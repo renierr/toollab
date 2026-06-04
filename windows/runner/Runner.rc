@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "de.renier" "\0"
-            VALUE "FileDescription", "tool_lab" "\0"
+            VALUE "FileDescription", "ToolLab" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "tool_lab" "\0"
+            VALUE "InternalName", "ToolLab" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 de.renier. All rights reserved." "\0"
             VALUE "OriginalFilename", "tool_lab.exe" "\0"
-            VALUE "ProductName", "tool_lab" "\0"
+            VALUE "ProductName", "ToolLab" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
