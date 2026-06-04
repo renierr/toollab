@@ -1,11 +1,17 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:tool_lab/theme/theme.dart';
+
 import 'config.dart';
+import 'battery_card.dart';
+import 'info_card.dart';
+import 'system_overview_header.dart';
 
 class DeviceInfoPage extends StatefulWidget {
   const DeviceInfoPage({super.key});
@@ -18,200 +24,229 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
     with DisposeCleanup<DeviceInfoPage> {
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final Battery _battery = Battery();
-  Map<String, String> _info = {};
+
+  bool _loading = true;
   int? _batteryLevel;
   BatteryState? _batteryState;
-  bool _loading = true;
+  final bool _isBatterySaver = false;
   StreamSubscription<BatteryState>? _batterySubscription;
+
+  // Visual header fields
+  String _osName = '';
+  String _osVersion = '';
+  String _deviceName = '';
+  String _modelName = '';
+
+  // Info section categories
+  Map<String, String> _systemInfo = {};
+  Map<String, String> _hardwareInfo = {};
+  Map<String, String> _displayInfo = {};
+  Map<String, String> _generalInfo = {};
 
   @override
   void initState() {
     super.initState();
-    _loadInfo();
-    onDispose(() => _batterySubscription?.cancel());
+    _loadAllInfo();
   }
 
-  Future<void> _loadInfo() async {
+  Future<void> _loadAllInfo() async {
+    // 1. Load battery info
     try {
       _batteryLevel = await _battery.batteryLevel;
       _batteryState = await _battery.batteryState;
-      _batterySubscription = _battery.onBatteryStateChanged.listen((state) {
-        if (mounted) setState(() => _batteryState = state);
+      _batterySubscription = _battery.onBatteryStateChanged.listen((
+        state,
+      ) async {
+        if (!mounted) return;
+        final level = await _battery.batteryLevel;
+        setState(() {
+          _batteryState = state;
+          _batteryLevel = level;
+        });
       });
+      onDispose(() => _batterySubscription?.cancel());
     } catch (e) {
       debugPrint('[DeviceInfo] Failed to read battery: $e');
     }
 
+    // 2. Load device-specific and system info
     try {
       if (defaultTargetPlatform == TargetPlatform.android) {
         final info = await _deviceInfo.androidInfo;
-        _info = {
-          'Model': '${info.brand} ${info.model}',
-          'Manufacturer': info.manufacturer,
-          'Android Version': info.version.release,
-          'SDK': '${info.version.sdkInt}',
-          'Hardware': info.hardware,
-          'Device': info.device,
-          'Product': info.product,
-          'Board': info.board,
+
+        _osName = 'Android';
+        _osVersion = '${info.version.release} (API ${info.version.sdkInt})';
+        _deviceName = info.device;
+        _modelName = '${info.brand} ${info.model}';
+
+        _systemInfo = {
+          'OS': 'Android',
+          'OS Version': info.version.release,
+          'SDK Version': '${info.version.sdkInt}',
+          'Security Patch': info.version.securityPatch ?? 'N/A',
+          'Build ID': info.id,
           'Fingerprint': info.fingerprint,
+        };
+
+        _hardwareInfo = {
+          'Brand / Manufacturer': '${info.brand} / ${info.manufacturer}',
+          'Model': info.model,
+          'Board / Motherboard': '${info.board} / ${info.hardware}',
+          'Bootloader': info.bootloader,
+          'CPU Cores': '${Platform.numberOfProcessors}',
+          'Supported ABIs': info.supportedAbis.take(3).join(', '),
+          'Hardware Name': info.hardware,
+          'Physical Device': info.isPhysicalDevice ? 'Yes' : 'No (Emulator)',
         };
       } else if (defaultTargetPlatform == TargetPlatform.windows) {
         final info = await _deviceInfo.windowsInfo;
-        _info = {
-          'OS': 'Windows ${info.majorVersion}.${info.minorVersion}',
-          'Build': info.buildNumber.toString(),
-          'Product Name': info.productName,
+
+        _osName = info.productName.isNotEmpty ? info.productName : 'Windows';
+        _osVersion = info.displayVersion.isNotEmpty
+            ? info.displayVersion
+            : 'Build ${info.buildNumber}';
+        _deviceName = info.computerName;
+        _modelName = info.productName;
+
+        _systemInfo = {
+          'OS Product': info.productName,
+          'Edition': info.editionId,
+          'OS Version': 'Windows ${info.majorVersion}.${info.minorVersion}',
+          'Build Number': '${info.buildNumber}',
           'Build Lab': info.buildLab,
+          'Registry ID': info.deviceId,
+        };
+
+        _hardwareInfo = {
+          'Computer Name': info.computerName,
+          'User Name': info.userName,
+          'CPU Cores': '${info.numberOfCores}',
+          'System RAM':
+              '${(info.systemMemoryInMegabytes / 1024).toStringAsFixed(2)} GB',
+          'Install Date': info.installDate
+              .toLocal()
+              .toString()
+              .split('.')
+              .first,
         };
       } else if (defaultTargetPlatform == TargetPlatform.linux) {
         final info = await _deviceInfo.linuxInfo;
-        _info = {
-          'OS': info.prettyName,
-          'Version': info.version ?? '',
+
+        _osName = info.prettyName;
+        _osVersion = info.version ?? 'Unknown';
+        _deviceName = Platform.localHostname;
+        _modelName = 'Linux Device';
+
+        _systemInfo = {
+          'Distribution': info.name,
+          'Pretty Name': info.prettyName,
+          'OS Version': info.version ?? 'N/A',
           'ID': info.id,
+          'Kernel Version': Platform.operatingSystemVersion,
+        };
+
+        _hardwareInfo = {
+          'Local Hostname': Platform.localHostname,
+          'CPU Cores': '${Platform.numberOfProcessors}',
         };
       } else {
-        _info = {'Platform': defaultTargetPlatform.name};
+        _osName = defaultTargetPlatform.name;
+        _osVersion = Platform.operatingSystemVersion;
+        _deviceName = Platform.localHostname;
+        _modelName = 'Generic Device';
+
+        _systemInfo = {
+          'Platform': defaultTargetPlatform.name,
+          'OS Version': Platform.operatingSystemVersion,
+        };
+        _hardwareInfo = {'Cores': '${Platform.numberOfProcessors}'};
       }
     } catch (e) {
       debugPrint('[DeviceInfo] Failed to read device info: $e');
-      _info = {'Error': e.toString()};
+      _systemInfo = {'Error': e.toString()};
     }
 
-    if (mounted) setState(() => _loading = false);
+    // 3. Load dynamic display and general settings
+    if (mounted) {
+      final mediaQuery = MediaQuery.of(context);
+      _displayInfo = {
+        'Screen Size':
+            '${mediaQuery.size.width.round()} x ${mediaQuery.size.height.round()} pt',
+        'Physical Pixels':
+            '${(mediaQuery.size.width * mediaQuery.devicePixelRatio).round()} x ${(mediaQuery.size.height * mediaQuery.devicePixelRatio).round()} px',
+        'Device Pixel Ratio':
+            'x${mediaQuery.devicePixelRatio.toStringAsFixed(2)}',
+        'Orientation': mediaQuery.orientation.name.toUpperCase(),
+      };
+
+      final now = DateTime.now();
+      final offsetHours = now.timeZoneOffset.inHours;
+      final offsetSign = offsetHours >= 0 ? '+' : '';
+      _generalInfo = {
+        'System Locale': Platform.localeName,
+        'Time Zone': '${now.timeZoneName} (UTC $offsetSign$offsetHours)',
+        'Dart Version': Platform.version.split(' ').first,
+      };
+
+      setState(() => _loading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return ToolLayout(
       title: 'Device Info',
       fullscreen: DeviceInfoTool.config.fullscreen,
       child: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
-                if (_batteryLevel != null)
-                  _BatteryCard(
+                SystemOverviewHeader(
+                  osName: _osName,
+                  osVersion: _osVersion,
+                  deviceName: _deviceName,
+                  modelName: _modelName,
+                ),
+                const SizedBox(height: 20),
+                if (_batteryLevel != null && _batteryState != null) ...[
+                  BatteryCard(
                     level: _batteryLevel!,
-                    isCharging:
-                        _batteryState == BatteryState.charging ||
-                        _batteryState == BatteryState.full,
+                    state: _batteryState!,
+                    isSaverMode: _isBatterySaver,
                   ),
-                const SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'System',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ..._info.entries.map(
-                          (entry) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: 120,
-                                  child: Text(
-                                    entry.key,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withAlpha(150),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    entry.value,
-                                    style: theme.textTheme.bodyMedium,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 12),
+                ],
+                InfoCard(
+                  title: 'System & OS',
+                  icon: Icons.settings_applications_outlined,
+                  accentColor: AppTheme.accentPurple,
+                  items: _systemInfo,
+                ),
+                const SizedBox(height: 12),
+                InfoCard(
+                  title: 'Hardware Specs',
+                  icon: Icons.memory_outlined,
+                  accentColor: AppTheme.accentBlue,
+                  items: _hardwareInfo,
+                ),
+                const SizedBox(height: 12),
+                InfoCard(
+                  title: 'Display Details',
+                  icon: Icons.screenshot_outlined,
+                  accentColor: AppTheme.accentTeal,
+                  items: _displayInfo,
+                ),
+                const SizedBox(height: 12),
+                InfoCard(
+                  title: 'General Settings',
+                  icon: Icons.public_outlined,
+                  accentColor: AppTheme.accentAmber,
+                  items: _generalInfo,
                 ),
               ],
             ),
-    );
-  }
-}
-
-class _BatteryCard extends StatelessWidget {
-  final int level;
-  final bool isCharging;
-
-  const _BatteryCard({required this.level, required this.isCharging});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = level > 60
-        ? theme.colorScheme.primary
-        : level > 20
-        ? theme.colorScheme.tertiary
-        : theme.colorScheme.error;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 48,
-              height: 48,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(Icons.battery_4_bar, size: 48, color: color),
-                  Text(
-                    '$level%',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Battery',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '$level% ${isCharging ? '(Charging)' : '(Not Charging)'}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(150),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(isCharging ? Icons.bolt : Icons.battery_std, color: color),
-          ],
-        ),
-      ),
     );
   }
 }
