@@ -12,5 +12,6 @@ class DeviceInfoTool {
     icon: Icons.phone_android_outlined,
     route: '/device-info',
     accentColor: AppTheme.accentPurple,
+    sectionId: 'info',
   );
 }

@@ -12,5 +12,6 @@ class EmfDetectorTool {
     icon: Icons.wifi_tethering_outlined,
     route: '/emf-detector',
     accentColor: AppTheme.accentAmber,
+    sectionId: 'sensors',
   );
 }

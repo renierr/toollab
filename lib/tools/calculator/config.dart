@@ -12,5 +12,6 @@ class CalculatorTool {
     icon: Icons.calculate_outlined,
     route: '/calculator',
     accentColor: AppTheme.accentBlue,
+    sectionId: 'utilities',
   );
 }

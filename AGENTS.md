@@ -50,10 +50,13 @@ Each tool lives in its own folder under `lib/tools/<name>/` with exactly:
 - **`<name>_page.dart`** — Tool implementation. A `StatefulWidget` or `StatelessWidget`.
 
 ### 2. Adding a New Tool
-1. Create `lib/tools/<name>/` with `config.dart` and `<name>_page.dart`.
+See the full step-by-step guide at [`docs/creating-a-tool.md`](docs/creating-a-tool.md).
+
+Quick reference:
+1. Create `lib/tools/<name>/` with `config.dart` (include `sectionId`) and `<name>_page.dart`.
 2. Register in `lib/core/tool_registry.dart` — add tool class to the `all` list.
 3. Add page import + `case` entry to the `_pageForTool()` switch in `lib/app.dart`.
-4. Create any shared widgets in `lib/widgets/` if the pattern is used by 2+ tools.
+4. Run `dart format ./lib && flutter analyze` before committing.
 
 ### 3. Tool Config Pattern
 ```dart
@@ -66,12 +69,17 @@ class MyNewTool {
     icon: Icons.star_outlined,
     route: '/my-new-tool',
     accentColor: AppTheme.accentTeal,
+    sectionId: 'utilities',
   );
 }
 ```
 
 ### 4. Routing
 Routes are auto-generated from `ToolRegistry.all` in `lib/app.dart`. Each tool's `route` field becomes a GoRouter path. The `_pageForTool()` switch maps tool IDs to page widgets.
+
+### 5. Storage
+- **Per-tool settings**: use `DatabaseService.instance` (`lib/services/database_service.dart`) — singleton with `setSetting`/`getSetting`/`getAllSettings`.
+- **Global settings** (theme, compact mode, sort): go through `AppState`, which persists via `SharedPreferences` (`lib/services/settings_service.dart`).
 
 ---
 

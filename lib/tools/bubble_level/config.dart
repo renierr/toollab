@@ -12,5 +12,6 @@ class BubbleLevelTool {
     icon: Icons.sensors_outlined,
     route: '/bubble-level',
     accentColor: AppTheme.accentGreen,
+    sectionId: 'sensors',
   );
 }
