@@ -42,6 +42,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Antigravity CLI
+.antigravitycli/
+.antigravitycli
+
 # Generated version file
 /lib/version.g.dart
 
