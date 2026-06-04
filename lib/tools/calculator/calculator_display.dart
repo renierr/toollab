@@ -6,12 +6,17 @@ class CalculatorDisplay extends StatefulWidget {
   final bool flashResult;
   final ScrollController scrollController;
 
+  final bool isShort;
+  final bool fullscreen;
+
   const CalculatorDisplay({
     super.key,
     required this.expression,
     required this.input,
     required this.flashResult,
     required this.scrollController,
+    this.isShort = false,
+    this.fullscreen = false,
   });
 
   @override
@@ -57,9 +62,14 @@ class _CalculatorDisplayState extends State<CalculatorDisplay> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final displayStyle = theme.textTheme.displaySmall?.copyWith(
+    final baseStyle = widget.isShort
+        ? theme.textTheme.headlineMedium
+        : theme.textTheme.displaySmall;
+
+    final displayStyle = baseStyle?.copyWith(
       fontWeight: FontWeight.w300,
       fontFamily: 'monospace',
+      fontSize: widget.isShort ? 24.0 : null,
       color: widget.flashResult
           ? theme.colorScheme.primary
           : theme.colorScheme.onSurface,
@@ -70,22 +80,29 @@ class _CalculatorDisplayState extends State<CalculatorDisplay> {
         color: theme.colorScheme.surfaceContainerLow,
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      padding: EdgeInsets.fromLTRB(
+        widget.fullscreen ? 64.0 : (widget.isShort ? 16.0 : 20.0),
+        widget.isShort ? 2.0 : 8.0,
+        20.0,
+        widget.isShort ? 2.0 : 4.0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text(
-            widget.expression,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withAlpha(150),
-              fontFamily: 'monospace',
+          if (!widget.isShort) ...[
+            Text(
+              widget.expression,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withAlpha(150),
+                fontFamily: 'monospace',
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.right,
-          ),
-          const SizedBox(height: 4),
+            const SizedBox(height: 4),
+          ],
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -101,7 +118,9 @@ class _CalculatorDisplayState extends State<CalculatorDisplay> {
                         ),
                         child: AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 200),
-                          style: displayStyle ?? const TextStyle(fontSize: 36),
+                          style:
+                              displayStyle ??
+                              TextStyle(fontSize: widget.isShort ? 24 : 36),
                           child: Text(widget.input, maxLines: 1),
                         ),
                       ),

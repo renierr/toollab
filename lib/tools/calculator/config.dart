@@ -13,5 +13,6 @@ class CalculatorTool {
     route: '/calculator',
     accentColor: AppTheme.accentBlue,
     sectionId: 'utilities',
+    fullscreen: true,
   );
 }

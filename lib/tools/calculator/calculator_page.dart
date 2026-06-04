@@ -9,6 +9,8 @@ import 'calculator_toolbar.dart';
 import 'calculator_sci_buttons.dart';
 import 'calculator_history_panel.dart';
 import 'calculator_equals_button.dart';
+import 'package:tool_lab/widgets/floating_back_button.dart';
+import 'config.dart';
 
 class CalculatorPage extends StatefulWidget {
   const CalculatorPage({super.key});
@@ -154,14 +156,6 @@ class _CalculatorPageState extends State<CalculatorPage>
 
   @override
   Widget build(BuildContext context) {
-    final sharedToolbar = CalculatorToolbar(
-      showScientific: _showScientific,
-      onToggleSci: () => setState(() => _showScientific = !_showScientific),
-      onShowHistory: _showHistory,
-      onCopy: _onCopy,
-      onBackspace: _onBackspace,
-    );
-
     final sharedGrid = CalculatorGrid(
       onInput: _onInput,
       onClear: _onClear,
@@ -169,88 +163,166 @@ class _CalculatorPageState extends State<CalculatorPage>
       onNegate: _onNegate,
     );
 
-    final sharedDisplay = CalculatorDisplay(
-      expression: _expression,
-      input: _core.input,
-      flashResult: _flashResult,
-      scrollController: _displayController,
-    );
-
-    final equalsButton = CalculatorEqualsButton(onTap: _onEquals);
-
     return KeyboardListener(
       focusNode: FocusNode()..requestFocus(),
       onKeyEvent: _onKeyboard,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Calculator')),
+        appBar: CalculatorTool.config.fullscreen
+            ? null
+            : AppBar(title: const Text('Calculator')),
         body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isWide = constraints.maxWidth >= 500;
+          child: Stack(
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth >= 500;
+                      final isShort = constraints.maxHeight < 400;
 
-                  const displayHeight = 95.0;
+                      final displayHeight = isShort ? 44.0 : 95.0;
 
-                  if (isWide) {
-                    return Column(
-                      children: [
-                        SizedBox(height: displayHeight, child: sharedDisplay),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: 180,
-                                child: CalculatorSciColumn(onInput: _onInput),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  children: [
-                                    CalculatorToolbar(
-                                      showScientific: false,
-                                      onToggleSci: () {},
-                                      onShowHistory: _showHistory,
-                                      onCopy: _onCopy,
-                                      onBackspace: _onBackspace,
-                                    ),
-                                    Expanded(child: sharedGrid),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        equalsButton,
-                      ],
-                    );
-                  }
+                      final display = CalculatorDisplay(
+                        expression: _expression,
+                        input: _core.input,
+                        flashResult: _flashResult,
+                        scrollController: _displayController,
+                        isShort: isShort,
+                        fullscreen: CalculatorTool.config.fullscreen,
+                      );
 
-                  return Column(
-                    children: [
-                      SizedBox(height: displayHeight, child: sharedDisplay),
-                      sharedToolbar,
-                      Expanded(
-                        child: _showScientific
-                            ? Row(
+                      final eqBtn = CalculatorEqualsButton(onTap: _onEquals);
+
+                      final toolbar = CalculatorToolbar(
+                        showScientific: _showScientific,
+                        onToggleSci: () =>
+                            setState(() => _showScientific = !_showScientific),
+                        onShowHistory: _showHistory,
+                        onCopy: _onCopy,
+                        onBackspace: _onBackspace,
+                        isShort: isShort,
+                      );
+
+                      if (isWide) {
+                        return Column(
+                          children: [
+                            SizedBox(height: displayHeight, child: display),
+                            Expanded(
+                              child: Row(
                                 children: [
                                   SizedBox(
-                                    width: 90,
+                                    width: 180,
                                     child: CalculatorSciColumn(
                                       onInput: _onInput,
                                     ),
                                   ),
-                                  Expanded(child: sharedGrid),
+                                  Expanded(
+                                    child: Column(
+                                      children: [
+                                        CalculatorToolbar(
+                                          showScientific: false,
+                                          onToggleSci: () {},
+                                          onShowHistory: _showHistory,
+                                          onCopy: _onCopy,
+                                          onBackspace: _onBackspace,
+                                          isShort: isShort,
+                                        ),
+                                        Expanded(
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                              8,
+                                              4,
+                                              8,
+                                              8,
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Expanded(
+                                                  flex: 5,
+                                                  child: sharedGrid,
+                                                ),
+                                                const SizedBox(height: 6),
+                                                Expanded(flex: 1, child: eqBtn),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ],
-                              )
-                            : sharedGrid,
-                      ),
-                      equalsButton,
-                    ],
-                  );
-                },
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return Column(
+                        children: [
+                          SizedBox(height: displayHeight, child: display),
+                          toolbar,
+                          Expanded(
+                            child: _showScientific
+                                ? Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 90,
+                                        child: CalculatorSciColumn(
+                                          onInput: _onInput,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                            8,
+                                            4,
+                                            8,
+                                            8,
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Expanded(
+                                                flex: 5,
+                                                child: sharedGrid,
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Expanded(flex: 1, child: eqBtn),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      8,
+                                      4,
+                                      8,
+                                      8,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Expanded(flex: 5, child: sharedGrid),
+                                        const SizedBox(height: 6),
+                                        Expanded(flex: 1, child: eqBtn),
+                                      ],
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
               ),
-            ),
+              if (CalculatorTool.config.fullscreen)
+                const Positioned(
+                  left: 12,
+                  top: 12,
+                  child: FloatingBackButton(),
+                ),
+            ],
           ),
         ),
       ),

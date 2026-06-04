@@ -6,6 +6,7 @@ class CalculatorToolbar extends StatelessWidget {
   final VoidCallback onShowHistory;
   final VoidCallback onCopy;
   final VoidCallback onBackspace;
+  final bool isShort;
 
   const CalculatorToolbar({
     super.key,
@@ -14,12 +15,13 @@ class CalculatorToolbar extends StatelessWidget {
     required this.onShowHistory,
     required this.onCopy,
     required this.onBackspace,
+    this.isShort = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: isShort ? 0 : 4),
       child: Row(
         children: [
           _ToolbarChip(
@@ -27,22 +29,24 @@ class CalculatorToolbar extends StatelessWidget {
             label: 'SCI',
             selected: showScientific,
             onTap: onToggleSci,
+            showLabel: !isShort,
           ),
           const SizedBox(width: 4),
           _ToolbarChip(
             icon: Icons.history,
             label: 'HIST',
             onTap: onShowHistory,
+            showLabel: !isShort,
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.copy, size: 20),
+            icon: Icon(Icons.copy, size: isShort ? 18 : 20),
             onPressed: onCopy,
             tooltip: 'Copy result',
             visualDensity: VisualDensity.compact,
           ),
           IconButton(
-            icon: const Icon(Icons.backspace_outlined, size: 20),
+            icon: Icon(Icons.backspace_outlined, size: isShort ? 18 : 20),
             onPressed: onBackspace,
             tooltip: 'Backspace',
             visualDensity: VisualDensity.compact,
@@ -58,12 +62,14 @@ class _ToolbarChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool showLabel;
 
   const _ToolbarChip({
     required this.icon,
     required this.label,
     this.selected = false,
     required this.onTap,
+    this.showLabel = true,
   });
 
   @override
@@ -87,17 +93,19 @@ class _ToolbarChip extends StatelessWidget {
                     ? theme.colorScheme.onPrimaryContainer
                     : theme.colorScheme.onSurface.withAlpha(180),
               ),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: selected
-                      ? theme.colorScheme.onPrimaryContainer
-                      : theme.colorScheme.onSurface.withAlpha(180),
+              if (showLabel) ...[
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? theme.colorScheme.onPrimaryContainer
+                        : theme.colorScheme.onSurface.withAlpha(180),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

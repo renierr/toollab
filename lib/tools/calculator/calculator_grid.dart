@@ -26,28 +26,25 @@ class CalculatorGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-      child: Column(
-        children: List.generate(_rows.length, (i) {
-          final row = _rows[i];
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: i < _rows.length - 1 ? 6 : 0),
-              child: Row(
-                children: row.map((label) {
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: _buildButton(label),
-                    ),
-                  );
-                }).toList(),
-              ),
+    return Column(
+      children: List.generate(_rows.length, (i) {
+        final row = _rows[i];
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(bottom: i < _rows.length - 1 ? 6 : 0),
+            child: Row(
+              children: row.map((label) {
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: _buildButton(label),
+                  ),
+                );
+              }).toList(),
             ),
-          );
-        }),
-      ),
+          ),
+        );
+      }),
     );
   }
 

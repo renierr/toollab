@@ -8,6 +8,7 @@ class ToolModel {
   final String route;
   final Color accentColor;
   final String sectionId;
+  final bool fullscreen;
 
   const ToolModel({
     required this.id,
@@ -17,6 +18,7 @@ class ToolModel {
     required this.route,
     required this.accentColor,
     required this.sectionId,
+    this.fullscreen = false,
   });
 }
 

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/constants.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/providers/app_state.dart';
-import 'package:tool_lab/widgets/tool_card.dart';
 import 'package:tool_lab/widgets/section_header.dart';
 import 'package:tool_lab/pages/overview/settings_dialog.dart';
+import 'section_grid.dart';
 
 class OverviewPage extends StatefulWidget {
   const OverviewPage({super.key});
@@ -33,8 +32,14 @@ class _OverviewPageState extends State<OverviewPage> {
     return 4;
   }
 
-  double _childAspectRatio(bool compact) {
-    return compact ? 3.5 : 1.3;
+  double _childAspectRatio(bool compact, double width) {
+    if (compact) {
+      if (width < 400) return 4.5;
+      if (width < 600) return 3.2;
+      return 3.5;
+    }
+    if (width < 480) return 1.2;
+    return 1.35;
   }
 
   @override
@@ -165,15 +170,14 @@ class _OverviewPageState extends State<OverviewPage> {
                   )
                 else ...[
                   if (showFavorites)
-                    _buildSectionGrid(
-                      section: const ToolSection(
-                        id: '__favorites__',
-                        title: 'Favorites',
-                        icon: Icons.star,
-                      ),
+                    SectionGrid(
                       sectionTools: favoriteTools,
                       crossAxisCount: crossAxisCount,
                       compact: compact,
+                      childAspectRatio: _childAspectRatio(
+                        compact,
+                        constraints.maxWidth,
+                      ),
                     ),
                   ...orderedSections
                       .map((entry) {
@@ -202,32 +206,14 @@ class _OverviewPageState extends State<OverviewPage> {
                             ),
                           ),
                           if (!isCollapsed)
-                            SliverGrid(
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: crossAxisCount,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10,
-                                    childAspectRatio: _childAspectRatio(
-                                      compact,
-                                    ),
-                                  ),
-                              delegate: SliverChildBuilderDelegate((
-                                context,
-                                index,
-                              ) {
-                                final tool = sectionTools[index];
-                                return ToolCard(
-                                  tool: tool,
-                                  compact: compact,
-                                  onTap: () {
-                                    context.read<AppState>().recordToolUsage(
-                                      tool.id,
-                                    );
-                                    context.push(tool.route);
-                                  },
-                                );
-                              }, childCount: sectionTools.length),
+                            SectionGrid(
+                              sectionTools: sectionTools,
+                              crossAxisCount: crossAxisCount,
+                              compact: compact,
+                              childAspectRatio: _childAspectRatio(
+                                compact,
+                                constraints.maxWidth,
+                              ),
                             ),
                           SliverToBoxAdapter(
                             child: SizedBox(
@@ -243,33 +229,6 @@ class _OverviewPageState extends State<OverviewPage> {
           },
         ),
       ),
-    );
-  }
-
-  Widget _buildSectionGrid({
-    required ToolSection section,
-    required List<ToolModel> sectionTools,
-    required int crossAxisCount,
-    required bool compact,
-  }) {
-    return SliverGrid(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: _childAspectRatio(compact),
-      ),
-      delegate: SliverChildBuilderDelegate((context, index) {
-        final tool = sectionTools[index];
-        return ToolCard(
-          tool: tool,
-          compact: compact,
-          onTap: () {
-            context.read<AppState>().recordToolUsage(tool.id);
-            context.push(tool.route);
-          },
-        );
-      }, childCount: sectionTools.length),
     );
   }
 }

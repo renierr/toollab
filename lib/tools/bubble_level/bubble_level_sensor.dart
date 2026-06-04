@@ -19,12 +19,22 @@ class CalibrationOffset {
   const CalibrationOffset({this.pitch = 0, this.roll = 0});
 }
 
+enum DeviceScreenOrientation {
+  portraitUp,
+  portraitDown,
+  landscapeLeft,
+  landscapeRight,
+}
+
 class BubbleLevelSensor {
   double _smoothPitch = 0;
   double _smoothRoll = 0;
   CalibrationOffset _offset = const CalibrationOffset();
+  DeviceScreenOrientation _orientation = DeviceScreenOrientation.portraitUp;
 
   static const double _alpha = 0.22;
+
+  DeviceScreenOrientation get orientation => _orientation;
 
   void calibrateZero(OrientationReading reading) {
     _offset = CalibrationOffset(
@@ -45,8 +55,49 @@ class BubbleLevelSensor {
       OrientationReading(pitch: _smoothPitch, roll: _smoothRoll);
 
   OrientationReading process(AccelerometerEvent event) {
-    final rawPitch = _pitchFromAccel(event.x, event.y, event.z);
-    final rawRoll = _rollFromAccel(event.x, event.y, event.z);
+    // Detect device screen orientation from gravity if held upright
+    final horizontalG = math.sqrt(event.x * event.x + event.y * event.y);
+    if (horizontalG > 3.0) {
+      if (event.y.abs() > event.x.abs()) {
+        if (event.y > 0) {
+          _orientation = DeviceScreenOrientation.portraitUp;
+        } else {
+          _orientation = DeviceScreenOrientation.portraitDown;
+        }
+      } else {
+        if (event.x > 0) {
+          _orientation = DeviceScreenOrientation.landscapeLeft;
+        } else {
+          _orientation = DeviceScreenOrientation.landscapeRight;
+        }
+      }
+    }
+
+    double mappedX = event.x;
+    double mappedY = event.y;
+    double mappedZ = event.z;
+
+    switch (_orientation) {
+      case DeviceScreenOrientation.portraitUp:
+        mappedX = event.x;
+        mappedY = event.y;
+        break;
+      case DeviceScreenOrientation.portraitDown:
+        mappedX = -event.x;
+        mappedY = -event.y;
+        break;
+      case DeviceScreenOrientation.landscapeLeft:
+        mappedX = -event.y;
+        mappedY = -event.x;
+        break;
+      case DeviceScreenOrientation.landscapeRight:
+        mappedX = event.y;
+        mappedY = event.x;
+        break;
+    }
+
+    final rawPitch = _pitchFromAccel(mappedX, mappedY, mappedZ);
+    final rawRoll = _rollFromAccel(mappedX, mappedY, mappedZ);
 
     final correctedPitch = rawPitch - _offset.pitch;
     final correctedRoll = rawRoll - _offset.roll;
@@ -58,11 +109,11 @@ class BubbleLevelSensor {
   }
 
   static double _pitchFromAccel(double x, double y, double z) {
-    return math.atan2(-x, math.sqrt(y * y + z * z)) * 180 / math.pi;
+    return math.atan2(y, math.sqrt(x * x + z * z)) * 180 / math.pi;
   }
 
   static double _rollFromAccel(double x, double y, double z) {
-    return math.atan2(y, z) * 180 / math.pi;
+    return math.atan2(-x, math.sqrt(y * y + z * z)) * 180 / math.pi;
   }
 
   static bool isLevel(double pitch, double roll, double tolerance) {

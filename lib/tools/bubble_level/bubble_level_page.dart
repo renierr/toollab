@@ -5,6 +5,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'bubble_level_sensor.dart';
 import 'bubble_level_view_2d.dart';
 import 'bubble_level_view_1d.dart';
@@ -207,16 +208,49 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
 
     final readout = BubbleLevelReadout(pitch: _pitch, roll: _roll);
 
+    final leftPadding = _rulerVisible ? 80.0 : 16.0;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Bubble Level')),
       body: SafeArea(
         child: Stack(
           children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 480),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            ResponsiveOrientationLayout(
+              padding: EdgeInsets.fromLTRB(leftPadding, 8, 16, 8),
+              landscape: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: _mode == LevelMode.mode2d ? 1.0 : 2.5,
+                        child: view,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    flex: 6,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          statusBar,
+                          const SizedBox(height: 8),
+                          toolbar,
+                          const SizedBox(height: 12),
+                          readout,
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              portrait: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
                   child: Column(
                     children: [
                       statusBar,
