@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tool_lab/models/tool_model.dart';
+import 'package:tool_lab/core/tool_model.dart';
 
 class ToolCard extends StatelessWidget {
   final ToolModel tool;

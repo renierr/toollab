@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tool_lab/constants.dart';
-import 'package:tool_lab/models/tool_model.dart';
+import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/widgets/tool_card.dart';
 
 class OverviewPage extends StatelessWidget {
@@ -9,7 +9,7 @@ class OverviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tools = ToolModel.all;
+    final tools = ToolRegistry.all;
     return Scaffold(
       appBar: AppBar(title: Text(AppConstants.appName)),
       body: SafeArea(

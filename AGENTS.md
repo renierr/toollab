@@ -22,7 +22,8 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **Small Screen Fitting**: Always use responsive layouts (like `Wrap` instead of horizontal `Row` for actions, and scrollable/grid metrics) in dialogs/modals/cards to prevent overflow on mobile.
 - **Cross-Platform Checks**: Check platform before using platform-specific APIs (sensors, battery, etc.).
 - **Prevent Duplicated UI/Dialog Code**: Extract custom dialogs, overlays, or recurring visual elements to `lib/widgets/` immediately. Never copy-paste presentation logic across views.
-- **Use Existing Custom Widgets**: Always reuse existing custom widgets in `lib/widgets/` (such as `ToolCard`, `ResponsiveLayout`) rather than writing from scratch. Check the codebase for existing reusable options before writing presentation code.
+- **Use Existing Custom Widgets**: Always reuse existing custom widgets in `lib/widgets/` (such as `ToolCard`, `ToolLayout`, `ResponsiveLayout`) rather than writing from scratch. Check the codebase for existing reusable options before writing presentation code.
+- **Share Cross-Tool Widgets**: Any widget, component, or utility pattern used by 2+ different tools must be extracted to `lib/widgets/` as a shared widget. Tool-specific private widgets (`_SomeWidget`) stay in the tool's own folder under `lib/tools/<name>/`. This includes common patterns like sensor data display rows, status badges, action icon buttons, loading indicators, info cards, and value readouts.
 
 ---
 
@@ -38,6 +39,39 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **Private Widgets over Helpers**: Prefer declaring private `StatelessWidget` classes instead of helper methods returning `Widget` to optimize element tree lifecycles and rebuilds.
 - **Const Constructors**: Prefer using `const` constructors for widgets and in `build()` methods where possible to reduce rebuilds.
 - **Lazy Lists**: Prefer `ListView.builder` or slivers for dynamic or performance-sensitive lists.
+
+---
+
+## Tool Architecture
+
+### 1. Tool Structure
+Each tool lives in its own folder under `lib/tools/<name>/` with exactly:
+- **`config.dart`** — Tool metadata (name, icon, route, color). Exports a static `const ToolModel` via a tool class.
+- **`<name>_page.dart`** — Tool implementation. A `StatefulWidget` or `StatelessWidget`.
+
+### 2. Adding a New Tool
+1. Create `lib/tools/<name>/` with `config.dart` and `<name>_page.dart`.
+2. Register in `lib/core/tool_registry.dart` — add tool class to the `all` list.
+3. Add page import + `case` entry to the `_pageForTool()` switch in `lib/app.dart`.
+4. Create any shared widgets in `lib/widgets/` if the pattern is used by 2+ tools.
+
+### 3. Tool Config Pattern
+```dart
+class MyNewTool {
+  MyNewTool._();
+  static const ToolModel config = ToolModel(
+    id: 'my-new-tool',
+    name: 'My New Tool',
+    description: 'What it does',
+    icon: Icons.star_outlined,
+    route: '/my-new-tool',
+    accentColor: AppTheme.accentTeal,
+  );
+}
+```
+
+### 4. Routing
+Routes are auto-generated from `ToolRegistry.all` in `lib/app.dart`. Each tool's `route` field becomes a GoRouter path. The `_pageForTool()` switch maps tool IDs to page widgets.
 
 ---
 
