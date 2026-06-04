@@ -65,39 +65,67 @@ class _BeamPainter extends CustomPainter {
     final rrect = RRect.fromRectAndRadius(trackRect, Radius.circular(r));
     final cx = size.width / 2;
 
-    final surface = theme.colorScheme.surface;
-    Color on(Color c, double opacity) =>
-        Color.alphaBlend(c.withValues(alpha: opacity), surface);
-
-    canvas.drawRRect(rrect, Paint()..color = on(accentColor, 0.15));
-    canvas.drawRRect(
-      rrect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [on(accentColor, 0.10), on(accentColor, 0.05)],
-        ).createShader(trackRect),
-    );
-    canvas.drawRRect(
-      rrect,
-      Paint()
-        ..color = accentColor.withValues(alpha: isDark ? 0.5 : 0.7)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
-    );
-
-    final hw = size.width * 0.08;
-    final centerRect = Rect.fromLTWH(cx - hw, 0, hw * 2, size.height);
-    canvas.drawRect(
-      centerRect,
-      Paint()..color = accentColor.withValues(alpha: isDark ? 0.25 : 0.15),
-    );
-    final linePaint = Paint()
-      ..color = accentColor.withValues(alpha: isDark ? 0.4 : 0.35)
-      ..strokeWidth = 1;
-    for (final x in [cx - hw, cx + hw]) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
+    if (isDark) {
+      final surface = theme.colorScheme.surface;
+      Color on(Color c, double opacity) =>
+          Color.alphaBlend(c.withValues(alpha: opacity), surface);
+      canvas.drawRRect(rrect, Paint()..color = on(accentColor, 0.15));
+      canvas.drawRRect(
+        rrect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [on(accentColor, 0.10), on(accentColor, 0.05)],
+          ).createShader(trackRect),
+      );
+      canvas.drawRRect(
+        rrect,
+        Paint()
+          ..color = accentColor.withValues(alpha: 0.5)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+      final hw = size.width * 0.08;
+      canvas.drawRect(
+        Rect.fromLTWH(cx - hw, 0, hw * 2, size.height),
+        Paint()..color = accentColor.withValues(alpha: 0.25),
+      );
+      final linePaint = Paint()
+        ..color = accentColor.withValues(alpha: 0.4)
+        ..strokeWidth = 1;
+      for (final x in [cx - hw, cx + hw]) {
+        canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
+      }
+    } else {
+      canvas.drawRRect(rrect, Paint()..color = const Color(0xFFE0E0E0));
+      canvas.drawRRect(
+        rrect,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [const Color(0xFFBDBDBD), const Color(0xFFE0E0E0)],
+          ).createShader(trackRect),
+      );
+      canvas.drawRRect(
+        rrect,
+        Paint()
+          ..color = const Color(0xFF757575)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+      final hw = size.width * 0.08;
+      canvas.drawRect(
+        Rect.fromLTWH(cx - hw, 0, hw * 2, size.height),
+        Paint()..color = accentColor.withValues(alpha: 0.35),
+      );
+      final linePaint = Paint()
+        ..color = accentColor.withValues(alpha: 0.55)
+        ..strokeWidth = 1;
+      for (final x in [cx - hw, cx + hw]) {
+        canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
+      }
     }
 
     final bubbleX = normalizedRoll.clamp(-1.0, 1.0) * (size.width / 2 - r - 8);
@@ -107,38 +135,65 @@ class _BeamPainter extends CustomPainter {
     final by = (size.height - bh) / 2;
     final bubbleRect = Rect.fromLTWH(bx, by, bw, bh);
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
-      Paint()
-        ..shader = RadialGradient(
-          center: const Alignment(-0.3, -0.3),
-          radius: 1,
-          colors: [
-            accentColor.withValues(alpha: 0.9),
-            accentColor.withValues(alpha: 0.7),
-            accentColor.withValues(alpha: 0.5),
-          ],
-          stops: const [0, 0.5, 1],
-        ).createShader(bubbleRect),
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
-      Paint()
-        ..color = locked
-            ? const Color(0xFF66BB6A)
-            : Colors.white.withValues(alpha: 0.8)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
+    if (isDark) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(-0.3, -0.3),
+            radius: 1,
+            colors: [
+              accentColor.withValues(alpha: 0.9),
+              accentColor.withValues(alpha: 0.7),
+              accentColor.withValues(alpha: 0.5),
+            ],
+            stops: const [0, 0.5, 1],
+          ).createShader(bubbleRect),
+      );
+    } else {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(-0.3, -0.3),
+            radius: 1,
+            colors: const [
+              Color(0xFF1565C0),
+              Color(0xFF0D47A1),
+              Color(0xFF0A2E6E),
+            ],
+            stops: [0, 0.5, 1],
+          ).createShader(bubbleRect),
+      );
+    }
+
     if (locked) {
+      const lockedColor = Color(0xFF1B5E20);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
+        Paint()
+          ..color = lockedColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5,
+      );
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(bx - 3, by - 3, bw + 6, bh + 6),
           Radius.circular((bh + 6) / 2),
         ),
         Paint()
-          ..color = const Color(0xFF66BB6A).withValues(alpha: 0.3)
+          ..color = lockedColor.withValues(alpha: isDark ? 0.3 : 0.5)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+      );
+    } else {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
+        Paint()
+          ..color = isDark
+              ? Colors.white.withValues(alpha: 0.8)
+              : const Color(0xFF1565C0)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
       );
     }
   }
