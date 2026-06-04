@@ -14,18 +14,30 @@ class BubbleLevelView1d extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: CustomPaint(
-          painter: _BeamPainter(
-            normalizedRoll: normalizedRoll,
-            locked: locked,
-            accentColor: accentColor,
+    final theme = Theme.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final h = constraints.maxHeight;
+        final trackH = (h * 0.18).clamp(40.0, 72.0);
+        return Align(
+          alignment: Alignment.center,
+          child: SizedBox(
+            height: trackH,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(trackH / 2),
+              child: CustomPaint(
+                painter: _BeamPainter(
+                  normalizedRoll: normalizedRoll,
+                  locked: locked,
+                  accentColor: accentColor,
+                  theme: theme,
+                ),
+                size: Size(constraints.maxWidth, trackH),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -34,114 +46,106 @@ class _BeamPainter extends CustomPainter {
   final double normalizedRoll;
   final bool locked;
   final Color accentColor;
+  final ThemeData theme;
 
   _BeamPainter({
     required this.normalizedRoll,
     required this.locked,
     required this.accentColor,
+    required this.theme,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      const Radius.circular(28),
-    );
+    if (size.width <= 0 || size.height <= 0) return;
 
-    final bgPaint = Paint()..color = accentColor.withAlpha(12);
-    canvas.drawRRect(rrect, bgPaint);
-
-    final trackPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [accentColor.withAlpha(28), accentColor.withAlpha(14)],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawRRect(rrect, trackPaint);
-
-    final borderPaint = Paint()
-      ..color = accentColor.withAlpha(50)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    canvas.drawRRect(rrect, borderPaint);
-
+    final isDark = theme.brightness == Brightness.dark;
+    final trackRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final r = size.height / 2;
+    final rrect = RRect.fromRectAndRadius(trackRect, Radius.circular(r));
     final cx = size.width / 2;
-    final centerZoneW = size.width * 0.16;
-    final centerPaint = Paint()
-      ..shader =
-          LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [accentColor.withAlpha(50), accentColor.withAlpha(20)],
-          ).createShader(
-            Rect.fromLTWH(cx - centerZoneW / 2, 0, centerZoneW, size.height),
-          );
+
+    final surface = theme.colorScheme.surface;
+    Color on(Color c, double opacity) =>
+        Color.alphaBlend(c.withValues(alpha: opacity), surface);
+
+    canvas.drawRRect(rrect, Paint()..color = on(accentColor, 0.15));
     canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(cx - centerZoneW / 2, 0, centerZoneW, size.height),
-        const Radius.circular(0),
-      ),
-      centerPaint,
+      rrect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [on(accentColor, 0.10), on(accentColor, 0.05)],
+        ).createShader(trackRect),
+    );
+    canvas.drawRRect(
+      rrect,
+      Paint()
+        ..color = accentColor.withValues(alpha: isDark ? 0.5 : 0.7)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
     );
 
-    final centerLinePaint = Paint()
-      ..color = accentColor.withAlpha(60)
+    final hw = size.width * 0.08;
+    final centerRect = Rect.fromLTWH(cx - hw, 0, hw * 2, size.height);
+    canvas.drawRect(
+      centerRect,
+      Paint()..color = accentColor.withValues(alpha: isDark ? 0.25 : 0.15),
+    );
+    final linePaint = Paint()
+      ..color = accentColor.withValues(alpha: isDark ? 0.4 : 0.35)
       ..strokeWidth = 1;
-    canvas.drawLine(
-      Offset(cx - centerZoneW / 2, 0),
-      Offset(cx - centerZoneW / 2, size.height),
-      centerLinePaint,
-    );
-    canvas.drawLine(
-      Offset(cx + centerZoneW / 2, 0),
-      Offset(cx + centerZoneW / 2, size.height),
-      centerLinePaint,
-    );
+    for (final x in [cx - hw, cx + hw]) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
+    }
 
-    final bubbleX = _clamp(normalizedRoll, -1, 1) * (size.width / 2 - 28 - 8);
-    final bw = 52.0;
-    final bh = size.height * 0.7;
-    final bx = cx + bubbleX - bw / 2;
+    final bubbleX = normalizedRoll.clamp(-1.0, 1.0) * (size.width / 2 - r - 8);
+    final bw = (size.height * 0.85).clamp(32.0, 56.0);
+    final bh = size.height * 0.6;
+    final bx = (cx + bubbleX - bw / 2).clamp(0.0, size.width - bw);
     final by = (size.height - bh) / 2;
+    final bubbleRect = Rect.fromLTWH(bx, by, bw, bh);
 
-    final bubblePaint = Paint()
-      ..shader = RadialGradient(
-        center: const Alignment(-0.3, -0.3),
-        radius: 1,
-        colors: [
-          const Color(0xFFFBFFD8),
-          const Color(0xFFB7FF70),
-          const Color(0xFF57CF39),
-          if (locked) const Color(0xFF309A29) else Color(0xFF888888),
-        ],
-        stops: const [0, 0.42, 0.72, 1],
-      ).createShader(Rect.fromLTWH(bx, by, bw, bh));
     canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(bx, by, bw, bh),
-        Radius.circular(bh / 2),
-      ),
-      bubblePaint,
+      RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.3, -0.3),
+          radius: 1,
+          colors: [
+            accentColor.withValues(alpha: 0.9),
+            accentColor.withValues(alpha: 0.7),
+            accentColor.withValues(alpha: 0.5),
+          ],
+          stops: const [0, 0.5, 1],
+        ).createShader(bubbleRect),
     );
-
-    final glowPaint = Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10)
-      ..color = locked
-          ? const Color(0xFFA4FF80).withAlpha(140)
-          : Color(0xFF7EFF57).withAlpha(80);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(bx, by, bw, bh * 0.6),
-        Radius.circular(bh / 2),
-      ),
-      glowPaint,
+      RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
+      Paint()
+        ..color = locked
+            ? const Color(0xFF66BB6A)
+            : Colors.white.withValues(alpha: 0.8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
     );
+    if (locked) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(bx - 3, by - 3, bw + 6, bh + 6),
+          Radius.circular((bh + 6) / 2),
+        ),
+        Paint()
+          ..color = const Color(0xFF66BB6A).withValues(alpha: 0.3)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+      );
+    }
   }
-
-  double _clamp(double v, double min, double max) =>
-      v < min ? min : (v > max ? max : v);
 
   @override
   bool shouldRepaint(_BeamPainter old) =>
-      old.normalizedRoll != normalizedRoll || old.locked != locked;
+      old.normalizedRoll != normalizedRoll ||
+      old.locked != locked ||
+      old.theme != theme;
 }
