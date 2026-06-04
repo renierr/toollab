@@ -18,8 +18,26 @@ class ToolLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isShort = MediaQuery.of(context).size.height < 600;
+    final appBarHeight = isShort ? 40.0 : 56.0;
+
     return Scaffold(
-      appBar: fullscreen ? null : AppBar(title: Text(title), actions: actions),
+      appBar: fullscreen
+          ? null
+          : PreferredSize(
+              preferredSize: Size.fromHeight(appBarHeight),
+              child: AppBar(
+                toolbarHeight: appBarHeight,
+                title: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: isShort ? 16.0 : 20.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                actions: actions,
+              ),
+            ),
       body: SafeArea(
         child: Stack(
           children: [

@@ -45,6 +45,9 @@ class _OverviewPageState extends State<OverviewPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isShort = MediaQuery.of(context).size.height < 600;
+    final appBarHeight = isShort ? 40.0 : 56.0;
+
     final appState = context.watch<AppState>();
     final query = appState.searchQuery;
     final sortBy = appState.sortBy;
@@ -99,15 +102,25 @@ class _OverviewPageState extends State<OverviewPage> {
     final showFavorites = favoriteTools.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppConstants.appName),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.tune_outlined),
-            onPressed: () => OverviewSettingsDialog.show(context),
-            tooltip: 'Settings',
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(appBarHeight),
+        child: AppBar(
+          toolbarHeight: appBarHeight,
+          title: Text(
+            AppConstants.appName,
+            style: TextStyle(
+              fontSize: isShort ? 16.0 : 20.0,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ],
+          actions: [
+            IconButton(
+              icon: Icon(Icons.tune_outlined, size: isShort ? 20 : null),
+              onPressed: () => OverviewSettingsDialog.show(context),
+              tooltip: 'Settings',
+            ),
+          ],
+        ),
       ),
       body: SafeArea(
         child: LayoutBuilder(
