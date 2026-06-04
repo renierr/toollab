@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 
 class EmfDetectorPage extends StatefulWidget {
   const EmfDetectorPage({super.key});
@@ -10,7 +11,8 @@ class EmfDetectorPage extends StatefulWidget {
   State<EmfDetectorPage> createState() => _EmfDetectorPageState();
 }
 
-class _EmfDetectorPageState extends State<EmfDetectorPage> {
+class _EmfDetectorPageState extends State<EmfDetectorPage>
+    with DisposeCleanup<EmfDetectorPage> {
   StreamSubscription<MagnetometerEvent>? _subscription;
   double _fieldX = 0;
   double _fieldY = 0;
@@ -22,6 +24,7 @@ class _EmfDetectorPageState extends State<EmfDetectorPage> {
   @override
   void initState() {
     super.initState();
+    onDispose(() => _subscription?.cancel());
     _subscription =
         magnetometerEventStream(
           samplingPeriod: const Duration(milliseconds: 100),
@@ -37,12 +40,6 @@ class _EmfDetectorPageState extends State<EmfDetectorPage> {
             if (_magnitude > _maxMagnitude) _maxMagnitude = _magnitude;
           });
         });
-  }
-
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
   }
 
   void _resetMax() {

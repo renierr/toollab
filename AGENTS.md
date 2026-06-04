@@ -24,6 +24,7 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **Prevent Duplicated UI/Dialog Code**: Extract custom dialogs, overlays, or recurring visual elements to `lib/widgets/` immediately. Never copy-paste presentation logic across views.
 - **Use Existing Custom Widgets**: Always reuse existing custom widgets in `lib/widgets/` (such as `ToolCard`, `ToolLayout`, `ResponsiveLayout`) rather than writing from scratch. Check the codebase for existing reusable options before writing presentation code.
 - **Share Cross-Tool Widgets**: Any widget, component, or utility pattern used by 2+ different tools must be extracted to `lib/widgets/` as a shared widget. Tool-specific private widgets (`_SomeWidget`) stay in the tool's own folder under `lib/tools/<name>/`. This includes common patterns like sensor data display rows, status badges, action icon buttons, loading indicators, info cards, and value readouts.
+- **Tool Cleanup on Dispose**: Every tool page must use the `DisposeCleanup` mixin (`lib/core/tool_page_state.dart`) and register all cleanup via `onDispose()` in `initState` — sensor subscriptions, wakelocks, controllers, listeners. Never override `dispose()` manually.
 
 ---
 

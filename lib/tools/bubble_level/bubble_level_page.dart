@@ -1,7 +1,17 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/services/database_service.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+import 'bubble_level_sensor.dart';
+import 'bubble_level_view_2d.dart';
+import 'bubble_level_view_1d.dart';
+import 'bubble_level_readout.dart';
+import 'bubble_level_toolbar.dart';
+import 'bubble_level_status.dart';
+import 'bubble_level_ruler.dart';
 
 class BubbleLevelPage extends StatefulWidget {
   const BubbleLevelPage({super.key});
@@ -10,176 +20,222 @@ class BubbleLevelPage extends StatefulWidget {
   State<BubbleLevelPage> createState() => _BubbleLevelPageState();
 }
 
-class _BubbleLevelPageState extends State<BubbleLevelPage> {
+class _BubbleLevelPageState extends State<BubbleLevelPage>
+    with DisposeCleanup<BubbleLevelPage> {
   StreamSubscription<AccelerometerEvent>? _subscription;
-  double _tiltX = 0;
-  double _tiltY = 0;
-  double _smoothX = 0;
-  double _smoothY = 0;
+  final _sensor = BubbleLevelSensor();
+
+  LevelMode _mode = LevelMode.mode2d;
+  double _tolerance = 0.2;
+  bool _locked = false;
+  bool _rulerVisible = false;
+  bool _rotationLocked = false;
+  bool _wakeLocked = false;
+  double _pitch = 0;
+  double _roll = 0;
+  double _pxPerMm = 3.78;
+  String _statusMessage = 'Initializing sensors...';
+  bool _isStatusError = false;
 
   @override
   void initState() {
     super.initState();
-    _subscription =
-        accelerometerEventStream(
-          samplingPeriod: const Duration(milliseconds: 50),
-        ).listen((event) {
-          setState(() {
-            _tiltX = event.x;
-            _tiltY = event.y;
-            _smoothX = _smoothX * 0.7 + _tiltX * 0.3;
-            _smoothY = _smoothY * 0.7 + _tiltY * 0.3;
-          });
-        });
+    _startSensors();
+    _loadSettings();
+    onDispose(() => _subscription?.cancel());
+    onDispose(WakelockPlus.disable);
   }
 
-  @override
-  void dispose() {
-    _subscription?.cancel();
-    super.dispose();
+  Future<void> _loadSettings() async {
+    final db = DatabaseService.instance;
+    final px = await db.getSetting('bubble-level', 'pxPerMm');
+    final tol = await db.getSetting('bubble-level', 'tolerance');
+    if (mounted) {
+      setState(() {
+        if (px != null) _pxPerMm = double.tryParse(px) ?? 3.78;
+        if (tol != null) _tolerance = double.tryParse(tol) ?? 0.2;
+      });
+    }
+  }
+
+  Future<void> _savePxPerMm(double value) async {
+    await DatabaseService.instance.setSetting(
+      'bubble-level',
+      'pxPerMm',
+      value.toStringAsFixed(4),
+    );
+  }
+
+  Future<void> _saveTolerance(double value) async {
+    await DatabaseService.instance.setSetting(
+      'bubble-level',
+      'tolerance',
+      value.toStringAsFixed(2),
+    );
+  }
+
+  void _startSensors() {
+    try {
+      _subscription = accelerometerEventStream(
+        samplingPeriod: const Duration(milliseconds: 50),
+      ).listen(_onSensorEvent);
+      _setStatus('Sensor ready. Move device slowly for best precision.');
+    } catch (e) {
+      _setStatus('Sensors not available on this device.', isError: true);
+    }
+  }
+
+  void _onSensorEvent(AccelerometerEvent event) {
+    final reading = _sensor.process(event);
+    final pitch = BubbleLevelSensor.roundToOne(reading.pitch);
+    final roll = BubbleLevelSensor.roundToOne(reading.roll);
+    final locked = BubbleLevelSensor.isLevel(pitch, roll, _tolerance);
+
+    setState(() {
+      _pitch = pitch;
+      _roll = roll;
+      _locked = locked;
+    });
+  }
+
+  void _setStatus(String msg, {bool isError = false}) {
+    setState(() {
+      _statusMessage = msg;
+      _isStatusError = isError;
+    });
+  }
+
+  void _onSetZero() {
+    _sensor.calibrateZero(_sensor.currentReading);
+    setState(() {
+      _pitch = 0;
+      _roll = 0;
+    });
+    _setStatus('Calibration saved. Current surface now zero reference.');
+  }
+
+  void _onResetZero() {
+    _sensor.resetCalibration();
+    _setStatus('Calibration reset. Using raw sensor zero.');
+  }
+
+  void _onToggleRotationLock() {
+    setState(() => _rotationLocked = !_rotationLocked);
+    if (_rotationLocked) {
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
+  }
+
+  void _onToggleWakeLock() {
+    setState(() => _wakeLocked = !_wakeLocked);
+    if (_wakeLocked) {
+      WakelockPlus.enable();
+    } else {
+      WakelockPlus.disable();
+    }
+  }
+
+  Future<void> _onCalibrateRuler() async {
+    final result = await showDialog<double>(
+      context: context,
+      builder: (_) => RulerCalibrationDialog(
+        initialPxPerMm: _pxPerMm,
+        onChanged: (v) => setState(() => _pxPerMm = v),
+      ),
+    );
+    if (result != null) {
+      setState(() => _pxPerMm = result);
+      _savePxPerMm(result);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
-    final sphereSize = math.min(size.width, size.height) * 0.55;
-    final maxOffset = sphereSize / 2 - 24;
+    final accentColor = theme.colorScheme.primary;
 
-    final bubbleX = (_smoothX / 12.0 * maxOffset).clamp(-maxOffset, maxOffset);
-    final bubbleY = (_smoothY / 12.0 * maxOffset).clamp(-maxOffset, maxOffset);
+    final normalizedPitch = (_pitch / 20).clamp(-1.0, 1.0);
+    final normalizedRoll = (_roll / 20).clamp(-1.0, 1.0);
 
-    final angle = math.atan2(_smoothX, _smoothY) * 180 / math.pi;
-    final magnitude = math.sqrt(_smoothX * _smoothX + _smoothY * _smoothY);
-    final isLevel = magnitude < 1.5;
+    final toolbar = BubbleLevelToolbar(
+      mode: _mode,
+      tolerance: _tolerance,
+      rulerVisible: _rulerVisible,
+      rotationLocked: _rotationLocked,
+      onModeChanged: (m) => setState(() => _mode = m),
+      onToleranceChanged: (v) {
+        setState(() => _tolerance = v);
+        _saveTolerance(v);
+      },
+      onToggleRuler: () => setState(() => _rulerVisible = !_rulerVisible),
+      onCalibrateRuler: _onCalibrateRuler,
+      onSetZero: _onSetZero,
+      onResetZero: _onResetZero,
+      onToggleRotationLock: _onToggleRotationLock,
+      wakeLocked: _wakeLocked,
+      onToggleWakeLock: _onToggleWakeLock,
+    );
+
+    final statusBar = BubbleLevelStatus(
+      locked: _locked,
+      message: _statusMessage,
+      isError: _isStatusError,
+    );
+
+    late final Widget view;
+    if (_mode == LevelMode.mode2d) {
+      view = BubbleLevelView2d(
+        normalizedPitch: normalizedPitch,
+        normalizedRoll: normalizedRoll,
+        locked: _locked,
+        accentColor: accentColor,
+      );
+    } else {
+      view = BubbleLevelView1d(
+        normalizedRoll: normalizedRoll,
+        locked: _locked,
+        accentColor: accentColor,
+      );
+    }
+
+    final readout = BubbleLevelReadout(pitch: _pitch, roll: _roll);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Bubble Level')),
       body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                isLevel ? '✓ Level' : 'Not Level',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: isLevel
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.error,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: sphereSize,
-                height: sphereSize,
-                child: CustomPaint(
-                  painter: _LevelPainter(
-                    bubbleX: bubbleX,
-                    bubbleY: bubbleY,
-                    isLevel: isLevel,
-                    accentColor: theme.colorScheme.primary,
+        child: Stack(
+          children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: Column(
+                    children: [
+                      statusBar,
+                      const SizedBox(height: 12),
+                      toolbar,
+                      const SizedBox(height: 20),
+                      Expanded(child: view),
+                      const SizedBox(height: 16),
+                      readout,
+                      const SizedBox(height: 8),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Pitch: ${angle.toStringAsFixed(1)}°',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withAlpha(180),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Tilt: ${magnitude.toStringAsFixed(1)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withAlpha(120),
-                ),
-              ),
-            ],
-          ),
+            ),
+            BubbleLevelRuler(visible: _rulerVisible, pixelsPerMm: _pxPerMm),
+          ],
         ),
       ),
     );
   }
-}
-
-class _LevelPainter extends CustomPainter {
-  final double bubbleX;
-  final double bubbleY;
-  final bool isLevel;
-  final Color accentColor;
-
-  _LevelPainter({
-    required this.bubbleX,
-    required this.bubbleY,
-    required this.isLevel,
-    required this.accentColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    final outerPaint = Paint()
-      ..color = accentColor.withAlpha(40)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius, outerPaint);
-
-    final borderPaint = Paint()
-      ..color = accentColor.withAlpha(100)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawCircle(center, radius, borderPaint);
-
-    final crossPaint = Paint()
-      ..color = accentColor.withAlpha(60)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    canvas.drawLine(
-      Offset(center.dx - radius * 0.7, center.dy),
-      Offset(center.dx + radius * 0.7, center.dy),
-      crossPaint,
-    );
-    canvas.drawLine(
-      Offset(center.dx, center.dy - radius * 0.7),
-      Offset(center.dx, center.dy + radius * 0.7),
-      crossPaint,
-    );
-
-    if (isLevel) {
-      final ringPaint = Paint()
-        ..color = accentColor.withAlpha(60)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5;
-      canvas.drawCircle(center, radius * 0.15, ringPaint);
-    }
-
-    final bubbleRadius = radius * 0.12;
-    final bubbleCenter = Offset(center.dx + bubbleX, center.dy + bubbleY);
-
-    final bubblePaint = Paint()
-      ..color = isLevel ? accentColor : accentColor.withAlpha(180)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(bubbleCenter, bubbleRadius, bubblePaint);
-
-    final highlightPaint = Paint()
-      ..color = Colors.white.withAlpha(80)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(
-      Offset(
-        bubbleCenter.dx - bubbleRadius * 0.2,
-        bubbleCenter.dy - bubbleRadius * 0.2,
-      ),
-      bubbleRadius * 0.4,
-      highlightPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_LevelPainter oldDelegate) =>
-      oldDelegate.bubbleX != bubbleX ||
-      oldDelegate.bubbleY != bubbleY ||
-      oldDelegate.isLevel != isLevel;
 }

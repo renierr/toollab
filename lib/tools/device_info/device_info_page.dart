@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:battery_plus/battery_plus.dart';
 
@@ -11,7 +12,8 @@ class DeviceInfoPage extends StatefulWidget {
   State<DeviceInfoPage> createState() => _DeviceInfoPageState();
 }
 
-class _DeviceInfoPageState extends State<DeviceInfoPage> {
+class _DeviceInfoPageState extends State<DeviceInfoPage>
+    with DisposeCleanup<DeviceInfoPage> {
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final Battery _battery = Battery();
   Map<String, String> _info = {};
@@ -24,12 +26,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
   void initState() {
     super.initState();
     _loadInfo();
-  }
-
-  @override
-  void dispose() {
-    _batterySubscription?.cancel();
-    super.dispose();
+    onDispose(() => _batterySubscription?.cancel());
   }
 
   Future<void> _loadInfo() async {

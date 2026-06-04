@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'core.dart';
 import 'history.dart';
 import 'calculator_display.dart';
@@ -16,7 +17,8 @@ class CalculatorPage extends StatefulWidget {
   State<CalculatorPage> createState() => _CalculatorPageState();
 }
 
-class _CalculatorPageState extends State<CalculatorPage> {
+class _CalculatorPageState extends State<CalculatorPage>
+    with DisposeCleanup<CalculatorPage> {
   final _core = CalculatorCore();
   final _history = HistoryManager();
   final _displayController = ScrollController();
@@ -29,12 +31,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
   void initState() {
     super.initState();
     _history.load();
-  }
-
-  @override
-  void dispose() {
-    _displayController.dispose();
-    super.dispose();
+    onDispose(() => _displayController.dispose());
   }
 
   void _onInput(String val) {
