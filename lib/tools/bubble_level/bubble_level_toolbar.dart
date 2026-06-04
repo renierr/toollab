@@ -41,6 +41,7 @@ class BubbleLevelToolbar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Main Modes/Features
         Wrap(
           spacing: 6,
           runSpacing: 6,
@@ -62,67 +63,109 @@ class BubbleLevelToolbar extends StatelessWidget {
             ),
             if (rulerVisible)
               ToolChip(
-                label: 'Calibrate',
+                label: 'Calibrate Ruler',
                 selected: false,
                 onTap: onCalibrateRuler,
               ),
-            ToolChip(
-              label: rotationLocked ? 'Locked' : 'Lock Rot.',
-              selected: rotationLocked,
-              onTap: onToggleRotationLock,
-            ),
-            ToolChip(label: 'Set Zero', selected: false, onTap: onSetZero),
-            ToolChip(label: 'Reset Zero', selected: false, onTap: onResetZero),
-            ToolChip(
-              label: wakeLocked ? 'Wake Lock' : 'Wake Lock',
-              selected: wakeLocked,
-              onTap: onToggleWakeLock,
-            ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
+        // System Quick Toggles (side-by-side)
         Row(
           children: [
-            Text(
-              'Tolerance',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
-                color: theme.colorScheme.onSurface.withAlpha(120),
+            Expanded(
+              child: ToolChip(
+                icon: rotationLocked
+                    ? Icons.screen_lock_portrait
+                    : Icons.screen_rotation,
+                label: rotationLocked ? 'Locked' : 'Lock Rot.',
+                selected: rotationLocked,
+                onTap: onToggleRotationLock,
               ),
             ),
             const SizedBox(width: 8),
-            Container(
-              height: 32,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: theme.colorScheme.onSurface.withAlpha(50),
-                ),
+            Expanded(
+              child: ToolChip(
+                icon: Icons.lightbulb_outline,
+                label: 'Wake Lock',
+                selected: wakeLocked,
+                onTap: onToggleWakeLock,
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Center(
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<double>(
-                    value: tolerance,
-                    isDense: true,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 0.1, child: Text('0.1°')),
-                      DropdownMenuItem(value: 0.2, child: Text('0.2°')),
-                      DropdownMenuItem(value: 0.5, child: Text('0.5°')),
-                      DropdownMenuItem(value: 1.0, child: Text('1.0°')),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) onToleranceChanged(v);
-                    },
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Tolerance Dropdown and Calibration buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'TOLERANCE',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: theme.colorScheme.onSurface.withAlpha(120),
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                Container(
+                  height: 32,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.onSurface.withAlpha(50),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Center(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<double>(
+                        value: tolerance,
+                        isDense: true,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 0.1, child: Text('0.1°')),
+                          DropdownMenuItem(value: 0.2, child: Text('0.2°')),
+                          DropdownMenuItem(value: 0.5, child: Text('0.5°')),
+                          DropdownMenuItem(value: 1.0, child: Text('1.0°')),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) onToleranceChanged(v);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                TextButton.icon(
+                  icon: const Icon(Icons.gps_fixed, size: 14),
+                  label: const Text('Set Zero', style: TextStyle(fontSize: 12)),
+                  onPressed: onSetZero,
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                TextButton.icon(
+                  icon: const Icon(Icons.refresh, size: 14),
+                  label: const Text('Reset', style: TextStyle(fontSize: 12)),
+                  onPressed: onResetZero,
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

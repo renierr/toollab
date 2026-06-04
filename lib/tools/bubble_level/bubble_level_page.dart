@@ -13,7 +13,6 @@ import 'bubble_level_view_2d.dart';
 import 'bubble_level_view_1d.dart';
 import 'bubble_level_readout.dart';
 import 'bubble_level_toolbar.dart';
-import 'bubble_level_status.dart';
 import 'bubble_level_ruler.dart';
 
 class BubbleLevelPage extends StatefulWidget {
@@ -37,8 +36,6 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
   double _pitch = 0;
   double _roll = 0;
   double _pxPerMm = 3.78;
-  String _statusMessage = 'Initializing sensors...';
-  bool _isStatusError = false;
 
   @override
   void initState() {
@@ -82,9 +79,17 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
       _subscription = accelerometerEventStream(
         samplingPeriod: const Duration(milliseconds: 50),
       ).listen(_onSensorEvent);
-      _setStatus('Sensor ready. Move device slowly for best precision.');
     } catch (e) {
-      _setStatus('Sensors not available on this device.', isError: true);
+      debugPrint('[BubbleLevel] Sensors not available: $e');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sensors not available on this device.'),
+            ),
+          );
+        }
+      });
     }
   }
 
@@ -101,25 +106,28 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
     });
   }
 
-  void _setStatus(String msg, {bool isError = false}) {
-    setState(() {
-      _statusMessage = msg;
-      _isStatusError = isError;
-    });
-  }
-
   void _onSetZero() {
     _sensor.calibrateZero(_sensor.currentReading);
     setState(() {
       _pitch = 0;
       _roll = 0;
     });
-    _setStatus('Calibration saved. Current surface now zero reference.');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Surface calibrated to zero.'),
+        duration: Duration(seconds: 1),
+      ),
+    );
   }
 
   void _onResetZero() {
     _sensor.resetCalibration();
-    _setStatus('Calibration reset. Using raw sensor zero.');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Calibration reset.'),
+        duration: Duration(seconds: 1),
+      ),
+    );
   }
 
   void _onToggleRotationLock() {
@@ -186,27 +194,18 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
       onToggleWakeLock: _onToggleWakeLock,
     );
 
-    final statusBar = BubbleLevelStatus(
-      locked: _locked,
-      message: _statusMessage,
-      isError: _isStatusError,
-    );
-
-    late final Widget view;
-    if (_mode == LevelMode.mode2d) {
-      view = BubbleLevelView2d(
-        normalizedPitch: normalizedPitch,
-        normalizedRoll: normalizedRoll,
-        locked: _locked,
-        accentColor: accentColor,
-      );
-    } else {
-      view = BubbleLevelView1d(
-        normalizedRoll: normalizedRoll,
-        locked: _locked,
-        accentColor: accentColor,
-      );
-    }
+    final view = _mode == LevelMode.mode2d
+        ? BubbleLevelView2d(
+            normalizedPitch: normalizedPitch,
+            normalizedRoll: normalizedRoll,
+            locked: _locked,
+            accentColor: accentColor,
+          )
+        : BubbleLevelView1d(
+            normalizedRoll: normalizedRoll,
+            locked: _locked,
+            accentColor: accentColor,
+          );
 
     final readout = BubbleLevelReadout(pitch: _pitch, roll: _roll);
 
@@ -238,13 +237,7 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        statusBar,
-                        const SizedBox(height: 8),
-                        toolbar,
-                        const SizedBox(height: 12),
-                        readout,
-                      ],
+                      children: [toolbar, const SizedBox(height: 12), readout],
                     ),
                   ),
                 ),
@@ -255,8 +248,6 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
                 constraints: const BoxConstraints(maxWidth: 480),
                 child: Column(
                   children: [
-                    statusBar,
-                    const SizedBox(height: 12),
                     toolbar,
                     const SizedBox(height: 20),
                     Expanded(child: view),
