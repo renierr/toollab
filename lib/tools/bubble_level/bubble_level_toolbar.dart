@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/widgets/tool_chip.dart';
 
 enum LevelMode { mode2d, mode1d }
 
@@ -44,35 +45,35 @@ class BubbleLevelToolbar extends StatelessWidget {
           spacing: 6,
           runSpacing: 6,
           children: [
-            _ToolChip(
+            ToolChip(
               label: '2-Axis',
               selected: mode == LevelMode.mode2d,
               onTap: () => onModeChanged(LevelMode.mode2d),
             ),
-            _ToolChip(
+            ToolChip(
               label: 'Beam',
               selected: mode == LevelMode.mode1d,
               onTap: () => onModeChanged(LevelMode.mode1d),
             ),
-            _ToolChip(
+            ToolChip(
               label: 'Ruler',
               selected: rulerVisible,
               onTap: onToggleRuler,
             ),
             if (rulerVisible)
-              _ToolChip(
+              ToolChip(
                 label: 'Calibrate',
                 selected: false,
                 onTap: onCalibrateRuler,
               ),
-            _ToolChip(
+            ToolChip(
               label: rotationLocked ? 'Locked' : 'Lock Rot.',
               selected: rotationLocked,
               onTap: onToggleRotationLock,
             ),
-            _ToolChip(label: 'Set Zero', selected: false, onTap: onSetZero),
-            _ToolChip(label: 'Reset Zero', selected: false, onTap: onResetZero),
-            _ToolChip(
+            ToolChip(label: 'Set Zero', selected: false, onTap: onSetZero),
+            ToolChip(label: 'Reset Zero', selected: false, onTap: onResetZero),
+            ToolChip(
               label: wakeLocked ? 'Wake Lock' : 'Wake Lock',
               selected: wakeLocked,
               onTap: onToggleWakeLock,
@@ -126,44 +127,6 @@ class BubbleLevelToolbar extends StatelessWidget {
           ],
         ),
       ],
-    );
-  }
-}
-
-class _ToolChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _ToolChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: selected ? theme.colorScheme.primaryContainer : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: selected
-                  ? theme.colorScheme.onPrimaryContainer
-                  : theme.colorScheme.onSurface.withAlpha(180),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

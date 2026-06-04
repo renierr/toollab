@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/widgets/tool_chip.dart';
 
 class CalculatorToolbar extends StatelessWidget {
   final bool showScientific;
@@ -24,7 +25,7 @@ class CalculatorToolbar extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: isShort ? 0 : 4),
       child: Row(
         children: [
-          _ToolbarChip(
+          ToolChip(
             icon: Icons.science_outlined,
             label: 'SCI',
             selected: showScientific,
@@ -32,7 +33,7 @@ class CalculatorToolbar extends StatelessWidget {
             showLabel: !isShort,
           ),
           const SizedBox(width: 4),
-          _ToolbarChip(
+          ToolChip(
             icon: Icons.history,
             label: 'HIST',
             onTap: onShowHistory,
@@ -52,63 +53,6 @@ class CalculatorToolbar extends StatelessWidget {
             visualDensity: VisualDensity.compact,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ToolbarChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final bool showLabel;
-
-  const _ToolbarChip({
-    required this.icon,
-    required this.label,
-    this.selected = false,
-    required this.onTap,
-    this.showLabel = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: selected ? theme.colorScheme.primaryContainer : Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 16,
-                color: selected
-                    ? theme.colorScheme.onPrimaryContainer
-                    : theme.colorScheme.onSurface.withAlpha(180),
-              ),
-              if (showLabel) ...[
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: selected
-                        ? theme.colorScheme.onPrimaryContainer
-                        : theme.colorScheme.onSurface.withAlpha(180),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
       ),
     );
   }

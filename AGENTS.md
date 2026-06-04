@@ -52,14 +52,13 @@ Each tool lives in its own folder under `lib/tools/<name>/` with exactly:
 - **`<name>_page.dart`** — Tool entry point page. Must be a thin coordinator — only `StatefulWidget` state + build method that composes extracted widgets. No inline `Widget _buildFoo(...)` methods.
 - **Additional widget files** — Every visual component gets its own file (e.g. `<name>_display.dart`, `<name>_grid.dart`, `<name>_toolbar.dart`, `<name>_history_panel.dart`). Never inline builders in the page file.
 
-### 2. Adding a New Tool
-See the full step-by-step guide at [`docs/creating-a-tool.md`](docs/creating-a-tool.md).
-
-Quick reference:
-1. Create `lib/tools/<name>/` with `config.dart` (include `sectionId`) and `<name>_page.dart`.
-2. Register in `lib/core/tool_registry.dart` — add tool class to the `all` list.
-3. Add page import + `case` entry to the `_pageForTool()` switch in `lib/app.dart`.
-4. Run `dart format ./lib && flutter analyze` before committing.
+### 2. Tool Development, Adaptation & Creation
+See the comprehensive guide at [`docs/creating-a-tool.md`](docs/creating-a-tool.md) for details on:
+- Folder structure and naming conventions.
+- Fullscreen config (`fullscreen: true` in `ToolModel`) to hide standard `AppBar` and enable auto-styled floating overlays.
+- Responsive layout adaptations (aspect-ratio constraint switching using `ResponsiveOrientationLayout`, adapting to constrained height).
+- Shared common widgets usage (`ToolLayout`, `ToolChip`, etc.).
+- Step-by-step instructions for creating a new tool.
 
 ### 3. Tool Config Pattern
 ```dart

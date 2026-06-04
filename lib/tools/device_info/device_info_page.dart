@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:tool_lab/widgets/tool_layout.dart';
+import 'config.dart';
 
 class DeviceInfoPage extends StatefulWidget {
   const DeviceInfoPage({super.key});
@@ -83,69 +85,67 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Device Info')),
-      body: SafeArea(
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  if (_batteryLevel != null)
-                    _BatteryCard(
-                      level: _batteryLevel!,
-                      isCharging:
-                          _batteryState == BatteryState.charging ||
-                          _batteryState == BatteryState.full,
-                    ),
-                  const SizedBox(height: 16),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'System',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+    return ToolLayout(
+      title: 'Device Info',
+      fullscreen: DeviceInfoTool.config.fullscreen,
+      child: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                if (_batteryLevel != null)
+                  _BatteryCard(
+                    level: _batteryLevel!,
+                    isCharging:
+                        _batteryState == BatteryState.charging ||
+                        _batteryState == BatteryState.full,
+                  ),
+                const SizedBox(height: 16),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'System',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(height: 12),
-                          ..._info.entries.map(
-                            (entry) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(
-                                    width: 120,
-                                    child: Text(
-                                      entry.key,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withAlpha(150),
-                                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ..._info.entries.map(
+                          (entry) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 120,
+                                  child: Text(
+                                    entry.key,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withAlpha(150),
                                     ),
                                   ),
-                                  Expanded(
-                                    child: Text(
-                                      entry.value,
-                                      style: theme.textTheme.bodyMedium,
-                                    ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    entry.value,
+                                    style: theme.textTheme.bodyMedium,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-      ),
+                ),
+              ],
+            ),
     );
   }
 }
