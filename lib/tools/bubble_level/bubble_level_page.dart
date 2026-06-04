@@ -94,6 +94,9 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
   }
 
   void _onSensorEvent(AccelerometerEvent event) {
+    if (mounted) {
+      _sensor.setUiOrientation(MediaQuery.of(context).orientation);
+    }
     final reading = _sensor.process(event);
     final pitch = BubbleLevelSensor.roundToOne(reading.pitch);
     final roll = BubbleLevelSensor.roundToOne(reading.roll);
@@ -169,6 +172,7 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
 
   @override
   Widget build(BuildContext context) {
+    _sensor.setUiOrientation(MediaQuery.of(context).orientation);
     final theme = Theme.of(context);
     final accentColor = theme.colorScheme.primary;
 

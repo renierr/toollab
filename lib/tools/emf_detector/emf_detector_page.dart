@@ -1,11 +1,19 @@
-import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
-import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
+import 'emf_reading.dart';
+import 'detector_state.dart';
+import 'circular_gauge.dart';
+import 'oscilloscope_chart.dart';
+import 'scanner_header.dart';
+import 'cable_detected_banner.dart';
+import 'calibration_panel.dart';
+import 'vector_readout_card.dart';
+import 'oscilloscope_header.dart';
+import 'scanner_controls_card.dart';
+import 'simulator_lab_card.dart';
 
 class EmfDetectorPage extends StatefulWidget {
   const EmfDetectorPage({super.key});
@@ -16,294 +24,166 @@ class EmfDetectorPage extends StatefulWidget {
 
 class _EmfDetectorPageState extends State<EmfDetectorPage>
     with DisposeCleanup<EmfDetectorPage> {
-  StreamSubscription<MagnetometerEvent>? _subscription;
-  double _fieldX = 0;
-  double _fieldY = 0;
-  double _fieldZ = 0;
-  double _magnitude = 0;
-  double _smoothMagnitude = 0;
-  double _maxMagnitude = 0;
+  late final DetectorState _state;
+  bool _wakeLockActive = false;
+  bool _automaticallyTurnedOnWakelock = false;
 
   @override
   void initState() {
     super.initState();
-    onDispose(() => _subscription?.cancel());
-    _subscription =
-        magnetometerEventStream(
-          samplingPeriod: const Duration(milliseconds: 100),
-        ).listen((event) {
-          setState(() {
-            _fieldX = event.x;
-            _fieldY = event.y;
-            _fieldZ = event.z;
-            _magnitude = math.sqrt(
-              event.x * event.x + event.y * event.y + event.z * event.z,
-            );
-            _smoothMagnitude = _smoothMagnitude * 0.7 + _magnitude * 0.3;
-            if (_magnitude > _maxMagnitude) _maxMagnitude = _magnitude;
-          });
+    _state = DetectorState();
+    onDispose(_state.dispose);
+    _checkWakeLock();
+    _state.addListener(_onStateChange);
+    onDispose(() => _state.removeListener(_onStateChange));
+    onDispose(WakelockPlus.disable);
+  }
+
+  void _onStateChange() {
+    if (!mounted) return;
+    if (_state.isScanning && !_wakeLockActive) {
+      WakelockPlus.enable();
+      setState(() {
+        _wakeLockActive = true;
+        _automaticallyTurnedOnWakelock = true;
+      });
+    } else if (!_state.isScanning && _wakeLockActive) {
+      if (_automaticallyTurnedOnWakelock) {
+        WakelockPlus.disable();
+        setState(() {
+          _wakeLockActive = false;
+          _automaticallyTurnedOnWakelock = false;
         });
+      }
+    }
   }
 
-  void _resetMax() {
-    setState(() => _maxMagnitude = 0);
+  void _checkWakeLock() async {
+    final active = await WakelockPlus.enabled;
+    if (!mounted) return;
+    setState(() {
+      _wakeLockActive = active;
+    });
   }
 
-  String _describeLevel(double uT) {
-    if (uT < 0.5) return 'Very Low';
-    if (uT < 2.0) return 'Low';
-    if (uT < 10.0) return 'Moderate';
-    if (uT < 50.0) return 'High';
-    return 'Very High';
-  }
-
-  Color _levelColor(double uT, ColorScheme colors) {
-    if (uT < 0.5) return colors.primary;
-    if (uT < 2.0) return colors.tertiary;
-    if (uT < 10.0) return colors.secondary;
-    if (uT < 50.0) return colors.errorContainer;
-    return colors.error;
+  void _toggleWakeLock() async {
+    final target = !_wakeLockActive;
+    if (target) {
+      await WakelockPlus.enable();
+    } else {
+      await WakelockPlus.disable();
+    }
+    if (!mounted) return;
+    setState(() {
+      _wakeLockActive = target;
+      _automaticallyTurnedOnWakelock = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final level = _describeLevel(_smoothMagnitude);
-    final color = _levelColor(_smoothMagnitude, colors);
-    final progress = (_smoothMagnitude / 100.0).clamp(0.0, 1.0);
-
     return ToolLayout(
       title: 'EMF Detector',
       fullscreen: EmfDetectorTool.config.fullscreen,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: _resetMax,
-          tooltip: 'Reset max',
-        ),
-      ],
-      child: ResponsiveOrientationLayout(
-        landscape: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: ListenableBuilder(
+        listenable: _state,
+        builder: (context, child) {
+          final current = _state.currentReading ?? EmfReading.fromRaw(0, 0, 0);
+          final isWarning =
+              _state.isScanning &&
+              current.deltaMagnitude >= _state.warningThreshold;
+
+          return Stack(
             children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 8),
-                    Text(
-                      _smoothMagnitude.toStringAsFixed(1),
-                      style: theme.textTheme.displayLarge?.copyWith(
-                        fontWeight: FontWeight.w200,
-                        color: color,
-                      ),
+              // High-tech top ambient gradient glow
+              Positioned(
+                top: -150,
+                left: -50,
+                right: -50,
+                height: 350,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.topCenter,
+                      radius: 0.8,
+                      colors: isWarning
+                          ? [
+                              const Color(0xFFFF0055).withValues(alpha: 0.18),
+                              const Color(0xFFFF0055).withValues(alpha: 0.0),
+                            ]
+                          : [
+                              const Color(0xFF00F2FE).withValues(alpha: 0.12),
+                              const Color(0xFF00F2FE).withValues(alpha: 0.0),
+                            ],
                     ),
-                    Text(
-                      'µT',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: color.withAlpha(180),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color.withAlpha(30),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        level,
-                        style: TextStyle(
-                          color: color,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 32),
-              Expanded(
+
+              SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20.0, 56.0, 20.0, 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 12,
-                        backgroundColor: colors.surfaceContainerHighest,
-                        color: color,
+                    // Header Section
+                    ScannerHeader(state: _state),
+                    const SizedBox(height: 24),
+
+                    // Real-time status / alert banner (always displayed to prevent layout jumping)
+                    CableDetectedBanner(
+                      isScanning: _state.isScanning,
+                      isWarning: isWarning,
+                    ),
+
+                    // Primary Gauge Panel
+                    Center(
+                      child: CircularGauge(
+                        value: current.deltaMagnitude,
+                        threshold: _state.warningThreshold,
+                        isScanning: _state.isScanning,
+                        maxExpected: 160.0,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '0 µT',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colors.onSurface.withAlpha(120),
-                          ),
-                        ),
-                        Text(
-                          '100 µT',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colors.onSurface.withAlpha(120),
-                          ),
-                        ),
-                      ],
-                    ),
+
+                    // Calibration Panel
+                    CalibrationPanel(state: _state),
+                    const SizedBox(height: 24),
+
+                    // 3-Axis Vector Breakdown
+                    VectorReadoutCard(state: _state, current: current),
                     const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colors.surfaceContainerHighest.withAlpha(80),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          _AxisRow(label: 'X', value: _fieldX),
-                          const SizedBox(height: 8),
-                          _AxisRow(label: 'Y', value: _fieldY),
-                          const SizedBox(height: 8),
-                          _AxisRow(label: 'Z', value: _fieldZ),
-                          const Divider(height: 24),
-                          _AxisRow(
-                            label: 'Max',
-                            value: _maxMagnitude,
-                            bold: true,
-                          ),
-                        ],
-                      ),
+
+                    // Real-time scrolling chart
+                    const OscilloscopeHeader(),
+                    const SizedBox(height: 8),
+                    OscilloscopeChart(
+                      history: _state.history,
+                      threshold: _state.warningThreshold,
+                      isScanning: _state.isScanning,
+                      maxVal: 160.0,
                     ),
+                    const SizedBox(height: 24),
+
+                    // Controls & Feedback toggles
+                    ScannerControlsCard(
+                      state: _state,
+                      wakeLockActive: _wakeLockActive,
+                      onToggleWakeLock: _toggleWakeLock,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Developer Mode Dock (Mock Simulators)
+                    SimulatorLabCard(state: _state),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
             ],
-          ),
-        ),
-        portrait: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                _smoothMagnitude.toStringAsFixed(1),
-                style: theme.textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.w200,
-                  color: color,
-                ),
-              ),
-              Text(
-                'µT',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: color.withAlpha(180),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: color.withAlpha(30),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  level,
-                  style: TextStyle(color: color, fontWeight: FontWeight.w600),
-                ),
-              ),
-              const SizedBox(height: 32),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 12,
-                  backgroundColor: colors.surfaceContainerHighest,
-                  color: color,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '0 µT',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colors.onSurface.withAlpha(120),
-                    ),
-                  ),
-                  Text(
-                    '100 µT',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colors.onSurface.withAlpha(120),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colors.surfaceContainerHighest.withAlpha(80),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    _AxisRow(label: 'X', value: _fieldX),
-                    const SizedBox(height: 8),
-                    _AxisRow(label: 'Y', value: _fieldY),
-                    const SizedBox(height: 8),
-                    _AxisRow(label: 'Z', value: _fieldZ),
-                    const Divider(height: 24),
-                    _AxisRow(label: 'Max', value: _maxMagnitude, bold: true),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+          );
+        },
       ),
-    );
-  }
-}
-
-class _AxisRow extends StatelessWidget {
-  final String label;
-  final double value;
-  final bool bold;
-
-  const _AxisRow({required this.label, required this.value, this.bold = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
-            color: colors.onSurface.withAlpha(180),
-          ),
-        ),
-        Text(
-          '${value.toStringAsFixed(1)} µT',
-          style: TextStyle(
-            fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ],
     );
   }
 }

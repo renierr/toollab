@@ -107,7 +107,7 @@ class _Bubble2dPainter extends CustomPainter {
     final bubbleX =
         BubbleLevelSensorClamp.clamp(normalizedRoll, -1, 1) * bubbleMaxOffset;
     final bubbleY =
-        BubbleLevelSensorClamp.clamp(normalizedPitch, -1, 1) * bubbleMaxOffset;
+        -BubbleLevelSensorClamp.clamp(normalizedPitch, -1, 1) * bubbleMaxOffset;
     final bc = Offset(center.dx + bubbleX, center.dy + bubbleY);
     final br = outerR * 0.18;
 

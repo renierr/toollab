@@ -13,5 +13,6 @@ class EmfDetectorTool {
     route: '/emf-detector',
     accentColor: AppTheme.accentAmber,
     sectionId: 'sensors',
+    fullscreen: true,
   );
 }

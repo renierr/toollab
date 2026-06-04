@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/widgets.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 class OrientationReading {
@@ -31,10 +32,15 @@ class BubbleLevelSensor {
   double _smoothRoll = 0;
   CalibrationOffset _offset = const CalibrationOffset();
   DeviceScreenOrientation _orientation = DeviceScreenOrientation.portraitUp;
+  Orientation _uiOrientation = Orientation.portrait;
 
   static const double _alpha = 0.22;
 
   DeviceScreenOrientation get orientation => _orientation;
+
+  void setUiOrientation(Orientation orientation) {
+    _uiOrientation = orientation;
+  }
 
   void calibrateZero(OrientationReading reading) {
     _offset = CalibrationOffset(
@@ -55,21 +61,26 @@ class BubbleLevelSensor {
       OrientationReading(pitch: _smoothPitch, roll: _smoothRoll);
 
   OrientationReading process(AccelerometerEvent event) {
-    // Detect device screen orientation from gravity if held upright
-    final horizontalG = math.sqrt(event.x * event.x + event.y * event.y);
-    if (horizontalG > 3.0) {
-      if (event.y.abs() > event.x.abs()) {
-        if (event.y > 0) {
-          _orientation = DeviceScreenOrientation.portraitUp;
-        } else {
-          _orientation = DeviceScreenOrientation.portraitDown;
-        }
-      } else {
-        if (event.x > 0) {
-          _orientation = DeviceScreenOrientation.landscapeLeft;
-        } else {
-          _orientation = DeviceScreenOrientation.landscapeRight;
-        }
+    // Detect device screen orientation based on UI orientation and accelerometer values
+    if (_uiOrientation == Orientation.portrait) {
+      if (_orientation != DeviceScreenOrientation.portraitUp &&
+          _orientation != DeviceScreenOrientation.portraitDown) {
+        _orientation = DeviceScreenOrientation.portraitUp;
+      }
+      if (event.y.abs() > 3.0) {
+        _orientation = event.y > 0
+            ? DeviceScreenOrientation.portraitUp
+            : DeviceScreenOrientation.portraitDown;
+      }
+    } else {
+      if (_orientation != DeviceScreenOrientation.landscapeLeft &&
+          _orientation != DeviceScreenOrientation.landscapeRight) {
+        _orientation = DeviceScreenOrientation.landscapeLeft;
+      }
+      if (event.x.abs() > 3.0) {
+        _orientation = event.x > 0
+            ? DeviceScreenOrientation.landscapeLeft
+            : DeviceScreenOrientation.landscapeRight;
       }
     }
 
