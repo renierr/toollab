@@ -36,7 +36,7 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - Log errors with clear service or page context prefixes to make debugging easy.
 - Extract dialogs, detailed cards, or list items to `lib/widgets/` to promote modular codebase structure.
 - Extract repetitive visual components to shared reusable widgets to maintain consistency.
-- **Private Widgets over Helpers**: Prefer declaring private `StatelessWidget` classes instead of helper methods returning `Widget` to optimize element tree lifecycles and rebuilds.
+- **Private Widgets over Helpers**: Always declare private `StatelessWidget` classes instead of helper methods returning `Widget`. Each builder method like `_buildSomething(ThemeData)` must be its own widget in a separate file under `lib/tools/<name>/` or `lib/widgets/`. Never write inline `Widget _buildFoo(...)` methods in a stateful widget — they break element tree diffing, prevent const optimization, and bloat the page file. Extract `FooWidget` into its own file with a clean constructor API.
 - **Const Constructors**: Prefer using `const` constructors for widgets and in `build()` methods where possible to reduce rebuilds.
 - **Lazy Lists**: Prefer `ListView.builder` or slivers for dynamic or performance-sensitive lists.
 
@@ -47,7 +47,8 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 ### 1. Tool Structure
 Each tool lives in its own folder under `lib/tools/<name>/` with exactly:
 - **`config.dart`** — Tool metadata (name, icon, route, color). Exports a static `const ToolModel` via a tool class.
-- **`<name>_page.dart`** — Tool implementation. A `StatefulWidget` or `StatelessWidget`.
+- **`<name>_page.dart`** — Tool entry point page. Must be a thin coordinator — only `StatefulWidget` state + build method that composes extracted widgets. No inline `Widget _buildFoo(...)` methods.
+- **Additional widget files** — Every visual component gets its own file (e.g. `<name>_display.dart`, `<name>_grid.dart`, `<name>_toolbar.dart`, `<name>_history_panel.dart`). Never inline builders in the page file.
 
 ### 2. Adding a New Tool
 See the full step-by-step guide at [`docs/creating-a-tool.md`](docs/creating-a-tool.md).

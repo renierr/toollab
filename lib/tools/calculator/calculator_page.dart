@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'core.dart';
+import 'history.dart';
+import 'calculator_display.dart';
+import 'calculator_grid.dart';
+import 'calculator_toolbar.dart';
+import 'calculator_sci_buttons.dart';
+import 'calculator_history_panel.dart';
+import 'calculator_equals_button.dart';
 
 class CalculatorPage extends StatefulWidget {
   const CalculatorPage({super.key});
@@ -9,236 +17,241 @@ class CalculatorPage extends StatefulWidget {
 }
 
 class _CalculatorPageState extends State<CalculatorPage> {
-  String _display = '0';
-  double? _operand1;
-  String? _operator;
-  bool _isNewInput = true;
+  final _core = CalculatorCore();
+  final _history = HistoryManager();
+  final _displayController = ScrollController();
 
-  void _onDigit(String digit) {
+  String _expression = '';
+  bool _showScientific = false;
+  bool _flashResult = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _history.load();
+  }
+
+  @override
+  void dispose() {
+    _displayController.dispose();
+    super.dispose();
+  }
+
+  void _onInput(String val) {
     HapticFeedback.lightImpact();
     setState(() {
-      if (_isNewInput) {
-        _display = digit;
-        _isNewInput = false;
-      } else {
-        if (_display == '0') {
-          _display = digit;
-        } else {
-          _display += digit;
-        }
-      }
+      _expression = '';
+      _core.appendInput(val);
+      _scrollToEnd();
     });
   }
 
-  void _onDecimal() {
+  void _onBackspace() {
     HapticFeedback.lightImpact();
-    setState(() {
-      if (_isNewInput) {
-        _display = '0.';
-        _isNewInput = false;
-      } else if (!_display.contains('.')) {
-        _display += '.';
-      }
-    });
-  }
-
-  void _onOperator(String op) {
-    HapticFeedback.heavyImpact();
-    setState(() {
-      if (_operator != null && !_isNewInput) {
-        _evaluate();
-      }
-      _operand1 = double.tryParse(_display);
-      _operator = op;
-      _isNewInput = true;
-    });
-  }
-
-  void _evaluate() {
-    final operand2 = double.tryParse(_display);
-    if (_operand1 == null || operand2 == null || _operator == null) return;
-
-    double result;
-    switch (_operator) {
-      case '+':
-        result = _operand1! + operand2;
-        break;
-      case '-':
-        result = _operand1! - operand2;
-        break;
-      case '×':
-        result = _operand1! * operand2;
-        break;
-      case '÷':
-        result = operand2 != 0 ? _operand1! / operand2 : double.nan;
-        break;
-      default:
-        return;
-    }
-
-    _display = result.isNaN
-        ? 'Error'
-        : result == result.roundToDouble()
-        ? result.toInt().toString()
-        : result.toStringAsFixed(4);
-
-    _operand1 = null;
-    _operator = null;
-    _isNewInput = true;
-  }
-
-  void _onEquals() {
-    HapticFeedback.heavyImpact();
-    setState(() {
-      if (_operator != null && !_isNewInput) {
-        _evaluate();
-      }
-    });
+    setState(() => _core.backspace());
   }
 
   void _onClear() {
     HapticFeedback.lightImpact();
     setState(() {
-      _display = '0';
-      _operand1 = null;
-      _operator = null;
-      _isNewInput = true;
+      _core.clear();
+      _expression = '';
     });
   }
 
-  void _onPercent() {
+  void _onBracket() {
+    HapticFeedback.lightImpact();
     setState(() {
-      final value = double.tryParse(_display);
-      if (value != null) {
-        _display = (value / 100).toStringAsFixed(4);
-        _isNewInput = true;
-      }
+      _expression = '';
+      _core.toggleBracket();
+      _scrollToEnd();
     });
   }
 
   void _onNegate() {
+    HapticFeedback.lightImpact();
+    setState(() => _core.negate());
+  }
+
+  void _onEquals() {
+    HapticFeedback.heavyImpact();
+    if (_core.input == '0' && _expression.isEmpty) return;
+
+    final result = _core.evaluate();
     setState(() {
-      if (_display != '0') {
-        _display = _display.startsWith('-')
-            ? _display.substring(1)
-            : '-$_display';
+      _expression = result.error == null ? '${result.expression} =' : 'Error';
+      _flashResult = true;
+    });
+
+    if (result.error == null) {
+      _history.addItem(result.expression, result.result);
+    }
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _flashResult = false);
+    });
+  }
+
+  void _onCopy() {
+    HapticFeedback.lightImpact();
+    Clipboard.setData(ClipboardData(text: _core.input));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Copied'), duration: Duration(seconds: 1)),
+      );
+    }
+  }
+
+  void _showHistory() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => CalculatorHistoryPanel(
+        history: _history,
+        onSelect: (item) {
+          setState(() {
+            _expression = item.expression;
+            _core.setInput(item.result);
+          });
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  void _scrollToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_displayController.hasClients) {
+        _displayController.animateTo(
+          _displayController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
 
-  void _onButtonTap(String label) {
-    if (label == 'C') {
-      _onClear();
-    } else if (label == '=') {
+  KeyEventResult _onKeyboard(KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey.keyLabel;
+    if (RegExp(r'^[0-9.]$').hasMatch(key)) {
+      _onInput(key);
+    } else if ('+-*/^'.contains(key)) {
+      _onInput(key);
+    } else if (key == '(' || key == ')') {
+      _onBracket();
+    } else if (key == 'Enter' || key == '=') {
       _onEquals();
-    } else if (label == '.') {
-      _onDecimal();
-    } else if (['+', '-', '×', '÷'].contains(label)) {
-      _onOperator(label);
-    } else if (label == '±') {
-      _onNegate();
-    } else if (label == '%') {
-      _onPercent();
-    } else {
-      _onDigit(label);
+    } else if (key == 'Backspace') {
+      _onBackspace();
+    } else if (key == 'Escape') {
+      _onClear();
+    } else if (key == '%') {
+      _onInput('%');
     }
+    return KeyEventResult.handled;
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final buttons = [
-      ['C', '±', '%', '÷'],
-      ['7', '8', '9', '×'],
-      ['4', '5', '6', '-'],
-      ['1', '2', '3', '+'],
-      ['0', '.', '='],
-    ];
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Calculator')),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                alignment: Alignment.bottomRight,
-                padding: const EdgeInsets.all(24),
-                child: SingleChildScrollView(
-                  reverse: true,
-                  child: Text(
-                    _display,
-                    style: theme.textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w300,
-                    ),
-                    textAlign: TextAlign.right,
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
-              child: Column(
-                children: buttons.map((row) {
-                  return Row(
-                    children: row.map((label) {
-                      return _CalcButton(
-                        label: label,
-                        onTap: () => _onButtonTap(label),
-                      );
-                    }).toList(),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
+    final sharedToolbar = CalculatorToolbar(
+      showScientific: _showScientific,
+      onToggleSci: () => setState(() => _showScientific = !_showScientific),
+      onShowHistory: _showHistory,
+      onCopy: _onCopy,
+      onBackspace: _onBackspace,
     );
-  }
-}
 
-class _CalcButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
+    final sharedGrid = CalculatorGrid(
+      onInput: _onInput,
+      onClear: _onClear,
+      onBracket: _onBracket,
+      onNegate: _onNegate,
+    );
 
-  const _CalcButton({required this.label, required this.onTap});
+    final sharedDisplay = CalculatorDisplay(
+      expression: _expression,
+      input: _core.input,
+      flashResult: _flashResult,
+      scrollController: _displayController,
+    );
 
-  @override
-  Widget build(BuildContext context) {
-    final isOperator = ['+', '-', '×', '÷', '='].contains(label);
-    final isClear = label == 'C';
-    final theme = Theme.of(context);
-    final bgColor = isOperator
-        ? theme.colorScheme.primary
-        : isClear
-        ? theme.colorScheme.errorContainer
-        : theme.colorScheme.surfaceContainerHighest;
+    final equalsButton = CalculatorEqualsButton(onTap: _onEquals);
 
-    final textColor = isOperator
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.onSurface;
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: _onKeyboard,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Calculator')),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isWide = constraints.maxWidth >= 500;
 
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: SizedBox(
-          height: 64,
-          child: Material(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: onTap,
-              child: Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: isOperator ? 24 : 20,
-                    fontWeight: FontWeight.w500,
-                    color: textColor,
-                  ),
-                ),
+                  const displayHeight = 95.0;
+
+                  if (isWide) {
+                    return Column(
+                      children: [
+                        SizedBox(height: displayHeight, child: sharedDisplay),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 180,
+                                child: CalculatorSciColumn(onInput: _onInput),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    CalculatorToolbar(
+                                      showScientific: false,
+                                      onToggleSci: () {},
+                                      onShowHistory: _showHistory,
+                                      onCopy: _onCopy,
+                                      onBackspace: _onBackspace,
+                                    ),
+                                    Expanded(child: sharedGrid),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        equalsButton,
+                      ],
+                    );
+                  }
+
+                  return Column(
+                    children: [
+                      SizedBox(height: displayHeight, child: sharedDisplay),
+                      sharedToolbar,
+                      Expanded(
+                        child: _showScientific
+                            ? Row(
+                                children: [
+                                  SizedBox(
+                                    width: 90,
+                                    child: CalculatorSciColumn(
+                                      onInput: _onInput,
+                                    ),
+                                  ),
+                                  Expanded(child: sharedGrid),
+                                ],
+                              )
+                            : sharedGrid,
+                      ),
+                      equalsButton,
+                    ],
+                  );
+                },
               ),
             ),
           ),
