@@ -17,12 +17,15 @@ class CalculatorEqualsButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           onTap: onTap,
           child: Center(
-            child: Text(
-              '=',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onTertiary,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '=',
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w500,
+                  color: theme.colorScheme.onTertiary,
+                ),
               ),
             ),
           ),
