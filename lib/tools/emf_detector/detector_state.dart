@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'emf_reading.dart';
 import 'sensor_service.dart';
 import 'audio_service.dart';
@@ -24,7 +23,6 @@ class DetectorState extends ChangeNotifier {
   // Alert and feedback settings
   double _warningThreshold = 45.0; // Default threshold in uT
   bool _soundEnabled = true;
-  bool _hapticsEnabled = true;
 
   // Low-pass filter smoothing coefficient (alpha)
   static const double _smoothingFactor = 0.22;
@@ -64,7 +62,6 @@ class DetectorState extends ChangeNotifier {
 
   double get warningThreshold => _warningThreshold;
   bool get soundEnabled => _soundEnabled;
-  bool get hapticsEnabled => _hapticsEnabled;
 
   bool get isSimulationActive => _sensorService.isSimulationActive;
   SimulationPreset get currentPreset => _sensorService.currentPreset;
@@ -130,12 +127,6 @@ class DetectorState extends ChangeNotifier {
   void toggleSound() {
     _soundEnabled = !_soundEnabled;
     _audioService.setEnabled(_isScanning && _soundEnabled);
-    notifyListeners();
-  }
-
-  /// Toggles physical device vibration responses on high anomalies.
-  void toggleHaptics() {
-    _hapticsEnabled = !_hapticsEnabled;
     notifyListeners();
   }
 
@@ -209,28 +200,7 @@ class DetectorState extends ChangeNotifier {
       );
     }
 
-    // Trigger haptic vibration on mobile devices during spikes
-    if (_hapticsEnabled &&
-        _currentReading!.deltaMagnitude >= _warningThreshold) {
-      _triggerHapticPulse(_currentReading!.deltaMagnitude);
-    }
-
     notifyListeners();
-  }
-
-  DateTime _lastHapticTime = DateTime.now();
-
-  void _triggerHapticPulse(double deltaMag) {
-    final now = DateTime.now();
-    // Dynamically pace vibration rate similar to beep sounds
-    // Map signal strength above threshold to interval between 600ms and 150ms
-    final deltaOver = (deltaMag - _warningThreshold).clamp(0.0, 100.0);
-    final cooldownMs = 600 - (deltaOver * 4.5).round();
-
-    if (now.difference(_lastHapticTime).inMilliseconds >= cooldownMs) {
-      HapticFeedback.vibrate();
-      _lastHapticTime = now;
-    }
   }
 
   @override

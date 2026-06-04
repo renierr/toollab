@@ -115,14 +115,6 @@ class ScannerControlsCard extends StatelessWidget {
                 onTap: state.toggleSound,
               ),
 
-              // Haptic Toggle
-              FeedbackButton(
-                icon: state.hapticsEnabled ? Icons.vibration : Icons.mobile_off,
-                label: 'HAPTICS',
-                active: state.hapticsEnabled,
-                onTap: state.toggleHaptics,
-              ),
-
               // Wake lock toggle
               FeedbackButton(
                 icon: wakeLockActive
