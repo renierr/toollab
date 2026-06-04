@@ -5,9 +5,10 @@ import 'package:path_provider/path_provider.dart';
 
 class DatabaseService {
   static const String _dbName = 'tool_lab.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
   static const String _tableFavorites = 'tool_favorites';
   static const String _tableSettings = 'tool_settings';
+  static const String _tableRecentUsage = 'tool_recent_usage';
 
   DatabaseService._privateConstructor();
   static final DatabaseService instance = DatabaseService._privateConstructor();
@@ -32,7 +33,12 @@ class DatabaseService {
     }
     final path = p.join(docDir.path, _dbName);
 
-    return await openDatabase(path, version: _dbVersion, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: _dbVersion,
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -52,6 +58,24 @@ class DatabaseService {
         PRIMARY KEY (tool_id, key)
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE $_tableRecentUsage (
+        tool_id TEXT PRIMARY KEY,
+        last_used_at INTEGER NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE $_tableRecentUsage (
+          tool_id TEXT PRIMARY KEY,
+          last_used_at INTEGER NOT NULL
+        )
+      ''');
+    }
   }
 
   Future<Set<String>> getFavoriteIds() async {
@@ -85,6 +109,22 @@ class DatabaseService {
         whereArgs: [toolId],
       );
     }
+  }
+
+  Future<Map<String, int>> getRecentTimestamps() async {
+    final db = await database;
+    final rows = await db.query(_tableRecentUsage);
+    return {
+      for (final r in rows) r['tool_id'] as String: r['last_used_at'] as int,
+    };
+  }
+
+  Future<void> touchToolUsage(String toolId) async {
+    final db = await database;
+    await db.insert(_tableRecentUsage, {
+      'tool_id': toolId,
+      'last_used_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<String?> getSetting(String toolId, String key) async {

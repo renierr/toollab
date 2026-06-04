@@ -50,6 +50,7 @@ class OverviewSettingsDialog extends StatelessWidget {
                 value: appState.sortBy,
                 underline: const SizedBox(),
                 items: const [
+                  DropdownMenuItem(value: 'recent', child: Text('Recent')),
                   DropdownMenuItem(
                     value: 'order',
                     child: Text('Default order'),

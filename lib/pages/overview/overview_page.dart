@@ -54,6 +54,12 @@ class _OverviewPageState extends State<OverviewPage> {
 
     if (sortBy == 'name') {
       tools.sort((a, b) => a.name.compareTo(b.name));
+    } else if (sortBy == 'recent') {
+      tools.sort((a, b) {
+        final ta = appState.getLastUsed(a.id);
+        final tb = appState.getLastUsed(b.id);
+        return tb.compareTo(ta);
+      });
     }
 
     final grouped = <ToolSection, List<ToolModel>>{};
@@ -214,7 +220,12 @@ class _OverviewPageState extends State<OverviewPage> {
                                 return ToolCard(
                                   tool: tool,
                                   compact: compact,
-                                  onTap: () => context.push(tool.route),
+                                  onTap: () {
+                                    context.read<AppState>().recordToolUsage(
+                                      tool.id,
+                                    );
+                                    context.push(tool.route);
+                                  },
                                 );
                               }, childCount: sectionTools.length),
                             ),
@@ -253,7 +264,10 @@ class _OverviewPageState extends State<OverviewPage> {
         return ToolCard(
           tool: tool,
           compact: compact,
-          onTap: () => context.push(tool.route),
+          onTap: () {
+            context.read<AppState>().recordToolUsage(tool.id);
+            context.push(tool.route);
+          },
         );
       }, childCount: sectionTools.length),
     );

@@ -34,7 +34,7 @@ class SettingsService {
   }
 
   String getSortBy() {
-    return _prefs.getString(_keySortBy) ?? 'order';
+    return _prefs.getString(_keySortBy) ?? 'recent';
   }
 
   Future<void> setSortBy(String value) async {

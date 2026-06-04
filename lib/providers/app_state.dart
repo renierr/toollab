@@ -10,24 +10,34 @@ class AppState extends ChangeNotifier {
     _compactMode = _settingsService.getCompactMode();
     _sortBy = _settingsService.getSortBy();
     _loadFavorites();
+    _loadRecentTimestamps();
   }
 
   ThemeMode _themeMode = ThemeMode.system;
   bool _compactMode = true;
-  String _sortBy = 'order';
+  String _sortBy = 'recent';
   String _searchQuery = '';
   Set<String> _favorites = {};
+  Map<String, int> _recentTimestamps = {};
 
   ThemeMode get themeMode => _themeMode;
   bool get compactMode => _compactMode;
   String get sortBy => _sortBy;
   String get searchQuery => _searchQuery;
   Set<String> get favorites => _favorites;
+  Map<String, int> get recentTimestamps => _recentTimestamps;
 
   bool isFavorite(String toolId) => _favorites.contains(toolId);
 
+  int getLastUsed(String toolId) => _recentTimestamps[toolId] ?? 0;
+
   Future<void> _loadFavorites() async {
     _favorites = await DatabaseService.instance.getFavoriteIds();
+    notifyListeners();
+  }
+
+  Future<void> _loadRecentTimestamps() async {
+    _recentTimestamps = await DatabaseService.instance.getRecentTimestamps();
     notifyListeners();
   }
 
@@ -39,6 +49,13 @@ class AppState extends ChangeNotifier {
     } else {
       _favorites.remove(toolId);
     }
+    notifyListeners();
+  }
+
+  Future<void> recordToolUsage(String toolId) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await DatabaseService.instance.touchToolUsage(toolId);
+    _recentTimestamps[toolId] = now;
     notifyListeners();
   }
 
