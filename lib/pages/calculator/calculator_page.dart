@@ -126,68 +126,35 @@ class _CalculatorPageState extends State<CalculatorPage> {
     });
   }
 
-  Widget _buildButton(String label, {Color? color, double flex = 1}) {
-    final isOperator = ['+', '-', '×', '÷', '='].contains(label);
-    final isClear = label == 'C';
-    final theme = Theme.of(context);
-    final bgColor = isOperator
-        ? theme.colorScheme.primary
-        : isClear
-        ? theme.colorScheme.errorContainer
-        : theme.colorScheme.surfaceContainerHighest;
-
-    final textColor = isOperator
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.onSurface;
-
-    return Expanded(
-      flex: flex.round(),
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: SizedBox(
-          height: 64,
-          child: Material(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                if (label == 'C') {
-                  _onClear();
-                } else if (label == '=') {
-                  _onEquals();
-                } else if (label == '.') {
-                  _onDecimal();
-                } else if (['+', '-', '×', '÷'].contains(label)) {
-                  _onOperator(label);
-                } else if (label == '±') {
-                  _onNegate();
-                } else if (label == '%') {
-                  _onPercent();
-                } else {
-                  _onDigit(label);
-                }
-              },
-              child: Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: isOperator ? 24 : 20,
-                    fontWeight: FontWeight.w500,
-                    color: textColor,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+  void _onButtonTap(String label) {
+    if (label == 'C') {
+      _onClear();
+    } else if (label == '=') {
+      _onEquals();
+    } else if (label == '.') {
+      _onDecimal();
+    } else if (['+', '-', '×', '÷'].contains(label)) {
+      _onOperator(label);
+    } else if (label == '±') {
+      _onNegate();
+    } else if (label == '%') {
+      _onPercent();
+    } else {
+      _onDigit(label);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final buttons = [
+      ['C', '±', '%', '÷'],
+      ['7', '8', '9', '×'],
+      ['4', '5', '6', '-'],
+      ['1', '2', '3', '+'],
+      ['0', '.', '='],
+    ];
+
     return Scaffold(
       appBar: AppBar(title: const Text('Calculator')),
       body: SafeArea(
@@ -212,50 +179,69 @@ class _CalculatorPageState extends State<CalculatorPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
               child: Column(
-                children: [
-                  Row(
-                    children: [
-                      _buildButton('C', color: theme.colorScheme.error),
-                      _buildButton('±'),
-                      _buildButton('%'),
-                      _buildButton('÷'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      _buildButton('7'),
-                      _buildButton('8'),
-                      _buildButton('9'),
-                      _buildButton('×'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      _buildButton('4'),
-                      _buildButton('5'),
-                      _buildButton('6'),
-                      _buildButton('-'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      _buildButton('1'),
-                      _buildButton('2'),
-                      _buildButton('3'),
-                      _buildButton('+'),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      _buildButton('0'),
-                      _buildButton('.'),
-                      _buildButton('='),
-                    ],
-                  ),
-                ],
+                children: buttons.map((row) {
+                  return Row(
+                    children: row.map((label) {
+                      return _CalcButton(
+                        label: label,
+                        onTap: () => _onButtonTap(label),
+                      );
+                    }).toList(),
+                  );
+                }).toList(),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CalcButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _CalcButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final isOperator = ['+', '-', '×', '÷', '='].contains(label);
+    final isClear = label == 'C';
+    final theme = Theme.of(context);
+    final bgColor = isOperator
+        ? theme.colorScheme.primary
+        : isClear
+        ? theme.colorScheme.errorContainer
+        : theme.colorScheme.surfaceContainerHighest;
+
+    final textColor = isOperator
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurface;
+
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: SizedBox(
+          height: 64,
+          child: Material(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: onTap,
+              child: Center(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: isOperator ? 24 : 20,
+                    fontWeight: FontWeight.w500,
+                    color: textColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

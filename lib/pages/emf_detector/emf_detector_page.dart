@@ -60,9 +60,9 @@ class _EmfDetectorPageState extends State<EmfDetectorPage> {
   Color _levelColor(double uT, ColorScheme colors) {
     if (uT < 0.5) return colors.primary;
     if (uT < 2.0) return colors.tertiary;
-    if (uT < 10.0) return Colors.green;
-    if (uT < 50.0) return Colors.orange;
-    return Colors.red;
+    if (uT < 10.0) return colors.secondary;
+    if (uT < 50.0) return colors.errorContainer;
+    return colors.error;
   }
 
   @override
@@ -155,13 +155,13 @@ class _EmfDetectorPageState extends State<EmfDetectorPage> {
                 ),
                 child: Column(
                   children: [
-                    _axisRow('X', _fieldX, colors),
+                    _AxisRow(label: 'X', value: _fieldX),
                     const SizedBox(height: 8),
-                    _axisRow('Y', _fieldY, colors),
+                    _AxisRow(label: 'Y', value: _fieldY),
                     const SizedBox(height: 8),
-                    _axisRow('Z', _fieldZ, colors),
+                    _AxisRow(label: 'Z', value: _fieldZ),
                     const Divider(height: 24),
-                    _axisRow('Max', _maxMagnitude, colors, bold: true),
+                    _AxisRow(label: 'Max', value: _maxMagnitude, bold: true),
                   ],
                 ),
               ),
@@ -171,13 +171,18 @@ class _EmfDetectorPageState extends State<EmfDetectorPage> {
       ),
     );
   }
+}
 
-  Widget _axisRow(
-    String label,
-    double value,
-    ColorScheme colors, {
-    bool bold = false,
-  }) {
+class _AxisRow extends StatelessWidget {
+  final String label;
+  final double value;
+  final bool bold;
+
+  const _AxisRow({required this.label, required this.value, this.bold = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -17,6 +18,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
   int? _batteryLevel;
   BatteryState? _batteryState;
   bool _loading = true;
+  StreamSubscription<BatteryState>? _batterySubscription;
 
   @override
   void initState() {
@@ -24,14 +26,22 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
     _loadInfo();
   }
 
+  @override
+  void dispose() {
+    _batterySubscription?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadInfo() async {
     try {
       _batteryLevel = await _battery.batteryLevel;
       _batteryState = await _battery.batteryState;
-      _battery.onBatteryStateChanged.listen((state) {
+      _batterySubscription = _battery.onBatteryStateChanged.listen((state) {
         if (mounted) setState(() => _batteryState = state);
       });
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[DeviceInfo] Failed to read battery: $e');
+    }
 
     try {
       if (defaultTargetPlatform == TargetPlatform.android) {
@@ -66,6 +76,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
         _info = {'Platform': defaultTargetPlatform.name};
       }
     } catch (e) {
+      debugPrint('[DeviceInfo] Failed to read device info: $e');
       _info = {'Error': e.toString()};
     }
 
@@ -83,7 +94,13 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  if (_batteryLevel != null) _buildBatteryCard(theme),
+                  if (_batteryLevel != null)
+                    _BatteryCard(
+                      level: _batteryLevel!,
+                      isCharging:
+                          _batteryState == BatteryState.charging ||
+                          _batteryState == BatteryState.full,
+                    ),
                   const SizedBox(height: 16),
                   Card(
                     child: Padding(
@@ -134,17 +151,22 @@ class _DeviceInfoPageState extends State<DeviceInfoPage> {
       ),
     );
   }
+}
 
-  Widget _buildBatteryCard(ThemeData theme) {
-    final level = _batteryLevel ?? 0;
-    final isCharging =
-        _batteryState == BatteryState.charging ||
-        _batteryState == BatteryState.full;
+class _BatteryCard extends StatelessWidget {
+  final int level;
+  final bool isCharging;
+
+  const _BatteryCard({required this.level, required this.isCharging});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final color = level > 60
-        ? Colors.green
+        ? theme.colorScheme.primary
         : level > 20
-        ? Colors.orange
-        : Colors.red;
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.error;
 
     return Card(
       child: Padding(
