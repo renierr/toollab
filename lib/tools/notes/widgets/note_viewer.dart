@@ -9,7 +9,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class NoteViewer extends StatelessWidget {
+class NoteViewer extends StatefulWidget {
   final Map<String, dynamic> note;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -22,6 +22,21 @@ class NoteViewer extends StatelessWidget {
     required this.onDelete,
     required this.onClose,
   });
+
+  @override
+  State<NoteViewer> createState() => _NoteViewerState();
+}
+
+class _NoteViewerState extends State<NoteViewer> {
+  bool _showBody = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _showBody = true);
+    });
+  }
 
   String _getTitle(String content) {
     final lines = content.split('\n');
@@ -64,8 +79,8 @@ class NoteViewer extends StatelessWidget {
   }
 
   Future<void> _exportMarkdown(BuildContext context) async {
-    final content = note['content'] as String;
-    final shortId = note['short_id'] as String;
+    final content = widget.note['content'] as String;
+    final shortId = widget.note['short_id'] as String;
     final bytes = Uint8List.fromList(utf8.encode(content));
     await FileSaveHelper.saveFile(
       context: context,
@@ -75,8 +90,8 @@ class NoteViewer extends StatelessWidget {
   }
 
   Future<void> _shareNote() async {
-    final content = note['content'] as String;
-    final shortId = note['short_id'] as String;
+    final content = widget.note['content'] as String;
+    final shortId = widget.note['short_id'] as String;
 
     if (Platform.isAndroid || Platform.isWindows) {
       try {
@@ -95,22 +110,22 @@ class NoteViewer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final content = note['content'] as String? ?? '';
+    final content = widget.note['content'] as String? ?? '';
     final title = _getTitle(content);
     final body = _getPureContent(content);
-    final updatedAt = note['updated_at'] as int? ?? 0;
+    final updatedAt = widget.note['updated_at'] as int? ?? 0;
 
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) onClose();
+        if (!didPop) widget.onClose();
       },
       child: Scaffold(
         appBar: AppBar(
           title: const Text('View Note'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: onClose,
+            onPressed: widget.onClose,
           ),
           actions: [
             IconButton(
@@ -126,12 +141,12 @@ class NoteViewer extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: 'Edit Note',
-              onPressed: onEdit,
+              onPressed: widget.onEdit,
             ),
             IconButton(
               icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
               tooltip: 'Delete Note',
-              onPressed: onDelete,
+              onPressed: widget.onDelete,
             ),
           ],
         ),
@@ -164,6 +179,8 @@ class NoteViewer extends StatelessWidget {
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                   )
+                else if (!_showBody)
+                  _buildLoadingSkeleton(theme)
                 else
                   MarkdownBody(
                     data: body,
@@ -187,6 +204,28 @@ class NoteViewer extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingSkeleton(ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        children: [
+          LinearProgressIndicator(
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            color: AppTheme.accentTeal,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Rendering markdown\u2026',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+          ),
+        ],
       ),
     );
   }
