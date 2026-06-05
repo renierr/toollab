@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
@@ -63,7 +62,7 @@ class PdfOverlayControls extends StatelessWidget {
         left: 16,
         right: 16,
       ),
-      color: theme.colorScheme.surface.withValues(alpha: 0.8),
+      color: theme.colorScheme.surface.withValues(alpha: 0.95),
       child: Row(
         children: [
           IconButton(
@@ -152,7 +151,7 @@ class PdfOverlayControls extends StatelessWidget {
         left: 16,
         right: 16,
       ),
-      color: theme.colorScheme.surface.withValues(alpha: 0.8),
+      color: theme.colorScheme.surface.withValues(alpha: 0.95),
       child: Row(
         children: [
           IconButton(
@@ -205,118 +204,110 @@ class PdfOverlayControls extends StatelessWidget {
 
     return Stack(
       children: [
-        // Top Header Overlay
         AnimatedPositioned(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           top: visible ? 0 : -100 - topPadding,
           left: 0,
           right: 0,
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: isSearchingText
-                  ? _buildSearchHeader(theme, topPadding)
-                  : _buildNormalHeader(context, theme, topPadding),
-            ),
+          child: RepaintBoundary(
+            child: isSearchingText
+                ? _buildSearchHeader(theme, topPadding)
+                : _buildNormalHeader(context, theme, topPadding),
           ),
         ),
 
-        // Bottom Footer Overlay
         AnimatedPositioned(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           bottom: visible ? 0 : -120 - bottomPadding,
           left: 0,
           right: 0,
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                padding: EdgeInsets.only(
-                  top: 12,
-                  bottom: bottomPadding + 16,
-                  left: 16,
-                  right: 16,
-                ),
-                color: theme.colorScheme.surface.withValues(alpha: 0.8),
-                child: SafeArea(
-                  top: false,
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceAround,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 16,
-                    runSpacing: 12,
-                    children: [
-                      // Page Controls
-                      ListenableBuilder(
-                        listenable: Listenable.merge([
-                          currentPageNotifier,
-                          totalPagesNotifier,
-                        ]),
-                        builder: (context, _) {
-                          final currentPage = currentPageNotifier.value;
-                          final totalPages = totalPagesNotifier.value > 0
-                              ? totalPagesNotifier.value
-                              : 1;
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.chevron_left),
-                                onPressed: currentPage > 1
-                                    ? () => controller.goToPage(
-                                        pageNumber: currentPage - 1,
-                                      )
-                                    : null,
-                                tooltip: 'Previous Page',
-                              ),
-                              Text(
-                                'Page $currentPage of $totalPages',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.chevron_right),
-                                onPressed: currentPage < totalPages
-                                    ? () => controller.goToPage(
-                                        pageNumber: currentPage + 1,
-                                      )
-                                    : null,
-                                tooltip: 'Next Page',
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-
-                      // Zoom Controls
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.zoom_out),
-                            onPressed: () => controller.zoomDown(),
-                            tooltip: 'Zoom Out',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.settings_backup_restore),
-                            onPressed: () => controller.setZoom(
-                              controller.centerPosition,
-                              1.0,
+          child: RepaintBoundary(
+            child: Container(
+              padding: EdgeInsets.only(
+                top: 12,
+                bottom: bottomPadding + 16,
+                left: 16,
+                right: 16,
+              ),
+              color: theme.colorScheme.surface.withValues(alpha: 0.95),
+              child: SafeArea(
+                top: false,
+                child: Wrap(
+                  alignment: WrapAlignment.spaceAround,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 16,
+                  runSpacing: 12,
+                  children: [
+                    // Page Controls
+                    ListenableBuilder(
+                      listenable: Listenable.merge([
+                        currentPageNotifier,
+                        totalPagesNotifier,
+                      ]),
+                      builder: (context, _) {
+                        final currentPage = currentPageNotifier.value;
+                        final totalPages = totalPagesNotifier.value > 0
+                            ? totalPagesNotifier.value
+                            : 1;
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left),
+                              onPressed: currentPage > 1
+                                  ? () => controller.goToPage(
+                                      pageNumber: currentPage - 1,
+                                    )
+                                  : null,
+                              tooltip: 'Previous Page',
                             ),
-                            tooltip: 'Reset Zoom',
+                            Text(
+                              'Page $currentPage of $totalPages',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right),
+                              onPressed: currentPage < totalPages
+                                  ? () => controller.goToPage(
+                                      pageNumber: currentPage + 1,
+                                    )
+                                  : null,
+                              tooltip: 'Next Page',
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+
+                    // Zoom Controls
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.zoom_out),
+                          onPressed: () => controller.zoomDown(),
+                          tooltip: 'Zoom Out',
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.settings_backup_restore),
+                          onPressed: () => controller.setZoom(
+                            controller.centerPosition,
+                            1.0,
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.zoom_in),
-                            onPressed: () => controller.zoomUp(),
-                            tooltip: 'Zoom In',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          tooltip: 'Reset Zoom',
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.zoom_in),
+                          onPressed: () => controller.zoomUp(),
+                          tooltip: 'Zoom In',
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
