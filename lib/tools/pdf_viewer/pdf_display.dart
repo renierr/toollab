@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 class PdfDisplay extends StatelessWidget {
@@ -41,35 +40,10 @@ class PdfDisplay extends StatelessWidget {
           onViewerTap();
           return false;
         },
-        verticalCacheExtent: 1.5,
-        horizontalCacheExtent: 1.5,
         getPageRenderingScale: (context, page, controller, estimatedScale) =>
             estimatedScale.clamp(1.0, 2.0),
         maxImageBytesCachedOnMemory: 64 * 1024 * 1024,
-        scrollPhysics: const LowerFrictionScrollPhysics(),
       ),
     );
-  }
-}
-
-class LowerFrictionScrollPhysics extends ScrollPhysics {
-  const LowerFrictionScrollPhysics({super.parent});
-
-  @override
-  LowerFrictionScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return LowerFrictionScrollPhysics(parent: buildParent(ancestor));
-  }
-
-  @override
-  Simulation? createBallisticSimulation(
-    ScrollMetrics position,
-    double velocity,
-  ) {
-    if ((velocity.abs() < toleranceFor(position).velocity) ||
-        (position.outOfRange)) {
-      return super.createBallisticSimulation(position, velocity);
-    }
-    // Lower friction coefficient (default is ~0.015) to make it glide further
-    return FrictionSimulation(0.0075, position.pixels, velocity);
   }
 }
