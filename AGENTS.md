@@ -27,6 +27,7 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **Tool Cleanup on Dispose**: Every tool page must use the `DisposeCleanup` mixin (`lib/core/tool_page_state.dart`) and register all cleanup via `onDispose()` in `initState` — sensor subscriptions, wakelocks, controllers, listeners. Never override `dispose()` manually.
 - **No Useless Comments**: Do not add code comments that are not useful, such as comments explaining the prompt or user requests.
 - **Latest Dependencies**: Always use the latest version of a dependency available at the time of adding it. Do not add outdated versions.
+- **Database Test Isolation**: Database unit/widget tests must never read or write to the standard persistent database. Always set `dbPathOverride` to `inMemoryDatabasePath` on `DatabaseService.instance` and close the connection in `tearDownAll` to ensure test state is clean and fully isolated in memory.
 
 ---
 
