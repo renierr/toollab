@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 
+class ShareTargetConfig {
+  final List<String> accept;
+
+  const ShareTargetConfig({required this.accept});
+}
+
 class ToolModel {
   final String id;
   final String name;
@@ -9,6 +15,7 @@ class ToolModel {
   final Color accentColor;
   final String sectionId;
   final bool fullscreen;
+  final ShareTargetConfig? shareTarget;
 
   const ToolModel({
     required this.id,
@@ -19,6 +26,7 @@ class ToolModel {
     required this.accentColor,
     required this.sectionId,
     this.fullscreen = false,
+    this.shareTarget,
   });
 }
 

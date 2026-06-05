@@ -5,10 +5,9 @@ import 'package:tool_lab/tools/bubble_level/config.dart';
 import 'package:tool_lab/tools/emf_detector/config.dart';
 import 'package:tool_lab/tools/device_info/config.dart';
 import 'package:tool_lab/tools/nfc_tag_lab/config.dart';
+import 'package:tool_lab/tools/pdf_viewer/config.dart';
 
 class ToolRegistry {
-  ToolRegistry._();
-
   static const Map<String, ToolSection> sections = {
     'sensors': ToolSection(
       id: 'sensors',
@@ -40,5 +39,6 @@ class ToolRegistry {
     EmfDetectorTool.config,
     DeviceInfoTool.config,
     NfcTagLabTool.config,
+    PdfViewerTool.config,
   ];
 }

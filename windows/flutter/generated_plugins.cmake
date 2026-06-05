@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   battery_plus
+  desktop_drop
   file_selector_windows
   share_plus
   url_launcher_windows

@@ -63,6 +63,7 @@ object ShortcutHelper {
             "emf-detector" -> "de.renier.tool_lab.EmfDetectorAlias"
             "device-info" -> "de.renier.tool_lab.DeviceInfoAlias"
             "nfc-tag-lab" -> "de.renier.tool_lab.NfcTagLabAlias"
+            "pdf-viewer" -> "de.renier.tool_lab.PdfViewerAlias"
             else -> return
         }
 

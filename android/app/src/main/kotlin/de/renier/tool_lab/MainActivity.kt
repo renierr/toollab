@@ -1,15 +1,21 @@
 package de.renier.tool_lab
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : FlutterActivity() {
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
     private val SHORTCUTS_CHANNEL = "de.renier.tool_lab/shortcuts"
+    private val SHARING_CHANNEL = "de.renier.tool_lab/sharing"
     private var launchRoute: String? = null
+    private var pendingSharedFile: Map<String, String>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,7 +36,58 @@ class MainActivity : FlutterActivity() {
     private fun handleIntent(intent: Intent?) {
         launchRoute = null
         if (intent != null) {
-            if (intent.hasExtra("route")) {
+            val action = intent.action
+            val isSend = action == Intent.ACTION_SEND
+            val isView = action == Intent.ACTION_VIEW
+
+            if (isSend || isView) {
+                val uri = if (isSend) {
+                    intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                } else {
+                    intent.data
+                }
+
+                if (uri != null) {
+                    try {
+                        val mimeType = intent.type ?: contentResolver.getType(uri) ?: "application/octet-stream"
+                        var name = "shared_file"
+                        val cursor = contentResolver.query(uri, null, null, null, null)
+                        cursor?.use {
+                            if (it.moveToFirst()) {
+                                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                                if (nameIndex != -1) {
+                                    name = it.getString(nameIndex)
+                                }
+                            }
+                        }
+
+                        val cacheDir = File(cacheDir, "shared_files")
+                        if (!cacheDir.exists()) cacheDir.mkdirs()
+                        val cleanName = name.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
+                        val tempFile = File(cacheDir, cleanName)
+                        contentResolver.openInputStream(uri).use { input ->
+                            FileOutputStream(tempFile).use { output ->
+                                input?.copyTo(output)
+                            }
+                        }
+
+                        val fileData = mapOf(
+                            "path" to tempFile.absolutePath,
+                            "name" to name,
+                            "mimeType" to mimeType
+                        )
+                        pendingSharedFile = fileData
+
+                        // If app is already running, notify Flutter immediately
+                        flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
+                            MethodChannel(messenger, SHARING_CHANNEL).invokeMethod("onSharedFile", fileData)
+                            pendingSharedFile = null
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            } else if (intent.hasExtra("route")) {
                 launchRoute = intent.getStringExtra("route")
             } else {
                 val className = intent.component?.className
@@ -41,6 +98,7 @@ class MainActivity : FlutterActivity() {
                         "de.renier.tool_lab.EmfDetectorAlias" -> launchRoute = "/emf-detector"
                         "de.renier.tool_lab.DeviceInfoAlias" -> launchRoute = "/device-info"
                         "de.renier.tool_lab.NfcTagLabAlias" -> launchRoute = "/nfc-tag-lab"
+                        "de.renier.tool_lab.PdfViewerAlias" -> launchRoute = "/pdf-viewer"
                         "de.renier.tool_lab.MainActivity" -> launchRoute = "/"
                     }
                 }
@@ -50,6 +108,20 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // Sharing MethodChannel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHARING_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getSharedFile" -> {
+                        result.success(pendingSharedFile)
+                        pendingSharedFile = null
+                    }
+                    else -> {
+                        result.notImplemented()
+                    }
+                }
+            }
 
         // Shortcuts MethodChannel
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHORTCUTS_CHANNEL)
