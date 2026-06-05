@@ -23,36 +23,41 @@ class CalculatorToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: isShort ? 0 : 4),
-      child: Row(
-        children: [
-          ToolChip(
-            icon: Icons.science_outlined,
-            label: 'SCI',
-            selected: showScientific,
-            onTap: onToggleSci,
-            showLabel: !isShort,
-          ),
-          const SizedBox(width: 4),
-          ToolChip(
-            icon: Icons.history,
-            label: 'HIST',
-            onTap: onShowHistory,
-            showLabel: !isShort,
-          ),
-          const Spacer(),
-          IconButton(
-            icon: Icon(Icons.copy, size: isShort ? 18 : 20),
-            onPressed: onCopy,
-            tooltip: 'Copy result',
-            visualDensity: VisualDensity.compact,
-          ),
-          IconButton(
-            icon: Icon(Icons.backspace_outlined, size: isShort ? 18 : 20),
-            onPressed: onBackspace,
-            tooltip: 'Backspace',
-            visualDensity: VisualDensity.compact,
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cramped = constraints.maxWidth < 220;
+          return Row(
+            children: [
+              ToolChip(
+                icon: Icons.science_outlined,
+                label: 'SCI',
+                selected: showScientific,
+                onTap: onToggleSci,
+                showLabel: !isShort && !cramped,
+              ),
+              const SizedBox(width: 4),
+              ToolChip(
+                icon: Icons.history,
+                label: 'HIST',
+                onTap: onShowHistory,
+                showLabel: !isShort && !cramped,
+              ),
+              const Spacer(),
+              IconButton(
+                icon: Icon(Icons.copy, size: isShort ? 18 : 20),
+                onPressed: onCopy,
+                tooltip: 'Copy result',
+                visualDensity: VisualDensity.compact,
+              ),
+              IconButton(
+                icon: Icon(Icons.backspace_outlined, size: isShort ? 18 : 20),
+                onPressed: onBackspace,
+                tooltip: 'Backspace',
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          );
+        },
       ),
     );
   }

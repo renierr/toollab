@@ -80,57 +80,35 @@ class _SciColumnCompact extends StatelessWidget {
       if (i + 1 < _sciBtns.length) rows.last.add(_sciBtns[i + 1]);
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const hPad = 12.0;
-        const gaps = 20.0;
-        final idealW = (constraints.maxWidth - hPad) / 2;
-        final maxH = constraints.maxHeight;
-        final rowH = maxH.isFinite && idealW * rows.length + gaps > maxH
-            ? (maxH - gaps) / rows.length
-            : idealW;
-
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 4, 8),
-          child: SizedBox(
-            height: rowH * rows.length + gaps,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(rows.length, (i) {
-                final pair = rows[i];
-                final isLast = i == rows.length - 1;
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      height: rowH,
-                      child: Row(
-                        children: pair.map((item) {
-                          final (display, val) = item;
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 2,
-                              ),
-                              child: _SciCell(
-                                display: display,
-                                val: val,
-                                onInput: onInput,
-                                compact: true,
-                              ),
-                            ),
-                          );
-                        }).toList(),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 4, 4, 8),
+      child: Column(
+        children: List.generate(rows.length, (i) {
+          final pair = rows[i];
+          final isLast = i == rows.length - 1;
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 4),
+              child: Row(
+                children: pair.map((item) {
+                  final (display, val) = item;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: _SciCell(
+                        display: display,
+                        val: val,
+                        onInput: onInput,
+                        compact: true,
                       ),
                     ),
-                    if (!isLast) const SizedBox(height: 4),
-                  ],
-                );
-              }),
+                  );
+                }).toList(),
+              ),
             ),
-          ),
-        );
-      },
+          );
+        }),
+      ),
     );
   }
 }

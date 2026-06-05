@@ -125,7 +125,7 @@ class _CalculatorDisplayState extends State<CalculatorDisplay> {
                                 bottom: i == 0 ? gap : 0,
                               ),
                               child: Text(
-                                '${item.expression} ${item.result}',
+                                '${item.expression} = ${item.result}',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurface.withAlpha(
                                     120,
