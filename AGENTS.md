@@ -93,6 +93,12 @@ Routes are auto-generated from `ToolRegistry.all` in `lib/app.dart`. Each tool's
 ### 7. File Saving & Sharing
 - Use `FileSaveHelper` (`lib/helpers/file_save_helper.dart`) to download/export files (such as database backups, reports, or JSON exports). For cross-platform file saving architecture, platform-specific providers, and implementation details, see [AGENTS.detail.md](file:///C:/dev/flutter/toolkit/AGENTS.detail.md).
 
+### 8. Launcher Shortcuts & App Drawer Icons (Android)
+For every tool added to the app, launcher entry points must be maintained:
+- **AndroidManifest.xml**: Define a corresponding `<activity-alias>` under `<application>` pointing to `.MainActivity`, named `de.renier.tool_lab.<ToolNamePascalCase>Alias`, marked `android:enabled="false"` (disabled by default) with standard launcher intent-filters.
+- **MainActivity.kt**: Map the alias class name to the tool's GoRouter route in `handleIntent` (e.g., `de.renier.tool_lab.CalculatorAlias` maps to `/calculator`).
+- **ShortcutHelper.kt**: Add the tool mapping in `setDrawerIconEnabled` to enable/disable the activity-alias component.
+
 
 ---
 

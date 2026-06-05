@@ -53,4 +53,15 @@ class ShortcutService {
       debugPrint('[ShortcutService] Failed to remove shortcut: $e');
     }
   }
+
+  Future<void> setDrawerIconEnabled(String toolId, bool enabled) async {
+    try {
+      await _channel.invokeMethod('setDrawerIconEnabled', {
+        'id': toolId,
+        'enabled': enabled,
+      });
+    } catch (e) {
+      debugPrint('[ShortcutService] Failed to set drawer icon: $e');
+    }
+  }
 }

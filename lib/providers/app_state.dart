@@ -20,6 +20,7 @@ class AppState extends ChangeNotifier {
     _loadFavorites();
     _loadRecentTimestamps();
     _loadPinnedShortcuts();
+    _loadDrawerIcons();
   }
 
   ThemeMode _themeMode = ThemeMode.system;
@@ -29,8 +30,10 @@ class AppState extends ChangeNotifier {
   Set<String> _favorites = {};
   Map<String, int> _recentTimestamps = {};
   Map<String, bool> _pinnedShortcuts = {};
+  Map<String, bool> _drawerIcons = {};
 
   Map<String, bool> get pinnedShortcuts => _pinnedShortcuts;
+  Map<String, bool> get drawerIcons => _drawerIcons;
 
   bool _syncEnabled = false;
   String _syncServerUrl = '';
@@ -111,6 +114,32 @@ class AppState extends ChangeNotifier {
       );
       _pinnedShortcuts[toolId] = false;
     }
+    notifyListeners();
+  }
+
+  Future<void> _loadDrawerIcons() async {
+    final Map<String, bool> result = {};
+    for (final tool in ToolRegistry.all) {
+      final value = await DatabaseService.instance.getSetting(
+        tool.id,
+        'drawer_icon',
+      );
+      result[tool.id] = value == 'true';
+    }
+    _drawerIcons = result;
+    notifyListeners();
+  }
+
+  Future<void> toggleDrawerIcon(String toolId) async {
+    final currentVal = _drawerIcons[toolId] ?? false;
+    final newVal = !currentVal;
+    await ShortcutService.instance.setDrawerIconEnabled(toolId, newVal);
+    await DatabaseService.instance.setSetting(
+      toolId,
+      'drawer_icon',
+      newVal ? 'true' : 'false',
+    );
+    _drawerIcons[toolId] = newVal;
     notifyListeners();
   }
 

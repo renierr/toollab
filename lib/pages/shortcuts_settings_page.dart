@@ -46,7 +46,7 @@ class ShortcutsSettingsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Add separate home screen icons for your favorite tools. Tapping a shortcut will open the app directly inside that tool.',
+                          'Add separate home screen icons or app drawer launchers for your favorite tools. Tapping a shortcut will open the app directly inside that tool.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface.withValues(
                               alpha: 0.7,
@@ -80,7 +80,7 @@ class ShortcutsSettingsPage extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Android OS is required to pin native shortcuts to your home launcher. Toggles will persist locally but no native icons will be added.',
+                      'Android OS is required to pin native shortcuts or toggle app drawer icons. Toggles will persist locally but no native icons will be modified.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.8,
@@ -99,7 +99,7 @@ class ShortcutsSettingsPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
-              'Select Tools to Pin',
+              'Select Tools to Configure',
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
@@ -107,49 +107,49 @@ class ShortcutsSettingsPage extends StatelessWidget {
             ),
           ),
 
-          // Tool List
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: theme.colorScheme.outline.withValues(alpha: 0.15),
-              ),
-            ),
-            child: Column(
-              children: [
-                for (int i = 0; i < ToolRegistry.all.length; i++) ...[
-                  if (i > 0) const Divider(height: 1),
-                  Builder(
-                    builder: (context) {
-                      final tool = ToolRegistry.all[i];
-                      final isPinned =
-                          appState.pinnedShortcuts[tool.id] ?? false;
+          // Tool List (direct cards)
+          for (int i = 0; i < ToolRegistry.all.length; i++)
+            Builder(
+              builder: (context) {
+                final tool = ToolRegistry.all[i];
+                final isPinned = appState.pinnedShortcuts[tool.id] ?? false;
+                final hasDrawerIcon = appState.drawerIcons[tool.id] ?? false;
 
-                      return ToolShortcutRow(
-                        tool: tool,
-                        isPinned: isPinned,
-                        onChanged: (_) {
-                          appState.togglePinnedShortcut(tool.id, tool.name);
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isPinned
-                                    ? 'Removed shortcut request for ${tool.name}'
-                                    : 'Shortcut requested for ${tool.name}! Accept system dialog.',
-                              ),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ],
+                return ToolShortcutRow(
+                  tool: tool,
+                  isPinned: isPinned,
+                  hasDrawerIcon: hasDrawerIcon,
+                  onPinnedChanged: (_) {
+                    appState.togglePinnedShortcut(tool.id, tool.name);
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isPinned
+                              ? 'Removed shortcut request for ${tool.name}'
+                              : 'Shortcut requested for ${tool.name}! Accept system dialog.',
+                        ),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  onDrawerIconChanged: (_) {
+                    appState.toggleDrawerIcon(tool.id);
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          hasDrawerIcon
+                              ? 'Disabled App Drawer icon for ${tool.name}'
+                              : 'Enabled App Drawer icon for ${tool.name} (Updates in a few seconds).',
+                        ),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-          ),
         ],
       ),
     );

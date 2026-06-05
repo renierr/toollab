@@ -28,8 +28,21 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        if (intent != null && intent.hasExtra("route")) {
-            launchRoute = intent.getStringExtra("route")
+        if (intent != null) {
+            if (intent.hasExtra("route")) {
+                launchRoute = intent.getStringExtra("route")
+            } else {
+                val className = intent.component?.className
+                if (className != null) {
+                    when (className) {
+                        "de.renier.tool_lab.CalculatorAlias" -> launchRoute = "/calculator"
+                        "de.renier.tool_lab.BubbleLevelAlias" -> launchRoute = "/bubble-level"
+                        "de.renier.tool_lab.EmfDetectorAlias" -> launchRoute = "/emf-detector"
+                        "de.renier.tool_lab.DeviceInfoAlias" -> launchRoute = "/device-info"
+                        "de.renier.tool_lab.NfcTagLabAlias" -> launchRoute = "/nfc-tag-lab"
+                    }
+                }
+            }
         }
     }
 
@@ -61,6 +74,16 @@ class MainActivity : FlutterActivity() {
                             return@setMethodCallHandler
                         }
                         ShortcutHelper.removeShortcut(this, toolId)
+                        result.success(true)
+                    }
+                    "setDrawerIconEnabled" -> {
+                        val toolId = call.argument<String>("id")
+                        val enabled = call.argument<Boolean>("enabled")
+                        if (toolId == null || enabled == null) {
+                            result.error("INVALID_ARGS", "tool id and enabled state required", null)
+                            return@setMethodCallHandler
+                        }
+                        ShortcutHelper.setDrawerIconEnabled(this, toolId, enabled)
                         result.success(true)
                     }
                     else -> {
