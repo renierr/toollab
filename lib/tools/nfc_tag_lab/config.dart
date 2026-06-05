@@ -1,0 +1,18 @@
+import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/theme/theme.dart';
+
+class NfcTagLabTool {
+  NfcTagLabTool._();
+
+  static const ToolModel config = ToolModel(
+    id: 'nfc-tag-lab',
+    name: 'NFC Tag Lab',
+    description:
+        'Scan NFC targets, decode NDEF, classify signatures, and write tags.',
+    icon: Icons.nfc_outlined,
+    route: '/nfc-tag-lab',
+    accentColor: AppTheme.accentTeal,
+    sectionId: 'devices',
+  );
+}

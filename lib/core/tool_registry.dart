@@ -4,6 +4,7 @@ import 'package:tool_lab/tools/calculator/config.dart';
 import 'package:tool_lab/tools/bubble_level/config.dart';
 import 'package:tool_lab/tools/emf_detector/config.dart';
 import 'package:tool_lab/tools/device_info/config.dart';
+import 'package:tool_lab/tools/nfc_tag_lab/config.dart';
 
 class ToolRegistry {
   ToolRegistry._();
@@ -14,6 +15,12 @@ class ToolRegistry {
       title: 'Sensors',
       icon: Icons.sensors,
       description: 'Tools using device sensors',
+    ),
+    'devices': ToolSection(
+      id: 'devices',
+      title: 'Devices & Connections',
+      icon: Icons.nfc_outlined,
+      description: 'NFC, Bluetooth, and device connections',
     ),
     'utilities': ToolSection(
       id: 'utilities',
@@ -32,5 +39,6 @@ class ToolRegistry {
     BubbleLevelTool.config,
     EmfDetectorTool.config,
     DeviceInfoTool.config,
+    NfcTagLabTool.config,
   ];
 }

@@ -10,6 +10,7 @@ import 'package:tool_lab/tools/calculator/calculator_page.dart';
 import 'package:tool_lab/tools/bubble_level/bubble_level_page.dart';
 import 'package:tool_lab/tools/emf_detector/emf_detector_page.dart';
 import 'package:tool_lab/tools/device_info/device_info_page.dart';
+import 'package:tool_lab/tools/nfc_tag_lab/nfc_tag_lab_page.dart';
 
 final _router = GoRouter(
   initialLocation: '/',
@@ -35,6 +36,7 @@ Widget _pageForTool(String id) {
     'bubble-level' => const BubbleLevelPage(),
     'emf-detector' => const EmfDetectorPage(),
     'device-info' => const DeviceInfoPage(),
+    'nfc-tag-lab' => const NfcTagLabPage(),
     _ => const OverviewPage(),
   };
 }
