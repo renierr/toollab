@@ -28,6 +28,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
+        launchRoute = null
         if (intent != null) {
             if (intent.hasExtra("route")) {
                 launchRoute = intent.getStringExtra("route")
@@ -40,6 +41,7 @@ class MainActivity : FlutterActivity() {
                         "de.renier.tool_lab.EmfDetectorAlias" -> launchRoute = "/emf-detector"
                         "de.renier.tool_lab.DeviceInfoAlias" -> launchRoute = "/device-info"
                         "de.renier.tool_lab.NfcTagLabAlias" -> launchRoute = "/nfc-tag-lab"
+                        "de.renier.tool_lab.MainActivity" -> launchRoute = "/"
                     }
                 }
             }
