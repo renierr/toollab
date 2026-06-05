@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:markdown_widget/markdown_widget.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
@@ -94,15 +94,10 @@ class NoteViewer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final content = note['content'] as String? ?? '';
     final title = _getTitle(content);
     final body = _getPureContent(content);
     final updatedAt = note['updated_at'] as int? ?? 0;
-
-    final mdConfig = isDark
-        ? MarkdownConfig.darkConfig
-        : MarkdownConfig.defaultConfig;
 
     return Scaffold(
       appBar: AppBar(
@@ -164,16 +159,12 @@ class NoteViewer extends StatelessWidget {
                   ),
                 )
               else
-                MediaQuery(
-                  data: MediaQuery.of(
-                    context,
+                MarkdownBody(
+                  data: body,
+                  selectable: true,
+                  styleSheet: MarkdownStyleSheet.fromTheme(
+                    theme,
                   ).copyWith(textScaler: TextScaler.linear(1.0)),
-                  child: MarkdownWidget(
-                    data: body,
-                    config: mdConfig,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                  ),
                 ),
             ],
           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:markdown_widget/markdown_widget.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class NoteEditor extends StatefulWidget {
@@ -138,10 +138,6 @@ class _NoteEditorState extends State<NoteEditor>
 
   Widget _buildPreview(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final mdConfig = isDark
-        ? MarkdownConfig.darkConfig
-        : MarkdownConfig.defaultConfig;
 
     if (_controller.text.trim().isEmpty) {
       return Center(
@@ -158,10 +154,10 @@ class _NoteEditorState extends State<NoteEditor>
     return Container(
       color: theme.colorScheme.surface,
       padding: const EdgeInsets.all(16),
-      child: MarkdownWidget(
+      child: MarkdownBody(
         data: _controller.text,
-        config: mdConfig,
-        shrinkWrap: true,
+        selectable: true,
+        styleSheet: MarkdownStyleSheet.fromTheme(theme),
       ),
     );
   }
