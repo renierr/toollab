@@ -30,6 +30,7 @@ class PdfDisplay extends StatelessWidget {
       filePath,
       controller: controller,
       params: PdfViewerParams(
+        textSelectionParams: const PdfTextSelectionParams(enabled: true),
         onPageChanged: onPageChanged,
         boundaryMargin: boundaryMargin,
         pagePaintCallbacks: pagePaintCallbacks,
@@ -37,7 +38,7 @@ class PdfDisplay extends StatelessWidget {
         onViewerReady: onViewerReady,
         onGeneralTap: (context, controller, details) {
           onViewerTap();
-          return true;
+          return false;
         },
       ),
     );
