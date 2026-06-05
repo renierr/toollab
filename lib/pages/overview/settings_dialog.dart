@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tool_lab/providers/app_state.dart';
 
 class OverviewSettingsDialog extends StatelessWidget {
@@ -39,6 +40,17 @@ class OverviewSettingsDialog extends StatelessWidget {
               const SizedBox(height: 20),
               Text('Overview Settings', style: theme.textTheme.titleMedium),
               const SizedBox(height: 24),
+              ListTile(
+                leading: const Icon(Icons.cloud_sync_outlined),
+                title: const Text('Cloud Synchronization'),
+                subtitle: const Text('Backup and sync tool data to the cloud'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/sync-settings');
+                },
+              ),
+              const Divider(height: 1),
               SwitchListTile(
                 title: const Text('Compact View'),
                 subtitle: const Text('Smaller cards, more tools per row'),

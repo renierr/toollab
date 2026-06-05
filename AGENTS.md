@@ -85,6 +85,10 @@ Routes are auto-generated from `ToolRegistry.all` in `lib/app.dart`. Each tool's
 - **Per-tool settings**: use `DatabaseService.instance` (`lib/services/database_service.dart`) — singleton with `setSetting`/`getSetting`/`getAllSettings`.
 - **Global settings** (theme, compact mode, sort): go through `AppState`, which persists via `SharedPreferences` (`lib/services/settings_service.dart`).
 
+### 6. Bidirectional Sync
+- Tools that require data syncing can implement `SyncDelegate` and register with `SyncService`. For database storage tracking, protocol flows, and serialization requirements, see the detailed technical specification in [AGENTS.detail.md](file:///C:/dev/flutter/toolkit/AGENTS.detail.md).
+
+
 ---
 
 ## Core Guardrails

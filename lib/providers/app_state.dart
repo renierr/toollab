@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
+import 'package:tool_lab/services/sync_service.dart';
 
 class AppState extends ChangeNotifier {
   final SettingsService _settingsService;
@@ -9,6 +10,10 @@ class AppState extends ChangeNotifier {
     _themeMode = _settingsService.getThemeMode();
     _compactMode = _settingsService.getCompactMode();
     _sortBy = _settingsService.getSortBy();
+    _syncEnabled = _settingsService.getSyncEnabled();
+    _syncServerUrl = _settingsService.getSyncServerUrl();
+    _syncUserId = _settingsService.getSyncUserId();
+    _syncLastSynced = _settingsService.getSyncLastSynced();
     _loadFavorites();
     _loadRecentTimestamps();
   }
@@ -20,12 +25,32 @@ class AppState extends ChangeNotifier {
   Set<String> _favorites = {};
   Map<String, int> _recentTimestamps = {};
 
+  bool _syncEnabled = false;
+  String _syncServerUrl = '';
+  String _syncUserId = '';
+  int _syncLastSynced = 0;
+  bool _isSyncing = false;
+  final List<SyncDelegate> _syncDelegates = [];
+
   ThemeMode get themeMode => _themeMode;
   bool get compactMode => _compactMode;
   String get sortBy => _sortBy;
   String get searchQuery => _searchQuery;
   Set<String> get favorites => _favorites;
   Map<String, int> get recentTimestamps => _recentTimestamps;
+
+  bool get syncEnabled => _syncEnabled;
+  String get syncServerUrl => _syncServerUrl;
+  String get syncUserId => _syncUserId;
+  int get syncLastSynced => _syncLastSynced;
+  bool get isSyncing => _isSyncing;
+  List<SyncDelegate> get syncDelegates => List.unmodifiable(_syncDelegates);
+
+  void registerSyncDelegate(SyncDelegate delegate) {
+    if (!_syncDelegates.any((d) => d.toolId == delegate.toolId)) {
+      _syncDelegates.add(delegate);
+    }
+  }
 
   bool isFavorite(String toolId) => _favorites.contains(toolId);
 
@@ -80,5 +105,68 @@ class AppState extends ChangeNotifier {
   void setSearchQuery(String value) {
     _searchQuery = value;
     notifyListeners();
+  }
+
+  Future<void> setSyncEnabled(bool value) async {
+    _syncEnabled = value;
+    await _settingsService.setSyncEnabled(value);
+    notifyListeners();
+  }
+
+  Future<void> saveSyncSettings({
+    required bool enabled,
+    required String url,
+    required String userId,
+  }) async {
+    _syncEnabled = enabled;
+    _syncServerUrl = url;
+    _syncUserId = userId;
+    await _settingsService.setSyncEnabled(enabled);
+    await _settingsService.setSyncServerUrl(url);
+    await _settingsService.setSyncUserId(userId);
+    notifyListeners();
+  }
+
+  Future<Map<String, int>?> syncWithBackend(
+    List<SyncDelegate> delegates,
+  ) async {
+    if (_isSyncing) return null;
+    if (_syncServerUrl.isEmpty) return null;
+
+    _isSyncing = true;
+    notifyListeners();
+
+    int pulledTotal = 0;
+    int pushedTotal = 0;
+    int deletedTotal = 0;
+
+    try {
+      final available = await SyncService.isBackendAvailable(_syncServerUrl);
+      if (!available) {
+        throw Exception('Backend server unreachable');
+      }
+
+      for (final delegate in delegates) {
+        final results = await SyncService.sync(
+          baseUrl: _syncServerUrl,
+          userId: _syncUserId,
+          delegate: delegate,
+        );
+        pulledTotal += results['pulled'] ?? 0;
+        pushedTotal += results['pushed'] ?? 0;
+        deletedTotal += results['deleted'] ?? 0;
+      }
+
+      _syncLastSynced = DateTime.now().millisecondsSinceEpoch;
+      await _settingsService.setSyncLastSynced(_syncLastSynced);
+      return {
+        'pulled': pulledTotal,
+        'pushed': pushedTotal,
+        'deleted': deletedTotal,
+      };
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
+    }
   }
 }
