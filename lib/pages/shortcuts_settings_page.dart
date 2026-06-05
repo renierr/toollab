@@ -17,7 +17,7 @@ class ShortcutsSettingsPage extends StatelessWidget {
     final isAndroid = !kIsWeb && Platform.isAndroid;
 
     return ToolLayout(
-      title: 'Home Shortcuts',
+      title: 'Tool Shortcuts',
       child: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -112,22 +112,18 @@ class ShortcutsSettingsPage extends StatelessWidget {
             Builder(
               builder: (context) {
                 final tool = ToolRegistry.all[i];
-                final isPinned = appState.pinnedShortcuts[tool.id] ?? false;
                 final hasDrawerIcon = appState.drawerIcons[tool.id] ?? false;
 
                 return ToolShortcutRow(
                   tool: tool,
-                  isPinned: isPinned,
                   hasDrawerIcon: hasDrawerIcon,
-                  onPinnedChanged: (_) {
-                    appState.togglePinnedShortcut(tool.id, tool.name);
+                  onPinPressed: () {
+                    appState.pinShortcut(tool.id, tool.name);
                     ScaffoldMessenger.of(context).hideCurrentSnackBar();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          isPinned
-                              ? 'Removed shortcut request for ${tool.name}'
-                              : 'Shortcut requested for ${tool.name}! Accept system dialog.',
+                          'Shortcut requested for ${tool.name}! Accept system dialog.',
                         ),
                         duration: const Duration(seconds: 2),
                       ),

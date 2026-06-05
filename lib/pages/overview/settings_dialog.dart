@@ -66,9 +66,9 @@ class OverviewSettingsDialog extends StatelessWidget {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.shortcut_outlined),
-                title: const Text('Home Screen Shortcuts'),
+                title: const Text('Tool Shortcuts'),
                 subtitle: const Text(
-                  'Pin specific tools directly to your home screen',
+                  'Pin shortcuts or manage app drawer icons',
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {

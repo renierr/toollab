@@ -3,17 +3,15 @@ import 'package:tool_lab/core/tool_model.dart';
 
 class ToolShortcutRow extends StatelessWidget {
   final ToolModel tool;
-  final bool isPinned;
   final bool hasDrawerIcon;
-  final ValueChanged<bool> onPinnedChanged;
+  final VoidCallback onPinPressed;
   final ValueChanged<bool> onDrawerIconChanged;
 
   const ToolShortcutRow({
     super.key,
     required this.tool,
-    required this.isPinned,
     required this.hasDrawerIcon,
-    required this.onPinnedChanged,
+    required this.onPinPressed,
     required this.onDrawerIconChanged,
   });
 
@@ -70,12 +68,24 @@ class ToolShortcutRow extends StatelessWidget {
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 8),
-            SwitchListTile(
+            ListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Home Screen Shortcut'),
-              subtitle: const Text('Place icon on your home launcher screen'),
-              value: isPinned,
-              onChanged: onPinnedChanged,
+              subtitle: const Text('Add shortcut to your home launcher screen'),
+              trailing: OutlinedButton.icon(
+                onPressed: onPinPressed,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Add'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: tool.accentColor,
+                  side: BorderSide(
+                    color: tool.accentColor.withValues(alpha: 0.5),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,

@@ -92,32 +92,20 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> togglePinnedShortcut(String toolId, String toolName) async {
-    final currentVal = _pinnedShortcuts[toolId] ?? false;
-    final newVal = !currentVal;
-    if (newVal) {
-      final success = await ShortcutService.instance.pinShortcut(
-        toolId,
-        toolName,
-      );
-      if (success) {
-        await DatabaseService.instance.setSetting(
-          toolId,
-          'pinned_shortcut',
-          'true',
-        );
-        _pinnedShortcuts[toolId] = true;
-      }
-    } else {
-      await ShortcutService.instance.removeShortcut(toolId);
+  Future<void> pinShortcut(String toolId, String toolName) async {
+    final success = await ShortcutService.instance.pinShortcut(
+      toolId,
+      toolName,
+    );
+    if (success) {
       await DatabaseService.instance.setSetting(
         toolId,
         'pinned_shortcut',
-        'false',
+        'true',
       );
-      _pinnedShortcuts[toolId] = false;
+      _pinnedShortcuts[toolId] = true;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   Future<void> _loadDrawerIcons() async {
