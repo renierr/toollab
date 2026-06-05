@@ -4,17 +4,18 @@ enum _ButtonVariant { number, operator, clear, neutral, equals }
 
 class CalculatorGrid extends StatelessWidget {
   static const _rows = [
-    ['AC', '(', ')', '%'],
-    ['7', '8', '9', '÷'],
-    ['4', '5', '6', '×'],
-    ['1', '2', '3', '−'],
-    ['±', '0', '.', '+'],
+    ['AC', '()', '%', '÷'],
+    ['7', '8', '9', '×'],
+    ['4', '5', '6', '−'],
+    ['1', '2', '3', '+'],
+    ['±', '0', '.', '='],
   ];
 
   final void Function(String) onInput;
   final VoidCallback onClear;
   final VoidCallback onBracket;
   final VoidCallback onNegate;
+  final VoidCallback onEquals;
 
   const CalculatorGrid({
     super.key,
@@ -22,6 +23,7 @@ class CalculatorGrid extends StatelessWidget {
     required this.onClear,
     required this.onBracket,
     required this.onNegate,
+    required this.onEquals,
   });
 
   @override
@@ -55,7 +57,7 @@ class CalculatorGrid extends StatelessWidget {
         variant: _ButtonVariant.clear,
         onTap: onClear,
       ),
-      '(' || ')' => _CalcButton(
+      '()' => _CalcButton(
         label: label,
         variant: _ButtonVariant.neutral,
         onTap: onBracket,
@@ -69,6 +71,11 @@ class CalculatorGrid extends StatelessWidget {
         label: label,
         variant: _ButtonVariant.operator,
         onTap: () => onInput(_operatorMap(label)),
+      ),
+      '=' => _CalcButton(
+        label: label,
+        variant: _ButtonVariant.equals,
+        onTap: onEquals,
       ),
       '±' => _CalcButton(
         label: label,

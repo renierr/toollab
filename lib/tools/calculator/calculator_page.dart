@@ -8,7 +8,6 @@ import 'calculator_grid.dart';
 import 'calculator_toolbar.dart';
 import 'calculator_sci_buttons.dart';
 import 'calculator_history_panel.dart';
-import 'calculator_equals_button.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
 
@@ -161,6 +160,7 @@ class _CalculatorPageState extends State<CalculatorPage>
       onClear: _onClear,
       onBracket: _onBracket,
       onNegate: _onNegate,
+      onEquals: _onEquals,
     );
 
     return KeyboardListener(
@@ -187,8 +187,6 @@ class _CalculatorPageState extends State<CalculatorPage>
                   isShort: isShort,
                   fullscreen: CalculatorTool.config.fullscreen,
                 );
-
-                final eqBtn = CalculatorEqualsButton(onTap: _onEquals);
 
                 final toolbar = CalculatorToolbar(
                   showScientific: _showScientific,
@@ -230,13 +228,7 @@ class _CalculatorPageState extends State<CalculatorPage>
                                         8,
                                         8,
                                       ),
-                                      child: Column(
-                                        children: [
-                                          Expanded(flex: 5, child: sharedGrid),
-                                          const SizedBox(height: 6),
-                                          Expanded(flex: 1, child: eqBtn),
-                                        ],
-                                      ),
+                                      child: sharedGrid,
                                     ),
                                   ),
                                 ],
@@ -269,26 +261,14 @@ class _CalculatorPageState extends State<CalculatorPage>
                                       8,
                                       8,
                                     ),
-                                    child: Column(
-                                      children: [
-                                        Expanded(flex: 5, child: sharedGrid),
-                                        const SizedBox(height: 6),
-                                        Expanded(flex: 1, child: eqBtn),
-                                      ],
-                                    ),
+                                    child: sharedGrid,
                                   ),
                                 ),
                               ],
                             )
                           : Padding(
                               padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                              child: Column(
-                                children: [
-                                  Expanded(flex: 5, child: sharedGrid),
-                                  const SizedBox(height: 6),
-                                  Expanded(flex: 1, child: eqBtn),
-                                ],
-                              ),
+                              child: sharedGrid,
                             ),
                     ),
                   ],
