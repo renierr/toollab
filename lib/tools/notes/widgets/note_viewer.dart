@@ -164,11 +164,16 @@ class NoteViewer extends StatelessWidget {
                   ),
                 )
               else
-                MarkdownWidget(
-                  data: body,
-                  config: mdConfig,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+                MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: TextScaler.linear(1.0)),
+                  child: MarkdownWidget(
+                    data: body,
+                    config: mdConfig,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                  ),
                 ),
             ],
           ),
