@@ -8,10 +8,17 @@ import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
 
 void main() {
-  testWidgets('App launches with overview page', (WidgetTester tester) async {
+  setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
-    await DatabaseService.instance.database;
+    DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;
+  });
+
+  tearDownAll(() async {
+    await DatabaseService.instance.close();
+  });
+
+  testWidgets('App launches with overview page', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({});
     final settingsService = await SettingsService.init();
 
