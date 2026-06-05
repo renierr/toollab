@@ -41,11 +41,14 @@ class PdfDisplay extends StatelessWidget {
           return false;
         },
         getPageRenderingScale: (context, page, controller, estimatedScale) =>
-            estimatedScale.clamp(1.0, 2.0),
+            estimatedScale.clamp(1.0, 3.0),
         maxImageBytesCachedOnMemory: 128 * 1024 * 1024,
         scrollPhysics: PdfViewerParams.getScrollPhysics(context),
         interactionDelegateProvider:
             const PdfViewerScrollInteractionDelegateProviderPhysics(),
+        behaviorControlParams: const PdfViewerBehaviorControlParams(
+          partialImageLoadingDelay: Duration(milliseconds: 200),
+        ),
       ),
     );
   }

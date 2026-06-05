@@ -346,8 +346,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               filePath: _filePath!,
               controller: _pdfController,
               boundaryMargin: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 76,
-                bottom: MediaQuery.of(context).padding.bottom + 84,
+                top: MediaQuery.of(context).padding.top + 72,
+                bottom: MediaQuery.of(context).padding.bottom + 56,
               ),
               pagePaintCallbacks: [
                 if (_pdfTextSearcher != null)
@@ -360,6 +360,13 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
                   : null,
               onViewerReady: (doc, controller) {
                 _initSearcher();
+                final headerHeight = MediaQuery.of(context).padding.top + 72;
+                controller.goToPosition(
+                  documentOffset: Offset(
+                    0,
+                    -headerHeight / controller.currentZoom,
+                  ),
+                );
               },
               onPageChanged: (pageNumber) {
                 _currentPageNotifier.value = pageNumber ?? 1;
