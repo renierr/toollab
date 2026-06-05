@@ -6,8 +6,8 @@ import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
 class PdfOverlayControls extends StatelessWidget {
   final String fileName;
   final PdfViewerController controller;
-  final int currentPage;
-  final int totalPages;
+  final ValueNotifier<int> currentPageNotifier;
+  final ValueNotifier<int> totalPagesNotifier;
   final bool visible;
   final VoidCallback onBack;
   final VoidCallback onShare;
@@ -33,8 +33,8 @@ class PdfOverlayControls extends StatelessWidget {
     super.key,
     required this.fileName,
     required this.controller,
-    required this.currentPage,
-    required this.totalPages,
+    required this.currentPageNotifier,
+    required this.totalPagesNotifier,
     required this.visible,
     required this.onBack,
     required this.onShare,
@@ -249,34 +249,46 @@ class PdfOverlayControls extends StatelessWidget {
                     runSpacing: 12,
                     children: [
                       // Page Controls
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.chevron_left),
-                            onPressed: currentPage > 1
-                                ? () => controller.goToPage(
-                                    pageNumber: currentPage - 1,
-                                  )
-                                : null,
-                            tooltip: 'Previous Page',
-                          ),
-                          Text(
-                            'Page $currentPage of $totalPages',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.chevron_right),
-                            onPressed: currentPage < totalPages
-                                ? () => controller.goToPage(
-                                    pageNumber: currentPage + 1,
-                                  )
-                                : null,
-                            tooltip: 'Next Page',
-                          ),
-                        ],
+                      ListenableBuilder(
+                        listenable: Listenable.merge([
+                          currentPageNotifier,
+                          totalPagesNotifier,
+                        ]),
+                        builder: (context, _) {
+                          final currentPage = currentPageNotifier.value;
+                          final totalPages = totalPagesNotifier.value > 0
+                              ? totalPagesNotifier.value
+                              : 1;
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.chevron_left),
+                                onPressed: currentPage > 1
+                                    ? () => controller.goToPage(
+                                        pageNumber: currentPage - 1,
+                                      )
+                                    : null,
+                                tooltip: 'Previous Page',
+                              ),
+                              Text(
+                                'Page $currentPage of $totalPages',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.chevron_right),
+                                onPressed: currentPage < totalPages
+                                    ? () => controller.goToPage(
+                                        pageNumber: currentPage + 1,
+                                      )
+                                    : null,
+                                tooltip: 'Next Page',
+                              ),
+                            ],
+                          );
+                        },
                       ),
 
                       // Zoom Controls

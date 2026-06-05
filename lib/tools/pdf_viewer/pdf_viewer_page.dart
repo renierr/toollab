@@ -26,8 +26,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
   String? _filePath;
   String? _fileName;
-  int _currentPage = 1;
-  int _totalPages = 0;
+  final ValueNotifier<int> _currentPageNotifier = ValueNotifier<int>(1);
+  final ValueNotifier<int> _totalPagesNotifier = ValueNotifier<int>(0);
   bool _showOverlays = true;
 
   // Bookmarks/Outline
@@ -55,6 +55,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       _pdfTextSearcher?.removeListener(_onSearchChanged);
       _pdfTextSearcher?.dispose();
       _searchTextController.dispose();
+      _currentPageNotifier.dispose();
+      _totalPagesNotifier.dispose();
     });
 
     if (widget.sharedFile != null) {
@@ -75,8 +77,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       setState(() {
         _filePath = widget.sharedFile!.path;
         _fileName = widget.sharedFile!.name;
-        _currentPage = 1;
-        _totalPages = 0;
+        _currentPageNotifier.value = 1;
+        _totalPagesNotifier.value = 0;
         _showOverlays = true;
         _outline = null;
         _isSearchingText = false;
@@ -118,8 +120,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     setState(() {
       _filePath = path;
       _fileName = name;
-      _currentPage = 1;
-      _totalPages = 0;
+      _currentPageNotifier.value = 1;
+      _totalPagesNotifier.value = 0;
       _showOverlays = true;
       _outline = null;
       _isSearchingText = false;
@@ -360,10 +362,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
                 _initSearcher();
               },
               onPageChanged: (pageNumber) {
-                setState(() {
-                  _currentPage = pageNumber ?? 1;
-                  _totalPages = _pdfController.pageCount;
-                });
+                _currentPageNotifier.value = pageNumber ?? 1;
+                _totalPagesNotifier.value = _pdfController.pageCount;
               },
               onViewerTap: () {
                 setState(() {
@@ -376,8 +376,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
             child: PdfOverlayControls(
               fileName: _fileName ?? 'Document',
               controller: _pdfController,
-              currentPage: _currentPage,
-              totalPages: _totalPages > 0 ? _totalPages : 1,
+              currentPageNotifier: _currentPageNotifier,
+              totalPagesNotifier: _totalPagesNotifier,
               visible: _showOverlays,
               onBack: () {
                 setState(() {
