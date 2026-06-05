@@ -3,12 +3,14 @@ import 'package:tool_lab/tools/notes/widgets/note_card.dart';
 
 class NotesList extends StatelessWidget {
   final List<Map<String, dynamic>> notes;
+  final Function(Map<String, dynamic> note) onTap;
   final Function(Map<String, dynamic> note) onEdit;
   final Function(Map<String, dynamic> note) onDelete;
 
   const NotesList({
     super.key,
     required this.notes,
+    required this.onTap,
     required this.onEdit,
     required this.onDelete,
   });
@@ -67,6 +69,7 @@ class NotesList extends StatelessWidget {
           final note = notes[index];
           return NoteCard(
             note: note,
+            onTap: () => onTap(note),
             onEdit: () => onEdit(note),
             onDelete: () => onDelete(note),
           );
@@ -87,6 +90,7 @@ class NotesList extends StatelessWidget {
           final note = notes[index];
           return NoteCard(
             note: note,
+            onTap: () => onTap(note),
             onEdit: () => onEdit(note),
             onDelete: () => onDelete(note),
           );
@@ -101,6 +105,7 @@ class NotesList extends StatelessWidget {
           final note = notes[index];
           return NoteCard(
             note: note,
+            onTap: () => onTap(note),
             onEdit: () => onEdit(note),
             onDelete: () => onDelete(note),
           );

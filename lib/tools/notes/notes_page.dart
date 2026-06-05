@@ -12,6 +12,7 @@ import 'package:tool_lab/tools/notes/config.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_list.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_toolbar.dart';
 import 'package:tool_lab/tools/notes/widgets/note_editor.dart';
+import 'package:tool_lab/tools/notes/widgets/note_viewer.dart';
 
 class NotesPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -26,6 +27,8 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
   bool _isEditing = false;
   int? _editingId;
   String _editingContent = '';
+  bool _isViewing = false;
+  Map<String, dynamic>? _viewingNote;
   String _searchQuery = '';
   bool _dragging = false;
 
@@ -88,6 +91,8 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       _isEditing = true;
       _editingId = id;
       _editingContent = content;
+      _isViewing = false;
+      _viewingNote = null;
     });
   }
 
@@ -96,6 +101,20 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       _isEditing = false;
       _editingId = null;
       _editingContent = '';
+    });
+  }
+
+  void _openViewer(Map<String, dynamic> note) {
+    setState(() {
+      _isViewing = true;
+      _viewingNote = note;
+    });
+  }
+
+  void _closeViewer() {
+    setState(() {
+      _isViewing = false;
+      _viewingNote = null;
     });
   }
 
@@ -151,6 +170,10 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       final appState = context.read<AppState>();
       try {
         await appState.deleteNote(id);
+        setState(() {
+          _isViewing = false;
+          _viewingNote = null;
+        });
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -201,6 +224,23 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
         initialContent: _editingContent,
         onSave: _saveNote,
         onCancel: _closeEditor,
+      );
+    }
+
+    if (_isViewing && _viewingNote != null) {
+      final currentNote = _viewingNote!;
+      return NoteViewer(
+        note: currentNote,
+        onEdit: () {
+          _openEditor(
+            id: currentNote['id'] as int,
+            content: currentNote['content'] as String,
+          );
+        },
+        onDelete: () {
+          _deleteNote(currentNote['id'] as int);
+        },
+        onClose: _closeViewer,
       );
     }
 
@@ -258,6 +298,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
                         )
                       : NotesList(
                           notes: notes,
+                          onTap: _openViewer,
                           onEdit: (note) {
                             _openEditor(
                               id: note['id'] as int,

@@ -76,7 +76,9 @@ class _NoteEditorState extends State<NoteEditor>
     final items = [
       (Icons.format_bold, 'Bold', () => _insertText('**', suffix: '**')),
       (Icons.format_italic, 'Italic', () => _insertText('*', suffix: '*')),
-      (Icons.title, 'H1', () => _insertText('# ')),
+      (Icons.looks_one, 'H1', () => _insertText('# ')),
+      (Icons.looks_two, 'H2', () => _insertText('## ')),
+      (Icons.looks_3, 'H3', () => _insertText('### ')),
       (Icons.format_list_bulleted, 'List', () => _insertText('- ')),
       (Icons.check_box_outlined, 'Todo', () => _insertText('- [ ] ')),
       (Icons.link, 'Link', () => _insertText('[', suffix: '](url)')),
@@ -90,21 +92,23 @@ class _NoteEditorState extends State<NoteEditor>
 
     return Container(
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-      height: 48,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      width: double.infinity,
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        children: items.map((item) {
           return Tooltip(
             message: item.$2,
             child: IconButton(
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              padding: EdgeInsets.zero,
               icon: Icon(item.$1, size: 20),
               onPressed: item.$3,
               color: theme.colorScheme.onSurfaceVariant,
             ),
           );
-        },
+        }).toList(),
       ),
     );
   }
@@ -162,80 +166,127 @@ class _NoteEditorState extends State<NoteEditor>
     );
   }
 
+  Future<bool> _showDiscardDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Unsaved Changes'),
+        content: const Text(
+          'You have unsaved changes. Do you want to discard them?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep Editing'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final width = MediaQuery.of(context).size.width;
     final isWide = width >= 800;
+    final hasChanges = _controller.text != widget.initialContent;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.id == null ? 'Create Note' : 'Edit Note'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: widget.onCancel,
-        ),
-        actions: [
-          TextButton(
-            onPressed: _controller.text.trim().isEmpty
-                ? null
-                : () => widget.onSave(_controller.text),
-            child: Text(
-              'Save',
-              style: TextStyle(
-                color: _controller.text.trim().isEmpty
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
-                    : AppTheme.accentTeal,
-                fontWeight: FontWeight.bold,
+    return PopScope(
+      canPop: !hasChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldDiscard = await _showDiscardDialog(context);
+        if (shouldDiscard) {
+          widget.onCancel();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.id == null ? 'Create Note' : 'Edit Note'),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () async {
+              if (hasChanges) {
+                final shouldDiscard = await _showDiscardDialog(context);
+                if (shouldDiscard) {
+                  widget.onCancel();
+                }
+              } else {
+                widget.onCancel();
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: _controller.text.trim().isEmpty
+                  ? null
+                  : () => widget.onSave(_controller.text),
+              child: Text(
+                'Save',
+                style: TextStyle(
+                  color: _controller.text.trim().isEmpty
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
+                      : AppTheme.accentTeal,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
-        bottom: isWide
-            ? null
-            : TabBar(
-                controller: _tabController,
-                indicatorColor: AppTheme.accentTeal,
-                labelColor: AppTheme.accentTeal,
-                unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-                tabs: const [
-                  Tab(text: 'Write'),
-                  Tab(text: 'Preview'),
-                ],
-              ),
-      ),
-      body: Column(
-        children: [
-          _buildToolbar(context),
-          Expanded(
-            child: isWide
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border(
-                              right: BorderSide(
-                                color: theme.colorScheme.outlineVariant,
+          ],
+          bottom: isWide
+              ? null
+              : TabBar(
+                  controller: _tabController,
+                  indicatorColor: AppTheme.accentTeal,
+                  labelColor: AppTheme.accentTeal,
+                  unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                  tabs: const [
+                    Tab(text: 'Write'),
+                    Tab(text: 'Preview'),
+                  ],
+                ),
+        ),
+        body: Column(
+          children: [
+            _buildToolbar(context),
+            Expanded(
+              child: isWide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                right: BorderSide(
+                                  color: theme.colorScheme.outlineVariant,
+                                ),
                               ),
                             ),
+                            child: _buildTextField(context),
                           ),
-                          child: _buildTextField(context),
                         ),
-                      ),
-                      Expanded(child: _buildPreview(context)),
-                    ],
-                  )
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildTextField(context),
-                      SingleChildScrollView(child: _buildPreview(context)),
-                    ],
-                  ),
-          ),
-        ],
+                        Expanded(child: _buildPreview(context)),
+                      ],
+                    )
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildTextField(context),
+                        SingleChildScrollView(child: _buildPreview(context)),
+                      ],
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
