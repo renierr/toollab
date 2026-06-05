@@ -48,14 +48,8 @@ class NoteViewer extends StatelessWidget {
       }
     }
     if (titleIdx == -1) return '';
-    final remainingLines = lines
-        .skip(titleIdx + 1)
-        .where((l) => l.trim().isNotEmpty)
-        .toList();
-    if (remainingLines.isEmpty) {
-      return content;
-    }
-    return remainingLines.join('\n');
+    final remainingLines = lines.skip(titleIdx + 1).toList();
+    return remainingLines.join('\n').trim();
   }
 
   String _formatDate(int timestamp) {
