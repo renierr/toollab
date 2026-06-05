@@ -6,6 +6,7 @@ class PdfDisplay extends StatelessWidget {
   final PdfViewerController controller;
   final void Function(int? pageNumber) onPageChanged;
   final VoidCallback onViewerTap;
+  final EdgeInsets boundaryMargin;
 
   const PdfDisplay({
     super.key,
@@ -13,6 +14,7 @@ class PdfDisplay extends StatelessWidget {
     required this.controller,
     required this.onPageChanged,
     required this.onViewerTap,
+    required this.boundaryMargin,
   });
 
   @override
@@ -22,6 +24,7 @@ class PdfDisplay extends StatelessWidget {
       controller: controller,
       params: PdfViewerParams(
         onPageChanged: onPageChanged,
+        boundaryMargin: boundaryMargin,
         onGeneralTap: (context, controller, details) {
           onViewerTap();
           return true;

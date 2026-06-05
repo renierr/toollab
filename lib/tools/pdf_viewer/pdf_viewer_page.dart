@@ -114,11 +114,14 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
           : Colors.grey[200],
       body: Stack(
         children: [
-          // The PDF display itself
           Positioned.fill(
             child: PdfDisplay(
               filePath: _filePath!,
               controller: _pdfController,
+              boundaryMargin: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 76,
+                bottom: MediaQuery.of(context).padding.bottom + 84,
+              ),
               onPageChanged: (pageNumber) {
                 setState(() {
                   _currentPage = pageNumber ?? 1;
