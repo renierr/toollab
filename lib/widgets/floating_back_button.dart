@@ -7,6 +7,9 @@ class FloatingBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!Navigator.of(context).canPop()) {
+      return const SizedBox.shrink();
+    }
     final theme = Theme.of(context);
     return Material(
       color: theme.colorScheme.surface.withAlpha(200),
