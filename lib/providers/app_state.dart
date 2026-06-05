@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
+import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 
 class AppState extends ChangeNotifier {
@@ -17,6 +19,7 @@ class AppState extends ChangeNotifier {
     _syncLastSynced = _settingsService.getSyncLastSynced();
     _loadFavorites();
     _loadRecentTimestamps();
+    _loadPinnedShortcuts();
   }
 
   ThemeMode _themeMode = ThemeMode.system;
@@ -25,6 +28,9 @@ class AppState extends ChangeNotifier {
   String _searchQuery = '';
   Set<String> _favorites = {};
   Map<String, int> _recentTimestamps = {};
+  Map<String, bool> _pinnedShortcuts = {};
+
+  Map<String, bool> get pinnedShortcuts => _pinnedShortcuts;
 
   bool _syncEnabled = false;
   String _syncServerUrl = '';
@@ -64,6 +70,47 @@ class AppState extends ChangeNotifier {
 
   Future<void> _loadRecentTimestamps() async {
     _recentTimestamps = await DatabaseService.instance.getRecentTimestamps();
+    notifyListeners();
+  }
+
+  Future<void> _loadPinnedShortcuts() async {
+    final Map<String, bool> result = {};
+    for (final tool in ToolRegistry.all) {
+      final value = await DatabaseService.instance.getSetting(
+        tool.id,
+        'pinned_shortcut',
+      );
+      result[tool.id] = value == 'true';
+    }
+    _pinnedShortcuts = result;
+    notifyListeners();
+  }
+
+  Future<void> togglePinnedShortcut(String toolId, String toolName) async {
+    final currentVal = _pinnedShortcuts[toolId] ?? false;
+    final newVal = !currentVal;
+    if (newVal) {
+      final success = await ShortcutService.instance.pinShortcut(
+        toolId,
+        toolName,
+      );
+      if (success) {
+        await DatabaseService.instance.setSetting(
+          toolId,
+          'pinned_shortcut',
+          'true',
+        );
+        _pinnedShortcuts[toolId] = true;
+      }
+    } else {
+      await ShortcutService.instance.removeShortcut(toolId);
+      await DatabaseService.instance.setSetting(
+        toolId,
+        'pinned_shortcut',
+        'false',
+      );
+      _pinnedShortcuts[toolId] = false;
+    }
     notifyListeners();
   }
 

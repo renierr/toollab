@@ -64,6 +64,19 @@ class OverviewSettingsDialog extends StatelessWidget {
                 },
               ),
               const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.shortcut_outlined),
+                title: const Text('Home Screen Shortcuts'),
+                subtitle: const Text(
+                  'Pin specific tools directly to your home screen',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/shortcut-settings');
+                },
+              ),
+              const Divider(height: 1),
               SwitchListTile(
                 title: const Text('Compact View'),
                 subtitle: const Text('Smaller cards, more tools per row'),

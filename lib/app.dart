@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,8 @@ import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/pages/overview/overview_page.dart';
 import 'package:tool_lab/pages/sync_settings_page.dart';
 import 'package:tool_lab/pages/maintenance_page.dart';
+import 'package:tool_lab/pages/shortcuts_settings_page.dart';
+import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/tools/calculator/calculator_page.dart';
 import 'package:tool_lab/tools/bubble_level/bubble_level_page.dart';
 import 'package:tool_lab/tools/emf_detector/emf_detector_page.dart';
@@ -32,6 +35,11 @@ final _router = GoRouter(
       name: 'maintenance',
       builder: (_, _) => const MaintenancePage(),
     ),
+    GoRoute(
+      path: '/shortcut-settings',
+      name: 'shortcut-settings',
+      builder: (_, _) => const ShortcutsSettingsPage(),
+    ),
     ...ToolRegistry.all.map(
       (tool) => GoRoute(
         path: tool.route,
@@ -53,8 +61,42 @@ Widget _pageForTool(String id) {
   };
 }
 
-class ToolLabApp extends StatelessWidget {
+class ToolLabApp extends StatefulWidget {
   const ToolLabApp({super.key});
+
+  @override
+  State<ToolLabApp> createState() => _ToolLabAppState();
+}
+
+class _ToolLabAppState extends State<ToolLabApp> {
+  StreamSubscription<String>? _shortcutSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _initShortcuts();
+  }
+
+  Future<void> _initShortcuts() async {
+    final launchRoute = await ShortcutService.instance.getLaunchRoute();
+    if (launchRoute != null && mounted) {
+      _router.go(launchRoute);
+    }
+
+    _shortcutSubscription = ShortcutService.instance.onShortcutRoute.listen((
+      route,
+    ) {
+      if (mounted) {
+        _router.go(route);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _shortcutSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
