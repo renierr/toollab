@@ -24,6 +24,7 @@ class NotesSyncDelegate implements SyncDelegate {
     final note = await NotesDbHelper.instance.getNoteByShortId(id);
     if (note == null || (note['deleted'] as int) == 1) return null;
     return {
+      'shortId': note['short_id'] as String,
       'content': note['content'] as String,
       'createdAt': note['created_at'] as int,
       'updatedAt': note['updated_at'] as int,

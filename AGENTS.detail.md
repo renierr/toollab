@@ -92,6 +92,20 @@ Global sync settings are persisted via `SettingsService` (backed by `SharedPrefe
 - `sync_user_id`: string (unique identifier or user namespace suffix)
 - `sync_last_synced`: int (timestamp of the last successful sync operation)
 
+### 1.4. Unique Record IDs (`shortId`) & Optional User Namespacing
+
+To prevent record duplication and ensure sync stability across multiple platforms (e.g., Flutter and TypeScript):
+
+- **Unique IDs (`shortId`)**:
+  - The record's unique ID (`shortId` in camelCase, matching the TypeScript schema) **MUST** be included inside the data map returned by `getLocalRecordData(id)`.
+  - When pulling data from the server, if the incoming data payload does not contain the key field (`shortId`), the sync engine or client **MUST** explicitly populate it using the envelope ID (`sRec.id`). This prevents ID loss and eventual duplication of records.
+  - When deletes are performed, the client must use the `shortId` to track deletions (rather than local auto-incremented integer keys) so they can be propagated and applied correctly on the server.
+
+- **Optional User Namespacing (`userId`)**:
+  - The `userId` setting is optional.
+  - If a user ID is specified in settings, the sync engine appends it as a suffix to the request path (e.g., `/api/sync/notes-<userId>`) to isolate user data.
+  - If the user ID is left blank or empty, no user ID suffix is appended, and sync operates directly on the raw tool ID (e.g., `/api/sync/notes`). This enables global sharing across tools or platforms that do not use a user namespace.
+
 ---
 
 ## 2. Database Backup, Export, & File Downloading Specifications
