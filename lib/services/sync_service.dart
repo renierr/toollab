@@ -7,10 +7,6 @@ abstract class SyncDelegate {
   /// Unique identifier of the tool (used to build the sync namespace and toolId on server).
   String get toolId;
 
-  /// Whether this tool's sync should be namespaced with a user ID suffix.
-  /// If false, the sync will use [toolId] directly without any user suffix.
-  bool get useUserNamespace => true;
-
   /// Retrieve all local records (active and deleted) as a list of maps.
   /// Each map MUST contain:
   /// - 'id': String (the unique record ID)
@@ -75,12 +71,9 @@ class SyncService {
         ? baseUrl.substring(0, baseUrl.length - 1)
         : baseUrl;
 
-    final String namespaceUserId = userId.trim().isEmpty
-        ? 'user-1'
-        : userId.trim();
-    final String toolId = delegate.useUserNamespace
-        ? '${delegate.toolId}-$namespaceUserId'
-        : delegate.toolId;
+    final String toolId = userId.trim().isEmpty
+        ? delegate.toolId
+        : '${delegate.toolId}-${userId.trim()}';
 
     int pulledCount = 0;
     int pushedCount = 0;

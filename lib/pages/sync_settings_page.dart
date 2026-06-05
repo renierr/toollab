@@ -253,18 +253,12 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                             TextFormField(
                               controller: _userIdController,
                               decoration: const InputDecoration(
-                                labelText: 'User ID',
-                                hintText: 'Enter your username or user ID',
+                                labelText: 'User ID (Optional)',
+                                hintText:
+                                    'Enter your username or user ID (optional)',
                                 prefixIcon: Icon(Icons.person_outline),
                                 border: OutlineInputBorder(),
                               ),
-                              validator: (v) {
-                                if (enabled &&
-                                    (v == null || v.trim().isEmpty)) {
-                                  return 'User ID is required when sync is enabled';
-                                }
-                                return null;
-                              },
                             ),
                           ],
                         ),
