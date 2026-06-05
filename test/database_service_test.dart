@@ -14,9 +14,7 @@ void main() {
   });
 
   group('ToolDatabase Namespace Tests', () {
-    testWidgets('Tool database namespaces table names correctly', (
-      WidgetTester tester,
-    ) async {
+    test('Tool database namespaces table names correctly', () async {
       final dbService = DatabaseService.instance;
       final toolDb1 = await dbService.getToolDatabase('tool-one');
       final toolDb2 = await dbService.getToolDatabase('tool-two');
@@ -25,9 +23,9 @@ void main() {
       expect(toolDb2.nameTable('history'), 'tool_tool_two_history');
     });
 
-    testWidgets(
+    test(
       'Tool databases can create tables and insert/query/update/delete independently',
-      (WidgetTester tester) async {
+      () async {
         final dbService = DatabaseService.instance;
         final toolDb1 = await dbService.getToolDatabase('tool_a');
         final toolDb2 = await dbService.getToolDatabase('tool_b');
@@ -98,34 +96,33 @@ void main() {
       },
     );
 
-    testWidgets('ToolDatabase supports transactions with namespaced executor', (
-      WidgetTester tester,
-    ) async {
-      final dbService = DatabaseService.instance;
-      final toolDb = await dbService.getToolDatabase('tool_txn');
-      final table = toolDb.nameTable('logs');
+    test(
+      'ToolDatabase supports transactions with namespaced executor',
+      () async {
+        final dbService = DatabaseService.instance;
+        final toolDb = await dbService.getToolDatabase('tool_txn');
+        final table = toolDb.nameTable('logs');
 
-      await toolDb.execute('''
+        await toolDb.execute('''
         CREATE TABLE IF NOT EXISTS $table (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           msg TEXT
         )
       ''');
 
-      await toolDb.transaction((txn) async {
-        await txn.insert('logs', {'msg': 'First'});
-        await txn.insert('logs', {'msg': 'Second'});
-      });
+        await toolDb.transaction((txn) async {
+          await txn.insert('logs', {'msg': 'First'});
+          await txn.insert('logs', {'msg': 'Second'});
+        });
 
-      final rows = await toolDb.query('logs');
-      expect(rows.length, 2);
-      expect(rows[0]['msg'], 'First');
-      expect(rows[1]['msg'], 'Second');
-    });
+        final rows = await toolDb.query('logs');
+        expect(rows.length, 2);
+        expect(rows[0]['msg'], 'First');
+        expect(rows[1]['msg'], 'Second');
+      },
+    );
 
-    testWidgets('ToolDatabase supports batch operations', (
-      WidgetTester tester,
-    ) async {
+    test('ToolDatabase supports batch operations', () async {
       final dbService = DatabaseService.instance;
       final toolDb = await dbService.getToolDatabase('tool_batch');
       final table = toolDb.nameTable('data');
@@ -148,9 +145,7 @@ void main() {
       expect(rows.map((r) => r['val']).toList(), ['A', 'B', 'C']);
     });
 
-    testWidgets('ToolDatabase supports safe schema migrations', (
-      WidgetTester tester,
-    ) async {
+    test('ToolDatabase supports safe schema migrations', () async {
       final dbService = DatabaseService.instance;
       final toolDb = await dbService.getToolDatabase('tool_migration');
       final table = toolDb.nameTable('test');
