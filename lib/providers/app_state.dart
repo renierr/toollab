@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
@@ -168,5 +169,15 @@ class AppState extends ChangeNotifier {
       _isSyncing = false;
       notifyListeners();
     }
+  }
+
+  /// Exports the SQLite database file as raw bytes.
+  Future<Uint8List> getDatabaseBytes() async {
+    return await DatabaseService.instance.getDatabaseBytes();
+  }
+
+  /// Exports global settings as a JSON string.
+  String exportSettingsToJson() {
+    return _settingsService.exportSettingsToJson();
   }
 }

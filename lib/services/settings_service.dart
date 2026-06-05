@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -75,5 +76,15 @@ class SettingsService {
 
   Future<void> setSyncLastSynced(int value) async {
     await _prefs.setInt(_keySyncLastSynced, value);
+  }
+
+  /// Exports all keys and values in SharedPreferences to a JSON string.
+  String exportSettingsToJson() {
+    final keys = _prefs.getKeys();
+    final Map<String, dynamic> map = {};
+    for (final key in keys) {
+      map[key] = _prefs.get(key);
+    }
+    return jsonEncode(map);
   }
 }

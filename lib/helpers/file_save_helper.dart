@@ -1,0 +1,397 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import '../widgets/custom_notification.dart';
+import '../theme/theme.dart';
+
+class FileSaveHelper {
+  static const _channel = MethodChannel('de.renier.tool_lab/file_save');
+
+  /// Resolves the save path for a file, writes [bytes] to it, and automatically
+  /// handles the success or error notifications internally.
+  /// On Android, uses MediaStore to save to public Downloads and posts a native notification.
+  /// On Desktop, uses native Save As dialog.
+  /// Returns the resolved save path, or null if cancelled or failed.
+  static Future<String?> saveFile({
+    required BuildContext context,
+    required String suggestedName,
+    Uint8List? bytes,
+    List<XTypeGroup>? acceptedTypeGroups,
+    String? successMessageAndroid,
+    String Function(String displayPath)? successMessageGeneralBuilder,
+    String Function(String error)? errorMessageBuilder,
+  }) async {
+    try {
+      // Clean up old temporary files in the background
+      cleanUpTempFiles().catchError(
+        (e) => debugPrint("Temp cleanup failed: $e"),
+      );
+
+      String? destPath;
+      final mimeType = _mimeTypeFromName(suggestedName);
+
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        final FileSaveLocation? location = await getSaveLocation(
+          suggestedName: suggestedName,
+          acceptedTypeGroups: acceptedTypeGroups ?? const <XTypeGroup>[],
+        );
+        if (location == null) return null;
+        destPath = location.path;
+        if (bytes != null) {
+          final File file = File(destPath);
+          await file.writeAsBytes(bytes);
+        }
+
+        if (context.mounted) {
+          final displayPath = destPath.length > 40
+              ? '...${destPath.substring(destPath.length - 37)}'
+              : destPath;
+
+          showSuccessDialog(
+            context: context,
+            displayPath: displayPath,
+            actualPath: destPath,
+            mimeType: mimeType,
+            message:
+                successMessageGeneralBuilder?.call(displayPath) ??
+                "File saved to $displayPath",
+          );
+        }
+      } else if (Platform.isAndroid) {
+        if (bytes == null) return null;
+
+        // Use MediaStore via platform channel for proper Downloads access (returns uri and filePath)
+        final Map? result = await _channel.invokeMethod<Map>(
+          'saveToDownloads',
+          {'bytes': bytes, 'fileName': suggestedName, 'mimeType': mimeType},
+        );
+
+        if (result == null) return null;
+
+        final uriString = result['uri'] as String?;
+        final filePath = result['filePath'] as String?;
+        destPath = filePath;
+
+        if (context.mounted && uriString != null && filePath != null) {
+          // Trigger native Android system notification (always enabled)
+          try {
+            await _channel.invokeMethod('showSystemNotification', {
+              'fileName': suggestedName,
+              'uri': uriString,
+              'mimeType': mimeType,
+            });
+          } catch (e) {
+            debugPrint("Failed to show native system notification: $e");
+          }
+
+          // Write bytes to a temporary file to enable secure in-app sharing
+          String sharePath = uriString;
+          try {
+            final tempDir = await getTemporaryDirectory();
+            final tempFile = File('${tempDir.path}/$suggestedName');
+            await tempFile.writeAsBytes(bytes);
+            sharePath = tempFile.path;
+          } catch (e) {
+            debugPrint("Failed to create temporary file for sharing: $e");
+          }
+
+          // Show in-app success dialog
+          if (context.mounted) {
+            showSuccessDialog(
+              context: context,
+              displayPath: filePath,
+              actualPath: sharePath,
+              mimeType: mimeType,
+              message:
+                  successMessageAndroid ?? "File saved to Downloads folder",
+            );
+          }
+        }
+      } else {
+        // iOS or other platforms
+        final Directory docDir = await getApplicationDocumentsDirectory();
+        final File file = File('${docDir.path}/$suggestedName');
+        if (bytes != null) {
+          await file.writeAsBytes(bytes);
+        }
+        destPath = file.path;
+
+        if (context.mounted) {
+          final displayPath = destPath.length > 40
+              ? '...${destPath.substring(destPath.length - 37)}'
+              : destPath;
+
+          showSuccessDialog(
+            context: context,
+            displayPath: displayPath,
+            actualPath: destPath,
+            mimeType: mimeType,
+            message:
+                successMessageGeneralBuilder?.call(displayPath) ??
+                "File saved to $displayPath",
+          );
+        }
+      }
+
+      return destPath;
+    } catch (e) {
+      if (context.mounted) {
+        showErrorNotification(
+          context: context,
+          errorMessage:
+              errorMessageBuilder?.call(e.toString()) ??
+              "Failed to save file: $e",
+        );
+      }
+      return null;
+    }
+  }
+
+  /// Opens the file using the default native system app.
+  static Future<void> openFile(String path, String mimeType) async {
+    try {
+      if (Platform.isAndroid) {
+        await _channel.invokeMethod('openFile', {
+          'uri': path,
+          'mimeType': mimeType,
+        });
+      } else if (Platform.isWindows) {
+        await Process.run('explorer.exe', [path]);
+      } else if (Platform.isMacOS) {
+        await Process.run('open', [path]);
+      } else if (Platform.isLinux) {
+        await Process.run('xdg-open', [path]);
+      }
+    } catch (e) {
+      debugPrint("Error opening file: $e");
+    }
+  }
+
+  /// Shares the file natively using share_plus on all platforms (mobile & desktop).
+  static Future<void> shareFile(String path, String mimeType) async {
+    try {
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(path, mimeType: mimeType)]),
+      );
+    } catch (e) {
+      debugPrint("Error sharing file: $e");
+    }
+  }
+
+  /// Cleans up old temporary files created by the application in the temp directory.
+  static Future<void> cleanUpTempFiles() async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      if (await tempDir.exists()) {
+        final List<FileSystemEntity> files = tempDir.listSync();
+        for (final file in files) {
+          if (file is File) {
+            final name = file.path.split(Platform.pathSeparator).last;
+            if (name.startsWith('tool_lab_db_') ||
+                name.startsWith('tool_lab_settings_')) {
+              final lastModified = await file.lastModified();
+              final now = DateTime.now();
+              if (now.difference(lastModified).inMinutes > 5) {
+                await file.delete();
+                debugPrint("Cleaned up temp file: ${file.path}");
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error cleaning up temp files: $e");
+    }
+  }
+
+  /// Displays an interactive success dialog allowing the user to open or share/locate the exported file.
+  static void showSuccessDialog({
+    required BuildContext context,
+    required String displayPath,
+    required String actualPath,
+    required String mimeType,
+    required String message,
+  }) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black38,
+      builder: (BuildContext ctx) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.check_circle_outline,
+                          color: AppTheme.accentGreen,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "Export Successful",
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurface,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      message,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.end,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
+                          },
+                          icon: Icon(
+                            Icons.close,
+                            size: 18,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          label: Text(
+                            "Close",
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            Navigator.of(ctx).pop();
+                            await openFile(actualPath, mimeType);
+                          },
+                          icon: const Icon(
+                            Icons.open_in_new,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            "Open",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accentGreen,
+                            elevation: 0,
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            Navigator.of(ctx).pop();
+                            await shareFile(actualPath, mimeType);
+                          },
+                          icon: const Icon(
+                            Icons.share,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            "Share",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accentBlue,
+                            elevation: 0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Returns MIME type based on file extension.
+  static String _mimeTypeFromName(String fileName) {
+    final ext = fileName.split('.').last.toLowerCase();
+    switch (ext) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'json':
+        return 'application/json';
+      case 'csv':
+        return 'text/csv';
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  /// Formats the success message and shows a custom notification dialog.
+  static void showSuccessNotification({
+    required BuildContext context,
+    required String savedPath,
+    required String androidDownloadMessage,
+    required String Function(String displayPath) generalMessageBuilder,
+  }) {
+    String message;
+    if (Platform.isAndroid) {
+      message = androidDownloadMessage;
+    } else {
+      final displayPath = savedPath.length > 40
+          ? '...${savedPath.substring(savedPath.length - 37)}'
+          : savedPath;
+      message = generalMessageBuilder(displayPath);
+    }
+
+    showNotificationDialog(context, message, isError: false);
+  }
+
+  /// Shows an error notification dialog.
+  static void showErrorNotification({
+    required BuildContext context,
+    required String errorMessage,
+  }) {
+    showNotificationDialog(context, errorMessage, isError: true);
+  }
+}

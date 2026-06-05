@@ -7,6 +7,7 @@ import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/pages/overview/overview_page.dart';
 import 'package:tool_lab/pages/sync_settings_page.dart';
+import 'package:tool_lab/pages/maintenance_page.dart';
 import 'package:tool_lab/tools/calculator/calculator_page.dart';
 import 'package:tool_lab/tools/bubble_level/bubble_level_page.dart';
 import 'package:tool_lab/tools/emf_detector/emf_detector_page.dart';
@@ -25,6 +26,11 @@ final _router = GoRouter(
       path: '/sync-settings',
       name: 'sync-settings',
       builder: (_, _) => const SyncSettingsPage(),
+    ),
+    GoRoute(
+      path: '/maintenance',
+      name: 'maintenance',
+      builder: (_, _) => const MaintenancePage(),
     ),
     ...ToolRegistry.all.map(
       (tool) => GoRoute(

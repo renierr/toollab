@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -199,6 +200,17 @@ class DatabaseService {
   /// Retrieves a namespaced database helper for a specific tool by its [ToolModel] configuration.
   Future<ToolDatabase> getToolDatabaseForConfig(ToolModel config) async {
     return getToolDatabase(config.id);
+  }
+
+  /// Reads the raw bytes of the active SQLite database file for backup/export.
+  Future<Uint8List> getDatabaseBytes() async {
+    final db = await database;
+    final path = db.path;
+    final file = File(path);
+    if (!await file.exists()) {
+      throw Exception('Database file does not exist');
+    }
+    return await file.readAsBytes();
   }
 }
 

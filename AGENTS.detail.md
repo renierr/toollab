@@ -91,3 +91,42 @@ Global sync settings are persisted via `SettingsService` (backed by `SharedPrefe
 - `sync_server_url`: string (base URL of the Bun backend server)
 - `sync_user_id`: string (unique identifier or user namespace suffix)
 - `sync_last_synced`: int (timestamp of the last successful sync operation)
+
+---
+
+## 2. Database Backup, Export, & File Downloading Specifications
+
+To ensure seamless, crash-free file exporting (e.g., SQLite database copies or settings JSON exports) across different operating systems, leverage `FileSaveHelper` (`lib/helpers/file_save_helper.dart`):
+
+### 2.1. Operating System Implementation Details
+- **Desktop (Windows, macOS, Linux)**:
+  - Uses `getSaveLocation()` from `package:file_selector` to present a native "Save As" file picker.
+  - Prompts the user for a destination path, writes raw bytes directly, and presents a custom in-app success dialog.
+- **Mobile (Android)**:
+  - Invokes a native Kotlin MethodChannel (`de.renier.tool_lab/file_save`).
+  - On Android 10+ (API 29+), uses MediaStore API to write bytes directly into the public Downloads directory without needing runtime storage permissions.
+  - Generates a local system-native download completed notification with "Open" and "Share" quick actions.
+  - Writes a temporary copy to the cache directory to allow immediate sharing via `share_plus`.
+- **iOS & Others**:
+  - Writes the backup/export directly to the application documents directory (`getApplicationDocumentsDirectory()`) and displays a success confirmation.
+
+### 2.2. Common API Interface
+```dart
+Future<String?> FileSaveHelper.saveFile({
+  required BuildContext context,
+  required String suggestedName,
+  Uint8List? bytes,
+  List<XTypeGroup>? acceptedTypeGroups,
+  String? successMessageAndroid,
+  String Function(String displayPath)? successMessageGeneralBuilder,
+  String Function(String error)? errorMessageBuilder,
+});
+```
+
+### 2.3. Sharing Files Natively
+To share exported files natively using `share_plus`:
+```dart
+await SharePlus.instance.share(
+  ShareParams(files: [XFile(path, mimeType: mimeType)]),
+);
+```

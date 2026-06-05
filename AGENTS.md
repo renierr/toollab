@@ -26,7 +26,7 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **Share Cross-Tool Widgets**: Any widget, component, or utility pattern used by 2+ different tools must be extracted to `lib/widgets/` as a shared widget. Tool-specific private widgets (`_SomeWidget`) stay in the tool's own folder under `lib/tools/<name>/`. This includes common patterns like sensor data display rows, status badges, action icon buttons, loading indicators, info cards, and value readouts.
 - **Tool Cleanup on Dispose**: Every tool page must use the `DisposeCleanup` mixin (`lib/core/tool_page_state.dart`) and register all cleanup via `onDispose()` in `initState` — sensor subscriptions, wakelocks, controllers, listeners. Never override `dispose()` manually.
 - **No Useless Comments**: Do not add code comments that are not useful, such as comments explaining the prompt or user requests.
-- **Latest Dependencies**: Always use the latest version of a dependency available at the time of adding it. Do not add outdated versions.
+- **Latest Dependencies & Modern APIs**: Always use the latest version of a dependency available at the time of adding it. Do not add outdated versions. Avoid deprecated method calls (e.g. always use `.withValues(alpha: ...)` instead of `.withOpacity(...)` to prevent precision loss, and use new and modern code).
 - **Database Test Isolation**: Database unit/widget tests must never read or write to the standard persistent database. Always set `dbPathOverride` to `inMemoryDatabasePath` on `DatabaseService.instance` and close the connection in `tearDownAll` to ensure test state is clean and fully isolated in memory.
 
 ---
@@ -87,6 +87,9 @@ Routes are auto-generated from `ToolRegistry.all` in `lib/app.dart`. Each tool's
 
 ### 6. Bidirectional Sync
 - Tools that require data syncing can implement `SyncDelegate` and register with `SyncService`. For database storage tracking, protocol flows, and serialization requirements, see the detailed technical specification in [AGENTS.detail.md](file:///C:/dev/flutter/toolkit/AGENTS.detail.md).
+
+### 7. File Saving & Sharing
+- Use `FileSaveHelper` (`lib/helpers/file_save_helper.dart`) to download/export files (such as database backups, reports, or JSON exports). For cross-platform file saving architecture, platform-specific providers, and implementation details, see [AGENTS.detail.md](file:///C:/dev/flutter/toolkit/AGENTS.detail.md).
 
 
 ---

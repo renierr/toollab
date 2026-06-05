@@ -51,6 +51,19 @@ class OverviewSettingsDialog extends StatelessWidget {
                 },
               ),
               const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.settings_suggest_outlined),
+                title: const Text('Maintenance Settings'),
+                subtitle: const Text(
+                  'Download database backups and settings JSON',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/maintenance');
+                },
+              ),
+              const Divider(height: 1),
               SwitchListTile(
                 title: const Text('Compact View'),
                 subtitle: const Text('Smaller cards, more tools per row'),
