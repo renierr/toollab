@@ -173,9 +173,15 @@ class NoteViewer extends StatelessWidget {
                         launchUrl(Uri.parse(href));
                       }
                     },
-                    styleSheet: MarkdownStyleSheet.fromTheme(
-                      theme,
-                    ).copyWith(textScaler: TextScaler.linear(1.0)),
+                    styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+                      textScaler: TextScaler.linear(1.0),
+                      blockquoteDecoration: BoxDecoration(
+                        color: theme.brightness == Brightness.dark
+                            ? theme.colorScheme.surfaceContainerHighest
+                            : Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(2.0),
+                      ),
+                    ),
                   ),
               ],
             ),

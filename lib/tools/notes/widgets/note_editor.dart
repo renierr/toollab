@@ -163,7 +163,14 @@ class _NoteEditorState extends State<NoteEditor>
             launchUrl(Uri.parse(href));
           }
         },
-        styleSheet: MarkdownStyleSheet.fromTheme(theme),
+        styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+          blockquoteDecoration: BoxDecoration(
+            color: theme.brightness == Brightness.dark
+                ? theme.colorScheme.surfaceContainerHighest
+                : Colors.blue.shade100,
+            borderRadius: BorderRadius.circular(2.0),
+          ),
+        ),
       ),
     );
   }
