@@ -33,13 +33,26 @@ class _OverviewPageState extends State<OverviewPage> {
   }
 
   double _childAspectRatio(bool compact, double width) {
+    final crossAxisCount = _crossAxisCount(width);
+    final cardWidth = (width - 32 - (crossAxisCount - 1) * 12) / crossAxisCount;
+
     if (compact) {
-      if (width < 400) return 4.5;
-      if (width < 600) return 3.2;
-      return 3.5;
+      const minHeight = 76.0;
+      final defaultRatio = width < 400 ? 4.0 : (width < 600 ? 2.8 : 3.0);
+      final heightWithDefaultRatio = cardWidth / defaultRatio;
+      if (heightWithDefaultRatio < minHeight) {
+        return cardWidth / minHeight;
+      }
+      return defaultRatio;
     }
-    if (width < 480) return 1.2;
-    return 1.35;
+
+    const minHeight = 145.0;
+    final defaultRatio = width < 480 ? 1.1 : 1.2;
+    final heightWithDefaultRatio = cardWidth / defaultRatio;
+    if (heightWithDefaultRatio < minHeight) {
+      return cardWidth / minHeight;
+    }
+    return defaultRatio;
   }
 
   @override
@@ -201,21 +214,24 @@ class _OverviewPageState extends State<OverviewPage> {
                         );
 
                         return <Widget>[
-                          SliverToBoxAdapter(
-                            child: SectionHeader(
-                              icon: section.icon,
-                              title: section.title,
-                              toolCount: sectionTools.length,
-                              isCollapsed: isCollapsed,
-                              onToggle: () {
-                                setState(() {
-                                  if (isCollapsed) {
-                                    _collapsedSections.remove(section.id);
-                                  } else {
-                                    _collapsedSections.add(section.id);
-                                  }
-                                });
-                              },
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            sliver: SliverToBoxAdapter(
+                              child: SectionHeader(
+                                icon: section.icon,
+                                title: section.title,
+                                toolCount: sectionTools.length,
+                                isCollapsed: isCollapsed,
+                                onToggle: () {
+                                  setState(() {
+                                    if (isCollapsed) {
+                                      _collapsedSections.remove(section.id);
+                                    } else {
+                                      _collapsedSections.add(section.id);
+                                    }
+                                  });
+                                },
+                              ),
                             ),
                           ),
                           if (!isCollapsed)

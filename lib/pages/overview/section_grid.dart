@@ -21,24 +21,27 @@ class SectionGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverGrid(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: childAspectRatio,
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverGrid(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: childAspectRatio,
+        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final tool = sectionTools[index];
+          return ToolCard(
+            tool: tool,
+            compact: compact,
+            onTap: () {
+              context.read<AppState>().recordToolUsage(tool.id);
+              context.push(tool.route);
+            },
+          );
+        }, childCount: sectionTools.length),
       ),
-      delegate: SliverChildBuilderDelegate((context, index) {
-        final tool = sectionTools[index];
-        return ToolCard(
-          tool: tool,
-          compact: compact,
-          onTap: () {
-            context.read<AppState>().recordToolUsage(tool.id);
-            context.push(tool.route);
-          },
-        );
-      }, childCount: sectionTools.length),
     );
   }
 }
