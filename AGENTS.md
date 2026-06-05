@@ -28,6 +28,8 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **No Useless Comments**: Do not add code comments that are not useful, such as comments explaining the prompt or user requests.
 - **Latest Dependencies & Modern APIs**: Always use the latest version of a dependency available at the time of adding it. Do not add outdated versions. Avoid deprecated method calls (e.g. always use `.withValues(alpha: ...)` instead of `.withOpacity(...)` to prevent precision loss, and use new and modern code).
 - **Database Test Isolation**: Database unit/widget tests must never read or write to the standard persistent database. Always set `dbPathOverride` to `inMemoryDatabasePath` on `DatabaseService.instance` and close the connection in `tearDownAll` to ensure test state is clean and fully isolated in memory.
+- **Platform Scope**: iOS and macOS are NOT supported. Tools and services do not need to handle, verify, or support iOS or macOS platforms. Focus purely on Android and Windows.
+- **Temporary Files & Plans**: Always use the `.agents/temp/` folder (create if not exists) for storing plans, temporary files, or agent scratch files. Never commit this folder.
 
 ---
 

@@ -16,6 +16,7 @@ import 'nfc_scan_status_card.dart';
 import 'nfc_record_list.dart';
 import 'nfc_editor_form.dart';
 import 'nfc_hex_panel.dart';
+import 'emv_parser.dart';
 
 class NfcTagLabPage extends StatefulWidget {
   const NfcTagLabPage({super.key});
@@ -117,6 +118,13 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> {
             techs = List<String>.from(androidTag.techList);
           }
 
+          EmvCardDetails? emvDetails;
+          final isoDep = IsoDepAndroid.from(tag);
+          if (isoDep != null) {
+            if (!techs.contains('IsoDep')) techs.add('IsoDep');
+            emvDetails = await EmvParser.readCard(isoDep);
+          }
+
           // Extract iOS Details & check iOS specific tag technologies
           final mifare = MiFareIos.from(tag);
           if (mifare != null) {
@@ -165,9 +173,12 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> {
 
           final profile = ScanProfileClassifier.classify(
             ScanContext(
-              source: 'reading',
+              source: (ndef != null || emvDetails != null)
+                  ? 'reading'
+                  : 'reading-error',
               serialNumber: uid,
               records: decodedRecords,
+              emvDetails: emvDetails,
             ),
           );
 

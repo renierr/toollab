@@ -46,6 +46,9 @@ app.*.map.json
 .antigravitycli/
 .antigravitycli
 
+# AI Agent temp files
+.agents/temp/
+
 # Generated version file
 /lib/version.g.dart
 

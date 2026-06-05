@@ -1,4 +1,5 @@
 import 'ndef_codec.dart';
+import 'emv_parser.dart';
 
 enum NfcCategoryId {
   ndefData,
@@ -20,6 +21,14 @@ class NfcScanProfile {
   final String reason;
   final String matchedRule;
 
+  // Extended fields for card/credential info
+  final String? cardNumber;
+  final String? cardExpiry;
+  final String? cardHolder;
+  final String? cardBrand;
+  final String? cardAid;
+  final bool isEmv;
+
   NfcScanProfile({
     required this.categoryId,
     required this.categoryLabel,
@@ -30,6 +39,12 @@ class NfcScanProfile {
     required this.allowsWrite,
     required this.reason,
     required this.matchedRule,
+    this.cardNumber,
+    this.cardExpiry,
+    this.cardHolder,
+    this.cardBrand,
+    this.cardAid,
+    this.isEmv = false,
   });
 
   factory NfcScanProfile.defaultProfile() {
@@ -43,6 +58,7 @@ class NfcScanProfile {
       allowsWrite: true,
       reason: 'Scan an NFC target to classify it and show supported actions.',
       matchedRule: 'none',
+      isEmv: false,
     );
   }
 }
@@ -51,11 +67,13 @@ class ScanContext {
   final String source; // 'reading' | 'reading-error' | 'hex-parser'
   final String serialNumber;
   final List<DecodedRecord> records;
+  final EmvCardDetails? emvDetails;
 
   ScanContext({
     required this.source,
     required this.serialNumber,
     required this.records,
+    this.emvDetails,
   });
 }
 
@@ -82,6 +100,29 @@ class ScanProfileClassifier {
   ];
 
   static NfcScanProfile classify(ScanContext context) {
+    if (context.emvDetails != null) {
+      final details = context.emvDetails!;
+      return NfcScanProfile(
+        categoryId: NfcCategoryId.paymentCard,
+        categoryLabel: details.brand.isNotEmpty
+            ? details.brand
+            : 'Payment Card',
+        technology: 'ISO-DEP / EMV',
+        confidence: 'high',
+        supportsNdefRead: false,
+        allowsEditor: false,
+        allowsWrite: false,
+        reason: 'Successfully decoded payment card secure data.',
+        matchedRule: 'emv-parsed-card',
+        cardNumber: details.number,
+        cardExpiry: details.expiry,
+        cardHolder: details.holder,
+        cardBrand: details.brand,
+        cardAid: details.aid,
+        isEmv: true,
+      );
+    }
+
     if (hasAnySignature(context, paymentSignatures)) {
       return NfcScanProfile(
         categoryId: NfcCategoryId.paymentCard,
