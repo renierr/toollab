@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 
@@ -40,15 +42,21 @@ class PdfDisplay extends StatelessWidget {
           onViewerTap();
           return false;
         },
-        getPageRenderingScale: (context, page, controller, estimatedScale) =>
-            estimatedScale.clamp(1.0, 3.0),
-        maxImageBytesCachedOnMemory: 128 * 1024 * 1024,
+        getPageRenderingScale: (context, page, controller, estimatedScale) {
+          final scale = estimatedScale.clamp(1.0, 3.0);
+          final maxDim = max(page.width, page.height);
+          if (maxDim * scale > 2500) return 2500 / maxDim;
+          return scale;
+        },
+        maxImageBytesCachedOnMemory: 256 * 1024 * 1024,
         scrollPhysics: PdfViewerParams.getScrollPhysics(context),
         interactionDelegateProvider:
             const PdfViewerScrollInteractionDelegateProviderPhysics(),
         behaviorControlParams: const PdfViewerBehaviorControlParams(
           partialImageLoadingDelay: Duration(milliseconds: 200),
         ),
+        horizontalCacheExtent: 0.5,
+        verticalCacheExtent: 0.5,
       ),
     );
   }

@@ -225,9 +225,9 @@ class PdfOverlayControls extends StatelessWidget {
           right: 0,
           child: RepaintBoundary(
             child: Container(
-              padding: EdgeInsets.only(
+              padding: const EdgeInsets.only(
                 top: 8,
-                bottom: bottomPadding + 12,
+                bottom: 12,
                 left: 16,
                 right: 16,
               ),
