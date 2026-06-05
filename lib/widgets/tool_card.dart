@@ -105,40 +105,48 @@ class ToolCard extends StatelessWidget {
     final iconPadding = isNarrow ? 6.0 : 8.0;
     final iconSize = isNarrow ? 18.0 : 20.0;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: verticalPadding,
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: tool.accentColor, width: 3)),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(iconPadding),
-            decoration: BoxDecoration(
-              color: tool.accentColor.withAlpha(30),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(tool.icon, size: iconSize, color: tool.accentColor),
-          ),
-          SizedBox(width: gapWidth),
-          Expanded(
-            child: Text(
-              tool.name,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: isNarrow ? 13.0 : null,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: verticalPadding,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(iconPadding),
+              decoration: BoxDecoration(
+                color: tool.accentColor.withAlpha(30),
+                borderRadius: BorderRadius.circular(8),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              child: Icon(tool.icon, size: iconSize, color: tool.accentColor),
             ),
-          ),
-          ToolFavoriteButton(toolId: tool.id, iconSize: isNarrow ? 16.0 : 18.0),
-          Icon(
-            Icons.chevron_right,
-            size: isNarrow ? 16.0 : 18.0,
-            color: theme.colorScheme.onSurface.withAlpha(100),
-          ),
-        ],
+            SizedBox(width: gapWidth),
+            Expanded(
+              child: Text(
+                tool.name,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: isNarrow ? 13.0 : null,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            ToolFavoriteButton(
+              toolId: tool.id,
+              iconSize: isNarrow ? 16.0 : 18.0,
+            ),
+            Icon(
+              Icons.chevron_right,
+              size: isNarrow ? 16.0 : 18.0,
+              color: theme.colorScheme.onSurface.withAlpha(100),
+            ),
+          ],
+        ),
       ),
     );
   }
