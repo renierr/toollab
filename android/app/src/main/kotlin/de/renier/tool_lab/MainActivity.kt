@@ -81,7 +81,6 @@ class MainActivity : FlutterActivity() {
                         // If app is already running, notify Flutter immediately
                         flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
                             MethodChannel(messenger, SHARING_CHANNEL).invokeMethod("onSharedFile", fileData)
-                            pendingSharedFile = null
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -117,6 +116,10 @@ class MainActivity : FlutterActivity() {
                     "getSharedFile" -> {
                         result.success(pendingSharedFile)
                         pendingSharedFile = null
+                    }
+                    "clearSharedFile" -> {
+                        pendingSharedFile = null
+                        result.success(true)
                     }
                     else -> {
                         result.notImplemented()

@@ -79,13 +79,14 @@ class ToolLabApp extends StatefulWidget {
   State<ToolLabApp> createState() => _ToolLabAppState();
 }
 
-class _ToolLabAppState extends State<ToolLabApp> {
+class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   StreamSubscription<String>? _shortcutSubscription;
   StreamSubscription<SharedFile>? _sharingSubscription;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initShortcuts();
     _initSharing();
   }
@@ -119,6 +120,7 @@ class _ToolLabAppState extends State<ToolLabApp> {
   }
 
   Future<void> _handleSharedFile(SharedFile file) async {
+    await SharingService.instance.clearSharedFile();
     final matchingTools = SharingService.instance.getMatchingTools(file);
     if (matchingTools.isEmpty) {
       final context = _navigatorKey.currentContext;
@@ -174,9 +176,24 @@ class _ToolLabAppState extends State<ToolLabApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _shortcutSubscription?.cancel();
     _sharingSubscription?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPendingSharing();
+    }
+  }
+
+  Future<void> _checkPendingSharing() async {
+    final sharedFile = await SharingService.instance.getInitialSharedFile();
+    if (sharedFile != null && mounted) {
+      _handleSharedFile(sharedFile);
+    }
   }
 
   @override

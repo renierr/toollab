@@ -62,6 +62,14 @@ class SharingService {
     return null;
   }
 
+  Future<void> clearSharedFile() async {
+    try {
+      await _channel.invokeMethod('clearSharedFile');
+    } catch (e) {
+      debugPrint('[SharingService] Failed to clear shared file: $e');
+    }
+  }
+
   List<ToolModel> getMatchingTools(SharedFile file) {
     final mime = file.mimeType.toLowerCase();
     final matching = <ToolModel>[];
