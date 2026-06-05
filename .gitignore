@@ -55,6 +55,9 @@ app.*.map.json
 # Build distribution folder
 /dist/
 
+# Local install script
+/install.sh
+
 # Unsupported platforms
 /ios/
 /macos/
