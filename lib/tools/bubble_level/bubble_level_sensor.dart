@@ -61,26 +61,26 @@ class BubbleLevelSensor {
       OrientationReading(pitch: _smoothPitch, roll: _smoothRoll);
 
   OrientationReading process(AccelerometerEvent event) {
-    // Detect device screen orientation based on UI orientation and accelerometer values
+    // Use a threshold of 7.0 to prevent orientation switching during normal tilts.
     if (_uiOrientation == Orientation.portrait) {
       if (_orientation != DeviceScreenOrientation.portraitUp &&
           _orientation != DeviceScreenOrientation.portraitDown) {
         _orientation = DeviceScreenOrientation.portraitUp;
       }
-      if (event.y.abs() > 3.0) {
-        _orientation = event.y > 0
-            ? DeviceScreenOrientation.portraitUp
-            : DeviceScreenOrientation.portraitDown;
+      if (event.y > 7.0) {
+        _orientation = DeviceScreenOrientation.portraitUp;
+      } else if (event.y < -7.0) {
+        _orientation = DeviceScreenOrientation.portraitDown;
       }
     } else {
       if (_orientation != DeviceScreenOrientation.landscapeLeft &&
           _orientation != DeviceScreenOrientation.landscapeRight) {
         _orientation = DeviceScreenOrientation.landscapeLeft;
       }
-      if (event.x.abs() > 3.0) {
-        _orientation = event.x > 0
-            ? DeviceScreenOrientation.landscapeLeft
-            : DeviceScreenOrientation.landscapeRight;
+      if (event.x > 7.0) {
+        _orientation = DeviceScreenOrientation.landscapeLeft;
+      } else if (event.x < -7.0) {
+        _orientation = DeviceScreenOrientation.landscapeRight;
       }
     }
 
@@ -99,11 +99,11 @@ class BubbleLevelSensor {
         break;
       case DeviceScreenOrientation.landscapeLeft:
         mappedX = -event.y;
-        mappedY = -event.x;
+        mappedY = event.x;
         break;
       case DeviceScreenOrientation.landscapeRight:
         mappedX = event.y;
-        mappedY = event.x;
+        mappedY = -event.x;
         break;
     }
 

@@ -128,7 +128,7 @@ class _BeamPainter extends CustomPainter {
       }
     }
 
-    final bubbleX = normalizedRoll.clamp(-1.0, 1.0) * (size.width / 2 - r - 8);
+    final bubbleX = -normalizedRoll.clamp(-1.0, 1.0) * (size.width / 2 - r - 8);
     final bw = (size.height * 0.85).clamp(32.0, 56.0);
     final bh = size.height * 0.6;
     final bx = (cx + bubbleX - bw / 2).clamp(0.0, size.width - bw);
