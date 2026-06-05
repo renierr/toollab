@@ -5,6 +5,8 @@ import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
+import 'package:tool_lab/tools/notes/notes_db_helper.dart';
+import 'package:tool_lab/tools/notes/notes_sync_delegate.dart';
 
 class AppState extends ChangeNotifier {
   final SettingsService _settingsService;
@@ -21,6 +23,7 @@ class AppState extends ChangeNotifier {
     _loadRecentTimestamps();
     _loadPinnedShortcuts();
     _loadDrawerIcons();
+    registerSyncDelegate(NotesSyncDelegate());
   }
 
   ThemeMode _themeMode = ThemeMode.system;
@@ -255,5 +258,75 @@ class AppState extends ChangeNotifier {
   /// Exports global settings as a JSON string.
   String exportSettingsToJson() {
     return _settingsService.exportSettingsToJson();
+  }
+
+  List<Map<String, dynamic>> _notes = [];
+  bool _isLoadingNotes = false;
+
+  List<Map<String, dynamic>> get notes => _notes;
+  bool get isLoadingNotes => _isLoadingNotes;
+
+  Future<void> loadNotes({String query = ''}) async {
+    _isLoadingNotes = true;
+    notifyListeners();
+    try {
+      _notes = await NotesDbHelper.instance.getActiveNotes(query: query);
+    } catch (e) {
+      debugPrint('[AppState] Failed to load notes: $e');
+    } finally {
+      _isLoadingNotes = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> saveNote(String content, {int? id, String? shortId}) async {
+    await NotesDbHelper.instance.saveNote(content, id: id, shortId: shortId);
+    await loadNotes();
+    if (_syncEnabled && _syncServerUrl.isNotEmpty) {
+      // Sync in background
+      syncWithBackend([NotesSyncDelegate()]).catchError((e) {
+        debugPrint('[AppState] Background sync failed: $e');
+        return null;
+      });
+    }
+  }
+
+  Future<void> deleteNote(int id) async {
+    await NotesDbHelper.instance.softDeleteNote(id);
+    await loadNotes();
+    if (_syncEnabled && _syncServerUrl.isNotEmpty) {
+      // Sync in background
+      syncWithBackend([NotesSyncDelegate()]).catchError((e) {
+        debugPrint('[AppState] Background sync failed: $e');
+        return null;
+      });
+    }
+  }
+
+  Future<void> importNotesFromJson(List<Map<String, dynamic>> notesList) async {
+    for (final note in notesList) {
+      final content = note['content'] as String? ?? '';
+      if (content.trim().isEmpty) continue;
+      final shortId = note['shortId'] as String?;
+      final createdAt = note['createdAt'] as int?;
+      final updatedAt = note['updatedAt'] as int?;
+
+      final existing = shortId != null
+          ? await NotesDbHelper.instance.getNoteByShortId(shortId)
+          : null;
+      if (existing == null) {
+        await NotesDbHelper.instance.savePulledNote(
+          shortId: shortId ?? NotesDbHelper.instance.generateShortId(),
+          content: content,
+          createdAt: createdAt ?? DateTime.now().millisecondsSinceEpoch,
+          updatedAt: updatedAt ?? DateTime.now().millisecondsSinceEpoch,
+          deleted: false,
+        );
+      }
+    }
+    await loadNotes();
+    if (_syncEnabled && _syncServerUrl.isNotEmpty) {
+      syncWithBackend([NotesSyncDelegate()]).catchError((e) => null);
+    }
   }
 }

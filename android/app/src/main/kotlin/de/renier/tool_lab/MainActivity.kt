@@ -99,6 +99,7 @@ class MainActivity : FlutterActivity() {
                         "de.renier.tool_lab.DeviceInfoAlias" -> launchRoute = "/device-info"
                         "de.renier.tool_lab.NfcTagLabAlias" -> launchRoute = "/nfc-tag-lab"
                         "de.renier.tool_lab.PdfViewerAlias" -> launchRoute = "/pdf-viewer"
+                        "de.renier.tool_lab.NotesAlias" -> launchRoute = "/notes"
                         "de.renier.tool_lab.MainActivity" -> launchRoute = "/"
                     }
                 }

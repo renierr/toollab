@@ -21,6 +21,7 @@ import 'package:tool_lab/tools/emf_detector/emf_detector_page.dart';
 import 'package:tool_lab/tools/device_info/device_info_page.dart';
 import 'package:tool_lab/tools/nfc_tag_lab/nfc_tag_lab_page.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_page.dart';
+import 'package:tool_lab/tools/notes/notes_page.dart';
 
 final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -66,6 +67,7 @@ Widget _pageForTool(String id, Object? extra) {
     'device-info' => const DeviceInfoPage(),
     'nfc-tag-lab' => const NfcTagLabPage(),
     'pdf-viewer' => PdfViewerPage(sharedFile: extra as SharedFile?),
+    'notes' => NotesPage(sharedFile: extra as SharedFile?),
     _ => const OverviewPage(),
   };
 }
