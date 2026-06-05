@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NoteEditor extends StatefulWidget {
   final int? id;
@@ -157,6 +158,11 @@ class _NoteEditorState extends State<NoteEditor>
       child: MarkdownBody(
         data: _controller.text,
         selectable: true,
+        onTapLink: (text, href, title) {
+          if (href != null) {
+            launchUrl(Uri.parse(href));
+          }
+        },
         styleSheet: MarkdownStyleSheet.fromTheme(theme),
       ),
     );
@@ -197,12 +203,17 @@ class _NoteEditorState extends State<NoteEditor>
     final hasChanges = _controller.text != widget.initialContent;
 
     return PopScope(
-      canPop: !hasChanges,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldDiscard = await _showDiscardDialog(context);
-        if (shouldDiscard) {
-          widget.onCancel();
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (!didPop) {
+          if (hasChanges) {
+            final shouldDiscard = await _showDiscardDialog(context);
+            if (shouldDiscard) {
+              widget.onCancel();
+            }
+          } else {
+            widget.onCancel();
+          }
         }
       },
       child: Scaffold(

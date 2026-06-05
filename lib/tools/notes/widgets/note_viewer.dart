@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NoteViewer extends StatelessWidget {
   final Map<String, dynamic> note;
@@ -99,74 +100,85 @@ class NoteViewer extends StatelessWidget {
     final body = _getPureContent(content);
     final updatedAt = note['updated_at'] as int? ?? 0;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('View Note'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: onClose,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) onClose();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('View Note'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: onClose,
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.share_outlined),
+              tooltip: 'Share Note',
+              onPressed: _shareNote,
+            ),
+            IconButton(
+              icon: const Icon(Icons.file_download_outlined),
+              tooltip: 'Export Markdown',
+              onPressed: () => _exportMarkdown(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit Note',
+              onPressed: onEdit,
+            ),
+            IconButton(
+              icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+              tooltip: 'Delete Note',
+              onPressed: onDelete,
+            ),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            tooltip: 'Share Note',
-            onPressed: _shareNote,
-          ),
-          IconButton(
-            icon: const Icon(Icons.file_download_outlined),
-            tooltip: 'Export Markdown',
-            onPressed: () => _exportMarkdown(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Edit Note',
-            onPressed: onEdit,
-          ),
-          IconButton(
-            icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-            tooltip: 'Delete Note',
-            onPressed: onDelete,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.accentTeal,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Updated: ${_formatDate(updatedAt)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                ),
-              ),
-              const Divider(height: 32),
-              if (body.isEmpty)
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  'No additional content',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontStyle: FontStyle.italic,
+                  title,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.accentTeal,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Updated: ${_formatDate(updatedAt)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
-                )
-              else
-                MarkdownBody(
-                  data: body,
-                  selectable: true,
-                  styleSheet: MarkdownStyleSheet.fromTheme(
-                    theme,
-                  ).copyWith(textScaler: TextScaler.linear(1.0)),
                 ),
-            ],
+                const Divider(height: 32),
+                if (body.isEmpty)
+                  Text(
+                    'No additional content',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  )
+                else
+                  MarkdownBody(
+                    data: body,
+                    selectable: true,
+                    onTapLink: (text, href, title) {
+                      if (href != null) {
+                        launchUrl(Uri.parse(href));
+                      }
+                    },
+                    styleSheet: MarkdownStyleSheet.fromTheme(
+                      theme,
+                    ).copyWith(textScaler: TextScaler.linear(1.0)),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
