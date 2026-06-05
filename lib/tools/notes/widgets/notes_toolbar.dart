@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -27,11 +28,24 @@ class NotesToolbar extends StatefulWidget {
 
 class _NotesToolbarState extends State<NotesToolbar> {
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounceTimer?.cancel();
+    if (value.isEmpty) {
+      widget.onSearchChanged(value);
+    } else {
+      _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+        widget.onSearchChanged(value);
+      });
+    }
   }
 
   Future<void> _importMarkdown() async {
@@ -227,7 +241,7 @@ class _NotesToolbarState extends State<NotesToolbar> {
                   ),
                   child: TextField(
                     controller: _searchController,
-                    onChanged: widget.onSearchChanged,
+                    onChanged: _onSearchChanged,
                     decoration: InputDecoration(
                       hintText: 'Search notes...',
                       hintStyle: theme.textTheme.bodyMedium?.copyWith(
@@ -241,7 +255,6 @@ class _NotesToolbarState extends State<NotesToolbar> {
                               icon: const Icon(Icons.clear, size: 18),
                               onPressed: () {
                                 _searchController.clear();
-                                widget.onSearchChanged('');
                                 setState(() {});
                               },
                             )
