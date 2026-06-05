@@ -210,6 +210,12 @@ class _NotesToolbarState extends State<NotesToolbar> {
         children: [
           Row(
             children: [
+              if (Navigator.of(context).canPop())
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  tooltip: 'Back',
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
               Expanded(
                 child: Container(
                   height: 44,
