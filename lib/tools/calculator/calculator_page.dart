@@ -184,6 +184,7 @@ class _CalculatorPageState extends State<CalculatorPage>
                   input: _core.input,
                   flashResult: _flashResult,
                   scrollController: _displayController,
+                  historyItems: _history.items,
                   isShort: isShort,
                   fullscreen: CalculatorTool.config.fullscreen,
                 );
@@ -206,7 +207,7 @@ class _CalculatorPageState extends State<CalculatorPage>
                         child: Row(
                           children: [
                             SizedBox(
-                              width: 180,
+                              width: 80,
                               child: CalculatorSciColumn(onInput: _onInput),
                             ),
                             Expanded(
@@ -241,37 +242,74 @@ class _CalculatorPageState extends State<CalculatorPage>
                   );
                 }
 
-                return Column(
-                  children: [
-                    SizedBox(height: displayHeight, child: display),
-                    toolbar,
-                    Expanded(
-                      child: _showScientific
-                          ? Row(
-                              children: [
-                                SizedBox(
-                                  width: 90,
-                                  child: CalculatorSciColumn(onInput: _onInput),
-                                ),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      8,
-                                      4,
-                                      8,
-                                      8,
-                                    ),
-                                    child: sharedGrid,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Padding(
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final totalH = constraints.maxHeight;
+                    final toolH = 44.0;
+                    final minDisplayH = displayHeight;
+                    final padV = 12.0;
+                    final gridW = constraints.maxWidth - 16;
+                    const hPad = 24.0;
+                    const gaps = 24.0;
+                    final idealGridH = 5 * (gridW - hPad) / 4 + gaps;
+                    final remaining = totalH - toolH - padV;
+                    final fits = idealGridH + minDisplayH <= remaining;
+
+                    if (isShort || !fits) {
+                      return Column(
+                        children: [
+                          SizedBox(height: minDisplayH, child: display),
+                          toolbar,
+                          Expanded(
+                            child: Padding(
                               padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                              child: sharedGrid,
+                              child: _showScientific
+                                  ? Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 80,
+                                          child: CalculatorSciColumn(
+                                            onInput: _onInput,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(child: sharedGrid),
+                                      ],
+                                    )
+                                  : sharedGrid,
                             ),
-                    ),
-                  ],
+                          ),
+                        ],
+                      );
+                    }
+
+                    return Column(
+                      children: [
+                        Expanded(child: display),
+                        toolbar,
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                          child: SizedBox(
+                            height: idealGridH,
+                            child: _showScientific
+                                ? Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 80,
+                                        child: CalculatorSciColumn(
+                                          onInput: _onInput,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: sharedGrid),
+                                    ],
+                                  )
+                                : sharedGrid,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
             ),

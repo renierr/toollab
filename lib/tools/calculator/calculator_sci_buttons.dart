@@ -63,39 +63,7 @@ class CalculatorSciColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxHeight / _sciBtns.length < 32;
-        if (compact) {
-          return _SciColumnCompact(onInput: onInput);
-        }
-        return _SciColumnVertical(onInput: onInput);
-      },
-    );
-  }
-}
-
-class _SciColumnVertical extends StatelessWidget {
-  final void Function(String) onInput;
-
-  const _SciColumnVertical({required this.onInput});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 4, 16),
-      child: Column(
-        children: List.generate(_sciBtns.length, (i) {
-          final (display, val) = _sciBtns[i];
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: i < _sciBtns.length - 1 ? 4 : 0),
-              child: _SciCell(display: display, val: val, onInput: onInput),
-            ),
-          );
-        }),
-      ),
-    );
+    return _SciColumnCompact(onInput: onInput);
   }
 }
 
@@ -106,39 +74,63 @@ class _SciColumnCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pairs = <List<(String, String)>>[];
+    final rows = <List<(String, String)>>[];
     for (var i = 0; i < _sciBtns.length; i += 2) {
-      pairs.add([_sciBtns[i]]);
-      if (i + 1 < _sciBtns.length) pairs.last.add(_sciBtns[i + 1]);
+      rows.add([_sciBtns[i]]);
+      if (i + 1 < _sciBtns.length) rows.last.add(_sciBtns[i + 1]);
     }
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 4, 4, 8),
-      child: Column(
-        children: pairs.map((pair) {
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: pair == pairs.last ? 0 : 4),
-              child: Row(
-                children: pair.map((item) {
-                  final (display, val) = item;
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: _SciCell(
-                        display: display,
-                        val: val,
-                        onInput: onInput,
-                        compact: true,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const hPad = 12.0;
+        const gaps = 20.0;
+        final idealW = (constraints.maxWidth - hPad) / 2;
+        final maxH = constraints.maxHeight;
+        final rowH = maxH.isFinite && idealW * rows.length + gaps > maxH
+            ? (maxH - gaps) / rows.length
+            : idealW;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 4, 8),
+          child: SizedBox(
+            height: rowH * rows.length + gaps,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(rows.length, (i) {
+                final pair = rows[i];
+                final isLast = i == rows.length - 1;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: rowH,
+                      child: Row(
+                        children: pair.map((item) {
+                          final (display, val) = item;
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 2,
+                              ),
+                              child: _SciCell(
+                                display: display,
+                                val: val,
+                                onInput: onInput,
+                                compact: true,
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
+                    if (!isLast) const SizedBox(height: 4),
+                  ],
+                );
+              }),
             ),
-          );
-        }).toList(),
-      ),
+          ),
+        );
+      },
     );
   }
 }

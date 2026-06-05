@@ -28,25 +28,46 @@ class CalculatorGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: List.generate(_rows.length, (i) {
-        final row = _rows[i];
-        return Expanded(
-          child: Padding(
-            padding: EdgeInsets.only(bottom: i < _rows.length - 1 ? 6 : 0),
-            child: Row(
-              children: row.map((label) {
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 3),
-                    child: _buildButton(label),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const hPad = 24.0;
+        const gaps = 24.0;
+        final idealW = (constraints.maxWidth - hPad) / 4;
+        final maxH = constraints.maxHeight;
+        final rowH = maxH.isFinite && idealW * 5 + gaps > maxH
+            ? (maxH - gaps) / 5
+            : idealW;
+
+        return SizedBox(
+          height: rowH * 5 + gaps,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(_rows.length, (i) {
+              final row = _rows[i];
+              final isLast = i == _rows.length - 1;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: rowH,
+                    child: Row(
+                      children: row.map((label) {
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
+                            child: _buildButton(label),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
-                );
-              }).toList(),
-            ),
+                  if (!isLast) const SizedBox(height: 6),
+                ],
+              );
+            }),
           ),
         );
-      }),
+      },
     );
   }
 
