@@ -105,11 +105,14 @@ class NotesDbHelper {
       final note = await getNoteById(id);
       final noteShortId =
           note?['short_id'] as String? ?? shortId ?? generateShortId();
+      final existingUpdatedAt = note?['updated_at'] as int? ?? 0;
+      final updateUpdatedAt = max(now, existingUpdatedAt + 1);
+
       await db.update(
         tableName,
         {
           'content': content,
-          'updated_at': now,
+          'updated_at': updateUpdatedAt,
           'short_id': noteShortId,
           'synced': 0, // Mark as unsynced
         },
@@ -135,11 +138,16 @@ class NotesDbHelper {
   Future<void> softDeleteNote(int id) async {
     final db = await _getDb();
     final now = DateTime.now().millisecondsSinceEpoch;
+
+    final note = await getNoteById(id);
+    final existingUpdatedAt = note?['updated_at'] as int? ?? 0;
+    final deleteUpdatedAt = max(now, existingUpdatedAt + 1);
+
     await db.update(
       tableName,
       {
         'deleted': 1,
-        'updated_at': now,
+        'updated_at': deleteUpdatedAt,
         'synced': 0, // Needs syncing to push deletion
       },
       where: 'id = ?',

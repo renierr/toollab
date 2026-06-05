@@ -13,6 +13,7 @@ import 'package:tool_lab/tools/notes/widgets/notes_list.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_toolbar.dart';
 import 'package:tool_lab/tools/notes/widgets/note_editor.dart';
 import 'package:tool_lab/tools/notes/widgets/note_viewer.dart';
+import 'package:tool_lab/tools/notes/notes_sync_delegate.dart';
 
 class NotesPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -38,9 +39,22 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
 
     final appState = context.read<AppState>();
 
-    // Load initial notes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       appState.loadNotes();
+
+      // Auto-sync if enabled and server URL is set
+      if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty) {
+        appState
+            .syncWithBackend([NotesSyncDelegate()])
+            .then((_) {
+              if (mounted) {
+                appState.loadNotes();
+              }
+            })
+            .catchError((e) {
+              debugPrint('[NotesPage] Auto-sync on open failed: $e');
+            });
+      }
 
       // Handle initial shared file if any
       if (widget.sharedFile != null) {
