@@ -45,7 +45,24 @@ class BubbleLevelToolbar extends StatelessWidget {
         Wrap(
           spacing: 6,
           runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
+            if (Navigator.of(context).canPop())
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).maybePop(),
+                tooltip: 'Back',
+                iconSize: 18,
+                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(
+                  backgroundColor: theme.colorScheme.surface.withAlpha(200),
+                  foregroundColor: theme.colorScheme.onSurface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.all(6),
+                ),
+              ),
             ToolChip(
               label: '2-Axis',
               selected: mode == LevelMode.mode2d,

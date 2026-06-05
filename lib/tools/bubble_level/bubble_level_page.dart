@@ -218,6 +218,7 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
     return ToolLayout(
       title: 'Bubble Level',
       fullscreen: BubbleLevelTool.config.fullscreen,
+      showFloatingBackButton: false,
       child: Stack(
         children: [
           ResponsiveOrientationLayout(

@@ -6,6 +6,7 @@ class ToolLayout extends StatelessWidget {
   final Widget child;
   final bool fullscreen;
   final List<Widget>? actions;
+  final bool showFloatingBackButton;
 
   const ToolLayout({
     super.key,
@@ -13,6 +14,7 @@ class ToolLayout extends StatelessWidget {
     required this.child,
     this.fullscreen = false,
     this.actions,
+    this.showFloatingBackButton = true,
   });
 
   @override
@@ -42,7 +44,7 @@ class ToolLayout extends StatelessWidget {
         child: Stack(
           children: [
             child,
-            if (fullscreen) ...[
+            if (fullscreen && showFloatingBackButton) ...[
               const Positioned(left: 12, top: 12, child: FloatingBackButton()),
               if (actions != null)
                 Positioned(
