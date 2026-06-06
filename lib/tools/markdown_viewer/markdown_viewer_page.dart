@@ -5,7 +5,8 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/markdown_viewer_page.dart';
 import 'package:tool_lab/tools/markdown_viewer/config.dart';
-import 'package:tool_lab/tools/markdown_viewer/markdown_drop_zone.dart';
+import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:file_selector/file_selector.dart' show XFile;
 
 class MarkdownViewerToolPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -63,11 +64,22 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
     }
   }
 
-  void _onFileSelected(String content) {
-    setState(() {
-      _fileContent = content;
-      _fileName = null;
-    });
+  Future<void> _onFileSelected(XFile file) async {
+    try {
+      final content = await file.readAsString();
+      if (mounted) {
+        setState(() {
+          _fileContent = content;
+          _fileName = file.name;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to read file: $e')));
+      }
+    }
   }
 
   void _onClose() {
@@ -79,14 +91,22 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
 
   @override
   Widget build(BuildContext context) {
+    final accent = MarkdownViewerTool.config.accentColor;
+
     if (_fileContent == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Markdown Viewer')),
-        body: MarkdownDropZone(onFileSelected: _onFileSelected),
+        body: FileDropZone(
+          onFileSelected: _onFileSelected,
+          allowedExtensions: const ['md', 'txt', 'markdown'],
+          allowedMimeTypes: const ['text/markdown', 'text/plain'],
+          typeLabel: 'Markdown',
+          accentColor: accent,
+          title: 'Open a Markdown File',
+          subtitle: 'Drag & drop a .md or .txt file here',
+        ),
       );
     }
-
-    final accent = MarkdownViewerTool.config.accentColor;
 
     return MarkdownViewerPage(
       content: _fileContent!,

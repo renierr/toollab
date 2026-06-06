@@ -6,11 +6,13 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
-import 'package:tool_lab/tools/pdf_viewer/pdf_drop_zone.dart';
+import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:tool_lab/tools/pdf_viewer/config.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_display.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_overlay_controls.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_drawer.dart';
 import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
+import 'package:file_selector/file_selector.dart' show XFile;
 
 class PdfViewerPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -111,14 +113,14 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     _pdfTextSearcher?.startTextSearch(text);
   }
 
-  void _onFileSelected(String path, String name) {
+  void _onFileSelected(XFile file) {
     _pdfTextSearcher?.removeListener(_onSearchChanged);
     _pdfTextSearcher?.dispose();
     _pdfTextSearcher = null;
 
     setState(() {
-      _filePath = path;
-      _fileName = name;
+      _filePath = file.path;
+      _fileName = file.name;
       _currentPageNotifier.value = 1;
       _totalPagesNotifier.value = 0;
       _showOverlays = true;
@@ -259,7 +261,16 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     if (_filePath == null) {
       return ToolLayout(
         title: 'PDF Viewer',
-        child: PdfDropZone(onFileSelected: _onFileSelected),
+        child: FileDropZone(
+          onFileSelected: _onFileSelected,
+          allowedExtensions: const ['pdf'],
+          allowedMimeTypes: const ['application/pdf'],
+          typeLabel: 'PDFs',
+          accentColor: PdfViewerTool.config.accentColor,
+          icon: Icons.picture_as_pdf_outlined,
+          title: 'Open a PDF File',
+          subtitle: 'Drag & drop a .pdf file here',
+        ),
       );
     }
 
