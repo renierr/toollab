@@ -110,6 +110,9 @@ class SharingService {
         return 'image/gif';
       case 'txt':
         return 'text/plain';
+      case 'md':
+      case 'markdown':
+        return 'text/markdown';
       case 'json':
         return 'application/json';
       default:
