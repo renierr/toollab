@@ -54,7 +54,7 @@ add_subdirectory("runner")
 
 
 # Skip compiling Opus/Ogg C libs for flutter_soloud (only need MP3/WAV).
-add_compile_definitions(NO_XIPH_LIBS=1)
+set(ENV{NO_XIPH_LIBS} 1)
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
