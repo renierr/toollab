@@ -13,23 +13,9 @@ class MarkdownCheckbox extends StatelessWidget {
     final color = checked
         ? (checkedColor ?? AppTheme.accentTeal)
         : theme.colorScheme.onSurface.withValues(alpha: 0.6);
-    return SizedBox(
-      width: 16,
-      height: 16,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 1),
-        child: Center(
-          child: Container(
-            width: 14,
-            height: 14,
-            decoration: BoxDecoration(
-              border: Border.all(color: color, width: 1.5),
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: checked ? Icon(Icons.check, size: 12, color: color) : null,
-          ),
-        ),
-      ),
+    return Text(
+      checked ? '\u25a3' : '\u25a1',
+      style: TextStyle(fontSize: 14, color: color),
     );
   }
 }
