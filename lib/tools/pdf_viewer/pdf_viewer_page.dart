@@ -381,6 +381,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
                   : null,
               onViewerReady: (doc, controller) {
                 _initSearcher();
+                _totalPagesNotifier.value = _pdfController.pageCount;
                 final headerHeight = MediaQuery.of(context).padding.top + 72;
                 controller.goToPosition(
                   documentOffset: Offset(
@@ -391,7 +392,6 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               },
               onPageChanged: (pageNumber) {
                 _currentPageNotifier.value = pageNumber ?? 1;
-                _totalPagesNotifier.value = _pdfController.pageCount;
                 if (_suppressAutoHide) {
                   _suppressAutoHide = false;
                   return;

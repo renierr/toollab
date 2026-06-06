@@ -252,9 +252,10 @@ class PdfOverlayControls extends StatelessWidget {
                       ]),
                       builder: (context, _) {
                         final currentPage = currentPageNotifier.value;
-                        final totalPages = totalPagesNotifier.value > 0
-                            ? totalPagesNotifier.value
-                            : 1;
+                        final totalPages = totalPagesNotifier.value;
+                        final pageText = totalPages > 0
+                            ? 'Page $currentPage of $totalPages'
+                            : 'Page $currentPage...';
                         return Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -269,14 +270,15 @@ class PdfOverlayControls extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'Page $currentPage of $totalPages',
+                              pageText,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.chevron_right),
-                              onPressed: currentPage < totalPages
+                              onPressed:
+                                  totalPages > 0 && currentPage < totalPages
                                   ? onNextPage
                                   : null,
                               tooltip: 'Next Page',
