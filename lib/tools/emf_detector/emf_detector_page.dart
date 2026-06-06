@@ -86,6 +86,7 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
     return ToolLayout(
       title: 'EMF Detector',
       fullscreen: EmfDetectorTool.config.fullscreen,
+      showFloatingBackButton: false,
       child: ListenableBuilder(
         listenable: _state,
         builder: (context, child) {
@@ -122,7 +123,7 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
 
               SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(20.0, 56.0, 20.0, 16.0),
+                padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

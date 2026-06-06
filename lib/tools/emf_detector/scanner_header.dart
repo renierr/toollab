@@ -23,8 +23,19 @@ class ScannerHeader extends StatelessWidget {
               spacing: 6,
               runSpacing: 4,
               children: [
+                if (Navigator.of(context).canPop())
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    color: Colors.white,
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    tooltip: 'Back',
+                    iconSize: 20,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
                 const Text(
-                  '⚡ EMF SCANNER',
+                  'EMF SCANNER',
                   style: TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 18,
