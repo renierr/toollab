@@ -346,8 +346,12 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               filePath: _filePath!,
               controller: _pdfController,
               boundaryMargin: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 72,
-                bottom: MediaQuery.of(context).padding.bottom + 56,
+                top: _showOverlays
+                    ? MediaQuery.of(context).padding.top + 72
+                    : MediaQuery.of(context).padding.top,
+                bottom: _showOverlays
+                    ? MediaQuery.of(context).padding.bottom + 56
+                    : MediaQuery.of(context).padding.bottom,
               ),
               pagePaintCallbacks: [
                 if (_pdfTextSearcher != null)
@@ -371,6 +375,12 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               onPageChanged: (pageNumber) {
                 _currentPageNotifier.value = pageNumber ?? 1;
                 _totalPagesNotifier.value = _pdfController.pageCount;
+                final page = pageNumber ?? 1;
+                if (page > 1 && _showOverlays) {
+                  setState(() => _showOverlays = false);
+                } else if (page == 1 && !_showOverlays) {
+                  setState(() => _showOverlays = true);
+                }
               },
               onViewerTap: () {
                 setState(() {
