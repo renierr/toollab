@@ -251,6 +251,8 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
         config: MarkdownViewerConfig(
           accentColor: AppTheme.accentTeal,
           title: 'View Note',
+          showEdit: true,
+          showDelete: true,
           onEdit: () {
             _openEditor(id: currentNote['id'] as int, content: content);
           },
