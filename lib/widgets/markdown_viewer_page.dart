@@ -6,6 +6,7 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/markdown_loading_skeleton.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -15,6 +16,7 @@ class MarkdownViewerConfig {
   final String title;
   final bool showShare;
   final bool showExport;
+  final bool showExportPdf;
   final bool showEdit;
   final bool showDelete;
   final VoidCallback? onEdit;
@@ -30,6 +32,7 @@ class MarkdownViewerConfig {
     this.title = 'Markdown Viewer',
     this.showShare = true,
     this.showExport = true,
+    this.showExportPdf = true,
     this.showEdit = false,
     this.showDelete = false,
     this.onEdit,
@@ -136,6 +139,17 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
     }
   }
 
+  Future<void> _exportPdf(BuildContext context) async {
+    final fileName =
+        '${(widget.config.exportSuggestedName ?? 'document').replaceAll(RegExp(r'\.md$'), '')}.pdf';
+    await PdfExportHelper.exportMarkdown(
+      context: context,
+      markdown: widget.content,
+      suggestedName: fileName,
+      title: _getTitle(widget.content),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -167,8 +181,14 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
             if (config.showExport)
               IconButton(
                 icon: const Icon(Icons.file_download_outlined),
-                tooltip: 'Export',
+                tooltip: 'Export Markdown',
                 onPressed: () => _exportMarkdown(context),
+              ),
+            if (config.showExportPdf)
+              IconButton(
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                tooltip: 'Export PDF',
+                onPressed: () => _exportPdf(context),
               ),
             if (config.showEdit && config.onEdit != null)
               IconButton(

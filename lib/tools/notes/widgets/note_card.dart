@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class NoteCard extends StatelessWidget {
@@ -80,6 +81,17 @@ class NoteCard extends StatelessWidget {
     );
   }
 
+  Future<void> _exportPdf(BuildContext context) async {
+    final content = note['content'] as String;
+    final shortId = note['short_id'] as String;
+    await PdfExportHelper.exportMarkdown(
+      context: context,
+      markdown: content,
+      suggestedName: 'note-$shortId.pdf',
+      title: _getTitle(content),
+    );
+  }
+
   Future<void> _shareNote() async {
     final content = note['content'] as String;
     final shortId = note['short_id'] as String;
@@ -147,6 +159,8 @@ class NoteCard extends StatelessWidget {
                         onDelete();
                       } else if (value == 'export') {
                         _exportMarkdown(context);
+                      } else if (value == 'export_pdf') {
+                        _exportPdf(context);
                       } else if (value == 'share') {
                         _shareNote();
                       }
@@ -179,6 +193,16 @@ class NoteCard extends StatelessWidget {
                             Icon(Icons.file_download_outlined, size: 18),
                             SizedBox(width: 8),
                             Text('Export MD'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'export_pdf',
+                        child: Row(
+                          children: [
+                            Icon(Icons.picture_as_pdf_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Export PDF'),
                           ],
                         ),
                       ),
