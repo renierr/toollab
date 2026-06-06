@@ -268,14 +268,9 @@ class MarkdownToPdfConverter {
   }
 
   static pw.Widget _buildCheckboxWidget(bool checked) {
-    final size = 7.0;
-    return pw.Container(
-      width: size,
-      height: size,
-      decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PdfColors.grey700, width: 0.5),
-        color: checked ? PdfColors.grey700 : null,
-      ),
+    return pw.Text(
+      checked ? '\u00d7' : 'o',
+      style: _baseStyle().copyWith(fontSize: 11),
     );
   }
 
