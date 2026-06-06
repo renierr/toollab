@@ -35,24 +35,8 @@ class _OverviewPageState extends State<OverviewPage> {
   double _childAspectRatio(bool compact, double width) {
     final crossAxisCount = _crossAxisCount(width);
     final cardWidth = (width - 32 - (crossAxisCount - 1) * 12) / crossAxisCount;
-
-    if (compact) {
-      const minHeight = 76.0;
-      final defaultRatio = width < 400 ? 4.0 : (width < 600 ? 2.8 : 3.0);
-      final heightWithDefaultRatio = cardWidth / defaultRatio;
-      if (heightWithDefaultRatio < minHeight) {
-        return cardWidth / minHeight;
-      }
-      return defaultRatio;
-    }
-
-    const minHeight = 145.0;
-    final defaultRatio = width < 480 ? 1.1 : 1.2;
-    final heightWithDefaultRatio = cardWidth / defaultRatio;
-    if (heightWithDefaultRatio < minHeight) {
-      return cardWidth / minHeight;
-    }
-    return defaultRatio;
+    final targetHeight = compact ? 76.0 : 155.0;
+    return cardWidth / targetHeight;
   }
 
   @override
