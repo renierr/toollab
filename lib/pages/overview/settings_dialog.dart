@@ -127,6 +127,17 @@ class OverviewSettingsDialog extends StatelessWidget {
                   },
                 ),
               ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('About'),
+                subtitle: const Text('Version, licenses, and app info'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/about');
+                },
+              ),
             ],
           ),
         ),

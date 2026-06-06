@@ -12,6 +12,7 @@ import 'package:tool_lab/pages/overview/overview_page.dart';
 import 'package:tool_lab/pages/sync_settings_page.dart';
 import 'package:tool_lab/pages/maintenance_page.dart';
 import 'package:tool_lab/pages/shortcuts_settings_page.dart';
+import 'package:tool_lab/pages/about_page.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
@@ -49,6 +50,11 @@ final _router = GoRouter(
       path: '/shortcut-settings',
       name: 'shortcut-settings',
       builder: (_, _) => const ShortcutsSettingsPage(),
+    ),
+    GoRoute(
+      path: '/about',
+      name: 'about',
+      builder: (_, _) => const AboutPage(),
     ),
     ...ToolRegistry.all.map(
       (tool) => GoRoute(
