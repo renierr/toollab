@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
@@ -25,7 +26,7 @@ class _MarkdownDropZoneState extends State<MarkdownDropZone> {
     if (result.isNotEmpty) {
       final file = result.first;
       final bytes = await file.readAsBytes();
-      final content = String.fromCharCodes(bytes);
+      final content = utf8.decode(bytes);
       if (mounted) {
         widget.onFileSelected(content);
       }
@@ -35,7 +36,7 @@ class _MarkdownDropZoneState extends State<MarkdownDropZone> {
   Future<void> _handleDropFile(dynamic dropFile) async {
     try {
       final bytes = await dropFile.readAsBytes();
-      final content = String.fromCharCodes(bytes);
+      final content = utf8.decode(bytes);
       if (mounted) {
         widget.onFileSelected(content);
       }
