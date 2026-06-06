@@ -12,7 +12,7 @@ import 'package:tool_lab/tools/notes/config.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_list.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_toolbar.dart';
 import 'package:tool_lab/tools/notes/widgets/note_editor.dart';
-import 'package:tool_lab/tools/notes/widgets/note_viewer.dart';
+import 'package:tool_lab/widgets/markdown_viewer_page.dart';
 import 'package:tool_lab/tools/notes/notes_sync_delegate.dart';
 
 class NotesPage extends StatefulWidget {
@@ -243,18 +243,24 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
 
     if (_isViewing && _viewingNote != null) {
       final currentNote = _viewingNote!;
-      return NoteViewer(
-        note: currentNote,
-        onEdit: () {
-          _openEditor(
-            id: currentNote['id'] as int,
-            content: currentNote['content'] as String,
-          );
-        },
-        onDelete: () {
-          _deleteNote(currentNote['id'] as int);
-        },
-        onClose: _closeViewer,
+      final content = currentNote['content'] as String? ?? '';
+      final updatedAt = currentNote['updated_at'] as int? ?? 0;
+      final shortId = currentNote['short_id'] as String? ?? 'note';
+      return MarkdownViewerPage(
+        content: content,
+        config: MarkdownViewerConfig(
+          accentColor: AppTheme.accentTeal,
+          title: 'View Note',
+          onEdit: () {
+            _openEditor(id: currentNote['id'] as int, content: content);
+          },
+          onDelete: () {
+            _deleteNote(currentNote['id'] as int);
+          },
+          onClose: _closeViewer,
+          exportSuggestedName: 'note-$shortId.md',
+          updatedAt: updatedAt,
+        ),
       );
     }
 

@@ -22,6 +22,7 @@ import 'package:tool_lab/tools/device_info/device_info_page.dart';
 import 'package:tool_lab/tools/nfc_tag_lab/nfc_tag_lab_page.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_page.dart';
 import 'package:tool_lab/tools/notes/notes_page.dart';
+import 'package:tool_lab/tools/markdown_viewer/markdown_viewer_page.dart';
 
 final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -68,6 +69,9 @@ Widget _pageForTool(String id, Object? extra) {
     'nfc-tag-lab' => const NfcTagLabPage(),
     'pdf-viewer' => PdfViewerPage(sharedFile: extra as SharedFile?),
     'notes' => NotesPage(sharedFile: extra as SharedFile?),
+    'markdown-viewer' => MarkdownViewerToolPage(
+      sharedFile: extra as SharedFile?,
+    ),
     _ => const OverviewPage(),
   };
 }

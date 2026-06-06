@@ -1,0 +1,19 @@
+import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/theme/theme.dart';
+
+class MarkdownViewerTool {
+  MarkdownViewerTool._();
+
+  static const ToolModel config = ToolModel(
+    id: 'markdown-viewer',
+    name: 'Markdown Viewer',
+    description: 'View Markdown files fullscreen with ease',
+    icon: Icons.description_outlined,
+    route: '/markdown-viewer',
+    accentColor: AppTheme.accentAmber,
+    sectionId: 'utilities',
+    fullscreen: true,
+    shareTarget: ShareTargetConfig(accept: ['text/markdown', 'text/plain']),
+  );
+}

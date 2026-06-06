@@ -65,6 +65,7 @@ object ShortcutHelper {
             "nfc-tag-lab" -> "de.renier.tool_lab.NfcTagLabAlias"
             "pdf-viewer" -> "de.renier.tool_lab.PdfViewerAlias"
             "notes" -> "de.renier.tool_lab.NotesAlias"
+            "markdown-viewer" -> "de.renier.tool_lab.MarkdownViewerAlias"
             else -> return
         }
 

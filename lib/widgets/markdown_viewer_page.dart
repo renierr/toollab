@@ -1,33 +1,62 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/markdown_loading_skeleton.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class NoteViewer extends StatefulWidget {
-  final Map<String, dynamic> note;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-  final VoidCallback onClose;
+class MarkdownViewerConfig {
+  final Color accentColor;
+  final String title;
+  final bool showShare;
+  final bool showExport;
+  final bool showEdit;
+  final bool showDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final VoidCallback? onClose;
+  final String? exportSuggestedName;
+  final String exportMimeType;
+  final bool selectable;
+  final int? updatedAt;
 
-  const NoteViewer({
+  const MarkdownViewerConfig({
+    this.accentColor = AppTheme.accentBlue,
+    this.title = 'Markdown Viewer',
+    this.showShare = true,
+    this.showExport = true,
+    this.showEdit = false,
+    this.showDelete = false,
+    this.onEdit,
+    this.onDelete,
+    this.onClose,
+    this.exportSuggestedName,
+    this.exportMimeType = 'text/markdown',
+    this.selectable = true,
+    this.updatedAt,
+  });
+}
+
+class MarkdownViewerPage extends StatefulWidget {
+  final String content;
+  final MarkdownViewerConfig config;
+
+  const MarkdownViewerPage({
     super.key,
-    required this.note,
-    required this.onEdit,
-    required this.onDelete,
-    required this.onClose,
+    required this.content,
+    this.config = const MarkdownViewerConfig(),
   });
 
   @override
-  State<NoteViewer> createState() => _NoteViewerState();
+  State<MarkdownViewerPage> createState() => _MarkdownViewerPageState();
 }
 
-class _NoteViewerState extends State<NoteViewer> {
+class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
   bool _showBody = false;
 
   @override
@@ -51,7 +80,7 @@ class _NoteViewerState extends State<NoteViewer> {
         return trimmed;
       }
     }
-    return 'Untitled Note';
+    return 'Untitled';
   }
 
   String _getPureContent(String content) {
@@ -79,75 +108,83 @@ class _NoteViewerState extends State<NoteViewer> {
   }
 
   Future<void> _exportMarkdown(BuildContext context) async {
-    final content = widget.note['content'] as String;
-    final shortId = widget.note['short_id'] as String;
-    final bytes = Uint8List.fromList(utf8.encode(content));
+    final bytes = Uint8List.fromList(utf8.encode(widget.content));
     await FileSaveHelper.saveFile(
       context: context,
-      suggestedName: 'note-$shortId.md',
+      suggestedName: widget.config.exportSuggestedName ?? 'document.md',
       bytes: bytes,
     );
   }
 
-  Future<void> _shareNote() async {
-    final content = widget.note['content'] as String;
-    final shortId = widget.note['short_id'] as String;
-
+  Future<void> _shareContent() async {
     if (Platform.isAndroid || Platform.isWindows) {
       try {
         final tempDir = await getTemporaryDirectory();
-        final tempFile = File('${tempDir.path}/note-$shortId.md');
-        await tempFile.writeAsString(content);
-        await FileSaveHelper.shareFile(tempFile.path, 'text/markdown');
+        final tempFile = File(
+          '${tempDir.path}/${widget.config.exportSuggestedName ?? 'document.md'}',
+        );
+        await tempFile.writeAsString(widget.content);
+        await FileSaveHelper.shareFile(
+          tempFile.path,
+          widget.config.exportMimeType,
+        );
       } catch (e) {
-        await SharePlus.instance.share(ShareParams(text: content));
+        await SharePlus.instance.share(ShareParams(text: widget.content));
       }
     } else {
-      await SharePlus.instance.share(ShareParams(text: content));
+      await SharePlus.instance.share(ShareParams(text: widget.content));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final content = widget.note['content'] as String? ?? '';
+    final content = widget.content;
     final title = _getTitle(content);
     final body = _getPureContent(content);
-    final updatedAt = widget.note['updated_at'] as int? ?? 0;
+    final updatedAt = widget.config.updatedAt ?? 0;
+    final config = widget.config;
 
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) widget.onClose();
+        if (!didPop) config.onClose?.call();
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('View Note'),
+          title: Text(config.title),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: widget.onClose,
+            onPressed: config.onClose,
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.share_outlined),
-              tooltip: 'Share Note',
-              onPressed: _shareNote,
-            ),
-            IconButton(
-              icon: const Icon(Icons.file_download_outlined),
-              tooltip: 'Export Markdown',
-              onPressed: () => _exportMarkdown(context),
-            ),
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Edit Note',
-              onPressed: widget.onEdit,
-            ),
-            IconButton(
-              icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-              tooltip: 'Delete Note',
-              onPressed: widget.onDelete,
-            ),
+            if (config.showShare)
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                tooltip: 'Share',
+                onPressed: _shareContent,
+              ),
+            if (config.showExport)
+              IconButton(
+                icon: const Icon(Icons.file_download_outlined),
+                tooltip: 'Export',
+                onPressed: () => _exportMarkdown(context),
+              ),
+            if (config.showEdit && config.onEdit != null)
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Edit',
+                onPressed: config.onEdit,
+              ),
+            if (config.showDelete && config.onDelete != null)
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: theme.colorScheme.error,
+                ),
+                tooltip: 'Delete',
+                onPressed: config.onDelete,
+              ),
           ],
         ),
         body: SafeArea(
@@ -160,16 +197,18 @@ class _NoteViewerState extends State<NoteViewer> {
                   title,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.accentTeal,
+                    color: config.accentColor,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Updated: ${_formatDate(updatedAt)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                if (updatedAt > 0) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Updated: ${_formatDate(updatedAt)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
                   ),
-                ),
+                ],
                 const Divider(height: 32),
                 if (body.isEmpty)
                   Text(
@@ -180,11 +219,11 @@ class _NoteViewerState extends State<NoteViewer> {
                     ),
                   )
                 else if (!_showBody)
-                  _buildLoadingSkeleton(theme)
+                  MarkdownLoadingSkeleton(accentColor: config.accentColor)
                 else
                   MarkdownBody(
                     data: body,
-                    selectable: true,
+                    selectable: config.selectable,
                     onTapLink: (text, href, title) {
                       if (href != null) {
                         launchUrl(Uri.parse(href));
@@ -204,28 +243,6 @@ class _NoteViewerState extends State<NoteViewer> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingSkeleton(ThemeData theme) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Column(
-        children: [
-          LinearProgressIndicator(
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-            color: AppTheme.accentTeal,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Rendering markdown\u2026',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-            ),
-          ),
-        ],
       ),
     );
   }

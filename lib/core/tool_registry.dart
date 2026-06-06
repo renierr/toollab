@@ -7,6 +7,7 @@ import 'package:tool_lab/tools/device_info/config.dart';
 import 'package:tool_lab/tools/nfc_tag_lab/config.dart';
 import 'package:tool_lab/tools/pdf_viewer/config.dart';
 import 'package:tool_lab/tools/notes/config.dart';
+import 'package:tool_lab/tools/markdown_viewer/config.dart';
 
 class ToolRegistry {
   static const Map<String, ToolSection> sections = {
@@ -42,5 +43,6 @@ class ToolRegistry {
     NfcTagLabTool.config,
     PdfViewerTool.config,
     NotesTool.config,
+    MarkdownViewerTool.config,
   ];
 }
