@@ -16,6 +16,8 @@ class AppState extends ChangeNotifier {
     _compactMode = _settingsService.getCompactMode();
     _sortBy = _settingsService.getSortBy();
     _syncEnabled = _settingsService.getSyncEnabled();
+    _systemNotificationsEnabled = _settingsService
+        .getSystemNotificationsEnabled();
     _syncServerUrl = _settingsService.getSyncServerUrl();
     _syncUserId = _settingsService.getSyncUserId();
     _syncLastSynced = _settingsService.getSyncLastSynced();
@@ -39,6 +41,7 @@ class AppState extends ChangeNotifier {
   Map<String, bool> get drawerIcons => _drawerIcons;
 
   bool _syncEnabled = false;
+  bool _systemNotificationsEnabled = true;
   String _syncServerUrl = '';
   String _syncUserId = '';
   int _syncLastSynced = 0;
@@ -53,6 +56,7 @@ class AppState extends ChangeNotifier {
   Map<String, int> get recentTimestamps => _recentTimestamps;
 
   bool get syncEnabled => _syncEnabled;
+  bool get systemNotificationsEnabled => _systemNotificationsEnabled;
   String get syncServerUrl => _syncServerUrl;
   String get syncUserId => _syncUserId;
   int get syncLastSynced => _syncLastSynced;
@@ -161,6 +165,12 @@ class AppState extends ChangeNotifier {
   void toggleCompactMode() {
     _compactMode = !_compactMode;
     _settingsService.setCompactMode(_compactMode);
+    notifyListeners();
+  }
+
+  Future<void> setSystemNotificationsEnabled(bool value) async {
+    _systemNotificationsEnabled = value;
+    await _settingsService.setSystemNotificationsEnabled(value);
     notifyListeners();
   }
 

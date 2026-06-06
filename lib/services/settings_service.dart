@@ -11,6 +11,8 @@ class SettingsService {
   static const String _keySyncServerUrl = 'sync_server_url';
   static const String _keySyncUserId = 'sync_user_id';
   static const String _keySyncLastSynced = 'sync_last_synced';
+  static const String _keySystemNotificationsEnabled =
+      'system_notifications_enabled';
 
   static Future<SettingsService> init() async {
     final allSettings = await DatabaseService.instance.getAllSettings(_toolId);
@@ -62,6 +64,21 @@ class SettingsService {
     final str = value.toString();
     _cache[_keySyncEnabled] = str;
     await DatabaseService.instance.setSetting(_toolId, _keySyncEnabled, str);
+  }
+
+  bool getSystemNotificationsEnabled() {
+    final value = _cache[_keySystemNotificationsEnabled];
+    return value != 'false';
+  }
+
+  Future<void> setSystemNotificationsEnabled(bool value) async {
+    final str = value.toString();
+    _cache[_keySystemNotificationsEnabled] = str;
+    await DatabaseService.instance.setSetting(
+      _toolId,
+      _keySystemNotificationsEnabled,
+      str,
+    );
   }
 
   String getSyncServerUrl() {

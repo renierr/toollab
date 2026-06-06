@@ -81,7 +81,16 @@ class OverviewSettingsDialog extends StatelessWidget {
                 title: const Text('Compact View'),
                 subtitle: const Text('Smaller cards, more tools per row'),
                 value: appState.compactMode,
-                onChanged: (_) => appState.toggleCompactMode(),
+                onChanged: (_) => context.read<AppState>().toggleCompactMode(),
+              ),
+              const Divider(height: 1),
+              SwitchListTile(
+                title: const Text('System Notifications'),
+                subtitle: const Text('Enable or disable system notifications'),
+                value: appState.systemNotificationsEnabled,
+                onChanged: (value) => context
+                    .read<AppState>()
+                    .setSystemNotificationsEnabled(value),
               ),
               const Divider(height: 1),
               ListTile(
@@ -98,7 +107,9 @@ class OverviewSettingsDialog extends StatelessWidget {
                     DropdownMenuItem(value: 'name', child: Text('Name')),
                   ],
                   onChanged: (value) {
-                    if (value != null) appState.setSortBy(value);
+                    if (value != null) {
+                      context.read<AppState>().setSortBy(value);
+                    }
                   },
                 ),
               ),
@@ -123,7 +134,9 @@ class OverviewSettingsDialog extends StatelessWidget {
                     ),
                   ],
                   onChanged: (value) {
-                    if (value != null) appState.setThemeMode(value);
+                    if (value != null) {
+                      context.read<AppState>().setThemeMode(value);
+                    }
                   },
                 ),
               ),

@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
 import '../widgets/custom_notification.dart';
 import '../theme/theme.dart';
 
@@ -76,15 +78,20 @@ class FileSaveHelper {
         destPath = filePath;
 
         if (context.mounted && uriString != null && filePath != null) {
-          // Trigger native Android system notification (always enabled)
-          try {
-            await _channel.invokeMethod('showSystemNotification', {
-              'fileName': suggestedName,
-              'uri': uriString,
-              'mimeType': mimeType,
-            });
-          } catch (e) {
-            debugPrint("Failed to show native system notification: $e");
+          final systemNotificationsEnabled = context
+              .read<AppState>()
+              .systemNotificationsEnabled;
+          if (systemNotificationsEnabled) {
+            // Trigger native Android system notification (if enabled)
+            try {
+              await _channel.invokeMethod('showSystemNotification', {
+                'fileName': suggestedName,
+                'uri': uriString,
+                'mimeType': mimeType,
+              });
+            } catch (e) {
+              debugPrint("Failed to show native system notification: $e");
+            }
           }
 
           // Write bytes to a temporary file to enable secure in-app sharing
