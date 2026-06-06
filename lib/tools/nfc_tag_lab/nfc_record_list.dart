@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tool_lab/theme/theme.dart';
 import 'ndef_codec.dart';
 
 class NfcRecordList extends StatelessWidget {
@@ -217,10 +218,10 @@ class _RecordItem extends StatelessWidget {
 
   Color _getRecordTypeColor(String type) {
     return switch (type) {
-      'text' => Colors.teal,
-      'url' => Colors.blue,
-      'mime' => Colors.purple,
-      _ => Colors.orange,
+      'text' => AppTheme.accentTeal,
+      'url' => AppTheme.statusBlue,
+      'mime' => AppTheme.accentPurple,
+      _ => AppTheme.statusOrange,
     };
   }
 

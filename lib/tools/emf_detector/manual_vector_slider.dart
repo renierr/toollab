@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 
 class ManualVectorSlider extends StatelessWidget {
   final String label;
@@ -28,11 +29,9 @@ class ManualVectorSlider extends StatelessWidget {
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: const Color(
-                  0xFFFFD200,
-                ).withValues(alpha: 0.7),
+                activeTrackColor: EmfColors.amberYellow.withValues(alpha: 0.7),
                 inactiveTrackColor: Colors.white.withValues(alpha: 0.04),
-                thumbColor: const Color(0xFFFFD200),
+                thumbColor: EmfColors.amberYellow,
                 trackHeight: 1.5,
                 thumbShape: const RoundSliderThumbShape(
                   enabledThumbRadius: 4.5,

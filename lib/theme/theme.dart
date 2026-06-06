@@ -8,6 +8,13 @@ class AppTheme {
   static const Color accentPurple = Color(0xFFAB47BC);
   static const Color accentTeal = Color(0xFF26A69A);
 
+  static const Color statusGreen = Color(0xFF66BB6A);
+  static const Color statusAmber = Color(0xFFFFCA28);
+  static const Color statusRed = Color(0xFFEF5350);
+  static const Color statusBlue = Color(0xFF4FC3F7);
+  static const Color statusOrange = Color(0xFFFF9800);
+  static const Color favoriteStar = Color(0xFFFFCA28);
+
   static ThemeData get light => ThemeData(
     useMaterial3: true,
     colorSchemeSeed: accentBlue,

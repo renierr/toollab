@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 
 class CableDetectedBanner extends StatelessWidget {
   final bool isScanning;
@@ -23,12 +24,12 @@ class CableDetectedBanner extends StatelessWidget {
       title = 'SCANNER PAUSED';
       subtitle = 'Tap START SCANNING below to search for hidden wall cables.';
     } else if (isWarning) {
-      themeColor = const Color(0xFFFF0055);
+      themeColor = EmfColors.neonPink;
       icon = Icons.warning_amber_rounded;
       title = 'CABLE / METAL DETECTED';
       subtitle = 'Strong local magnetic field anomaly detected inside wall.';
     } else {
-      themeColor = const Color(0xFF00FF87);
+      themeColor = EmfColors.neonEmerald;
       icon = Icons.check_circle_outline;
       title = 'SCANNING ACTIVE - SYSTEM STABLE';
       subtitle = 'No major electromagnetic anomalies detected.';

@@ -42,6 +42,10 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - Log errors with clear service or page context prefixes to make debugging easy.
 - Extract dialogs, detailed cards, or list items to `lib/widgets/` to promote modular codebase structure.
 - Extract repetitive visual components to shared reusable widgets to maintain consistency.
+- **Color Strategy — 3-Layer Approach**:
+  1. **Tool-specific palette**: Tools with a strong visual identity (e.g. EMF detector's neon cyberpunk colors) define their own `lib/tools/<name>/<name>_colors.dart` file with `static const` values. These are not theme-abstracted — they are part of the tool's aesthetic.
+  2. **Semantic status colors in AppTheme**: Cross-tool status indicators (battery level, sync state, delete actions) use `AppTheme.statusGreen`, `AppTheme.statusRed`, `AppTheme.statusAmber`, etc. in `lib/theme/theme.dart`.
+  3. **Theme.of(context) properties**: Universal colors like surface, background, text, dividers use `theme.colorScheme.*` and `theme.textTheme.*` — never hardcoded `Colors.grey[200]` or `Colors.white` for structural UI.
 - **Private Widgets over Helpers**: Always declare private `StatelessWidget` classes instead of helper methods returning `Widget`. Each builder method like `_buildSomething(ThemeData)` must be its own widget in a separate file under `lib/tools/<name>/` or `lib/widgets/`. Never write inline `Widget _buildFoo(...)` methods in a stateful widget — they break element tree diffing, prevent const optimization, and bloat the page file. Extract `FooWidget` into its own file with a clean constructor API.
 - **Const Constructors**: Prefer using `const` constructors for widgets and in `build()` methods where possible to reduce rebuilds.
 - **Lazy Lists**: Prefer `ListView.builder` or slivers for dynamic or performance-sensitive lists.

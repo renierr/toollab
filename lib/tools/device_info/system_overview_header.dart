@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 class SystemOverviewHeader extends StatelessWidget {
   final String osName;
@@ -32,11 +33,11 @@ class SystemOverviewHeader extends StatelessWidget {
         : Icons.device_unknown_outlined;
 
     final Color brandColor = isWindows
-        ? Colors.blue.shade400
+        ? AppTheme.statusBlue
         : isAndroid
-        ? Colors.green.shade400
+        ? AppTheme.statusGreen
         : isLinux
-        ? Colors.orange.shade400
+        ? AppTheme.statusOrange
         : theme.colorScheme.primary;
 
     return Padding(

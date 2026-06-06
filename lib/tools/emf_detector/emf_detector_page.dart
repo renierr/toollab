@@ -3,6 +3,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
+import 'emf_colors.dart';
 import 'emf_reading.dart';
 import 'detector_state.dart';
 import 'circular_gauge.dart';
@@ -107,12 +108,12 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
                       radius: 0.8,
                       colors: isWarning
                           ? [
-                              const Color(0xFFFF0055).withValues(alpha: 0.18),
-                              const Color(0xFFFF0055).withValues(alpha: 0.0),
+                              EmfColors.neonPink.withValues(alpha: 0.18),
+                              EmfColors.neonPink.withValues(alpha: 0.0),
                             ]
                           : [
-                              const Color(0xFF00F2FE).withValues(alpha: 0.12),
-                              const Color(0xFF00F2FE).withValues(alpha: 0.0),
+                              EmfColors.neonCyan.withValues(alpha: 0.12),
+                              EmfColors.neonCyan.withValues(alpha: 0.0),
                             ],
                     ),
                   ),

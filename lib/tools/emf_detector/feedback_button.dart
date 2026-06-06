@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 
 class FeedbackButton extends StatelessWidget {
   final IconData icon;
@@ -41,7 +42,7 @@ class FeedbackButton extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 20,
-                color: active ? const Color(0xFF00FF87) : Colors.grey[500],
+                color: active ? EmfColors.neonEmerald : Colors.grey[500],
               ),
             ),
             const SizedBox(height: 6),

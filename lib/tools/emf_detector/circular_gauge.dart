@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 
 class CircularGauge extends StatelessWidget {
   final double value;
@@ -57,8 +58,8 @@ class CircularGauge extends StatelessWidget {
                       color: !isScanning
                           ? Colors.grey[600]
                           : isWarning
-                          ? const Color(0xFFFF0055) // Cyberpunk warning pink
-                          : const Color(0xFF00F2FE), // Cyan standard
+                          ? EmfColors.neonPink
+                          : EmfColors.neonCyan,
                       shadows: isScanning
                           ? [
                               Shadow(
@@ -94,8 +95,8 @@ class CircularGauge extends StatelessWidget {
                     letterSpacing: 1.0,
                     color: isScanning
                         ? (isWarning
-                              ? const Color(0xFFFF0055).withValues(alpha: 0.7)
-                              : const Color(0xFF00F2FE).withValues(alpha: 0.7))
+                              ? EmfColors.neonPink.withValues(alpha: 0.7)
+                              : EmfColors.neonCyan.withValues(alpha: 0.7))
                         : Colors.grey[600],
                   ),
                 ),
@@ -107,10 +108,10 @@ class CircularGauge extends StatelessWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF0055).withValues(alpha: 0.15),
+                      color: EmfColors.neonPink.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: const Color(0xFFFF0055).withValues(alpha: 0.4),
+                        color: EmfColors.neonPink.withValues(alpha: 0.4),
                         width: 1,
                       ),
                     ),
@@ -120,7 +121,7 @@ class CircularGauge extends StatelessWidget {
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.5,
-                        color: Color(0xFFFF0055),
+                        color: EmfColors.neonPink,
                       ),
                     ),
                   ),
@@ -195,10 +196,10 @@ class _GaugePainter extends CustomPainter {
       startAngle: startAngle,
       endAngle: startAngle + totalSweep,
       colors: const [
-        Color(0xFF00F2FE), // Ice blue
-        Color(0xFF00FF87), // Emerald Green
-        Color(0xFFFFD200), // Amber Yellow
-        Color(0xFFFF0055), // Cyberpunk Red
+        EmfColors.neonCyan,
+        EmfColors.neonEmerald,
+        EmfColors.amberYellow,
+        EmfColors.neonPink,
       ],
       stops: const [0.0, 0.35, 0.65, 1.0],
     );
@@ -232,7 +233,7 @@ class _GaugePainter extends CustomPainter {
     final thresholdPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0
-      ..color = const Color(0xFFFF0055).withValues(alpha: 0.8);
+      ..color = EmfColors.neonPink.withValues(alpha: 0.8);
 
     // Small radial notch for the threshold
     final tx1 = center.dx + (radius - 12) * cos(thresholdAngle);
@@ -265,13 +266,13 @@ class _GaugePainter extends CustomPainter {
       Color tickColor;
       if (isActive) {
         if (tickPercent > thresholdPercentage) {
-          tickColor = const Color(0xFFFF0055); // Warning Red
+          tickColor = EmfColors.neonPink;
         } else if (tickPercent > 0.6) {
-          tickColor = const Color(0xFFFFD200); // Yellow
+          tickColor = EmfColors.amberYellow;
         } else if (tickPercent > 0.3) {
-          tickColor = const Color(0xFF00FF87); // Emerald Green
+          tickColor = EmfColors.neonEmerald;
         } else {
-          tickColor = const Color(0xFF00F2FE); // Cyan
+          tickColor = EmfColors.neonCyan;
         }
       } else {
         tickColor = Colors.white.withValues(alpha: 0.15);

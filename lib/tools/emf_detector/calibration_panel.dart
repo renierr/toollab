@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 import 'detector_state.dart';
 
 class CalibrationPanel extends StatelessWidget {
@@ -29,8 +30,8 @@ class CalibrationPanel extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                foregroundColor: const Color(0xFF07080D),
-                backgroundColor: const Color(0xFF00FF87),
+                foregroundColor: EmfColors.darkBgDeep,
+                backgroundColor: EmfColors.neonEmerald,
                 disabledBackgroundColor: Colors.white.withValues(alpha: 0.04),
                 disabledForegroundColor: Colors.grey[600],
                 padding: const EdgeInsets.symmetric(
@@ -85,7 +86,7 @@ class CalibrationPanel extends StatelessWidget {
           style: TextStyle(
             fontSize: 10,
             color: state.isCalibrated
-                ? const Color(0xFF00FF87).withValues(alpha: 0.8)
+                ? EmfColors.neonEmerald.withValues(alpha: 0.8)
                 : Colors.grey[600],
           ),
         ),

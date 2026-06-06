@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 import 'sensor_service.dart';
 import 'detector_state.dart';
 
@@ -23,15 +24,15 @@ class PresetChip extends StatelessWidget {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: isSelected ? const Color(0xFF07080D) : Colors.grey[300],
+          color: isSelected ? EmfColors.darkBgDeep : Colors.grey[300],
         ),
       ),
       selected: isSelected,
-      selectedColor: const Color(0xFFFFD200),
+      selectedColor: EmfColors.amberYellow,
       backgroundColor: Colors.white.withValues(alpha: 0.04),
       side: BorderSide(
         color: isSelected
-            ? const Color(0xFFFFD200)
+            ? EmfColors.amberYellow
             : Colors.white.withValues(alpha: 0.08),
         width: 1,
       ),

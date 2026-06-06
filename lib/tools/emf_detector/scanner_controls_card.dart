@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 import 'detector_state.dart';
 import 'feedback_button.dart';
 
@@ -42,19 +43,16 @@ class ScannerControlsCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: state.isScanning
-                            ? [const Color(0xFFFF0055), const Color(0xFF9D50BB)]
-                            : [
-                                const Color(0xFF00F2FE),
-                                const Color(0xFF4FACFE),
-                              ],
+                            ? [EmfColors.neonPink, const Color(0xFF9D50BB)]
+                            : [EmfColors.neonCyan, const Color(0xFF4FACFE)],
                       ),
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
                           color:
                               (state.isScanning
-                                      ? const Color(0xFFFF0055)
-                                      : const Color(0xFF00F2FE))
+                                      ? EmfColors.neonPink
+                                      : EmfColors.neonCyan)
                                   .withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
@@ -154,7 +152,7 @@ class ScannerControlsCard extends StatelessWidget {
                       fontFamily: 'monospace',
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFFFD200),
+                      color: EmfColors.amberYellow,
                     ),
                   ),
                 ],
@@ -162,10 +160,10 @@ class ScannerControlsCard extends StatelessWidget {
               const SizedBox(height: 4),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: const Color(0xFFFFD200),
+                  activeTrackColor: EmfColors.amberYellow,
                   inactiveTrackColor: Colors.white.withValues(alpha: 0.08),
-                  thumbColor: const Color(0xFFFFD200),
-                  overlayColor: const Color(0xFFFFD200).withValues(alpha: 0.12),
+                  thumbColor: EmfColors.amberYellow,
+                  overlayColor: EmfColors.amberYellow.withValues(alpha: 0.12),
                   trackHeight: 3,
                   thumbShape: const RoundSliderThumbShape(
                     enabledThumbRadius: 7,

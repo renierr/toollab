@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 import 'emf_reading.dart';
 import 'detector_state.dart';
 import 'axis_bar.dart';
@@ -50,7 +51,7 @@ class VectorReadoutCard extends StatelessWidget {
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                   color: state.isScanning
-                      ? const Color(0xFF00F2FE)
+                      ? EmfColors.neonCyan
                       : Colors.grey[600],
                 ),
               ),
@@ -60,19 +61,19 @@ class VectorReadoutCard extends StatelessWidget {
           AxisBar(
             label: 'X',
             value: state.isScanning ? current.deltaX : 0.0,
-            activeColor: const Color(0xFF00F2FE), // Cyan
+            activeColor: EmfColors.neonCyan,
             isScanning: state.isScanning,
           ),
           AxisBar(
             label: 'Y',
             value: state.isScanning ? current.deltaY : 0.0,
-            activeColor: const Color(0xFF00FF87), // Emerald
+            activeColor: EmfColors.neonEmerald,
             isScanning: state.isScanning,
           ),
           AxisBar(
             label: 'Z',
             value: state.isScanning ? current.deltaZ : 0.0,
-            activeColor: const Color(0xFFFF0055), // Pink/Red
+            activeColor: EmfColors.neonPink,
             isScanning: state.isScanning,
           ),
         ],

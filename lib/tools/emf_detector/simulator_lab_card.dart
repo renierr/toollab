@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 import 'sensor_service.dart';
 import 'detector_state.dart';
 import 'preset_chip.dart';
@@ -41,10 +42,10 @@ class SimulatorLabCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF14120E), // Slightly warm developer brown-black
+        color: EmfColors.darkBgWarm,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFFFD200).withValues(alpha: 0.15),
+          color: EmfColors.amberYellow.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -63,7 +64,7 @@ class SimulatorLabCard extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.0,
-                  color: Color(0xFFFFD200),
+                  color: EmfColors.amberYellow,
                 ),
               ),
               GestureDetector(
@@ -143,7 +144,7 @@ class SimulatorLabCard extends StatelessWidget {
                     fontFamily: 'monospace',
                     fontSize: 8,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF00FF87),
+                    color: EmfColors.neonEmerald,
                   ),
                 ),
             ],

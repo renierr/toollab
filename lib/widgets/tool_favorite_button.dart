@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 class ToolFavoriteButton extends StatelessWidget {
   final String toolId;
@@ -21,7 +22,7 @@ class ToolFavoriteButton extends StatelessWidget {
         isFav ? Icons.star : Icons.star_outline,
         size: iconSize,
         color: isFav
-            ? Colors.amber
+            ? AppTheme.favoriteStar
             : Theme.of(context).colorScheme.onSurface.withAlpha(100),
       ),
       onPressed: () => appState.toggleFavorite(toolId),

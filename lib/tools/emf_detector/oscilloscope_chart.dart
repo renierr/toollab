@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'emf_colors.dart';
 
 class OscilloscopeChart extends StatelessWidget {
   final List<double> history;
@@ -23,7 +24,7 @@ class OscilloscopeChart extends StatelessWidget {
         height: 140,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F1019), // Deepest obsidian blue
+          color: EmfColors.darkBg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: Colors.white.withValues(alpha: 0.08),
@@ -132,12 +133,12 @@ class _OscilloscopePainter extends CustomPainter {
       end: Alignment.bottomCenter,
       colors: hasWarning
           ? [
-              const Color(0xFFFF0055).withValues(alpha: 0.25),
-              const Color(0xFFFF0055).withValues(alpha: 0.0),
+              EmfColors.neonPink.withValues(alpha: 0.25),
+              EmfColors.neonPink.withValues(alpha: 0.0),
             ]
           : [
-              const Color(0xFF00F2FE).withValues(alpha: 0.20),
-              const Color(0xFF00F2FE).withValues(alpha: 0.0),
+              EmfColors.neonCyan.withValues(alpha: 0.20),
+              EmfColors.neonCyan.withValues(alpha: 0.0),
             ],
     );
 
@@ -151,14 +152,14 @@ class _OscilloscopePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round
-      ..color = hasWarning ? const Color(0xFFFF0055) : const Color(0xFF00F2FE);
+      ..color = hasWarning ? EmfColors.neonPink : EmfColors.neonCyan;
 
     // Add neon drop glow
     final glowPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6.0
       ..strokeCap = StrokeCap.round
-      ..color = (hasWarning ? const Color(0xFFFF0055) : const Color(0xFF00F2FE))
+      ..color = (hasWarning ? EmfColors.neonPink : EmfColors.neonCyan)
           .withValues(alpha: 0.4)
       ..imageFilter = ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0);
 
@@ -169,12 +170,12 @@ class _OscilloscopePainter extends CustomPainter {
     final latestPoint = points.last;
     final pulsePaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = hasWarning ? const Color(0xFFFF0055) : const Color(0xFF00FF87);
+      ..color = hasWarning ? EmfColors.neonPink : EmfColors.neonEmerald;
 
     final pulseOuterPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
-      ..color = (hasWarning ? const Color(0xFFFF0055) : const Color(0xFF00FF87))
+      ..color = (hasWarning ? EmfColors.neonPink : EmfColors.neonEmerald)
           .withValues(alpha: 0.6);
 
     canvas.drawCircle(latestPoint, 4.0, pulsePaint);
@@ -186,8 +187,7 @@ class _OscilloscopePainter extends CustomPainter {
 
   void _drawGrid(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = const Color(0xFF00F2FE)
-          .withValues(alpha: 0.03) // Very faint cyan grid lines
+      ..color = EmfColors.neonCyan.withValues(alpha: 0.03)
       ..strokeWidth = 0.8;
 
     // Horizontal grid lines
@@ -212,7 +212,7 @@ class _OscilloscopePainter extends CustomPainter {
     final double y = size.height - 8 - (threshRatio * (size.height - 16));
 
     final threshPaint = Paint()
-      ..color = const Color(0xFFFF0055).withValues(alpha: 0.35)
+      ..color = EmfColors.neonPink.withValues(alpha: 0.35)
       ..strokeWidth = 1.0;
 
     // Custom dashed line implementation

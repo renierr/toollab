@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/data_row.dart' as shared;
 import 'scan_profile.dart';
 
@@ -231,11 +232,11 @@ class NfcScanStatusCard extends StatelessWidget {
 
   Color _getCategoryColor(NfcCategoryId cat) {
     return switch (cat) {
-      NfcCategoryId.ndefData => Colors.greenAccent.shade700,
-      NfcCategoryId.paymentCard => Colors.blueAccent.shade400,
-      NfcCategoryId.passport => Colors.purpleAccent.shade400,
-      NfcCategoryId.idCard => Colors.amberAccent.shade700,
-      NfcCategoryId.secureCard => Colors.orangeAccent.shade700,
+      NfcCategoryId.ndefData => AppTheme.accentGreen,
+      NfcCategoryId.paymentCard => AppTheme.accentBlue,
+      NfcCategoryId.passport => AppTheme.accentPurple,
+      NfcCategoryId.idCard => AppTheme.accentAmber,
+      NfcCategoryId.secureCard => AppTheme.statusOrange,
       NfcCategoryId.unknown => Colors.grey,
     };
   }

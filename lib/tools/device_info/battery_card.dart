@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/status_badge.dart';
 
 class BatteryCard extends StatelessWidget {
@@ -22,10 +23,10 @@ class BatteryCard extends StatelessWidget {
 
     // Choose battery color based on level
     final Color color = level > 60
-        ? Colors.greenAccent.shade700
+        ? AppTheme.statusGreen
         : level > 20
-        ? Colors.orangeAccent.shade400
-        : Colors.redAccent.shade400;
+        ? AppTheme.statusOrange
+        : AppTheme.statusRed;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -75,7 +76,7 @@ class BatteryCard extends StatelessWidget {
                   if (isSaverMode)
                     StatusBadge(
                       label: 'Saver Active',
-                      color: Colors.orange,
+                      color: AppTheme.statusOrange,
                       icon: Icons.energy_savings_leaf,
                     ),
                 ],
