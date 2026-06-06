@@ -248,7 +248,7 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                     selectable: config.selectable,
                     extensionSet: md.ExtensionSet.gitHubFlavored,
                     listItemCrossAxisAlignment:
-                        MarkdownListItemCrossAxisAlignment.start,
+                        MarkdownListItemCrossAxisAlignment.baseline,
                     checkboxBuilder: (checked) => MarkdownCheckbox(
                       checked: checked,
                       checkedColor: config.accentColor,

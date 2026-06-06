@@ -208,7 +208,7 @@ class _NoteEditorState extends State<NoteEditor>
         data: _controller.text,
         selectable: true,
         extensionSet: md.ExtensionSet.gitHubFlavored,
-        listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
+        listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.baseline,
         checkboxBuilder: (checked) => MarkdownCheckbox(
           checked: checked,
           checkedColor: AppTheme.accentTeal,
