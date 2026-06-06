@@ -25,7 +25,7 @@ class _CalculatorPageState extends State<CalculatorPage>
   final _displayController = ScrollController();
 
   String _expression = '';
-  bool _showScientific = false;
+  bool? _showScientific;
   bool _flashResult = false;
 
   @override
@@ -176,6 +176,7 @@ class _CalculatorPageState extends State<CalculatorPage>
               builder: (context, constraints) {
                 final isWide = constraints.maxWidth >= 500;
                 final isShort = constraints.maxHeight < 400;
+                final effectiveShowScientific = _showScientific ?? false;
 
                 final displayHeight = isShort ? 44.0 : 95.0;
 
@@ -190,9 +191,10 @@ class _CalculatorPageState extends State<CalculatorPage>
                 );
 
                 final toolbar = CalculatorToolbar(
-                  showScientific: _showScientific,
-                  onToggleSci: () =>
-                      setState(() => _showScientific = !_showScientific),
+                  showScientific: effectiveShowScientific,
+                  onToggleSci: () => setState(
+                    () => _showScientific = !effectiveShowScientific,
+                  ),
                   onShowHistory: _showHistory,
                   onCopy: _onCopy,
                   onBackspace: _onBackspace,
@@ -206,16 +208,20 @@ class _CalculatorPageState extends State<CalculatorPage>
                       Expanded(
                         child: Row(
                           children: [
-                            SizedBox(
-                              width: 80,
-                              child: CalculatorSciColumn(onInput: _onInput),
-                            ),
+                            if (effectiveShowScientific)
+                              SizedBox(
+                                width: 80,
+                                child: CalculatorSciColumn(onInput: _onInput),
+                              ),
                             Expanded(
                               child: Column(
                                 children: [
                                   CalculatorToolbar(
-                                    showScientific: false,
-                                    onToggleSci: () {},
+                                    showScientific: effectiveShowScientific,
+                                    onToggleSci: () => setState(
+                                      () => _showScientific =
+                                          !effectiveShowScientific,
+                                    ),
                                     onShowHistory: _showHistory,
                                     onCopy: _onCopy,
                                     onBackspace: _onBackspace,
@@ -263,7 +269,7 @@ class _CalculatorPageState extends State<CalculatorPage>
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                              child: _showScientific
+                              child: effectiveShowScientific
                                   ? Row(
                                       children: [
                                         SizedBox(
@@ -291,7 +297,7 @@ class _CalculatorPageState extends State<CalculatorPage>
                           padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
                           child: SizedBox(
                             height: idealGridH,
-                            child: _showScientific
+                            child: effectiveShowScientific
                                 ? Row(
                                     children: [
                                       SizedBox(
