@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Clipboard background frame -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M32,24 h44 c3.3,0 6,2.7 6,6 v50 c0,3.3 -2.7,6 -6,6 h-44 c-3.3,0 -6,-2.7 -6,-6 v-50 c0,-3.3 2.7,-6 6,-6 z" />
+
+    <!-- Top clip -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,20 h20 v5 h-20 z" />
+
+    <!-- Writing lines -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M38,36 h32 M38,46 h32 M38,56 h22" />
+
+    <!-- Pencil drawing a line (Teal accent) -->
+    <path
+        android:fillColor="#26A69A"
+        android:pathData="M66,66 L78,54 L82,58 L70,70 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M66,66 L62,70 L70,70 Z" />
+</vector>

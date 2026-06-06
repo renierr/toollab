@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Dial gauge arc -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M30,68 A24,24 0 0,1 78,68" />
+    
+    <!-- Dial tick marks -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M30,68 h4 M42,47 l2,3.5 M54,44 v4 M66,50.5 l-2,-3.5 M74,68 h4" />
+
+    <!-- Center pivot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,68 m-4,0 a4,4 0 1,1 8,0 a4,4 0 1,1 -8,0" />
+
+    <!-- Needle pointing to high EMF (amber) -->
+    <path
+        android:strokeColor="#FFCA28"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M54,68 L70,44" />
+
+    <!-- EMF waves / lightning symbol at the top -->
+    <path
+        android:fillColor="#FFCA28"
+        android:pathData="M54,20 L44,36 H52 L50,46 L60,30 H52 Z" />
+</vector>
