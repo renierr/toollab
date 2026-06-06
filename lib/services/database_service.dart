@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kReleaseMode, kProfileMode;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -44,7 +45,11 @@ class DatabaseService {
     if (dbPathOverride != null) {
       path = dbPathOverride!;
     } else {
-      final docDir = await getApplicationSupportDirectory();
+      final appSupportDir = await getApplicationSupportDirectory();
+      final modeSubdir = kReleaseMode
+          ? ''
+          : (kProfileMode ? 'profile' : 'debug');
+      final docDir = Directory(p.join(appSupportDir.path, modeSubdir));
       if (!await docDir.exists()) {
         await docDir.create(recursive: true);
       }

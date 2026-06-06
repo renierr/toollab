@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/app.dart';
 import 'package:tool_lab/providers/app_state.dart';
@@ -19,7 +18,6 @@ void main() {
   });
 
   testWidgets('App launches with overview page', (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
     final settingsService = await SettingsService.init();
 
     await tester.pumpWidget(

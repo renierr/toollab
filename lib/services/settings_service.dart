@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tool_lab/services/database_service.dart';
 
 class SettingsService {
+  static const String _toolId = '_app';
   static const String _keyThemeMode = 'theme_mode';
   static const String _keyCompactMode = 'compact_mode';
   static const String _keySortBy = 'sort_by';
@@ -12,79 +13,93 @@ class SettingsService {
   static const String _keySyncLastSynced = 'sync_last_synced';
 
   static Future<SettingsService> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    return SettingsService._(prefs);
+    final allSettings = await DatabaseService.instance.getAllSettings(_toolId);
+    return SettingsService._(allSettings);
   }
 
-  final SharedPreferences _prefs;
+  final Map<String, String> _cache;
 
-  SettingsService._(this._prefs);
+  SettingsService._(this._cache);
 
   ThemeMode getThemeMode() {
-    final index = _prefs.getInt(_keyThemeMode);
+    final index = _cache[_keyThemeMode];
     if (index == null) return ThemeMode.system;
-    return ThemeMode.values[index];
+    return ThemeMode.values[int.parse(index)];
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    await _prefs.setInt(_keyThemeMode, mode.index);
+    final value = mode.index.toString();
+    _cache[_keyThemeMode] = value;
+    await DatabaseService.instance.setSetting(_toolId, _keyThemeMode, value);
   }
 
   bool getCompactMode() {
-    return _prefs.getBool(_keyCompactMode) ?? true;
+    final value = _cache[_keyCompactMode];
+    return value == 'true';
   }
 
   Future<void> setCompactMode(bool value) async {
-    await _prefs.setBool(_keyCompactMode, value);
+    final str = value.toString();
+    _cache[_keyCompactMode] = str;
+    await DatabaseService.instance.setSetting(_toolId, _keyCompactMode, str);
   }
 
   String getSortBy() {
-    return _prefs.getString(_keySortBy) ?? 'recent';
+    return _cache[_keySortBy] ?? 'recent';
   }
 
   Future<void> setSortBy(String value) async {
-    await _prefs.setString(_keySortBy, value);
+    _cache[_keySortBy] = value;
+    await DatabaseService.instance.setSetting(_toolId, _keySortBy, value);
   }
 
   bool getSyncEnabled() {
-    return _prefs.getBool(_keySyncEnabled) ?? false;
+    final value = _cache[_keySyncEnabled];
+    return value == 'true';
   }
 
   Future<void> setSyncEnabled(bool value) async {
-    await _prefs.setBool(_keySyncEnabled, value);
+    final str = value.toString();
+    _cache[_keySyncEnabled] = str;
+    await DatabaseService.instance.setSetting(_toolId, _keySyncEnabled, str);
   }
 
   String getSyncServerUrl() {
-    return _prefs.getString(_keySyncServerUrl) ?? '';
+    return _cache[_keySyncServerUrl] ?? '';
   }
 
   Future<void> setSyncServerUrl(String value) async {
-    await _prefs.setString(_keySyncServerUrl, value);
+    _cache[_keySyncServerUrl] = value;
+    await DatabaseService.instance.setSetting(
+      _toolId,
+      _keySyncServerUrl,
+      value,
+    );
   }
 
   String getSyncUserId() {
-    return _prefs.getString(_keySyncUserId) ?? '';
+    return _cache[_keySyncUserId] ?? '';
   }
 
   Future<void> setSyncUserId(String value) async {
-    await _prefs.setString(_keySyncUserId, value);
+    _cache[_keySyncUserId] = value;
+    await DatabaseService.instance.setSetting(_toolId, _keySyncUserId, value);
   }
 
   int getSyncLastSynced() {
-    return _prefs.getInt(_keySyncLastSynced) ?? 0;
+    final value = _cache[_keySyncLastSynced];
+    if (value == null) return 0;
+    return int.tryParse(value) ?? 0;
   }
 
   Future<void> setSyncLastSynced(int value) async {
-    await _prefs.setInt(_keySyncLastSynced, value);
+    final str = value.toString();
+    _cache[_keySyncLastSynced] = str;
+    await DatabaseService.instance.setSetting(_toolId, _keySyncLastSynced, str);
   }
 
-  /// Exports all keys and values in SharedPreferences to a JSON string.
+  /// Exports all app settings as a JSON string.
   String exportSettingsToJson() {
-    final keys = _prefs.getKeys();
-    final Map<String, dynamic> map = {};
-    for (final key in keys) {
-      map[key] = _prefs.get(key);
-    }
-    return jsonEncode(map);
+    return jsonEncode(Map<String, dynamic>.from(_cache));
   }
 }
