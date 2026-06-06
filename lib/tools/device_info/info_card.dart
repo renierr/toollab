@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/widgets/data_row.dart' as shared;
 
 class InfoCard extends StatelessWidget {
   final String title;
@@ -75,33 +76,7 @@ class InfoCard extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final key = items.keys.elementAt(index);
                   final value = items.values.elementAt(index);
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          key,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withAlpha(130),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 4,
-                        child: Text(
-                          value,
-                          textAlign: TextAlign.end,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface.withAlpha(220),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
+                  return shared.InfoRow(label: key, value: value);
                 },
               ),
             ],

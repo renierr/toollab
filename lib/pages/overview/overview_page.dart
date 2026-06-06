@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/constants.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/core/tool_registry.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/section_header.dart';
 import 'package:tool_lab/pages/overview/settings_dialog.dart';
@@ -15,14 +16,14 @@ class OverviewPage extends StatefulWidget {
   State<OverviewPage> createState() => _OverviewPageState();
 }
 
-class _OverviewPageState extends State<OverviewPage> {
+class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
   final TextEditingController _searchController = TextEditingController();
   final Set<String> _collapsedSections = {};
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    onDispose(_searchController.dispose);
   }
 
   int _crossAxisCount(double width) {
@@ -91,7 +92,6 @@ class _OverviewPageState extends State<OverviewPage> {
 
     final hasResults = tools.isNotEmpty;
 
-    // Favorites
     final favoriteTools = appState.favorites.isEmpty
         ? <ToolModel>[]
         : tools.where((t) => appState.isFavorite(t.id)).toList();

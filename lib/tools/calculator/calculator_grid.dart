@@ -55,7 +55,11 @@ class CalculatorGrid extends StatelessWidget {
                         return Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 3),
-                            child: _buildButton(label),
+                            child: _CalcButton(
+                              label: label,
+                              variant: _variantForLabel(label),
+                              onTap: () => _onTapForLabel(label),
+                            ),
                           ),
                         );
                       }).toList(),
@@ -71,53 +75,38 @@ class CalculatorGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildButton(String label) {
-    return switch (label) {
-      'AC' => _CalcButton(
-        label: label,
-        variant: _ButtonVariant.clear,
-        onTap: onClear,
-      ),
-      '()' => _CalcButton(
-        label: label,
-        variant: _ButtonVariant.neutral,
-        onTap: onBracket,
-      ),
-      '%' => _CalcButton(
-        label: label,
-        variant: _ButtonVariant.neutral,
-        onTap: () => onInput('%'),
-      ),
-      '÷' || '×' || '−' || '+' => _CalcButton(
-        label: label,
-        variant: _ButtonVariant.operator,
-        onTap: () => onInput(_operatorMap(label)),
-      ),
-      '=' => _CalcButton(
-        label: label,
-        variant: _ButtonVariant.equals,
-        onTap: onEquals,
-      ),
-      '±' => _CalcButton(
-        label: label,
-        variant: _ButtonVariant.neutral,
-        onTap: onNegate,
-      ),
-      _ => _CalcButton(
-        label: label,
-        variant: _ButtonVariant.number,
-        onTap: () => onInput(label),
-      ),
-    };
-  }
-
-  static String _operatorMap(String label) => switch (label) {
-    '÷' => '/',
-    '×' => '*',
-    '−' => '-',
-    '+' => '+',
-    _ => label,
+  static _ButtonVariant _variantForLabel(String label) => switch (label) {
+    'AC' => _ButtonVariant.clear,
+    '()' || '%' || '±' => _ButtonVariant.neutral,
+    '÷' || '×' || '−' || '+' => _ButtonVariant.operator,
+    '=' => _ButtonVariant.equals,
+    _ => _ButtonVariant.number,
   };
+
+  void _onTapForLabel(String label) {
+    switch (label) {
+      case 'AC':
+        onClear();
+      case '()':
+        onBracket();
+      case '%':
+        onInput('%');
+      case '÷':
+        onInput('/');
+      case '×':
+        onInput('*');
+      case '−':
+        onInput('-');
+      case '+':
+        onInput('+');
+      case '=':
+        onEquals();
+      case '±':
+        onNegate();
+      default:
+        onInput(label);
+    }
+  }
 }
 
 class _CalcButton extends StatelessWidget {

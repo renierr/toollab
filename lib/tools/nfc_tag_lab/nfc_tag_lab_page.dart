@@ -7,6 +7,7 @@ import 'package:nfc_manager/ndef_record.dart';
 import 'package:nfc_manager/nfc_manager_android.dart';
 import 'package:nfc_manager/nfc_manager_ios.dart';
 import 'package:nfc_manager_ndef/nfc_manager_ndef.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
@@ -25,12 +26,11 @@ class NfcTagLabPage extends StatefulWidget {
   State<NfcTagLabPage> createState() => _NfcTagLabPageState();
 }
 
-class _NfcTagLabPageState extends State<NfcTagLabPage> {
+class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
   bool _hasNfcSupport = false;
   bool _isScanning = false;
   NfcScanProfile _profile = NfcScanProfile.defaultProfile();
 
-  // Scanned tag characteristics
   String _scannedUid = '';
   String _scannedTechs = '';
   String _scannedCapacity = '';
@@ -39,7 +39,6 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> {
   List<DecodedRecord> _scannedRecords = [];
   NfcTag? _currentTag;
 
-  // Editor initial/loaded state fields
   String _editorRecordType = 'url';
   String _editorUrl = 'https://';
   String _editorPayload = '';
@@ -51,6 +50,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> {
   @override
   void initState() {
     super.initState();
+    onDispose(_stopScanning);
     _checkNfcSupport();
   }
 
@@ -111,7 +111,6 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> {
           String capacity = 'Unknown';
           String writable = 'Unknown';
 
-          // Extract Android Details
           final androidTag = NfcTagAndroid.from(tag);
           if (androidTag != null) {
             uid = NdefCodec.toHex(androidTag.id);
@@ -125,7 +124,6 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> {
             emvDetails = await EmvParser.readCard(isoDep);
           }
 
-          // Extract iOS Details & check iOS specific tag technologies
           final mifare = MiFareIos.from(tag);
           if (mifare != null) {
             if (!techs.contains('MiFare')) techs.add('MiFare');
@@ -286,7 +284,6 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> {
         );
       }
 
-      // Reload/update visual profile details
       final updatedDrecords = [
         NdefCodec.decodeRawRecord(
           record.typeNameFormat.index,
@@ -387,12 +384,6 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> {
   }
 
   @override
-  void dispose() {
-    _stopScanning();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -403,7 +394,6 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> {
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          // Platform Support Info Banner on desktop
           if (!_hasNfcSupport) ...[
             Container(
               padding: const EdgeInsets.all(12),

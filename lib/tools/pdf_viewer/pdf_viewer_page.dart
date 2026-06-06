@@ -1,14 +1,15 @@
 import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_drop_zone.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_display.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_overlay_controls.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_drawer.dart';
 import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
 
 class PdfViewerPage extends StatefulWidget {
@@ -31,18 +32,15 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
   bool _showOverlays = true;
   bool _suppressAutoHide = false;
 
-  // Bookmarks/Outline
   List<PdfOutlineNode>? _outline;
   bool _isLoadingOutline = false;
 
-  // Search State
   PdfTextSearcher? _pdfTextSearcher;
   bool _isSearchingText = false;
   final TextEditingController _searchTextController = TextEditingController();
   int _currentMatchIndex = 0;
   int _totalMatches = 0;
 
-  // Layout mode
   PdfLayoutMode _layoutMode = PdfLayoutMode.vertical;
 
   @override
@@ -254,109 +252,31 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     );
   }
 
-  Widget _buildDrawer(BuildContext context) {
-    final theme = Theme.of(context);
-    return Drawer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Icon(
-                  Icons.menu_book,
-                  color: theme.colorScheme.primary,
-                  size: 36,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Bookmarks',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: _isLoadingOutline
-                ? const Center(child: CircularProgressIndicator())
-                : _outline == null || _outline!.isEmpty
-                ? const Center(child: Text('No bookmarks available'))
-                : ListView.builder(
-                    itemCount: _outline!.length,
-                    itemBuilder: (context, index) {
-                      return _buildOutlineTile(_outline![index]);
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOutlineTile(PdfOutlineNode node, [int depth = 0]) {
-    final theme = Theme.of(context);
-    final hasChildren = node.children.isNotEmpty;
-
-    if (hasChildren) {
-      return ExpansionTile(
-        title: Padding(
-          padding: EdgeInsets.only(left: depth * 8.0),
-          child: Text(
-            node.title,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        children: node.children
-            .map((child) => _buildOutlineTile(child, depth + 1))
-            .toList(),
-      );
-    }
-
-    return ListTile(
-      contentPadding: EdgeInsets.only(left: 16.0 + (depth * 8.0), right: 16.0),
-      title: Text(node.title, style: theme.textTheme.bodyMedium),
-      onTap: () {
-        if (node.dest != null) {
-          _pdfController.goToDest(node.dest);
-          Navigator.of(context).pop();
-        }
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     if (_filePath == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('PDF Viewer'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go('/'),
-          ),
-        ),
-        body: PdfDropZone(onFileSelected: _onFileSelected),
+      return ToolLayout(
+        title: 'PDF Viewer',
+        child: PdfDropZone(onFileSelected: _onFileSelected),
       );
     }
 
-    return Scaffold(
-      key: _scaffoldKey,
+    return ToolLayout(
+      title: 'PDF Viewer',
+      fullscreen: true,
+      showFloatingBackButton: false,
+      scaffoldKey: _scaffoldKey,
+      drawer: PdfDrawer(
+        outline: _outline,
+        isLoadingOutline: _isLoadingOutline,
+        controller: _pdfController,
+      ),
       backgroundColor: theme.brightness == Brightness.dark
           ? Colors.black
           : Colors.grey[200],
-      drawer: _buildDrawer(context),
-      body: Stack(
+      child: Stack(
         children: [
           Positioned.fill(
             child: PdfDisplay(

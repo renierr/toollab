@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:tool_lab/widgets/status_badge.dart';
 
 class BatteryCard extends StatelessWidget {
   final int level;
@@ -72,34 +73,10 @@ class BatteryCard extends StatelessWidget {
                     ],
                   ),
                   if (isSaverMode)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withAlpha(40),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.orange.withAlpha(100)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.energy_savings_leaf,
-                            size: 14,
-                            color: Colors.orange.shade300,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Saver Active',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: Colors.orange.shade300,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+                    StatusBadge(
+                      label: 'Saver Active',
+                      color: Colors.orange,
+                      icon: Icons.energy_savings_leaf,
                     ),
                 ],
               ),
@@ -170,7 +147,6 @@ class _BatteryIndicator extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Battery outer frame
         Container(
           width: 72,
           height: 32,
@@ -183,7 +159,6 @@ class _BatteryIndicator extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: Stack(
               children: [
-                // Level percentage fill
                 FractionallySizedBox(
                   widthFactor: level / 100,
                   child: Container(
@@ -197,7 +172,6 @@ class _BatteryIndicator extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Charging bolt icon overlay
                 if (isCharging)
                   const Center(
                     child: Icon(
@@ -217,7 +191,6 @@ class _BatteryIndicator extends StatelessWidget {
             ),
           ),
         ),
-        // Battery positive cap/tip
         Container(
           width: 4.5,
           height: 12,

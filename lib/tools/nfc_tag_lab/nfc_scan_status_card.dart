@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/widgets/data_row.dart' as shared;
 import 'scan_profile.dart';
 
 class NfcScanStatusCard extends StatelessWidget {
@@ -185,39 +186,39 @@ class NfcScanStatusCard extends StatelessWidget {
                 child: Column(
                   children: [
                     if (profile.isEmv) ...[
-                      _DetailRow(
+                      shared.InfoRow(
                         label: 'Card Brand',
                         value: profile.cardBrand ?? '-',
                       ),
                       const Divider(height: 12),
-                      _DetailRow(
+                      shared.InfoRow(
                         label: 'Card Number',
                         value: profile.cardNumber ?? '-',
                       ),
                       const Divider(height: 12),
-                      _DetailRow(
+                      shared.InfoRow(
                         label: 'Cardholder Name',
                         value: profile.cardHolder ?? '-',
                       ),
                       const Divider(height: 12),
-                      _DetailRow(
+                      shared.InfoRow(
                         label: 'Expiration Date',
                         value: profile.cardExpiry ?? '-',
                       ),
                       const Divider(height: 12),
-                      _DetailRow(
+                      shared.InfoRow(
                         label: 'Application AID',
                         value: profile.cardAid ?? '-',
                       ),
                       const Divider(height: 12),
                     ],
-                    _DetailRow(label: 'UID / Serial', value: tagUid),
+                    shared.InfoRow(label: 'UID / Serial', value: tagUid),
                     const Divider(height: 12),
-                    _DetailRow(label: 'Technologies', value: tagTechs),
+                    shared.InfoRow(label: 'Technologies', value: tagTechs),
                     const Divider(height: 12),
-                    _DetailRow(label: 'Capacity', value: tagCapacity),
+                    shared.InfoRow(label: 'Capacity', value: tagCapacity),
                     const Divider(height: 12),
-                    _DetailRow(label: 'Writable', value: tagWritable),
+                    shared.InfoRow(label: 'Writable', value: tagWritable),
                   ],
                 ),
               ),
@@ -248,37 +249,6 @@ class NfcScanStatusCard extends StatelessWidget {
       NfcCategoryId.secureCard => Icons.lock_person,
       NfcCategoryId.unknown => Icons.nfc_rounded,
     };
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _DetailRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Text(
-          value.isNotEmpty ? value : '-',
-          style: theme.textTheme.bodySmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-      ],
-    );
   }
 }
 

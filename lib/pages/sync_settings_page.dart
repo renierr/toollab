@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/providers/app_state.dart';
 
 class SyncSettingsPage extends StatefulWidget {
@@ -10,7 +11,8 @@ class SyncSettingsPage extends StatefulWidget {
   State<SyncSettingsPage> createState() => _SyncSettingsPageState();
 }
 
-class _SyncSettingsPageState extends State<SyncSettingsPage> {
+class _SyncSettingsPageState extends State<SyncSettingsPage>
+    with DisposeCleanup {
   late final AppState _appState;
   late TextEditingController _serverUrlController;
   late TextEditingController _userIdController;
@@ -28,13 +30,8 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
     _appState = context.read<AppState>();
     _serverUrlController = TextEditingController(text: _appState.syncServerUrl);
     _userIdController = TextEditingController(text: _appState.syncUserId);
-  }
-
-  @override
-  void dispose() {
-    _serverUrlController.dispose();
-    _userIdController.dispose();
-    super.dispose();
+    onDispose(_serverUrlController.dispose);
+    onDispose(_userIdController.dispose);
   }
 
   Future<void> _saveSettings() async {
@@ -84,14 +81,12 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
     });
 
     try {
-      // First save settings so the sync service uses the latest entered values
       await _appState.saveSyncSettings(
         enabled: true,
         url: _serverUrlController.text.trim(),
         userId: _userIdController.text.trim(),
       );
 
-      // In the future, individual tool page states register their delegates in appState
       final results = await _appState.syncWithBackend(_appState.syncDelegates);
 
       if (!mounted) return;
@@ -152,7 +147,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Info block
                 Card(
                   margin: EdgeInsets.zero,
                   child: Padding(
@@ -191,7 +185,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Enable toggle card
                 Card(
                   margin: EdgeInsets.zero,
                   child: SwitchListTile(
@@ -214,7 +207,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Configuration card
                 AnimatedOpacity(
                   opacity: enabled ? 1.0 : 0.5,
                   duration: const Duration(milliseconds: 200),
@@ -268,7 +260,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Sync action card
                 Card(
                   margin: EdgeInsets.zero,
                   child: Padding(
@@ -368,7 +359,6 @@ class _SyncSettingsPageState extends State<SyncSettingsPage> {
                 ),
                 const SizedBox(height: 24),
 
-                // Save button
                 SizedBox(
                   width: double.infinity,
                   height: 50,

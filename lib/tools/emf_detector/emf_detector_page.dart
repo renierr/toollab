@@ -95,7 +95,6 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
 
           return Stack(
             children: [
-              // High-tech top ambient gradient glow
               Positioned(
                 top: -150,
                 left: -50,
@@ -126,17 +125,14 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Header Section
                     ScannerHeader(state: _state),
                     const SizedBox(height: 24),
 
-                    // Real-time status / alert banner (always displayed to prevent layout jumping)
                     CableDetectedBanner(
                       isScanning: _state.isScanning,
                       isWarning: isWarning,
                     ),
 
-                    // Primary Gauge Panel
                     Center(
                       child: CircularGauge(
                         value: current.deltaMagnitude,
@@ -147,15 +143,12 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
                     ),
                     const SizedBox(height: 12),
 
-                    // Calibration Panel
                     CalibrationPanel(state: _state),
                     const SizedBox(height: 24),
 
-                    // 3-Axis Vector Breakdown
                     VectorReadoutCard(state: _state, current: current),
                     const SizedBox(height: 20),
 
-                    // Real-time scrolling chart
                     const OscilloscopeHeader(),
                     const SizedBox(height: 8),
                     OscilloscopeChart(
@@ -166,7 +159,6 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
                     ),
                     const SizedBox(height: 24),
 
-                    // Controls & Feedback toggles
                     ScannerControlsCard(
                       state: _state,
                       wakeLockActive: _wakeLockActive,
@@ -174,7 +166,6 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
                     ),
                     const SizedBox(height: 24),
 
-                    // Developer Mode Dock (Mock Simulators)
                     SimulatorLabCard(state: _state),
                     const SizedBox(height: 20),
                   ],

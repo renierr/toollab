@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/widgets/data_row.dart' as shared;
 
 class BubbleLevelReadout extends StatelessWidget {
   final double pitch;
@@ -12,72 +13,24 @@ class BubbleLevelReadout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Row(
       children: [
         Expanded(
-          child: _ReadoutCard(
+          child: shared.InfoRow(
             label: 'Pitch',
-            value: pitch,
-            accentColor: theme.colorScheme.primary,
+            value: '${pitch.toStringAsFixed(1)}°',
+            vertical: true,
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: _ReadoutCard(
+          child: shared.InfoRow(
             label: 'Roll',
-            value: roll,
-            accentColor: theme.colorScheme.primary,
+            value: '${roll.toStringAsFixed(1)}°',
+            vertical: true,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ReadoutCard extends StatelessWidget {
-  final String label;
-  final double value;
-  final Color accentColor;
-
-  const _ReadoutCard({
-    required this.label,
-    required this.value,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
-              color: theme.colorScheme.onSurface.withAlpha(120),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${value.toStringAsFixed(1)}°',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              fontFamily: 'monospace',
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

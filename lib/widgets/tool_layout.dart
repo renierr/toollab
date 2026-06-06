@@ -7,6 +7,9 @@ class ToolLayout extends StatelessWidget {
   final bool fullscreen;
   final List<Widget>? actions;
   final bool showFloatingBackButton;
+  final Widget? drawer;
+  final Color? backgroundColor;
+  final GlobalKey<ScaffoldState>? scaffoldKey;
 
   const ToolLayout({
     super.key,
@@ -15,6 +18,9 @@ class ToolLayout extends StatelessWidget {
     this.fullscreen = false,
     this.actions,
     this.showFloatingBackButton = true,
+    this.drawer,
+    this.backgroundColor,
+    this.scaffoldKey,
   });
 
   @override
@@ -24,6 +30,9 @@ class ToolLayout extends StatelessWidget {
     final appBarHeight = isShort ? 40.0 : 56.0;
 
     return Scaffold(
+      key: scaffoldKey,
+      drawer: drawer,
+      backgroundColor: backgroundColor,
       appBar: fullscreen
           ? null
           : PreferredSize(

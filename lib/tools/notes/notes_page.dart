@@ -7,6 +7,7 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/tools/notes/config.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_list.dart';
@@ -42,7 +43,6 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       appState.loadNotes();
 
-      // Auto-sync if enabled and server URL is set
       if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty) {
         appState
             .syncWithBackend([NotesSyncDelegate()])
@@ -56,13 +56,11 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
             });
       }
 
-      // Handle initial shared file if any
       if (widget.sharedFile != null) {
         _loadSharedFile(widget.sharedFile!);
       }
     });
 
-    // Listen to shared files stream
     final sharingSub = SharingService.instance.onSharedFile.listen((file) {
       final mime = file.mimeType.toLowerCase();
       if (mime == 'text/markdown' ||
@@ -82,7 +80,6 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
         final text = await diskFile.readAsString();
         final fileName = file.name;
 
-        // Open editor populated with the file contents
         setState(() {
           _isEditing = true;
           _editingId = null;
@@ -158,26 +155,11 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
   }
 
   Future<void> _deleteNote(int id) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await ConfirmActionDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Note'),
-        content: const Text('Are you sure you want to delete this note?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Delete Note',
+      message: 'Are you sure you want to delete this note?',
+      confirmLabel: 'Delete',
     );
 
     if (confirmed == true && mounted) {

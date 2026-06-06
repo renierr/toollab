@@ -31,13 +31,11 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
   final bool _isBatterySaver = false;
   StreamSubscription<BatteryState>? _batterySubscription;
 
-  // Visual header fields
   String _osName = '';
   String _osVersion = '';
   String _deviceName = '';
   String _modelName = '';
 
-  // Info section categories
   Map<String, String> _systemInfo = {};
   Map<String, String> _hardwareInfo = {};
   Map<String, String> _displayInfo = {};
@@ -50,7 +48,6 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
   }
 
   Future<void> _loadAllInfo() async {
-    // 1. Load battery info
     try {
       _batteryLevel = await _battery.batteryLevel;
       _batteryState = await _battery.batteryState;
@@ -69,7 +66,6 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       debugPrint('[DeviceInfo] Failed to read battery: $e');
     }
 
-    // 2. Load device-specific and system info
     try {
       if (defaultTargetPlatform == TargetPlatform.android) {
         final info = await _deviceInfo.androidInfo;
@@ -166,7 +162,6 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       _systemInfo = {'Error': e.toString()};
     }
 
-    // 3. Load dynamic display and general settings
     if (mounted) {
       final mediaQuery = MediaQuery.of(context);
       _displayInfo = {

@@ -4,6 +4,7 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/markdown_checkbox.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -230,28 +231,12 @@ class _NoteEditorState extends State<NoteEditor>
   }
 
   Future<bool> _showDiscardDialog(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await ConfirmActionDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Unsaved Changes'),
-        content: const Text(
-          'You have unsaved changes. Do you want to discard them?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Keep Editing'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Discard'),
-          ),
-        ],
-      ),
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Do you want to discard them?',
+      cancelLabel: 'Keep Editing',
+      confirmLabel: 'Discard',
     );
     return confirmed ?? false;
   }
