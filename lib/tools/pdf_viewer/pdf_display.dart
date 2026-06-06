@@ -49,9 +49,15 @@ class PdfDisplay extends StatelessWidget {
           return scale;
         },
         maxImageBytesCachedOnMemory: 256 * 1024 * 1024,
+        scrollByMouseWheel: 2,
         scrollPhysics: PdfViewerParams.getScrollPhysics(context),
         interactionDelegateProvider:
-            const PdfViewerScrollInteractionDelegateProviderPhysics(),
+            const PdfViewerScrollInteractionDelegateProviderPhysics(
+              panFriction: 6.0,
+            ),
+        sizeDelegateProvider: const PdfViewerSizeDelegateProviderSmart(
+          smartMaxScale: 2.0,
+        ),
         behaviorControlParams: const PdfViewerBehaviorControlParams(
           partialImageLoadingDelay: Duration(milliseconds: 200),
         ),
