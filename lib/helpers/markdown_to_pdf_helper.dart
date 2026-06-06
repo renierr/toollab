@@ -45,11 +45,12 @@ class MarkdownToPdfConverter {
             alignment: pw.Alignment.centerRight,
             margin: const pw.EdgeInsets.only(bottom: 8),
             child: pw.Text(
-              title,
+              _clean(title),
               style: pw.TextStyle(
                 font: _bodyFont,
                 fontSize: 9,
                 color: PdfColors.grey600,
+                fontFallback: [_emojiFont!],
               ),
             ),
           );
@@ -63,6 +64,7 @@ class MarkdownToPdfConverter {
               font: _bodyFont,
               fontSize: 9,
               color: PdfColors.grey600,
+              fontFallback: [_emojiFont!],
             ),
           ),
         ),
@@ -95,6 +97,12 @@ class MarkdownToPdfConverter {
     color: PdfColors.grey800,
     fontFallback: [_emojiFont!],
   );
+
+  static pw.TextStyle _fallbackStyle() =>
+      pw.TextStyle(fontFallback: [_emojiFont!]);
+
+  static String _clean(String text) =>
+      text.replaceAll(RegExp(r'[\u200c\u200d\ufe0e\ufe0f]'), '');
 
   static List<pw.Widget> _buildBlocks(List<md.Node> nodes) {
     final widgets = <pw.Widget>[];
@@ -351,7 +359,7 @@ class MarkdownToPdfConverter {
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
       ),
       child: pw.Text(
-        code,
+        _clean(code),
         style: pw.TextStyle(
           font: _monoFont,
           fontSize: 9,
@@ -367,7 +375,7 @@ class MarkdownToPdfConverter {
 
   static pw.TextSpan _buildInlineSpan(md.Node node) {
     if (node is md.Text) {
-      return pw.TextSpan(text: node.text);
+      return pw.TextSpan(text: _clean(node.text), style: _fallbackStyle());
     }
     if (node is! md.Element) return const pw.TextSpan(text: '');
 
@@ -383,7 +391,7 @@ class MarkdownToPdfConverter {
           children: _buildInlineSpans(node.children ?? []),
         );
       case 'code':
-        return pw.TextSpan(style: _monoStyle(), text: node.textContent);
+        return pw.TextSpan(style: _monoStyle(), text: _clean(node.textContent));
       case 'a':
         final href = node.attributes['href'];
         return pw.TextSpan(
@@ -397,11 +405,12 @@ class MarkdownToPdfConverter {
             ..._buildInlineSpans(node.children ?? []),
             if (href != null && href.isNotEmpty)
               pw.TextSpan(
-                text: ' ($href)',
+                text: ' (${_clean(href)})',
                 style: pw.TextStyle(
                   font: _bodyFont,
                   fontSize: 9,
                   color: PdfColors.grey500,
+                  fontFallback: [_emojiFont!],
                 ),
               ),
           ],
@@ -409,7 +418,7 @@ class MarkdownToPdfConverter {
       case 'img':
         final alt = node.attributes['alt'] ?? '';
         return pw.TextSpan(
-          text: alt.isNotEmpty ? '[Image: $alt]' : '[Image]',
+          text: alt.isNotEmpty ? '[Image: ${_clean(alt)}]' : '[Image]',
           style: pw.TextStyle(
             font: _italicFont,
             color: PdfColors.grey500,
