@@ -11,6 +11,8 @@ class PdfOverlayControls extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onShare;
   final VoidCallback onDownload;
+  final VoidCallback? onPrevPage;
+  final VoidCallback? onNextPage;
 
   // Bookmarks
   final VoidCallback onOpenBookmarks;
@@ -38,6 +40,8 @@ class PdfOverlayControls extends StatelessWidget {
     required this.onBack,
     required this.onShare,
     required this.onDownload,
+    this.onPrevPage,
+    this.onNextPage,
     required this.onOpenBookmarks,
     required this.isSearchingText,
     required this.searchTextController,
@@ -226,10 +230,10 @@ class PdfOverlayControls extends StatelessWidget {
           child: RepaintBoundary(
             child: Container(
               padding: const EdgeInsets.only(
-                top: 8,
-                bottom: 12,
-                left: 16,
-                right: 16,
+                top: 4,
+                bottom: 8,
+                left: 12,
+                right: 12,
               ),
               color: theme.colorScheme.surface.withValues(alpha: 0.95),
               child: SafeArea(
@@ -256,36 +260,30 @@ class PdfOverlayControls extends StatelessWidget {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.chevron_left),
-                              onPressed: currentPage > 1
-                                  ? () => controller.goToPage(
-                                      pageNumber: currentPage - 1,
-                                    )
-                                  : null,
+                              onPressed: currentPage > 1 ? onPrevPage : null,
                               tooltip: 'Previous Page',
-                              iconSize: 20,
+                              iconSize: 16,
                               constraints: const BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
+                                minWidth: 28,
+                                minHeight: 28,
                               ),
                             ),
                             Text(
                               'Page $currentPage of $totalPages',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.chevron_right),
                               onPressed: currentPage < totalPages
-                                  ? () => controller.goToPage(
-                                      pageNumber: currentPage + 1,
-                                    )
+                                  ? onNextPage
                                   : null,
                               tooltip: 'Next Page',
-                              iconSize: 20,
+                              iconSize: 16,
                               constraints: const BoxConstraints(
-                                minWidth: 36,
-                                minHeight: 36,
+                                minWidth: 28,
+                                minHeight: 28,
                               ),
                             ),
                           ],
@@ -301,10 +299,10 @@ class PdfOverlayControls extends StatelessWidget {
                           icon: const Icon(Icons.zoom_out),
                           onPressed: () => controller.zoomDown(),
                           tooltip: 'Zoom Out',
-                          iconSize: 20,
+                          iconSize: 16,
                           constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 36,
+                            minWidth: 28,
+                            minHeight: 28,
                           ),
                         ),
                         IconButton(
@@ -314,20 +312,20 @@ class PdfOverlayControls extends StatelessWidget {
                             1.0,
                           ),
                           tooltip: 'Reset Zoom',
-                          iconSize: 20,
+                          iconSize: 16,
                           constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 36,
+                            minWidth: 28,
+                            minHeight: 28,
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.zoom_in),
                           onPressed: () => controller.zoomUp(),
                           tooltip: 'Zoom In',
-                          iconSize: 20,
+                          iconSize: 16,
                           constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 36,
+                            minWidth: 28,
+                            minHeight: 28,
                           ),
                         ),
                       ],

@@ -29,6 +29,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
   final ValueNotifier<int> _currentPageNotifier = ValueNotifier<int>(1);
   final ValueNotifier<int> _totalPagesNotifier = ValueNotifier<int>(0);
   bool _showOverlays = true;
+  bool _suppressAutoHide = false;
 
   // Bookmarks/Outline
   List<PdfOutlineNode>? _outline;
@@ -127,6 +128,22 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       _isSearchingText = false;
       _searchTextController.clear();
     });
+  }
+
+  void _onPrevPage() {
+    final page = _currentPageNotifier.value;
+    if (page > 1) {
+      _suppressAutoHide = true;
+      _pdfController.goToPage(pageNumber: page - 1);
+    }
+  }
+
+  void _onNextPage() {
+    final page = _currentPageNotifier.value;
+    if (page < _pdfController.pageCount) {
+      _suppressAutoHide = true;
+      _pdfController.goToPage(pageNumber: page + 1);
+    }
   }
 
   Future<void> _shareFile() async {
@@ -350,7 +367,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
                     ? MediaQuery.of(context).padding.top + 72
                     : MediaQuery.of(context).padding.top,
                 bottom: _showOverlays
-                    ? MediaQuery.of(context).padding.bottom + 56
+                    ? MediaQuery.of(context).padding.bottom + 40
                     : MediaQuery.of(context).padding.bottom,
               ),
               pagePaintCallbacks: [
@@ -375,6 +392,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               onPageChanged: (pageNumber) {
                 _currentPageNotifier.value = pageNumber ?? 1;
                 _totalPagesNotifier.value = _pdfController.pageCount;
+                if (_suppressAutoHide) {
+                  _suppressAutoHide = false;
+                  return;
+                }
                 final page = pageNumber ?? 1;
                 if (page > 1 && _showOverlays) {
                   setState(() => _showOverlays = false);
@@ -404,6 +425,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               },
               onShare: _shareFile,
               onDownload: _downloadFile,
+              onPrevPage: _onPrevPage,
+              onNextPage: _onNextPage,
               onOpenBookmarks: () {
                 _loadOutline();
                 _scaffoldKey.currentState?.openDrawer();
