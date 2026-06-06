@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/markdown_checkbox.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NoteEditor extends StatefulWidget {
@@ -28,11 +31,50 @@ class _NoteEditorState extends State<NoteEditor>
   late final FocusNode _focusNode;
   TabController? _tabController;
 
+  static final _listPrefix = RegExp(
+    r'^(\s*)([-*+]\s\[[ x]\]\s|[-*+]\s|\d+[.)]\s)',
+  );
+
+  KeyEventResult _handleEnter(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.enter) {
+      return KeyEventResult.ignored;
+    }
+    final text = _controller.text;
+    final sel = _controller.selection;
+    final cursorPos = sel.start;
+    final lineStart = text.lastIndexOf('\n', cursorPos - 1) + 1;
+    final currentLine = text.substring(lineStart, cursorPos);
+    final match = _listPrefix.firstMatch(currentLine);
+    if (match == null) return KeyEventResult.ignored;
+
+    final prefix = match.group(0)!;
+    final rest = currentLine.substring(prefix.length);
+    final before = text.substring(0, cursorPos);
+    final after = text.substring(sel.end);
+
+    if (rest.trim().isEmpty) {
+      final beforeLine = text.substring(0, lineStart);
+      _controller.value = TextEditingValue(
+        text: '$beforeLine\n$after',
+        selection: TextSelection.collapsed(offset: beforeLine.length + 1),
+      );
+    } else {
+      _controller.value = TextEditingValue(
+        text: '$before\n$prefix$after',
+        selection: TextSelection.collapsed(
+          offset: cursorPos + 1 + prefix.length,
+        ),
+      );
+    }
+    return KeyEventResult.handled;
+  }
+
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialContent);
-    _focusNode = FocusNode();
+    _focusNode = FocusNode(onKeyEvent: _handleEnter);
     _tabController = TabController(length: 2, vsync: this);
     _controller.addListener(() {
       setState(() {});
@@ -78,6 +120,11 @@ class _NoteEditorState extends State<NoteEditor>
     final items = [
       (Icons.format_bold, 'Bold', () => _insertText('**', suffix: '**')),
       (Icons.format_italic, 'Italic', () => _insertText('*', suffix: '*')),
+      (
+        Icons.format_strikethrough,
+        'Strikethrough',
+        () => _insertText('~~', suffix: '~~'),
+      ),
       (Icons.looks_one, 'H1', () => _insertText('# ')),
       (Icons.looks_two, 'H2', () => _insertText('## ')),
       (Icons.looks_3, 'H3', () => _insertText('### ')),
@@ -159,6 +206,12 @@ class _NoteEditorState extends State<NoteEditor>
       child: MarkdownBody(
         data: _controller.text,
         selectable: true,
+        extensionSet: md.ExtensionSet.gitHubFlavored,
+        listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
+        checkboxBuilder: (checked) => MarkdownCheckbox(
+          checked: checked,
+          checkedColor: AppTheme.accentTeal,
+        ),
         onTapLink: (text, href, title) {
           if (href != null) {
             launchUrl(Uri.parse(href));

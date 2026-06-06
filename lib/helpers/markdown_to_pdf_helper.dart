@@ -32,7 +32,10 @@ class MarkdownToPdfConverter {
     await _ensureFonts();
 
     final doc = pw.Document();
-    final parser = md.Document(encodeHtml: false);
+    final parser = md.Document(
+      encodeHtml: false,
+      extensionSet: md.ExtensionSet.gitHubFlavored,
+    );
     final ast = parser.parse(markdown);
 
     doc.addPage(
@@ -220,8 +223,76 @@ class MarkdownToPdfConverter {
     );
   }
 
+  static bool? _checkboxChecked(md.Element item) {
+    final children = item.children;
+    if (children == null || children.isEmpty) return null;
+    final first = children.first;
+    if (first is md.Element &&
+        first.tag == 'input' &&
+        first.attributes['type'] == 'checkbox') {
+      return first.attributes.containsKey('checked');
+    }
+    if (first is md.Element && first.tag == 'p') {
+      final p = first.children;
+      if (p != null &&
+          p.isNotEmpty &&
+          p.first is md.Element &&
+          (p.first as md.Element).tag == 'input' &&
+          (p.first as md.Element).attributes['type'] == 'checkbox') {
+        return (p.first as md.Element).attributes.containsKey('checked');
+      }
+    }
+    return null;
+  }
+
+  static List<md.Node> _stripCheckbox(List<md.Node> children) {
+    if (children.isEmpty) return children;
+    final first = children.first;
+    if (first is md.Element &&
+        first.tag == 'input' &&
+        first.attributes['type'] == 'checkbox') {
+      return children.sublist(1);
+    }
+    if (first is md.Element && first.tag == 'p') {
+      final p = first.children;
+      if (p != null &&
+          p.isNotEmpty &&
+          p.first is md.Element &&
+          (p.first as md.Element).tag == 'input' &&
+          (p.first as md.Element).attributes['type'] == 'checkbox') {
+        final rest = [md.Element('p', p.sublist(1)), ...children.sublist(1)];
+        return rest;
+      }
+    }
+    return children;
+  }
+
+  static pw.Widget _buildCheckboxWidget(bool checked) {
+    final size = 7.0;
+    return pw.Container(
+      width: size,
+      height: size,
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PdfColors.grey700, width: 0.5),
+        color: checked ? PdfColors.grey700 : null,
+      ),
+    );
+  }
+
+  static pw.Widget _prefixWidget(
+    String text, {
+    required bool isCheckbox,
+    required bool checked,
+  }) {
+    if (isCheckbox) return _buildCheckboxWidget(checked);
+    return pw.Text(text, style: _baseStyle().copyWith(fontSize: 11));
+  }
+
   static pw.Widget _buildListItem(md.Element item, {required String prefix}) {
-    final children = item.children ?? [];
+    var children = item.children ?? [];
+    final checked = _checkboxChecked(item);
+    final isCheckbox = checked != null;
+    if (isCheckbox) children = _stripCheckbox(children);
     if (children.isEmpty) return pw.SizedBox.shrink();
 
     final onlyElems = children.every((c) => c is md.Element && c is! md.Text);
@@ -240,9 +311,10 @@ class MarkdownToPdfConverter {
             children: [
               pw.SizedBox(
                 width: 22,
-                child: pw.Text(
+                child: _prefixWidget(
                   prefix,
-                  style: _baseStyle().copyWith(fontSize: 11),
+                  isCheckbox: isCheckbox,
+                  checked: checked ?? false,
                 ),
               ),
               pw.Expanded(
@@ -267,9 +339,10 @@ class MarkdownToPdfConverter {
           children: [
             pw.SizedBox(
               width: 22,
-              child: pw.Text(
+              child: _prefixWidget(
                 prefix,
-                style: _baseStyle().copyWith(fontSize: 11),
+                isCheckbox: isCheckbox,
+                checked: checked ?? false,
               ),
             ),
             pw.Expanded(
@@ -310,7 +383,11 @@ class MarkdownToPdfConverter {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(prefix, style: _baseStyle().copyWith(fontSize: 11)),
+          _prefixWidget(
+            prefix,
+            isCheckbox: isCheckbox,
+            checked: checked ?? false,
+          ),
           pw.Padding(
             padding: const pw.EdgeInsets.only(left: 22),
             child: pw.Column(

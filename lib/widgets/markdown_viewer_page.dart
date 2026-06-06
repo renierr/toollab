@@ -3,11 +3,13 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:markdown/markdown.dart' as md;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/markdown_checkbox.dart';
 import 'package:tool_lab/widgets/markdown_loading_skeleton.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -244,6 +246,13 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                   MarkdownBody(
                     data: body,
                     selectable: config.selectable,
+                    extensionSet: md.ExtensionSet.gitHubFlavored,
+                    listItemCrossAxisAlignment:
+                        MarkdownListItemCrossAxisAlignment.start,
+                    checkboxBuilder: (checked) => MarkdownCheckbox(
+                      checked: checked,
+                      checkedColor: config.accentColor,
+                    ),
                     onTapLink: (text, href, title) {
                       if (href != null) {
                         launchUrl(Uri.parse(href));
