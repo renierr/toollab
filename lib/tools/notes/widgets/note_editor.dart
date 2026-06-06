@@ -306,7 +306,11 @@ class _NoteEditorState extends State<NoteEditor>
                             child: _buildTextField(context),
                           ),
                         ),
-                        Expanded(child: _buildPreview(context)),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: _buildPreview(context),
+                          ),
+                        ),
                       ],
                     )
                   : TabBarView(
