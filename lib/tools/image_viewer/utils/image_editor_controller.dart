@@ -28,13 +28,15 @@ class ImageEditorController extends ChangeNotifier {
   ImageMetadata? _metadata;
   bool _preserveExif = false;
 
-  // Editor and history state
+  // Editor and history state (max 5 steps)
   bool _isCropMode = false;
   final List<img.Image> _history = [];
   int _historyIndex = -1;
+  static const int _maxHistorySteps = 5;
 
-  // Deferred decoding future
+  // Deferred decoding future and load session counter to prevent memory leaks on close/switch
   Future<img.Image>? _decodingFuture;
+  int _loadSessionCounter = 0;
 
   // Getters
   img.Image? get decodedImage => _decodedImage;
@@ -60,8 +62,11 @@ class ImageEditorController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _loadSessionCounter++; // Invalidate any running background tasks
     widthController.dispose();
     heightController.dispose();
+    _uiImage?.dispose();
+    _uiImage = null;
     super.dispose();
   }
 
@@ -99,10 +104,23 @@ class ImageEditorController extends ChangeNotifier {
     _decodedImage = null;
     _decodingFuture = null;
 
+    // Increment load session to invalidate previous background decodes/metadata requests
+    _loadSessionCounter++;
+    final currentSession = _loadSessionCounter;
+
     try {
       // Decode instantly using native Flutter C++ engine (under 50ms) for visual preview
       final codec = await ui.instantiateImageCodec(bytes);
       final frame = await codec.getNextFrame();
+
+      // If user closed or switched to another image while UI decoded, stop here
+      if (currentSession != _loadSessionCounter) {
+        frame.image.dispose();
+        return;
+      }
+
+      // Free previously loaded native image resources immediately
+      _uiImage?.dispose();
       _uiImage = frame.image;
 
       _fileName = name;
@@ -129,6 +147,10 @@ class ImageEditorController extends ChangeNotifier {
       _decodingFuture = compute(decodeAndBakeOrientationTask, bytes).then((
         decoded,
       ) {
+        // Discard if session changed or controller was cleared
+        if (currentSession != _loadSessionCounter || _uiImage == null) {
+          return decoded;
+        }
         _decodedImage = decoded;
         _history.add(decoded);
         _historyIndex = 0;
@@ -136,16 +158,17 @@ class ImageEditorController extends ChangeNotifier {
       });
 
       // Load EXIF in background
-      _extractExif(bytes);
+      _extractExif(bytes, currentSession);
     } catch (e) {
       debugPrint("Failed to load image: $e");
       rethrow;
     }
   }
 
-  void _extractExif(Uint8List bytes) {
+  void _extractExif(Uint8List bytes, int session) {
     compute(extractMetadataTask, bytes)
         .then((metadata) {
+          if (session != _loadSessionCounter || _uiImage == null) return;
           _metadata = metadata;
           notifyListeners();
         })
@@ -180,7 +203,12 @@ class ImageEditorController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _uiImage = await _convertToUiImage(newImage);
+      final newUi = await _convertToUiImage(newImage);
+
+      // Dispose old display texture immediately
+      _uiImage?.dispose();
+      _uiImage = newUi;
+
       _decodedImage = newImage;
       _originalWidth = newImage.width;
       _originalHeight = newImage.height;
@@ -189,7 +217,14 @@ class ImageEditorController extends ChangeNotifier {
       if (_historyIndex < _history.length - 1) {
         _history.removeRange(_historyIndex + 1, _history.length);
       }
+
       _history.add(newImage);
+
+      // Enforce history size limit
+      if (_history.length > _maxHistorySteps) {
+        _history.removeAt(0);
+      }
+
       _historyIndex = _history.length - 1;
 
       // Sync text fields
@@ -225,7 +260,10 @@ class ImageEditorController extends ChangeNotifier {
       notifyListeners();
 
       try {
-        _uiImage = await _convertToUiImage(prevImage);
+        final newUi = await _convertToUiImage(prevImage);
+        _uiImage?.dispose();
+        _uiImage = newUi;
+
         _decodedImage = prevImage;
         _historyIndex--;
         _originalWidth = prevImage.width;
@@ -255,7 +293,10 @@ class ImageEditorController extends ChangeNotifier {
       notifyListeners();
 
       try {
-        _uiImage = await _convertToUiImage(nextImage);
+        final newUi = await _convertToUiImage(nextImage);
+        _uiImage?.dispose();
+        _uiImage = newUi;
+
         _decodedImage = nextImage;
         _historyIndex++;
         _originalWidth = nextImage.width;
@@ -383,7 +424,9 @@ class ImageEditorController extends ChangeNotifier {
   }
 
   void clear() {
+    _loadSessionCounter++; // Invalidate any running background tasks
     _decodedImage = null;
+    _uiImage?.dispose();
     _uiImage = null;
     _fileName = null;
     _fileSizeBytes = 0;
