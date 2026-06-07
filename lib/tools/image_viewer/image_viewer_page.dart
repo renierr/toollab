@@ -496,56 +496,56 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
           icon: Icons.image_outlined,
           buttonLabel: 'Browse Files',
           buttonIcon: Icons.folder_open,
-          extraButtons: [
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _pickFromGallery,
-                  icon: const Icon(Icons.photo_outlined),
-                  label: const Text('Browse Gallery'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ImageViewerTool.config.accentColor,
-                    side: BorderSide(
-                      color: ImageViewerTool.config.accentColor.withValues(
-                        alpha: 0.5,
+          extraButtons: Platform.isAndroid
+              ? [
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: _pickFromGallery,
+                        icon: const Icon(Icons.photo_outlined),
+                        label: const Text('Browse Gallery'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: ImageViewerTool.config.accentColor,
+                          side: BorderSide(
+                            color: ImageViewerTool.config.accentColor
+                                .withValues(alpha: 0.5),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-                OutlinedButton.icon(
-                  onPressed: _takePhoto,
-                  icon: const Icon(Icons.camera_alt_outlined),
-                  label: const Text('Take Photo'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ImageViewerTool.config.accentColor,
-                    side: BorderSide(
-                      color: ImageViewerTool.config.accentColor.withValues(
-                        alpha: 0.5,
+                      OutlinedButton.icon(
+                        onPressed: _takePhoto,
+                        icon: const Icon(Icons.camera_alt_outlined),
+                        label: const Text('Take Photo'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: ImageViewerTool.config.accentColor,
+                          side: BorderSide(
+                            color: ImageViewerTool.config.accentColor
+                                .withValues(alpha: 0.5),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                       ),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          ],
+                ]
+              : null,
         ),
       );
     } else {
