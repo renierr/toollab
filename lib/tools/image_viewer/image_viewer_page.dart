@@ -42,6 +42,9 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   final TransformationController _transformationController =
       TransformationController();
 
+  bool _isEditorOpen = true;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -303,36 +306,18 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isWideScreen = MediaQuery.of(context).size.width > 720;
 
-    Widget mainContent;
-    if (_imageBytes == null) {
-      mainContent = Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: FileDropZone(
-          onFileSelected: _onFileSelected,
-          allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'],
-          typeLabel: 'Images',
-          accentColor: ImageViewerTool.config.accentColor,
-          title: 'Drop an image here',
-          subtitle: 'Supports PNG, JPEG, WebP, BMP, GIF',
-          icon: Icons.image_outlined,
-          buttonLabel: 'Browse Images',
-          buttonIcon: Icons.photo_library_outlined,
-        ),
-      );
-    } else {
-      mainContent = LayoutBuilder(
-        builder: (context, constraints) {
-          final isLandscape =
-              constraints.maxWidth > constraints.maxHeight + 100;
-
-          final displayWidget = ImageViewerDisplay(
+    final displayWidget = _imageBytes != null
+        ? ImageViewerDisplay(
             imageBytes: _imageBytes!,
             transformationController: _transformationController,
             onResetZoom: _onResetZoom,
-          );
+          )
+        : const SizedBox.shrink();
 
-          final editorWidget = ImageViewerEditor(
+    final editorWidget = _imageBytes != null
+        ? ImageViewerEditor(
             widthController: _widthController,
             heightController: _heightController,
             keepAspectRatio: _keepAspectRatio,
@@ -361,65 +346,123 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
             isProcessing: _isProcessing,
             originalDimensions: '${_originalWidth}x$_originalHeight px',
             originalSize: _formatBytes(_fileSizeBytes),
-          );
+          )
+        : const SizedBox.shrink();
 
-          if (isLandscape) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: displayWidget,
-                  ),
-                ),
-                Container(
-                  width: 320,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      left: BorderSide(
-                        color: theme.colorScheme.outline.withValues(
-                          alpha: 0.15,
-                        ),
-                      ),
+    Widget mainContent;
+    if (_imageBytes == null) {
+      mainContent = Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: FileDropZone(
+          onFileSelected: _onFileSelected,
+          allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'],
+          typeLabel: 'Images',
+          accentColor: ImageViewerTool.config.accentColor,
+          title: 'Drop an image here',
+          subtitle: 'Supports PNG, JPEG, WebP, BMP, GIF',
+          icon: Icons.image_outlined,
+          buttonLabel: 'Browse Images',
+          buttonIcon: Icons.photo_library_outlined,
+        ),
+      );
+    } else {
+      if (isWideScreen) {
+        mainContent = Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: displayWidget,
+              ),
+            ),
+            if (_isEditorOpen)
+              Container(
+                width: 320,
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.15),
                     ),
                   ),
-                  child: editorWidget,
                 ),
-              ],
-            );
-          } else {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: displayWidget,
-                  ),
-                ),
-                const Divider(height: 1),
-                SizedBox(height: 360, child: editorWidget),
-              ],
-            );
-          }
-        },
-      );
+                child: editorWidget,
+              ),
+          ],
+        );
+      } else {
+        mainContent = Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: displayWidget,
+        );
+      }
     }
+
+    final List<Widget>? actions = _imageBytes != null
+        ? [
+            if (isWideScreen)
+              IconButton(
+                icon: Icon(
+                  _isEditorOpen
+                      ? Icons.view_sidebar
+                      : Icons.view_sidebar_outlined,
+                ),
+                onPressed: () => setState(() => _isEditorOpen = !_isEditorOpen),
+                tooltip: _isEditorOpen ? 'Hide settings' : 'Show settings',
+              )
+            else
+              IconButton(
+                icon: const Icon(Icons.tune),
+                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                tooltip: 'Edit image',
+              ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: _onClose,
+              tooltip: 'Close image',
+            ),
+          ]
+        : null;
+
+    final Widget? fab = (_imageBytes != null && !isWideScreen)
+        ? FloatingActionButton(
+            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+            tooltip: 'Edit image',
+            child: const Icon(Icons.tune),
+          )
+        : null;
+
+    final Widget? endDrawer = (_imageBytes != null && !isWideScreen)
+        ? Drawer(
+            child: SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppBar(
+                    title: const Text('Edit Image'),
+                    automaticallyImplyLeading: false,
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 1),
+                  Expanded(child: editorWidget),
+                ],
+              ),
+            ),
+          )
+        : null;
 
     return ToolLayout(
       title: ImageViewerTool.config.name,
       fullscreen: ImageViewerTool.config.fullscreen,
-      actions: _imageBytes != null
-          ? [
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: _onClose,
-                tooltip: 'Close image',
-              ),
-            ]
-          : null,
+      scaffoldKey: _scaffoldKey,
+      actions: actions,
+      floatingActionButton: fab,
+      endDrawer: endDrawer,
       child: mainContent,
     );
   }

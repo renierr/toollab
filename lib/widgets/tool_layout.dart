@@ -8,6 +8,8 @@ class ToolLayout extends StatelessWidget {
   final List<Widget>? actions;
   final bool showFloatingBackButton;
   final Widget? drawer;
+  final Widget? endDrawer;
+  final Widget? floatingActionButton;
   final Color? backgroundColor;
   final GlobalKey<ScaffoldState>? scaffoldKey;
 
@@ -19,6 +21,8 @@ class ToolLayout extends StatelessWidget {
     this.actions,
     this.showFloatingBackButton = true,
     this.drawer,
+    this.endDrawer,
+    this.floatingActionButton,
     this.backgroundColor,
     this.scaffoldKey,
   });
@@ -32,6 +36,8 @@ class ToolLayout extends StatelessWidget {
     return Scaffold(
       key: scaffoldKey,
       drawer: drawer,
+      endDrawer: endDrawer,
+      floatingActionButton: floatingActionButton,
       backgroundColor: backgroundColor,
       appBar: fullscreen
           ? null
