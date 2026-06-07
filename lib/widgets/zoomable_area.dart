@@ -30,6 +30,8 @@ class _ZoomableAreaState extends State<ZoomableArea> {
   double _baseScale = 1.0;
   bool _isScaling = false;
   bool _ctrlPressed = false;
+  bool _isPinching = false;
+  final Set<int> _activePointers = {};
   Timer? _hideTimer;
 
   @override
@@ -84,6 +86,10 @@ class _ZoomableAreaState extends State<ZoomableArea> {
         });
       }
     });
+    setState(() {
+      _isPinching = false;
+      _activePointers.clear();
+    });
   }
 
   void _handlePointerSignal(PointerSignalEvent event) {
@@ -134,12 +140,37 @@ class _ZoomableAreaState extends State<ZoomableArea> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final ScrollPhysics? physics = _ctrlPressed
+    final ScrollPhysics? physics = (_ctrlPressed || _isPinching)
         ? const NeverScrollableScrollPhysics()
         : null;
 
     return Listener(
       onPointerSignal: _handlePointerSignal,
+      onPointerDown: (event) {
+        _activePointers.add(event.pointer);
+        if (_activePointers.length > 1) {
+          setState(() {
+            _isPinching = true;
+            _isScaling = true;
+          });
+        }
+      },
+      onPointerUp: (event) {
+        _activePointers.remove(event.pointer);
+        if (_activePointers.isEmpty) {
+          setState(() {
+            _isPinching = false;
+          });
+        }
+      },
+      onPointerCancel: (event) {
+        _activePointers.remove(event.pointer);
+        if (_activePointers.isEmpty) {
+          setState(() {
+            _isPinching = false;
+          });
+        }
+      },
       behavior: HitTestBehavior.translucent,
       child: GestureDetector(
         onScaleStart: _onScaleStart,
@@ -149,7 +180,10 @@ class _ZoomableAreaState extends State<ZoomableArea> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            widget.builder(context, _scaleFactor, physics),
+            AbsorbPointer(
+              absorbing: _isPinching,
+              child: widget.builder(context, _scaleFactor, physics),
+            ),
             if (_isScaling)
               Positioned(
                 top: 16,
