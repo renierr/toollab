@@ -194,13 +194,18 @@ for task in "${TASKS[@]}"; do
       fi
       ;;
     apks1)
-      echo -e "\033[1;32m>>> Building Android arm64-v8a APK${VER_STR}...\033[0m"
-      rm -f "$APK_SRC_DIR/app-release.apk"
-      if flutter build apk --release --target-platform android-arm64; then
-        if [ -f "$APK_SRC_DIR/app-release.apk" ]; then
-          cp "$APK_SRC_DIR/app-release.apk" "$DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-arm64-v8a-release.apk"
-          echo -e "\033[1;32m>>> Saved: $DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-arm64-v8a-release.apk\033[0m"
-        fi
+      echo -e "\033[1;32m>>> Building Android arm64-v8a Split APK${VER_STR}...\033[0m"
+      rm -f "$APK_SRC_DIR"/app-*-release.apk
+      if flutter build apk --release --target-platform android-arm64 --split-per-abi; then
+        for file in "$APK_SRC_DIR"/app-*-release.apk; do
+          if [ -f "$file" ]; then
+            filename=$(basename "$file")
+            target="${filename#app-}"
+            target="${target%-release.apk}"
+            cp "$file" "$DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-${target}-release.apk"
+            echo -e "\033[1;32m>>> Saved: $DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-${target}-release.apk\033[0m"
+          fi
+        done
       else
         exit 1
       fi
