@@ -144,3 +144,47 @@ await SharePlus.instance.share(
   ShareParams(files: [XFile(path, mimeType: mimeType)]),
 );
 ```
+
+---
+
+## 3. Gesture, Scroll, & Selection Conflicts in Zoomable Views
+
+This behavior is packaged into the reusable `ZoomableArea` common widget, located at `lib/widgets/zoomable_area.dart`. Always reuse this widget when implementing pinch-to-zoom containers to ensure consistent mobile performance.
+
+When implementing pinch-to-zoom (`GestureDetector` with scale callbacks) on top of scrollable views (`SingleChildScrollView`, `ListView`, etc.) or text selection views (`SelectionArea`, `SelectableText`), gesture recognizer collisions are common on touch devices. This leads to accidental scrolling, jitter, and unexpected text selection highlight handles popping up during pinch-zooming.
+
+### 3.1. Mitigation Strategy (Pointer Absorption & Physics Locking)
+
+To make pinch-to-zoom highly resilient and smooth, the container must bypass standard gesture arena latency by directly listening to raw pointer events and dynamically absorbing pointer propagation:
+
+1. **Raw Pointer Tracking**:
+   Use a `Listener` to intercept raw touch pointer events before they enter the gesture arena. Maintain a `Set<int>` of active pointer IDs.
+   ```dart
+   final Set<int> _activePointers = {};
+   ```
+   - On `onPointerDown`: Add the pointer ID to `_activePointers`. If `_activePointers.length > 1`, set a pinching state flag `_isPinching = true`.
+   - On `onPointerUp` / `onPointerCancel`: Remove the pointer ID. If `_activePointers.isEmpty`, reset `_isPinching = false`.
+
+2. **Pointer Absorption**:
+   Wrap the child builder of the zoomable area inside an `AbsorbPointer` widget controlled by the pinching state:
+   ```dart
+   AbsorbPointer(
+     absorbing: _isPinching,
+     child: widget.builder(context, scale, physics),
+   )
+   ```
+   This prevents all touch events from reaching the child widgets (such as text selection recognizers or scroll controllers) while a pinch gesture is active, instantly canceling child selection/scroll updates.
+
+3. **Dynamic Scroll Physics Lock**:
+   Pass a dynamic `ScrollPhysics` down to the child scroll view. When `_isPinching` (or Ctrl-key scroll wheel zooming on desktop) is active, supply `NeverScrollableScrollPhysics()` to immediately disable scrolling in the viewport:
+   ```dart
+   final ScrollPhysics? physics = (_ctrlPressed || _isPinching)
+       ? const NeverScrollableScrollPhysics()
+       : null;
+   ```
+4. **Clean Reset**:
+   When the gesture is ended via `onScaleEnd`, ensure all pointer states are reset and any remaining pointer IDs are cleared to ensure normal user interactivity is immediately restored:
+   ```dart
+   _activePointers.clear();
+   _isPinching = false;
+   ```
