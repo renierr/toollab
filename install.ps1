@@ -109,12 +109,21 @@ function Register-UninstallEntry {
   $uninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$AppName"
   New-Item -Path $uninstallKey -Force | Out-Null
   $exePath = Join-Path $InstallDir $ExeName
+  
+  # Copy installer script to installation directory so it can be invoked for uninstallation
+  $targetScript = Join-Path $InstallDir 'install.ps1'
+  Copy-Item -Path $ScriptPath -Destination $targetScript -Force
+  
   Set-ItemProperty -Path $uninstallKey -Name 'DisplayName' -Value $AppName
   Set-ItemProperty -Path $uninstallKey -Name 'DisplayVersion' -Value $Version
   Set-ItemProperty -Path $uninstallKey -Name 'DisplayIcon' -Value $exePath
   Set-ItemProperty -Path $uninstallKey -Name 'Publisher' -Value $Company
   Set-ItemProperty -Path $uninstallKey -Name 'InstallLocation' -Value $InstallDir
-  Set-ItemProperty -Path $uninstallKey -Name 'UninstallString' -Value "powershell -NoProfile -File `"$ScriptPath`" -Uninstall"
+  
+  # Copy to temp, execute silently, and then clean up temp script to avoid locking files
+  $uninstallCmd = "powershell -NoProfile -ExecutionPolicy Bypass -Command `"Copy-Item -Path '$targetScript' -Destination '$env:TEMP\uninstall_tool_lab.ps1' -Force; & '$env:TEMP\uninstall_tool_lab.ps1' -Uninstall -Silent; Remove-Item -Path '$env:TEMP\uninstall_tool_lab.ps1' -Force`""
+  Set-ItemProperty -Path $uninstallKey -Name 'UninstallString' -Value $uninstallCmd
+  
   New-ItemProperty -Path $uninstallKey -Name 'NoModify' -Value 1 -PropertyType DWord -Force | Out-Null
   New-ItemProperty -Path $uninstallKey -Name 'NoRepair' -Value 1 -PropertyType DWord -Force | Out-Null
   $size = [math]::Round((Get-ChildItem $InstallDir -Recurse -File | Measure-Object Length -Sum).Sum / 1KB)
@@ -138,6 +147,8 @@ function Install-StartMenuShortcut {
 
 function Uninstall-All {
   Write-Info "Starting uninstall..."
+  # Change working directory to temp to prevent locking the installation directory
+  Set-Location $env:TEMP
   # Kill running app
   Stop-App
   # Remove file associations
