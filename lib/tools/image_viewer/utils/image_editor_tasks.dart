@@ -44,6 +44,24 @@ class CropParams extends EditParams {
   });
 }
 
+class ImageResizeParams {
+  final Uint8List bytes;
+  final int width;
+  final int height;
+  final String format;
+  final int quality;
+  final bool preserveExif;
+
+  ImageResizeParams({
+    required this.bytes,
+    required this.width,
+    required this.height,
+    required this.format,
+    required this.quality,
+    required this.preserveExif,
+  });
+}
+
 Uint8List rotateImageTask(RotateParams params) {
   final decoded = img.decodeImage(params.bytes);
   if (decoded == null) {
@@ -89,6 +107,58 @@ Uint8List cropImageTask(CropParams params) {
     height: params.height,
   );
   return Uint8List.fromList(_encodeByFormat(cropped, params.format));
+}
+
+Uint8List resizeAndEncodeTask(ImageResizeParams params) {
+  final decoded = img.decodeImage(params.bytes);
+  if (decoded == null) {
+    throw Exception('Could not decode original image');
+  }
+
+  // Bake orientation to ensure width/height match what the user sees in the UI
+  final oriented = img.bakeOrientation(decoded);
+
+  final resized = img.copyResize(
+    oriented,
+    width: params.width,
+    height: params.height,
+    interpolation: img.Interpolation.average,
+  );
+
+  if (!params.preserveExif) {
+    resized.exif = img.ExifData();
+  }
+
+  List<int> encoded;
+  switch (params.format.toLowerCase()) {
+    case 'jpg':
+    case 'jpeg':
+      encoded = img.encodeJpg(resized, quality: params.quality);
+      if (params.preserveExif) {
+        try {
+          final injected = img.injectJpgExif(
+            Uint8List.fromList(encoded),
+            decoded.exif,
+          );
+          if (injected != null) {
+            encoded = injected;
+          }
+        } catch (_) {
+          // ignore or fallback
+        }
+      }
+      break;
+    case 'png':
+      encoded = img.encodePng(resized);
+      break;
+    case 'bmp':
+      encoded = img.encodeBmp(resized);
+      break;
+    default:
+      encoded = img.encodePng(resized);
+  }
+
+  return Uint8List.fromList(encoded);
 }
 
 List<int> _encodeByFormat(img.Image image, String format) {
