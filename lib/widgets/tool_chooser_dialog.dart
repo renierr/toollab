@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_model.dart';
+import 'responsive_alert_dialog.dart';
 
 class ToolChooserDialog extends StatefulWidget {
   final List<ToolModel> tools;
@@ -24,7 +25,7 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return AlertDialog(
+    return ResponsiveAlertDialog(
       title: Text(
         'Open File',
         style: theme.textTheme.titleMedium?.copyWith(

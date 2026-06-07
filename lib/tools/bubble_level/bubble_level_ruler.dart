@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class BubbleLevelRuler extends StatelessWidget {
   final bool visible;
@@ -155,7 +156,7 @@ class _RulerCalibrationDialogState extends State<RulerCalibrationDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AlertDialog(
+    return ResponsiveAlertDialog(
       title: Text(
         'Ruler Calibration',
         style: TextStyle(color: theme.colorScheme.primary),

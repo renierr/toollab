@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'responsive_alert_dialog.dart';
 
 class ConfirmActionDialog {
   static Future<bool?> show({
@@ -11,7 +12,7 @@ class ConfirmActionDialog {
   }) {
     return showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => ResponsiveAlertDialog(
         title: Text(title),
         content: Text(message),
         actions: [
