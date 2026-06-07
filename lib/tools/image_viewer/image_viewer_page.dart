@@ -652,9 +652,9 @@ ImageMetadata _extractMetadataTask(Uint8List bytes) {
 
     final gpsDir = exif.gpsIfd;
     if (!gpsDir.isEmpty) {
-      final latVal = gpsDir.gpsLatitude;
+      final latVal = gpsDir[2]; // Tag 2 is GPSLatitude
       final latRef = gpsDir.gpsLatitudeRef;
-      final lonVal = gpsDir.gpsLongitude;
+      final lonVal = gpsDir[4]; // Tag 4 is GPSLongitude
       final lonRef = gpsDir.gpsLongitudeRef;
 
       final parsedLat = _parseGpsCoordinate(latVal, latRef);
