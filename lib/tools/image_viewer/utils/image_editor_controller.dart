@@ -400,6 +400,7 @@ class ImageEditorController extends ChangeNotifier {
     _uiImage = newUi;
     _originalWidth = newUi.width;
     _originalHeight = newUi.height;
+    _isAnimated = false;
     _syncDimensionFields();
     notifyListeners();
 
@@ -414,6 +415,7 @@ class ImageEditorController extends ChangeNotifier {
     final newUi = await _canvasFlip(_uiImage!, direction);
     _uiImage?.dispose();
     _uiImage = newUi;
+    _isAnimated = false;
     notifyListeners();
 
     _queueBackgroundSync(
@@ -430,6 +432,7 @@ class ImageEditorController extends ChangeNotifier {
     _uiImage = newUi;
     _originalWidth = w;
     _originalHeight = h;
+    _isAnimated = false;
     _syncDimensionFields();
     notifyListeners();
 
