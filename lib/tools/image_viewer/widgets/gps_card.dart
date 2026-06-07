@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:tool_lab/widgets/info_card.dart';
 
 class GpsCard extends StatelessWidget {
   final double latitude;
@@ -28,60 +29,38 @@ class GpsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.25),
-      shape: RoundedRectangleBorder(
-        side: BorderSide(
-          color: theme.colorScheme.primary.withValues(alpha: 0.15),
-        ),
-        borderRadius: BorderRadius.circular(16),
+    return InfoCard(
+      icon: Icons.location_on,
+      title: 'GPS Location Information',
+      backgroundColor: theme.colorScheme.primaryContainer.withValues(
+        alpha: 0.25,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.location_on,
-                  color: theme.colorScheme.primary,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'GPS Location Information',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _DetailRow(label: 'Latitude', value: latitude.toStringAsFixed(6)),
+      borderColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _DetailRow(label: 'Latitude', value: latitude.toStringAsFixed(6)),
+          const SizedBox(height: 8),
+          _DetailRow(label: 'Longitude', value: longitude.toStringAsFixed(6)),
+          if (dms != null && dms!.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _DetailRow(label: 'Longitude', value: longitude.toStringAsFixed(6)),
-            if (dms != null && dms!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              _DetailRow(label: 'Coordinates (DMS)', value: dms!),
-            ],
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _openMap,
-              icon: const Icon(Icons.map_outlined, size: 18),
-              label: const Text('Open in Maps'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: theme.colorScheme.onPrimary,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+            _DetailRow(label: 'Coordinates (DMS)', value: dms!),
+          ],
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _openMap,
+            icon: const Icon(Icons.map_outlined, size: 18),
+            label: const Text('Open in Maps'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

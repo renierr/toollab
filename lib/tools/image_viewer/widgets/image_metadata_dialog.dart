@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import '../utils/image_metadata_extractor.dart';
 import 'gps_card.dart';
 import 'thumbnail_card.dart';
@@ -31,7 +32,7 @@ class ImageMetadataDialog extends StatelessWidget {
     final hasGps = metadata.latitude != null && metadata.longitude != null;
     final hasThumbnail = metadata.thumbnailBytes != null;
 
-    return AlertDialog(
+    return ResponsiveAlertDialog(
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -59,7 +60,6 @@ class ImageMetadataDialog extends StatelessWidget {
           ),
         ],
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       content: SizedBox(
         width: 500,
         child: SingleChildScrollView(
