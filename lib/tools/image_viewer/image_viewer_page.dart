@@ -17,6 +17,8 @@ import 'package:tool_lab/tools/image_viewer/config.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_display.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_editor.dart';
+import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
+import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_crop_panel.dart';
 
 class ImageViewerPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -49,6 +51,11 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
 
   bool _isEditorOpen = true;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // Editor and history state
+  bool _isCropMode = false;
+  final List<Uint8List> _history = [];
+  int _historyIndex = -1;
 
   @override
   void initState() {
@@ -167,6 +174,12 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
           _originalWidth = image.width;
           _originalHeight = image.height;
 
+          // Clear history and store initial version
+          _history.clear();
+          _history.add(bytes);
+          _historyIndex = 0;
+          _isCropMode = false;
+
           // Pause listeners to avoid side-effects/rounding during initialization
           _widthController.removeListener(_onWidthChanged);
           _heightController.removeListener(_onHeightChanged);
@@ -182,7 +195,11 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
 
           // Auto-detect format from file extension if possible
           final ext = name.split('.').last.toLowerCase();
-          if (ext == 'png' || ext == 'jpg' || ext == 'jpeg' || ext == 'bmp') {
+          if (ext == 'png' ||
+              ext == 'jpg' ||
+              ext == 'jpeg' ||
+              ext == 'webp' ||
+              ext == 'bmp') {
             _selectedFormat = (ext == 'jpeg') ? 'jpg' : ext;
           } else {
             _selectedFormat = 'png';
@@ -204,6 +221,213 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
           });
     } catch (e) {
       _showError('Failed to process image: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _applyNewBytes(Uint8List newBytes) async {
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      final codec = await ui.instantiateImageCodec(newBytes);
+      final frame = await codec.getNextFrame();
+      final image = frame.image;
+
+      if (mounted) {
+        setState(() {
+          _imageBytes = newBytes;
+          _originalWidth = image.width;
+          _originalHeight = image.height;
+
+          // Clear redo history if we are editing from a middle index
+          if (_historyIndex < _history.length - 1) {
+            _history.removeRange(_historyIndex + 1, _history.length);
+          }
+          _history.add(newBytes);
+          _historyIndex = _history.length - 1;
+
+          // Sync textfields
+          _widthController.removeListener(_onWidthChanged);
+          _heightController.removeListener(_onHeightChanged);
+          _widthController.text = _originalWidth.toString();
+          _heightController.text = _originalHeight.toString();
+          _widthController.addListener(_onWidthChanged);
+          _heightController.addListener(_onHeightChanged);
+
+          // Reset zoom transformation
+          _transformationController.value = Matrix4.identity();
+        });
+      }
+    } catch (e) {
+      _showError('Failed to apply edits: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _undo() async {
+    if (_historyIndex > 0) {
+      final prevBytes = _history[_historyIndex - 1];
+      setState(() {
+        _isProcessing = true;
+      });
+
+      try {
+        final codec = await ui.instantiateImageCodec(prevBytes);
+        final frame = await codec.getNextFrame();
+        final image = frame.image;
+
+        if (mounted) {
+          setState(() {
+            _historyIndex--;
+            _imageBytes = prevBytes;
+            _originalWidth = image.width;
+            _originalHeight = image.height;
+
+            _widthController.removeListener(_onWidthChanged);
+            _heightController.removeListener(_onHeightChanged);
+            _widthController.text = _originalWidth.toString();
+            _heightController.text = _originalHeight.toString();
+            _widthController.addListener(_onWidthChanged);
+            _heightController.addListener(_onHeightChanged);
+
+            _transformationController.value = Matrix4.identity();
+          });
+        }
+      } catch (e) {
+        _showError('Undo failed: $e');
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _redo() async {
+    if (_historyIndex < _history.length - 1) {
+      final nextBytes = _history[_historyIndex + 1];
+      setState(() {
+        _isProcessing = true;
+      });
+
+      try {
+        final codec = await ui.instantiateImageCodec(nextBytes);
+        final frame = await codec.getNextFrame();
+        final image = frame.image;
+
+        if (mounted) {
+          setState(() {
+            _historyIndex++;
+            _imageBytes = nextBytes;
+            _originalWidth = image.width;
+            _originalHeight = image.height;
+
+            _widthController.removeListener(_onWidthChanged);
+            _heightController.removeListener(_onHeightChanged);
+            _widthController.text = _originalWidth.toString();
+            _heightController.text = _originalHeight.toString();
+            _widthController.addListener(_onWidthChanged);
+            _heightController.addListener(_onHeightChanged);
+
+            _transformationController.value = Matrix4.identity();
+          });
+        }
+      } catch (e) {
+        _showError('Redo failed: $e');
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _rotateImage(int angle) async {
+    if (_imageBytes == null) return;
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      final params = RotateParams(
+        bytes: _imageBytes!,
+        format: _selectedFormat,
+        angle: angle,
+      );
+      final rotatedBytes = await compute(rotateImageTask, params);
+      await _applyNewBytes(rotatedBytes);
+    } catch (e) {
+      _showError('Rotation failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _flipImage(String direction) async {
+    if (_imageBytes == null) return;
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      final params = FlipParams(
+        bytes: _imageBytes!,
+        format: _selectedFormat,
+        direction: direction,
+      );
+      final flippedBytes = await compute(flipImageTask, params);
+      await _applyNewBytes(flippedBytes);
+    } catch (e) {
+      _showError('Flipping failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _cropImage(int x, int y, int w, int h) async {
+    if (_imageBytes == null) return;
+    setState(() {
+      _isProcessing = true;
+      _isCropMode = false;
+    });
+
+    try {
+      final params = CropParams(
+        bytes: _imageBytes!,
+        format: _selectedFormat,
+        x: x,
+        y: y,
+        width: w,
+        height: h,
+      );
+      final croppedBytes = await compute(cropImageTask, params);
+      await _applyNewBytes(croppedBytes);
+    } catch (e) {
+      _showError('Cropping failed: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -288,6 +512,9 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       _preserveExif = false;
       _widthController.clear();
       _heightController.clear();
+      _history.clear();
+      _historyIndex = -1;
+      _isCropMode = false;
     });
   }
 
@@ -434,11 +661,21 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
     final isWideScreen = MediaQuery.of(context).size.width > 720;
 
     final displayWidget = _imageBytes != null
-        ? ImageViewerDisplay(
-            imageBytes: _imageBytes!,
-            transformationController: _transformationController,
-            onResetZoom: _onResetZoom,
-          )
+        ? (_isCropMode
+              ? ImageViewerCropPanel(
+                  imageBytes: _imageBytes!,
+                  onCropApplied: _cropImage,
+                  onCropCancelled: () {
+                    setState(() {
+                      _isCropMode = false;
+                    });
+                  },
+                )
+              : ImageViewerDisplay(
+                  imageBytes: _imageBytes!,
+                  transformationController: _transformationController,
+                  onResetZoom: _onResetZoom,
+                ))
         : const SizedBox.shrink();
 
     final editorWidget = _imageBytes != null
@@ -479,6 +716,17 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                 _preserveExif = val;
               });
             },
+            onRotateLeft: () => _rotateImage(270),
+            onRotateRight: () => _rotateImage(90),
+            onFlipHorizontal: () => _flipImage('horizontal'),
+            onFlipVertical: () => _flipImage('vertical'),
+            onToggleCropMode: () {
+              setState(() {
+                _isCropMode = !_isCropMode;
+              });
+            },
+            isCropMode: _isCropMode,
+            isWideScreen: isWideScreen,
           )
         : const SizedBox.shrink();
 
@@ -583,6 +831,16 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
 
     final List<Widget>? actions = _imageBytes != null
         ? [
+            IconButton(
+              icon: const Icon(Icons.undo),
+              onPressed: _historyIndex > 0 ? _undo : null,
+              tooltip: 'Undo',
+            ),
+            IconButton(
+              icon: const Icon(Icons.redo),
+              onPressed: _historyIndex < _history.length - 1 ? _redo : null,
+              tooltip: 'Redo',
+            ),
             if (isWideScreen)
               IconButton(
                 icon: Icon(
