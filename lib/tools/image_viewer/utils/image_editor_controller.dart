@@ -126,7 +126,7 @@ class ImageEditorController extends ChangeNotifier {
       _uiImage?.dispose();
       _uiImage = frame.image;
       _isAnimated = animated;
-      _rawBytes = animated ? bytes : null;
+      _rawBytes = bytes;
 
       _fileName = name;
       _fileSizeBytes = sizeBytes;
@@ -140,18 +140,6 @@ class ImageEditorController extends ChangeNotifier {
       _isCropMode = false;
 
       notifyListeners();
-
-      _decodingFuture = compute(decodeAndBakeOrientationTask, bytes).then((
-        decoded,
-      ) {
-        if (currentSession != _loadSessionCounter || _uiImage == null) {
-          return decoded;
-        }
-        _decodedImage = decoded;
-        _history.add(decoded);
-        _historyIndex = 0;
-        return decoded;
-      });
 
       _extractExif(bytes, currentSession);
     } catch (e) {
@@ -303,10 +291,7 @@ class ImageEditorController extends ChangeNotifier {
 
     _backgroundSync = prev.then((_) async {
       if (session != _loadSessionCounter) return;
-      // Wait for the initial heavy decode if still in flight
-      if (_decodedImage == null && _decodingFuture != null) {
-        await _decodingFuture;
-      }
+      await _ensureDecoded();
       if (session != _loadSessionCounter || _decodedImage == null) return;
       final result = await work(_decodedImage!);
       if (session != _loadSessionCounter) return;
@@ -315,8 +300,31 @@ class ImageEditorController extends ChangeNotifier {
     });
   }
 
+  Future<void> _ensureDecoded() async {
+    if (_decodedImage != null) return;
+    if (_decodingFuture != null) {
+      await _decodingFuture;
+      return;
+    }
+    if (_rawBytes == null) {
+      throw Exception("No image data available for decoding.");
+    }
+    final session = _loadSessionCounter;
+    _decodingFuture = compute(decodeAndBakeOrientationTask, _rawBytes!).then((
+      decoded,
+    ) {
+      if (session != _loadSessionCounter) return decoded;
+      _decodedImage = decoded;
+      _history.add(decoded);
+      _historyIndex = 0;
+      if (!_isAnimated) _rawBytes = null;
+      return decoded;
+    });
+    await _decodingFuture;
+  }
+
   Future<void> _ensureFullySynced() async {
-    if (_decodingFuture != null) await _decodingFuture;
+    await _ensureDecoded();
     if (_backgroundSync != null) await _backgroundSync;
     if (_decodedImage == null) {
       throw Exception("Backing image not yet decoded.");
