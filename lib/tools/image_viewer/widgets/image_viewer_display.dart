@@ -1,14 +1,19 @@
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 class ImageViewerDisplay extends StatefulWidget {
   final ui.Image image;
+  final Uint8List? rawBytes;
+  final bool isAnimated;
   final TransformationController transformationController;
   final VoidCallback onResetZoom;
 
   const ImageViewerDisplay({
     super.key,
     required this.image,
+    this.rawBytes,
+    this.isAnimated = false,
     required this.transformationController,
     required this.onResetZoom,
   });
@@ -82,7 +87,9 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
               minScale: 0.1,
               maxScale: 10.0,
               child: Center(
-                child: RawImage(image: widget.image, fit: BoxFit.contain),
+                child: widget.isAnimated && widget.rawBytes != null
+                    ? Image.memory(widget.rawBytes!, fit: BoxFit.contain)
+                    : RawImage(image: widget.image, fit: BoxFit.contain),
               ),
             ),
           ),

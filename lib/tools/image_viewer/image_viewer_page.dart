@@ -179,6 +179,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                     )
                   : ImageViewerDisplay(
                       image: _controller.uiImage!,
+                      rawBytes: _controller.rawBytes,
+                      isAnimated: _controller.isAnimated,
                       transformationController: _transformationController,
                       onResetZoom: _onResetZoom,
                     ))

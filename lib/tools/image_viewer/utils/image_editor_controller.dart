@@ -13,6 +13,8 @@ import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart'
 class ImageEditorController extends ChangeNotifier {
   img.Image? _decodedImage;
   ui.Image? _uiImage;
+  Uint8List? _rawBytes;
+  bool _isAnimated = false;
   String? _fileName;
   int _fileSizeBytes = 0;
 
@@ -36,11 +38,14 @@ class ImageEditorController extends ChangeNotifier {
 
   // Deferred decoding future and load session counter to prevent memory leaks on close/switch
   Future<img.Image>? _decodingFuture;
+  Future<void>? _backgroundSync;
   int _loadSessionCounter = 0;
 
   // Getters
   img.Image? get decodedImage => _decodedImage;
   ui.Image? get uiImage => _uiImage;
+  Uint8List? get rawBytes => _rawBytes;
+  bool get isAnimated => _isAnimated;
   String? get fileName => _fileName;
   int get fileSizeBytes => _fileSizeBytes;
   int get originalWidth => _originalWidth;
@@ -62,7 +67,7 @@ class ImageEditorController extends ChangeNotifier {
 
   @override
   void dispose() {
-    _loadSessionCounter++; // Invalidate any running background tasks
+    _loadSessionCounter++;
     widthController.dispose();
     heightController.dispose();
     _uiImage?.dispose();
@@ -100,54 +105,45 @@ class ImageEditorController extends ChangeNotifier {
 
   Future<void> loadImage(Uint8List bytes, String name, int sizeBytes) async {
     _metadata = null;
-    _isProcessing = false; // Do not show loader on open
+    _isProcessing = false;
     _decodedImage = null;
     _decodingFuture = null;
+    _backgroundSync = null;
 
-    // Increment load session to invalidate previous background decodes/metadata requests
     _loadSessionCounter++;
     final currentSession = _loadSessionCounter;
 
     try {
-      // Decode instantly using native Flutter C++ engine (under 50ms) for visual preview
       final codec = await ui.instantiateImageCodec(bytes);
+      final animated = codec.frameCount > 1;
       final frame = await codec.getNextFrame();
 
-      // If user closed or switched to another image while UI decoded, stop here
       if (currentSession != _loadSessionCounter) {
         frame.image.dispose();
         return;
       }
 
-      // Free previously loaded native image resources immediately
       _uiImage?.dispose();
       _uiImage = frame.image;
+      _isAnimated = animated;
+      _rawBytes = animated ? bytes : null;
 
       _fileName = name;
       _fileSizeBytes = sizeBytes;
       _originalWidth = _uiImage!.width;
       _originalHeight = _uiImage!.height;
 
-      // Update text fields
-      widthController.removeListener(_onWidthChanged);
-      heightController.removeListener(_onHeightChanged);
-      widthController.text = _originalWidth.toString();
-      heightController.text = _originalHeight.toString();
-      widthController.addListener(_onWidthChanged);
-      heightController.addListener(_onHeightChanged);
+      _syncDimensionFields();
 
       _history.clear();
       _historyIndex = -1;
       _isCropMode = false;
 
-      // Instantly notify so image displays
       notifyListeners();
 
-      // Start the heavy pure-Dart decode asynchronously in background
       _decodingFuture = compute(decodeAndBakeOrientationTask, bytes).then((
         decoded,
       ) {
-        // Discard if session changed or controller was cleared
         if (currentSession != _loadSessionCounter || _uiImage == null) {
           return decoded;
         }
@@ -157,7 +153,6 @@ class ImageEditorController extends ChangeNotifier {
         return decoded;
       });
 
-      // Load EXIF in background
       _extractExif(bytes, currentSession);
     } catch (e) {
       debugPrint("Failed to load image: $e");
@@ -198,186 +193,249 @@ class ImageEditorController extends ChangeNotifier {
     return completer.future;
   }
 
-  Future<void> _applyNewImage(img.Image newImage) async {
-    _isProcessing = true;
-    notifyListeners();
-
-    try {
-      final newUi = await _convertToUiImage(newImage);
-
-      // Dispose old display texture immediately
-      _uiImage?.dispose();
-      _uiImage = newUi;
-
-      _decodedImage = newImage;
-      _originalWidth = newImage.width;
-      _originalHeight = newImage.height;
-
-      // Clear redo history
-      if (_historyIndex < _history.length - 1) {
-        _history.removeRange(_historyIndex + 1, _history.length);
-      }
-
-      _history.add(newImage);
-
-      // Enforce history size limit
-      if (_history.length > _maxHistorySteps) {
-        _history.removeAt(0);
-      }
-
-      _historyIndex = _history.length - 1;
-
-      // Sync text fields
-      widthController.removeListener(_onWidthChanged);
-      heightController.removeListener(_onHeightChanged);
-      widthController.text = _originalWidth.toString();
-      heightController.text = _originalHeight.toString();
-      widthController.addListener(_onWidthChanged);
-      heightController.addListener(_onHeightChanged);
-    } catch (e) {
-      debugPrint("Failed to apply new image: $e");
-      rethrow;
-    } finally {
-      _isProcessing = false;
-      notifyListeners();
-    }
+  void _syncDimensionFields() {
+    widthController.removeListener(_onWidthChanged);
+    heightController.removeListener(_onHeightChanged);
+    widthController.text = _originalWidth.toString();
+    heightController.text = _originalHeight.toString();
+    widthController.addListener(_onWidthChanged);
+    heightController.addListener(_onHeightChanged);
   }
 
-  Future<void> _ensureDecoded() async {
-    if (_decodedImage == null && _decodingFuture != null) {
-      await _decodingFuture;
+  // ---------------------------------------------------------------------------
+  // GPU-accelerated Canvas transforms — instant (<10ms) vs seconds with the
+  // pure-Dart image package. The backing img.Image is synced in a chained
+  // background isolate afterwards so export/undo keep working.
+  // ---------------------------------------------------------------------------
+
+  Future<ui.Image> _canvasRotate(ui.Image source, int angle) async {
+    final a = angle % 360;
+    final swap = a == 90 || a == 270;
+    final w = swap ? source.height : source.width;
+    final h = swap ? source.width : source.height;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    switch (a) {
+      case 90:
+        canvas.translate(w.toDouble(), 0);
+      case 180:
+        canvas.translate(w.toDouble(), h.toDouble());
+      case 270:
+        canvas.translate(0, h.toDouble());
     }
+    canvas.rotate(a * math.pi / 180);
+    canvas.drawImage(source, Offset.zero, Paint());
+
+    final picture = recorder.endRecording();
+    final result = await picture.toImage(w, h);
+    picture.dispose();
+    return result;
+  }
+
+  Future<ui.Image> _canvasFlip(ui.Image source, String direction) async {
+    final w = source.width.toDouble();
+    final h = source.height.toDouble();
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    if (direction == 'horizontal') {
+      canvas.translate(w, 0);
+      canvas.scale(-1, 1);
+    } else {
+      canvas.translate(0, h);
+      canvas.scale(1, -1);
+    }
+    canvas.drawImage(source, Offset.zero, Paint());
+
+    final picture = recorder.endRecording();
+    final result = await picture.toImage(source.width, source.height);
+    picture.dispose();
+    return result;
+  }
+
+  Future<ui.Image> _canvasCrop(
+    ui.Image source,
+    int x,
+    int y,
+    int w,
+    int h,
+  ) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    canvas.drawImageRect(
+      source,
+      Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
+      Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()),
+      Paint(),
+    );
+
+    final picture = recorder.endRecording();
+    final result = await picture.toImage(w, h);
+    picture.dispose();
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Background sync — chains isolate transforms so the backing img.Image
+  // stays in lockstep with the displayed ui.Image.
+  // ---------------------------------------------------------------------------
+
+  void _pushHistory(img.Image newImage) {
+    if (_historyIndex < _history.length - 1) {
+      _history.removeRange(_historyIndex + 1, _history.length);
+    }
+    _history.add(newImage);
+    if (_history.length > _maxHistorySteps) {
+      _history.removeAt(0);
+    }
+    _historyIndex = _history.length - 1;
+  }
+
+  void _queueBackgroundSync(
+    Future<img.Image> Function(img.Image current) work,
+  ) {
+    final prev = _backgroundSync ?? Future.value(null);
+    final session = _loadSessionCounter;
+
+    _backgroundSync = prev.then((_) async {
+      if (session != _loadSessionCounter) return;
+      // Wait for the initial heavy decode if still in flight
+      if (_decodedImage == null && _decodingFuture != null) {
+        await _decodingFuture;
+      }
+      if (session != _loadSessionCounter || _decodedImage == null) return;
+      final result = await work(_decodedImage!);
+      if (session != _loadSessionCounter) return;
+      _decodedImage = result;
+      _pushHistory(result);
+    });
+  }
+
+  Future<void> _ensureFullySynced() async {
+    if (_decodingFuture != null) await _decodingFuture;
+    if (_backgroundSync != null) await _backgroundSync;
     if (_decodedImage == null) {
       throw Exception("Backing image not yet decoded.");
     }
   }
 
-  Future<void> undo() async {
-    await _ensureDecoded();
-    if (_historyIndex > 0) {
-      final prevImage = _history[_historyIndex - 1];
-      _isProcessing = true;
-      notifyListeners();
+  // ---------------------------------------------------------------------------
+  // Undo / Redo — waits for all background syncs before navigating history.
+  // ---------------------------------------------------------------------------
 
-      try {
+  Future<void> undo() async {
+    _isProcessing = true;
+    notifyListeners();
+
+    try {
+      await _ensureFullySynced();
+      if (_historyIndex > 0) {
+        final prevImage = _history[_historyIndex - 1];
         final newUi = await _convertToUiImage(prevImage);
         _uiImage?.dispose();
         _uiImage = newUi;
-
         _decodedImage = prevImage;
         _historyIndex--;
         _originalWidth = prevImage.width;
         _originalHeight = prevImage.height;
-
-        widthController.removeListener(_onWidthChanged);
-        heightController.removeListener(_onHeightChanged);
-        widthController.text = _originalWidth.toString();
-        heightController.text = _originalHeight.toString();
-        widthController.addListener(_onWidthChanged);
-        heightController.addListener(_onHeightChanged);
-      } catch (e) {
-        debugPrint("Undo failed: $e");
-        rethrow;
-      } finally {
-        _isProcessing = false;
-        notifyListeners();
+        _syncDimensionFields();
       }
+    } catch (e) {
+      debugPrint("Undo failed: $e");
+      rethrow;
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
     }
   }
 
   Future<void> redo() async {
-    await _ensureDecoded();
-    if (_historyIndex < _history.length - 1) {
-      final nextImage = _history[_historyIndex + 1];
-      _isProcessing = true;
-      notifyListeners();
+    _isProcessing = true;
+    notifyListeners();
 
-      try {
+    try {
+      await _ensureFullySynced();
+      if (_historyIndex < _history.length - 1) {
+        final nextImage = _history[_historyIndex + 1];
         final newUi = await _convertToUiImage(nextImage);
         _uiImage?.dispose();
         _uiImage = newUi;
-
         _decodedImage = nextImage;
         _historyIndex++;
         _originalWidth = nextImage.width;
         _originalHeight = nextImage.height;
-
-        widthController.removeListener(_onWidthChanged);
-        heightController.removeListener(_onHeightChanged);
-        widthController.text = _originalWidth.toString();
-        heightController.text = _originalHeight.toString();
-        widthController.addListener(_onWidthChanged);
-        heightController.addListener(_onHeightChanged);
-      } catch (e) {
-        debugPrint("Redo failed: $e");
-        rethrow;
-      } finally {
-        _isProcessing = false;
-        notifyListeners();
+        _syncDimensionFields();
       }
-    }
-  }
-
-  Future<void> rotateImage(int angle) async {
-    _isProcessing = true;
-    notifyListeners();
-
-    try {
-      await _ensureDecoded();
-      final params = RotateParams(_decodedImage!, angle);
-      final rotatedImage = await compute(rotateImageTask, params);
-      await _applyNewImage(rotatedImage);
     } catch (e) {
-      debugPrint("Rotation failed: $e");
+      debugPrint("Redo failed: $e");
       rethrow;
     } finally {
       _isProcessing = false;
       notifyListeners();
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Transform operations — Canvas-first for instant display, then background
+  // isolate sync to keep img.Image in step.
+  // ---------------------------------------------------------------------------
+
+  Future<void> rotateImage(int angle) async {
+    if (_uiImage == null) return;
+
+    final newUi = await _canvasRotate(_uiImage!, angle);
+    _uiImage?.dispose();
+    _uiImage = newUi;
+    _originalWidth = newUi.width;
+    _originalHeight = newUi.height;
+    _syncDimensionFields();
+    notifyListeners();
+
+    _queueBackgroundSync(
+      (current) => compute(rotateImageTask, RotateParams(current, angle)),
+    );
   }
 
   Future<void> flipImage(String direction) async {
-    _isProcessing = true;
+    if (_uiImage == null) return;
+
+    final newUi = await _canvasFlip(_uiImage!, direction);
+    _uiImage?.dispose();
+    _uiImage = newUi;
     notifyListeners();
 
-    try {
-      await _ensureDecoded();
-      final params = FlipParams(_decodedImage!, direction);
-      final flippedImage = await compute(flipImageTask, params);
-      await _applyNewImage(flippedImage);
-    } catch (e) {
-      debugPrint("Flipping failed: $e");
-      rethrow;
-    } finally {
-      _isProcessing = false;
-      notifyListeners();
-    }
+    _queueBackgroundSync(
+      (current) => compute(flipImageTask, FlipParams(current, direction)),
+    );
   }
 
   Future<void> cropImage(int x, int y, int w, int h) async {
-    _isProcessing = true;
+    if (_uiImage == null) return;
     _isCropMode = false;
+
+    final newUi = await _canvasCrop(_uiImage!, x, y, w, h);
+    _uiImage?.dispose();
+    _uiImage = newUi;
+    _originalWidth = w;
+    _originalHeight = h;
+    _syncDimensionFields();
     notifyListeners();
 
-    try {
-      await _ensureDecoded();
-      final params = CropParams(
-        image: _decodedImage!,
-        x: x,
-        y: y,
-        width: w,
-        height: h,
-      );
-      final croppedImage = await compute(cropImageTask, params);
-      await _applyNewImage(croppedImage);
-    } catch (e) {
-      debugPrint("Cropping failed: $e");
-      rethrow;
-    } finally {
-      _isProcessing = false;
-      notifyListeners();
-    }
+    _queueBackgroundSync(
+      (current) => compute(
+        cropImageTask,
+        CropParams(image: current, x: x, y: y, width: w, height: h),
+      ),
+    );
   }
+
+  // ---------------------------------------------------------------------------
+  // Resize text-field sync
+  // ---------------------------------------------------------------------------
 
   void _onWidthChanged() {
     if (!_keepAspectRatio || _originalWidth == 0 || _originalHeight == 0) {
@@ -424,10 +482,12 @@ class ImageEditorController extends ChangeNotifier {
   }
 
   void clear() {
-    _loadSessionCounter++; // Invalidate any running background tasks
+    _loadSessionCounter++;
     _decodedImage = null;
     _uiImage?.dispose();
     _uiImage = null;
+    _rawBytes = null;
+    _isAnimated = false;
     _fileName = null;
     _fileSizeBytes = 0;
     _originalWidth = 0;
@@ -441,11 +501,12 @@ class ImageEditorController extends ChangeNotifier {
     _isCropMode = false;
     _isProcessing = false;
     _decodingFuture = null;
+    _backgroundSync = null;
     notifyListeners();
   }
 
   Future<void> exportImage(BuildContext context) async {
-    await _ensureDecoded();
+    await _ensureFullySynced();
 
     final width = int.tryParse(widthController.text);
     final height = int.tryParse(heightController.text);
@@ -469,7 +530,6 @@ class ImageEditorController extends ChangeNotifier {
 
       final exportedBytes = await compute(resizeAndEncodeTask, params);
 
-      // Clean up base name to construct suggested output file name
       final dotIndex = _fileName?.lastIndexOf('.') ?? -1;
       final originalBase = (dotIndex != -1)
           ? _fileName!.substring(0, dotIndex)
@@ -496,7 +556,7 @@ class ImageEditorController extends ChangeNotifier {
   }
 
   Future<void> shareImage(BuildContext context) async {
-    await _ensureDecoded();
+    await _ensureFullySynced();
 
     final width = int.tryParse(widthController.text);
     final height = int.tryParse(heightController.text);
