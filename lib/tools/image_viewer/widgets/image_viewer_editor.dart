@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../image_viewer_page.dart';
+import '../utils/image_metadata_extractor.dart';
 import 'image_metadata_dialog.dart';
 
 class ImageViewerEditor extends StatelessWidget {

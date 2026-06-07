@@ -13,6 +13,7 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/tools/image_viewer/config.dart';
+import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_display.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_editor.dart';
 
@@ -151,7 +152,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       }
 
       // Load EXIF metadata in background asynchronously
-      compute(_extractMetadataTask, bytes)
+      compute(extractMetadataTask, bytes)
           .then((metadata) {
             if (mounted) {
               setState(() {
@@ -629,151 +630,4 @@ Uint8List _resizeAndEncodeTask(ImageResizeParams params) {
   }
 
   return Uint8List.fromList(encoded);
-}
-
-class ImageMetadata {
-  final Map<String, Map<String, String>> exifTags;
-  final double? latitude;
-  final double? longitude;
-  final String? gpsDMS;
-
-  ImageMetadata({
-    required this.exifTags,
-    this.latitude,
-    this.longitude,
-    this.gpsDMS,
-  });
-}
-
-ImageMetadata _extractMetadataTask(Uint8List bytes) {
-  try {
-    final decoded = img.decodeImage(bytes);
-    if (decoded == null) {
-      return ImageMetadata(exifTags: {});
-    }
-
-    final exif = decoded.exif;
-    final tags = <String, Map<String, String>>{};
-
-    void extractDirectory(String name, img.IfdDirectory? dir) {
-      if (dir == null || dir.isEmpty) return;
-      final map = <String, String>{};
-      for (final key in dir.keys) {
-        final tagName = exif.getTagName(key);
-        final val = dir[key];
-        if (val != null) {
-          map[tagName] = val.toString();
-        }
-      }
-      if (map.isNotEmpty) {
-        tags[name] = map;
-      }
-    }
-
-    extractDirectory('Image Info', exif.imageIfd);
-    extractDirectory('Exif Info', exif.exifIfd);
-    extractDirectory('GPS Info', exif.gpsIfd);
-    extractDirectory('Thumbnail Info', exif.thumbnailIfd);
-    extractDirectory('Interop Info', exif.interopIfd);
-
-    double? lat;
-    double? lon;
-    String? gpsDMS;
-
-    final gpsDir = exif.gpsIfd;
-    if (!gpsDir.isEmpty) {
-      final latVal = gpsDir[2]; // Tag 2 is GPSLatitude
-      final latRef = gpsDir.gpsLatitudeRef;
-      final lonVal = gpsDir[4]; // Tag 4 is GPSLongitude
-      final lonRef = gpsDir.gpsLongitudeRef;
-
-      final parsedLat = _parseGpsCoordinate(latVal, latRef);
-      final parsedLon = _parseGpsCoordinate(lonVal, lonRef);
-
-      if (parsedLat != null && parsedLon != null) {
-        lat = parsedLat;
-        lon = parsedLon;
-        gpsDMS =
-            '${_formatDMS(latVal, latRef)} / ${_formatDMS(lonVal, lonRef)}';
-      }
-    }
-
-    return ImageMetadata(
-      exifTags: tags,
-      latitude: lat,
-      longitude: lon,
-      gpsDMS: gpsDMS,
-    );
-  } catch (e) {
-    debugPrint("Failed to extract metadata: $e");
-    return ImageMetadata(exifTags: {});
-  }
-}
-
-double? _parseGpsCoordinate(dynamic value, String? ref) {
-  if (value == null) return null;
-  try {
-    final str = value.toString();
-    final matches = RegExp(r'\d+/\d+|\d+\.\d+|\d+').allMatches(str);
-    final List<double> parts = [];
-    for (final m in matches) {
-      final tok = m.group(0)!;
-      if (tok.contains('/')) {
-        final fraction = tok.split('/');
-        final numVal = double.tryParse(fraction[0]);
-        final denVal = double.tryParse(fraction[1]);
-        if (numVal != null && denVal != null && denVal != 0) {
-          parts.add(numVal / denVal);
-        }
-      } else {
-        final parsed = double.tryParse(tok);
-        if (parsed != null) parts.add(parsed);
-      }
-    }
-
-    if (parts.length >= 3) {
-      double decimal = parts[0] + (parts[1] / 60.0) + (parts[2] / 3600.0);
-      if (ref == 'S' || ref == 'W') {
-        decimal = -decimal;
-      }
-      return decimal;
-    } else if (parts.length == 1) {
-      double decimal = parts[0];
-      if (ref == 'S' || ref == 'W') {
-        decimal = -decimal;
-      }
-      return decimal;
-    }
-  } catch (e) {
-    debugPrint("Failed to parse GPS coordinate: $e");
-  }
-  return null;
-}
-
-String _formatDMS(dynamic value, String? ref) {
-  if (value == null) return '';
-  try {
-    final str = value.toString();
-    final matches = RegExp(r'\d+/\d+|\d+\.\d+|\d+').allMatches(str);
-    final List<double> parts = [];
-    for (final m in matches) {
-      final tok = m.group(0)!;
-      if (tok.contains('/')) {
-        final fraction = tok.split('/');
-        final numVal = double.tryParse(fraction[0]);
-        final denVal = double.tryParse(fraction[1]);
-        if (numVal != null && denVal != null && denVal != 0) {
-          parts.add(numVal / denVal);
-        }
-      } else {
-        final parsed = double.tryParse(tok);
-        if (parsed != null) parts.add(parsed);
-      }
-    }
-
-    if (parts.length >= 3) {
-      return "${parts[0].round()}° ${parts[1].round()}' ${parts[2].toStringAsFixed(2)}\" ${ref ?? ''}";
-    }
-  } catch (_) {}
-  return '$value ${ref ?? ''}';
 }
