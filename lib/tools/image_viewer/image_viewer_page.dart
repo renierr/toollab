@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
+import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -101,6 +102,44 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       await _processLoadedImage(bytes, file.name, file.path, size);
     } catch (e) {
       _showError('Failed to read selected file: $e');
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        final size = await pickedFile.length();
+        await _processLoadedImage(
+          bytes,
+          pickedFile.name,
+          pickedFile.path,
+          size,
+        );
+      }
+    } catch (e) {
+      _showError('Failed to select image from gallery: $e');
+    }
+  }
+
+  Future<void> _takePhoto() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.camera);
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        final size = await pickedFile.length();
+        await _processLoadedImage(
+          bytes,
+          pickedFile.name,
+          pickedFile.path,
+          size,
+        );
+      }
+    } catch (e) {
+      _showError('Failed to take photo: $e');
     }
   }
 
@@ -455,8 +494,58 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
           title: 'Drop an image here',
           subtitle: 'Supports PNG, JPEG, WebP, BMP, GIF',
           icon: Icons.image_outlined,
-          buttonLabel: 'Browse Images',
-          buttonIcon: Icons.photo_library_outlined,
+          buttonLabel: 'Browse Files',
+          buttonIcon: Icons.folder_open,
+          extraButtons: [
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _pickFromGallery,
+                  icon: const Icon(Icons.photo_outlined),
+                  label: const Text('Browse Gallery'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ImageViewerTool.config.accentColor,
+                    side: BorderSide(
+                      color: ImageViewerTool.config.accentColor.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _takePhoto,
+                  icon: const Icon(Icons.camera_alt_outlined),
+                  label: const Text('Take Photo'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ImageViewerTool.config.accentColor,
+                    side: BorderSide(
+                      color: ImageViewerTool.config.accentColor.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     } else {

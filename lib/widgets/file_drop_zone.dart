@@ -13,6 +13,7 @@ class FileDropZone extends StatefulWidget {
   final String subtitle;
   final String buttonLabel;
   final IconData buttonIcon;
+  final List<Widget>? extraButtons;
 
   const FileDropZone({
     super.key,
@@ -26,6 +27,7 @@ class FileDropZone extends StatefulWidget {
     this.icon = Icons.description_outlined,
     this.buttonLabel = 'Browse Files',
     this.buttonIcon = Icons.folder_open,
+    this.extraButtons,
   });
 
   @override
@@ -145,6 +147,7 @@ class _FileDropZoneState extends State<FileDropZone> {
                       ),
                     ),
                   ),
+                  if (widget.extraButtons != null) ...widget.extraButtons!,
                   if (_dragging)
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
