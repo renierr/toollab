@@ -157,7 +157,31 @@ When exposing file "Open" or "Share" actions to users inside your tool, use `Fil
 
 ---
 
-## 4. Reusable Common Widgets
+## 4. SQLite Storage & Cloud Syncing
+
+### 4.1. SQLite Persistence
+- **Per-Tool Settings**: For basic key-value preferences, use `DatabaseService.instance` (`lib/services/database_service.dart`). It provides a simple API to read/write settings scoped to a tool/section:
+  ```dart
+  // Save a preference
+  await DatabaseService.instance.setSetting('my-tool', 'enable_feature_x', 'true');
+  
+  // Read a preference
+  final isEnabled = await DatabaseService.instance.getSetting('my-tool', 'enable_feature_x');
+  ```
+- **Custom SQL Tables**: If your tool stores complex structured records (like a notes tool or history logs), define a database schema migration inside `DatabaseService` and write direct SQLite queries using the active database instance.
+
+### 4.2. Bidirectional Cloud Sync (`SyncDelegate`)
+To enable automatic, bidirectional cloud sync with the backend server for a tool's records:
+1. Implement the `SyncDelegate` interface (`lib/services/sync_service.dart`) in your data manager or provider class:
+   - `getLocalSyncRecords()`: Return all local active and deleted records (with `id`, `updatedAt`, `deleted` fields).
+   - `getLocalRecordData(id)`: Return the full details of a specific record to push.
+   - `savePulledRecord(...)`: Save or update a pulled record from the server.
+   - `finalizeLocalSync(...)`: Mark the record as successfully synchronized.
+2. Register the delegate with `SyncService` during application initialization.
+
+---
+
+## 5. Reusable Common Widgets
 
 > [!IMPORTANT]
 > **Share & Extract Cross-Tool Widgets**: Always check `lib/widgets/` before building any UI component from scratch. Any presentation pattern, card style, toolbar row, status badge, or widget layout used by **two or more** different tools must be extracted into `lib/widgets/` as a shared, reusable widget. Tool-specific private widgets (prefixed with `_` or built locally) must stay in the tool's own folder under `lib/tools/<name>/widgets/`.
@@ -171,7 +195,7 @@ Avoid writing presentation logic or dropzones from scratch. Use existing widgets
 
 ---
 
-## 5. Pain Points & Best Practices
+## 6. Pain Points & Best Practices
 
 1. **No Inline Build Helpers**: Never declare helper methods like `Widget _buildRow()`. Build tree diffing and performance require extracting them into separate files as private `StatelessWidget` classes (e.g., `widgets/my_tool_row.dart`).
 2. **Dispose Cleanup**: Every stateful tool page must mix in `DisposeCleanup` (`lib/core/tool_page_state.dart`) and register cleanup inside `initState` via `onDispose(...)` instead of overriding `dispose()`.
@@ -184,4 +208,5 @@ Avoid writing presentation logic or dropzones from scratch. Use existing widgets
    - Always check `pubspec.yaml` to see if a suitable dependency is already available before proposing to add a new package.
    - If a new dependency is absolutely necessary, only use well-maintained, modern packages and always target their latest stable versions.
    - Never add or modify dependencies in `pubspec.yaml` directly—always present the proposed package and version to the user first and ask them to add it.
+7. **Database Test Isolation**: If a new tool adds database tables, any unit/widget tests must override the database path using `inMemoryDatabasePath` on `DatabaseService.instance` and close the connection in `tearDownAll` to ensure test state is clean and fully isolated in memory.
 
