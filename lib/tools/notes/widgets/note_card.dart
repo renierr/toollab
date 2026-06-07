@@ -92,7 +92,7 @@ class NoteCard extends StatelessWidget {
     );
   }
 
-  Future<void> _shareNote() async {
+  Future<void> _shareNote(BuildContext context) async {
     final content = note['content'] as String;
     final shortId = note['short_id'] as String;
 
@@ -101,7 +101,13 @@ class NoteCard extends StatelessWidget {
         final tempDir = await getTemporaryDirectory();
         final tempFile = File('${tempDir.path}/note-$shortId.md');
         await tempFile.writeAsString(content);
-        await FileSaveHelper.shareFile(tempFile.path, 'text/markdown');
+        if (context.mounted) {
+          await FileSaveHelper.showShareChooser(
+            context: context,
+            path: tempFile.path,
+            mimeType: 'text/markdown',
+          );
+        }
       } catch (e) {
         await SharePlus.instance.share(ShareParams(text: content));
       }
@@ -162,7 +168,7 @@ class NoteCard extends StatelessWidget {
                       } else if (value == 'export_pdf') {
                         _exportPdf(context);
                       } else if (value == 'share') {
-                        _shareNote();
+                        _shareNote(context);
                       }
                     },
                     itemBuilder: (context) => [

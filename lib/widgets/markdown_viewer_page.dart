@@ -127,10 +127,13 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
           '${tempDir.path}/${widget.config.exportSuggestedName ?? 'document.md'}',
         );
         await tempFile.writeAsString(widget.content);
-        await FileSaveHelper.shareFile(
-          tempFile.path,
-          widget.config.exportMimeType,
-        );
+        if (mounted) {
+          await FileSaveHelper.showShareChooser(
+            context: context,
+            path: tempFile.path,
+            mimeType: widget.config.exportMimeType,
+          );
+        }
       } catch (e) {
         await SharePlus.instance.share(ShareParams(text: widget.content));
       }

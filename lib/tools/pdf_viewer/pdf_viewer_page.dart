@@ -149,7 +149,13 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
   Future<void> _shareFile() async {
     if (_filePath == null) return;
     try {
-      await FileSaveHelper.shareFile(_filePath!, 'application/pdf');
+      if (mounted) {
+        await FileSaveHelper.showShareChooser(
+          context: context,
+          path: _filePath!,
+          mimeType: 'application/pdf',
+        );
+      }
     } catch (e) {
       debugPrint('[PdfViewerPage] Share failed: $e');
       if (mounted) {
@@ -349,10 +355,21 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               totalPagesNotifier: _totalPagesNotifier,
               visible: _showOverlays,
               onBack: () {
-                setState(() {
-                  _filePath = null;
-                  _fileName = null;
-                });
+                if (widget.sharedFile != null) {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  } else {
+                    setState(() {
+                      _filePath = null;
+                      _fileName = null;
+                    });
+                  }
+                } else {
+                  setState(() {
+                    _filePath = null;
+                    _fileName = null;
+                  });
+                }
               },
               onShare: _shareFile,
               onDownload: _downloadFile,

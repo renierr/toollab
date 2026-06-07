@@ -83,10 +83,21 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
   }
 
   void _onClose() {
-    setState(() {
-      _fileContent = null;
-      _fileName = null;
-    });
+    if (widget.sharedFile != null) {
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        setState(() {
+          _fileContent = null;
+          _fileName = null;
+        });
+      }
+    } else {
+      setState(() {
+        _fileContent = null;
+        _fileName = null;
+      });
+    }
   }
 
   @override

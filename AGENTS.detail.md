@@ -145,6 +145,20 @@ await SharePlus.instance.share(
 );
 ```
 
+### 2.4. Internal Viewer Routing & Popped Navigation
+When opening files within the app (e.g. PDF or Markdown), do not navigate using root replacement (`context.go`). Instead, push the viewer route onto the navigation stack (`context.push`) so that back/close navigation naturally pops back to the originating screen (e.g., the notes editor/view).
+
+To support this:
+- **Outside Launchers**: Viewer pages (like `PdfViewerPage` and `MarkdownViewerToolPage`) must check if they were opened via a shared file (`widget.sharedFile != null`).
+- **Back Actions**: If the file was opened from outside, the back/close button must pop the navigation stack (`Navigator.of(context).pop()`). If opened manually inside the tool, it should clear state (e.g., set file path or content to null) to return to the `FileDropZone`.
+
+### 2.5. Internal Open & Share Choosers
+To support unified, cross-platform file opening and sharing (specifically on Desktop where native OS sharing is unsupported or fails), leverage:
+- **`FileSaveHelper.showOpenChooser(...)`**: Detects matching tools for a file. If found, displays `ToolChooserDialog` with matching internal tools and a **"System Default App"** option (hiding the "Always use this tool..." checkbox). If none, opens via native system viewer.
+- **`FileSaveHelper.showShareChooser(...)`**: Detects matching tools. If found, displays `ToolChooserDialog` with matching internal tools and a **"System Share"** option (hiding the "Always use this tool..." checkbox). If none, opens via native system share sheet.
+
+Always call `FileSaveHelper.showShareChooser` in tool pages (such as NoteCard, PDFViewerPage, and MarkdownViewerPage) when user triggers a share action, rather than calling native share directly.
+
 ---
 
 ## 3. Gesture, Scroll, & Selection Conflicts in Zoomable Views

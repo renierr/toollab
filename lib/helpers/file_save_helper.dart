@@ -5,6 +5,11 @@ import 'package:file_selector/file_selector.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import '../core/shared_file.dart';
+import '../core/tool_model.dart';
+import '../services/sharing_service.dart';
+import '../widgets/tool_chooser_dialog.dart';
 import '../providers/app_state.dart';
 import '../widgets/custom_notification.dart';
 import '../theme/theme.dart';
@@ -188,6 +193,114 @@ class FileSaveHelper {
     }
   }
 
+  /// Shows a chooser to open a file internally or externally.
+  static Future<void> showOpenChooser({
+    required BuildContext context,
+    required String path,
+    required String mimeType,
+  }) async {
+    final name = path.split(Platform.pathSeparator).last.split('/').last;
+    final file = SharedFile(path: path, name: name, mimeType: mimeType);
+    final matchingTools = SharingService.instance.getMatchingTools(file);
+
+    if (matchingTools.isEmpty) {
+      await openFile(path, mimeType);
+      return;
+    }
+
+    const systemDefaultTool = ToolModel(
+      id: 'system-default',
+      name: 'System Default App',
+      description: 'Open in the device\'s default viewer application',
+      icon: Icons.open_in_new,
+      route: '',
+      accentColor: Colors.grey,
+      sectionId: '',
+    );
+
+    if (!context.mounted) return;
+
+    final result = await showDialog<(ToolModel, bool)>(
+      context: context,
+      builder: (context) => ToolChooserDialog(
+        tools: [...matchingTools, systemDefaultTool],
+        fileName: name,
+        showRememberChoice: false,
+      ),
+    );
+
+    if (result != null) {
+      final (selectedTool, remember) = result;
+      if (selectedTool.id == 'system-default') {
+        await openFile(path, mimeType);
+      } else {
+        if (remember) {
+          await SharingService.instance.setDefaultTool(
+            file.mimeType,
+            selectedTool.id,
+          );
+        }
+        if (context.mounted) {
+          GoRouter.of(context).push(selectedTool.route, extra: file);
+        }
+      }
+    }
+  }
+
+  /// Shows a chooser to share a file internally or externally.
+  static Future<void> showShareChooser({
+    required BuildContext context,
+    required String path,
+    required String mimeType,
+  }) async {
+    final name = path.split(Platform.pathSeparator).last.split('/').last;
+    final file = SharedFile(path: path, name: name, mimeType: mimeType);
+    final matchingTools = SharingService.instance.getMatchingTools(file);
+
+    if (matchingTools.isEmpty) {
+      await shareFile(path, mimeType);
+      return;
+    }
+
+    const systemShareTool = ToolModel(
+      id: 'system-share',
+      name: 'System Share',
+      description: 'Share file externally using the system share sheet',
+      icon: Icons.share,
+      route: '',
+      accentColor: AppTheme.accentBlue,
+      sectionId: '',
+    );
+
+    if (!context.mounted) return;
+
+    final result = await showDialog<(ToolModel, bool)>(
+      context: context,
+      builder: (context) => ToolChooserDialog(
+        tools: [...matchingTools, systemShareTool],
+        fileName: name,
+        showRememberChoice: false,
+      ),
+    );
+
+    if (result != null) {
+      final (selectedTool, remember) = result;
+      if (selectedTool.id == 'system-share') {
+        await shareFile(path, mimeType);
+      } else {
+        if (remember) {
+          await SharingService.instance.setDefaultTool(
+            file.mimeType,
+            selectedTool.id,
+          );
+        }
+        if (context.mounted) {
+          GoRouter.of(context).push(selectedTool.route, extra: file);
+        }
+      }
+    }
+  }
+
   /// Cleans up old temporary files created by the application in the temp directory.
   static Future<void> cleanUpTempFiles() async {
     try {
@@ -307,7 +420,13 @@ class FileSaveHelper {
                         ElevatedButton.icon(
                           onPressed: () async {
                             Navigator.of(ctx).pop();
-                            await openFile(actualPath, mimeType);
+                            if (context.mounted) {
+                              await showOpenChooser(
+                                context: context,
+                                path: actualPath,
+                                mimeType: mimeType,
+                              );
+                            }
                           },
                           icon: const Icon(
                             Icons.open_in_new,
@@ -326,7 +445,13 @@ class FileSaveHelper {
                         ElevatedButton.icon(
                           onPressed: () async {
                             Navigator.of(ctx).pop();
-                            await shareFile(actualPath, mimeType);
+                            if (context.mounted) {
+                              await showShareChooser(
+                                context: context,
+                                path: actualPath,
+                                mimeType: mimeType,
+                              );
+                            }
                           },
                           icon: const Icon(
                             Icons.share,

@@ -4,11 +4,13 @@ import 'package:tool_lab/core/tool_model.dart';
 class ToolChooserDialog extends StatefulWidget {
   final List<ToolModel> tools;
   final String fileName;
+  final bool showRememberChoice;
 
   const ToolChooserDialog({
     super.key,
     required this.tools,
     required this.fileName,
+    this.showRememberChoice = true,
   });
 
   @override
@@ -125,25 +127,27 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Checkbox(
-                  value: _rememberChoice,
-                  onChanged: (val) {
-                    setState(() {
-                      _rememberChoice = val ?? false;
-                    });
-                  },
-                ),
-                Expanded(
-                  child: Text(
-                    'Always use this tool for this file type',
-                    style: theme.textTheme.bodySmall,
+            if (widget.showRememberChoice) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _rememberChoice,
+                    onChanged: (val) {
+                      setState(() {
+                        _rememberChoice = val ?? false;
+                      });
+                    },
                   ),
-                ),
-              ],
-            ),
+                  Expanded(
+                    child: Text(
+                      'Always use this tool for this file type',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
