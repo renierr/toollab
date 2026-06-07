@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/services/sharing_service.dart';
@@ -38,6 +39,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   String _selectedFormat = 'png';
   double _quality = 90.0;
   bool _isProcessing = false;
+  ImageMetadata? _metadata;
+  bool _preserveExif = false;
 
   final TransformationController _transformationController =
       TransformationController();
@@ -115,6 +118,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       final frame = await codec.getNextFrame();
       final image = frame.image;
 
+      final metadata = await compute(_extractMetadataTask, bytes);
+
       if (mounted) {
         setState(() {
           _imageBytes = bytes;
@@ -122,6 +127,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
           _fileSizeBytes = sizeBytes;
           _originalWidth = image.width;
           _originalHeight = image.height;
+          _metadata = metadata;
 
           // Set size fields silently without invoking listeners recursively
           _widthController.text = _originalWidth.toString();
@@ -221,6 +227,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       _fileSizeBytes = 0;
       _originalWidth = 0;
       _originalHeight = 0;
+      _metadata = null;
+      _preserveExif = false;
       _widthController.clear();
       _heightController.clear();
     });
@@ -233,7 +241,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
     return '${(bytes / math.pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
   }
 
-  Future<void> _exportImage(bool doShare) async {
+  Future<void> _exportImage() async {
     if (_imageBytes == null) return;
 
     final width = int.tryParse(_widthController.text);
@@ -255,6 +263,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
         height: height,
         format: _selectedFormat,
         quality: _quality.round(),
+        preserveExif: _preserveExif,
       );
 
       final exportedBytes = await compute(_resizeAndEncodeTask, params);
@@ -264,26 +273,79 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       // Clean up base name to construct suggested output file name
       final originalBase = _fileName?.split('.').first ?? 'image';
       final ext = _selectedFormat == 'jpg' ? 'jpg' : _selectedFormat;
-      final suggestedName = '${originalBase}_resized.$ext';
+      final hasResized = (width != _originalWidth || height != _originalHeight);
+      final suggestedName = hasResized
+          ? '${originalBase}_resized.$ext'
+          : '$originalBase.$ext';
 
-      final savedPath = await FileSaveHelper.saveFile(
+      await FileSaveHelper.saveFile(
         context: context,
         suggestedName: suggestedName,
         bytes: exportedBytes,
         successMessageAndroid: 'Image saved to Downloads directory.',
         successMessageGeneralBuilder: (path) => 'Image saved to $path',
       );
+    } catch (e) {
+      _showError('Failed to export image: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
+  }
 
-      if (savedPath != null && doShare && mounted) {
+  Future<void> _shareImage() async {
+    if (_imageBytes == null) return;
+
+    final width = int.tryParse(_widthController.text);
+    final height = int.tryParse(_heightController.text);
+
+    if (width == null || width <= 0 || height == null || height <= 0) {
+      _showError('Please enter valid width and height dimensions.');
+      return;
+    }
+
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      final params = ImageResizeParams(
+        bytes: _imageBytes!,
+        width: width,
+        height: height,
+        format: _selectedFormat,
+        quality: _quality.round(),
+        preserveExif: _preserveExif,
+      );
+
+      final exportedBytes = await compute(_resizeAndEncodeTask, params);
+
+      if (!mounted) return;
+
+      final tempDir = await getTemporaryDirectory();
+      final ext = _selectedFormat == 'jpg' ? 'jpg' : _selectedFormat;
+      final originalBase = _fileName?.split('.').first ?? 'image';
+      final hasResized = (width != _originalWidth || height != _originalHeight);
+      final suggestedName = hasResized
+          ? '${originalBase}_resized.$ext'
+          : '$originalBase.$ext';
+
+      final tempFile = File('${tempDir.path}/$suggestedName');
+      await tempFile.writeAsBytes(exportedBytes);
+
+      if (mounted) {
         final mimeType = 'image/$_selectedFormat';
         await FileSaveHelper.showShareChooser(
           context: context,
-          path: savedPath,
+          path: tempFile.path,
           mimeType: mimeType,
         );
       }
     } catch (e) {
-      _showError('Failed to export image: $e');
+      _showError('Failed to share image: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -341,11 +403,19 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                 _quality = val;
               });
             },
-            onSave: () => _exportImage(false),
-            onShare: () => _exportImage(true),
+            onSave: _exportImage,
+            onShare: _shareImage,
             isProcessing: _isProcessing,
             originalDimensions: '${_originalWidth}x$_originalHeight px',
             originalSize: _formatBytes(_fileSizeBytes),
+            metadata: _metadata,
+            fileName: _fileName ?? 'image.png',
+            preserveExif: _preserveExif,
+            onPreserveExifChanged: (val) {
+              setState(() {
+                _preserveExif = val;
+              });
+            },
           )
         : const SizedBox.shrink();
 
@@ -474,6 +544,7 @@ class ImageResizeParams {
   final int height;
   final String format;
   final int quality;
+  final bool preserveExif;
 
   ImageResizeParams({
     required this.bytes,
@@ -481,6 +552,7 @@ class ImageResizeParams {
     required this.height,
     required this.format,
     required this.quality,
+    required this.preserveExif,
   });
 }
 
@@ -502,6 +574,19 @@ Uint8List _resizeAndEncodeTask(ImageResizeParams params) {
     case 'jpg':
     case 'jpeg':
       encoded = img.encodeJpg(resized, quality: params.quality);
+      if (params.preserveExif) {
+        try {
+          final injected = img.injectJpgExif(
+            Uint8List.fromList(encoded),
+            decoded.exif,
+          );
+          if (injected != null) {
+            encoded = injected;
+          }
+        } catch (_) {
+          // ignore or fallback
+        }
+      }
       break;
     case 'png':
       encoded = img.encodePng(resized);
@@ -514,4 +599,151 @@ Uint8List _resizeAndEncodeTask(ImageResizeParams params) {
   }
 
   return Uint8List.fromList(encoded);
+}
+
+class ImageMetadata {
+  final Map<String, Map<String, String>> exifTags;
+  final double? latitude;
+  final double? longitude;
+  final String? gpsDMS;
+
+  ImageMetadata({
+    required this.exifTags,
+    this.latitude,
+    this.longitude,
+    this.gpsDMS,
+  });
+}
+
+ImageMetadata _extractMetadataTask(Uint8List bytes) {
+  try {
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) {
+      return ImageMetadata(exifTags: {});
+    }
+
+    final exif = decoded.exif;
+    final tags = <String, Map<String, String>>{};
+
+    void extractDirectory(String name, img.IfdDirectory? dir) {
+      if (dir == null || dir.isEmpty) return;
+      final map = <String, String>{};
+      for (final key in dir.keys) {
+        final tagName = exif.getTagName(key);
+        final val = dir[key];
+        if (val != null) {
+          map[tagName] = val.toString();
+        }
+      }
+      if (map.isNotEmpty) {
+        tags[name] = map;
+      }
+    }
+
+    extractDirectory('Image Info', exif.imageIfd);
+    extractDirectory('Exif Info', exif.exifIfd);
+    extractDirectory('GPS Info', exif.gpsIfd);
+    extractDirectory('Thumbnail Info', exif.thumbnailIfd);
+    extractDirectory('Interop Info', exif.interopIfd);
+
+    double? lat;
+    double? lon;
+    String? gpsDMS;
+
+    final gpsDir = exif.gpsIfd;
+    if (!gpsDir.isEmpty) {
+      final latVal = gpsDir.gpsLatitude;
+      final latRef = gpsDir.gpsLatitudeRef;
+      final lonVal = gpsDir.gpsLongitude;
+      final lonRef = gpsDir.gpsLongitudeRef;
+
+      final parsedLat = _parseGpsCoordinate(latVal, latRef);
+      final parsedLon = _parseGpsCoordinate(lonVal, lonRef);
+
+      if (parsedLat != null && parsedLon != null) {
+        lat = parsedLat;
+        lon = parsedLon;
+        gpsDMS =
+            '${_formatDMS(latVal, latRef)} / ${_formatDMS(lonVal, lonRef)}';
+      }
+    }
+
+    return ImageMetadata(
+      exifTags: tags,
+      latitude: lat,
+      longitude: lon,
+      gpsDMS: gpsDMS,
+    );
+  } catch (e) {
+    debugPrint("Failed to extract metadata: $e");
+    return ImageMetadata(exifTags: {});
+  }
+}
+
+double? _parseGpsCoordinate(dynamic value, String? ref) {
+  if (value == null) return null;
+  try {
+    final str = value.toString();
+    final matches = RegExp(r'\d+/\d+|\d+\.\d+|\d+').allMatches(str);
+    final List<double> parts = [];
+    for (final m in matches) {
+      final tok = m.group(0)!;
+      if (tok.contains('/')) {
+        final fraction = tok.split('/');
+        final numVal = double.tryParse(fraction[0]);
+        final denVal = double.tryParse(fraction[1]);
+        if (numVal != null && denVal != null && denVal != 0) {
+          parts.add(numVal / denVal);
+        }
+      } else {
+        final parsed = double.tryParse(tok);
+        if (parsed != null) parts.add(parsed);
+      }
+    }
+
+    if (parts.length >= 3) {
+      double decimal = parts[0] + (parts[1] / 60.0) + (parts[2] / 3600.0);
+      if (ref == 'S' || ref == 'W') {
+        decimal = -decimal;
+      }
+      return decimal;
+    } else if (parts.length == 1) {
+      double decimal = parts[0];
+      if (ref == 'S' || ref == 'W') {
+        decimal = -decimal;
+      }
+      return decimal;
+    }
+  } catch (e) {
+    debugPrint("Failed to parse GPS coordinate: $e");
+  }
+  return null;
+}
+
+String _formatDMS(dynamic value, String? ref) {
+  if (value == null) return '';
+  try {
+    final str = value.toString();
+    final matches = RegExp(r'\d+/\d+|\d+\.\d+|\d+').allMatches(str);
+    final List<double> parts = [];
+    for (final m in matches) {
+      final tok = m.group(0)!;
+      if (tok.contains('/')) {
+        final fraction = tok.split('/');
+        final numVal = double.tryParse(fraction[0]);
+        final denVal = double.tryParse(fraction[1]);
+        if (numVal != null && denVal != null && denVal != 0) {
+          parts.add(numVal / denVal);
+        }
+      } else {
+        final parsed = double.tryParse(tok);
+        if (parsed != null) parts.add(parsed);
+      }
+    }
+
+    if (parts.length >= 3) {
+      return "${parts[0].round()}° ${parts[1].round()}' ${parts[2].toStringAsFixed(2)}\" ${ref ?? ''}";
+    }
+  } catch (_) {}
+  return '$value ${ref ?? ''}';
 }

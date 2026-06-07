@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../image_viewer_page.dart';
+import 'image_metadata_dialog.dart';
 
 class ImageViewerEditor extends StatelessWidget {
   final TextEditingController widthController;
@@ -15,6 +17,10 @@ class ImageViewerEditor extends StatelessWidget {
   final bool isProcessing;
   final String originalDimensions;
   final String originalSize;
+  final ImageMetadata? metadata;
+  final String fileName;
+  final bool preserveExif;
+  final ValueChanged<bool> onPreserveExifChanged;
 
   const ImageViewerEditor({
     super.key,
@@ -31,6 +37,10 @@ class ImageViewerEditor extends StatelessWidget {
     required this.isProcessing,
     required this.originalDimensions,
     required this.originalSize,
+    required this.metadata,
+    required this.fileName,
+    required this.preserveExif,
+    required this.onPreserveExifChanged,
   });
 
   @override
@@ -45,10 +55,9 @@ class ImageViewerEditor extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Info Section
-          _buildSectionHeader(
-            theme,
-            'Original File Details',
-            Icons.info_outline,
+          const _SectionHeader(
+            title: 'Original File Details',
+            icon: Icons.info_outline,
           ),
           const SizedBox(height: 12),
           Container(
@@ -61,19 +70,35 @@ class ImageViewerEditor extends StatelessWidget {
             ),
             child: Column(
               children: [
-                _buildInfoRow('Dimensions', originalDimensions),
+                _InfoRow(label: 'Dimensions', value: originalDimensions),
                 const Divider(height: 16),
-                _buildInfoRow('File Size', originalSize),
+                _InfoRow(label: 'File Size', value: originalSize),
+                if (metadata != null) ...[
+                  const Divider(height: 16),
+                  TextButton.icon(
+                    onPressed: () => ImageMetadataDialog.show(
+                      context: context,
+                      metadata: metadata!,
+                      fileName: fileName,
+                    ),
+                    icon: const Icon(Icons.info_outline, size: 18),
+                    label: const Text('More Information'),
+                    style: TextButton.styleFrom(
+                      minimumSize: Size.zero,
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
           const SizedBox(height: 24),
 
           // Resize Section
-          _buildSectionHeader(
-            theme,
-            'Resize Image',
-            Icons.aspect_ratio_outlined,
+          const _SectionHeader(
+            title: 'Resize Image',
+            icon: Icons.aspect_ratio_outlined,
           ),
           const SizedBox(height: 12),
           Row(
@@ -128,10 +153,9 @@ class ImageViewerEditor extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Format Section
-          _buildSectionHeader(
-            theme,
-            'Output Format',
-            Icons.image_search_outlined,
+          const _SectionHeader(
+            title: 'Output Format',
+            icon: Icons.image_search_outlined,
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
@@ -153,7 +177,21 @@ class ImageViewerEditor extends StatelessWidget {
               if (val != null) onFormatChanged(val);
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+
+          // EXIF Preserve Checkbox
+          CheckboxListTile(
+            title: const Text('Preserve EXIF Metadata'),
+            subtitle: const Text('Keep GPS, camera tags, and date (JPEG only)'),
+            value: preserveExif,
+            onChanged: (val) {
+              if (val != null) onPreserveExifChanged(val);
+            },
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+          ),
+          const SizedBox(height: 12),
 
           // Quality Slider (for JPG and WebP)
           if (showQualitySlider) ...[
@@ -212,8 +250,17 @@ class ImageViewerEditor extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildSectionHeader(ThemeData theme, String title, IconData icon) {
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final IconData icon;
+
+  const _SectionHeader({required this.title, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       children: [
         Icon(icon, size: 20, color: theme.colorScheme.primary),
@@ -227,8 +274,16 @@ class ImageViewerEditor extends StatelessWidget {
       ],
     );
   }
+}
 
-  Widget _buildInfoRow(String label, String value) {
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
