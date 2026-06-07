@@ -90,7 +90,12 @@ create_zip() {
 
   # Copy extra files (installers) to stage/
   for f in "${extra_files[@]}"; do
-    [ -f "$f" ] && cp "$f" "$stage_dir/"
+    if [ -f "$f" ]; then
+      cp "$f" "$stage_dir/"
+      if [ "$(basename "$f")" = "install.ps1" ] && [ -n "$VERSION" ]; then
+        sed -i "s/\$Version = '[^']*'/\$Version = '${VERSION}'/g" "$stage_dir/install.ps1"
+      fi
+    fi
   done
 
   # 1. Try standard 'zip' command

@@ -12,7 +12,7 @@ $StartMenuDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
 $ShortcutPath = Join-Path $StartMenuDir "$AppName.lnk"
 $ScriptPath = $PSCommandPath
 $SourceDir = Join-Path $PSScriptRoot 'dist\ToolLab-windows'
-$Version = '0.1.0'
+$Version = '0.0.0'
 
 $FileTypes = @(
   @{ Extension = '.pdf';     ProgId = "$AppName.pdf";     Description = 'PDF Document';     MimeType = 'application/pdf' }
