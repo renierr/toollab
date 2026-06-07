@@ -11,7 +11,6 @@ import 'oscilloscope_chart.dart';
 import 'scanner_header.dart';
 import 'cable_detected_banner.dart';
 import 'calibration_panel.dart';
-import 'vector_readout_card.dart';
 import 'oscilloscope_header.dart';
 import 'scanner_controls_card.dart';
 import 'simulator_lab_card.dart';
@@ -147,9 +146,6 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
 
                     CalibrationPanel(state: _state),
                     const SizedBox(height: 24),
-
-                    VectorReadoutCard(state: _state, current: current),
-                    const SizedBox(height: 20),
 
                     const OscilloscopeHeader(),
                     const SizedBox(height: 8),
