@@ -163,10 +163,10 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
     return ListenableBuilder(
       listenable: _controller,
       builder: (context, child) {
-        final displayWidget = _controller.imageBytes != null
+        final displayWidget = _controller.uiImage != null
             ? (_controller.isCropMode
                   ? ImageViewerCropPanel(
-                      imageBytes: _controller.imageBytes!,
+                      image: _controller.uiImage!,
                       onCropApplied: (x, y, w, h) async {
                         try {
                           await _controller.cropImage(x, y, w, h);
@@ -178,13 +178,13 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                       onCropCancelled: () => _controller.setCropMode(false),
                     )
                   : ImageViewerDisplay(
-                      imageBytes: _controller.imageBytes!,
+                      image: _controller.uiImage!,
                       transformationController: _transformationController,
                       onResetZoom: _onResetZoom,
                     ))
             : const SizedBox.shrink();
 
-        final editorWidget = _controller.imageBytes != null
+        final editorWidget = _controller.uiImage != null
             ? ImageViewerEditor(
                 widthController: _controller.widthController,
                 heightController: _controller.heightController,
@@ -248,7 +248,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
             : const SizedBox.shrink();
 
         Widget mainContent;
-        if (_controller.imageBytes == null) {
+        if (_controller.uiImage == null) {
           mainContent = Padding(
             padding: const EdgeInsets.all(16.0),
             child: FileDropZone(
@@ -322,7 +322,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
           ],
         );
 
-        final List<Widget>? actions = _controller.imageBytes != null
+        final List<Widget>? actions = _controller.uiImage != null
             ? [
                 IconButton(
                   icon: const Icon(Icons.undo),
@@ -378,7 +378,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
               ]
             : null;
 
-        final Widget? fab = (_controller.imageBytes != null && !isWideScreen)
+        final Widget? fab = (_controller.uiImage != null && !isWideScreen)
             ? FloatingActionButton(
                 onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
                 tooltip: 'Edit image',
@@ -386,8 +386,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
               )
             : null;
 
-        final Widget? endDrawer =
-            (_controller.imageBytes != null && !isWideScreen)
+        final Widget? endDrawer = (_controller.uiImage != null && !isWideScreen)
             ? Drawer(
                 child: SafeArea(
                   child: Column(

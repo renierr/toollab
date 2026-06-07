@@ -1,42 +1,29 @@
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 
-class EditParams {
-  final Uint8List bytes;
-  final String format; // 'png', 'jpg', 'webp', 'bmp'
-
-  EditParams({required this.bytes, required this.format});
-}
-
-class RotateParams extends EditParams {
+class RotateParams {
+  final img.Image image;
   final int angle; // 90, 180, 270
 
-  RotateParams({
-    required super.bytes,
-    required super.format,
-    required this.angle,
-  });
+  RotateParams(this.image, this.angle);
 }
 
-class FlipParams extends EditParams {
+class FlipParams {
+  final img.Image image;
   final String direction; // 'horizontal', 'vertical'
 
-  FlipParams({
-    required super.bytes,
-    required super.format,
-    required this.direction,
-  });
+  FlipParams(this.image, this.direction);
 }
 
-class CropParams extends EditParams {
+class CropParams {
+  final img.Image image;
   final int x;
   final int y;
   final int width;
   final int height;
 
   CropParams({
-    required super.bytes,
-    required super.format,
+    required this.image,
     required this.x,
     required this.y,
     required this.width,
@@ -45,7 +32,7 @@ class CropParams extends EditParams {
 }
 
 class ImageResizeParams {
-  final Uint8List bytes;
+  final img.Image image;
   final int width;
   final int height;
   final String format;
@@ -53,7 +40,7 @@ class ImageResizeParams {
   final bool preserveExif;
 
   ImageResizeParams({
-    required this.bytes,
+    required this.image,
     required this.width,
     required this.height,
     required this.format,
@@ -62,83 +49,58 @@ class ImageResizeParams {
   });
 }
 
-Uint8List rotateImageTask(RotateParams params) {
-  final decoded = img.decodeImage(params.bytes);
+img.Image decodeAndBakeOrientationTask(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
   if (decoded == null) {
-    throw Exception('Could not decode image for rotation');
+    throw Exception('Could not decode image');
   }
-
-  // Bake orientation first to ensure we work on visual pixels
-  final oriented = img.bakeOrientation(decoded);
-
-  final rotated = img.copyRotate(oriented, angle: params.angle);
-  return Uint8List.fromList(_encodeByFormat(rotated, params.format));
+  return img.bakeOrientation(decoded);
 }
 
-Uint8List flipImageTask(FlipParams params) {
-  final decoded = img.decodeImage(params.bytes);
-  if (decoded == null) {
-    throw Exception('Could not decode image for flipping');
-  }
+img.Image rotateImageTask(RotateParams params) {
+  return img.copyRotate(params.image, angle: params.angle);
+}
 
-  final oriented = img.bakeOrientation(decoded);
-
+img.Image flipImageTask(FlipParams params) {
   final direction = params.direction == 'horizontal'
       ? img.FlipDirection.horizontal
       : img.FlipDirection.vertical;
-
-  final flipped = img.copyFlip(oriented, direction: direction);
-  return Uint8List.fromList(_encodeByFormat(flipped, params.format));
+  return img.copyFlip(params.image, direction: direction);
 }
 
-Uint8List cropImageTask(CropParams params) {
-  final decoded = img.decodeImage(params.bytes);
-  if (decoded == null) {
-    throw Exception('Could not decode image for cropping');
-  }
-
-  final oriented = img.bakeOrientation(decoded);
-
-  final cropped = img.copyCrop(
-    oriented,
+img.Image cropImageTask(CropParams params) {
+  return img.copyCrop(
+    params.image,
     x: params.x,
     y: params.y,
     width: params.width,
     height: params.height,
   );
-  return Uint8List.fromList(_encodeByFormat(cropped, params.format));
 }
 
 Uint8List resizeAndEncodeTask(ImageResizeParams params) {
-  final decoded = img.decodeImage(params.bytes);
-  if (decoded == null) {
-    throw Exception('Could not decode original image');
-  }
-
-  // Bake orientation to ensure width/height match what the user sees in the UI
-  final oriented = img.bakeOrientation(decoded);
-
   final resized = img.copyResize(
-    oriented,
+    params.image,
     width: params.width,
     height: params.height,
     interpolation: img.Interpolation.average,
   );
 
+  final targetImage = params.preserveExif ? resized : img.Image.from(resized);
   if (!params.preserveExif) {
-    resized.exif = img.ExifData();
+    targetImage.exif = img.ExifData();
   }
 
   List<int> encoded;
   switch (params.format.toLowerCase()) {
     case 'jpg':
     case 'jpeg':
-      encoded = img.encodeJpg(resized, quality: params.quality);
+      encoded = img.encodeJpg(targetImage, quality: params.quality);
       if (params.preserveExif) {
         try {
           final injected = img.injectJpgExif(
             Uint8List.fromList(encoded),
-            decoded.exif,
+            params.image.exif,
           );
           if (injected != null) {
             encoded = injected;
@@ -149,28 +111,14 @@ Uint8List resizeAndEncodeTask(ImageResizeParams params) {
       }
       break;
     case 'png':
-      encoded = img.encodePng(resized);
+      encoded = img.encodePng(targetImage);
       break;
     case 'bmp':
-      encoded = img.encodeBmp(resized);
+      encoded = img.encodeBmp(targetImage);
       break;
     default:
-      encoded = img.encodePng(resized);
+      encoded = img.encodePng(targetImage);
   }
 
   return Uint8List.fromList(encoded);
-}
-
-List<int> _encodeByFormat(img.Image image, String format) {
-  switch (format.toLowerCase()) {
-    case 'jpg':
-    case 'jpeg':
-      return img.encodeJpg(image, quality: 95);
-    case 'png':
-      return img.encodePng(image);
-    case 'bmp':
-      return img.encodeBmp(image);
-    default:
-      return img.encodePng(image);
-  }
 }
