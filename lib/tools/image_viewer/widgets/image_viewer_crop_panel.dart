@@ -1,16 +1,15 @@
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 class ImageViewerCropPanel extends StatefulWidget {
-  final Uint8List imageBytes;
+  final ui.Image image;
   final Function(int x, int y, int width, int height) onCropApplied;
   final VoidCallback onCropCancelled;
 
   const ImageViewerCropPanel({
     super.key,
-    required this.imageBytes,
+    required this.image,
     required this.onCropApplied,
     required this.onCropCancelled,
   });
@@ -21,9 +20,8 @@ class ImageViewerCropPanel extends StatefulWidget {
 
 class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
   // Image dimensions
-  int _imageWidth = 0;
-  int _imageHeight = 0;
-  bool _isLoading = true;
+  late int _imageWidth;
+  late int _imageHeight;
 
   // Crop Box state: normalized (0.0 to 1.0) coordinates relative to the IMAGE bounds.
   // Using normalized coordinates ensures that changes in screen layout or orientation
@@ -36,29 +34,8 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
   @override
   void initState() {
     super.initState();
-    _loadImageDimensions();
-  }
-
-  Future<void> _loadImageDimensions() async {
-    try {
-      final codec = await ui.instantiateImageCodec(widget.imageBytes);
-      final frame = await codec.getNextFrame();
-      final image = frame.image;
-      if (mounted) {
-        setState(() {
-          _imageWidth = image.width;
-          _imageHeight = image.height;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint("Crop: failed to load dimensions: $e");
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+    _imageWidth = widget.image.width;
+    _imageHeight = widget.image.height;
   }
 
   void _applyPreset(double? ratio, String label) {
@@ -93,10 +70,6 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
 
     return Column(
       children: [
@@ -184,7 +157,7 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
                     top: offsetY,
                     width: dispW,
                     height: dispH,
-                    child: Image.memory(widget.imageBytes, fit: BoxFit.fill),
+                    child: RawImage(image: widget.image, fit: BoxFit.fill),
                   ),
 
                   // Overlay and draggable crop box
