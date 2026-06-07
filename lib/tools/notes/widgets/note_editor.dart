@@ -4,6 +4,7 @@ import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
+import 'package:tool_lab/widgets/zoomable_area.dart';
 
 class NoteEditor extends StatefulWidget {
   final int? id;
@@ -183,16 +184,19 @@ class _NoteEditorState extends State<NoteEditor>
     );
   }
 
-  Widget _buildPreview(BuildContext context) {
+  Widget _buildPreview(BuildContext context, double scale) {
     final theme = Theme.of(context);
 
     if (_controller.text.trim().isEmpty) {
       return Center(
-        child: Text(
-          'Nothing to preview yet',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-            fontStyle: FontStyle.italic,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32.0),
+          child: Text(
+            'Nothing to preview yet',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ),
       );
@@ -205,6 +209,7 @@ class _NoteEditorState extends State<NoteEditor>
         data: _controller.text,
         selectable: true,
         accentColor: AppTheme.accentTeal,
+        scale: scale,
       ),
     );
   }
@@ -324,8 +329,13 @@ class _NoteEditorState extends State<NoteEditor>
                           ),
                         ),
                         Expanded(
-                          child: SingleChildScrollView(
-                            child: _buildPreview(context),
+                          child: ZoomableArea(
+                            accentColor: AppTheme.accentTeal,
+                            builder: (context, scale, physics) =>
+                                SingleChildScrollView(
+                                  physics: physics,
+                                  child: _buildPreview(context, scale),
+                                ),
                           ),
                         ),
                       ],
@@ -334,7 +344,14 @@ class _NoteEditorState extends State<NoteEditor>
                       controller: _tabController,
                       children: [
                         _buildTextField(context),
-                        SingleChildScrollView(child: _buildPreview(context)),
+                        ZoomableArea(
+                          accentColor: AppTheme.accentTeal,
+                          builder: (context, scale, physics) =>
+                              SingleChildScrollView(
+                                physics: physics,
+                                child: _buildPreview(context, scale),
+                              ),
+                        ),
                       ],
                     ),
             ),

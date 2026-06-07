@@ -9,6 +9,7 @@ import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/markdown_loading_skeleton.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
+import 'package:tool_lab/widgets/zoomable_area.dart';
 
 class MarkdownViewerConfig {
   final Color accentColor;
@@ -158,12 +159,6 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
     final updatedAt = widget.config.updatedAt ?? 0;
     final config = widget.config;
 
-    final markdownWidget = MarkdownView(
-      data: body,
-      selectable: config.selectable,
-      accentColor: config.accentColor,
-    );
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -212,42 +207,55 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
               ),
           ],
         ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: config.accentColor,
-                  ),
-                ),
-                if (updatedAt > 0) ...[
-                  const SizedBox(height: 8),
+        body: ZoomableArea(
+          accentColor: config.accentColor,
+          builder: (context, scale, physics) => SafeArea(
+            child: SingleChildScrollView(
+              physics: physics,
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    'Updated: ${_formatDate(updatedAt)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    title,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: config.accentColor,
                     ),
                   ),
+                  if (updatedAt > 0) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Updated: ${_formatDate(updatedAt)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const Divider(height: 32),
+                  if (body.isEmpty)
+                    Text(
+                      'No additional content',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.4,
+                        ),
+                      ),
+                    )
+                  else if (!_showBody)
+                    MarkdownLoadingSkeleton(accentColor: config.accentColor)
+                  else
+                    MarkdownView(
+                      data: body,
+                      selectable: config.selectable,
+                      accentColor: config.accentColor,
+                      scale: scale,
+                    ),
                 ],
-                const Divider(height: 32),
-                if (body.isEmpty)
-                  Text(
-                    'No additional content',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontStyle: FontStyle.italic,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                    ),
-                  )
-                else if (!_showBody)
-                  MarkdownLoadingSkeleton(accentColor: config.accentColor)
-                else
-                  markdownWidget,
-              ],
+              ),
             ),
           ),
         ),

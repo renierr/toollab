@@ -9,12 +9,14 @@ class MarkdownView extends StatelessWidget {
   final String data;
   final bool selectable;
   final Color accentColor;
+  final double scale;
 
   const MarkdownView({
     super.key,
     required this.data,
     this.selectable = true,
     this.accentColor = AppTheme.accentBlue,
+    this.scale = 1.0,
   });
 
   @override
@@ -34,7 +36,7 @@ class MarkdownView extends StatelessWidget {
         }
       },
       styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-        textScaler: const TextScaler.linear(1.0),
+        textScaler: TextScaler.linear(scale),
         blockquoteDecoration: BoxDecoration(
           color: theme.brightness == Brightness.dark
               ? theme.colorScheme.surfaceContainerHighest
