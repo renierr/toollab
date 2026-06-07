@@ -17,6 +17,7 @@ show_help() {
   echo -e "  \033[1;32mclean\033[0m       - Clean Flutter build cache and clear dist/"
   echo -e "  \033[1;32mapk\033[0m         - Build universal Android APK"
   echo -e "  \033[1;32mapks\033[0m        - Build Android APKs split per ABI"
+  echo -e "  \033[1;32mapks1\033[0m       - Build Android arm64-v8a Split APK"
   echo -e "  \033[1;32mbundle\033[0m      - Build Android App Bundle (.aab)"
   echo -e "  \033[1;32mwindows\033[0m     - Build Windows Desktop release"
   echo -e "  \033[1;32mlinux\033[0m       - Build Linux Desktop release"
@@ -56,6 +57,7 @@ for arg in "$@"; do
     clean) RUN_CLEAN=true ;;
     apk) TASKS+=("apk") ;;
     apks|apk-split) TASKS+=("apk-split") ;;
+    apks1) TASKS+=("apks1") ;;
     bundle) TASKS+=("bundle") ;;
     windows) TASKS+=("windows") ;;
     linux) TASKS+=("linux") ;;
@@ -167,8 +169,8 @@ for task in "${TASKS[@]}"; do
       rm -f "$APK_SRC_DIR/app-release.apk"
       if flutter build apk --release; then
         if [ -f "$APK_SRC_DIR/app-release.apk" ]; then
-          cp "$APK_SRC_DIR/app-release.apk" "$DIST_DIR/${APP_NAME}-release.apk"
-          echo -e "\033[1;32m>>> Saved: $DIST_DIR/${APP_NAME}-release.apk\033[0m"
+          cp "$APK_SRC_DIR/app-release.apk" "$DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-release.apk"
+          echo -e "\033[1;32m>>> Saved: $DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-release.apk\033[0m"
         fi
       else
         exit 1
@@ -183,9 +185,22 @@ for task in "${TASKS[@]}"; do
             filename=$(basename "$file")
             target="${filename#app-}"
             target="${target%-release.apk}"
-            cp "$file" "$DIST_DIR/${APP_NAME}-${target}-release.apk"
+            cp "$file" "$DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-${target}-release.apk"
+            echo -e "\033[1;32m>>> Saved: $DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-${target}-release.apk\033[0m"
           fi
         done
+      else
+        exit 1
+      fi
+      ;;
+    apks1)
+      echo -e "\033[1;32m>>> Building Android arm64-v8a APK${VER_STR}...\033[0m"
+      rm -f "$APK_SRC_DIR/app-release.apk"
+      if flutter build apk --release --target-platform android-arm64; then
+        if [ -f "$APK_SRC_DIR/app-release.apk" ]; then
+          cp "$APK_SRC_DIR/app-release.apk" "$DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-arm64-v8a-release.apk"
+          echo -e "\033[1;32m>>> Saved: $DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-arm64-v8a-release.apk\033[0m"
+        fi
       else
         exit 1
       fi
@@ -195,7 +210,8 @@ for task in "${TASKS[@]}"; do
       rm -f "$BUNDLE_SRC"
       if flutter build appbundle --release; then
         if [ -f "$BUNDLE_SRC" ]; then
-          cp "$BUNDLE_SRC" "$DIST_DIR/${APP_NAME}-release.aab"
+          cp "$BUNDLE_SRC" "$DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-release.aab"
+          echo -e "\033[1;32m>>> Saved: $DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-release.aab\033[0m"
         fi
       else
         exit 1
@@ -209,6 +225,7 @@ for task in "${TASKS[@]}"; do
           rm -rf "$DIST_DIR/${APP_NAME}-windows"
           mkdir -p "$DIST_DIR/${APP_NAME}-windows"
           cp -r "$WINDOWS_SRC_DIR"/* "$DIST_DIR/${APP_NAME}-windows/"
+          echo "$VERSION" > "$DIST_DIR/${APP_NAME}-windows/version.txt"
           if [ "$PACKAGE" = true ]; then
             package_windows
             WINDOWS_PACKAGED=true
@@ -226,6 +243,7 @@ for task in "${TASKS[@]}"; do
           rm -rf "$DIST_DIR/${APP_NAME}-linux"
           mkdir -p "$DIST_DIR/${APP_NAME}-linux"
           cp -r "$LINUX_SRC_DIR"/* "$DIST_DIR/${APP_NAME}-linux/"
+          echo "$VERSION" > "$DIST_DIR/${APP_NAME}-linux/version.txt"
           if [ "$PACKAGE" = true ]; then
             package_linux
             LINUX_PACKAGED=true
