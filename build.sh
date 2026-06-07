@@ -9,7 +9,7 @@ APP_NAME="ToolLab"
 
 show_help() {
   echo -e "\033[1;36m========================================================\033[0m"
-  echo -e "\033[1;32m             ToolLab Build Script                       \033[0m"
+  echo -e "\033[1;32m             ${APP_NAME} Build Script                       \033[0m"
   echo -e "\033[1;36m========================================================\033[0m"
   echo -e "Usage: ./build.sh [arguments...]"
   echo -e ""
@@ -40,13 +40,15 @@ declare -a TASKS=()
 VERSION=""
 if [ -f "pubspec.yaml" ]; then
   VERSION=$(grep '^version: ' pubspec.yaml | sed 's/version: //g' | tr -d '\r')
-  VERSION=$(echo "$VERSION" | tr '+' '_')
 fi
 
 if [ -n "$VERSION" ]; then
-  ZIP_SUFFIX="-v${VERSION}"
+  VERSION_SAFE=$(echo "$VERSION" | tr '+' '_')
+  ZIP_SUFFIX="-v${VERSION_SAFE}"
+  VER_STR=" (v${VERSION})"
 else
   ZIP_SUFFIX=""
+  VER_STR=""
 fi
 
 for arg in "$@"; do
@@ -156,7 +158,7 @@ package_linux() {
 for task in "${TASKS[@]}"; do
   case "$task" in
     apk)
-      echo -e "\033[1;32m>>> Building Android APK...\033[0m"
+      echo -e "\033[1;32m>>> Building Android APK${VER_STR}...\033[0m"
       rm -f "$APK_SRC_DIR/app-release.apk"
       if flutter build apk --release; then
         if [ -f "$APK_SRC_DIR/app-release.apk" ]; then
@@ -168,7 +170,7 @@ for task in "${TASKS[@]}"; do
       fi
       ;;
     apk-split)
-      echo -e "\033[1;32m>>> Building Android Split APKs...\033[0m"
+      echo -e "\033[1;32m>>> Building Android Split APKs${VER_STR}...\033[0m"
       rm -f "$APK_SRC_DIR"/app-*-release.apk
       if flutter build apk --release --split-per-abi; then
         for file in "$APK_SRC_DIR"/app-*-release.apk; do
@@ -184,7 +186,7 @@ for task in "${TASKS[@]}"; do
       fi
       ;;
     bundle)
-      echo -e "\033[1;32m>>> Building App Bundle...\033[0m"
+      echo -e "\033[1;32m>>> Building App Bundle${VER_STR}...\033[0m"
       rm -f "$BUNDLE_SRC"
       if flutter build appbundle --release; then
         if [ -f "$BUNDLE_SRC" ]; then
@@ -195,7 +197,7 @@ for task in "${TASKS[@]}"; do
       fi
       ;;
     windows)
-      echo -e "\033[1;32m>>> Building Windows Release...\033[0m"
+      echo -e "\033[1;32m>>> Building Windows Release${VER_STR}...\033[0m"
       rm -rf "$WINDOWS_SRC_DIR"
       if flutter build windows --release; then
         if [ -d "$WINDOWS_SRC_DIR" ]; then
@@ -212,7 +214,7 @@ for task in "${TASKS[@]}"; do
       fi
       ;;
     linux)
-      echo -e "\033[1;32m>>> Building Linux Release...\033[0m"
+      echo -e "\033[1;32m>>> Building Linux Release${VER_STR}...\033[0m"
       rm -rf "$LINUX_SRC_DIR"
       if flutter build linux --release; then
         if [ -d "$LINUX_SRC_DIR" ]; then
