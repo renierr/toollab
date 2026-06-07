@@ -66,6 +66,7 @@ object ShortcutHelper {
             "pdf-viewer" -> "de.renier.tool_lab.PdfViewerAlias"
             "notes" -> "de.renier.tool_lab.NotesAlias"
             "markdown-viewer" -> "de.renier.tool_lab.MarkdownViewerAlias"
+            "image-viewer" -> "de.renier.tool_lab.ImageViewerAlias"
             else -> return
         }
 

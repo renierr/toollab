@@ -100,6 +100,7 @@ class MainActivity : FlutterActivity() {
                         "de.renier.tool_lab.PdfViewerAlias" -> launchRoute = "/pdf-viewer"
                         "de.renier.tool_lab.NotesAlias" -> launchRoute = "/notes"
                         "de.renier.tool_lab.MarkdownViewerAlias" -> launchRoute = "/markdown-viewer"
+                        "de.renier.tool_lab.ImageViewerAlias" -> launchRoute = "/image-viewer"
                         "de.renier.tool_lab.MainActivity" -> launchRoute = "/"
                     }
                 }

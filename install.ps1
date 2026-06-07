@@ -27,6 +27,12 @@ $FileTypes = @(
   @{ Extension = '.md';      ProgId = "$AppName.md";      Description = 'Markdown Document'; MimeType = 'text/markdown' }
   @{ Extension = '.markdown'; ProgId = "$AppName.markdown"; Description = 'Markdown Document'; MimeType = 'text/markdown' }
   @{ Extension = '.txt';     ProgId = "$AppName.txt";     Description = 'Text Document';     MimeType = 'text/plain' }
+  @{ Extension = '.png';      ProgId = "$AppName.png";      Description = 'PNG Image';         MimeType = 'image/png' }
+  @{ Extension = '.jpg';      ProgId = "$AppName.jpg";      Description = 'JPEG Image';        MimeType = 'image/jpeg' }
+  @{ Extension = '.jpeg';     ProgId = "$AppName.jpeg";     Description = 'JPEG Image';        MimeType = 'image/jpeg' }
+  @{ Extension = '.webp';     ProgId = "$AppName.webp";     Description = 'WebP Image';        MimeType = 'image/webp' }
+  @{ Extension = '.bmp';      ProgId = "$AppName.bmp";      Description = 'BMP Image';         MimeType = 'image/bmp' }
+  @{ Extension = '.gif';      ProgId = "$AppName.gif";      Description = 'GIF Image';         MimeType = 'image/gif' }
 )
 
 function Write-Info  { Write-Host "INFO: $($args[0])" -ForegroundColor Cyan }
@@ -207,7 +213,7 @@ function Install-All {
     exit 1
   }
   if (-not $Silent) {
-    $answer = Read-Host "Install $AppName to $InstallDir and register file associations (.pdf, .md, .markdown, .txt)? [Y/n]"
+    $answer = Read-Host "Install $AppName to $InstallDir and register file associations (.pdf, .md, .markdown, .txt, images)? [Y/n]"
     if ($answer -ne '' -and $answer -notmatch '^[Yy]') {
       Write-Info "Install cancelled"
       exit 0
