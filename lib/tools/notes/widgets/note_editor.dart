@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:markdown/markdown.dart' as md;
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
-import 'package:tool_lab/widgets/markdown_checkbox.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:tool_lab/widgets/markdown_view.dart';
 
 class NoteEditor extends StatefulWidget {
   final int? id;
@@ -204,28 +201,10 @@ class _NoteEditorState extends State<NoteEditor>
     return Container(
       color: theme.colorScheme.surface,
       padding: const EdgeInsets.all(16),
-      child: MarkdownBody(
+      child: MarkdownView(
         data: _controller.text,
         selectable: true,
-        extensionSet: md.ExtensionSet.gitHubFlavored,
-        listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.baseline,
-        checkboxBuilder: (checked) => MarkdownCheckbox(
-          checked: checked,
-          checkedColor: AppTheme.accentTeal,
-        ),
-        onTapLink: (text, href, title) {
-          if (href != null) {
-            launchUrl(Uri.parse(href));
-          }
-        },
-        styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-          blockquoteDecoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark
-                ? theme.colorScheme.surfaceContainerHighest
-                : Colors.blue.shade100,
-            borderRadius: BorderRadius.circular(2.0),
-          ),
-        ),
+        accentColor: AppTheme.accentTeal,
       ),
     );
   }

@@ -2,16 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:markdown/markdown.dart' as md;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/widgets/markdown_checkbox.dart';
 import 'package:tool_lab/widgets/markdown_loading_skeleton.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:tool_lab/widgets/markdown_view.dart';
 
 class MarkdownViewerConfig {
   final Color accentColor;
@@ -161,6 +158,12 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
     final updatedAt = widget.config.updatedAt ?? 0;
     final config = widget.config;
 
+    final markdownWidget = MarkdownView(
+      data: body,
+      selectable: config.selectable,
+      accentColor: config.accentColor,
+    );
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -243,31 +246,7 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                 else if (!_showBody)
                   MarkdownLoadingSkeleton(accentColor: config.accentColor)
                 else
-                  MarkdownBody(
-                    data: body,
-                    selectable: config.selectable,
-                    extensionSet: md.ExtensionSet.gitHubFlavored,
-                    listItemCrossAxisAlignment:
-                        MarkdownListItemCrossAxisAlignment.baseline,
-                    checkboxBuilder: (checked) => MarkdownCheckbox(
-                      checked: checked,
-                      checkedColor: config.accentColor,
-                    ),
-                    onTapLink: (text, href, title) {
-                      if (href != null) {
-                        launchUrl(Uri.parse(href));
-                      }
-                    },
-                    styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-                      textScaler: TextScaler.linear(1.0),
-                      blockquoteDecoration: BoxDecoration(
-                        color: theme.brightness == Brightness.dark
-                            ? theme.colorScheme.surfaceContainerHighest
-                            : Colors.blue.shade100,
-                        borderRadius: BorderRadius.circular(2.0),
-                      ),
-                    ),
-                  ),
+                  markdownWidget,
               ],
             ),
           ),
