@@ -14,6 +14,14 @@ $ScriptPath = $PSCommandPath
 $SourceDir = Join-Path $PSScriptRoot 'dist\ToolLab-windows'
 $Version = '0.0.0'
 
+if ($Version -eq '0.0.0' -and (Test-Path (Join-Path $PSScriptRoot 'pubspec.yaml'))) {
+  $versionLine = Get-Content (Join-Path $PSScriptRoot 'pubspec.yaml') | Select-String -Pattern '^version:\s*'
+  if ($versionLine) {
+    $Version = ($versionLine.Line -replace '^version:\s*', '').Trim()
+  }
+}
+
+
 $FileTypes = @(
   @{ Extension = '.pdf';     ProgId = "$AppName.pdf";     Description = 'PDF Document';     MimeType = 'application/pdf' }
   @{ Extension = '.md';      ProgId = "$AppName.md";      Description = 'Markdown Document'; MimeType = 'text/markdown' }
@@ -204,6 +212,7 @@ function Install-All {
 }
 
 # --- Entry point ---
+Write-Info "Starting installer for $AppName (v$Version)..."
 if ($Uninstall) {
   if (-not $Silent) {
     $answer = Read-Host "Uninstall $AppName from $InstallDir? This will remove all file associations. [y/N]"
