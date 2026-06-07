@@ -209,4 +209,7 @@ Avoid writing presentation logic or dropzones from scratch. Use existing widgets
    - If a new dependency is absolutely necessary, only use well-maintained, modern packages and always target their latest stable versions.
    - Never add or modify dependencies in `pubspec.yaml` directly—always present the proposed package and version to the user first and ask them to add it.
 7. **Database Test Isolation**: If a new tool adds database tables, any unit/widget tests must override the database path using `inMemoryDatabasePath` on `DatabaseService.instance` and close the connection in `tearDownAll` to ensure test state is clean and fully isolated in memory.
+8. **Const Constructors**: Prefer using `const` constructors for widgets and in `build()` methods where possible to reduce rebuild cycles.
+9. **Lazy Lists**: Prefer `ListView.builder` or slivers for dynamic or performance-sensitive lists to keep frame rates high.
+10. **State Management & UI Binding**: Always bind UI screens to state using `context.watch<AppState>()` (or `Consumer<AppState>`) for automatic rebuilds, and use `context.read<AppState>()` inside buttons and lifecycle callbacks. Never update local state variables inside views for persistent/syncable data.
 
