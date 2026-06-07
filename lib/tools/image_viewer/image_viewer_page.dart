@@ -111,14 +111,13 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   ) async {
     setState(() {
       _isProcessing = true;
+      _metadata = null;
     });
 
     try {
       final codec = await ui.instantiateImageCodec(bytes);
       final frame = await codec.getNextFrame();
       final image = frame.image;
-
-      final metadata = await compute(_extractMetadataTask, bytes);
 
       if (mounted) {
         setState(() {
@@ -127,11 +126,16 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
           _fileSizeBytes = sizeBytes;
           _originalWidth = image.width;
           _originalHeight = image.height;
-          _metadata = metadata;
 
-          // Set size fields silently without invoking listeners recursively
+          // Pause listeners to avoid side-effects/rounding during initialization
+          _widthController.removeListener(_onWidthChanged);
+          _heightController.removeListener(_onHeightChanged);
+
           _widthController.text = _originalWidth.toString();
           _heightController.text = _originalHeight.toString();
+
+          _widthController.addListener(_onWidthChanged);
+          _heightController.addListener(_onHeightChanged);
 
           // Reset zoom transformation
           _transformationController.value = Matrix4.identity();
@@ -145,6 +149,19 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
           }
         });
       }
+
+      // Load EXIF metadata in background asynchronously
+      compute(_extractMetadataTask, bytes)
+          .then((metadata) {
+            if (mounted) {
+              setState(() {
+                _metadata = metadata;
+              });
+            }
+          })
+          .catchError((e) {
+            debugPrint("Failed to extract metadata in background: $e");
+          });
     } catch (e) {
       _showError('Failed to process image: $e');
     } finally {
@@ -271,7 +288,10 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       if (!mounted) return;
 
       // Clean up base name to construct suggested output file name
-      final originalBase = _fileName?.split('.').first ?? 'image';
+      final dotIndex = _fileName?.lastIndexOf('.') ?? -1;
+      final originalBase = (dotIndex != -1)
+          ? _fileName!.substring(0, dotIndex)
+          : (_fileName ?? 'image');
       final ext = _selectedFormat == 'jpg' ? 'jpg' : _selectedFormat;
       final hasResized = (width != _originalWidth || height != _originalHeight);
       final suggestedName = hasResized
@@ -327,7 +347,10 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
 
       final tempDir = await getTemporaryDirectory();
       final ext = _selectedFormat == 'jpg' ? 'jpg' : _selectedFormat;
-      final originalBase = _fileName?.split('.').first ?? 'image';
+      final dotIndex = _fileName?.lastIndexOf('.') ?? -1;
+      final originalBase = (dotIndex != -1)
+          ? _fileName!.substring(0, dotIndex)
+          : (_fileName ?? 'image');
       final hasResized = (width != _originalWidth || height != _originalHeight);
       final suggestedName = hasResized
           ? '${originalBase}_resized.$ext'
@@ -562,12 +585,19 @@ Uint8List _resizeAndEncodeTask(ImageResizeParams params) {
     throw Exception('Could not decode original image');
   }
 
+  // Bake orientation to ensure width/height match what the user sees in the UI
+  final oriented = img.bakeOrientation(decoded);
+
   final resized = img.copyResize(
-    decoded,
+    oriented,
     width: params.width,
     height: params.height,
     interpolation: img.Interpolation.average,
   );
+
+  if (!params.preserveExif) {
+    resized.exif = img.ExifData();
+  }
 
   List<int> encoded;
   switch (params.format) {
