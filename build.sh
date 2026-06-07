@@ -20,6 +20,7 @@ show_help() {
   echo -e "  \033[1;32mbundle\033[0m      - Build Android App Bundle (.aab)"
   echo -e "  \033[1;32mwindows\033[0m     - Build Windows Desktop release"
   echo -e "  \033[1;32mlinux\033[0m       - Build Linux Desktop release"
+  echo -e "  \033[1;32mpackage\033[0m     - Package Windows/Linux build into a ZIP file with install script"
   echo -e "  \033[1;32mhelp\033[0m        - Show this help message"
   echo -e "\033[1;36m========================================================\033[0m"
 }
@@ -30,7 +31,23 @@ if [ $# -eq 0 ]; then
 fi
 
 RUN_CLEAN=false
+PACKAGE=false
+WINDOWS_PACKAGED=false
+LINUX_PACKAGED=false
 declare -a TASKS=()
+
+# Extract version from pubspec.yaml
+VERSION=""
+if [ -f "pubspec.yaml" ]; then
+  VERSION=$(grep '^version: ' pubspec.yaml | sed 's/version: //g' | tr -d '\r')
+  VERSION=$(echo "$VERSION" | tr '+' '_')
+fi
+
+if [ -n "$VERSION" ]; then
+  ZIP_SUFFIX="-v${VERSION}"
+else
+  ZIP_SUFFIX=""
+fi
 
 for arg in "$@"; do
   case "$arg" in
@@ -40,6 +57,7 @@ for arg in "$@"; do
     bundle) TASKS+=("bundle") ;;
     windows) TASKS+=("windows") ;;
     linux) TASKS+=("linux") ;;
+    package) PACKAGE=true ;;
     -h|--help|help) show_help; exit 0 ;;
     *) echo -e "\033[1;31mError: Unknown argument '$arg'\033[0m"; show_help; exit 1 ;;
   esac
@@ -54,6 +72,86 @@ if [ "$RUN_CLEAN" = true ]; then
 fi
 
 mkdir -p "$DIST_DIR"
+
+create_zip() {
+  local zip_name="$1"
+  local folder_to_zip="$2"
+  shift 2
+  local extra_files=("$@")
+
+  local stage_dir="$DIST_DIR/stage"
+  rm -rf "$stage_dir"
+  mkdir -p "$stage_dir/dist"
+
+  # Copy compiled folder to stage/dist/
+  cp -r "$folder_to_zip" "$stage_dir/dist/"
+
+  # Copy extra files (installers) to stage/
+  for f in "${extra_files[@]}"; do
+    [ -f "$f" ] && cp "$f" "$stage_dir/"
+  done
+
+  # 1. Try standard 'zip' command
+  if command -v zip >/dev/null 2>&1; then
+    local abs_zip_path="$(pwd)/$zip_name"
+    (cd "$stage_dir" && zip -r "$abs_zip_path" .)
+    rm -rf "$stage_dir"
+    return 0
+  fi
+
+  # 2. Try PowerShell on Windows (native)
+  if command -v powershell.exe >/dev/null 2>&1; then
+    echo "Using PowerShell to compress..."
+    powershell.exe -NoProfile -Command "Compress-Archive -Path '${stage_dir}/*' -DestinationPath '${zip_name}' -Force"
+    rm -rf "$stage_dir"
+    return 0
+  fi
+
+  # 3. Try Tar on Linux/macOS (native, creates .tar.gz instead of .zip)
+  if command -v tar >/dev/null 2>&1; then
+    local tar_name="${zip_name%.zip}.tar.gz"
+    echo "Using tar to compress to $tar_name..."
+    local abs_tar_path="$(pwd)/$tar_name"
+    (cd "$stage_dir" && tar -czf "$abs_tar_path" .)
+    rm -rf "$stage_dir"
+    return 0
+  fi
+
+  rm -rf "$stage_dir"
+  echo -e "\033[1;31mError: No compression tool found ('zip', 'powershell.exe', or 'tar' not available).\033[0m"
+  return 1
+}
+
+package_windows() {
+  if [ -d "$DIST_DIR/${APP_NAME}-windows" ]; then
+    echo -e "\033[1;32m>>> Packaging Windows Release...\033[0m"
+    pkg_files=()
+    [ -f "install.bat" ] && pkg_files+=("install.bat")
+    [ -f "install.ps1" ] && pkg_files+=("install.ps1")
+    
+    zip_name="$DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-windows.zip"
+    rm -f "$zip_name"
+    create_zip "$zip_name" "$DIST_DIR/${APP_NAME}-windows" "${pkg_files[@]}"
+  else
+    echo -e "\033[1;31mError: Windows build folder not found at '$DIST_DIR/${APP_NAME}-windows'.\033[0m"
+    return 1
+  fi
+}
+
+package_linux() {
+  if [ -d "$DIST_DIR/${APP_NAME}-linux" ]; then
+    echo -e "\033[1;32m>>> Packaging Linux Release...\033[0m"
+    pkg_files=()
+    [ -f "install.sh" ] && pkg_files+=("install.sh")
+    
+    zip_name="$DIST_DIR/${APP_NAME}${ZIP_SUFFIX}-linux.zip"
+    rm -f "$zip_name"
+    create_zip "$zip_name" "$DIST_DIR/${APP_NAME}-linux" "${pkg_files[@]}"
+  else
+    echo -e "\033[1;31mError: Linux build folder not found at '$DIST_DIR/${APP_NAME}-linux'.\033[0m"
+    return 1
+  fi
+}
 
 for task in "${TASKS[@]}"; do
   case "$task" in
@@ -104,6 +202,10 @@ for task in "${TASKS[@]}"; do
           rm -rf "$DIST_DIR/${APP_NAME}-windows"
           mkdir -p "$DIST_DIR/${APP_NAME}-windows"
           cp -r "$WINDOWS_SRC_DIR"/* "$DIST_DIR/${APP_NAME}-windows/"
+          if [ "$PACKAGE" = true ]; then
+            package_windows
+            WINDOWS_PACKAGED=true
+          fi
         fi
       else
         exit 1
@@ -117,6 +219,10 @@ for task in "${TASKS[@]}"; do
           rm -rf "$DIST_DIR/${APP_NAME}-linux"
           mkdir -p "$DIST_DIR/${APP_NAME}-linux"
           cp -r "$LINUX_SRC_DIR"/* "$DIST_DIR/${APP_NAME}-linux/"
+          if [ "$PACKAGE" = true ]; then
+            package_linux
+            LINUX_PACKAGED=true
+          fi
         fi
       else
         exit 1
@@ -124,6 +230,22 @@ for task in "${TASKS[@]}"; do
       ;;
   esac
 done
+
+if [ "$PACKAGE" = true ]; then
+  if [ "$WINDOWS_PACKAGED" != true ] && [ -d "$DIST_DIR/${APP_NAME}-windows" ]; then
+    package_windows || exit 1
+    WINDOWS_PACKAGED=true
+  fi
+  if [ "$LINUX_PACKAGED" != true ] && [ -d "$DIST_DIR/${APP_NAME}-linux" ]; then
+    package_linux || exit 1
+    LINUX_PACKAGED=true
+  fi
+
+  if [ "$WINDOWS_PACKAGED" != true ] && [ "$LINUX_PACKAGED" != true ]; then
+    echo -e "\033[1;31mError: No existing Windows or Linux build found in '$DIST_DIR/' to package.\033[0m"
+    exit 1
+  fi
+fi
 
 echo -e "\033[1;32m>>> All builds completed!\033[0m"
 ls -lh "$DIST_DIR"
