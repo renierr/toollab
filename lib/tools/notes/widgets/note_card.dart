@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class NoteCard extends StatelessWidget {
@@ -98,13 +98,12 @@ class NoteCard extends StatelessWidget {
 
     if (Platform.isAndroid || Platform.isWindows) {
       try {
-        final tempDir = await getTemporaryDirectory();
-        final tempFile = File('${tempDir.path}/note-$shortId.md');
-        await tempFile.writeAsString(content);
+        final tempPath = await TempFileManager.createFile('note-$shortId.md');
+        await File(tempPath).writeAsString(content);
         if (context.mounted) {
           await FileSaveHelper.showShareChooser(
             context: context,
-            path: tempFile.path,
+            path: tempPath,
             mimeType: 'text/markdown',
           );
         }

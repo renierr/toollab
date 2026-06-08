@@ -15,8 +15,9 @@ class ClipboardHelper {
 
   static Future<Uint8List?> getImagePng() async {
     try {
-      final result =
-          await _channel.invokeMethod<Uint8List>('getClipboardImagePng');
+      final result = await _channel.invokeMethod<Uint8List>(
+        'getClipboardImagePng',
+      );
       if (result != null && result.isNotEmpty) return result;
     } on MissingPluginException {
       // platform does not support clipboard image reading

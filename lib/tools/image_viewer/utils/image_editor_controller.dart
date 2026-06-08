@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
-import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
 
@@ -591,7 +590,6 @@ class ImageEditorController extends ChangeNotifier {
 
       final exportedBytes = await compute(resizeAndEncodeTask, params);
 
-      final tempDir = await getTemporaryDirectory();
       final ext = _selectedFormat == 'jpg' ? 'jpg' : _selectedFormat;
       final dotIndex = _fileName?.lastIndexOf('.') ?? -1;
       final originalBase = (dotIndex != -1)
@@ -602,14 +600,16 @@ class ImageEditorController extends ChangeNotifier {
           ? '${originalBase}_resized.$ext'
           : '$originalBase.$ext';
 
-      final tempFile = File('${tempDir.path}/$suggestedName');
-      await tempFile.writeAsBytes(exportedBytes);
+      final tempPath = await TempFileManager.createFile(
+        suggestedName,
+        bytes: exportedBytes,
+      );
 
       if (context.mounted) {
         final mimeType = 'image/$_selectedFormat';
         await FileSaveHelper.showShareChooser(
           context: context,
-          path: tempFile.path,
+          path: tempPath,
           mimeType: mimeType,
         );
       }

@@ -15,6 +15,7 @@ import '../widgets/custom_notification.dart';
 import '../theme/theme.dart';
 
 import 'mime_type_helper.dart';
+import 'temp_file_manager.dart';
 
 class FileSaveHelper {
   static const _channel = MethodChannel('de.renier.tool_lab/file_save');
@@ -104,10 +105,10 @@ class FileSaveHelper {
           // Write bytes to a temporary file to enable secure in-app sharing
           String sharePath = uriString;
           try {
-            final tempDir = await getTemporaryDirectory();
-            final tempFile = File('${tempDir.path}/$suggestedName');
-            await tempFile.writeAsBytes(bytes);
-            sharePath = tempFile.path;
+            sharePath = await TempFileManager.createFile(
+              'share_$suggestedName',
+              bytes: bytes,
+            );
           } catch (e) {
             debugPrint("Failed to create temporary file for sharing: $e");
           }

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -122,15 +122,14 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
   Future<void> _shareContent() async {
     if (Platform.isAndroid || Platform.isWindows) {
       try {
-        final tempDir = await getTemporaryDirectory();
-        final tempFile = File(
-          '${tempDir.path}/${widget.config.exportSuggestedName ?? 'document.md'}',
+        final tempPath = await TempFileManager.createFile(
+          widget.config.exportSuggestedName ?? 'document.md',
         );
-        await tempFile.writeAsString(widget.content);
+        await File(tempPath).writeAsString(widget.content);
         if (mounted) {
           await FileSaveHelper.showShareChooser(
             context: context,
-            path: tempFile.path,
+            path: tempPath,
             mimeType: widget.config.exportMimeType,
           );
         }

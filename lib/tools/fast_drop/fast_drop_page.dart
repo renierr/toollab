@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +10,7 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
@@ -43,6 +43,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   @override
   void initState() {
     super.initState();
+    onDispose(() => TempFileManager.cleanTracked());
 
     _pendingSharedFile = widget.sharedFile;
 
@@ -299,14 +300,15 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         );
       }
       final bytes = await appState.downloadFastDrop(item.id);
-      final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/${item.filename}');
-      await tempFile.writeAsBytes(bytes);
+      final tempPath = await TempFileManager.createFile(
+        'fast_drop_${item.filename}',
+        bytes: bytes,
+      );
 
       if (mounted) {
         await FileSaveHelper.showOpenChooser(
           context: context,
-          path: tempFile.path,
+          path: tempPath,
           mimeType: item.type,
         );
       }
