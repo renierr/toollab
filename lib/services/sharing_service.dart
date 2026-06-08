@@ -6,6 +6,7 @@ import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/helpers/mime_type_helper.dart';
 
 class SharingService {
   static const _channel = MethodChannel('de.renier.tool_lab/sharing');
@@ -42,7 +43,7 @@ class SharingService {
         try {
           if (await file.exists()) {
             final name = file.path.split(Platform.pathSeparator).last;
-            final mimeType = _getMimeType(file.path);
+            final mimeType = MimeTypeHelper.getMimeType(file.path);
             return SharedFile(path: file.path, name: name, mimeType: mimeType);
           }
         } catch (e) {
@@ -98,30 +99,6 @@ class SharingService {
       if (mime.startsWith('$category/')) return true;
     }
     return false;
-  }
-
-  String _getMimeType(String filePath) {
-    final ext = filePath.split('.').last.toLowerCase();
-    switch (ext) {
-      case 'pdf':
-        return 'application/pdf';
-      case 'png':
-        return 'image/png';
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg';
-      case 'gif':
-        return 'image/gif';
-      case 'txt':
-        return 'text/plain';
-      case 'md':
-      case 'markdown':
-        return 'text/markdown';
-      case 'json':
-        return 'application/json';
-      default:
-        return 'application/octet-stream';
-    }
   }
 
   Future<String?> getDefaultTool(String mimeType) async {

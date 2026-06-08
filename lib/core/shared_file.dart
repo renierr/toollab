@@ -1,13 +1,24 @@
+import 'package:tool_lab/helpers/mime_type_helper.dart';
+
 class SharedFile {
   final String path;
   final String name;
   final String mimeType;
 
-  const SharedFile({
-    required this.path,
-    required this.name,
-    required this.mimeType,
-  });
+  SharedFile({required this.path, required this.name, required String mimeType})
+    : mimeType = _resolveMimeType(path, name, mimeType);
+
+  static String _resolveMimeType(String path, String name, String mimeType) {
+    if (mimeType.toLowerCase() == 'application/octet-stream') {
+      final resolved = MimeTypeHelper.getMimeType(
+        path.isNotEmpty ? path : name,
+      );
+      if (resolved != 'application/octet-stream') {
+        return resolved;
+      }
+    }
+    return mimeType;
+  }
 
   factory SharedFile.fromMap(Map<dynamic, dynamic> map) {
     return SharedFile(
