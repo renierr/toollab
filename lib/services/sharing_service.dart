@@ -19,7 +19,9 @@ class SharingService {
   Stream<SharedFile> get onSharedFile => _sharedFileStreamController.stream;
 
   SharingService._() {
-    _channel.setMethodCallHandler(_handleMethodCall);
+    if (Platform.isAndroid) {
+      _channel.setMethodCallHandler(_handleMethodCall);
+    }
   }
 
   Future<void> _handleMethodCall(MethodCall call) async {
@@ -50,6 +52,7 @@ class SharingService {
     }
 
     // 2. Check Android Initial Shared File
+    if (!Platform.isAndroid) return null;
     try {
       final map = await _channel.invokeMethod<Map>('getSharedFile');
       if (map != null) {
@@ -63,6 +66,7 @@ class SharingService {
   }
 
   Future<void> clearSharedFile() async {
+    if (!Platform.isAndroid) return;
     try {
       await _channel.invokeMethod('clearSharedFile');
     } catch (e) {

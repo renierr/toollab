@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -8,7 +9,9 @@ class ShortcutService {
   static final ShortcutService instance = ShortcutService._();
 
   ShortcutService._() {
-    _channel.setMethodCallHandler(_handleMethodCall);
+    if (Platform.isAndroid) {
+      _channel.setMethodCallHandler(_handleMethodCall);
+    }
   }
 
   final _routeStreamController = StreamController<String>.broadcast();
@@ -25,6 +28,7 @@ class ShortcutService {
   }
 
   Future<String?> getLaunchRoute() async {
+    if (!Platform.isAndroid) return null;
     try {
       return await _channel.invokeMethod<String>('getLaunchRoute');
     } catch (e) {
@@ -34,6 +38,7 @@ class ShortcutService {
   }
 
   Future<bool> pinShortcut(String toolId, String toolName) async {
+    if (!Platform.isAndroid) return false;
     try {
       return await _channel.invokeMethod<bool>('pinShortcut', {
             'id': toolId,
@@ -47,6 +52,7 @@ class ShortcutService {
   }
 
   Future<void> removeShortcut(String toolId) async {
+    if (!Platform.isAndroid) return;
     try {
       await _channel.invokeMethod('removeShortcut', {'id': toolId});
     } catch (e) {
@@ -55,6 +61,7 @@ class ShortcutService {
   }
 
   Future<void> setDrawerIconEnabled(String toolId, bool enabled) async {
+    if (!Platform.isAndroid) return;
     try {
       await _channel.invokeMethod('setDrawerIconEnabled', {
         'id': toolId,
