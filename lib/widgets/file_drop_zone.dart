@@ -38,13 +38,20 @@ class _FileDropZoneState extends State<FileDropZone> {
   bool _dragging = false;
 
   Future<void> _pickFile() async {
-    final typeGroup = XTypeGroup(
-      label: widget.typeLabel,
-      extensions: widget.allowedExtensions,
-      mimeTypes: widget.allowedMimeTypes,
-    );
     try {
-      final file = await openFile(acceptedTypeGroups: [typeGroup]);
+      final hasFilters =
+          widget.allowedExtensions.isNotEmpty ||
+          widget.allowedMimeTypes != null;
+      final typeGroup = XTypeGroup(
+        label: widget.typeLabel,
+        extensions: widget.allowedExtensions.isNotEmpty
+            ? widget.allowedExtensions
+            : null,
+        mimeTypes: widget.allowedMimeTypes,
+      );
+      final file = await openFile(
+        acceptedTypeGroups: hasFilters ? [typeGroup] : const <XTypeGroup>[],
+      );
       if (file != null && mounted) {
         widget.onFileSelected(file);
       }
@@ -67,11 +74,13 @@ class _FileDropZoneState extends State<FileDropZone> {
         if (details.files.isNotEmpty) {
           final file = details.files.first;
           final name = file.name.toLowerCase();
-          bool isValid = false;
-          for (final ext in widget.allowedExtensions) {
-            if (name.endsWith('.${ext.toLowerCase()}')) {
-              isValid = true;
-              break;
+          bool isValid = widget.allowedExtensions.isEmpty;
+          if (!isValid) {
+            for (final ext in widget.allowedExtensions) {
+              if (name.endsWith('.${ext.toLowerCase()}')) {
+                isValid = true;
+                break;
+              }
             }
           }
           if (isValid) {

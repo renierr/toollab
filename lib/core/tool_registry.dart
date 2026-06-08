@@ -9,6 +9,7 @@ import 'package:tool_lab/tools/pdf_viewer/config.dart';
 import 'package:tool_lab/tools/notes/config.dart';
 import 'package:tool_lab/tools/markdown_viewer/config.dart';
 import 'package:tool_lab/tools/image_viewer/config.dart';
+import 'package:tool_lab/tools/fast_drop/config.dart';
 
 class ToolRegistry {
   static const Map<String, ToolSection> sections = {
@@ -46,5 +47,6 @@ class ToolRegistry {
     NotesTool.config,
     MarkdownViewerTool.config,
     ImageViewerTool.config,
+    FastDropTool.config,
   ];
 }

@@ -7,6 +7,8 @@ import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/tools/notes/notes_db_helper.dart';
 import 'package:tool_lab/tools/notes/notes_sync_delegate.dart';
+import 'package:tool_lab/tools/fast_drop/fast_drop_model.dart';
+import 'package:tool_lab/tools/fast_drop/fast_drop_service.dart';
 
 class AppState extends ChangeNotifier {
   final SettingsService _settingsService;
@@ -326,5 +328,110 @@ class AppState extends ChangeNotifier {
     if (_syncEnabled && _syncServerUrl.isNotEmpty) {
       syncWithBackend([NotesSyncDelegate()]).catchError((e) => null);
     }
+  }
+
+  List<FastDropItem> _fastDrops = [];
+  bool _isLoadingFastDrops = false;
+  bool _isUploadingFastDrop = false;
+  String? _fastDropError;
+  bool _isServerAvailable = true;
+
+  List<FastDropItem> get fastDrops => _fastDrops;
+  bool get isLoadingFastDrops => _isLoadingFastDrops;
+  bool get isUploadingFastDrop => _isUploadingFastDrop;
+  String? get fastDropError => _fastDropError;
+  bool get isServerAvailable => _isServerAvailable;
+
+  Future<void> loadFastDrops() async {
+    if (_syncServerUrl.isEmpty) {
+      _fastDropError =
+          'Sync Server URL is not configured. Please configure it in settings.';
+      _fastDrops = [];
+      _isServerAvailable = false;
+      notifyListeners();
+      return;
+    }
+
+    _isLoadingFastDrops = true;
+    _fastDropError = null;
+    notifyListeners();
+
+    try {
+      final available = await SyncService.isBackendAvailable(_syncServerUrl);
+      _isServerAvailable = available;
+      if (!available) {
+        _fastDropError = 'Sync server is offline or unreachable.';
+        _fastDrops = [];
+      } else {
+        _fastDrops = await FastDropService.fetchDrops(_syncServerUrl);
+      }
+    } catch (e) {
+      _isServerAvailable = false;
+      _fastDropError = e.toString().replaceAll('Exception: ', '');
+      _fastDrops = [];
+      debugPrint('[AppState] Failed to load Fast Drops: $e');
+    } finally {
+      _isLoadingFastDrops = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> uploadFastDrop({
+    required String filename,
+    required Uint8List bytes,
+    required String retention,
+    required String source,
+    required String mimeType,
+  }) async {
+    if (_syncServerUrl.isEmpty) {
+      throw Exception('Sync Server URL is not configured');
+    }
+
+    _isUploadingFastDrop = true;
+    notifyListeners();
+
+    try {
+      await FastDropService.uploadDrop(
+        baseUrl: _syncServerUrl,
+        filename: filename,
+        bytes: bytes,
+        retention: retention,
+        source: source,
+        mimeType: mimeType,
+      );
+      await loadFastDrops();
+    } finally {
+      _isUploadingFastDrop = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteFastDrop(String id) async {
+    if (_syncServerUrl.isEmpty) return;
+    try {
+      await FastDropService.deleteDrop(_syncServerUrl, id);
+      await loadFastDrops();
+    } catch (e) {
+      debugPrint('[AppState] Failed to delete Fast Drop: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> keepFastDrop(String id) async {
+    if (_syncServerUrl.isEmpty) return;
+    try {
+      await FastDropService.keepDrop(_syncServerUrl, id);
+      await loadFastDrops();
+    } catch (e) {
+      debugPrint('[AppState] Failed to update Fast Drop retention: $e');
+      rethrow;
+    }
+  }
+
+  Future<Uint8List> downloadFastDrop(String id) async {
+    if (_syncServerUrl.isEmpty) {
+      throw Exception('Sync Server URL is not configured');
+    }
+    return await FastDropService.downloadDrop(_syncServerUrl, id);
   }
 }
