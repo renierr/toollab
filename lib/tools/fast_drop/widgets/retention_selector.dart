@@ -33,45 +33,39 @@ class RetentionSelector extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: options.map((opt) {
-              final isSelected = selectedValue == opt['value'];
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: ChoiceChip(
-                  label: Text(
-                    opt['label']!,
-                    style: TextStyle(
-                      color: isSelected
-                          ? Colors.white
-                          : theme.colorScheme.onSurface,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
-                  ),
-                  selected: isSelected,
-                  selectedColor: AppTheme.accentTeal,
-                  backgroundColor: theme.colorScheme.surfaceContainer,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(
-                      color: isSelected
-                          ? Colors.transparent
-                          : theme.colorScheme.outlineVariant,
-                    ),
-                  ),
-                  onSelected: (selected) {
-                    if (selected) {
-                      onChanged(opt['value']!);
-                    }
-                  },
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options.map((opt) {
+            final isSelected = selectedValue == opt['value'];
+            return ChoiceChip(
+              label: Text(
+                opt['label']!,
+                style: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : theme.colorScheme.onSurface,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
-              );
-            }).toList(),
-          ),
+              ),
+              selected: isSelected,
+              selectedColor: AppTheme.accentTeal,
+              backgroundColor: theme.colorScheme.surfaceContainer,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(
+                  color: isSelected
+                      ? Colors.transparent
+                      : theme.colorScheme.outlineVariant,
+                ),
+              ),
+              onSelected: (selected) {
+                if (selected) {
+                  onChanged(opt['value']!);
+                }
+              },
+            );
+          }).toList(),
         ),
       ],
     );

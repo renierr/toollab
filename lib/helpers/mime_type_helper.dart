@@ -17,6 +17,25 @@ class MimeTypeHelper {
       case 'gif':
         return 'image/gif';
       case 'txt':
+      case 'dart':
+      case 'py':
+      case 'go':
+      case 'java':
+      case 'c':
+      case 'cpp':
+      case 'h':
+      case 'hpp':
+      case 'ts':
+      case 'kt':
+      case 'gradle':
+      case 'properties':
+      case 'ini':
+      case 'conf':
+      case 'log':
+      case 'bat':
+      case 'sh':
+      case 'sql':
+      case 'toml':
         return 'text/plain';
       case 'md':
       case 'markdown':

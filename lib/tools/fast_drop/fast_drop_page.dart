@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
@@ -123,12 +124,16 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         ).showSnackBar(SnackBar(content: Text('Uploading ${file.name}...')));
       }
       final bytes = await file.readAsBytes();
+      String mimeType = file.mimeType ?? 'application/octet-stream';
+      if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
+        mimeType = MimeTypeHelper.getMimeType(file.name);
+      }
       await appState.uploadFastDrop(
         filename: file.name,
         bytes: bytes,
         retention: _retention,
         source: 'file',
-        mimeType: file.mimeType ?? 'application/octet-stream',
+        mimeType: mimeType,
       );
       if (mounted) {
         ScaffoldMessenger.of(
@@ -159,12 +164,16 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         ).showSnackBar(SnackBar(content: Text('Uploading ${file.name}...')));
       }
       final bytes = await File(file.path).readAsBytes();
+      String mimeType = file.mimeType;
+      if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
+        mimeType = MimeTypeHelper.getMimeType(file.name);
+      }
       await appState.uploadFastDrop(
         filename: file.name,
         bytes: bytes,
         retention: _retention,
         source: 'file',
-        mimeType: file.mimeType,
+        mimeType: mimeType,
       );
       setState(() {
         _pendingSharedFile = null;
@@ -466,10 +475,17 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     return const SizedBox();
   }
 
-  Widget _buildDropsList(AppState appState, ThemeData theme) {
+  Widget _buildDropsList(
+    AppState appState,
+    ThemeData theme, {
+    bool shrinkWrap = false,
+  }) {
     if (appState.isLoadingFastDrops && appState.fastDrops.isEmpty) {
       return const Center(
-        child: CircularProgressIndicator(color: AppTheme.accentTeal),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 32.0),
+          child: CircularProgressIndicator(color: AppTheme.accentTeal),
+        ),
       );
     }
 
@@ -550,24 +566,34 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       );
     }
 
+    final listView = ListView.builder(
+      padding: shrinkWrap
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: appState.fastDrops.length,
+      shrinkWrap: shrinkWrap,
+      physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
+      itemBuilder: (context, index) {
+        final item = appState.fastDrops[index];
+        return FastDropItemCard(
+          item: item,
+          onDelete: () => _onDelete(item),
+          onKeep: () => _onKeep(item),
+          onPreview: () => _onPreview(item),
+          onOpen: () => _onOpen(item),
+          onDownload: () => _onDownload(item),
+        );
+      },
+    );
+
+    if (shrinkWrap) {
+      return listView;
+    }
+
     return RefreshIndicator(
       onRefresh: () => appState.loadFastDrops(),
       color: AppTheme.accentTeal,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        itemCount: appState.fastDrops.length,
-        itemBuilder: (context, index) {
-          final item = appState.fastDrops[index];
-          return FastDropItemCard(
-            item: item,
-            onDelete: () => _onDelete(item),
-            onKeep: () => _onKeep(item),
-            onPreview: () => _onPreview(item),
-            onOpen: () => _onOpen(item),
-            onDownload: () => _onDownload(item),
-          );
-        },
-      ),
+      child: listView,
     );
   }
 
@@ -717,87 +743,96 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             child: !isConfigured
                 ? _buildNotConfiguredState(theme)
                 : ResponsiveOrientationLayout(
-                    portrait: Column(
-                      children: [
-                        SingleChildScrollView(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (_pendingSharedFile != null) ...[
-                                  _buildPendingSharedFileCard(theme),
-                                  const SizedBox(height: 16),
-                                ],
-                                RetentionSelector(
-                                  selectedValue: _retention,
-                                  onChanged: (val) {
-                                    setState(() => _retention = val);
-                                    DatabaseService.instance.setSetting(
-                                      'fast-drop',
-                                      'retention',
-                                      val,
-                                    );
-                                  },
+                    portrait: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_pendingSharedFile != null) ...[
+                              _buildPendingSharedFileCard(theme),
+                              const SizedBox(height: 16),
+                            ],
+                            RetentionSelector(
+                              selectedValue: _retention,
+                              onChanged: (val) {
+                                setState(() => _retention = val);
+                                DatabaseService.instance.setSetting(
+                                  'fast-drop',
+                                  'retention',
+                                  val,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            Opacity(
+                              opacity: isActionsEnabled ? 1.0 : 0.5,
+                              child: AbsorbPointer(
+                                absorbing: !isActionsEnabled,
+                                child: SizedBox(
+                                  height: Platform.isAndroid ? 160 : 290,
+                                  child: FileDropZone(
+                                    onFileSelected: _onFileSelected,
+                                    allowedExtensions: const [],
+                                    typeLabel: 'All Files',
+                                    accentColor:
+                                        FastDropTool.config.accentColor,
+                                    icon: Icons.cloud_upload_outlined,
+                                    title: Platform.isAndroid
+                                        ? 'Select a file to upload'
+                                        : 'Drop files here',
+                                    subtitle: 'or click to browse',
+                                    compact: Platform.isAndroid,
+                                  ),
                                 ),
-                                const SizedBox(height: 16),
-                                Opacity(
-                                  opacity: isActionsEnabled ? 1.0 : 0.5,
-                                  child: AbsorbPointer(
-                                    absorbing: !isActionsEnabled,
-                                    child: SizedBox(
-                                      height:
-                                          250, // Keep height large enough to prevent internal scrolling
-                                      child: FileDropZone(
-                                        onFileSelected: _onFileSelected,
-                                        allowedExtensions: const [],
-                                        typeLabel: 'All Files',
-                                        accentColor:
-                                            FastDropTool.config.accentColor,
-                                        icon: Icons.cloud_upload_outlined,
-                                        title: 'Drop files here',
-                                        subtitle: 'or click to browse',
-                                      ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              alignment: WrapAlignment.center,
+                              children: [
+                                OutlinedButton.icon(
+                                  onPressed: isActionsEnabled
+                                      ? _pasteFromClipboard
+                                      : null,
+                                  icon: const Icon(Icons.paste_outlined),
+                                  label: const Text('Paste Clipboard'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppTheme.accentTeal,
+                                    side: const BorderSide(
+                                      color: AppTheme.accentTeal,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 12,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  alignment: WrapAlignment.center,
-                                  children: [
-                                    OutlinedButton.icon(
-                                      onPressed: isActionsEnabled
-                                          ? _pasteFromClipboard
-                                          : null,
-                                      icon: const Icon(Icons.paste_outlined),
-                                      label: const Text('Paste Clipboard'),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppTheme.accentTeal,
-                                        side: const BorderSide(
-                                          color: AppTheme.accentTeal,
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
                               ],
                             ),
-                          ),
+                            const SizedBox(height: 24),
+                            const Divider(height: 1),
+                            const SizedBox(height: 16),
+                            Text(
+                              'DROPPED FILES',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildDropsList(appState, theme, shrinkWrap: true),
+                          ],
                         ),
-                        const Divider(height: 1),
-                        Expanded(child: _buildDropsList(appState, theme)),
-                      ],
+                      ),
                     ),
                     landscape: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -830,8 +865,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                                   child: AbsorbPointer(
                                     absorbing: !isActionsEnabled,
                                     child: SizedBox(
-                                      height:
-                                          250, // Keep height large enough to prevent internal scrolling
+                                      height: Platform.isAndroid ? 160 : 290,
                                       child: FileDropZone(
                                         onFileSelected: _onFileSelected,
                                         allowedExtensions: const [],
@@ -839,8 +873,11 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                                         accentColor:
                                             FastDropTool.config.accentColor,
                                         icon: Icons.cloud_upload_outlined,
-                                        title: 'Drop here to upload',
+                                        title: Platform.isAndroid
+                                            ? 'Select a file to upload'
+                                            : 'Drop here to upload',
                                         subtitle: 'or click to browse',
+                                        compact: Platform.isAndroid,
                                       ),
                                     ),
                                   ),
@@ -880,7 +917,13 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                           ),
                         ),
                         const VerticalDivider(width: 1),
-                        Expanded(child: _buildDropsList(appState, theme)),
+                        Expanded(
+                          child: _buildDropsList(
+                            appState,
+                            theme,
+                            shrinkWrap: false,
+                          ),
+                        ),
                       ],
                     ),
                   ),

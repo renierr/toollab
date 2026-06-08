@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/helpers/mime_type_helper.dart';
 import '../fast_drop_model.dart';
 
 class FastDropPreviewDialog extends StatefulWidget {
@@ -36,15 +37,19 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final resolvedMimeType = widget.item.type == 'application/octet-stream'
+        ? MimeTypeHelper.getMimeType(widget.item.filename)
+        : widget.item.type;
+
     final isText =
-        widget.item.type.startsWith('text/') ||
-        widget.item.type.contains('json') ||
-        widget.item.type.contains('javascript') ||
-        widget.item.type.contains('xml');
+        resolvedMimeType.startsWith('text/') ||
+        resolvedMimeType.contains('json') ||
+        resolvedMimeType.contains('javascript') ||
+        resolvedMimeType.contains('xml');
     final isMarkdown =
-        widget.item.type == 'text/markdown' ||
+        resolvedMimeType == 'text/markdown' ||
         widget.item.filename.endsWith('.md');
-    final isImage = widget.item.type.startsWith('image/');
+    final isImage = resolvedMimeType.startsWith('image/');
 
     return ResponsiveAlertDialog(
       title: Text(
@@ -148,9 +153,29 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    widget.item.type,
+                    resolvedMimeType,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      widget.onOpen();
+                    },
+                    icon: const Icon(Icons.open_in_new),
+                    label: const Text('Open with Tool / App'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.secondaryContainer,
+                      foregroundColor: theme.colorScheme.onSecondaryContainer,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ],
