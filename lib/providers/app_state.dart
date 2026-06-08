@@ -190,6 +190,12 @@ class AppState extends ChangeNotifier {
   Future<void> setSyncEnabled(bool value) async {
     _syncEnabled = value;
     await _settingsService.setSyncEnabled(value);
+    if (!value) {
+      _fastDrops = [];
+      _fastDropError = 'Cloud sync is disabled.';
+    } else {
+      loadFastDrops();
+    }
     notifyListeners();
   }
 
@@ -204,6 +210,12 @@ class AppState extends ChangeNotifier {
     await _settingsService.setSyncEnabled(enabled);
     await _settingsService.setSyncServerUrl(url);
     await _settingsService.setSyncUserId(userId);
+    if (!enabled) {
+      _fastDrops = [];
+      _fastDropError = 'Cloud sync is disabled.';
+    } else {
+      loadFastDrops();
+    }
     notifyListeners();
   }
 
@@ -343,6 +355,14 @@ class AppState extends ChangeNotifier {
   bool get isServerAvailable => _isServerAvailable;
 
   Future<void> loadFastDrops() async {
+    if (!_syncEnabled) {
+      _fastDropError = 'Cloud sync is disabled.';
+      _fastDrops = [];
+      _isServerAvailable = false;
+      notifyListeners();
+      return;
+    }
+
     if (_syncServerUrl.isEmpty) {
       _fastDropError =
           'Sync Server URL is not configured. Please configure it in settings.';
@@ -383,8 +403,14 @@ class AppState extends ChangeNotifier {
     required String source,
     required String mimeType,
   }) async {
+    if (!_syncEnabled) {
+      throw Exception('Cloud sync is disabled.');
+    }
     if (_syncServerUrl.isEmpty) {
       throw Exception('Sync Server URL is not configured');
+    }
+    if (!_isServerAvailable) {
+      throw Exception('Sync server is unreachable.');
     }
 
     _isUploadingFastDrop = true;
@@ -407,7 +433,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> deleteFastDrop(String id) async {
-    if (_syncServerUrl.isEmpty) return;
+    if (!_syncEnabled || _syncServerUrl.isEmpty || !_isServerAvailable) return;
     try {
       await FastDropService.deleteDrop(_syncServerUrl, id);
       await loadFastDrops();
@@ -418,7 +444,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> keepFastDrop(String id) async {
-    if (_syncServerUrl.isEmpty) return;
+    if (!_syncEnabled || _syncServerUrl.isEmpty || !_isServerAvailable) return;
     try {
       await FastDropService.keepDrop(_syncServerUrl, id);
       await loadFastDrops();
@@ -429,8 +455,14 @@ class AppState extends ChangeNotifier {
   }
 
   Future<Uint8List> downloadFastDrop(String id) async {
+    if (!_syncEnabled) {
+      throw Exception('Cloud sync is disabled.');
+    }
     if (_syncServerUrl.isEmpty) {
       throw Exception('Sync Server URL is not configured');
+    }
+    if (!_isServerAvailable) {
+      throw Exception('Sync server is unreachable.');
     }
     return await FastDropService.downloadDrop(_syncServerUrl, id);
   }
