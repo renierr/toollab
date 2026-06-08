@@ -45,7 +45,10 @@ class _MarkdownViewState extends State<MarkdownView>
   @override
   TextSpan formatText(MarkdownStyleSheet styleSheet, String code) {
     code = code.replaceAll(RegExp(r'\n$'), '');
-    return TextSpan(style: styleSheet.code, text: code);
+    return TextSpan(
+      style: styleSheet.code?.copyWith(backgroundColor: Colors.transparent),
+      text: code,
+    );
   }
 
   void _disposeRecognizers() {
@@ -151,16 +154,31 @@ class _MarkdownViewState extends State<MarkdownView>
     _preprocessAST(astNodes);
 
     final theme = Theme.of(context);
+
     final styleSheet = MarkdownStyleSheet.fromTheme(theme).copyWith(
       textScaler: TextScaler.linear(widget.scale),
+      code: TextStyle(
+        fontFamily: 'monospace',
+        fontSize: 13,
+        color: widget.accentColor,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+      ),
+      codeblockPadding: const EdgeInsets.symmetric(
+        horizontal: 16.0,
+        vertical: 12.0,
+      ),
+      codeblockDecoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8.0),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1.0),
+      ),
+      blockquotePadding: const EdgeInsets.all(12.0),
       blockquoteDecoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? theme.colorScheme.surfaceContainerHighest
-            : Colors.blue.shade100,
-        borderRadius: BorderRadius.circular(2.0),
+        color: theme.colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(6.0),
+        border: Border(left: BorderSide(color: widget.accentColor, width: 4.0)),
       ),
     );
-
     final MarkdownBuilder builder = MarkdownBuilder(
       delegate: this,
       selectable: false,
