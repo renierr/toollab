@@ -14,6 +14,7 @@ class MainActivity : FlutterActivity() {
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
     private val SHORTCUTS_CHANNEL = "de.renier.tool_lab/shortcuts"
     private val SHARING_CHANNEL = "de.renier.tool_lab/sharing"
+    private val CLIPBOARD_CHANNEL = "de.renier.tool_lab/clipboard"
     private var launchRoute: String? = null
     private var pendingSharedFile: Map<String, String>? = null
 
@@ -170,6 +171,35 @@ class MainActivity : FlutterActivity() {
                     else -> {
                         result.notImplemented()
                     }
+                }
+            }
+
+        // Clipboard MethodChannel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CLIPBOARD_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getClipboardImagePng" -> {
+                        try {
+                            val clipboard = getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                            val clipData = clipboard.primaryClip
+                            if (clipData != null && clipData.itemCount > 0) {
+                                val uri = clipData.getItemAt(0).uri
+                                if (uri != null) {
+                                    val inputStream = contentResolver.openInputStream(uri)
+                                    val bytes = inputStream?.readBytes()
+                                    inputStream?.close()
+                                    result.success(bytes)
+                                } else {
+                                    result.success(null)
+                                }
+                            } else {
+                                result.success(null)
+                            }
+                        } catch (e: Exception) {
+                            result.success(null)
+                        }
+                    }
+                    else -> result.notImplemented()
                 }
             }
 

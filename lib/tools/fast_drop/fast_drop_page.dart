@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:provider/provider.dart';
@@ -9,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
+import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -81,8 +81,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     final appState = context.read<AppState>();
     if (!appState.syncEnabled || !appState.isServerAvailable) return;
     try {
-      final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-      final text = clipboardData?.text;
+      final text = await ClipboardHelper.getText();
       if (text != null && text.trim().isNotEmpty) {
         final bytes = utf8.encode(text);
         final filename =
@@ -99,17 +98,38 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
           source: 'clipboard',
           mimeType: 'text/plain',
         );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Uploaded successfully!')),
-          );
-        }
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No text content found in clipboard')),
+        final imageBytes = await ClipboardHelper.getImagePng();
+        if (imageBytes != null && imageBytes.isNotEmpty) {
+          final filename =
+              'pasted-image-${DateTime.now().millisecondsSinceEpoch}.png';
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Pasting image from clipboard...')),
+            );
+          }
+          await appState.uploadFastDrop(
+            filename: filename,
+            bytes: imageBytes,
+            retention: _retention,
+            source: 'clipboard',
+            mimeType: 'image/png',
           );
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No text or image content found in clipboard'),
+              ),
+            );
+          }
+          return;
         }
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Uploaded successfully!')));
       }
     } catch (e) {
       if (mounted) {
