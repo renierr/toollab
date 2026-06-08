@@ -14,6 +14,8 @@ import '../providers/app_state.dart';
 import '../widgets/custom_notification.dart';
 import '../theme/theme.dart';
 
+import 'mime_type_helper.dart';
+
 class FileSaveHelper {
   static const _channel = MethodChannel('de.renier.tool_lab/file_save');
 
@@ -479,24 +481,8 @@ class FileSaveHelper {
     );
   }
 
-  /// Returns MIME type based on file extension.
   static String _mimeTypeFromName(String fileName) {
-    final ext = fileName.split('.').last.toLowerCase();
-    switch (ext) {
-      case 'pdf':
-        return 'application/pdf';
-      case 'json':
-        return 'application/json';
-      case 'csv':
-        return 'text/csv';
-      case 'png':
-        return 'image/png';
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg';
-      default:
-        return 'application/octet-stream';
-    }
+    return MimeTypeHelper.getMimeType(fileName);
   }
 
   /// Formats the success message and shows a custom notification dialog.
