@@ -155,6 +155,9 @@ When exposing file "Open" or "Share" actions to users inside your tool, use `Fil
   );
   ```
 
+> [!IMPORTANT]
+> **Temp File Manager**: When creating temp files for open/share, always use `TempFileManager.createFile()` (`lib/helpers/temp_file_manager.dart`). It tracks the file and cleans up on page dispose (`cleanTracked()`) or app close (`cleanSession()`). Register cleanup via `onDispose(() => TempFileManager.cleanTracked())` — external apps get their own copy/handle, and internal tools read into memory immediately.
+
 ---
 
 ## 4. SQLite Storage & Cloud Syncing
@@ -212,4 +215,5 @@ Avoid writing presentation logic or dropzones from scratch. Use existing widgets
 8. **Const Constructors**: Prefer using `const` constructors for widgets and in `build()` methods where possible to reduce rebuild cycles.
 9. **Lazy Lists**: Prefer `ListView.builder` or slivers for dynamic or performance-sensitive lists to keep frame rates high.
 10. **State Management & UI Binding**: Always bind UI screens to state using `context.watch<AppState>()` (or `Consumer<AppState>`) for automatic rebuilds, and use `context.read<AppState>()` inside buttons and lifecycle callbacks. Never update local state variables inside views for persistent/syncable data.
+11. **Temporary Files**: Use `TempFileManager` (`lib/helpers/temp_file_manager.dart`) for all temp file creation — never raw `getTemporaryDirectory()`. Temp files are auto-tracked. Register cleanup via `onDispose(() => TempFileManager.cleanTracked())` on any StatefulWidget that creates temp files. Files from StatelessWidgets or static helpers are cleaned by `cleanSession()` on app close. External apps get their own copy/handle, and internal tools read into memory immediately — so cleanup on dispose is always safe.
 
