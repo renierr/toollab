@@ -29,7 +29,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   final TransformationController _transformationController =
       TransformationController();
 
-  bool _isEditorOpen = true;
+  bool _isEditorOpen = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
