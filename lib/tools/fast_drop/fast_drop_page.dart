@@ -12,18 +12,19 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
-import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 
-import 'config.dart';
 import 'fast_drop_model.dart';
-import 'widgets/fast_drop_item_card.dart';
 import 'widgets/fast_drop_preview_dialog.dart';
-import 'widgets/retention_selector.dart';
+import 'widgets/fast_drop_upload_panel.dart';
+import 'widgets/fast_drop_status_banner.dart';
+import 'widgets/fast_drop_pending_card.dart';
+import 'widgets/fast_drop_list.dart';
+import 'widgets/fast_drop_not_configured.dart';
 
 class FastDropPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -69,6 +70,11 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         _pendingSharedFile = widget.sharedFile;
       });
     }
+  }
+
+  void _onRetentionChanged(String val) {
+    setState(() => _retention = val);
+    DatabaseService.instance.setSetting('fast-drop', 'retention', val);
   }
 
   Future<void> _pasteFromClipboard() async {
@@ -305,349 +311,6 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     );
   }
 
-  Widget _buildPendingSharedFileCard(ThemeData theme) {
-    if (_pendingSharedFile == null) return const SizedBox();
-    final appState = context.read<AppState>();
-    final isActionsEnabled = appState.syncEnabled && appState.isServerAvailable;
-
-    return Card(
-      color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.7),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.colorScheme.secondary, width: 1.5),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.share_outlined,
-                  color: theme.colorScheme.onSecondaryContainer,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Shared File Received',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSecondaryContainer,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: () {
-                    setState(() {
-                      _pendingSharedFile = null;
-                    });
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _pendingSharedFile!.name,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSecondaryContainer,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            if (_isUploadingPending)
-              const LinearProgressIndicator(color: AppTheme.accentTeal)
-            else
-              FilledButton.icon(
-                onPressed: isActionsEnabled ? _uploadPendingSharedFile : null,
-                icon: const Icon(Icons.cloud_upload_outlined),
-                label: const Text('Upload to Server'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.accentTeal,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBanner(AppState appState, ThemeData theme) {
-    if (!appState.syncEnabled) {
-      return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.statusAmber.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.statusAmber, width: 1),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.warning_amber_outlined,
-              color: AppTheme.statusAmber,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Cloud Sync is Disabled',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Fast Drop requires cloud sync to be enabled in settings.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            TextButton(
-              onPressed: () => context.push('/sync-settings'),
-              child: const Text('Enable'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (!appState.isServerAvailable) {
-      return Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppTheme.statusRed.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppTheme.statusRed, width: 1),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.cloud_off_outlined, color: AppTheme.statusRed),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Sync Server Unreachable',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Check connection or retry health check to enable operations.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.refresh, color: AppTheme.statusRed),
-              tooltip: 'Retry Connection',
-              onPressed: () => appState.loadFastDrops(),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return const SizedBox();
-  }
-
-  Widget _buildDropsList(
-    AppState appState,
-    ThemeData theme, {
-    bool shrinkWrap = false,
-  }) {
-    if (appState.isLoadingFastDrops && appState.fastDrops.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 32.0),
-          child: CircularProgressIndicator(color: AppTheme.accentTeal),
-        ),
-      );
-    }
-
-    if (appState.fastDropError != null && appState.fastDrops.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.cloud_off_outlined,
-                size: 64,
-                color: theme.colorScheme.error.withValues(alpha: 0.6),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Connection Status',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                appState.fastDropError!,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ),
-              const SizedBox(height: 24),
-              if (appState.syncEnabled)
-                FilledButton.icon(
-                  onPressed: () => appState.loadFastDrops(),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry connection'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppTheme.accentTeal,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (appState.fastDrops.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.cloud_queue_outlined,
-                size: 64,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No Drops Yet',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Drag and drop files or paste content from clipboard to save temporarily.',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final listView = ListView.builder(
-      padding: shrinkWrap
-          ? EdgeInsets.zero
-          : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: appState.fastDrops.length,
-      shrinkWrap: shrinkWrap,
-      physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
-      itemBuilder: (context, index) {
-        final item = appState.fastDrops[index];
-        return FastDropItemCard(
-          item: item,
-          onDelete: () => _onDelete(item),
-          onKeep: () => _onKeep(item),
-          onPreview: () => _onPreview(item),
-          onOpen: () => _onOpen(item),
-          onDownload: () => _onDownload(item),
-        );
-      },
-    );
-
-    if (shrinkWrap) {
-      return listView;
-    }
-
-    return RefreshIndicator(
-      onRefresh: () => appState.loadFastDrops(),
-      color: AppTheme.accentTeal,
-      child: listView,
-    );
-  }
-
-  Widget _buildNotConfiguredState(ThemeData theme) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.cloud_off_outlined,
-              size: 80,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Sync Server Not Configured',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Fast Drop requires a connection to the backend server. Please configure your Sync Server URL in settings to start dropping files.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: () => context.push('/sync-settings'),
-              icon: const Icon(Icons.settings_outlined),
-              label: const Text('Configure Server'),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.accentTeal,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
@@ -658,12 +321,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     return ToolLayout(
       title: 'Fast Drop',
       fullscreen: true,
-      showFloatingBackButton:
-          false, // Hide overlay back button to place our own
+      showFloatingBackButton: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Custom header that acts as native App Bar but behaves responsive
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
@@ -738,10 +399,13 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
               color: AppTheme.accentTeal,
               minHeight: 3,
             ),
-          _buildStatusBanner(appState, theme),
+          FastDropStatusBanner(
+            appState: appState,
+            onRetry: () => appState.loadFastDrops(),
+          ),
           Expanded(
             child: !isConfigured
-                ? _buildNotConfiguredState(theme)
+                ? const FastDropNotConfigured()
                 : ResponsiveOrientationLayout(
                     portrait: SingleChildScrollView(
                       child: Padding(
@@ -750,70 +414,25 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             if (_pendingSharedFile != null) ...[
-                              _buildPendingSharedFileCard(theme),
+                              FastDropPendingCard(
+                                file: _pendingSharedFile!,
+                                isUploading: _isUploadingPending,
+                                isActionsEnabled: isActionsEnabled,
+                                onUpload: _uploadPendingSharedFile,
+                                onDismiss: () {
+                                  setState(() {
+                                    _pendingSharedFile = null;
+                                  });
+                                },
+                              ),
                               const SizedBox(height: 16),
                             ],
-                            RetentionSelector(
-                              selectedValue: _retention,
-                              onChanged: (val) {
-                                setState(() => _retention = val);
-                                DatabaseService.instance.setSetting(
-                                  'fast-drop',
-                                  'retention',
-                                  val,
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            Opacity(
-                              opacity: isActionsEnabled ? 1.0 : 0.5,
-                              child: AbsorbPointer(
-                                absorbing: !isActionsEnabled,
-                                child: SizedBox(
-                                  height: Platform.isAndroid ? 160 : 290,
-                                  child: FileDropZone(
-                                    onFileSelected: _onFileSelected,
-                                    allowedExtensions: const [],
-                                    typeLabel: 'All Files',
-                                    accentColor:
-                                        FastDropTool.config.accentColor,
-                                    icon: Icons.cloud_upload_outlined,
-                                    title: Platform.isAndroid
-                                        ? 'Select a file to upload'
-                                        : 'Drop files here',
-                                    subtitle: 'or click to browse',
-                                    compact: Platform.isAndroid,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              alignment: WrapAlignment.center,
-                              children: [
-                                OutlinedButton.icon(
-                                  onPressed: isActionsEnabled
-                                      ? _pasteFromClipboard
-                                      : null,
-                                  icon: const Icon(Icons.paste_outlined),
-                                  label: const Text('Paste Clipboard'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppTheme.accentTeal,
-                                    side: const BorderSide(
-                                      color: AppTheme.accentTeal,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
-                                      vertical: 12,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            FastDropUploadPanel(
+                              retention: _retention,
+                              onRetentionChanged: _onRetentionChanged,
+                              onFileSelected: _onFileSelected,
+                              onPasteClipboard: _pasteFromClipboard,
+                              isActionsEnabled: isActionsEnabled,
                             ),
                             const SizedBox(height: 24),
                             const Divider(height: 1),
@@ -829,7 +448,15 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            _buildDropsList(appState, theme, shrinkWrap: true),
+                            FastDropList(
+                              appState: appState,
+                              shrinkWrap: true,
+                              onDelete: _onDelete,
+                              onKeep: _onKeep,
+                              onPreview: _onPreview,
+                              onOpen: _onOpen,
+                              onDownload: _onDownload,
+                            ),
                           ],
                         ),
                       ),
@@ -845,72 +472,25 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if (_pendingSharedFile != null) ...[
-                                  _buildPendingSharedFileCard(theme),
+                                  FastDropPendingCard(
+                                    file: _pendingSharedFile!,
+                                    isUploading: _isUploadingPending,
+                                    isActionsEnabled: isActionsEnabled,
+                                    onUpload: _uploadPendingSharedFile,
+                                    onDismiss: () {
+                                      setState(() {
+                                        _pendingSharedFile = null;
+                                      });
+                                    },
+                                  ),
                                   const SizedBox(height: 16),
                                 ],
-                                RetentionSelector(
-                                  selectedValue: _retention,
-                                  onChanged: (val) {
-                                    setState(() => _retention = val);
-                                    DatabaseService.instance.setSetting(
-                                      'fast-drop',
-                                      'retention',
-                                      val,
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                Opacity(
-                                  opacity: isActionsEnabled ? 1.0 : 0.5,
-                                  child: AbsorbPointer(
-                                    absorbing: !isActionsEnabled,
-                                    child: SizedBox(
-                                      height: Platform.isAndroid ? 160 : 290,
-                                      child: FileDropZone(
-                                        onFileSelected: _onFileSelected,
-                                        allowedExtensions: const [],
-                                        typeLabel: 'All Files',
-                                        accentColor:
-                                            FastDropTool.config.accentColor,
-                                        icon: Icons.cloud_upload_outlined,
-                                        title: Platform.isAndroid
-                                            ? 'Select a file to upload'
-                                            : 'Drop here to upload',
-                                        subtitle: 'or click to browse',
-                                        compact: Platform.isAndroid,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  alignment: WrapAlignment.center,
-                                  children: [
-                                    OutlinedButton.icon(
-                                      onPressed: isActionsEnabled
-                                          ? _pasteFromClipboard
-                                          : null,
-                                      icon: const Icon(Icons.paste_outlined),
-                                      label: const Text('Paste Clipboard'),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppTheme.accentTeal,
-                                        side: const BorderSide(
-                                          color: AppTheme.accentTeal,
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                FastDropUploadPanel(
+                                  retention: _retention,
+                                  onRetentionChanged: _onRetentionChanged,
+                                  onFileSelected: _onFileSelected,
+                                  onPasteClipboard: _pasteFromClipboard,
+                                  isActionsEnabled: isActionsEnabled,
                                 ),
                               ],
                             ),
@@ -918,10 +498,13 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                         ),
                         const VerticalDivider(width: 1),
                         Expanded(
-                          child: _buildDropsList(
-                            appState,
-                            theme,
-                            shrinkWrap: false,
+                          child: FastDropList(
+                            appState: appState,
+                            onDelete: _onDelete,
+                            onKeep: _onKeep,
+                            onPreview: _onPreview,
+                            onOpen: _onOpen,
+                            onDownload: _onDownload,
                           ),
                         ),
                       ],

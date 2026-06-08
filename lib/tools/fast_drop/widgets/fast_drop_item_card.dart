@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/helpers/mime_type_helper.dart';
 import '../fast_drop_model.dart';
-import 'dart:math' as math;
 
 class FastDropItemCard extends StatelessWidget {
   final FastDropItem item;
@@ -20,18 +21,6 @@ class FastDropItemCard extends StatelessWidget {
     required this.onOpen,
     required this.onDownload,
   });
-
-  String _formatSize(int bytes) {
-    if (bytes <= 0) return '0 B';
-    const suffixes = ['B', 'KB', 'MB', 'GB'];
-    final i = (math.log(bytes) / math.log(1024)).floor();
-    return '${(bytes / math.pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
-  }
-
-  String _formatTime(int timestamp) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-    return '${date.month}/${date.day}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
 
   IconData _getFileIcon(String type) {
     final mime = type.toLowerCase();
@@ -56,11 +45,14 @@ class FastDropItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final sizeText = _formatSize(item.size);
-    final icon = _getFileIcon(item.type);
+    final resolvedType = item.type == 'application/octet-stream'
+        ? MimeTypeHelper.getMimeType(item.filename)
+        : item.type;
+    final sizeText = FormatHelper.fileSize(item.size);
+    final icon = _getFileIcon(resolvedType);
     final isExpires = item.expiresAt != null;
     final expiresText = isExpires
-        ? 'Expires: ${_formatTime(item.expiresAt!)}'
+        ? 'Expires: ${FormatHelper.dateTime(item.expiresAt!)}'
         : 'Indefinite retention';
 
     return Card(
@@ -161,7 +153,7 @@ class FastDropItemCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            item.type,
+                            resolvedType,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurface.withValues(
                                 alpha: 0.6,
