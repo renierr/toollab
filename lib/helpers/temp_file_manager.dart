@@ -1,13 +1,87 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+
+// ---------------------------------------------------------------------------
+// Private raw I/O — no tracking, shared by both global and scope APIs
+// ---------------------------------------------------------------------------
+
+String _sessionPath(Directory dir, String name) => '${dir.path}/$name';
+
+Future<String> _rawCreateFile(String name, {Uint8List? bytes}) async {
+  final dir = await TempFileManager.sessionDir;
+  final file = File(_sessionPath(dir, name));
+  await file.create(recursive: true);
+  if (bytes != null) await file.writeAsBytes(bytes);
+  return file.path;
+}
+
+Future<File> _rawResolveFile(String name) async {
+  final dir = await TempFileManager.sessionDir;
+  return File(_sessionPath(dir, name));
+}
+
+Future<Uint8List> _rawReadFile(String name) async {
+  return await (await _rawResolveFile(name)).readAsBytes();
+}
+
+Future<void> _rawDeleteFile(String name) async {
+  final file = await _rawResolveFile(name);
+  if (await file.exists()) await file.delete();
+}
+
+// ---------------------------------------------------------------------------
+// Scope — per-widget/controller tracking
+// ---------------------------------------------------------------------------
+
+/// A scope that tracks temp files created within a widget/controller lifecycle.
+/// Call [cleanTracked] on dispose to remove only this scope's files.
+class TempFileScope {
+  final List<String> _tracked = [];
+
+  Future<String> createFile(String name, {Uint8List? bytes}) async {
+    final path = await _rawCreateFile(name, bytes: bytes);
+    if (!_tracked.contains(name)) _tracked.add(name);
+    return path;
+  }
+
+  Future<Uint8List> readFile(String name) => _rawReadFile(name);
+
+  Future<File> resolveFile(String name) => _rawResolveFile(name);
+
+  Future<void> deleteFile(String name) async {
+    await _rawDeleteFile(name);
+    _tracked.remove(name);
+  }
+
+  Future<void> cleanTracked() async {
+    for (final name in _tracked.toList()) {
+      await _rawDeleteFile(name);
+    }
+    _tracked.clear();
+  }
+
+  int get trackedCount => _tracked.length;
+
+  Future<int> trackedBytes() async {
+    int total = 0;
+    for (final name in _tracked) {
+      try {
+        final file = await _rawResolveFile(name);
+        if (await file.exists()) total += await file.length();
+      } catch (_) {}
+    }
+    return total;
+  }
+}
 
 class TempFileManager {
   TempFileManager._();
 
   static Directory? _baseDir;
   static Directory? _sessionDir;
-  static final List<String> _tracked = [];
+  static final List<String> _globalTracked = [];
 
   static String get _namespace => 'tool_lab';
 
@@ -19,32 +93,31 @@ class TempFileManager {
     return _baseDir!;
   }
 
+  static Future<Directory> get sessionDir async {
+    _sessionDir ??= await _createSession();
+    return _sessionDir!;
+  }
+
   /// Creates a new session dir. Orphan cleanup runs in background.
   static Future<void> init() async {
     final base = await _base;
     final sessionId = DateTime.now().millisecondsSinceEpoch.toString();
     _sessionDir = Directory('${base.path}/$sessionId');
     await _sessionDir!.create(recursive: true);
-    // fire-and-forget orphan cleanup
     _cleanupOrphans(base);
   }
 
-  static Future<void> _cleanupOrphans(Directory base) async {
+  static void _cleanupOrphans(Directory base) {
     try {
       final entries = base.listSync();
       for (final entry in entries) {
         if (entry is Directory && entry.path != _sessionDir?.path) {
-          await entry.delete(recursive: true);
+          unawaited(entry.delete(recursive: true));
         }
       }
     } catch (e) {
       debugPrint('TempFileManager: orphan cleanup error: $e');
     }
-  }
-
-  static Future<Directory> get sessionDir async {
-    _sessionDir ??= await _createSession();
-    return _sessionDir!;
   }
 
   static Future<Directory> _createSession() async {
@@ -56,65 +129,71 @@ class TempFileManager {
     return dir;
   }
 
-  /// Create a tracked temp file. Returns the absolute path.
+  // ---------------------------------------------------------------------------
+  // Global API – for StatelessWidgets / static helpers
+  // ---------------------------------------------------------------------------
+
   static Future<String> createFile(String name, {Uint8List? bytes}) async {
-    final dir = await sessionDir;
-    final file = File('${dir.path}/$name');
-    await file.create(recursive: true);
-    if (bytes != null) await file.writeAsBytes(bytes);
-    if (!_tracked.contains(name)) _tracked.add(name);
-    return file.path;
+    final path = await _rawCreateFile(name, bytes: bytes);
+    if (!_globalTracked.contains(name)) _globalTracked.add(name);
+    return path;
   }
 
-  /// Read bytes from a tracked temp file.
-  static Future<Uint8List> readFile(String name) async {
-    final file = await resolveFile(name);
-    return await file.readAsBytes();
-  }
+  static Future<Uint8List> readFile(String name) => _rawReadFile(name);
 
-  /// Resolve a [File] reference within the session dir.
-  static Future<File> resolveFile(String name) async {
-    final dir = await sessionDir;
-    return File('${dir.path}/$name');
-  }
+  static Future<File> resolveFile(String name) => _rawResolveFile(name);
 
-  /// Delete a single tracked file.
   static Future<void> deleteFile(String name) async {
-    final file = await resolveFile(name);
-    if (await file.exists()) await file.delete();
-    _tracked.remove(name);
+    await _rawDeleteFile(name);
+    _globalTracked.remove(name);
   }
 
-  /// Remove all tracked files for this session.
   static Future<void> cleanTracked() async {
-    for (final name in _tracked.toList()) {
-      await deleteFile(name);
+    for (final name in _globalTracked.toList()) {
+      await _rawDeleteFile(name);
     }
-    _tracked.clear();
+    _globalTracked.clear();
   }
 
-  /// Delete the entire current session dir and all tracked files.
-  static Future<void> cleanSession() async {
-    if (_sessionDir != null && await _sessionDir!.exists()) {
-      await _sessionDir!.delete(recursive: true);
-    }
-    _tracked.clear();
-    _sessionDir = null;
-    _baseDir = null;
-  }
+  static int get trackedCount => _globalTracked.length;
 
-  /// Total bytes of tracked files.
   static Future<int> trackedBytes() async {
     int total = 0;
-    for (final name in _tracked) {
+    for (final name in _globalTracked) {
       try {
-        final file = await resolveFile(name);
+        final file = await _rawResolveFile(name);
         if (await file.exists()) total += await file.length();
       } catch (_) {}
     }
     return total;
   }
 
-  /// Number of tracked files.
-  static int get trackedCount => _tracked.length;
+  // ---------------------------------------------------------------------------
+  // Scope API
+  // ---------------------------------------------------------------------------
+
+  static TempFileScope createScope() => TempFileScope();
+
+  // ---------------------------------------------------------------------------
+  // Session-level cleanup
+  // ---------------------------------------------------------------------------
+
+  static Future<void> cleanSession() async {
+    if (_sessionDir != null && await _sessionDir!.exists()) {
+      await _sessionDir!.delete(recursive: true);
+    }
+    _globalTracked.clear();
+    _sessionDir = null;
+    _baseDir = null;
+  }
+
+  static Future<void> cleanAll() async {
+    _globalTracked.clear();
+    _sessionDir = null;
+    if (_baseDir != null && await _baseDir!.exists()) {
+      await _baseDir!.delete(recursive: true);
+    }
+    _baseDir = null;
+    await init();
+  }
 }

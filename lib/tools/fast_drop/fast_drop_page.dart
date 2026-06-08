@@ -36,6 +36,7 @@ class FastDropPage extends StatefulWidget {
 }
 
 class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
+  late final TempFileScope _scope = TempFileManager.createScope();
   String _retention = '24';
   SharedFile? _pendingSharedFile;
   bool _isUploadingPending = false;
@@ -43,7 +44,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   @override
   void initState() {
     super.initState();
-    onDispose(() => TempFileManager.cleanTracked());
+    onDispose(() => _scope.cleanTracked());
 
     _pendingSharedFile = widget.sharedFile;
 
@@ -300,7 +301,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         );
       }
       final bytes = await appState.downloadFastDrop(item.id);
-      final tempPath = await TempFileManager.createFile(
+      final tempPath = await _scope.createFile(
         'fast_drop_${item.filename}',
         bytes: bytes,
       );

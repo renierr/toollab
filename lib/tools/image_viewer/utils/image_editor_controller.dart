@@ -59,6 +59,8 @@ class ImageEditorController extends ChangeNotifier {
   int get historyIndex => _historyIndex;
   int get historyLength => _history.length;
 
+  late final TempFileScope _scope = TempFileManager.createScope();
+
   ImageEditorController() {
     widthController.addListener(_onWidthChanged);
     heightController.addListener(_onHeightChanged);
@@ -71,6 +73,7 @@ class ImageEditorController extends ChangeNotifier {
     heightController.dispose();
     _uiImage?.dispose();
     _uiImage = null;
+    _scope.cleanTracked();
     super.dispose();
   }
 
@@ -600,7 +603,7 @@ class ImageEditorController extends ChangeNotifier {
           ? '${originalBase}_resized.$ext'
           : '$originalBase.$ext';
 
-      final tempPath = await TempFileManager.createFile(
+      final tempPath = await _scope.createFile(
         suggestedName,
         bytes: exportedBytes,
       );

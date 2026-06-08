@@ -30,8 +30,12 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **Database Test Isolation**: Database unit/widget tests must never read or write to the standard persistent database. Always set `dbPathOverride` to `inMemoryDatabasePath` on `DatabaseService.instance` and close the connection in `tearDownAll` to ensure test state is clean and fully isolated in memory.
 - **Platform Scope**: iOS and macOS are NOT supported. Tools and services do not need to handle, verify, or support iOS or macOS platforms. Focus purely on Android and Windows.
 - **Temporary Files & Plans**: Always use the `.agents/temp/` folder (create if not exists) for storing plans, temporary files, or agent scratch files. Never commit this folder.
-- **Temp File Manager**: Always use `TempFileManager` (`lib/helpers/temp_file_manager.dart`) for all app temp file creation/reading/cleanup. Never use raw `getTemporaryDirectory()` + manual `File()` — this leaves orphans and bypasses namespace isolation. Register cleanup via `onDispose(() => TempFileManager.cleanTracked())` on any widget or controller that creates temp files.
-- **Large Data → Temp Files**: Prefer `TempFileManager.createFile()` for large binary data (images, PDFs, exports) instead of holding large `Uint8List` in memory. Small in-memory bytes (< 100 KB) are fine for fast access.
+- **Temp File Manager**: Always use `TempFileManager` (`lib/helpers/temp_file_manager.dart`) for all app temp file creation/reading/cleanup. Never use raw `getTemporaryDirectory()` + manual `File()` — this leaves orphans and bypasses namespace isolation.
+- **Temp File Lifecycle** — Three cleanup levels:
+  1. **`TempFileScope.cleanTracked()`** — per-widget/controller cleanup. Create a scope via `TempFileManager.createScope()`, store as `late final TempFileScope _scope`, and register cleanup via `onDispose(() => _scope.cleanTracked())`. Only this scope's files are removed. Always use scoped tracking for StatefulWidgets and ChangeNotifiers.
+  2. **`TempFileManager.cleanTracked()`** — global tracked file cleanup (for files created via the static `TempFileManager.createFile()`). Only relevant for StatelessWidgets or static helpers without lifecycle.
+  3. **`TempFileManager.cleanSession()`** / **`cleanAll()`** — session-level / nuclear cleanup. `cleanSession` removes the current session dir; `cleanAll` nukes the entire `tool_lab/` base dir and re-initializes (use from maintenance page). `cleanSession` fires automatically on `AppLifecycleState.detached`.
+- **Large Data → Temp Files**: Prefer `TempFileManager.createFile()` or `scope.createFile()` for large binary data (images, PDFs, exports) instead of holding large `Uint8List` in memory. Small in-memory bytes (< 100 KB) are fine for fast access.
 
 ---
 
