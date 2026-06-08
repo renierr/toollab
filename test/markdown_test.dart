@@ -22,10 +22,7 @@ efvevf
     );
     await tester.pumpAndSettle();
 
-    // Verify checkbox count
     expect(find.byType(MarkdownCheckbox), findsNWidgets(3));
-
-    // Verify task texts exactly
     expect(find.text('ed e'), findsOneWidget);
     expect(find.text('eded ed'), findsOneWidget);
     expect(find.text('efvevf'), findsOneWidget);
@@ -48,15 +45,11 @@ efvevf
       );
       await tester.pumpAndSettle();
 
-      // Verify checkbox count
       expect(find.byType(MarkdownCheckbox), findsNWidgets(3));
-
-      // Verify task texts exactly
       expect(find.text('ed e'), findsOneWidget);
       expect(find.text('eded ed'), findsOneWidget);
       expect(find.text('jzzjjz'), findsOneWidget);
 
-      // Verify that they are split into separate columns
       final listColumns = find.descendant(
         of: find.byType(MarkdownView),
         matching: find.byType(Column),
@@ -83,18 +76,12 @@ efvevf
       );
       await tester.pumpAndSettle();
 
-      // Verify checkbox count
       expect(find.byType(MarkdownCheckbox), findsNWidgets(3));
-
-      // Verify task texts exactly
       expect(find.text('ed e'), findsOneWidget);
       expect(find.text('eded ed'), findsOneWidget);
       expect(find.text('jzzjjz'), findsOneWidget);
-
-      // Verify that the spacing is rendered as rich text containing nbsp
       expect(find.textContaining('\u00a0'), findsWidgets);
 
-      // Verify that they are split into separate columns
       final listColumns = find.descendant(
         of: find.byType(MarkdownView),
         matching: find.byType(Column),
@@ -102,4 +89,22 @@ efvevf
       expect(listColumns.evaluate().length, greaterThanOrEqualTo(2));
     },
   );
+
+  testWidgets('Test Case 4: Code block with long line does not throw errors', (
+    WidgetTester tester,
+  ) async {
+    const data = '''
+```
+This is an extremely long line in a code block that should definitely overflow the screen width and be scrollable horizontally.
+```
+''';
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: MarkdownView(data: data)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('overflow the screen width'), findsOneWidget);
+  });
 }
