@@ -13,6 +13,7 @@ import 'package:tool_lab/pages/sync_settings_page.dart';
 import 'package:tool_lab/pages/maintenance_page.dart';
 import 'package:tool_lab/pages/shortcuts_settings_page.dart';
 import 'package:tool_lab/pages/about_page.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
@@ -200,6 +201,8 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkPendingSharing();
+    } else if (state == AppLifecycleState.detached) {
+      TempFileManager.cleanSession();
     }
   }
 

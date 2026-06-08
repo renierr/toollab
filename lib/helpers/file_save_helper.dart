@@ -35,11 +35,6 @@ class FileSaveHelper {
     String Function(String error)? errorMessageBuilder,
   }) async {
     try {
-      // Clean up old temporary files in the background
-      cleanUpTempFiles().catchError(
-        (e) => debugPrint("Temp cleanup failed: $e"),
-      );
-
       String? destPath;
       final mimeType = _mimeTypeFromName(suggestedName);
 
@@ -301,32 +296,6 @@ class FileSaveHelper {
           GoRouter.of(context).push(selectedTool.route, extra: file);
         }
       }
-    }
-  }
-
-  /// Cleans up old temporary files created by the application in the temp directory.
-  static Future<void> cleanUpTempFiles() async {
-    try {
-      final tempDir = await getTemporaryDirectory();
-      if (await tempDir.exists()) {
-        final List<FileSystemEntity> files = tempDir.listSync();
-        for (final file in files) {
-          if (file is File) {
-            final name = file.path.split(Platform.pathSeparator).last;
-            if (name.startsWith('tool_lab_db_') ||
-                name.startsWith('tool_lab_settings_')) {
-              final lastModified = await file.lastModified();
-              final now = DateTime.now();
-              if (now.difference(lastModified).inMinutes > 5) {
-                await file.delete();
-                debugPrint("Cleaned up temp file: ${file.path}");
-              }
-            }
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint("Error cleaning up temp files: $e");
     }
   }
 
