@@ -345,12 +345,21 @@ class AppState extends ChangeNotifier {
   List<FastDropItem> _fastDrops = [];
   bool _isLoadingFastDrops = false;
   bool _isUploadingFastDrop = false;
+  bool _isDownloadingFastDrop = false;
+  (int sent, int total)? _fastDropUploadProgress;
+  (int received, int total)? _fastDropDownloadProgress;
+  bool _cancelUploadRequested = false;
+  bool _cancelDownloadRequested = false;
   String? _fastDropError;
   bool _isServerAvailable = true;
 
   List<FastDropItem> get fastDrops => _fastDrops;
   bool get isLoadingFastDrops => _isLoadingFastDrops;
   bool get isUploadingFastDrop => _isUploadingFastDrop;
+  bool get isDownloadingFastDrop => _isDownloadingFastDrop;
+  (int sent, int total)? get fastDropUploadProgress => _fastDropUploadProgress;
+  (int received, int total)? get fastDropDownloadProgress =>
+      _fastDropDownloadProgress;
   String? get fastDropError => _fastDropError;
   bool get isServerAvailable => _isServerAvailable;
 
@@ -396,6 +405,14 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  void cancelUploadFastDrop() {
+    _cancelUploadRequested = true;
+  }
+
+  void cancelDownloadFastDrop() {
+    _cancelDownloadRequested = true;
+  }
+
   Future<void> uploadFastDrop({
     required String filename,
     required Uint8List bytes,
@@ -413,7 +430,9 @@ class AppState extends ChangeNotifier {
       throw Exception('Sync server is unreachable.');
     }
 
+    _cancelUploadRequested = false;
     _isUploadingFastDrop = true;
+    _fastDropUploadProgress = null;
     notifyListeners();
 
     try {
@@ -424,10 +443,17 @@ class AppState extends ChangeNotifier {
         retention: retention,
         source: source,
         mimeType: mimeType,
+        onProgress: (sent, total) {
+          _fastDropUploadProgress = (sent, total);
+          notifyListeners();
+        },
+        isCancelled: () => _cancelUploadRequested,
       );
       await loadFastDrops();
     } finally {
+      _cancelUploadRequested = false;
       _isUploadingFastDrop = false;
+      _fastDropUploadProgress = null;
       notifyListeners();
     }
   }
@@ -464,6 +490,27 @@ class AppState extends ChangeNotifier {
     if (!_isServerAvailable) {
       throw Exception('Sync server is unreachable.');
     }
-    return await FastDropService.downloadDrop(_syncServerUrl, id);
+
+    _cancelDownloadRequested = false;
+    _isDownloadingFastDrop = true;
+    _fastDropDownloadProgress = null;
+    notifyListeners();
+
+    try {
+      return await FastDropService.downloadDrop(
+        baseUrl: _syncServerUrl,
+        id: id,
+        onProgress: (received, total) {
+          _fastDropDownloadProgress = (received, total);
+          notifyListeners();
+        },
+        isCancelled: () => _cancelDownloadRequested,
+      );
+    } finally {
+      _cancelDownloadRequested = false;
+      _isDownloadingFastDrop = false;
+      _fastDropDownloadProgress = null;
+      notifyListeners();
+    }
   }
 }

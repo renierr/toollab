@@ -25,6 +25,7 @@ import 'widgets/fast_drop_status_banner.dart';
 import 'widgets/fast_drop_pending_card.dart';
 import 'widgets/fast_drop_list.dart';
 import 'widgets/fast_drop_not_configured.dart';
+import 'widgets/fast_drop_progress_indicator.dart';
 
 class FastDropPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -135,9 +136,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       }
     } catch (e) {
       if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to read clipboard: $e')));
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     }
   }
@@ -170,9 +172,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       }
     } catch (e) {
       if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     }
   }
@@ -217,9 +220,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         _isUploadingPending = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to upload shared file: $e')),
-        );
+        final msg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     }
   }
@@ -285,9 +289,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       );
     } catch (e) {
       if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Download failed: $e')));
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     }
   }
@@ -315,9 +320,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       }
     } catch (e) {
       if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to open file: $e')));
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     }
   }
@@ -417,10 +423,21 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             ),
           ),
           const Divider(height: 1),
-          if (appState.isUploadingFastDrop)
-            const LinearProgressIndicator(
-              color: AppTheme.accentTeal,
-              minHeight: 3,
+          if (appState.isUploadingFastDrop &&
+              appState.fastDropUploadProgress != null)
+            FastDropProgressIndicator(
+              label: 'Uploading',
+              sent: appState.fastDropUploadProgress!.$1,
+              total: appState.fastDropUploadProgress!.$2,
+              onCancel: () => context.read<AppState>().cancelUploadFastDrop(),
+            ),
+          if (appState.isDownloadingFastDrop &&
+              appState.fastDropDownloadProgress != null)
+            FastDropProgressIndicator(
+              label: 'Downloading',
+              sent: appState.fastDropDownloadProgress!.$1,
+              total: appState.fastDropDownloadProgress!.$2,
+              onCancel: () => context.read<AppState>().cancelDownloadFastDrop(),
             ),
           FastDropStatusBanner(
             appState: appState,
