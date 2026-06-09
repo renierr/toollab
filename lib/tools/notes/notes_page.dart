@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -10,6 +9,7 @@ import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/tools/notes/config.dart';
+import 'package:tool_lab/tools/notes/widgets/markdown_drop_zone.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_list.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_toolbar.dart';
 import 'package:tool_lab/tools/notes/widgets/note_editor.dart';
@@ -32,7 +32,6 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
   bool _isViewing = false;
   Map<String, dynamic>? _viewingNote;
   String _searchQuery = '';
-  bool _dragging = false;
 
   @override
   void initState() {
@@ -212,7 +211,6 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     final notes = appState.notes;
-    final theme = Theme.of(context);
 
     if (_isEditing) {
       return NoteEditor(
@@ -252,119 +250,54 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       title: NotesTool.config.name,
       fullscreen: true,
       showFloatingBackButton: false,
-      child: DropTarget(
-        onDragDone: (details) async {
-          if (details.files.isNotEmpty) {
-            for (final file in details.files) {
-              final name = file.name.toLowerCase();
-              if (name.endsWith('.md') || name.endsWith('.txt')) {
-                final diskFile = File(file.path);
-                await _importDroppedFile(diskFile, file.name);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Only Markdown (.md) or Text (.txt) files are supported',
-                    ),
-                  ),
-                );
-              }
-            }
-          }
-        },
-        onDragEntered: (_) => setState(() => _dragging = true),
-        onDragExited: (_) => setState(() => _dragging = false),
-        child: Stack(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openEditor(),
+        backgroundColor: AppTheme.accentTeal,
+        foregroundColor: Colors.white,
+        shape: const CircleBorder(),
+        elevation: 4,
+        child: const Icon(Icons.add),
+      ),
+      child: MarkdownDropZone(
+        onFileDropped: _importDroppedFile,
+        child: Column(
           children: [
-            Column(
-              children: [
-                NotesToolbar(
-                  onSearchChanged: (query) {
-                    setState(() {
-                      _searchQuery = query;
-                    });
-                    appState.loadNotes(query: query);
-                  },
-                  onImportMarkdown: (content) {
-                    _openEditor(content: content);
-                  },
-                  onRefresh: () {
-                    appState.loadNotes(query: _searchQuery);
-                  },
-                ),
-                Expanded(
-                  child: appState.isLoadingNotes
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppTheme.accentTeal,
-                            ),
-                          ),
-                        )
-                      : NotesList(
-                          notes: notes,
-                          onTap: _openViewer,
-                          onEdit: (note) {
-                            _openEditor(
-                              id: note['id'] as int,
-                              content: note['content'] as String,
-                            );
-                          },
-                          onDelete: (note) {
-                            _deleteNote(note['id'] as int);
-                          },
-                        ),
-                ),
-              ],
+            NotesToolbar(
+              onSearchChanged: (query) {
+                setState(() {
+                  _searchQuery = query;
+                });
+                appState.loadNotes(query: query);
+              },
+              onImportMarkdown: (content) {
+                _openEditor(content: content);
+              },
+              onRefresh: () {
+                appState.loadNotes(query: _searchQuery);
+              },
             ),
-            if (_dragging)
-              Container(
-                color: theme.colorScheme.surface.withValues(alpha: 0.8),
-                child: Center(
-                  child: Container(
-                    width: 320,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: AppTheme.accentTeal,
-                        width: 3,
-                        style: BorderStyle.solid,
+            Expanded(
+              child: appState.isLoadingNotes
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppTheme.accentTeal,
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(24),
-                      color: AppTheme.accentTeal.withValues(alpha: 0.1),
+                    )
+                  : NotesList(
+                      notes: notes,
+                      onTap: _openViewer,
+                      onEdit: (note) {
+                        _openEditor(
+                          id: note['id'] as int,
+                          content: note['content'] as String,
+                        );
+                      },
+                      onDelete: (note) {
+                        _deleteNote(note['id'] as int);
+                      },
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.cloud_upload_outlined,
-                          size: 64,
-                          color: AppTheme.accentTeal,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Drop Markdown file here',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.accentTeal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: FloatingActionButton(
-                onPressed: () => _openEditor(),
-                backgroundColor: AppTheme.accentTeal,
-                foregroundColor: Colors.white,
-                shape: const CircleBorder(),
-                elevation: 4,
-                child: const Icon(Icons.add),
-              ),
             ),
           ],
         ),
