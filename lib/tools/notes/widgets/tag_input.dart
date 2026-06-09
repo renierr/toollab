@@ -98,6 +98,10 @@ class _TagInputState extends State<TagInput> {
   }
 
   void _onSubmit(String value) {
+    if (_filteredSuggestions.isNotEmpty) {
+      _addTag(_filteredSuggestions.first);
+      return;
+    }
     _addTag(value);
     setState(() {
       _showSuggestions = false;
@@ -135,69 +139,83 @@ class _TagInputState extends State<TagInput> {
               ),
             ),
             SizedBox(
-              width: 140,
-              child: TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                onChanged: _onTextChanged,
-                onSubmitted: _onSubmit,
-                decoration: InputDecoration(
-                  hintText: 'Add tag...',
-                  hintStyle: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
-                  ),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.3),
+              width: 180,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    onChanged: _onTextChanged,
+                    onSubmitted: _onSubmit,
+                    decoration: InputDecoration(
+                      hintText: 'Add tag...',
+                      hintStyle: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.35,
+                        ),
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: const BorderSide(
+                          color: AppTheme.accentTeal,
+                        ),
+                      ),
                     ),
+                    style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                  if (_showSuggestions)
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      constraints: const BoxConstraints(maxHeight: 140),
+                      child: Material(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: _filteredSuggestions.length,
+                          itemBuilder: (context, index) {
+                            final suggestion = _filteredSuggestions[index];
+                            return ListTile(
+                              dense: true,
+                              title: Text(
+                                suggestion,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                              onTap: () => _onSubmit(suggestion),
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: const BorderSide(color: AppTheme.accentTeal),
-                  ),
-                ),
-                style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
+                ],
               ),
             ),
           ],
         ),
-        if (_showSuggestions)
-          Container(
-            margin: const EdgeInsets.only(top: 4),
-            constraints: const BoxConstraints(maxHeight: 140),
-            child: Material(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: _filteredSuggestions.length,
-                itemBuilder: (context, index) {
-                  final suggestion = _filteredSuggestions[index];
-                  return ListTile(
-                    dense: true,
-                    title: Text(
-                      suggestion,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    onTap: () => _onSubmit(suggestion),
-                  );
-                },
-              ),
-            ),
-          ),
       ],
     );
   }
