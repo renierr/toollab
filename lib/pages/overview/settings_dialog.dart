@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tool_lab/providers/app_state.dart';
 
 class OverviewSettingsDialog extends StatelessWidget {
   const OverviewSettingsDialog({super.key});
@@ -17,7 +15,6 @@ class OverviewSettingsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final appState = context.watch<AppState>();
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -77,68 +74,17 @@ class OverviewSettingsDialog extends StatelessWidget {
                 },
               ),
               const Divider(height: 1),
-              SwitchListTile(
-                title: const Text('Compact View'),
-                subtitle: const Text('Smaller cards, more tools per row'),
-                value: appState.compactMode,
-                onChanged: (_) => context.read<AppState>().toggleCompactMode(),
-              ),
-              const Divider(height: 1),
-              SwitchListTile(
-                title: const Text('System Notifications'),
-                subtitle: const Text('Enable or disable system notifications'),
-                value: appState.systemNotificationsEnabled,
-                onChanged: (value) => context
-                    .read<AppState>()
-                    .setSystemNotificationsEnabled(value),
-              ),
-              const Divider(height: 1),
               ListTile(
-                title: const Text('Sort by'),
-                trailing: DropdownButton<String>(
-                  value: appState.sortBy,
-                  underline: const SizedBox(),
-                  items: const [
-                    DropdownMenuItem(value: 'recent', child: Text('Recent')),
-                    DropdownMenuItem(
-                      value: 'order',
-                      child: Text('Default order'),
-                    ),
-                    DropdownMenuItem(value: 'name', child: Text('Name')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      context.read<AppState>().setSortBy(value);
-                    }
-                  },
+                leading: const Icon(Icons.palette_outlined),
+                title: const Text('Appearance'),
+                subtitle: const Text(
+                  'Theme, compact view, notifications, sorting',
                 ),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                title: const Text('Theme'),
-                trailing: DropdownButton<ThemeMode>(
-                  value: appState.themeMode,
-                  underline: const SizedBox(),
-                  items: const [
-                    DropdownMenuItem(
-                      value: ThemeMode.system,
-                      child: Text('System'),
-                    ),
-                    DropdownMenuItem(
-                      value: ThemeMode.light,
-                      child: Text('Light'),
-                    ),
-                    DropdownMenuItem(
-                      value: ThemeMode.dark,
-                      child: Text('Dark'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      context.read<AppState>().setThemeMode(value);
-                    }
-                  },
-                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.push('/appearance-settings');
+                },
               ),
               const Divider(height: 1),
               ListTile(
