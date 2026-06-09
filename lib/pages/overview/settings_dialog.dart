@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tool_lab/pages/overview/open_with_defaults_dialog.dart';
 
 class OverviewSettingsDialog extends StatelessWidget {
   const OverviewSettingsDialog({super.key});
@@ -71,6 +72,19 @@ class OverviewSettingsDialog extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).pop();
                   context.push('/shortcut-settings');
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.open_in_new_outlined),
+                title: const Text('Open with Defaults'),
+                subtitle: const Text(
+                  'Manage default tool associations for shared files',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  OpenWithDefaultsDialog.show(context);
                 },
               ),
               const Divider(height: 1),
