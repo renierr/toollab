@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -108,6 +109,21 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       }
     } catch (e) {
       _showError('Failed to take photo: $e');
+    }
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    try {
+      final bytes = await ClipboardHelper.getImagePng();
+      if (bytes != null && mounted) {
+        await _controller.loadImage(bytes, 'clipboard.png', bytes.length);
+      } else if (mounted) {
+        _showError('No image found in clipboard');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError('Failed to read clipboard: $e');
+      }
     }
   }
 
@@ -270,16 +286,37 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
               icon: Icons.image_outlined,
               buttonLabel: 'Browse Files',
               buttonIcon: Icons.folder_open,
-              extraButtons: Platform.isAndroid
-                  ? [
-                      const SizedBox(height: 16),
-                      AndroidPickerButtons(
-                        onPickFromGallery: _pickFromGallery,
-                        onTakePhoto: _takePhoto,
-                        accentColor: ImageViewerTool.config.accentColor,
+              extraButtons: [
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _pasteFromClipboard,
+                  icon: const Icon(Icons.paste_outlined),
+                  label: const Text('Paste from Clipboard'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ImageViewerTool.config.accentColor,
+                    side: BorderSide(
+                      color: ImageViewerTool.config.accentColor.withValues(
+                        alpha: 0.5,
                       ),
-                    ]
-                  : null,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                if (Platform.isAndroid) ...[
+                  const SizedBox(height: 16),
+                  AndroidPickerButtons(
+                    onPickFromGallery: _pickFromGallery,
+                    onTakePhoto: _takePhoto,
+                    accentColor: ImageViewerTool.config.accentColor,
+                  ),
+                ],
+              ],
             ),
           );
         } else {

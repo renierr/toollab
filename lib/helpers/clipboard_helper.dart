@@ -1,8 +1,8 @@
 import 'package:flutter/services.dart';
+import 'package:pasteboard/pasteboard.dart';
 
 class ClipboardHelper {
   ClipboardHelper._();
-  static const _channel = MethodChannel('de.renier.tool_lab/clipboard');
 
   static Future<String?> getText() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -15,14 +15,10 @@ class ClipboardHelper {
 
   static Future<Uint8List?> getImagePng() async {
     try {
-      final result = await _channel.invokeMethod<Uint8List>(
-        'getClipboardImagePng',
-      );
-      if (result != null && result.isNotEmpty) return result;
-    } on MissingPluginException {
-      // platform does not support clipboard image reading
+      final image = await Pasteboard.image;
+      if (image != null && image.isNotEmpty) return image;
     } catch (_) {
-      // ignore other errors
+      // ignore errors
     }
     return null;
   }
