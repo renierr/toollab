@@ -4,6 +4,7 @@ class AppTheme {
   static const Color accentBlue = Color(0xFF4FC3F7);
   static const Color accentGreen = Color(0xFF66BB6A);
   static const Color accentAmber = Color(0xFFFFCA28);
+  static const Color accentAmberLight = Color(0xFFF57C00);
   static const Color accentRed = Color(0xFFEF5350);
   static const Color accentPurple = Color(0xFFAB47BC);
   static const Color accentTeal = Color(0xFF26A69A);

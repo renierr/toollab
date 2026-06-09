@@ -5,6 +5,7 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/markdown_viewer_page.dart';
 import 'package:tool_lab/tools/markdown_viewer/config.dart';
+import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 
@@ -102,7 +103,10 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
 
   @override
   Widget build(BuildContext context) {
-    final accent = MarkdownViewerTool.config.accentColor;
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final accent = isLight
+        ? AppTheme.accentAmberLight
+        : MarkdownViewerTool.config.accentColor;
 
     if (_fileContent == null) {
       return Scaffold(

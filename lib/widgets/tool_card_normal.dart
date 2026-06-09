@@ -32,7 +32,7 @@ class ToolCardNormal extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(isNarrow ? 6.0 : 8.0),
                   decoration: BoxDecoration(
-                    color: tool.accentColor.withAlpha(30),
+                    color: tool.accentColor.withAlpha(50),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(

@@ -43,8 +43,8 @@ class ScannerControlsCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: state.isScanning
-                            ? [EmfColors.neonPink, const Color(0xFF9D50BB)]
-                            : [EmfColors.neonCyan, const Color(0xFF4FACFE)],
+                            ? [EmfColors.neonPink, EmfColors.gradientPurple]
+                            : [EmfColors.neonCyan, EmfColors.gradientBlue],
                       ),
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [

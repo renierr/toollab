@@ -64,12 +64,8 @@ class CircularGauge extends StatelessWidget {
                           ? [
                               Shadow(
                                 color: isWarning
-                                    ? const Color(
-                                        0xFFFF0055,
-                                      ).withValues(alpha: 0.5)
-                                    : const Color(
-                                        0xFF00F2FE,
-                                      ).withValues(alpha: 0.5),
+                                    ? EmfColors.neonPink.withValues(alpha: 0.5)
+                                    : EmfColors.neonCyan.withValues(alpha: 0.5),
                                 blurRadius: 15,
                               ),
                             ]

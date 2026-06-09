@@ -86,6 +86,7 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
       title: EmfDetectorTool.config.name,
       fullscreen: true,
       showFloatingBackButton: false,
+      backgroundColor: EmfColors.darkBg,
       child: ListenableBuilder(
         listenable: _state,
         builder: (context, child) {

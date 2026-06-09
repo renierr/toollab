@@ -69,6 +69,9 @@ class _FileDropZoneState extends State<FileDropZone> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final buttonForeground = widget.accentColor.computeLuminance() > 0.18
+        ? Colors.black87
+        : Colors.white;
 
     return DropTarget(
       onDragDone: (details) {
@@ -140,7 +143,7 @@ class _FileDropZoneState extends State<FileDropZone> {
                         label: Text(widget.buttonLabel),
                         style: FilledButton.styleFrom(
                           backgroundColor: widget.accentColor,
-                          foregroundColor: Colors.white,
+                          foregroundColor: buttonForeground,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 8,
@@ -187,7 +190,7 @@ class _FileDropZoneState extends State<FileDropZone> {
                         label: Text(widget.buttonLabel),
                         style: FilledButton.styleFrom(
                           backgroundColor: widget.accentColor,
-                          foregroundColor: Colors.white,
+                          foregroundColor: buttonForeground,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
                             vertical: 14,
