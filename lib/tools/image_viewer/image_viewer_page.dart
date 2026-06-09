@@ -213,6 +213,14 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                 onFormatChanged: (val) => _controller.setSelectedFormat(val),
                 quality: _controller.quality,
                 onQualityChanged: (val) => _controller.setQuality(val),
+                onPreview: () async {
+                  try {
+                    await _controller.previewResize();
+                    _onResetZoom();
+                  } catch (e) {
+                    _showError(e.toString().replaceAll('Exception: ', ''));
+                  }
+                },
                 onSave: _exportImage,
                 onShare: _shareImage,
                 isProcessing: _controller.isProcessing,

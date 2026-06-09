@@ -31,6 +31,18 @@ class CropParams {
   });
 }
 
+class ResizeParams {
+  final img.Image image;
+  final int width;
+  final int height;
+
+  ResizeParams({
+    required this.image,
+    required this.width,
+    required this.height,
+  });
+}
+
 class ImageResizeParams {
   final img.Image image;
   final int width;
@@ -78,12 +90,21 @@ img.Image cropImageTask(CropParams params) {
   );
 }
 
+img.Image resizeImageTask(ResizeParams params) {
+  return img.copyResize(
+    params.image,
+    width: params.width,
+    height: params.height,
+    interpolation: img.Interpolation.cubic,
+  );
+}
+
 Uint8List resizeAndEncodeTask(ImageResizeParams params) {
   final resized = img.copyResize(
     params.image,
     width: params.width,
     height: params.height,
-    interpolation: img.Interpolation.average,
+    interpolation: img.Interpolation.cubic,
   );
 
   final targetImage = params.preserveExif ? resized : img.Image.from(resized);

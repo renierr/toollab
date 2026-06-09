@@ -518,6 +518,42 @@ class ImageEditorController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> previewResize() async {
+    await _ensureFullySynced();
+
+    final width = int.tryParse(widthController.text);
+    final height = int.tryParse(heightController.text);
+
+    if (width == null || width <= 0 || height == null || height <= 0) {
+      throw Exception('Please enter valid width and height dimensions.');
+    }
+
+    _isProcessing = true;
+    notifyListeners();
+
+    try {
+      final params = ResizeParams(
+        image: _decodedImage!,
+        width: width,
+        height: height,
+      );
+
+      final resized = await compute(resizeImageTask, params);
+
+      final newUi = await _convertToUiImage(resized);
+      _uiImage?.dispose();
+      _uiImage = newUi;
+      _decodedImage = resized;
+      _originalWidth = resized.width;
+      _originalHeight = resized.height;
+      _syncDimensionFields();
+      _pushHistory(resized);
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> exportImage(BuildContext context) async {
     await _ensureFullySynced();
 

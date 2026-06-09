@@ -12,6 +12,7 @@ class ImageViewerEditor extends StatelessWidget {
   final ValueChanged<String> onFormatChanged;
   final double quality;
   final ValueChanged<double> onQualityChanged;
+  final VoidCallback onPreview;
   final VoidCallback onSave;
   final VoidCallback onShare;
   final bool isProcessing;
@@ -41,6 +42,7 @@ class ImageViewerEditor extends StatelessWidget {
     required this.onFormatChanged,
     required this.quality,
     required this.onQualityChanged,
+    required this.onPreview,
     required this.onSave,
     required this.onShare,
     required this.isProcessing,
@@ -247,6 +249,20 @@ class ImageViewerEditor extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+
+            // Preview Button
+            ElevatedButton.icon(
+              onPressed: isProcessing ? null : onPreview,
+              icon: const Icon(Icons.preview_outlined),
+              label: const Text('Preview Resize'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
             const SizedBox(height: 24),
 
