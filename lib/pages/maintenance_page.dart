@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/services/sharing_service.dart';
 
 class MaintenancePage extends StatelessWidget {
   const MaintenancePage({super.key});
@@ -108,6 +110,171 @@ class MaintenancePage extends StatelessWidget {
                             ),
                           ],
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Open-with defaults card
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.open_in_new_outlined,
+                            color: AppTheme.accentPurple,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Open with Defaults',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Default tool associations for shared files. '
+                        'Reset them to always show the chooser dialog.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      FutureBuilder<Map<String, String>>(
+                        future: SharingService.instance.getAllDefaultTools(),
+                        builder: (context, snapshot) {
+                          final defaults = snapshot.data ?? {};
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          }
+                          if (defaults.isEmpty) {
+                            return Text(
+                              'No default associations set.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            );
+                          }
+                          return Column(
+                            children: [
+                              ...defaults.entries.map((e) {
+                                final tool = ToolRegistry.all.where(
+                                  (t) => t.id == e.value,
+                                );
+                                final toolName = tool.isNotEmpty
+                                    ? tool.first.name
+                                    : e.value;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.insert_drive_file_outlined,
+                                        size: 16,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${e.key} → $toolName',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                fontFamily: 'monospace',
+                                              ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.statusAmber,
+                                    foregroundColor: Colors.black,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    final messenger = ScaffoldMessenger.of(
+                                      context,
+                                    );
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text(
+                                          'Reset All Defaults?',
+                                        ),
+                                        content: const Text(
+                                          'This will clear all "always open with" '
+                                          'associations. The chooser dialog will '
+                                          'appear next time you open a shared file.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(ctx).pop(false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(ctx).pop(true),
+                                            child: const Text('Reset'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirmed == true && context.mounted) {
+                                      await SharingService.instance
+                                          .clearAllDefaultTools();
+                                      messenger
+                                        ..hideCurrentSnackBar()
+                                        ..showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Default associations cleared',
+                                            ),
+                                          ),
+                                        );
+                                      (context as Element).markNeedsBuild();
+                                    }
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text(
+                                    'Reset All Defaults',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -268,6 +435,171 @@ class MaintenancePage extends StatelessWidget {
                                   icon: const Icon(Icons.delete_outline),
                                   label: const Text(
                                     'Clean Up Temp Files',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Open-with defaults card
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.open_in_new_outlined,
+                            color: AppTheme.accentPurple,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Open with Defaults',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Default tool associations for shared files. '
+                        'Reset them to always show the chooser dialog.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      FutureBuilder<Map<String, String>>(
+                        future: SharingService.instance.getAllDefaultTools(),
+                        builder: (context, snapshot) {
+                          final defaults = snapshot.data ?? {};
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          }
+                          if (defaults.isEmpty) {
+                            return Text(
+                              'No default associations set.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            );
+                          }
+                          return Column(
+                            children: [
+                              ...defaults.entries.map((e) {
+                                final tool = ToolRegistry.all.where(
+                                  (t) => t.id == e.value,
+                                );
+                                final toolName = tool.isNotEmpty
+                                    ? tool.first.name
+                                    : e.value;
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.insert_drive_file_outlined,
+                                        size: 16,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${e.key} → $toolName',
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                fontFamily: 'monospace',
+                                              ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.statusAmber,
+                                    foregroundColor: Colors.black,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  onPressed: () async {
+                                    final messenger = ScaffoldMessenger.of(
+                                      context,
+                                    );
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text(
+                                          'Reset All Defaults?',
+                                        ),
+                                        content: const Text(
+                                          'This will clear all "always open with" '
+                                          'associations. The chooser dialog will '
+                                          'appear next time you open a shared file.',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(ctx).pop(false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.of(ctx).pop(true),
+                                            child: const Text('Reset'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirmed == true && context.mounted) {
+                                      await SharingService.instance
+                                          .clearAllDefaultTools();
+                                      messenger
+                                        ..hideCurrentSnackBar()
+                                        ..showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Default associations cleared',
+                                            ),
+                                          ),
+                                        );
+                                      (context as Element).markNeedsBuild();
+                                    }
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text(
+                                    'Reset All Defaults',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),

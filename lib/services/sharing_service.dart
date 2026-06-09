@@ -124,4 +124,28 @@ class SharingService {
       debugPrint('[SharingService] Failed to set default tool: $e');
     }
   }
+
+  Future<Map<String, String>> getAllDefaultTools() async {
+    try {
+      final all = await DatabaseService.instance.getAllSettings(
+        'sharing_service',
+      );
+      return {
+        for (final entry in all.entries)
+          if (entry.key.startsWith('default_tool_'))
+            entry.key.substring('default_tool_'.length): entry.value,
+      };
+    } catch (e) {
+      debugPrint('[SharingService] Failed to get default tools: $e');
+      return {};
+    }
+  }
+
+  Future<void> clearAllDefaultTools() async {
+    try {
+      await DatabaseService.instance.deleteAllSettings('sharing_service');
+    } catch (e) {
+      debugPrint('[SharingService] Failed to clear default tools: $e');
+    }
+  }
 }
