@@ -281,12 +281,13 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
           SnackBar(content: Text('Downloading ${item.filename}...')),
         );
       }
-      final bytes = await appState.downloadFastDrop(item.id);
+      final tempPath = await _scope.createFile('fast_drop_save_${item.id}');
+      await appState.downloadFastDropToFile(id: item.id, outputPath: tempPath);
       if (!mounted) return;
-      await FileSaveHelper.saveFile(
+      await FileSaveHelper.saveFileFromPath(
         context: context,
         suggestedName: item.filename,
-        bytes: bytes,
+        sourcePath: tempPath,
       );
     } catch (e) {
       if (mounted) {
@@ -306,11 +307,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
           SnackBar(content: Text('Downloading ${item.filename} to open...')),
         );
       }
-      final bytes = await appState.downloadFastDrop(item.id);
       final tempPath = await _scope.createFile(
-        'fast_drop_${item.filename}',
-        bytes: bytes,
+        'fast_drop_open_${item.id}_${item.filename}',
       );
+      await appState.downloadFastDropToFile(id: item.id, outputPath: tempPath);
 
       if (mounted) {
         await FileSaveHelper.showOpenChooser(

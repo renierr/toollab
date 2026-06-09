@@ -194,6 +194,21 @@ class MainActivity : FlutterActivity() {
                             result.error("SAVE_ERROR", e.message, null)
                         }
                     }
+                    "saveToDownloadsFromPath" -> {
+                        val sourcePath = call.argument<String>("sourcePath")
+                        val fileName = call.argument<String>("fileName")
+                        val mimeType = call.argument<String>("mimeType") ?: "application/octet-stream"
+                        if (sourcePath == null || fileName == null) {
+                            result.error("INVALID_ARGS", "sourcePath and fileName required", null)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            val savedInfo = FileSaveHelper.saveToDownloadsFromPath(this, sourcePath, fileName, mimeType)
+                            result.success(savedInfo)
+                        } catch (e: Exception) {
+                            result.error("SAVE_ERROR", e.message, null)
+                        }
+                    }
                     "openFile" -> {
                         val uriString = call.argument<String>("uri")
                         val mimeType = call.argument<String>("mimeType") ?: "*/*"

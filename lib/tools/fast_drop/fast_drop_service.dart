@@ -1,16 +1,15 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
 import 'package:rhttp/rhttp.dart';
-import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'fast_drop_model.dart';
 
 class FastDropService {
-  static http.Client? _client;
+  static RhttpClient? _client;
 
-  static Future<http.Client> get _clientFuture async {
-    _client ??= await RhttpCompatibleClient.create();
+  static Future<RhttpClient> get _clientFuture async {
+    _client ??= await RhttpClient.create();
     return _client!;
   }
 
@@ -34,9 +33,7 @@ class FastDropService {
   static Future<List<FastDropItem>> fetchDrops(String baseUrl) async {
     final client = await _clientFuture;
     final url = '${_sanitizeUrl(baseUrl)}/api/drop';
-    final response = await client
-        .get(Uri.parse(url))
-        .timeout(const Duration(seconds: 10));
+    final response = await client.get(url).timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['success'] == true) {
@@ -63,49 +60,73 @@ class FastDropService {
     final client = await _clientFuture;
     final url = '${_sanitizeUrl(baseUrl)}/api/drop';
     final total = bytes.length;
-    const chunkSize = 64 * 1024;
-
-    final request = http.StreamedRequest('POST', Uri.parse(url));
-    request.headers.addAll({
-      'X-Filename': Uri.encodeComponent(filename),
-      'X-Retention': retention,
-      'X-Source': source,
-      'Content-Type': mimeType.isEmpty ? 'application/octet-stream' : mimeType,
-    });
-    request.contentLength = total;
-
-    final responseFuture = client.send(request);
+    const chunkSize = 1024 * 1024;
+    final cancelToken = CancelToken();
 
     try {
-      int sent = 0;
-      for (int i = 0; i < total; i += chunkSize) {
-        if (isCancelled != null && isCancelled()) {
-          request.sink.close();
-          throw Exception('Upload cancelled by user');
-        }
-        final end = (i + chunkSize).clamp(0, total);
-        request.sink.add(bytes.sublist(i, end));
-        sent = end;
-        onProgress?.call(sent, total);
+      if (isCancelled != null && isCancelled()) {
+        throw Exception('Upload cancelled by user');
       }
-      await request.sink.close();
 
       final timeout = _adaptiveTimeout(
         bytes: total,
         baseSeconds: 30,
         bytesPerSecond: 100 * 1024,
       );
-      final streamedResponse = await responseFuture.timeout(timeout);
-      final response = await http.Response.fromStream(streamedResponse);
+
+      final response = await client
+          .requestText(
+            method: HttpMethod.post,
+            url: url,
+            headers: HttpHeaders.rawMap({
+              'X-Filename': Uri.encodeComponent(filename),
+              'X-Retention': retention,
+              'X-Source': source,
+              'Content-Type': mimeType.isEmpty
+                  ? 'application/octet-stream'
+                  : mimeType,
+            }),
+            body: HttpBody.stream(
+              _chunkedByteStream(
+                bytes,
+                chunkSize: chunkSize,
+                isCancelled: isCancelled,
+              ),
+              length: total,
+            ),
+            cancelToken: cancelToken,
+            onSendProgress: (sent, progressTotal) {
+              if (isCancelled != null && isCancelled()) {
+                unawaited(cancelToken.cancel());
+              }
+              onProgress?.call(sent, progressTotal > 0 ? progressTotal : total);
+            },
+          )
+          .timeout(timeout);
+
       if (response.statusCode != 200) {
         final errorData = jsonDecode(response.body);
         throw Exception(
           errorData['error'] ?? 'Failed to upload drop: ${response.statusCode}',
         );
       }
-    } catch (e) {
-      request.sink.close();
-      rethrow;
+    } on RhttpCancelException {
+      throw Exception('Upload cancelled by user');
+    }
+  }
+
+  static Stream<List<int>> _chunkedByteStream(
+    Uint8List bytes, {
+    required int chunkSize,
+    bool Function()? isCancelled,
+  }) async* {
+    final total = bytes.length;
+    for (int i = 0; i < total; i += chunkSize) {
+      if (isCancelled != null && isCancelled()) {
+        throw Exception('Upload cancelled by user');
+      }
+      final end = (i + chunkSize).clamp(0, total);
+      yield Uint8List.sublistView(bytes, i, end);
     }
   }
 
@@ -113,7 +134,7 @@ class FastDropService {
     final client = await _clientFuture;
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id';
     final response = await client
-        .delete(Uri.parse(url))
+        .delete(url)
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
       final errorData = jsonDecode(response.body);
@@ -127,7 +148,7 @@ class FastDropService {
     final client = await _clientFuture;
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id/keep';
     final response = await client
-        .patch(Uri.parse(url))
+        .patch(url)
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
       final errorData = jsonDecode(response.body);
@@ -145,44 +166,122 @@ class FastDropService {
   }) async {
     final client = await _clientFuture;
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id';
-    final request = http.Request('GET', Uri.parse(url));
-    final streamedResponse = await client.send(request);
-    final total = streamedResponse.contentLength ?? -1;
-
-    final tempName = 'fast_drop_download_$id';
-    final tempPath = await TempFileManager.createFile(tempName);
-    final tempFile = File(tempPath);
-    final sink = tempFile.openWrite();
+    final cancelToken = CancelToken();
 
     try {
-      int received = 0;
-      await for (final chunk in streamedResponse.stream) {
+      if (isCancelled != null && isCancelled()) {
+        throw Exception('Download cancelled by user');
+      }
+
+      final response = await client.requestBytes(
+        method: HttpMethod.get,
+        url: url,
+        cancelToken: cancelToken,
+        onReceiveProgress: (received, total) {
+          if (isCancelled != null && isCancelled()) {
+            unawaited(cancelToken.cancel());
+          }
+          onProgress?.call(received, total);
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download drop: ${response.statusCode}');
+      }
+      return response.body;
+    } on RhttpCancelException {
+      throw Exception('Download cancelled by user');
+    }
+  }
+
+  static Future<String> downloadDropToFile({
+    required String baseUrl,
+    required String id,
+    required String outputPath,
+    void Function(int received, int total)? onProgress,
+    bool Function()? isCancelled,
+  }) async {
+    final client = await _clientFuture;
+    final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id';
+    final cancelToken = CancelToken();
+    final file = File(outputPath);
+    await file.parent.create(recursive: true);
+
+    final sink = file.openWrite();
+    try {
+      if (isCancelled != null && isCancelled()) {
+        throw Exception('Download cancelled by user');
+      }
+
+      final streamedResponse = await client.requestStream(
+        method: HttpMethod.get,
+        url: url,
+        cancelToken: cancelToken,
+        onReceiveProgress: (received, total) {
+          if (isCancelled != null && isCancelled()) {
+            unawaited(cancelToken.cancel());
+          }
+          onProgress?.call(received, total);
+        },
+      );
+
+      if (streamedResponse.statusCode != 200) {
+        final errorBody = await _readStreamBody(streamedResponse.body);
+        final parsedError = _parseError(errorBody);
+        throw Exception(
+          parsedError ??
+              'Failed to download drop: ${streamedResponse.statusCode}',
+        );
+      }
+
+      await for (final chunk in streamedResponse.body) {
         if (isCancelled != null && isCancelled()) {
+          unawaited(cancelToken.cancel());
           throw Exception('Download cancelled by user');
         }
         sink.add(chunk);
-        received += chunk.length;
-        onProgress?.call(received, total);
       }
-      await sink.close();
 
-      final timeout = _adaptiveTimeout(
-        bytes: received,
-        baseSeconds: 10,
-        bytesPerSecond: 200 * 1024,
-      );
-
-      final bytes = await tempFile.readAsBytes().timeout(timeout);
-      await TempFileManager.deleteFile(tempName);
-      return bytes;
-    } catch (e) {
+      await sink.flush();
       await sink.close();
-      if (await tempFile.exists()) {
+      return outputPath;
+    } on RhttpCancelException {
+      await sink.close();
+      if (await file.exists()) {
         try {
-          await TempFileManager.deleteFile(tempName);
+          await file.delete();
+        } catch (_) {}
+      }
+      throw Exception('Download cancelled by user');
+    } catch (_) {
+      await sink.close();
+      if (await file.exists()) {
+        try {
+          await file.delete();
         } catch (_) {}
       }
       rethrow;
     }
+  }
+
+  static Future<String> _readStreamBody(Stream<Uint8List> stream) async {
+    final bytesBuilder = BytesBuilder(copy: false);
+    await for (final chunk in stream) {
+      bytesBuilder.add(chunk);
+    }
+    return utf8.decode(bytesBuilder.takeBytes(), allowMalformed: true);
+  }
+
+  static String? _parseError(String body) {
+    if (body.isEmpty) return null;
+    try {
+      final json = jsonDecode(body);
+      if (json is Map<String, dynamic> && json['error'] is String) {
+        return json['error'] as String;
+      }
+    } catch (_) {
+      return null;
+    }
+    return null;
   }
 }

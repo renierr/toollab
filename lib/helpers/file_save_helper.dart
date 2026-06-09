@@ -160,6 +160,123 @@ class FileSaveHelper {
     }
   }
 
+  static Future<String?> saveFileFromPath({
+    required BuildContext context,
+    required String suggestedName,
+    required String sourcePath,
+    List<XTypeGroup>? acceptedTypeGroups,
+    String? successMessageAndroid,
+    String Function(String displayPath)? successMessageGeneralBuilder,
+    String Function(String error)? errorMessageBuilder,
+  }) async {
+    try {
+      String? destPath;
+      final mimeType = _mimeTypeFromName(suggestedName);
+
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        final FileSaveLocation? location = await getSaveLocation(
+          suggestedName: suggestedName,
+          acceptedTypeGroups: acceptedTypeGroups ?? const <XTypeGroup>[],
+        );
+        if (location == null) return null;
+        destPath = location.path;
+        await File(sourcePath).copy(destPath);
+
+        if (context.mounted) {
+          final displayPath = destPath.length > 40
+              ? '...${destPath.substring(destPath.length - 37)}'
+              : destPath;
+
+          showSuccessDialog(
+            context: context,
+            displayPath: displayPath,
+            actualPath: destPath,
+            mimeType: mimeType,
+            message:
+                successMessageGeneralBuilder?.call(displayPath) ??
+                'File saved to $displayPath',
+          );
+        }
+      } else if (Platform.isAndroid) {
+        final Map? result = await _channel.invokeMethod<Map>(
+          'saveToDownloadsFromPath',
+          {
+            'sourcePath': sourcePath,
+            'fileName': suggestedName,
+            'mimeType': mimeType,
+          },
+        );
+
+        if (result == null) return null;
+
+        final uriString = result['uri'] as String?;
+        final filePath = result['filePath'] as String?;
+        destPath = filePath;
+
+        if (context.mounted && uriString != null && filePath != null) {
+          final systemNotificationsEnabled = context
+              .read<AppState>()
+              .systemNotificationsEnabled;
+          if (systemNotificationsEnabled) {
+            try {
+              await _channel.invokeMethod('showSystemNotification', {
+                'fileName': suggestedName,
+                'uri': uriString,
+                'mimeType': mimeType,
+              });
+            } catch (e) {
+              debugPrint('Failed to show native system notification: $e');
+            }
+          }
+
+          if (context.mounted) {
+            showSuccessDialog(
+              context: context,
+              displayPath: filePath,
+              actualPath: sourcePath,
+              mimeType: mimeType,
+              message:
+                  successMessageAndroid ?? 'File saved to Downloads folder',
+            );
+          }
+        }
+      } else {
+        final Directory docDir = await getApplicationDocumentsDirectory();
+        final File file = File('${docDir.path}/$suggestedName');
+        await File(sourcePath).copy(file.path);
+        destPath = file.path;
+
+        if (context.mounted) {
+          final displayPath = destPath.length > 40
+              ? '...${destPath.substring(destPath.length - 37)}'
+              : destPath;
+
+          showSuccessDialog(
+            context: context,
+            displayPath: displayPath,
+            actualPath: destPath,
+            mimeType: mimeType,
+            message:
+                successMessageGeneralBuilder?.call(displayPath) ??
+                'File saved to $displayPath',
+          );
+        }
+      }
+
+      return destPath;
+    } catch (e) {
+      if (context.mounted) {
+        showErrorNotification(
+          context: context,
+          errorMessage:
+              errorMessageBuilder?.call(e.toString()) ??
+              'Failed to save file: $e',
+        );
+      }
+      return null;
+    }
+  }
+
   /// Opens the file using the default native system app.
   static Future<void> openFile(String path, String mimeType) async {
     try {

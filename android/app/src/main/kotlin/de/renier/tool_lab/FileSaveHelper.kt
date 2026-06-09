@@ -14,6 +14,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import java.io.File
+import java.io.FileInputStream
 
 object FileSaveHelper {
 
@@ -43,6 +44,46 @@ object FileSaveHelper {
             val file = File(downloadsDir, fileName)
             file.writeBytes(bytes)
             
+            return mapOf(
+                "uri" to Uri.fromFile(file).toString(),
+                "filePath" to file.absolutePath
+            )
+        }
+    }
+
+    fun saveToDownloadsFromPath(context: Context, sourcePath: String, fileName: String, mimeType: String): Map<String, String> {
+        val resolver = context.contentResolver
+        val sourceFile = File(sourcePath)
+        if (!sourceFile.exists()) {
+            throw Exception("Source file does not exist")
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(MediaStore.Downloads.MIME_TYPE, mimeType)
+                put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            }
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                ?: throw Exception("Failed to create MediaStore entry")
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                FileInputStream(sourceFile).use { inputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            } ?: throw Exception("Failed to open output stream")
+
+            return mapOf(
+                "uri" to uri.toString(),
+                "filePath" to "${Environment.DIRECTORY_DOWNLOADS}/$fileName"
+            )
+        } else {
+            val downloadsDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS
+            )
+            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+            val file = File(downloadsDir, fileName)
+            sourceFile.copyTo(file, overwrite = true)
+
             return mapOf(
                 "uri" to Uri.fromFile(file).toString(),
                 "filePath" to file.absolutePath

@@ -371,6 +371,8 @@ class AppState extends ChangeNotifier {
   bool _cancelDownloadRequested = false;
   String? _fastDropError;
   bool _isServerAvailable = true;
+  int _lastUploadProgressNotifyMs = 0;
+  int _lastDownloadProgressNotifyMs = 0;
 
   List<FastDropItem> get fastDrops => _fastDrops;
   bool get isLoadingFastDrops => _isLoadingFastDrops;
@@ -452,6 +454,7 @@ class AppState extends ChangeNotifier {
     _cancelUploadRequested = false;
     _isUploadingFastDrop = true;
     _fastDropUploadProgress = null;
+    _lastUploadProgressNotifyMs = 0;
     notifyListeners();
 
     try {
@@ -464,7 +467,13 @@ class AppState extends ChangeNotifier {
         mimeType: mimeType,
         onProgress: (sent, total) {
           _fastDropUploadProgress = (sent, total);
-          notifyListeners();
+          if (_shouldNotifyTransferProgress(
+            current: sent,
+            total: total,
+            isUpload: true,
+          )) {
+            notifyListeners();
+          }
         },
         isCancelled: () => _cancelUploadRequested,
       );
@@ -513,6 +522,7 @@ class AppState extends ChangeNotifier {
     _cancelDownloadRequested = false;
     _isDownloadingFastDrop = true;
     _fastDropDownloadProgress = null;
+    _lastDownloadProgressNotifyMs = 0;
     notifyListeners();
 
     try {
@@ -521,7 +531,13 @@ class AppState extends ChangeNotifier {
         id: id,
         onProgress: (received, total) {
           _fastDropDownloadProgress = (received, total);
-          notifyListeners();
+          if (_shouldNotifyTransferProgress(
+            current: received,
+            total: total,
+            isUpload: false,
+          )) {
+            notifyListeners();
+          }
         },
         isCancelled: () => _cancelDownloadRequested,
       );
@@ -531,5 +547,79 @@ class AppState extends ChangeNotifier {
       _fastDropDownloadProgress = null;
       notifyListeners();
     }
+  }
+
+  Future<String> downloadFastDropToFile({
+    required String id,
+    required String outputPath,
+  }) async {
+    if (!_syncEnabled) {
+      throw Exception('Cloud sync is disabled.');
+    }
+    if (_syncServerUrl.isEmpty) {
+      throw Exception('Sync Server URL is not configured');
+    }
+    if (!_isServerAvailable) {
+      throw Exception('Sync server is unreachable.');
+    }
+
+    _cancelDownloadRequested = false;
+    _isDownloadingFastDrop = true;
+    _fastDropDownloadProgress = null;
+    _lastDownloadProgressNotifyMs = 0;
+    notifyListeners();
+
+    try {
+      return await FastDropService.downloadDropToFile(
+        baseUrl: _syncServerUrl,
+        id: id,
+        outputPath: outputPath,
+        onProgress: (received, total) {
+          _fastDropDownloadProgress = (received, total);
+          if (_shouldNotifyTransferProgress(
+            current: received,
+            total: total,
+            isUpload: false,
+          )) {
+            notifyListeners();
+          }
+        },
+        isCancelled: () => _cancelDownloadRequested,
+      );
+    } finally {
+      _cancelDownloadRequested = false;
+      _isDownloadingFastDrop = false;
+      _fastDropDownloadProgress = null;
+      notifyListeners();
+    }
+  }
+
+  bool _shouldNotifyTransferProgress({
+    required int current,
+    required int total,
+    required bool isUpload,
+  }) {
+    if (total > 0 && current >= total) {
+      if (isUpload) {
+        _lastUploadProgressNotifyMs = 0;
+      } else {
+        _lastDownloadProgressNotifyMs = 0;
+      }
+      return true;
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final last = isUpload
+        ? _lastUploadProgressNotifyMs
+        : _lastDownloadProgressNotifyMs;
+    if (now - last >= 120) {
+      if (isUpload) {
+        _lastUploadProgressNotifyMs = now;
+      } else {
+        _lastDownloadProgressNotifyMs = now;
+      }
+      return true;
+    }
+    return false;
   }
 }
