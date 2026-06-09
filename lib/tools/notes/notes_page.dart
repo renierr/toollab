@@ -259,7 +259,12 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
           showEdit: true,
           showDelete: true,
           onEdit: () {
-            _openEditor(id: currentNote['id'] as int, content: content);
+            _openEditor(
+              id: currentNote['id'] as int,
+              content: content,
+              tags:
+                  (currentNote['tags'] as List<dynamic>?)?.cast<String>() ?? [],
+            );
           },
           onDelete: () {
             _deleteNote(currentNote['id'] as int);

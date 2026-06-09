@@ -37,9 +37,11 @@ class _TagInputState extends State<TagInput> {
 
     final updated = [...widget.tags, tag];
     widget.onTagsChanged(updated);
-    _controller.clear();
-    _filteredSuggestions = [];
-    _showSuggestions = false;
+    setState(() {
+      _controller.clear();
+      _filteredSuggestions = [];
+      _showSuggestions = false;
+    });
   }
 
   void _removeTag(String tag) {
@@ -57,24 +59,49 @@ class _TagInputState extends State<TagInput> {
     }
 
     if (value.isEmpty) {
-      _filteredSuggestions = [];
-      _showSuggestions = false;
+      setState(() {
+        _filteredSuggestions = [];
+        _showSuggestions = false;
+      });
       return;
     }
 
     final query = value.toLowerCase();
-    _filteredSuggestions = widget.suggestions
-        .where(
-          (s) => s.toLowerCase().startsWith(query) && s.toLowerCase() != query,
-        )
-        .take(5)
-        .toList();
-    _showSuggestions = _filteredSuggestions.isNotEmpty;
+    final selectedTags = widget.tags.map((t) => t.toLowerCase()).toSet();
+    final seen = <String>{};
+    final prefixMatches = <String>[];
+    final containsMatches = <String>[];
+
+    for (final suggestion in widget.suggestions) {
+      final normalized = suggestion.trim();
+      if (normalized.isEmpty) continue;
+      final lower = normalized.toLowerCase();
+      if (selectedTags.contains(lower) || lower == query || !seen.add(lower)) {
+        continue;
+      }
+      if (lower.startsWith(query)) {
+        prefixMatches.add(normalized);
+        continue;
+      }
+      if (lower.contains(query)) {
+        containsMatches.add(normalized);
+      }
+    }
+
+    setState(() {
+      _filteredSuggestions = [
+        ...prefixMatches,
+        ...containsMatches,
+      ].take(5).toList();
+      _showSuggestions = _filteredSuggestions.isNotEmpty;
+    });
   }
 
   void _onSubmit(String value) {
     _addTag(value);
-    _showSuggestions = false;
+    setState(() {
+      _showSuggestions = false;
+    });
   }
 
   @override
@@ -150,22 +177,25 @@ class _TagInputState extends State<TagInput> {
           Container(
             margin: const EdgeInsets.only(top: 4),
             constraints: const BoxConstraints(maxHeight: 140),
-            decoration: BoxDecoration(
+            child: Material(
               color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
-            ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              itemCount: _filteredSuggestions.length,
-              itemBuilder: (context, index) {
-                final suggestion = _filteredSuggestions[index];
-                return ListTile(
-                  dense: true,
-                  title: Text(suggestion, style: const TextStyle(fontSize: 13)),
-                  onTap: () => _onSubmit(suggestion),
-                );
-              },
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: _filteredSuggestions.length,
+                itemBuilder: (context, index) {
+                  final suggestion = _filteredSuggestions[index];
+                  return ListTile(
+                    dense: true,
+                    title: Text(
+                      suggestion,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    onTap: () => _onSubmit(suggestion),
+                  );
+                },
+              ),
             ),
           ),
       ],
