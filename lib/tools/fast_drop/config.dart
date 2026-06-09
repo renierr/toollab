@@ -14,7 +14,6 @@ class FastDropTool {
     route: '/fast-drop',
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities',
-    fullscreen: true,
     shareTarget: ShareTargetConfig(accept: ['*/*']),
   );
 }

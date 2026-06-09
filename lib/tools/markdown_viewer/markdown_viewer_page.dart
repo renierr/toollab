@@ -106,7 +106,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
 
     if (_fileContent == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Markdown Viewer')),
+        appBar: AppBar(title: Text(MarkdownViewerTool.config.name)),
         body: FileDropZone(
           onFileSelected: _onFileSelected,
           allowedExtensions: const ['md', 'txt', 'markdown'],
@@ -123,7 +123,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
       content: _fileContent!,
       config: MarkdownViewerConfig(
         accentColor: accent,
-        title: 'Markdown Viewer',
+        title: MarkdownViewerTool.config.name,
         showShare: true,
         showExport: true,
         showEdit: false,

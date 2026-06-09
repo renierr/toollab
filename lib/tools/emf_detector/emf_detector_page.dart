@@ -83,8 +83,8 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
   @override
   Widget build(BuildContext context) {
     return ToolLayout(
-      title: 'EMF Detector',
-      fullscreen: EmfDetectorTool.config.fullscreen,
+      title: EmfDetectorTool.config.name,
+      fullscreen: true,
       showFloatingBackButton: false,
       child: ListenableBuilder(
         listenable: _state,

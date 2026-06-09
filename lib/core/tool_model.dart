@@ -14,7 +14,6 @@ class ToolModel {
   final String route;
   final Color accentColor;
   final String sectionId;
-  final bool fullscreen;
   final ShareTargetConfig? shareTarget;
 
   const ToolModel({
@@ -25,7 +24,6 @@ class ToolModel {
     required this.route,
     required this.accentColor,
     required this.sectionId,
-    this.fullscreen = false,
     this.shareTarget,
   });
 }

@@ -13,7 +13,6 @@ class MarkdownViewerTool {
     route: '/markdown-viewer',
     accentColor: AppTheme.accentAmber,
     sectionId: 'utilities',
-    fullscreen: true,
     shareTarget: ShareTargetConfig(
       accept: ['text/markdown', 'text/x-markdown', 'text/plain', 'text/*'],
     ),

@@ -266,7 +266,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
     if (_filePath == null) {
       return ToolLayout(
-        title: 'PDF Viewer',
+        title: PdfViewerTool.config.name,
         child: FileDropZone(
           onFileSelected: _onFileSelected,
           allowedExtensions: const ['pdf'],
@@ -281,7 +281,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     }
 
     return ToolLayout(
-      title: 'PDF Viewer',
+      title: PdfViewerTool.config.name,
       fullscreen: true,
       showFloatingBackButton: false,
       scaffoldKey: _scaffoldKey,

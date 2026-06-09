@@ -14,7 +14,6 @@ class NotesTool {
     route: '/notes',
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities',
-    fullscreen: true,
     shareTarget: ShareTargetConfig(accept: ['text/markdown', 'text/plain']),
   );
 }

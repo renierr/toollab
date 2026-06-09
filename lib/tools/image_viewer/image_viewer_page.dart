@@ -459,7 +459,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
 
         return ToolLayout(
           title: ImageViewerTool.config.name,
-          fullscreen: ImageViewerTool.config.fullscreen,
+          fullscreen: true,
           scaffoldKey: _scaffoldKey,
           actions: actions,
           floatingActionButton: fab,

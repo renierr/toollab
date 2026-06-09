@@ -190,8 +190,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
   @override
   Widget build(BuildContext context) {
     return ToolLayout(
-      title: 'Device Info',
-      fullscreen: DeviceInfoTool.config.fullscreen,
+      title: DeviceInfoTool.config.name,
       child: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

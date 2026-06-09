@@ -167,8 +167,8 @@ class _CalculatorPageState extends State<CalculatorPage>
       focusNode: FocusNode()..requestFocus(),
       onKeyEvent: _onKeyboard,
       child: ToolLayout(
-        title: 'Calculator',
-        fullscreen: CalculatorTool.config.fullscreen,
+        title: CalculatorTool.config.name,
+        fullscreen: true,
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
@@ -187,7 +187,7 @@ class _CalculatorPageState extends State<CalculatorPage>
                   scrollController: _displayController,
                   historyItems: _history.items,
                   isShort: isShort,
-                  fullscreen: CalculatorTool.config.fullscreen,
+                  fullscreen: true,
                 );
 
                 final toolbar = CalculatorToolbar(

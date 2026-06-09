@@ -13,6 +13,5 @@ class BubbleLevelTool {
     route: '/bubble-level',
     accentColor: AppTheme.accentGreen,
     sectionId: 'sensors',
-    fullscreen: true,
   );
 }

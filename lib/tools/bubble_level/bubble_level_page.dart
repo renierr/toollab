@@ -216,8 +216,8 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
     final leftPadding = _rulerVisible ? 80.0 : 16.0;
 
     return ToolLayout(
-      title: 'Bubble Level',
-      fullscreen: BubbleLevelTool.config.fullscreen,
+      title: BubbleLevelTool.config.name,
+      fullscreen: true,
       showFloatingBackButton: false,
       child: Stack(
         children: [

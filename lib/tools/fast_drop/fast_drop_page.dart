@@ -18,6 +18,7 @@ import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 
+import 'config.dart';
 import 'fast_drop_model.dart';
 import 'widgets/fast_drop_preview_dialog.dart';
 import 'widgets/fast_drop_upload_panel.dart';
@@ -348,7 +349,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     final isActionsEnabled = appState.syncEnabled && appState.isServerAvailable;
 
     return ToolLayout(
-      title: 'Fast Drop',
+      title: FastDropTool.config.name,
       fullscreen: true,
       showFloatingBackButton: false,
       child: Column(

@@ -13,7 +13,6 @@ class PdfViewerTool {
     route: '/pdf-viewer',
     accentColor: AppTheme.accentRed,
     sectionId: 'utilities',
-    fullscreen: true,
     shareTarget: ShareTargetConfig(accept: ['application/pdf']),
   );
 }

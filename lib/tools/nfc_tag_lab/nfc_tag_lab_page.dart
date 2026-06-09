@@ -389,7 +389,6 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
 
     return ToolLayout(
       title: NfcTagLabTool.config.name,
-      fullscreen: NfcTagLabTool.config.fullscreen,
       child: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

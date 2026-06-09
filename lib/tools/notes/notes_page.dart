@@ -250,7 +250,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
 
     return ToolLayout(
       title: NotesTool.config.name,
-      fullscreen: NotesTool.config.fullscreen,
+      fullscreen: true,
       showFloatingBackButton: false,
       child: DropTarget(
         onDragDone: (details) async {

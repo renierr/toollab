@@ -13,7 +13,6 @@ class ImageViewerTool {
     route: '/image-viewer',
     accentColor: AppTheme.accentBlue,
     sectionId: 'utilities',
-    fullscreen: true,
     shareTarget: ShareTargetConfig(accept: ['image/*']),
   );
 }
