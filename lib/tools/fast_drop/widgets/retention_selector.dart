@@ -16,9 +16,9 @@ class RetentionSelector extends StatelessWidget {
     final theme = Theme.of(context);
     final options = [
       {'value': '1', 'label': '1 hr'},
-      {'value': '4', 'label': '4 hrs'},
       {'value': '8', 'label': '8 hrs'},
       {'value': '24', 'label': '24 hrs'},
+      {'value': '168', 'label': '7 days'},
       {'value': 'indefinite', 'label': 'Indefinite'},
     ];
 
