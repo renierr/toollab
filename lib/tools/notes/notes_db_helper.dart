@@ -1,19 +1,22 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:tool_lab/services/database_service.dart';
 
 class NotesDbHelper {
   static const String tableName = 'notes';
+  static const String tagTableName = 'note_tags';
 
   NotesDbHelper._privateConstructor();
   static final NotesDbHelper instance = NotesDbHelper._privateConstructor();
 
-  bool _isInitialized = false;
+  ToolDatabase? _cachedDb;
 
   Future<ToolDatabase> _getDb() async {
-    final db = await DatabaseService.instance.getToolDatabase('notes');
-    if (!_isInitialized) {
-      await db.migrate(
-        currentVersion: 1,
+    if (_cachedDb != null) return _cachedDb!;
+    _cachedDb = await DatabaseService.instance.getToolDatabase('notes');
+    try {
+      await _cachedDb!.migrate(
+        currentVersion: 2,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -28,11 +31,21 @@ class NotesDbHelper {
               )
             ''');
           }
+          if (oldVersion < 2) {
+            await txn.execute('''
+              CREATE TABLE IF NOT EXISTS ${txn.nameTable(tagTableName)} (
+                note_id INTEGER NOT NULL,
+                tag TEXT NOT NULL COLLATE NOCASE,
+                PRIMARY KEY (note_id, tag)
+              )
+            ''');
+          }
         },
       );
-      _isInitialized = true;
+    } catch (e) {
+      debugPrint('[NotesDbHelper] Migration failed, using fallback: $e');
     }
-    return db;
+    return _cachedDb!;
   }
 
   String generateShortId() {
@@ -62,7 +75,26 @@ class NotesDbHelper {
     }
   }
 
-  /// Get all notes (including deleted and unsynced ones) for SyncDelegate metadata.
+  /// Gets active notes enriched with their tags.
+  Future<List<Map<String, dynamic>>> getActiveNotesWithTags({
+    String query = '',
+  }) async {
+    final rawNotes = await getActiveNotes(query: query);
+    if (rawNotes.isEmpty) return rawNotes;
+    final notes = rawNotes.map((m) => Map<String, dynamic>.from(m)).toList();
+    try {
+      final noteIds = notes.map((n) => n['id'] as int).toList();
+      final tagsMap = await getTagsForNotes(noteIds);
+      for (final note in notes) {
+        note['tags'] = tagsMap[note['id'] as int] ?? <String>[];
+      }
+    } catch (e) {
+      debugPrint('[NotesDbHelper] Failed to load tags: $e');
+    }
+    return notes;
+  }
+
+  /// Get all sync records (including deleted ones).
   Future<List<Map<String, dynamic>>> getSyncRecords() async {
     final db = await _getDb();
     return await db.query(
@@ -80,7 +112,10 @@ class NotesDbHelper {
       whereArgs: [shortId],
       limit: 1,
     );
-    return rows.isEmpty ? null : rows.first;
+    if (rows.isEmpty) return null;
+    final note = Map<String, dynamic>.from(rows.first);
+    note['tags'] = await getTagsForNote(note['id'] as int);
+    return note;
   }
 
   /// Get note details by integer ID.
@@ -92,16 +127,23 @@ class NotesDbHelper {
       whereArgs: [id],
       limit: 1,
     );
-    return rows.isEmpty ? null : rows.first;
+    if (rows.isEmpty) return null;
+    final note = Map<String, dynamic>.from(rows.first);
+    note['tags'] = await getTagsForNote(note['id'] as int);
+    return note;
   }
 
   /// Save or update a note.
-  Future<int> saveNote(String content, {int? id, String? shortId}) async {
+  Future<int> saveNote(
+    String content, {
+    int? id,
+    String? shortId,
+    List<String>? tags,
+  }) async {
     final db = await _getDb();
     final now = DateTime.now().millisecondsSinceEpoch;
 
     if (id != null) {
-      // Update existing
       final note = await getNoteById(id);
       final noteShortId =
           note?['short_id'] as String? ?? shortId ?? generateShortId();
@@ -114,16 +156,19 @@ class NotesDbHelper {
           'content': content,
           'updated_at': updateUpdatedAt,
           'short_id': noteShortId,
-          'synced': 0, // Mark as unsynced
+          'synced': 0,
         },
         where: 'id = ?',
         whereArgs: [id],
       );
+
+      if (tags != null) {
+        await setTagsForNote(id, tags);
+      }
       return id;
     } else {
-      // Insert new
       final noteShortId = shortId ?? generateShortId();
-      return await db.insert(tableName, {
+      final newId = await db.insert(tableName, {
         'short_id': noteShortId,
         'content': content,
         'created_at': now,
@@ -131,6 +176,11 @@ class NotesDbHelper {
         'deleted': 0,
         'synced': 0,
       });
+
+      if (tags != null && tags.isNotEmpty) {
+        await setTagsForNote(newId, tags);
+      }
+      return newId;
     }
   }
 
@@ -145,19 +195,20 @@ class NotesDbHelper {
 
     await db.update(
       tableName,
-      {
-        'deleted': 1,
-        'updated_at': deleteUpdatedAt,
-        'synced': 0, // Needs syncing to push deletion
-      },
+      {'deleted': 1, 'updated_at': deleteUpdatedAt, 'synced': 0},
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  /// Hard delete note (called during sync finalize or if local unsynced deletion is done).
+  /// Hard delete note (called during sync finalize).
   Future<void> hardDeleteNote(String shortId) async {
     final db = await _getDb();
+    final existing = await getNoteByShortId(shortId);
+    if (existing != null) {
+      final noteId = existing['id'] as int;
+      await db.delete(tagTableName, where: 'note_id = ?', whereArgs: [noteId]);
+    }
     await db.delete(tableName, where: 'short_id = ?', whereArgs: [shortId]);
   }
 
@@ -179,6 +230,7 @@ class NotesDbHelper {
     required int createdAt,
     required int updatedAt,
     required bool deleted,
+    List<String>? tags,
   }) async {
     final db = await _getDb();
     if (deleted) {
@@ -200,8 +252,11 @@ class NotesDbHelper {
         where: 'short_id = ?',
         whereArgs: [shortId],
       );
+      if (tags != null) {
+        await setTagsForNote(existing['id'] as int, tags);
+      }
     } else {
-      await db.insert(tableName, {
+      final newId = await db.insert(tableName, {
         'short_id': shortId,
         'content': content,
         'created_at': createdAt,
@@ -209,6 +264,74 @@ class NotesDbHelper {
         'deleted': 0,
         'synced': 1,
       });
+      if (tags != null && tags.isNotEmpty) {
+        await setTagsForNote(newId, tags);
+      }
     }
+  }
+
+  // ---- Tag CRUD ----
+
+  /// Get tags for a single note.
+  Future<List<String>> getTagsForNote(int noteId) async {
+    final db = await _getDb();
+    final rows = await db.query(
+      tagTableName,
+      columns: ['tag'],
+      where: 'note_id = ?',
+      whereArgs: [noteId],
+    );
+    return rows.map((r) => r['tag'] as String).toList();
+  }
+
+  /// Get tags for multiple notes. Returns a map of note_id → tags.
+  Future<Map<int, List<String>>> getTagsForNotes(List<int> noteIds) async {
+    if (noteIds.isEmpty) return {};
+    final db = await _getDb();
+    final placeholders = noteIds.map((_) => '?').join(',');
+    final rows = await db.query(
+      tagTableName,
+      where: 'note_id IN ($placeholders)',
+      whereArgs: noteIds,
+    );
+    final result = <int, List<String>>{};
+    for (final noteId in noteIds) {
+      result[noteId] = [];
+    }
+    for (final row in rows) {
+      final noteId = row['note_id'] as int;
+      final tag = row['tag'] as String;
+      result.putIfAbsent(noteId, () => []).add(tag);
+    }
+    return result;
+  }
+
+  /// Replace all tags for a note.
+  Future<void> setTagsForNote(int noteId, List<String> tags) async {
+    final db = await _getDb();
+    final normalized = tags
+        .map((t) => t.trim())
+        .where((t) => t.isNotEmpty)
+        .toSet()
+        .toList();
+
+    await db.delete(tagTableName, where: 'note_id = ?', whereArgs: [noteId]);
+
+    for (final tag in normalized) {
+      await db.insert(tagTableName, {'note_id': noteId, 'tag': tag});
+    }
+  }
+
+  /// Get all distinct tags from non-deleted notes.
+  Future<List<String>> getAllTags() async {
+    final db = await _getDb();
+    final rows = await db.rawQuery('''
+      SELECT DISTINCT t.tag
+      FROM ${db.nameTable(tagTableName)} t
+      INNER JOIN ${db.nameTable(tableName)} n ON n.id = t.note_id
+      WHERE n.deleted = 0
+      ORDER BY t.tag ASC
+    ''');
+    return rows.map((r) => r['tag'] as String).toList();
   }
 }

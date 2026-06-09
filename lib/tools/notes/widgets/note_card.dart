@@ -92,6 +92,48 @@ class NoteCard extends StatelessWidget {
     );
   }
 
+  Widget _buildTags(BuildContext context) {
+    final tags = (note['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+    if (tags.isEmpty) return const SizedBox.shrink();
+
+    const maxVisible = 3;
+    final visible = tags.take(maxVisible).toList();
+    final remaining = tags.length - maxVisible;
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        ...visible.map(
+          (tag) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppTheme.accentTeal.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              tag,
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.accentTeal.withValues(alpha: 0.85),
+              ),
+            ),
+          ),
+        ),
+        if (remaining > 0)
+          Text(
+            '+$remaining',
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+          ),
+      ],
+    );
+  }
+
   Future<void> _shareNote(BuildContext context) async {
     final content = note['content'] as String;
     final shortId = note['short_id'] as String;
@@ -242,7 +284,9 @@ class NoteCard extends StatelessWidget {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
+              _buildTags(context),
+              const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

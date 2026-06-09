@@ -14,12 +14,18 @@ class NotesToolbar extends StatefulWidget {
   final Function(String query) onSearchChanged;
   final Function(String content) onImportMarkdown;
   final VoidCallback onRefresh;
+  final List<String> allTags;
+  final List<String> selectedFilterTags;
+  final ValueChanged<List<String>> onFilterTagsChanged;
 
   const NotesToolbar({
     super.key,
     required this.onSearchChanged,
     required this.onImportMarkdown,
     required this.onRefresh,
+    this.allTags = const [],
+    this.selectedFilterTags = const [],
+    required this.onFilterTagsChanged,
   });
 
   @override
@@ -121,7 +127,7 @@ class _NotesToolbarState extends State<NotesToolbar> {
 
   Future<void> _exportBackup() async {
     try {
-      final dbNotes = await NotesDbHelper.instance.getActiveNotes();
+      final dbNotes = await NotesDbHelper.instance.getActiveNotesWithTags();
 
       // Map schema structure matching blueprint export
       final notesList = dbNotes
@@ -131,6 +137,8 @@ class _NotesToolbarState extends State<NotesToolbar> {
               'content': n['content'],
               'createdAt': n['created_at'],
               'updatedAt': n['updated_at'],
+              if (n['tags'] is List && (n['tags'] as List).isNotEmpty)
+                'tags': n['tags'],
             },
           )
           .toList();
@@ -221,6 +229,7 @@ class _NotesToolbarState extends State<NotesToolbar> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -334,6 +343,52 @@ class _NotesToolbarState extends State<NotesToolbar> {
               ),
             ],
           ),
+          if (widget.allTags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: SizedBox(
+                height: 32,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: widget.allTags.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 6),
+                  itemBuilder: (context, index) {
+                    final tag = widget.allTags[index];
+                    final isSelected = widget.selectedFilterTags.contains(tag);
+                    return FilterChip(
+                      label: Text(tag, style: const TextStyle(fontSize: 12)),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        final updated = List<String>.from(
+                          widget.selectedFilterTags,
+                        );
+                        if (selected) {
+                          updated.add(tag);
+                        } else {
+                          updated.remove(tag);
+                        }
+                        widget.onFilterTagsChanged(updated);
+                      },
+                      visualDensity: VisualDensity.compact,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      selectedColor: AppTheme.accentTeal.withValues(alpha: 0.2),
+                      checkmarkColor: AppTheme.accentTeal,
+                      side: BorderSide.none,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.4),
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? AppTheme.accentTeal
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
         ],
       ),
     );

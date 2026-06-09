@@ -29,9 +29,11 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
   bool _isEditing = false;
   int? _editingId;
   String _editingContent = '';
+  List<String> _editingTags = [];
   bool _isViewing = false;
   Map<String, dynamic>? _viewingNote;
   String _searchQuery = '';
+  List<String> _selectedFilterTags = [];
 
   @override
   void initState() {
@@ -96,11 +98,16 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     }
   }
 
-  void _openEditor({int? id, String content = ''}) {
+  void _openEditor({
+    int? id,
+    String content = '',
+    List<String> tags = const [],
+  }) {
     setState(() {
       _isEditing = true;
       _editingId = id;
       _editingContent = content;
+      _editingTags = tags;
       _isViewing = false;
       _viewingNote = null;
     });
@@ -111,6 +118,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       _isEditing = false;
       _editingId = null;
       _editingContent = '';
+      _editingTags = [];
     });
   }
 
@@ -128,10 +136,10 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     });
   }
 
-  Future<void> _saveNote(String content) async {
+  Future<void> _saveNote(String content, List<String> tags) async {
     final appState = context.read<AppState>();
     try {
-      await appState.saveNote(content, id: _editingId);
+      await appState.saveNote(content, id: _editingId, tags: tags);
       _closeEditor();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -212,10 +220,27 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     final appState = context.watch<AppState>();
     final notes = appState.notes;
 
+    final allTags = <String>{};
+    for (final note in notes) {
+      final noteTags = note['tags'] as List<dynamic>? ?? [];
+      allTags.addAll(noteTags.cast<String>());
+    }
+    final sortedAllTags = allTags.toList()..sort();
+
+    final filteredNotes = _selectedFilterTags.isEmpty
+        ? notes
+        : notes.where((n) {
+            final noteTags =
+                (n['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+            return _selectedFilterTags.every((t) => noteTags.contains(t));
+          }).toList();
+
     if (_isEditing) {
       return NoteEditor(
         id: _editingId,
         initialContent: _editingContent,
+        initialTags: _editingTags,
+        allTags: sortedAllTags,
         onSave: _saveNote,
         onCancel: _closeEditor,
       );
@@ -275,6 +300,11 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
               onRefresh: () {
                 appState.loadNotes(query: _searchQuery);
               },
+              allTags: sortedAllTags,
+              selectedFilterTags: _selectedFilterTags,
+              onFilterTagsChanged: (tags) {
+                setState(() => _selectedFilterTags = tags);
+              },
             ),
             Expanded(
               child: appState.isLoadingNotes
@@ -286,12 +316,16 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
                       ),
                     )
                   : NotesList(
-                      notes: notes,
+                      notes: filteredNotes,
                       onTap: _openViewer,
                       onEdit: (note) {
                         _openEditor(
                           id: note['id'] as int,
                           content: note['content'] as String,
+                          tags:
+                              (note['tags'] as List<dynamic>?)
+                                  ?.cast<String>() ??
+                              [],
                         );
                       },
                       onDelete: (note) {

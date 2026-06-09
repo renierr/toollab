@@ -5,17 +5,22 @@ import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import 'package:tool_lab/widgets/zoomable_area.dart';
+import 'package:tool_lab/tools/notes/widgets/tag_input.dart';
 
 class NoteEditor extends StatefulWidget {
   final int? id;
   final String initialContent;
-  final Function(String content) onSave;
+  final List<String> initialTags;
+  final List<String> allTags;
+  final Function(String content, List<String> tags) onSave;
   final VoidCallback onCancel;
 
   const NoteEditor({
     super.key,
     this.id,
     required this.initialContent,
+    this.initialTags = const [],
+    this.allTags = const [],
     required this.onSave,
     required this.onCancel,
   });
@@ -29,6 +34,7 @@ class _NoteEditorState extends State<NoteEditor>
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
   TabController? _tabController;
+  late List<String> _tags;
 
   static final _listPrefix = RegExp(
     r'^(\s*)([-*+]\s\[[ x]\]\s|[-*+]\s|\d+[.)]\s)',
@@ -75,6 +81,7 @@ class _NoteEditorState extends State<NoteEditor>
     _controller = TextEditingController(text: widget.initialContent);
     _focusNode = FocusNode(onKeyEvent: _handleEnter);
     _tabController = TabController(length: 2, vsync: this);
+    _tags = List.from(widget.initialTags);
     _controller.addListener(() {
       setState(() {});
     });
@@ -283,7 +290,7 @@ class _NoteEditorState extends State<NoteEditor>
             TextButton(
               onPressed: _controller.text.trim().isEmpty
                   ? null
-                  : () => widget.onSave(_controller.text),
+                  : () => widget.onSave(_controller.text, _tags),
               child: Text(
                 'Save',
                 style: TextStyle(
@@ -311,6 +318,19 @@ class _NoteEditorState extends State<NoteEditor>
         body: Column(
           children: [
             _buildToolbar(context),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
+              child: TagInput(
+                tags: _tags,
+                onTagsChanged: (tags) {
+                  setState(() => _tags = tags);
+                },
+                suggestions: widget.allTags,
+              ),
+            ),
             Expanded(
               child: isWide
                   ? Row(

@@ -282,17 +282,34 @@ class AppState extends ChangeNotifier {
     _isLoadingNotes = true;
     notifyListeners();
     try {
-      _notes = await NotesDbHelper.instance.getActiveNotes(query: query);
+      _notes = await NotesDbHelper.instance.getActiveNotesWithTags(
+        query: query,
+      );
     } catch (e) {
-      debugPrint('[AppState] Failed to load notes: $e');
+      debugPrint('[AppState] Failed to load notes with tags: $e');
+      try {
+        _notes = await NotesDbHelper.instance.getActiveNotes(query: query);
+      } catch (e2) {
+        debugPrint('[AppState] Failed to load notes (fallback): $e2');
+      }
     } finally {
       _isLoadingNotes = false;
       notifyListeners();
     }
   }
 
-  Future<void> saveNote(String content, {int? id, String? shortId}) async {
-    await NotesDbHelper.instance.saveNote(content, id: id, shortId: shortId);
+  Future<void> saveNote(
+    String content, {
+    int? id,
+    String? shortId,
+    List<String>? tags,
+  }) async {
+    await NotesDbHelper.instance.saveNote(
+      content,
+      id: id,
+      shortId: shortId,
+      tags: tags,
+    );
     await loadNotes();
     if (_syncEnabled && _syncServerUrl.isNotEmpty) {
       // Sync in background
@@ -322,6 +339,7 @@ class AppState extends ChangeNotifier {
       final shortId = note['shortId'] as String?;
       final createdAt = note['createdAt'] as int?;
       final updatedAt = note['updatedAt'] as int?;
+      final tags = (note['tags'] as List<dynamic>?)?.cast<String>();
 
       final existing = shortId != null
           ? await NotesDbHelper.instance.getNoteByShortId(shortId)
@@ -333,6 +351,7 @@ class AppState extends ChangeNotifier {
           createdAt: createdAt ?? DateTime.now().millisecondsSinceEpoch,
           updatedAt: updatedAt ?? DateTime.now().millisecondsSinceEpoch,
           deleted: false,
+          tags: tags,
         );
       }
     }

@@ -23,11 +23,13 @@ class NotesSyncDelegate implements SyncDelegate {
   Future<Map<String, dynamic>?> getLocalRecordData(String id) async {
     final note = await NotesDbHelper.instance.getNoteByShortId(id);
     if (note == null || (note['deleted'] as int) == 1) return null;
+    final tags = (note['tags'] as List<dynamic>?)?.cast<String>() ?? [];
     return {
       'shortId': note['short_id'] as String,
       'content': note['content'] as String,
       'createdAt': note['created_at'] as int,
       'updatedAt': note['updated_at'] as int,
+      if (tags.isNotEmpty) 'tags': tags,
     };
   }
 
@@ -38,12 +40,14 @@ class NotesSyncDelegate implements SyncDelegate {
     required int updatedAt,
     required bool deleted,
   }) async {
+    final tags = (data['tags'] as List<dynamic>?)?.cast<String>();
     await NotesDbHelper.instance.savePulledNote(
       shortId: id,
       content: data['content'] as String? ?? '',
       createdAt: data['createdAt'] as int? ?? updatedAt,
       updatedAt: updatedAt,
       deleted: deleted,
+      tags: tags,
     );
   }
 
