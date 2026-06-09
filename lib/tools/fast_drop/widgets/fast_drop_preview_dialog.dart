@@ -44,7 +44,11 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
   void initState() {
     super.initState();
     if (_isPreviewable) {
-      _downloadFuture = widget.onDownload(widget.item.id);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _downloadFuture = widget.onDownload(widget.item.id);
+        }
+      });
     }
   }
 
