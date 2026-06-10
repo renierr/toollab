@@ -33,6 +33,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
   final ValueNotifier<int> _totalPagesNotifier = ValueNotifier<int>(0);
   bool _showOverlays = true;
   bool _suppressAutoHide = false;
+  bool _userToggledOverlays = false;
 
   List<PdfOutlineNode>? _outline;
   bool _isLoadingOutline = false;
@@ -81,6 +82,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         _currentPageNotifier.value = 1;
         _totalPagesNotifier.value = 0;
         _showOverlays = true;
+        _userToggledOverlays = false;
         _outline = null;
         _isSearchingText = false;
         _searchTextController.clear();
@@ -124,6 +126,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       _currentPageNotifier.value = 1;
       _totalPagesNotifier.value = 0;
       _showOverlays = true;
+      _userToggledOverlays = false;
       _outline = null;
       _isSearchingText = false;
       _searchTextController.clear();
@@ -329,7 +332,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               },
               onPageChanged: (pageNumber) {
                 _currentPageNotifier.value = pageNumber ?? 1;
-                if (_suppressAutoHide) {
+                if (_suppressAutoHide || _userToggledOverlays) {
                   _suppressAutoHide = false;
                   return;
                 }
@@ -343,6 +346,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               onViewerTap: () {
                 setState(() {
                   _showOverlays = !_showOverlays;
+                  _userToggledOverlays = true;
                 });
               },
             ),
