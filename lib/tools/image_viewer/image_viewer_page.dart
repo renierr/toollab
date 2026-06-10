@@ -7,6 +7,7 @@ import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:tool_lab/widgets/floating_back_button.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/tools/image_viewer/config.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_display.dart';
@@ -266,8 +267,13 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                     _showError('Flipping failed: $e');
                   }
                 },
-                onToggleCropMode: () =>
-                    _controller.setCropMode(!_controller.isCropMode),
+                onToggleCropMode: () {
+                  final enteringCrop = !_controller.isCropMode;
+                  _controller.setCropMode(enteringCrop);
+                  if (enteringCrop && !isWideScreen) {
+                    _scaffoldKey.currentState?.closeEndDrawer();
+                  }
+                },
                 isCropMode: _controller.isCropMode,
                 isWideScreen: isWideScreen,
               )
@@ -365,11 +371,14 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
         final Widget bodyContent = Stack(
           children: [
             mainContent,
+            if (!_controller.isCropMode)
+              const Positioned(left: 12, top: 12, child: FloatingBackButton()),
             ImageViewerLoadingOverlay(isVisible: _controller.isProcessing),
           ],
         );
 
-        final List<Widget>? actions = _controller.uiImage != null
+        final List<Widget>? actions =
+            _controller.uiImage != null && !_controller.isCropMode
             ? [
                 IconButton(
                   icon: const Icon(Icons.undo),
@@ -425,13 +434,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
               ]
             : null;
 
-        final Widget? fab = (_controller.uiImage != null && !isWideScreen)
-            ? FloatingActionButton(
-                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-                tooltip: 'Edit image',
-                child: const Icon(Icons.tune),
-              )
-            : null;
+        final Widget? fab = null;
 
         final Widget? endDrawer = (_controller.uiImage != null && !isWideScreen)
             ? Drawer(
@@ -460,6 +463,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
         return ToolLayout(
           title: ImageViewerTool.config.name,
           fullscreen: true,
+          showFloatingBackButton: false,
           scaffoldKey: _scaffoldKey,
           actions: actions,
           floatingActionButton: fab,
