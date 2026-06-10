@@ -27,7 +27,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   bool _isProcessing = false;
   bool _dragging = false;
 
-  ImageToPdfPageSize _pageSize = ImageToPdfPageSize.a4;
+  ImageToPdfPageSize _pageSize = ImageToPdfPageSize.fit;
   bool _landscape = false;
   int _jpegQuality = 90;
 
