@@ -79,6 +79,7 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
           color: theme.colorScheme.surfaceContainerHigh,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Row(
               children: [
                 _PresetButton(
