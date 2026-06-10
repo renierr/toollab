@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart'
     show XFile, XTypeGroup, openFiles;
 import 'package:image_picker/image_picker.dart' show ImagePicker;
@@ -24,6 +25,7 @@ class ImagesToPdfPage extends StatefulWidget {
 class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   final List<_ImageItem> _items = [];
   bool _isProcessing = false;
+  bool _dragging = false;
 
   ImageToPdfPageSize _pageSize = ImageToPdfPageSize.a4;
   bool _landscape = false;
@@ -123,62 +125,84 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     return ToolLayout(
       title: ImagesToPdfTool.config.name,
-      fullscreen: true,
-      showFloatingBackButton: false,
       child: Column(
         children: [
-          if (_items.isEmpty)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: FileDropZone(
-                  onFilesSelected: _onDropFiles,
-                  onFileSelected: _onFileSelected,
-                  allowedExtensions: _imageExtensions,
-                  typeLabel: 'Images',
-                  accentColor: ImagesToPdfTool.config.accentColor,
-                  icon: Icons.collections_bookmark_outlined,
-                  title: 'Drop images here',
-                  subtitle: 'Supports PNG, JPEG, WebP, BMP, GIF',
-                  buttonLabel: 'Browse Files',
-                  buttonIcon: Icons.folder_open,
-                  multiple: true,
-                  extraButtons: [
-                    if (Platform.isAndroid) ...[
-                      const SizedBox(height: 16),
-                      OutlinedButton.icon(
-                        onPressed: _pickFromGallery,
-                        icon: const Icon(Icons.photo_library_outlined),
-                        label: const Text('Pick from Gallery'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: ImagesToPdfTool.config.accentColor,
-                          side: BorderSide(
-                            color: ImagesToPdfTool.config.accentColor
-                                .withValues(alpha: 0.5),
+          Expanded(
+            child: _items.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: FileDropZone(
+                      onFilesSelected: _onDropFiles,
+                      onFileSelected: _onFileSelected,
+                      allowedExtensions: _imageExtensions,
+                      typeLabel: 'Images',
+                      accentColor: ImagesToPdfTool.config.accentColor,
+                      icon: Icons.collections_bookmark_outlined,
+                      title: 'Drop images here',
+                      subtitle: 'Supports PNG, JPEG, WebP, BMP, GIF',
+                      buttonLabel: 'Browse Files',
+                      buttonIcon: Icons.folder_open,
+                      multiple: true,
+                      extraButtons: [
+                        if (Platform.isAndroid) ...[
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            onPressed: _pickFromGallery,
+                            icon: const Icon(Icons.photo_library_outlined),
+                            label: const Text('Pick from Gallery'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor:
+                                  ImagesToPdfTool.config.accentColor,
+                              side: BorderSide(
+                                color: ImagesToPdfTool.config.accentColor
+                                    .withValues(alpha: 0.5),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                        ],
+                      ],
+                    ),
+                  )
+                : DropTarget(
+                    onDragDone: (details) {
+                      setState(() => _dragging = false);
+                      final valid = details.files.where((f) {
+                        final name = f.name.toLowerCase();
+                        return _imageExtensions.any(
+                          (ext) => name.endsWith('.${ext.toLowerCase()}'),
+                        );
+                      }).toList();
+                      if (valid.isNotEmpty) _onDropFiles(valid);
+                    },
+                    onDragEntered: (_) => setState(() => _dragging = true),
+                    onDragExited: (_) => setState(() => _dragging = false),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: _dragging
+                              ? ImagesToPdfTool.config.accentColor
+                              : Colors.transparent,
+                          width: 3,
                         ),
+                        borderRadius: BorderRadius.circular(24),
                       ),
-                    ],
-                  ],
-                ),
-              ),
-            )
-          else
-            Expanded(
-              child: ImagesToPdfPreview(
-                images: _items.map((i) => i.bytes).toList(),
-                names: _items.map((i) => i.name).toList(),
-                onRemove: _removeImage,
-                onReorder: _reorderImages,
-              ),
-            ),
+                      child: ImagesToPdfPreview(
+                        images: _items.map((i) => i.bytes).toList(),
+                        names: _items.map((i) => i.name).toList(),
+                        onRemove: _removeImage,
+                        onReorder: _reorderImages,
+                      ),
+                    ),
+                  ),
+          ),
           if (_isProcessing) LinearProgressIndicator(),
           ImagesToPdfToolbar(
             imageCount: _items.length,
