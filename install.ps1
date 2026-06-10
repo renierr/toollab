@@ -1,9 +1,10 @@
-param(
+﻿param(
   [switch]$Uninstall,
   [switch]$Silent
 )
 
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
 $AppName = 'ToolLab'
 $ExeName = 'tool_lab.exe'
 $Company = 'de.renier'

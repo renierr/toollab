@@ -96,6 +96,12 @@ create_zip() {
       cp "$f" "$stage_dir/"
       if [ "$(basename "$f")" = "install.ps1" ] && [ -n "$VERSION" ]; then
         sed -i "s/\$Version = '[^']*'/\$Version = '${VERSION}'/g" "$stage_dir/install.ps1"
+        # sed strips the UTF-8 BOM; re-add it so Windows PowerShell 5.1 reads the
+        # script as UTF-8 (keeps Unicode chars like → from being corrupted).
+        if ! head -c 3 "$stage_dir/install.ps1" | grep -q $'\xEF\xBB\xBF'; then
+          printf '\xEF\xBB\xBF' | cat - "$stage_dir/install.ps1" > "$stage_dir/install.ps1.tmp" \
+            && mv "$stage_dir/install.ps1.tmp" "$stage_dir/install.ps1"
+        fi
       fi
     fi
   done
