@@ -25,8 +25,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
   FlutterWindow window(project);
-  Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
+  HMONITOR primary = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY);
+  UINT dpi = FlutterDesktopGetDpiForMonitor(primary);
+  double scale = dpi / 96.0;
+  int screenWidthLog =
+      static_cast<int>(GetSystemMetrics(SM_CXSCREEN) / scale);
+  int screenHeightLog =
+      static_cast<int>(GetSystemMetrics(SM_CYSCREEN) / scale);
+  Win32Window::Point origin(
+      (screenWidthLog - static_cast<int>(size.width)) / 2,
+      (screenHeightLog - static_cast<int>(size.height)) / 2);
   if (!window.Create(L"ToolLab", origin, size)) {
     return EXIT_FAILURE;
   }
