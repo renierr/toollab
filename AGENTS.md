@@ -16,7 +16,7 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **Caveman style**: Short, direct answers. No filler.
 - Do not run production compilation or release builds unless explicitly requested.
 - **Git Write Consent**: Never run git write operations (`git add`, `git commit`, `git push`) without fresh explicit approval for each write command. "Fix it" or "proceed" is not approval to commit or push — ask first. A single "commit" or "push" in a prompt does not authorize further commits later in the same session — each requires its own explicit approval.
-- Never mention AI agents in commit messages or code.
+- Never mention AI agents in commit messages or code. This includes `Co-Authored-By: Claude ...` trailers and any "Generated with Claude Code" attribution in commits or PR descriptions — omit them entirely.
 - **Resilience to Rejected Commands**: If a user rejects or stops a command execution, continue the task and provide the alternative results or plan. A rejected command must not abort the overall execution.
 - **State Management & Data Flow**: Always channel app state through providers in `lib/providers/`. Never update local state variables in views for persistent data.
 - **Small Screen Fitting**: Always use responsive layouts (like `Wrap` instead of horizontal `Row` for actions, and scrollable/grid metrics) in dialogs/modals/cards to prevent overflow on mobile.
