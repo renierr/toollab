@@ -248,6 +248,33 @@ class PdfOverlayControls extends StatelessWidget {
                   spacing: 16,
                   runSpacing: 8,
                   children: [
+                    // Share / Download
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.share_outlined),
+                          onPressed: onShare,
+                          tooltip: 'Share File',
+                          iconSize: 16,
+                          constraints: const BoxConstraints(
+                            minWidth: 28,
+                            minHeight: 28,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.download_outlined),
+                          onPressed: onDownload,
+                          tooltip: 'Save to Downloads',
+                          iconSize: 16,
+                          constraints: const BoxConstraints(
+                            minWidth: 28,
+                            minHeight: 28,
+                          ),
+                        ),
+                      ],
+                    ),
+
                     // Page Controls
                     ListenableBuilder(
                       listenable: Listenable.merge([
