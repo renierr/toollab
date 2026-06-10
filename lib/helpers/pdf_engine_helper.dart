@@ -146,8 +146,11 @@ class PdfEngineHelper {
       indices = order.where((i) => i >= 0 && i < totalPages).toList();
     }
 
-    doc.pages = indices.map((i) => pages[i]).toList();
-    return doc.encodePdf();
+    final newDoc = await PdfDocument.createNew(sourceName: 'reorganized.pdf');
+    newDoc.pages = indices.map((i) => pages[i]).toList();
+    final bytes = await newDoc.encodePdf();
+    newDoc.dispose();
+    return bytes;
   }
 
   static Future<Uint8List> insertPagesFromPdf(

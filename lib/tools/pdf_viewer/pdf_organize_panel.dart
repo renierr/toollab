@@ -217,18 +217,10 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       _isProcessing = true;
     });
     try {
-      final hasExternalPages = _pages.any((p) => p.index < 0);
-
-      Uint8List bytes;
-      if (hasExternalPages) {
-        final newDoc = await PdfDocument.createNew(sourceName: 'organized.pdf');
-        newDoc.pages = _pages.map((p) => p.page).toList();
-        bytes = await newDoc.encodePdf();
-        newDoc.dispose();
-      } else {
-        final order = _pages.map((p) => p.index).toList();
-        bytes = await PdfEngineHelper.reorganizePdf(_doc!, order: order);
-      }
+      final newDoc = await PdfDocument.createNew(sourceName: 'organized.pdf');
+      newDoc.pages = _pages.map((p) => p.page).toList();
+      final bytes = await newDoc.encodePdf();
+      newDoc.dispose();
 
       if (mounted) {
         setState(() {
