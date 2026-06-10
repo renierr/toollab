@@ -33,10 +33,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       static_cast<int>(GetSystemMetrics(SM_CXSCREEN) / scale);
   int screenHeightLog =
       static_cast<int>(GetSystemMetrics(SM_CYSCREEN) / scale);
+
+  // Clamp window size to fit within screen bounds
+  unsigned int windowWidth = size.width;
+  unsigned int windowHeight = size.height;
+  if (screenWidthLog < static_cast<int>(windowWidth)) {
+    windowWidth = static_cast<unsigned int>(screenWidthLog);
+  }
+  if (screenHeightLog < static_cast<int>(windowHeight)) {
+    windowHeight = static_cast<unsigned int>(screenHeightLog);
+  }
+
+  int originX =
+      (screenWidthLog - static_cast<int>(windowWidth)) / 2;
+  int originY =
+      (screenHeightLog - static_cast<int>(windowHeight)) / 2;
   Win32Window::Point origin(
-      (screenWidthLog - static_cast<int>(size.width)) / 2,
-      (screenHeightLog - static_cast<int>(size.height)) / 2);
-  if (!window.Create(L"ToolLab", origin, size)) {
+      originX < 0 ? 0u : static_cast<unsigned int>(originX),
+      originY < 0 ? 0u : static_cast<unsigned int>(originY));
+
+  Win32Window::Size clampedSize(windowWidth, windowHeight);
+  if (!window.Create(L"ToolLab", origin, clampedSize)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
