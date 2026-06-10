@@ -68,6 +68,7 @@ object ShortcutHelper {
             "markdown-viewer" -> "de.renier.tool_lab.MarkdownViewerAlias"
             "image-viewer" -> "de.renier.tool_lab.ImageViewerAlias"
             "fast-drop" -> "de.renier.tool_lab.FastDropAlias"
+            "images-to-pdf" -> "de.renier.tool_lab.ImagesToPdfAlias"
             else -> return
         }
 

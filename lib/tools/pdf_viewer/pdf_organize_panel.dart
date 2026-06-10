@@ -6,6 +6,7 @@ import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class PdfOrganizePanel extends StatefulWidget {
   final String filePath;
@@ -133,7 +134,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
+        builder: (ctx, setDialogState) => ResponsiveAlertDialog(
           title: Text('Insert Pages from "$srcName"'),
           content: SizedBox(
             width: 360,
@@ -182,7 +183,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
                 Navigator.of(ctx).pop();
                 setState(() => _isProcessing = false);
               },
-              child: const Text('Cancel'),
+              child: const Text('Close'),
             ),
             FilledButton(
               onPressed: () {

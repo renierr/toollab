@@ -12,8 +12,8 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/tools/images_to_pdf/config.dart';
-import 'package:tool_lab/tools/images_to_pdf/images_to_pdf_preview.dart';
-import 'package:tool_lab/tools/images_to_pdf/images_to_pdf_toolbar.dart';
+import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_preview.dart';
+import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_toolbar.dart';
 
 class ImagesToPdfPage extends StatefulWidget {
   const ImagesToPdfPage({super.key});
