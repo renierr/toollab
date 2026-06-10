@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 
 class ImageViewerCropPanel extends StatefulWidget {
   final ui.Image image;
@@ -31,11 +32,19 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
   double? _aspectRatio; // null means Freeform
   String _activePreset = 'Free';
 
+  final ScrollController _presetScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     _imageWidth = widget.image.width;
     _imageHeight = widget.image.height;
+  }
+
+  @override
+  void dispose() {
+    _presetScrollController.dispose();
+    super.dispose();
   }
 
   void _applyPreset(double? ratio, String label) {
@@ -77,41 +86,56 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           color: theme.colorScheme.surfaceContainerHigh,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Row(
-              children: [
-                _PresetButton(
-                  label: 'Free',
-                  isActive: _activePreset == 'Free',
-                  onPressed: () => _applyPreset(null, 'Free'),
+          child: Listener(
+            onPointerSignal: (event) {
+              if (event is PointerScrollEvent && event.scrollDelta.dy != 0) {
+                _presetScrollController.animateTo(
+                  _presetScrollController.offset + event.scrollDelta.dy,
+                  duration: const Duration(milliseconds: 80),
+                  curve: Curves.linear,
+                );
+              }
+            },
+            child: Scrollbar(
+              controller: _presetScrollController,
+              child: SingleChildScrollView(
+                controller: _presetScrollController,
+                scrollDirection: Axis.horizontal,
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Row(
+                  children: [
+                    _PresetButton(
+                      label: 'Free',
+                      isActive: _activePreset == 'Free',
+                      onPressed: () => _applyPreset(null, 'Free'),
+                    ),
+                    const SizedBox(width: 8),
+                    _PresetButton(
+                      label: '1:1 Square',
+                      isActive: _activePreset == '1:1 Square',
+                      onPressed: () => _applyPreset(1.0, '1:1 Square'),
+                    ),
+                    const SizedBox(width: 8),
+                    _PresetButton(
+                      label: '16:9 Widescreen',
+                      isActive: _activePreset == '16:9 Widescreen',
+                      onPressed: () => _applyPreset(16 / 9, '16:9 Widescreen'),
+                    ),
+                    const SizedBox(width: 8),
+                    _PresetButton(
+                      label: '4:3 Standard',
+                      isActive: _activePreset == '4:3 Standard',
+                      onPressed: () => _applyPreset(4 / 3, '4:3 Standard'),
+                    ),
+                    const SizedBox(width: 8),
+                    _PresetButton(
+                      label: '3:2 Photo',
+                      isActive: _activePreset == '3:2 Photo',
+                      onPressed: () => _applyPreset(3 / 2, '3:2 Photo'),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                _PresetButton(
-                  label: '1:1 Square',
-                  isActive: _activePreset == '1:1 Square',
-                  onPressed: () => _applyPreset(1.0, '1:1 Square'),
-                ),
-                const SizedBox(width: 8),
-                _PresetButton(
-                  label: '16:9 Widescreen',
-                  isActive: _activePreset == '16:9 Widescreen',
-                  onPressed: () => _applyPreset(16 / 9, '16:9 Widescreen'),
-                ),
-                const SizedBox(width: 8),
-                _PresetButton(
-                  label: '4:3 Standard',
-                  isActive: _activePreset == '4:3 Standard',
-                  onPressed: () => _applyPreset(4 / 3, '4:3 Standard'),
-                ),
-                const SizedBox(width: 8),
-                _PresetButton(
-                  label: '3:2 Photo',
-                  isActive: _activePreset == '3:2 Photo',
-                  onPressed: () => _applyPreset(3 / 2, '3:2 Photo'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
