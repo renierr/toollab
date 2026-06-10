@@ -3,7 +3,8 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 
 class FileDropZone extends StatefulWidget {
-  final ValueChanged<XFile> onFileSelected;
+  final ValueChanged<XFile>? onFileSelected;
+  final ValueChanged<List<XFile>>? onFilesSelected;
   final List<String> allowedExtensions;
   final List<String>? allowedMimeTypes;
   final String typeLabel;
@@ -15,10 +16,12 @@ class FileDropZone extends StatefulWidget {
   final IconData buttonIcon;
   final List<Widget>? extraButtons;
   final bool compact;
+  final bool multiple;
 
   const FileDropZone({
     super.key,
-    required this.onFileSelected,
+    this.onFileSelected,
+    this.onFilesSelected,
     required this.allowedExtensions,
     required this.typeLabel,
     required this.accentColor,
@@ -30,7 +33,11 @@ class FileDropZone extends StatefulWidget {
     this.buttonIcon = Icons.folder_open,
     this.extraButtons,
     this.compact = false,
-  });
+    this.multiple = false,
+  }) : assert(
+         onFileSelected != null || onFilesSelected != null,
+         'Either onFileSelected or onFilesSelected must be provided',
+       );
 
   @override
   State<FileDropZone> createState() => _FileDropZoneState();
@@ -51,11 +58,20 @@ class _FileDropZoneState extends State<FileDropZone> {
             : null,
         mimeTypes: widget.allowedMimeTypes,
       );
-      final file = await openFile(
-        acceptedTypeGroups: hasFilters ? [typeGroup] : const <XTypeGroup>[],
-      );
-      if (file != null && mounted) {
-        widget.onFileSelected(file);
+      if (widget.multiple) {
+        final files = await openFiles(
+          acceptedTypeGroups: hasFilters ? [typeGroup] : const <XTypeGroup>[],
+        );
+        if (files.isNotEmpty && mounted) {
+          widget.onFilesSelected?.call(files);
+        }
+      } else {
+        final file = await openFile(
+          acceptedTypeGroups: hasFilters ? [typeGroup] : const <XTypeGroup>[],
+        );
+        if (file != null && mounted) {
+          widget.onFileSelected?.call(file);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -76,31 +92,45 @@ class _FileDropZoneState extends State<FileDropZone> {
     return DropTarget(
       onDragDone: (details) {
         setState(() => _dragging = false);
-        if (details.files.isNotEmpty) {
-          final file = details.files.first;
-          final name = file.name.toLowerCase();
-          bool isValid = widget.allowedExtensions.isEmpty;
-          if (!isValid) {
-            for (final ext in widget.allowedExtensions) {
-              if (name.endsWith('.${ext.toLowerCase()}')) {
-                isValid = true;
-                break;
-              }
+        if (details.files.isEmpty) return;
+
+        if (widget.onFilesSelected != null) {
+          final valid = details.files.where((f) {
+            final name = f.name.toLowerCase();
+            return widget.allowedExtensions.isEmpty ||
+                widget.allowedExtensions.any(
+                  (ext) => name.endsWith('.${ext.toLowerCase()}'),
+                );
+          }).toList();
+          if (valid.isNotEmpty) {
+            widget.onFilesSelected!(valid);
+          }
+          return;
+        }
+
+        final file = details.files.first;
+        final name = file.name.toLowerCase();
+        bool isValid = widget.allowedExtensions.isEmpty;
+        if (!isValid) {
+          for (final ext in widget.allowedExtensions) {
+            if (name.endsWith('.${ext.toLowerCase()}')) {
+              isValid = true;
+              break;
             }
           }
-          if (isValid) {
-            widget.onFileSelected(file);
-          } else {
-            if (mounted) {
-              final extensionsStr = widget.allowedExtensions
-                  .map((e) => '.$e')
-                  .join(' or ');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Only $extensionsStr files are supported'),
-                ),
-              );
-            }
+        }
+        if (isValid) {
+          widget.onFileSelected?.call(file);
+        } else {
+          if (mounted) {
+            final extensionsStr = widget.allowedExtensions
+                .map((e) => '.$e')
+                .join(' or ');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Only $extensionsStr files are supported'),
+              ),
+            );
           }
         }
       },

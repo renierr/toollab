@@ -1,7 +1,7 @@
 name: tool_lab
 description: "A multi-tool utility app with device sensors, calculator, and more."
 publish_to: "none"
-version: 1.3.2+15
+version: 1.4.0+16
 
 environment:
   sdk: ^3.12.1
@@ -28,6 +28,7 @@ dependencies:
   nfc_manager: ^4.2.1
   nfc_manager_ndef: ^1.1.0
   pdfrx: ^2.4.3
+  pdfrx_engine: ^0.4.2
   desktop_drop: ^0.7.1
   flutter_markdown_plus: ^1.0.7
   url_launcher: ^6.3.0

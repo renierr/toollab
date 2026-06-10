@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_mode.dart';
 
 class PdfOverlayControls extends StatelessWidget {
   final String fileName;
@@ -8,6 +9,8 @@ class PdfOverlayControls extends StatelessWidget {
   final ValueNotifier<int> currentPageNotifier;
   final ValueNotifier<int> totalPagesNotifier;
   final bool visible;
+  final PdfViewerMode currentMode;
+  final ValueChanged<PdfViewerMode> onModeChanged;
   final VoidCallback onBack;
   final VoidCallback onShare;
   final VoidCallback onDownload;
@@ -37,6 +40,8 @@ class PdfOverlayControls extends StatelessWidget {
     required this.currentPageNotifier,
     required this.totalPagesNotifier,
     required this.visible,
+    required this.currentMode,
+    required this.onModeChanged,
     required this.onBack,
     required this.onShare,
     required this.onDownload,
@@ -95,52 +100,51 @@ class PdfOverlayControls extends StatelessWidget {
             onPressed: onToggleSearch,
             tooltip: 'Search Text',
           ),
-          PopupMenuButton<PdfLayoutMode>(
-            icon: const Icon(Icons.layers_outlined),
-            tooltip: 'Page Layout',
-            onSelected: onLayoutModeChanged,
+          PopupMenuButton<PdfViewerMode>(
+            icon: Icon(
+              currentMode == PdfViewerMode.organize
+                  ? Icons.reorder
+                  : currentMode == PdfViewerMode.flatten
+                  ? Icons.photo_library_outlined
+                  : Icons.more_vert,
+            ),
+            tooltip: 'More',
+            onSelected: onModeChanged,
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: PdfLayoutMode.vertical,
-                child: Row(
-                  children: [
-                    Icon(Icons.splitscreen_outlined),
-                    SizedBox(width: 8),
-                    Text('Vertical Scroll'),
-                  ],
+              if (currentMode != PdfViewerMode.view)
+                const PopupMenuItem(
+                  value: PdfViewerMode.view,
+                  child: Row(
+                    children: [
+                      Icon(Icons.visibility_outlined),
+                      SizedBox(width: 8),
+                      Text('View'),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: PdfLayoutMode.horizontal,
-                child: Row(
-                  children: [
-                    Icon(Icons.view_week_outlined),
-                    SizedBox(width: 8),
-                    Text('Horizontal Scroll'),
-                  ],
+              if (currentMode != PdfViewerMode.organize)
+                const PopupMenuItem(
+                  value: PdfViewerMode.organize,
+                  child: Row(
+                    children: [
+                      Icon(Icons.reorder),
+                      SizedBox(width: 8),
+                      Text('Organize Pages'),
+                    ],
+                  ),
                 ),
-              ),
-              const PopupMenuItem(
-                value: PdfLayoutMode.doublePage,
-                child: Row(
-                  children: [
-                    Icon(Icons.auto_stories_outlined),
-                    SizedBox(width: 8),
-                    Text('Double Page View'),
-                  ],
+              if (currentMode != PdfViewerMode.flatten)
+                const PopupMenuItem(
+                  value: PdfViewerMode.flatten,
+                  child: Row(
+                    children: [
+                      Icon(Icons.photo_library_outlined),
+                      SizedBox(width: 8),
+                      Text('Flatten PDF'),
+                    ],
+                  ),
                 ),
-              ),
             ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            onPressed: onShare,
-            tooltip: 'Share File',
-          ),
-          IconButton(
-            icon: const Icon(Icons.download_outlined),
-            onPressed: onDownload,
-            tooltip: 'Save to Downloads',
           ),
         ],
       ),

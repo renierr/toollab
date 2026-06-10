@@ -737,7 +737,7 @@ packages:
     source: hosted
     version: "2.4.3"
   pdfrx_engine:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: pdfrx_engine
       sha256: a201b11e13b6c729d731ddc96ce06394cce8503c39e4c7e9d2fa51b3e7b351a5

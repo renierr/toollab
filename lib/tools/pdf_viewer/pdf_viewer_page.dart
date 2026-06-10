@@ -1,10 +1,13 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/pdf_engine_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/tools/pdf_viewer/config.dart';
@@ -12,6 +15,9 @@ import 'package:tool_lab/tools/pdf_viewer/pdf_display.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_overlay_controls.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_drawer.dart';
 import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_mode.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_organize_panel.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_flatten_panel.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 
 class PdfViewerPage extends StatefulWidget {
@@ -46,12 +52,16 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
   PdfLayoutMode _layoutMode = PdfLayoutMode.vertical;
 
+  PdfViewerMode _mode = PdfViewerMode.view;
+  late final TempFileScope _tempScope;
+
   @override
   void initState() {
     super.initState();
     _pdfController = PdfViewerController();
 
     _searchTextController.addListener(_onSearchTextChanged);
+    _tempScope = TempFileManager.createScope();
 
     onDispose(() {
       _pdfTextSearcher?.removeListener(_onSearchChanged);
@@ -59,6 +69,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       _searchTextController.dispose();
       _currentPageNotifier.dispose();
       _totalPagesNotifier.dispose();
+      _tempScope.cleanTracked();
     });
 
     if (widget.sharedFile != null) {
@@ -115,14 +126,12 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     _pdfTextSearcher?.startTextSearch(text);
   }
 
-  void _onFileSelected(XFile file) {
+  void _resetViewerState() {
     _pdfTextSearcher?.removeListener(_onSearchChanged);
     _pdfTextSearcher?.dispose();
     _pdfTextSearcher = null;
 
     setState(() {
-      _filePath = file.path;
-      _fileName = file.name;
       _currentPageNotifier.value = 1;
       _totalPagesNotifier.value = 0;
       _showOverlays = true;
@@ -130,6 +139,14 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       _outline = null;
       _isSearchingText = false;
       _searchTextController.clear();
+    });
+  }
+
+  void _onFileSelected(XFile file) {
+    _resetViewerState();
+    setState(() {
+      _filePath = file.path;
+      _fileName = file.name;
     });
   }
 
@@ -263,6 +280,45 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     );
   }
 
+  void _setMode(PdfViewerMode mode) {
+    setState(() => _mode = mode);
+  }
+
+  Future<void> _onOrganizeComplete(Uint8List pdfBytes, String name) async {
+    final path = await PdfEngineHelper.savePdfToTemp(pdfBytes, name);
+    if (mounted) {
+      _resetViewerState();
+      setState(() {
+        _mode = PdfViewerMode.view;
+        _filePath = path;
+        _fileName = name;
+      });
+    }
+  }
+
+  Future<void> _onOrganizeCancel() async {
+    setState(() => _mode = PdfViewerMode.view);
+  }
+
+  Future<void> _onFlattenComplete(Uint8List pdfBytes) async {
+    final path = await PdfEngineHelper.savePdfToTemp(
+      pdfBytes,
+      '${_fileName ?? 'document'}_flattened.pdf',
+    );
+    if (mounted) {
+      _resetViewerState();
+      setState(() {
+        _mode = PdfViewerMode.view;
+        _filePath = path;
+        _fileName = '${_fileName ?? 'document'}_flattened.pdf';
+      });
+    }
+  }
+
+  void _onFlattenCancel() {
+    setState(() => _mode = PdfViewerMode.view);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -279,6 +335,39 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
           icon: Icons.picture_as_pdf_outlined,
           title: 'Open a PDF File',
           subtitle: 'Drag & drop a .pdf file here',
+        ),
+      );
+    }
+
+    if (_mode == PdfViewerMode.organize) {
+      return ToolLayout(
+        title: PdfViewerTool.config.name,
+        fullscreen: true,
+        showFloatingBackButton: false,
+        scaffoldKey: _scaffoldKey,
+        backgroundColor: theme.colorScheme.surface,
+        child: PdfOrganizePanel(
+          filePath: _filePath!,
+          fileName: _fileName ?? 'document.pdf',
+          tempScope: _tempScope,
+          onComplete: _onOrganizeComplete,
+          onCancel: _onOrganizeCancel,
+        ),
+      );
+    }
+
+    if (_mode == PdfViewerMode.flatten) {
+      return ToolLayout(
+        title: PdfViewerTool.config.name,
+        fullscreen: true,
+        showFloatingBackButton: false,
+        scaffoldKey: _scaffoldKey,
+        backgroundColor: theme.colorScheme.surface,
+        child: PdfFlattenPanel(
+          filePath: _filePath!,
+          fileName: _fileName ?? 'document.pdf',
+          onComplete: _onFlattenComplete,
+          onCancel: _onFlattenCancel,
         ),
       );
     }
@@ -300,6 +389,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         children: [
           Positioned.fill(
             child: PdfDisplay(
+              key: ValueKey(_filePath),
               filePath: _filePath!,
               controller: _pdfController,
               boundaryMargin: EdgeInsets.only(
@@ -358,6 +448,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               currentPageNotifier: _currentPageNotifier,
               totalPagesNotifier: _totalPagesNotifier,
               visible: _showOverlays,
+              currentMode: _mode,
+              onModeChanged: _setMode,
               onBack: () {
                 if (widget.sharedFile != null) {
                   if (Navigator.of(context).canPop()) {
