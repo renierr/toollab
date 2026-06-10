@@ -246,7 +246,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
     if (_resultBytes == null) return;
     await FileSaveHelper.saveFile(
       context: context,
-      suggestedName: 'organized_${widget.fileName}',
+      suggestedName: '${widget.fileName}_organized',
       bytes: _resultBytes,
     );
   }
@@ -255,7 +255,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
     if (_resultBytes == null) return;
     final path = await PdfEngineHelper.savePdfToTemp(
       _resultBytes!,
-      'organized_${widget.fileName}',
+      '${widget.fileName}_organized',
     );
     if (mounted) {
       await FileSaveHelper.showShareChooser(
@@ -418,7 +418,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
               TextButton.icon(
                 onPressed: () => widget.onComplete(
                   _resultBytes!,
-                  'organized_${widget.fileName}',
+                  '${widget.fileName}_organized',
                 ),
                 icon: const Icon(Icons.open_in_new),
                 label: const Text('Open in Viewer'),
