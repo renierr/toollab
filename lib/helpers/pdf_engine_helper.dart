@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:pdfrx/pdfrx.dart';
@@ -69,8 +70,10 @@ class PdfEngineHelper {
     }
   }
 
-  static Future<Uint8List> createPdfFromImages(
-    List<Uint8List> imageBytes, {
+  /// Reads and decodes each image from disk one at a time, so the full set of
+  /// source images is never held in memory at once.
+  static Future<Uint8List> createPdfFromImagePaths(
+    List<String> imagePaths, {
     ImageToPdfPageSize pageSize = ImageToPdfPageSize.a4,
     int jpegQuality = 90,
     bool landscape = false,
@@ -78,8 +81,9 @@ class PdfEngineHelper {
     await _ensureInit();
     final docs = <PdfDocument>[];
     try {
-      for (int i = 0; i < imageBytes.length; i++) {
-        final decoded = img.decodeImage(imageBytes[i]);
+      for (int i = 0; i < imagePaths.length; i++) {
+        final bytes = await File(imagePaths[i]).readAsBytes();
+        final decoded = img.decodeImage(bytes);
         if (decoded == null) throw Exception('Failed to decode image $i');
 
         final jpegData = Uint8List.fromList(
@@ -189,22 +193,32 @@ class PdfEngineHelper {
     int jpegQuality = 90,
     String format = 'jpeg',
   }) async {
-    final images = <Uint8List>[];
+    final ext = format == 'jpeg' ? 'jpg' : 'png';
     final pages = doc.pages.toList();
-    for (int i = 0; i < pages.length; i++) {
-      final bytes = await renderPageToBytes(
-        pages[i],
-        dpi: dpi,
-        format: format,
+    final names = <String>[];
+    final paths = <String>[];
+    try {
+      for (int i = 0; i < pages.length; i++) {
+        final bytes = await renderPageToBytes(
+          pages[i],
+          dpi: dpi,
+          format: format,
+          jpegQuality: jpegQuality,
+        );
+        final name = 'flatten_${identityHashCode(doc)}_$i.$ext';
+        names.add(name);
+        paths.add(await TempFileManager.createFile(name, bytes: bytes));
+      }
+      return await createPdfFromImagePaths(
+        paths,
+        pageSize: ImageToPdfPageSize.fit,
         jpegQuality: jpegQuality,
       );
-      images.add(bytes);
+    } finally {
+      for (final name in names) {
+        await TempFileManager.deleteFile(name);
+      }
     }
-    return createPdfFromImages(
-      images,
-      pageSize: ImageToPdfPageSize.fit,
-      jpegQuality: jpegQuality,
-    );
   }
 
   static Future<String> savePdfToTemp(Uint8List bytes, String name) async {

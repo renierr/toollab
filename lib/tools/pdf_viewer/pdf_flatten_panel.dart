@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 
 class PdfFlattenPanel extends StatefulWidget {
   final String filePath;
@@ -23,7 +25,7 @@ class PdfFlattenPanel extends StatefulWidget {
 
 enum _FlattenPhase { options, processing, done }
 
-class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
+class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
   _FlattenPhase _phase = _FlattenPhase.options;
 
   int _dpi = 200;
@@ -35,6 +37,15 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
   Uint8List? _resultBytes;
   int _totalPages = 0;
 
+  late final TempFileScope _scope;
+
+  @override
+  void initState() {
+    super.initState();
+    _scope = TempFileManager.createScope();
+    onDispose(() => _scope.cleanTracked());
+  }
+
   Future<void> _execute() async {
     setState(() {
       _phase = _FlattenPhase.processing;
@@ -42,10 +53,12 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
     });
 
     try {
+      await _scope.cleanTracked();
       final doc = await PdfEngineHelper.openPdf(widget.filePath);
       _totalPages = doc.pages.length;
+      final ext = _format == 'jpeg' ? 'jpg' : 'png';
 
-      final images = <Uint8List>[];
+      final pagePaths = <String>[];
       for (int i = 0; i < _totalPages; i++) {
         if (!mounted) {
           doc.dispose();
@@ -63,7 +76,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
           format: _format,
           jpegQuality: _jpegQuality,
         );
-        images.add(bytes);
+        pagePaths.add(await _scope.createFile('flatten_$i.$ext', bytes: bytes));
       }
 
       doc.dispose();
@@ -74,8 +87,8 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
         _statusText = 'Creating PDF...';
       });
 
-      final pdfBytes = await PdfEngineHelper.createPdfFromImages(
-        images,
+      final pdfBytes = await PdfEngineHelper.createPdfFromImagePaths(
+        pagePaths,
         pageSize: ImageToPdfPageSize.fit,
         jpegQuality: _jpegQuality,
       );

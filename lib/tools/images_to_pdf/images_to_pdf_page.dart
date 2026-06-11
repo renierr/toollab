@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart'
@@ -32,6 +31,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   int _jpegQuality = 90;
 
   late final TempFileScope _tempScope;
+  int _seq = 0;
 
   static const _imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'];
 
@@ -45,10 +45,16 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   Future<void> _addFiles(List<XFile> files) async {
     for (final file in files) {
       try {
+        // Persist to temp and keep only the path, so images are not all held in memory.
         final bytes = await file.readAsBytes();
+        final safe = file.name.replaceAll(RegExp(r'[^\w\-.]'), '_');
+        final tempName = 'img_${_seq++}_$safe';
+        final path = await _tempScope.createFile(tempName, bytes: bytes);
         if (mounted) {
           setState(() {
-            _items.add(_ImageItem(bytes: bytes, name: file.name));
+            _items.add(
+              _ImageItem(path: path, tempName: tempName, name: file.name),
+            );
           });
         }
       } catch (e) {
@@ -77,7 +83,9 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   }
 
   void _removeImage(int index) {
+    final item = _items[index];
     setState(() => _items.removeAt(index));
+    _tempScope.deleteFile(item.tempName);
   }
 
   void _reorderImages(int oldIndex, int newIndex) {
@@ -93,28 +101,34 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
     setState(() => _isProcessing = true);
 
     try {
-      final imageBytes = _items.map((i) => i.bytes).toList();
-      final pdfBytes = await PdfEngineHelper.createPdfFromImages(
-        imageBytes,
+      final pdfBytes = await PdfEngineHelper.createPdfFromImagePaths(
+        _items.map((i) => i.path).toList(),
         pageSize: _pageSize,
         jpegQuality: _jpegQuality,
         landscape: _landscape,
       );
 
+      // Hand the saver a path so the PDF bytes are not re-buffered for sharing.
+      final pdfPath = await _tempScope.createFile(
+        'images_export.pdf',
+        bytes: pdfBytes,
+      );
+
       if (!mounted) return;
 
-      await FileSaveHelper.saveFile(
+      await FileSaveHelper.saveFileFromPath(
         context: context,
         suggestedName: 'images_export.pdf',
-        bytes: pdfBytes,
+        sourcePath: pdfPath,
         successMessageGeneralBuilder: (path) => 'PDF saved to $path',
         errorMessageBuilder: (e) => 'Failed to save PDF: $e',
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to create PDF: $e')));
+        FileSaveHelper.showErrorNotification(
+          context: context,
+          errorMessage: 'Failed to create PDF: $e',
+        );
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -195,7 +209,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: ImagesToPdfPreview(
-                        images: _items.map((i) => i.bytes).toList(),
+                        paths: _items.map((i) => i.path).toList(),
                         names: _items.map((i) => i.name).toList(),
                         onRemove: _removeImage,
                         onReorder: _reorderImages,
@@ -203,7 +217,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                     ),
                   ),
           ),
-          if (_isProcessing) LinearProgressIndicator(),
+          if (_isProcessing) const LinearProgressIndicator(),
           ImagesToPdfToolbar(
             imageCount: _items.length,
             pageSize: _pageSize,
@@ -234,8 +248,13 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
 }
 
 class _ImageItem {
-  final Uint8List bytes;
+  final String path;
+  final String tempName;
   final String name;
 
-  const _ImageItem({required this.bytes, required this.name});
+  const _ImageItem({
+    required this.path,
+    required this.tempName,
+    required this.name,
+  });
 }

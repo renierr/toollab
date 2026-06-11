@@ -1,22 +1,22 @@
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class ImagesToPdfPreview extends StatelessWidget {
-  final List<Uint8List> images;
+  final List<String> paths;
   final List<String> names;
   final void Function(int index) onRemove;
   final void Function(int oldIndex, int newIndex) onReorder;
 
   const ImagesToPdfPreview({
     super.key,
-    required this.images,
+    required this.paths,
     required this.names,
     required this.onRemove,
     required this.onReorder,
   });
 
-  void _showPreview(BuildContext context, Uint8List bytes, String name) {
+  void _showPreview(BuildContext context, String path, String name) {
     showDialog(
       context: context,
       builder: (ctx) => ResponsiveAlertDialog(
@@ -41,9 +41,20 @@ class ImagesToPdfPreview extends StatelessWidget {
             maxHeight: MediaQuery.of(context).size.height * 0.6,
           ),
           child: InteractiveViewer(
+            maxScale: 5,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.memory(bytes, fit: BoxFit.contain),
+              // Decode at ~2x the viewport: crisp when zoomed, bounded memory.
+              child: Image.file(
+                File(path),
+                fit: BoxFit.contain,
+                cacheWidth:
+                    (MediaQuery.of(context).size.width *
+                            MediaQuery.of(context).devicePixelRatio *
+                            2)
+                        .round(),
+                filterQuality: FilterQuality.medium,
+              ),
             ),
           ),
         ),
@@ -56,7 +67,7 @@ class ImagesToPdfPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (images.isEmpty) {
+    if (paths.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -87,7 +98,7 @@ class ImagesToPdfPreview extends StatelessWidget {
 
     return ReorderableListView.builder(
       padding: const EdgeInsets.all(8),
-      itemCount: images.length,
+      itemCount: paths.length,
       buildDefaultDragHandles: false,
       onReorderItem: onReorder,
       proxyDecorator: (child, index, animation) {
@@ -99,11 +110,11 @@ class ImagesToPdfPreview extends StatelessWidget {
       },
       itemBuilder: (context, index) {
         return Card(
-          key: ValueKey('img_$index'),
+          key: ValueKey(paths[index]),
           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: () => _showPreview(context, images[index], names[index]),
+            onTap: () => _showPreview(context, paths[index], names[index]),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
@@ -120,15 +131,17 @@ class ImagesToPdfPreview extends StatelessWidget {
                   ),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: Image.memory(
-                      images[index],
+                    child: Image.file(
+                      File(paths[index]),
                       width: 56,
                       height: 56,
                       fit: BoxFit.cover,
+                      cacheWidth: 112,
+                      cacheHeight: 112,
                       errorBuilder: (_, _, _) => Container(
                         width: 56,
                         height: 56,
-                        color: Colors.grey[300],
+                        color: theme.colorScheme.surfaceContainerHighest,
                         child: const Icon(Icons.broken_image),
                       ),
                     ),
