@@ -1,12 +1,9 @@
-import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
-import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
@@ -189,12 +186,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
   Future<void> _downloadFile() async {
     if (_filePath == null) return;
     try {
-      final bytes = await File(_filePath!).readAsBytes();
-      if (!mounted) return;
-      await FileSaveHelper.saveFile(
+      await FileSaveHelper.saveFileFromPath(
         context: context,
         suggestedName: _fileName ?? 'document.pdf',
-        bytes: bytes,
+        sourcePath: _filePath!,
       );
     } catch (e) {
       debugPrint('[PdfViewerPage] Download failed: $e');
@@ -284,35 +279,26 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     setState(() => _mode = mode);
   }
 
-  Future<void> _onOrganizeComplete(Uint8List pdfBytes, String name) async {
-    final path = await PdfEngineHelper.savePdfToTemp(pdfBytes, name);
-    if (mounted) {
-      _resetViewerState();
-      setState(() {
-        _mode = PdfViewerMode.view;
-        _filePath = path;
-        _fileName = name;
-      });
-    }
+  void _onOrganizeComplete(String pdfPath, String name) {
+    _resetViewerState();
+    setState(() {
+      _mode = PdfViewerMode.view;
+      _filePath = pdfPath;
+      _fileName = name;
+    });
   }
 
   Future<void> _onOrganizeCancel() async {
     setState(() => _mode = PdfViewerMode.view);
   }
 
-  Future<void> _onFlattenComplete(Uint8List pdfBytes) async {
-    final path = await PdfEngineHelper.savePdfToTemp(
-      pdfBytes,
-      '${_fileName ?? 'document'}_flattened.pdf',
-    );
-    if (mounted) {
-      _resetViewerState();
-      setState(() {
-        _mode = PdfViewerMode.view;
-        _filePath = path;
-        _fileName = '${_fileName ?? 'document'}_flattened.pdf';
-      });
-    }
+  void _onFlattenComplete(String pdfPath, String name) {
+    _resetViewerState();
+    setState(() {
+      _mode = PdfViewerMode.view;
+      _filePath = pdfPath;
+      _fileName = name;
+    });
   }
 
   void _onFlattenCancel() {
@@ -366,6 +352,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         child: PdfFlattenPanel(
           filePath: _filePath!,
           fileName: _fileName ?? 'document.pdf',
+          tempScope: _tempScope,
           onComplete: _onFlattenComplete,
           onCancel: _onFlattenCancel,
         ),

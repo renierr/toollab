@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
@@ -8,13 +7,15 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 class PdfFlattenPanel extends StatefulWidget {
   final String filePath;
   final String fileName;
-  final void Function(Uint8List pdfBytes) onComplete;
+  final TempFileScope tempScope;
+  final void Function(String pdfPath, String name) onComplete;
   final VoidCallback onCancel;
 
   const PdfFlattenPanel({
     super.key,
     required this.filePath,
     required this.fileName,
+    required this.tempScope,
     required this.onComplete,
     required this.onCancel,
   });
@@ -34,10 +35,13 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
 
   double _progress = 0;
   String _statusText = '';
-  Uint8List? _resultBytes;
+  String? _resultPath;
+  int _resultSize = 0;
   int _totalPages = 0;
 
   late final TempFileScope _scope;
+
+  String get _baseName => widget.fileName.replaceAll('.pdf', '');
 
   @override
   void initState() {
@@ -93,10 +97,19 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
         jpegQuality: _jpegQuality,
       );
 
+      // The result lives in the parent scope so it survives this panel being
+      // disposed when the viewer reopens it; the page renders are no longer needed.
+      final resultPath = await widget.tempScope.createFile(
+        '${_baseName}_flattened.pdf',
+        bytes: pdfBytes,
+      );
+      await _scope.cleanTracked();
+
       if (!mounted) return;
 
       setState(() {
-        _resultBytes = pdfBytes;
+        _resultPath = resultPath;
+        _resultSize = pdfBytes.length;
         _phase = _FlattenPhase.done;
         _progress = 1.0;
         _statusText = 'Done';
@@ -115,27 +128,23 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
   }
 
   Future<void> _download() async {
-    if (_resultBytes == null) return;
-    await FileSaveHelper.saveFile(
+    final path = _resultPath;
+    if (path == null) return;
+    await FileSaveHelper.saveFileFromPath(
       context: context,
-      suggestedName: '${widget.fileName.replaceAll('.pdf', '')}_flattened.pdf',
-      bytes: _resultBytes,
+      suggestedName: '${_baseName}_flattened.pdf',
+      sourcePath: path,
     );
   }
 
   Future<void> _share() async {
-    if (_resultBytes == null) return;
-    final path = await PdfEngineHelper.savePdfToTemp(
-      _resultBytes!,
-      '${widget.fileName.replaceAll('.pdf', '')}_flattened.pdf',
+    final path = _resultPath;
+    if (path == null || !mounted) return;
+    await FileSaveHelper.showShareChooser(
+      context: context,
+      path: path,
+      mimeType: 'application/pdf',
     );
-    if (mounted) {
-      await FileSaveHelper.showShareChooser(
-        context: context,
-        path: path,
-        mimeType: 'application/pdf',
-      );
-    }
   }
 
   @override
@@ -317,7 +326,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
   }
 
   Widget _buildDone(ThemeData theme) {
-    final size = _resultBytes?.length ?? 0;
+    final size = _resultSize;
     final sizeText = size > 1024 * 1024
         ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
         : size > 1024
@@ -363,7 +372,8 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
             ),
             const SizedBox(height: 16),
             TextButton.icon(
-              onPressed: () => widget.onComplete(_resultBytes!),
+              onPressed: () =>
+                  widget.onComplete(_resultPath!, '${_baseName}_flattened.pdf'),
               icon: const Icon(Icons.open_in_new),
               label: const Text('Open in Viewer'),
             ),

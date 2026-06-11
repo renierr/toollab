@@ -220,9 +220,4 @@ class PdfEngineHelper {
       }
     }
   }
-
-  static Future<String> savePdfToTemp(Uint8List bytes, String name) async {
-    final safeName = name.replaceAll(RegExp(r'[^\w\-.]'), '_');
-    return TempFileManager.createFile(safeName, bytes: bytes);
-  }
 }

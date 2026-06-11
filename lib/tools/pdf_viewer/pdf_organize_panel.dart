@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XTypeGroup, openFile;
 import 'package:pdfrx/pdfrx.dart';
@@ -12,7 +11,7 @@ class PdfOrganizePanel extends StatefulWidget {
   final String filePath;
   final String fileName;
   final TempFileScope tempScope;
-  final void Function(Uint8List pdfBytes, String name) onComplete;
+  final void Function(String pdfPath, String name) onComplete;
   final VoidCallback onCancel;
 
   const PdfOrganizePanel({
@@ -36,7 +35,10 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
   bool _isLoading = true;
   bool _isProcessing = false;
   _OrganizePhase _phase = _OrganizePhase.editing;
-  Uint8List? _resultBytes;
+  String? _resultPath;
+  int _resultSize = 0;
+
+  String get _baseName => widget.fileName.replaceAll('.pdf', '');
 
   @override
   void initState() {
@@ -223,9 +225,16 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       final bytes = await newDoc.encodePdf();
       newDoc.dispose();
 
+      // Stage to the parent scope so the result survives this panel closing.
+      final resultPath = await widget.tempScope.createFile(
+        '${_baseName}_organized.pdf',
+        bytes: bytes,
+      );
+
       if (mounted) {
         setState(() {
-          _resultBytes = bytes;
+          _resultPath = resultPath;
+          _resultSize = bytes.length;
           _phase = _OrganizePhase.done;
           _isProcessing = false;
         });
@@ -244,27 +253,23 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
   }
 
   Future<void> _download() async {
-    if (_resultBytes == null) return;
-    await FileSaveHelper.saveFile(
+    final path = _resultPath;
+    if (path == null) return;
+    await FileSaveHelper.saveFileFromPath(
       context: context,
-      suggestedName: '${widget.fileName}_organized',
-      bytes: _resultBytes,
+      suggestedName: '${_baseName}_organized.pdf',
+      sourcePath: path,
     );
   }
 
   Future<void> _share() async {
-    if (_resultBytes == null) return;
-    final path = await PdfEngineHelper.savePdfToTemp(
-      _resultBytes!,
-      '${widget.fileName}_organized',
+    final path = _resultPath;
+    if (path == null || !mounted) return;
+    await FileSaveHelper.showShareChooser(
+      context: context,
+      path: path,
+      mimeType: 'application/pdf',
     );
-    if (mounted) {
-      await FileSaveHelper.showShareChooser(
-        context: context,
-        path: path,
-        mimeType: 'application/pdf',
-      );
-    }
   }
 
   @override
@@ -275,7 +280,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_phase == _OrganizePhase.done && _resultBytes != null) {
+    if (_phase == _OrganizePhase.done && _resultPath != null) {
       return _buildDone(theme);
     }
 
@@ -363,7 +368,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
   }
 
   Widget _buildDone(ThemeData theme) {
-    final size = _resultBytes?.length ?? 0;
+    final size = _resultSize;
     final sizeText = size > 1024 * 1024
         ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
         : size > 1024
@@ -418,8 +423,8 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
               const SizedBox(height: 16),
               TextButton.icon(
                 onPressed: () => widget.onComplete(
-                  _resultBytes!,
-                  '${widget.fileName}_organized',
+                  _resultPath!,
+                  '${_baseName}_organized.pdf',
                 ),
                 icon: const Icon(Icons.open_in_new),
                 label: const Text('Open in Viewer'),
