@@ -2,6 +2,9 @@
 
 This tool is built to make adding sounds easy.
 
+Current defaults are fully generated at runtime (including Forest/City), so
+there is no audible seam from loop wrap.
+
 ## Sound types
 
 - `generated`: PCM noise produced at runtime (infinite, no asset file).

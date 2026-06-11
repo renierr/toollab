@@ -63,7 +63,12 @@ class FocusNoisePlayer {
     final GeneratedNoiseType type = switch (sound.id) {
       'white' => GeneratedNoiseType.white,
       'pink' => GeneratedNoiseType.pink,
-      _ => GeneratedNoiseType.brown,
+      'brown' => GeneratedNoiseType.brown,
+      'forest' => GeneratedNoiseType.forest,
+      'city' => GeneratedNoiseType.city,
+      'rain' => GeneratedNoiseType.rain,
+      'waves' => GeneratedNoiseType.waves,
+      _ => GeneratedNoiseType.pink,
     };
 
     _generator.reset();

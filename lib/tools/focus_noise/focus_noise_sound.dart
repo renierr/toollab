@@ -52,15 +52,25 @@ class FocusNoiseCatalog {
       id: 'forest',
       name: 'Forest',
       icon: Icons.park_outlined,
-      kind: FocusNoiseSoundKind.asset,
-      assetPath: 'assets/audio/forest_loop_60s.wav',
+      kind: FocusNoiseSoundKind.generated,
     ),
     FocusNoiseSound(
       id: 'city',
       name: 'City',
       icon: Icons.location_city_outlined,
-      kind: FocusNoiseSoundKind.asset,
-      assetPath: 'assets/audio/city_loop_60s.wav',
+      kind: FocusNoiseSoundKind.generated,
+    ),
+    FocusNoiseSound(
+      id: 'rain',
+      name: 'Rain',
+      icon: Icons.water_drop_outlined,
+      kind: FocusNoiseSoundKind.generated,
+    ),
+    FocusNoiseSound(
+      id: 'waves',
+      name: 'Waves',
+      icon: Icons.waves_outlined,
+      kind: FocusNoiseSoundKind.generated,
     ),
   ];
 
