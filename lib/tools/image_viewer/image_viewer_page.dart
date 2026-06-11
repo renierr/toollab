@@ -285,14 +285,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
             padding: const EdgeInsets.all(16.0),
             child: FileDropZone(
               onFileSelected: _onFileSelected,
-              allowedExtensions: const [
-                'png',
-                'jpg',
-                'jpeg',
-                'webp',
-                'bmp',
-                'gif',
-              ],
+              allowedExtensions: ImageViewerTool.config.fileExtensions,
               typeLabel: 'Images',
               accentColor: ImageViewerTool.config.accentColor,
               title: 'Drop an image here',

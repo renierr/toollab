@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'nfc_tag_lab_page.dart';
+
 class NfcTagLabTool {
   NfcTagLabTool._();
 
-  static const ToolModel config = ToolModel(
+  static ToolModel get config => ToolModel(
     id: 'nfc-tag-lab',
     name: 'NFC Tag Lab',
     description:
@@ -14,5 +16,6 @@ class NfcTagLabTool {
     route: '/nfc-tag-lab',
     accentColor: AppTheme.accentTeal,
     sectionId: 'devices',
+    createPage: (_) => const NfcTagLabPage(),
   );
 }

@@ -18,18 +18,6 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
-import 'package:tool_lab/tools/calculator/calculator_page.dart';
-import 'package:tool_lab/tools/bubble_level/bubble_level_page.dart';
-import 'package:tool_lab/tools/emf_detector/emf_detector_page.dart';
-import 'package:tool_lab/tools/device_info/device_info_page.dart';
-import 'package:tool_lab/tools/nfc_tag_lab/nfc_tag_lab_page.dart';
-import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_page.dart';
-import 'package:tool_lab/tools/notes/notes_page.dart';
-import 'package:tool_lab/tools/markdown_viewer/markdown_viewer_page.dart';
-import 'package:tool_lab/tools/image_viewer/image_viewer_page.dart';
-import 'package:tool_lab/tools/fast_drop/fast_drop_page.dart';
-import 'package:tool_lab/tools/images_to_pdf/images_to_pdf_page.dart';
-import 'package:tool_lab/tools/chiptune/chiptune_page.dart';
 
 final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -78,23 +66,9 @@ final _router = GoRouter(
 );
 
 Widget _pageForTool(String id, Object? extra) {
-  return switch (id) {
-    'calculator' => const CalculatorPage(),
-    'bubble-level' => const BubbleLevelPage(),
-    'emf-detector' => const EmfDetectorPage(),
-    'device-info' => const DeviceInfoPage(),
-    'nfc-tag-lab' => const NfcTagLabPage(),
-    'pdf-viewer' => PdfViewerPage(sharedFile: extra as SharedFile?),
-    'notes' => NotesPage(sharedFile: extra as SharedFile?),
-    'markdown-viewer' => MarkdownViewerToolPage(
-      sharedFile: extra as SharedFile?,
-    ),
-    'image-viewer' => ImageViewerPage(sharedFile: extra as SharedFile?),
-    'fast-drop' => FastDropPage(sharedFile: extra as SharedFile?),
-    'images-to-pdf' => const ImagesToPdfPage(),
-    'chiptune' => ChiptunePage(sharedFile: extra as SharedFile?),
-    _ => const OverviewPage(),
-  };
+  final tool = ToolRegistry.all.where((t) => t.id == id).firstOrNull;
+  if (tool != null) return tool.createPage(extra as SharedFile?);
+  return const OverviewPage();
 }
 
 class ToolLabApp extends StatefulWidget {

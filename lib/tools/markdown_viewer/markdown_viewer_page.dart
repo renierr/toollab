@@ -113,7 +113,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         appBar: AppBar(title: Text(MarkdownViewerTool.config.name)),
         body: FileDropZone(
           onFileSelected: _onFileSelected,
-          allowedExtensions: const ['md', 'txt', 'markdown'],
+          allowedExtensions: MarkdownViewerTool.config.fileExtensions,
           allowedMimeTypes: const ['text/markdown', 'text/plain'],
           typeLabel: 'Markdown',
           accentColor: accent,

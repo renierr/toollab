@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'notes_sync_delegate.dart';
+import 'notes_page.dart';
+
 class NotesTool {
   NotesTool._();
 
-  static const ToolModel config = ToolModel(
+  static ToolModel get config => ToolModel(
     id: 'notes',
     name: 'Notes',
     description:
@@ -15,5 +18,8 @@ class NotesTool {
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities',
     shareTarget: ShareTargetConfig(accept: ['text/markdown', 'text/plain']),
+    fileExtensions: ['md', 'txt', 'markdown'],
+    createPage: (sf) => NotesPage(sharedFile: sf),
+    syncDelegateFactory: NotesSyncDelegate.new,
   );
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'shared_file.dart';
+import '../services/sync_service.dart';
+
 class ShareTargetConfig {
   final List<String> accept;
 
@@ -15,8 +18,11 @@ class ToolModel {
   final Color accentColor;
   final String sectionId;
   final ShareTargetConfig? shareTarget;
+  final List<String> fileExtensions;
+  final Widget Function(SharedFile? sharedFile) createPage;
+  final SyncDelegate Function()? syncDelegateFactory;
 
-  const ToolModel({
+  ToolModel({
     required this.id,
     required this.name,
     required this.description,
@@ -25,7 +31,10 @@ class ToolModel {
     required this.accentColor,
     required this.sectionId,
     this.shareTarget,
-  });
+    this.fileExtensions = const [],
+    this.syncDelegateFactory,
+    Widget Function(SharedFile? sharedFile)? createPage,
+  }) : createPage = createPage ?? ((_) => const SizedBox.shrink());
 }
 
 class ToolSection {

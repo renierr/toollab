@@ -39,7 +39,7 @@ class ToolRegistry {
     ),
   };
 
-  static const List<ToolModel> all = [
+  static List<ToolModel> get all => [
     CalculatorTool.config,
     BubbleLevelTool.config,
     EmfDetectorTool.config,

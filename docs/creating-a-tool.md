@@ -126,9 +126,11 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'my_new_tool_page.dart';
+
 class MyNewTool {
   MyNewTool._();
-  static const ToolModel config = ToolModel(
+  static ToolModel get config => ToolModel(
     id: 'my-new-tool',
     name: 'My New Tool',
     description: 'What it does',
@@ -136,6 +138,12 @@ class MyNewTool {
     route: '/my-new-tool',
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities',
+    fileExtensions: ['ext1', 'ext2'],   // for local file picker
+    shareTarget: ShareTargetConfig(       // for incoming shared files
+      accept: ['application/octet-stream'],
+    ),
+    createPage: (sf) => const MyNewToolPage(),  // route auto-wired
+    syncDelegateFactory: MyNewToolSyncDelegate.new,  // if sync needed
   );
 }
 ```
@@ -161,42 +169,19 @@ class MyNewToolPage extends StatelessWidget {
 ```
 
 ### Step 3: Register in `lib/core/tool_registry.dart`
-Add the configuration to the list:
+Add the import and config to the list — **this is the only manual wiring needed** (routing, sync delegate registration, and file extensions are all auto-discovered from `ToolModel`):
 ```dart
 import 'package:tool_lab/tools/my_new_tool/config.dart';
 
 class ToolRegistry {
-  static const List<ToolModel> all = [
+  static List<ToolModel> get all => [
     ...
     MyNewTool.config,
   ];
 }
 ```
 
-### Step 4: Add the case in `lib/app.dart`
-Add the router route definition matching the switch:
-```dart
-import 'package:tool_lab/tools/my_new_tool/my_new_tool_page.dart';
-
-Widget _pageForTool(String id) {
-  return switch (id) {
-    ...
-    'my-new-tool' => const MyNewToolPage(),
-    _ => const OverviewPage(),
-  };
-}
-```
-
-### Step 5: Register SyncDelegate (if tool needs sync)
-If your tool implements a `SyncDelegate` (`lib/tools/<name>/<name>_sync_delegate.dart`), register it in `lib/providers/app_state.dart` so the global Settings "Sync Now" button covers it:
-```dart
-// In AppState constructor
-registerSyncDelegate(NotesSyncDelegate());
-registerSyncDelegate(ChiptuneSyncDelegate());  // add yours here
-registerSyncDelegate(MyNewToolSyncDelegate()); // <--
-```
-
-### Step 6: Verify & Clean
+### Step 4: Verify & Clean
 Before committing, always run:
 ```bash
 dart format ./lib

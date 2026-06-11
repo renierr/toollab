@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'fast_drop_page.dart';
+
 class FastDropTool {
   FastDropTool._();
 
-  static const ToolModel config = ToolModel(
+  static ToolModel get config => ToolModel(
     id: 'fast-drop',
     name: 'Fast Drop',
     description:
@@ -15,5 +17,7 @@ class FastDropTool {
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities',
     shareTarget: ShareTargetConfig(accept: ['*/*']),
+    fileExtensions: const [],
+    createPage: (sf) => FastDropPage(sharedFile: sf),
   );
 }

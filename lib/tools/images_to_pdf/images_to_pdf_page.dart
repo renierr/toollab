@@ -41,8 +41,6 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  static const _imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'];
-
   @override
   void initState() {
     super.initState();
@@ -224,7 +222,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                     child: FileDropZone(
                       onFilesSelected: _onDropFiles,
                       onFileSelected: _onFileSelected,
-                      allowedExtensions: _imageExtensions,
+                      allowedExtensions: ImagesToPdfTool.config.fileExtensions,
                       typeLabel: 'Images',
                       accentColor: ImagesToPdfTool.config.accentColor,
                       icon: Icons.collections_bookmark_outlined,
@@ -256,7 +254,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                       setState(() => _dragging = false);
                       final valid = details.files.where((f) {
                         final name = f.name.toLowerCase();
-                        return _imageExtensions.any(
+                        return ImagesToPdfTool.config.fileExtensions.any(
                           (ext) => name.endsWith('.${ext.toLowerCase()}'),
                         );
                       }).toList();
@@ -295,7 +293,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                 acceptedTypeGroups: [
                   XTypeGroup(
                     label: 'Images',
-                    extensions: _imageExtensions,
+                    extensions: ImagesToPdfTool.config.fileExtensions,
                     mimeTypes: ['image/*'],
                   ),
                 ],

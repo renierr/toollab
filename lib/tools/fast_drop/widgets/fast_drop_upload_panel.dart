@@ -42,7 +42,7 @@ class FastDropUploadPanel extends StatelessWidget {
               height: isAndroid ? 160 : 290,
               child: FileDropZone(
                 onFileSelected: onFileSelected,
-                allowedExtensions: const [],
+                allowedExtensions: FastDropTool.config.fileExtensions,
                 typeLabel: 'All Files',
                 accentColor: FastDropTool.config.accentColor,
                 icon: Icons.cloud_upload_outlined,

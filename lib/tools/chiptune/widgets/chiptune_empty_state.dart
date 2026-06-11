@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 
 import '../chiptune_colors.dart';
+import '../config.dart';
 
 /// Initial state shown when no module is loaded: a drop zone plus the
 /// archive list (when there are saved modules to pick from).
 class ChiptuneEmptyState extends StatelessWidget {
-  static const List<String> extensions = ['mod', 'xm', 'it', 's3m'];
-
   final ValueChanged<XFile> onFileSelected;
   final Widget? archivePanel;
 
@@ -28,7 +27,7 @@ class ChiptuneEmptyState extends StatelessWidget {
         children: [
           FileDropZone(
             compact: hasArchive,
-            allowedExtensions: extensions,
+            allowedExtensions: ChiptuneTool.config.fileExtensions,
             typeLabel: 'Tracker module',
             accentColor: ChiptuneColors.accent,
             icon: Icons.music_note_outlined,

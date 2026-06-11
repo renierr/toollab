@@ -323,7 +323,7 @@ class FileSaveHelper {
       return;
     }
 
-    const systemDefaultTool = ToolModel(
+    final systemDefaultTool = ToolModel(
       id: 'system-default',
       name: 'System Default App',
       description: 'Open in the device\'s default viewer application',
@@ -377,7 +377,7 @@ class FileSaveHelper {
       return;
     }
 
-    const systemShareTool = ToolModel(
+    final systemShareTool = ToolModel(
       id: 'system-share',
       name: 'System Share',
       description: 'Share file externally using the system share sheet',

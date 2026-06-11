@@ -64,7 +64,9 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
 
     final sub = SharingService.instance.onSharedFile.listen((file) {
       final lower = file.name.toLowerCase();
-      if (ChiptuneEmptyState.extensions.any((e) => lower.endsWith('.$e'))) {
+      if (ChiptuneTool.config.fileExtensions.any(
+        (e) => lower.endsWith('.$e'),
+      )) {
         _loadSharedFile(file);
       }
     });
@@ -112,9 +114,9 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
   Future<void> _pickAndLoad() async {
     final file = await openFile(
       acceptedTypeGroups: [
-        const XTypeGroup(
+        XTypeGroup(
           label: 'Tracker module',
-          extensions: ChiptuneEmptyState.extensions,
+          extensions: ChiptuneTool.config.fileExtensions,
         ),
       ],
     );

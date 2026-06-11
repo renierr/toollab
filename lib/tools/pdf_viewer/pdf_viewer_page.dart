@@ -314,7 +314,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         title: PdfViewerTool.config.name,
         child: FileDropZone(
           onFileSelected: _onFileSelected,
-          allowedExtensions: const ['pdf'],
+          allowedExtensions: PdfViewerTool.config.fileExtensions,
           allowedMimeTypes: const ['application/pdf'],
           typeLabel: 'PDFs',
           accentColor: PdfViewerTool.config.accentColor,
