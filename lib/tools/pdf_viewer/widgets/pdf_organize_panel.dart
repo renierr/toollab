@@ -31,6 +31,7 @@ enum _OrganizePhase { editing, processing, done }
 
 class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
   PdfDocument? _doc;
+  final List<PdfDocument> _insertedDocs = [];
   List<_PageItem> _pages = [];
   bool _isLoading = true;
   bool _isProcessing = false;
@@ -49,6 +50,9 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
   @override
   void dispose() {
     _doc?.dispose();
+    for (final doc in _insertedDocs) {
+      doc.dispose();
+    }
     super.dispose();
   }
 
@@ -199,8 +203,10 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
         ),
       ),
     ).then((result) {
-      srcDoc.dispose();
+      // Keep the source document alive: page import happens lazily at
+      // encodePdf() time, so disposing it now would yield blank pages.
       if (result is List<int> && result.isNotEmpty && mounted) {
+        _insertedDocs.add(srcDoc);
         setState(() {
           for (final idx in result) {
             _pages.add(_PageItem(index: -1, page: srcPages[idx]));
@@ -208,7 +214,8 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
           _isProcessing = false;
         });
       } else {
-        setState(() => _isProcessing = false);
+        srcDoc.dispose();
+        if (mounted) setState(() => _isProcessing = false);
       }
     });
   }
