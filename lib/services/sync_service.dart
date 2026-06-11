@@ -104,8 +104,10 @@ class SyncService {
 
     final client = await _client;
 
+    const httpTimeout = Duration(seconds: 10);
+
     final metadataUri = Uri.parse('$sanitizedUrl/api/sync/$toolId/metadata');
-    final metadataResponse = await client.get(metadataUri);
+    final metadataResponse = await client.get(metadataUri).timeout(httpTimeout);
     if (metadataResponse.statusCode != 200) {
       throw Exception(
         'Failed to fetch metadata from server: ${metadataResponse.statusCode}',
@@ -194,11 +196,13 @@ class SyncService {
     List<dynamic> pulledRecords = [];
     if (toPullIds.isNotEmpty) {
       final pullUri = Uri.parse('$sanitizedUrl/api/sync/$toolId/pull');
-      final pullResponse = await client.post(
-        pullUri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'ids': toPullIds}),
-      );
+      final pullResponse = await client
+          .post(
+            pullUri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'ids': toPullIds}),
+          )
+          .timeout(httpTimeout);
 
       if (pullResponse.statusCode != 200) {
         throw Exception(
@@ -245,11 +249,13 @@ class SyncService {
 
     if (toPush.isNotEmpty) {
       final pushUri = Uri.parse('$sanitizedUrl/api/sync/$toolId');
-      final pushResponse = await client.post(
-        pushUri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'records': toPush}),
-      );
+      final pushResponse = await client
+          .post(
+            pushUri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'records': toPush}),
+          )
+          .timeout(httpTimeout);
 
       if (pushResponse.statusCode != 200) {
         throw Exception(
