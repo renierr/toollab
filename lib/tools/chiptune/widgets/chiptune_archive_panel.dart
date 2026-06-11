@@ -15,6 +15,7 @@ class ChiptuneArchivePanel extends StatelessWidget {
   final VoidCallback onSave;
   final VoidCallback onSync;
   final ValueChanged<String> onPlay;
+  final ValueChanged<String> onDownload;
   final ValueChanged<String> onDelete;
 
   const ChiptuneArchivePanel({
@@ -28,6 +29,7 @@ class ChiptuneArchivePanel extends StatelessWidget {
     required this.onSave,
     required this.onSync,
     required this.onPlay,
+    required this.onDownload,
     required this.onDelete,
   });
 
@@ -90,6 +92,7 @@ class ChiptuneArchivePanel extends StatelessWidget {
                 module: modules[i],
                 isCurrent: modules[i].id == currentId,
                 onPlay: () => onPlay(modules[i].id),
+                onDownload: () => onDownload(modules[i].id),
                 onDelete: () => onDelete(modules[i].id),
               ),
             ),
@@ -103,12 +106,14 @@ class _ArchiveItem extends StatelessWidget {
   final ArchivedModule module;
   final bool isCurrent;
   final VoidCallback onPlay;
+  final VoidCallback onDownload;
   final VoidCallback onDelete;
 
   const _ArchiveItem({
     required this.module,
     required this.isCurrent,
     required this.onPlay,
+    required this.onDownload,
     required this.onDelete,
   });
 
@@ -136,6 +141,12 @@ class _ArchiveItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall,
                 ),
+              ),
+              IconButton(
+                onPressed: onDownload,
+                tooltip: 'Download',
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.download_outlined, size: 18),
               ),
               IconButton(
                 onPressed: onDelete,

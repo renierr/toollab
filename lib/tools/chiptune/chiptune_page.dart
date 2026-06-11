@@ -11,6 +11,7 @@ import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
+import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
@@ -227,6 +228,26 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     await _player.play();
   }
 
+  Future<void> _downloadArchived(String id) async {
+    final idx = _archive.indexWhere((m) => m.id == id);
+    if (idx < 0) return;
+    final entry = _archive[idx];
+    final bytes = await ChiptuneArchive.instance.getBytes(id);
+    if (bytes == null || bytes.isEmpty) {
+      if (mounted) _showSnack('Module data not available');
+      return;
+    }
+    final ext = entry.fileName.contains('.')
+        ? entry.fileName.split('.').last
+        : entry.format.toLowerCase();
+    final name = '${entry.title.isEmpty ? entry.fileName : entry.title}.$ext';
+    await FileSaveHelper.saveFile(
+      context: context,
+      suggestedName: name,
+      bytes: bytes,
+    );
+  }
+
   Future<void> _deleteArchived(String id) async {
     final confirmed = await ConfirmActionDialog.show(
       context: context,
@@ -325,6 +346,7 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
                 onSave: _saveCurrent,
                 onSync: _runSync,
                 onPlay: _playArchived,
+                onDownload: _downloadArchived,
                 onDelete: _deleteArchived,
               ),
               onPlayPause: _playPause,
@@ -346,6 +368,7 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
                       onSave: _saveCurrent,
                       onSync: _runSync,
                       onPlay: _playArchived,
+                      onDownload: _downloadArchived,
                       onDelete: _deleteArchived,
                     )
                   : null,
