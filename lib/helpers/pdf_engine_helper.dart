@@ -36,7 +36,14 @@ class PdfEngineHelper {
   }) async {
     final w = (page.width * dpi / 72).round();
     final h = (page.height * dpi / 72).round();
-    final rendered = await page.render(width: w, height: h);
+    // fullWidth/fullHeight set the scale the whole page is rasterized at;
+    // without them pdfrx renders at 72-dpi into a corner of the crop.
+    final rendered = await page.render(
+      fullWidth: w.toDouble(),
+      fullHeight: h.toDouble(),
+      width: w,
+      height: h,
+    );
     if (rendered == null) throw Exception('Failed to render page');
     try {
       final image = rendered.createImageNF();
@@ -59,7 +66,12 @@ class PdfEngineHelper {
     final ratio = height / page.height;
     final w = (page.width * ratio).round();
     final h = height;
-    final rendered = await page.render(width: w, height: h);
+    final rendered = await page.render(
+      fullWidth: w.toDouble(),
+      fullHeight: h.toDouble(),
+      width: w,
+      height: h,
+    );
     if (rendered == null) throw Exception('Failed to render thumbnail');
     try {
       final image = rendered.createImageNF();

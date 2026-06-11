@@ -167,9 +167,9 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
                 const SizedBox(height: 8),
                 Slider(
                   value: _dpi.toDouble(),
-                  min: 72,
-                  max: 600,
-                  divisions: 8,
+                  min: 100,
+                  max: 400,
+                  divisions: 6,
                   label: '$_dpi DPI',
                   onChanged: (v) => setState(() => _dpi = v.round()),
                 ),
