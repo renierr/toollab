@@ -324,7 +324,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
                       const SizedBox(width: 8),
                       Text(
                         '${_pages.length} page${_pages.length == 1 ? '' : 's'} — '
-                        'drag to reorder, tap X to remove',
+                        'drag to reorder, tap to preview',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -336,6 +336,8 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
                   child: _pages.isEmpty
                       ? const Center(child: Text('No pages'))
                       : ReorderableListView.builder(
+                          padding: const EdgeInsets.all(8),
+                          buildDefaultDragHandles: false,
                           itemCount: _pages.length,
                           onReorderItem: (oldIndex, newIndex) {
                             setState(() {
@@ -465,31 +467,120 @@ class _PageTile extends StatelessWidget {
     required this.theme,
   });
 
+  void _showPreview(BuildContext context) {
+    final media = MediaQuery.of(context).size;
+    final aspect = page.width / page.height;
+    double w = media.width * 0.8;
+    double h = w / aspect;
+    final maxH = media.height * 0.6;
+    if (h > maxH) {
+      h = maxH;
+      w = h * aspect;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => ResponsiveAlertDialog(
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Page ${index + 1}',
+                style: Theme.of(context).textTheme.titleMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(ctx).pop(),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: w,
+          height: h,
+          child: InteractiveViewer(
+            maxScale: 5,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: PdfPageView(
+                document: page.document,
+                pageNumber: page.pageNumber,
+                alignment: Alignment.center,
+              ),
+            ),
+          ),
+        ),
+        scrollable: true,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: ListTile(
-        leading: SizedBox(
-          width: 60,
-          height: 80,
-          child: PdfPageView(
-            document: page.document,
-            pageNumber: page.pageNumber,
-            alignment: Alignment.center,
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _showPreview(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              ReorderableDragStartListener(
+                index: index,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Icon(
+                    Icons.drag_handle,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: SizedBox(
+                  width: 56,
+                  height: 72,
+                  child: PdfPageView(
+                    document: page.document,
+                    pageNumber: page.pageNumber,
+                    alignment: Alignment.center,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Page ${index + 1}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                    Text(
+                      '${page.width.round()} x ${page.height.round()} pt',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.remove_circle_outlined,
+                  color: theme.colorScheme.error,
+                ),
+                tooltip: 'Remove',
+                onPressed: onRemove,
+              ),
+            ],
           ),
         ),
-        title: Text('Page ${index + 1}'),
-        subtitle: Text('${page.width.round()} x ${page.height.round()} pt'),
-        trailing: IconButton(
-          icon: Icon(
-            Icons.remove_circle_outlined,
-            color: theme.colorScheme.error,
-          ),
-          tooltip: 'Remove page',
-          onPressed: onRemove,
-        ),
-        onTap: () {},
       ),
     );
   }
