@@ -41,6 +41,7 @@ class ChiptuneRenderWorker {
     required int sampleRate,
     required bool looping,
     required double volume,
+    required int chunkFrames,
   }) async {
     await stop();
 
@@ -61,6 +62,7 @@ class ChiptuneRenderWorker {
       'sampleRate': sampleRate,
       'looping': looping,
       'volume': volume,
+      'chunkFrames': chunkFrames,
     });
   }
 
@@ -129,6 +131,12 @@ class ChiptuneRenderWorker {
         Float32List pcm;
         if (rawData is Float32List) {
           pcm = rawData;
+        } else if (rawData is TransferableTypedData) {
+          final ByteData bytes = rawData.materialize().asByteData();
+          pcm = bytes.buffer.asFloat32List(
+            bytes.offsetInBytes,
+            bytes.lengthInBytes ~/ Float32List.bytesPerElement,
+          );
         } else if (rawData is Uint8List) {
           pcm = rawData.buffer.asFloat32List(
             rawData.offsetInBytes,
@@ -170,6 +178,21 @@ void _renderWorkerEntry(SendPort initPort) {
 
   final ChiptuneMixer mixer = ChiptuneMixer();
   SendPort? mainPort;
+  int chunkFrames = 4096;
+  final List<TransferableTypedData> pcmQueue = <TransferableTypedData>[];
+
+  void refillQueue() {
+    if (mixer.mod == null) return;
+    while (pcmQueue.length < 10) {
+      final Float32List out = Float32List(chunkFrames * 2);
+      mixer.render(out, chunkFrames);
+      final Uint8List bytes = out.buffer.asUint8List();
+      pcmQueue.add(TransferableTypedData.fromList([bytes]));
+      if (!mixer.playing) {
+        break;
+      }
+    }
+  }
 
   mixer.onRow = (order, row, active, _) {
     mainPort?.send({
@@ -197,37 +220,62 @@ void _renderWorkerEntry(SendPort initPort) {
         final WorkletModule module = workletModuleFromMessage(
           message['module'] as Map<Object?, Object?>,
         );
+        chunkFrames = (message['chunkFrames'] as num).toInt();
         mixer.loadAndPlay(
           module,
           (message['sampleRate'] as num).toInt(),
           looping: message['looping'] == true,
         );
         mixer.setMasterVolume((message['volume'] as num).toDouble());
+        pcmQueue.clear();
+        refillQueue();
         break;
       case 'render':
         final int id = (message['id'] as num).toInt();
         final int frames = (message['frames'] as num).toInt();
-        final Float32List out = Float32List(frames * 2);
-        mixer.render(out, frames);
-        mainPort?.send({'type': 'pcm', 'id': id, 'data': out});
+        if (frames != chunkFrames) {
+          chunkFrames = frames;
+          pcmQueue.clear();
+        }
+        if (pcmQueue.isEmpty) {
+          refillQueue();
+        }
+        if (pcmQueue.isNotEmpty) {
+          final TransferableTypedData chunk = pcmQueue.removeAt(0);
+          mainPort?.send({'type': 'pcm', 'id': id, 'data': chunk});
+        } else {
+          mainPort?.send({
+            'type': 'pcm',
+            'id': id,
+            'data': TransferableTypedData.fromList([
+              Uint8List(chunkFrames * 2 * Float32List.bytesPerElement),
+            ]),
+          });
+        }
+        refillQueue();
         break;
       case 'seek':
         mixer.seek(
           (message['order'] as num).toInt(),
           (message['row'] as num).toInt(),
         );
+        pcmQueue.clear();
+        refillQueue();
         break;
       case 'setVolume':
         mixer.setMasterVolume((message['volume'] as num).toDouble());
         break;
       case 'setSpeed':
         mixer.setSpeed((message['speed'] as num).toInt());
+        pcmQueue.clear();
+        refillQueue();
         break;
       case 'setLooping':
         mixer.setLooping(message['looping'] == true);
         break;
       case 'stop':
         mixer.stop();
+        pcmQueue.clear();
         break;
       default:
         break;

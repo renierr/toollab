@@ -183,6 +183,7 @@ class ChiptunePlayer {
       sampleRate: sampleRate,
       looping: _looping,
       volume: _volume,
+      chunkFrames: _chunkFrames,
     );
 
     _stream = SoLoud.instance.setBufferStream(
