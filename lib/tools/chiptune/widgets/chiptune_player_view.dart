@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../chiptune_colors.dart';
 import '../engine/chiptune_player.dart';
 import '../engine/module.dart';
 import 'chiptune_channel_activity.dart';
@@ -8,7 +7,7 @@ import 'chiptune_module_info.dart';
 import 'chiptune_sample_list.dart';
 import 'chiptune_seek_bar.dart';
 import 'chiptune_transport_bar.dart';
-import 'chiptune_visualizer.dart';
+import 'chiptune_visualizer_panel.dart';
 
 /// Full player layout for a loaded module: visualizer, metadata, transport,
 /// seek bar, channel LEDs, sample list and the archive panel.
@@ -17,6 +16,7 @@ class ChiptunePlayerView extends StatelessWidget {
   final ModuleFile module;
   final bool looping;
   final double volume;
+  final bool visualizerEnabled;
   final Widget archivePanel;
   final VoidCallback onPlayPause;
   final VoidCallback onStop;
@@ -30,6 +30,7 @@ class ChiptunePlayerView extends StatelessWidget {
     required this.module,
     required this.looping,
     required this.volume,
+    required this.visualizerEnabled,
     required this.archivePanel,
     required this.onPlayPause,
     required this.onStop,
@@ -43,22 +44,10 @@ class ChiptunePlayerView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        AspectRatio(
-          aspectRatio: 16 / 6,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: ColoredBox(
-              color: ChiptuneColors.visualizerBg,
-              child: ValueListenableBuilder(
-                valueListenable: player.state,
-                builder: (_, state, _) => ChiptuneVisualizer(
-                  active: state == ChiptunePlaybackState.playing,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
+        if (visualizerEnabled) ...[
+          ChiptuneVisualizerPanel(player: player),
+          const SizedBox(height: 12),
+        ],
         ChiptuneModuleInfo(module: module),
         const SizedBox(height: 8),
         ValueListenableBuilder(

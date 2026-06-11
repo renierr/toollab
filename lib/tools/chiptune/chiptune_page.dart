@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:file_selector/file_selector.dart' show XFile;
+import 'package:file_selector/file_selector.dart'
+    show XFile, XTypeGroup, openFile;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -42,6 +43,7 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
   bool _backendAvailable = false;
   double _volume = 0.7;
   bool _looping = false;
+  bool _visualizerEnabled = true;
 
   @override
   void initState() {
@@ -72,10 +74,12 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     final db = DatabaseService.instance;
     final vol = await db.getSetting(ChiptuneArchive.toolId, 'volume');
     final loop = await db.getSetting(ChiptuneArchive.toolId, 'looping');
+    final vis = await db.getSetting(ChiptuneArchive.toolId, 'visualizer');
     if (!mounted) return;
     setState(() {
       _volume = double.tryParse(vol ?? '') ?? 0.7;
       _looping = loop == '1';
+      _visualizerEnabled = vis != '0';
     });
     _player.setVolume(_volume);
     _player.setLooping(_looping);
@@ -104,6 +108,18 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     await _loadBytes(bytes, file.name);
   }
 
+  Future<void> _pickAndLoad() async {
+    final file = await openFile(
+      acceptedTypeGroups: [
+        const XTypeGroup(
+          label: 'Tracker module',
+          extensions: ChiptuneEmptyState.extensions,
+        ),
+      ],
+    );
+    if (file != null) await _onFilePicked(file);
+  }
+
   Future<void> _loadSharedFile(SharedFile file) async {
     try {
       final bytes = await File(file.path).readAsBytes();
@@ -112,16 +128,6 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     } catch (e) {
       if (mounted) _showSnack('Failed to open shared file: $e');
     }
-  }
-
-  void _clear() {
-    _player.stop();
-    setState(() {
-      _currentBytes = null;
-      _currentFileName = '';
-      _currentFormat = '';
-      _currentArchiveId = null;
-    });
   }
 
   // ---- Transport ----
@@ -150,6 +156,15 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     DatabaseService.instance.setSetting(
       ChiptuneArchive.toolId,
       'looping',
+      v ? '1' : '0',
+    );
+  }
+
+  void _setVisualizerEnabled(bool v) {
+    setState(() => _visualizerEnabled = v);
+    DatabaseService.instance.setSetting(
+      ChiptuneArchive.toolId,
+      'visualizer',
       v ? '1' : '0',
     );
   }
@@ -270,12 +285,20 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     return ToolLayout(
       title: ChiptuneTool.config.name,
       actions: [
-        if (hasModule)
+        if (hasModule) ...[
+          IconButton(
+            tooltip: _visualizerEnabled ? 'Hide visualizer' : 'Show visualizer',
+            icon: Icon(
+              _visualizerEnabled ? Icons.equalizer : Icons.equalizer_outlined,
+            ),
+            onPressed: () => _setVisualizerEnabled(!_visualizerEnabled),
+          ),
           IconButton(
             tooltip: 'Load another',
             icon: const Icon(Icons.folder_open),
-            onPressed: _clear,
+            onPressed: _pickAndLoad,
           ),
+        ],
       ],
       child: hasModule
           ? ChiptunePlayerView(
@@ -283,6 +306,7 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
               module: module,
               looping: _looping,
               volume: _volume,
+              visualizerEnabled: _visualizerEnabled,
               archivePanel: archivePanel,
               onPlayPause: _playPause,
               onStop: _player.stop,
