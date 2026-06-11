@@ -552,3 +552,244 @@ WorkletModule serializeModuleForWorklet(ModuleFile mod) {
     channelPanning: mod.channelPanning,
   );
 }
+
+Map<String, Object?> workletModuleToMessage(WorkletModule module) {
+  return <String, Object?>{
+    'type': module.type,
+    'name': module.name,
+    'length': module.length,
+    'sequence': module.sequence,
+    'patternTable': module.patternTable,
+    'channels': module.channels,
+    'defaultBpm': module.defaultBpm,
+    'defaultSpeed': module.defaultSpeed,
+    'rowsPerPattern': module.rowsPerPattern,
+    'linearFrequencies': module.linearFrequencies,
+    'restartPosition': module.restartPosition,
+    'clock': module.clock,
+    'globalVolume': module.globalVolume,
+    'mixingVolume': module.mixingVolume,
+    'channelVolumes': module.channelVolumes,
+    'channelPanning': module.channelPanning,
+    'instruments': module.instruments.map(_workletInstrumentToMessage).toList(),
+    'patterns': module.patterns.map(_workletPatternToMessage).toList(),
+  };
+}
+
+Map<String, Object?> _workletInstrumentToMessage(WorkletInstrument inst) {
+  return <String, Object?>{
+    'index': inst.index,
+    'name': inst.name,
+    'sampleMap': inst.sampleMap,
+    'noteMap': inst.noteMap,
+    'volumeFadeout': inst.volumeFadeout,
+    'nna': inst.nna,
+    'dct': inst.dct,
+    'dca': inst.dca,
+    'volumeEnv': _envelopeToMessage(inst.volumeEnv),
+    'panningEnv': _envelopeToMessage(inst.panningEnv),
+    'samples': inst.samples.map(_workletSampleToMessage).toList(),
+  };
+}
+
+Map<String, Object?> _workletSampleToMessage(WorkletInstrumentSample sample) {
+  return <String, Object?>{
+    'length': sample.length,
+    'finetune': sample.finetune,
+    'volume': sample.volume,
+    'loopStart': sample.loopStart,
+    'loopLength': sample.loopLength,
+    'panning': sample.panning,
+    'baseNote': sample.baseNote,
+    'c5speed': sample.c5speed,
+    'vibratoType': sample.vibratoType,
+    'vibratoSweep': sample.vibratoSweep,
+    'vibratoDepth': sample.vibratoDepth,
+    'vibratoRate': sample.vibratoRate,
+    'data': sample.data,
+  };
+}
+
+Map<String, Object?> _workletPatternToMessage(WorkletPattern pattern) {
+  return <String, Object?>{
+    'rows': pattern.rows
+        .map(
+          (row) => <String, Object?>{
+            'notes': row.notes
+                .map(
+                  (note) => <String, Object?>{
+                    'instrument': note.instrument,
+                    'period': note.period,
+                    'effect': note.effect,
+                    'effectParam': note.effectParam,
+                    'itVolumeEffect': note.itVolumeEffect,
+                    'itVolumeEffectParam': note.itVolumeEffectParam,
+                    'volume': note.volume,
+                    'volumeColumn': note.volumeColumn,
+                    'note': note.note,
+                  },
+                )
+                .toList(),
+          },
+        )
+        .toList(),
+  };
+}
+
+Map<String, Object?>? _envelopeToMessage(Envelope? env) {
+  if (env == null) return null;
+  return <String, Object?>{
+    'loopStart': env.loopStart,
+    'loopEnd': env.loopEnd,
+    'sustainStart': env.sustainStart,
+    'sustainEnd': env.sustainEnd,
+    'type': env.type,
+    'points': env.points
+        .map((p) => <String, Object?>{'tick': p.tick, 'value': p.value})
+        .toList(),
+  };
+}
+
+WorkletModule workletModuleFromMessage(Map<Object?, Object?> raw) {
+  final List<WorkletInstrument> instruments =
+      (raw['instruments'] as List<dynamic>)
+          .cast<Map<Object?, Object?>>()
+          .map(_workletInstrumentFromMessage)
+          .toList();
+
+  final List<WorkletPattern> patterns = (raw['patterns'] as List<dynamic>)
+      .cast<Map<Object?, Object?>>()
+      .map(_workletPatternFromMessage)
+      .toList();
+
+  return WorkletModule(
+    type: raw['type'] as String,
+    name: raw['name'] as String,
+    length: (raw['length'] as num).toInt(),
+    sequence: (raw['sequence'] as List<dynamic>)
+        .map((e) => (e as num).toInt())
+        .toList(growable: false),
+    patternTable: (raw['patternTable'] as List<dynamic>)
+        .map((e) => (e as num).toInt())
+        .toList(growable: false),
+    instruments: instruments,
+    patterns: patterns,
+    channels: (raw['channels'] as num).toInt(),
+    defaultBpm: (raw['defaultBpm'] as num).toInt(),
+    defaultSpeed: (raw['defaultSpeed'] as num).toInt(),
+    rowsPerPattern: (raw['rowsPerPattern'] as num).toInt(),
+    linearFrequencies: raw['linearFrequencies'] == true,
+    restartPosition: (raw['restartPosition'] as num).toInt(),
+    clock: (raw['clock'] as num).toDouble(),
+    globalVolume: (raw['globalVolume'] as num).toInt(),
+    mixingVolume: (raw['mixingVolume'] as num).toInt(),
+    channelVolumes: (raw['channelVolumes'] as List<dynamic>?)
+        ?.map((e) => (e as num).toInt())
+        .toList(growable: false),
+    channelPanning: (raw['channelPanning'] as List<dynamic>?)
+        ?.map((e) => (e as num).toInt())
+        .toList(growable: false),
+  );
+}
+
+WorkletInstrument _workletInstrumentFromMessage(Map<Object?, Object?> raw) {
+  return WorkletInstrument(
+    index: (raw['index'] as num).toInt(),
+    name: raw['name'] as String,
+    samples: (raw['samples'] as List<dynamic>)
+        .cast<Map<Object?, Object?>>()
+        .map(_workletSampleFromMessage)
+        .toList(growable: false),
+    sampleMap: (raw['sampleMap'] as List<dynamic>?)
+        ?.map((e) => (e as num).toInt())
+        .toList(growable: false),
+    noteMap: (raw['noteMap'] as List<dynamic>?)
+        ?.map((e) => (e as num).toInt())
+        .toList(growable: false),
+    volumeEnv: _envelopeFromMessage(raw['volumeEnv'] as Map<Object?, Object?>?),
+    panningEnv: _envelopeFromMessage(
+      raw['panningEnv'] as Map<Object?, Object?>?,
+    ),
+    volumeFadeout: (raw['volumeFadeout'] as num?)?.toInt(),
+    nna: (raw['nna'] as num?)?.toInt(),
+    dct: (raw['dct'] as num?)?.toInt(),
+    dca: (raw['dca'] as num?)?.toInt(),
+  );
+}
+
+WorkletInstrumentSample _workletSampleFromMessage(Map<Object?, Object?> raw) {
+  final dynamic rawData = raw['data'];
+  final Float32List data = rawData is Float32List
+      ? rawData
+      : Float32List.fromList(
+          (rawData as List<dynamic>)
+              .map((e) => (e as num).toDouble())
+              .toList(growable: false),
+        );
+
+  return WorkletInstrumentSample(
+    length: (raw['length'] as num).toInt(),
+    finetune: (raw['finetune'] as num).toDouble(),
+    volume: (raw['volume'] as num).toInt(),
+    loopStart: (raw['loopStart'] as num).toInt(),
+    loopLength: (raw['loopLength'] as num).toInt(),
+    panning: (raw['panning'] as num).toInt(),
+    data: data,
+    baseNote: (raw['baseNote'] as num?)?.toInt(),
+    c5speed: (raw['c5speed'] as num?)?.toInt(),
+    vibratoType: (raw['vibratoType'] as num?)?.toInt(),
+    vibratoSweep: (raw['vibratoSweep'] as num?)?.toInt(),
+    vibratoDepth: (raw['vibratoDepth'] as num?)?.toInt(),
+    vibratoRate: (raw['vibratoRate'] as num?)?.toInt(),
+  );
+}
+
+WorkletPattern _workletPatternFromMessage(Map<Object?, Object?> raw) {
+  final rows = (raw['rows'] as List<dynamic>)
+      .cast<Map<Object?, Object?>>()
+      .map((rowRaw) {
+        final notes = (rowRaw['notes'] as List<dynamic>)
+            .cast<Map<Object?, Object?>>()
+            .map(
+              (noteRaw) => WorkletNote(
+                instrument: (noteRaw['instrument'] as num).toInt(),
+                period: (noteRaw['period'] as num).toInt(),
+                effect: (noteRaw['effect'] as num).toInt(),
+                effectParam: (noteRaw['effectParam'] as num).toInt(),
+                itVolumeEffect: (noteRaw['itVolumeEffect'] as num?)?.toInt(),
+                itVolumeEffectParam: (noteRaw['itVolumeEffectParam'] as num?)
+                    ?.toInt(),
+                volume: (noteRaw['volume'] as num?)?.toInt(),
+                volumeColumn: (noteRaw['volumeColumn'] as num?)?.toInt(),
+                note: (noteRaw['note'] as num?)?.toInt(),
+              ),
+            )
+            .toList(growable: false);
+        return WorkletRow(notes);
+      })
+      .toList(growable: false);
+
+  return WorkletPattern(rows);
+}
+
+Envelope? _envelopeFromMessage(Map<Object?, Object?>? raw) {
+  if (raw == null) return null;
+  final points = (raw['points'] as List<dynamic>)
+      .cast<Map<Object?, Object?>>()
+      .map(
+        (p) => EnvelopePoint(
+          (p['tick'] as num).toInt(),
+          (p['value'] as num).toInt(),
+        ),
+      )
+      .toList(growable: false);
+
+  return Envelope(
+    points: points,
+    loopStart: (raw['loopStart'] as num?)?.toInt(),
+    loopEnd: (raw['loopEnd'] as num?)?.toInt(),
+    sustainStart: (raw['sustainStart'] as num?)?.toInt(),
+    sustainEnd: (raw['sustainEnd'] as num?)?.toInt(),
+    type: (raw['type'] as num?)?.toInt() ?? 0,
+  );
+}

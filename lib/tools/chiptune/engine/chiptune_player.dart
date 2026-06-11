@@ -5,8 +5,8 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../../services/foreground_runtime_service.dart';
 import '../../../services/power_wake_lock_service.dart';
-import 'mixer.dart';
 import 'module.dart';
+import 'render_worker.dart';
 
 enum ChiptunePlaybackState { stopped, playing, paused }
 
@@ -45,12 +45,14 @@ class ChiptunePlayer {
     milliseconds: 80,
   );
 
-  final ChiptuneMixer _mixer = ChiptuneMixer();
+  final ChiptuneRenderWorker _renderWorker = ChiptuneRenderWorker();
 
   AudioSource? _stream;
   SoundHandle? _handle;
   Timer? _feedTimer;
-  final Float32List _chunk = Float32List(_chunkFrames * 2);
+  bool _feedInProgress = false;
+  StreamSubscription<RenderRowEvent>? _rowSubscription;
+  StreamSubscription<void>? _endedSubscription;
 
   ModuleFile? _module;
   WorkletModule? _worklet;
@@ -99,7 +101,7 @@ class ChiptunePlayer {
   }
 
   ChiptunePlayer() {
-    _mixer.onRow = (order, row, active, _) {
+    _rowSubscription = _renderWorker.onRow.listen((event) {
       if (!_uiUpdatesEnabled) return;
       final DateTime now = DateTime.now();
       final DateTime? last = _lastUiUpdateAt;
@@ -108,26 +110,31 @@ class ChiptunePlayer {
       }
       _lastUiUpdateAt = now;
 
-      final SongPosition next = SongPosition(order, row);
+      final SongPosition next = SongPosition(event.order, event.row);
       if (position.value != next) {
         position.value = next;
       }
 
       final List<bool> previous = channelActivity.value;
-      bool changed = previous.length != active.length;
+      bool changed = previous.length != event.activeChannels.length;
       if (!changed) {
-        for (int i = 0; i < active.length; i++) {
-          if (previous[i] != active[i]) {
+        for (int i = 0; i < event.activeChannels.length; i++) {
+          if (previous[i] != event.activeChannels[i]) {
             changed = true;
             break;
           }
         }
       }
       if (changed) {
-        channelActivity.value = List<bool>.from(active, growable: false);
+        channelActivity.value = List<bool>.from(
+          event.activeChannels,
+          growable: false,
+        );
       }
-    };
-    _mixer.onEnded = () => _ended = true;
+    });
+    _endedSubscription = _renderWorker.onEnded.listen((_) {
+      _ended = true;
+    });
   }
 
   /// Total rows across the whole order list (for seek slider math).
@@ -160,18 +167,23 @@ class ChiptunePlayer {
       await _acquirePlaybackRuntimeLocks();
       SoLoud.instance.setPause(_handle!, false);
       state.value = ChiptunePlaybackState.playing;
-      _feed();
+      await _feed();
       _startFeed();
       return;
     }
 
     await _ensureInit();
+    await _renderWorker.stop();
     _stopInternal();
     await _acquirePlaybackRuntimeLocks();
 
     _ended = false;
-    _mixer.loadAndPlay(_worklet!, sampleRate, looping: _looping);
-    _mixer.setMasterVolume(_volume);
+    await _renderWorker.start(
+      module: _worklet!,
+      sampleRate: sampleRate,
+      looping: _looping,
+      volume: _volume,
+    );
 
     _stream = SoLoud.instance.setBufferStream(
       sampleRate: sampleRate,
@@ -182,7 +194,7 @@ class ChiptunePlayer {
     );
 
     // Pre-fill before starting so playback begins instantly.
-    _feed();
+    await _feed();
     _handle = SoLoud.instance.play(_stream!, volume: 1);
     state.value = ChiptunePlaybackState.playing;
     _startFeed();
@@ -212,23 +224,25 @@ class ChiptunePlayer {
   void seek(int order, int row) {
     if (_worklet == null) return;
     final wasPlaying = state.value == ChiptunePlaybackState.playing;
-    _mixer.seek(order, row);
+    _renderWorker.seek(order, row);
     if (_stream != null) {
       SoLoud.instance.resetBufferStream(_stream!);
     }
-    if (wasPlaying) _feed();
+    if (wasPlaying) {
+      unawaited(_feed());
+    }
   }
 
   void setVolume(double volume) {
     _volume = volume.clamp(0.0, 1.0);
-    _mixer.setMasterVolume(_volume);
+    _renderWorker.setVolume(_volume);
   }
 
-  void setSpeed(int speed) => _mixer.setSpeed(speed);
+  void setSpeed(int speed) => _renderWorker.setSpeed(speed);
 
   void setLooping(bool looping) {
     _looping = looping;
-    _mixer.setLooping(looping);
+    _renderWorker.setLooping(looping);
   }
 
   void _startFeed() {
@@ -238,8 +252,8 @@ class ChiptunePlayer {
 
   void _scheduleFeedLoop() {
     if (state.value != ChiptunePlaybackState.playing) return;
-    scheduleMicrotask(() {
-      _feed();
+    scheduleMicrotask(() async {
+      await _feed();
       if (state.value == ChiptunePlaybackState.playing) {
         _feedTimer = Timer(_feedInterval, _scheduleFeedLoop);
       } else {
@@ -248,47 +262,63 @@ class ChiptunePlayer {
     });
   }
 
-  void _feed() {
+  Future<void> _feed() async {
+    if (_feedInProgress) return;
+    _feedInProgress = true;
+
     final stream = _stream;
-    if (stream == null) return;
-
-    if (_uiUpdatesEnabled && _handle != null) {
-      final DateTime now = DateTime.now();
-      final DateTime? last = _lastElapsedUpdateAt;
-      if (last == null || now.difference(last) >= _elapsedUpdateInterval) {
-        _lastElapsedUpdateAt = now;
-        elapsed.value = SoLoud.instance.getStreamTimeConsumed(stream);
-      }
-    }
-
-    if (_ended) {
-      _onSongEnded();
+    if (stream == null) {
+      _feedInProgress = false;
       return;
     }
 
-    final targetBytes = (sampleRate * _bufferAheadSeconds * 2 * 4)
-        .toInt(); // stereo f32
-    final int maxIterations = ((targetBytes / _chunk.lengthInBytes).ceil() + 8)
-        .clamp(8, 96)
-        .toInt();
-    int guard = 0;
-    while (!_ended && guard < maxIterations) {
-      int buffered;
-      try {
-        buffered = SoLoud.instance.getBufferSize(stream);
-      } catch (_) {
-        buffered = targetBytes; // stop topping up if query fails
+    try {
+      if (_uiUpdatesEnabled && _handle != null) {
+        final DateTime now = DateTime.now();
+        final DateTime? last = _lastElapsedUpdateAt;
+        if (last == null || now.difference(last) >= _elapsedUpdateInterval) {
+          _lastElapsedUpdateAt = now;
+          elapsed.value = SoLoud.instance.getStreamTimeConsumed(stream);
+        }
       }
-      if (buffered >= targetBytes) break;
 
-      _mixer.render(_chunk, _chunkFrames);
-      try {
-        SoLoud.instance.addAudioDataStream(stream, _chunk.buffer.asUint8List());
-      } catch (e) {
-        debugPrint('$_logPrefix addAudioDataStream failed: $e');
-        break;
+      if (_ended) {
+        _onSongEnded();
+        return;
       }
-      guard++;
+
+      final int targetBytes = (sampleRate * _bufferAheadSeconds * 2 * 4)
+          .toInt(); // stereo f32
+      final int chunkBytes = _chunkFrames * 2 * Float32List.bytesPerElement;
+      final int maxIterations = ((targetBytes / chunkBytes).ceil() + 8)
+          .clamp(8, 96)
+          .toInt();
+      int guard = 0;
+      while (!_ended && guard < maxIterations) {
+        int buffered;
+        try {
+          buffered = SoLoud.instance.getBufferSize(stream);
+        } catch (_) {
+          buffered = targetBytes; // stop topping up if query fails
+        }
+        if (buffered >= targetBytes) break;
+
+        final Float32List chunk = await _renderWorker.render(_chunkFrames);
+        if (chunk.isEmpty) break;
+
+        try {
+          SoLoud.instance.addAudioDataStream(
+            stream,
+            chunk.buffer.asUint8List(),
+          );
+        } catch (e) {
+          debugPrint('$_logPrefix addAudioDataStream failed: $e');
+          break;
+        }
+        guard++;
+      }
+    } finally {
+      _feedInProgress = false;
     }
   }
 
@@ -312,9 +342,10 @@ class ChiptunePlayer {
   void _stopInternal() {
     _feedTimer?.cancel();
     _feedTimer = null;
+    _feedInProgress = false;
     _lastUiUpdateAt = null;
     _lastElapsedUpdateAt = null;
-    _mixer.stop();
+    unawaited(_renderWorker.stop());
     final handle = _handle;
     if (handle != null) {
       SoLoud.instance.stop(handle);
@@ -352,6 +383,9 @@ class ChiptunePlayer {
 
   void dispose() {
     _stopInternal();
+    _rowSubscription?.cancel();
+    _endedSubscription?.cancel();
+    unawaited(_renderWorker.dispose());
     state.dispose();
     position.dispose();
     channelActivity.dispose();
