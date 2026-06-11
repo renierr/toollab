@@ -38,6 +38,66 @@ void main() {
     });
   });
 
+  group('MimeTypeHelper magic bytes', () {
+    test('detects signatures regardless of extension', () {
+      expect(
+        MimeTypeHelper.detectFromMagicBytes([0x25, 0x50, 0x44, 0x46, 0x2D]),
+        'application/pdf',
+      );
+      expect(
+        MimeTypeHelper.detectFromMagicBytes([
+          0x89,
+          0x50,
+          0x4E,
+          0x47,
+          0x0D,
+          0x0A,
+          0x1A,
+          0x0A,
+        ]),
+        'image/png',
+      );
+      expect(
+        MimeTypeHelper.detectFromMagicBytes([0xFF, 0xD8, 0xFF, 0xE0]),
+        'image/jpeg',
+      );
+      expect(
+        MimeTypeHelper.detectFromMagicBytes('GIF89a'.codeUnits),
+        'image/gif',
+      );
+      expect(
+        MimeTypeHelper.detectFromMagicBytes([0x50, 0x4B, 0x03, 0x04]),
+        'application/zip',
+      );
+      expect(
+        MimeTypeHelper.detectFromMagicBytes('IMPM'.codeUnits),
+        'audio/x-it',
+      );
+      expect(
+        MimeTypeHelper.detectFromMagicBytes('Extended Module: '.codeUnits),
+        'audio/x-xm',
+      );
+      expect(MimeTypeHelper.detectFromMagicBytes([0x00, 0x01]), isNull);
+    });
+
+    test('magic bytes win over a wrong extension', () {
+      expect(
+        MimeTypeHelper.getMimeType(
+          'photo.txt',
+          bytes: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A],
+        ),
+        'image/png',
+      );
+    });
+
+    test('falls back to extension when bytes are unknown', () {
+      expect(
+        MimeTypeHelper.getMimeType('notes.md', bytes: [0x00, 0x01, 0x02]),
+        'text/markdown',
+      );
+    });
+  });
+
   group('SharedFile Octet-Stream Resolution', () {
     test(
       'resolves mimeType from path if original is application/octet-stream',

@@ -157,7 +157,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       final bytes = await file.readAsBytes();
       String mimeType = file.mimeType ?? 'application/octet-stream';
       if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
-        mimeType = MimeTypeHelper.getMimeType(file.name);
+        mimeType = MimeTypeHelper.getMimeType(file.name, bytes: bytes);
       }
       await appState.uploadFastDrop(
         filename: file.name,
@@ -198,7 +198,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       final bytes = await File(file.path).readAsBytes();
       String mimeType = file.mimeType;
       if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
-        mimeType = MimeTypeHelper.getMimeType(file.name);
+        mimeType = MimeTypeHelper.getMimeType(file.name, bytes: bytes);
       }
       await appState.uploadFastDrop(
         filename: file.name,
