@@ -284,6 +284,7 @@ class ChiptuneArchive {
         'mimeType': r['mime_type'],
         'data': fileData,
       },
+      'fileDataBase64': fileData,
       'mimeType': r['mime_type'],
       'format': r['format'],
       'title': r['title'],
@@ -303,7 +304,7 @@ class ChiptuneArchive {
       await hardDelete(id);
       return;
     }
-    final rawFileData = data['fileData'];
+    final rawFileData = data['fileData'] ?? data['fileDataBase64'];
     final fileData = _extractFileData(rawFileData);
     final bytes = (fileData != null && fileData.isNotEmpty)
         ? base64Decode(fileData)
