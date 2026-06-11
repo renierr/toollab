@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
+import '../../../services/wake_lock_service.dart';
 import 'mixer.dart';
 import 'module.dart';
 
@@ -31,9 +32,9 @@ class ChiptunePlayer {
   static const int sampleRate = 44100;
   static const String _logPrefix = '[ChiptunePlayer]';
 
-  // Look-ahead buffer target (~150ms) keeps row/LED callbacks close to audio.
-  static const double _bufferAheadSeconds = 0.15;
-  static const int _chunkFrames = 2048;
+  // Look-ahead buffer target (~2s) absorbs UI thread jitter.
+  static const double _bufferAheadSeconds = 2.0;
+  static const int _chunkFrames = 4096;
 
   final ChiptuneMixer _mixer = ChiptuneMixer();
 
@@ -102,12 +103,14 @@ class ChiptunePlayer {
     if (state.value == ChiptunePlaybackState.paused && _handle != null) {
       SoLoud.instance.setPause(_handle!, false);
       state.value = ChiptunePlaybackState.playing;
+      _feed();
       _startFeed();
       return;
     }
 
     await _ensureInit();
     _stopInternal();
+    await WakeLockService.acquire();
 
     _ended = false;
     _mixer.loadAndPlay(_worklet!, sampleRate, looping: _looping);
@@ -118,7 +121,7 @@ class ChiptunePlayer {
       channels: Channels.stereo,
       format: BufferType.f32le,
       bufferingType: BufferingType.released,
-      maxBufferSizeDuration: const Duration(seconds: 10),
+      maxBufferSizeDuration: const Duration(seconds: 30),
     );
 
     // Pre-fill before starting so playback begins instantly.
@@ -138,6 +141,7 @@ class ChiptunePlayer {
 
   void stop() {
     _stopInternal();
+    WakeLockService.release();
     state.value = ChiptunePlaybackState.stopped;
     position.value = const SongPosition(0, 0);
     elapsed.value = Duration.zero;
@@ -172,10 +176,19 @@ class ChiptunePlayer {
 
   void _startFeed() {
     _feedTimer?.cancel();
-    _feedTimer = Timer.periodic(
-      const Duration(milliseconds: 16),
-      (_) => _feed(),
-    );
+    _scheduleFeedLoop();
+  }
+
+  void _scheduleFeedLoop() {
+    if (state.value != ChiptunePlaybackState.playing) return;
+    scheduleMicrotask(() {
+      _feed();
+      if (state.value == ChiptunePlaybackState.playing) {
+        _feedTimer = Timer(const Duration(milliseconds: 16), _scheduleFeedLoop);
+      } else {
+        _feedTimer = null;
+      }
+    });
   }
 
   void _feed() {
@@ -221,6 +234,7 @@ class ChiptunePlayer {
       SoLoud.instance.setDataIsEnded(_stream!);
     }
     state.value = ChiptunePlaybackState.stopped;
+    WakeLockService.release();
     onEnded?.call();
   }
 
@@ -248,6 +262,7 @@ class ChiptunePlayer {
 
   void dispose() {
     _stopInternal();
+    WakeLockService.release();
     state.dispose();
     position.dispose();
     channelActivity.dispose();

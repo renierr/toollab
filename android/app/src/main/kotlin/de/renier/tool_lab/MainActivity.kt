@@ -3,6 +3,7 @@ package de.renier.tool_lab
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.OpenableColumns
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -14,9 +15,11 @@ class MainActivity : FlutterActivity() {
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
     private val SHORTCUTS_CHANNEL = "de.renier.tool_lab/shortcuts"
     private val SHARING_CHANNEL = "de.renier.tool_lab/sharing"
+    private val WAKE_LOCK_CHANNEL = "de.renier.tool_lab/wake_lock"
 
     private var launchRoute: String? = null
     private var pendingSharedFile: Map<String, String>? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,6 +128,32 @@ class MainActivity : FlutterActivity() {
                     }
                     "clearSharedFile" -> {
                         pendingSharedFile = null
+                        result.success(true)
+                    }
+                    else -> {
+                        result.notImplemented()
+                    }
+                }
+            }
+
+        // Wake Lock MethodChannel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, WAKE_LOCK_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "acquire" -> {
+                        if (wakeLock == null) {
+                            val pm = getSystemService(POWER_SERVICE) as PowerManager
+                            wakeLock = pm.newWakeLock(
+                                PowerManager.PARTIAL_WAKE_LOCK,
+                                "ToolLab::PartialWakeLock"
+                            )
+                        }
+                        wakeLock?.acquire()
+                        result.success(true)
+                    }
+                    "release" -> {
+                        wakeLock?.release()
+                        wakeLock = null
                         result.success(true)
                     }
                     else -> {
