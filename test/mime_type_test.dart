@@ -18,6 +18,9 @@ void main() {
       expect(MimeTypeHelper.getMimeType('styles.css'), 'text/css');
       expect(MimeTypeHelper.getMimeType('image.webp'), 'image/webp');
       expect(MimeTypeHelper.getMimeType('song.mp3'), 'audio/mpeg');
+      expect(MimeTypeHelper.getMimeType('tune.mod'), 'audio/x-mod');
+      expect(MimeTypeHelper.getMimeType('tune.xm'), 'audio/x-xm');
+      expect(MimeTypeHelper.getMimeType('tune.it'), 'audio/x-it');
       expect(MimeTypeHelper.getMimeType('movie.mp4'), 'video/mp4');
       expect(MimeTypeHelper.getMimeType('archive.zip'), 'application/zip');
       expect(

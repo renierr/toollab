@@ -78,6 +78,13 @@ class MimeTypeHelper {
         return 'audio/mp4';
       case 'flac':
         return 'audio/flac';
+      // Tracker modules
+      case 'mod':
+        return 'audio/x-mod';
+      case 'xm':
+        return 'audio/x-xm';
+      case 'it':
+        return 'audio/x-it';
       // Video
       case 'mp4':
         return 'video/mp4';
