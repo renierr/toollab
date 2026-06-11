@@ -83,10 +83,8 @@ class ChiptuneArchivePanel extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 240),
             child: ListView.builder(
-              shrinkWrap: inScrollableParent,
-              physics: inScrollableParent
-                  ? const NeverScrollableScrollPhysics()
-                  : null,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: modules.length,
               itemBuilder: (_, i) => _ArchiveItem(
                 module: modules[i],

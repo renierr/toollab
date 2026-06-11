@@ -20,25 +20,23 @@ class ChiptuneEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final hasArchive = archivePanel != null;
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: FileDropZone(
-              allowedExtensions: extensions,
-              typeLabel: 'Tracker module',
-              accentColor: ChiptuneColors.accent,
-              icon: Icons.music_note_outlined,
-              title: 'Drop a tracker module',
-              subtitle: 'MOD · XM · IT files',
-              onFileSelected: onFileSelected,
-            ),
+          FileDropZone(
+            compact: hasArchive,
+            allowedExtensions: extensions,
+            typeLabel: 'Tracker module',
+            accentColor: ChiptuneColors.accent,
+            icon: Icons.music_note_outlined,
+            title: 'Drop a tracker module',
+            subtitle: 'MOD · XM · IT files',
+            onFileSelected: onFileSelected,
           ),
-          if (archivePanel != null) ...[
-            const SizedBox(height: 12),
-            archivePanel!,
-          ],
+          if (hasArchive) ...[const SizedBox(height: 12), archivePanel!],
         ],
       ),
     );

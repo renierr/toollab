@@ -327,6 +327,7 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
                       syncing: _syncing,
                       showSync: _backendAvailable,
                       currentId: _currentArchiveId,
+                      inScrollableParent: true,
                       onSave: _saveCurrent,
                       onSync: _runSync,
                       onPlay: _playArchived,
