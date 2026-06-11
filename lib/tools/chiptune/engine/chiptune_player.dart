@@ -33,9 +33,17 @@ class ChiptunePlayer {
   static const int sampleRate = 44100;
   static const String _logPrefix = '[ChiptunePlayer]';
 
-  // Look-ahead buffer target (~2s) absorbs UI thread jitter.
-  static const double _bufferAheadSeconds = 2.0;
-  static const int _chunkFrames = 4096;
+  // Larger look-ahead keeps playback stable under background throttling.
+  static const double _bufferAheadSeconds = 6.0;
+  static const int _chunkFrames = 8192;
+  static const Duration _feedIntervalForeground = Duration(milliseconds: 16);
+  static const Duration _feedIntervalBackground = Duration(milliseconds: 48);
+  static const Duration _uiUpdateIntervalForeground = Duration(
+    milliseconds: 24,
+  );
+  static const Duration _elapsedUpdateIntervalForeground = Duration(
+    milliseconds: 80,
+  );
 
   final ChiptuneMixer _mixer = ChiptuneMixer();
 
@@ -48,6 +56,12 @@ class ChiptunePlayer {
   WorkletModule? _worklet;
   WakeLockLease? _partialWakeLock;
   ForegroundRuntimeLease? _foregroundRuntimeLease;
+  DateTime? _lastUiUpdateAt;
+  DateTime? _lastElapsedUpdateAt;
+  bool _uiUpdatesEnabled = true;
+  Duration _feedInterval = _feedIntervalForeground;
+  Duration _uiUpdateInterval = _uiUpdateIntervalForeground;
+  Duration _elapsedUpdateInterval = _elapsedUpdateIntervalForeground;
   bool _ended = false;
   double _volume = 0.7;
   bool _looping = false;
@@ -69,10 +83,49 @@ class ChiptunePlayer {
   bool get isPlaying => state.value == ChiptunePlaybackState.playing;
   bool get hasModule => _worklet != null;
 
+  void setUiUpdatesEnabled(bool enabled) {
+    _uiUpdatesEnabled = enabled;
+    _feedInterval = enabled ? _feedIntervalForeground : _feedIntervalBackground;
+    _uiUpdateInterval = enabled
+        ? _uiUpdateIntervalForeground
+        : const Duration(hours: 1);
+    _elapsedUpdateInterval = enabled
+        ? _elapsedUpdateIntervalForeground
+        : const Duration(hours: 1);
+    if (!enabled) {
+      _lastUiUpdateAt = null;
+      _lastElapsedUpdateAt = null;
+    }
+  }
+
   ChiptunePlayer() {
     _mixer.onRow = (order, row, active, _) {
-      position.value = SongPosition(order, row);
-      channelActivity.value = List<bool>.from(active);
+      if (!_uiUpdatesEnabled) return;
+      final DateTime now = DateTime.now();
+      final DateTime? last = _lastUiUpdateAt;
+      if (last != null && now.difference(last) < _uiUpdateInterval) {
+        return;
+      }
+      _lastUiUpdateAt = now;
+
+      final SongPosition next = SongPosition(order, row);
+      if (position.value != next) {
+        position.value = next;
+      }
+
+      final List<bool> previous = channelActivity.value;
+      bool changed = previous.length != active.length;
+      if (!changed) {
+        for (int i = 0; i < active.length; i++) {
+          if (previous[i] != active[i]) {
+            changed = true;
+            break;
+          }
+        }
+      }
+      if (changed) {
+        channelActivity.value = List<bool>.from(active, growable: false);
+      }
     };
     _mixer.onEnded = () => _ended = true;
   }
@@ -188,7 +241,7 @@ class ChiptunePlayer {
     scheduleMicrotask(() {
       _feed();
       if (state.value == ChiptunePlaybackState.playing) {
-        _feedTimer = Timer(const Duration(milliseconds: 16), _scheduleFeedLoop);
+        _feedTimer = Timer(_feedInterval, _scheduleFeedLoop);
       } else {
         _feedTimer = null;
       }
@@ -199,8 +252,13 @@ class ChiptunePlayer {
     final stream = _stream;
     if (stream == null) return;
 
-    if (_handle != null) {
-      elapsed.value = SoLoud.instance.getStreamTimeConsumed(stream);
+    if (_uiUpdatesEnabled && _handle != null) {
+      final DateTime now = DateTime.now();
+      final DateTime? last = _lastElapsedUpdateAt;
+      if (last == null || now.difference(last) >= _elapsedUpdateInterval) {
+        _lastElapsedUpdateAt = now;
+        elapsed.value = SoLoud.instance.getStreamTimeConsumed(stream);
+      }
     }
 
     if (_ended) {
@@ -254,6 +312,8 @@ class ChiptunePlayer {
   void _stopInternal() {
     _feedTimer?.cancel();
     _feedTimer = null;
+    _lastUiUpdateAt = null;
+    _lastElapsedUpdateAt = null;
     _mixer.stop();
     final handle = _handle;
     if (handle != null) {

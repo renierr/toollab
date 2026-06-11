@@ -32,7 +32,8 @@ class ChiptunePage extends StatefulWidget {
   State<ChiptunePage> createState() => _ChiptunePageState();
 }
 
-class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
+class _ChiptunePageState extends State<ChiptunePage>
+    with DisposeCleanup, WidgetsBindingObserver {
   final ChiptunePlayer _player = ChiptunePlayer();
 
   Uint8List? _currentBytes;
@@ -46,10 +47,13 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
   double _volume = 0.7;
   bool _looping = false;
   bool _visualizerEnabled = true;
+  bool _appInForeground = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    onDispose(() => WidgetsBinding.instance.removeObserver(this));
     onDispose(_player.dispose);
 
     _player.onEnded = _onPlaybackEnded;
@@ -72,6 +76,16 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
       }
     });
     onDispose(sub.cancel);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final bool active = state == AppLifecycleState.resumed;
+    _player.setUiUpdatesEnabled(active);
+    if (!mounted) return;
+    if (_appInForeground != active) {
+      setState(() => _appInForeground = active);
+    }
   }
 
   Future<void> _restoreSettings() async {
@@ -335,7 +349,7 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
               module: module,
               looping: _looping,
               volume: _volume,
-              visualizerEnabled: _visualizerEnabled,
+              visualizerEnabled: _visualizerEnabled && _appInForeground,
               archivePanel: ChiptuneArchivePanel(
                 modules: _archive,
                 canSave: _currentBytes != null,
