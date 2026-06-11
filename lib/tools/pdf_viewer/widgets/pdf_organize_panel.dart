@@ -149,22 +149,40 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
                 ? const Center(child: Text('No pages found'))
                 : ListView.builder(
                     itemCount: srcPages.length,
-                    itemBuilder: (_, i) => CheckboxListTile(
-                      value: selected.contains(i),
-                      onChanged: (v) {
-                        setDialogState(() {
-                          if (v == true) {
-                            selected.add(i);
-                          } else {
-                            selected.remove(i);
-                          }
-                        });
-                      },
-                      title: Text('Page ${i + 1}'),
-                      subtitle: Text(
-                        '${srcPages[i].width.round()} x ${srcPages[i].height.round()} pt',
-                      ),
-                    ),
+                    itemBuilder: (_, i) {
+                      final p = srcPages[i];
+                      final isPortrait = p.height >= p.width;
+                      return CheckboxListTile(
+                        value: selected.contains(i),
+                        controlAffinity: ListTileControlAffinity.trailing,
+                        onChanged: (v) {
+                          setDialogState(() {
+                            if (v == true) {
+                              selected.add(i);
+                            } else {
+                              selected.remove(i);
+                            }
+                          });
+                        },
+                        secondary: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: SizedBox(
+                            width: 44,
+                            height: 58,
+                            child: PdfPageView(
+                              document: p.document,
+                              pageNumber: p.pageNumber,
+                              alignment: Alignment.center,
+                            ),
+                          ),
+                        ),
+                        title: Text('Page ${i + 1}'),
+                        subtitle: Text(
+                          '${p.width.round()} x ${p.height.round()} pt · '
+                          '${isPortrait ? 'Portrait' : 'Landscape'}',
+                        ),
+                      );
+                    },
                   ),
           ),
           actions: [
