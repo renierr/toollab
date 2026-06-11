@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:pdfrx/pdfrx.dart';
-import 'package:tool_lab/helpers/temp_file_manager.dart';
 
 enum ImageToPdfPageSize { a4, letter, legal, fit }
 
@@ -187,36 +186,51 @@ class PdfEngineHelper {
     }
   }
 
-  static Future<Uint8List> flattenPdf(
+  /// Flattens [doc] into a non-extractable, image-only PDF that preserves each
+  /// page's exact size and format. Every page is rasterized at [dpi] and the
+  /// image fully fills a new page of the original page's point dimensions, so
+  /// the output looks identical to the source (no white margins, same A4/Letter
+  /// geometry). [dpi] and [jpegQuality] only affect output quality/size.
+  ///
+  /// Renders one page at a time and never accumulates page bitmaps on the Dart
+  /// heap; PDFium embeds each JPEG inline as it goes.
+  static Future<Uint8List> flattenPdfDocument(
     PdfDocument doc, {
     int dpi = 200,
     int jpegQuality = 90,
-    String format = 'jpeg',
+    void Function(int done, int total)? onProgress,
   }) async {
-    final ext = format == 'jpeg' ? 'jpg' : 'png';
+    await _ensureInit();
     final pages = doc.pages.toList();
-    final names = <String>[];
-    final paths = <String>[];
+    final imageDocs = <PdfDocument>[];
     try {
       for (int i = 0; i < pages.length; i++) {
-        final bytes = await renderPageToBytes(
-          pages[i],
+        final page = pages[i];
+        final jpegData = await renderPageToBytes(
+          page,
           dpi: dpi,
-          format: format,
+          format: 'jpeg',
           jpegQuality: jpegQuality,
         );
-        final name = 'flatten_${identityHashCode(doc)}_$i.$ext';
-        names.add(name);
-        paths.add(await TempFileManager.createFile(name, bytes: bytes));
+        // Page size in points (1/72") = original geometry; the image fills it.
+        final imageDoc = await PdfDocument.createFromJpegData(
+          jpegData,
+          width: page.width,
+          height: page.height,
+          sourceName: 'flat_$i.pdf',
+        );
+        imageDocs.add(imageDoc);
+        onProgress?.call(i + 1, pages.length);
       }
-      return await createPdfFromImagePaths(
-        paths,
-        pageSize: ImageToPdfPageSize.fit,
-        jpegQuality: jpegQuality,
-      );
+
+      final result = await PdfDocument.createNew(sourceName: 'flattened.pdf');
+      result.pages = imageDocs.map((d) => d.pages[0]).toList();
+      final bytes = await result.encodePdf();
+      result.dispose();
+      return bytes;
     } finally {
-      for (final name in names) {
-        await TempFileManager.deleteFile(name);
+      for (final d in imageDocs) {
+        d.dispose();
       }
     }
   }

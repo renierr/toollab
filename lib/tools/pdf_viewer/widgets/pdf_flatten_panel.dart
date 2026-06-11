@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
@@ -26,12 +26,11 @@ class PdfFlattenPanel extends StatefulWidget {
 
 enum _FlattenPhase { options, processing, done }
 
-class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
+class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
   _FlattenPhase _phase = _FlattenPhase.options;
 
   int _dpi = 200;
   int _jpegQuality = 90;
-  String _format = 'jpeg';
 
   double _progress = 0;
   String _statusText = '';
@@ -39,16 +38,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
   int _resultSize = 0;
   int _totalPages = 0;
 
-  late final TempFileScope _scope;
-
   String get _baseName => widget.fileName.replaceAll('.pdf', '');
-
-  @override
-  void initState() {
-    super.initState();
-    _scope = TempFileManager.createScope();
-    onDispose(() => _scope.cleanTracked());
-  }
 
   Future<void> _execute() async {
     setState(() {
@@ -56,54 +46,31 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
       _progress = 0;
     });
 
+    PdfDocument? doc;
     try {
-      await _scope.cleanTracked();
-      final doc = await PdfEngineHelper.openPdf(widget.filePath);
+      doc = await PdfEngineHelper.openPdf(widget.filePath);
       _totalPages = doc.pages.length;
-      final ext = _format == 'jpeg' ? 'jpg' : 'png';
 
-      final pagePaths = <String>[];
-      for (int i = 0; i < _totalPages; i++) {
-        if (!mounted) {
-          doc.dispose();
-          return;
-        }
-
-        setState(() {
-          _progress = (i / _totalPages).clamp(0.0, 1.0);
-          _statusText = 'Rendering page ${i + 1} of $_totalPages...';
-        });
-
-        final bytes = await PdfEngineHelper.renderPageToBytes(
-          doc.pages[i],
-          dpi: _dpi,
-          format: _format,
-          jpegQuality: _jpegQuality,
-        );
-        pagePaths.add(await _scope.createFile('flatten_$i.$ext', bytes: bytes));
-      }
-
-      doc.dispose();
-
-      if (!mounted) return;
-
-      setState(() {
-        _statusText = 'Creating PDF...';
-      });
-
-      final pdfBytes = await PdfEngineHelper.createPdfFromImagePaths(
-        pagePaths,
-        pageSize: ImageToPdfPageSize.fit,
+      final pdfBytes = await PdfEngineHelper.flattenPdfDocument(
+        doc,
+        dpi: _dpi,
         jpegQuality: _jpegQuality,
+        onProgress: (done, total) {
+          if (mounted) {
+            setState(() {
+              _progress = (done / total).clamp(0.0, 1.0);
+              _statusText = 'Rendering page $done of $total...';
+            });
+          }
+        },
       );
 
       // The result lives in the parent scope so it survives this panel being
-      // disposed when the viewer reopens it; the page renders are no longer needed.
+      // disposed when the viewer reopens it.
       final resultPath = await widget.tempScope.createFile(
         '${_baseName}_flattened.pdf',
         bytes: pdfBytes,
       );
-      await _scope.cleanTracked();
 
       if (!mounted) return;
 
@@ -124,6 +91,8 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
           context,
         ).showSnackBar(SnackBar(content: Text('Flatten failed: $e')));
       }
+    } finally {
+      doc?.dispose();
     }
   }
 
@@ -238,44 +207,6 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> with DisposeCleanup {
                 ),
                 Text(
                   'Higher quality = larger file size',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Format
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Image Format', style: theme.textTheme.titleSmall),
-                const SizedBox(height: 8),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 'jpeg',
-                      label: Text('JPEG'),
-                      icon: Icon(Icons.photo),
-                    ),
-                    ButtonSegment(
-                      value: 'png',
-                      label: Text('PNG'),
-                      icon: Icon(Icons.image),
-                    ),
-                  ],
-                  selected: {_format},
-                  onSelectionChanged: (v) => setState(() => _format = v.first),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'JPEG is smaller, PNG is lossless but larger',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
