@@ -183,6 +183,11 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
   // ---- Archive ----
 
   Future<void> _loadArchive() async {
+    final repaired = await ChiptuneArchive.instance.repairEmptyRecords();
+    if (repaired > 0) {
+      debugPrint('[ChiptunePage] Repaired $repaired empty archive records');
+      if (mounted) await _maybeAutoSync();
+    }
     final modules = await ChiptuneArchive.instance.getModules();
     if (!mounted) return;
     setState(() => _archive = modules);
@@ -270,18 +275,6 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     final module = _player.module;
     final hasModule = module != null;
 
-    final archivePanel = ChiptuneArchivePanel(
-      modules: _archive,
-      canSave: _currentBytes != null,
-      syncing: _syncing,
-      showSync: _backendAvailable,
-      currentId: _currentArchiveId,
-      onSave: _saveCurrent,
-      onSync: _runSync,
-      onPlay: _playArchived,
-      onDelete: _deleteArchived,
-    );
-
     return ToolLayout(
       title: ChiptuneTool.config.name,
       actions: [
@@ -307,7 +300,18 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
               looping: _looping,
               volume: _volume,
               visualizerEnabled: _visualizerEnabled,
-              archivePanel: archivePanel,
+              archivePanel: ChiptuneArchivePanel(
+                modules: _archive,
+                canSave: _currentBytes != null,
+                syncing: _syncing,
+                showSync: _backendAvailable,
+                currentId: _currentArchiveId,
+                inScrollableParent: true,
+                onSave: _saveCurrent,
+                onSync: _runSync,
+                onPlay: _playArchived,
+                onDelete: _deleteArchived,
+              ),
               onPlayPause: _playPause,
               onStop: _player.stop,
               onLoopChanged: _setLooping,
@@ -316,7 +320,19 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
             )
           : ChiptuneEmptyState(
               onFileSelected: _onFilePicked,
-              archivePanel: _archive.isNotEmpty ? archivePanel : null,
+              archivePanel: _archive.isNotEmpty
+                  ? ChiptuneArchivePanel(
+                      modules: _archive,
+                      canSave: _currentBytes != null,
+                      syncing: _syncing,
+                      showSync: _backendAvailable,
+                      currentId: _currentArchiveId,
+                      onSave: _saveCurrent,
+                      onSync: _runSync,
+                      onPlay: _playArchived,
+                      onDelete: _deleteArchived,
+                    )
+                  : null,
             ),
     );
   }

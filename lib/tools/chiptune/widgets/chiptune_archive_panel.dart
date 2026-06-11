@@ -11,6 +11,7 @@ class ChiptuneArchivePanel extends StatelessWidget {
   final bool syncing;
   final bool showSync;
   final String? currentId;
+  final bool inScrollableParent;
   final VoidCallback onSave;
   final VoidCallback onSync;
   final ValueChanged<String> onPlay;
@@ -23,6 +24,7 @@ class ChiptuneArchivePanel extends StatelessWidget {
     required this.syncing,
     required this.showSync,
     required this.currentId,
+    this.inScrollableParent = false,
     required this.onSave,
     required this.onSync,
     required this.onPlay,
@@ -78,12 +80,20 @@ class ChiptuneArchivePanel extends StatelessWidget {
             ),
           )
         else
-          ...modules.map(
-            (m) => _ArchiveItem(
-              module: m,
-              isCurrent: m.id == currentId,
-              onPlay: () => onPlay(m.id),
-              onDelete: () => onDelete(m.id),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 240),
+            child: ListView.builder(
+              shrinkWrap: inScrollableParent,
+              physics: inScrollableParent
+                  ? const NeverScrollableScrollPhysics()
+                  : null,
+              itemCount: modules.length,
+              itemBuilder: (_, i) => _ArchiveItem(
+                module: modules[i],
+                isCurrent: modules[i].id == currentId,
+                onPlay: () => onPlay(modules[i].id),
+                onDelete: () => onDelete(modules[i].id),
+              ),
             ),
           ),
       ],

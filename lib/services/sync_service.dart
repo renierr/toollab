@@ -52,6 +52,34 @@ class SyncService {
     }
   }
 
+  /// Recursively unwraps `{__type: 'blob', data: …}` Maps produced by the
+  /// browser-toolkit backend, replacing them with the raw base64 data string.
+  /// This ensures all [SyncDelegate]s receive plain data regardless of source.
+  static Map<String, dynamic> _unwrapBlobData(Map<String, dynamic> data) {
+    final result = <String, dynamic>{};
+    for (final entry in data.entries) {
+      final val = entry.value;
+      if (val is Map<String, dynamic>) {
+        if (val['__type'] == 'blob' && val['data'] is String) {
+          result[entry.key] = val['data'];
+        } else {
+          result[entry.key] = _unwrapBlobData(val);
+        }
+      } else if (val is List) {
+        result[entry.key] = val.map((e) {
+          if (e is Map<String, dynamic>) {
+            if (e['__type'] == 'blob' && e['data'] is String) return e['data'];
+            return _unwrapBlobData(e);
+          }
+          return e;
+        }).toList();
+      } else {
+        result[entry.key] = val;
+      }
+    }
+    return result;
+  }
+
   static Future<Map<String, int>> sync({
     required String baseUrl,
     required String userId,
@@ -202,8 +230,9 @@ class SyncService {
       }
 
       if (lMeta == null || serverUpdatedAt > lMeta.updatedAt) {
-        final Map<String, dynamic> data =
-            sRec['data'] as Map<String, dynamic>? ?? {};
+        final Map<String, dynamic> data = _unwrapBlobData(
+          sRec['data'] as Map<String, dynamic>? ?? {},
+        );
         await delegate.savePulledRecord(
           id: id,
           data: data,

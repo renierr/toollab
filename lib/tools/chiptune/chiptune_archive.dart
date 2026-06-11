@@ -38,14 +38,14 @@ class ChiptuneArchive {
     _cachedDb = await DatabaseService.instance.getToolDatabase(toolId);
     try {
       await _cachedDb!.migrate(
-        currentVersion: 1,
+        currentVersion: 2,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
               CREATE TABLE ${txn.nameTable(tableName)} (
                 short_id TEXT PRIMARY KEY,
                 file_name TEXT NOT NULL,
-                file_data TEXT NOT NULL,
+                file_data BLOB NOT NULL,
                 mime_type TEXT NOT NULL,
                 format TEXT NOT NULL,
                 title TEXT NOT NULL,
@@ -56,6 +56,30 @@ class ChiptuneArchive {
                 synced INTEGER NOT NULL DEFAULT 0
               )
             ''');
+          } else if (oldVersion < 2) {
+            // v1 had file_data as TEXT; recreate as BLOB to get proper affinity.
+            final src = txn.nameTable(tableName);
+            final tmp = '${src}_v2_migrate';
+            await txn.execute('''
+              CREATE TABLE $tmp (
+                short_id TEXT PRIMARY KEY,
+                file_name TEXT NOT NULL,
+                file_data BLOB NOT NULL,
+                mime_type TEXT NOT NULL,
+                format TEXT NOT NULL,
+                title TEXT NOT NULL,
+                channels INTEGER NOT NULL,
+                archived_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL,
+                deleted INTEGER NOT NULL DEFAULT 0,
+                synced INTEGER NOT NULL DEFAULT 0
+              )
+            ''');
+            await txn.execute('''
+              INSERT INTO $tmp SELECT * FROM $src
+            ''');
+            await txn.execute('DROP TABLE $src');
+            await txn.execute('ALTER TABLE $tmp RENAME TO $src');
           }
         },
       );
@@ -63,6 +87,20 @@ class ChiptuneArchive {
       debugPrint('[ChiptuneArchive] Migration failed: $e');
     }
     return _cachedDb!;
+  }
+
+  /// Decodes [raw] from the database — handles both BLOB (Uint8List) reads and
+  /// legacy TEXT (base64 String) reads left from the pre-BLOB schema.
+  static Uint8List? _dataFromRow(dynamic raw) {
+    if (raw is Uint8List) return raw;
+    if (raw is String && raw.isNotEmpty) {
+      try {
+        return base64Decode(raw);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
   }
 
   /// Content hash used as the stable, dedupe-friendly sync id (FNV-1a 64-bit).
@@ -75,6 +113,36 @@ class ChiptuneArchive {
       hash = (hash * prime) & mask;
     }
     return hash.toRadixString(16).padLeft(16, '0');
+  }
+
+  /// Deletes records with empty file data. Run once on startup to allow the
+  /// next sync to re-pull the real data.
+  Future<int> repairEmptyRecords() async {
+    final db = await _getDb();
+    int deleted = 0;
+
+    final textRows = await db.query(
+      tableName,
+      columns: ['short_id'],
+      where: "file_data = '' AND deleted = 0",
+    );
+    for (final r in textRows) {
+      await hardDelete(r['short_id'] as String);
+      deleted++;
+    }
+
+    final blobRows = await db.query(
+      tableName,
+      columns: ['short_id'],
+      where:
+          "typeof(file_data) = 'blob' AND length(file_data) = 0 AND deleted = 0",
+    );
+    for (final r in blobRows) {
+      await hardDelete(r['short_id'] as String);
+      deleted++;
+    }
+
+    return deleted;
   }
 
   /// Lists non-deleted modules, newest first.
@@ -130,7 +198,7 @@ class ChiptuneArchive {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    return base64Decode(rows.first['file_data'] as String);
+    return _dataFromRow(rows.first['file_data']);
   }
 
   /// Archives a module. Returns false if an identical module already exists.
@@ -150,7 +218,7 @@ class ChiptuneArchive {
     await db.insert(tableName, {
       'short_id': id,
       'file_name': fileName,
-      'file_data': base64Encode(bytes),
+      'file_data': bytes,
       'mime_type': mimeType,
       'format': format,
       'title': title,
@@ -180,6 +248,18 @@ class ChiptuneArchive {
 
   // ---- Sync support ----
 
+  /// Extracts a base64-encoded string from either a plain [String] or a
+  /// `{__type: 'blob', data: …}` Map (as produced by the browser-toolkit backend).
+  static String? _extractFileData(dynamic fileData) {
+    if (fileData is String) return fileData;
+    if (fileData is Map<String, dynamic> &&
+        fileData['__type'] == 'blob' &&
+        fileData['data'] is String) {
+      return fileData['data'] as String;
+    }
+    return null;
+  }
+
   Future<List<Map<String, dynamic>>> getSyncRecords() async {
     final db = await _getDb();
     return db.query(tableName, columns: ['short_id', 'updated_at', 'deleted']);
@@ -195,9 +275,15 @@ class ChiptuneArchive {
     );
     if (rows.isEmpty || (rows.first['deleted'] as int) == 1) return null;
     final r = rows.first;
+    final raw = _dataFromRow(r['file_data']);
+    final fileData = raw != null ? base64Encode(raw) : '';
     return {
       'fileName': r['file_name'],
-      'fileData': r['file_data'],
+      'fileData': {
+        '__type': 'blob',
+        'mimeType': r['mime_type'],
+        'data': fileData,
+      },
       'mimeType': r['mime_type'],
       'format': r['format'],
       'title': r['title'],
@@ -217,10 +303,15 @@ class ChiptuneArchive {
       await hardDelete(id);
       return;
     }
+    final rawFileData = data['fileData'];
+    final fileData = _extractFileData(rawFileData);
+    final bytes = (fileData != null && fileData.isNotEmpty)
+        ? base64Decode(fileData)
+        : Uint8List(0);
     final row = {
       'short_id': id,
       'file_name': data['fileName'] as String? ?? 'module',
-      'file_data': data['fileData'] as String? ?? '',
+      'file_data': bytes,
       'mime_type': data['mimeType'] as String? ?? 'application/octet-stream',
       'format': data['format'] as String? ?? 'MOD',
       'title': data['title'] as String? ?? '',

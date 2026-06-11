@@ -107,10 +107,11 @@ Routes are auto-generated from `ToolRegistry.all` in `lib/app.dart`. Each tool's
 - **Global settings** (theme, compact mode, sort): go through `AppState`, which persists via `SharedPreferences` (`lib/services/settings_service.dart`).
 
 ### 6. Bidirectional Sync
-- Tools that require data syncing can implement `SyncDelegate` and register with `SyncService`. For database storage tracking, protocol flows, and serialization requirements, see the detailed technical specification in [AGENTS.detail.md](file:///C:/dev/flutter/toolkit/AGENTS.detail.md).
+- Tools that require data syncing can implement `SyncDelegate` and register with `SyncService`. For database storage tracking, protocol flows, and serialization requirements, see the detailed technical specification in [AGENTS.detail.md](AGENTS.detail.md#1-bidirectional-cloud-synchronization).
+- **Binary blob handling**: The browser-toolkit backend uses a `__type: 'blob'` wire format for binary fields. `SyncService._unwrapBlobData` centrally unwraps incoming blobs for all tools. Tools wrapping binary data in `getRecordData` must emit `{__type: 'blob', mimeType, data: <base64>}`. Store binary data as native SQLite `BLOB` columns — never as base64 `TEXT`. See [AGENTS.detail.md §1.5](AGENTS.detail.md#15-binary-data--blob-handling-in-sync).
 
 ### 7. File Saving & Sharing
-- Use `FileSaveHelper` (`lib/helpers/file_save_helper.dart`) to download/export files (such as database backups, reports, or JSON exports). For cross-platform file saving architecture, platform-specific providers, and implementation details, see [AGENTS.detail.md](file:///C:/dev/flutter/toolkit/AGENTS.detail.md).
+- Use `FileSaveHelper` (`lib/helpers/file_save_helper.dart`) to download/export files (such as database backups, reports, or JSON exports). For cross-platform file saving architecture, platform-specific providers, and implementation details, see [AGENTS.detail.md](AGENTS.detail.md#2-database-backup-export--file-downloading-specifications).
 
 ### 8. Launcher Shortcuts & App Drawer Icons (Android)
 For every tool added to the app, launcher entry points must be maintained:
