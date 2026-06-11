@@ -70,6 +70,7 @@ object ShortcutHelper {
             "fast-drop" -> "de.renier.tool_lab.FastDropAlias"
             "images-to-pdf" -> "de.renier.tool_lab.ImagesToPdfAlias"
             "chiptune" -> "de.renier.tool_lab.ChiptuneAlias"
+            "focus-noise" -> "de.renier.tool_lab.FocusNoiseAlias"
             else -> return
         }
 

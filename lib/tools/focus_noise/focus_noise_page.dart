@@ -1,0 +1,299 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
+import 'package:tool_lab/widgets/tool_layout.dart';
+
+import 'config.dart';
+import 'engine/focus_noise_player.dart';
+import 'focus_noise_breathing.dart';
+import 'focus_noise_sound.dart';
+import 'widgets/focus_noise_breathing_card.dart';
+import 'widgets/focus_noise_sound_selector.dart';
+import 'widgets/focus_noise_timer_card.dart';
+import 'widgets/focus_noise_transport.dart';
+
+class FocusNoisePage extends StatefulWidget {
+  const FocusNoisePage({super.key});
+
+  @override
+  State<FocusNoisePage> createState() => _FocusNoisePageState();
+}
+
+class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
+  static const String _toolId = 'focus-noise';
+  static const String _keySound = 'selected_sound';
+  static const String _keyVolume = 'volume';
+  static const String _keyBreathingMode = 'breathing_mode';
+  static const String _keyTimerCustomMinutes = 'timer_custom_minutes';
+
+  final FocusNoisePlayer _player = FocusNoisePlayer();
+
+  FocusNoiseSound _selectedSound = FocusNoiseCatalog.sounds.first;
+  double _volume = 0.65;
+  bool _isPlaying = false;
+
+  Timer? _timerTicker;
+  DateTime? _timerTarget;
+  int _customMinutes = 30;
+
+  bool _breathingActive = false;
+  FocusBreathingMode _breathingMode = FocusBreathingMode.relax;
+  Timer? _breathingTimer;
+  int _breathingStepIndex = 0;
+  String _breathingStepLabel = 'Ready';
+  double _breathingScale = 1.0;
+  Duration _breathingAnimDuration = const Duration(milliseconds: 400);
+
+  @override
+  void initState() {
+    super.initState();
+    onDispose(() => _player.dispose());
+    onDispose(() => _timerTicker?.cancel());
+    onDispose(() => _breathingTimer?.cancel());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreSettings());
+  }
+
+  Future<void> _restoreSettings() async {
+    final db = DatabaseService.instance;
+    final soundId = await db.getSetting(_toolId, _keySound);
+    final volumeRaw = await db.getSetting(_toolId, _keyVolume);
+    final modeRaw = await db.getSetting(_toolId, _keyBreathingMode);
+    final customRaw = await db.getSetting(_toolId, _keyTimerCustomMinutes);
+
+    if (!mounted) return;
+    setState(() {
+      if (soundId != null && soundId.isNotEmpty) {
+        _selectedSound = FocusNoiseCatalog.byId(soundId);
+      }
+      _volume = double.tryParse(volumeRaw ?? '')?.clamp(0.0, 1.0) ?? 0.65;
+      _breathingMode = switch (modeRaw) {
+        'box' => FocusBreathingMode.box,
+        'calm' => FocusBreathingMode.calm,
+        _ => FocusBreathingMode.relax,
+      };
+      _customMinutes = int.tryParse(customRaw ?? '')?.clamp(1, 1440) ?? 30;
+    });
+    _player.setVolume(_volume);
+  }
+
+  Future<void> _selectSound(FocusNoiseSound sound) async {
+    setState(() => _selectedSound = sound);
+    await DatabaseService.instance.setSetting(_toolId, _keySound, sound.id);
+    if (_isPlaying) {
+      await _player.play(sound);
+      _player.setVolume(_volume);
+    }
+  }
+
+  Future<void> _togglePlayback() async {
+    if (_isPlaying) {
+      await _player.stop();
+      if (_breathingActive) {
+        _toggleBreathing();
+      }
+      _timerTarget = null;
+      _timerTicker?.cancel();
+      if (mounted) {
+        setState(() => _isPlaying = false);
+      }
+      return;
+    }
+
+    await _player.play(_selectedSound);
+    _player.setVolume(_volume);
+    if (!mounted) return;
+    setState(() => _isPlaying = true);
+  }
+
+  Future<void> _setVolume(double value) async {
+    setState(() => _volume = value);
+    _player.setVolume(value);
+    await DatabaseService.instance.setSetting(
+      _toolId,
+      _keyVolume,
+      value.toStringAsFixed(3),
+    );
+  }
+
+  void _setTimerMinutes(int minutes) {
+    if (!_isPlaying) return;
+    final int clamped = minutes.clamp(1, 1440);
+    setState(() {
+      _timerTarget = DateTime.now().add(Duration(minutes: clamped));
+      _customMinutes = clamped;
+    });
+    DatabaseService.instance.setSetting(
+      _toolId,
+      _keyTimerCustomMinutes,
+      clamped.toString(),
+    );
+
+    _timerTicker ??= Timer.periodic(const Duration(seconds: 1), (_) {
+      final target = _timerTarget;
+      if (target == null) return;
+      final remaining = target.difference(DateTime.now());
+      if (remaining <= Duration.zero) {
+        _togglePlayback();
+      } else if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  void _cancelTimer() {
+    setState(() => _timerTarget = null);
+  }
+
+  String _timerLabel() {
+    final target = _timerTarget;
+    if (target == null) return 'No timer set';
+    final Duration remaining = target.difference(DateTime.now());
+    if (remaining <= Duration.zero) return 'Stopping...';
+    final int minutes = remaining.inMinutes;
+    final int seconds = remaining.inSeconds % 60;
+    return 'Will stop in ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _setBreathingMode(FocusBreathingMode mode) async {
+    setState(() {
+      _breathingMode = mode;
+      _breathingStepIndex = 0;
+    });
+    await DatabaseService.instance.setSetting(
+      _toolId,
+      _keyBreathingMode,
+      switch (mode) {
+        FocusBreathingMode.box => 'box',
+        FocusBreathingMode.relax => 'relax',
+        FocusBreathingMode.calm => 'calm',
+      },
+    );
+    if (_breathingActive) {
+      _runBreathingStep(restart: true);
+    }
+  }
+
+  void _toggleBreathing() {
+    setState(() => _breathingActive = !_breathingActive);
+    if (_breathingActive) {
+      _runBreathingStep(restart: true);
+      return;
+    }
+
+    _breathingTimer?.cancel();
+    _breathingTimer = null;
+    setState(() {
+      _breathingStepLabel = 'Ready';
+      _breathingScale = 1.0;
+      _breathingAnimDuration = const Duration(milliseconds: 350);
+    });
+  }
+
+  void _runBreathingStep({bool restart = false}) {
+    _breathingTimer?.cancel();
+    final FocusBreathingPattern pattern = FocusBreathingCatalog.byMode(
+      _breathingMode,
+    );
+    if (restart) {
+      _breathingStepIndex = 0;
+    }
+    final BreathingStep step =
+        pattern.steps[_breathingStepIndex % pattern.steps.length];
+
+    setState(() {
+      _breathingStepLabel = step.label;
+      _breathingScale = step.scale;
+      _breathingAnimDuration = step.duration;
+    });
+
+    _breathingTimer = Timer(step.duration, () {
+      if (!_breathingActive) return;
+      _breathingStepIndex = (_breathingStepIndex + 1) % pattern.steps.length;
+      _runBreathingStep();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String statusText = _isPlaying
+        ? 'Playing ${_selectedSound.name}'
+        : 'Selected ${_selectedSound.name}';
+
+    final Widget content = SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: ResponsiveOrientationLayout(
+        portrait: Column(children: _buildCards(statusText)),
+        landscape: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(children: _buildCards(statusText, leftSide: true)),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(children: _buildCards(statusText, leftSide: false)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return ToolLayout(title: FocusNoiseTool.config.name, child: content);
+  }
+
+  List<Widget> _buildCards(String statusText, {bool? leftSide}) {
+    final List<Widget> cards = [
+      FocusNoiseSoundSelector(
+        sounds: FocusNoiseCatalog.sounds,
+        selectedSoundId: _selectedSound.id,
+        onSelected: _selectSound,
+      ),
+      const SizedBox(height: 12),
+      FocusNoiseTransport(
+        isPlaying: _isPlaying,
+        statusText: statusText,
+        volume: _volume,
+        onVolumeChanged: _setVolume,
+        onTogglePlay: _togglePlayback,
+      ),
+      const SizedBox(height: 12),
+      FocusNoiseTimerCard(
+        isPlaying: _isPlaying,
+        hasTimer: _timerTarget != null,
+        timerLabel: _timerLabel(),
+        customMinutes: _customMinutes,
+        onCustomMinutesDecrement: () {
+          setState(() => _customMinutes = (_customMinutes - 1).clamp(1, 1440));
+        },
+        onCustomMinutesIncrement: () {
+          setState(() => _customMinutes = (_customMinutes + 1).clamp(1, 1440));
+        },
+        onSetPresetMinutes: _setTimerMinutes,
+        onSetCustomTimer: () => _setTimerMinutes(_customMinutes),
+        onCancelTimer: _cancelTimer,
+      ),
+      const SizedBox(height: 12),
+      FocusNoiseBreathingCard(
+        patterns: FocusBreathingCatalog.patterns,
+        selectedMode: _breathingMode,
+        active: _breathingActive,
+        stepText: _breathingStepLabel,
+        circleScale: _breathingScale,
+        animationDuration: _breathingAnimDuration,
+        onModeChanged: _setBreathingMode,
+        onToggle: _toggleBreathing,
+      ),
+    ];
+
+    if (leftSide == true) {
+      return cards.take(2).toList();
+    }
+    if (leftSide == false) {
+      return cards.skip(2).toList();
+    }
+    return cards;
+  }
+}
