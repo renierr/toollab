@@ -88,6 +88,7 @@ class PdfEngineHelper {
     ImageToPdfPageSize pageSize = ImageToPdfPageSize.a4,
     int jpegQuality = 90,
     bool landscape = false,
+    void Function(int done, int total)? onProgress,
   }) async {
     await _ensureInit();
     final docs = <PdfDocument>[];
@@ -109,6 +110,7 @@ class PdfEngineHelper {
           sourceName: 'img_$i.pdf',
         );
         docs.add(imageDoc);
+        onProgress?.call(i + 1, imagePaths.length);
       }
 
       final result = await PdfDocument.createNew(sourceName: 'combined.pdf');

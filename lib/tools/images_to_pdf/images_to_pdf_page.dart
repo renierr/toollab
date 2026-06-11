@@ -14,6 +14,7 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/tools/images_to_pdf/config.dart';
 import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_preview.dart';
+import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_progress.dart';
 import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_toolbar.dart';
 import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_settings_drawer.dart';
 
@@ -28,6 +29,8 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   final List<_ImageItem> _items = [];
   bool _isProcessing = false;
   bool _dragging = false;
+  double _progress = 0;
+  String _progressText = '';
 
   ImageToPdfPageSize _pageSize = ImageToPdfPageSize.fit;
   bool _landscape = false;
@@ -133,7 +136,11 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
 
   Future<void> _createPdf() async {
     if (_items.isEmpty) return;
-    setState(() => _isProcessing = true);
+    setState(() {
+      _isProcessing = true;
+      _progress = 0;
+      _progressText = 'Preparing...';
+    });
 
     try {
       final pdfBytes = await PdfEngineHelper.createPdfFromImagePaths(
@@ -141,7 +148,22 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
         pageSize: _pageSize,
         jpegQuality: _jpegQuality,
         landscape: _landscape,
+        onProgress: (done, total) {
+          if (mounted) {
+            setState(() {
+              _progress = total == 0 ? 0 : done / total;
+              _progressText = 'Processing image $done of $total...';
+            });
+          }
+        },
       );
+
+      if (mounted) {
+        setState(() {
+          _progress = 1;
+          _progressText = 'Saving PDF...';
+        });
+      }
 
       // Hand the saver a path so the PDF bytes are not re-buffered for sharing.
       final pdfPath = await _tempScope.createFile(
@@ -262,7 +284,8 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                     ),
                   ),
           ),
-          if (_isProcessing) const LinearProgressIndicator(),
+          if (_isProcessing)
+            ImagesToPdfProgress(progress: _progress, statusText: _progressText),
           ImagesToPdfToolbar(
             imageCount: _items.length,
             isProcessing: _isProcessing,
