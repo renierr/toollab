@@ -18,11 +18,64 @@ import java.io.FileInputStream
 
 object FileSaveHelper {
 
+    private fun splitBaseAndExtension(fileName: String): Pair<String, String> {
+        val dotIndex = fileName.lastIndexOf('.')
+        if (dotIndex <= 0 || dotIndex == fileName.length - 1) {
+            return Pair(fileName, "")
+        }
+        return Pair(fileName.substring(0, dotIndex), fileName.substring(dotIndex))
+    }
+
+    private fun indexedName(base: String, extension: String, index: Int): String {
+        return if (index <= 0) "$base$extension" else "$base ($index)$extension"
+    }
+
+    private fun mediaStoreNameExists(context: Context, candidateName: String): Boolean {
+        val resolver = context.contentResolver
+        val projection = arrayOf(MediaStore.Downloads._ID)
+        val selection = "${MediaStore.Downloads.DISPLAY_NAME} = ?"
+        val selectionArgs = arrayOf(candidateName)
+        resolver.query(
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            null,
+        ).use { cursor ->
+            return cursor?.moveToFirst() == true
+        }
+    }
+
+    private fun resolveUniqueMediaStoreName(context: Context, fileName: String): String {
+        val (base, extension) = splitBaseAndExtension(fileName)
+        var index = 0
+        while (true) {
+            val candidate = indexedName(base, extension, index)
+            if (!mediaStoreNameExists(context, candidate)) {
+                return candidate
+            }
+            index++
+        }
+    }
+
+    private fun resolveUniqueFileNameInDirectory(directory: File, fileName: String): String {
+        val (base, extension) = splitBaseAndExtension(fileName)
+        var index = 0
+        while (true) {
+            val candidate = indexedName(base, extension, index)
+            if (!File(directory, candidate).exists()) {
+                return candidate
+            }
+            index++
+        }
+    }
+
     fun saveToDownloads(context: Context, bytes: ByteArray, fileName: String, mimeType: String): Map<String, String> {
         val resolver = context.contentResolver
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val resolvedName = resolveUniqueMediaStoreName(context, fileName)
             val contentValues = ContentValues().apply {
-                put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(MediaStore.Downloads.DISPLAY_NAME, resolvedName)
                 put(MediaStore.Downloads.MIME_TYPE, mimeType)
                 put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
             }
@@ -34,19 +87,22 @@ object FileSaveHelper {
             
             return mapOf(
                 "uri" to uri.toString(),
-                "filePath" to "${Environment.DIRECTORY_DOWNLOADS}/$fileName"
+                "filePath" to "${Environment.DIRECTORY_DOWNLOADS}/$resolvedName",
+                "fileName" to resolvedName,
             )
         } else {
             val downloadsDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS
             )
             if (!downloadsDir.exists()) downloadsDir.mkdirs()
-            val file = File(downloadsDir, fileName)
+            val resolvedName = resolveUniqueFileNameInDirectory(downloadsDir, fileName)
+            val file = File(downloadsDir, resolvedName)
             file.writeBytes(bytes)
             
             return mapOf(
                 "uri" to Uri.fromFile(file).toString(),
-                "filePath" to file.absolutePath
+                "filePath" to file.absolutePath,
+                "fileName" to resolvedName,
             )
         }
     }
@@ -59,8 +115,9 @@ object FileSaveHelper {
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val resolvedName = resolveUniqueMediaStoreName(context, fileName)
             val contentValues = ContentValues().apply {
-                put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                put(MediaStore.Downloads.DISPLAY_NAME, resolvedName)
                 put(MediaStore.Downloads.MIME_TYPE, mimeType)
                 put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
             }
@@ -74,19 +131,22 @@ object FileSaveHelper {
 
             return mapOf(
                 "uri" to uri.toString(),
-                "filePath" to "${Environment.DIRECTORY_DOWNLOADS}/$fileName"
+                "filePath" to "${Environment.DIRECTORY_DOWNLOADS}/$resolvedName",
+                "fileName" to resolvedName,
             )
         } else {
             val downloadsDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_DOWNLOADS
             )
             if (!downloadsDir.exists()) downloadsDir.mkdirs()
-            val file = File(downloadsDir, fileName)
+            val resolvedName = resolveUniqueFileNameInDirectory(downloadsDir, fileName)
+            val file = File(downloadsDir, resolvedName)
             sourceFile.copyTo(file, overwrite = true)
 
             return mapOf(
                 "uri" to Uri.fromFile(file).toString(),
-                "filePath" to file.absolutePath
+                "filePath" to file.absolutePath,
+                "fileName" to resolvedName,
             )
         }
     }

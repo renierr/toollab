@@ -78,6 +78,7 @@ class FileSaveHelper {
 
         final uriString = result['uri'] as String?;
         final filePath = result['filePath'] as String?;
+        final savedFileName = result['fileName'] as String? ?? suggestedName;
         destPath = filePath;
 
         if (context.mounted && uriString != null && filePath != null) {
@@ -88,7 +89,7 @@ class FileSaveHelper {
             // Trigger native Android system notification (if enabled)
             try {
               await _channel.invokeMethod('showSystemNotification', {
-                'fileName': suggestedName,
+                'fileName': savedFileName,
                 'uri': uriString,
                 'mimeType': mimeType,
               });
@@ -211,6 +212,7 @@ class FileSaveHelper {
 
         final uriString = result['uri'] as String?;
         final filePath = result['filePath'] as String?;
+        final savedFileName = result['fileName'] as String? ?? suggestedName;
         destPath = filePath;
 
         if (context.mounted && uriString != null && filePath != null) {
@@ -220,7 +222,7 @@ class FileSaveHelper {
           if (systemNotificationsEnabled) {
             try {
               await _channel.invokeMethod('showSystemNotification', {
-                'fileName': suggestedName,
+                'fileName': savedFileName,
                 'uri': uriString,
                 'mimeType': mimeType,
               });
