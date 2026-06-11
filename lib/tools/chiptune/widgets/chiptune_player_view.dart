@@ -44,10 +44,7 @@ class ChiptunePlayerView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (visualizerEnabled) ...[
-          ChiptuneVisualizerPanel(player: player),
-          const SizedBox(height: 12),
-        ],
+        if (visualizerEnabled) ChiptuneVisualizerPanel(player: player),
         ChiptuneModuleInfo(module: module),
         const SizedBox(height: 8),
         ValueListenableBuilder(
