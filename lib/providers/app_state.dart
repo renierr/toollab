@@ -6,6 +6,7 @@ import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/tools/notes/notes_db_helper.dart';
+import 'package:tool_lab/tools/chiptune/chiptune_sync_delegate.dart';
 import 'package:tool_lab/tools/notes/notes_sync_delegate.dart';
 import 'package:tool_lab/tools/fast_drop/fast_drop_model.dart';
 import 'package:tool_lab/tools/fast_drop/fast_drop_service.dart';
@@ -28,6 +29,7 @@ class AppState extends ChangeNotifier {
     _loadPinnedShortcuts();
     _loadDrawerIcons();
     registerSyncDelegate(NotesSyncDelegate());
+    registerSyncDelegate(ChiptuneSyncDelegate());
   }
 
   ThemeMode _themeMode = ThemeMode.system;
