@@ -6,13 +6,17 @@ This guide outlines how to build, adapt, and register tools within the ToolLab e
 
 ## 1. Tool Folder Structure
 
-Each tool lives in its own directory under `lib/tools/<name>/`:
+Each tool lives in its own directory under `lib/tools/<name>/`. Component widgets ALWAYS go in a `widgets/` subfolder:
 ```
 lib/tools/<name>/
-  config.dart      - Metadata (id, name, description, icon, route, colors, fullscreen)
-  <name>_page.dart - Coordinator page widget (must compose extracted widgets, no inline helper build methods)
-  <name>_display.dart, <name>_toolbar.dart - private widget files for page components
+  config.dart           - Metadata (id, name, description, icon, route, colors, fullscreen)
+  <name>_page.dart      - Coordinator page widget (composes extracted widgets, no inline helper build methods)
+  <name>_colors.dart    - Optional tool-specific color palette
+  widgets/              - REQUIRED: every tool-specific component widget gets its own file here
+    <name>_display.dart
+    <name>_toolbar.dart
 ```
+Only `config.dart`, `<name>_page.dart`, the optional `<name>_colors.dart`, and non-widget files (enums, models) sit at the tool root — all widget files live under `widgets/`.
 
 ---
 

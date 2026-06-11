@@ -61,10 +61,19 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 ## Tool Architecture
 
 ### 1. Tool Structure
-Each tool lives in its own folder under `lib/tools/<name>/` with exactly:
+Each tool lives in its own folder under `lib/tools/<name>/` and follows this layout:
+```
+lib/tools/<name>/
+  config.dart           - Tool metadata (ToolModel)
+  <name>_page.dart      - Thin coordinator page (composes widgets, no inline builders)
+  <name>_colors.dart    - Optional tool-specific color palette
+  widgets/              - REQUIRED for component widgets — every visual component gets its own file here
+    <name>_display.dart
+    <name>_toolbar.dart
+```
 - **`config.dart`** — Tool metadata (name, icon, route, color). Exports a static `const ToolModel` via a tool class.
 - **`<name>_page.dart`** — Tool entry point page. Must be a thin coordinator — only `StatefulWidget` state + build method that composes extracted widgets. No inline `Widget _buildFoo(...)` methods.
-- **Additional widget files** — Every visual component gets its own file (e.g. `<name>_display.dart`, `<name>_grid.dart`, `<name>_toolbar.dart`, `<name>_history_panel.dart`). Never inline builders in the page file.
+- **`widgets/` subfolder** — ALWAYS place tool-specific component widgets here (e.g. `widgets/<name>_display.dart`, `widgets/<name>_toolbar.dart`, `widgets/<name>_panel.dart`). Never inline builders in the page file, and never scatter widget files at the tool root. Only `config.dart`, `<name>_page.dart`, optional `<name>_colors.dart`, and non-widget files (enums, models) sit at the tool root.
 
 ### 2. Tool Development, Adaptation & Creation
 See the comprehensive guide at [`docs/creating-a-tool.md`](docs/creating-a-tool.md) for details on:

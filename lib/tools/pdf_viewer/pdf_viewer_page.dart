@@ -8,13 +8,13 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/tools/pdf_viewer/config.dart';
-import 'package:tool_lab/tools/pdf_viewer/pdf_display.dart';
-import 'package:tool_lab/tools/pdf_viewer/pdf_overlay_controls.dart';
-import 'package:tool_lab/tools/pdf_viewer/pdf_drawer.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_display.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_overlay_controls.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_drawer.dart';
 import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_mode.dart';
-import 'package:tool_lab/tools/pdf_viewer/pdf_organize_panel.dart';
-import 'package:tool_lab/tools/pdf_viewer/pdf_flatten_panel.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_organize_panel.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_flatten_panel.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 
 class PdfViewerPage extends StatefulWidget {

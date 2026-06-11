@@ -202,3 +202,27 @@ To make pinch-to-zoom highly resilient and smooth, the container must bypass sta
    _activePointers.clear();
    _isPinching = false;
    ```
+
+---
+
+## 4. Tool Folder Structure (`widgets/` subfolder)
+
+Every tool under `lib/tools/<name>/` MUST keep its component widgets inside a `widgets/` subfolder. This is the canonical layout (see also the `creating-a-tool` skill and [`docs/creating-a-tool.md`](docs/creating-a-tool.md)):
+
+```
+lib/tools/<name>/
+  config.dart              - Tool metadata (ToolModel) only
+  <name>_page.dart         - Thin coordinator page (composes widgets, no inline _buildFoo)
+  <name>_colors.dart       - Optional tool-specific color palette
+  layout_mode.dart, ...    - Non-widget files (enums, models) stay at the tool root
+  widgets/                 - REQUIRED home for every tool-specific component widget
+    <name>_display.dart
+    <name>_toolbar.dart
+    <name>_panel.dart
+```
+
+Rules:
+- Widget files (any `StatelessWidget`/`StatefulWidget` class) ALWAYS live in `widgets/`. Never scatter widget files at the tool root.
+- Only `config.dart`, `<name>_page.dart`, the optional `<name>_colors.dart`, and non-widget support files (enums, models, mode definitions) sit directly at the tool root.
+- Cross-tool widgets (used by 2+ tools) still belong in the shared `lib/widgets/`, not in any tool's `widgets/`.
+- Imports use absolute package paths, e.g. `package:tool_lab/tools/<name>/widgets/<name>_display.dart`.
