@@ -206,8 +206,10 @@ class ChiptunePlayer {
 
     final targetBytes = (sampleRate * _bufferAheadSeconds * 2 * 4)
         .toInt(); // stereo f32
+    final int maxIterations =
+        ((targetBytes / _chunk.lengthInBytes).ceil() + 8).clamp(8, 96).toInt();
     int guard = 0;
-    while (!_ended && guard < 8) {
+    while (!_ended && guard < maxIterations) {
       int buffered;
       try {
         buffered = SoLoud.instance.getBufferSize(stream);
