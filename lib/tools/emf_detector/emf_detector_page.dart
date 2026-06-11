@@ -1,6 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
 import 'emf_colors.dart';
@@ -27,6 +29,7 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
   late final DetectorState _state;
   bool _wakeLockActive = false;
   bool _automaticallyTurnedOnWakelock = false;
+  WakeLockLease? _fullWakeLock;
 
   @override
   void initState() {
@@ -36,20 +39,26 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
     _checkWakeLock();
     _state.addListener(_onStateChange);
     onDispose(() => _state.removeListener(_onStateChange));
-    onDispose(WakelockPlus.disable);
+    onDispose(() {
+      final lease = _fullWakeLock;
+      if (lease != null) {
+        unawaited(lease.release());
+      }
+      _fullWakeLock = null;
+    });
   }
 
   void _onStateChange() {
     if (!mounted) return;
     if (_state.isScanning && !_wakeLockActive) {
-      WakelockPlus.enable();
+      _enableWakeLock();
       setState(() {
         _wakeLockActive = true;
         _automaticallyTurnedOnWakelock = true;
       });
     } else if (!_state.isScanning && _wakeLockActive) {
       if (_automaticallyTurnedOnWakelock) {
-        WakelockPlus.disable();
+        _disableWakeLock();
         setState(() {
           _wakeLockActive = false;
           _automaticallyTurnedOnWakelock = false;
@@ -59,7 +68,7 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
   }
 
   void _checkWakeLock() async {
-    final active = await WakelockPlus.enabled;
+    final active = PowerWakeLockService.isFullHeld;
     if (!mounted) return;
     setState(() {
       _wakeLockActive = active;
@@ -69,15 +78,27 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
   void _toggleWakeLock() async {
     final target = !_wakeLockActive;
     if (target) {
-      await WakelockPlus.enable();
+      await _enableWakeLock();
     } else {
-      await WakelockPlus.disable();
+      await _disableWakeLock();
     }
     if (!mounted) return;
     setState(() {
       _wakeLockActive = target;
       _automaticallyTurnedOnWakelock = false;
     });
+  }
+
+  Future<void> _enableWakeLock() async {
+    _fullWakeLock ??= await PowerWakeLockService.acquireFull();
+  }
+
+  Future<void> _disableWakeLock() async {
+    final lease = _fullWakeLock;
+    if (lease != null) {
+      await lease.release();
+      _fullWakeLock = null;
+    }
   }
 
   @override

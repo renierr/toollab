@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
-import '../../../services/wake_lock_service.dart';
+import '../../../services/power_wake_lock_service.dart';
 import 'mixer.dart';
 import 'module.dart';
 
@@ -45,6 +45,7 @@ class ChiptunePlayer {
 
   ModuleFile? _module;
   WorkletModule? _worklet;
+  WakeLockLease? _partialWakeLock;
   bool _ended = false;
   double _volume = 0.7;
   bool _looping = false;
@@ -110,7 +111,7 @@ class ChiptunePlayer {
 
     await _ensureInit();
     _stopInternal();
-    await WakeLockService.acquire();
+    _partialWakeLock = await PowerWakeLockService.acquirePartial();
 
     _ended = false;
     _mixer.loadAndPlay(_worklet!, sampleRate, looping: _looping);
@@ -141,7 +142,6 @@ class ChiptunePlayer {
 
   void stop() {
     _stopInternal();
-    WakeLockService.release();
     state.value = ChiptunePlaybackState.stopped;
     position.value = const SongPosition(0, 0);
     elapsed.value = Duration.zero;
@@ -234,7 +234,7 @@ class ChiptunePlayer {
       SoLoud.instance.setDataIsEnded(_stream!);
     }
     state.value = ChiptunePlaybackState.stopped;
-    WakeLockService.release();
+    _releasePartialWakeLock();
     onEnded?.call();
   }
 
@@ -258,11 +258,19 @@ class ChiptunePlayer {
       SoLoud.instance.disposeSource(stream);
       _stream = null;
     }
+    _releasePartialWakeLock();
+  }
+
+  void _releasePartialWakeLock() {
+    final lease = _partialWakeLock;
+    if (lease != null) {
+      unawaited(lease.release());
+    }
+    _partialWakeLock = null;
   }
 
   void dispose() {
     _stopInternal();
-    WakeLockService.release();
     state.dispose();
     position.dispose();
     channelActivity.dispose();

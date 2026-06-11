@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/services/database_service.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
@@ -33,6 +33,7 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
   bool _rulerVisible = false;
   bool _rotationLocked = false;
   bool _wakeLocked = false;
+  WakeLockLease? _fullWakeLock;
   double _pitch = 0;
   double _roll = 0;
   double _pxPerMm = 3.78;
@@ -43,7 +44,13 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
     _startSensors();
     _loadSettings();
     onDispose(() => _subscription?.cancel());
-    onDispose(WakelockPlus.disable);
+    onDispose(() {
+      final lease = _fullWakeLock;
+      if (lease != null) {
+        unawaited(lease.release());
+      }
+      _fullWakeLock = null;
+    });
   }
 
   Future<void> _loadSettings() async {
@@ -147,13 +154,19 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
     }
   }
 
-  void _onToggleWakeLock() {
-    setState(() => _wakeLocked = !_wakeLocked);
-    if (_wakeLocked) {
-      WakelockPlus.enable();
+  Future<void> _onToggleWakeLock() async {
+    final target = !_wakeLocked;
+    if (target) {
+      _fullWakeLock ??= await PowerWakeLockService.acquireFull();
     } else {
-      WakelockPlus.disable();
+      final lease = _fullWakeLock;
+      if (lease != null) {
+        await lease.release();
+      }
+      _fullWakeLock = null;
     }
+    if (!mounted) return;
+    setState(() => _wakeLocked = target);
   }
 
   Future<void> _onCalibrateRuler() async {

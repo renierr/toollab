@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.OpenableColumns
+import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -19,7 +20,7 @@ class MainActivity : FlutterActivity() {
 
     private var launchRoute: String? = null
     private var pendingSharedFile: Map<String, String>? = null
-    private var wakeLock: PowerManager.WakeLock? = null
+    private var partialWakeLock: PowerManager.WakeLock? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,20 +141,58 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, WAKE_LOCK_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
-                    "acquire" -> {
-                        if (wakeLock == null) {
+                    "acquirePartial" -> {
+                        if (partialWakeLock == null) {
                             val pm = getSystemService(POWER_SERVICE) as PowerManager
-                            wakeLock = pm.newWakeLock(
+                            partialWakeLock = pm.newWakeLock(
                                 PowerManager.PARTIAL_WAKE_LOCK,
                                 "ToolLab::PartialWakeLock"
                             )
+                            partialWakeLock?.setReferenceCounted(false)
                         }
-                        wakeLock?.acquire()
+                        if (partialWakeLock?.isHeld != true) {
+                            partialWakeLock?.acquire()
+                        }
+                        result.success(true)
+                    }
+                    "releasePartial" -> {
+                        if (partialWakeLock?.isHeld == true) {
+                            partialWakeLock?.release()
+                        }
+                        partialWakeLock = null
+                        result.success(true)
+                    }
+                    "acquireFull" -> {
+                        runOnUiThread {
+                            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            result.success(true)
+                        }
+                    }
+                    "releaseFull" -> {
+                        runOnUiThread {
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            result.success(true)
+                        }
+                    }
+                    "acquire" -> {
+                        if (partialWakeLock == null) {
+                            val pm = getSystemService(POWER_SERVICE) as PowerManager
+                            partialWakeLock = pm.newWakeLock(
+                                PowerManager.PARTIAL_WAKE_LOCK,
+                                "ToolLab::PartialWakeLock"
+                            )
+                            partialWakeLock?.setReferenceCounted(false)
+                        }
+                        if (partialWakeLock?.isHeld != true) {
+                            partialWakeLock?.acquire()
+                        }
                         result.success(true)
                     }
                     "release" -> {
-                        wakeLock?.release()
-                        wakeLock = null
+                        if (partialWakeLock?.isHeld == true) {
+                            partialWakeLock?.release()
+                        }
+                        partialWakeLock = null
                         result.success(true)
                     }
                     else -> {
