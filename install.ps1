@@ -34,6 +34,10 @@ $FileTypes = @(
   @{ Extension = '.webp';     ProgId = "$AppName.webp";     Description = 'WebP Image';        MimeType = 'image/webp' }
   @{ Extension = '.bmp';      ProgId = "$AppName.bmp";      Description = 'BMP Image';         MimeType = 'image/bmp' }
   @{ Extension = '.gif';      ProgId = "$AppName.gif";      Description = 'GIF Image';         MimeType = 'image/gif' }
+  @{ Extension = '.mod';     ProgId = "$AppName.mod";     Description = 'Tracker Module';    MimeType = 'audio/x-mod' }
+  @{ Extension = '.xm';      ProgId = "$AppName.xm";      Description = 'Tracker Module';    MimeType = 'audio/x-xm' }
+  @{ Extension = '.it';      ProgId = "$AppName.it";      Description = 'Tracker Module';    MimeType = 'audio/x-it' }
+  @{ Extension = '.s3m';     ProgId = "$AppName.s3m";     Description = 'Tracker Module';    MimeType = 'audio/x-s3m' }
 )
 
 function Write-Info  { Write-Host "INFO: $($args[0])" -ForegroundColor Cyan }
@@ -214,7 +218,7 @@ function Install-All {
     exit 1
   }
   if (-not $Silent) {
-    $answer = Read-Host "Install $AppName to $InstallDir and register file associations (.pdf, .md, .markdown, .txt, images)? [Y/n]"
+    $answer = Read-Host "Install $AppName to $InstallDir and register file associations (.pdf, .md, .markdown, .txt, images, tracker modules)? [Y/n]"
     if ($answer -ne '' -and $answer -notmatch '^[Yy]') {
       Write-Info "Install cancelled"
       exit 0

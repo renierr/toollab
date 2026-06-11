@@ -251,7 +251,7 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     }
     await _checkBackend();
     if (!_backendAvailable) return;
-    await _runSync();
+    await _runSync(showFeedback: false);
   }
 
   Future<void> _checkBackend() async {
@@ -260,14 +260,14 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     if (mounted) setState(() => _backendAvailable = ok);
   }
 
-  Future<void> _runSync() async {
+  Future<void> _runSync({bool showFeedback = true}) async {
     final appState = context.read<AppState>();
     if (!appState.syncEnabled || appState.syncServerUrl.isEmpty) return;
     setState(() => _syncing = true);
     try {
       final result = await appState.syncWithBackend([ChiptuneSyncDelegate()]);
       await _loadArchive();
-      if (mounted) {
+      if (mounted && showFeedback) {
         _showSnack(
           'Synced: ${result?['pulled'] ?? 0} pulled, ${result?['pushed'] ?? 0} pushed',
         );
