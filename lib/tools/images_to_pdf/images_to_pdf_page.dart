@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart'
     show XFile, XTypeGroup, openFiles;
 import 'package:image_picker/image_picker.dart' show ImagePicker;
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
@@ -45,23 +47,33 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
     onDispose(() => _tempScope.cleanTracked());
   }
 
+  void _addItem(_ImageItem item) {
+    if (mounted) setState(() => _items.add(item));
+  }
+
+  // For in-memory sources (clipboard) with no backing file — spool to temp.
+  Future<void> _addImageBytes(Uint8List bytes, String name) async {
+    try {
+      final safe = name.replaceAll(RegExp(r'[^\w\-.]'), '_');
+      final tempName = 'img_${_seq++}_$safe';
+      final path = await _tempScope.createFile(tempName, bytes: bytes);
+      _addItem(_ImageItem(path: path, tempName: tempName, name: name));
+    } catch (e) {
+      debugPrint('[ImagesToPdf] Failed to load $name: $e');
+    }
+  }
+
   Future<void> _addFiles(List<XFile> files) async {
     for (final file in files) {
-      try {
-        // Persist to temp and keep only the path, so images are not all held in memory.
-        final bytes = await file.readAsBytes();
-        final safe = file.name.replaceAll(RegExp(r'[^\w\-.]'), '_');
-        final tempName = 'img_${_seq++}_$safe';
-        final path = await _tempScope.createFile(tempName, bytes: bytes);
-        if (mounted) {
-          setState(() {
-            _items.add(
-              _ImageItem(path: path, tempName: tempName, name: file.name),
-            );
-          });
+      if (file.path.isNotEmpty) {
+        // Reference the existing file directly — no copy of bytes to temp.
+        _addItem(_ImageItem(path: file.path, name: file.name));
+      } else {
+        try {
+          await _addImageBytes(await file.readAsBytes(), file.name);
+        } catch (e) {
+          debugPrint('[ImagesToPdf] Failed to load ${file.name}: $e');
         }
-      } catch (e) {
-        debugPrint('[ImagesToPdf] Failed to load ${file.name}: $e');
       }
     }
   }
@@ -72,6 +84,25 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
 
   Future<void> _onFileSelected(XFile file) async {
     await _addFiles([file]);
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    try {
+      final bytes = await ClipboardHelper.getImagePng();
+      if (bytes != null) {
+        await _addImageBytes(bytes, 'clipboard_$_seq.png');
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No image found in clipboard')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to read clipboard: $e')));
+      }
+    }
   }
 
   Future<void> _pickFromGallery() async {
@@ -88,7 +119,8 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   void _removeImage(int index) {
     final item = _items[index];
     setState(() => _items.removeAt(index));
-    _tempScope.deleteFile(item.tempName);
+    final tempName = item.tempName;
+    if (tempName != null) _tempScope.deleteFile(tempName);
   }
 
   void _reorderImages(int oldIndex, int newIndex) {
@@ -180,27 +212,18 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                       buttonIcon: Icons.folder_open,
                       multiple: true,
                       extraButtons: [
+                        const SizedBox(height: 16),
+                        _DropZoneActionButton(
+                          onPressed: _pasteFromClipboard,
+                          icon: Icons.paste_outlined,
+                          label: 'Paste from Clipboard',
+                        ),
                         if (Platform.isAndroid) ...[
-                          const SizedBox(height: 16),
-                          OutlinedButton.icon(
+                          const SizedBox(height: 12),
+                          _DropZoneActionButton(
                             onPressed: _pickFromGallery,
-                            icon: const Icon(Icons.photo_library_outlined),
-                            label: const Text('Pick from Gallery'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor:
-                                  ImagesToPdfTool.config.accentColor,
-                              side: BorderSide(
-                                color: ImagesToPdfTool.config.accentColor
-                                    .withValues(alpha: 0.5),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
+                            icon: Icons.photo_library_outlined,
+                            label: 'Pick from Gallery',
                           ),
                         ],
                       ],
@@ -243,6 +266,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
           ImagesToPdfToolbar(
             imageCount: _items.length,
             isProcessing: _isProcessing,
+            onPaste: _pasteFromClipboard,
             onAddMore: () async {
               final files = await openFiles(
                 acceptedTypeGroups: [
@@ -265,12 +289,36 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
 
 class _ImageItem {
   final String path;
-  final String tempName;
+  final String? tempName;
   final String name;
 
-  const _ImageItem({
-    required this.path,
-    required this.tempName,
-    required this.name,
+  const _ImageItem({required this.path, this.tempName, required this.name});
+}
+
+class _DropZoneActionButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final IconData icon;
+  final String label;
+
+  const _DropZoneActionButton({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = ImagesToPdfTool.config.accentColor;
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: accent,
+        side: BorderSide(color: accent.withValues(alpha: 0.5)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
 }

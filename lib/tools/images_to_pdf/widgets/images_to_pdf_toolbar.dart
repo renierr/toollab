@@ -4,6 +4,7 @@ import 'package:tool_lab/tools/images_to_pdf/config.dart';
 class ImagesToPdfToolbar extends StatelessWidget {
   final int imageCount;
   final bool isProcessing;
+  final VoidCallback onPaste;
   final VoidCallback onAddMore;
   final VoidCallback onCreatePdf;
 
@@ -11,6 +12,7 @@ class ImagesToPdfToolbar extends StatelessWidget {
     super.key,
     required this.imageCount,
     required this.isProcessing,
+    required this.onPaste,
     required this.onAddMore,
     required this.onCreatePdf,
   });
@@ -41,6 +43,12 @@ class ImagesToPdfToolbar extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
+                IconButton.outlined(
+                  onPressed: isProcessing ? null : onPaste,
+                  icon: const Icon(Icons.paste_outlined, size: 18),
+                  tooltip: 'Paste from Clipboard',
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: isProcessing ? null : onAddMore,
