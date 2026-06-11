@@ -23,6 +23,12 @@ class FocusNoiseSound {
 class FocusNoiseCatalog {
   FocusNoiseCatalog._();
 
+  /// Quick checklist for adding sounds:
+  /// 1) Add a new [FocusNoiseSound] entry below.
+  /// 2) For generated sounds: map `id` in focus_noise_player.dart.
+  /// 3) For asset sounds: place loop file in assets/audio/ and set assetPath.
+  /// 4) Keep ids stable once shipped (settings persistence uses sound id).
+
   static const List<FocusNoiseSound> sounds = [
     FocusNoiseSound(
       id: 'white',
