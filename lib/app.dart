@@ -29,6 +29,7 @@ import 'package:tool_lab/tools/markdown_viewer/markdown_viewer_page.dart';
 import 'package:tool_lab/tools/image_viewer/image_viewer_page.dart';
 import 'package:tool_lab/tools/fast_drop/fast_drop_page.dart';
 import 'package:tool_lab/tools/images_to_pdf/images_to_pdf_page.dart';
+import 'package:tool_lab/tools/chiptune/chiptune_page.dart';
 
 final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -91,6 +92,7 @@ Widget _pageForTool(String id, Object? extra) {
     'image-viewer' => ImageViewerPage(sharedFile: extra as SharedFile?),
     'fast-drop' => FastDropPage(sharedFile: extra as SharedFile?),
     'images-to-pdf' => const ImagesToPdfPage(),
+    'chiptune' => ChiptunePage(sharedFile: extra as SharedFile?),
     _ => const OverviewPage(),
   };
 }
