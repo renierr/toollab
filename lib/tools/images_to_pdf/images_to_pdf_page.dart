@@ -13,6 +13,7 @@ import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/tools/images_to_pdf/config.dart';
 import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_preview.dart';
 import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_toolbar.dart';
+import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_settings_drawer.dart';
 
 class ImagesToPdfPage extends StatefulWidget {
   const ImagesToPdfPage({super.key});
@@ -32,6 +33,8 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
 
   late final TempFileScope _tempScope;
   int _seq = 0;
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const _imageExtensions = ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif'];
 
@@ -139,6 +142,25 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     return ToolLayout(
       title: ImagesToPdfTool.config.name,
+      scaffoldKey: _scaffoldKey,
+      actions: _items.isEmpty
+          ? null
+          : [
+              IconButton(
+                tooltip: 'PDF Settings',
+                icon: const Icon(Icons.tune),
+                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+              ),
+            ],
+      endDrawer: ImagesToPdfSettingsDrawer(
+        pageSize: _pageSize,
+        onPageSizeChanged: (v) => setState(() => _pageSize = v),
+        landscape: _landscape,
+        onLandscapeChanged: (v) => setState(() => _landscape = v),
+        jpegQuality: _jpegQuality,
+        onJpegQualityChanged: (v) => setState(() => _jpegQuality = v),
+        isProcessing: _isProcessing,
+      ),
       child: Column(
         children: [
           Expanded(
@@ -220,12 +242,6 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
           if (_isProcessing) const LinearProgressIndicator(),
           ImagesToPdfToolbar(
             imageCount: _items.length,
-            pageSize: _pageSize,
-            onPageSizeChanged: (v) => setState(() => _pageSize = v),
-            landscape: _landscape,
-            onLandscapeChanged: (v) => setState(() => _landscape = v),
-            jpegQuality: _jpegQuality,
-            onJpegQualityChanged: (v) => setState(() => _jpegQuality = v),
             isProcessing: _isProcessing,
             onAddMore: () async {
               final files = await openFiles(
