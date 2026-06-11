@@ -10,22 +10,16 @@ import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
-import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'chiptune_archive.dart';
-import 'chiptune_colors.dart';
 import 'chiptune_sync_delegate.dart';
 import 'config.dart';
 import 'engine/chiptune_player.dart';
 import 'engine/parser.dart';
 import 'widgets/chiptune_archive_panel.dart';
-import 'widgets/chiptune_channel_activity.dart';
-import 'widgets/chiptune_module_info.dart';
-import 'widgets/chiptune_sample_list.dart';
-import 'widgets/chiptune_seek_bar.dart';
-import 'widgets/chiptune_transport_bar.dart';
-import 'widgets/chiptune_visualizer.dart';
+import 'widgets/chiptune_empty_state.dart';
+import 'widgets/chiptune_player_view.dart';
 
 class ChiptunePage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -36,8 +30,6 @@ class ChiptunePage extends StatefulWidget {
 }
 
 class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
-  static const List<String> _extensions = ['mod', 'xm', 'it', 's3m'];
-
   final ChiptunePlayer _player = ChiptunePlayer();
 
   Uint8List? _currentBytes;
@@ -69,7 +61,7 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
 
     final sub = SharingService.instance.onSharedFile.listen((file) {
       final lower = file.name.toLowerCase();
-      if (_extensions.any((e) => lower.endsWith('.$e'))) {
+      if (ChiptuneEmptyState.extensions.any((e) => lower.endsWith('.$e'))) {
         _loadSharedFile(file);
       }
     });
@@ -260,114 +252,10 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
-    final hasModule = _player.module != null;
-    return ToolLayout(
-      title: ChiptuneTool.config.name,
-      actions: [
-        if (hasModule)
-          IconButton(
-            tooltip: 'Load another',
-            icon: const Icon(Icons.folder_open),
-            onPressed: () => _clear(),
-          ),
-      ],
-      child: hasModule ? _buildPlayer() : _buildDropzone(),
-    );
-  }
+    final module = _player.module;
+    final hasModule = module != null;
 
-  Widget _buildDropzone() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          Expanded(
-            child: FileDropZone(
-              allowedExtensions: _extensions,
-              typeLabel: 'Tracker module',
-              accentColor: ChiptuneColors.accent,
-              icon: Icons.music_note_outlined,
-              title: 'Drop a tracker module',
-              subtitle: 'MOD · XM · IT files',
-              onFileSelected: _onFilePicked,
-            ),
-          ),
-          if (_archive.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _archivePanel(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlayer() {
-    final mod = _player.module!;
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        AspectRatio(
-          aspectRatio: 16 / 6,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: ColoredBox(
-              color: const Color(0xFF120E20),
-              child: ValueListenableBuilder(
-                valueListenable: _player.state,
-                builder: (_, state, _) => ChiptuneVisualizer(
-                  active: state == ChiptunePlaybackState.playing,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        ChiptuneModuleInfo(module: mod),
-        const SizedBox(height: 8),
-        ValueListenableBuilder(
-          valueListenable: _player.position,
-          builder: (_, position, _) => ValueListenableBuilder(
-            valueListenable: _player.elapsed,
-            builder: (_, elapsed, _) => ChiptuneSeekBar(
-              position: position,
-              elapsed: elapsed,
-              rowsPerPattern: mod.rowsPerPattern,
-              totalRows: _player.totalRows,
-              onSeekFraction: (f) {
-                final targetRow = (f * _player.totalRows).floor();
-                final order = (targetRow / mod.rowsPerPattern).floor();
-                final row = targetRow % mod.rowsPerPattern;
-                _player.seek(order, row);
-              },
-            ),
-          ),
-        ),
-        ValueListenableBuilder(
-          valueListenable: _player.state,
-          builder: (_, state, _) => ChiptuneTransportBar(
-            isPlaying: state == ChiptunePlaybackState.playing,
-            looping: _looping,
-            volume: _volume,
-            onPlayPause: _playPause,
-            onStop: _player.stop,
-            onLoopChanged: _setLooping,
-            onVolumeChanged: _setVolume,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ValueListenableBuilder(
-          valueListenable: _player.channelActivity,
-          builder: (_, active, _) => ChiptuneChannelActivity(active: active),
-        ),
-        const SizedBox(height: 8),
-        ChiptuneSampleList(module: mod),
-        const Divider(height: 24),
-        _archivePanel(),
-      ],
-    );
-  }
-
-  Widget _archivePanel() {
-    return ChiptuneArchivePanel(
+    final archivePanel = ChiptuneArchivePanel(
       modules: _archive,
       canSave: _currentBytes != null,
       syncing: _syncing,
@@ -377,6 +265,35 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
       onSync: _runSync,
       onPlay: _playArchived,
       onDelete: _deleteArchived,
+    );
+
+    return ToolLayout(
+      title: ChiptuneTool.config.name,
+      actions: [
+        if (hasModule)
+          IconButton(
+            tooltip: 'Load another',
+            icon: const Icon(Icons.folder_open),
+            onPressed: _clear,
+          ),
+      ],
+      child: hasModule
+          ? ChiptunePlayerView(
+              player: _player,
+              module: module,
+              looping: _looping,
+              volume: _volume,
+              archivePanel: archivePanel,
+              onPlayPause: _playPause,
+              onStop: _player.stop,
+              onLoopChanged: _setLooping,
+              onVolumeChanged: _setVolume,
+              onSeek: _player.seek,
+            )
+          : ChiptuneEmptyState(
+              onFileSelected: _onFilePicked,
+              archivePanel: _archive.isNotEmpty ? archivePanel : null,
+            ),
     );
   }
 }

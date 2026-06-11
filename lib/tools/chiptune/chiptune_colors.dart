@@ -8,6 +8,9 @@ class ChiptuneColors {
   static const Color accentBright = Color(0xFFE05CFF);
   static const Color ledOn = Color(0xFF66FFCC);
   static const Color ledOff = Color(0xFF2A2540);
+  static const Color ledTextOn = Color(0xFF06281F);
+  static const Color ledTextOff = Color(0xFF6B6388);
   static const Color visBar = Color(0xFF7C4DFF);
   static const Color visPeak = Color(0xFFE05CFF);
+  static const Color visualizerBg = Color(0xFF120E20);
 }

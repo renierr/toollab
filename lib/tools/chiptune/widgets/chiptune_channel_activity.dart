@@ -57,7 +57,7 @@ class _Led extends StatelessWidget {
         style: TextStyle(
           fontSize: 9,
           fontWeight: FontWeight.bold,
-          color: on ? const Color(0xFF06281F) : const Color(0xFF6B6388),
+          color: on ? ChiptuneColors.ledTextOn : ChiptuneColors.ledTextOff,
         ),
       ),
     );
