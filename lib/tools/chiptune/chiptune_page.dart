@@ -10,6 +10,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
@@ -246,8 +247,15 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
       setState(() => _backendAvailable = false);
       return;
     }
-    setState(() => _backendAvailable = true);
+    await _checkBackend();
+    if (!_backendAvailable) return;
     await _runSync();
+  }
+
+  Future<void> _checkBackend() async {
+    final appState = context.read<AppState>();
+    final ok = await SyncService.isBackendAvailable(appState.syncServerUrl);
+    if (mounted) setState(() => _backendAvailable = ok);
   }
 
   Future<void> _runSync() async {
@@ -255,8 +263,13 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     if (!appState.syncEnabled || appState.syncServerUrl.isEmpty) return;
     setState(() => _syncing = true);
     try {
-      await appState.syncWithBackend([ChiptuneSyncDelegate()]);
+      final result = await appState.syncWithBackend([ChiptuneSyncDelegate()]);
       await _loadArchive();
+      if (mounted) {
+        _showSnack(
+          'Synced: ${result?['pulled'] ?? 0} pulled, ${result?['pushed'] ?? 0} pushed',
+        );
+      }
     } catch (e) {
       if (mounted) _showSnack('Sync failed: $e');
     } finally {
@@ -320,7 +333,7 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
             )
           : ChiptuneEmptyState(
               onFileSelected: _onFilePicked,
-              archivePanel: _archive.isNotEmpty
+              archivePanel: (_archive.isNotEmpty || _backendAvailable)
                   ? ChiptuneArchivePanel(
                       modules: _archive,
                       canSave: _currentBytes != null,
