@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
+import '../../../services/foreground_runtime_service.dart';
 import '../../../services/power_wake_lock_service.dart';
 import 'mixer.dart';
 import 'module.dart';
@@ -46,6 +47,7 @@ class ChiptunePlayer {
   ModuleFile? _module;
   WorkletModule? _worklet;
   WakeLockLease? _partialWakeLock;
+  ForegroundRuntimeLease? _foregroundRuntimeLease;
   bool _ended = false;
   double _volume = 0.7;
   bool _looping = false;
@@ -102,6 +104,7 @@ class ChiptunePlayer {
     if (_worklet == null) return;
 
     if (state.value == ChiptunePlaybackState.paused && _handle != null) {
+      await _acquirePlaybackRuntimeLocks();
       SoLoud.instance.setPause(_handle!, false);
       state.value = ChiptunePlaybackState.playing;
       _feed();
@@ -111,7 +114,7 @@ class ChiptunePlayer {
 
     await _ensureInit();
     _stopInternal();
-    _partialWakeLock = await PowerWakeLockService.acquirePartial();
+    await _acquirePlaybackRuntimeLocks();
 
     _ended = false;
     _mixer.loadAndPlay(_worklet!, sampleRate, looping: _looping);
@@ -137,6 +140,7 @@ class ChiptunePlayer {
     SoLoud.instance.setPause(_handle!, true);
     _feedTimer?.cancel();
     _feedTimer = null;
+    _releasePlaybackRuntimeLocks();
     state.value = ChiptunePlaybackState.paused;
   }
 
@@ -206,8 +210,9 @@ class ChiptunePlayer {
 
     final targetBytes = (sampleRate * _bufferAheadSeconds * 2 * 4)
         .toInt(); // stereo f32
-    final int maxIterations =
-        ((targetBytes / _chunk.lengthInBytes).ceil() + 8).clamp(8, 96).toInt();
+    final int maxIterations = ((targetBytes / _chunk.lengthInBytes).ceil() + 8)
+        .clamp(8, 96)
+        .toInt();
     int guard = 0;
     while (!_ended && guard < maxIterations) {
       int buffered;
@@ -236,7 +241,7 @@ class ChiptunePlayer {
       SoLoud.instance.setDataIsEnded(_stream!);
     }
     state.value = ChiptunePlaybackState.stopped;
-    _releasePartialWakeLock();
+    _releasePlaybackRuntimeLocks();
     onEnded?.call();
   }
 
@@ -260,15 +265,29 @@ class ChiptunePlayer {
       SoLoud.instance.disposeSource(stream);
       _stream = null;
     }
-    _releasePartialWakeLock();
+    _releasePlaybackRuntimeLocks();
   }
 
-  void _releasePartialWakeLock() {
-    final lease = _partialWakeLock;
-    if (lease != null) {
-      unawaited(lease.release());
+  Future<void> _acquirePlaybackRuntimeLocks() async {
+    _partialWakeLock ??= await PowerWakeLockService.acquirePartial();
+    _foregroundRuntimeLease ??= await ForegroundRuntimeService.acquire(
+      title: 'Chiptune playback active',
+      text: 'ToolLab keeps audio running in background',
+    );
+  }
+
+  void _releasePlaybackRuntimeLocks() {
+    final partialLease = _partialWakeLock;
+    if (partialLease != null) {
+      unawaited(partialLease.release());
     }
     _partialWakeLock = null;
+
+    final foregroundLease = _foregroundRuntimeLease;
+    if (foregroundLease != null) {
+      unawaited(foregroundLease.release());
+    }
+    _foregroundRuntimeLease = null;
   }
 
   void dispose() {

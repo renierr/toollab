@@ -17,6 +17,7 @@ class MainActivity : FlutterActivity() {
     private val SHORTCUTS_CHANNEL = "de.renier.tool_lab/shortcuts"
     private val SHARING_CHANNEL = "de.renier.tool_lab/sharing"
     private val WAKE_LOCK_CHANNEL = "de.renier.tool_lab/wake_lock"
+    private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
 
     private var launchRoute: String? = null
     private var pendingSharedFile: Map<String, String>? = null
@@ -193,6 +194,32 @@ class MainActivity : FlutterActivity() {
                             partialWakeLock?.release()
                         }
                         partialWakeLock = null
+                        result.success(true)
+                    }
+                    else -> {
+                        result.notImplemented()
+                    }
+                }
+            }
+
+        // Foreground Runtime MethodChannel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FOREGROUND_RUNTIME_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "start" -> {
+                        val title = call.argument<String>("title") ?: "ToolLab active"
+                        val text = call.argument<String>("text") ?: "Running in background"
+                        ToolLabForegroundService.start(this, title, text)
+                        result.success(true)
+                    }
+                    "update" -> {
+                        val title = call.argument<String>("title") ?: "ToolLab active"
+                        val text = call.argument<String>("text") ?: "Running in background"
+                        ToolLabForegroundService.update(this, title, text)
+                        result.success(true)
+                    }
+                    "stop" -> {
+                        ToolLabForegroundService.stop(this)
                         result.success(true)
                     }
                     else -> {
