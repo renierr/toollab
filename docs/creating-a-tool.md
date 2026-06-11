@@ -187,7 +187,16 @@ Widget _pageForTool(String id) {
 }
 ```
 
-### Step 5: Verify & Clean
+### Step 5: Register SyncDelegate (if tool needs sync)
+If your tool implements a `SyncDelegate` (`lib/tools/<name>/<name>_sync_delegate.dart`), register it in `lib/providers/app_state.dart` so the global Settings "Sync Now" button covers it:
+```dart
+// In AppState constructor
+registerSyncDelegate(NotesSyncDelegate());
+registerSyncDelegate(ChiptuneSyncDelegate());  // add yours here
+registerSyncDelegate(MyNewToolSyncDelegate()); // <--
+```
+
+### Step 6: Verify & Clean
 Before committing, always run:
 ```bash
 dart format ./lib
