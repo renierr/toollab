@@ -75,10 +75,12 @@ function Register-FileAssociations {
     $progId = $ft.ProgId
     $desc = $ft.Description
     # Extension -> ProgId
-    Set-ItemProperty -Path "HKCU:\Software\Classes\$ext" -Name '(default)' -Value $progId -Force
+    $extKey = "HKCU:\Software\Classes\$ext"
+    New-Item -Path $extKey -Force | Out-Null
+    Set-ItemProperty -Path $extKey -Name '(default)' -Value $progId -Force
     # PerceivedType
     if ($ext -eq '.txt') {
-      Set-ItemProperty -Path "HKCU:\Software\Classes\$ext" -Name 'PerceivedType' -Value 'text' -Force
+      Set-ItemProperty -Path $extKey -Name 'PerceivedType' -Value 'text' -Force
     }
     # ProgId
     $progKey = "HKCU:\Software\Classes\$progId"
