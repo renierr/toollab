@@ -110,6 +110,13 @@ class FocusNoiseCatalog {
       assetPath: 'assets/audio/campfire.ogg',
     ),
     FocusNoiseSound(
+      id: 'countryside',
+      name: 'Countryside',
+      icon: Icons.wb_sunny_outlined,
+      kind: FocusNoiseSoundKind.asset,
+      assetPath: 'assets/audio/countryside.ogg',
+    ),
+    FocusNoiseSound(
       id: 'alpine',
       name: 'Alpine',
       icon: Icons.terrain_outlined,
