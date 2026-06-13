@@ -22,12 +22,6 @@ class ToolRegistry {
       icon: Icons.sensors,
       description: 'Tools using device sensors',
     ),
-    'devices': ToolSection(
-      id: 'devices',
-      title: 'Devices & Connections',
-      icon: Icons.nfc_outlined,
-      description: 'NFC, Bluetooth, and device connections',
-    ),
     'utilities': ToolSection(
       id: 'utilities',
       title: 'Utilities',
