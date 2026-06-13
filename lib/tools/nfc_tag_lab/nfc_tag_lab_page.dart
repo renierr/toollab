@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:nfc_manager/ndef_record.dart';
 import 'package:nfc_manager/nfc_manager_android.dart';
-import 'package:nfc_manager/nfc_manager_ios.dart';
+
 import 'package:nfc_manager_ndef/nfc_manager_ndef.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -106,90 +106,90 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
           }
         },
         onDiscovered: (NfcTag tag) async {
-          String uid = '';
-          List<String> techs = [];
-          String capacity = 'Unknown';
-          String writable = 'Unknown';
+          try {
+            String uid = '';
+            List<String> techs = [];
+            String capacity = 'Unknown';
+            String writable = 'Unknown';
 
-          final androidTag = NfcTagAndroid.from(tag);
-          if (androidTag != null) {
-            uid = NdefCodec.toHex(androidTag.id);
-            techs = List<String>.from(androidTag.techList);
-          }
+            final androidTag = NfcTagAndroid.from(tag);
+            if (androidTag != null) {
+              uid = NdefCodec.toHex(androidTag.id);
+              techs = List<String>.from(androidTag.techList);
+            }
 
-          EmvCardDetails? emvDetails;
-          final isoDep = IsoDepAndroid.from(tag);
-          if (isoDep != null) {
-            if (!techs.contains('IsoDep')) techs.add('IsoDep');
-            emvDetails = await EmvParser.readCard(isoDep);
-          }
+            EmvCardDetails? emvDetails;
+            final isoDep = IsoDepAndroid.from(tag);
+            if (isoDep != null) {
+              if (!techs.contains('IsoDep')) techs.add('IsoDep');
+              emvDetails = await EmvParser.readCard(isoDep);
+            }
 
-          final mifare = MiFareIos.from(tag);
-          if (mifare != null) {
-            if (!techs.contains('MiFare')) techs.add('MiFare');
-            uid = NdefCodec.toHex(mifare.identifier);
-          }
-          final felica = FeliCaIos.from(tag);
-          if (felica != null) {
-            if (!techs.contains('FeliCa')) techs.add('FeliCa');
-            uid = NdefCodec.toHex(felica.currentIDm);
-          }
-          final iso15693 = Iso15693Ios.from(tag);
-          if (iso15693 != null) {
-            if (!techs.contains('ISO15693')) techs.add('ISO15693');
-            uid = NdefCodec.toHex(iso15693.identifier);
-          }
-          final iso7816 = Iso7816Ios.from(tag);
-          if (iso7816 != null) {
-            if (!techs.contains('ISO7816')) techs.add('ISO7816');
-            uid = NdefCodec.toHex(iso7816.identifier);
-          }
+            final ndef = Ndef.from(tag);
+            if (ndef != null) {
+              if (!techs.contains('Ndef')) techs.add('Ndef');
+              capacity = '${ndef.maxSize} bytes';
+              writable = ndef.isWritable ? 'Yes' : 'No';
+            }
 
-          final ndef = Ndef.from(tag);
-          if (ndef != null) {
-            if (!techs.contains('Ndef')) techs.add('Ndef');
-            capacity = '${ndef.maxSize} bytes';
-            writable = ndef.isWritable ? 'Yes' : 'No';
-          }
-
-          List<DecodedRecord> decodedRecords = [];
-          if (ndef != null) {
-            final cachedMsg = ndef.cachedMessage;
-            if (cachedMsg != null) {
-              for (int i = 0; i < cachedMsg.records.length; i++) {
-                final r = cachedMsg.records[i];
-                final decoded = NdefCodec.decodeRawRecord(
-                  r.typeNameFormat.index,
-                  r.type,
-                  r.payload,
-                  i,
-                );
-                decodedRecords.add(decoded);
+            List<DecodedRecord> decodedRecords = [];
+            if (ndef != null) {
+              final cachedMsg = ndef.cachedMessage;
+              if (cachedMsg != null) {
+                for (int i = 0; i < cachedMsg.records.length; i++) {
+                  final r = cachedMsg.records[i];
+                  final decoded = NdefCodec.decodeRawRecord(
+                    r.typeNameFormat.index,
+                    r.type,
+                    r.payload,
+                    i,
+                  );
+                  decodedRecords.add(decoded);
+                }
               }
             }
-          }
 
-          final profile = ScanProfileClassifier.classify(
-            ScanContext(
-              source: (ndef != null || emvDetails != null)
-                  ? 'reading'
-                  : 'reading-error',
-              serialNumber: uid,
-              records: decodedRecords,
-              emvDetails: emvDetails,
-            ),
-          );
+            final profile = ScanProfileClassifier.classify(
+              ScanContext(
+                source: (ndef != null || emvDetails != null)
+                    ? 'reading'
+                    : 'reading-error',
+                serialNumber: uid,
+                records: decodedRecords,
+                emvDetails: emvDetails,
+              ),
+            );
 
-          if (mounted) {
-            setState(() {
-              _scannedUid = uid;
-              _scannedTechs = techs.join(', ');
-              _scannedCapacity = capacity;
-              _scannedWritable = writable;
-              _scannedRecords = decodedRecords;
-              _profile = profile;
-              _currentTag = tag;
-            });
+            if (mounted) {
+              setState(() {
+                _scannedUid = uid;
+                _scannedTechs = techs.join(', ');
+                _scannedCapacity = capacity;
+                _scannedWritable = writable;
+                _scannedRecords = decodedRecords;
+                _profile = profile;
+                _currentTag = tag;
+                _isScanning = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Tag detected — ${profile.categoryLabel}'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          } catch (e) {
+            debugPrint('[NfcTagLab] Scan error: $e');
+            if (mounted) {
+              setState(() => _isScanning = false);
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Scan failed: $e')));
+            }
+          } finally {
+            try {
+              await NfcManager.instance.stopSession();
+            } catch (_) {}
           }
         },
       );
