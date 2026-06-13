@@ -1,7 +1,7 @@
 name: tool_lab
 description: "A multi-tool utility app with device sensors, calculator, and more."
 publish_to: "none"
-version: 1.4.4+19
+version: 1.4.5+20
 
 environment:
   sdk: ^3.12.1

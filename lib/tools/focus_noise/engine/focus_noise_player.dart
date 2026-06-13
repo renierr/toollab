@@ -80,7 +80,7 @@ class FocusNoisePlayer {
       maxBufferSizeDuration: const Duration(seconds: 16),
     );
 
-    _pushGenerated(type, rounds: 6);
+    _pushGenerated(type, rounds: 48, fadeIn: true);
     _handle = SoLoud.instance.play(_stream!, volume: _volume);
     _isPlaying = true;
 
@@ -102,13 +102,25 @@ class FocusNoisePlayer {
     }
   }
 
-  void _pushGenerated(GeneratedNoiseType type, {required int rounds}) {
+  void _pushGenerated(
+    GeneratedNoiseType type, {
+    required int rounds,
+    bool fadeIn = false,
+  }) {
     if (_stream == null) return;
     for (int i = 0; i < rounds; i++) {
       final Float32List chunk = _generator.generate(
         type: type,
         frames: _chunkFrames,
       );
+      if (fadeIn && i == 0) {
+        final int fadeFrames = 512;
+        for (int j = 0; j < fadeFrames && j < _chunkFrames; j++) {
+          final double gain = j / fadeFrames;
+          chunk[j * 2] *= gain;
+          chunk[j * 2 + 1] *= gain;
+        }
+      }
       SoLoud.instance.addAudioDataStream(_stream!, chunk.buffer.asUint8List());
     }
   }

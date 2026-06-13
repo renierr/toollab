@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
@@ -40,6 +41,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   int _customMinutes = 30;
 
   bool _breathingActive = false;
+  WakeLockLease? _breathingWakeLock;
   FocusBreathingMode _breathingMode = FocusBreathingMode.relax;
   Timer? _breathingTimer;
   int _breathingStepIndex = 0;
@@ -53,6 +55,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     onDispose(() => _player.dispose());
     onDispose(() => _timerTicker?.cancel());
     onDispose(() => _breathingTimer?.cancel());
+    onDispose(() => _breathingWakeLock?.release());
     WidgetsBinding.instance.addPostFrameCallback((_) => _restoreSettings());
   }
 
@@ -179,10 +182,17 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   void _toggleBreathing() {
     setState(() => _breathingActive = !_breathingActive);
     if (_breathingActive) {
+      unawaited(
+        PowerWakeLockService.acquireFull().then((lease) {
+          _breathingWakeLock = lease;
+        }),
+      );
       _runBreathingStep(restart: true);
       return;
     }
 
+    _breathingWakeLock?.release();
+    _breathingWakeLock = null;
     _breathingTimer?.cancel();
     _breathingTimer = null;
     setState(() {

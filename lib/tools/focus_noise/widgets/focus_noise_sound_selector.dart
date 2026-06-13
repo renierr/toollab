@@ -30,7 +30,35 @@ class FocusNoiseSoundSelector extends StatelessWidget {
             selected: selected,
             onSelected: (_) => onSelected(sound),
             avatar: Icon(sound.icon, size: 18),
-            label: Text(sound.name),
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(sound.name),
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: sound.isAsset
+                        ? Colors.green.withValues(alpha: 0.2)
+                        : Colors.amber.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    sound.isAsset ? 'REC' : 'GEN',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: sound.isAsset
+                          ? Colors.green.shade700
+                          : Colors.amber.shade800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             labelStyle: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             ),
