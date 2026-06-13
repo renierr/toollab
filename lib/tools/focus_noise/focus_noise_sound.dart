@@ -90,7 +90,7 @@ class FocusNoiseCatalog {
     ),
     FocusNoiseSound(
       id: 'waves',
-      name: 'Waves',
+      name: 'Ocean',
       icon: Icons.waves_outlined,
       kind: FocusNoiseSoundKind.asset,
       assetPath: 'assets/audio/waves.ogg',
