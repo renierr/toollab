@@ -64,10 +64,8 @@ class FocusNoisePlayer {
       'white' => GeneratedNoiseType.white,
       'pink' => GeneratedNoiseType.pink,
       'brown' => GeneratedNoiseType.brown,
-      'forest' => GeneratedNoiseType.forest,
-      'city' => GeneratedNoiseType.city,
-      'rain' => GeneratedNoiseType.rain,
-      'waves' => GeneratedNoiseType.waves,
+      'train' => GeneratedNoiseType.train,
+      'green' => GeneratedNoiseType.green,
       _ => GeneratedNoiseType.pink,
     };
 

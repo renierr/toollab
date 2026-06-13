@@ -2,15 +2,13 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'generated/brown_noise_renderer.dart';
-import 'generated/city_noise_renderer.dart';
-import 'generated/forest_noise_renderer.dart';
 import 'generated/generated_sound_renderer.dart';
+import 'generated/green_noise_renderer.dart';
 import 'generated/pink_noise_renderer.dart';
-import 'generated/rain_noise_renderer.dart';
-import 'generated/waves_noise_renderer.dart';
+import 'generated/train_noise_renderer.dart';
 import 'generated/white_noise_renderer.dart';
 
-enum GeneratedNoiseType { white, pink, brown, forest, city, rain, waves }
+enum GeneratedNoiseType { white, pink, brown, train, green }
 
 class NoisePcmGenerator {
   final int sampleRate;
@@ -24,21 +22,13 @@ class NoisePcmGenerator {
       GeneratedNoiseType.white: WhiteNoiseRenderer(_random),
       GeneratedNoiseType.pink: PinkNoiseRenderer(_random),
       GeneratedNoiseType.brown: BrownNoiseRenderer(_random),
-      GeneratedNoiseType.forest: ForestNoiseRenderer(
+      GeneratedNoiseType.train: TrainNoiseRenderer(
         sampleRate: sampleRate,
         random: _random,
       ),
-      GeneratedNoiseType.city: CityNoiseRenderer(
+      GeneratedNoiseType.green: GreenNoiseRenderer(
+        _random,
         sampleRate: sampleRate,
-        random: _random,
-      ),
-      GeneratedNoiseType.rain: RainNoiseRenderer(
-        sampleRate: sampleRate,
-        random: _random,
-      ),
-      GeneratedNoiseType.waves: WavesNoiseRenderer(
-        sampleRate: sampleRate,
-        random: _random,
       ),
     };
   }

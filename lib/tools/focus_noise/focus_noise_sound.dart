@@ -49,6 +49,18 @@ class FocusNoiseCatalog {
       kind: FocusNoiseSoundKind.generated,
     ),
     FocusNoiseSound(
+      id: 'train',
+      name: 'Train',
+      icon: Icons.train_outlined,
+      kind: FocusNoiseSoundKind.generated,
+    ),
+    FocusNoiseSound(
+      id: 'green',
+      name: 'Green',
+      icon: Icons.nature_outlined,
+      kind: FocusNoiseSoundKind.generated,
+    ),
+    FocusNoiseSound(
       id: 'forest',
       name: 'Forest',
       icon: Icons.park_outlined,
