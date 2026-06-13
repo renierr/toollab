@@ -23,6 +23,9 @@ class PdfExtractImagesGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return GridView.builder(
       padding: const EdgeInsets.all(12),
+      addAutomaticKeepAlives: false,
+      addRepaintBoundaries: true,
+      addSemanticIndexes: false,
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 320,
         mainAxisSpacing: 10,
@@ -75,7 +78,12 @@ class _PdfExtractImageCard extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: Image.file(File(item.path), fit: BoxFit.cover),
+                    child: Image.file(
+                      File(item.path),
+                      fit: BoxFit.cover,
+                      cacheWidth: 640,
+                      filterQuality: FilterQuality.low,
+                    ),
                   ),
                   Positioned(
                     top: 8,

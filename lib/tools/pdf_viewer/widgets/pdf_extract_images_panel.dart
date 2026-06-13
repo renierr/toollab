@@ -83,12 +83,23 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
           }
           setState(() {
             _progress = total == 0 ? 0 : done / total;
-            _statusText = 'Scanning page $done of $total...';
+            _statusText = 'Scanning PDF objects $done of $total...';
           });
         },
       );
 
+      if (mounted) {
+        imageCache.clear();
+        imageCache.clearLiveImages();
+      }
+
       final items = <PdfExtractedImageItem>[];
+      if (mounted && extracted.isNotEmpty) {
+        setState(() {
+          _progress = 0;
+          _statusText = 'Preparing images 0 of ${extracted.length}...';
+        });
+      }
       for (int i = 0; i < extracted.length; i++) {
         final image = extracted[i];
         final fileName =
@@ -109,6 +120,13 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
             filters: image.filters,
           ),
         );
+        if (mounted && ((i + 1) % 8 == 0 || i + 1 == extracted.length)) {
+          setState(() {
+            final done = i + 1;
+            _progress = extracted.isEmpty ? 0 : done / extracted.length;
+            _statusText = 'Preparing images $done of ${extracted.length}...';
+          });
+        }
       }
 
       if (!mounted) {
