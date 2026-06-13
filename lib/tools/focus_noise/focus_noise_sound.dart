@@ -90,6 +90,41 @@ class FocusNoiseCatalog {
       kind: FocusNoiseSoundKind.asset,
       assetPath: 'assets/audio/night.ogg',
     ),
+    FocusNoiseSound(
+      id: 'campfire',
+      name: 'Campfire',
+      icon: Icons.local_fire_department_outlined,
+      kind: FocusNoiseSoundKind.asset,
+      assetPath: 'assets/audio/campfire.ogg',
+    ),
+    FocusNoiseSound(
+      id: 'alpine',
+      name: 'Alpine',
+      icon: Icons.terrain_outlined,
+      kind: FocusNoiseSoundKind.asset,
+      assetPath: 'assets/audio/alpine.ogg',
+    ),
+    FocusNoiseSound(
+      id: 'wind',
+      name: 'Wind',
+      icon: Icons.air_outlined,
+      kind: FocusNoiseSoundKind.asset,
+      assetPath: 'assets/audio/wind.ogg',
+    ),
+    FocusNoiseSound(
+      id: 'birds_night',
+      name: 'Birds at Night',
+      icon: Icons.nightlife_outlined,
+      kind: FocusNoiseSoundKind.asset,
+      assetPath: 'assets/audio/birds_night.ogg',
+    ),
+    FocusNoiseSound(
+      id: 'thunder',
+      name: 'Thunder',
+      icon: Icons.thunderstorm_outlined,
+      kind: FocusNoiseSoundKind.asset,
+      assetPath: 'assets/audio/rain_thunder.ogg',
+    ),
   ];
 
   static FocusNoiseSound byId(String id) {
