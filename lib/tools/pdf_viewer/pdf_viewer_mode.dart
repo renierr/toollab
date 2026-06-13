@@ -1,1 +1,1 @@
-enum PdfViewerMode { view, organize, flatten }
+enum PdfViewerMode { view, organize, flatten, extractImages }

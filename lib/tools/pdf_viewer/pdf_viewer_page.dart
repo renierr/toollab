@@ -15,6 +15,7 @@ import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_mode.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_organize_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_flatten_panel.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_panel.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 
 class PdfViewerPage extends StatefulWidget {
@@ -305,6 +306,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     setState(() => _mode = PdfViewerMode.view);
   }
 
+  void _onExtractImagesCancel() {
+    setState(() => _mode = PdfViewerMode.view);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -355,6 +360,22 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
           tempScope: _tempScope,
           onComplete: _onFlattenComplete,
           onCancel: _onFlattenCancel,
+        ),
+      );
+    }
+
+    if (_mode == PdfViewerMode.extractImages) {
+      return ToolLayout(
+        title: PdfViewerTool.config.name,
+        fullscreen: true,
+        showFloatingBackButton: false,
+        scaffoldKey: _scaffoldKey,
+        backgroundColor: theme.colorScheme.surface,
+        child: PdfExtractImagesPanel(
+          filePath: _filePath!,
+          fileName: _fileName ?? 'document.pdf',
+          tempScope: _tempScope,
+          onCancel: _onExtractImagesCancel,
         ),
       );
     }

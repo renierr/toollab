@@ -106,6 +106,8 @@ class PdfOverlayControls extends StatelessWidget {
                   ? Icons.reorder
                   : currentMode == PdfViewerMode.flatten
                   ? Icons.photo_library_outlined
+                  : currentMode == PdfViewerMode.extractImages
+                  ? Icons.collections_outlined
                   : Icons.more_vert,
             ),
             tooltip: 'More',
@@ -141,6 +143,17 @@ class PdfOverlayControls extends StatelessWidget {
                       Icon(Icons.photo_library_outlined),
                       SizedBox(width: 8),
                       Text('Flatten PDF'),
+                    ],
+                  ),
+                ),
+              if (currentMode != PdfViewerMode.extractImages)
+                const PopupMenuItem(
+                  value: PdfViewerMode.extractImages,
+                  child: Row(
+                    children: [
+                      Icon(Icons.collections_outlined),
+                      SizedBox(width: 8),
+                      Text('Extract Images'),
                     ],
                   ),
                 ),
