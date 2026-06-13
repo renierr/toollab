@@ -255,6 +255,7 @@ class _ChiptunePageState extends State<ChiptunePage>
         ? entry.fileName.split('.').last
         : entry.format.toLowerCase();
     final name = '${entry.title.isEmpty ? entry.fileName : entry.title}.$ext';
+    if (!mounted) return;
     await FileSaveHelper.saveFile(
       context: context,
       suggestedName: name,

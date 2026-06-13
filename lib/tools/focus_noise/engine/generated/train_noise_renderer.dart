@@ -22,8 +22,7 @@ class TrainNoiseRenderer implements GeneratedSoundRenderer {
   int _nextClack = 0;
   int _clackStart = -1;
 
-  TrainNoiseRenderer({required this.sampleRate, required Random random})
-    : _random = random;
+  TrainNoiseRenderer({required this.sampleRate, required this._random});
 
   @override
   void reset() {
