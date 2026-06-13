@@ -110,11 +110,11 @@ class FocusNoiseCatalog {
       assetPath: 'assets/audio/night.ogg',
     ),
     FocusNoiseSound(
-      id: 'campfire',
-      name: 'Campfire',
+      id: 'fire',
+      name: 'Fire',
       icon: Icons.local_fire_department_outlined,
       kind: FocusNoiseSoundKind.asset,
-      assetPath: 'assets/audio/campfire.ogg',
+      assetPath: 'assets/audio/fire.ogg',
     ),
     FocusNoiseSound(
       id: 'countryside',
