@@ -191,6 +191,7 @@ class ChiptunePlayer {
       channels: Channels.stereo,
       format: BufferType.f32le,
       bufferingType: BufferingType.released,
+      bufferingTimeNeeds: 0,
       maxBufferSizeDuration: const Duration(seconds: 30),
     );
 
