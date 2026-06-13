@@ -34,6 +34,51 @@ class PdfEmbeddedImageData {
   });
 }
 
+class _ExtractionProgress {
+  final void Function(int done, int total)? onProgress;
+  int done;
+  int total;
+  int _lastReportedDone = -1;
+
+  _ExtractionProgress({
+    required this.onProgress,
+    required this.done,
+    required this.total,
+  });
+
+  void addTotal(int value) {
+    if (value <= 0) {
+      return;
+    }
+    total += value;
+    _emit(force: true);
+  }
+
+  void step([int value = 1]) {
+    done += value;
+    _emit();
+  }
+
+  void complete() {
+    if (done < total) {
+      done = total;
+    }
+    _emit(force: true);
+  }
+
+  void _emit({bool force = false}) {
+    if (onProgress == null) {
+      return;
+    }
+    final safeTotal = total <= 0 ? 1 : total;
+    if (!force && done != safeTotal && (done - _lastReportedDone) < 8) {
+      return;
+    }
+    _lastReportedDone = done;
+    onProgress!(done.clamp(0, safeTotal), safeTotal);
+  }
+}
+
 class PdfEngineHelper {
   static bool _initialized = false;
 
@@ -288,22 +333,38 @@ class PdfEngineHelper {
     final images = <PdfEmbeddedImageData>[];
     final seenHashes = <String>{};
 
-    await doc.useNativeDocumentHandle((nativeDocumentHandle) {
+    await doc.useNativeDocumentHandle((nativeDocumentHandle) async {
       final pdf = pdfium.getPdfium();
       final documentHandle = pdfium.FPDF_DOCUMENT.fromAddress(
         nativeDocumentHandle,
       );
       final pageCount = pdf.FPDF_GetPageCount(documentHandle);
+      final progress = _ExtractionProgress(
+        onProgress: onProgress,
+        done: 0,
+        total: pageCount > 0 ? pageCount : 1,
+      );
+      var uiYieldCounter = 0;
+
+      Future<void> yieldToUi() async {
+        uiYieldCounter++;
+        if (uiYieldCounter % 24 != 0) {
+          return;
+        }
+        await Future<void>.delayed(Duration.zero);
+      }
 
       for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
         final pageHandle = pdf.FPDF_LoadPage(documentHandle, pageIndex);
         if (pageHandle.address == 0) {
-          onProgress?.call(pageIndex + 1, pageCount);
+          progress.step();
+          await yieldToUi();
           continue;
         }
 
         try {
           final objectCount = pdf.FPDFPage_CountObjects(pageHandle);
+          progress.addTotal(objectCount);
           for (int objectIndex = 0; objectIndex < objectCount; objectIndex++) {
             final objectHandle = pdf.FPDFPage_GetObject(
               pageHandle,
@@ -322,11 +383,13 @@ class PdfEngineHelper {
               deduplicate: deduplicate,
               seenHashes: seenHashes,
               images: images,
+              progress: progress,
             );
+            await yieldToUi();
           }
 
           if (includeAnnotations) {
-            _collectImagesFromAnnotations(
+            await _collectImagesFromAnnotations(
               pdf: pdf,
               documentHandle: documentHandle,
               pageHandle: pageHandle,
@@ -334,19 +397,24 @@ class PdfEngineHelper {
               deduplicate: deduplicate,
               seenHashes: seenHashes,
               images: images,
+              progress: progress,
+              onChunkProcessed: yieldToUi,
             );
           }
         } finally {
           pdf.FPDF_ClosePage(pageHandle);
-          onProgress?.call(pageIndex + 1, pageCount);
+          progress.step();
+          await yieldToUi();
         }
       }
+
+      progress.complete();
     });
 
     return images;
   }
 
-  static void _collectImagesFromAnnotations({
+  static Future<void> _collectImagesFromAnnotations({
     required pdfium.PDFium pdf,
     required pdfium.FPDF_DOCUMENT documentHandle,
     required pdfium.FPDF_PAGE pageHandle,
@@ -354,7 +422,9 @@ class PdfEngineHelper {
     required bool deduplicate,
     required Set<String> seenHashes,
     required List<PdfEmbeddedImageData> images,
-  }) {
+    required _ExtractionProgress progress,
+    Future<void> Function()? onChunkProcessed,
+  }) async {
     final annotCount = pdf.FPDFPage_GetAnnotCount(pageHandle);
     if (annotCount <= 0) {
       return;
@@ -371,6 +441,7 @@ class PdfEngineHelper {
         if (objectCount <= 0) {
           continue;
         }
+        progress.addTotal(objectCount);
 
         for (int objectIndex = 0; objectIndex < objectCount; objectIndex++) {
           final objectHandle = pdf.FPDFAnnot_GetObject(
@@ -390,7 +461,11 @@ class PdfEngineHelper {
             deduplicate: deduplicate,
             seenHashes: seenHashes,
             images: images,
+            progress: progress,
           );
+          if (onChunkProcessed != null) {
+            await onChunkProcessed();
+          }
         }
       } finally {
         pdf.FPDFPage_CloseAnnot(annotHandle);
@@ -408,7 +483,9 @@ class PdfEngineHelper {
     required bool deduplicate,
     required Set<String> seenHashes,
     required List<PdfEmbeddedImageData> images,
+    required _ExtractionProgress progress,
   }) {
+    progress.step();
     final objectType = pdf.FPDFPageObj_GetType(objectHandle);
     if (objectType == pdfium.FPDF_PAGEOBJ_IMAGE) {
       final item = _extractImageFromObject(
@@ -433,6 +510,7 @@ class PdfEngineHelper {
     }
 
     final childCount = pdf.FPDFFormObj_CountObjects(objectHandle);
+    progress.addTotal(childCount);
     for (int childIndex = 0; childIndex < childCount; childIndex++) {
       final childHandle = pdf.FPDFFormObj_GetObject(objectHandle, childIndex);
       if (childHandle.address == 0) {
@@ -448,6 +526,7 @@ class PdfEngineHelper {
         deduplicate: deduplicate,
         seenHashes: seenHashes,
         images: images,
+        progress: progress,
       );
     }
   }
