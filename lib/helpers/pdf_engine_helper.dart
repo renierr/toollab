@@ -311,91 +311,17 @@ class PdfEngineHelper {
             if (objectHandle.address == 0) {
               continue;
             }
-
-            final objectType = pdf.FPDFPageObj_GetType(objectHandle);
-            if (objectType != pdfium.FPDF_PAGEOBJ_IMAGE) {
-              continue;
-            }
-
-            final renderedBitmap = pdf.FPDFImageObj_GetRenderedBitmap(
-              documentHandle,
-              pageHandle,
-              objectHandle,
+            _collectImagesFromObject(
+              pdf: pdf,
+              documentHandle: documentHandle,
+              pageHandle: pageHandle,
+              objectHandle: objectHandle,
+              pageIndex: pageIndex,
+              objectIndex: objectIndex,
+              deduplicate: deduplicate,
+              seenHashes: seenHashes,
+              images: images,
             );
-            final bitmapHandle = renderedBitmap.address != 0
-                ? renderedBitmap
-                : pdf.FPDFImageObj_GetBitmap(objectHandle);
-
-            if (bitmapHandle.address == 0) {
-              continue;
-            }
-
-            try {
-              final width = pdf.FPDFBitmap_GetWidth(bitmapHandle);
-              final height = pdf.FPDFBitmap_GetHeight(bitmapHandle);
-              final stride = pdf.FPDFBitmap_GetStride(bitmapHandle);
-              if (width <= 0 || height <= 0 || stride <= 0) {
-                continue;
-              }
-
-              final rawPtr = pdf.FPDFBitmap_GetBuffer(bitmapHandle);
-              if (rawPtr.address == 0) {
-                continue;
-              }
-
-              final bufferLength = stride * height;
-              final raw = rawPtr.cast<Uint8>().asTypedList(bufferLength);
-
-              final bitmapFormat = pdf.FPDFBitmap_GetFormat(bitmapHandle);
-              final pngBytes = _encodeBitmapToPng(
-                raw,
-                width: width,
-                height: height,
-                stride: stride,
-                bitmapFormat: bitmapFormat,
-              );
-
-              final checksum = sha1.convert(pngBytes).toString();
-              if (deduplicate && seenHashes.contains(checksum)) {
-                continue;
-              }
-              seenHashes.add(checksum);
-
-              final metadata = calloc<pdfium.FPDF_IMAGEOBJ_METADATA>();
-              final metaLoaded =
-                  pdf.FPDFImageObj_GetImageMetadata(
-                    objectHandle,
-                    pageHandle,
-                    metadata,
-                  ) !=
-                  0;
-              final bitsPerPixel = metaLoaded ? metadata.ref.bits_per_pixel : 0;
-              final imageWidth = metaLoaded && metadata.ref.width > 0
-                  ? metadata.ref.width
-                  : width;
-              final imageHeight = metaLoaded && metadata.ref.height > 0
-                  ? metadata.ref.height
-                  : height;
-              calloc.free(metadata);
-
-              final filters = _readImageFilters(pdf, objectHandle);
-
-              images.add(
-                PdfEmbeddedImageData(
-                  id: 'p${pageIndex + 1}_o${objectIndex + 1}_${images.length + 1}',
-                  pageNumber: pageIndex + 1,
-                  objectIndex: objectIndex,
-                  width: imageWidth,
-                  height: imageHeight,
-                  bitsPerPixel: bitsPerPixel,
-                  filters: filters,
-                  checksum: checksum,
-                  pngBytes: pngBytes,
-                ),
-              );
-            } finally {
-              pdf.FPDFBitmap_Destroy(bitmapHandle);
-            }
           }
         } finally {
           pdf.FPDF_ClosePage(pageHandle);
@@ -405,6 +331,185 @@ class PdfEngineHelper {
     });
 
     return images;
+  }
+
+  static void _collectImagesFromObject({
+    required pdfium.PDFium pdf,
+    required pdfium.FPDF_DOCUMENT documentHandle,
+    required pdfium.FPDF_PAGE pageHandle,
+    required pdfium.FPDF_PAGEOBJECT objectHandle,
+    required int pageIndex,
+    required int objectIndex,
+    required bool deduplicate,
+    required Set<String> seenHashes,
+    required List<PdfEmbeddedImageData> images,
+  }) {
+    final objectType = pdf.FPDFPageObj_GetType(objectHandle);
+    if (objectType == pdfium.FPDF_PAGEOBJ_IMAGE) {
+      final item = _extractImageFromObject(
+        pdf: pdf,
+        documentHandle: documentHandle,
+        pageHandle: pageHandle,
+        objectHandle: objectHandle,
+        pageIndex: pageIndex,
+        objectIndex: objectIndex,
+        deduplicate: deduplicate,
+        seenHashes: seenHashes,
+        serial: images.length + 1,
+      );
+      if (item != null) {
+        images.add(item);
+      }
+      return;
+    }
+
+    if (objectType != pdfium.FPDF_PAGEOBJ_FORM) {
+      return;
+    }
+
+    final childCount = pdf.FPDFFormObj_CountObjects(objectHandle);
+    for (int childIndex = 0; childIndex < childCount; childIndex++) {
+      final childHandle = pdf.FPDFFormObj_GetObject(objectHandle, childIndex);
+      if (childHandle.address == 0) {
+        continue;
+      }
+      _collectImagesFromObject(
+        pdf: pdf,
+        documentHandle: documentHandle,
+        pageHandle: pageHandle,
+        objectHandle: childHandle,
+        pageIndex: pageIndex,
+        objectIndex: objectIndex,
+        deduplicate: deduplicate,
+        seenHashes: seenHashes,
+        images: images,
+      );
+    }
+  }
+
+  static PdfEmbeddedImageData? _extractImageFromObject({
+    required pdfium.PDFium pdf,
+    required pdfium.FPDF_DOCUMENT documentHandle,
+    required pdfium.FPDF_PAGE pageHandle,
+    required pdfium.FPDF_PAGEOBJECT objectHandle,
+    required int pageIndex,
+    required int objectIndex,
+    required bool deduplicate,
+    required Set<String> seenHashes,
+    required int serial,
+  }) {
+    final renderedBitmap = pdf.FPDFImageObj_GetRenderedBitmap(
+      documentHandle,
+      pageHandle,
+      objectHandle,
+    );
+    final bitmapHandle = renderedBitmap.address != 0
+        ? renderedBitmap
+        : pdf.FPDFImageObj_GetBitmap(objectHandle);
+
+    if (bitmapHandle.address == 0) {
+      return null;
+    }
+
+    try {
+      final width = pdf.FPDFBitmap_GetWidth(bitmapHandle);
+      final height = pdf.FPDFBitmap_GetHeight(bitmapHandle);
+      final stride = pdf.FPDFBitmap_GetStride(bitmapHandle);
+      if (width <= 0 || height <= 0 || stride <= 0) {
+        return null;
+      }
+
+      final rawPtr = pdf.FPDFBitmap_GetBuffer(bitmapHandle);
+      if (rawPtr.address == 0) {
+        return null;
+      }
+
+      final bufferLength = stride * height;
+      final raw = rawPtr.cast<Uint8>().asTypedList(bufferLength);
+
+      final bitmapFormat = pdf.FPDFBitmap_GetFormat(bitmapHandle);
+      final pngBytes = _encodeBitmapToPng(
+        raw,
+        width: width,
+        height: height,
+        stride: stride,
+        bitmapFormat: bitmapFormat,
+      );
+
+      final checksum = sha1.convert(pngBytes).toString();
+      if (deduplicate && seenHashes.contains(checksum)) {
+        return null;
+      }
+      seenHashes.add(checksum);
+
+      final metadata = calloc<pdfium.FPDF_IMAGEOBJ_METADATA>();
+      final bitsPerPixel = (() {
+        try {
+          final metaLoaded =
+              pdf.FPDFImageObj_GetImageMetadata(
+                objectHandle,
+                pageHandle,
+                metadata,
+              ) !=
+              0;
+          if (!metaLoaded) {
+            return 0;
+          }
+          return metadata.ref.bits_per_pixel;
+        } finally {
+          calloc.free(metadata);
+        }
+      })();
+
+      final imageWidth = bitsPerPixel > 0
+          ? _readImageDimension(pdf, objectHandle, pageHandle, width, true)
+          : width;
+      final imageHeight = bitsPerPixel > 0
+          ? _readImageDimension(pdf, objectHandle, pageHandle, height, false)
+          : height;
+
+      final filters = _readImageFilters(pdf, objectHandle);
+
+      return PdfEmbeddedImageData(
+        id: 'p${pageIndex + 1}_o${objectIndex + 1}_$serial',
+        pageNumber: pageIndex + 1,
+        objectIndex: objectIndex,
+        width: imageWidth,
+        height: imageHeight,
+        bitsPerPixel: bitsPerPixel,
+        filters: filters,
+        checksum: checksum,
+        pngBytes: pngBytes,
+      );
+    } finally {
+      pdf.FPDFBitmap_Destroy(bitmapHandle);
+    }
+  }
+
+  static int _readImageDimension(
+    pdfium.PDFium pdf,
+    pdfium.FPDF_PAGEOBJECT objectHandle,
+    pdfium.FPDF_PAGE pageHandle,
+    int fallback,
+    bool isWidth,
+  ) {
+    final metadata = calloc<pdfium.FPDF_IMAGEOBJ_METADATA>();
+    try {
+      final metaLoaded =
+          pdf.FPDFImageObj_GetImageMetadata(
+            objectHandle,
+            pageHandle,
+            metadata,
+          ) !=
+          0;
+      if (!metaLoaded) {
+        return fallback;
+      }
+      final value = isWidth ? metadata.ref.width : metadata.ref.height;
+      return value > 0 ? value : fallback;
+    } finally {
+      calloc.free(metadata);
+    }
   }
 
   static List<String> _readImageFilters(
