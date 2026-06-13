@@ -100,37 +100,42 @@ class NoteCard extends StatelessWidget {
     final visible = tags.take(maxVisible).toList();
     final remaining = tags.length - maxVisible;
 
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      children: [
-        ...visible.map(
-          (tag) => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: AppTheme.accentTeal.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              tag,
-              style: TextStyle(
-                fontSize: 11,
-                color: AppTheme.accentTeal.withValues(alpha: 0.85),
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width - 40,
+      ),
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        children: [
+          ...visible.map(
+            (tag) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.accentTeal.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                tag,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.accentTeal.withValues(alpha: 0.85),
+                ),
               ),
             ),
           ),
-        ),
-        if (remaining > 0)
-          Text(
-            '+$remaining',
-            style: TextStyle(
-              fontSize: 11,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.4),
+          if (remaining > 0)
+            Text(
+              '+$remaining',
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -179,138 +184,158 @@ class NoteCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isConstrained = constraints.maxHeight < double.infinity;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: isConstrained
+                    ? MainAxisSize.max
+                    : MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.accentTeal,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, size: 20),
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        onEdit();
-                      } else if (value == 'delete') {
-                        onDelete();
-                      } else if (value == 'export') {
-                        _exportMarkdown(context);
-                      } else if (value == 'export_pdf') {
-                        _exportPdf(context);
-                      } else if (value == 'share') {
-                        _shareNote(context);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit_outlined, size: 18),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.accentTeal,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const PopupMenuItem(
-                        value: 'share',
-                        child: Row(
-                          children: [
-                            Icon(Icons.share_outlined, size: 18),
-                            SizedBox(width: 8),
-                            Text('Share'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'export',
-                        child: Row(
-                          children: [
-                            Icon(Icons.file_download_outlined, size: 18),
-                            SizedBox(width: 8),
-                            Text('Export MD'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'export_pdf',
-                        child: Row(
-                          children: [
-                            Icon(Icons.picture_as_pdf_outlined, size: 18),
-                            SizedBox(width: 8),
-                            Text('Export PDF'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.delete_outline,
-                              size: 18,
-                              color: theme.colorScheme.error,
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert, size: 20),
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            onEdit();
+                          } else if (value == 'delete') {
+                            onDelete();
+                          } else if (value == 'export') {
+                            _exportMarkdown(context);
+                          } else if (value == 'export_pdf') {
+                            _exportPdf(context);
+                          } else if (value == 'share') {
+                            _shareNote(context);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit_outlined, size: 18),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Delete',
-                              style: TextStyle(color: theme.colorScheme.error),
+                          ),
+                          const PopupMenuItem(
+                            value: 'share',
+                            child: Row(
+                              children: [
+                                Icon(Icons.share_outlined, size: 18),
+                                SizedBox(width: 8),
+                                Text('Share'),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'export',
+                            child: Row(
+                              children: [
+                                Icon(Icons.file_download_outlined, size: 18),
+                                SizedBox(width: 8),
+                                Text('Export MD'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'export_pdf',
+                            child: Row(
+                              children: [
+                                Icon(Icons.picture_as_pdf_outlined, size: 18),
+                                SizedBox(width: 8),
+                                Text('Export PDF'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.delete_outline,
+                                  size: 18,
+                                  color: theme.colorScheme.error,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    color: theme.colorScheme.error,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (bodyPreview.isNotEmpty)
-                Text(
-                  bodyPreview,
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              const SizedBox(height: 8),
-              _buildTags(context),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Updated: ${_formatDate(updatedAt)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  const SizedBox(height: 8),
+                  if (bodyPreview.isNotEmpty)
+                    Text(
+                      bodyPreview,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
+                  const SizedBox(height: 8),
+                  _buildTags(context),
+                  if (isConstrained) const Spacer(),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          'Updated: ${_formatDate(updatedAt)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if ((note['synced'] as int? ?? 0) == 1)
+                        Icon(
+                          Icons.cloud_done_outlined,
+                          size: 14,
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.5,
+                          ),
+                        )
+                      else
+                        Icon(
+                          Icons.cloud_upload_outlined,
+                          size: 14,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
+                    ],
                   ),
-                  if ((note['synced'] as int? ?? 0) == 1)
-                    Icon(
-                      Icons.cloud_done_outlined,
-                      size: 14,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                    )
-                  else
-                    Icon(
-                      Icons.cloud_upload_outlined,
-                      size: 14,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                    ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),

@@ -58,11 +58,11 @@ class NotesList extends StatelessWidget {
       // 3 columns grid
       return GridView.builder(
         padding: const EdgeInsets.all(12),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 380,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          mainAxisExtent: 220, // Limit card height or let it wrap
+          mainAxisExtent: 250,
         ),
         itemCount: notes.length,
         itemBuilder: (context, index) {
@@ -79,11 +79,11 @@ class NotesList extends StatelessWidget {
       // 2 columns grid
       return GridView.builder(
         padding: const EdgeInsets.all(12),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 420,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          mainAxisExtent: 220,
+          mainAxisExtent: 250,
         ),
         itemCount: notes.length,
         itemBuilder: (context, index) {
