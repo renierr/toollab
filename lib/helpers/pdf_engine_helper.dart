@@ -281,6 +281,7 @@ class PdfEngineHelper {
   static Future<List<PdfEmbeddedImageData>> extractEmbeddedImages(
     PdfDocument doc, {
     bool deduplicate = true,
+    bool includeAnnotations = true,
     void Function(int done, int total)? onProgress,
   }) async {
     await _ensureInit();
@@ -323,6 +324,18 @@ class PdfEngineHelper {
               images: images,
             );
           }
+
+          if (includeAnnotations) {
+            _collectImagesFromAnnotations(
+              pdf: pdf,
+              documentHandle: documentHandle,
+              pageHandle: pageHandle,
+              pageIndex: pageIndex,
+              deduplicate: deduplicate,
+              seenHashes: seenHashes,
+              images: images,
+            );
+          }
         } finally {
           pdf.FPDF_ClosePage(pageHandle);
           onProgress?.call(pageIndex + 1, pageCount);
@@ -331,6 +344,58 @@ class PdfEngineHelper {
     });
 
     return images;
+  }
+
+  static void _collectImagesFromAnnotations({
+    required pdfium.PDFium pdf,
+    required pdfium.FPDF_DOCUMENT documentHandle,
+    required pdfium.FPDF_PAGE pageHandle,
+    required int pageIndex,
+    required bool deduplicate,
+    required Set<String> seenHashes,
+    required List<PdfEmbeddedImageData> images,
+  }) {
+    final annotCount = pdf.FPDFPage_GetAnnotCount(pageHandle);
+    if (annotCount <= 0) {
+      return;
+    }
+
+    for (int annotIndex = 0; annotIndex < annotCount; annotIndex++) {
+      final annotHandle = pdf.FPDFPage_GetAnnot(pageHandle, annotIndex);
+      if (annotHandle.address == 0) {
+        continue;
+      }
+
+      try {
+        final objectCount = pdf.FPDFAnnot_GetObjectCount(annotHandle);
+        if (objectCount <= 0) {
+          continue;
+        }
+
+        for (int objectIndex = 0; objectIndex < objectCount; objectIndex++) {
+          final objectHandle = pdf.FPDFAnnot_GetObject(
+            annotHandle,
+            objectIndex,
+          );
+          if (objectHandle.address == 0) {
+            continue;
+          }
+          _collectImagesFromObject(
+            pdf: pdf,
+            documentHandle: documentHandle,
+            pageHandle: pageHandle,
+            objectHandle: objectHandle,
+            pageIndex: pageIndex,
+            objectIndex: 1000000 + annotIndex * 1000 + objectIndex,
+            deduplicate: deduplicate,
+            seenHashes: seenHashes,
+            images: images,
+          );
+        }
+      } finally {
+        pdf.FPDFPage_CloseAnnot(annotHandle);
+      }
+    }
   }
 
   static void _collectImagesFromObject({

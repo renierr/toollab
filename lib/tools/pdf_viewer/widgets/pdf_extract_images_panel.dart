@@ -76,6 +76,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
       final extracted = await PdfEngineHelper.extractEmbeddedImages(
         doc,
         deduplicate: true,
+        includeAnnotations: true,
         onProgress: (done, total) {
           if (!mounted) {
             return;
@@ -116,7 +117,6 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
 
       setState(() {
         _items = items;
-        _selectedIds.addAll(items.map((e) => e.id));
         _isLoading = false;
         _progress = 1;
         _statusText =
