@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/data_row.dart' as shared;
 import 'scan_profile.dart';
+import 'tag_tech_data.dart';
+import 'widgets/tag_tech_panel.dart';
 
 class NfcScanStatusCard extends StatelessWidget {
   final bool isScanning;
@@ -11,6 +13,7 @@ class NfcScanStatusCard extends StatelessWidget {
   final String tagTechs;
   final String tagCapacity;
   final String tagWritable;
+  final TagTechData? techData;
   final VoidCallback onStartScan;
   final VoidCallback onStopScan;
 
@@ -23,6 +26,7 @@ class NfcScanStatusCard extends StatelessWidget {
     required this.tagTechs,
     required this.tagCapacity,
     required this.tagWritable,
+    this.techData,
     required this.onStartScan,
     required this.onStopScan,
   });
@@ -223,6 +227,7 @@ class NfcScanStatusCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (techData != null) TagTechPanel(data: techData!),
             ],
           ],
         ),

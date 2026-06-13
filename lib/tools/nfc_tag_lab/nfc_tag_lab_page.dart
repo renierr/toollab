@@ -18,6 +18,7 @@ import 'nfc_record_list.dart';
 import 'nfc_editor_form.dart';
 import 'nfc_hex_panel.dart';
 import 'emv_parser.dart';
+import 'tag_tech_data.dart';
 
 class NfcTagLabPage extends StatefulWidget {
   const NfcTagLabPage({super.key});
@@ -37,6 +38,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
   String _scannedWritable = '';
 
   List<DecodedRecord> _scannedRecords = [];
+  TagTechData? _techData;
   NfcTag? _currentTag;
 
   String _editorRecordType = 'url';
@@ -81,6 +83,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
       _scannedCapacity = '';
       _scannedWritable = '';
       _scannedRecords = [];
+      _techData = null;
       _currentTag = null;
       _profile = NfcScanProfile.defaultProfile();
     });
@@ -149,6 +152,12 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
               }
             }
 
+            final tagTechData = TagTechData.extract(
+              tag,
+              ndef: ndef,
+              recordCount: decodedRecords.length,
+            );
+
             final profile = ScanProfileClassifier.classify(
               ScanContext(
                 source: (ndef != null || emvDetails != null)
@@ -157,6 +166,9 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
                 serialNumber: uid,
                 records: decodedRecords,
                 emvDetails: emvDetails,
+                techList: tagTechData.techList,
+                nfcASak: tagTechData.nfcA?.sak,
+                isoDepHistoricalBytes: tagTechData.isoDep?.historicalBytesHex,
               ),
             );
 
@@ -167,6 +179,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
                 _scannedCapacity = capacity;
                 _scannedWritable = writable;
                 _scannedRecords = decodedRecords;
+                _techData = tagTechData;
                 _profile = profile;
                 _currentTag = tag;
                 _isScanning = false;
@@ -429,6 +442,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
             tagTechs: _scannedTechs,
             tagCapacity: _scannedCapacity,
             tagWritable: _scannedWritable,
+            techData: _techData,
             onStartScan: _startScanning,
             onStopScan: _stopScanning,
           ),

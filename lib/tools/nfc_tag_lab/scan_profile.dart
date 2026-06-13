@@ -68,12 +68,18 @@ class ScanContext {
   final String serialNumber;
   final List<DecodedRecord> records;
   final EmvCardDetails? emvDetails;
+  final List<String> techList;
+  final int? nfcASak;
+  final String? isoDepHistoricalBytes;
 
   ScanContext({
     required this.source,
     required this.serialNumber,
     required this.records,
     this.emvDetails,
+    this.techList = const [],
+    this.nfcASak,
+    this.isoDepHistoricalBytes,
   });
 }
 
@@ -165,6 +171,50 @@ class ScanProfileClassifier {
         reason:
             'Detected ID-document-like signatures. Editing and writing are disabled.',
         matchedRule: 'id-card-signature',
+      );
+    }
+
+    if (context.techList.any((tech) => tech.toLowerCase().contains('isodep'))) {
+      final historicalBytes = context.isoDepHistoricalBytes;
+      final reason = (historicalBytes != null && historicalBytes.isNotEmpty)
+          ? 'ISO-DEP tag detected with historical bytes $historicalBytes. Secure applet access is likely required.'
+          : 'ISO-DEP tag detected, but no public NDEF payload was decoded. Secure applet access is likely required.';
+      return NfcScanProfile(
+        categoryId: NfcCategoryId.secureCard,
+        categoryLabel: 'Secure ISO-DEP Card',
+        technology: 'ISO-DEP / APDU',
+        confidence: 'medium',
+        supportsNdefRead: false,
+        allowsEditor: false,
+        allowsWrite: false,
+        reason: reason,
+        matchedRule: 'isodep-tech-present',
+      );
+    }
+
+    if (context.nfcASak != null) {
+      final sak = context.nfcASak!;
+      final technology = switch (sak) {
+        0x00 => 'MIFARE Ultralight',
+        0x08 => 'MIFARE Classic 1K',
+        0x09 => 'MIFARE Classic Mini',
+        0x18 => 'MIFARE Classic 4K',
+        0x20 => 'NTAG / MIFARE Ultralight EV1',
+        0x50 => 'ISO-DEP capable tag',
+        _ =>
+          'Nfc-A tag (SAK 0x${sak.toRadixString(16).padLeft(2, '0').toUpperCase()})',
+      };
+      return NfcScanProfile(
+        categoryId: NfcCategoryId.unknown,
+        categoryLabel: 'Nfc-A Tag',
+        technology: technology,
+        confidence: 'medium',
+        supportsNdefRead: false,
+        allowsEditor: false,
+        allowsWrite: false,
+        reason:
+            'Classified using Nfc-A SAK byte. No public NDEF records were decoded.',
+        matchedRule: 'nfca-sak-heuristic',
       );
     }
 
