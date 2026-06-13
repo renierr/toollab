@@ -19,7 +19,9 @@ class PdfEmbeddedImageData {
   final int bitsPerPixel;
   final List<String> filters;
   final String checksum;
-  final Uint8List pngBytes;
+  final Uint8List bytes;
+  final String fileExtension;
+  final bool isRawExport;
 
   const PdfEmbeddedImageData({
     required this.id,
@@ -30,8 +32,16 @@ class PdfEmbeddedImageData {
     required this.bitsPerPixel,
     required this.filters,
     required this.checksum,
-    required this.pngBytes,
+    required this.bytes,
+    required this.fileExtension,
+    required this.isRawExport,
   });
+}
+
+class _RawImageExportFormat {
+  final String fileExtension;
+
+  const _RawImageExportFormat(this.fileExtension);
 }
 
 class _ExtractionProgress {
@@ -542,6 +552,42 @@ class PdfEngineHelper {
     required Set<String> seenHashes,
     required int serial,
   }) {
+    final rawFormat = _tryDetectRawExportFormat(
+      pdf: pdf,
+      objectHandle: objectHandle,
+    );
+    if (rawFormat != null) {
+      final rawBytes = _tryReadRawImageBytes(
+        pdf: pdf,
+        objectHandle: objectHandle,
+      );
+      if (rawBytes != null && rawBytes.isNotEmpty) {
+        final rawChecksum = sha1.convert(rawBytes).toString();
+        if (!deduplicate || !seenHashes.contains(rawChecksum)) {
+          seenHashes.add(rawChecksum);
+          final metadata = _readImageMetadata(
+            pdf: pdf,
+            objectHandle: objectHandle,
+            pageHandle: pageHandle,
+          );
+          final filters = _readImageFilters(pdf, objectHandle);
+          return PdfEmbeddedImageData(
+            id: 'p${pageIndex + 1}_o${objectIndex + 1}_$serial',
+            pageNumber: pageIndex + 1,
+            objectIndex: objectIndex,
+            width: metadata.width,
+            height: metadata.height,
+            bitsPerPixel: metadata.bitsPerPixel,
+            filters: filters,
+            checksum: rawChecksum,
+            bytes: rawBytes,
+            fileExtension: rawFormat.fileExtension,
+            isRawExport: true,
+          );
+        }
+      }
+    }
+
     final renderedBitmap = pdf.FPDFImageObj_GetRenderedBitmap(
       documentHandle,
       pageHandle,
@@ -586,31 +632,13 @@ class PdfEngineHelper {
       }
       seenHashes.add(checksum);
 
-      final metadata = calloc<pdfium.FPDF_IMAGEOBJ_METADATA>();
-      final bitsPerPixel = (() {
-        try {
-          final metaLoaded =
-              pdf.FPDFImageObj_GetImageMetadata(
-                objectHandle,
-                pageHandle,
-                metadata,
-              ) !=
-              0;
-          if (!metaLoaded) {
-            return 0;
-          }
-          return metadata.ref.bits_per_pixel;
-        } finally {
-          calloc.free(metadata);
-        }
-      })();
-
-      final imageWidth = bitsPerPixel > 0
-          ? _readImageDimension(pdf, objectHandle, pageHandle, width, true)
-          : width;
-      final imageHeight = bitsPerPixel > 0
-          ? _readImageDimension(pdf, objectHandle, pageHandle, height, false)
-          : height;
+      final metadata = _readImageMetadata(
+        pdf: pdf,
+        objectHandle: objectHandle,
+        pageHandle: pageHandle,
+        fallbackWidth: width,
+        fallbackHeight: height,
+      );
 
       final filters = _readImageFilters(pdf, objectHandle);
 
@@ -618,25 +646,72 @@ class PdfEngineHelper {
         id: 'p${pageIndex + 1}_o${objectIndex + 1}_$serial',
         pageNumber: pageIndex + 1,
         objectIndex: objectIndex,
-        width: imageWidth,
-        height: imageHeight,
-        bitsPerPixel: bitsPerPixel,
+        width: metadata.width,
+        height: metadata.height,
+        bitsPerPixel: metadata.bitsPerPixel,
         filters: filters,
         checksum: checksum,
-        pngBytes: pngBytes,
+        bytes: pngBytes,
+        fileExtension: 'png',
+        isRawExport: false,
       );
     } finally {
       pdf.FPDFBitmap_Destroy(bitmapHandle);
     }
   }
 
-  static int _readImageDimension(
-    pdfium.PDFium pdf,
-    pdfium.FPDF_PAGEOBJECT objectHandle,
-    pdfium.FPDF_PAGE pageHandle,
-    int fallback,
-    bool isWidth,
-  ) {
+  static _RawImageExportFormat? _tryDetectRawExportFormat({
+    required pdfium.PDFium pdf,
+    required pdfium.FPDF_PAGEOBJECT objectHandle,
+  }) {
+    final filters = _readImageFilters(pdf, objectHandle);
+    for (final filter in filters) {
+      final normalized = filter.trim().toLowerCase();
+      if (normalized == 'dctdecode') {
+        return const _RawImageExportFormat('jpg');
+      }
+      if (normalized == 'jpxdecode') {
+        return const _RawImageExportFormat('jp2');
+      }
+    }
+    return null;
+  }
+
+  static Uint8List? _tryReadRawImageBytes({
+    required pdfium.PDFium pdf,
+    required pdfium.FPDF_PAGEOBJECT objectHandle,
+  }) {
+    final rawLength = pdf.FPDFImageObj_GetImageDataRaw(
+      objectHandle,
+      nullptr,
+      0,
+    );
+    if (rawLength <= 0) {
+      return null;
+    }
+    final rawPtr = calloc<Uint8>(rawLength);
+    try {
+      final written = pdf.FPDFImageObj_GetImageDataRaw(
+        objectHandle,
+        rawPtr.cast<Void>(),
+        rawLength,
+      );
+      if (written <= 0) {
+        return null;
+      }
+      return Uint8List.fromList(rawPtr.asTypedList(written));
+    } finally {
+      calloc.free(rawPtr);
+    }
+  }
+
+  static ({int width, int height, int bitsPerPixel}) _readImageMetadata({
+    required pdfium.PDFium pdf,
+    required pdfium.FPDF_PAGEOBJECT objectHandle,
+    required pdfium.FPDF_PAGE pageHandle,
+    int? fallbackWidth,
+    int? fallbackHeight,
+  }) {
     final metadata = calloc<pdfium.FPDF_IMAGEOBJ_METADATA>();
     try {
       final metaLoaded =
@@ -646,11 +721,14 @@ class PdfEngineHelper {
             metadata,
           ) !=
           0;
-      if (!metaLoaded) {
-        return fallback;
-      }
-      final value = isWidth ? metadata.ref.width : metadata.ref.height;
-      return value > 0 ? value : fallback;
+      final width = metaLoaded && metadata.ref.width > 0
+          ? metadata.ref.width
+          : (fallbackWidth ?? 0);
+      final height = metaLoaded && metadata.ref.height > 0
+          ? metadata.ref.height
+          : (fallbackHeight ?? 0);
+      final bitsPerPixel = metaLoaded ? metadata.ref.bits_per_pixel : 0;
+      return (width: width, height: height, bitsPerPixel: bitsPerPixel);
     } finally {
       calloc.free(metadata);
     }

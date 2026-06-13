@@ -88,11 +88,6 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         },
       );
 
-      if (mounted) {
-        imageCache.clear();
-        imageCache.clearLiveImages();
-      }
-
       final items = <PdfExtractedImageItem>[];
       if (mounted && extracted.isNotEmpty) {
         setState(() {
@@ -102,11 +97,12 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
       }
       for (int i = 0; i < extracted.length; i++) {
         final image = extracted[i];
+        final extension = image.fileExtension;
         final fileName =
-            '${_baseName}_p${image.pageNumber}_img${i + 1}_${image.checksum.substring(0, 8)}.png';
+            '${_baseName}_p${image.pageNumber}_img${i + 1}_${image.checksum.substring(0, 8)}.$extension';
         final path = await widget.tempScope.createFile(
           fileName,
-          bytes: image.pngBytes,
+          bytes: image.bytes,
         );
         items.add(
           PdfExtractedImageItem(
