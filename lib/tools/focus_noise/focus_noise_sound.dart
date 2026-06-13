@@ -82,6 +82,13 @@ class FocusNoiseCatalog {
       assetPath: 'assets/audio/rain.ogg',
     ),
     FocusNoiseSound(
+      id: 'rain_heavy',
+      name: 'Rain (Heavy)',
+      icon: Icons.water_drop,
+      kind: FocusNoiseSoundKind.asset,
+      assetPath: 'assets/audio/rain_heavy.ogg',
+    ),
+    FocusNoiseSound(
       id: 'waves',
       name: 'Waves',
       icon: Icons.waves_outlined,
