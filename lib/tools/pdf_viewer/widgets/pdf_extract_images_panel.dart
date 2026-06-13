@@ -1,11 +1,15 @@
 import 'dart:io';
 
-import 'package:archive/archive.dart';
+import 'package:archive/archive_io.dart';
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_empty_state.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_grid.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_header.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_item.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class PdfExtractImagesPanel extends StatefulWidget {
@@ -27,13 +31,14 @@ class PdfExtractImagesPanel extends StatefulWidget {
 }
 
 class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
-  bool _deduplicate = true;
   bool _isLoading = true;
   bool _isExporting = false;
+  bool _controlsExpanded = true;
+  bool _didInitControlsExpanded = false;
   double _progress = 0;
   String _statusText = '';
 
-  List<_ExtractedImageItem> _items = [];
+  List<PdfExtractedImageItem> _items = [];
   final Set<String> _selectedIds = <String>{};
 
   String get _baseName => widget.fileName.replaceAll('.pdf', '');
@@ -42,6 +47,18 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
   void initState() {
     super.initState();
     _loadImages();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didInitControlsExpanded) {
+      return;
+    }
+    final media = MediaQuery.of(context);
+    final isCompactScreen = media.size.width < 600 || media.size.height < 760;
+    _controlsExpanded = !isCompactScreen;
+    _didInitControlsExpanded = true;
   }
 
   Future<void> _loadImages() async {
@@ -58,7 +75,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
       doc = await PdfEngineHelper.openPdf(widget.filePath);
       final extracted = await PdfEngineHelper.extractEmbeddedImages(
         doc,
-        deduplicate: _deduplicate,
+        deduplicate: true,
         onProgress: (done, total) {
           if (!mounted) {
             return;
@@ -70,7 +87,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         },
       );
 
-      final items = <_ExtractedImageItem>[];
+      final items = <PdfExtractedImageItem>[];
       for (int i = 0; i < extracted.length; i++) {
         final image = extracted[i];
         final fileName =
@@ -80,7 +97,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
           bytes: image.pngBytes,
         );
         items.add(
-          _ExtractedImageItem(
+          PdfExtractedImageItem(
             id: image.id,
             fileName: fileName,
             path: path,
@@ -143,7 +160,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
     setState(() => _selectedIds.clear());
   }
 
-  Future<void> _downloadSingle(_ExtractedImageItem item) async {
+  Future<void> _downloadSingle(PdfExtractedImageItem item) async {
     await FileSaveHelper.saveFileFromPath(
       context: context,
       suggestedName: item.fileName,
@@ -151,7 +168,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
     );
   }
 
-  List<_ExtractedImageItem> get _selectedItems {
+  List<PdfExtractedImageItem> get _selectedItems {
     return _items.where((item) => _selectedIds.contains(item.id)).toList();
   }
 
@@ -174,23 +191,41 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
   }
 
   Future<void> _downloadAsZip(
-    List<_ExtractedImageItem> items,
+    List<PdfExtractedImageItem> items,
     String zipName,
   ) async {
     setState(() {
       _isExporting = true;
+      _progress = 0;
+      _statusText = 'Creating ZIP 0 of ${items.length}...';
     });
+    final encoder = ZipFileEncoder();
+    var hasOpenZip = false;
     try {
-      final archive = Archive();
-      for (final item in items) {
-        final bytes = await File(item.path).readAsBytes();
-        archive.addFile(ArchiveFile(item.fileName, bytes.length, bytes));
+      final zipPath = await widget.tempScope.createFile(zipName);
+      encoder.create(zipPath);
+      hasOpenZip = true;
+      for (int i = 0; i < items.length; i++) {
+        final item = items[i];
+        await encoder.addFile(File(item.path), item.fileName);
+        if (!mounted) {
+          continue;
+        }
+        setState(() {
+          final done = i + 1;
+          _progress = items.isEmpty ? 0 : done / items.length;
+          _statusText = 'Creating ZIP $done of ${items.length}...';
+        });
       }
-      final zip = ZipEncoder().encodeBytes(archive);
-      final zipPath = await widget.tempScope.createFile(zipName, bytes: zip);
+      await encoder.close();
+      hasOpenZip = false;
       if (!mounted) {
         return;
       }
+      setState(() {
+        _statusText = 'ZIP ready';
+        _progress = 1;
+      });
       await FileSaveHelper.saveFileFromPath(
         context: context,
         suggestedName: zipName,
@@ -204,15 +239,23 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         context,
       ).showSnackBar(SnackBar(content: Text('ZIP export failed: $e')));
     } finally {
+      if (hasOpenZip) {
+        try {
+          await encoder.close();
+        } catch (_) {}
+      }
       if (mounted) {
         setState(() {
           _isExporting = false;
+          _statusText =
+              '${_items.length} image${_items.length == 1 ? '' : 's'} found';
+          _progress = 1;
         });
       }
     }
   }
 
-  void _showPreview(_ExtractedImageItem item) {
+  void _showPreview(PdfExtractedImageItem item) {
     showDialog(
       context: context,
       builder: (ctx) {
@@ -267,6 +310,9 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final isCompactScreen = media.size.width < 600 || media.size.height < 760;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Extract Images: ${widget.fileName}'),
@@ -277,15 +323,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
       ),
       body: Column(
         children: [
-          _ExtractImagesHeader(
-            deduplicate: _deduplicate,
-            onDeduplicateChanged: (value) async {
-              if (_isExporting || _isLoading) {
-                return;
-              }
-              setState(() => _deduplicate = value);
-              await _loadImages();
-            },
+          PdfExtractImagesHeader(
             totalCount: _items.length,
             selectedCount: _selectedIds.length,
             isLoading: _isLoading,
@@ -296,13 +334,20 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
             onClearSelection: _clearSelection,
             onDownloadSelected: _downloadSelected,
             onDownloadAll: _downloadAll,
+            isCompactScreen: isCompactScreen,
+            controlsExpanded: _controlsExpanded,
+            onToggleControlsExpanded: () {
+              setState(() {
+                _controlsExpanded = !_controlsExpanded;
+              });
+            },
           ),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _items.isEmpty
-                ? const _ExtractImagesEmptyState()
-                : _ExtractImagesGrid(
+                ? const PdfExtractImagesEmptyState()
+                : PdfExtractImagesGrid(
                     items: _items,
                     selectedIds: _selectedIds,
                     onToggleSelected: _toggleSelection,
@@ -314,325 +359,4 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
       ),
     );
   }
-}
-
-class _ExtractImagesHeader extends StatelessWidget {
-  final bool deduplicate;
-  final ValueChanged<bool> onDeduplicateChanged;
-  final int totalCount;
-  final int selectedCount;
-  final bool isLoading;
-  final bool isExporting;
-  final double progress;
-  final String statusText;
-  final VoidCallback onSelectAll;
-  final VoidCallback onClearSelection;
-  final VoidCallback onDownloadSelected;
-  final VoidCallback onDownloadAll;
-
-  const _ExtractImagesHeader({
-    required this.deduplicate,
-    required this.onDeduplicateChanged,
-    required this.totalCount,
-    required this.selectedCount,
-    required this.isLoading,
-    required this.isExporting,
-    required this.progress,
-    required this.statusText,
-    required this.onSelectAll,
-    required this.onClearSelection,
-    required this.onDownloadSelected,
-    required this.onDownloadAll,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Switch(
-                      value: deduplicate,
-                      onChanged: isLoading || isExporting
-                          ? null
-                          : onDeduplicateChanged,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('Deduplicate identical images'),
-                  ],
-                ),
-                Text(
-                  '$selectedCount selected / $totalCount total',
-                  style: theme.textTheme.bodyMedium,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              statusText,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (isLoading) ...[
-              const SizedBox(height: 8),
-              LinearProgressIndicator(value: progress > 0 ? progress : null),
-            ],
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: isLoading || isExporting ? null : onSelectAll,
-                  icon: const Icon(Icons.select_all),
-                  label: const Text('Select All'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: isLoading || isExporting ? null : onClearSelection,
-                  icon: const Icon(Icons.deselect),
-                  label: const Text('Clear Selection'),
-                ),
-                FilledButton.icon(
-                  onPressed: isLoading || isExporting || selectedCount == 0
-                      ? null
-                      : onDownloadSelected,
-                  icon: const Icon(Icons.download),
-                  label: const Text('Download Selected'),
-                ),
-                FilledButton.tonalIcon(
-                  onPressed: isLoading || isExporting || totalCount == 0
-                      ? null
-                      : onDownloadAll,
-                  icon: const Icon(Icons.folder_zip_outlined),
-                  label: const Text('Download All (ZIP)'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ExtractImagesEmptyState extends StatelessWidget {
-  const _ExtractImagesEmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.image_not_supported_outlined,
-              size: 56,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'No embedded images found in this PDF',
-              style: theme.textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ExtractImagesGrid extends StatelessWidget {
-  final List<_ExtractedImageItem> items;
-  final Set<String> selectedIds;
-  final ValueChanged<String> onToggleSelected;
-  final ValueChanged<_ExtractedImageItem> onPreview;
-  final ValueChanged<_ExtractedImageItem> onDownload;
-
-  const _ExtractImagesGrid({
-    required this.items,
-    required this.selectedIds,
-    required this.onToggleSelected,
-    required this.onPreview,
-    required this.onDownload,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(12),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 320,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.98,
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final isSelected = selectedIds.contains(item.id);
-        return _ExtractImageCard(
-          item: item,
-          isSelected: isSelected,
-          onToggleSelected: () => onToggleSelected(item.id),
-          onPreview: () => onPreview(item),
-          onDownload: () => onDownload(item),
-        );
-      },
-    );
-  }
-}
-
-class _ExtractImageCard extends StatelessWidget {
-  final _ExtractedImageItem item;
-  final bool isSelected;
-  final VoidCallback onToggleSelected;
-  final VoidCallback onPreview;
-  final VoidCallback onDownload;
-
-  const _ExtractImageCard({
-    required this.item,
-    required this.isSelected,
-    required this.onToggleSelected,
-    required this.onPreview,
-    required this.onDownload,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final filterText = item.filters.isEmpty ? '-' : item.filters.join(', ');
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onPreview,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Image.file(File(item.path), fit: BoxFit.cover),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Material(
-                      color: theme.colorScheme.surface.withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(999),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(999),
-                        onTap: onToggleSelected,
-                        child: Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: Icon(
-                            isSelected
-                                ? Icons.check_circle
-                                : Icons.radio_button_unchecked,
-                            size: 18,
-                            color: isSelected
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
-              child: Text(
-                'Page ${item.pageNumber} • ${item.width}x${item.height}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
-              child: Text(
-                'BPP: ${item.bitsPerPixel > 0 ? item.bitsPerPixel : '-'}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
-              child: Text(
-                'Filter: $filterText',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: onPreview,
-                    icon: const Icon(Icons.zoom_in),
-                    label: const Text('Preview'),
-                  ),
-                  FilledButton.tonalIcon(
-                    onPressed: onDownload,
-                    icon: const Icon(Icons.download),
-                    label: const Text('Download'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ExtractedImageItem {
-  final String id;
-  final String fileName;
-  final String path;
-  final int pageNumber;
-  final int width;
-  final int height;
-  final int bitsPerPixel;
-  final List<String> filters;
-
-  const _ExtractedImageItem({
-    required this.id,
-    required this.fileName,
-    required this.path,
-    required this.pageNumber,
-    required this.width,
-    required this.height,
-    required this.bitsPerPixel,
-    required this.filters,
-  });
 }
