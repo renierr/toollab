@@ -92,14 +92,19 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
 
   Future<void> _initShortcuts() async {
     final launchRoute = await ShortcutService.instance.getLaunchRoute();
-    if (launchRoute != null && mounted) {
+    if (launchRoute != null && launchRoute != '/' && mounted) {
       _router.go(launchRoute);
     }
 
     _shortcutSubscription = ShortcutService.instance.onShortcutRoute.listen((
       route,
     ) {
-      if (mounted) {
+      if (!mounted) return;
+      if (route == '/') {
+        if (!_router.canPop() && _router.state.matchedLocation != '/') {
+          _router.go('/');
+        }
+      } else {
         _router.go(route);
       }
     });
