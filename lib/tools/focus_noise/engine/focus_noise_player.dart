@@ -12,8 +12,9 @@ class FocusNoisePlayer {
   static const int _sampleRate = 48000;
   static const int _channels = 2;
   static const int _chunkFrames = 4096;
-  static const Duration _feedEvery = Duration(milliseconds: 24);
-  static const int _targetBufferedBytes = _sampleRate * _channels * 4 * 4;
+  static const int _pushRounds = 24;
+  static const int _initialRounds = 96;
+  static const Duration _pushInterval = Duration(seconds: 2);
 
   final NoisePcmGenerator _generator = NoisePcmGenerator(
     sampleRate: _sampleRate,
@@ -24,12 +25,15 @@ class FocusNoisePlayer {
   AudioSource? _stream;
   AudioSource? _assetSource;
   Timer? _feedTimer;
-  bool _feedBusy = false;
+  bool _pushing = false;
   bool _isPlaying = false;
   double _volume = 0.65;
   FocusNoiseSound? _currentSound;
   WakeLockLease? _partialWakeLock;
   ForegroundRuntimeLease? _foregroundRuntimeLease;
+
+  int _totalPushedFrames = 0;
+  int _startedAt = 0;
 
   bool get isPlaying => _isPlaying;
   double get volume => _volume;
@@ -70,57 +74,70 @@ class FocusNoisePlayer {
     };
 
     _generator.reset();
+    _startedAt = 0;
+    _totalPushedFrames = 0;
     _stream = SoLoud.instance.setBufferStream(
       sampleRate: _sampleRate,
       channels: Channels.stereo,
       format: BufferType.f32le,
       bufferingType: BufferingType.released,
+      bufferingTimeNeeds: 0,
       maxBufferSizeDuration: const Duration(seconds: 16),
     );
 
-    _pushGenerated(type, rounds: 48, fadeIn: true);
+    _push(type, _initialRounds);
     _handle = SoLoud.instance.play(_stream!, volume: _volume);
     _isPlaying = true;
+    _startedAt = DateTime.now().microsecondsSinceEpoch;
 
-    _feedTimer = Timer.periodic(_feedEvery, (_) => _maintainBuffer(type));
+    _schedulePush(type);
   }
 
-  void _maintainBuffer(GeneratedNoiseType type) {
-    if (!_isPlaying || _stream == null || _feedBusy) return;
-    _feedBusy = true;
+  void _schedulePush(GeneratedNoiseType type) {
+    _feedTimer = Timer(_pushInterval, () => _onTimer(type));
+  }
+
+  void _onTimer(GeneratedNoiseType type) {
+    if (_pushing || _stream == null) return;
+    _pushing = true;
     try {
-      final int buffered = SoLoud.instance.getBufferSize(_stream!);
-      if (buffered < _targetBufferedBytes) {
-        _pushGenerated(type, rounds: 2);
-      }
+      _push(type, _pushRounds);
+    } on SoLoudStreamEndedAlreadyCppException {
+      _isPlaying = false;
+      _feedTimer = null;
     } catch (e) {
-      debugPrint('[FocusNoisePlayer] Buffer feed failed: $e');
+      debugPrint('[FocusNoisePlayer] Push failed: $e');
     } finally {
-      _feedBusy = false;
+      _pushing = false;
+    }
+    if (_isPlaying) {
+      _schedulePush(type);
     }
   }
 
-  void _pushGenerated(
-    GeneratedNoiseType type, {
-    required int rounds,
-    bool fadeIn = false,
-  }) {
+  int _estimatedBufferedFrames() {
+    if (_startedAt == 0) return 0;
+    final int elapsed = DateTime.now().microsecondsSinceEpoch - _startedAt;
+    final int consumed = (elapsed * _sampleRate ~/ 1000000);
+    return (_totalPushedFrames - consumed).clamp(0, _totalPushedFrames);
+  }
+
+  void _push(GeneratedNoiseType type, int rounds) {
     if (_stream == null) return;
+    if (_estimatedBufferedFrames() >= 12 * _sampleRate) return;
+    final int totalFrames = rounds * _chunkFrames;
+    _totalPushedFrames += totalFrames;
+    final Float32List buffer = Float32List(totalFrames * _channels);
+    int offset = 0;
     for (int i = 0; i < rounds; i++) {
       final Float32List chunk = _generator.generate(
         type: type,
         frames: _chunkFrames,
       );
-      if (fadeIn && i == 0) {
-        final int fadeFrames = 512;
-        for (int j = 0; j < fadeFrames && j < _chunkFrames; j++) {
-          final double gain = j / fadeFrames;
-          chunk[j * 2] *= gain;
-          chunk[j * 2 + 1] *= gain;
-        }
-      }
-      SoLoud.instance.addAudioDataStream(_stream!, chunk.buffer.asUint8List());
+      buffer.setRange(offset, offset + chunk.length, chunk);
+      offset += chunk.length;
     }
+    SoLoud.instance.addAudioDataStream(_stream!, buffer.buffer.asUint8List());
   }
 
   void setVolume(double value) {
@@ -135,6 +152,7 @@ class FocusNoisePlayer {
     _isPlaying = false;
     _feedTimer?.cancel();
     _feedTimer = null;
+    _pushing = false;
 
     final SoundHandle? handle = _handle;
     if (handle != null) {

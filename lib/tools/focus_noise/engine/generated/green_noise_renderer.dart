@@ -37,7 +37,6 @@ class GreenNoiseRenderer implements GeneratedSoundRenderer {
     _bpR = _bpR + f * hpInR;
     _lpR = _lpR + f * _bpR;
 
-    final double gain = 2.2;
-    return ((_bpL * gain).clamp(-1.0, 1.0), (_bpR * gain).clamp(-1.0, 1.0));
+    return (_bpL.clamp(-1.0, 1.0), _bpR.clamp(-1.0, 1.0));
   }
 }
