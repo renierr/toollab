@@ -8,21 +8,21 @@ class FastDropList extends StatelessWidget {
   final FastDropState appState;
   final bool shrinkWrap;
   final void Function(FastDropItem item) onDelete;
-  final void Function(FastDropItem item) onKeep;
   final void Function(FastDropItem item) onPreview;
   final void Function(FastDropItem item) onOpen;
   final void Function(FastDropItem item) onDownload;
   final void Function(FastDropItem item) onEditDescription;
+  final void Function(FastDropItem item) onEditRetention;
 
   const FastDropList({
     super.key,
     required this.appState,
     required this.onDelete,
-    required this.onKeep,
     required this.onPreview,
     required this.onOpen,
     required this.onDownload,
     required this.onEditDescription,
+    required this.onEditRetention,
     this.shrinkWrap = false,
   });
 
@@ -128,11 +128,11 @@ class FastDropList extends StatelessWidget {
         return FastDropItemCard(
           item: item,
           onDelete: () => onDelete(item),
-          onKeep: () => onKeep(item),
           onPreview: () => onPreview(item),
           onOpen: () => onOpen(item),
           onDownload: () => onDownload(item),
           onEditDescription: () => onEditDescription(item),
+          onEditRetention: () => onEditRetention(item),
         );
       },
     );

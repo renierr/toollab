@@ -163,6 +163,25 @@ class FastDropService {
     }
   }
 
+  static Future<void> updateRetention(
+    String baseUrl,
+    String id,
+    String retention,
+  ) async {
+    final client = await _clientFuture;
+    final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id/retention';
+    final response = await client
+        .patch(url, body: HttpBody.json({'retention': retention}))
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(response.body);
+      throw Exception(
+        errorData['error'] ??
+            'Failed to update retention: ${response.statusCode}',
+      );
+    }
+  }
+
   static Future<void> keepDrop(String baseUrl, String id) async {
     final client = await _clientFuture;
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id/keep';

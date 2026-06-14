@@ -7,21 +7,21 @@ import '../fast_drop_model.dart';
 class FastDropItemCard extends StatelessWidget {
   final FastDropItem item;
   final VoidCallback onDelete;
-  final VoidCallback onKeep;
   final VoidCallback onPreview;
   final VoidCallback onOpen;
   final VoidCallback onDownload;
   final VoidCallback onEditDescription;
+  final VoidCallback onEditRetention;
 
   const FastDropItemCard({
     super.key,
     required this.item,
     required this.onDelete,
-    required this.onKeep,
     required this.onPreview,
     required this.onOpen,
     required this.onDownload,
     required this.onEditDescription,
+    required this.onEditRetention,
   });
 
   IconData _getFileIcon(String type) {
@@ -165,16 +165,43 @@ class FastDropItemCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        expiresText,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 10,
-                          color: isExpires
-                              ? AppTheme.statusOrange
-                              : AppTheme.statusGreen,
-                          fontWeight: isExpires
-                              ? FontWeight.w500
-                              : FontWeight.bold,
+                      InkWell(
+                        onTap: onEditRetention,
+                        borderRadius: BorderRadius.circular(4),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 2,
+                            horizontal: 4,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                expiresText,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 10,
+                                  color: isExpires
+                                      ? AppTheme.statusOrange
+                                      : AppTheme.statusGreen,
+                                  fontWeight: isExpires
+                                      ? FontWeight.w500
+                                      : FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 10,
+                                color: isExpires
+                                    ? AppTheme.statusOrange.withValues(
+                                        alpha: 0.8,
+                                      )
+                                    : AppTheme.statusGreen.withValues(
+                                        alpha: 0.8,
+                                      ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -255,25 +282,11 @@ class FastDropItemCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (isExpires)
-                  IconButton(
-                    icon: const Icon(Icons.verified_user_outlined),
-                    tooltip: 'Keep Indefinitely',
-                    color: AppTheme.statusGreen,
-                    iconSize: 18,
-                    onPressed: onKeep,
-                  ),
                 IconButton(
                   icon: const Icon(Icons.visibility_outlined),
                   tooltip: 'Preview',
                   iconSize: 18,
                   onPressed: onPreview,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Edit Description',
-                  iconSize: 18,
-                  onPressed: onEditDescription,
                 ),
                 IconButton(
                   icon: const Icon(Icons.open_in_new_outlined),

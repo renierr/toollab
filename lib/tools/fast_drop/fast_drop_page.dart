@@ -29,6 +29,7 @@ import 'widgets/fast_drop_list.dart';
 import 'widgets/fast_drop_not_configured.dart';
 import 'widgets/fast_drop_progress_indicator.dart';
 import 'widgets/fast_drop_edit_description_dialog.dart';
+import 'widgets/fast_drop_edit_retention_dialog.dart';
 
 class FastDropPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -240,24 +241,6 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     }
   }
 
-  Future<void> _onKeep(FastDropItem item) async {
-    final fastDropState = context.read<FastDropState>();
-    try {
-      await fastDropState.keepFastDrop(item.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Retention set to indefinite')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update retention: $e')),
-        );
-      }
-    }
-  }
-
   Future<void> _onDelete(FastDropItem item) async {
     final fastDropState = context.read<FastDropState>();
     final confirm = await ConfirmActionDialog.show(
@@ -363,6 +346,32 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Description updated')));
+      }
+    } catch (e) {
+      if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
+      }
+    }
+  }
+
+  Future<void> _onUpdateRetention(FastDropItem item) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => FastDropEditRetentionDialog(item: item),
+    );
+    if (result == null || !mounted) return;
+    try {
+      await context.read<FastDropState>().updateFastDropRetention(
+        item.id,
+        result,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Retention updated')));
       }
     } catch (e) {
       if (mounted) {
@@ -542,11 +551,11 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                               appState: fastDropState,
                               shrinkWrap: true,
                               onDelete: _onDelete,
-                              onKeep: _onKeep,
                               onPreview: _onPreview,
                               onOpen: _onOpen,
                               onDownload: _onDownload,
                               onEditDescription: _onUpdateDescription,
+                              onEditRetention: _onUpdateRetention,
                             ),
                           ],
                         ),
@@ -592,11 +601,11 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                           child: FastDropList(
                             appState: fastDropState,
                             onDelete: _onDelete,
-                            onKeep: _onKeep,
                             onPreview: _onPreview,
                             onOpen: _onOpen,
                             onDownload: _onDownload,
                             onEditDescription: _onUpdateDescription,
+                            onEditRetention: _onUpdateRetention,
                           ),
                         ),
                       ],

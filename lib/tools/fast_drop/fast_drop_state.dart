@@ -191,6 +191,18 @@ class FastDropState extends ChangeNotifier {
     }
   }
 
+  Future<void> updateFastDropRetention(String id, String retention) async {
+    await _loadServerUrl();
+    if (_syncServerUrl.isEmpty || !_isServerAvailable) return;
+    try {
+      await FastDropService.updateRetention(_syncServerUrl, id, retention);
+      await loadFastDrops();
+    } catch (e) {
+      debugPrint('[FastDropState] Failed to update Fast Drop retention: $e');
+      rethrow;
+    }
+  }
+
   Future<Uint8List> downloadFastDrop(String id) async {
     await _loadServerUrl();
     final syncEnabled = await _isSyncEnabled();
