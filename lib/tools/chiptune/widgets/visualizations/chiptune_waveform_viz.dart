@@ -1,62 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../chiptune_colors.dart';
+import 'chiptune_viz_data.dart';
 
-/// Oscilloscope-style waveform visualizer driven by SoLoud's audio data.
+/// Oscilloscope-style waveform visualizer.
 class ChiptuneWaveformViz extends StatefulWidget {
-  final bool active;
-  const ChiptuneWaveformViz({super.key, required this.active});
+  final VizData? data;
+  const ChiptuneWaveformViz({super.key, this.data});
 
   @override
   State<ChiptuneWaveformViz> createState() => _ChiptuneWaveformVizState();
 }
 
-class _ChiptuneWaveformVizState extends State<ChiptuneWaveformViz>
-    with SingleTickerProviderStateMixin {
+class _ChiptuneWaveformVizState extends State<ChiptuneWaveformViz> {
   static const int _waveSamples = 256;
-
-  AudioData? _audioData;
-  late final Ticker _ticker;
   final List<double> _samples = List<double>.filled(_waveSamples, 0);
 
   @override
-  void initState() {
-    super.initState();
-    _ticker = createTicker(_onTick)..start();
-  }
-
-  void _ensureAudioData() {
-    if (_audioData != null) return;
-    try {
-      SoLoud.instance.setVisualizationEnabled(true);
-      _audioData = AudioData(GetSamplesKind.linear);
-    } catch (_) {
-      _audioData = null;
-    }
-  }
-
-  void _onTick(Duration _) {
-    if (!widget.active) {
-      _decay();
-      return;
-    }
-
-    _ensureAudioData();
-    final data = _audioData;
-    if (data == null) return;
-
-    try {
-      data.updateSamples();
-      final all = data.getAudioData(); // 256 FFT + 256 wave
-      if (all.length < 512) return;
-      final wave = all.sublist(256, 512);
+  void didUpdateWidget(ChiptuneWaveformViz oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final data = widget.data;
+    if (data != null && oldWidget.data != data) {
+      final wave = data.wave;
       for (int i = 0; i < _waveSamples; i++) {
         _samples[i] = _samples[i] * 0.6 + wave[i] * 0.4;
       }
-      if (mounted) setState(() {});
-    } catch (_) {}
+    } else if (data == null) {
+      _decay();
+    }
   }
 
   void _decay() {
@@ -67,14 +38,7 @@ class _ChiptuneWaveformVizState extends State<ChiptuneWaveformViz>
         changed = true;
       }
     }
-    if (changed && mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _ticker.dispose();
-    _audioData?.dispose();
-    super.dispose();
+    if (changed) setState(() {});
   }
 
   @override
@@ -114,7 +78,6 @@ class _WaveformPainter extends CustomPainter {
 
     canvas.drawPath(path, paint);
 
-    // Center line
     final linePaint = Paint()
       ..color = ChiptuneColors.visPeak.withValues(alpha: 0.2)
       ..strokeWidth = 0.5;

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'chiptune_pulse_grid_viz.dart';
 import 'chiptune_spectrum_viz.dart';
+import 'chiptune_viz_data.dart';
 import 'chiptune_waveform_viz.dart';
 
 /// Metadata + factory for a single chiptune visualization.
@@ -8,7 +10,7 @@ class VizDefinition {
   final String id;
   final String label;
   final IconData icon;
-  final Widget Function({required bool active, Key? key}) create;
+  final Widget Function({VizData? data, Key? key}) create;
 
   const VizDefinition({
     required this.id,
@@ -28,15 +30,22 @@ class ChiptuneVizRegistry {
       id: 'spectrum',
       label: 'Spectrum',
       icon: Icons.equalizer,
-      create: ({bool active = true, Key? key}) =>
-          ChiptuneSpectrumViz(key: key, active: active),
+      create: ({VizData? data, Key? key}) =>
+          ChiptuneSpectrumViz(key: key, data: data),
     ),
     VizDefinition(
       id: 'waveform',
       label: 'Waveform',
       icon: Icons.show_chart,
-      create: ({bool active = true, Key? key}) =>
-          ChiptuneWaveformViz(key: key, active: active),
+      create: ({VizData? data, Key? key}) =>
+          ChiptuneWaveformViz(key: key, data: data),
+    ),
+    VizDefinition(
+      id: 'pulse-grid',
+      label: 'Pulse Grid',
+      icon: Icons.grid_on,
+      create: ({VizData? data, Key? key}) =>
+          ChiptunePulseGridViz(key: key, data: data),
     ),
   ];
 

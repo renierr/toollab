@@ -1,64 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../chiptune_colors.dart';
+import 'chiptune_viz_data.dart';
 
-/// Live spectrum visualizer driven by SoLoud's FFT data.
+/// 48-bar spectrum analyzer.
 class ChiptuneSpectrumViz extends StatefulWidget {
-  final bool active;
-  const ChiptuneSpectrumViz({super.key, required this.active});
+  final VizData? data;
+  const ChiptuneSpectrumViz({super.key, this.data});
 
   @override
   State<ChiptuneSpectrumViz> createState() => _ChiptuneSpectrumVizState();
 }
 
-class _ChiptuneSpectrumVizState extends State<ChiptuneSpectrumViz>
-    with SingleTickerProviderStateMixin {
+class _ChiptuneSpectrumVizState extends State<ChiptuneSpectrumViz> {
   static const int _bars = 48;
-  static const int _fftBins = 256;
-
-  AudioData? _audioData;
-  late final Ticker _ticker;
   final List<double> _levels = List<double>.filled(_bars, 0);
 
   @override
-  void initState() {
-    super.initState();
-    _ticker = createTicker(_onTick)..start();
-  }
-
-  void _ensureAudioData() {
-    if (_audioData != null) return;
-    try {
-      SoLoud.instance.setVisualizationEnabled(true);
-      _audioData = AudioData(GetSamplesKind.linear);
-    } catch (_) {
-      _audioData = null;
-    }
-  }
-
-  void _onTick(Duration _) {
-    if (!widget.active) {
-      _decay();
-      return;
-    }
-
-    _ensureAudioData();
-    final data = _audioData;
-    if (data == null) return;
-
-    try {
-      data.updateSamples();
-      final samples = data.getAudioData();
-      if (samples.length < _fftBins) return;
+  void didUpdateWidget(ChiptuneSpectrumViz oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final data = widget.data;
+    if (data != null && oldWidget.data != data) {
+      final freq = data.freq;
       for (int i = 0; i < _bars; i++) {
-        final bin = (i * _fftBins / _bars).floor();
-        final v = samples[bin].abs().clamp(0.0, 1.0);
+        final bin = (i * (freq.length - 1) / _bars).floor();
+        final v = freq[bin];
         _levels[i] = v > _levels[i] ? v : _levels[i] * 0.8 + v * 0.2;
       }
-      if (mounted) setState(() {});
-    } catch (_) {}
+    } else if (data == null) {
+      _decay();
+    }
   }
 
   void _decay() {
@@ -70,14 +41,7 @@ class _ChiptuneSpectrumVizState extends State<ChiptuneSpectrumViz>
         changed = true;
       }
     }
-    if (changed && mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    _ticker.dispose();
-    _audioData?.dispose();
-    super.dispose();
+    if (changed) setState(() {});
   }
 
   @override
