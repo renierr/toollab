@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/tools/calculator/config.dart';
 
 class HistoryItem {
   final String id;
@@ -40,7 +41,7 @@ class HistoryManager {
   Future<void> load() async {
     try {
       final raw = await DatabaseService.instance.getSetting(
-        'calculator',
+        CalculatorTool.config.id,
         _storageKey,
       );
       if (raw == null || raw.isEmpty) {
@@ -62,7 +63,7 @@ class HistoryManager {
     try {
       final json = jsonEncode(_items.map((e) => e.toJson()).toList());
       await DatabaseService.instance.setSetting(
-        'calculator',
+        CalculatorTool.config.id,
         _storageKey,
         json,
       );

@@ -24,7 +24,7 @@ class FocusNoisePage extends StatefulWidget {
 }
 
 class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
-  static const String _toolId = 'focus-noise';
+  static String get _toolId => FocusNoiseTool.config.id;
   static const String _keySound = 'selected_sound';
   static const String _keyVolume = 'volume';
   static const String _keyBreathingMode = 'breathing_mode';

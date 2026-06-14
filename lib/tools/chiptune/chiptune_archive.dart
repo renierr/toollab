@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/tools/chiptune/config.dart';
 
 /// A module stored in the archive.
 class ArchivedModule {
@@ -25,7 +26,7 @@ class ArchivedModule {
 
 /// Persists archived modules and exposes the records needed for backend sync.
 class ChiptuneArchive {
-  static const String toolId = 'chiptune';
+  static String get toolId => ChiptuneTool.config.id;
   static const String tableName = 'modules';
 
   ChiptuneArchive._();

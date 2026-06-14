@@ -52,13 +52,15 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
 
     _pendingSharedFile = widget.sharedFile;
 
-    DatabaseService.instance.getSetting('fast-drop', 'retention').then((val) {
-      if (val != null && mounted) {
-        setState(() {
-          _retention = val;
+    DatabaseService.instance
+        .getSetting(FastDropTool.config.id, 'retention')
+        .then((val) {
+          if (val != null && mounted) {
+            setState(() {
+              _retention = val;
+            });
+          }
         });
-      }
-    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -80,7 +82,11 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
 
   void _onRetentionChanged(String val) {
     setState(() => _retention = val);
-    DatabaseService.instance.setSetting('fast-drop', 'retention', val);
+    DatabaseService.instance.setSetting(
+      FastDropTool.config.id,
+      'retention',
+      val,
+    );
   }
 
   Future<void> _pasteFromClipboard() async {

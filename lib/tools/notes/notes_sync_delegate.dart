@@ -1,9 +1,10 @@
 import 'package:tool_lab/services/sync_service.dart';
+import 'package:tool_lab/tools/notes/config.dart';
 import 'package:tool_lab/tools/notes/notes_db_helper.dart';
 
 class NotesSyncDelegate implements SyncDelegate {
   @override
-  String get toolId => 'notes';
+  String get toolId => NotesTool.config.id;
 
   @override
   Future<List<Map<String, dynamic>>> getLocalSyncRecords() async {

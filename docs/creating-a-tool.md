@@ -261,3 +261,17 @@ Before committing, always run:
 dart format ./lib
 flutter analyze
 ```
+
+## 7. Tool ID Hygiene
+
+**Rule:** The tool ID string lives in exactly one place — `config.dart`. Every other file that needs to reference the tool ID must import `config.dart` and use `MyTool.config.id` instead of hardcoding the string.
+
+```dart
+// ✓ CORRECT — references the single source of truth
+await DatabaseService.instance.getToolDatabase(NotesTool.config.id);
+
+// ✗ WRONG — duplicates the ID string
+await DatabaseService.instance.getToolDatabase('notes');
+```
+
+This applies everywhere: pages, sync delegates, DB helpers, archive classes, and any other file referencing the tool's namespace. A grep for the literal tool ID string should return only the `config.dart` definition.

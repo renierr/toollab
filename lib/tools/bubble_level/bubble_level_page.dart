@@ -55,8 +55,8 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
 
   Future<void> _loadSettings() async {
     final db = DatabaseService.instance;
-    final px = await db.getSetting('bubble-level', 'pxPerMm');
-    final tol = await db.getSetting('bubble-level', 'tolerance');
+    final px = await db.getSetting(BubbleLevelTool.config.id, 'pxPerMm');
+    final tol = await db.getSetting(BubbleLevelTool.config.id, 'tolerance');
     if (mounted) {
       setState(() {
         if (px != null) _pxPerMm = double.tryParse(px) ?? 3.78;
@@ -67,7 +67,7 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
 
   Future<void> _savePxPerMm(double value) async {
     await DatabaseService.instance.setSetting(
-      'bubble-level',
+      BubbleLevelTool.config.id,
       'pxPerMm',
       value.toStringAsFixed(4),
     );
@@ -75,7 +75,7 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
 
   Future<void> _saveTolerance(double value) async {
     await DatabaseService.instance.setSetting(
-      'bubble-level',
+      BubbleLevelTool.config.id,
       'tolerance',
       value.toStringAsFixed(2),
     );

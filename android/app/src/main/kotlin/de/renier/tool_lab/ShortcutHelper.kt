@@ -56,25 +56,9 @@ object ShortcutHelper {
     }
 
     fun setDrawerIconEnabled(context: Context, toolId: String, enabled: Boolean) {
-        val packageName = context.packageName
-        val aliasClassName = when (toolId) {
-            "calculator" -> "de.renier.tool_lab.CalculatorAlias"
-            "bubble-level" -> "de.renier.tool_lab.BubbleLevelAlias"
-            "emf-detector" -> "de.renier.tool_lab.EmfDetectorAlias"
-            "device-info" -> "de.renier.tool_lab.DeviceInfoAlias"
-            "nfc-tag-lab" -> "de.renier.tool_lab.NfcTagLabAlias"
-            "pdf-viewer" -> "de.renier.tool_lab.PdfViewerAlias"
-            "notes" -> "de.renier.tool_lab.NotesAlias"
-            "markdown-viewer" -> "de.renier.tool_lab.MarkdownViewerAlias"
-            "image-viewer" -> "de.renier.tool_lab.ImageViewerAlias"
-            "fast-drop" -> "de.renier.tool_lab.FastDropAlias"
-            "images-to-pdf" -> "de.renier.tool_lab.ImagesToPdfAlias"
-            "chiptune" -> "de.renier.tool_lab.ChiptuneAlias"
-            "focus-noise" -> "de.renier.tool_lab.FocusNoiseAlias"
-            else -> return
-        }
+        val aliasClassName = toolIdToAliasClassName(toolId) ?: return
 
-        val componentName = android.content.ComponentName(packageName, aliasClassName)
+        val componentName = android.content.ComponentName(context.packageName, aliasClassName)
         val newState = if (enabled) {
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED
         } else {
@@ -86,5 +70,11 @@ object ShortcutHelper {
             newState,
             PackageManager.DONT_KILL_APP
         )
+    }
+
+    private fun toolIdToAliasClassName(toolId: String): String? {
+        val parts = toolId.split("-").map { it.replaceFirstChar { c -> c.uppercase() } }
+        if (parts.isEmpty()) return null
+        return "de.renier.tool_lab.${parts.joinToString("")}Alias"
     }
 }

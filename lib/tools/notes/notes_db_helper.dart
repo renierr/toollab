@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/tools/notes/config.dart';
 
 class NotesDbHelper {
   static const String tableName = 'notes';
@@ -13,7 +14,9 @@ class NotesDbHelper {
 
   Future<ToolDatabase> _getDb() async {
     if (_cachedDb != null) return _cachedDb!;
-    _cachedDb = await DatabaseService.instance.getToolDatabase('notes');
+    _cachedDb = await DatabaseService.instance.getToolDatabase(
+      NotesTool.config.id,
+    );
     try {
       await _cachedDb!.migrate(
         currentVersion: 2,

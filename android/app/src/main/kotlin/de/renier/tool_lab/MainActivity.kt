@@ -23,6 +23,21 @@ class MainActivity : FlutterActivity() {
     private var pendingSharedFile: Map<String, String>? = null
     private var partialWakeLock: PowerManager.WakeLock? = null
 
+    companion object {
+        private const val ALIAS_PREFIX = "de.renier.tool_lab."
+        private const val ALIAS_SUFFIX = "Alias"
+
+        private fun aliasClassNameToRoute(className: String): String? {
+            if (className == "${ALIAS_PREFIX}MainActivity") return "/"
+            if (!className.startsWith(ALIAS_PREFIX) || !className.endsWith(ALIAS_SUFFIX)) return null
+            val name = className.removePrefix(ALIAS_PREFIX).removeSuffix(ALIAS_SUFFIX)
+            return "/${name.toKebabCase()}"
+        }
+
+        private fun String.toKebabCase(): String =
+            replace(Regex("[A-Z]")) { "-${it.value.lowercase()}" }.trimStart('-')
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handleIntent(intent)
@@ -95,25 +110,7 @@ class MainActivity : FlutterActivity() {
             } else if (intent.hasExtra("route")) {
                 launchRoute = intent.getStringExtra("route")
             } else {
-                val className = intent.component?.className
-                if (className != null) {
-                    when (className) {
-                        "de.renier.tool_lab.CalculatorAlias" -> launchRoute = "/calculator"
-                        "de.renier.tool_lab.BubbleLevelAlias" -> launchRoute = "/bubble-level"
-                        "de.renier.tool_lab.EmfDetectorAlias" -> launchRoute = "/emf-detector"
-                        "de.renier.tool_lab.DeviceInfoAlias" -> launchRoute = "/device-info"
-                        "de.renier.tool_lab.NfcTagLabAlias" -> launchRoute = "/nfc-tag-lab"
-                        "de.renier.tool_lab.PdfViewerAlias" -> launchRoute = "/pdf-viewer"
-                        "de.renier.tool_lab.NotesAlias" -> launchRoute = "/notes"
-                        "de.renier.tool_lab.MarkdownViewerAlias" -> launchRoute = "/markdown-viewer"
-                        "de.renier.tool_lab.ImageViewerAlias" -> launchRoute = "/image-viewer"
-                        "de.renier.tool_lab.FastDropAlias" -> launchRoute = "/fast-drop"
-                        "de.renier.tool_lab.ImagesToPdfAlias" -> launchRoute = "/images-to-pdf"
-                        "de.renier.tool_lab.ChiptuneAlias" -> launchRoute = "/chiptune"
-                        "de.renier.tool_lab.FocusNoiseAlias" -> launchRoute = "/focus-noise"
-                        "de.renier.tool_lab.MainActivity" -> launchRoute = "/"
-                    }
-                }
+                launchRoute = intent.component?.className?.let { aliasClassNameToRoute(it) }
             }
         }
     }

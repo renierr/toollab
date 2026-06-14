@@ -36,6 +36,7 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
   2. **`TempFileManager.cleanTracked()`** — global tracked file cleanup (for files created via the static `TempFileManager.createFile()`). Only relevant for StatelessWidgets or static helpers without lifecycle.
   3. **`TempFileManager.cleanSession()`** / **`cleanAll()`** — session-level / nuclear cleanup. `cleanSession` removes the current session dir; `cleanAll` nukes the entire `tool_lab/` base dir and re-initializes (use from maintenance page). `cleanSession` fires automatically on `AppLifecycleState.detached`.
 - **Large Data → Temp Files**: Prefer `TempFileManager.createFile()` or `scope.createFile()` for large binary data (images, PDFs, exports) instead of holding large `Uint8List` in memory. Small in-memory bytes (< 100 KB) are fine for fast access.
+- **Tool ID Single Source of Truth**: Never hardcode tool ID strings (`'fast-drop'`, `'notes'`, etc.) outside of `config.dart`. Always reference via `MyTool.config.id`. This applies to pages, sync delegates, DB helpers, archive classes — everywhere. The only occurrence of the literal tool ID string should be in `config.dart`.
 
 ---
 
