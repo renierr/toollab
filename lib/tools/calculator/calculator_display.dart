@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'history.dart';
 
-class CalculatorDisplay extends StatefulWidget {
+class CalculatorDisplay extends StatelessWidget {
   final String expression;
-  final String input;
+  final TextEditingController controller;
   final bool flashResult;
-  final ScrollController scrollController;
   final List<HistoryItem> historyItems;
 
   final bool isShort;
@@ -14,74 +13,32 @@ class CalculatorDisplay extends StatefulWidget {
   const CalculatorDisplay({
     super.key,
     required this.expression,
-    required this.input,
+    required this.controller,
     required this.flashResult,
-    required this.scrollController,
     this.historyItems = const [],
     this.isShort = false,
     this.fullscreen = false,
   });
 
   @override
-  State<CalculatorDisplay> createState() => _CalculatorDisplayState();
-}
-
-class _CalculatorDisplayState extends State<CalculatorDisplay> {
-  bool _showFade = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.scrollController.addListener(_updateFade);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateFade());
-  }
-
-  @override
-  void didUpdateWidget(CalculatorDisplay old) {
-    super.didUpdateWidget(old);
-    if (old.scrollController != widget.scrollController) {
-      old.scrollController.removeListener(_updateFade);
-      widget.scrollController.addListener(_updateFade);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _updateFade());
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.scrollController.removeListener(_updateFade);
-    super.dispose();
-  }
-
-  void _updateFade() {
-    if (!widget.scrollController.hasClients) return;
-    final pos = widget.scrollController.position;
-    final shouldShow =
-        pos.maxScrollExtent > 0 && pos.pixels < pos.maxScrollExtent - 4;
-    if (shouldShow != _showFade) {
-      setState(() => _showFade = shouldShow);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final baseStyle = widget.isShort
+    final baseStyle = isShort
         ? theme.textTheme.headlineMedium
         : theme.textTheme.displaySmall;
 
     final displayStyle = baseStyle?.copyWith(
       fontWeight: FontWeight.w300,
       fontFamily: 'monospace',
-      fontSize: widget.isShort ? 24.0 : null,
-      color: widget.flashResult
+      fontSize: isShort ? 24.0 : null,
+      color: flashResult
           ? theme.colorScheme.primary
           : theme.colorScheme.onSurface,
     );
 
-    final resultAreaH = widget.isShort ? 30.0 : 60.0;
-    final gap = widget.isShort ? 0.0 : 4.0;
-    final historyItems = widget.historyItems;
-    final showHistory = !widget.isShort && historyItems.isNotEmpty;
+    final resultAreaH = isShort ? 30.0 : 60.0;
+    final gap = isShort ? 0.0 : 4.0;
+    final showHistory = !isShort && historyItems.isNotEmpty;
 
     return Container(
       decoration: BoxDecoration(
@@ -89,10 +46,10 @@ class _CalculatorDisplayState extends State<CalculatorDisplay> {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
       padding: EdgeInsets.fromLTRB(
-        widget.fullscreen ? 64.0 : (widget.isShort ? 16.0 : 20.0),
-        widget.isShort ? 2.0 : 8.0,
+        fullscreen ? 64.0 : (isShort ? 16.0 : 20.0),
+        isShort ? 2.0 : 8.0,
         20.0,
-        widget.isShort ? 2.0 : 4.0,
+        isShort ? 2.0 : 4.0,
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -140,11 +97,11 @@ class _CalculatorDisplayState extends State<CalculatorDisplay> {
                           },
                         ),
                       ),
-                    if (!widget.isShort && widget.expression.isNotEmpty)
+                    if (!isShort && expression.isNotEmpty)
                       Padding(
                         padding: EdgeInsets.only(bottom: gap),
                         child: Text(
-                          widget.expression,
+                          expression,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurface.withAlpha(150),
                             fontFamily: 'monospace',
@@ -158,49 +115,27 @@ class _CalculatorDisplayState extends State<CalculatorDisplay> {
                       height: resultAreaH,
                       child: Align(
                         alignment: Alignment.bottomRight,
-                        child: SingleChildScrollView(
-                          controller: widget.scrollController,
-                          scrollDirection: Axis.horizontal,
-                          child: Container(
-                            constraints: BoxConstraints(
-                              minWidth: constraints.maxWidth,
-                            ),
-                            alignment: Alignment.bottomRight,
-                            child: AnimatedDefaultTextStyle(
-                              duration: const Duration(milliseconds: 200),
-                              style:
-                                  displayStyle ??
-                                  TextStyle(fontSize: widget.isShort ? 24 : 36),
-                              child: Text(widget.input, maxLines: 1),
-                            ),
+                        child: TextField(
+                          controller: controller,
+                          readOnly: true,
+                          showCursor: true,
+                          style: displayStyle,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
                           ),
+                          cursorColor: theme.colorScheme.primary,
+                          maxLines: 1,
+                          textAlign: TextAlign.right,
+                          scrollPhysics: const BouncingScrollPhysics(),
+                          enableInteractiveSelection: true,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              if (_showFade)
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 24,
-                  child: IgnorePointer(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerRight,
-                          end: Alignment.centerLeft,
-                          colors: [
-                            theme.colorScheme.surfaceContainerLow,
-                            theme.colorScheme.surfaceContainerLow.withAlpha(0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
             ],
           );
         },

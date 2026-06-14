@@ -37,6 +37,70 @@ class CalculatorCore {
     _input += value;
   }
 
+  void insertAt(int index, String value) {
+    if (_input == 'Error') {
+      clear();
+      index = 0;
+    }
+
+    index = index.clamp(0, _input.length);
+
+    if (_input == '0') {
+      if (index >= 1 && RegExp(r'^[0-9.]$').hasMatch(value)) {
+        _input = value;
+        return;
+      }
+      _input = value;
+      return;
+    }
+
+    if (index > 0) {
+      final prev = _input[index - 1];
+      if (_isOperator(prev) && _isOperator(value)) {
+        _input =
+            _input.substring(0, index - 1) + value + _input.substring(index);
+        return;
+      }
+    }
+
+    _input = _input.substring(0, index) + value + _input.substring(index);
+  }
+
+  void deleteAt(int index) {
+    if (_input == 'Error') {
+      clear();
+      return;
+    }
+    if (index <= 0 || _input.length <= 1) {
+      _input = '0';
+      return;
+    }
+    _input = _input.substring(0, index - 1) + _input.substring(index);
+  }
+
+  void deleteRange(int start, int end) {
+    if (_input == 'Error') {
+      clear();
+      return;
+    }
+    start = start.clamp(0, _input.length);
+    end = end.clamp(start, _input.length);
+    if (start == end) return;
+    _input = _input.substring(0, start) + _input.substring(end);
+    if (_input.isEmpty) _input = '0';
+  }
+
+  void replaceRange(int start, int end, String value) {
+    if (_input == 'Error') {
+      clear();
+      return;
+    }
+    start = start.clamp(0, _input.length);
+    end = end.clamp(start, _input.length);
+    _input = _input.substring(0, start) + value + _input.substring(end);
+    if (_input.isEmpty) _input = '0';
+  }
+
   void backspace() {
     if (_input == 'Error') {
       clear();
@@ -47,6 +111,37 @@ class CalculatorCore {
     } else {
       _input = '0';
     }
+  }
+
+  void insertBracketAt(int index) {
+    if (_input == 'Error') {
+      clear();
+      index = 0;
+    }
+
+    index = index.clamp(0, _input.length);
+
+    if (_input == '0' && index >= 1) {
+      _input = '(';
+      return;
+    }
+
+    if (index == 0) {
+      _input = '($_input';
+      return;
+    }
+
+    final prev = _input[index - 1];
+    if (_isOperator(prev) || prev == '(') {
+      _input = '${_input.substring(0, index)}(${_input.substring(index)}';
+      return;
+    }
+
+    final before = _input.substring(0, index);
+    final openCount = '('.allMatches(before).length;
+    final closeCount = ')'.allMatches(before).length;
+    final bracket = openCount > closeCount ? ')' : '(';
+    _input = _input.substring(0, index) + bracket + _input.substring(index);
   }
 
   void toggleBracket() {
