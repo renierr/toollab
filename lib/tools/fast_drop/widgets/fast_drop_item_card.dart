@@ -11,6 +11,7 @@ class FastDropItemCard extends StatelessWidget {
   final VoidCallback onPreview;
   final VoidCallback onOpen;
   final VoidCallback onDownload;
+  final VoidCallback onEditDescription;
 
   const FastDropItemCard({
     super.key,
@@ -20,6 +21,7 @@ class FastDropItemCard extends StatelessWidget {
     required this.onPreview,
     required this.onOpen,
     required this.onDownload,
+    required this.onEditDescription,
   });
 
   IconData _getFileIcon(String type) {
@@ -180,6 +182,73 @@ class FastDropItemCard extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: onEditDescription,
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      item.description != null &&
+                          item.description!.trim().isNotEmpty
+                      ? theme.colorScheme.surfaceContainerLow
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                  border:
+                      item.description != null &&
+                          item.description!.trim().isNotEmpty
+                      ? null
+                      : Border.all(
+                          color: theme.colorScheme.outlineVariant.withValues(
+                            alpha: 0.4,
+                          ),
+                          strokeAlign: BorderSide.strokeAlignInside,
+                        ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child:
+                          item.description != null &&
+                              item.description!.trim().isNotEmpty
+                          ? Text(
+                              item.description!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.8,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              'Add description...',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.35,
+                                ),
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      item.description != null &&
+                              item.description!.trim().isNotEmpty
+                          ? Icons.edit_outlined
+                          : Icons.add,
+                      size: 14,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 8),
@@ -199,6 +268,12 @@ class FastDropItemCard extends StatelessWidget {
                   tooltip: 'Preview',
                   iconSize: 18,
                   onPressed: onPreview,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: 'Edit Description',
+                  iconSize: 18,
+                  onPressed: onEditDescription,
                 ),
                 IconButton(
                   icon: const Icon(Icons.open_in_new_outlined),

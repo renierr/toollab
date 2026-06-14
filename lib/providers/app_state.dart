@@ -511,6 +511,17 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<void> updateFastDropDescription(String id, String description) async {
+    if (!_syncEnabled || _syncServerUrl.isEmpty || !_isServerAvailable) return;
+    try {
+      await FastDropService.updateDescription(_syncServerUrl, id, description);
+      await loadFastDrops();
+    } catch (e) {
+      debugPrint('[AppState] Failed to update Fast Drop description: $e');
+      rethrow;
+    }
+  }
+
   Future<Uint8List> downloadFastDrop(String id) async {
     if (!_syncEnabled) {
       throw Exception('Cloud sync is disabled.');

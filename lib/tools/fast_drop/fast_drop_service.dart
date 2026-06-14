@@ -144,6 +144,28 @@ class FastDropService {
     }
   }
 
+  static Future<void> updateDescription(
+    String baseUrl,
+    String id,
+    String description,
+  ) async {
+    final client = await _clientFuture;
+    final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id/description';
+    final response = await client
+        .patch(
+          url,
+          body: HttpBody.json({'description': description}),
+        )
+        .timeout(const Duration(seconds: 10));
+    if (response.statusCode != 200) {
+      final errorData = jsonDecode(response.body);
+      throw Exception(
+        errorData['error'] ??
+            'Failed to update description: ${response.statusCode}',
+      );
+    }
+  }
+
   static Future<void> keepDrop(String baseUrl, String id) async {
     final client = await _clientFuture;
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id/keep';

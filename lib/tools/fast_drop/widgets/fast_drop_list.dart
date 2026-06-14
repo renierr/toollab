@@ -12,6 +12,7 @@ class FastDropList extends StatelessWidget {
   final void Function(FastDropItem item) onPreview;
   final void Function(FastDropItem item) onOpen;
   final void Function(FastDropItem item) onDownload;
+  final void Function(FastDropItem item) onEditDescription;
 
   const FastDropList({
     super.key,
@@ -21,6 +22,7 @@ class FastDropList extends StatelessWidget {
     required this.onPreview,
     required this.onOpen,
     required this.onDownload,
+    required this.onEditDescription,
     this.shrinkWrap = false,
   });
 
@@ -130,6 +132,7 @@ class FastDropList extends StatelessWidget {
           onPreview: () => onPreview(item),
           onOpen: () => onOpen(item),
           onDownload: () => onDownload(item),
+          onEditDescription: () => onEditDescription(item),
         );
       },
     );

@@ -27,6 +27,7 @@ import 'widgets/fast_drop_pending_card.dart';
 import 'widgets/fast_drop_list.dart';
 import 'widgets/fast_drop_not_configured.dart';
 import 'widgets/fast_drop_progress_indicator.dart';
+import 'widgets/fast_drop_edit_description_dialog.dart';
 
 class FastDropPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -329,6 +330,31 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     }
   }
 
+  Future<void> _onUpdateDescription(FastDropItem item) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => FastDropEditDescriptionDialog(
+        currentDescription: item.description ?? '',
+      ),
+    );
+    if (result == null || !mounted) return;
+    try {
+      await context.read<AppState>().updateFastDropDescription(item.id, result);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Description updated')));
+      }
+    } catch (e) {
+      if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
+      }
+    }
+  }
+
   void _onPreview(FastDropItem item) {
     showDialog(
       context: context,
@@ -497,6 +523,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                               onPreview: _onPreview,
                               onOpen: _onOpen,
                               onDownload: _onDownload,
+                              onEditDescription: _onUpdateDescription,
                             ),
                           ],
                         ),
@@ -546,6 +573,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                             onPreview: _onPreview,
                             onOpen: _onOpen,
                             onDownload: _onDownload,
+                            onEditDescription: _onUpdateDescription,
                           ),
                         ),
                       ],

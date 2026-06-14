@@ -6,6 +6,7 @@ class FastDropItem {
   final String source;
   final int uploadedAt;
   final int? expiresAt;
+  final String? description;
 
   FastDropItem({
     required this.id,
@@ -15,6 +16,7 @@ class FastDropItem {
     required this.source,
     required this.uploadedAt,
     this.expiresAt,
+    this.description,
   });
 
   factory FastDropItem.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,20 @@ class FastDropItem {
       uploadedAt:
           json['uploaded_at'] as int? ?? json['uploadedAt'] as int? ?? 0,
       expiresAt: json['expires_at'] as int? ?? json['expiresAt'] as int?,
+      description: json['description'] as String?,
+    );
+  }
+
+  FastDropItem copyWith({String? description}) {
+    return FastDropItem(
+      id: id,
+      filename: filename,
+      size: size,
+      type: type,
+      source: source,
+      uploadedAt: uploadedAt,
+      expiresAt: expiresAt,
+      description: description ?? this.description,
     );
   }
 }
