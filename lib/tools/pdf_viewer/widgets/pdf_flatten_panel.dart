@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
-import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
-import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/helpers/pdf_engine_helper.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 
 class PdfFlattenPanel extends StatefulWidget {
-  final String filePath;
-  final String fileName;
-  final TempFileScope tempScope;
+  final PdfOperationSession session;
   final void Function(String pdfPath, String name) onComplete;
   final VoidCallback onCancel;
 
   const PdfFlattenPanel({
     super.key,
-    required this.filePath,
-    required this.fileName,
-    required this.tempScope,
+    required this.session,
     required this.onComplete,
     required this.onCancel,
   });
@@ -38,7 +34,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
   int _resultSize = 0;
   int _totalPages = 0;
 
-  String get _baseName => widget.fileName.replaceAll('.pdf', '');
+  String get _baseName => widget.session.fileName.replaceAll('.pdf', '');
 
   Future<void> _execute() async {
     setState(() {
@@ -48,7 +44,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
 
     PdfDocument? doc;
     try {
-      doc = await PdfEngineHelper.openPdf(widget.filePath);
+      doc = await widget.session.openDocument();
       _totalPages = doc.pages.length;
 
       final pdfBytes = await PdfEngineHelper.flattenPdfDocument(
@@ -67,7 +63,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
 
       // The result lives in the parent scope so it survives this panel being
       // disposed when the viewer reopens it.
-      final resultPath = await widget.tempScope.createFile(
+      final resultPath = await widget.session.tempScope.createFile(
         '${_baseName}_flattened.pdf',
         bytes: pdfBytes,
       );
@@ -122,7 +118,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flatten: ${widget.fileName}'),
+        title: Text('Flatten: ${widget.session.fileName}'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _phase == _FlattenPhase.processing

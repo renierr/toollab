@@ -104,6 +104,14 @@ class PdfEngineHelper {
     return PdfDocument.openFile(path);
   }
 
+  static Future<PdfDocument> openPdfWithPassword(
+    String path, {
+    PdfPasswordProvider? passwordProvider,
+  }) async {
+    await _ensureInit();
+    return PdfDocument.openFile(path, passwordProvider: passwordProvider);
+  }
+
   static Future<PdfDocument> openPdfFromBytes(
     Uint8List data,
     String name,

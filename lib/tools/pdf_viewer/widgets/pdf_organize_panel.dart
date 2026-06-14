@@ -3,22 +3,18 @@ import 'package:file_selector/file_selector.dart' show XTypeGroup, openFile;
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
-import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class PdfOrganizePanel extends StatefulWidget {
-  final String filePath;
-  final String fileName;
-  final TempFileScope tempScope;
+  final PdfOperationSession session;
   final void Function(String pdfPath, String name) onComplete;
   final VoidCallback onCancel;
 
   const PdfOrganizePanel({
     super.key,
-    required this.filePath,
-    required this.fileName,
-    required this.tempScope,
+    required this.session,
     required this.onComplete,
     required this.onCancel,
   });
@@ -39,7 +35,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
   String? _resultPath;
   int _resultSize = 0;
 
-  String get _baseName => widget.fileName.replaceAll('.pdf', '');
+  String get _baseName => widget.session.fileName.replaceAll('.pdf', '');
 
   @override
   void initState() {
@@ -58,7 +54,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
 
   Future<void> _loadDocument() async {
     try {
-      final doc = await PdfEngineHelper.openPdf(widget.filePath);
+      final doc = await widget.session.openDocument();
       final pages = <_PageItem>[];
       for (int i = 0; i < doc.pages.length; i++) {
         pages.add(_PageItem(index: i, page: doc.pages[i]));
@@ -251,7 +247,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       newDoc.dispose();
 
       // Stage to the parent scope so the result survives this panel closing.
-      final resultPath = await widget.tempScope.createFile(
+      final resultPath = await widget.session.tempScope.createFile(
         '${_baseName}_organized.pdf',
         bytes: bytes,
       );
@@ -311,7 +307,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Organize: ${widget.fileName}'),
+        title: Text('Organize: ${widget.session.fileName}'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _isProcessing ? null : widget.onCancel,
@@ -348,7 +344,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${_pages.length} page${_pages.length == 1 ? '' : 's'} — '
+                        '${_pages.length} page${_pages.length == 1 ? '' : 's'} - '
                         'drag to reorder, tap to preview',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -404,7 +400,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Organize: ${widget.fileName}'),
+        title: Text('Organize: ${widget.session.fileName}'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: widget.onCancel,

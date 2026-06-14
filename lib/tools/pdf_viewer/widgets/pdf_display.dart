@@ -6,6 +6,7 @@ import 'package:pdfrx/pdfrx.dart';
 class PdfDisplay extends StatelessWidget {
   final String filePath;
   final PdfViewerController controller;
+  final PdfPasswordProvider? passwordProvider;
   final void Function(int? pageNumber) onPageChanged;
   final VoidCallback onViewerTap;
   final EdgeInsets boundaryMargin;
@@ -18,6 +19,7 @@ class PdfDisplay extends StatelessWidget {
     super.key,
     required this.filePath,
     required this.controller,
+    this.passwordProvider,
     required this.onPageChanged,
     required this.onViewerTap,
     required this.boundaryMargin,
@@ -30,6 +32,7 @@ class PdfDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     return PdfViewer.file(
       filePath,
+      passwordProvider: passwordProvider,
       controller: controller,
       params: PdfViewerParams(
         textSelectionParams: const PdfTextSelectionParams(enabled: true),

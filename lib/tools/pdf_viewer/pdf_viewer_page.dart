@@ -1,12 +1,14 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_page_layouts.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:tool_lab/widgets/document_password_dialog.dart';
 import 'package:tool_lab/tools/pdf_viewer/config.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_display.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_overlay_controls.dart';
@@ -52,6 +54,9 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
   PdfViewerMode _mode = PdfViewerMode.view;
   late final TempFileScope _tempScope;
+  String? _resolvedPdfPassword;
+  String? _lastProvidedPdfPassword;
+  Future<String?>? _passwordDialogFuture;
 
   @override
   void initState() {
@@ -81,20 +86,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     super.didUpdateWidget(oldWidget);
     if (widget.sharedFile != oldWidget.sharedFile &&
         widget.sharedFile != null) {
-      _pdfTextSearcher?.removeListener(_onSearchChanged);
-      _pdfTextSearcher?.dispose();
-      _pdfTextSearcher = null;
-
+      _resetViewerState(notify: false);
       setState(() {
         _filePath = widget.sharedFile!.path;
         _fileName = widget.sharedFile!.name;
-        _currentPageNotifier.value = 1;
-        _totalPagesNotifier.value = 0;
-        _showOverlays = true;
-        _userToggledOverlays = false;
-        _outline = null;
-        _isSearchingText = false;
-        _searchTextController.clear();
       });
     }
   }
@@ -124,12 +119,15 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     _pdfTextSearcher?.startTextSearch(text);
   }
 
-  void _resetViewerState() {
+  void _resetViewerState({bool notify = true}) {
     _pdfTextSearcher?.removeListener(_onSearchChanged);
     _pdfTextSearcher?.dispose();
     _pdfTextSearcher = null;
+    _resolvedPdfPassword = null;
+    _lastProvidedPdfPassword = null;
+    _passwordDialogFuture = null;
 
-    setState(() {
+    void applyReset() {
       _currentPageNotifier.value = 1;
       _totalPagesNotifier.value = 0;
       _showOverlays = true;
@@ -137,7 +135,34 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       _outline = null;
       _isSearchingText = false;
       _searchTextController.clear();
-    });
+    }
+
+    if (notify) {
+      setState(applyReset);
+      return;
+    }
+    applyReset();
+  }
+
+  Future<String?> _providePdfPassword() async {
+    if (_resolvedPdfPassword != null) {
+      return _resolvedPdfPassword;
+    }
+    if (_passwordDialogFuture != null) {
+      return _passwordDialogFuture;
+    }
+
+    final passwordFuture = DocumentPasswordDialog.show(
+      context,
+      title: 'Password Protected PDF',
+      message: 'Enter password for ${_fileName ?? 'document.pdf'}.',
+    );
+    _passwordDialogFuture = passwordFuture;
+
+    final password = await passwordFuture;
+    _passwordDialogFuture = null;
+    _lastProvidedPdfPassword = password;
+    return password;
   }
 
   void _onFileSelected(XFile file) {
@@ -216,66 +241,6 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     }
   }
 
-  PdfPageLayout _horizontalLayout(List<PdfPage> pages, PdfViewerParams params) {
-    final height =
-        pages.fold(
-          0.0,
-          (prev, page) => prev > page.height ? prev : page.height,
-        ) +
-        params.margin * 2;
-    final pageLayouts = <Rect>[];
-    double x = params.margin;
-    for (final page in pages) {
-      pageLayouts.add(
-        Rect.fromLTWH(x, (height - page.height) / 2, page.width, page.height),
-      );
-      x += page.width + params.margin;
-    }
-    return PdfPageLayout(
-      pageLayouts: pageLayouts,
-      documentSize: Size(x, height),
-    );
-  }
-
-  PdfPageLayout _doublePageLayout(List<PdfPage> pages, PdfViewerParams params) {
-    final pageLayouts = <Rect>[];
-    double y = params.margin;
-    double maxWidth = 0;
-    for (int i = 0; i < pages.length; i += 2) {
-      final page1 = pages[i];
-      final hasSecond = i + 1 < pages.length;
-      final page2 = hasSecond ? pages[i + 1] : null;
-      final rowHeight = page2 == null
-          ? page1.height
-          : math.max(page1.height, page2.height);
-      final rowWidth = page1.width + (page2?.width ?? 0.0) + params.margin;
-      maxWidth = math.max(maxWidth, rowWidth);
-      pageLayouts.add(
-        Rect.fromLTWH(
-          params.margin,
-          y + (rowHeight - page1.height) / 2,
-          page1.width,
-          page1.height,
-        ),
-      );
-      if (page2 != null) {
-        pageLayouts.add(
-          Rect.fromLTWH(
-            params.margin + page1.width + params.margin,
-            y + (rowHeight - page2.height) / 2,
-            page2.width,
-            page2.height,
-          ),
-        );
-      }
-      y += rowHeight + params.margin;
-    }
-    return PdfPageLayout(
-      pageLayouts: pageLayouts,
-      documentSize: Size(maxWidth + params.margin * 2, y),
-    );
-  }
-
   void _setMode(PdfViewerMode mode) {
     setState(() => _mode = mode);
   }
@@ -310,6 +275,15 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     setState(() => _mode = PdfViewerMode.view);
   }
 
+  PdfOperationSession get _operationSession {
+    return PdfOperationSession(
+      filePath: _filePath!,
+      fileName: _fileName ?? 'document.pdf',
+      tempScope: _tempScope,
+      passwordProvider: _providePdfPassword,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -338,9 +312,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         scaffoldKey: _scaffoldKey,
         backgroundColor: theme.colorScheme.surface,
         child: PdfOrganizePanel(
-          filePath: _filePath!,
-          fileName: _fileName ?? 'document.pdf',
-          tempScope: _tempScope,
+          session: _operationSession,
           onComplete: _onOrganizeComplete,
           onCancel: _onOrganizeCancel,
         ),
@@ -355,9 +327,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         scaffoldKey: _scaffoldKey,
         backgroundColor: theme.colorScheme.surface,
         child: PdfFlattenPanel(
-          filePath: _filePath!,
-          fileName: _fileName ?? 'document.pdf',
-          tempScope: _tempScope,
+          session: _operationSession,
           onComplete: _onFlattenComplete,
           onCancel: _onFlattenCancel,
         ),
@@ -372,9 +342,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         scaffoldKey: _scaffoldKey,
         backgroundColor: theme.colorScheme.surface,
         child: PdfExtractImagesPanel(
-          filePath: _filePath!,
-          fileName: _fileName ?? 'document.pdf',
-          tempScope: _tempScope,
+          session: _operationSession,
           onCancel: _onExtractImagesCancel,
         ),
       );
@@ -400,6 +368,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               key: ValueKey(_filePath),
               filePath: _filePath!,
               controller: _pdfController,
+              passwordProvider: _providePdfPassword,
               boundaryMargin: EdgeInsets.only(
                 top: _showOverlays
                     ? MediaQuery.of(context).padding.top + 72
@@ -413,11 +382,14 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
                   _pdfTextSearcher!.pageTextMatchPaintCallback,
               ],
               layoutPages: _layoutMode == PdfLayoutMode.horizontal
-                  ? _horizontalLayout
+                  ? PdfPageLayouts.horizontal
                   : _layoutMode == PdfLayoutMode.doublePage
-                  ? _doublePageLayout
+                  ? PdfPageLayouts.doublePage
                   : null,
               onViewerReady: (doc, controller) {
+                if (_lastProvidedPdfPassword != null) {
+                  _resolvedPdfPassword = _lastProvidedPdfPassword;
+                }
                 _initSearcher();
                 _totalPagesNotifier.value = _pdfController.pageCount;
                 final headerHeight = MediaQuery.of(context).padding.top + 72;

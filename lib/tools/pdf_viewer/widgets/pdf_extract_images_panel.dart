@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
-import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_empty_state.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_grid.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_header.dart';
@@ -13,16 +13,12 @@ import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_item.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class PdfExtractImagesPanel extends StatefulWidget {
-  final String filePath;
-  final String fileName;
-  final TempFileScope tempScope;
+  final PdfOperationSession session;
   final VoidCallback onCancel;
 
   const PdfExtractImagesPanel({
     super.key,
-    required this.filePath,
-    required this.fileName,
-    required this.tempScope,
+    required this.session,
     required this.onCancel,
   });
 
@@ -41,7 +37,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
   List<PdfExtractedImageItem> _items = [];
   final Set<String> _selectedIds = <String>{};
 
-  String get _baseName => widget.fileName.replaceAll('.pdf', '');
+  String get _baseName => widget.session.fileName.replaceAll('.pdf', '');
 
   @override
   void initState() {
@@ -72,7 +68,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
 
     PdfDocument? doc;
     try {
-      doc = await PdfEngineHelper.openPdf(widget.filePath);
+      doc = await widget.session.openDocument();
       final extracted = await PdfEngineHelper.extractEmbeddedImages(
         doc,
         deduplicate: true,
@@ -100,7 +96,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         final extension = image.fileExtension;
         final fileName =
             '${_baseName}_p${image.pageNumber}_img${i + 1}_${image.checksum.substring(0, 8)}.$extension';
-        final path = await widget.tempScope.createFile(
+        final path = await widget.session.tempScope.createFile(
           fileName,
           bytes: image.bytes,
         );
@@ -216,7 +212,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
     final encoder = ZipFileEncoder();
     var hasOpenZip = false;
     try {
-      final zipPath = await widget.tempScope.createFile(zipName);
+      final zipPath = await widget.session.tempScope.createFile(zipName);
       encoder.create(zipPath);
       hasOpenZip = true;
       for (int i = 0; i < items.length; i++) {
@@ -329,7 +325,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Extract Images: ${widget.fileName}'),
+        title: Text('Extract Images: ${widget.session.fileName}'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _isLoading || _isExporting ? null : widget.onCancel,
