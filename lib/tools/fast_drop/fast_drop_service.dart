@@ -50,7 +50,7 @@ class FastDropService {
   static Future<void> uploadDrop({
     required String baseUrl,
     required String filename,
-    required Uint8List bytes,
+    required String filePath,
     required String retention,
     required String source,
     required String mimeType,
@@ -59,8 +59,11 @@ class FastDropService {
   }) async {
     final client = await _clientFuture;
     final url = '${_sanitizeUrl(baseUrl)}/api/drop';
-    final total = bytes.length;
-    const chunkSize = 1024 * 1024;
+    final file = File(filePath);
+    if (!await file.exists()) {
+      throw Exception('File does not exist: $filePath');
+    }
+    final total = await file.length();
     final cancelToken = CancelToken();
 
     try {
@@ -74,6 +77,13 @@ class FastDropService {
         bytesPerSecond: 100 * 1024,
       );
 
+      final stream = file.openRead().map((chunk) {
+        if (isCancelled != null && isCancelled()) {
+          throw Exception('Upload cancelled by user');
+        }
+        return chunk;
+      });
+
       final response = await client
           .requestText(
             method: HttpMethod.post,
@@ -86,14 +96,7 @@ class FastDropService {
                   ? 'application/octet-stream'
                   : mimeType,
             }),
-            body: HttpBody.stream(
-              _chunkedByteStream(
-                bytes,
-                chunkSize: chunkSize,
-                isCancelled: isCancelled,
-              ),
-              length: total,
-            ),
+            body: HttpBody.stream(stream, length: total),
             cancelToken: cancelToken,
             onSendProgress: (sent, progressTotal) {
               if (isCancelled != null && isCancelled()) {
@@ -112,21 +115,6 @@ class FastDropService {
       }
     } on RhttpCancelException {
       throw Exception('Upload cancelled by user');
-    }
-  }
-
-  static Stream<List<int>> _chunkedByteStream(
-    Uint8List bytes, {
-    required int chunkSize,
-    bool Function()? isCancelled,
-  }) async* {
-    final total = bytes.length;
-    for (int i = 0; i < total; i += chunkSize) {
-      if (isCancelled != null && isCancelled()) {
-        throw Exception('Upload cancelled by user');
-      }
-      final end = (i + chunkSize).clamp(0, total);
-      yield Uint8List.sublistView(bytes, i, end);
     }
   }
 

@@ -1,6 +1,8 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
@@ -9,14 +11,14 @@ import '../fast_drop_model.dart';
 
 class FastDropPreviewDialog extends StatefulWidget {
   final FastDropItem item;
-  final Future<Uint8List> Function(String id) onDownload;
+  final Future<String> Function(String id, String outputPath) onDownloadToFile;
   final VoidCallback onOpen;
   final VoidCallback onSave;
 
   const FastDropPreviewDialog({
     super.key,
     required this.item,
-    required this.onDownload,
+    required this.onDownloadToFile,
     required this.onOpen,
     required this.onSave,
   });
@@ -25,8 +27,10 @@ class FastDropPreviewDialog extends StatefulWidget {
   State<FastDropPreviewDialog> createState() => _FastDropPreviewDialogState();
 }
 
-class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
-  Future<Uint8List>? _downloadFuture;
+class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
+    with DisposeCleanup {
+  late final TempFileScope _scope = TempFileManager.createScope();
+  Future<String>? _downloadFuture;
 
   bool get _isPreviewable {
     if (widget.item.size > 10 * 1024 * 1024) return false;
@@ -45,9 +49,18 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
   @override
   void initState() {
     super.initState();
+    onDispose(() => _scope.cleanTracked());
     if (_isPreviewable) {
-      _downloadFuture = widget.onDownload(widget.item.id);
+      _downloadFuture = _startDownload();
     }
+  }
+
+  Future<String> _startDownload() async {
+    final tempPath = await _scope.createFile(
+      'fast_drop_preview_${widget.item.id}',
+    );
+    await widget.onDownloadToFile(widget.item.id, tempPath);
+    return tempPath;
   }
 
   @override
@@ -104,7 +117,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
               if (_downloadFuture == null)
                 _buildNoPreview(theme, resolvedMimeType)
               else
-                FutureBuilder<Uint8List>(
+                FutureBuilder<String>(
                   future: _downloadFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -143,7 +156,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
                       );
                     }
 
-                    final bytes = snapshot.data!;
+                    final path = snapshot.data!;
                     if (isImage) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -152,38 +165,57 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
                           child: InteractiveViewer(
                             minScale: 0.5,
                             maxScale: 5.0,
-                            child: Image.memory(bytes, fit: BoxFit.contain),
+                            child: Image.file(File(path), fit: BoxFit.contain),
                           ),
                         ),
                       );
                     }
 
                     if (isText) {
-                      final text = utf8.decode(bytes, allowMalformed: true);
-                      if (isMarkdown) {
-                        return MarkdownView(
-                          data: text,
-                          accentColor: AppTheme.accentTeal,
-                        );
-                      } else {
-                        return Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: theme.colorScheme.outlineVariant,
-                            ),
-                          ),
-                          child: SelectableText(
-                            text,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 12,
-                            ),
-                          ),
-                        );
-                      }
+                      return FutureBuilder<String>(
+                        future: File(path).readAsString(encoding: utf8),
+                        builder: (context, textSnapshot) {
+                          if (textSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: AppTheme.accentTeal,
+                              ),
+                            );
+                          }
+                          if (textSnapshot.hasError) {
+                            return Text(
+                              'Error reading file: ${textSnapshot.error}',
+                              style: TextStyle(color: theme.colorScheme.error),
+                            );
+                          }
+                          final text = textSnapshot.data ?? '';
+                          if (isMarkdown) {
+                            return MarkdownView(
+                              data: text,
+                              accentColor: AppTheme.accentTeal,
+                            );
+                          } else {
+                            return Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: theme.colorScheme.outlineVariant,
+                                ),
+                              ),
+                              child: SelectableText(
+                                text,
+                                style: const TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 12,
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                      );
                     }
 
                     return _buildNoPreview(theme, resolvedMimeType);

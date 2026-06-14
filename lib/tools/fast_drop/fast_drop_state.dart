@@ -103,7 +103,7 @@ class FastDropState extends ChangeNotifier {
 
   Future<void> uploadFastDrop({
     required String filename,
-    required Uint8List bytes,
+    required String filePath,
     required String retention,
     required String source,
     required String mimeType,
@@ -130,7 +130,7 @@ class FastDropState extends ChangeNotifier {
       await FastDropService.uploadDrop(
         baseUrl: _syncServerUrl,
         filename: filename,
-        bytes: bytes,
+        filePath: filePath,
         retention: retention,
         source: source,
         mimeType: mimeType,

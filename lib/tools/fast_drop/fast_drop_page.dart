@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:provider/provider.dart';
@@ -105,9 +104,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             const SnackBar(content: Text('Pasting text from clipboard...')),
           );
         }
+        final path = await _scope.createFile(filename, bytes: bytes);
         await fastDropState.uploadFastDrop(
           filename: filename,
-          bytes: bytes,
+          filePath: path,
           retention: _retention,
           source: 'clipboard',
           mimeType: 'text/plain',
@@ -122,9 +122,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
               const SnackBar(content: Text('Pasting image from clipboard...')),
             );
           }
+          final path = await _scope.createFile(filename, bytes: imageBytes);
           await fastDropState.uploadFastDrop(
             filename: filename,
-            bytes: imageBytes,
+            filePath: path,
             retention: _retention,
             source: 'clipboard',
             mimeType: 'image/png',
@@ -165,14 +166,13 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
           context,
         ).showSnackBar(SnackBar(content: Text('Uploading ${file.name}...')));
       }
-      final bytes = await file.readAsBytes();
       String mimeType = file.mimeType ?? 'application/octet-stream';
       if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
-        mimeType = MimeTypeHelper.getMimeType(file.name, bytes: bytes);
+        mimeType = MimeTypeHelper.getMimeType(file.name);
       }
       await fastDropState.uploadFastDrop(
         filename: file.name,
-        bytes: bytes,
+        filePath: file.path,
         retention: _retention,
         source: 'file',
         mimeType: mimeType,
@@ -207,14 +207,13 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
           context,
         ).showSnackBar(SnackBar(content: Text('Uploading ${file.name}...')));
       }
-      final bytes = await File(file.path).readAsBytes();
       String mimeType = file.mimeType;
       if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
-        mimeType = MimeTypeHelper.getMimeType(file.name, bytes: bytes);
+        mimeType = MimeTypeHelper.getMimeType(file.name);
       }
       await fastDropState.uploadFastDrop(
         filename: file.name,
-        bytes: bytes,
+        filePath: file.path,
         retention: _retention,
         source: 'file',
         mimeType: mimeType,
@@ -390,10 +389,12 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       context: context,
       builder: (context) => FastDropPreviewDialog(
         item: item,
-        onDownload: (id) => context.read<FastDropState>().downloadFastDrop(
-          id,
-          knownSize: item.size,
-        ),
+        onDownloadToFile: (id, outputPath) =>
+            context.read<FastDropState>().downloadFastDropToFile(
+              id: id,
+              outputPath: outputPath,
+              knownSize: item.size,
+            ),
         onOpen: () => _onOpen(item),
         onSave: () => _onDownload(item),
       ),
