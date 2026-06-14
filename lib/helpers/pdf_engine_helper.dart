@@ -48,6 +48,11 @@ class PdfDocumentMetadata {
   final String creationDate;
   final String modificationDate;
   final String trapped;
+  final String pdfVersion;
+  final int pageCount;
+  final double widthPoints;
+  final double heightPoints;
+  final int fileSize;
 
   const PdfDocumentMetadata({
     required this.title,
@@ -59,6 +64,11 @@ class PdfDocumentMetadata {
     required this.creationDate,
     required this.modificationDate,
     required this.trapped,
+    required this.pdfVersion,
+    required this.pageCount,
+    required this.widthPoints,
+    required this.heightPoints,
+    required this.fileSize,
   });
 }
 
@@ -136,13 +146,38 @@ class PdfEngineHelper {
     return PdfDocument.openFile(path, passwordProvider: passwordProvider);
   }
 
-  static Future<PdfDocumentMetadata> readMetadata(PdfDocument doc) async {
+  static Future<PdfDocumentMetadata> readMetadata(
+    PdfDocument doc,
+    String filePath,
+  ) async {
     await _ensureInit();
+    final file = File(filePath);
+    final fileSize = await file.exists() ? await file.length() : 0;
+
+    final pageCount = doc.pages.length;
+    final firstPage = doc.pages.isNotEmpty ? doc.pages.first : null;
+    final widthPoints = firstPage?.width ?? 0.0;
+    final heightPoints = firstPage?.height ?? 0.0;
+
     return doc.useNativeDocumentHandle((nativeDocumentHandle) async {
       final pdf = pdfium.getPdfium();
       final documentHandle = pdfium.FPDF_DOCUMENT.fromAddress(
         nativeDocumentHandle,
       );
+
+      final versionPtr = calloc<Int>();
+      String pdfVersion = 'Unknown';
+      try {
+        final success =
+            pdf.FPDF_GetFileVersion(documentHandle, versionPtr) != 0;
+        if (success) {
+          final verInt = versionPtr.value;
+          pdfVersion = '${verInt / 10}';
+        }
+      } catch (_) {
+      } finally {
+        calloc.free(versionPtr);
+      }
 
       String readTag(String tag) {
         final tagBytes = tag.toNativeUtf8();
@@ -195,6 +230,11 @@ class PdfEngineHelper {
         creationDate: readTag('CreationDate'),
         modificationDate: readTag('ModDate'),
         trapped: readTag('Trapped'),
+        pdfVersion: pdfVersion,
+        pageCount: pageCount,
+        widthPoints: widthPoints,
+        heightPoints: heightPoints,
+        fileSize: fileSize,
       );
     });
   }
