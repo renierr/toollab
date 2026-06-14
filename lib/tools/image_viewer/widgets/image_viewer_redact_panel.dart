@@ -440,30 +440,33 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                         ),
                       ),
                     ),
-                    // Hint banner
-                    Positioned(
-                      top: 16,
-                      left: 16,
-                      right: 16,
-                      child: Center(
-                        child: Card(
-                          color: theme.colorScheme.primaryContainer,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: Text(
-                              'Draw a path over the area to redact',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.bold,
+                    // Hint banner (hidden once user starts drawing)
+                    if (_tempDrawingPoints.isEmpty)
+                      Positioned(
+                        top: 8,
+                        left: 16,
+                        right: 16,
+                        child: Center(
+                          child: Card(
+                            margin: EdgeInsets.zero,
+                            color: theme.colorScheme.primaryContainer,
+                            elevation: 1,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              child: Text(
+                                'Draw a path over the area to redact',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
                   ] else
                     // Overlay and draggable redact box
                     Positioned.fill(
