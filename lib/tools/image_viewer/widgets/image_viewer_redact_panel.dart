@@ -3,6 +3,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:image/image.dart' as img;
+import 'package:tool_lab/tools/image_viewer/utils/image_redact_painters.dart';
+import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_redact_overlay.dart';
 
 class ImageViewerRedactPanel extends StatefulWidget {
   final ui.Image image;
@@ -15,6 +17,7 @@ class ImageViewerRedactPanel extends StatefulWidget {
     String redactType,
     double intensity,
     Color? color,
+    List<Offset>? relativePathPoints,
   )
   onRedactApplied;
   final VoidCallback onRedactCancelled;
@@ -44,6 +47,14 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
   Color _solidColor = Colors.black; // Color for solid redact type
   bool _isDragging =
       false; // Performance flag to show fast placeholder during drag/resize
+
+  // Path drawing state
+  List<Offset>? _relativePathPoints;
+  bool _isDrawingPath = false;
+  List<Offset> _tempDrawingPoints = [];
+
+  // Collapsible header state
+  bool _isHeaderExpanded = true;
 
   final ScrollController _styleScrollController = ScrollController();
 
@@ -81,6 +92,57 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
     });
   }
 
+  void _finalizeDrawing(double dispW, double dispH) {
+    if (_tempDrawingPoints.length < 3) {
+      setState(() {
+        _isDrawingPath = false;
+        _relativePathPoints = null;
+      });
+      return;
+    }
+
+    double minX = _tempDrawingPoints.first.dx;
+    double maxX = _tempDrawingPoints.first.dx;
+    double minY = _tempDrawingPoints.first.dy;
+    double maxY = _tempDrawingPoints.first.dy;
+    for (final p in _tempDrawingPoints) {
+      if (p.dx < minX) minX = p.dx;
+      if (p.dx > maxX) maxX = p.dx;
+      if (p.dy < minY) minY = p.dy;
+      if (p.dy > maxY) maxY = p.dy;
+    }
+
+    double w = maxX - minX;
+    double h = maxY - minY;
+    if (w < 10) {
+      minX = math.max(0.0, minX - 5);
+      w = 10;
+    }
+    if (h < 10) {
+      minY = math.max(0.0, minY - 5);
+      h = 10;
+    }
+
+    final double normLeft = (minX / dispW).clamp(0.0, 1.0);
+    final double normTop = (minY / dispH).clamp(0.0, 1.0);
+    final double normWidth = (w / dispW).clamp(0.0, 1.0 - normLeft);
+    final double normHeight = (h / dispH).clamp(0.0, 1.0 - normTop);
+    final normRect = Rect.fromLTWH(normLeft, normTop, normWidth, normHeight);
+
+    final List<Offset> relativePoints = [];
+    for (final p in _tempDrawingPoints) {
+      final rx = ((p.dx - minX) / w).clamp(0.0, 1.0);
+      final ry = ((p.dy - minY) / h).clamp(0.0, 1.0);
+      relativePoints.add(Offset(rx, ry));
+    }
+
+    setState(() {
+      _normalizedRedactRect = normRect;
+      _relativePathPoints = relativePoints;
+      _isDrawingPath = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -89,122 +151,217 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
 
     return Column(
       children: [
-        // Redact style selector
+        // Collapsible header row
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           color: theme.colorScheme.surfaceContainerHigh,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Listener(
-                onPointerSignal: (event) {
-                  if (event is PointerScrollEvent &&
-                      event.scrollDelta.dy != 0) {
-                    _styleScrollController.animateTo(
-                      _styleScrollController.offset + event.scrollDelta.dy,
-                      duration: const Duration(milliseconds: 80),
-                      curve: Curves.linear,
-                    );
-                  }
-                },
-                child: Scrollbar(
-                  controller: _styleScrollController,
-                  child: SingleChildScrollView(
-                    controller: _styleScrollController,
-                    scrollDirection: Axis.horizontal,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Row(
-                      children: [
-                        _RedactStyleButton(
-                          label: 'Solid',
-                          isActive: isSolid,
-                          onPressed: () => _onTypeChanged('solid'),
-                        ),
-                        const SizedBox(width: 8),
-                        _RedactStyleButton(
-                          label: 'Pixelate',
-                          isActive: _redactType == 'pixelate',
-                          onPressed: () => _onTypeChanged('pixelate'),
-                        ),
-                        const SizedBox(width: 8),
-                        _RedactStyleButton(
-                          label: 'Blur',
-                          isActive: _redactType == 'blur',
-                          onPressed: () => _onTypeChanged('blur'),
-                        ),
-                      ],
-                    ),
-                  ),
+              Text(
+                'Redaction Style & Shape',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              if (isSolid) ...[
-                const SizedBox(height: 12),
-                Row(
+              IconButton(
+                icon: Icon(
+                  _isHeaderExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                  size: 20,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isHeaderExpanded = !_isHeaderExpanded;
+                  });
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+        ),
+
+        // Settings panel
+        if (_isHeaderExpanded)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: theme.colorScheme.surfaceContainerHigh,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Shape selector using Wrap to prevent overflow on small screens
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      'Color: ',
+                      'Shape: ',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _swatchColors.map((color) {
-                          return _ColorSwatch(
-                            color: color,
-                            isSelected:
-                                _solidColor.toARGB32() == color.toARGB32(),
-                            onTap: () {
-                              setState(() {
-                                _solidColor = color;
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              if (hasIntensity) ...[
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _redactType == 'pixelate'
-                            ? 'Block Size: ${_intensity.round()} px'
-                            : 'Blur Radius: ${_intensity.round()} px',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: Slider(
-                        value: _intensity,
-                        min: 4,
-                        max: 60,
-                        divisions: 56,
-                        onChanged: (val) {
+                    ChoiceChip(
+                      label: const Text('Rectangle'),
+                      selected: _relativePathPoints == null,
+                      onSelected: (selected) {
+                        if (selected) {
                           setState(() {
-                            _intensity = val;
+                            _relativePathPoints = null;
+                            _isDrawingPath = false;
+                          });
+                        }
+                      },
+                    ),
+                    ChoiceChip(
+                      label: const Text('Freehand'),
+                      selected: _relativePathPoints != null,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            _isDrawingPath = true;
+                            _tempDrawingPoints = [];
+                          });
+                        }
+                      },
+                    ),
+                    if (_relativePathPoints != null)
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _isDrawingPath = true;
+                            _tempDrawingPoints = [];
                           });
                         },
+                        icon: const Icon(Icons.gesture, size: 16),
+                        label: const Text('Redraw'),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                       ),
-                    ),
                   ],
                 ),
+                const SizedBox(height: 12),
+
+                // Style selector
+                Listener(
+                  onPointerSignal: (event) {
+                    if (event is PointerScrollEvent &&
+                        event.scrollDelta.dy != 0) {
+                      _styleScrollController.animateTo(
+                        _styleScrollController.offset + event.scrollDelta.dy,
+                        duration: const Duration(milliseconds: 80),
+                        curve: Curves.linear,
+                      );
+                    }
+                  },
+                  child: Scrollbar(
+                    controller: _styleScrollController,
+                    child: SingleChildScrollView(
+                      controller: _styleScrollController,
+                      scrollDirection: Axis.horizontal,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Row(
+                        children: [
+                          _RedactStyleButton(
+                            label: 'Solid',
+                            isActive: isSolid,
+                            onPressed: () => _onTypeChanged('solid'),
+                          ),
+                          const SizedBox(width: 8),
+                          _RedactStyleButton(
+                            label: 'Pixelate',
+                            isActive: _redactType == 'pixelate',
+                            onPressed: () => _onTypeChanged('pixelate'),
+                          ),
+                          const SizedBox(width: 8),
+                          _RedactStyleButton(
+                            label: 'Blur',
+                            isActive: _redactType == 'blur',
+                            onPressed: () => _onTypeChanged('blur'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (isSolid) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Text(
+                        'Color: ',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _swatchColors.map((color) {
+                            return _ColorSwatch(
+                              color: color,
+                              isSelected:
+                                  _solidColor.toARGB32() == color.toARGB32(),
+                              onTap: () {
+                                setState(() {
+                                  _solidColor = color;
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                if (hasIntensity) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _redactType == 'pixelate'
+                              ? 'Block Size: ${_intensity.round()} px'
+                              : 'Blur Radius: ${_intensity.round()} px',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: Slider(
+                          value: _intensity,
+                          min: 4,
+                          max: 60,
+                          divisions: 56,
+                          onChanged: (val) {
+                            setState(() {
+                              _intensity = val;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
 
         // Interactive Redact Editor area
         Expanded(
@@ -248,37 +405,98 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                     child: RawImage(image: widget.image, fit: BoxFit.fill),
                   ),
 
-                  // Overlay and draggable redact box
-                  Positioned.fill(
-                    child: _RedactOverlay(
-                      image: widget.image,
-                      decodedImage: widget.decodedImage,
-                      redactRectNormalized: _normalizedRedactRect,
-                      imageOffsetX: offsetX,
-                      imageOffsetY: offsetY,
-                      imageDispW: dispW,
-                      imageDispH: dispH,
-                      redactType: _redactType,
-                      intensity: _intensity,
-                      solidColor: _solidColor,
-                      isDragging: _isDragging,
-                      onDragStart: () {
-                        setState(() {
-                          _isDragging = true;
-                        });
-                      },
-                      onDragEnd: () {
-                        setState(() {
-                          _isDragging = false;
-                        });
-                      },
-                      onRectChanged: (newRectNormalized) {
-                        setState(() {
-                          _normalizedRedactRect = newRectNormalized;
-                        });
-                      },
+                  if (_isDrawingPath) ...[
+                    // Drawing canvas
+                    Positioned(
+                      left: offsetX,
+                      top: offsetY,
+                      width: dispW,
+                      height: dispH,
+                      child: GestureDetector(
+                        onPanStart: (details) {
+                          setState(() {
+                            _tempDrawingPoints = [details.localPosition];
+                          });
+                        },
+                        onPanUpdate: (details) {
+                          setState(() {
+                            final localPos = details.localPosition;
+                            if (localPos.dx >= 0 &&
+                                localPos.dx <= dispW &&
+                                localPos.dy >= 0 &&
+                                localPos.dy <= dispH) {
+                              _tempDrawingPoints.add(localPos);
+                            }
+                          });
+                        },
+                        onPanEnd: (_) {
+                          _finalizeDrawing(dispW, dispH);
+                        },
+                        child: CustomPaint(
+                          painter: DrawingPainter(
+                            points: _tempDrawingPoints,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    // Hint banner
+                    Positioned(
+                      top: 16,
+                      left: 16,
+                      right: 16,
+                      child: Center(
+                        child: Card(
+                          color: theme.colorScheme.primaryContainer,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: Text(
+                              'Draw a path over the area to redact',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ] else
+                    // Overlay and draggable redact box
+                    Positioned.fill(
+                      child: ImageViewerRedactOverlay(
+                        image: widget.image,
+                        decodedImage: widget.decodedImage,
+                        redactRectNormalized: _normalizedRedactRect,
+                        imageOffsetX: offsetX,
+                        imageOffsetY: offsetY,
+                        imageDispW: dispW,
+                        imageDispH: dispH,
+                        redactType: _redactType,
+                        intensity: _intensity,
+                        solidColor: _solidColor,
+                        isDragging: _isDragging,
+                        relativePathPoints: _relativePathPoints,
+                        onDragStart: () {
+                          setState(() {
+                            _isDragging = true;
+                          });
+                        },
+                        onDragEnd: () {
+                          setState(() {
+                            _isDragging = false;
+                          });
+                        },
+                        onRectChanged: (newRectNormalized) {
+                          setState(() {
+                            _normalizedRedactRect = newRectNormalized;
+                          });
+                        },
+                      ),
+                    ),
                 ],
               );
             },
@@ -315,7 +533,6 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                   w = w.clamp(1, _imageWidth - x);
                   h = h.clamp(1, _imageHeight - y);
 
-                  // Calculate display width in this build
                   final double containerW = MediaQuery.of(context).size.width;
                   final double containerH = MediaQuery.of(context).size.height;
                   final double imgRatio = _imageWidth / _imageHeight;
@@ -324,7 +541,6 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                       ? containerW
                       : containerH * imgRatio;
 
-                  // Scale intensity based on the display-to-original ratio so the pixelation matches preview
                   final double scaleRelation =
                       _imageWidth / (dispW > 0 ? dispW : _imageWidth);
                   final double scaledIntensity = _intensity * scaleRelation;
@@ -337,6 +553,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                     _redactType,
                     scaledIntensity,
                     _redactType == 'solid' ? _solidColor : null,
+                    _relativePathPoints,
                   );
                 },
                 icon: const Icon(Icons.check),
@@ -428,473 +645,6 @@ class _ColorSwatch extends StatelessWidget {
                 color: isWhite ? Colors.black : Colors.white,
               )
             : null,
-      ),
-    );
-  }
-}
-
-class _RedactOverlay extends StatefulWidget {
-  final ui.Image image;
-  final img.Image? decodedImage;
-  final Rect redactRectNormalized;
-  final double imageOffsetX;
-  final double imageOffsetY;
-  final double imageDispW;
-  final double imageDispH;
-  final String redactType;
-  final double intensity;
-  final Color solidColor;
-  final bool isDragging;
-  final VoidCallback onDragStart;
-  final VoidCallback onDragEnd;
-  final ValueChanged<Rect> onRectChanged;
-
-  const _RedactOverlay({
-    required this.image,
-    this.decodedImage,
-    required this.redactRectNormalized,
-    required this.imageOffsetX,
-    required this.imageOffsetY,
-    required this.imageDispW,
-    required this.imageDispH,
-    required this.redactType,
-    required this.intensity,
-    required this.solidColor,
-    required this.isDragging,
-    required this.onDragStart,
-    required this.onDragEnd,
-    required this.onRectChanged,
-  });
-
-  @override
-  State<_RedactOverlay> createState() => _RedactOverlayState();
-}
-
-class _RedactOverlayState extends State<_RedactOverlay> {
-  Offset? _dragStartOffset;
-  Rect? _dragStartRect;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // Screen coordinates of the redact box
-    final double left =
-        widget.imageOffsetX +
-        widget.redactRectNormalized.left * widget.imageDispW;
-    final double top =
-        widget.imageOffsetY +
-        widget.redactRectNormalized.top * widget.imageDispH;
-    final double width = widget.redactRectNormalized.width * widget.imageDispW;
-    final double height =
-        widget.redactRectNormalized.height * widget.imageDispH;
-
-    return Stack(
-      children: [
-        // Live Preview of the redacted area (Ignored for pointer events)
-        Positioned(
-          left: left,
-          top: top,
-          width: width,
-          height: height,
-          child: IgnorePointer(
-            child: ClipRect(child: _buildPreviewContent(context)),
-          ),
-        ),
-
-        // Border of the redact box
-        Positioned(
-          left: left,
-          top: top,
-          width: width,
-          height: height,
-          child: IgnorePointer(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: theme.colorScheme.primary,
-                  width: 2.0,
-                ),
-              ),
-            ),
-          ),
-        ),
-
-        // Draggable box surface for moving the entire redact rect
-        Positioned(
-          left: left,
-          top: top,
-          width: width,
-          height: height,
-          child: GestureDetector(
-            onPanStart: (details) {
-              widget.onDragStart();
-              _dragStartOffset = details.globalPosition;
-              _dragStartRect = widget.redactRectNormalized;
-            },
-            onPanEnd: (_) {
-              widget.onDragEnd();
-              _dragStartOffset = null;
-              _dragStartRect = null;
-            },
-            onPanCancel: () {
-              widget.onDragEnd();
-              _dragStartOffset = null;
-              _dragStartRect = null;
-            },
-            onPanUpdate: (details) {
-              if (_dragStartOffset == null || _dragStartRect == null) return;
-              final double dx =
-                  details.globalPosition.dx - _dragStartOffset!.dx;
-              final double dy =
-                  details.globalPosition.dy - _dragStartOffset!.dy;
-
-              final double dxNorm = dx / widget.imageDispW;
-              final double dyNorm = dy / widget.imageDispH;
-
-              double newLeft = _dragStartRect!.left + dxNorm;
-              double newTop = _dragStartRect!.top + dyNorm;
-
-              newLeft = newLeft.clamp(0.0, 1.0 - _dragStartRect!.width);
-              newTop = newTop.clamp(0.0, 1.0 - _dragStartRect!.height);
-
-              widget.onRectChanged(
-                Rect.fromLTWH(
-                  newLeft,
-                  newTop,
-                  _dragStartRect!.width,
-                  _dragStartRect!.height,
-                ),
-              );
-            },
-            child: Container(color: Colors.transparent),
-          ),
-        ),
-
-        // Drag handles (corners)
-        // Top-Left
-        Positioned(
-          left: left - 20,
-          top: top - 20,
-          child: _Handle(
-            onDragStart: (globalPos) {
-              widget.onDragStart();
-              _dragStartOffset = globalPos;
-              _dragStartRect = widget.redactRectNormalized;
-            },
-            onDragEnd: () {
-              widget.onDragEnd();
-              _dragStartOffset = null;
-              _dragStartRect = null;
-            },
-            onDrag: (globalPos) {
-              if (_dragStartOffset == null || _dragStartRect == null) return;
-              final double dx = globalPos.dx - _dragStartOffset!.dx;
-              final double dy = globalPos.dy - _dragStartOffset!.dy;
-              _resizeRedactBox(dx, dy, _dragStartRect!, top: true, left: true);
-            },
-          ),
-        ),
-        // Top-Right
-        Positioned(
-          left: left + width - 20,
-          top: top - 20,
-          child: _Handle(
-            onDragStart: (globalPos) {
-              widget.onDragStart();
-              _dragStartOffset = globalPos;
-              _dragStartRect = widget.redactRectNormalized;
-            },
-            onDragEnd: () {
-              widget.onDragEnd();
-              _dragStartOffset = null;
-              _dragStartRect = null;
-            },
-            onDrag: (globalPos) {
-              if (_dragStartOffset == null || _dragStartRect == null) return;
-              final double dx = globalPos.dx - _dragStartOffset!.dx;
-              final double dy = globalPos.dy - _dragStartOffset!.dy;
-              _resizeRedactBox(dx, dy, _dragStartRect!, top: true, right: true);
-            },
-          ),
-        ),
-        // Bottom-Left
-        Positioned(
-          left: left - 20,
-          top: top + height - 20,
-          child: _Handle(
-            onDragStart: (globalPos) {
-              widget.onDragStart();
-              _dragStartOffset = globalPos;
-              _dragStartRect = widget.redactRectNormalized;
-            },
-            onDragEnd: () {
-              widget.onDragEnd();
-              _dragStartOffset = null;
-              _dragStartRect = null;
-            },
-            onDrag: (globalPos) {
-              if (_dragStartOffset == null || _dragStartRect == null) return;
-              final double dx = globalPos.dx - _dragStartOffset!.dx;
-              final double dy = globalPos.dy - _dragStartOffset!.dy;
-              _resizeRedactBox(
-                dx,
-                dy,
-                _dragStartRect!,
-                bottom: true,
-                left: true,
-              );
-            },
-          ),
-        ),
-        // Bottom-Right
-        Positioned(
-          left: left + width - 20,
-          top: top + height - 20,
-          child: _Handle(
-            onDragStart: (globalPos) {
-              widget.onDragStart();
-              _dragStartOffset = globalPos;
-              _dragStartRect = widget.redactRectNormalized;
-            },
-            onDragEnd: () {
-              widget.onDragEnd();
-              _dragStartOffset = null;
-              _dragStartRect = null;
-            },
-            onDrag: (globalPos) {
-              if (_dragStartOffset == null || _dragStartRect == null) return;
-              final double dx = globalPos.dx - _dragStartOffset!.dx;
-              final double dy = globalPos.dy - _dragStartOffset!.dy;
-              _resizeRedactBox(
-                dx,
-                dy,
-                _dragStartRect!,
-                bottom: true,
-                right: true,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPreviewContent(BuildContext context) {
-    final theme = Theme.of(context);
-    switch (widget.redactType) {
-      case 'solid':
-        return Container(color: widget.solidColor);
-      case 'pixelate':
-        if (widget.isDragging) {
-          return Container(
-            color: theme.colorScheme.primary.withValues(alpha: 0.15),
-            child: const Center(
-              child: Icon(Icons.grid_on, color: Colors.white70, size: 24),
-            ),
-          );
-        }
-        if (widget.decodedImage == null) {
-          return Container(
-            color: theme.colorScheme.primary.withValues(alpha: 0.25),
-            child: const Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          );
-        }
-        return CustomPaint(
-          painter: _PixelatePainter(
-            decodedImage: widget.decodedImage!,
-            normalizedRect: widget.redactRectNormalized,
-            blockSize: widget.intensity,
-          ),
-        );
-      case 'blur':
-        if (widget.isDragging) {
-          return Container(
-            color: theme.colorScheme.primary.withValues(alpha: 0.15),
-            child: const Center(
-              child: Icon(Icons.blur_on, color: Colors.white70, size: 24),
-            ),
-          );
-        }
-        return ClipRect(
-          child: BackdropFilter(
-            filter: ui.ImageFilter.blur(
-              sigmaX: widget.intensity,
-              sigmaY: widget.intensity,
-            ),
-            child: Container(color: Colors.transparent),
-          ),
-        );
-      default:
-        return const SizedBox.shrink();
-    }
-  }
-
-  void _resizeRedactBox(
-    double dx,
-    double dy,
-    Rect startRect, {
-    bool top = false,
-    bool bottom = false,
-    bool left = false,
-    bool right = false,
-  }) {
-    double pxLeft = startRect.left * widget.imageDispW;
-    double pxTop = startRect.top * widget.imageDispH;
-    double pxWidth = startRect.width * widget.imageDispW;
-    double pxHeight = startRect.height * widget.imageDispH;
-
-    const double minSize = 24.0;
-
-    if (left) {
-      final double maxLeft = math.max(0.0, pxLeft + pxWidth - minSize);
-      final double newLeft = (pxLeft + dx).clamp(0.0, maxLeft);
-      pxWidth = pxWidth + (pxLeft - newLeft);
-      pxLeft = newLeft;
-    }
-    if (right) {
-      final double maxWidth = math.max(minSize, widget.imageDispW - pxLeft);
-      pxWidth = (pxWidth + dx).clamp(minSize, maxWidth);
-    }
-    if (top) {
-      final double maxTop = math.max(0.0, pxTop + pxHeight - minSize);
-      final double newTop = (pxTop + dy).clamp(0.0, maxTop);
-      pxHeight = pxHeight + (pxTop - newTop);
-      pxTop = newTop;
-    }
-    if (bottom) {
-      final double maxHeight = math.max(minSize, widget.imageDispH - pxTop);
-      pxHeight = (pxHeight + dy).clamp(minSize, maxHeight);
-    }
-
-    widget.onRectChanged(
-      Rect.fromLTWH(
-        (pxLeft / widget.imageDispW).clamp(0.0, 1.0),
-        (pxTop / widget.imageDispH).clamp(0.0, 1.0),
-        (pxWidth / widget.imageDispW).clamp(0.0, 1.0),
-        (pxHeight / widget.imageDispH).clamp(0.0, 1.0),
-      ),
-    );
-  }
-}
-
-class _PixelatePainter extends CustomPainter {
-  final img.Image decodedImage;
-  final Rect normalizedRect;
-  final double blockSize;
-
-  _PixelatePainter({
-    required this.decodedImage,
-    required this.normalizedRect,
-    required this.blockSize,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (size.width <= 0 || size.height <= 0) return;
-
-    final double stepX = blockSize;
-    final double stepY = blockSize;
-
-    final paint = Paint()..style = PaintingStyle.fill;
-
-    // Map starting coords of redact box to decoded image pixels
-    final double srcLeft = normalizedRect.left * decodedImage.width;
-    final double srcTop = normalizedRect.top * decodedImage.height;
-    final double srcWidth = normalizedRect.width * decodedImage.width;
-    final double srcHeight = normalizedRect.height * decodedImage.height;
-
-    for (double y = 0; y < size.height; y += stepY) {
-      for (double x = 0; x < size.width; x += stepX) {
-        // Calculate original coordinate to sample color from the center of this block
-        final double sampleX =
-            srcLeft + (x + stepX / 2) * (srcWidth / size.width);
-        final double sampleY =
-            srcTop + (y + stepY / 2) * (srcHeight / size.height);
-
-        final int clampX = sampleX.round().clamp(0, decodedImage.width - 1);
-        final int clampY = sampleY.round().clamp(0, decodedImage.height - 1);
-
-        final pixel = decodedImage.getPixel(clampX, clampY);
-        final int r = pixel.r.toInt();
-        final int g = pixel.g.toInt();
-        final int b = pixel.b.toInt();
-        final int a = pixel.a.toInt();
-
-        paint.color = Color.fromARGB(a, r, g, b);
-
-        final double w = math.min(stepX, size.width - x);
-        final double h = math.min(stepY, size.height - y);
-
-        canvas.drawRect(Rect.fromLTWH(x, y, w, h), paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _PixelatePainter oldDelegate) {
-    return oldDelegate.decodedImage != decodedImage ||
-        oldDelegate.normalizedRect != normalizedRect ||
-        oldDelegate.blockSize != blockSize;
-  }
-}
-
-class _Handle extends StatelessWidget {
-  final ValueChanged<Offset> onDragStart;
-  final VoidCallback onDragEnd;
-  final ValueChanged<Offset> onDrag;
-
-  const _Handle({
-    required this.onDrag,
-    required this.onDragStart,
-    required this.onDragEnd,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onPanStart: (details) {
-        onDragStart(details.globalPosition);
-      },
-      onPanEnd: (_) {
-        onDragEnd();
-      },
-      onPanCancel: () {
-        onDragEnd();
-      },
-      onPanUpdate: (details) {
-        onDrag(details.globalPosition);
-      },
-      child: Container(
-        width: 40,
-        height: 40,
-        alignment: Alignment.center,
-        color: Colors.transparent,
-        child: Container(
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary,
-              width: 2.0,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 4,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

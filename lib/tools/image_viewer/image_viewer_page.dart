@@ -208,6 +208,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                                   redactType,
                                   intensity,
                                   color,
+                                  relativePathPoints,
                                 ) async {
                                   try {
                                     await _controller.redactImage(
@@ -218,6 +219,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                                       redactType,
                                       intensity,
                                       color,
+                                      relativePathPoints,
                                     );
                                     _onResetZoom();
                                   } catch (e) {

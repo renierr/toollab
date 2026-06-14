@@ -31,6 +31,7 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
 
   double? _aspectRatio; // null means Freeform
   String _activePreset = 'Free';
+  bool _isHeaderExpanded = true;
 
   final ScrollController _presetScrollController = ScrollController();
 
@@ -82,63 +83,99 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
 
     return Column(
       children: [
-        // Presets bar
+        // Collapsible Header Row
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           color: theme.colorScheme.surfaceContainerHigh,
-          child: Listener(
-            onPointerSignal: (event) {
-              if (event is PointerScrollEvent && event.scrollDelta.dy != 0) {
-                _presetScrollController.animateTo(
-                  _presetScrollController.offset + event.scrollDelta.dy,
-                  duration: const Duration(milliseconds: 80),
-                  curve: Curves.linear,
-                );
-              }
-            },
-            child: Scrollbar(
-              controller: _presetScrollController,
-              child: SingleChildScrollView(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Crop Presets',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  _isHeaderExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                  size: 20,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isHeaderExpanded = !_isHeaderExpanded;
+                  });
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+        ),
+
+        // Presets bar
+        if (_isHeaderExpanded)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: theme.colorScheme.surfaceContainerHigh,
+            child: Listener(
+              onPointerSignal: (event) {
+                if (event is PointerScrollEvent && event.scrollDelta.dy != 0) {
+                  _presetScrollController.animateTo(
+                    _presetScrollController.offset + event.scrollDelta.dy,
+                    duration: const Duration(milliseconds: 80),
+                    curve: Curves.linear,
+                  );
+                }
+              },
+              child: Scrollbar(
                 controller: _presetScrollController,
-                scrollDirection: Axis.horizontal,
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Row(
-                  children: [
-                    _PresetButton(
-                      label: 'Free',
-                      isActive: _activePreset == 'Free',
-                      onPressed: () => _applyPreset(null, 'Free'),
-                    ),
-                    const SizedBox(width: 8),
-                    _PresetButton(
-                      label: '1:1 Square',
-                      isActive: _activePreset == '1:1 Square',
-                      onPressed: () => _applyPreset(1.0, '1:1 Square'),
-                    ),
-                    const SizedBox(width: 8),
-                    _PresetButton(
-                      label: '16:9 Widescreen',
-                      isActive: _activePreset == '16:9 Widescreen',
-                      onPressed: () => _applyPreset(16 / 9, '16:9 Widescreen'),
-                    ),
-                    const SizedBox(width: 8),
-                    _PresetButton(
-                      label: '4:3 Standard',
-                      isActive: _activePreset == '4:3 Standard',
-                      onPressed: () => _applyPreset(4 / 3, '4:3 Standard'),
-                    ),
-                    const SizedBox(width: 8),
-                    _PresetButton(
-                      label: '3:2 Photo',
-                      isActive: _activePreset == '3:2 Photo',
-                      onPressed: () => _applyPreset(3 / 2, '3:2 Photo'),
-                    ),
-                  ],
+                child: SingleChildScrollView(
+                  controller: _presetScrollController,
+                  scrollDirection: Axis.horizontal,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Row(
+                    children: [
+                      _PresetButton(
+                        label: 'Free',
+                        isActive: _activePreset == 'Free',
+                        onPressed: () => _applyPreset(null, 'Free'),
+                      ),
+                      const SizedBox(width: 8),
+                      _PresetButton(
+                        label: '1:1 Square',
+                        isActive: _activePreset == '1:1 Square',
+                        onPressed: () => _applyPreset(1.0, '1:1 Square'),
+                      ),
+                      const SizedBox(width: 8),
+                      _PresetButton(
+                        label: '16:9 Widescreen',
+                        isActive: _activePreset == '16:9 Widescreen',
+                        onPressed: () =>
+                            _applyPreset(16 / 9, '16:9 Widescreen'),
+                      ),
+                      const SizedBox(width: 8),
+                      _PresetButton(
+                        label: '4:3 Standard',
+                        isActive: _activePreset == '4:3 Standard',
+                        onPressed: () => _applyPreset(4 / 3, '4:3 Standard'),
+                      ),
+                      const SizedBox(width: 8),
+                      _PresetButton(
+                        label: '3:2 Photo',
+                        isActive: _activePreset == '3:2 Photo',
+                        onPressed: () => _applyPreset(3 / 2, '3:2 Photo'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
 
         // Interactive Editor area
         Expanded(

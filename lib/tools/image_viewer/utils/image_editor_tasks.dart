@@ -153,6 +153,7 @@ class RedactParams {
   final String redactType;
   final double intensity;
   final int? colorValue;
+  final List<double>? pathPoints;
 
   RedactParams({
     required this.image,
@@ -163,7 +164,37 @@ class RedactParams {
     required this.redactType,
     required this.intensity,
     this.colorValue,
+    this.pathPoints,
   });
+}
+
+bool _isPointInPolygon(
+  double px,
+  double py,
+  List<double> pathPoints,
+  int x,
+  int y,
+  int w,
+  int h,
+) {
+  bool inside = false;
+  final int count = pathPoints.length ~/ 2;
+  if (count < 3) return false;
+
+  int j = count - 1;
+  for (int i = 0; i < count; i++) {
+    final double ix = x + pathPoints[i * 2] * w;
+    final double iy = y + pathPoints[i * 2 + 1] * h;
+    final double jx = x + pathPoints[j * 2] * w;
+    final double jy = y + pathPoints[j * 2 + 1] * h;
+
+    if (((iy > py) != (jy > py)) &&
+        (px < (jx - ix) * (py - iy) / (jy - iy) + ix)) {
+      inside = !inside;
+    }
+    j = i;
+  }
+  return inside;
 }
 
 img.Image redactImageTask(RedactParams params) {
@@ -174,6 +205,7 @@ img.Image redactImageTask(RedactParams params) {
   final h = params.height;
   final type = params.redactType.toLowerCase();
   final intensity = params.intensity;
+  final pathPoints = params.pathPoints;
 
   if (type == 'solid') {
     final colorVal = params.colorValue ?? 0xFF000000;
@@ -181,15 +213,37 @@ img.Image redactImageTask(RedactParams params) {
     final r = (colorVal >> 16) & 0xFF;
     final g = (colorVal >> 8) & 0xFF;
     final b = colorVal & 0xFF;
+    final color = img.ColorRgba8(r, g, b, a);
 
-    return img.fillRect(
-      image,
-      x1: x,
-      y1: y,
-      x2: x + w - 1,
-      y2: y + h - 1,
-      color: img.ColorRgba8(r, g, b, a),
-    );
+    if (pathPoints != null && pathPoints.isNotEmpty) {
+      for (int py = y; py < y + h; py++) {
+        for (int px = x; px < x + w; px++) {
+          if (px >= 0 && px < image.width && py >= 0 && py < image.height) {
+            if (_isPointInPolygon(
+              px.toDouble(),
+              py.toDouble(),
+              pathPoints,
+              x,
+              y,
+              w,
+              h,
+            )) {
+              image.setPixel(px, py, color);
+            }
+          }
+        }
+      }
+      return image;
+    } else {
+      return img.fillRect(
+        image,
+        x1: x,
+        y1: y,
+        x2: x + w - 1,
+        y2: y + h - 1,
+        color: color,
+      );
+    }
   } else if (type == 'pixelate') {
     final blockSize = intensity.round().clamp(1, 100);
     for (int py = y; py < y + h; py += blockSize) {
@@ -209,14 +263,30 @@ img.Image redactImageTask(RedactParams params) {
           a.toInt(),
         );
 
-        img.fillRect(
-          image,
-          x1: px,
-          y1: py,
-          x2: (px + blockSize - 1).clamp(x, x + w - 1),
-          y2: (py + blockSize - 1).clamp(y, y + h - 1),
-          color: color,
-        );
+        final int x2 = (px + blockSize - 1).clamp(x, x + w - 1);
+        final int y2 = (py + blockSize - 1).clamp(y, y + h - 1);
+
+        if (pathPoints != null && pathPoints.isNotEmpty) {
+          for (int by = py; by <= y2; by++) {
+            for (int bx = px; bx <= x2; bx++) {
+              if (bx >= 0 && bx < image.width && by >= 0 && by < image.height) {
+                if (_isPointInPolygon(
+                  bx.toDouble(),
+                  by.toDouble(),
+                  pathPoints,
+                  x,
+                  y,
+                  w,
+                  h,
+                )) {
+                  image.setPixel(bx, by, color);
+                }
+              }
+            }
+          }
+        } else {
+          img.fillRect(image, x1: px, y1: py, x2: x2, y2: y2, color: color);
+        }
       }
     }
     return image;
@@ -224,7 +294,27 @@ img.Image redactImageTask(RedactParams params) {
     final radius = intensity.round().clamp(1, 100);
     final cropped = img.copyCrop(image, x: x, y: y, width: w, height: h);
     final blurred = img.gaussianBlur(cropped, radius: radius);
-    return img.compositeImage(image, blurred, dstX: x, dstY: y);
+
+    if (pathPoints != null && pathPoints.isNotEmpty) {
+      for (int py = 0; py < h; py++) {
+        for (int px = 0; px < w; px++) {
+          final double imgX = (x + px).toDouble();
+          final double imgY = (y + py).toDouble();
+          if (imgX >= 0 &&
+              imgX < image.width &&
+              imgY >= 0 &&
+              imgY < image.height) {
+            if (_isPointInPolygon(imgX, imgY, pathPoints, x, y, w, h)) {
+              final blurPixel = blurred.getPixel(px, py);
+              image.setPixel(x + px, y + py, blurPixel);
+            }
+          }
+        }
+      }
+      return image;
+    } else {
+      return img.compositeImage(image, blurred, dstX: x, dstY: y);
+    }
   }
 
   return image;
