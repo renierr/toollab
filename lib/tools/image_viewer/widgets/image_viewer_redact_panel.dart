@@ -2,9 +2,11 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:image/image.dart' as img;
 
 class ImageViewerRedactPanel extends StatefulWidget {
   final ui.Image image;
+  final img.Image? decodedImage;
   final Function(
     int x,
     int y,
@@ -20,6 +22,7 @@ class ImageViewerRedactPanel extends StatefulWidget {
   const ImageViewerRedactPanel({
     super.key,
     required this.image,
+    this.decodedImage,
     required this.onRedactApplied,
     required this.onRedactCancelled,
   });
@@ -39,6 +42,8 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
   double _intensity =
       15.0; // Slider value for pixelate (block size) or blur (radius)
   Color _solidColor = Colors.black; // Color for solid redact type
+  bool _isDragging =
+      false; // Performance flag to show fast placeholder during drag/resize
 
   final ScrollController _styleScrollController = ScrollController();
 
@@ -247,6 +252,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                   Positioned.fill(
                     child: _RedactOverlay(
                       image: widget.image,
+                      decodedImage: widget.decodedImage,
                       redactRectNormalized: _normalizedRedactRect,
                       imageOffsetX: offsetX,
                       imageOffsetY: offsetY,
@@ -255,6 +261,17 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                       redactType: _redactType,
                       intensity: _intensity,
                       solidColor: _solidColor,
+                      isDragging: _isDragging,
+                      onDragStart: () {
+                        setState(() {
+                          _isDragging = true;
+                        });
+                      },
+                      onDragEnd: () {
+                        setState(() {
+                          _isDragging = false;
+                        });
+                      },
                       onRectChanged: (newRectNormalized) {
                         setState(() {
                           _normalizedRedactRect = newRectNormalized;
@@ -298,13 +315,27 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                   w = w.clamp(1, _imageWidth - x);
                   h = h.clamp(1, _imageHeight - y);
 
+                  // Calculate display width in this build
+                  final double containerW = MediaQuery.of(context).size.width;
+                  final double containerH = MediaQuery.of(context).size.height;
+                  final double imgRatio = _imageWidth / _imageHeight;
+                  final double containerRatio = containerW / containerH;
+                  final double dispW = imgRatio > containerRatio
+                      ? containerW
+                      : containerH * imgRatio;
+
+                  // Scale intensity based on the display-to-original ratio so the pixelation matches preview
+                  final double scaleRelation =
+                      _imageWidth / (dispW > 0 ? dispW : _imageWidth);
+                  final double scaledIntensity = _intensity * scaleRelation;
+
                   widget.onRedactApplied(
                     x,
                     y,
                     w,
                     h,
                     _redactType,
-                    _intensity,
+                    scaledIntensity,
                     _redactType == 'solid' ? _solidColor : null,
                   );
                 },
@@ -404,6 +435,7 @@ class _ColorSwatch extends StatelessWidget {
 
 class _RedactOverlay extends StatelessWidget {
   final ui.Image image;
+  final img.Image? decodedImage;
   final Rect redactRectNormalized;
   final double imageOffsetX;
   final double imageOffsetY;
@@ -412,10 +444,14 @@ class _RedactOverlay extends StatelessWidget {
   final String redactType;
   final double intensity;
   final Color solidColor;
+  final bool isDragging;
+  final VoidCallback onDragStart;
+  final VoidCallback onDragEnd;
   final ValueChanged<Rect> onRectChanged;
 
   const _RedactOverlay({
     required this.image,
+    this.decodedImage,
     required this.redactRectNormalized,
     required this.imageOffsetX,
     required this.imageOffsetY,
@@ -424,6 +460,9 @@ class _RedactOverlay extends StatelessWidget {
     required this.redactType,
     required this.intensity,
     required this.solidColor,
+    required this.isDragging,
+    required this.onDragStart,
+    required this.onDragEnd,
     required this.onRectChanged,
   });
 
@@ -468,13 +507,16 @@ class _RedactOverlay extends StatelessWidget {
           ),
         ),
 
-        // Draggable box surface for moving the entire redact rect (covers full area)
+        // Draggable box surface for moving the entire redact rect
         Positioned(
           left: left,
           top: top,
           width: width,
           height: height,
           child: GestureDetector(
+            onPanStart: (_) => onDragStart(),
+            onPanEnd: (_) => onDragEnd(),
+            onPanCancel: () => onDragEnd(),
             onPanUpdate: (details) {
               final double dxNorm = details.delta.dx / imageDispW;
               final double dyNorm = details.delta.dy / imageDispH;
@@ -498,12 +540,14 @@ class _RedactOverlay extends StatelessWidget {
           ),
         ),
 
-        // Drag handles (corners) - drawn on top of the draggable surface
+        // Drag handles (corners)
         // Top-Left
         Positioned(
           left: left - 12,
           top: top - 12,
           child: _Handle(
+            onDragStart: onDragStart,
+            onDragEnd: onDragEnd,
             onDrag: (dx, dy) => _resizeRedactBox(dx, dy, top: true, left: true),
           ),
         ),
@@ -512,6 +556,8 @@ class _RedactOverlay extends StatelessWidget {
           left: left + width - 12,
           top: top - 12,
           child: _Handle(
+            onDragStart: onDragStart,
+            onDragEnd: onDragEnd,
             onDrag: (dx, dy) =>
                 _resizeRedactBox(dx, dy, top: true, right: true),
           ),
@@ -521,6 +567,8 @@ class _RedactOverlay extends StatelessWidget {
           left: left - 12,
           top: top + height - 12,
           child: _Handle(
+            onDragStart: onDragStart,
+            onDragEnd: onDragEnd,
             onDrag: (dx, dy) =>
                 _resizeRedactBox(dx, dy, bottom: true, left: true),
           ),
@@ -530,6 +578,8 @@ class _RedactOverlay extends StatelessWidget {
           left: left + width - 12,
           top: top + height - 12,
           child: _Handle(
+            onDragStart: onDragStart,
+            onDragEnd: onDragEnd,
             onDrag: (dx, dy) =>
                 _resizeRedactBox(dx, dy, bottom: true, right: true),
           ),
@@ -539,18 +589,47 @@ class _RedactOverlay extends StatelessWidget {
   }
 
   Widget _buildPreviewContent(BuildContext context) {
+    final theme = Theme.of(context);
     switch (redactType) {
       case 'solid':
         return Container(color: solidColor);
       case 'pixelate':
+        if (isDragging) {
+          return Container(
+            color: theme.colorScheme.primary.withValues(alpha: 0.15),
+            child: const Center(
+              child: Icon(Icons.grid_on, color: Colors.white70, size: 24),
+            ),
+          );
+        }
+        if (decodedImage == null) {
+          return Container(
+            color: theme.colorScheme.primary.withValues(alpha: 0.25),
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        }
         return CustomPaint(
           painter: _PixelatePainter(
-            image: image,
+            decodedImage: decodedImage!,
             normalizedRect: redactRectNormalized,
             blockSize: intensity,
           ),
         );
       case 'blur':
+        if (isDragging) {
+          return Container(
+            color: theme.colorScheme.primary.withValues(alpha: 0.15),
+            child: const Center(
+              child: Icon(Icons.blur_on, color: Colors.white70, size: 24),
+            ),
+          );
+        }
         return ClipRect(
           child: BackdropFilter(
             filter: ui.ImageFilter.blur(sigmaX: intensity, sigmaY: intensity),
@@ -610,12 +689,12 @@ class _RedactOverlay extends StatelessWidget {
 }
 
 class _PixelatePainter extends CustomPainter {
-  final ui.Image image;
+  final img.Image decodedImage;
   final Rect normalizedRect;
   final double blockSize;
 
   _PixelatePainter({
-    required this.image,
+    required this.decodedImage,
     required this.normalizedRect,
     required this.blockSize,
   });
@@ -624,43 +703,47 @@ class _PixelatePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width <= 0 || size.height <= 0) return;
 
-    final double srcLeft = (normalizedRect.left * image.width).clamp(
-      0.0,
-      image.width.toDouble(),
-    );
-    final double srcTop = (normalizedRect.top * image.height).clamp(
-      0.0,
-      image.height.toDouble(),
-    );
-    final double srcWidth = (normalizedRect.width * image.width).clamp(
-      1.0,
-      image.width - srcLeft,
-    );
-    final double srcHeight = (normalizedRect.height * image.height).clamp(
-      1.0,
-      image.height - srcTop,
-    );
+    final double stepX = blockSize;
+    final double stepY = blockSize;
 
-    final int tinyW = (srcWidth / blockSize).round().clamp(1, srcWidth.toInt());
-    final int tinyH = (srcHeight / blockSize).round().clamp(
-      1,
-      srcHeight.toInt(),
-    );
+    final paint = Paint()..style = PaintingStyle.fill;
 
-    canvas.save();
-    canvas.scale(size.width / tinyW, size.height / tinyH);
-    canvas.drawImageRect(
-      image,
-      Rect.fromLTWH(srcLeft, srcTop, srcWidth, srcHeight),
-      Rect.fromLTWH(0, 0, tinyW.toDouble(), tinyH.toDouble()),
-      Paint()..filterQuality = ui.FilterQuality.none,
-    );
-    canvas.restore();
+    // Map starting coords of redact box to decoded image pixels
+    final double srcLeft = normalizedRect.left * decodedImage.width;
+    final double srcTop = normalizedRect.top * decodedImage.height;
+    final double srcWidth = normalizedRect.width * decodedImage.width;
+    final double srcHeight = normalizedRect.height * decodedImage.height;
+
+    for (double y = 0; y < size.height; y += stepY) {
+      for (double x = 0; x < size.width; x += stepX) {
+        // Calculate original coordinate to sample color from the center of this block
+        final double sampleX =
+            srcLeft + (x + stepX / 2) * (srcWidth / size.width);
+        final double sampleY =
+            srcTop + (y + stepY / 2) * (srcHeight / size.height);
+
+        final int clampX = sampleX.round().clamp(0, decodedImage.width - 1);
+        final int clampY = sampleY.round().clamp(0, decodedImage.height - 1);
+
+        final pixel = decodedImage.getPixel(clampX, clampY);
+        final int r = pixel.r.toInt();
+        final int g = pixel.g.toInt();
+        final int b = pixel.b.toInt();
+        final int a = pixel.a.toInt();
+
+        paint.color = Color.fromARGB(a, r, g, b);
+
+        final double w = math.min(stepX, size.width - x);
+        final double h = math.min(stepY, size.height - y);
+
+        canvas.drawRect(Rect.fromLTWH(x, y, w, h), paint);
+      }
+    }
   }
 
   @override
   bool shouldRepaint(covariant _PixelatePainter oldDelegate) {
-    return oldDelegate.image != image ||
+    return oldDelegate.decodedImage != decodedImage ||
         oldDelegate.normalizedRect != normalizedRect ||
         oldDelegate.blockSize != blockSize;
   }
@@ -668,12 +751,21 @@ class _PixelatePainter extends CustomPainter {
 
 class _Handle extends StatelessWidget {
   final Function(double dx, double dy) onDrag;
+  final VoidCallback onDragStart;
+  final VoidCallback onDragEnd;
 
-  const _Handle({required this.onDrag});
+  const _Handle({
+    required this.onDrag,
+    required this.onDragStart,
+    required this.onDragEnd,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onPanStart: (_) => onDragStart(),
+      onPanEnd: (_) => onDragEnd(),
+      onPanCancel: () => onDragEnd(),
       onPanUpdate: (details) {
         onDrag(details.delta.dx, details.delta.dy);
       },

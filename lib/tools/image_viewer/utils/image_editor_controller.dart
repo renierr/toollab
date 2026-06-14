@@ -679,6 +679,20 @@ class ImageEditorController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> prepareForEditing() async {
+    if (_decodedImage != null) return;
+    _isProcessing = true;
+    notifyListeners();
+    try {
+      await _ensureFullySynced();
+    } catch (e) {
+      debugPrint("Failed to sync/decode image: $e");
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> previewResize() async {
     await _ensureFullySynced();
 

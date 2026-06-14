@@ -198,6 +198,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                   : (_controller.isRedactMode
                         ? ImageViewerRedactPanel(
                             image: _controller.uiImage!,
+                            decodedImage: _controller.decodedImage,
                             onRedactApplied:
                                 (
                                   x,
@@ -451,14 +452,21 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                           ? Icons.view_sidebar
                           : Icons.view_sidebar_outlined,
                     ),
-                    onPressed: () =>
-                        setState(() => _isEditorOpen = !_isEditorOpen),
+                    onPressed: () {
+                      setState(() => _isEditorOpen = !_isEditorOpen);
+                      if (_isEditorOpen) {
+                        _controller.prepareForEditing();
+                      }
+                    },
                     tooltip: _isEditorOpen ? 'Hide settings' : 'Show settings',
                   )
                 else
                   IconButton(
                     icon: const Icon(Icons.tune),
-                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                    onPressed: () {
+                      _scaffoldKey.currentState?.openEndDrawer();
+                      _controller.prepareForEditing();
+                    },
                     tooltip: 'Edit image',
                   ),
                 IconButton(
