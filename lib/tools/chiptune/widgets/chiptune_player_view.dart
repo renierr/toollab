@@ -17,6 +17,8 @@ class ChiptunePlayerView extends StatelessWidget {
   final bool looping;
   final double volume;
   final bool visualizerEnabled;
+  final String currentVizId;
+  final ValueChanged<String> onVizChanged;
   final Widget archivePanel;
   final VoidCallback onPlayPause;
   final VoidCallback onStop;
@@ -31,6 +33,8 @@ class ChiptunePlayerView extends StatelessWidget {
     required this.looping,
     required this.volume,
     required this.visualizerEnabled,
+    required this.currentVizId,
+    required this.onVizChanged,
     required this.archivePanel,
     required this.onPlayPause,
     required this.onStop,
@@ -44,7 +48,12 @@ class ChiptunePlayerView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        if (visualizerEnabled) ChiptuneVisualizerPanel(player: player),
+        if (visualizerEnabled)
+          ChiptuneVisualizerPanel(
+            player: player,
+            currentVizId: currentVizId,
+            onVizChanged: onVizChanged,
+          ),
         ChiptuneModuleInfo(module: module),
         const SizedBox(height: 8),
         ValueListenableBuilder(

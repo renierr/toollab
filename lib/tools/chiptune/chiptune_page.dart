@@ -23,6 +23,7 @@ import 'engine/parser.dart';
 import 'widgets/chiptune_archive_panel.dart';
 import 'widgets/chiptune_empty_state.dart';
 import 'widgets/chiptune_player_view.dart';
+import 'widgets/visualizations/chiptune_viz_registry.dart';
 
 class ChiptunePage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -48,6 +49,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   bool _looping = false;
   bool _visualizerEnabled = true;
   bool _appInForeground = true;
+  String _currentVizId = ChiptuneVizRegistry.defaultId;
 
   @override
   void initState() {
@@ -92,12 +94,14 @@ class _ChiptunePageState extends State<ChiptunePage>
     final db = DatabaseService.instance;
     final vol = await db.getSetting(ChiptuneArchive.toolId, 'volume');
     final loop = await db.getSetting(ChiptuneArchive.toolId, 'looping');
-    final vis = await db.getSetting(ChiptuneArchive.toolId, 'visualizer');
+    final vis = await db.getSetting(ChiptuneArchive.toolId, 'vis_id');
+    final visOn = await db.getSetting(ChiptuneArchive.toolId, 'visualizer');
     if (!mounted) return;
     setState(() {
       _volume = double.tryParse(vol ?? '') ?? 0.7;
       _looping = loop == '1';
-      _visualizerEnabled = vis != '0';
+      _visualizerEnabled = visOn != '0';
+      _currentVizId = vis ?? ChiptuneVizRegistry.defaultId;
     });
     _player.setVolume(_volume);
     _player.setLooping(_looping);
@@ -185,6 +189,11 @@ class _ChiptunePageState extends State<ChiptunePage>
       'visualizer',
       v ? '1' : '0',
     );
+  }
+
+  void _setVizId(String id) {
+    setState(() => _currentVizId = id);
+    DatabaseService.instance.setSetting(ChiptuneArchive.toolId, 'vis_id', id);
   }
 
   void _onPlaybackEnded() {
@@ -351,6 +360,8 @@ class _ChiptunePageState extends State<ChiptunePage>
               looping: _looping,
               volume: _volume,
               visualizerEnabled: _visualizerEnabled && _appInForeground,
+              currentVizId: _currentVizId,
+              onVizChanged: _setVizId,
               archivePanel: ChiptuneArchivePanel(
                 modules: _archive,
                 canSave: _currentBytes != null,

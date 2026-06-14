@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
-import '../chiptune_colors.dart';
+import '../../chiptune_colors.dart';
 
 /// Live spectrum visualizer driven by SoLoud's FFT data.
-class ChiptuneVisualizer extends StatefulWidget {
+class ChiptuneSpectrumViz extends StatefulWidget {
   final bool active;
-  const ChiptuneVisualizer({super.key, required this.active});
+  const ChiptuneSpectrumViz({super.key, required this.active});
 
   @override
-  State<ChiptuneVisualizer> createState() => _ChiptuneVisualizerState();
+  State<ChiptuneSpectrumViz> createState() => _ChiptuneSpectrumVizState();
 }
 
-class _ChiptuneVisualizerState extends State<ChiptuneVisualizer>
+class _ChiptuneSpectrumVizState extends State<ChiptuneSpectrumViz>
     with SingleTickerProviderStateMixin {
   static const int _bars = 48;
-  static const int _fftBins = 256; // first half of the linear sample buffer
+  static const int _fftBins = 256;
 
   AudioData? _audioData;
   late final Ticker _ticker;
@@ -50,12 +50,11 @@ class _ChiptuneVisualizerState extends State<ChiptuneVisualizer>
 
     try {
       data.updateSamples();
-      final samples = data.getAudioData(); // 256 FFT + 256 wave
+      final samples = data.getAudioData();
       if (samples.length < _fftBins) return;
       for (int i = 0; i < _bars; i++) {
         final bin = (i * _fftBins / _bars).floor();
         final v = samples[bin].abs().clamp(0.0, 1.0);
-        // Fast attack, slow release for a lively but smooth meter.
         _levels[i] = v > _levels[i] ? v : _levels[i] * 0.8 + v * 0.2;
       }
       if (mounted) setState(() {});
