@@ -29,6 +29,8 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
   Future<Uint8List>? _downloadFuture;
 
   bool get _isPreviewable {
+    if (widget.item.size > 10 * 1024 * 1024) return false;
+
     final resolvedMimeType = widget.item.type == 'application/octet-stream'
         ? MimeTypeHelper.getMimeType(widget.item.filename)
         : widget.item.type;
@@ -44,11 +46,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
   void initState() {
     super.initState();
     if (_isPreviewable) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _downloadFuture = widget.onDownload(widget.item.id);
-        }
-      });
+      _downloadFuture = widget.onDownload(widget.item.id);
     }
   }
 
