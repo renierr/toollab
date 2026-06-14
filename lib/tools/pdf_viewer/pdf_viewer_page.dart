@@ -18,6 +18,7 @@ import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_mode.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_organize_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_flatten_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_panel.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_metadata_panel.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 
 class PdfViewerPage extends StatefulWidget {
@@ -165,6 +166,52 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     return password;
   }
 
+  void _handleDocumentLoadError(Object error) {
+    if (!mounted) {
+      return;
+    }
+
+    if (error is PdfPasswordException) {
+      _resolvedPdfPassword = null;
+      _lastProvidedPdfPassword = null;
+      _passwordDialogFuture = null;
+
+      final message = error.message;
+      final canceledByUser = message.contains(
+        'No password supplied by PasswordProvider',
+      );
+      if (canceledByUser) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'PDF open canceled. Select another file or try again.',
+            ),
+          ),
+        );
+        setState(() {
+          _mode = PdfViewerMode.view;
+          _filePath = null;
+          _fileName = null;
+        });
+      }
+    }
+  }
+
+  void _handleDocumentLoadFinished(PdfDocumentRef documentRef, bool succeeded) {
+    if (!mounted) {
+      return;
+    }
+    final listenable = documentRef.resolveListenable();
+    final error = listenable.error;
+    if (error != null) {
+      _handleDocumentLoadError(error);
+      return;
+    }
+    if (succeeded && _lastProvidedPdfPassword != null) {
+      _resolvedPdfPassword = _lastProvidedPdfPassword;
+    }
+  }
+
   void _onFileSelected(XFile file) {
     _resetViewerState();
     setState(() {
@@ -275,6 +322,19 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     setState(() => _mode = PdfViewerMode.view);
   }
 
+  void _onMetadataComplete(String pdfPath, String name) {
+    _resetViewerState();
+    setState(() {
+      _mode = PdfViewerMode.view;
+      _filePath = pdfPath;
+      _fileName = name;
+    });
+  }
+
+  void _onMetadataCancel() {
+    setState(() => _mode = PdfViewerMode.view);
+  }
+
   PdfOperationSession get _operationSession {
     return PdfOperationSession(
       filePath: _filePath!,
@@ -348,6 +408,21 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       );
     }
 
+    if (_mode == PdfViewerMode.metadata) {
+      return ToolLayout(
+        title: PdfViewerTool.config.name,
+        fullscreen: true,
+        showFloatingBackButton: false,
+        scaffoldKey: _scaffoldKey,
+        backgroundColor: theme.colorScheme.surface,
+        child: PdfMetadataPanel(
+          session: _operationSession,
+          onComplete: _onMetadataComplete,
+          onCancel: _onMetadataCancel,
+        ),
+      );
+    }
+
     return ToolLayout(
       title: PdfViewerTool.config.name,
       fullscreen: true,
@@ -369,6 +444,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               filePath: _filePath!,
               controller: _pdfController,
               passwordProvider: _providePdfPassword,
+              onDocumentLoadFinished: _handleDocumentLoadFinished,
               boundaryMargin: EdgeInsets.only(
                 top: _showOverlays
                     ? MediaQuery.of(context).padding.top + 72
@@ -387,9 +463,6 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
                   ? PdfPageLayouts.doublePage
                   : null,
               onViewerReady: (doc, controller) {
-                if (_lastProvidedPdfPassword != null) {
-                  _resolvedPdfPassword = _lastProvidedPdfPassword;
-                }
                 _initSearcher();
                 _totalPagesNotifier.value = _pdfController.pageCount;
                 final headerHeight = MediaQuery.of(context).padding.top + 72;

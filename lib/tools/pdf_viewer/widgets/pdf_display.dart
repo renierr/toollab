@@ -7,6 +7,8 @@ class PdfDisplay extends StatelessWidget {
   final String filePath;
   final PdfViewerController controller;
   final PdfPasswordProvider? passwordProvider;
+  final void Function(PdfDocumentRef documentRef, bool succeeded)?
+  onDocumentLoadFinished;
   final void Function(int? pageNumber) onPageChanged;
   final VoidCallback onViewerTap;
   final EdgeInsets boundaryMargin;
@@ -20,6 +22,7 @@ class PdfDisplay extends StatelessWidget {
     required this.filePath,
     required this.controller,
     this.passwordProvider,
+    this.onDocumentLoadFinished,
     required this.onPageChanged,
     required this.onViewerTap,
     required this.boundaryMargin,
@@ -41,6 +44,7 @@ class PdfDisplay extends StatelessWidget {
         pagePaintCallbacks: pagePaintCallbacks,
         layoutPages: layoutPages,
         onViewerReady: onViewerReady,
+        onDocumentLoadFinished: onDocumentLoadFinished,
         onGeneralTap: (context, controller, details) {
           onViewerTap();
           return false;

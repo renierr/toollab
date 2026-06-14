@@ -38,6 +38,30 @@ class PdfEmbeddedImageData {
   });
 }
 
+class PdfDocumentMetadata {
+  final String title;
+  final String author;
+  final String subject;
+  final String keywords;
+  final String creator;
+  final String producer;
+  final String creationDate;
+  final String modificationDate;
+  final String trapped;
+
+  const PdfDocumentMetadata({
+    required this.title,
+    required this.author,
+    required this.subject,
+    required this.keywords,
+    required this.creator,
+    required this.producer,
+    required this.creationDate,
+    required this.modificationDate,
+    required this.trapped,
+  });
+}
+
 class _RawImageExportFormat {
   final String fileExtension;
 
@@ -110,6 +134,95 @@ class PdfEngineHelper {
   }) async {
     await _ensureInit();
     return PdfDocument.openFile(path, passwordProvider: passwordProvider);
+  }
+
+  static Future<PdfDocumentMetadata> readMetadata(PdfDocument doc) async {
+    await _ensureInit();
+    return doc.useNativeDocumentHandle((nativeDocumentHandle) async {
+      final pdf = pdfium.getPdfium();
+      final documentHandle = pdfium.FPDF_DOCUMENT.fromAddress(
+        nativeDocumentHandle,
+      );
+
+      String readTag(String tag) {
+        final tagBytes = tag.toNativeUtf8();
+        try {
+          final byteCount = pdf.FPDF_GetMetaText(
+            documentHandle,
+            tagBytes.cast(),
+            nullptr,
+            0,
+          );
+          if (byteCount <= 2) {
+            return '';
+          }
+          final buffer = calloc<Uint8>(byteCount);
+          try {
+            final written = pdf.FPDF_GetMetaText(
+              documentHandle,
+              tagBytes.cast(),
+              buffer.cast(),
+              byteCount,
+            );
+            if (written <= 2) {
+              return '';
+            }
+            final bytes = buffer.asTypedList(written);
+            final codeUnits = bytes.buffer.asUint16List(
+              bytes.offsetInBytes,
+              bytes.lengthInBytes ~/ 2,
+            );
+            final text = String.fromCharCodes(codeUnits);
+            return text
+                .replaceAll('\u0000', '')
+                .replaceAll('\uFEFF', '')
+                .trim();
+          } finally {
+            calloc.free(buffer);
+          }
+        } finally {
+          calloc.free(tagBytes);
+        }
+      }
+
+      return PdfDocumentMetadata(
+        title: readTag('Title'),
+        author: readTag('Author'),
+        subject: readTag('Subject'),
+        keywords: readTag('Keywords'),
+        creator: readTag('Creator'),
+        producer: readTag('Producer'),
+        creationDate: readTag('CreationDate'),
+        modificationDate: readTag('ModDate'),
+        trapped: readTag('Trapped'),
+      );
+    });
+  }
+
+  static Future<Uint8List> createUnsecuredCopy(PdfDocument doc) async {
+    await _ensureInit();
+
+    final removedByFlag = await doc.encodePdf(removeSecurity: true);
+    try {
+      final verify = await openPdfFromBytes(
+        removedByFlag,
+        'verify_unsecured.pdf',
+      );
+      await verify.dispose();
+      return removedByFlag;
+    } catch (_) {
+      // Fallback path for PDFs where save flag does not fully remove security.
+    }
+
+    final cleanDoc = await PdfDocument.createNew(
+      sourceName: 'unsecured_copy.pdf',
+    );
+    try {
+      cleanDoc.pages = doc.pages.toList();
+      return await cleanDoc.encodePdf();
+    } finally {
+      await cleanDoc.dispose();
+    }
   }
 
   static Future<PdfDocument> openPdfFromBytes(

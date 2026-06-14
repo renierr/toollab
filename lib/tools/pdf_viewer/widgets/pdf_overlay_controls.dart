@@ -108,6 +108,8 @@ class PdfOverlayControls extends StatelessWidget {
                   ? Icons.photo_library_outlined
                   : currentMode == PdfViewerMode.extractImages
                   ? Icons.collections_outlined
+                  : currentMode == PdfViewerMode.metadata
+                  ? Icons.info_outline
                   : Icons.more_vert,
             ),
             tooltip: 'More',
@@ -154,6 +156,17 @@ class PdfOverlayControls extends StatelessWidget {
                       Icon(Icons.collections_outlined),
                       SizedBox(width: 8),
                       Text('Extract Images'),
+                    ],
+                  ),
+                ),
+              if (currentMode != PdfViewerMode.metadata)
+                const PopupMenuItem(
+                  value: PdfViewerMode.metadata,
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline),
+                      SizedBox(width: 8),
+                      Text('Metadata'),
                     ],
                   ),
                 ),
