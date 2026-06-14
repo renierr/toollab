@@ -27,7 +27,7 @@ class FastDropProgressIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final progress = total > 0 ? sent / total : 0.0;
+    final progress = total > 0 ? sent / total : null;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -48,7 +48,9 @@ class FastDropProgressIndicator extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${_formatBytes(sent)} / ${_formatBytes(total)}',
+                      total > 0
+                          ? '${_formatBytes(sent)} / ${_formatBytes(total)}'
+                          : _formatBytes(sent),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.6,

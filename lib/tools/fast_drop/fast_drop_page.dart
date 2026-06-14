@@ -279,6 +279,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       await fastDropState.downloadFastDropToFile(
         id: item.id,
         outputPath: tempPath,
+        knownSize: item.size,
       );
       if (!mounted) return;
       await FileSaveHelper.saveFileFromPath(
@@ -310,6 +311,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       await fastDropState.downloadFastDropToFile(
         id: item.id,
         outputPath: tempPath,
+        knownSize: item.size,
       );
 
       if (mounted) {
@@ -388,7 +390,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       context: context,
       builder: (context) => FastDropPreviewDialog(
         item: item,
-        onDownload: (id) => context.read<FastDropState>().downloadFastDrop(id),
+        onDownload: (id) => context.read<FastDropState>().downloadFastDrop(
+          id,
+          knownSize: item.size,
+        ),
         onOpen: () => _onOpen(item),
         onSave: () => _onDownload(item),
       ),

@@ -203,7 +203,7 @@ class FastDropState extends ChangeNotifier {
     }
   }
 
-  Future<Uint8List> downloadFastDrop(String id) async {
+  Future<Uint8List> downloadFastDrop(String id, {int? knownSize}) async {
     await _loadServerUrl();
     final syncEnabled = await _isSyncEnabled();
     if (!syncEnabled) {
@@ -214,6 +214,16 @@ class FastDropState extends ChangeNotifier {
     }
     if (!_isServerAvailable) {
       throw Exception('Sync server is unreachable.');
+    }
+
+    int? size = knownSize;
+    if (size == null) {
+      for (final item in _fastDrops) {
+        if (item.id == id) {
+          size = item.size;
+          break;
+        }
+      }
     }
 
     _cancelDownloadRequested = false;
@@ -227,10 +237,11 @@ class FastDropState extends ChangeNotifier {
         baseUrl: _syncServerUrl,
         id: id,
         onProgress: (received, total) {
-          _fastDropDownloadProgress = (received, total);
+          final effectiveTotal = total > 0 ? total : (size ?? -1);
+          _fastDropDownloadProgress = (received, effectiveTotal);
           if (_shouldNotifyTransferProgress(
             current: received,
-            total: total,
+            total: effectiveTotal,
             isUpload: false,
           )) {
             notifyListeners();
@@ -249,6 +260,7 @@ class FastDropState extends ChangeNotifier {
   Future<String> downloadFastDropToFile({
     required String id,
     required String outputPath,
+    int? knownSize,
   }) async {
     await _loadServerUrl();
     final syncEnabled = await _isSyncEnabled();
@@ -260,6 +272,16 @@ class FastDropState extends ChangeNotifier {
     }
     if (!_isServerAvailable) {
       throw Exception('Sync server is unreachable.');
+    }
+
+    int? size = knownSize;
+    if (size == null) {
+      for (final item in _fastDrops) {
+        if (item.id == id) {
+          size = item.size;
+          break;
+        }
+      }
     }
 
     _cancelDownloadRequested = false;
@@ -274,10 +296,11 @@ class FastDropState extends ChangeNotifier {
         id: id,
         outputPath: outputPath,
         onProgress: (received, total) {
-          _fastDropDownloadProgress = (received, total);
+          final effectiveTotal = total > 0 ? total : (size ?? -1);
+          _fastDropDownloadProgress = (received, effectiveTotal);
           if (_shouldNotifyTransferProgress(
             current: received,
-            total: total,
+            total: effectiveTotal,
             isUpload: false,
           )) {
             notifyListeners();
