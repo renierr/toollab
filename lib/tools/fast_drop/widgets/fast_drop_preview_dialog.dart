@@ -78,79 +78,109 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
       content: SizedBox(
         width: 600,
         height: 400,
-        child: _downloadFuture == null
-            ? _buildNoPreview(theme, resolvedMimeType)
-            : FutureBuilder<Uint8List>(
-                future: _downloadFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(color: AppTheme.accentTeal),
-                          SizedBox(height: 16),
-                          Text('Downloading file for preview...'),
-                        ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.item.description != null &&
+                  widget.item.description!.trim().isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.5,
                       ),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: AppTheme.statusRed,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Failed to load preview:\n${snapshot.error}',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: theme.colorScheme.error),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  final bytes = snapshot.data!;
-                  if (isImage) {
-                    return InteractiveViewer(
-                      minScale: 0.5,
-                      maxScale: 5.0,
-                      child: Center(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.memory(bytes, fit: BoxFit.contain),
-                        ),
-                      ),
-                    );
-                  }
-
-                  if (isText) {
-                    final text = utf8.decode(bytes, allowMalformed: true);
-                    if (isMarkdown) {
-                      return SingleChildScrollView(
-                        child: MarkdownView(
-                          data: text,
-                          accentColor: AppTheme.accentTeal,
+                    ),
+                  ),
+                  child: Text(
+                    widget.item.description!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+              if (_downloadFuture == null)
+                _buildNoPreview(theme, resolvedMimeType)
+              else
+                FutureBuilder<Uint8List>(
+                  future: _downloadFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              color: AppTheme.accentTeal,
+                            ),
+                            SizedBox(height: 16),
+                            Text('Downloading file for preview...'),
+                          ],
                         ),
                       );
-                    } else {
-                      return Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerLow,
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: AppTheme.statusRed,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Failed to load preview:\n${snapshot.error}',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final bytes = snapshot.data!;
+                    if (isImage) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: theme.colorScheme.outlineVariant,
+                          child: InteractiveViewer(
+                            minScale: 0.5,
+                            maxScale: 5.0,
+                            child: Image.memory(bytes, fit: BoxFit.contain),
                           ),
                         ),
-                        child: SingleChildScrollView(
+                      );
+                    }
+
+                    if (isText) {
+                      final text = utf8.decode(bytes, allowMalformed: true);
+                      if (isMarkdown) {
+                        return MarkdownView(
+                          data: text,
+                          accentColor: AppTheme.accentTeal,
+                        );
+                      } else {
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: theme.colorScheme.outlineVariant,
+                            ),
+                          ),
                           child: SelectableText(
                             text,
                             style: const TextStyle(
@@ -158,14 +188,16 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
                               fontSize: 12,
                             ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     }
-                  }
 
-                  return _buildNoPreview(theme, resolvedMimeType);
-                },
-              ),
+                    return _buildNoPreview(theme, resolvedMimeType);
+                  },
+                ),
+            ],
+          ),
+        ),
       ),
       actions: [
         TextButton(

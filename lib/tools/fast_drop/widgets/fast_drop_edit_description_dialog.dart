@@ -41,7 +41,7 @@ class _FastDropEditDescriptionDialogState
           controller: _controller,
           autofocus: true,
           maxLines: 4,
-          minLines: 2,
+          minLines: 4,
           textCapitalization: TextCapitalization.sentences,
           decoration: InputDecoration(
             hintText: 'Add a description...',

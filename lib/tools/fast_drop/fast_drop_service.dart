@@ -152,10 +152,7 @@ class FastDropService {
     final client = await _clientFuture;
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id/description';
     final response = await client
-        .patch(
-          url,
-          body: HttpBody.json({'description': description}),
-        )
+        .patch(url, body: HttpBody.json({'description': description}))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
       final errorData = jsonDecode(response.body);
