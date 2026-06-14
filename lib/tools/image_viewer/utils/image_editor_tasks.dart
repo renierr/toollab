@@ -143,3 +143,89 @@ Uint8List resizeAndEncodeTask(ImageResizeParams params) {
 
   return Uint8List.fromList(encoded);
 }
+
+class RedactParams {
+  final img.Image image;
+  final int x;
+  final int y;
+  final int width;
+  final int height;
+  final String redactType;
+  final double intensity;
+  final int? colorValue;
+
+  RedactParams({
+    required this.image,
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    required this.redactType,
+    required this.intensity,
+    this.colorValue,
+  });
+}
+
+img.Image redactImageTask(RedactParams params) {
+  final image = params.image;
+  final x = params.x;
+  final y = params.y;
+  final w = params.width;
+  final h = params.height;
+  final type = params.redactType.toLowerCase();
+  final intensity = params.intensity;
+
+  if (type == 'solid') {
+    final colorVal = params.colorValue ?? 0xFF000000;
+    final a = (colorVal >> 24) & 0xFF;
+    final r = (colorVal >> 16) & 0xFF;
+    final g = (colorVal >> 8) & 0xFF;
+    final b = colorVal & 0xFF;
+
+    return img.fillRect(
+      image,
+      x1: x,
+      y1: y,
+      x2: x + w - 1,
+      y2: y + h - 1,
+      color: img.ColorRgba8(r, g, b, a),
+    );
+  } else if (type == 'pixelate') {
+    final blockSize = intensity.round().clamp(1, 100);
+    for (int py = y; py < y + h; py += blockSize) {
+      for (int px = x; px < x + w; px += blockSize) {
+        final pixel = image.getPixel(
+          px.clamp(0, image.width - 1),
+          py.clamp(0, image.height - 1),
+        );
+        final r = pixel.r;
+        final g = pixel.g;
+        final b = pixel.b;
+        final a = pixel.a;
+        final color = img.ColorRgba8(
+          r.toInt(),
+          g.toInt(),
+          b.toInt(),
+          a.toInt(),
+        );
+
+        img.fillRect(
+          image,
+          x1: px,
+          y1: py,
+          x2: (px + blockSize - 1).clamp(x, x + w - 1),
+          y2: (py + blockSize - 1).clamp(y, y + h - 1),
+          color: color,
+        );
+      }
+    }
+    return image;
+  } else if (type == 'blur') {
+    final radius = intensity.round().clamp(1, 100);
+    final cropped = img.copyCrop(image, x: x, y: y, width: w, height: h);
+    final blurred = img.gaussianBlur(cropped, radius: radius);
+    return img.compositeImage(image, blurred, dstX: x, dstY: y);
+  }
+
+  return image;
+}

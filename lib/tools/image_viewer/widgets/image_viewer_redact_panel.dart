@@ -1,0 +1,707 @@
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+
+class ImageViewerRedactPanel extends StatefulWidget {
+  final ui.Image image;
+  final Function(
+    int x,
+    int y,
+    int width,
+    int height,
+    String redactType,
+    double intensity,
+    Color? color,
+  )
+  onRedactApplied;
+  final VoidCallback onRedactCancelled;
+
+  const ImageViewerRedactPanel({
+    super.key,
+    required this.image,
+    required this.onRedactApplied,
+    required this.onRedactCancelled,
+  });
+
+  @override
+  State<ImageViewerRedactPanel> createState() => _ImageViewerRedactPanelState();
+}
+
+class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
+  late int _imageWidth;
+  late int _imageHeight;
+
+  // Normalized coordinates (0.0 to 1.0) of the redact box relative to the image
+  Rect _normalizedRedactRect = const Rect.fromLTWH(0.25, 0.25, 0.5, 0.5);
+
+  String _redactType = 'solid'; // 'solid', 'pixelate', 'blur'
+  double _intensity =
+      15.0; // Slider value for pixelate (block size) or blur (radius)
+  Color _solidColor = Colors.black; // Color for solid redact type
+
+  final ScrollController _styleScrollController = ScrollController();
+
+  static const List<Color> _swatchColors = [
+    Colors.black,
+    Colors.white,
+    Colors.grey,
+    Color(0xFFF44336), // Red
+    Color(0xFFFFC107), // Amber/Yellow
+    Color(0xFF4CAF50), // Green
+    Color(0xFF2196F3), // Blue
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _imageWidth = widget.image.width;
+    _imageHeight = widget.image.height;
+  }
+
+  @override
+  void dispose() {
+    _styleScrollController.dispose();
+    super.dispose();
+  }
+
+  void _onTypeChanged(String type) {
+    setState(() {
+      _redactType = type;
+      if (type == 'pixelate') {
+        _intensity = 15.0;
+      } else if (type == 'blur') {
+        _intensity = 15.0;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasIntensity = _redactType == 'pixelate' || _redactType == 'blur';
+    final isSolid = _redactType == 'solid';
+
+    return Column(
+      children: [
+        // Redact style selector
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          color: theme.colorScheme.surfaceContainerHigh,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Listener(
+                onPointerSignal: (event) {
+                  if (event is PointerScrollEvent &&
+                      event.scrollDelta.dy != 0) {
+                    _styleScrollController.animateTo(
+                      _styleScrollController.offset + event.scrollDelta.dy,
+                      duration: const Duration(milliseconds: 80),
+                      curve: Curves.linear,
+                    );
+                  }
+                },
+                child: Scrollbar(
+                  controller: _styleScrollController,
+                  child: SingleChildScrollView(
+                    controller: _styleScrollController,
+                    scrollDirection: Axis.horizontal,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Row(
+                      children: [
+                        _RedactStyleButton(
+                          label: 'Solid',
+                          isActive: isSolid,
+                          onPressed: () => _onTypeChanged('solid'),
+                        ),
+                        const SizedBox(width: 8),
+                        _RedactStyleButton(
+                          label: 'Pixelate',
+                          isActive: _redactType == 'pixelate',
+                          onPressed: () => _onTypeChanged('pixelate'),
+                        ),
+                        const SizedBox(width: 8),
+                        _RedactStyleButton(
+                          label: 'Blur',
+                          isActive: _redactType == 'blur',
+                          onPressed: () => _onTypeChanged('blur'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (isSolid) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Text(
+                      'Color: ',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _swatchColors.map((color) {
+                          return _ColorSwatch(
+                            color: color,
+                            isSelected:
+                                _solidColor.toARGB32() == color.toARGB32(),
+                            onTap: () {
+                              setState(() {
+                                _solidColor = color;
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+              if (hasIntensity) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _redactType == 'pixelate'
+                            ? 'Block Size: ${_intensity.round()} px'
+                            : 'Blur Radius: ${_intensity.round()} px',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: Slider(
+                        value: _intensity,
+                        min: 4,
+                        max: 60,
+                        divisions: 56,
+                        onChanged: (val) {
+                          setState(() {
+                            _intensity = val;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // Interactive Redact Editor area
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final double containerW = constraints.maxWidth;
+              final double containerH = constraints.maxHeight;
+
+              if (containerW <= 0 || containerH <= 0) {
+                return const SizedBox.shrink();
+              }
+
+              final double imgRatio = _imageWidth / _imageHeight;
+              final double containerRatio = containerW / containerH;
+
+              double dispW;
+              double dispH;
+              double offsetX;
+              double offsetY;
+
+              if (imgRatio > containerRatio) {
+                dispW = containerW;
+                dispH = containerW / imgRatio;
+                offsetX = 0;
+                offsetY = (containerH - dispH) / 2;
+              } else {
+                dispH = containerH;
+                dispW = containerH * imgRatio;
+                offsetX = (containerW - dispW) / 2;
+                offsetY = 0;
+              }
+
+              return Stack(
+                children: [
+                  // Original Image
+                  Positioned(
+                    left: offsetX,
+                    top: offsetY,
+                    width: dispW,
+                    height: dispH,
+                    child: RawImage(image: widget.image, fit: BoxFit.fill),
+                  ),
+
+                  // Overlay and draggable redact box
+                  Positioned.fill(
+                    child: _RedactOverlay(
+                      image: widget.image,
+                      redactRectNormalized: _normalizedRedactRect,
+                      imageOffsetX: offsetX,
+                      imageOffsetY: offsetY,
+                      imageDispW: dispW,
+                      imageDispH: dispH,
+                      redactType: _redactType,
+                      intensity: _intensity,
+                      solidColor: _solidColor,
+                      onRectChanged: (newRectNormalized) {
+                        setState(() {
+                          _normalizedRedactRect = newRectNormalized;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+
+        // Action controls
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: theme.colorScheme.surfaceContainerHigh,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: widget.onRedactCancelled,
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('Cancel'),
+                style: TextButton.styleFrom(
+                  foregroundColor: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final int x = (_normalizedRedactRect.left * _imageWidth)
+                      .round()
+                      .clamp(0, _imageWidth - 1);
+                  final int y = (_normalizedRedactRect.top * _imageHeight)
+                      .round()
+                      .clamp(0, _imageHeight - 1);
+                  int w = (_normalizedRedactRect.width * _imageWidth).round();
+                  int h = (_normalizedRedactRect.height * _imageHeight).round();
+
+                  w = w.clamp(1, _imageWidth - x);
+                  h = h.clamp(1, _imageHeight - y);
+
+                  widget.onRedactApplied(
+                    x,
+                    y,
+                    w,
+                    h,
+                    _redactType,
+                    _intensity,
+                    _redactType == 'solid' ? _solidColor : null,
+                  );
+                },
+                icon: const Icon(Icons.check),
+                label: const Text('Apply Redaction'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RedactStyleButton extends StatelessWidget {
+  final String label;
+  final bool isActive;
+  final VoidCallback onPressed;
+
+  const _RedactStyleButton({
+    required this.label,
+    required this.isActive,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ChoiceChip(
+      label: Text(label),
+      selected: isActive,
+      onSelected: (_) => onPressed(),
+      selectedColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+      labelStyle: TextStyle(
+        color: isActive
+            ? theme.colorScheme.primary
+            : theme.colorScheme.onSurface,
+        fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+      ),
+    );
+  }
+}
+
+class _ColorSwatch extends StatelessWidget {
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ColorSwatch({
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isWhite = color == Colors.white;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : (isWhite ? Colors.grey.shade400 : Colors.transparent),
+            width: isSelected ? 3.0 : 1.0,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: isSelected
+            ? Icon(
+                Icons.check,
+                size: 16,
+                color: isWhite ? Colors.black : Colors.white,
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+class _RedactOverlay extends StatelessWidget {
+  final ui.Image image;
+  final Rect redactRectNormalized;
+  final double imageOffsetX;
+  final double imageOffsetY;
+  final double imageDispW;
+  final double imageDispH;
+  final String redactType;
+  final double intensity;
+  final Color solidColor;
+  final ValueChanged<Rect> onRectChanged;
+
+  const _RedactOverlay({
+    required this.image,
+    required this.redactRectNormalized,
+    required this.imageOffsetX,
+    required this.imageOffsetY,
+    required this.imageDispW,
+    required this.imageDispH,
+    required this.redactType,
+    required this.intensity,
+    required this.solidColor,
+    required this.onRectChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // Screen coordinates of the redact box
+    final double left = imageOffsetX + redactRectNormalized.left * imageDispW;
+    final double top = imageOffsetY + redactRectNormalized.top * imageDispH;
+    final double width = redactRectNormalized.width * imageDispW;
+    final double height = redactRectNormalized.height * imageDispH;
+
+    return Stack(
+      children: [
+        // Live Preview of the redacted area (Ignored for pointer events)
+        Positioned(
+          left: left,
+          top: top,
+          width: width,
+          height: height,
+          child: IgnorePointer(
+            child: ClipRect(child: _buildPreviewContent(context)),
+          ),
+        ),
+
+        // Border of the redact box
+        Positioned(
+          left: left,
+          top: top,
+          width: width,
+          height: height,
+          child: IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: theme.colorScheme.primary,
+                  width: 2.0,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Draggable box surface for moving the entire redact rect (covers full area)
+        Positioned(
+          left: left,
+          top: top,
+          width: width,
+          height: height,
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              final double dxNorm = details.delta.dx / imageDispW;
+              final double dyNorm = details.delta.dy / imageDispH;
+
+              double newLeft = redactRectNormalized.left + dxNorm;
+              double newTop = redactRectNormalized.top + dyNorm;
+
+              newLeft = newLeft.clamp(0.0, 1.0 - redactRectNormalized.width);
+              newTop = newTop.clamp(0.0, 1.0 - redactRectNormalized.height);
+
+              onRectChanged(
+                Rect.fromLTWH(
+                  newLeft,
+                  newTop,
+                  redactRectNormalized.width,
+                  redactRectNormalized.height,
+                ),
+              );
+            },
+            child: Container(color: Colors.transparent),
+          ),
+        ),
+
+        // Drag handles (corners) - drawn on top of the draggable surface
+        // Top-Left
+        Positioned(
+          left: left - 12,
+          top: top - 12,
+          child: _Handle(
+            onDrag: (dx, dy) => _resizeRedactBox(dx, dy, top: true, left: true),
+          ),
+        ),
+        // Top-Right
+        Positioned(
+          left: left + width - 12,
+          top: top - 12,
+          child: _Handle(
+            onDrag: (dx, dy) =>
+                _resizeRedactBox(dx, dy, top: true, right: true),
+          ),
+        ),
+        // Bottom-Left
+        Positioned(
+          left: left - 12,
+          top: top + height - 12,
+          child: _Handle(
+            onDrag: (dx, dy) =>
+                _resizeRedactBox(dx, dy, bottom: true, left: true),
+          ),
+        ),
+        // Bottom-Right
+        Positioned(
+          left: left + width - 12,
+          top: top + height - 12,
+          child: _Handle(
+            onDrag: (dx, dy) =>
+                _resizeRedactBox(dx, dy, bottom: true, right: true),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPreviewContent(BuildContext context) {
+    switch (redactType) {
+      case 'solid':
+        return Container(color: solidColor);
+      case 'pixelate':
+        return CustomPaint(
+          painter: _PixelatePainter(
+            image: image,
+            normalizedRect: redactRectNormalized,
+            blockSize: intensity,
+          ),
+        );
+      case 'blur':
+        return ClipRect(
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: intensity, sigmaY: intensity),
+            child: Container(color: Colors.transparent),
+          ),
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  void _resizeRedactBox(
+    double dx,
+    double dy, {
+    bool top = false,
+    bool bottom = false,
+    bool left = false,
+    bool right = false,
+  }) {
+    double pxLeft = redactRectNormalized.left * imageDispW;
+    double pxTop = redactRectNormalized.top * imageDispH;
+    double pxWidth = redactRectNormalized.width * imageDispW;
+    double pxHeight = redactRectNormalized.height * imageDispH;
+
+    const double minSize = 24.0;
+
+    if (left) {
+      final double maxLeft = math.max(0.0, pxLeft + pxWidth - minSize);
+      final double newLeft = (pxLeft + dx).clamp(0.0, maxLeft);
+      pxWidth = pxWidth + (pxLeft - newLeft);
+      pxLeft = newLeft;
+    }
+    if (right) {
+      final double maxWidth = math.max(minSize, imageDispW - pxLeft);
+      pxWidth = (pxWidth + dx).clamp(minSize, maxWidth);
+    }
+    if (top) {
+      final double maxTop = math.max(0.0, pxTop + pxHeight - minSize);
+      final double newTop = (pxTop + dy).clamp(0.0, maxTop);
+      pxHeight = pxHeight + (pxTop - newTop);
+      pxTop = newTop;
+    }
+    if (bottom) {
+      final double maxHeight = math.max(minSize, imageDispH - pxTop);
+      pxHeight = (pxHeight + dy).clamp(minSize, maxHeight);
+    }
+
+    onRectChanged(
+      Rect.fromLTWH(
+        (pxLeft / imageDispW).clamp(0.0, 1.0),
+        (pxTop / imageDispH).clamp(0.0, 1.0),
+        (pxWidth / imageDispW).clamp(0.0, 1.0),
+        (pxHeight / imageDispH).clamp(0.0, 1.0),
+      ),
+    );
+  }
+}
+
+class _PixelatePainter extends CustomPainter {
+  final ui.Image image;
+  final Rect normalizedRect;
+  final double blockSize;
+
+  _PixelatePainter({
+    required this.image,
+    required this.normalizedRect,
+    required this.blockSize,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 0 || size.height <= 0) return;
+
+    final double srcLeft = (normalizedRect.left * image.width).clamp(
+      0.0,
+      image.width.toDouble(),
+    );
+    final double srcTop = (normalizedRect.top * image.height).clamp(
+      0.0,
+      image.height.toDouble(),
+    );
+    final double srcWidth = (normalizedRect.width * image.width).clamp(
+      1.0,
+      image.width - srcLeft,
+    );
+    final double srcHeight = (normalizedRect.height * image.height).clamp(
+      1.0,
+      image.height - srcTop,
+    );
+
+    final int tinyW = (srcWidth / blockSize).round().clamp(1, srcWidth.toInt());
+    final int tinyH = (srcHeight / blockSize).round().clamp(
+      1,
+      srcHeight.toInt(),
+    );
+
+    canvas.save();
+    canvas.scale(size.width / tinyW, size.height / tinyH);
+    canvas.drawImageRect(
+      image,
+      Rect.fromLTWH(srcLeft, srcTop, srcWidth, srcHeight),
+      Rect.fromLTWH(0, 0, tinyW.toDouble(), tinyH.toDouble()),
+      Paint()..filterQuality = ui.FilterQuality.none,
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _PixelatePainter oldDelegate) {
+    return oldDelegate.image != image ||
+        oldDelegate.normalizedRect != normalizedRect ||
+        oldDelegate.blockSize != blockSize;
+  }
+}
+
+class _Handle extends StatelessWidget {
+  final Function(double dx, double dy) onDrag;
+
+  const _Handle({required this.onDrag});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        onDrag(details.delta.dx, details.delta.dy);
+      },
+      child: Container(
+        width: 24,
+        height: 24,
+        alignment: Alignment.center,
+        color: Colors.transparent,
+        child: Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary,
+              width: 2.0,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

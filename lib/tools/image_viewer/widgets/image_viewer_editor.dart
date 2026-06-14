@@ -30,6 +30,8 @@ class ImageViewerEditor extends StatelessWidget {
   final VoidCallback onFlipVertical;
   final VoidCallback onToggleCropMode;
   final bool isCropMode;
+  final VoidCallback onToggleRedactMode;
+  final bool isRedactMode;
   final bool isWideScreen;
 
   const ImageViewerEditor({
@@ -58,6 +60,8 @@ class ImageViewerEditor extends StatelessWidget {
     required this.onFlipVertical,
     required this.onToggleCropMode,
     required this.isCropMode,
+    required this.onToggleRedactMode,
+    required this.isRedactMode,
     required this.isWideScreen,
   });
 
@@ -99,7 +103,7 @@ class ImageViewerEditor extends StatelessWidget {
                 if (metadata != null) ...[
                   const Divider(height: 16),
                   TextButton.icon(
-                    onPressed: isCropMode
+                    onPressed: (isCropMode || isRedactMode)
                         ? null
                         : () => ImageMetadataDialog.show(
                             context: context,
@@ -126,7 +130,7 @@ class ImageViewerEditor extends StatelessWidget {
             icon: Icons.transform_outlined,
           ),
           const SizedBox(height: 12),
-          isCropMode
+          (isCropMode || isRedactMode)
               ? Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -140,11 +144,16 @@ class ImageViewerEditor extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.crop, color: theme.colorScheme.primary),
+                      Icon(
+                        isCropMode ? Icons.crop : Icons.blur_on,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Cropping Active. Adjust controls on the image display.',
+                          isCropMode
+                              ? 'Cropping Active. Adjust controls on the image display.'
+                              : 'Redacting Active. Adjust controls on the image display.',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onPrimaryContainer,
                             fontWeight: FontWeight.w500,
@@ -189,12 +198,22 @@ class ImageViewerEditor extends StatelessWidget {
                         ),
                       ),
                     ),
+                    OutlinedButton.icon(
+                      onPressed: onToggleRedactMode,
+                      icon: const Icon(Icons.blur_on),
+                      label: const Text('Redact'),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
           const SizedBox(height: 24),
 
-          // Disable other controls during crop mode to keep user focused
-          if (!isCropMode) ...[
+          // Disable other controls during crop/redact mode to keep user focused
+          if (!isCropMode && !isRedactMode) ...[
             // Resize Section
             const _SectionHeader(
               title: 'Resize Image',

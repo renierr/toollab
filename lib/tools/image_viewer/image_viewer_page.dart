@@ -13,6 +13,7 @@ import 'package:tool_lab/tools/image_viewer/config.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_display.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_editor.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_crop_panel.dart';
+import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_redact_panel.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_loading_overlay.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/android_picker_buttons.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_controller.dart';
@@ -194,13 +195,44 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                       },
                       onCropCancelled: () => _controller.setCropMode(false),
                     )
-                  : ImageViewerDisplay(
-                      image: _controller.uiImage!,
-                      rawBytes: _controller.rawBytes,
-                      isAnimated: _controller.isAnimated,
-                      transformationController: _transformationController,
-                      onResetZoom: _onResetZoom,
-                    ))
+                  : (_controller.isRedactMode
+                        ? ImageViewerRedactPanel(
+                            image: _controller.uiImage!,
+                            onRedactApplied:
+                                (
+                                  x,
+                                  y,
+                                  w,
+                                  h,
+                                  redactType,
+                                  intensity,
+                                  color,
+                                ) async {
+                                  try {
+                                    await _controller.redactImage(
+                                      x,
+                                      y,
+                                      w,
+                                      h,
+                                      redactType,
+                                      intensity,
+                                      color,
+                                    );
+                                    _onResetZoom();
+                                  } catch (e) {
+                                    _showError('Redaction failed: $e');
+                                  }
+                                },
+                            onRedactCancelled: () =>
+                                _controller.setRedactMode(false),
+                          )
+                        : ImageViewerDisplay(
+                            image: _controller.uiImage!,
+                            rawBytes: _controller.rawBytes,
+                            isAnimated: _controller.isAnimated,
+                            transformationController: _transformationController,
+                            onResetZoom: _onResetZoom,
+                          )))
             : const SizedBox.shrink();
 
         final editorWidget = _controller.uiImage != null
@@ -275,6 +307,14 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                   }
                 },
                 isCropMode: _controller.isCropMode,
+                onToggleRedactMode: () {
+                  final enteringRedact = !_controller.isRedactMode;
+                  _controller.setRedactMode(enteringRedact);
+                  if (enteringRedact && !isWideScreen) {
+                    _scaffoldKey.currentState?.closeEndDrawer();
+                  }
+                },
+                isRedactMode: _controller.isRedactMode,
                 isWideScreen: isWideScreen,
               )
             : const SizedBox.shrink();
@@ -364,14 +404,16 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
         final Widget bodyContent = Stack(
           children: [
             mainContent,
-            if (!_controller.isCropMode)
+            if (!_controller.isCropMode && !_controller.isRedactMode)
               const Positioned(left: 12, top: 12, child: FloatingBackButton()),
             ImageViewerLoadingOverlay(isVisible: _controller.isProcessing),
           ],
         );
 
         final List<Widget>? actions =
-            _controller.uiImage != null && !_controller.isCropMode
+            _controller.uiImage != null &&
+                !_controller.isCropMode &&
+                !_controller.isRedactMode
             ? [
                 IconButton(
                   icon: const Icon(Icons.undo),

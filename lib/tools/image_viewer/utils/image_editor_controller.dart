@@ -31,6 +31,7 @@ class ImageEditorController extends ChangeNotifier {
 
   // Editor and history state (max 5 steps)
   bool _isCropMode = false;
+  bool _isRedactMode = false;
   final List<img.Image> _history = [];
   int _historyIndex = -1;
   static const int _maxHistorySteps = 5;
@@ -56,6 +57,7 @@ class ImageEditorController extends ChangeNotifier {
   ImageMetadata? get metadata => _metadata;
   bool get preserveExif => _preserveExif;
   bool get isCropMode => _isCropMode;
+  bool get isRedactMode => _isRedactMode;
   int get historyIndex => _historyIndex;
   int get historyLength => _history.length;
 
@@ -79,6 +81,11 @@ class ImageEditorController extends ChangeNotifier {
 
   void setCropMode(bool value) {
     _isCropMode = value;
+    notifyListeners();
+  }
+
+  void setRedactMode(bool value) {
+    _isRedactMode = value;
     notifyListeners();
   }
 
@@ -446,6 +453,159 @@ class ImageEditorController extends ChangeNotifier {
     );
   }
 
+  Future<ui.Image> _canvasPixelate(
+    ui.Image source,
+    int x,
+    int y,
+    int w,
+    int h,
+    double blockSize,
+  ) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    canvas.drawImage(source, Offset.zero, Paint());
+
+    final int tinyW = (w / blockSize).round().clamp(1, w);
+    final int tinyH = (h / blockSize).round().clamp(1, h);
+
+    final tinyRecorder = ui.PictureRecorder();
+    final tinyCanvas = Canvas(tinyRecorder);
+    tinyCanvas.drawImageRect(
+      source,
+      Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
+      Rect.fromLTWH(0, 0, tinyW.toDouble(), tinyH.toDouble()),
+      Paint(),
+    );
+    final tinyPicture = tinyRecorder.endRecording();
+    final tinyImage = await tinyPicture.toImage(tinyW, tinyH);
+    tinyPicture.dispose();
+
+    canvas.drawImageRect(
+      tinyImage,
+      Rect.fromLTWH(0, 0, tinyW.toDouble(), tinyH.toDouble()),
+      Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
+      Paint()..filterQuality = ui.FilterQuality.none,
+    );
+
+    tinyImage.dispose();
+
+    final picture = recorder.endRecording();
+    final result = await picture.toImage(source.width, source.height);
+    picture.dispose();
+    return result;
+  }
+
+  Future<ui.Image> _canvasBlur(
+    ui.Image source,
+    int x,
+    int y,
+    int w,
+    int h,
+    double sigma,
+  ) async {
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    canvas.drawImage(source, Offset.zero, Paint());
+
+    canvas.save();
+    canvas.clipRect(
+      Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
+    );
+
+    final paint = Paint()
+      ..imageFilter = ui.ImageFilter.blur(
+        sigmaX: sigma,
+        sigmaY: sigma,
+        tileMode: TileMode.clamp,
+      );
+    canvas.drawImage(source, Offset.zero, paint);
+    canvas.restore();
+
+    final picture = recorder.endRecording();
+    final result = await picture.toImage(source.width, source.height);
+    picture.dispose();
+    return result;
+  }
+
+  Future<ui.Image> _canvasRedact(
+    ui.Image source,
+    int x,
+    int y,
+    int w,
+    int h,
+    String redactType,
+    double intensity,
+    Color? solidColor,
+  ) async {
+    final type = redactType.toLowerCase();
+    if (type == 'solid') {
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+      canvas.drawImage(source, Offset.zero, Paint());
+      canvas.drawRect(
+        Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
+        Paint()
+          ..color = solidColor ?? Colors.black
+          ..style = PaintingStyle.fill,
+      );
+      final picture = recorder.endRecording();
+      final result = await picture.toImage(source.width, source.height);
+      picture.dispose();
+      return result;
+    } else if (type == 'pixelate') {
+      return _canvasPixelate(source, x, y, w, h, intensity);
+    } else if (type == 'blur') {
+      return _canvasBlur(source, x, y, w, h, intensity);
+    }
+    return source;
+  }
+
+  Future<void> redactImage(
+    int x,
+    int y,
+    int w,
+    int h,
+    String redactType,
+    double intensity,
+    Color? solidColor,
+  ) async {
+    if (_uiImage == null) return;
+    _isRedactMode = false;
+
+    final newUi = await _canvasRedact(
+      _uiImage!,
+      x,
+      y,
+      w,
+      h,
+      redactType,
+      intensity,
+      solidColor,
+    );
+    _uiImage?.dispose();
+    _uiImage = newUi;
+    _isAnimated = false;
+    notifyListeners();
+
+    _queueBackgroundSync(
+      (current) => compute(
+        redactImageTask,
+        RedactParams(
+          image: current,
+          x: x,
+          y: y,
+          width: w,
+          height: h,
+          redactType: redactType,
+          intensity: intensity,
+          colorValue: solidColor?.toARGB32(),
+        ),
+      ),
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Resize text-field sync
   // ---------------------------------------------------------------------------
@@ -512,6 +672,7 @@ class ImageEditorController extends ChangeNotifier {
     _history.clear();
     _historyIndex = -1;
     _isCropMode = false;
+    _isRedactMode = false;
     _isProcessing = false;
     _decodingFuture = null;
     _backgroundSync = null;
