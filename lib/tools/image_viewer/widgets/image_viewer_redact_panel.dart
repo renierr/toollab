@@ -433,7 +433,7 @@ class _ColorSwatch extends StatelessWidget {
   }
 }
 
-class _RedactOverlay extends StatelessWidget {
+class _RedactOverlay extends StatefulWidget {
   final ui.Image image;
   final img.Image? decodedImage;
   final Rect redactRectNormalized;
@@ -467,14 +467,27 @@ class _RedactOverlay extends StatelessWidget {
   });
 
   @override
+  State<_RedactOverlay> createState() => _RedactOverlayState();
+}
+
+class _RedactOverlayState extends State<_RedactOverlay> {
+  Offset? _dragStartOffset;
+  Rect? _dragStartRect;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     // Screen coordinates of the redact box
-    final double left = imageOffsetX + redactRectNormalized.left * imageDispW;
-    final double top = imageOffsetY + redactRectNormalized.top * imageDispH;
-    final double width = redactRectNormalized.width * imageDispW;
-    final double height = redactRectNormalized.height * imageDispH;
+    final double left =
+        widget.imageOffsetX +
+        widget.redactRectNormalized.left * widget.imageDispW;
+    final double top =
+        widget.imageOffsetY +
+        widget.redactRectNormalized.top * widget.imageDispH;
+    final double width = widget.redactRectNormalized.width * widget.imageDispW;
+    final double height =
+        widget.redactRectNormalized.height * widget.imageDispH;
 
     return Stack(
       children: [
@@ -514,25 +527,43 @@ class _RedactOverlay extends StatelessWidget {
           width: width,
           height: height,
           child: GestureDetector(
-            onPanStart: (_) => onDragStart(),
-            onPanEnd: (_) => onDragEnd(),
-            onPanCancel: () => onDragEnd(),
+            onPanStart: (details) {
+              widget.onDragStart();
+              _dragStartOffset = details.globalPosition;
+              _dragStartRect = widget.redactRectNormalized;
+            },
+            onPanEnd: (_) {
+              widget.onDragEnd();
+              _dragStartOffset = null;
+              _dragStartRect = null;
+            },
+            onPanCancel: () {
+              widget.onDragEnd();
+              _dragStartOffset = null;
+              _dragStartRect = null;
+            },
             onPanUpdate: (details) {
-              final double dxNorm = details.delta.dx / imageDispW;
-              final double dyNorm = details.delta.dy / imageDispH;
+              if (_dragStartOffset == null || _dragStartRect == null) return;
+              final double dx =
+                  details.globalPosition.dx - _dragStartOffset!.dx;
+              final double dy =
+                  details.globalPosition.dy - _dragStartOffset!.dy;
 
-              double newLeft = redactRectNormalized.left + dxNorm;
-              double newTop = redactRectNormalized.top + dyNorm;
+              final double dxNorm = dx / widget.imageDispW;
+              final double dyNorm = dy / widget.imageDispH;
 
-              newLeft = newLeft.clamp(0.0, 1.0 - redactRectNormalized.width);
-              newTop = newTop.clamp(0.0, 1.0 - redactRectNormalized.height);
+              double newLeft = _dragStartRect!.left + dxNorm;
+              double newTop = _dragStartRect!.top + dyNorm;
 
-              onRectChanged(
+              newLeft = newLeft.clamp(0.0, 1.0 - _dragStartRect!.width);
+              newTop = newTop.clamp(0.0, 1.0 - _dragStartRect!.height);
+
+              widget.onRectChanged(
                 Rect.fromLTWH(
                   newLeft,
                   newTop,
-                  redactRectNormalized.width,
-                  redactRectNormalized.height,
+                  _dragStartRect!.width,
+                  _dragStartRect!.height,
                 ),
               );
             },
@@ -543,45 +574,106 @@ class _RedactOverlay extends StatelessWidget {
         // Drag handles (corners)
         // Top-Left
         Positioned(
-          left: left - 12,
-          top: top - 12,
+          left: left - 20,
+          top: top - 20,
           child: _Handle(
-            onDragStart: onDragStart,
-            onDragEnd: onDragEnd,
-            onDrag: (dx, dy) => _resizeRedactBox(dx, dy, top: true, left: true),
+            onDragStart: (globalPos) {
+              widget.onDragStart();
+              _dragStartOffset = globalPos;
+              _dragStartRect = widget.redactRectNormalized;
+            },
+            onDragEnd: () {
+              widget.onDragEnd();
+              _dragStartOffset = null;
+              _dragStartRect = null;
+            },
+            onDrag: (globalPos) {
+              if (_dragStartOffset == null || _dragStartRect == null) return;
+              final double dx = globalPos.dx - _dragStartOffset!.dx;
+              final double dy = globalPos.dy - _dragStartOffset!.dy;
+              _resizeRedactBox(dx, dy, _dragStartRect!, top: true, left: true);
+            },
           ),
         ),
         // Top-Right
         Positioned(
-          left: left + width - 12,
-          top: top - 12,
+          left: left + width - 20,
+          top: top - 20,
           child: _Handle(
-            onDragStart: onDragStart,
-            onDragEnd: onDragEnd,
-            onDrag: (dx, dy) =>
-                _resizeRedactBox(dx, dy, top: true, right: true),
+            onDragStart: (globalPos) {
+              widget.onDragStart();
+              _dragStartOffset = globalPos;
+              _dragStartRect = widget.redactRectNormalized;
+            },
+            onDragEnd: () {
+              widget.onDragEnd();
+              _dragStartOffset = null;
+              _dragStartRect = null;
+            },
+            onDrag: (globalPos) {
+              if (_dragStartOffset == null || _dragStartRect == null) return;
+              final double dx = globalPos.dx - _dragStartOffset!.dx;
+              final double dy = globalPos.dy - _dragStartOffset!.dy;
+              _resizeRedactBox(dx, dy, _dragStartRect!, top: true, right: true);
+            },
           ),
         ),
         // Bottom-Left
         Positioned(
-          left: left - 12,
-          top: top + height - 12,
+          left: left - 20,
+          top: top + height - 20,
           child: _Handle(
-            onDragStart: onDragStart,
-            onDragEnd: onDragEnd,
-            onDrag: (dx, dy) =>
-                _resizeRedactBox(dx, dy, bottom: true, left: true),
+            onDragStart: (globalPos) {
+              widget.onDragStart();
+              _dragStartOffset = globalPos;
+              _dragStartRect = widget.redactRectNormalized;
+            },
+            onDragEnd: () {
+              widget.onDragEnd();
+              _dragStartOffset = null;
+              _dragStartRect = null;
+            },
+            onDrag: (globalPos) {
+              if (_dragStartOffset == null || _dragStartRect == null) return;
+              final double dx = globalPos.dx - _dragStartOffset!.dx;
+              final double dy = globalPos.dy - _dragStartOffset!.dy;
+              _resizeRedactBox(
+                dx,
+                dy,
+                _dragStartRect!,
+                bottom: true,
+                left: true,
+              );
+            },
           ),
         ),
         // Bottom-Right
         Positioned(
-          left: left + width - 12,
-          top: top + height - 12,
+          left: left + width - 20,
+          top: top + height - 20,
           child: _Handle(
-            onDragStart: onDragStart,
-            onDragEnd: onDragEnd,
-            onDrag: (dx, dy) =>
-                _resizeRedactBox(dx, dy, bottom: true, right: true),
+            onDragStart: (globalPos) {
+              widget.onDragStart();
+              _dragStartOffset = globalPos;
+              _dragStartRect = widget.redactRectNormalized;
+            },
+            onDragEnd: () {
+              widget.onDragEnd();
+              _dragStartOffset = null;
+              _dragStartRect = null;
+            },
+            onDrag: (globalPos) {
+              if (_dragStartOffset == null || _dragStartRect == null) return;
+              final double dx = globalPos.dx - _dragStartOffset!.dx;
+              final double dy = globalPos.dy - _dragStartOffset!.dy;
+              _resizeRedactBox(
+                dx,
+                dy,
+                _dragStartRect!,
+                bottom: true,
+                right: true,
+              );
+            },
           ),
         ),
       ],
@@ -590,11 +682,11 @@ class _RedactOverlay extends StatelessWidget {
 
   Widget _buildPreviewContent(BuildContext context) {
     final theme = Theme.of(context);
-    switch (redactType) {
+    switch (widget.redactType) {
       case 'solid':
-        return Container(color: solidColor);
+        return Container(color: widget.solidColor);
       case 'pixelate':
-        if (isDragging) {
+        if (widget.isDragging) {
           return Container(
             color: theme.colorScheme.primary.withValues(alpha: 0.15),
             child: const Center(
@@ -602,7 +694,7 @@ class _RedactOverlay extends StatelessWidget {
             ),
           );
         }
-        if (decodedImage == null) {
+        if (widget.decodedImage == null) {
           return Container(
             color: theme.colorScheme.primary.withValues(alpha: 0.25),
             child: const Center(
@@ -616,13 +708,13 @@ class _RedactOverlay extends StatelessWidget {
         }
         return CustomPaint(
           painter: _PixelatePainter(
-            decodedImage: decodedImage!,
-            normalizedRect: redactRectNormalized,
-            blockSize: intensity,
+            decodedImage: widget.decodedImage!,
+            normalizedRect: widget.redactRectNormalized,
+            blockSize: widget.intensity,
           ),
         );
       case 'blur':
-        if (isDragging) {
+        if (widget.isDragging) {
           return Container(
             color: theme.colorScheme.primary.withValues(alpha: 0.15),
             child: const Center(
@@ -632,7 +724,10 @@ class _RedactOverlay extends StatelessWidget {
         }
         return ClipRect(
           child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: intensity, sigmaY: intensity),
+            filter: ui.ImageFilter.blur(
+              sigmaX: widget.intensity,
+              sigmaY: widget.intensity,
+            ),
             child: Container(color: Colors.transparent),
           ),
         );
@@ -643,16 +738,17 @@ class _RedactOverlay extends StatelessWidget {
 
   void _resizeRedactBox(
     double dx,
-    double dy, {
+    double dy,
+    Rect startRect, {
     bool top = false,
     bool bottom = false,
     bool left = false,
     bool right = false,
   }) {
-    double pxLeft = redactRectNormalized.left * imageDispW;
-    double pxTop = redactRectNormalized.top * imageDispH;
-    double pxWidth = redactRectNormalized.width * imageDispW;
-    double pxHeight = redactRectNormalized.height * imageDispH;
+    double pxLeft = startRect.left * widget.imageDispW;
+    double pxTop = startRect.top * widget.imageDispH;
+    double pxWidth = startRect.width * widget.imageDispW;
+    double pxHeight = startRect.height * widget.imageDispH;
 
     const double minSize = 24.0;
 
@@ -663,7 +759,7 @@ class _RedactOverlay extends StatelessWidget {
       pxLeft = newLeft;
     }
     if (right) {
-      final double maxWidth = math.max(minSize, imageDispW - pxLeft);
+      final double maxWidth = math.max(minSize, widget.imageDispW - pxLeft);
       pxWidth = (pxWidth + dx).clamp(minSize, maxWidth);
     }
     if (top) {
@@ -673,16 +769,16 @@ class _RedactOverlay extends StatelessWidget {
       pxTop = newTop;
     }
     if (bottom) {
-      final double maxHeight = math.max(minSize, imageDispH - pxTop);
+      final double maxHeight = math.max(minSize, widget.imageDispH - pxTop);
       pxHeight = (pxHeight + dy).clamp(minSize, maxHeight);
     }
 
-    onRectChanged(
+    widget.onRectChanged(
       Rect.fromLTWH(
-        (pxLeft / imageDispW).clamp(0.0, 1.0),
-        (pxTop / imageDispH).clamp(0.0, 1.0),
-        (pxWidth / imageDispW).clamp(0.0, 1.0),
-        (pxHeight / imageDispH).clamp(0.0, 1.0),
+        (pxLeft / widget.imageDispW).clamp(0.0, 1.0),
+        (pxTop / widget.imageDispH).clamp(0.0, 1.0),
+        (pxWidth / widget.imageDispW).clamp(0.0, 1.0),
+        (pxHeight / widget.imageDispH).clamp(0.0, 1.0),
       ),
     );
   }
@@ -750,9 +846,9 @@ class _PixelatePainter extends CustomPainter {
 }
 
 class _Handle extends StatelessWidget {
-  final Function(double dx, double dy) onDrag;
-  final VoidCallback onDragStart;
+  final ValueChanged<Offset> onDragStart;
   final VoidCallback onDragEnd;
+  final ValueChanged<Offset> onDrag;
 
   const _Handle({
     required this.onDrag,
@@ -763,15 +859,21 @@ class _Handle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onPanStart: (_) => onDragStart(),
-      onPanEnd: (_) => onDragEnd(),
-      onPanCancel: () => onDragEnd(),
+      onPanStart: (details) {
+        onDragStart(details.globalPosition);
+      },
+      onPanEnd: (_) {
+        onDragEnd();
+      },
+      onPanCancel: () {
+        onDragEnd();
+      },
       onPanUpdate: (details) {
-        onDrag(details.delta.dx, details.delta.dy);
+        onDrag(details.globalPosition);
       },
       child: Container(
-        width: 24,
-        height: 24,
+        width: 40,
+        height: 40,
         alignment: Alignment.center,
         color: Colors.transparent,
         child: Container(
