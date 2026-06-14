@@ -16,6 +16,7 @@ import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/tools/fast_drop/fast_drop_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
@@ -61,7 +62,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<AppState>().loadFastDrops();
+        context.read<FastDropState>().loadFastDrops();
       }
     });
   }
@@ -84,7 +85,8 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
 
   Future<void> _pasteFromClipboard() async {
     final appState = context.read<AppState>();
-    if (!appState.syncEnabled || !appState.isServerAvailable) return;
+    final fastDropState = context.read<FastDropState>();
+    if (!appState.syncEnabled || !fastDropState.isServerAvailable) return;
     try {
       final text = await ClipboardHelper.getText();
       if (text != null && text.trim().isNotEmpty) {
@@ -96,7 +98,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             const SnackBar(content: Text('Pasting text from clipboard...')),
           );
         }
-        await appState.uploadFastDrop(
+        await fastDropState.uploadFastDrop(
           filename: filename,
           bytes: bytes,
           retention: _retention,
@@ -113,7 +115,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
               const SnackBar(content: Text('Pasting image from clipboard...')),
             );
           }
-          await appState.uploadFastDrop(
+          await fastDropState.uploadFastDrop(
             filename: filename,
             bytes: imageBytes,
             retention: _retention,
@@ -148,7 +150,8 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
 
   Future<void> _onFileSelected(XFile file) async {
     final appState = context.read<AppState>();
-    if (!appState.syncEnabled || !appState.isServerAvailable) return;
+    final fastDropState = context.read<FastDropState>();
+    if (!appState.syncEnabled || !fastDropState.isServerAvailable) return;
     try {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -160,7 +163,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
         mimeType = MimeTypeHelper.getMimeType(file.name, bytes: bytes);
       }
-      await appState.uploadFastDrop(
+      await fastDropState.uploadFastDrop(
         filename: file.name,
         bytes: bytes,
         retention: _retention,
@@ -185,7 +188,8 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   Future<void> _uploadPendingSharedFile() async {
     if (_pendingSharedFile == null) return;
     final appState = context.read<AppState>();
-    if (!appState.syncEnabled || !appState.isServerAvailable) return;
+    final fastDropState = context.read<FastDropState>();
+    if (!appState.syncEnabled || !fastDropState.isServerAvailable) return;
     final file = _pendingSharedFile!;
     try {
       setState(() {
@@ -201,7 +205,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
         mimeType = MimeTypeHelper.getMimeType(file.name, bytes: bytes);
       }
-      await appState.uploadFastDrop(
+      await fastDropState.uploadFastDrop(
         filename: file.name,
         bytes: bytes,
         retention: _retention,
@@ -231,9 +235,9 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   }
 
   Future<void> _onKeep(FastDropItem item) async {
-    final appState = context.read<AppState>();
+    final fastDropState = context.read<FastDropState>();
     try {
-      await appState.keepFastDrop(item.id);
+      await fastDropState.keepFastDrop(item.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Retention set to indefinite')),
@@ -249,7 +253,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   }
 
   Future<void> _onDelete(FastDropItem item) async {
-    final appState = context.read<AppState>();
+    final fastDropState = context.read<FastDropState>();
     final confirm = await ConfirmActionDialog.show(
       context: context,
       title: 'Delete Drop',
@@ -258,7 +262,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     );
     if (confirm == true) {
       try {
-        await appState.deleteFastDrop(item.id);
+        await fastDropState.deleteFastDrop(item.id);
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -275,7 +279,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   }
 
   Future<void> _onDownload(FastDropItem item) async {
-    final appState = context.read<AppState>();
+    final fastDropState = context.read<FastDropState>();
     try {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -283,7 +287,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         );
       }
       final tempPath = await _scope.createFile('fast_drop_save_${item.id}');
-      await appState.downloadFastDropToFile(id: item.id, outputPath: tempPath);
+      await fastDropState.downloadFastDropToFile(
+        id: item.id,
+        outputPath: tempPath,
+      );
       if (!mounted) return;
       await FileSaveHelper.saveFileFromPath(
         context: context,
@@ -301,7 +308,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   }
 
   Future<void> _onOpen(FastDropItem item) async {
-    final appState = context.read<AppState>();
+    final fastDropState = context.read<FastDropState>();
     try {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -311,7 +318,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       final tempPath = await _scope.createFile(
         'fast_drop_open_${item.id}_${item.filename}',
       );
-      await appState.downloadFastDropToFile(id: item.id, outputPath: tempPath);
+      await fastDropState.downloadFastDropToFile(
+        id: item.id,
+        outputPath: tempPath,
+      );
 
       if (mounted) {
         await FileSaveHelper.showOpenChooser(
@@ -339,7 +349,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     );
     if (result == null || !mounted) return;
     try {
-      await context.read<AppState>().updateFastDropDescription(item.id, result);
+      await context.read<FastDropState>().updateFastDropDescription(
+        item.id,
+        result,
+      );
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -360,7 +373,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       context: context,
       builder: (context) => FastDropPreviewDialog(
         item: item,
-        onDownload: (id) => context.read<AppState>().downloadFastDrop(id),
+        onDownload: (id) => context.read<FastDropState>().downloadFastDrop(id),
         onOpen: () => _onOpen(item),
         onSave: () => _onDownload(item),
       ),
@@ -370,9 +383,11 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
+    final fastDropState = context.watch<FastDropState>();
     final theme = Theme.of(context);
     final isConfigured = appState.syncServerUrl.isNotEmpty;
-    final isActionsEnabled = appState.syncEnabled && appState.isServerAvailable;
+    final isActionsEnabled =
+        appState.syncEnabled && fastDropState.isServerAvailable;
 
     return ToolLayout(
       title: FastDropTool.config.name,
@@ -410,7 +425,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                       Text(
                         isConfigured
                             ? (appState.syncEnabled
-                                  ? (appState.isServerAvailable
+                                  ? (fastDropState.isServerAvailable
                                         ? 'Online'
                                         : 'Offline')
                                   : 'Sync Disabled')
@@ -418,7 +433,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: isConfigured
                               ? (appState.syncEnabled
-                                    ? (appState.isServerAvailable
+                                    ? (fastDropState.isServerAvailable
                                           ? AppTheme.statusGreen
                                           : AppTheme.statusRed)
                                     : AppTheme.statusAmber)
@@ -433,7 +448,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                 ),
                 if (isConfigured && appState.syncEnabled)
                   IconButton(
-                    icon: appState.isLoadingFastDrops
+                    icon: fastDropState.isLoadingFastDrops
                         ? const SizedBox(
                             width: 18,
                             height: 18,
@@ -444,31 +459,33 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                           )
                         : const Icon(Icons.refresh),
                     tooltip: 'Refresh List',
-                    onPressed: () => appState.loadFastDrops(),
+                    onPressed: () => fastDropState.loadFastDrops(),
                   ),
               ],
             ),
           ),
           const Divider(height: 1),
-          if (appState.isUploadingFastDrop &&
-              appState.fastDropUploadProgress != null)
+          if (fastDropState.isUploadingFastDrop &&
+              fastDropState.fastDropUploadProgress != null)
             FastDropProgressIndicator(
               label: 'Uploading',
-              sent: appState.fastDropUploadProgress!.$1,
-              total: appState.fastDropUploadProgress!.$2,
-              onCancel: () => context.read<AppState>().cancelUploadFastDrop(),
+              sent: fastDropState.fastDropUploadProgress!.$1,
+              total: fastDropState.fastDropUploadProgress!.$2,
+              onCancel: () =>
+                  context.read<FastDropState>().cancelUploadFastDrop(),
             ),
-          if (appState.isDownloadingFastDrop &&
-              appState.fastDropDownloadProgress != null)
+          if (fastDropState.isDownloadingFastDrop &&
+              fastDropState.fastDropDownloadProgress != null)
             FastDropProgressIndicator(
               label: 'Downloading',
-              sent: appState.fastDropDownloadProgress!.$1,
-              total: appState.fastDropDownloadProgress!.$2,
-              onCancel: () => context.read<AppState>().cancelDownloadFastDrop(),
+              sent: fastDropState.fastDropDownloadProgress!.$1,
+              total: fastDropState.fastDropDownloadProgress!.$2,
+              onCancel: () =>
+                  context.read<FastDropState>().cancelDownloadFastDrop(),
             ),
           FastDropStatusBanner(
-            appState: appState,
-            onRetry: () => appState.loadFastDrops(),
+            appState: fastDropState,
+            onRetry: () => fastDropState.loadFastDrops(),
           ),
           Expanded(
             child: !isConfigured
@@ -516,7 +533,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                             ),
                             const SizedBox(height: 8),
                             FastDropList(
-                              appState: appState,
+                              appState: fastDropState,
                               shrinkWrap: true,
                               onDelete: _onDelete,
                               onKeep: _onKeep,
@@ -567,7 +584,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                         const VerticalDivider(width: 1),
                         Expanded(
                           child: FastDropList(
-                            appState: appState,
+                            appState: fastDropState,
                             onDelete: _onDelete,
                             onKeep: _onKeep,
                             onPreview: _onPreview,

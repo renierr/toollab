@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:tool_lab/app.dart';
+import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -16,9 +17,18 @@ void main(List<String> args) async {
   await DatabaseService.instance.database;
   final settingsService = await SettingsService.init();
 
+  final toolProviders = ToolRegistry.all
+      .map((t) => t.stateProviders)
+      .where((f) => f != null)
+      .expand((f) => f!())
+      .toList();
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppState(settingsService),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppState(settingsService)),
+        ...toolProviders,
+      ],
       child: const ToolLabApp(),
     ),
   );

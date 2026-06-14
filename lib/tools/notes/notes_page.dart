@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/tools/notes/notes_state.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
@@ -40,16 +41,17 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     super.initState();
 
     final appState = context.read<AppState>();
+    final notesState = context.read<NotesState>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      appState.loadNotes();
+      notesState.loadNotes();
 
       if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty) {
         appState
             .syncWithBackend([NotesSyncDelegate()])
             .then((_) {
               if (mounted) {
-                appState.loadNotes();
+                notesState.loadNotes();
               }
             })
             .catchError((e) {
@@ -137,9 +139,9 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
   }
 
   Future<void> _saveNote(String content, List<String> tags) async {
-    final appState = context.read<AppState>();
+    final notesState = context.read<NotesState>();
     try {
-      await appState.saveNote(content, id: _editingId, tags: tags);
+      await notesState.saveNote(content, id: _editingId, tags: tags);
       _closeEditor();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -170,9 +172,9 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     );
 
     if (confirmed == true && mounted) {
-      final appState = context.read<AppState>();
+      final notesState = context.read<NotesState>();
       try {
-        await appState.deleteNote(id);
+        await notesState.deleteNote(id);
         setState(() {
           _isViewing = false;
           _viewingNote = null;
@@ -193,11 +195,11 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
   }
 
   Future<void> _importDroppedFile(File file, String name) async {
-    final appState = context.read<AppState>();
+    final notesState = context.read<NotesState>();
     try {
       final text = await file.readAsString();
       final content = text.trim().startsWith('# ') ? text : '# $name\n\n$text';
-      await appState.saveNote(content);
+      await notesState.saveNote(content);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -217,8 +219,8 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
-    final notes = appState.notes;
+    final notesState = context.watch<NotesState>();
+    final notes = notesState.notes;
 
     final allTags = <String>{};
     for (final note in notes) {
@@ -297,13 +299,13 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
                 setState(() {
                   _searchQuery = query;
                 });
-                appState.loadNotes(query: query);
+                notesState.loadNotes(query: query);
               },
               onImportMarkdown: (content) {
                 _openEditor(content: content);
               },
               onRefresh: () {
-                appState.loadNotes(query: _searchQuery);
+                notesState.loadNotes(query: _searchQuery);
               },
               allTags: sortedAllTags,
               selectedFilterTags: _selectedFilterTags,
@@ -312,7 +314,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
               },
             ),
             Expanded(
-              child: appState.isLoadingNotes
+              child: notesState.isLoadingNotes
                   ? const Center(
                       child: CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(

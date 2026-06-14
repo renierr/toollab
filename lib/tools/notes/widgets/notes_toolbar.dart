@@ -6,6 +6,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/tools/notes/notes_state.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/tools/notes/notes_sync_delegate.dart';
 import 'package:tool_lab/tools/notes/notes_db_helper.dart';
@@ -97,12 +98,12 @@ class _NotesToolbarState extends State<NotesToolbar> {
         }
 
         if (!mounted) return;
-        final appState = context.read<AppState>();
+        final notesState = context.read<NotesState>();
         final castedList = notesList
             .map((n) => Map<String, dynamic>.from(n as Map))
             .toList();
 
-        await appState.importNotesFromJson(castedList);
+        await notesState.importNotesFromJson(castedList);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

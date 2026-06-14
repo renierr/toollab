@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/single_child_widget.dart';
 
 import 'shared_file.dart';
 import '../services/sync_service.dart';
@@ -21,6 +22,7 @@ class ToolModel {
   final List<String> fileExtensions;
   final Widget Function(SharedFile? sharedFile) createPage;
   final SyncDelegate Function()? syncDelegateFactory;
+  final List<SingleChildWidget> Function()? stateProviders;
 
   ToolModel({
     required this.id,
@@ -33,6 +35,7 @@ class ToolModel {
     this.shareTarget,
     this.fileExtensions = const [],
     this.syncDelegateFactory,
+    this.stateProviders,
     Widget Function(SharedFile? sharedFile)? createPage,
   }) : createPage = createPage ?? ((_) => const SizedBox.shrink());
 }

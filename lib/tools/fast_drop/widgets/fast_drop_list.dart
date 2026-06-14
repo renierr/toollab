@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/providers/app_state.dart';
+import '../fast_drop_state.dart';
 import '../fast_drop_model.dart';
 import 'fast_drop_item_card.dart';
 
 class FastDropList extends StatelessWidget {
-  final AppState appState;
+  final FastDropState appState;
   final bool shrinkWrap;
   final void Function(FastDropItem item) onDelete;
   final void Function(FastDropItem item) onKeep;
@@ -67,7 +67,7 @@ class FastDropList extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              if (appState.syncEnabled)
+              if (appState.fastDropError != null)
                 FilledButton.icon(
                   onPressed: () => appState.loadFastDrops(),
                   icon: const Icon(Icons.refresh),
