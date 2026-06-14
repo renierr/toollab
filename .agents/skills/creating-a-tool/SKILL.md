@@ -30,6 +30,7 @@ Every tool must live in its own directory under `lib/tools/<name>/` and should m
 lib/tools/<name>/
   ├── config.dart             - Tool metadata (ToolModel) and configurations
   ├── <name>_page.dart        - Coordinator page widget (Stateless/Stateful coordinations)
+  ├── <name>_state.dart       - Optional ChangeNotifier for tool-specific state management
   ├── widgets/                - Private widgets for page components (never inline builder methods in page)
   │    ├── <name>_display.dart
   │    └── <name>_toolbar.dart
@@ -82,6 +83,7 @@ class MyNewTool {
 | `sectionId` | `String` | Category section in launchers (e.g. `'utilities'`, `'sensors'`). |
 | `fullscreen` | `bool` | Set `true` to hide standard AppBar and enable floating overlay buttons. |
 | `shareTarget` | `ShareTargetConfig?` | Declares accepted MIME types. Matches files shared natively or internally. |
+| `stateProviders` | `List<SingleChildWidget> Function()?` | Optional factory returning tool-specific `ChangeNotifierProvider`s. Auto-collected by `ToolRegistry.all` into `main.dart`. |
 
 ---
 
@@ -214,6 +216,9 @@ Avoid writing presentation logic or dropzones from scratch. Use existing widgets
 7. **Database Test Isolation**: If a new tool adds database tables, any unit/widget tests must override the database path using `inMemoryDatabasePath` on `DatabaseService.instance` and close the connection in `tearDownAll` to ensure test state is clean and fully isolated in memory.
 8. **Const Constructors**: Prefer using `const` constructors for widgets and in `build()` methods where possible to reduce rebuild cycles.
 9. **Lazy Lists**: Prefer `ListView.builder` or slivers for dynamic or performance-sensitive lists to keep frame rates high.
-10. **State Management & UI Binding**: Always bind UI screens to state using `context.watch<AppState>()` (or `Consumer<AppState>`) for automatic rebuilds, and use `context.read<AppState>()` inside buttons and lifecycle callbacks. Never update local state variables inside views for persistent/syncable data.
+10. **State Management & UI Binding**:
+    - **Global state** (theme, sync config, favorites): bind via `context.watch<AppState>()` / `context.read<AppState>()`.
+    - **Tool-specific state**: extract into `<name>_state.dart` as a standalone `ChangeNotifier`, register via `stateProviders` in `ToolModel`. Pages then use `context.watch<MyToolState>()` instead of polling `AppState` for tool data.
+    - Never update local state variables inside views for persistent/syncable data.
 11. **Temporary Files**: Use `TempFileManager` (`lib/helpers/temp_file_manager.dart`) for all temp file creation — never raw `getTemporaryDirectory()`. Temp files are auto-tracked. Register cleanup via `onDispose(() => TempFileManager.cleanTracked())` on any StatefulWidget that creates temp files. Files from StatelessWidgets or static helpers are cleaned by `cleanSession()` on app close. External apps get their own copy/handle, and internal tools read into memory immediately — so cleanup on dispose is always safe.
 

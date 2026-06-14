@@ -18,7 +18,7 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **Git Write Consent**: Never run git write operations (`git add`, `git commit`, `git push`) without fresh explicit approval for each write command. "Fix it" or "proceed" is not approval to commit or push — ask first. A single "commit" or "push" in a prompt does not authorize further commits later in the same session — each requires its own explicit approval.
 - Never mention AI agents in commit messages or code. This includes `Co-Authored-By: Claude ...` trailers and any "Generated with Claude Code" attribution in commits or PR descriptions — omit them entirely.
 - **Resilience to Rejected Commands**: If a user rejects or stops a command execution, continue the task and provide the alternative results or plan. A rejected command must not abort the overall execution.
-- **State Management & Data Flow**: Always channel app state through providers in `lib/providers/`. Never update local state variables in views for persistent data.
+- **State Management & Data Flow**: Always channel app state through providers. Global state goes in `lib/providers/app_state.dart`; tool-specific state goes in a standalone `ChangeNotifier` at `lib/tools/<name>/<name>_state.dart`. Never update local state variables in views for persistent data.
 - **Small Screen Fitting**: Always use responsive layouts (like `Wrap` instead of horizontal `Row` for actions, and scrollable/grid metrics) in dialogs/modals/cards to prevent overflow on mobile.
 - **Cross-Platform Checks**: Check platform before using platform-specific APIs (sensors, battery, etc.).
 - **Prevent Duplicated UI/Dialog Code**: Extract custom dialogs, overlays, or recurring visual elements to `lib/widgets/` immediately. Never copy-paste presentation logic across views.
@@ -44,7 +44,7 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - Keep answers extremely short and concise. English for code/docs.
 - Use explicit return types for methods.
 - Reference colors from `AppTheme` in `lib/theme/theme.dart`. No hardcoded hex codes.
-- Bind UI screens to state using `Consumer<AppState>`, `context.watch<AppState>()`, or `context.read<AppState>()`. Prefer `context.watch<T>()` over `Provider.of<T>(context)` and `context.read<T>()` over `Provider.of<T>(context, listen: false)`. Use `context.read<T>()` in button callbacks and lifecycle methods.
+- Bind UI screens to state using `Consumer<AppState>`, `context.watch<AppState>()`, or `context.read<AppState>()`. Tool-specific state: use `context.watch<MyToolState>()` / `context.read<MyToolState>()` from the tool's own `ChangeNotifier`. Prefer `context.watch<T>()` over `Provider.of<T>(context)` and `context.read<T>()` over `Provider.of<T>(context, listen: false)`. Use `context.read<T>()` in button callbacks and lifecycle methods.
 - Log errors with clear service or page context prefixes to make debugging easy.
 - Extract dialogs, detailed cards, or list items to `lib/widgets/` to promote modular codebase structure.
 - Extract repetitive visual components to shared reusable widgets to maintain consistency.
@@ -95,12 +95,19 @@ class MyNewTool {
     route: '/my-new-tool',
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities',
+    stateProviders: () => [ // optional: tool-specific ChangeNotifier
+      ChangeNotifierProvider<MyNewToolState>(
+        create: (_) => MyNewToolState(),
+      ),
+    ],
   );
 }
 ```
 
 ### 4. Routing
 Routes are auto-generated from `ToolRegistry.all` in `lib/app.dart`. Each tool's `route` field becomes a GoRouter path. Page creation uses `ToolModel.createPage` — no manual switch needed in `app.dart`.
+
+Tool state providers declared via `stateProviders` are auto-collected into `main.dart`'s `MultiProvider` — no manual provider registration needed either.
 
 ### 5. Storage
 - **Per-tool settings**: use `DatabaseService.instance` (`lib/services/database_service.dart`) — singleton with `setSetting`/`getSetting`/`getAllSettings`.
@@ -126,6 +133,7 @@ For every tool added to the app, launcher entry points must be maintained:
 
 ### 1. State Management & UI Binding
 - Standard: `provider` + `ChangeNotifier` (`AppState` in `lib/providers/app_state.dart`).
+- Tool-specific state: standalone `ChangeNotifier` in `lib/tools/<name>/<name>_state.dart`, registered via `stateProviders` in `ToolModel`.
 - Ensure UI automatically rebuilds by binding via standard consumers.
 
 ### 2. Styling & Layouts

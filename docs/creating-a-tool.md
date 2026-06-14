@@ -11,12 +11,13 @@ Each tool lives in its own directory under `lib/tools/<name>/`. Component widget
 lib/tools/<name>/
   config.dart           - Metadata (id, name, description, icon, route, colors, fullscreen)
   <name>_page.dart      - Coordinator page widget (composes extracted widgets, no inline helper build methods)
+  <name>_state.dart     - Optional ChangeNotifier for tool-specific state management
   <name>_colors.dart    - Optional tool-specific color palette
   widgets/              - REQUIRED: every tool-specific component widget gets its own file here
     <name>_display.dart
     <name>_toolbar.dart
 ```
-Only `config.dart`, `<name>_page.dart`, the optional `<name>_colors.dart`, and non-widget files (enums, models) sit at the tool root — all widget files live under `widgets/`.
+Only `config.dart`, `<name>_page.dart`, the optional `<name>_state.dart` / `<name>_colors.dart`, and non-widget files (enums, models) sit at the tool root — all widget files live under `widgets/`.
 
 ---
 
@@ -118,15 +119,83 @@ Always reuse existing custom widgets in `lib/widgets/` to ensure visual consiste
 
 ---
 
-## 5. Creating a New Tool (Step-by-Step)
+## 5. Tool-Specific State Management
+
+Tools with significant internal state (loading states, item lists, upload progress, etc.) should extract their own `ChangeNotifier` instead of polluting `AppState`.
+
+### Creating a State Provider
+
+Create `<name>_state.dart` at the tool root:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:tool_lab/services/database_service.dart';
+
+class MyNewToolState extends ChangeNotifier {
+  List<MyItem> _items = [];
+  bool _isLoading = false;
+
+  List<MyItem> get items => _items;
+  bool get isLoading => _isLoading;
+
+  Future<void> loadItems() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      // load from DB or API
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+}
+```
+
+### Auto-Registration via `config.dart`
+
+Add the `stateProviders` field to your `ToolModel` — providers are auto-collected by `ToolRegistry.all` into `main.dart`'s `MultiProvider`. No manual wiring needed.
+
+```dart
+stateProviders: () => [
+  ChangeNotifierProvider<MyNewToolState>(
+    create: (_) => MyNewToolState(),
+  ),
+],
+```
+
+### Accessing in Pages
+
+Pages read from their own provider instead of `AppState`:
+
+```dart
+final myState = context.watch<MyNewToolState>();    // reactivity
+context.read<MyNewToolState>().loadItems();           // one-shot
+```
+
+For global sync config (`syncEnabled`, `syncServerUrl`), still read from `AppState`:
+
+```dart
+final appState = context.watch<AppState>();
+final syncOk = appState.syncEnabled && appState.syncServerUrl.isNotEmpty;
+```
+
+### Standalone by Design
+
+Tool state providers should read sync config directly from `DatabaseService.instance` (async) rather than depending on `AppState`. This keeps them fully standalone and auto-registerable.
+
+---
+
+## 6. Creating a New Tool (Step-by-Step)
 
 ### Step 1: Write `config.dart`
 ```dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'my_new_tool_page.dart';
+import 'my_new_tool_state.dart';        // if tool has its own state
 
 class MyNewTool {
   MyNewTool._();
@@ -144,6 +213,11 @@ class MyNewTool {
     ),
     createPage: (sf) => const MyNewToolPage(),  // route auto-wired
     syncDelegateFactory: MyNewToolSyncDelegate.new,  // if sync needed
+    stateProviders: () => [                // if tool needs state management
+      ChangeNotifierProvider<MyNewToolState>(
+        create: (_) => MyNewToolState(),
+      ),
+    ],
   );
 }
 ```
@@ -181,7 +255,7 @@ class ToolRegistry {
 }
 ```
 
-### Step 4: Verify & Clean
+### Step 5: Verify & Clean
 Before committing, always run:
 ```bash
 dart format ./lib
