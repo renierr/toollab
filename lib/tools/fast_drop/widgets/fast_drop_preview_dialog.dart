@@ -68,11 +68,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog> {
     final isImage = resolvedMimeType.startsWith('image/');
 
     return ResponsiveAlertDialog(
-      title: Text(
-        widget.item.filename,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(widget.item.filename.split('').join('\u{200B}')),
       content: SizedBox(
         width: 600,
         height: 400,
