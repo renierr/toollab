@@ -162,6 +162,24 @@ class FastDropItemCard extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (item.uploadedAt > 0) ...[
+                            Text(
+                              '•',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.4,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              'Uploaded: ${FormatHelper.dateTime(item.uploadedAt)}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 4),
