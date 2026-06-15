@@ -157,9 +157,10 @@ class _MarkdownViewState extends State<MarkdownView>
 
     final styleSheet = MarkdownStyleSheet.fromTheme(theme).copyWith(
       textScaler: TextScaler.linear(widget.scale),
+      p: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
       code: TextStyle(
         fontFamily: 'monospace',
-        fontSize: 13,
+        fontSize: 14,
         color: widget.accentColor,
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
       ),
