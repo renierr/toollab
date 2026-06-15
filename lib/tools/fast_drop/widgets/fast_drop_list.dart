@@ -41,7 +41,7 @@ class FastDropList extends StatelessWidget {
 
     if (appState.fastDropError != null && appState.fastDrops.isEmpty) {
       return Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -85,7 +85,7 @@ class FastDropList extends StatelessWidget {
 
     if (appState.fastDrops.isEmpty) {
       return Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
