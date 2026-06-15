@@ -8,6 +8,7 @@ import 'package:image/image.dart' as img;
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/tools/image_viewer/utils/edit_history.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_canvas_ops.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
@@ -32,12 +33,10 @@ class ImageEditorController extends ChangeNotifier {
   ImageMetadata? _metadata;
   bool _preserveExif = false;
 
-  // Editor and history state (max 5 steps)
+  // Editor and history state (bounded undo/redo, see EditHistory).
   bool _isCropMode = false;
   bool _isRedactMode = false;
-  final List<img.Image> _history = [];
-  int _historyIndex = -1;
-  static const int _maxHistorySteps = 5;
+  final EditHistory _history = EditHistory();
 
   // Deferred decoding future and load session counter to prevent memory leaks on close/switch
   Future<img.Image>? _decodingFuture;
@@ -74,8 +73,8 @@ class ImageEditorController extends ChangeNotifier {
   bool get preserveExif => _preserveExif;
   bool get isCropMode => _isCropMode;
   bool get isRedactMode => _isRedactMode;
-  int get historyIndex => _historyIndex;
-  int get historyLength => _history.length;
+  bool get canUndo => _history.canUndo;
+  bool get canRedo => _history.canRedo;
   bool get canBrowseSiblings => _siblings.length > 1;
   bool get hasPrevSibling => canBrowseSiblings && _siblingIndex > 0;
   bool get hasNextSibling =>
@@ -169,7 +168,6 @@ class ImageEditorController extends ChangeNotifier {
       _syncDimensionFields();
 
       _history.clear();
-      _historyIndex = -1;
       _isCropMode = false;
 
       notifyListeners();
@@ -298,19 +296,12 @@ class ImageEditorController extends ChangeNotifier {
   // transforms live in image_canvas_ops.dart.
   // ---------------------------------------------------------------------------
 
-  void _pushHistory(img.Image newImage) {
-    if (_historyIndex < _history.length - 1) {
-      _history.removeRange(_historyIndex + 1, _history.length);
-    }
-    _history.add(newImage);
-    if (_history.length > _maxHistorySteps) {
-      _history.removeAt(0);
-    }
-    _historyIndex = _history.length - 1;
-  }
-
+  /// Runs [work] on the backing img.Image in a chained isolate to keep it in
+  /// step with the GPU display, then records [buildStep] in history. For
+  /// destructive edits, [buildStep] snapshots the pre-edit image it receives.
   void _queueBackgroundSync(
     Future<img.Image> Function(img.Image current) work,
+    Future<EditStep> Function(img.Image before) buildStep,
   ) {
     final prev = _backgroundSync ?? Future.value(null);
     final session = _loadSessionCounter;
@@ -319,10 +310,13 @@ class ImageEditorController extends ChangeNotifier {
       if (session != _loadSessionCounter) return;
       await _ensureDecoded();
       if (session != _loadSessionCounter || _decodedImage == null) return;
-      final result = await work(_decodedImage!);
+      final before = _decodedImage!;
+      final result = await work(before);
+      if (session != _loadSessionCounter) return;
+      final step = await buildStep(before);
       if (session != _loadSessionCounter) return;
       _decodedImage = result;
-      _pushHistory(result);
+      _history.record(step);
     });
   }
 
@@ -341,8 +335,6 @@ class ImageEditorController extends ChangeNotifier {
     ) {
       if (session != _loadSessionCounter) return decoded;
       _decodedImage = decoded;
-      _history.add(decoded);
-      _historyIndex = 0;
       if (!_isAnimated) _rawBytes = null;
       return decoded;
     });
@@ -367,17 +359,8 @@ class ImageEditorController extends ChangeNotifier {
 
     try {
       await _ensureFullySynced();
-      if (_historyIndex > 0) {
-        final prevImage = _history[_historyIndex - 1];
-        final newUi = await _convertToUiImage(prevImage);
-        _uiImage?.dispose();
-        _uiImage = newUi;
-        _decodedImage = prevImage;
-        _historyIndex--;
-        _originalWidth = prevImage.width;
-        _originalHeight = prevImage.height;
-        _syncDimensionFields();
-      }
+      final prevImage = await _history.undo(_decodedImage!);
+      if (prevImage != null) await _applyHistoryImage(prevImage);
     } catch (e) {
       debugPrint("Undo failed: $e");
       rethrow;
@@ -393,17 +376,8 @@ class ImageEditorController extends ChangeNotifier {
 
     try {
       await _ensureFullySynced();
-      if (_historyIndex < _history.length - 1) {
-        final nextImage = _history[_historyIndex + 1];
-        final newUi = await _convertToUiImage(nextImage);
-        _uiImage?.dispose();
-        _uiImage = newUi;
-        _decodedImage = nextImage;
-        _historyIndex++;
-        _originalWidth = nextImage.width;
-        _originalHeight = nextImage.height;
-        _syncDimensionFields();
-      }
+      final nextImage = await _history.redo(_decodedImage!);
+      if (nextImage != null) await _applyHistoryImage(nextImage);
     } catch (e) {
       debugPrint("Redo failed: $e");
       rethrow;
@@ -411,6 +385,17 @@ class ImageEditorController extends ChangeNotifier {
       _isProcessing = false;
       notifyListeners();
     }
+  }
+
+  Future<void> _applyHistoryImage(img.Image image) async {
+    final newUi = await _convertToUiImage(image);
+    _uiImage?.dispose();
+    _uiImage = newUi;
+    _decodedImage = image;
+    _originalWidth = image.width;
+    _originalHeight = image.height;
+    _isAnimated = false;
+    _syncDimensionFields();
   }
 
   // ---------------------------------------------------------------------------
@@ -432,6 +417,7 @@ class ImageEditorController extends ChangeNotifier {
 
     _queueBackgroundSync(
       (current) => compute(rotateImageTask, RotateParams(current, angle)),
+      (_) async => RotateStep(angle),
     );
   }
 
@@ -446,6 +432,7 @@ class ImageEditorController extends ChangeNotifier {
 
     _queueBackgroundSync(
       (current) => compute(flipImageTask, FlipParams(current, direction)),
+      (_) async => FlipStep(direction),
     );
   }
 
@@ -466,6 +453,13 @@ class ImageEditorController extends ChangeNotifier {
       (current) => compute(
         cropImageTask,
         CropParams(image: current, x: x, y: y, width: w, height: h),
+      ),
+      (before) async => CropStep(
+        await compute(encodePngTask, before),
+        x: x,
+        y: y,
+        width: w,
+        height: h,
       ),
     );
   }
@@ -499,6 +493,8 @@ class ImageEditorController extends ChangeNotifier {
     _isAnimated = false;
     notifyListeners();
 
+    final pathPoints = relativePathPoints?.expand((p) => [p.dx, p.dy]).toList();
+    final colorValue = solidColor?.toARGB32();
     _queueBackgroundSync(
       (current) => compute(
         redactImageTask,
@@ -510,9 +506,20 @@ class ImageEditorController extends ChangeNotifier {
           height: h,
           redactType: redactType,
           intensity: intensity,
-          colorValue: solidColor?.toARGB32(),
-          pathPoints: relativePathPoints?.expand((p) => [p.dx, p.dy]).toList(),
+          colorValue: colorValue,
+          pathPoints: pathPoints,
         ),
+      ),
+      (before) async => RedactStep(
+        await compute(encodePngTask, before),
+        x: x,
+        y: y,
+        width: w,
+        height: h,
+        redactType: redactType,
+        intensity: intensity,
+        colorValue: colorValue,
+        pathPoints: pathPoints,
       ),
     );
   }
@@ -581,7 +588,6 @@ class ImageEditorController extends ChangeNotifier {
     widthController.clear();
     heightController.clear();
     _history.clear();
-    _historyIndex = -1;
     _isCropMode = false;
     _isRedactMode = false;
     _isProcessing = false;
@@ -620,13 +626,13 @@ class ImageEditorController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final params = ResizeParams(
-        image: _decodedImage!,
-        width: width,
-        height: height,
-      );
+      final before = _decodedImage!;
+      final beforePng = await compute(encodePngTask, before);
 
-      final resized = await compute(resizeImageTask, params);
+      final resized = await compute(
+        resizeImageTask,
+        ResizeParams(image: before, width: width, height: height),
+      );
 
       final newUi = await _convertToUiImage(resized);
       _uiImage?.dispose();
@@ -635,7 +641,7 @@ class ImageEditorController extends ChangeNotifier {
       _originalWidth = resized.width;
       _originalHeight = resized.height;
       _syncDimensionFields();
-      _pushHistory(resized);
+      _history.record(ResizeStep(beforePng, width: width, height: height));
     } finally {
       _isProcessing = false;
       notifyListeners();

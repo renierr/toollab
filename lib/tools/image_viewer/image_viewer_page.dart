@@ -458,7 +458,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
             ? [
                 IconButton(
                   icon: const Icon(Icons.undo),
-                  onPressed: _controller.historyIndex > 0
+                  onPressed: _controller.canUndo
                       ? () async {
                           try {
                             await _controller.undo();
@@ -472,8 +472,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                 ),
                 IconButton(
                   icon: const Icon(Icons.redo),
-                  onPressed:
-                      _controller.historyIndex < _controller.historyLength - 1
+                  onPressed: _controller.canRedo
                       ? () async {
                           try {
                             await _controller.redo();

@@ -69,6 +69,18 @@ img.Image decodeAndBakeOrientationTask(Uint8List bytes) {
   return img.bakeOrientation(decoded);
 }
 
+img.Image decodeImageTask(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) {
+    throw Exception('Could not decode snapshot image');
+  }
+  return decoded;
+}
+
+Uint8List encodePngTask(img.Image image) {
+  return Uint8List.fromList(img.encodePng(image));
+}
+
 img.Image rotateImageTask(RotateParams params) {
   return img.copyRotate(params.image, angle: params.angle);
 }
