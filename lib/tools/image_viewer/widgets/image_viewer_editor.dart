@@ -71,6 +71,11 @@ class ImageViewerEditor extends StatelessWidget {
     final showQualitySlider =
         selectedFormat == 'jpg' || selectedFormat == 'webp';
 
+    final dot = fileName.lastIndexOf('.');
+    final fileFormat = (dot != -1 && dot < fileName.length - 1)
+        ? fileName.substring(dot + 1).toUpperCase()
+        : '';
+
     return SingleChildScrollView(
       padding: EdgeInsets.only(
         left: 16.0,
@@ -97,6 +102,30 @@ class ImageViewerEditor extends StatelessWidget {
             ),
             child: Column(
               children: [
+                SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        fileName,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (fileFormat.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          fileFormat,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const Divider(height: 16),
                 _InfoRow(label: 'Dimensions', value: originalDimensions),
                 const Divider(height: 16),
                 _InfoRow(label: 'File Size', value: originalSize),
