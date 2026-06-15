@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
+import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
@@ -887,6 +888,20 @@ class ImageEditorController extends ChangeNotifier {
           mimeType: mimeType,
         );
       }
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> copyToClipboard() async {
+    if (_uiImage == null) return;
+
+    _isProcessing = true;
+    notifyListeners();
+
+    try {
+      await ClipboardHelper.setImagePng(_uiImage!);
     } finally {
       _isProcessing = false;
       notifyListeners();

@@ -173,6 +173,13 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
     );
   }
 
+  void _showSuccess(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -446,6 +453,20 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                         }
                       : null,
                   tooltip: 'Redo',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy),
+                  onPressed: () async {
+                    try {
+                      await _controller.copyToClipboard();
+                      _showSuccess('Image copied to clipboard');
+                    } catch (e) {
+                      _showError(
+                        'Copy failed: ${e.toString().replaceAll('Exception: ', '')}',
+                      );
+                    }
+                  },
+                  tooltip: 'Copy to clipboard',
                 ),
                 if (isWideScreen)
                   IconButton(

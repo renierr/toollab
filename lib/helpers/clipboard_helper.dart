@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:pasteboard/pasteboard.dart';
 
@@ -21,6 +22,14 @@ class ClipboardHelper {
       // ignore errors
     }
     return null;
+  }
+
+  static Future<void> setImagePng(ui.Image image) async {
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (byteData == null) {
+      throw Exception('Failed to encode image.');
+    }
+    await Pasteboard.writeImage(byteData.buffer.asUint8List());
   }
 
   static Future<bool> hasText() async {
