@@ -71,7 +71,6 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
         final bytes = await diskFile.readAsBytes();
         final size = await diskFile.length();
         await _controller.loadImage(bytes, file.name, size);
-        // Fire-and-forget: scanning the folder must not delay the first paint.
         if (!Platform.isAndroid) unawaited(_controller.scanSiblings(file.path));
       }
     } catch (e) {

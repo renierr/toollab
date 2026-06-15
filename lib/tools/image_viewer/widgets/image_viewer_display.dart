@@ -84,6 +84,23 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
     return KeyEventResult.ignored;
   }
 
+  void _zoomBy(double factor) {
+    final size = context.size;
+    if (size == null) return;
+    final current = widget.transformationController.value.getMaxScaleOnAxis();
+    final target = (current * factor).clamp(0.1, 10.0);
+    final effective = target / current;
+    if ((effective - 1.0).abs() < 0.001) return;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final zoom = Matrix4.identity()
+      ..translateByDouble(center.dx, center.dy, 0, 1)
+      ..scaleByDouble(effective, effective, 1, 1)
+      ..translateByDouble(-center.dx, -center.dy, 0, 1);
+    widget.transformationController.value =
+        zoom * widget.transformationController.value;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -118,6 +135,7 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
                 transformationController: widget.transformationController,
                 minScale: 0.1,
                 maxScale: 10.0,
+                boundaryMargin: const EdgeInsets.all(double.infinity),
                 child: Center(
                   child: widget.isAnimated && widget.rawBytes != null
                       ? Image.memory(widget.rawBytes!, fit: BoxFit.contain)
@@ -144,12 +162,15 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.zoom_in,
-                      size: 16,
+                    _ZoomButton(
+                      icon: Icons.zoom_out,
+                      tooltip: 'Zoom out',
                       color: theme.colorScheme.primary,
+                      onPressed: _zoomScale > 0.1
+                          ? () => _zoomBy(1 / 1.25)
+                          : null,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     Text(
                       '${(_zoomScale * 100).round()}%',
                       style: TextStyle(
@@ -157,6 +178,13 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
                         fontWeight: FontWeight.bold,
                         color: theme.colorScheme.onSurface,
                       ),
+                    ),
+                    const SizedBox(width: 4),
+                    _ZoomButton(
+                      icon: Icons.zoom_in,
+                      tooltip: 'Zoom in',
+                      color: theme.colorScheme.primary,
+                      onPressed: _zoomScale < 10.0 ? () => _zoomBy(1.25) : null,
                     ),
                     if ((_zoomScale - 1.0).abs() > 0.01) ...[
                       const SizedBox(width: 8),
@@ -256,6 +284,40 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
                 ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ZoomButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final Color color;
+  final VoidCallback? onPressed;
+
+  const _ZoomButton({
+    required this.icon,
+    required this.tooltip,
+    required this.color,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return InkWell(
+      onTap: onPressed,
+      customBorder: const CircleBorder(),
+      child: Tooltip(
+        message: tooltip,
+        child: Padding(
+          padding: const EdgeInsets.all(2),
+          child: Icon(
+            icon,
+            size: 18,
+            color: enabled ? color : color.withValues(alpha: 0.3),
+          ),
         ),
       ),
     );
