@@ -148,7 +148,11 @@ class _FileDropZoneState extends State<FileDropZone> {
         child: LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              constraints: BoxConstraints(
+                minHeight: constraints.hasBoundedHeight
+                    ? constraints.maxHeight
+                    : 0.0,
+              ),
               child: Center(
                 child: Padding(
                   padding: EdgeInsets.all(widget.compact ? 12.0 : 24.0),
