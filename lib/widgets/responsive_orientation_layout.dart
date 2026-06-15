@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'responsive_layout.dart';
 
 /// A widget that switches between a portrait and a landscape layout
 /// based on the aspect ratio of the available constraints.
@@ -24,7 +25,7 @@ class ResponsiveOrientationLayout extends StatelessWidget {
     required this.portrait,
     required this.landscape,
     this.padding,
-    this.minLandscapeWidth = 500,
+    this.minLandscapeWidth = ResponsiveLayout.mobileBreakpoint,
   });
 
   @override
