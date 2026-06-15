@@ -8,6 +8,7 @@ import 'package:image/image.dart' as img;
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/tools/image_viewer/utils/image_canvas_ops.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
 
@@ -292,85 +293,9 @@ class ImageEditorController extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
-  // GPU-accelerated Canvas transforms — instant (<10ms) vs seconds with the
-  // pure-Dart image package. The backing img.Image is synced in a chained
-  // background isolate afterwards so export/undo keep working.
-  // ---------------------------------------------------------------------------
-
-  Future<ui.Image> _canvasRotate(ui.Image source, int angle) async {
-    final a = angle % 360;
-    final swap = a == 90 || a == 270;
-    final w = swap ? source.height : source.width;
-    final h = swap ? source.width : source.height;
-
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    switch (a) {
-      case 90:
-        canvas.translate(w.toDouble(), 0);
-      case 180:
-        canvas.translate(w.toDouble(), h.toDouble());
-      case 270:
-        canvas.translate(0, h.toDouble());
-    }
-    canvas.rotate(a * math.pi / 180);
-    canvas.drawImage(source, Offset.zero, Paint());
-
-    final picture = recorder.endRecording();
-    final result = await picture.toImage(w, h);
-    picture.dispose();
-    return result;
-  }
-
-  Future<ui.Image> _canvasFlip(ui.Image source, String direction) async {
-    final w = source.width.toDouble();
-    final h = source.height.toDouble();
-
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    if (direction == 'horizontal') {
-      canvas.translate(w, 0);
-      canvas.scale(-1, 1);
-    } else {
-      canvas.translate(0, h);
-      canvas.scale(1, -1);
-    }
-    canvas.drawImage(source, Offset.zero, Paint());
-
-    final picture = recorder.endRecording();
-    final result = await picture.toImage(source.width, source.height);
-    picture.dispose();
-    return result;
-  }
-
-  Future<ui.Image> _canvasCrop(
-    ui.Image source,
-    int x,
-    int y,
-    int w,
-    int h,
-  ) async {
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    canvas.drawImageRect(
-      source,
-      Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
-      Rect.fromLTWH(0, 0, w.toDouble(), h.toDouble()),
-      Paint(),
-    );
-
-    final picture = recorder.endRecording();
-    final result = await picture.toImage(w, h);
-    picture.dispose();
-    return result;
-  }
-
-  // ---------------------------------------------------------------------------
   // Background sync — chains isolate transforms so the backing img.Image
-  // stays in lockstep with the displayed ui.Image.
+  // stays in lockstep with the displayed ui.Image. GPU-accelerated Canvas
+  // transforms live in image_canvas_ops.dart.
   // ---------------------------------------------------------------------------
 
   void _pushHistory(img.Image newImage) {
@@ -496,7 +421,7 @@ class ImageEditorController extends ChangeNotifier {
   Future<void> rotateImage(int angle) async {
     if (_uiImage == null) return;
 
-    final newUi = await _canvasRotate(_uiImage!, angle);
+    final newUi = await canvasRotate(_uiImage!, angle);
     _uiImage?.dispose();
     _uiImage = newUi;
     _originalWidth = newUi.width;
@@ -513,7 +438,7 @@ class ImageEditorController extends ChangeNotifier {
   Future<void> flipImage(String direction) async {
     if (_uiImage == null) return;
 
-    final newUi = await _canvasFlip(_uiImage!, direction);
+    final newUi = await canvasFlip(_uiImage!, direction);
     _uiImage?.dispose();
     _uiImage = newUi;
     _isAnimated = false;
@@ -528,7 +453,7 @@ class ImageEditorController extends ChangeNotifier {
     if (_uiImage == null) return;
     _isCropMode = false;
 
-    final newUi = await _canvasCrop(_uiImage!, x, y, w, h);
+    final newUi = await canvasCrop(_uiImage!, x, y, w, h);
     _uiImage?.dispose();
     _uiImage = newUi;
     _originalWidth = w;
@@ -545,172 +470,6 @@ class ImageEditorController extends ChangeNotifier {
     );
   }
 
-  Future<ui.Image> _canvasPixelate(
-    ui.Image source,
-    int x,
-    int y,
-    int w,
-    int h,
-    double blockSize, [
-    List<Offset>? relativePathPoints,
-  ]) async {
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    canvas.drawImage(source, Offset.zero, Paint());
-
-    final int tinyW = (w / blockSize).round().clamp(1, w);
-    final int tinyH = (h / blockSize).round().clamp(1, h);
-
-    final tinyRecorder = ui.PictureRecorder();
-    final tinyCanvas = Canvas(tinyRecorder);
-    tinyCanvas.drawImageRect(
-      source,
-      Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
-      Rect.fromLTWH(0, 0, tinyW.toDouble(), tinyH.toDouble()),
-      Paint(),
-    );
-    final tinyPicture = tinyRecorder.endRecording();
-    final tinyImage = await tinyPicture.toImage(tinyW, tinyH);
-    tinyPicture.dispose();
-
-    canvas.save();
-    if (relativePathPoints != null && relativePathPoints.isNotEmpty) {
-      final path = ui.Path();
-      path.moveTo(
-        x + relativePathPoints.first.dx * w,
-        y + relativePathPoints.first.dy * h,
-      );
-      for (int i = 1; i < relativePathPoints.length; i++) {
-        path.lineTo(
-          x + relativePathPoints[i].dx * w,
-          y + relativePathPoints[i].dy * h,
-        );
-      }
-      path.close();
-      canvas.clipPath(path);
-    }
-
-    canvas.drawImageRect(
-      tinyImage,
-      Rect.fromLTWH(0, 0, tinyW.toDouble(), tinyH.toDouble()),
-      Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
-      Paint()..filterQuality = ui.FilterQuality.none,
-    );
-    canvas.restore();
-
-    tinyImage.dispose();
-
-    final picture = recorder.endRecording();
-    final result = await picture.toImage(source.width, source.height);
-    picture.dispose();
-    return result;
-  }
-
-  Future<ui.Image> _canvasBlur(
-    ui.Image source,
-    int x,
-    int y,
-    int w,
-    int h,
-    double sigma, [
-    List<Offset>? relativePathPoints,
-  ]) async {
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    canvas.drawImage(source, Offset.zero, Paint());
-
-    canvas.save();
-    if (relativePathPoints != null && relativePathPoints.isNotEmpty) {
-      final path = ui.Path();
-      path.moveTo(
-        x + relativePathPoints.first.dx * w,
-        y + relativePathPoints.first.dy * h,
-      );
-      for (int i = 1; i < relativePathPoints.length; i++) {
-        path.lineTo(
-          x + relativePathPoints[i].dx * w,
-          y + relativePathPoints[i].dy * h,
-        );
-      }
-      path.close();
-      canvas.clipPath(path);
-    } else {
-      canvas.clipRect(
-        Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
-      );
-    }
-
-    final paint = Paint()
-      ..imageFilter = ui.ImageFilter.blur(
-        sigmaX: sigma,
-        sigmaY: sigma,
-        tileMode: TileMode.clamp,
-      );
-    canvas.drawImage(source, Offset.zero, paint);
-    canvas.restore();
-
-    final picture = recorder.endRecording();
-    final result = await picture.toImage(source.width, source.height);
-    picture.dispose();
-    return result;
-  }
-
-  Future<ui.Image> _canvasRedact(
-    ui.Image source,
-    int x,
-    int y,
-    int w,
-    int h,
-    String redactType,
-    double intensity,
-    Color? solidColor, [
-    List<Offset>? relativePathPoints,
-  ]) async {
-    final type = redactType.toLowerCase();
-    if (type == 'solid') {
-      final recorder = ui.PictureRecorder();
-      final canvas = Canvas(recorder);
-      canvas.drawImage(source, Offset.zero, Paint());
-
-      canvas.save();
-      if (relativePathPoints != null && relativePathPoints.isNotEmpty) {
-        final path = ui.Path();
-        path.moveTo(
-          x + relativePathPoints.first.dx * w,
-          y + relativePathPoints.first.dy * h,
-        );
-        for (int i = 1; i < relativePathPoints.length; i++) {
-          path.lineTo(
-            x + relativePathPoints[i].dx * w,
-            y + relativePathPoints[i].dy * h,
-          );
-        }
-        path.close();
-        canvas.clipPath(path);
-      }
-
-      canvas.drawRect(
-        Rect.fromLTWH(x.toDouble(), y.toDouble(), w.toDouble(), h.toDouble()),
-        Paint()
-          ..color = solidColor ?? Colors.black
-          ..style = PaintingStyle.fill,
-      );
-      canvas.restore();
-
-      final picture = recorder.endRecording();
-      final result = await picture.toImage(source.width, source.height);
-      picture.dispose();
-      return result;
-    } else if (type == 'pixelate') {
-      return _canvasPixelate(source, x, y, w, h, intensity, relativePathPoints);
-    } else if (type == 'blur') {
-      return _canvasBlur(source, x, y, w, h, intensity, relativePathPoints);
-    }
-    return source;
-  }
-
   Future<void> redactImage(
     int x,
     int y,
@@ -724,7 +483,7 @@ class ImageEditorController extends ChangeNotifier {
     if (_uiImage == null) return;
     _isRedactMode = false;
 
-    final newUi = await _canvasRedact(
+    final newUi = await canvasRedact(
       _uiImage!,
       x,
       y,
