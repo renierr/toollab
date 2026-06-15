@@ -20,7 +20,7 @@ class MainActivity : FlutterActivity() {
     private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
 
     private var launchRoute: String? = null
-    private var pendingSharedFile: Map<String, String>? = null
+    private var pendingSharedFiles: List<Map<String, String>>? = null
     private var partialWakeLock: PowerManager.WakeLock? = null
 
     companion object {
@@ -59,49 +59,90 @@ class MainActivity : FlutterActivity() {
         if (intent != null) {
             val action = intent.action
             val isSend = action == Intent.ACTION_SEND
+            val isSendMultiple = action == Intent.ACTION_SEND_MULTIPLE
             val isView = action == Intent.ACTION_VIEW
 
-            if (isSend || isView) {
-                val uri = if (isSend) {
-                    intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                } else {
-                    intent.data
+            if (isSend || isSendMultiple || isView) {
+                val uris = when {
+                    isSendMultiple -> {
+                        intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+                    }
+                    isSend -> {
+                        intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let { arrayListOf(it) }
+                    }
+                    else -> {
+                        intent.data?.let { arrayListOf(it) }
+                    }
                 }
 
-                if (uri != null) {
+                if (uris != null && uris.isNotEmpty()) {
                     try {
-                        val mimeType = intent.type ?: contentResolver.getType(uri) ?: "application/octet-stream"
-                        var name = "shared_file"
-                        val cursor = contentResolver.query(uri, null, null, null, null)
-                        cursor?.use {
-                            if (it.moveToFirst()) {
-                                val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                                if (nameIndex != -1) {
-                                    name = it.getString(nameIndex)
-                                }
-                            }
-                        }
-
+                        val filesList = mutableListOf<Map<String, String>>()
                         val cacheDir = File(cacheDir, "shared_files")
                         if (!cacheDir.exists()) cacheDir.mkdirs()
-                        val cleanName = name.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
-                        val tempFile = File(cacheDir, cleanName)
-                        contentResolver.openInputStream(uri).use { input ->
-                            FileOutputStream(tempFile).use { output ->
-                                input?.copyTo(output)
+
+                        for (uri in uris) {
+                            val mimeType = intent.type ?: contentResolver.getType(uri) ?: "application/octet-stream"
+                            var name = "shared_file"
+                            var path: String? = null
+
+                            if (uri.scheme == "file") {
+                                path = uri.path
+                                if (path != null) {
+                                    name = File(path).name
+                                }
+                            }
+
+                            if (path == null) {
+                                val cursor = contentResolver.query(uri, null, null, null, null)
+                                cursor?.use {
+                                    if (it.moveToFirst()) {
+                                        val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                                        if (nameIndex != -1) {
+                                            name = it.getString(nameIndex)
+                                        }
+                                    }
+                                }
+
+                                val cleanName = name.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
+                                var tempFile = File(cacheDir, cleanName)
+                                if (tempFile.exists()) {
+                                    val base = cleanName.substringBeforeLast(".")
+                                    val ext = cleanName.substringAfterLast(".", "")
+                                    val extSuffix = if (ext.isNotEmpty()) ".$ext" else ""
+                                    var counter = 1
+                                    while (tempFile.exists()) {
+                                        tempFile = File(cacheDir, "${base}_$counter$extSuffix")
+                                        counter++
+                                    }
+                                }
+
+                                contentResolver.openInputStream(uri).use { input ->
+                                    FileOutputStream(tempFile).use { output ->
+                                        input?.copyTo(output)
+                                    }
+                                }
+                                path = tempFile.absolutePath
+                            }
+
+                            if (path != null) {
+                                filesList.add(mapOf(
+                                    "path" to path,
+                                    "name" to name,
+                                    "mimeType" to mimeType
+                                ))
                             }
                         }
 
-                        val fileData = mapOf(
-                            "path" to tempFile.absolutePath,
-                            "name" to name,
-                            "mimeType" to mimeType
-                        )
-                        pendingSharedFile = fileData
+                        pendingSharedFiles = filesList
 
                         // If app is already running, notify Flutter immediately
                         flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
-                            MethodChannel(messenger, SHARING_CHANNEL).invokeMethod("onSharedFile", fileData)
+                            if (filesList.size == 1) {
+                                MethodChannel(messenger, SHARING_CHANNEL).invokeMethod("onSharedFile", filesList.first())
+                            } else if (filesList.size > 1) {
+                                MethodChannel(messenger, SHARING_CHANNEL).invokeMethod("onSharedFiles", filesList)
+                            }
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -123,11 +164,19 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getSharedFile" -> {
-                        result.success(pendingSharedFile)
-                        pendingSharedFile = null
+                        result.success(pendingSharedFiles?.firstOrNull())
+                        pendingSharedFiles = null
                     }
                     "clearSharedFile" -> {
-                        pendingSharedFile = null
+                        pendingSharedFiles = null
+                        result.success(true)
+                    }
+                    "getSharedFiles" -> {
+                        result.success(pendingSharedFiles)
+                        pendingSharedFiles = null
+                    }
+                    "clearSharedFiles" -> {
+                        pendingSharedFiles = null
                         result.success(true)
                     }
                     else -> {

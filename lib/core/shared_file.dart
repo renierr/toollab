@@ -32,3 +32,16 @@ class SharedFile {
     return {'path': path, 'name': name, 'mimeType': mimeType};
   }
 }
+
+class SharedData {
+  final List<SharedFile> files;
+
+  SharedData(this.files);
+
+  factory SharedData.single(SharedFile file) => SharedData([file]);
+
+  bool get isMultiple => files.length > 1;
+  bool get isEmpty => files.isEmpty;
+
+  SharedFile? get firstFile => files.isNotEmpty ? files.first : null;
+}

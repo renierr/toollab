@@ -19,6 +19,6 @@ class MarkdownViewerTool {
       accept: ['text/markdown', 'text/x-markdown', 'text/plain', 'text/*'],
     ),
     fileExtensions: ['md', 'txt', 'markdown'],
-    createPage: (sf) => MarkdownViewerToolPage(sharedFile: sf),
+    createPage: (sd) => MarkdownViewerToolPage(sharedFile: sd?.firstFile),
   );
 }

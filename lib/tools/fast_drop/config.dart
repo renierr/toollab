@@ -20,7 +20,7 @@ class FastDropTool {
     sectionId: 'utilities',
     shareTarget: ShareTargetConfig(accept: ['*/*']),
     fileExtensions: const [],
-    createPage: (sf) => FastDropPage(sharedFile: sf),
+    createPage: (sd) => FastDropPage(sharedData: sd),
     stateProviders: () => [
       ChangeNotifierProvider<FastDropState>(create: (_) => FastDropState()),
     ],

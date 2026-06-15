@@ -9,7 +9,7 @@ import 'retention_selector.dart';
 class FastDropUploadPanel extends StatelessWidget {
   final String retention;
   final ValueChanged<String> onRetentionChanged;
-  final ValueChanged<XFile> onFileSelected;
+  final ValueChanged<List<XFile>> onFilesSelected;
   final VoidCallback onPasteClipboard;
   final bool isActionsEnabled;
 
@@ -17,7 +17,7 @@ class FastDropUploadPanel extends StatelessWidget {
     super.key,
     required this.retention,
     required this.onRetentionChanged,
-    required this.onFileSelected,
+    required this.onFilesSelected,
     required this.onPasteClipboard,
     required this.isActionsEnabled,
   });
@@ -41,16 +41,15 @@ class FastDropUploadPanel extends StatelessWidget {
             child: SizedBox(
               height: isAndroid ? 160 : 290,
               child: FileDropZone(
-                onFileSelected: onFileSelected,
+                onFilesSelected: onFilesSelected,
                 allowedExtensions: FastDropTool.config.fileExtensions,
                 typeLabel: 'All Files',
                 accentColor: FastDropTool.config.accentColor,
                 icon: Icons.cloud_upload_outlined,
-                title: isAndroid
-                    ? 'Select a file to upload'
-                    : 'Drop files here',
+                title: isAndroid ? 'Select files to upload' : 'Drop files here',
                 subtitle: 'or click to browse',
                 compact: isAndroid,
+                multiple: true,
               ),
             ),
           ),

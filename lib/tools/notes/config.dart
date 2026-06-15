@@ -21,7 +21,7 @@ class NotesTool {
     sectionId: 'utilities',
     shareTarget: ShareTargetConfig(accept: ['text/markdown', 'text/plain']),
     fileExtensions: ['md', 'txt', 'markdown'],
-    createPage: (sf) => NotesPage(sharedFile: sf),
+    createPage: (sd) => NotesPage(sharedFile: sd?.firstFile),
     syncDelegateFactory: NotesSyncDelegate.new,
     stateProviders: () => [
       ChangeNotifierProvider<NotesState>(create: (_) => NotesState()),

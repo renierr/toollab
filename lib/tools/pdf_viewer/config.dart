@@ -17,6 +17,6 @@ class PdfViewerTool {
     sectionId: 'utilities',
     shareTarget: ShareTargetConfig(accept: ['application/pdf']),
     fileExtensions: ['pdf'],
-    createPage: (sf) => PdfViewerPage(sharedFile: sf),
+    createPage: (sd) => PdfViewerPage(sharedFile: sd?.firstFile),
   );
 }

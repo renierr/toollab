@@ -6,7 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../core/shared_file.dart';
 import '../core/tool_model.dart';
 import '../services/sharing_service.dart';
 import '../widgets/tool_chooser_dialog.dart';

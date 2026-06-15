@@ -6,7 +6,6 @@ import 'package:tool_lab/constants.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/core/tool_model.dart';
-import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/pages/overview/overview_page.dart';
 import 'package:tool_lab/pages/sync_settings_page.dart';
@@ -67,7 +66,7 @@ final _router = GoRouter(
 
 Widget _pageForTool(String id, Object? extra) {
   final tool = ToolRegistry.all.where((t) => t.id == id).firstOrNull;
-  if (tool != null) return tool.createPage(extra as SharedFile?);
+  if (tool != null) return tool.createPage(extra as SharedData?);
   return const OverviewPage();
 }
 
@@ -80,7 +79,7 @@ class ToolLabApp extends StatefulWidget {
 
 class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   StreamSubscription<String>? _shortcutSubscription;
-  StreamSubscription<SharedFile>? _sharingSubscription;
+  StreamSubscription<SharedData>? _sharingSubscription;
 
   @override
   void initState() {
@@ -111,26 +110,29 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   }
 
   Future<void> _initSharing() async {
-    final sharedFile = await SharingService.instance.getInitialSharedFile();
-    if (sharedFile != null && mounted) {
-      _handleSharedFile(sharedFile);
+    final sharedData = await SharingService.instance.getInitialSharedData();
+    if (sharedData != null && !sharedData.isEmpty && mounted) {
+      _handleSharedData(sharedData);
     }
 
-    _sharingSubscription = SharingService.instance.onSharedFile.listen((file) {
-      if (mounted) {
-        _handleSharedFile(file);
+    _sharingSubscription = SharingService.instance.onSharedData.listen((data) {
+      if (mounted && !data.isEmpty) {
+        _handleSharedData(data);
       }
     });
   }
 
-  Future<void> _handleSharedFile(SharedFile file) async {
-    await SharingService.instance.clearSharedFile();
-    final matchingTools = SharingService.instance.getMatchingTools(file);
+  Future<void> _handleSharedData(SharedData data) async {
+    await SharingService.instance.clearSharedData();
+    final firstFile = data.firstFile;
+    if (firstFile == null) return;
+
+    final matchingTools = SharingService.instance.getMatchingTools(firstFile);
     if (matchingTools.isEmpty) {
       final context = _navigatorKey.currentContext;
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No tools found to open "${file.name}"')),
+          SnackBar(content: Text('No tools found to open "${firstFile.name}"')),
         );
       }
       return;
@@ -138,13 +140,13 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
 
     if (matchingTools.length == 1) {
       final tool = matchingTools.first;
-      _router.go(tool.route, extra: file);
+      _router.go(tool.route, extra: data);
       return;
     }
 
     // Multiple matching tools: check default setting
     final defaultToolId = await SharingService.instance.getDefaultTool(
-      file.mimeType,
+      firstFile.mimeType,
     );
     if (defaultToolId != null) {
       final defaultTool = matchingTools.cast<ToolModel?>().firstWhere(
@@ -152,7 +154,7 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
         orElse: () => null,
       );
       if (defaultTool != null) {
-        _router.go(defaultTool.route, extra: file);
+        _router.go(defaultTool.route, extra: data);
         return;
       }
     }
@@ -163,18 +165,18 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
     final result = await showDialog<(ToolModel, bool)>(
       context: context,
       builder: (context) =>
-          ToolChooserDialog(tools: matchingTools, fileName: file.name),
+          ToolChooserDialog(tools: matchingTools, fileName: firstFile.name),
     );
 
     if (result != null) {
       final (selectedTool, remember) = result;
       if (remember) {
         await SharingService.instance.setDefaultTool(
-          file.mimeType,
+          firstFile.mimeType,
           selectedTool.id,
         );
       }
-      _router.go(selectedTool.route, extra: file);
+      _router.go(selectedTool.route, extra: data);
     }
   }
 
@@ -196,9 +198,9 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   }
 
   Future<void> _checkPendingSharing() async {
-    final sharedFile = await SharingService.instance.getInitialSharedFile();
-    if (sharedFile != null && mounted) {
-      _handleSharedFile(sharedFile);
+    final sharedData = await SharingService.instance.getInitialSharedData();
+    if (sharedData != null && !sharedData.isEmpty && mounted) {
+      _handleSharedData(sharedData);
     }
   }
 

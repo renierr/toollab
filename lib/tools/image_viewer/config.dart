@@ -17,6 +17,6 @@ class ImageViewerTool {
     sectionId: 'utilities',
     shareTarget: ShareTargetConfig(accept: ['image/*']),
     fileExtensions: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'],
-    createPage: (sf) => ImageViewerPage(sharedFile: sf),
+    createPage: (sd) => ImageViewerPage(sharedFile: sd?.firstFile),
   );
 }

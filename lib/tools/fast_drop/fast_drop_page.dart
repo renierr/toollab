@@ -31,9 +31,9 @@ import 'widgets/fast_drop_edit_description_dialog.dart';
 import 'widgets/fast_drop_edit_retention_dialog.dart';
 
 class FastDropPage extends StatefulWidget {
-  final SharedFile? sharedFile;
+  final SharedData? sharedData;
 
-  const FastDropPage({super.key, this.sharedFile});
+  const FastDropPage({super.key, this.sharedData});
 
   @override
   State<FastDropPage> createState() => _FastDropPageState();
@@ -42,7 +42,7 @@ class FastDropPage extends StatefulWidget {
 class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   late final TempFileScope _scope = TempFileManager.createScope();
   String _retention = '24';
-  SharedFile? _pendingSharedFile;
+  List<SharedFile> _pendingSharedFiles = [];
   bool _isUploadingPending = false;
 
   @override
@@ -50,7 +50,9 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     super.initState();
     onDispose(() => _scope.cleanTracked());
 
-    _pendingSharedFile = widget.sharedFile;
+    if (widget.sharedData != null) {
+      _pendingSharedFiles = List<SharedFile>.from(widget.sharedData!.files);
+    }
 
     DatabaseService.instance
         .getSetting(FastDropTool.config.id, 'retention')
@@ -72,10 +74,10 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   @override
   void didUpdateWidget(covariant FastDropPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.sharedFile != oldWidget.sharedFile &&
-        widget.sharedFile != null) {
+    if (widget.sharedData != oldWidget.sharedData &&
+        widget.sharedData != null) {
       setState(() {
-        _pendingSharedFile = widget.sharedFile;
+        _pendingSharedFiles = List<SharedFile>.from(widget.sharedData!.files);
       });
     }
   }
@@ -156,27 +158,40 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     }
   }
 
-  Future<void> _onFileSelected(XFile file) async {
+  Future<void> _onFilesSelected(List<XFile> files) async {
     final appState = context.read<AppState>();
     final fastDropState = context.read<FastDropState>();
     if (!appState.syncEnabled || !fastDropState.isServerAvailable) return;
     try {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Uploading ${file.name}...')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Uploading ${files.length} files...')),
+        );
       }
-      String mimeType = file.mimeType ?? 'application/octet-stream';
-      if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
-        mimeType = MimeTypeHelper.getMimeType(file.name);
+      for (int i = 0; i < files.length; i++) {
+        final file = files[i];
+        if (mounted && files.length > 1) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Uploading ${i + 1} of ${files.length}: ${file.name}...',
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+        String mimeType = file.mimeType ?? 'application/octet-stream';
+        if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
+          mimeType = MimeTypeHelper.getMimeType(file.name);
+        }
+        await fastDropState.uploadFastDrop(
+          filename: file.name,
+          filePath: file.path,
+          retention: _retention,
+          source: 'file',
+          mimeType: mimeType,
+        );
       }
-      await fastDropState.uploadFastDrop(
-        filename: file.name,
-        filePath: file.path,
-        retention: _retention,
-        source: 'file',
-        mimeType: mimeType,
-      );
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -192,39 +207,47 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     }
   }
 
-  Future<void> _uploadPendingSharedFile() async {
-    if (_pendingSharedFile == null) return;
+  Future<void> _uploadPendingSharedFiles() async {
+    if (_pendingSharedFiles.isEmpty) return;
     final appState = context.read<AppState>();
     final fastDropState = context.read<FastDropState>();
     if (!appState.syncEnabled || !fastDropState.isServerAvailable) return;
-    final file = _pendingSharedFile!;
+    final filesToUpload = List<SharedFile>.from(_pendingSharedFiles);
     try {
       setState(() {
         _isUploadingPending = true;
       });
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Uploading ${file.name}...')));
+      for (int i = 0; i < filesToUpload.length; i++) {
+        final file = filesToUpload[i];
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Uploading ${i + 1} of ${filesToUpload.length}: ${file.name}...',
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+        String mimeType = file.mimeType;
+        if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
+          mimeType = MimeTypeHelper.getMimeType(file.name);
+        }
+        await fastDropState.uploadFastDrop(
+          filename: file.name,
+          filePath: file.path,
+          retention: _retention,
+          source: 'file',
+          mimeType: mimeType,
+        );
       }
-      String mimeType = file.mimeType;
-      if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
-        mimeType = MimeTypeHelper.getMimeType(file.name);
-      }
-      await fastDropState.uploadFastDrop(
-        filename: file.name,
-        filePath: file.path,
-        retention: _retention,
-        source: 'file',
-        mimeType: mimeType,
-      );
       setState(() {
-        _pendingSharedFile = null;
+        _pendingSharedFiles.clear();
         _isUploadingPending = false;
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Shared file uploaded successfully!')),
+          const SnackBar(content: Text('Shared files uploaded successfully!')),
         );
       }
     } catch (e) {
@@ -518,15 +541,15 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            if (_pendingSharedFile != null) ...[
+                            if (_pendingSharedFiles.isNotEmpty) ...[
                               FastDropPendingCard(
-                                file: _pendingSharedFile!,
+                                files: _pendingSharedFiles,
                                 isUploading: _isUploadingPending,
                                 isActionsEnabled: isActionsEnabled,
-                                onUpload: _uploadPendingSharedFile,
+                                onUpload: _uploadPendingSharedFiles,
                                 onDismiss: () {
                                   setState(() {
-                                    _pendingSharedFile = null;
+                                    _pendingSharedFiles.clear();
                                   });
                                 },
                               ),
@@ -535,7 +558,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                             FastDropUploadPanel(
                               retention: _retention,
                               onRetentionChanged: _onRetentionChanged,
-                              onFileSelected: _onFileSelected,
+                              onFilesSelected: _onFilesSelected,
                               onPasteClipboard: _pasteFromClipboard,
                               isActionsEnabled: isActionsEnabled,
                             ),
@@ -577,15 +600,15 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                if (_pendingSharedFile != null) ...[
+                                if (_pendingSharedFiles.isNotEmpty) ...[
                                   FastDropPendingCard(
-                                    file: _pendingSharedFile!,
+                                    files: _pendingSharedFiles,
                                     isUploading: _isUploadingPending,
                                     isActionsEnabled: isActionsEnabled,
-                                    onUpload: _uploadPendingSharedFile,
+                                    onUpload: _uploadPendingSharedFiles,
                                     onDismiss: () {
                                       setState(() {
-                                        _pendingSharedFile = null;
+                                        _pendingSharedFiles.clear();
                                       });
                                     },
                                   ),
@@ -594,7 +617,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                                 FastDropUploadPanel(
                                   retention: _retention,
                                   onRetentionChanged: _onRetentionChanged,
-                                  onFileSelected: _onFileSelected,
+                                  onFilesSelected: _onFilesSelected,
                                   onPasteClipboard: _pasteFromClipboard,
                                   isActionsEnabled: isActionsEnabled,
                                 ),

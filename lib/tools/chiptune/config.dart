@@ -17,7 +17,7 @@ class ChiptuneTool {
     sectionId: 'utilities',
     shareTarget: ShareTargetConfig(accept: ['application/octet-stream']),
     fileExtensions: ['mod', 'xm', 'it', 's3m'],
-    createPage: (sf) => ChiptunePage(sharedFile: sf),
+    createPage: (sd) => ChiptunePage(sharedFile: sd?.firstFile),
     syncDelegateFactory: ChiptuneSyncDelegate.new,
   );
 }
