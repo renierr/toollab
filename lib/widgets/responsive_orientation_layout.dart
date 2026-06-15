@@ -15,18 +15,25 @@ class ResponsiveOrientationLayout extends StatelessWidget {
   /// Optional padding to wrap around the layout.
   final EdgeInsetsGeometry? padding;
 
+  /// Minimum width required to use the landscape layout.
+  /// If the available width is less than this value, falls back to portrait.
+  final double minLandscapeWidth;
+
   const ResponsiveOrientationLayout({
     super.key,
     required this.portrait,
     required this.landscape,
     this.padding,
+    this.minLandscapeWidth = 500,
   });
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isLandscape = constraints.maxWidth > constraints.maxHeight;
+        final isLandscape =
+            constraints.maxWidth > constraints.maxHeight &&
+            constraints.maxWidth >= minLandscapeWidth;
         final child = isLandscape ? landscape : portrait;
 
         if (padding != null) {
