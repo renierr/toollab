@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
@@ -70,6 +71,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
         final bytes = await diskFile.readAsBytes();
         final size = await diskFile.length();
         await _controller.loadImage(bytes, file.name, size);
+        // Fire-and-forget: scanning the folder must not delay the first paint.
+        if (!Platform.isAndroid) unawaited(_controller.scanSiblings(file.path));
       }
     } catch (e) {
       _showError('Failed to load image: $e');
@@ -81,6 +84,9 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       final bytes = await file.readAsBytes();
       final size = await file.length();
       await _controller.loadImage(bytes, file.name, size);
+      if (!Platform.isAndroid && file.path.isNotEmpty) {
+        unawaited(_controller.scanSiblings(file.path));
+      }
     } catch (e) {
       _showError('Failed to read selected file: $e');
     }
@@ -126,6 +132,24 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       if (mounted) {
         _showError('Failed to read clipboard: $e');
       }
+    }
+  }
+
+  Future<void> _prevImage() async {
+    try {
+      await _controller.prevSibling();
+      _onResetZoom();
+    } catch (e) {
+      _showError('Failed to load previous image: $e');
+    }
+  }
+
+  Future<void> _nextImage() async {
+    try {
+      await _controller.nextSibling();
+      _onResetZoom();
+    } catch (e) {
+      _showError('Failed to load next image: $e');
     }
   }
 
@@ -242,6 +266,14 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                             isAnimated: _controller.isAnimated,
                             transformationController: _transformationController,
                             onResetZoom: _onResetZoom,
+                            showSiblingNav: _controller.canBrowseSiblings,
+                            hasPrevSibling: _controller.hasPrevSibling,
+                            hasNextSibling: _controller.hasNextSibling,
+                            siblingLabel: _controller.canBrowseSiblings
+                                ? '${_controller.siblingIndex + 1} / ${_controller.siblingCount}'
+                                : null,
+                            onPrevImage: _prevImage,
+                            onNextImage: _nextImage,
                           )))
             : const SizedBox.shrink();
 

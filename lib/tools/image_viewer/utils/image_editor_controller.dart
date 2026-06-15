@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
@@ -42,6 +43,19 @@ class ImageEditorController extends ChangeNotifier {
   Future<void>? _backgroundSync;
   int _loadSessionCounter = 0;
 
+  // Sibling browsing — only populated when the image was opened from a real
+  // filesystem path (desktop). Paste/gallery/camera sources leave this empty.
+  static const Set<String> _siblingExtensions = {
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.bmp',
+    '.webp',
+  };
+  List<String> _siblings = const [];
+  int _siblingIndex = -1;
+
   // Getters
   img.Image? get decodedImage => _decodedImage;
   ui.Image? get uiImage => _uiImage;
@@ -61,6 +75,12 @@ class ImageEditorController extends ChangeNotifier {
   bool get isRedactMode => _isRedactMode;
   int get historyIndex => _historyIndex;
   int get historyLength => _history.length;
+  bool get canBrowseSiblings => _siblings.length > 1;
+  bool get hasPrevSibling => canBrowseSiblings && _siblingIndex > 0;
+  bool get hasNextSibling =>
+      canBrowseSiblings && _siblingIndex < _siblings.length - 1;
+  int get siblingIndex => _siblingIndex;
+  int get siblingCount => _siblings.length;
 
   late final TempFileScope _scope = TempFileManager.createScope();
 
@@ -119,6 +139,8 @@ class ImageEditorController extends ChangeNotifier {
     _decodedImage = null;
     _decodingFuture = null;
     _backgroundSync = null;
+    _siblings = const [];
+    _siblingIndex = -1;
 
     _loadSessionCounter++;
     final currentSession = _loadSessionCounter;
@@ -157,6 +179,75 @@ class ImageEditorController extends ChangeNotifier {
       rethrow;
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Sibling browsing — scans the folder of the opened file for other images so
+  // the user can step through them with prev/next. Only meaningful when the
+  // source is a real filesystem path (desktop file pick / shared file).
+  // ---------------------------------------------------------------------------
+
+  Future<void> scanSiblings(String? filePath) async {
+    _siblings = const [];
+    _siblingIndex = -1;
+
+    if (filePath == null) {
+      notifyListeners();
+      return;
+    }
+
+    try {
+      final file = File(filePath);
+      final dir = file.parent;
+      if (!await dir.exists()) {
+        notifyListeners();
+        return;
+      }
+
+      final paths = <String>[];
+      await for (final entity in dir.list(followLinks: false)) {
+        if (entity is! File) continue;
+        final dot = entity.path.lastIndexOf('.');
+        if (dot == -1) continue;
+        final ext = entity.path.substring(dot).toLowerCase();
+        if (_siblingExtensions.contains(ext)) paths.add(entity.path);
+      }
+      paths.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+      final target = file.absolute.path.toLowerCase();
+      _siblings = paths;
+      _siblingIndex = paths.indexWhere(
+        (p) => File(p).absolute.path.toLowerCase() == target,
+      );
+    } catch (e) {
+      debugPrint('Failed to scan sibling images: $e');
+      _siblings = const [];
+      _siblingIndex = -1;
+    }
+    notifyListeners();
+  }
+
+  Future<void> _loadSiblingAt(int index) async {
+    if (index < 0 || index >= _siblings.length) return;
+    final path = _siblings[index];
+    try {
+      final file = File(path);
+      final bytes = await file.readAsBytes();
+      final size = await file.length();
+      final name = path.split(Platform.pathSeparator).last;
+      final siblings = _siblings;
+      await loadImage(bytes, name, size);
+      // loadImage does not touch sibling state; restore it after the reload.
+      _siblings = siblings;
+      _siblingIndex = index;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to load sibling image: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> nextSibling() => _loadSiblingAt(_siblingIndex + 1);
+  Future<void> prevSibling() => _loadSiblingAt(_siblingIndex - 1);
 
   void _extractExif(Uint8List bytes, int session) {
     compute(extractMetadataTask, bytes)
@@ -737,6 +828,8 @@ class ImageEditorController extends ChangeNotifier {
     _isProcessing = false;
     _decodingFuture = null;
     _backgroundSync = null;
+    _siblings = const [];
+    _siblingIndex = -1;
     notifyListeners();
   }
 

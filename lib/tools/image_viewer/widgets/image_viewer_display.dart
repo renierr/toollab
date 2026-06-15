@@ -1,6 +1,6 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ImageViewerDisplay extends StatefulWidget {
   final ui.Image image;
@@ -8,6 +8,12 @@ class ImageViewerDisplay extends StatefulWidget {
   final bool isAnimated;
   final TransformationController transformationController;
   final VoidCallback onResetZoom;
+  final bool showSiblingNav;
+  final bool hasPrevSibling;
+  final bool hasNextSibling;
+  final String? siblingLabel;
+  final VoidCallback? onPrevImage;
+  final VoidCallback? onNextImage;
 
   const ImageViewerDisplay({
     super.key,
@@ -16,6 +22,12 @@ class ImageViewerDisplay extends StatefulWidget {
     this.isAnimated = false,
     required this.transformationController,
     required this.onResetZoom,
+    this.showSiblingNav = false,
+    this.hasPrevSibling = false,
+    this.hasNextSibling = false,
+    this.siblingLabel,
+    this.onPrevImage,
+    this.onNextImage,
   });
 
   @override
@@ -55,6 +67,23 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
     }
   }
 
+  KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
+    if (!widget.showSiblingNav || event is! KeyDownEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft &&
+        widget.hasPrevSibling) {
+      widget.onPrevImage?.call();
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight &&
+        widget.hasNextSibling) {
+      widget.onNextImage?.call();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -67,92 +96,198 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
         ? const Color(0xFF0F172A)
         : const Color(0xFFF5F5F5);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Stack(
-        children: [
-          // Checkerboard background
-          Positioned.fill(
-            child: CustomPaint(
-              painter: CheckerboardPainter(
-                color1: checkerboardColor1,
-                color2: checkerboardColor2,
-              ),
-            ),
-          ),
-          // Interactive image viewer
-          Positioned.fill(
-            child: InteractiveViewer(
-              transformationController: widget.transformationController,
-              minScale: 0.1,
-              maxScale: 10.0,
-              child: Center(
-                child: widget.isAnimated && widget.rawBytes != null
-                    ? Image.memory(widget.rawBytes!, fit: BoxFit.contain)
-                    : RawImage(image: widget.image, fit: BoxFit.contain),
-              ),
-            ),
-          ),
-          // Floating overlay: Zoom level and Reset Zoom button
-          Positioned(
-            bottom: 16,
-            left: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withValues(alpha: 0.85),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.2),
+    return Focus(
+      autofocus: widget.showSiblingNav,
+      onKeyEvent: _handleKey,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            // Checkerboard background
+            Positioned.fill(
+              child: CustomPaint(
+                painter: CheckerboardPainter(
+                  color1: checkerboardColor1,
+                  color2: checkerboardColor2,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.zoom_in,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${(_zoomScale * 100).round()}%',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  if ((_zoomScale - 1.0).abs() > 0.01) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 1,
-                      height: 16,
-                      color: theme.colorScheme.outline.withValues(alpha: 0.3),
-                    ),
-                    const SizedBox(width: 4),
-                    TextButton(
-                      onPressed: widget.onResetZoom,
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Text(
-                        'Reset',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+            ),
+            // Interactive image viewer
+            Positioned.fill(
+              child: InteractiveViewer(
+                transformationController: widget.transformationController,
+                minScale: 0.1,
+                maxScale: 10.0,
+                child: Center(
+                  child: widget.isAnimated && widget.rawBytes != null
+                      ? Image.memory(widget.rawBytes!, fit: BoxFit.contain)
+                      : RawImage(image: widget.image, fit: BoxFit.contain),
+                ),
               ),
             ),
-          ),
-        ],
+            // Floating overlay: Zoom level and Reset Zoom button
+            Positioned(
+              bottom: 16,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.zoom_in,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${(_zoomScale * 100).round()}%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    if ((_zoomScale - 1.0).abs() > 0.01) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 1,
+                        height: 16,
+                        color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                      ),
+                      const SizedBox(width: 4),
+                      TextButton(
+                        onPressed: widget.onResetZoom,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Reset',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            // Sibling navigation: prev/next arrows + position indicator
+            if (widget.showSiblingNav) ...[
+              Positioned(
+                left: 12,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: _SiblingNavButton(
+                    icon: Icons.chevron_left,
+                    tooltip: 'Previous image',
+                    onPressed: widget.hasPrevSibling
+                        ? widget.onPrevImage
+                        : null,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 12,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: _SiblingNavButton(
+                    icon: Icons.chevron_right,
+                    tooltip: 'Next image',
+                    onPressed: widget.hasNextSibling
+                        ? widget.onNextImage
+                        : null,
+                  ),
+                ),
+              ),
+              if (widget.siblingLabel != null)
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.collections_outlined,
+                          size: 16,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          widget.siblingLabel!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SiblingNavButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  const _SiblingNavButton({
+    required this.icon,
+    required this.tooltip,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final enabled = onPressed != null;
+    return Material(
+      color: theme.colorScheme.surface.withValues(alpha: enabled ? 0.85 : 0.4),
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: IconButton(
+        icon: Icon(icon),
+        iconSize: 28,
+        tooltip: enabled ? tooltip : null,
+        color: theme.colorScheme.onSurface,
+        disabledColor: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+        onPressed: onPressed,
       ),
     );
   }
