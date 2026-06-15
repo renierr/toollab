@@ -10,6 +10,7 @@ import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/floating_back_button.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/tools/image_viewer/config.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_display.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_editor.dart';
@@ -134,7 +135,23 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
     }
   }
 
+  /// Returns true if it is safe to leave the current image — either there are
+  /// no unsaved edits, or the user chose to discard them.
+  Future<bool> _confirmDiscardEdits() async {
+    if (!_controller.hasEdits) return true;
+    final discard = await ConfirmActionDialog.show(
+      context: context,
+      title: 'Discard changes?',
+      message:
+          'You have unsaved edits to this image. Leaving will discard them.',
+      confirmLabel: 'Discard',
+      cancelLabel: 'Keep editing',
+    );
+    return discard ?? false;
+  }
+
   Future<void> _prevImage() async {
+    if (!await _confirmDiscardEdits()) return;
     try {
       await _controller.prevSibling();
       _onResetZoom();
@@ -144,6 +161,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   }
 
   Future<void> _nextImage() async {
+    if (!await _confirmDiscardEdits()) return;
     try {
       await _controller.nextSibling();
       _onResetZoom();
@@ -158,16 +176,14 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
     });
   }
 
-  void _onClose() {
-    if (widget.sharedFile != null) {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      } else {
-        _controller.clear();
-      }
-    } else {
-      _controller.clear();
+  Future<void> _onClose() async {
+    if (widget.sharedFile != null && Navigator.of(context).canPop()) {
+      // Leaves the route — PopScope handles the discard confirmation.
+      Navigator.of(context).maybePop();
+      return;
     }
+    if (!await _confirmDiscardEdits()) return;
+    _controller.clear();
   }
 
   Future<void> _exportImage() async {
@@ -556,15 +572,25 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
               )
             : null;
 
-        return ToolLayout(
-          title: ImageViewerTool.config.name,
-          fullscreen: true,
-          showFloatingBackButton: false,
-          scaffoldKey: _scaffoldKey,
-          actions: actions,
-          floatingActionButton: fab,
-          endDrawer: endDrawer,
-          child: bodyContent,
+        return PopScope(
+          canPop: !_controller.hasEdits,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            final navigator = Navigator.of(context);
+            final discard = await _confirmDiscardEdits();
+            if (!mounted || !discard) return;
+            navigator.pop();
+          },
+          child: ToolLayout(
+            title: ImageViewerTool.config.name,
+            fullscreen: true,
+            showFloatingBackButton: false,
+            scaffoldKey: _scaffoldKey,
+            actions: actions,
+            floatingActionButton: fab,
+            endDrawer: endDrawer,
+            child: bodyContent,
+          ),
         );
       },
     );

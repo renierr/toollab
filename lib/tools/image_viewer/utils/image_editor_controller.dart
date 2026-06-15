@@ -75,6 +75,8 @@ class ImageEditorController extends ChangeNotifier {
   bool get isRedactMode => _isRedactMode;
   bool get canUndo => _history.canUndo;
   bool get canRedo => _history.canRedo;
+  // True when edits are applied on top of the loaded original (undoable).
+  bool get hasEdits => _history.canUndo;
   bool get canBrowseSiblings => _siblings.length > 1;
   bool get hasPrevSibling => canBrowseSiblings && _siblingIndex > 0;
   bool get hasNextSibling =>
