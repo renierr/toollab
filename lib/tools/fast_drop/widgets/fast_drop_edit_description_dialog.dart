@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
@@ -33,8 +34,9 @@ class _FastDropEditDescriptionDialogState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ResponsiveAlertDialog(
-      title: const Text('Edit Description'),
+      title: Text(l10n.fastDropEditDescriptionTitle),
       content: SizedBox(
         width: 400,
         child: TextField(
@@ -44,7 +46,7 @@ class _FastDropEditDescriptionDialogState
           minLines: 4,
           textCapitalization: TextCapitalization.sentences,
           decoration: InputDecoration(
-            hintText: 'Add a description...',
+            hintText: l10n.fastDropDescriptionHint,
             hintStyle: TextStyle(
               color: Theme.of(
                 context,
@@ -59,14 +61,14 @@ class _FastDropEditDescriptionDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton.icon(
           onPressed: () {
             Navigator.of(context).pop(_controller.text.trim());
           },
           icon: const Icon(Icons.save_outlined, size: 18),
-          label: const Text('Save'),
+          label: Text(l10n.commonSave),
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.accentTeal,
             foregroundColor: Colors.white,

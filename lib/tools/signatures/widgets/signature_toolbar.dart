@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_chip.dart';
 
 import '../signatures_state.dart';
@@ -24,6 +25,7 @@ class SignatureToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final state = context.watch<SignaturesState>();
     final hasContent = !state.isEmpty;
 
@@ -36,7 +38,7 @@ class SignatureToolbar extends StatelessWidget {
         children: [
           ToolChip(
             icon: Icons.undo,
-            label: 'Undo',
+            label: l10n.sigUndo,
             showLabel: false,
             onTap: state.canUndo
                 ? () => context.read<SignaturesState>().undo()
@@ -44,7 +46,7 @@ class SignatureToolbar extends StatelessWidget {
           ),
           ToolChip(
             icon: Icons.redo,
-            label: 'Redo',
+            label: l10n.sigRedo,
             showLabel: false,
             onTap: state.canRedo
                 ? () => context.read<SignaturesState>().redo()
@@ -52,34 +54,34 @@ class SignatureToolbar extends StatelessWidget {
           ),
           ToolChip(
             icon: Icons.delete_outline,
-            label: 'Clear',
+            label: l10n.commonClear,
             onTap: hasContent
                 ? () => context.read<SignaturesState>().clear()
                 : () {},
           ),
           ToolChip(
             icon: Icons.copy_outlined,
-            label: 'Copy',
+            label: l10n.commonCopy,
             onTap: hasContent ? onCopy : () {},
           ),
           ToolChip(
             icon: Icons.share_outlined,
-            label: 'Share',
+            label: l10n.commonShare,
             onTap: hasContent ? onShare : () {},
           ),
           ToolChip(
             icon: Icons.image_outlined,
-            label: 'PNG',
+            label: l10n.sigPng,
             onTap: hasContent ? onExportPng : () {},
           ),
           ToolChip(
             icon: Icons.polyline_outlined,
-            label: 'SVG',
+            label: l10n.sigSvg,
             onTap: hasContent ? onExportSvg : () {},
           ),
           ToolChip(
             icon: Icons.save_outlined,
-            label: 'Save',
+            label: l10n.commonSave,
             selected: hasContent,
             onTap: hasContent ? onSave : () {},
           ),

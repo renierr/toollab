@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
@@ -90,11 +91,10 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
       debugPrint('[BubbleLevel] Sensors not available: $e');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Sensors not available on this device.'),
-            ),
-          );
+          final l10n = AppLocalizations.of(context);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.levelSensorsUnavailable)));
         }
       });
     }
@@ -117,25 +117,27 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
   }
 
   void _onSetZero() {
+    final l10n = AppLocalizations.of(context);
     _sensor.calibrateZero(_sensor.currentReading);
     setState(() {
       _pitch = 0;
       _roll = 0;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Surface calibrated to zero.'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text(l10n.levelCalibratedToZero),
+        duration: const Duration(seconds: 1),
       ),
     );
   }
 
   void _onResetZero() {
+    final l10n = AppLocalizations.of(context);
     _sensor.resetCalibration();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Calibration reset.'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text(l10n.levelCalibrationReset),
+        duration: const Duration(seconds: 1),
       ),
     );
   }

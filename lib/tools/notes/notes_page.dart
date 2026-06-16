@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/notes/notes_state.dart';
 import 'package:tool_lab/services/sharing_service.dart';
@@ -93,8 +94,11 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load shared file: $e')),
+          SnackBar(
+            content: Text(l10n.notesFailedToLoadSharedFile(e.toString())),
+          ),
         );
       }
     }
@@ -144,18 +148,20 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       await notesState.saveNote(content, id: _editingId, tags: tags);
       _closeEditor();
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Note saved'),
+          SnackBar(
+            content: Text(l10n.notesNoteSaved),
             backgroundColor: AppTheme.accentGreen,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save note: $e'),
+            content: Text(l10n.notesFailedToSaveNote(e.toString())),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -164,11 +170,12 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
   }
 
   Future<void> _deleteNote(int id) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmActionDialog.show(
       context: context,
-      title: 'Delete Note',
-      message: 'Are you sure you want to delete this note?',
-      confirmLabel: 'Delete',
+      title: l10n.notesDeleteNoteTitle,
+      message: l10n.notesDeleteNoteMessage,
+      confirmLabel: l10n.commonDelete,
     );
 
     if (confirmed == true && mounted) {
@@ -182,13 +189,13 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('Note deleted')));
+          ).showSnackBar(SnackBar(content: Text(l10n.notesNoteDeleted)));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to delete note: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.notesFailedToDeleteNote(e.toString()))),
+          );
         }
       }
     }
@@ -201,17 +208,21 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       final content = text.trim().startsWith('# ') ? text : '# $name\n\n$text';
       await notesState.saveNote(content);
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Imported note from "$name"'),
+            content: Text(l10n.notesImportedNoteFrom(name)),
             backgroundColor: AppTheme.accentGreen,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to import dropped file: $e')),
+          SnackBar(
+            content: Text(l10n.notesFailedToImportDroppedFile(e.toString())),
+          ),
         );
       }
     }
@@ -219,6 +230,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final notesState = context.watch<NotesState>();
     final notes = notesState.notes;
 
@@ -257,7 +269,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
         content: content,
         config: MarkdownViewerConfig(
           accentColor: AppTheme.accentTeal,
-          title: 'View Note',
+          title: l10n.notesViewNoteTitle,
           showEdit: true,
           showDelete: true,
           onEdit: () {

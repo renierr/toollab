@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'ndef_codec.dart';
 
@@ -17,6 +18,8 @@ class NfcRecordList extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    final l10n = AppLocalizations.of(context);
+
     if (records.isEmpty) {
       return Card(
         child: Padding(
@@ -31,7 +34,7 @@ class NfcRecordList extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'No Records Found',
+                  l10n.nfcNoRecordsFound,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface.withAlpha(140),
@@ -39,7 +42,7 @@ class NfcRecordList extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'NDEF payload is empty or not scanned yet.',
+                  l10n.nfcNoRecordsSubtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withAlpha(100),
                   ),
@@ -57,7 +60,7 @@ class NfcRecordList extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            'NDEF Records (${records.length})',
+            l10n.nfcNdefRecords(records.length),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface.withAlpha(160),
@@ -92,6 +95,7 @@ class _RecordItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final accent = _getRecordTypeColor(record.recordType);
 
@@ -119,7 +123,7 @@ class _RecordItem extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          _getSubtitle(record),
+          _getSubtitle(record, l10n),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurface.withAlpha(140),
           ),
@@ -133,7 +137,7 @@ class _RecordItem extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Record Index:',
+                l10n.nfcRecordIndex,
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withAlpha(120),
                 ),
@@ -148,27 +152,27 @@ class _RecordItem extends StatelessWidget {
               const Spacer(),
               if (onLoad != null)
                 IconButton(
-                  tooltip: 'Load into Editor',
+                  tooltip: l10n.nfcLoadIntoEditor,
                   icon: const Icon(Icons.edit_note_outlined, size: 20),
                   onPressed: () {
                     onLoad!();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Record loaded into Editor Form.'),
-                        duration: Duration(seconds: 1),
+                      SnackBar(
+                        content: Text(l10n.nfcRecordLoaded),
+                        duration: const Duration(seconds: 1),
                       ),
                     );
                   },
                 ),
               IconButton(
-                tooltip: 'Copy Payload Hex',
+                tooltip: l10n.nfcCopyPayloadHex,
                 icon: const Icon(Icons.copy_outlined, size: 18),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: record.rawHex));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Payload Hex copied to clipboard.'),
-                      duration: Duration(seconds: 1),
+                    SnackBar(
+                      content: Text(l10n.nfcPayloadHexCopied),
+                      duration: const Duration(seconds: 1),
                     ),
                   );
                 },
@@ -177,7 +181,7 @@ class _RecordItem extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Raw Payload (Hex):',
+            l10n.nfcRawPayloadHex,
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurface.withAlpha(120),
             ),
@@ -203,17 +207,17 @@ class _RecordItem extends StatelessWidget {
     );
   }
 
-  String _getSubtitle(DecodedRecord r) {
+  String _getSubtitle(DecodedRecord r, AppLocalizations l10n) {
     if (r.recordType == 'text') {
-      return 'Well-known Text [${r.lang.toUpperCase()} | ${r.encoding}]';
+      return l10n.nfcSubtitleText(r.lang.toUpperCase(), r.encoding);
     }
     if (r.recordType == 'url') {
-      return 'Well-known URI';
+      return l10n.nfcSubtitleUri;
     }
     if (r.recordType == 'mime') {
       return 'MIME: ${r.mediaType}';
     }
-    return 'Custom / Non-NDEF';
+    return l10n.nfcSubtitleCustom;
   }
 
   Color _getRecordTypeColor(String type) {

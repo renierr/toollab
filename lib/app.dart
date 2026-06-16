@@ -132,8 +132,9 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
     if (matchingTools.isEmpty) {
       final context = _navigatorKey.currentContext;
       if (context != null && context.mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('No tools found to open "${firstFile.name}"')),
+          SnackBar(content: Text(l10n.coreNoToolsFoundToOpen(firstFile.name))),
         );
       }
       return;

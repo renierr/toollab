@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
-import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/widgets/data_row.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 
@@ -74,9 +75,10 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
       if (!mounted) {
         return;
       }
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _phase = _MetadataPhase.viewing;
-        _errorText = 'Failed to load metadata: $e';
+        _errorText = l10n.pdfEditMetaLoadError(e.toString());
       });
     } finally {
       await doc?.dispose();
@@ -113,13 +115,14 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
       if (!mounted) {
         return;
       }
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _phase = _MetadataPhase.viewing;
-        _errorText = 'Failed to remove security: $e';
+        _errorText = l10n.pdfEditMetaRemoveSecurityError(e.toString());
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.pdfEditMetaSaveFailed(e.toString()))),
+      );
     } finally {
       await doc?.dispose();
     }
@@ -185,6 +188,7 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
 
   Widget _buildPermissionRow(BuildContext context, String label, bool allowed) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -204,7 +208,9 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
             ),
           ),
           Text(
-            allowed ? 'Allowed' : 'Restricted',
+            allowed
+                ? l10n.pdfEditMetaPermAllowed
+                : l10n.pdfEditMetaPermRestricted,
             style: theme.textTheme.bodySmall?.copyWith(
               color: allowed ? AppTheme.statusGreen : AppTheme.statusRed,
               fontWeight: FontWeight.bold,
@@ -216,12 +222,13 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
   }
 
   Widget _buildViewing(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     if (_metadata == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Text(
-            _errorText ?? 'Failed to load metadata',
+            _errorText ?? l10n.pdfEditMetaLoadFailed,
             style: TextStyle(color: theme.colorScheme.error),
             textAlign: TextAlign.center,
           ),
@@ -244,28 +251,31 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
           ),
         InfoCard(
           icon: Icons.info_outline,
-          title: 'Document Specifications',
+          title: l10n.pdfEditMetaSpecsTitle,
           child: Column(
             children: [
-              InfoRow(label: 'File Name', value: widget.session.fileName),
+              InfoRow(
+                label: l10n.pdfEditMetaFileName,
+                value: widget.session.fileName,
+              ),
               const Divider(height: 16),
               InfoRow(
-                label: 'File Size',
+                label: l10n.pdfEditMetaFileSize,
                 value: _formatFileSize(metadata.fileSize),
               ),
               const Divider(height: 16),
               InfoRow(
-                label: 'Page Count',
+                label: l10n.pdfEditMetaPageCount,
                 value: metadata.pageCount.toString(),
               ),
               const Divider(height: 16),
               InfoRow(
-                label: 'PDF Version',
+                label: l10n.pdfEditMetaPdfVersion,
                 value: 'PDF ${metadata.pdfVersion}',
               ),
               const Divider(height: 16),
               InfoRow(
-                label: 'Page Dimensions',
+                label: l10n.pdfEditMetaPageDimensions,
                 value: _formatPageSize(
                   metadata.widthPoints,
                   metadata.heightPoints,
@@ -277,48 +287,60 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
         const SizedBox(height: 12),
         InfoCard(
           icon: Icons.description_outlined,
-          title: 'Document Metadata',
+          title: l10n.pdfEditMetaMetadataTitle,
           child: Column(
             children: [
-              InfoRow(label: 'Title', value: metadata.title),
+              InfoRow(label: l10n.pdfEditMetaTitle, value: metadata.title),
               const Divider(height: 16),
-              InfoRow(label: 'Author', value: metadata.author),
+              InfoRow(label: l10n.pdfEditMetaAuthor, value: metadata.author),
               const Divider(height: 16),
-              InfoRow(label: 'Subject', value: metadata.subject),
-              const Divider(height: 16),
-              InfoRow(label: 'Keywords', value: metadata.keywords),
-              const Divider(height: 16),
-              InfoRow(label: 'Creator', value: metadata.creator),
-              const Divider(height: 16),
-              InfoRow(label: 'Producer', value: metadata.producer),
-              const Divider(height: 16),
-              InfoRow(label: 'Creation Date', value: metadata.creationDate),
+              InfoRow(label: l10n.pdfEditMetaSubject, value: metadata.subject),
               const Divider(height: 16),
               InfoRow(
-                label: 'Modification Date',
+                label: l10n.pdfEditMetaKeywords,
+                value: metadata.keywords,
+              ),
+              const Divider(height: 16),
+              InfoRow(label: l10n.pdfEditMetaCreator, value: metadata.creator),
+              const Divider(height: 16),
+              InfoRow(
+                label: l10n.pdfEditMetaProducer,
+                value: metadata.producer,
+              ),
+              const Divider(height: 16),
+              InfoRow(
+                label: l10n.pdfEditMetaCreationDate,
+                value: metadata.creationDate,
+              ),
+              const Divider(height: 16),
+              InfoRow(
+                label: l10n.pdfEditMetaModDate,
                 value: metadata.modificationDate,
               ),
               const Divider(height: 16),
-              InfoRow(label: 'Trapped', value: metadata.trapped),
+              InfoRow(label: l10n.pdfEditMetaTrapped, value: metadata.trapped),
             ],
           ),
         ),
         const SizedBox(height: 12),
         InfoCard(
           icon: Icons.security_outlined,
-          title: 'Security & Restrictions',
+          title: l10n.pdfEditMetaSecurityTitle,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               InfoRow(
-                label: 'Encrypted',
+                label: l10n.pdfEditMetaEncrypted,
                 value: _isEncrypted
-                    ? 'Yes (Revision ${_securityRevision ?? 'unknown'})'
-                    : 'No',
+                    ? l10n.pdfEditMetaEncryptedYes(
+                        _securityRevision?.toString() ??
+                            l10n.pdfEditMetaUnknown,
+                      )
+                    : l10n.commonNo,
               ),
               const Divider(height: 24),
               Text(
-                'Restrictions',
+                l10n.pdfEditMetaRestrictions,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -326,42 +348,42 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
               const SizedBox(height: 8),
               _buildPermissionRow(
                 context,
-                'Printing (Low Resolution)',
+                l10n.pdfEditMetaPermPrintLow,
                 _isPermissionAllowed(4),
               ),
               _buildPermissionRow(
                 context,
-                'High-Quality Printing',
+                l10n.pdfEditMetaPermPrintHigh,
                 _isPermissionAllowed(2048),
               ),
               _buildPermissionRow(
                 context,
-                'Modifying Document Content',
+                l10n.pdfEditMetaPermModifyContent,
                 _isPermissionAllowed(8),
               ),
               _buildPermissionRow(
                 context,
-                'Content Copying & Extraction',
+                l10n.pdfEditMetaPermCopyExtract,
                 _isPermissionAllowed(16),
               ),
               _buildPermissionRow(
                 context,
-                'Adding/Modifying Annotations',
+                l10n.pdfEditMetaPermAnnotations,
                 _isPermissionAllowed(32),
               ),
               _buildPermissionRow(
                 context,
-                'Filling Interactive Forms',
+                l10n.pdfEditMetaPermForms,
                 _isPermissionAllowed(256),
               ),
               _buildPermissionRow(
                 context,
-                'Accessibility Extraction',
+                l10n.pdfEditMetaPermAccessibility,
                 _isPermissionAllowed(512),
               ),
               _buildPermissionRow(
                 context,
-                'Document Assembly',
+                l10n.pdfEditMetaPermAssembly,
                 _isPermissionAllowed(1024),
               ),
               if (_isEncrypted) ...[
@@ -371,7 +393,7 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
                   child: FilledButton.icon(
                     onPressed: _decryptAndSave,
                     icon: const Icon(Icons.lock_open_outlined),
-                    label: const Text('Remove Password & Save Copy'),
+                    label: Text(l10n.pdfEditMetaRemovePassword),
                   ),
                 ),
               ],
@@ -383,6 +405,7 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
   }
 
   Widget _buildDone(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     final size = _resultSize;
     final sizeText = _formatFileSize(size);
     final outName = '${_baseName}_unsecured.pdf';
@@ -400,12 +423,12 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Security Removal Complete',
+              l10n.pdfEditMetaDoneTitle,
               style: theme.textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
-              'New PDF size: $sizeText',
+              l10n.pdfEditFlattenDoneSize(sizeText),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -419,12 +442,12 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
                 FilledButton.icon(
                   onPressed: _download,
                   icon: const Icon(Icons.download),
-                  label: const Text('Download'),
+                  label: Text(l10n.pdfEditDownload),
                 ),
                 OutlinedButton.icon(
                   onPressed: _share,
                   icon: const Icon(Icons.share),
-                  label: const Text('Share'),
+                  label: Text(l10n.commonShare),
                 ),
               ],
             ),
@@ -432,9 +455,12 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
             TextButton.icon(
               onPressed: () => widget.onComplete(_resultPath!, outName),
               icon: const Icon(Icons.open_in_new),
-              label: const Text('Open in Viewer'),
+              label: Text(l10n.pdfEditOpenInViewer),
             ),
-            TextButton(onPressed: widget.onCancel, child: const Text('Close')),
+            TextButton(
+              onPressed: widget.onCancel,
+              child: Text(l10n.commonClose),
+            ),
           ],
         ),
       ),
@@ -444,9 +470,10 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Metadata: ${widget.session.fileName}'),
+        title: Text(l10n.pdfEditMetaTitle2(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _phase == _MetadataPhase.processing
@@ -456,7 +483,7 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Reload metadata',
+            tooltip: l10n.pdfEditMetaReload,
             onPressed: _phase == _MetadataPhase.processing
                 ? null
                 : _loadMetadata,

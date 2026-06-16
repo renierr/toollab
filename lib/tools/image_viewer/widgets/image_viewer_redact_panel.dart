@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:image/image.dart' as img;
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_redact_painters.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_redact_overlay.dart';
 
@@ -146,6 +147,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final hasIntensity = _redactType == 'pixelate' || _redactType == 'blur';
     final isSolid = _redactType == 'solid';
 
@@ -159,7 +161,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Redaction Style & Shape',
+                l10n.imgViewRedactStyleHeader,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -201,13 +203,13 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      'Shape: ',
+                      l10n.imgViewShapeLabel,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     ChoiceChip(
-                      label: const Text('Rectangle'),
+                      label: Text(l10n.imgViewShapeRectangle),
                       selected: _relativePathPoints == null,
                       onSelected: (selected) {
                         if (selected) {
@@ -219,7 +221,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                       },
                     ),
                     ChoiceChip(
-                      label: const Text('Freehand'),
+                      label: Text(l10n.imgViewShapeFreehand),
                       selected: _relativePathPoints != null,
                       onSelected: (selected) {
                         if (selected) {
@@ -239,7 +241,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                           });
                         },
                         icon: const Icon(Icons.gesture, size: 16),
-                        label: const Text('Redraw'),
+                        label: Text(l10n.imgViewRedraw),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
@@ -274,19 +276,19 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                       child: Row(
                         children: [
                           _RedactStyleButton(
-                            label: 'Solid',
+                            label: l10n.imgViewStyleSolid,
                             isActive: isSolid,
                             onPressed: () => _onTypeChanged('solid'),
                           ),
                           const SizedBox(width: 8),
                           _RedactStyleButton(
-                            label: 'Pixelate',
+                            label: l10n.imgViewStylePixelate,
                             isActive: _redactType == 'pixelate',
                             onPressed: () => _onTypeChanged('pixelate'),
                           ),
                           const SizedBox(width: 8),
                           _RedactStyleButton(
-                            label: 'Blur',
+                            label: l10n.imgViewStyleBlur,
                             isActive: _redactType == 'blur',
                             onPressed: () => _onTypeChanged('blur'),
                           ),
@@ -300,7 +302,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                   Row(
                     children: [
                       Text(
-                        'Color: ',
+                        l10n.imgViewColorLabel,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -334,8 +336,8 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                       Expanded(
                         child: Text(
                           _redactType == 'pixelate'
-                              ? 'Block Size: ${_intensity.round()} px'
-                              : 'Blur Radius: ${_intensity.round()} px',
+                              ? l10n.imgViewBlockSize(_intensity.round())
+                              : l10n.imgViewBlurRadius(_intensity.round()),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                           ),
@@ -457,7 +459,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                                 vertical: 6,
                               ),
                               child: Text(
-                                'Draw a path over the area to redact',
+                                l10n.imgViewRedactHint,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onPrimaryContainer,
                                   fontWeight: FontWeight.bold,
@@ -516,7 +518,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
               TextButton.icon(
                 onPressed: widget.onRedactCancelled,
                 icon: const Icon(Icons.cancel_outlined),
-                label: const Text('Cancel'),
+                label: Text(l10n.commonCancel),
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -560,7 +562,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                   );
                 },
                 icon: const Icon(Icons.check),
-                label: const Text('Apply Redaction'),
+                label: Text(l10n.imgViewApplyRedaction),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,

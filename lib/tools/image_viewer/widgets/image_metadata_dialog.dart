@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import '../utils/image_metadata_extractor.dart';
 import 'gps_card.dart';
@@ -29,6 +30,7 @@ class ImageMetadataDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final hasGps = metadata.latitude != null && metadata.longitude != null;
     final hasThumbnail = metadata.thumbnailBytes != null;
 
@@ -42,7 +44,7 @@ class ImageMetadataDialog extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Metadata & EXIF Info',
+                  l10n.imgViewMetadataDialogTitle,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -99,7 +101,7 @@ class ImageMetadataDialog extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'No EXIF metadata found in this image.',
+                          l10n.imgViewNoExifData,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -121,7 +123,7 @@ class ImageMetadataDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: Text(l10n.commonClose),
         ),
       ],
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import '../fast_drop_model.dart';
@@ -39,8 +40,9 @@ class _FastDropEditRetentionDialogState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ResponsiveAlertDialog(
-      title: const Text('Edit Retention Period'),
+      title: Text(l10n.fastDropEditRetentionTitle),
       content: SizedBox(
         width: 400,
         child: SingleChildScrollView(
@@ -63,14 +65,14 @@ class _FastDropEditRetentionDialogState
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton.icon(
           onPressed: () {
             Navigator.of(context).pop(_retention);
           },
           icon: const Icon(Icons.save_outlined, size: 18),
-          label: const Text('Save'),
+          label: Text(l10n.commonSave),
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.accentTeal,
             foregroundColor: Colors.white,

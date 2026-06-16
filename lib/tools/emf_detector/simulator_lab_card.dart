@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'emf_colors.dart';
 import 'sensor_service.dart';
 import 'detector_state.dart';
@@ -12,6 +13,7 @@ class SimulatorLabCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (!state.isSimulationActive) {
       // Don't clutter UI on actual phones where sensor is active (but allow manual simulator overrides by turning it on)
       return Container(
@@ -24,9 +26,9 @@ class SimulatorLabCard extends StatelessWidget {
           child: TextButton.icon(
             onPressed: () => state.setSimulationMode(true),
             icon: const Icon(Icons.science_outlined, size: 14),
-            label: const Text(
-              'OPEN VIRTUAL SENSOR TOOLBOX (DEVELOPER)',
-              style: TextStyle(
+            label: Text(
+              l10n.emfOpenVirtualSensorToolbox,
+              style: const TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
@@ -58,9 +60,9 @@ class SimulatorLabCard extends StatelessWidget {
             spacing: 12,
             runSpacing: 6,
             children: [
-              const Text(
-                '🛠️ DEVELOPER SIMULATION LAB',
-                style: TextStyle(
+              Text(
+                l10n.emfDeveloperSimulationLab,
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.0,
@@ -69,9 +71,9 @@ class SimulatorLabCard extends StatelessWidget {
               ),
               GestureDetector(
                 onTap: () => state.setSimulationMode(false),
-                child: const Text(
-                  'EXIT SIM',
-                  style: TextStyle(
+                child: Text(
+                  l10n.emfExitSim,
+                  style: const TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
@@ -85,7 +87,7 @@ class SimulatorLabCard extends StatelessWidget {
 
           // Simulation Presets Toggle
           Text(
-            'SELECT FIELD SCENARIO PRESET',
+            l10n.emfSelectFieldScenarioPreset,
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
@@ -100,22 +102,22 @@ class SimulatorLabCard extends StatelessWidget {
               PresetChip(
                 state: state,
                 preset: SimulationPreset.none,
-                label: 'Earth Normal',
+                label: l10n.emfPresetEarthNormal,
               ),
               PresetChip(
                 state: state,
                 preset: SimulationPreset.mainsCable,
-                label: 'Mains Wire (AC)',
+                label: l10n.emfPresetMainsWire,
               ),
               PresetChip(
                 state: state,
                 preset: SimulationPreset.strongMagnet,
-                label: 'Magnet Proximity',
+                label: l10n.emfPresetMagnetProximity,
               ),
               PresetChip(
                 state: state,
                 preset: SimulationPreset.ambientNoise,
-                label: 'Walk Drift (Drift)',
+                label: l10n.emfPresetWalkDrift,
               ),
             ],
           ),
@@ -130,7 +132,7 @@ class SimulatorLabCard extends StatelessWidget {
             runSpacing: 4,
             children: [
               Text(
-                'MANUAL X, Y, Z VECTOR ADJUSTMENTS',
+                l10n.emfManualVectorAdjustments,
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
@@ -138,9 +140,9 @@ class SimulatorLabCard extends StatelessWidget {
                 ),
               ),
               if (state.currentPreset == SimulationPreset.none)
-                const Text(
-                  'MANUAL ACTIVE',
-                  style: TextStyle(
+                Text(
+                  l10n.emfManualActive,
+                  style: const TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 8,
                     fontWeight: FontWeight.bold,
@@ -151,7 +153,7 @@ class SimulatorLabCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           ManualVectorSlider(
-            label: 'X Offset',
+            label: l10n.emfXOffset,
             value: state.currentReading?.x ?? 0.0,
             onChanged: (val) {
               state.setSimulationPreset(SimulationPreset.none);
@@ -163,7 +165,7 @@ class SimulatorLabCard extends StatelessWidget {
             },
           ),
           ManualVectorSlider(
-            label: 'Y Offset',
+            label: l10n.emfYOffset,
             value: state.currentReading?.y ?? 0.0,
             onChanged: (val) {
               state.setSimulationPreset(SimulationPreset.none);
@@ -175,7 +177,7 @@ class SimulatorLabCard extends StatelessWidget {
             },
           ),
           ManualVectorSlider(
-            label: 'Z Offset',
+            label: l10n.emfZOffset,
             value: state.currentReading?.z ?? 0.0,
             onChanged: (val) {
               state.setSimulationPreset(SimulationPreset.none);

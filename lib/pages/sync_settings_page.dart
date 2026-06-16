@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
-import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 class SyncSettingsPage extends StatefulWidget {
   const SyncSettingsPage({super.key});
@@ -50,17 +51,19 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
       );
 
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Settings saved successfully'),
+        SnackBar(
+          content: Text(l10n.coreSyncSettingsSaved),
           backgroundColor: AppTheme.accentGreen,
         ),
       );
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to save settings: $e'),
+          content: Text(l10n.coreSyncSettingsSaveFailed(e.toString())),
           backgroundColor: AppTheme.accentRed,
         ),
       );
@@ -92,21 +95,26 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
 
       if (!mounted) return;
 
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _syncSuccess = true;
         if (results != null) {
-          _syncMessage =
-              'Sync completed. Pulled: ${results['pulled']}, Pushed: ${results['pushed']}, Deleted: ${results['deleted']}.';
+          _syncMessage = l10n.coreSyncCompleted(
+            results['pulled'].toString(),
+            results['pushed'].toString(),
+            results['deleted'].toString(),
+          );
         } else {
-          _syncMessage = 'Sync failed. Server URL is empty.';
+          _syncMessage = l10n.coreSyncFailedNoUrl;
           _syncSuccess = false;
         }
       });
     } catch (e) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _syncSuccess = false;
-        _syncMessage = 'Sync failed: $e';
+        _syncMessage = l10n.coreSyncFailed(e.toString());
       });
     } finally {
       if (mounted) {
@@ -117,16 +125,18 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
     }
   }
 
-  String _formatLastSynced(int timestamp) {
+  String _formatLastSynced(int timestamp, AppLocalizations l10n) {
     if (timestamp == 0) {
-      return 'Never synced';
+      return l10n.coreSyncNeverSynced;
     }
-    return 'Last synced: '
-        '${FormatHelper.epoch(timestamp, style: DateStyle.dateTimeSeconds)}';
+    return l10n.coreSyncLastSynced(
+      FormatHelper.epoch(timestamp, style: DateStyle.dateTimeSeconds),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final appState = context.watch<AppState>();
     final enabled = appState.syncEnabled;
     final syncing = appState.isSyncing || _isSyncingLocal;
@@ -134,7 +144,7 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Cloud Synchronization')),
+      appBar: AppBar(title: Text(l10n.coreSyncTitle)),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -160,14 +170,14 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Sync data across devices',
+                                l10n.coreSyncAcrossDevicesTitle,
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Enabling cloud sync lets you back up your tools data and sync seamlessly to a centralized server.',
+                                l10n.coreSyncAcrossDevicesSubtitle,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -184,12 +194,12 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                 Card(
                   margin: EdgeInsets.zero,
                   child: SwitchListTile(
-                    title: const Text(
-                      'Enable Synchronization',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    title: Text(
+                      l10n.coreSyncEnableTitle,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      enabled ? 'Syncing active' : 'Syncing disabled',
+                      enabled ? l10n.coreSyncActive : l10n.coreSyncDisabled,
                       style: TextStyle(
                         color: enabled ? AppTheme.accentGreen : null,
                         fontWeight: enabled ? FontWeight.bold : null,
@@ -216,23 +226,23 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Server Credentials',
+                              l10n.coreSyncServerCredentials,
                               style: theme.textTheme.titleMedium,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _serverUrlController,
                               keyboardType: TextInputType.url,
-                              decoration: const InputDecoration(
-                                labelText: 'Server Base URL',
+                              decoration: InputDecoration(
+                                labelText: l10n.coreSyncServerBaseUrl,
                                 hintText: 'http://localhost:3000',
-                                prefixIcon: Icon(Icons.dns_outlined),
-                                border: OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.dns_outlined),
+                                border: const OutlineInputBorder(),
                               ),
                               validator: (v) {
                                 if (enabled &&
                                     (v == null || v.trim().isEmpty)) {
-                                  return 'Server URL is required when sync is enabled';
+                                  return l10n.coreSyncServerUrlRequired;
                                 }
                                 return null;
                               },
@@ -240,12 +250,11 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _userIdController,
-                              decoration: const InputDecoration(
-                                labelText: 'User ID (Optional)',
-                                hintText:
-                                    'Enter your username or user ID (optional)',
-                                prefixIcon: Icon(Icons.person_outline),
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: l10n.coreSyncUserId,
+                                hintText: l10n.coreSyncUserIdHint,
+                                prefixIcon: const Icon(Icons.person_outline),
+                                border: const OutlineInputBorder(),
                               ),
                             ),
                           ],
@@ -263,10 +272,13 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Sync Status', style: theme.textTheme.titleMedium),
+                        Text(
+                          l10n.coreSyncStatusTitle,
+                          style: theme.textTheme.titleMedium,
+                        ),
                         const SizedBox(height: 8),
                         Text(
-                          _formatLastSynced(appState.syncLastSynced),
+                          _formatLastSynced(appState.syncLastSynced, l10n),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w500,
@@ -298,7 +310,7 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                                   )
                                 : const Icon(Icons.sync),
                             label: Text(
-                              syncing ? 'Syncing...' : 'Sync Now',
+                              syncing ? l10n.coreSyncSyncing : l10n.coreSyncNow,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -370,9 +382,9 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                             ),
                           )
                         : const Icon(Icons.save),
-                    label: const Text(
-                      'Save Configuration',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    label: Text(
+                      l10n.coreSyncSaveConfiguration,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

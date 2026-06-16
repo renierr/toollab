@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'core.dart';
 import 'history.dart';
 import 'calculator_display.dart';
@@ -192,8 +193,12 @@ class _CalculatorPageState extends State<CalculatorPage>
     HapticFeedback.lightImpact();
     Clipboard.setData(ClipboardData(text: _core.input));
     if (mounted) {
+      final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Copied'), duration: Duration(seconds: 1)),
+        SnackBar(
+          content: Text(l10n.miscCalculatorCopied),
+          duration: const Duration(seconds: 1),
+        ),
       );
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class NfcEditorForm extends StatefulWidget {
   final bool isWriteEnabled;
@@ -127,6 +128,7 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Card(
@@ -138,7 +140,7 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'NDEF Record Creator',
+                l10n.nfcEditorFormTitle,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -148,34 +150,34 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
               DropdownButtonFormField<String>(
                 // ignore: deprecated_member_use
                 value: _templateId,
-                decoration: const InputDecoration(
-                  labelText: 'Template Preset',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
+                decoration: InputDecoration(
+                  labelText: l10n.nfcTemplatePreset,
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
                   ),
                 ),
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: 'custom',
-                    child: Text('Custom Record'),
+                    child: Text(l10n.nfcTemplateCustomRecord),
                   ),
                   DropdownMenuItem(
                     value: 'url-homepage',
-                    child: Text('URL: Homepage Link'),
+                    child: Text(l10n.nfcTemplateUrlHomepage),
                   ),
                   DropdownMenuItem(
                     value: 'text-note',
-                    child: Text('Text: Plain Note'),
+                    child: Text(l10n.nfcTemplateTextNote),
                   ),
                   DropdownMenuItem(
                     value: 'mime-json',
-                    child: Text('MIME: JSON Config'),
+                    child: Text(l10n.nfcTemplateMimeJson),
                   ),
                   DropdownMenuItem(
                     value: 'mime-vcard',
-                    child: Text('MIME: vCard Contact'),
+                    child: Text(l10n.nfcTemplateMimeVcard),
                   ),
                 ],
                 onChanged: (val) {
@@ -187,26 +189,26 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
               DropdownButtonFormField<String>(
                 // ignore: deprecated_member_use
                 value: _recordType,
-                decoration: const InputDecoration(
-                  labelText: 'Record Type (NDEF Format)',
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
+                decoration: InputDecoration(
+                  labelText: l10n.nfcRecordType,
+                  border: const OutlineInputBorder(),
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
                   ),
                 ),
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: 'url',
-                    child: Text('Well-known URI (URL)'),
+                    child: Text(l10n.nfcRecordTypeUri),
                   ),
                   DropdownMenuItem(
                     value: 'text',
-                    child: Text('Well-known Text'),
+                    child: Text(l10n.nfcRecordTypeText),
                   ),
                   DropdownMenuItem(
                     value: 'mime',
-                    child: Text('MIME Media Payload'),
+                    child: Text(l10n.nfcRecordTypeMime),
                   ),
                 ],
                 onChanged: (val) {
@@ -223,16 +225,15 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
               if (_recordType == 'url') ...[
                 TextFormField(
                   controller: _urlController,
-                  decoration: const InputDecoration(
-                    labelText: 'URI Target Link',
+                  decoration: InputDecoration(
+                    labelText: l10n.nfcUriTargetLink,
                     hintText: 'https://example.com',
-                    border: OutlineInputBorder(),
-                    helperText:
-                        'Auto-detects common prefixes (https://, http://, mailto:, file://) to save tag space.',
+                    border: const OutlineInputBorder(),
+                    helperText: l10n.nfcUriHelperText,
                   ),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) {
-                      return 'URI target link is required';
+                      return l10n.nfcUriRequired;
                     }
                     return null;
                   },
@@ -241,14 +242,14 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
                 TextFormField(
                   controller: _payloadController,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Text Content',
-                    hintText: 'Enter note content...',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.nfcTextContent,
+                    hintText: l10n.nfcTextContentHint,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) {
-                      return 'Text content is required';
+                      return l10n.nfcTextContentRequired;
                     }
                     return null;
                   },
@@ -256,16 +257,15 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _langController,
-                  decoration: const InputDecoration(
-                    labelText: 'Language Code',
+                  decoration: InputDecoration(
+                    labelText: l10n.nfcLanguageCode,
                     hintText: 'en',
-                    border: OutlineInputBorder(),
-                    helperText:
-                        'Standard BCP 47 language identifier (e.g. en, fr, de, es).',
+                    border: const OutlineInputBorder(),
+                    helperText: l10n.nfcLanguageCodeHelper,
                   ),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) {
-                      return 'Language code is required';
+                      return l10n.nfcLanguageCodeRequired;
                     }
                     return null;
                   },
@@ -273,17 +273,16 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
               ] else if (_recordType == 'mime') ...[
                 TextFormField(
                   controller: _mimeController,
-                  decoration: const InputDecoration(
-                    labelText: 'MIME Type',
+                  decoration: InputDecoration(
+                    labelText: l10n.nfcMimeType,
                     hintText: 'application/json',
-                    border: OutlineInputBorder(),
-                    helperText:
-                        'Official media type (e.g. application/json, text/vcard, image/png).',
+                    border: const OutlineInputBorder(),
+                    helperText: l10n.nfcMimeTypeHelper,
                   ),
                   validator: (val) {
                     final str = val ?? '';
                     if (str.isEmpty || !str.contains('/')) {
-                      return 'A valid MIME type (e.g., type/subtype) is required';
+                      return l10n.nfcMimeTypeRequired;
                     }
                     return null;
                   },
@@ -292,14 +291,14 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
                 TextFormField(
                   controller: _payloadController,
                   maxLines: 4,
-                  decoration: const InputDecoration(
-                    labelText: 'MIME Payload Data',
-                    hintText: 'Enter JSON, vCard, or custom raw contents...',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.nfcMimePayloadData,
+                    hintText: l10n.nfcMimePayloadHint,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (val) {
                     if (val == null || val.trim().isEmpty) {
-                      return 'Payload data is required';
+                      return l10n.nfcPayloadRequired;
                     }
                     return null;
                   },
@@ -323,7 +322,7 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
                         }
                       },
                       icon: const Icon(Icons.code, size: 18),
-                      label: const Text('Get Hex'),
+                      label: Text(l10n.nfcGetHex),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -343,7 +342,7 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
                             }
                           : null,
                       icon: const Icon(Icons.edit_calendar, size: 18),
-                      label: const Text('Write Tag'),
+                      label: Text(l10n.nfcWriteTag),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: theme.colorScheme.onPrimary,
@@ -356,7 +355,7 @@ class _NfcEditorFormState extends State<NfcEditorForm> {
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    'Write Tag active only when scanning a writable tag.',
+                    l10n.nfcWriteTagHint,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withAlpha(100),
                       fontSize: 10,

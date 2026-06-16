@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class ToolShortcutRow extends StatelessWidget {
   final ToolModel tool;
@@ -17,6 +18,7 @@ class ToolShortcutRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Card(
@@ -70,12 +72,12 @@ class ToolShortcutRow extends StatelessWidget {
             const SizedBox(height: 8),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Home Screen Shortcut'),
-              subtitle: const Text('Add shortcut to your home launcher screen'),
+              title: Text(l10n.widgetShortcutHomeTitle),
+              subtitle: Text(l10n.widgetShortcutHomeSubtitle),
               trailing: OutlinedButton.icon(
                 onPressed: onPinPressed,
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add'),
+                label: Text(l10n.commonAdd),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: tool.accentColor,
                   side: BorderSide(
@@ -89,8 +91,8 @@ class ToolShortcutRow extends StatelessWidget {
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('App Drawer Icon'),
-              subtitle: const Text('Show separate launcher icon in App Drawer'),
+              title: Text(l10n.widgetShortcutDrawerTitle),
+              subtitle: Text(l10n.widgetShortcutDrawerSubtitle),
               value: hasDrawerIcon,
               onChanged: onDrawerIconChanged,
             ),

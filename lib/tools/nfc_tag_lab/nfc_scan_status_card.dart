@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/data_row.dart' as shared;
 import 'scan_profile.dart';
@@ -33,6 +34,7 @@ class NfcScanStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final categoryColor = _getCategoryColor(profile.categoryId);
     final isCompact = MediaQuery.sizeOf(context).width < 420;
@@ -43,7 +45,7 @@ class NfcScanStatusCard extends StatelessWidget {
           ? ElevatedButton.icon(
               onPressed: onStopScan,
               icon: const Icon(Icons.stop_rounded, size: 18),
-              label: const Text('Stop'),
+              label: Text(l10n.nfcStop),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.errorContainer,
                 foregroundColor: theme.colorScheme.onErrorContainer,
@@ -52,7 +54,7 @@ class NfcScanStatusCard extends StatelessWidget {
           : ElevatedButton.icon(
               onPressed: onStartScan,
               icon: const Icon(Icons.play_arrow_rounded, size: 18),
-              label: const Text('Scan'),
+              label: Text(l10n.nfcScan),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primaryContainer,
                 foregroundColor: theme.colorScheme.onPrimaryContainer,
@@ -66,7 +68,7 @@ class NfcScanStatusCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          'No Hardware',
+          l10n.nfcNoHardware,
           style: theme.textTheme.labelSmall?.copyWith(
             color: theme.colorScheme.error,
             fontWeight: FontWeight.bold,
@@ -86,7 +88,7 @@ class NfcScanStatusCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'NFC Scanner',
+                    l10n.nfcScannerTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -94,8 +96,8 @@ class NfcScanStatusCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     isScanning
-                        ? 'Approach an NFC tag to scan'
-                        : 'Scanner is inactive',
+                        ? l10n.nfcScanningPrompt
+                        : l10n.nfcScannerInactive,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withAlpha(140),
                     ),
@@ -112,7 +114,7 @@ class NfcScanStatusCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'NFC Scanner',
+                        l10n.nfcScannerTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -120,8 +122,8 @@ class NfcScanStatusCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         isScanning
-                            ? 'Approach an NFC tag to scan'
-                            : 'Scanner is inactive',
+                            ? l10n.nfcScanningPrompt
+                            : l10n.nfcScannerInactive,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withAlpha(140),
                         ),
@@ -217,38 +219,41 @@ class NfcScanStatusCard extends StatelessWidget {
                   children: [
                     if (profile.isEmv) ...[
                       shared.InfoRow(
-                        label: 'Card Brand',
+                        label: l10n.nfcCardBrand,
                         value: profile.cardBrand ?? '-',
                       ),
                       const Divider(height: 12),
                       shared.InfoRow(
-                        label: 'Card Number',
+                        label: l10n.nfcCardNumber,
                         value: profile.cardNumber ?? '-',
                       ),
                       const Divider(height: 12),
                       shared.InfoRow(
-                        label: 'Cardholder Name',
+                        label: l10n.nfcCardholderName,
                         value: profile.cardHolder ?? '-',
                       ),
                       const Divider(height: 12),
                       shared.InfoRow(
-                        label: 'Expiration Date',
+                        label: l10n.nfcExpirationDate,
                         value: profile.cardExpiry ?? '-',
                       ),
                       const Divider(height: 12),
                       shared.InfoRow(
-                        label: 'Application AID',
+                        label: l10n.nfcApplicationAid,
                         value: profile.cardAid ?? '-',
                       ),
                       const Divider(height: 12),
                     ],
-                    shared.InfoRow(label: 'UID / Serial', value: tagUid),
+                    shared.InfoRow(label: l10n.nfcUidSerial, value: tagUid),
                     const Divider(height: 12),
-                    shared.InfoRow(label: 'Technologies', value: tagTechs),
+                    shared.InfoRow(
+                      label: l10n.nfcTechnologies,
+                      value: tagTechs,
+                    ),
                     const Divider(height: 12),
-                    shared.InfoRow(label: 'Capacity', value: tagCapacity),
+                    shared.InfoRow(label: l10n.nfcCapacity, value: tagCapacity),
                     const Divider(height: 12),
-                    shared.InfoRow(label: 'Writable', value: tagWritable),
+                    shared.InfoRow(label: l10n.nfcWritable, value: tagWritable),
                   ],
                 ),
               ),
@@ -290,7 +295,8 @@ class _PremiumCreditCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardBrand = profile.cardBrand ?? 'Payment Card';
+    final l10n = AppLocalizations.of(context);
+    final cardBrand = profile.cardBrand ?? l10n.nfcPaymentCard;
     final cardHolder =
         (profile.cardHolder != null && profile.cardHolder!.isNotEmpty)
         ? profile.cardHolder!
@@ -431,7 +437,7 @@ class _PremiumCreditCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'CARDHOLDER',
+                          l10n.nfcCardholderLabel,
                           style: TextStyle(
                             color: Colors.white60,
                             fontSize: isCompact ? 7 : 8,
@@ -457,7 +463,7 @@ class _PremiumCreditCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        'EXPIRES',
+                        l10n.nfcExpiresLabel,
                         style: TextStyle(
                           color: Colors.white60,
                           fontSize: isCompact ? 7 : 8,

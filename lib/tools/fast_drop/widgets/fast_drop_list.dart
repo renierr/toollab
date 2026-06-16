@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import '../fast_drop_state.dart';
 import '../fast_drop_model.dart';
@@ -28,6 +29,7 @@ class FastDropList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     if (appState.isLoadingFastDrops && appState.fastDrops.isEmpty) {
@@ -53,7 +55,7 @@ class FastDropList extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Connection Status',
+                l10n.fastDropConnectionStatus,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -71,7 +73,7 @@ class FastDropList extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: () => appState.loadFastDrops(),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Retry connection'),
+                  label: Text(l10n.fastDropRetryConnection),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.accentTeal,
                     foregroundColor: Colors.white,
@@ -97,14 +99,14 @@ class FastDropList extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'No Drops Yet',
+                l10n.fastDropNoDropsTitle,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Drag and drop files or paste content from clipboard to save temporarily.',
+                l10n.fastDropNoDropsSubtitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.5),

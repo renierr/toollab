@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 import 'package:tool_lab/widgets/status_badge.dart';
 
@@ -12,6 +13,7 @@ class ChiptuneModuleInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final instrumentCount = module.instruments
         .where((i) => i.samples.isNotEmpty)
@@ -19,7 +21,7 @@ class ChiptuneModuleInfo extends StatelessWidget {
 
     return InfoCard(
       icon: Icons.music_note_outlined,
-      title: module.title.isEmpty ? 'Untitled' : module.title,
+      title: module.title.isEmpty ? l10n.chipUntitled : module.title,
       titleColor: ChiptuneColors.accent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,17 +32,32 @@ class ChiptuneModuleInfo extends StatelessWidget {
             spacing: 16,
             runSpacing: 8,
             children: [
-              _Metric(label: 'Channels', value: '${module.channels}'),
-              _Metric(label: 'Patterns', value: '${module.patterns.length}'),
-              _Metric(label: 'Orders', value: '${module.sequence.length}'),
-              _Metric(label: 'Instruments', value: '$instrumentCount'),
-              _Metric(label: 'BPM', value: '${module.defaultBpm}'),
-              _Metric(label: 'Speed', value: '${module.defaultSpeed}'),
+              _Metric(
+                label: l10n.chipMetricChannels,
+                value: '${module.channels}',
+              ),
+              _Metric(
+                label: l10n.chipMetricPatterns,
+                value: '${module.patterns.length}',
+              ),
+              _Metric(
+                label: l10n.chipMetricOrders,
+                value: '${module.sequence.length}',
+              ),
+              _Metric(
+                label: l10n.chipMetricInstruments,
+                value: '$instrumentCount',
+              ),
+              _Metric(label: l10n.chipMetricBpm, value: '${module.defaultBpm}'),
+              _Metric(
+                label: l10n.chipMetricSpeed,
+                value: '${module.defaultSpeed}',
+              ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
-            'Tip: most module collections live at modarchive.org',
+            l10n.chipModArchiveTip,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),

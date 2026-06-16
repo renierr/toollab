@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/constants.dart';
 import 'package:tool_lab/core/tool_model.dart';
-import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/core/tool_registry.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/section_header.dart';
 import 'package:tool_lab/pages/overview/settings_dialog.dart';
@@ -42,6 +43,7 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isShort = MediaQuery.of(context).size.height < 600;
     final appBarHeight = isShort ? 40.0 : 56.0;
@@ -114,7 +116,7 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
             IconButton(
               icon: Icon(Icons.tune_outlined, size: isShort ? 20 : null),
               onPressed: () => OverviewSettingsDialog.show(context),
-              tooltip: 'Settings',
+              tooltip: l10n.commonSettings,
             ),
           ],
         ),
@@ -133,7 +135,7 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
                       controller: _searchController,
                       onChanged: (value) => appState.setSearchQuery(value),
                       decoration: InputDecoration(
-                        hintText: 'Search tools...',
+                        hintText: l10n.coreOverviewSearchHint,
                         prefixIcon: const Icon(Icons.search, size: 20),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
@@ -169,7 +171,7 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'No tools found',
+                            l10n.coreOverviewNoToolsFound,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: theme.colorScheme.onSurface.withAlpha(150),
                             ),

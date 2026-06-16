@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/markdown_viewer_page.dart';
 import 'package:tool_lab/tools/markdown_viewer/config.dart';
@@ -58,9 +59,10 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load file: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.miscMarkdownFailedToLoad(e.toString()))),
+        );
       }
     }
   }
@@ -76,9 +78,10 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to read file: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.miscMarkdownFailedToRead(e.toString()))),
+        );
       }
     }
   }
@@ -107,6 +110,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
     final accent = isLight
         ? AppTheme.accentAmberLight
         : MarkdownViewerTool.config.accentColor;
+    final l10n = AppLocalizations.of(context);
 
     if (_fileContent == null) {
       return Scaffold(
@@ -117,8 +121,8 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
           allowedMimeTypes: const ['text/markdown', 'text/plain'],
           typeLabel: 'Markdown',
           accentColor: accent,
-          title: 'Open a Markdown File',
-          subtitle: 'Drag & drop a .md or .txt file here',
+          title: l10n.miscMarkdownOpenTitle,
+          subtitle: l10n.miscMarkdownDropSubtitle,
         ),
       );
     }

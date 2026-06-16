@@ -7,6 +7,7 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/markdown_loading_skeleton.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
@@ -147,6 +148,7 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final content = widget.content;
     final title = _getTitle(content);
@@ -170,25 +172,25 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
             if (config.showShare)
               IconButton(
                 icon: const Icon(Icons.share_outlined),
-                tooltip: 'Share',
+                tooltip: l10n.commonShare,
                 onPressed: _shareContent,
               ),
             if (config.showExport)
               IconButton(
                 icon: const Icon(Icons.file_download_outlined),
-                tooltip: 'Export Markdown',
+                tooltip: l10n.widgetMarkdownExportMarkdown,
                 onPressed: () => _exportMarkdown(context),
               ),
             if (config.showExportPdf)
               IconButton(
                 icon: const Icon(Icons.picture_as_pdf_outlined),
-                tooltip: 'Export PDF',
+                tooltip: l10n.widgetMarkdownExportPdf,
                 onPressed: () => _exportPdf(context),
               ),
             if (config.showEdit && config.onEdit != null)
               IconButton(
                 icon: const Icon(Icons.edit_outlined),
-                tooltip: 'Edit',
+                tooltip: l10n.commonEdit,
                 onPressed: config.onEdit,
               ),
             if (config.showDelete && config.onDelete != null)
@@ -197,7 +199,7 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                   Icons.delete_outline,
                   color: theme.colorScheme.error,
                 ),
-                tooltip: 'Delete',
+                tooltip: l10n.commonDelete,
                 onPressed: config.onDelete,
               ),
           ],
@@ -221,7 +223,7 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                   if (updatedAt > 0) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Updated: ${_formatDate(updatedAt)}',
+                      l10n.widgetMarkdownUpdated(_formatDate(updatedAt)),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.4,
@@ -232,7 +234,7 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                   const Divider(height: 32),
                   if (body.isEmpty)
                     Text(
-                      'No additional content',
+                      l10n.widgetMarkdownNoContent,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontStyle: FontStyle.italic,
                         color: theme.colorScheme.onSurface.withValues(

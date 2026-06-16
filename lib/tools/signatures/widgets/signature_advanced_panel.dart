@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../signature_models.dart';
 import '../signatures_state.dart';
@@ -10,6 +11,7 @@ class SignatureAdvancedPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = context.watch<SignaturesState>();
     final s = state.settings;
@@ -24,25 +26,25 @@ class SignatureAdvancedPanel extends StatelessWidget {
               children: [
                 Icon(Icons.tune, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
-                Text('Advanced', style: theme.textTheme.titleLarge),
+                Text(l10n.sigAdvanced, style: theme.textTheme.titleLarge),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: read.resetSettings,
                   icon: const Icon(Icons.restart_alt, size: 18),
-                  label: const Text('Reset'),
+                  label: Text(l10n.commonReset),
                 ),
               ],
             ),
             const Divider(),
             _Dropdown<RdpMode>(
-              label: 'Reduce lines (RDP)',
+              label: l10n.sigReduceLines,
               value: s.rdpMode,
               values: RdpMode.values,
               nameOf: (m) => m.name,
               onChanged: (m) => read.updateSettings(s.copyWith(rdpMode: m)),
             ),
             _SliderRow(
-              label: 'Move tolerance',
+              label: l10n.sigMoveTolerance,
               value: s.moveTolerance,
               min: 0,
               max: 20,
@@ -50,7 +52,7 @@ class SignatureAdvancedPanel extends StatelessWidget {
                   read.updateSettings(s.copyWith(moveTolerance: v)),
             ),
             _SliderRow(
-              label: 'Min width factor',
+              label: l10n.sigMinWidthFactor,
               value: s.minWidthFactor,
               min: 0.05,
               max: 1.0,
@@ -58,7 +60,7 @@ class SignatureAdvancedPanel extends StatelessWidget {
                   read.updateSettings(s.copyWith(minWidthFactor: v)),
             ),
             _SliderRow(
-              label: 'Max width factor',
+              label: l10n.sigMaxWidthFactor,
               value: s.maxWidthFactor,
               min: 1.0,
               max: 3.0,
@@ -66,7 +68,7 @@ class SignatureAdvancedPanel extends StatelessWidget {
                   read.updateSettings(s.copyWith(maxWidthFactor: v)),
             ),
             _SliderRow(
-              label: 'Velocity sensitivity',
+              label: l10n.sigVelocitySensitivity,
               value: s.velocitySensitivity,
               min: 0,
               max: 2.0,
@@ -74,7 +76,7 @@ class SignatureAdvancedPanel extends StatelessWidget {
                   read.updateSettings(s.copyWith(velocitySensitivity: v)),
             ),
             _SliderRow(
-              label: 'Velocity influence',
+              label: l10n.sigVelocityInfluence,
               value: s.velocityInfluence,
               min: 0,
               max: 1.0,
@@ -82,7 +84,7 @@ class SignatureAdvancedPanel extends StatelessWidget {
                   read.updateSettings(s.copyWith(velocityInfluence: v)),
             ),
             _SliderRow(
-              label: 'Pressure influence',
+              label: l10n.sigPressureInfluence,
               value: s.pressureInfluence,
               min: 0,
               max: 1.0,
@@ -90,7 +92,7 @@ class SignatureAdvancedPanel extends StatelessWidget {
                   read.updateSettings(s.copyWith(pressureInfluence: v)),
             ),
             _SliderRow(
-              label: 'Width smoothing',
+              label: l10n.sigWidthSmoothing,
               value: s.widthSmoothing,
               min: 0,
               max: 1.0,
@@ -98,7 +100,7 @@ class SignatureAdvancedPanel extends StatelessWidget {
                   read.updateSettings(s.copyWith(widthSmoothing: v)),
             ),
             _SliderRow(
-              label: 'Export DPI',
+              label: l10n.sigExportDpi,
               value: s.dpi.toDouble(),
               min: 72,
               max: 600,

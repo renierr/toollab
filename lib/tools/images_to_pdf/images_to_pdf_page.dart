@@ -10,6 +10,7 @@ import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/tools/images_to_pdf/config.dart';
@@ -93,15 +94,19 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
       if (bytes != null) {
         await _addImageBytes(bytes, 'clipboard_$_seq.png');
       } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No image found in clipboard')),
-        );
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.img2pdfNoImageInClipboard)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to read clipboard: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.img2pdfFailedReadClipboard(e.toString())),
+          ),
+        );
       }
     }
   }
@@ -192,6 +197,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ToolLayout(
       title: ImagesToPdfTool.config.name,
       scaffoldKey: _scaffoldKey,
@@ -199,7 +205,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
           ? null
           : [
               IconButton(
-                tooltip: 'PDF Settings',
+                tooltip: l10n.img2pdfSettingsTooltip,
                 icon: const Icon(Icons.tune),
                 onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
               ),
@@ -223,12 +229,12 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                       onFilesSelected: _onDropFiles,
                       onFileSelected: _onFileSelected,
                       allowedExtensions: ImagesToPdfTool.config.fileExtensions,
-                      typeLabel: 'Images',
+                      typeLabel: l10n.img2pdfImagesLabel,
                       accentColor: ImagesToPdfTool.config.accentColor,
                       icon: Icons.collections_bookmark_outlined,
-                      title: 'Drop images here',
-                      subtitle: 'Supports PNG, JPEG, WebP, BMP, GIF',
-                      buttonLabel: 'Browse Files',
+                      title: l10n.img2pdfDropTitle,
+                      subtitle: l10n.img2pdfDropSubtitle,
+                      buttonLabel: l10n.img2pdfBrowseFiles,
                       buttonIcon: Icons.folder_open,
                       multiple: true,
                       extraButtons: [
@@ -236,14 +242,14 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                         _DropZoneActionButton(
                           onPressed: _pasteFromClipboard,
                           icon: Icons.paste_outlined,
-                          label: 'Paste from Clipboard',
+                          label: l10n.img2pdfPasteFromClipboard,
                         ),
                         if (Platform.isAndroid) ...[
                           const SizedBox(height: 12),
                           _DropZoneActionButton(
                             onPressed: _pickFromGallery,
                             icon: Icons.photo_library_outlined,
-                            label: 'Pick from Gallery',
+                            label: l10n.img2pdfPickFromGallery,
                           ),
                         ],
                       ],

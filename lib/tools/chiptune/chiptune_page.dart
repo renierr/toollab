@@ -7,11 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
-import 'package:tool_lab/providers/app_state.dart';
-import 'package:tool_lab/services/sharing_service.dart';
-import 'package:tool_lab/services/database_service.dart';
-import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
@@ -121,7 +122,11 @@ class _ChiptunePageState extends State<ChiptunePage>
         _currentArchiveId = null;
       });
     } catch (e) {
-      if (mounted) _showSnack('Failed to parse module: $e');
+      if (mounted) {
+        _showSnack(
+          AppLocalizations.of(context).chipFailedToParseModule(e.toString()),
+        );
+      }
     }
   }
 
@@ -148,7 +153,11 @@ class _ChiptunePageState extends State<ChiptunePage>
       await _loadBytes(bytes, file.name);
       await _player.play();
     } catch (e) {
-      if (mounted) _showSnack('Failed to open shared file: $e');
+      if (mounted) {
+        _showSnack(
+          AppLocalizations.of(context).chipFailedToOpenSharedFile(e.toString()),
+        );
+      }
     }
   }
 
@@ -232,7 +241,11 @@ class _ChiptunePageState extends State<ChiptunePage>
       channels: mod.channels,
     );
     if (!mounted) return;
-    _showSnack(ok ? 'Module archived' : 'Already in archive');
+    _showSnack(
+      ok
+          ? AppLocalizations.of(context).chipModuleArchived
+          : AppLocalizations.of(context).chipAlreadyInArchive,
+    );
     if (ok) {
       await _loadArchive();
       await _maybeAutoSync();
@@ -242,7 +255,9 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _playArchived(String id) async {
     final bytes = await ChiptuneArchive.instance.getBytes(id);
     if (bytes == null) {
-      if (mounted) _showSnack('Archived module not found');
+      if (mounted) {
+        _showSnack(AppLocalizations.of(context).chipArchivedModuleNotFound);
+      }
       return;
     }
     final entry = _archive.firstWhere((m) => m.id == id);
@@ -257,7 +272,9 @@ class _ChiptunePageState extends State<ChiptunePage>
     final entry = _archive[idx];
     final bytes = await ChiptuneArchive.instance.getBytes(id);
     if (bytes == null || bytes.isEmpty) {
-      if (mounted) _showSnack('Module data not available');
+      if (mounted) {
+        _showSnack(AppLocalizations.of(context).chipModuleDataNotAvailable);
+      }
       return;
     }
     final ext = entry.fileName.contains('.')
@@ -273,11 +290,12 @@ class _ChiptunePageState extends State<ChiptunePage>
   }
 
   Future<void> _deleteArchived(String id) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmActionDialog.show(
       context: context,
-      title: 'Delete Module',
-      message: 'Remove this module from the archive?',
-      confirmLabel: 'Delete',
+      title: l10n.chipDeleteModuleTitle,
+      message: l10n.chipDeleteModuleMessage,
+      confirmLabel: l10n.commonDelete,
     );
     if (confirmed != true) return;
     await ChiptuneArchive.instance.deleteModule(id);
@@ -314,11 +332,15 @@ class _ChiptunePageState extends State<ChiptunePage>
       await _loadArchive();
       if (mounted && showFeedback) {
         _showSnack(
-          'Synced: ${result?['pulled'] ?? 0} pulled, ${result?['pushed'] ?? 0} pushed',
+          AppLocalizations.of(
+            context,
+          ).chipSyncedResult(result?['pulled'] ?? 0, result?['pushed'] ?? 0),
         );
       }
     } catch (e) {
-      if (mounted) _showSnack('Sync failed: $e');
+      if (mounted) {
+        _showSnack(AppLocalizations.of(context).chipSyncFailed(e.toString()));
+      }
     } finally {
       if (mounted) setState(() => _syncing = false);
     }
@@ -332,6 +354,7 @@ class _ChiptunePageState extends State<ChiptunePage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final module = _player.module;
     final hasModule = module != null;
 
@@ -340,14 +363,16 @@ class _ChiptunePageState extends State<ChiptunePage>
       actions: [
         if (hasModule) ...[
           IconButton(
-            tooltip: _visualizerEnabled ? 'Hide visualizer' : 'Show visualizer',
+            tooltip: _visualizerEnabled
+                ? l10n.chipHideVisualizer
+                : l10n.chipShowVisualizer,
             icon: Icon(
               _visualizerEnabled ? Icons.equalizer : Icons.equalizer_outlined,
             ),
             onPressed: () => _setVisualizerEnabled(!_visualizerEnabled),
           ),
           IconButton(
-            tooltip: 'Load another',
+            tooltip: l10n.chipLoadAnother,
             icon: const Icon(Icons.folder_open),
             onPressed: _pickAndLoad,
           ),

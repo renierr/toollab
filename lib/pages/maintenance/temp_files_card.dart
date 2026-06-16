@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 class TempFilesCard extends StatelessWidget {
   const TempFilesCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Card(
@@ -26,7 +28,7 @@ class TempFilesCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Temp Files',
+                  l10n.coreTempFilesTitle,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -46,7 +48,7 @@ class TempFilesCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '$count file(s) using $size',
+                      l10n.coreTempFilesUsage(count, size),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -66,20 +68,23 @@ class TempFilesCard extends StatelessWidget {
                         onPressed: () async {
                           await TempFileManager.cleanAll();
                           if (context.mounted) {
+                            final innerL10n = AppLocalizations.of(context);
                             ScaffoldMessenger.of(context)
                               ..hideCurrentSnackBar()
                               ..showSnackBar(
-                                const SnackBar(
-                                  content: Text('Temp files cleaned up'),
+                                SnackBar(
+                                  content: Text(
+                                    innerL10n.coreTempFilesCleanedUp,
+                                  ),
                                 ),
                               );
                             (context as Element).markNeedsBuild();
                           }
                         },
                         icon: const Icon(Icons.delete_outline),
-                        label: const Text(
-                          'Clean Up Temp Files',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        label: Text(
+                          l10n.coreTempFilesCleanUp,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),

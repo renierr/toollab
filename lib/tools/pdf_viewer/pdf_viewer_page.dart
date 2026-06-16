@@ -4,6 +4,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_page_layouts.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -154,10 +155,11 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       return _passwordDialogFuture;
     }
 
+    final l10n = AppLocalizations.of(context);
     final passwordFuture = DocumentPasswordDialog.show(
       context,
-      title: 'Password Protected PDF',
-      message: 'Enter password for ${_fileName ?? 'document.pdf'}.',
+      title: l10n.pdfNavPasswordTitle,
+      message: l10n.pdfNavPasswordMessage(_fileName ?? 'document.pdf'),
     );
     _passwordDialogFuture = passwordFuture;
 
@@ -182,13 +184,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         'No password supplied by PasswordProvider',
       );
       if (canceledByUser) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'PDF open canceled. Select another file or try again.',
-            ),
-          ),
-        );
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.pdfNavOpenCanceled)));
         setState(() {
           _mode = PdfViewerMode.view;
           _filePath = null;
@@ -361,6 +360,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     if (_filePath == null) {
       return ToolLayout(
@@ -369,11 +369,11 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
           onFileSelected: _onFileSelected,
           allowedExtensions: PdfViewerTool.config.fileExtensions,
           allowedMimeTypes: const ['application/pdf'],
-          typeLabel: 'PDFs',
+          typeLabel: l10n.pdfNavTypeLabel,
           accentColor: PdfViewerTool.config.accentColor,
           icon: Icons.picture_as_pdf_outlined,
-          title: 'Open a PDF File',
-          subtitle: 'Drag & drop a .pdf file here',
+          title: l10n.pdfNavDropZoneTitle,
+          subtitle: l10n.pdfNavDropZoneSubtitle,
         ),
       );
     }
@@ -525,7 +525,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
           ),
           Positioned.fill(
             child: PdfOverlayControls(
-              fileName: _fileName ?? 'Document',
+              fileName: _fileName ?? l10n.pdfNavDocumentFallback,
               controller: _pdfController,
               currentPageNotifier: _currentPageNotifier,
               totalPagesNotifier: _totalPagesNotifier,

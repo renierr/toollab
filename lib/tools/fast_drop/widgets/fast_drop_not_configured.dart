@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class FastDropNotConfigured extends StatelessWidget {
@@ -7,6 +8,7 @@ class FastDropNotConfigured extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Center(
@@ -22,14 +24,14 @@ class FastDropNotConfigured extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Sync Server Not Configured',
+              l10n.fastDropNotConfiguredTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Fast Drop requires a connection to the backend server. Please configure your Sync Server URL in settings to start dropping files.',
+              l10n.fastDropNotConfiguredBody,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -40,7 +42,7 @@ class FastDropNotConfigured extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => context.push('/sync-settings'),
               icon: const Icon(Icons.settings_outlined),
-              label: const Text('Configure Server'),
+              label: Text(l10n.fastDropConfigureServer),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.accentTeal,
                 foregroundColor: Colors.white,

@@ -3,6 +3,7 @@ import 'package:file_selector/file_selector.dart' show XTypeGroup, openFile;
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
@@ -77,17 +78,18 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
   }
 
   void _removePage(int index) {
+    final l10n = AppLocalizations.of(context);
     if (_pages.length <= 1) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot delete the last page')),
+        SnackBar(content: Text(l10n.pdfNavOrganizeCannotDeleteLastPage)),
       );
       return;
     }
     ConfirmActionDialog.show(
       context: context,
-      title: 'Remove Page',
-      message: 'Remove page ${index + 1}?',
-      confirmLabel: 'Remove',
+      title: l10n.pdfNavOrganizeRemovePageTitle,
+      message: l10n.pdfNavOrganizeRemovePageMessage(index + 1),
+      confirmLabel: l10n.commonRemove,
     ).then((confirmed) {
       if (confirmed == true && mounted) {
         setState(() => _pages.removeAt(index));
@@ -136,85 +138,86 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => ResponsiveAlertDialog(
-          title: Text('Insert Pages from "$srcName"'),
-          content: SizedBox(
-            width: 360,
-            height: 400,
-            child: srcPages.isEmpty
-                ? const Center(child: Text('No pages found'))
-                : ListView.builder(
-                    itemCount: srcPages.length,
-                    itemBuilder: (_, i) {
-                      final p = srcPages[i];
-                      final isPortrait = p.height >= p.width;
-                      return CheckboxListTile(
-                        value: selected.contains(i),
-                        controlAffinity: ListTileControlAffinity.trailing,
-                        onChanged: (v) {
-                          setDialogState(() {
-                            if (v == true) {
-                              selected.add(i);
-                            } else {
-                              selected.remove(i);
-                            }
-                          });
-                        },
-                        secondary: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: SizedBox(
-                            width: 44,
-                            height: 58,
-                            child: PdfPageView(
-                              document: p.document,
-                              pageNumber: p.pageNumber,
-                              alignment: Alignment.center,
+        builder: (ctx, setDialogState) {
+          final l10n = AppLocalizations.of(ctx);
+          return ResponsiveAlertDialog(
+            title: Text(l10n.pdfNavOrganizeInsertDialogTitle(srcName)),
+            content: SizedBox(
+              width: 360,
+              height: 400,
+              child: srcPages.isEmpty
+                  ? Center(child: Text(l10n.pdfNavOrganizeNoPagesFound))
+                  : ListView.builder(
+                      itemCount: srcPages.length,
+                      itemBuilder: (_, i) {
+                        final p = srcPages[i];
+                        final isPortrait = p.height >= p.width;
+                        return CheckboxListTile(
+                          value: selected.contains(i),
+                          controlAffinity: ListTileControlAffinity.trailing,
+                          onChanged: (v) {
+                            setDialogState(() {
+                              if (v == true) {
+                                selected.add(i);
+                              } else {
+                                selected.remove(i);
+                              }
+                            });
+                          },
+                          secondary: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: SizedBox(
+                              width: 44,
+                              height: 58,
+                              child: PdfPageView(
+                                document: p.document,
+                                pageNumber: p.pageNumber,
+                                alignment: Alignment.center,
+                              ),
                             ),
                           ),
-                        ),
-                        title: Text('Page ${i + 1}'),
-                        subtitle: Text(
-                          '${p.width.round()} x ${p.height.round()} pt · '
-                          '${isPortrait ? 'Portrait' : 'Landscape'}',
-                        ),
-                      );
-                    },
-                  ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setDialogState(() {
-                  if (selected.length == srcPages.length) {
-                    selected.clear();
-                  } else {
-                    selected.addAll(List.generate(srcPages.length, (i) => i));
-                  }
-                });
-              },
-              child: Text(
-                selected.length == srcPages.length
-                    ? 'Deselect All'
-                    : 'Select All',
+                          title: Text(l10n.pdfNavOrganizePageNumber(i + 1)),
+                          subtitle: Text(
+                            '${p.width.round()} x ${p.height.round()} pt · '
+                            '${isPortrait ? l10n.pdfNavOrientationPortrait : l10n.pdfNavOrientationLandscape}',
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  setDialogState(() {
+                    if (selected.length == srcPages.length) {
+                      selected.clear();
+                    } else {
+                      selected.addAll(List.generate(srcPages.length, (i) => i));
+                    }
+                  });
+                },
+                child: Text(
+                  selected.length == srcPages.length
+                      ? l10n.pdfNavDeselectAll
+                      : l10n.pdfNavSelectAll,
+                ),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                setState(() => _isProcessing = false);
-              },
-              child: const Text('Close'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(ctx).pop(selected.toList());
-              },
-              child: Text(
-                'Insert ${selected.length} page${selected.length == 1 ? '' : 's'}',
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  setState(() => _isProcessing = false);
+                },
+                child: Text(l10n.commonClose),
               ),
-            ),
-          ],
-        ),
+              FilledButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop(selected.toList());
+                },
+                child: Text(l10n.pdfNavOrganizeInsertCount(selected.length)),
+              ),
+            ],
+          );
+        },
       ),
     ).then((result) {
       // Keep the source document alive: page import happens lazily at
@@ -296,6 +299,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -307,7 +311,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Organize: ${widget.session.fileName}'),
+        title: Text(l10n.pdfNavOrganizeTitle(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _isProcessing ? null : widget.onCancel,
@@ -315,12 +319,12 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Insert pages from another PDF',
+            tooltip: l10n.pdfNavOrganizeInsertTooltip,
             onPressed: _isProcessing ? null : _insertPages,
           ),
           IconButton(
             icon: const Icon(Icons.check),
-            tooltip: 'Apply changes',
+            tooltip: l10n.pdfNavOrganizeApplyTooltip,
             onPressed: _isProcessing ? null : _apply,
           ),
         ],
@@ -344,8 +348,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${_pages.length} page${_pages.length == 1 ? '' : 's'} - '
-                        'drag to reorder, tap to preview',
+                        l10n.pdfNavOrganizePageCountHint(_pages.length),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -355,7 +358,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
                 ),
                 Expanded(
                   child: _pages.isEmpty
-                      ? const Center(child: Text('No pages'))
+                      ? Center(child: Text(l10n.pdfNavOrganizeNoPages))
                       : ReorderableListView.builder(
                           padding: const EdgeInsets.all(8),
                           buildDefaultDragHandles: false,
@@ -398,69 +401,77 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
         ? '${(size / 1024).toStringAsFixed(1)} KB'
         : '$size B';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Organize: ${widget.session.fileName}'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: widget.onCancel,
-        ),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.check_circle,
-                size: 64,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(height: 16),
-              Text('Organizing Complete', style: theme.textTheme.headlineSmall),
-              const SizedBox(height: 8),
-              Text(
-                'New PDF size: $sizeText',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Row(
+    return Builder(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(l10n.pdfNavOrganizeTitle(widget.session.fileName)),
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: widget.onCancel,
+            ),
+          ),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  FilledButton.icon(
-                    onPressed: _download,
-                    icon: const Icon(Icons.download),
-                    label: const Text('Download'),
+                  Icon(
+                    Icons.check_circle,
+                    size: 64,
+                    color: theme.colorScheme.primary,
                   ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: _share,
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share'),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.pdfNavOrganizeComplete,
+                    style: theme.textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.pdfNavOrganizeNewSize(sizeText),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: _download,
+                        icon: const Icon(Icons.download),
+                        label: Text(l10n.pdfNavDownload),
+                      ),
+                      const SizedBox(width: 12),
+                      OutlinedButton.icon(
+                        onPressed: _share,
+                        icon: const Icon(Icons.share),
+                        label: Text(l10n.commonShare),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton.icon(
+                    onPressed: () => widget.onComplete(
+                      _resultPath!,
+                      '${_baseName}_organized.pdf',
+                    ),
+                    icon: const Icon(Icons.open_in_new),
+                    label: Text(l10n.pdfNavOpenInViewer),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: widget.onCancel,
+                    child: Text(l10n.commonClose),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextButton.icon(
-                onPressed: () => widget.onComplete(
-                  _resultPath!,
-                  '${_baseName}_organized.pdf',
-                ),
-                icon: const Icon(Icons.open_in_new),
-                label: const Text('Open in Viewer'),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: widget.onCancel,
-                child: const Text('Close'),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -490,6 +501,7 @@ class _PageTile extends StatelessWidget {
 
   void _showPreview(BuildContext context) {
     final media = MediaQuery.of(context).size;
+    final l10n = AppLocalizations.of(context);
     final aspect = page.width / page.height;
     double w = media.width * 0.8;
     double h = w / aspect;
@@ -506,7 +518,7 @@ class _PageTile extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Page ${index + 1}',
+                l10n.pdfNavOrganizePageNumber(index + 1),
                 style: Theme.of(context).textTheme.titleMedium,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -540,6 +552,7 @@ class _PageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: InkWell(
@@ -577,7 +590,7 @@ class _PageTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Page ${index + 1}',
+                      l10n.pdfNavOrganizePageNumber(index + 1),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge,
@@ -596,7 +609,7 @@ class _PageTile extends StatelessWidget {
                   Icons.remove_circle_outlined,
                   color: theme.colorScheme.error,
                 ),
-                tooltip: 'Remove',
+                tooltip: l10n.commonRemove,
                 onPressed: onRemove,
               ),
             ],

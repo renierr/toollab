@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_chip.dart';
 
 class CalculatorToolbar extends StatelessWidget {
@@ -21,6 +22,7 @@ class CalculatorToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: isShort ? 0 : 4),
       child: LayoutBuilder(
@@ -30,7 +32,7 @@ class CalculatorToolbar extends StatelessWidget {
             children: [
               ToolChip(
                 icon: Icons.science_outlined,
-                label: 'SCI',
+                label: l10n.miscCalculatorSciLabel,
                 selected: showScientific,
                 onTap: onToggleSci,
                 showLabel: !isShort && !cramped,
@@ -38,7 +40,7 @@ class CalculatorToolbar extends StatelessWidget {
               const SizedBox(width: 4),
               ToolChip(
                 icon: Icons.history,
-                label: 'HIST',
+                label: l10n.miscCalculatorHistLabel,
                 onTap: onShowHistory,
                 showLabel: !isShort && !cramped,
               ),
@@ -46,13 +48,13 @@ class CalculatorToolbar extends StatelessWidget {
               IconButton(
                 icon: Icon(Icons.copy, size: isShort ? 18 : 20),
                 onPressed: onCopy,
-                tooltip: 'Copy result',
+                tooltip: l10n.miscCalculatorCopyResultTooltip,
                 visualDensity: VisualDensity.compact,
               ),
               IconButton(
                 icon: Icon(Icons.backspace_outlined, size: isShort ? 18 : 20),
                 onPressed: onBackspace,
-                tooltip: 'Backspace',
+                tooltip: l10n.miscCalculatorBackspaceTooltip,
                 visualDensity: VisualDensity.compact,
               ),
             ],

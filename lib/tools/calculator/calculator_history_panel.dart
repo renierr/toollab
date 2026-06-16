@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'history.dart';
 
 class CalculatorHistoryPanel extends StatelessWidget {
@@ -14,6 +15,7 @@ class CalculatorHistoryPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final items = history.items;
 
     return DraggableScrollableSheet(
@@ -32,7 +34,7 @@ class CalculatorHistoryPanel extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    'History',
+                    l10n.miscCalculatorHistoryTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -44,7 +46,7 @@ class CalculatorHistoryPanel extends StatelessWidget {
                         history.clear();
                         (context as Element).markNeedsBuild();
                       },
-                      child: const Text('Clear'),
+                      child: Text(l10n.commonClear),
                     ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -66,7 +68,7 @@ class CalculatorHistoryPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'No calculations yet',
+                        l10n.miscCalculatorNoHistory,
                         style: TextStyle(
                           color: theme.colorScheme.onSurface.withAlpha(100),
                         ),

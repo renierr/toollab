@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
+import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
-import 'package:tool_lab/core/shared_file.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/floating_back_button.dart';
@@ -139,13 +140,13 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   /// no unsaved edits, or the user chose to discard them.
   Future<bool> _confirmDiscardEdits() async {
     if (!_controller.hasEdits) return true;
+    final l10n = AppLocalizations.of(context);
     final discard = await ConfirmActionDialog.show(
       context: context,
-      title: 'Discard changes?',
-      message:
-          'You have unsaved edits to this image. Leaving will discard them.',
-      confirmLabel: 'Discard',
-      cancelLabel: 'Keep editing',
+      title: l10n.imgViewDiscardChangesTitle,
+      message: l10n.imgViewDiscardChangesMessage,
+      confirmLabel: l10n.imgViewDiscard,
+      cancelLabel: l10n.imgViewKeepEditing,
     );
     return discard ?? false;
   }
@@ -222,6 +223,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isWideScreen = MediaQuery.of(context).size.width > 720;
 
     return ListenableBuilder(
@@ -383,19 +385,19 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
             child: FileDropZone(
               onFileSelected: _onFileSelected,
               allowedExtensions: ImageViewerTool.config.fileExtensions,
-              typeLabel: 'Images',
+              typeLabel: l10n.imgViewTypeLabel,
               accentColor: ImageViewerTool.config.accentColor,
-              title: 'Drop an image here',
-              subtitle: 'Supports PNG, JPEG, WebP, BMP, GIF',
+              title: l10n.imgViewDropZoneTitle,
+              subtitle: l10n.imgViewDropZoneSubtitle,
               icon: Icons.image_outlined,
-              buttonLabel: 'Browse Files',
+              buttonLabel: l10n.imgViewBrowseFiles,
               buttonIcon: Icons.folder_open,
               extraButtons: [
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   onPressed: _pasteFromClipboard,
                   icon: const Icon(Icons.paste_outlined),
-                  label: const Text('Paste from Clipboard'),
+                  label: Text(l10n.imgViewPasteFromClipboard),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: ImageViewerTool.config.accentColor,
                     side: BorderSide(
@@ -484,7 +486,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                           }
                         }
                       : null,
-                  tooltip: 'Undo',
+                  tooltip: l10n.imgViewUndo,
                 ),
                 IconButton(
                   icon: const Icon(Icons.redo),
@@ -498,21 +500,21 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                           }
                         }
                       : null,
-                  tooltip: 'Redo',
+                  tooltip: l10n.imgViewRedo,
                 ),
                 IconButton(
                   icon: const Icon(Icons.copy),
                   onPressed: () async {
                     try {
                       await _controller.copyToClipboard();
-                      _showSuccess('Image copied to clipboard');
+                      _showSuccess(l10n.imgViewImageCopied);
                     } catch (e) {
                       _showError(
                         'Copy failed: ${e.toString().replaceAll('Exception: ', '')}',
                       );
                     }
                   },
-                  tooltip: 'Copy to clipboard',
+                  tooltip: l10n.imgViewCopyToClipboard,
                 ),
                 if (isWideScreen)
                   IconButton(
@@ -527,7 +529,9 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                         _controller.prepareForEditing();
                       }
                     },
-                    tooltip: _isEditorOpen ? 'Hide settings' : 'Show settings',
+                    tooltip: _isEditorOpen
+                        ? l10n.imgViewHideSettings
+                        : l10n.imgViewShowSettings,
                   )
                 else
                   IconButton(
@@ -536,12 +540,12 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                       _scaffoldKey.currentState?.openEndDrawer();
                       _controller.prepareForEditing();
                     },
-                    tooltip: 'Edit image',
+                    tooltip: l10n.imgViewEditImageTooltip,
                   ),
                 IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: _onClose,
-                  tooltip: 'Close image',
+                  tooltip: l10n.imgViewCloseImage,
                 ),
               ]
             : null;
@@ -555,7 +559,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       AppBar(
-                        title: const Text('Edit Image'),
+                        title: Text(l10n.imgViewEditImageDrawerTitle),
                         automaticallyImplyLeading: false,
                         actions: [
                           IconButton(

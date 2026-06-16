@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'responsive_alert_dialog.dart';
 
 class ToolChooserDialog extends StatefulWidget {
@@ -23,11 +24,12 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return ResponsiveAlertDialog(
       title: Text(
-        'Open File',
+        l10n.widgetToolChooserOpenFile,
         style: theme.textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.bold,
         ),
@@ -38,7 +40,10 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Choose a tool to open:', style: theme.textTheme.bodyMedium),
+            Text(
+              l10n.widgetToolChooserChooseTool,
+              style: theme.textTheme.bodyMedium,
+            ),
             const SizedBox(height: 4),
             Text(
               widget.fileName,
@@ -142,7 +147,7 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
                   ),
                   Expanded(
                     child: Text(
-                      'Always use this tool for this file type',
+                      l10n.widgetToolChooserAlwaysUseTool,
                       style: theme.textTheme.bodySmall,
                     ),
                   ),
@@ -155,7 +160,7 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
       ],
     );

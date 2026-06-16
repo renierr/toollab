@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class PdfDrawer extends StatelessWidget {
   final List<PdfOutlineNode>? outline;
@@ -16,6 +17,7 @@ class PdfDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Drawer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -35,7 +37,7 @@ class PdfDrawer extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Bookmarks',
+                  l10n.pdfNavBookmarks,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -47,7 +49,7 @@ class PdfDrawer extends StatelessWidget {
             child: isLoadingOutline
                 ? const Center(child: CircularProgressIndicator())
                 : outline == null || outline!.isEmpty
-                ? const Center(child: Text('No bookmarks available'))
+                ? Center(child: Text(l10n.pdfNavNoBookmarks))
                 : ListView.builder(
                     itemCount: outline!.length,
                     itemBuilder: (context, index) {

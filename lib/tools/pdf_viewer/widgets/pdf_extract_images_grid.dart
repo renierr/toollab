@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_item.dart';
 
 class PdfExtractImagesGrid extends StatelessWidget {
@@ -66,6 +67,7 @@ class _PdfExtractImageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final filterText = item.filters.isEmpty ? '-' : item.filters.join(', ');
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -115,7 +117,11 @@ class _PdfExtractImageCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
               child: Text(
-                'Page ${item.pageNumber} - ${item.width}x${item.height}',
+                l10n.pdfEditExtractImagePageDimensions(
+                  item.pageNumber,
+                  item.width,
+                  item.height,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodyMedium,
@@ -124,7 +130,9 @@ class _PdfExtractImageCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 0, 10, 2),
               child: Text(
-                'BPP: ${item.bitsPerPixel > 0 ? item.bitsPerPixel : '-'}',
+                l10n.pdfEditExtractImageBpp(
+                  item.bitsPerPixel > 0 ? item.bitsPerPixel.toString() : '-',
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -135,7 +143,7 @@ class _PdfExtractImageCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
               child: Text(
-                'Filter: $filterText',
+                l10n.pdfEditExtractImageFilter(filterText),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -152,12 +160,12 @@ class _PdfExtractImageCard extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onPreview,
                     icon: const Icon(Icons.zoom_in),
-                    label: const Text('Preview'),
+                    label: Text(l10n.pdfEditExtractPreview),
                   ),
                   FilledButton.tonalIcon(
                     onPressed: onDownload,
                     icon: const Icon(Icons.download),
-                    label: const Text('Download'),
+                    label: Text(l10n.pdfEditDownload),
                   ),
                 ],
               ),

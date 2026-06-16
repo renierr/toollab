@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../chiptune_colors.dart';
 
@@ -25,6 +26,7 @@ class ChiptuneTransportBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return Row(
       children: [
@@ -32,13 +34,13 @@ class ChiptuneTransportBar extends StatelessWidget {
           onPressed: onPlayPause,
           icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
           style: IconButton.styleFrom(backgroundColor: ChiptuneColors.accent),
-          tooltip: isPlaying ? 'Pause' : 'Play',
+          tooltip: isPlaying ? l10n.chipPauseTooltip : l10n.chipPlayTooltip,
         ),
         const SizedBox(width: 8),
         IconButton(
           onPressed: onStop,
           icon: const Icon(Icons.stop),
-          tooltip: 'Stop',
+          tooltip: l10n.chipStopTooltip,
         ),
         IconButton(
           onPressed: () => onLoopChanged(!looping),
@@ -46,7 +48,7 @@ class ChiptuneTransportBar extends StatelessWidget {
             Icons.repeat,
             color: looping ? ChiptuneColors.accentBright : null,
           ),
-          tooltip: looping ? 'Looping' : 'Loop off',
+          tooltip: looping ? l10n.chipLoopingTooltip : l10n.chipLoopOffTooltip,
         ),
         const SizedBox(width: 8),
         Icon(

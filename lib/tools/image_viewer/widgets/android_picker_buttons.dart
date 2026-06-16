@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class AndroidPickerButtons extends StatelessWidget {
   final VoidCallback onPickFromGallery;
@@ -14,6 +15,7 @@ class AndroidPickerButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -22,7 +24,7 @@ class AndroidPickerButtons extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onPickFromGallery,
           icon: const Icon(Icons.photo_outlined),
-          label: const Text('Browse Gallery'),
+          label: Text(l10n.imgViewBrowseGallery),
           style: OutlinedButton.styleFrom(
             foregroundColor: accentColor,
             side: BorderSide(color: accentColor.withValues(alpha: 0.5)),
@@ -35,7 +37,7 @@ class AndroidPickerButtons extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onTakePhoto,
           icon: const Icon(Icons.camera_alt_outlined),
-          label: const Text('Take Photo'),
+          label: Text(l10n.imgViewTakePhoto),
           style: OutlinedButton.styleFrom(
             foregroundColor: accentColor,
             side: BorderSide(color: accentColor.withValues(alpha: 0.5)),

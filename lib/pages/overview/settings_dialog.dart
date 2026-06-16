@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/pages/overview/open_with_defaults_dialog.dart';
 
 class OverviewSettingsDialog extends StatelessWidget {
@@ -15,6 +16,7 @@ class OverviewSettingsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return SafeArea(
@@ -36,12 +38,15 @@ class OverviewSettingsDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Overview Settings', style: theme.textTheme.titleMedium),
+              Text(
+                l10n.coreSettingsDialogTitle,
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: 24),
               ListTile(
                 leading: const Icon(Icons.cloud_sync_outlined),
-                title: const Text('Cloud Synchronization'),
-                subtitle: const Text('Backup and sync tool data to the cloud'),
+                title: Text(l10n.coreSyncTitle),
+                subtitle: Text(l10n.coreSettingsDialogSyncSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -51,10 +56,8 @@ class OverviewSettingsDialog extends StatelessWidget {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.settings_suggest_outlined),
-                title: const Text('Maintenance Settings'),
-                subtitle: const Text(
-                  'Download database backups and settings JSON',
-                ),
+                title: Text(l10n.coreMaintenanceTitle),
+                subtitle: Text(l10n.coreSettingsDialogMaintenanceSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -64,10 +67,8 @@ class OverviewSettingsDialog extends StatelessWidget {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.shortcut_outlined),
-                title: const Text('Tool Shortcuts'),
-                subtitle: const Text(
-                  'Pin shortcuts or manage app drawer icons',
-                ),
+                title: Text(l10n.coreShortcutsTitle),
+                subtitle: Text(l10n.coreSettingsDialogShortcutsSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -77,10 +78,8 @@ class OverviewSettingsDialog extends StatelessWidget {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.open_in_new_outlined),
-                title: const Text('Open with Defaults'),
-                subtitle: const Text(
-                  'Manage default tool associations for shared files',
-                ),
+                title: Text(l10n.coreOpenWithDefaultsTitle),
+                subtitle: Text(l10n.coreSettingsDialogOpenWithSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -90,10 +89,8 @@ class OverviewSettingsDialog extends StatelessWidget {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.palette_outlined),
-                title: const Text('Appearance'),
-                subtitle: const Text(
-                  'Theme, compact view, notifications, sorting',
-                ),
+                title: Text(l10n.appearanceTitle),
+                subtitle: Text(l10n.coreSettingsDialogAppearanceSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context).pop();
@@ -103,8 +100,8 @@ class OverviewSettingsDialog extends StatelessWidget {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.info_outline),
-                title: const Text('About'),
-                subtitle: const Text('Version, licenses, and app info'),
+                title: Text(l10n.coreAboutTitle),
+                subtitle: Text(l10n.coreSettingsDialogAboutSubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.of(context).pop();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
@@ -122,25 +123,46 @@ class _NoteEditorState extends State<NoteEditor>
   }
 
   Widget _buildToolbar(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final items = [
-      (Icons.format_bold, 'Bold', () => _insertText('**', suffix: '**')),
-      (Icons.format_italic, 'Italic', () => _insertText('*', suffix: '*')),
+      (
+        Icons.format_bold,
+        l10n.notesToolbarBold,
+        () => _insertText('**', suffix: '**'),
+      ),
+      (
+        Icons.format_italic,
+        l10n.notesToolbarItalic,
+        () => _insertText('*', suffix: '*'),
+      ),
       (
         Icons.format_strikethrough,
-        'Strikethrough',
+        l10n.notesToolbarStrikethrough,
         () => _insertText('~~', suffix: '~~'),
       ),
-      (Icons.looks_one, 'H1', () => _insertText('# ')),
-      (Icons.looks_two, 'H2', () => _insertText('## ')),
-      (Icons.looks_3, 'H3', () => _insertText('### ')),
-      (Icons.format_list_bulleted, 'List', () => _insertText('- ')),
-      (Icons.check_box_outlined, 'Todo', () => _insertText('- [ ] ')),
-      (Icons.link, 'Link', () => _insertText('[', suffix: '](url)')),
-      (Icons.code, 'Code', () => _insertText('`', suffix: '`')),
+      (Icons.looks_one, l10n.notesToolbarH1, () => _insertText('# ')),
+      (Icons.looks_two, l10n.notesToolbarH2, () => _insertText('## ')),
+      (Icons.looks_3, l10n.notesToolbarH3, () => _insertText('### ')),
+      (
+        Icons.format_list_bulleted,
+        l10n.notesToolbarList,
+        () => _insertText('- '),
+      ),
+      (
+        Icons.check_box_outlined,
+        l10n.notesToolbarTodo,
+        () => _insertText('- [ ] '),
+      ),
+      (
+        Icons.link,
+        l10n.notesToolbarLink,
+        () => _insertText('[', suffix: '](url)'),
+      ),
+      (Icons.code, l10n.notesToolbarCode, () => _insertText('`', suffix: '`')),
       (
         Icons.integration_instructions,
-        'Code Block',
+        l10n.notesToolbarCodeBlock,
         () => _insertText('\n```\n', suffix: '\n```\n'),
       ),
     ];
@@ -169,6 +191,7 @@ class _NoteEditorState extends State<NoteEditor>
   }
 
   Widget _buildTextField(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -183,8 +206,8 @@ class _NoteEditorState extends State<NoteEditor>
           fontSize: 14,
           height: 1.5,
         ),
-        decoration: const InputDecoration(
-          hintText: 'Write notes here... (Markdown supported)',
+        decoration: InputDecoration(
+          hintText: l10n.notesEditorHint,
           border: InputBorder.none,
         ),
       ),
@@ -192,6 +215,7 @@ class _NoteEditorState extends State<NoteEditor>
   }
 
   Widget _buildPreview(BuildContext context, double scale) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     if (_controller.text.trim().isEmpty) {
@@ -199,7 +223,7 @@ class _NoteEditorState extends State<NoteEditor>
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 32.0),
           child: Text(
-            'Nothing to preview yet',
+            l10n.notesEditorNoPreview,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
               fontStyle: FontStyle.italic,
@@ -222,12 +246,13 @@ class _NoteEditorState extends State<NoteEditor>
   }
 
   Future<bool> _showDiscardDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmActionDialog.show(
       context: context,
-      title: 'Unsaved Changes',
-      message: 'You have unsaved changes. Do you want to discard them?',
-      cancelLabel: 'Keep Editing',
-      confirmLabel: 'Discard',
+      title: l10n.notesUnsavedChangesTitle,
+      message: l10n.notesUnsavedChangesMessage,
+      cancelLabel: l10n.notesKeepEditing,
+      confirmLabel: l10n.notesDiscard,
     );
     return confirmed ?? false;
   }
@@ -244,6 +269,7 @@ class _NoteEditorState extends State<NoteEditor>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final width = MediaQuery.of(context).size.width;
     final isWide = width >= 800;
@@ -265,7 +291,11 @@ class _NoteEditorState extends State<NoteEditor>
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.id == null ? 'Create Note' : 'Edit Note'),
+          title: Text(
+            widget.id == null
+                ? l10n.notesCreateNoteTitle
+                : l10n.notesEditNoteTitle,
+          ),
           leading: IconButton(
             icon: const Icon(Icons.close),
             onPressed: () async {
@@ -282,7 +312,7 @@ class _NoteEditorState extends State<NoteEditor>
           actions: [
             IconButton(
               icon: const Icon(Icons.picture_as_pdf_outlined),
-              tooltip: 'Export PDF',
+              tooltip: l10n.notesExportPdf,
               onPressed: _controller.text.trim().isEmpty
                   ? null
                   : () => _exportPdf(context),
@@ -292,7 +322,7 @@ class _NoteEditorState extends State<NoteEditor>
                   ? null
                   : () => widget.onSave(_controller.text, _tags),
               child: Text(
-                'Save',
+                l10n.commonSave,
                 style: TextStyle(
                   color: _controller.text.trim().isEmpty
                       ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
@@ -309,9 +339,9 @@ class _NoteEditorState extends State<NoteEditor>
                   indicatorColor: AppTheme.accentTeal,
                   labelColor: AppTheme.accentTeal,
                   unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-                  tabs: const [
-                    Tab(text: 'Write'),
-                    Tab(text: 'Preview'),
+                  tabs: [
+                    Tab(text: l10n.notesTabWrite),
+                    Tab(text: l10n.notesTabPreview),
                   ],
                 ),
         ),

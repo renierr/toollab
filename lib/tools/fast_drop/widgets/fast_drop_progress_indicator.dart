@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class FastDropProgressIndicator extends StatelessWidget {
@@ -26,6 +27,7 @@ class FastDropProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final progress = total > 0 ? sent / total : null;
 
@@ -78,7 +80,7 @@ class FastDropProgressIndicator extends StatelessWidget {
             height: 32,
             child: IconButton(
               icon: const Icon(Icons.close, size: 18),
-              tooltip: 'Cancel',
+              tooltip: l10n.commonCancel,
               onPressed: onCancel,
               style: IconButton.styleFrom(
                 foregroundColor: AppTheme.statusRed,

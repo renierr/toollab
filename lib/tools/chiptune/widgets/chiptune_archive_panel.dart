@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/status_badge.dart';
 
 import '../chiptune_archive.dart';
@@ -35,6 +36,7 @@ class ChiptuneArchivePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,14 +50,14 @@ class ChiptuneArchivePanel extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              'Archive (${modules.length})',
+              l10n.chipArchiveTitle(modules.length),
               style: theme.textTheme.titleSmall,
             ),
             const Spacer(),
             if (showSync)
               IconButton(
                 onPressed: syncing ? null : onSync,
-                tooltip: 'Sync',
+                tooltip: l10n.chipSyncTooltip,
                 icon: syncing
                     ? const SizedBox(
                         width: 16,
@@ -67,7 +69,7 @@ class ChiptuneArchivePanel extends StatelessWidget {
             TextButton.icon(
               onPressed: canSave ? onSave : null,
               icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-              label: const Text('Save'),
+              label: Text(l10n.commonSave),
             ),
           ],
         ),
@@ -75,7 +77,7 @@ class ChiptuneArchivePanel extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: Text(
-              'No archived modules',
+              l10n.chipNoArchivedModules,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -118,6 +120,7 @@ class _ArchiveItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return Card(
       elevation: 0,
@@ -143,13 +146,13 @@ class _ArchiveItem extends StatelessWidget {
               ),
               IconButton(
                 onPressed: onDownload,
-                tooltip: 'Download',
+                tooltip: l10n.chipDownloadTooltip,
                 visualDensity: VisualDensity.compact,
                 icon: const Icon(Icons.download_outlined, size: 18),
               ),
               IconButton(
                 onPressed: onDelete,
-                tooltip: 'Delete',
+                tooltip: l10n.commonDelete,
                 visualDensity: VisualDensity.compact,
                 icon: const Icon(Icons.delete_outline, size: 18),
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class DocumentPasswordDialog extends StatefulWidget {
@@ -55,6 +56,7 @@ class _DocumentPasswordDialogState extends State<DocumentPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ResponsiveAlertDialog(
       icon: const Icon(Icons.lock_outline),
       title: Text(widget.title),
@@ -75,10 +77,12 @@ class _DocumentPasswordDialogState extends State<DocumentPasswordDialog> {
                 Navigator.of(context).pop(value);
               },
               decoration: InputDecoration(
-                labelText: 'Password',
+                labelText: l10n.widgetPasswordLabel,
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
-                  tooltip: _obscureText ? 'Show password' : 'Hide password',
+                  tooltip: _obscureText
+                      ? l10n.widgetPasswordShow
+                      : l10n.widgetPasswordHide,
                   onPressed: () {
                     setState(() => _obscureText = !_obscureText);
                   },
@@ -96,7 +100,7 @@ class _DocumentPasswordDialogState extends State<DocumentPasswordDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class NfcHexPanel extends StatefulWidget {
   final String generatedHex;
@@ -26,6 +27,7 @@ class _NfcHexPanelState extends State<NfcHexPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Card(
@@ -35,14 +37,14 @@ class _NfcHexPanelState extends State<NfcHexPanel> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'NDEF Hex Inspector',
+              l10n.nfcHexInspectorTitle,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Validate, parse, or generate raw NDEF hex codes.',
+              l10n.nfcHexInspectorSubtitle,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withAlpha(120),
               ),
@@ -56,10 +58,10 @@ class _NfcHexPanelState extends State<NfcHexPanel> {
                 fontFamily: 'monospace',
                 fontSize: 12,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Paste NDEF Hex Data',
+              decoration: InputDecoration(
+                labelText: l10n.nfcPasteHexData,
                 hintText: 'D1 01 0B 55 04 65 78 61 6D 70 6C 65 2E 63 6F 6D...',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
             ),
@@ -71,7 +73,7 @@ class _NfcHexPanelState extends State<NfcHexPanel> {
                     onPressed: () {
                       _hexInputController.clear();
                     },
-                    child: const Text('Clear Input'),
+                    child: Text(l10n.nfcClearInput),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -83,17 +85,15 @@ class _NfcHexPanelState extends State<NfcHexPanel> {
                         widget.onParseHex(hex);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Please paste some NDEF hex data to parse.',
-                            ),
-                            duration: Duration(seconds: 2),
+                          SnackBar(
+                            content: Text(l10n.nfcPasteHexToParsePrompt),
+                            duration: const Duration(seconds: 2),
                           ),
                         );
                       }
                     },
                     icon: const Icon(Icons.analytics_outlined, size: 18),
-                    label: const Text('Parse Hex'),
+                    label: Text(l10n.nfcParseHex),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.secondaryContainer,
                       foregroundColor: theme.colorScheme.onSecondaryContainer,
@@ -108,24 +108,22 @@ class _NfcHexPanelState extends State<NfcHexPanel> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Generated NDEF Hex',
+                    l10n.nfcGeneratedHex,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.copy_outlined, size: 18),
-                    tooltip: 'Copy Generated Hex',
+                    tooltip: l10n.nfcCopyGeneratedHex,
                     onPressed: () {
                       Clipboard.setData(
                         ClipboardData(text: widget.generatedHex),
                       );
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Generated NDEF Hex copied to clipboard.',
-                          ),
-                          duration: Duration(seconds: 1),
+                        SnackBar(
+                          content: Text(l10n.nfcHexCopied),
+                          duration: const Duration(seconds: 1),
                         ),
                       );
                     },

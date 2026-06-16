@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
 import '../fast_drop_model.dart';
 
 class FastDropItemCard extends StatelessWidget {
@@ -46,6 +47,7 @@ class FastDropItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final resolvedType = item.type == 'application/octet-stream'
         ? MimeTypeHelper.getMimeType(item.filename)
@@ -54,8 +56,8 @@ class FastDropItemCard extends StatelessWidget {
     final icon = _getFileIcon(resolvedType);
     final isExpires = item.expiresAt != null;
     final expiresText = isExpires
-        ? 'Expires: ${FormatHelper.epoch(item.expiresAt!)}'
-        : 'Indefinite retention';
+        ? l10n.fastDropExpires(FormatHelper.epoch(item.expiresAt!))
+        : l10n.fastDropIndefiniteRetention;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -104,7 +106,7 @@ class FastDropItemCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'CLIPBOARD',
+                          l10n.fastDropClipboardBadge,
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
@@ -172,7 +174,9 @@ class FastDropItemCard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'Uploaded: ${FormatHelper.epoch(item.uploadedAt)}',
+                              l10n.fastDropUploaded(
+                                FormatHelper.epoch(item.uploadedAt),
+                              ),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurface.withValues(
                                   alpha: 0.6,
@@ -272,7 +276,7 @@ class FastDropItemCard extends StatelessWidget {
                               ),
                             )
                           : Text(
-                              'Add description...',
+                              l10n.fastDropAddDescriptionPlaceholder,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurface.withValues(
                                   alpha: 0.35,
@@ -302,26 +306,26 @@ class FastDropItemCard extends StatelessWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.visibility_outlined),
-                  tooltip: 'Preview',
+                  tooltip: l10n.fastDropPreviewTooltip,
                   iconSize: 18,
                   onPressed: onPreview,
                 ),
                 IconButton(
                   icon: const Icon(Icons.open_in_new_outlined),
-                  tooltip: 'Open / Share',
+                  tooltip: l10n.fastDropOpenShare,
                   iconSize: 18,
                   onPressed: onOpen,
                 ),
                 IconButton(
                   icon: const Icon(Icons.download_outlined),
-                  tooltip: 'Download',
+                  tooltip: l10n.fastDropDownload,
                   iconSize: 18,
                   onPressed: onDownload,
                 ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.delete_outline),
-                  tooltip: 'Delete',
+                  tooltip: l10n.commonDelete,
                   color: AppTheme.statusRed,
                   iconSize: 18,
                   onPressed: onDelete,

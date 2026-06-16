@@ -2,11 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
-import 'package:tool_lab/helpers/mime_type_helper.dart';
 import '../fast_drop_model.dart';
 
 class FastDropPreviewDialog extends StatefulWidget {
@@ -65,6 +66,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final resolvedMimeType = widget.item.type == 'application/octet-stream'
         ? MimeTypeHelper.getMimeType(widget.item.filename)
@@ -115,21 +117,21 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
                   ),
                 ),
               if (_downloadFuture == null)
-                _buildNoPreview(theme, resolvedMimeType)
+                _buildNoPreview(context, theme, resolvedMimeType)
               else
                 FutureBuilder<String>(
                   future: _downloadFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
+                      return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircularProgressIndicator(
+                            const CircularProgressIndicator(
                               color: AppTheme.accentTeal,
                             ),
-                            SizedBox(height: 16),
-                            Text('Downloading file for preview...'),
+                            const SizedBox(height: 16),
+                            Text(l10n.fastDropDownloadingForPreview),
                           ],
                         ),
                       );
@@ -147,7 +149,9 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Failed to load preview:\n${snapshot.error}',
+                              l10n.fastDropPreviewFailed(
+                                snapshot.error.toString(),
+                              ),
                               textAlign: TextAlign.center,
                               style: TextStyle(color: theme.colorScheme.error),
                             ),
@@ -185,7 +189,9 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
                           }
                           if (textSnapshot.hasError) {
                             return Text(
-                              'Error reading file: ${textSnapshot.error}',
+                              l10n.fastDropReadFileFailed(
+                                textSnapshot.error.toString(),
+                              ),
                               style: TextStyle(color: theme.colorScheme.error),
                             );
                           }
@@ -218,7 +224,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
                       );
                     }
 
-                    return _buildNoPreview(theme, resolvedMimeType);
+                    return _buildNoPreview(context, theme, resolvedMimeType);
                   },
                 ),
             ],
@@ -228,7 +234,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: Text(l10n.commonClose),
         ),
         FilledButton.icon(
           onPressed: () {
@@ -236,7 +242,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
             widget.onOpen();
           },
           icon: const Icon(Icons.open_in_new),
-          label: const Text('Open / Share'),
+          label: Text(l10n.fastDropOpenShare),
           style: FilledButton.styleFrom(
             backgroundColor: theme.colorScheme.secondaryContainer,
             foregroundColor: theme.colorScheme.onSecondaryContainer,
@@ -248,7 +254,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
             widget.onSave();
           },
           icon: const Icon(Icons.download),
-          label: const Text('Download'),
+          label: Text(l10n.fastDropDownload),
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.accentTeal,
             foregroundColor: Colors.white,
@@ -258,7 +264,12 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
     );
   }
 
-  Widget _buildNoPreview(ThemeData theme, String resolvedMimeType) {
+  Widget _buildNoPreview(
+    BuildContext context,
+    ThemeData theme,
+    String resolvedMimeType,
+  ) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -269,9 +280,9 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
             color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Preview not available for this file type.',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Text(
+            l10n.fastDropPreviewNotAvailable,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
@@ -287,7 +298,7 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
               widget.onOpen();
             },
             icon: const Icon(Icons.open_in_new),
-            label: const Text('Open with Tool / App'),
+            label: Text(l10n.fastDropOpenWithApp),
             style: FilledButton.styleFrom(
               backgroundColor: theme.colorScheme.secondaryContainer,
               foregroundColor: theme.colorScheme.onSecondaryContainer,

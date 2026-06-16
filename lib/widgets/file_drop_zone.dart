@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class FileDropZone extends StatefulWidget {
   final ValueChanged<XFile>? onFileSelected;
@@ -75,15 +76,19 @@ class _FileDropZoneState extends State<FileDropZone> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to select file: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.widgetFileDropFailedToSelect(e.toString())),
+          ),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final buttonForeground = widget.accentColor.computeLuminance() > 0.18
         ? Colors.black87
@@ -128,7 +133,9 @@ class _FileDropZoneState extends State<FileDropZone> {
                 .join(' or ');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Only $extensionsStr files are supported'),
+                content: Text(
+                  l10n.widgetFileDropOnlyFilesSupported(extensionsStr),
+                ),
               ),
             );
           }
@@ -245,7 +252,7 @@ class _FileDropZoneState extends State<FileDropZone> {
                               Padding(
                                 padding: const EdgeInsets.only(top: 16),
                                 child: Text(
-                                  'Release to load file',
+                                  l10n.widgetFileDropReleaseToLoad,
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: widget.accentColor,
                                     fontWeight: FontWeight.bold,

@@ -7,6 +7,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class NoteCard extends StatelessWidget {
@@ -23,7 +24,7 @@ class NoteCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  String _getTitle(String content) {
+  String _getTitle(String content, {required String untitledFallback}) {
     final lines = content.split('\n');
     for (final line in lines) {
       final trimmed = line.trim();
@@ -36,7 +37,7 @@ class NoteCard extends StatelessWidget {
         return trimmed;
       }
     }
-    return 'Untitled Note';
+    return untitledFallback;
   }
 
   String _getPreviewContent(String content) {
@@ -81,7 +82,10 @@ class NoteCard extends StatelessWidget {
       context: context,
       markdown: content,
       suggestedName: 'note-$shortId.pdf',
-      title: _getTitle(content),
+      title: _getTitle(
+        content,
+        untitledFallback: AppLocalizations.of(context).notesUntitledNote,
+      ),
     );
   }
 
@@ -157,9 +161,10 @@ class NoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final content = note['content'] as String? ?? '';
-    final title = _getTitle(content);
+    final title = _getTitle(content, untitledFallback: l10n.notesUntitledNote);
     final bodyPreview = _getPreviewContent(content);
     final updatedAt = note['updated_at'] as int? ?? 0;
 
@@ -216,43 +221,49 @@ class NoteCard extends StatelessWidget {
                           }
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
-                                Icon(Icons.edit_outlined, size: 18),
-                                SizedBox(width: 8),
-                                Text('Edit'),
+                                const Icon(Icons.edit_outlined, size: 18),
+                                const SizedBox(width: 8),
+                                Text(l10n.commonEdit),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'share',
                             child: Row(
                               children: [
-                                Icon(Icons.share_outlined, size: 18),
-                                SizedBox(width: 8),
-                                Text('Share'),
+                                const Icon(Icons.share_outlined, size: 18),
+                                const SizedBox(width: 8),
+                                Text(l10n.commonShare),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'export',
                             child: Row(
                               children: [
-                                Icon(Icons.file_download_outlined, size: 18),
-                                SizedBox(width: 8),
-                                Text('Export MD'),
+                                const Icon(
+                                  Icons.file_download_outlined,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(l10n.notesExportMd),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'export_pdf',
                             child: Row(
                               children: [
-                                Icon(Icons.picture_as_pdf_outlined, size: 18),
-                                SizedBox(width: 8),
-                                Text('Export PDF'),
+                                const Icon(
+                                  Icons.picture_as_pdf_outlined,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(l10n.notesExportPdf),
                               ],
                             ),
                           ),
@@ -267,7 +278,7 @@ class NoteCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Delete',
+                                  l10n.commonDelete,
                                   style: TextStyle(
                                     color: theme.colorScheme.error,
                                   ),
@@ -298,7 +309,7 @@ class NoteCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          'Updated: ${_formatDate(updatedAt)}',
+                          l10n.notesUpdatedAt(_formatDate(updatedAt)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(

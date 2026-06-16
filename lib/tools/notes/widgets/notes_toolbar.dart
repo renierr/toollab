@@ -6,6 +6,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/notes/notes_state.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -70,9 +71,10 @@ class _NotesToolbarState extends State<NotesToolbar> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to read file: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.notesFailedToReadFile(e.toString()))),
+        );
       }
     }
   }
@@ -107,9 +109,10 @@ class _NotesToolbarState extends State<NotesToolbar> {
         await notesState.importNotesFromJson(castedList);
 
         if (mounted) {
+          final l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Backup imported successfully'),
+            SnackBar(
+              content: Text(l10n.notesBackupImportedSuccessfully),
               backgroundColor: AppTheme.accentGreen,
             ),
           );
@@ -117,9 +120,10 @@ class _NotesToolbarState extends State<NotesToolbar> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Import failed: ${e.toString()}'),
+            content: Text(l10n.notesImportFailed(e.toString())),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -174,21 +178,21 @@ class _NotesToolbarState extends State<NotesToolbar> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to export notes: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.notesFailedToExportNotes(e.toString()))),
+        );
       }
     }
   }
 
   Future<void> _triggerSync() async {
+    final l10n = AppLocalizations.of(context);
     final appState = context.read<AppState>();
     if (appState.syncServerUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Configure server URL in Cloud settings first'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.notesSyncConfigureServerUrl)));
       return;
     }
 
@@ -200,7 +204,11 @@ class _NotesToolbarState extends State<NotesToolbar> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Sync finished. Pulled: ${results['pulled']}, Pushed: ${results['pushed']}, Deleted: ${results['deleted']}.',
+                l10n.notesSyncFinished(
+                  results['pulled'] ?? 0,
+                  results['pushed'] ?? 0,
+                  results['deleted'] ?? 0,
+                ),
               ),
               backgroundColor: AppTheme.accentGreen,
             ),
@@ -208,16 +216,16 @@ class _NotesToolbarState extends State<NotesToolbar> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Sync failed: URL or User ID empty')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.notesSyncFailedEmpty)));
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Sync failed: $e'),
+            content: Text(l10n.notesSyncFailed(e.toString())),
             backgroundColor: AppTheme.accentRed,
           ),
         );
@@ -227,6 +235,7 @@ class _NotesToolbarState extends State<NotesToolbar> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final appState = context.watch<AppState>();
     final isSyncing = appState.isSyncing;
@@ -241,7 +250,7 @@ class _NotesToolbarState extends State<NotesToolbar> {
               if (Navigator.of(context).canPop())
                 IconButton(
                   icon: const Icon(Icons.arrow_back),
-                  tooltip: 'Back',
+                  tooltip: l10n.commonBack,
                   onPressed: () => Navigator.of(context).maybePop(),
                 ),
               Expanded(
@@ -257,7 +266,7 @@ class _NotesToolbarState extends State<NotesToolbar> {
                     controller: _searchController,
                     onChanged: _onSearchChanged,
                     decoration: InputDecoration(
-                      hintText: 'Search notes...',
+                      hintText: l10n.notesSearchHint,
                       hintStyle: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant.withValues(
                           alpha: 0.6,
@@ -281,7 +290,7 @@ class _NotesToolbarState extends State<NotesToolbar> {
               ),
               const SizedBox(width: 8),
               Tooltip(
-                message: 'Sync with Cloud',
+                message: l10n.notesSyncWithCloud,
                 child: isSyncing
                     ? const Padding(
                         padding: EdgeInsets.all(12.0),
@@ -313,14 +322,14 @@ class _NotesToolbarState extends State<NotesToolbar> {
                     _exportBackup();
                   }
                 },
-                itemBuilder: (context) => const [
+                itemBuilder: (context) => [
                   PopupMenuItem(
                     value: 'import_md',
                     child: Row(
                       children: [
-                        Icon(Icons.file_open_outlined, size: 18),
-                        SizedBox(width: 8),
-                        Text('Import Markdown file'),
+                        const Icon(Icons.file_open_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.notesImportMarkdownFile),
                       ],
                     ),
                   ),
@@ -328,9 +337,9 @@ class _NotesToolbarState extends State<NotesToolbar> {
                     value: 'import_backup',
                     child: Row(
                       children: [
-                        Icon(Icons.restore, size: 18),
-                        SizedBox(width: 8),
-                        Text('Import JSON Backup'),
+                        const Icon(Icons.restore, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.notesImportJsonBackup),
                       ],
                     ),
                   ),
@@ -338,9 +347,9 @@ class _NotesToolbarState extends State<NotesToolbar> {
                     value: 'export_backup',
                     child: Row(
                       children: [
-                        Icon(Icons.backup_outlined, size: 18),
-                        SizedBox(width: 8),
-                        Text('Export JSON Backup'),
+                        const Icon(Icons.backup_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(l10n.notesExportJsonBackup),
                       ],
                     ),
                   ),

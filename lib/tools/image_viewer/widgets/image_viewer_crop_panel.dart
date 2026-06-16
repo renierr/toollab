@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class ImageViewerCropPanel extends StatefulWidget {
   final ui.Image image;
@@ -80,6 +81,7 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       children: [
@@ -91,7 +93,7 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Crop Presets',
+                l10n.imgViewCropPresetsHeader,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -141,32 +143,32 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
                   child: Row(
                     children: [
                       _PresetButton(
-                        label: 'Free',
+                        label: l10n.imgViewCropPresetFree,
                         isActive: _activePreset == 'Free',
                         onPressed: () => _applyPreset(null, 'Free'),
                       ),
                       const SizedBox(width: 8),
                       _PresetButton(
-                        label: '1:1 Square',
+                        label: l10n.imgViewCropPreset1x1,
                         isActive: _activePreset == '1:1 Square',
                         onPressed: () => _applyPreset(1.0, '1:1 Square'),
                       ),
                       const SizedBox(width: 8),
                       _PresetButton(
-                        label: '16:9 Widescreen',
+                        label: l10n.imgViewCropPreset16x9,
                         isActive: _activePreset == '16:9 Widescreen',
                         onPressed: () =>
                             _applyPreset(16 / 9, '16:9 Widescreen'),
                       ),
                       const SizedBox(width: 8),
                       _PresetButton(
-                        label: '4:3 Standard',
+                        label: l10n.imgViewCropPreset4x3,
                         isActive: _activePreset == '4:3 Standard',
                         onPressed: () => _applyPreset(4 / 3, '4:3 Standard'),
                       ),
                       const SizedBox(width: 8),
                       _PresetButton(
-                        label: '3:2 Photo',
+                        label: l10n.imgViewCropPreset3x2,
                         isActive: _activePreset == '3:2 Photo',
                         onPressed: () => _applyPreset(3 / 2, '3:2 Photo'),
                       ),
@@ -254,7 +256,7 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
               TextButton.icon(
                 onPressed: widget.onCropCancelled,
                 icon: const Icon(Icons.cancel_outlined),
-                label: const Text('Cancel'),
+                label: Text(l10n.commonCancel),
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -279,7 +281,7 @@ class _ImageViewerCropPanelState extends State<ImageViewerCropPanel> {
                   widget.onCropApplied(x, y, w, h);
                 },
                 icon: const Icon(Icons.check),
-                label: const Text('Apply Crop'),
+                label: Text(l10n.imgViewApplyCrop),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,

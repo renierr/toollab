@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class BubbleLevelRuler extends StatelessWidget {
@@ -156,9 +157,10 @@ class _RulerCalibrationDialogState extends State<RulerCalibrationDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return ResponsiveAlertDialog(
       title: Text(
-        'Ruler Calibration',
+        l10n.levelRulerCalibration,
         style: TextStyle(color: theme.colorScheme.primary),
       ),
       content: SizedBox(
@@ -168,7 +170,7 @@ class _RulerCalibrationDialogState extends State<RulerCalibrationDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hold a physical ruler against the screen edge. Adjust the scale until the markings match exactly.',
+              l10n.levelRulerCalibrationHint,
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onSurface.withAlpha(180),
@@ -236,11 +238,11 @@ class _RulerCalibrationDialogState extends State<RulerCalibrationDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(null),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(_pxPerMm),
-          child: const Text('Save'),
+          child: Text(l10n.commonSave),
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 
 class PdfFlattenPanel extends StatefulWidget {
@@ -37,6 +38,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
   String get _baseName => widget.session.fileName.replaceAll('.pdf', '');
 
   Future<void> _execute() async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _phase = _FlattenPhase.processing;
       _progress = 0;
@@ -55,7 +57,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
           if (mounted) {
             setState(() {
               _progress = (done / total).clamp(0.0, 1.0);
-              _statusText = 'Rendering page $done of $total...';
+              _statusText = l10n.pdfEditFlattenProgress(done, total);
             });
           }
         },
@@ -75,17 +77,18 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
         _resultSize = pdfBytes.length;
         _phase = _FlattenPhase.done;
         _progress = 1.0;
-        _statusText = 'Done';
+        _statusText = AppLocalizations.of(context).commonDone;
       });
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         setState(() {
-          _statusText = 'Error: $e';
+          _statusText = e.toString();
           _phase = _FlattenPhase.options;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Flatten failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.pdfEditFlattenFailed(e.toString()))),
+        );
       }
     } finally {
       doc?.dispose();
@@ -115,10 +118,11 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flatten: ${widget.session.fileName}'),
+        title: Text(l10n.pdfEditFlattenTitle(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _phase == _FlattenPhase.processing
@@ -135,14 +139,14 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
   }
 
   Widget _buildOptions(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text('Flatten PDF to Images', style: theme.textTheme.headlineSmall),
+        Text(l10n.pdfEditFlattenHeadline, style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
         Text(
-          'Each page will be rendered as an image and embedded into a new PDF. '
-          'This makes the content non-selectable and prevents text extraction.',
+          l10n.pdfEditFlattenDescription,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -157,7 +161,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Resolution (DPI): $_dpi',
+                  l10n.pdfEditFlattenDpi(_dpi),
                   style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
@@ -170,7 +174,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
                   onChanged: (v) => setState(() => _dpi = v.round()),
                 ),
                 Text(
-                  'Higher DPI = larger file size but better quality',
+                  l10n.pdfEditFlattenDpiHint,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -189,7 +193,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'JPEG Quality: $_jpegQuality%',
+                  l10n.pdfEditFlattenJpegQuality(_jpegQuality),
                   style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
@@ -202,7 +206,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
                   onChanged: (v) => setState(() => _jpegQuality = v.round()),
                 ),
                 Text(
-                  'Higher quality = larger file size',
+                  l10n.pdfEditFlattenJpegQualityHint,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -216,7 +220,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
         FilledButton.icon(
           onPressed: _execute,
           icon: const Icon(Icons.photo_library),
-          label: const Text('Start Flattening'),
+          label: Text(l10n.pdfEditFlattenStart),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
@@ -226,6 +230,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
   }
 
   Widget _buildProgress(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -241,7 +246,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
             ),
             const SizedBox(height: 8),
             Text(
-              '$_totalPages pages total',
+              l10n.pdfEditFlattenPagesTotal(_totalPages),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -253,6 +258,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
   }
 
   Widget _buildDone(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     final size = _resultSize;
     final sizeText = size > 1024 * 1024
         ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
@@ -272,10 +278,13 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
               color: theme.colorScheme.primary,
             ),
             const SizedBox(height: 16),
-            Text('Flattening Complete', style: theme.textTheme.headlineSmall),
+            Text(
+              l10n.pdfEditFlattenDoneTitle,
+              style: theme.textTheme.headlineSmall,
+            ),
             const SizedBox(height: 8),
             Text(
-              'New PDF size: $sizeText',
+              l10n.pdfEditFlattenDoneSize(sizeText),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -287,13 +296,13 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
                 FilledButton.icon(
                   onPressed: _download,
                   icon: const Icon(Icons.download),
-                  label: const Text('Download'),
+                  label: Text(l10n.pdfEditDownload),
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
                   onPressed: _share,
                   icon: const Icon(Icons.share),
-                  label: const Text('Share'),
+                  label: Text(l10n.commonShare),
                 ),
               ],
             ),
@@ -302,10 +311,13 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
               onPressed: () =>
                   widget.onComplete(_resultPath!, '${_baseName}_flattened.pdf'),
               icon: const Icon(Icons.open_in_new),
-              label: const Text('Open in Viewer'),
+              label: Text(l10n.pdfEditOpenInViewer),
             ),
             const SizedBox(height: 8),
-            TextButton(onPressed: widget.onCancel, child: const Text('Close')),
+            TextButton(
+              onPressed: widget.onCancel,
+              child: Text(l10n.commonClose),
+            ),
           ],
         ),
       ),

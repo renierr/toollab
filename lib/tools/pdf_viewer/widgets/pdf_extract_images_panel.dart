@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_empty_state.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_grid.dart';
@@ -58,10 +59,11 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
   }
 
   Future<void> _loadImages() async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isLoading = true;
       _progress = 0;
-      _statusText = 'Scanning PDF...';
+      _statusText = l10n.pdfEditExtractScanning;
       _items = [];
       _selectedIds.clear();
     });
@@ -77,18 +79,23 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
           if (!mounted) {
             return;
           }
+          final l10nCb = AppLocalizations.of(context);
           setState(() {
             _progress = total == 0 ? 0 : done / total;
-            _statusText = 'Scanning PDF objects $done of $total...';
+            _statusText = l10nCb.pdfEditExtractScanningObjects(done, total);
           });
         },
       );
 
       final items = <PdfExtractedImageItem>[];
       if (mounted && extracted.isNotEmpty) {
+        final l10nPrep = AppLocalizations.of(context);
         setState(() {
           _progress = 0;
-          _statusText = 'Preparing images 0 of ${extracted.length}...';
+          _statusText = l10nPrep.pdfEditExtractPreparingImages(
+            0,
+            extracted.length,
+          );
         });
       }
       for (int i = 0; i < extracted.length; i++) {
@@ -113,10 +120,14 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
           ),
         );
         if (mounted && ((i + 1) % 8 == 0 || i + 1 == extracted.length)) {
+          final l10nProg = AppLocalizations.of(context);
           setState(() {
             final done = i + 1;
             _progress = extracted.isEmpty ? 0 : done / extracted.length;
-            _statusText = 'Preparing images $done of ${extracted.length}...';
+            _statusText = l10nProg.pdfEditExtractPreparingImages(
+              done,
+              extracted.length,
+            );
           });
         }
       }
@@ -125,24 +136,25 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         return;
       }
 
+      final l10nDone = AppLocalizations.of(context);
       setState(() {
         _items = items;
         _isLoading = false;
         _progress = 1;
-        _statusText =
-            '${items.length} image${items.length == 1 ? '' : 's'} found';
+        _statusText = l10nDone.pdfEditExtractImagesFound(items.length);
       });
     } catch (e) {
       if (!mounted) {
         return;
       }
+      final l10nErr = AppLocalizations.of(context);
       setState(() {
         _isLoading = false;
-        _statusText = 'Error: $e';
+        _statusText = e.toString();
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Image extraction failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10nErr.pdfEditExtractFailed(e.toString()))),
+      );
     } finally {
       doc?.dispose();
     }
@@ -204,10 +216,11 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
     List<PdfExtractedImageItem> items,
     String zipName,
   ) async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isExporting = true;
       _progress = 0;
-      _statusText = 'Creating ZIP 0 of ${items.length}...';
+      _statusText = l10n.pdfEditExtractCreatingZip(0, items.length);
     });
     final encoder = ZipFileEncoder();
     var hasOpenZip = false;
@@ -221,10 +234,11 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         if (!mounted) {
           continue;
         }
+        final l10nZip = AppLocalizations.of(context);
         setState(() {
           final done = i + 1;
           _progress = items.isEmpty ? 0 : done / items.length;
-          _statusText = 'Creating ZIP $done of ${items.length}...';
+          _statusText = l10nZip.pdfEditExtractCreatingZip(done, items.length);
         });
       }
       await encoder.close();
@@ -232,8 +246,9 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
       if (!mounted) {
         return;
       }
+      final l10nReady = AppLocalizations.of(context);
       setState(() {
-        _statusText = 'ZIP ready';
+        _statusText = l10nReady.pdfEditExtractZipReady;
         _progress = 1;
       });
       await FileSaveHelper.saveFileFromPath(
@@ -245,9 +260,10 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('ZIP export failed: $e')));
+      final l10nErr = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10nErr.pdfEditExtractZipFailed(e.toString()))),
+      );
     } finally {
       if (hasOpenZip) {
         try {
@@ -255,10 +271,10 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         } catch (_) {}
       }
       if (mounted) {
+        final l10nFin = AppLocalizations.of(context);
         setState(() {
           _isExporting = false;
-          _statusText =
-              '${_items.length} image${_items.length == 1 ? '' : 's'} found';
+          _statusText = l10nFin.pdfEditExtractImagesFound(_items.length);
           _progress = 1;
         });
       }
@@ -269,6 +285,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
     showDialog(
       context: context,
       builder: (ctx) {
+        final l10n = AppLocalizations.of(ctx);
         return ResponsiveAlertDialog(
           title: Row(
             children: [
@@ -301,7 +318,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Close'),
+              child: Text(l10n.commonClose),
             ),
             FilledButton.icon(
               onPressed: () async {
@@ -309,7 +326,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
                 await _downloadSingle(item);
               },
               icon: const Icon(Icons.download),
-              label: const Text('Download'),
+              label: Text(l10n.pdfEditDownload),
             ),
           ],
           scrollable: true,
@@ -320,12 +337,13 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final media = MediaQuery.of(context);
     final isCompactScreen = media.size.width < 600 || media.size.height < 760;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Extract Images: ${widget.session.fileName}'),
+        title: Text(l10n.pdfEditExtractTitle(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _isLoading || _isExporting ? null : widget.onCancel,

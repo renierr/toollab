@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
-import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/file_drop_zone.dart';
 import '../config.dart';
 import 'retention_selector.dart';
 
@@ -24,6 +25,7 @@ class FastDropUploadPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isAndroid = Platform.isAndroid;
 
     return Column(
@@ -43,11 +45,13 @@ class FastDropUploadPanel extends StatelessWidget {
               child: FileDropZone(
                 onFilesSelected: onFilesSelected,
                 allowedExtensions: FastDropTool.config.fileExtensions,
-                typeLabel: 'All Files',
+                typeLabel: l10n.fastDropAllFiles,
                 accentColor: FastDropTool.config.accentColor,
                 icon: Icons.cloud_upload_outlined,
-                title: isAndroid ? 'Select files to upload' : 'Drop files here',
-                subtitle: 'or click to browse',
+                title: isAndroid
+                    ? l10n.fastDropSelectFilesAndroid
+                    : l10n.fastDropDropFilesHere,
+                subtitle: l10n.fastDropOrClickToBrowse,
                 compact: isAndroid,
                 multiple: true,
               ),
@@ -63,7 +67,7 @@ class FastDropUploadPanel extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: isActionsEnabled ? onPasteClipboard : null,
               icon: const Icon(Icons.paste_outlined),
-              label: const Text('Paste Clipboard'),
+              label: Text(l10n.fastDropPasteClipboard),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.accentTeal,
                 side: const BorderSide(color: AppTheme.accentTeal),

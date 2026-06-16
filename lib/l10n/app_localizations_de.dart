@@ -60,4 +60,2252 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsSortName => 'Name';
+
+  @override
+  String get commonCancel => 'Abbrechen';
+
+  @override
+  String get commonSave => 'Speichern';
+
+  @override
+  String get commonDelete => 'Löschen';
+
+  @override
+  String get commonClose => 'Schließen';
+
+  @override
+  String get commonOk => 'OK';
+
+  @override
+  String get commonYes => 'Ja';
+
+  @override
+  String get commonNo => 'Nein';
+
+  @override
+  String get commonClear => 'Leeren';
+
+  @override
+  String get commonEdit => 'Bearbeiten';
+
+  @override
+  String get commonShare => 'Teilen';
+
+  @override
+  String get commonExport => 'Exportieren';
+
+  @override
+  String get commonImport => 'Importieren';
+
+  @override
+  String get commonCopy => 'Kopieren';
+
+  @override
+  String get commonError => 'Fehler';
+
+  @override
+  String get commonLoading => 'Wird geladen…';
+
+  @override
+  String get commonRetry => 'Erneut versuchen';
+
+  @override
+  String get commonRename => 'Umbenennen';
+
+  @override
+  String get commonAdd => 'Hinzufügen';
+
+  @override
+  String get commonRemove => 'Entfernen';
+
+  @override
+  String get commonReset => 'Zurücksetzen';
+
+  @override
+  String get commonDone => 'Fertig';
+
+  @override
+  String get commonApply => 'Anwenden';
+
+  @override
+  String get commonOpen => 'Öffnen';
+
+  @override
+  String get commonSettings => 'Einstellungen';
+
+  @override
+  String get commonSearch => 'Suchen';
+
+  @override
+  String get commonConfirm => 'Bestätigen';
+
+  @override
+  String get commonBack => 'Zurück';
+
+  @override
+  String chipFailedToParseModule(Object error) {
+    return 'Modul konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String chipFailedToOpenSharedFile(Object error) {
+    return 'Geteilte Datei konnte nicht geöffnet werden: $error';
+  }
+
+  @override
+  String get chipHideVisualizer => 'Visualisierung ausblenden';
+
+  @override
+  String get chipShowVisualizer => 'Visualisierung einblenden';
+
+  @override
+  String get chipLoadAnother => 'Andere laden';
+
+  @override
+  String get chipModuleArchived => 'Modul archiviert';
+
+  @override
+  String get chipAlreadyInArchive => 'Bereits im Archiv';
+
+  @override
+  String get chipArchivedModuleNotFound => 'Archiviertes Modul nicht gefunden';
+
+  @override
+  String get chipModuleDataNotAvailable => 'Moduldaten nicht verfügbar';
+
+  @override
+  String get chipDeleteModuleTitle => 'Modul löschen';
+
+  @override
+  String get chipDeleteModuleMessage =>
+      'Dieses Modul aus dem Archiv entfernen?';
+
+  @override
+  String chipSyncedResult(Object pulled, Object pushed) {
+    return 'Synchronisiert: $pulled empfangen, $pushed gesendet';
+  }
+
+  @override
+  String chipSyncFailed(Object error) {
+    return 'Synchronisierung fehlgeschlagen: $error';
+  }
+
+  @override
+  String chipArchiveTitle(Object count) {
+    return 'Archiv ($count)';
+  }
+
+  @override
+  String get chipSyncTooltip => 'Synchronisieren';
+
+  @override
+  String get chipNoArchivedModules => 'Keine archivierten Module';
+
+  @override
+  String get chipDownloadTooltip => 'Herunterladen';
+
+  @override
+  String get chipUntitled => 'Ohne Titel';
+
+  @override
+  String get chipMetricChannels => 'Kanäle';
+
+  @override
+  String get chipMetricPatterns => 'Muster';
+
+  @override
+  String get chipMetricOrders => 'Positionen';
+
+  @override
+  String get chipMetricInstruments => 'Instrumente';
+
+  @override
+  String get chipMetricBpm => 'BPM';
+
+  @override
+  String get chipMetricSpeed => 'Tempo';
+
+  @override
+  String get chipModArchiveTip =>
+      'Tipp: Die meisten Modulsammlungen gibt es auf modarchive.org';
+
+  @override
+  String get chipPauseTooltip => 'Pause';
+
+  @override
+  String get chipPlayTooltip => 'Abspielen';
+
+  @override
+  String get chipStopTooltip => 'Stopp';
+
+  @override
+  String get chipLoopingTooltip => 'Schleife aktiv';
+
+  @override
+  String get chipLoopOffTooltip => 'Schleife aus';
+
+  @override
+  String coreNoToolsFoundToOpen(String name) {
+    return 'Keine Tools gefunden zum Öffnen von \"$name\"';
+  }
+
+  @override
+  String get coreAboutTitle => 'Über';
+
+  @override
+  String coreAboutVersion(String version) {
+    return 'v$version';
+  }
+
+  @override
+  String get coreAboutDescription =>
+      'ToolLab ist eine Sammlung von Dienstprogrammen für Ihr Gerät. Es umfasst Sensoren, Rechner, Geräteinformationen, NFC-Tag-Lesen/-Schreiben, PDF-Anzeige, Notizen und vieles mehr – alles in einer App.';
+
+  @override
+  String get coreAboutDisclaimer => 'Haftungsausschluss';
+
+  @override
+  String get coreAboutDisclaimerText =>
+      'Diese App wird ohne jegliche Gewährleistung bereitgestellt. Der Entwickler haftet nicht für Schäden, Datenverluste oder Probleme, die aus der Nutzung dieser Software entstehen.';
+
+  @override
+  String get coreAboutThirdPartyLicenses => 'Drittanbieter-Lizenzen';
+
+  @override
+  String get coreMaintenanceTitle => 'Wartungseinstellungen';
+
+  @override
+  String get coreDatabaseExportedAndroid =>
+      'Datenbank erfolgreich in den Downloads-Ordner exportiert.';
+
+  @override
+  String coreDatabaseExportedGeneral(String path) {
+    return 'Datenbank erfolgreich nach $path exportiert.';
+  }
+
+  @override
+  String coreDatabaseExportFailed(String error) {
+    return 'Datenbankexport fehlgeschlagen: $error';
+  }
+
+  @override
+  String get coreSettingsExportedAndroid =>
+      'Einstellungen erfolgreich in den Downloads-Ordner exportiert.';
+
+  @override
+  String coreSettingsExportedGeneral(String path) {
+    return 'Einstellungen erfolgreich nach $path exportiert.';
+  }
+
+  @override
+  String coreSettingsExportFailed(String error) {
+    return 'Einstellungsexport fehlgeschlagen: $error';
+  }
+
+  @override
+  String get coreTempFilesTitle => 'Temporäre Dateien';
+
+  @override
+  String coreTempFilesUsage(int count, String size) {
+    return '$count Datei(en), $size belegt';
+  }
+
+  @override
+  String get coreTempFilesCleanUp => 'Temporäre Dateien bereinigen';
+
+  @override
+  String get coreTempFilesCleanedUp => 'Temporäre Dateien wurden bereinigt';
+
+  @override
+  String get coreShortcutsTitle => 'Tool-Verknüpfungen';
+
+  @override
+  String get coreShortcutsDirectAccessTitle => 'Direktzugriff-Starter';
+
+  @override
+  String get coreShortcutsDirectAccessSubtitle =>
+      'Fügen Sie separate Home-Screen-Symbole oder App-Drawer-Einträge für Ihre Lieblingstools hinzu. Ein Tippen auf eine Verknüpfung öffnet die App direkt in diesem Tool.';
+
+  @override
+  String get coreShortcutsAndroidRequired =>
+      'Android wird benötigt, um native Verknüpfungen anzuheften oder App-Drawer-Symbole zu verwalten. Änderungen werden lokal gespeichert, aber keine nativen Symbole werden verändert.';
+
+  @override
+  String get coreShortcutsSelectTools => 'Tools zur Konfiguration auswählen';
+
+  @override
+  String coreShortcutsPinRequested(String name) {
+    return 'Verknüpfung für $name angefordert! Systemmeldung bestätigen.';
+  }
+
+  @override
+  String coreShortcutsDrawerDisabled(String name) {
+    return 'App-Drawer-Symbol für $name deaktiviert';
+  }
+
+  @override
+  String coreShortcutsDrawerEnabled(String name) {
+    return 'App-Drawer-Symbol für $name aktiviert (Aktualisierung in wenigen Sekunden).';
+  }
+
+  @override
+  String get coreSyncTitle => 'Cloud-Synchronisierung';
+
+  @override
+  String get coreSyncAcrossDevicesTitle =>
+      'Daten geräteübergreifend synchronisieren';
+
+  @override
+  String get coreSyncAcrossDevicesSubtitle =>
+      'Mit der Cloud-Synchronisierung können Sie Ihre Tool-Daten sichern und nahtlos mit einem zentralen Server abgleichen.';
+
+  @override
+  String get coreSyncEnableTitle => 'Synchronisierung aktivieren';
+
+  @override
+  String get coreSyncActive => 'Synchronisierung aktiv';
+
+  @override
+  String get coreSyncDisabled => 'Synchronisierung deaktiviert';
+
+  @override
+  String get coreSyncServerCredentials => 'Server-Zugangsdaten';
+
+  @override
+  String get coreSyncServerBaseUrl => 'Server-Basis-URL';
+
+  @override
+  String get coreSyncServerUrlRequired =>
+      'Server-URL ist erforderlich, wenn die Synchronisierung aktiviert ist';
+
+  @override
+  String get coreSyncUserId => 'Benutzer-ID (optional)';
+
+  @override
+  String get coreSyncUserIdHint =>
+      'Benutzername oder Benutzer-ID eingeben (optional)';
+
+  @override
+  String get coreSyncStatusTitle => 'Synchronisierungsstatus';
+
+  @override
+  String get coreSyncNeverSynced => 'Noch nie synchronisiert';
+
+  @override
+  String coreSyncLastSynced(String dateTime) {
+    return 'Zuletzt synchronisiert: $dateTime';
+  }
+
+  @override
+  String get coreSyncSyncing => 'Synchronisierung läuft...';
+
+  @override
+  String get coreSyncNow => 'Jetzt synchronisieren';
+
+  @override
+  String coreSyncCompleted(String pulled, String pushed, String deleted) {
+    return 'Synchronisierung abgeschlossen. Empfangen: $pulled, Gesendet: $pushed, Gelöscht: $deleted.';
+  }
+
+  @override
+  String get coreSyncFailedNoUrl =>
+      'Synchronisierung fehlgeschlagen. Server-URL ist leer.';
+
+  @override
+  String coreSyncFailed(String error) {
+    return 'Synchronisierung fehlgeschlagen: $error';
+  }
+
+  @override
+  String get coreSyncSaveConfiguration => 'Konfiguration speichern';
+
+  @override
+  String get coreSyncSettingsSaved => 'Einstellungen erfolgreich gespeichert';
+
+  @override
+  String coreSyncSettingsSaveFailed(String error) {
+    return 'Einstellungen konnten nicht gespeichert werden: $error';
+  }
+
+  @override
+  String get coreOverviewSearchHint => 'Tools suchen...';
+
+  @override
+  String get coreOverviewNoToolsFound => 'Keine Tools gefunden';
+
+  @override
+  String get coreSettingsDialogTitle => 'Übersichtseinstellungen';
+
+  @override
+  String get coreSettingsDialogSyncSubtitle =>
+      'Tool-Daten sichern und mit der Cloud synchronisieren';
+
+  @override
+  String get coreSettingsDialogMaintenanceSubtitle =>
+      'Datenbank-Backups und Einstellungen als JSON herunterladen';
+
+  @override
+  String get coreSettingsDialogShortcutsSubtitle =>
+      'Verknüpfungen anheften oder App-Drawer-Symbole verwalten';
+
+  @override
+  String get coreSettingsDialogOpenWithSubtitle =>
+      'Standard-Toolzuordnungen für geteilte Dateien verwalten';
+
+  @override
+  String get coreSettingsDialogAppearanceSubtitle =>
+      'Design, kompakte Ansicht, Benachrichtigungen, Sortierung';
+
+  @override
+  String get coreSettingsDialogAboutSubtitle =>
+      'Version, Lizenzen und App-Informationen';
+
+  @override
+  String get coreOpenWithDefaultsTitle => 'Standardmäßig öffnen mit';
+
+  @override
+  String get coreOpenWithResetTitle => 'Alle Standards zurücksetzen?';
+
+  @override
+  String get coreOpenWithResetContent =>
+      'Dadurch werden alle „Immer öffnen mit“-Zuordnungen gelöscht. Beim nächsten Öffnen einer geteilten Datei erscheint wieder der Auswahldialog.';
+
+  @override
+  String get coreOpenWithNoDefaults => 'Keine Standardzuordnungen festgelegt.';
+
+  @override
+  String get coreOpenWithAssociationsLabel =>
+      'Standard-Toolzuordnungen für geteilte Dateien:';
+
+  @override
+  String get coreOpenWithResetButton => 'Alle Standards zurücksetzen';
+
+  @override
+  String get coreOpenWithResetting => 'Wird zurückgesetzt...';
+
+  @override
+  String get coreOpenWithCleared => 'Standardzuordnungen wurden gelöscht';
+
+  @override
+  String get emfStartScanning => 'SCAN STARTEN';
+
+  @override
+  String get emfStopScanning => 'SCAN STOPPEN';
+
+  @override
+  String get emfAudioTick => 'AUDIO-TICK';
+
+  @override
+  String get emfScreenOn => 'DISPLAY AN';
+
+  @override
+  String get emfCableTriggerThreshold => 'KABEL-AUSLÖSESCHWELLE';
+
+  @override
+  String get emfScannerTitle => 'EMF-SCANNER';
+
+  @override
+  String get emfPro => 'PRO';
+
+  @override
+  String get emfWallCurrentSubtitle => 'STROMLEITUNGSORTUNG & FELDMESSUNG';
+
+  @override
+  String get emfSimulator => 'SIMULATOR';
+
+  @override
+  String get emfHardwareSensor => 'HARDWARE-SENSOR';
+
+  @override
+  String get emfOpenVirtualSensorToolbox =>
+      'VIRTUELLES SENSOR-TOOLBOX ÖFFNEN (ENTWICKLER)';
+
+  @override
+  String get emfDeveloperSimulationLab => '🛠️ ENTWICKLER-SIMULATIONSLABOR';
+
+  @override
+  String get emfExitSim => 'SIM BEENDEN';
+
+  @override
+  String get emfSelectFieldScenarioPreset => 'FELDSZENARIO AUSWÄHLEN';
+
+  @override
+  String get emfPresetEarthNormal => 'Erdfeld Normal';
+
+  @override
+  String get emfPresetMainsWire => 'Stromleitung (AC)';
+
+  @override
+  String get emfPresetMagnetProximity => 'Magnetannäherung';
+
+  @override
+  String get emfPresetWalkDrift => 'Bewegungsdrift (Drift)';
+
+  @override
+  String get emfManualVectorAdjustments => 'MANUELLE X,Y,Z-VEKTORANPASSUNGEN';
+
+  @override
+  String get emfManualActive => 'MANUELL AKTIV';
+
+  @override
+  String get emfXOffset => 'X Versatz';
+
+  @override
+  String get emfYOffset => 'Y Versatz';
+
+  @override
+  String get emfZOffset => 'Z Versatz';
+
+  @override
+  String get emfThreeAxisVectorReadout => '3-ACHSEN-VEKTORANZEIGE';
+
+  @override
+  String get emfLiveSensors => 'LIVE-SENSOREN';
+
+  @override
+  String get emfPaused => 'PAUSIERT';
+
+  @override
+  String get fastDropPastingText => 'Text aus Zwischenablage wird eingefügt...';
+
+  @override
+  String get fastDropPastingImage =>
+      'Bild aus Zwischenablage wird eingefügt...';
+
+  @override
+  String get fastDropClipboardEmpty =>
+      'Kein Text- oder Bildinhalt in der Zwischenablage gefunden';
+
+  @override
+  String get fastDropUploadedSuccessfully => 'Erfolgreich hochgeladen!';
+
+  @override
+  String fastDropUploadingFiles(int count) {
+    return '$count Dateien werden hochgeladen...';
+  }
+
+  @override
+  String fastDropUploadingFileProgress(int current, int total, String name) {
+    return '$current von $total wird hochgeladen: $name...';
+  }
+
+  @override
+  String get fastDropSharedFilesUploaded =>
+      'Geteilte Dateien erfolgreich hochgeladen!';
+
+  @override
+  String get fastDropDeleteTitle => 'Drop löschen';
+
+  @override
+  String fastDropDeleteMessage(String filename) {
+    return 'Möchten Sie \"$filename\" wirklich löschen?';
+  }
+
+  @override
+  String get fastDropDeletedSuccessfully => 'Erfolgreich gelöscht';
+
+  @override
+  String fastDropDeleteFailed(String error) {
+    return 'Drop konnte nicht gelöscht werden: $error';
+  }
+
+  @override
+  String fastDropDownloadingFile(String filename) {
+    return '$filename wird heruntergeladen...';
+  }
+
+  @override
+  String fastDropDownloadingFileToOpen(String filename) {
+    return '$filename wird zum Öffnen heruntergeladen...';
+  }
+
+  @override
+  String get fastDropDescriptionUpdated => 'Beschreibung aktualisiert';
+
+  @override
+  String get fastDropRetentionUpdated => 'Aufbewahrungsdauer aktualisiert';
+
+  @override
+  String get fastDropTitle => 'Fast Drop';
+
+  @override
+  String get fastDropStatusOnline => 'Online';
+
+  @override
+  String get fastDropStatusOffline => 'Offline';
+
+  @override
+  String get fastDropStatusSyncDisabled => 'Sync deaktiviert';
+
+  @override
+  String get fastDropStatusNotConfigured => 'Nicht konfiguriert';
+
+  @override
+  String get fastDropRefreshList => 'Liste aktualisieren';
+
+  @override
+  String get fastDropProgressUploading => 'Wird hochgeladen';
+
+  @override
+  String get fastDropProgressDownloading => 'Wird heruntergeladen';
+
+  @override
+  String get fastDropSectionTitle => 'ABGELEGTE DATEIEN';
+
+  @override
+  String get fastDropEditRetentionTitle => 'Aufbewahrungsdauer bearbeiten';
+
+  @override
+  String get fastDropEditDescriptionTitle => 'Beschreibung bearbeiten';
+
+  @override
+  String get fastDropDescriptionHint => 'Beschreibung hinzufügen...';
+
+  @override
+  String fastDropExpires(String date) {
+    return 'Läuft ab: $date';
+  }
+
+  @override
+  String get fastDropIndefiniteRetention => 'Unbegrenzte Aufbewahrung';
+
+  @override
+  String get fastDropClipboardBadge => 'ZWISCHENABLAGE';
+
+  @override
+  String fastDropUploaded(String date) {
+    return 'Hochgeladen: $date';
+  }
+
+  @override
+  String get fastDropAddDescriptionPlaceholder => 'Beschreibung hinzufügen...';
+
+  @override
+  String get fastDropPreviewTooltip => 'Vorschau';
+
+  @override
+  String get fastDropOpenShare => 'Öffnen / Teilen';
+
+  @override
+  String get fastDropDownload => 'Herunterladen';
+
+  @override
+  String get fastDropConnectionStatus => 'Verbindungsstatus';
+
+  @override
+  String get fastDropRetryConnection => 'Verbindung erneut versuchen';
+
+  @override
+  String get fastDropNoDropsTitle => 'Noch keine Drops';
+
+  @override
+  String get fastDropNoDropsSubtitle =>
+      'Dateien hierher ziehen oder Inhalt aus der Zwischenablage einfügen, um ihn vorübergehend zu speichern.';
+
+  @override
+  String get fastDropDownloadingForPreview =>
+      'Datei für Vorschau wird heruntergeladen...';
+
+  @override
+  String fastDropPreviewFailed(String error) {
+    return 'Vorschau konnte nicht geladen werden:\n$error';
+  }
+
+  @override
+  String fastDropReadFileFailed(String error) {
+    return 'Fehler beim Lesen der Datei: $error';
+  }
+
+  @override
+  String get fastDropPreviewNotAvailable =>
+      'Für diesen Dateityp ist keine Vorschau verfügbar.';
+
+  @override
+  String get fastDropOpenWithApp => 'Mit App öffnen';
+
+  @override
+  String get fastDropNotConfiguredTitle => 'Sync-Server nicht konfiguriert';
+
+  @override
+  String get fastDropNotConfiguredBody =>
+      'Fast Drop benötigt eine Verbindung zum Backend-Server. Bitte konfigurieren Sie die Sync-Server-URL in den Einstellungen, um Dateien zu teilen.';
+
+  @override
+  String get fastDropConfigureServer => 'Server konfigurieren';
+
+  @override
+  String get fastDropSyncDisabledTitle => 'Cloud-Sync ist deaktiviert';
+
+  @override
+  String get fastDropSyncDisabledBody =>
+      'Fast Drop erfordert, dass Cloud-Sync in den Einstellungen aktiviert ist.';
+
+  @override
+  String get fastDropEnableButton => 'Aktivieren';
+
+  @override
+  String get fastDropConfigureServerBody =>
+      'Bitte zuerst die Server-URL in den Cloud-Einstellungen konfigurieren.';
+
+  @override
+  String get fastDropServerUnreachable => 'Sync-Server nicht erreichbar';
+
+  @override
+  String get fastDropAllFiles => 'Alle Dateien';
+
+  @override
+  String get fastDropSelectFilesAndroid => 'Dateien zum Hochladen auswählen';
+
+  @override
+  String get fastDropDropFilesHere => 'Dateien hier ablegen';
+
+  @override
+  String get fastDropOrClickToBrowse => 'oder tippen, um zu durchsuchen';
+
+  @override
+  String get fastDropPasteClipboard => 'Zwischenablage einfügen';
+
+  @override
+  String get focusAutoStopTimer => 'Auto-Stopp-Timer';
+
+  @override
+  String get focusStartPlaybackToEnableTimer =>
+      'Wiedergabe starten, um Timer zu aktivieren';
+
+  @override
+  String focusCustomMinutes(int minutes) {
+    return 'Benutzerdefiniert: $minutes Min.';
+  }
+
+  @override
+  String get focusSetTimer => 'Festlegen';
+
+  @override
+  String get focusCancelTimer => 'Timer abbrechen';
+
+  @override
+  String get img2pdfNoImageInClipboard =>
+      'Kein Bild in der Zwischenablage gefunden';
+
+  @override
+  String img2pdfFailedReadClipboard(String error) {
+    return 'Fehler beim Lesen der Zwischenablage: $error';
+  }
+
+  @override
+  String get img2pdfSettingsTooltip => 'PDF-Einstellungen';
+
+  @override
+  String get img2pdfImagesLabel => 'Bilder';
+
+  @override
+  String get img2pdfDropTitle => 'Bilder hier ablegen';
+
+  @override
+  String get img2pdfDropSubtitle => 'Unterstützt PNG, JPEG, WebP, BMP, GIF';
+
+  @override
+  String get img2pdfBrowseFiles => 'Dateien durchsuchen';
+
+  @override
+  String get img2pdfPasteFromClipboard => 'Aus Zwischenablage einfügen';
+
+  @override
+  String get img2pdfPickFromGallery => 'Aus Galerie auswählen';
+
+  @override
+  String get img2pdfNoImagesYet => 'Noch keine Bilder hinzugefügt';
+
+  @override
+  String get img2pdfNoImagesHint =>
+      'Bilder hier ablegen oder „Weitere hinzufügen“ wählen';
+
+  @override
+  String img2pdfPageNumber(int page) {
+    return 'Seite $page';
+  }
+
+  @override
+  String get img2pdfPdfSettings => 'PDF-Einstellungen';
+
+  @override
+  String get img2pdfPageSize => 'Seitengröße';
+
+  @override
+  String get img2pdfFitToImage => 'An Bild anpassen';
+
+  @override
+  String get img2pdfOrientation => 'Ausrichtung';
+
+  @override
+  String get img2pdfLandscape => 'Querformat';
+
+  @override
+  String get img2pdfJpegQuality => 'JPEG-Qualität';
+
+  @override
+  String get img2pdfImageCountSingle => '1 Bild';
+
+  @override
+  String img2pdfImageCountPlural(int count) {
+    return '$count Bilder';
+  }
+
+  @override
+  String get img2pdfAddMore => 'Weitere hinzufügen';
+
+  @override
+  String get img2pdfCreatePdf => 'PDF erstellen';
+
+  @override
+  String get imgViewDiscardChangesTitle => 'Änderungen verwerfen?';
+
+  @override
+  String get imgViewDiscardChangesMessage =>
+      'Dieses Bild hat ungespeicherte Änderungen. Beim Verlassen werden sie verworfen.';
+
+  @override
+  String get imgViewDiscard => 'Verwerfen';
+
+  @override
+  String get imgViewKeepEditing => 'Weiter bearbeiten';
+
+  @override
+  String get imgViewImageCopied => 'Bild in Zwischenablage kopiert';
+
+  @override
+  String get imgViewHideSettings => 'Einstellungen ausblenden';
+
+  @override
+  String get imgViewShowSettings => 'Einstellungen einblenden';
+
+  @override
+  String get imgViewEditImageTooltip => 'Bild bearbeiten';
+
+  @override
+  String get imgViewCloseImage => 'Bild schließen';
+
+  @override
+  String get imgViewEditImageDrawerTitle => 'Bild bearbeiten';
+
+  @override
+  String get imgViewUndo => 'Rückgängig';
+
+  @override
+  String get imgViewRedo => 'Wiederholen';
+
+  @override
+  String get imgViewCopyToClipboard => 'In Zwischenablage kopieren';
+
+  @override
+  String get imgViewDropZoneTitle => 'Bild hier ablegen';
+
+  @override
+  String get imgViewDropZoneSubtitle => 'Unterstützt PNG, JPEG, WebP, BMP, GIF';
+
+  @override
+  String get imgViewTypeLabel => 'Bilder';
+
+  @override
+  String get imgViewBrowseFiles => 'Dateien durchsuchen';
+
+  @override
+  String get imgViewPasteFromClipboard => 'Aus Zwischenablage einfügen';
+
+  @override
+  String get imgViewOriginalFileDetails => 'Originaldatei-Details';
+
+  @override
+  String get imgViewMoreInformation => 'Weitere Informationen';
+
+  @override
+  String get imgViewTransform => 'Transformieren';
+
+  @override
+  String get imgViewCroppingActive =>
+      'Zuschneiden aktiv. Steuerung auf dem Bild anpassen.';
+
+  @override
+  String get imgViewRedactingActive =>
+      'Schwärzen aktiv. Steuerung auf dem Bild anpassen.';
+
+  @override
+  String get imgViewRotateLeft => '90° nach links drehen';
+
+  @override
+  String get imgViewRotateRight => '90° nach rechts drehen';
+
+  @override
+  String get imgViewFlipHorizontal => 'Horizontal spiegeln';
+
+  @override
+  String get imgViewFlipVertical => 'Vertikal spiegeln';
+
+  @override
+  String get imgViewCrop => 'Zuschneiden';
+
+  @override
+  String get imgViewRedact => 'Schwärzen';
+
+  @override
+  String get imgViewResizeImage => 'Bild skalieren';
+
+  @override
+  String get imgViewWidthLabel => 'Breite (px)';
+
+  @override
+  String get imgViewAspectRatioLocked => 'Seitenverhältnis gesperrt';
+
+  @override
+  String get imgViewAspectRatioUnlocked => 'Seitenverhältnis entsperrt';
+
+  @override
+  String get imgViewHeightLabel => 'Höhe (px)';
+
+  @override
+  String get imgViewPreviewResize => 'Vorschau anzeigen';
+
+  @override
+  String get imgViewOutputFormat => 'Ausgabeformat';
+
+  @override
+  String get imgViewPreserveExif => 'EXIF-Metadaten beibehalten';
+
+  @override
+  String get imgViewPreserveExifSubtitle =>
+      'GPS, Kamera-Tags und Datum beibehalten (nur JPEG)';
+
+  @override
+  String imgViewCompressionQuality(int quality) {
+    return 'Kompressionsqualität: $quality%';
+  }
+
+  @override
+  String get imgViewSaveImage => 'Bild speichern';
+
+  @override
+  String get imgViewShareImage => 'Bild teilen';
+
+  @override
+  String get imgViewDimensions => 'Abmessungen';
+
+  @override
+  String get imgViewFileSize => 'Dateigröße';
+
+  @override
+  String get imgViewRedactStyleHeader => 'Schwärzungsstil und Form';
+
+  @override
+  String get imgViewShapeLabel => 'Form: ';
+
+  @override
+  String get imgViewShapeRectangle => 'Rechteck';
+
+  @override
+  String get imgViewShapeFreehand => 'Freihand';
+
+  @override
+  String get imgViewRedraw => 'Neu zeichnen';
+
+  @override
+  String get imgViewStyleSolid => 'Einfarbig';
+
+  @override
+  String get imgViewStylePixelate => 'Verpixeln';
+
+  @override
+  String get imgViewStyleBlur => 'Weichzeichnen';
+
+  @override
+  String get imgViewColorLabel => 'Farbe: ';
+
+  @override
+  String imgViewBlockSize(int size) {
+    return 'Blockgröße: $size px';
+  }
+
+  @override
+  String imgViewBlurRadius(int radius) {
+    return 'Unschärferadius: $radius px';
+  }
+
+  @override
+  String get imgViewRedactHint =>
+      'Pfad über den zu schwärzenden Bereich zeichnen';
+
+  @override
+  String get imgViewApplyRedaction => 'Schwärzung anwenden';
+
+  @override
+  String get imgViewCropPresetsHeader => 'Zuschnitt-Vorlagen';
+
+  @override
+  String get imgViewCropPresetFree => 'Frei';
+
+  @override
+  String get imgViewCropPreset1x1 => '1:1 Quadrat';
+
+  @override
+  String get imgViewCropPreset16x9 => '16:9 Breitbild';
+
+  @override
+  String get imgViewCropPreset4x3 => '4:3 Standard';
+
+  @override
+  String get imgViewCropPreset3x2 => '3:2 Foto';
+
+  @override
+  String get imgViewApplyCrop => 'Zuschnitt anwenden';
+
+  @override
+  String get imgViewZoomOut => 'Herauszoomen';
+
+  @override
+  String get imgViewZoomIn => 'Hineinzoomen';
+
+  @override
+  String get imgViewPreviousImage => 'Vorheriges Bild';
+
+  @override
+  String get imgViewNextImage => 'Nächstes Bild';
+
+  @override
+  String get imgViewGpsTitle => 'GPS-Standortinformationen';
+
+  @override
+  String get imgViewGpsLatitude => 'Breitengrad';
+
+  @override
+  String get imgViewGpsLongitude => 'Längengrad';
+
+  @override
+  String get imgViewGpsCoordinatesDms => 'Koordinaten (DMS)';
+
+  @override
+  String get imgViewOpenInMaps => 'In Karte öffnen';
+
+  @override
+  String get imgViewBrowseGallery => 'Galerie durchsuchen';
+
+  @override
+  String get imgViewTakePhoto => 'Foto aufnehmen';
+
+  @override
+  String get imgViewMetadataDialogTitle => 'Metadaten & EXIF-Informationen';
+
+  @override
+  String get imgViewNoExifData =>
+      'Keine EXIF-Metadaten in diesem Bild gefunden.';
+
+  @override
+  String get levelSensorsUnavailable =>
+      'Sensoren auf diesem Gerät nicht verfügbar.';
+
+  @override
+  String get levelCalibratedToZero => 'Oberfläche auf null kalibriert.';
+
+  @override
+  String get levelCalibrationReset => 'Kalibrierung zurückgesetzt.';
+
+  @override
+  String get levelMode2Axis => '2-Achsen';
+
+  @override
+  String get levelModeBeam => 'Strahl';
+
+  @override
+  String get levelRuler => 'Lineal';
+
+  @override
+  String get levelCalibrateRuler => 'Lineal kalibrieren';
+
+  @override
+  String get levelRotationLocked => 'Gesperrt';
+
+  @override
+  String get levelLockRotation => 'Rot. sperren';
+
+  @override
+  String get levelWakeLock => 'Display aktiv';
+
+  @override
+  String get levelTolerance => 'TOLERANZ';
+
+  @override
+  String get levelSetZero => 'Null setzen';
+
+  @override
+  String get levelRulerCalibration => 'Lineal kalibrieren';
+
+  @override
+  String get levelRulerCalibrationHint =>
+      'Halte ein physisches Lineal an den Bildschirmrand. Passe die Skala an, bis die Markierungen genau übereinstimmen.';
+
+  @override
+  String get levelPitch => 'Neigung';
+
+  @override
+  String get levelRoll => 'Rolle';
+
+  @override
+  String get miscCalculatorCopied => 'Kopiert';
+
+  @override
+  String get miscCalculatorSciLabel => 'SCI';
+
+  @override
+  String get miscCalculatorHistLabel => 'HIST';
+
+  @override
+  String get miscCalculatorCopyResultTooltip => 'Ergebnis kopieren';
+
+  @override
+  String get miscCalculatorBackspaceTooltip => 'Rücktaste';
+
+  @override
+  String get miscCalculatorHistoryTitle => 'Verlauf';
+
+  @override
+  String get miscCalculatorNoHistory => 'Noch keine Berechnungen';
+
+  @override
+  String get miscBatteryPowerStatus => 'Energiestatus';
+
+  @override
+  String get miscBatteryFullyCharged => 'Vollständig geladen';
+
+  @override
+  String get miscBatteryCharging => 'Wird geladen';
+
+  @override
+  String get miscBatteryDischarging => 'Entlädt sich';
+
+  @override
+  String get miscBatterySaverActive => 'Energiesparen aktiv';
+
+  @override
+  String get miscDeviceInfoSystemOs => 'System & Betriebssystem';
+
+  @override
+  String get miscDeviceInfoHardwareSpecs => 'Hardware-Details';
+
+  @override
+  String get miscDeviceInfoDisplayDetails => 'Anzeige-Details';
+
+  @override
+  String get miscDeviceInfoGeneralSettings => 'Allgemeine Einstellungen';
+
+  @override
+  String miscMarkdownFailedToLoad(String error) {
+    return 'Datei konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String miscMarkdownFailedToRead(String error) {
+    return 'Datei konnte nicht gelesen werden: $error';
+  }
+
+  @override
+  String get miscMarkdownOpenTitle => 'Markdown-Datei öffnen';
+
+  @override
+  String get miscMarkdownDropSubtitle =>
+      'Lege eine .md- oder .txt-Datei hier ab';
+
+  @override
+  String get nfcEditorFormTitle => 'NDEF-Datensatz erstellen';
+
+  @override
+  String get nfcTemplatePreset => 'Vorlage';
+
+  @override
+  String get nfcTemplateCustomRecord => 'Benutzerdefiniert';
+
+  @override
+  String get nfcTemplateUrlHomepage => 'URL: Homepage-Link';
+
+  @override
+  String get nfcTemplateTextNote => 'Text: Einfache Notiz';
+
+  @override
+  String get nfcTemplateMimeJson => 'MIME: JSON-Konfiguration';
+
+  @override
+  String get nfcTemplateMimeVcard => 'MIME: vCard-Kontakt';
+
+  @override
+  String get nfcRecordType => 'Datensatztyp (NDEF-Format)';
+
+  @override
+  String get nfcRecordTypeUri => 'Bekannte URI (URL)';
+
+  @override
+  String get nfcRecordTypeText => 'Bekannter Text';
+
+  @override
+  String get nfcRecordTypeMime => 'MIME-Medieninhalt';
+
+  @override
+  String get nfcUriTargetLink => 'URI-Ziellink';
+
+  @override
+  String get nfcUriHelperText =>
+      'Erkennt gängige Präfixe automatisch (https://, http://, mailto:, file://), um Tag-Speicher zu sparen.';
+
+  @override
+  String get nfcUriRequired => 'URI-Ziellink ist erforderlich';
+
+  @override
+  String get nfcTextContent => 'Textinhalt';
+
+  @override
+  String get nfcTextContentHint => 'Notizinhalt eingeben...';
+
+  @override
+  String get nfcTextContentRequired => 'Textinhalt ist erforderlich';
+
+  @override
+  String get nfcLanguageCode => 'Sprachcode';
+
+  @override
+  String get nfcLanguageCodeHelper =>
+      'Standardmäßiger BCP-47-Sprachbezeichner (z. B. en, fr, de, es).';
+
+  @override
+  String get nfcLanguageCodeRequired => 'Sprachcode ist erforderlich';
+
+  @override
+  String get nfcMimeType => 'MIME-Typ';
+
+  @override
+  String get nfcMimeTypeHelper =>
+      'Offizieller Medientyp (z. B. application/json, text/vcard, image/png).';
+
+  @override
+  String get nfcMimeTypeRequired =>
+      'Ein gültiger MIME-Typ (z. B. typ/subtyp) ist erforderlich';
+
+  @override
+  String get nfcMimePayloadData => 'MIME-Nutzlastdaten';
+
+  @override
+  String get nfcMimePayloadHint =>
+      'JSON, vCard oder benutzerdefinierte Rohdaten eingeben...';
+
+  @override
+  String get nfcPayloadRequired => 'Nutzlastdaten sind erforderlich';
+
+  @override
+  String get nfcGetHex => 'Hex erzeugen';
+
+  @override
+  String get nfcWriteTag => 'Tag schreiben';
+
+  @override
+  String get nfcWriteTagHint =>
+      '\"Tag schreiben\" ist nur beim Scannen eines beschreibbaren Tags aktiv.';
+
+  @override
+  String get nfcHexInspectorTitle => 'NDEF-Hex-Inspektor';
+
+  @override
+  String get nfcHexInspectorSubtitle =>
+      'Rohe NDEF-Hex-Codes validieren, parsen oder erzeugen.';
+
+  @override
+  String get nfcPasteHexData => 'NDEF-Hex-Daten einfügen';
+
+  @override
+  String get nfcClearInput => 'Eingabe löschen';
+
+  @override
+  String get nfcPasteHexToParsePrompt =>
+      'Bitte NDEF-Hex-Daten zum Parsen einfügen.';
+
+  @override
+  String get nfcParseHex => 'Hex parsen';
+
+  @override
+  String get nfcGeneratedHex => 'Erzeugter NDEF-Hex';
+
+  @override
+  String get nfcCopyGeneratedHex => 'Erzeugten Hex kopieren';
+
+  @override
+  String get nfcHexCopied =>
+      'Erzeugter NDEF-Hex in die Zwischenablage kopiert.';
+
+  @override
+  String get nfcNoRecordsFound => 'Keine Datensätze gefunden';
+
+  @override
+  String get nfcNoRecordsSubtitle =>
+      'NDEF-Nutzlast ist leer oder wurde noch nicht gescannt.';
+
+  @override
+  String nfcNdefRecords(int count) {
+    return 'NDEF-Datensätze ($count)';
+  }
+
+  @override
+  String get nfcRecordIndex => 'Datensatz-Index:';
+
+  @override
+  String get nfcLoadIntoEditor => 'In Editor laden';
+
+  @override
+  String get nfcRecordLoaded => 'Datensatz in das Editor-Formular geladen.';
+
+  @override
+  String get nfcCopyPayloadHex => 'Nutzlast-Hex kopieren';
+
+  @override
+  String get nfcPayloadHexCopied =>
+      'Nutzlast-Hex in die Zwischenablage kopiert.';
+
+  @override
+  String get nfcRawPayloadHex => 'Rohe Nutzlast (Hex):';
+
+  @override
+  String nfcSubtitleText(String lang, String encoding) {
+    return 'Bekannter Text [$lang | $encoding]';
+  }
+
+  @override
+  String get nfcSubtitleUri => 'Bekannte URI';
+
+  @override
+  String get nfcSubtitleCustom => 'Benutzerdefiniert / Kein NDEF';
+
+  @override
+  String get nfcStop => 'Stopp';
+
+  @override
+  String get nfcScan => 'Scannen';
+
+  @override
+  String get nfcNoHardware => 'Keine Hardware';
+
+  @override
+  String get nfcScannerTitle => 'NFC-Scanner';
+
+  @override
+  String get nfcScanningPrompt => 'NFC-Tag zum Scannen annähern';
+
+  @override
+  String get nfcScannerInactive => 'Scanner ist inaktiv';
+
+  @override
+  String get nfcCardBrand => 'Kartenmarke';
+
+  @override
+  String get nfcCardNumber => 'Kartennummer';
+
+  @override
+  String get nfcCardholderName => 'Karteninhaber';
+
+  @override
+  String get nfcExpirationDate => 'Ablaufdatum';
+
+  @override
+  String get nfcApplicationAid => 'Anwendungs-AID';
+
+  @override
+  String get nfcUidSerial => 'UID / Seriennummer';
+
+  @override
+  String get nfcTechnologies => 'Technologien';
+
+  @override
+  String get nfcCapacity => 'Kapazität';
+
+  @override
+  String get nfcWritable => 'Beschreibbar';
+
+  @override
+  String get nfcCardholderLabel => 'KARTENINHABER';
+
+  @override
+  String get nfcExpiresLabel => 'GÜLTIG BIS';
+
+  @override
+  String get nfcPaymentCard => 'Zahlungskarte';
+
+  @override
+  String nfcSessionError(String message) {
+    return 'NFC-Scan-Sitzungsfehler: $message';
+  }
+
+  @override
+  String nfcTagDetected(String label) {
+    return 'Tag erkannt — $label';
+  }
+
+  @override
+  String nfcScanFailed(String error) {
+    return 'Scan fehlgeschlagen: $error';
+  }
+
+  @override
+  String get nfcNoActiveTag =>
+      'Kein aktives Tag. Bitte zuerst ein Tag scannen.';
+
+  @override
+  String get nfcTagNotWritable =>
+      'Tag ist nicht beschreibbar oder NDEF wird nicht unterstützt.';
+
+  @override
+  String get nfcWritingToTag => 'Schreibe auf NFC-Tag...';
+
+  @override
+  String get nfcWriteSuccess => 'NDEF-Datensatz erfolgreich geschrieben!';
+
+  @override
+  String nfcWriteFailed(String error) {
+    return 'Schreiben fehlgeschlagen: $error';
+  }
+
+  @override
+  String get nfcHexGenerated => 'NDEF-Hex erzeugt! Unten kopieren.';
+
+  @override
+  String nfcHexGenerateError(String error) {
+    return 'Fehler beim Erzeugen des Hex: $error';
+  }
+
+  @override
+  String get nfcHexParsed => 'NDEF-Hex erfolgreich geparst!';
+
+  @override
+  String nfcHexParseFailed(String error) {
+    return 'Hex parsen fehlgeschlagen: $error';
+  }
+
+  @override
+  String get nfcNoHardwareInfo =>
+      'NFC-Hardware-Scanning wird nur auf Mobilgeräten unterstützt. Sie können dennoch NDEF-Hexadezimalkonfigurationen lokal einfügen, parsen, bearbeiten und erzeugen.';
+
+  @override
+  String get nfcHexEmulator => 'Hex-Emulator';
+
+  @override
+  String nfcRecordsParsed(int count) {
+    return '$count Datensätze geparst';
+  }
+
+  @override
+  String notesFailedToLoadSharedFile(String error) {
+    return 'Gemeinsame Datei konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String get notesNoteSaved => 'Notiz gespeichert';
+
+  @override
+  String notesFailedToSaveNote(String error) {
+    return 'Notiz konnte nicht gespeichert werden: $error';
+  }
+
+  @override
+  String get notesDeleteNoteTitle => 'Notiz löschen';
+
+  @override
+  String get notesDeleteNoteMessage => 'Diese Notiz wirklich löschen?';
+
+  @override
+  String get notesNoteDeleted => 'Notiz gelöscht';
+
+  @override
+  String notesFailedToDeleteNote(String error) {
+    return 'Notiz konnte nicht gelöscht werden: $error';
+  }
+
+  @override
+  String notesImportedNoteFrom(String name) {
+    return 'Notiz importiert aus \"$name\"';
+  }
+
+  @override
+  String notesFailedToImportDroppedFile(String error) {
+    return 'Abgelegte Datei konnte nicht importiert werden: $error';
+  }
+
+  @override
+  String get notesViewNoteTitle => 'Notiz anzeigen';
+
+  @override
+  String notesFailedToReadFile(String error) {
+    return 'Datei konnte nicht gelesen werden: $error';
+  }
+
+  @override
+  String get notesBackupImportedSuccessfully =>
+      'Sicherung erfolgreich importiert';
+
+  @override
+  String notesImportFailed(String error) {
+    return 'Import fehlgeschlagen: $error';
+  }
+
+  @override
+  String notesFailedToExportNotes(String error) {
+    return 'Notizen konnten nicht exportiert werden: $error';
+  }
+
+  @override
+  String get notesSyncConfigureServerUrl =>
+      'Bitte zuerst die Server-URL in den Cloud-Einstellungen konfigurieren';
+
+  @override
+  String notesSyncFinished(int pulled, int pushed, int deleted) {
+    return 'Synchronisierung abgeschlossen. Empfangen: $pulled, Gesendet: $pushed, Gelöscht: $deleted.';
+  }
+
+  @override
+  String get notesSyncFailedEmpty =>
+      'Synchronisierung fehlgeschlagen: URL oder Benutzer-ID fehlt';
+
+  @override
+  String notesSyncFailed(String error) {
+    return 'Synchronisierung fehlgeschlagen: $error';
+  }
+
+  @override
+  String get notesSearchHint => 'Notizen suchen...';
+
+  @override
+  String get notesSyncWithCloud => 'Mit Cloud synchronisieren';
+
+  @override
+  String get notesImportMarkdownFile => 'Markdown-Datei importieren';
+
+  @override
+  String get notesImportJsonBackup => 'JSON-Sicherung importieren';
+
+  @override
+  String get notesExportJsonBackup => 'JSON-Sicherung exportieren';
+
+  @override
+  String get notesEditorHint =>
+      'Notizen hier schreiben... (Markdown wird unterstützt)';
+
+  @override
+  String get notesEditorNoPreview => 'Noch keine Vorschau verfügbar';
+
+  @override
+  String get notesUnsavedChangesTitle => 'Nicht gespeicherte Änderungen';
+
+  @override
+  String get notesUnsavedChangesMessage =>
+      'Du hast nicht gespeicherte Änderungen. Wirklich verwerfen?';
+
+  @override
+  String get notesKeepEditing => 'Weiter bearbeiten';
+
+  @override
+  String get notesDiscard => 'Verwerfen';
+
+  @override
+  String get notesExportPdf => 'Als PDF exportieren';
+
+  @override
+  String get notesCreateNoteTitle => 'Notiz erstellen';
+
+  @override
+  String get notesEditNoteTitle => 'Notiz bearbeiten';
+
+  @override
+  String get notesTabWrite => 'Schreiben';
+
+  @override
+  String get notesTabPreview => 'Vorschau';
+
+  @override
+  String get notesToolbarBold => 'Fett';
+
+  @override
+  String get notesToolbarItalic => 'Kursiv';
+
+  @override
+  String get notesToolbarStrikethrough => 'Durchgestrichen';
+
+  @override
+  String get notesToolbarH1 => 'H1';
+
+  @override
+  String get notesToolbarH2 => 'H2';
+
+  @override
+  String get notesToolbarH3 => 'H3';
+
+  @override
+  String get notesToolbarList => 'Liste';
+
+  @override
+  String get notesToolbarTodo => 'Aufgabe';
+
+  @override
+  String get notesToolbarLink => 'Link';
+
+  @override
+  String get notesToolbarCode => 'Code';
+
+  @override
+  String get notesToolbarCodeBlock => 'Codeblock';
+
+  @override
+  String get notesUntitledNote => 'Unbenannte Notiz';
+
+  @override
+  String get notesExportMd => 'Als MD exportieren';
+
+  @override
+  String notesUpdatedAt(String date) {
+    return 'Aktualisiert: $date';
+  }
+
+  @override
+  String get notesDropZoneUnsupportedFile =>
+      'Nur Markdown- (.md) oder Textdateien (.txt) werden unterstützt';
+
+  @override
+  String get notesDropZoneTitle => 'Markdown-Datei hier ablegen';
+
+  @override
+  String get notesAddTagHint => 'Tag hinzufügen...';
+
+  @override
+  String get pdfEditDownload => 'Herunterladen';
+
+  @override
+  String get pdfEditOpenInViewer => 'Im Viewer öffnen';
+
+  @override
+  String pdfEditSignTitle(String fileName) {
+    return 'Signieren: $fileName';
+  }
+
+  @override
+  String pdfEditSignOpenError(String error) {
+    return 'PDF konnte nicht geöffnet werden: $error';
+  }
+
+  @override
+  String pdfEditSignFailed(String error) {
+    return 'Signieren fehlgeschlagen: $error';
+  }
+
+  @override
+  String get pdfEditSignPrevPage => 'Vorherige Seite';
+
+  @override
+  String get pdfEditSignNextPage => 'Nächste Seite';
+
+  @override
+  String pdfEditSignPageOf(int current, int total) {
+    return 'Seite $current von $total';
+  }
+
+  @override
+  String get pdfEditSignDragHint =>
+      'Ziehen zum Positionieren · Größe/Drehung an den Griffen ändern';
+
+  @override
+  String get pdfEditSignTapHint => 'Signatur oben antippen';
+
+  @override
+  String get pdfEditSignStamping => 'Signatur wird eingefügt…';
+
+  @override
+  String get pdfEditSignDoneTitle => 'Signatur eingefügt';
+
+  @override
+  String pdfEditSignDoneSize(String size) {
+    return 'Größe des signierten PDF: $size';
+  }
+
+  @override
+  String pdfEditFlattenTitle(String fileName) {
+    return 'Reduzieren: $fileName';
+  }
+
+  @override
+  String get pdfEditFlattenHeadline => 'PDF auf Bilder reduzieren';
+
+  @override
+  String get pdfEditFlattenDescription =>
+      'Jede Seite wird als Bild gerendert und in ein neues PDF eingebettet. Der Inhalt kann dadurch nicht mehr ausgewählt oder extrahiert werden.';
+
+  @override
+  String pdfEditFlattenDpi(int dpi) {
+    return 'Auflösung (DPI): $dpi';
+  }
+
+  @override
+  String get pdfEditFlattenDpiHint =>
+      'Höherer DPI-Wert = größere Datei, aber bessere Qualität';
+
+  @override
+  String pdfEditFlattenJpegQuality(int quality) {
+    return 'JPEG-Qualität: $quality %';
+  }
+
+  @override
+  String get pdfEditFlattenJpegQualityHint => 'Höhere Qualität = größere Datei';
+
+  @override
+  String get pdfEditFlattenStart => 'Reduzieren starten';
+
+  @override
+  String pdfEditFlattenProgress(int done, int total) {
+    return 'Seite $done von $total wird gerendert…';
+  }
+
+  @override
+  String pdfEditFlattenPagesTotal(int count) {
+    return '$count Seiten gesamt';
+  }
+
+  @override
+  String pdfEditFlattenFailed(String error) {
+    return 'Reduzieren fehlgeschlagen: $error';
+  }
+
+  @override
+  String get pdfEditFlattenDoneTitle => 'Reduzieren abgeschlossen';
+
+  @override
+  String pdfEditFlattenDoneSize(String size) {
+    return 'Neue PDF-Größe: $size';
+  }
+
+  @override
+  String pdfEditMetaTitle2(String fileName) {
+    return 'Metadaten: $fileName';
+  }
+
+  @override
+  String get pdfEditMetaReload => 'Metadaten neu laden';
+
+  @override
+  String get pdfEditMetaLoadFailed => 'Metadaten konnten nicht geladen werden';
+
+  @override
+  String pdfEditMetaLoadError(String error) {
+    return 'Metadaten konnten nicht geladen werden: $error';
+  }
+
+  @override
+  String pdfEditMetaRemoveSecurityError(String error) {
+    return 'Sicherheitsschutz konnte nicht entfernt werden: $error';
+  }
+
+  @override
+  String pdfEditMetaSaveFailed(String error) {
+    return 'Speichern fehlgeschlagen: $error';
+  }
+
+  @override
+  String get pdfEditMetaSpecsTitle => 'Dokumenteigenschaften';
+
+  @override
+  String get pdfEditMetaFileName => 'Dateiname';
+
+  @override
+  String get pdfEditMetaFileSize => 'Dateigröße';
+
+  @override
+  String get pdfEditMetaPageCount => 'Seitenanzahl';
+
+  @override
+  String get pdfEditMetaPdfVersion => 'PDF-Version';
+
+  @override
+  String get pdfEditMetaPageDimensions => 'Seitenabmessungen';
+
+  @override
+  String get pdfEditMetaMetadataTitle => 'Dokumentmetadaten';
+
+  @override
+  String get pdfEditMetaTitle => 'Titel';
+
+  @override
+  String get pdfEditMetaAuthor => 'Autor';
+
+  @override
+  String get pdfEditMetaSubject => 'Betreff';
+
+  @override
+  String get pdfEditMetaKeywords => 'Stichwörter';
+
+  @override
+  String get pdfEditMetaCreator => 'Ersteller';
+
+  @override
+  String get pdfEditMetaProducer => 'Erzeuger';
+
+  @override
+  String get pdfEditMetaCreationDate => 'Erstellungsdatum';
+
+  @override
+  String get pdfEditMetaModDate => 'Änderungsdatum';
+
+  @override
+  String get pdfEditMetaTrapped => 'Trapped';
+
+  @override
+  String get pdfEditMetaSecurityTitle => 'Sicherheit & Einschränkungen';
+
+  @override
+  String get pdfEditMetaEncrypted => 'Verschlüsselt';
+
+  @override
+  String pdfEditMetaEncryptedYes(String revision) {
+    return 'Ja (Revision $revision)';
+  }
+
+  @override
+  String get pdfEditMetaUnknown => 'unbekannt';
+
+  @override
+  String get pdfEditMetaRestrictions => 'Einschränkungen';
+
+  @override
+  String get pdfEditMetaPermAllowed => 'Erlaubt';
+
+  @override
+  String get pdfEditMetaPermRestricted => 'Eingeschränkt';
+
+  @override
+  String get pdfEditMetaPermPrintLow => 'Drucken (niedrige Auflösung)';
+
+  @override
+  String get pdfEditMetaPermPrintHigh => 'Drucken in hoher Qualität';
+
+  @override
+  String get pdfEditMetaPermModifyContent => 'Dokumentinhalt bearbeiten';
+
+  @override
+  String get pdfEditMetaPermCopyExtract => 'Inhalt kopieren & extrahieren';
+
+  @override
+  String get pdfEditMetaPermAnnotations => 'Anmerkungen hinzufügen/bearbeiten';
+
+  @override
+  String get pdfEditMetaPermForms => 'Interaktive Formulare ausfüllen';
+
+  @override
+  String get pdfEditMetaPermAccessibility => 'Barrierefreiheits-Extraktion';
+
+  @override
+  String get pdfEditMetaPermAssembly => 'Dokumentzusammenstellung';
+
+  @override
+  String get pdfEditMetaRemovePassword =>
+      'Passwort entfernen & Kopie speichern';
+
+  @override
+  String get pdfEditMetaDoneTitle => 'Sicherheitsschutz entfernt';
+
+  @override
+  String pdfEditExtractTitle(String fileName) {
+    return 'Bilder extrahieren: $fileName';
+  }
+
+  @override
+  String pdfEditExtractSelectionCount(int selected, int total) {
+    return '$selected ausgewählt / $total gesamt';
+  }
+
+  @override
+  String get pdfEditExtractHideControls => 'Steuerelemente ausblenden';
+
+  @override
+  String get pdfEditExtractShowControls => 'Steuerelemente einblenden';
+
+  @override
+  String get pdfEditExtractSelectAll => 'Alle auswählen';
+
+  @override
+  String get pdfEditExtractClearSelection => 'Auswahl aufheben';
+
+  @override
+  String get pdfEditExtractDownloadSelected => 'Auswahl herunterladen';
+
+  @override
+  String get pdfEditExtractDownloadAllZip => 'Alle herunterladen (ZIP)';
+
+  @override
+  String get pdfEditExtractScanning => 'PDF wird gescannt…';
+
+  @override
+  String pdfEditExtractScanningObjects(int done, int total) {
+    return 'PDF-Objekte $done von $total werden gescannt…';
+  }
+
+  @override
+  String pdfEditExtractPreparingImages(int done, int total) {
+    return 'Bilder $done von $total werden vorbereitet…';
+  }
+
+  @override
+  String pdfEditExtractImagesFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Bilder gefunden',
+      one: '1 Bild gefunden',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pdfEditExtractFailed(String error) {
+    return 'Bildextraktion fehlgeschlagen: $error';
+  }
+
+  @override
+  String pdfEditExtractCreatingZip(int done, int total) {
+    return 'ZIP wird erstellt $done von $total…';
+  }
+
+  @override
+  String get pdfEditExtractZipReady => 'ZIP bereit';
+
+  @override
+  String pdfEditExtractZipFailed(String error) {
+    return 'ZIP-Export fehlgeschlagen: $error';
+  }
+
+  @override
+  String pdfEditExtractImagePageDimensions(int page, int width, int height) {
+    return 'Seite $page – ${width}x$height';
+  }
+
+  @override
+  String pdfEditExtractImageBpp(String value) {
+    return 'BPP: $value';
+  }
+
+  @override
+  String pdfEditExtractImageFilter(String filter) {
+    return 'Filter: $filter';
+  }
+
+  @override
+  String get pdfEditExtractPreview => 'Vorschau';
+
+  @override
+  String get pdfNavPasswordTitle => 'Passwortgeschütztes PDF';
+
+  @override
+  String pdfNavPasswordMessage(String fileName) {
+    return 'Passwort für $fileName eingeben.';
+  }
+
+  @override
+  String get pdfNavOpenCanceled =>
+      'PDF-Öffnen abgebrochen. Andere Datei auswählen oder erneut versuchen.';
+
+  @override
+  String get pdfNavTypeLabel => 'PDFs';
+
+  @override
+  String get pdfNavDropZoneTitle => 'PDF-Datei öffnen';
+
+  @override
+  String get pdfNavDropZoneSubtitle => '.pdf-Datei hier ablegen';
+
+  @override
+  String get pdfNavDocumentFallback => 'Dokument';
+
+  @override
+  String get pdfNavBookmarks => 'Lesezeichen';
+
+  @override
+  String get pdfNavNoBookmarks => 'Keine Lesezeichen vorhanden';
+
+  @override
+  String get pdfNavSearchText => 'Text suchen';
+
+  @override
+  String get pdfNavMore => 'Mehr';
+
+  @override
+  String get pdfNavModeView => 'Ansicht';
+
+  @override
+  String get pdfNavModePlaceSignature => 'Unterschrift platzieren';
+
+  @override
+  String get pdfNavModeOrganizePages => 'Seiten anordnen';
+
+  @override
+  String get pdfNavModeFlattenPdf => 'PDF reduzieren';
+
+  @override
+  String get pdfNavModeExtractImages => 'Bilder extrahieren';
+
+  @override
+  String get pdfNavModeMetadata => 'Metadaten';
+
+  @override
+  String get pdfNavCloseSearch => 'Suche schließen';
+
+  @override
+  String get pdfNavSearchHint => 'Text suchen …';
+
+  @override
+  String get pdfNavPrevMatch => 'Vorheriger Treffer';
+
+  @override
+  String get pdfNavNextMatch => 'Nächster Treffer';
+
+  @override
+  String get pdfNavShareFile => 'Datei teilen';
+
+  @override
+  String get pdfNavSaveToDownloads => 'In Downloads speichern';
+
+  @override
+  String pdfNavPageOf(int current, int total) {
+    return 'Seite $current von $total';
+  }
+
+  @override
+  String pdfNavPageLoading(int current) {
+    return 'Seite $current …';
+  }
+
+  @override
+  String get pdfNavPrevPage => 'Vorherige Seite';
+
+  @override
+  String get pdfNavNextPage => 'Nächste Seite';
+
+  @override
+  String get pdfNavZoomOut => 'Verkleinern';
+
+  @override
+  String get pdfNavZoomReset => 'Zoom zurücksetzen';
+
+  @override
+  String get pdfNavZoomIn => 'Vergrößern';
+
+  @override
+  String pdfNavOrganizeTitle(String fileName) {
+    return 'Anordnen: $fileName';
+  }
+
+  @override
+  String get pdfNavOrganizeInsertTooltip => 'Seiten aus anderem PDF einfügen';
+
+  @override
+  String get pdfNavOrganizeApplyTooltip => 'Änderungen übernehmen';
+
+  @override
+  String pdfNavOrganizePageCountHint(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Seiten',
+      one: '1 Seite',
+    );
+    return '$_temp0 – ziehen zum Sortieren, tippen zur Vorschau';
+  }
+
+  @override
+  String get pdfNavOrganizeNoPages => 'Keine Seiten';
+
+  @override
+  String get pdfNavOrganizeCannotDeleteLastPage =>
+      'Die letzte Seite kann nicht gelöscht werden';
+
+  @override
+  String get pdfNavOrganizeRemovePageTitle => 'Seite entfernen';
+
+  @override
+  String pdfNavOrganizeRemovePageMessage(int pageNumber) {
+    return 'Seite $pageNumber entfernen?';
+  }
+
+  @override
+  String pdfNavOrganizeInsertDialogTitle(String srcName) {
+    return 'Seiten aus \"$srcName\" einfügen';
+  }
+
+  @override
+  String get pdfNavOrganizeNoPagesFound => 'Keine Seiten gefunden';
+
+  @override
+  String pdfNavOrganizePageNumber(int pageNumber) {
+    return 'Seite $pageNumber';
+  }
+
+  @override
+  String get pdfNavOrientationPortrait => 'Hochformat';
+
+  @override
+  String get pdfNavOrientationLandscape => 'Querformat';
+
+  @override
+  String get pdfNavDeselectAll => 'Alle abwählen';
+
+  @override
+  String get pdfNavSelectAll => 'Alle auswählen';
+
+  @override
+  String pdfNavOrganizeInsertCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Seiten einfügen',
+      one: '1 Seite einfügen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pdfNavOrganizeComplete => 'Anordnung abgeschlossen';
+
+  @override
+  String pdfNavOrganizeNewSize(String size) {
+    return 'Neue PDF-Größe: $size';
+  }
+
+  @override
+  String get pdfNavDownload => 'Herunterladen';
+
+  @override
+  String get pdfNavOpenInViewer => 'Im Viewer öffnen';
+
+  @override
+  String get sigAdvancedSettings => 'Erweiterte Einstellungen';
+
+  @override
+  String get sigTabDraw => 'Zeichnen';
+
+  @override
+  String get sigTabSaved => 'Gespeichert';
+
+  @override
+  String get sigSavedToDownloads => 'Unterschrift in Downloads gespeichert';
+
+  @override
+  String get sigCopiedToClipboard =>
+      'Unterschrift in die Zwischenablage kopiert';
+
+  @override
+  String get sigSaved => 'Unterschrift gespeichert';
+
+  @override
+  String get sigDeleteTitle => 'Unterschrift löschen?';
+
+  @override
+  String get sigDeleteContent => 'Diese Unterschrift wird entfernt.';
+
+  @override
+  String get sigUndo => 'Rückgängig';
+
+  @override
+  String get sigRedo => 'Wiederholen';
+
+  @override
+  String get sigPng => 'PNG';
+
+  @override
+  String get sigSvg => 'SVG';
+
+  @override
+  String get sigAdvanced => 'Erweitert';
+
+  @override
+  String get sigReduceLines => 'Linien reduzieren (RDP)';
+
+  @override
+  String get sigMoveTolerance => 'Bewegungstoleranz';
+
+  @override
+  String get sigMinWidthFactor => 'Minimaler Breitenfaktor';
+
+  @override
+  String get sigMaxWidthFactor => 'Maximaler Breitenfaktor';
+
+  @override
+  String get sigVelocitySensitivity => 'Geschwindigkeitsempfindlichkeit';
+
+  @override
+  String get sigVelocityInfluence => 'Geschwindigkeitseinfluss';
+
+  @override
+  String get sigPressureInfluence => 'Druckeinfluss';
+
+  @override
+  String get sigWidthSmoothing => 'Breitenglättung';
+
+  @override
+  String get sigExportDpi => 'Export-DPI';
+
+  @override
+  String get sigLoad => 'Laden';
+
+  @override
+  String get widgetPasswordLabel => 'Passwort';
+
+  @override
+  String get widgetPasswordShow => 'Passwort anzeigen';
+
+  @override
+  String get widgetPasswordHide => 'Passwort verbergen';
+
+  @override
+  String widgetFileDropFailedToSelect(String error) {
+    return 'Datei konnte nicht ausgewählt werden: $error';
+  }
+
+  @override
+  String widgetFileDropOnlyFilesSupported(String extensions) {
+    return 'Nur $extensions-Dateien werden unterstützt';
+  }
+
+  @override
+  String get widgetFileDropReleaseToLoad => 'Loslassen zum Laden';
+
+  @override
+  String get widgetMarkdownExportMarkdown => 'Markdown exportieren';
+
+  @override
+  String get widgetMarkdownExportPdf => 'PDF exportieren';
+
+  @override
+  String widgetMarkdownUpdated(String date) {
+    return 'Aktualisiert: $date';
+  }
+
+  @override
+  String get widgetMarkdownNoContent => 'Kein weiterer Inhalt';
+
+  @override
+  String get widgetToolChooserOpenFile => 'Datei öffnen';
+
+  @override
+  String get widgetToolChooserChooseTool => 'Tool zum Öffnen wählen:';
+
+  @override
+  String get widgetToolChooserAlwaysUseTool =>
+      'Dieses Tool immer für diesen Dateityp verwenden';
+
+  @override
+  String get widgetShortcutHomeTitle => 'Startbildschirm-Verknüpfung';
+
+  @override
+  String get widgetShortcutHomeSubtitle =>
+      'Verknüpfung zum Startbildschirm hinzufügen';
+
+  @override
+  String get widgetShortcutDrawerTitle => 'App-Drawer-Symbol';
+
+  @override
+  String get widgetShortcutDrawerSubtitle =>
+      'Separates Symbol im App-Drawer anzeigen';
 }

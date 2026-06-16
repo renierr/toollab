@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'emf_colors.dart';
 import 'emf_reading.dart';
 import 'detector_state.dart';
@@ -16,6 +17,7 @@ class VectorReadoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -35,9 +37,9 @@ class VectorReadoutCard extends StatelessWidget {
             spacing: 12,
             runSpacing: 6,
             children: [
-              const Text(
-                '3-AXIS VECTOR READOUT',
-                style: TextStyle(
+              Text(
+                l10n.emfThreeAxisVectorReadout,
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
@@ -45,7 +47,7 @@ class VectorReadoutCard extends StatelessWidget {
                 ),
               ),
               Text(
-                state.isScanning ? 'LIVE SENSORS' : 'PAUSED',
+                state.isScanning ? l10n.emfLiveSensors : l10n.emfPaused,
                 style: TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 9,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 
 class FocusNoiseTimerCard extends StatelessWidget {
@@ -27,13 +28,14 @@ class FocusNoiseTimerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return InfoCard(
       icon: Icons.timer_outlined,
-      title: 'Auto-stop Timer',
+      title: l10n.focusAutoStopTimer,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(isPlaying ? timerLabel : 'Start playback to enable timer'),
+          Text(isPlaying ? timerLabel : l10n.focusStartPlaybackToEnableTimer),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -54,7 +56,7 @@ class FocusNoiseTimerCard extends StatelessWidget {
                 onPressed: isPlaying ? onCustomMinutesDecrement : null,
                 icon: const Icon(Icons.remove_circle_outline),
               ),
-              Expanded(child: Text('Custom: $customMinutes min')),
+              Expanded(child: Text(l10n.focusCustomMinutes(customMinutes))),
               IconButton(
                 onPressed: isPlaying ? onCustomMinutesIncrement : null,
                 icon: const Icon(Icons.add_circle_outline),
@@ -62,14 +64,14 @@ class FocusNoiseTimerCard extends StatelessWidget {
               const SizedBox(width: 8),
               FilledButton(
                 onPressed: isPlaying ? onSetCustomTimer : null,
-                child: const Text('Set'),
+                child: Text(l10n.focusSetTimer),
               ),
             ],
           ),
           const SizedBox(height: 8),
           OutlinedButton(
             onPressed: hasTimer ? onCancelTimer : null,
-            child: const Text('Cancel Timer'),
+            child: Text(l10n.focusCancelTimer),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class PdfExtractImagesHeader extends StatelessWidget {
   final int totalCount;
@@ -35,6 +36,7 @@ class PdfExtractImagesHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final showControls = !isCompactScreen || controlsExpanded;
 
     return Card(
@@ -48,15 +50,18 @@ class PdfExtractImagesHeader extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '$selectedCount selected / $totalCount total',
+                    l10n.pdfEditExtractSelectionCount(
+                      selectedCount,
+                      totalCount,
+                    ),
                     style: theme.textTheme.bodyMedium,
                   ),
                 ),
                 if (isCompactScreen)
                   IconButton(
                     tooltip: controlsExpanded
-                        ? 'Hide controls'
-                        : 'Show controls',
+                        ? l10n.pdfEditExtractHideControls
+                        : l10n.pdfEditExtractShowControls,
                     onPressed: onToggleControlsExpanded,
                     icon: Icon(
                       controlsExpanded
@@ -86,28 +91,28 @@ class PdfExtractImagesHeader extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: isLoading || isExporting ? null : onSelectAll,
                     icon: const Icon(Icons.select_all),
-                    label: const Text('Select All'),
+                    label: Text(l10n.pdfEditExtractSelectAll),
                   ),
                   OutlinedButton.icon(
                     onPressed: isLoading || isExporting
                         ? null
                         : onClearSelection,
                     icon: const Icon(Icons.deselect),
-                    label: const Text('Clear Selection'),
+                    label: Text(l10n.pdfEditExtractClearSelection),
                   ),
                   FilledButton.icon(
                     onPressed: isLoading || isExporting || selectedCount == 0
                         ? null
                         : onDownloadSelected,
                     icon: const Icon(Icons.download),
-                    label: const Text('Download Selected'),
+                    label: Text(l10n.pdfEditExtractDownloadSelected),
                   ),
                   FilledButton.tonalIcon(
                     onPressed: isLoading || isExporting || totalCount == 0
                         ? null
                         : onDownloadAll,
                     icon: const Icon(Icons.folder_zip_outlined),
-                    label: const Text('Download All (ZIP)'),
+                    label: Text(l10n.pdfEditExtractDownloadAllZip),
                   ),
                 ],
               ),

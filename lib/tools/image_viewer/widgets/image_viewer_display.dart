@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class ImageViewerDisplay extends StatefulWidget {
   final ui.Image image;
@@ -104,6 +105,7 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     final checkerboardColor1 = isDark
@@ -164,7 +166,7 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
                   children: [
                     _ZoomButton(
                       icon: Icons.zoom_out,
-                      tooltip: 'Zoom out',
+                      tooltip: l10n.imgViewZoomOut,
                       color: theme.colorScheme.primary,
                       onPressed: _zoomScale > 0.1
                           ? () => _zoomBy(1 / 1.25)
@@ -182,7 +184,7 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
                     const SizedBox(width: 4),
                     _ZoomButton(
                       icon: Icons.zoom_in,
-                      tooltip: 'Zoom in',
+                      tooltip: l10n.imgViewZoomIn,
                       color: theme.colorScheme.primary,
                       onPressed: _zoomScale < 10.0 ? () => _zoomBy(1.25) : null,
                     ),
@@ -202,7 +204,7 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(
-                          'Reset',
+                          l10n.commonReset,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -224,7 +226,7 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
                 child: Center(
                   child: _SiblingNavButton(
                     icon: Icons.chevron_left,
-                    tooltip: 'Previous image',
+                    tooltip: l10n.imgViewPreviousImage,
                     onPressed: widget.hasPrevSibling
                         ? widget.onPrevImage
                         : null,
@@ -238,7 +240,7 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
                 child: Center(
                   child: _SiblingNavButton(
                     icon: Icons.chevron_right,
-                    tooltip: 'Next image',
+                    tooltip: l10n.imgViewNextImage,
                     onPressed: widget.hasNextSibling
                         ? widget.onNextImage
                         : null,

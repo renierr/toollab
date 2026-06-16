@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
@@ -63,23 +64,25 @@ class _SignaturesPageState extends State<SignaturesPage>
 
   Future<void> _savePngBytes(List<int> bytes) async {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     await FileSaveHelper.saveFile(
       context: context,
       suggestedName: _fileName('png'),
       bytes: Uint8List.fromList(bytes),
       acceptedTypeGroups: _pngGroups,
-      successMessageAndroid: 'Signature saved to Downloads',
+      successMessageAndroid: l10n.sigSavedToDownloads,
     );
   }
 
   Future<void> _saveSvgString(String svg) async {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     await FileSaveHelper.saveFile(
       context: context,
       suggestedName: _fileName('svg'),
       bytes: Uint8List.fromList(utf8.encode(svg)),
       acceptedTypeGroups: _svgGroups,
-      successMessageAndroid: 'Signature saved to Downloads',
+      successMessageAndroid: l10n.sigSavedToDownloads,
     );
   }
 
@@ -99,7 +102,8 @@ class _SignaturesPageState extends State<SignaturesPage>
     final bytes = await context.read<SignaturesState>().exportCurrentPng();
     if (bytes == null) return;
     await Pasteboard.writeImage(bytes);
-    _toast('Signature copied to clipboard');
+    if (!mounted) return;
+    _toast(AppLocalizations.of(context).sigCopiedToClipboard);
   }
 
   Future<void> _share() async {
@@ -119,7 +123,7 @@ class _SignaturesPageState extends State<SignaturesPage>
 
   Future<void> _save() async {
     final ok = await context.read<SignaturesState>().save();
-    if (ok) _toast('Signature saved');
+    if (ok && mounted) _toast(AppLocalizations.of(context).sigSaved);
   }
 
   void _loadRecord(SignatureRecord record) {
@@ -148,19 +152,20 @@ class _SignaturesPageState extends State<SignaturesPage>
   }
 
   Future<void> _deleteRecord(SignatureRecord record) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => ResponsiveAlertDialog(
-        title: const Text('Delete signature?'),
-        content: const Text('This signature will be removed.'),
+        title: Text(l10n.sigDeleteTitle),
+        content: Text(l10n.sigDeleteContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -171,13 +176,14 @@ class _SignaturesPageState extends State<SignaturesPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ToolLayout(
       scaffoldKey: _scaffoldKey,
       title: SignaturesTool.config.name,
       endDrawer: const SignatureAdvancedPanel(),
       actions: [
         IconButton(
-          tooltip: 'Advanced settings',
+          tooltip: l10n.sigAdvancedSettings,
           icon: const Icon(Icons.tune),
           onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
         ),
@@ -186,9 +192,9 @@ class _SignaturesPageState extends State<SignaturesPage>
         children: [
           TabBar(
             controller: _tabController,
-            tabs: const [
-              Tab(text: 'Draw'),
-              Tab(text: 'Saved'),
+            tabs: [
+              Tab(text: l10n.sigTabDraw),
+              Tab(text: l10n.sigTabSaved),
             ],
           ),
           Expanded(

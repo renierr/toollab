@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_registry.dart';
-import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 class OpenWithDefaultsDialog extends StatefulWidget {
   const OpenWithDefaultsDialog({super.key});
@@ -39,25 +40,26 @@ class _OpenWithDefaultsDialogState extends State<OpenWithDefaultsDialog> {
   }
 
   Future<void> _reset() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset All Defaults?'),
-        content: const Text(
-          'This will clear all "always open with" associations. '
-          'The chooser dialog will appear next time you open a shared file.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
+      builder: (ctx) {
+        final ctxL10n = AppLocalizations.of(ctx);
+        return AlertDialog(
+          title: Text(ctxL10n.coreOpenWithResetTitle),
+          content: Text(ctxL10n.coreOpenWithResetContent),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(ctxL10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(ctxL10n.commonReset),
+            ),
+          ],
+        );
+      },
     );
     if (confirmed != true) return;
 
@@ -69,18 +71,17 @@ class _OpenWithDefaultsDialogState extends State<OpenWithDefaultsDialog> {
     if (mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(content: Text('Default associations cleared')),
-        );
+        ..showSnackBar(SnackBar(content: Text(l10n.coreOpenWithCleared)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: const Text('Open with Defaults'),
+      title: Text(l10n.coreOpenWithDefaultsTitle),
       content: SizedBox(
         width: double.maxFinite,
         child: _loading
@@ -92,7 +93,7 @@ class _OpenWithDefaultsDialogState extends State<OpenWithDefaultsDialog> {
               )
             : _defaults.isEmpty
             ? Text(
-                'No default associations set.',
+                l10n.coreOpenWithNoDefaults,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -102,7 +103,7 @@ class _OpenWithDefaultsDialogState extends State<OpenWithDefaultsDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Default tool associations for shared files:',
+                    l10n.coreOpenWithAssociationsLabel,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -160,7 +161,9 @@ class _OpenWithDefaultsDialogState extends State<OpenWithDefaultsDialog> {
                             )
                           : const Icon(Icons.refresh, size: 18),
                       label: Text(
-                        _resetting ? 'Resetting...' : 'Reset All Defaults',
+                        _resetting
+                            ? l10n.coreOpenWithResetting
+                            : l10n.coreOpenWithResetButton,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -171,7 +174,7 @@ class _OpenWithDefaultsDialogState extends State<OpenWithDefaultsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: Text(l10n.commonClose),
         ),
       ],
     );

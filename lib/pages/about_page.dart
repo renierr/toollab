@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:tool_lab/constants.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class AboutPage extends StatefulWidget {
@@ -26,13 +27,14 @@ class _AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final version = _packageInfo != null
         ? '${_packageInfo!.version} (build ${_packageInfo!.buildNumber})'
         : '${AppConstants.appVersion} (build ?)';
 
     return Scaffold(
-      appBar: AppBar(title: const Text('About')),
+      appBar: AppBar(title: Text(l10n.coreAboutTitle)),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -65,7 +67,7 @@ class _AboutPageState extends State<AboutPage> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'v$version',
+                  l10n.coreAboutVersion(version),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontFamily: 'monospace',
                     color: AppTheme.accentBlue,
@@ -91,17 +93,14 @@ class _AboutPageState extends State<AboutPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'About',
+                              l10n.coreAboutTitle,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'ToolLab is a collection of utility tools for your device. '
-                              'It includes sensors, calculator, device information, '
-                              'NFC tag reading/writing, PDF viewing, note taking, '
-                              'and more — all in one app.',
+                              l10n.coreAboutDescription,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -132,16 +131,14 @@ class _AboutPageState extends State<AboutPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Disclaimer',
+                              l10n.coreAboutDisclaimer,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'This app is provided "as is" without warranty of any kind. '
-                              'The developer shall not be held liable for any damages, '
-                              'data loss, or issues arising from the use of this software.',
+                              l10n.coreAboutDisclaimerText,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -161,7 +158,7 @@ class _AboutPageState extends State<AboutPage> {
                     Icons.description_outlined,
                     color: AppTheme.accentBlue,
                   ),
-                  title: const Text('Third-Party Licenses'),
+                  title: Text(l10n.coreAboutThirdPartyLicenses),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => showLicensePage(
                     context: context,

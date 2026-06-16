@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class ImagesToPdfPreview extends StatelessWidget {
@@ -66,6 +67,7 @@ class ImagesToPdfPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     if (paths.isEmpty) {
       return Center(
@@ -79,14 +81,14 @@ class ImagesToPdfPreview extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No images added yet',
+              l10n.img2pdfNoImagesYet,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Drop images here or use "Add More" to begin',
+              l10n.img2pdfNoImagesHint,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -109,6 +111,7 @@ class ImagesToPdfPreview extends StatelessWidget {
         );
       },
       itemBuilder: (context, index) {
+        final itemL10n = AppLocalizations.of(context);
         return Card(
           key: ValueKey(paths[index]),
           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
@@ -158,7 +161,7 @@ class ImagesToPdfPreview extends StatelessWidget {
                           style: theme.textTheme.bodyLarge,
                         ),
                         Text(
-                          'Page ${index + 1}',
+                          itemL10n.img2pdfPageNumber(index + 1),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -171,7 +174,7 @@ class ImagesToPdfPreview extends StatelessWidget {
                       Icons.remove_circle_outlined,
                       color: theme.colorScheme.error,
                     ),
-                    tooltip: 'Remove',
+                    tooltip: itemL10n.commonRemove,
                     onPressed: () => onRemove(index),
                   ),
                 ],

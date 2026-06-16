@@ -6,6 +6,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/theme/theme.dart';
 
@@ -189,6 +190,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ToolLayout(
       title: DeviceInfoTool.config.name,
       child: _loading
@@ -213,28 +215,28 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
                   const SizedBox(height: 12),
                 ],
                 InfoCard(
-                  title: 'System & OS',
+                  title: l10n.miscDeviceInfoSystemOs,
                   icon: Icons.settings_applications_outlined,
                   accentColor: AppTheme.accentPurple,
                   items: _systemInfo,
                 ),
                 const SizedBox(height: 12),
                 InfoCard(
-                  title: 'Hardware Specs',
+                  title: l10n.miscDeviceInfoHardwareSpecs,
                   icon: Icons.memory_outlined,
                   accentColor: AppTheme.accentBlue,
                   items: _hardwareInfo,
                 ),
                 const SizedBox(height: 12),
                 InfoCard(
-                  title: 'Display Details',
+                  title: l10n.miscDeviceInfoDisplayDetails,
                   icon: Icons.screenshot_outlined,
                   accentColor: AppTheme.accentTeal,
                   items: _displayInfo,
                 ),
                 const SizedBox(height: 12),
                 InfoCard(
-                  title: 'General Settings',
+                  title: l10n.miscDeviceInfoGeneralSettings,
                   icon: Icons.public_outlined,
                   accentColor: AppTheme.accentAmber,
                   items: _generalInfo,

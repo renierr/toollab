@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_mode.dart';
 
@@ -64,6 +65,7 @@ class PdfOverlayControls extends StatelessWidget {
     ThemeData theme,
     double topPadding,
   ) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.only(
         top: topPadding + 12,
@@ -77,7 +79,7 @@ class PdfOverlayControls extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: onBack,
-            tooltip: 'Back',
+            tooltip: l10n.commonBack,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -93,12 +95,12 @@ class PdfOverlayControls extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.menu_book),
             onPressed: onOpenBookmarks,
-            tooltip: 'Bookmarks',
+            tooltip: l10n.pdfNavBookmarks,
           ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: onToggleSearch,
-            tooltip: 'Search Text',
+            tooltip: l10n.pdfNavSearchText,
           ),
           PopupMenuButton<PdfViewerMode>(
             icon: Icon(
@@ -114,83 +116,91 @@ class PdfOverlayControls extends StatelessWidget {
                   ? Icons.info_outline
                   : Icons.more_vert,
             ),
-            tooltip: 'More',
+            tooltip: l10n.pdfNavMore,
             onSelected: onModeChanged,
-            itemBuilder: (context) => [
-              if (currentMode != PdfViewerMode.view)
-                const PopupMenuItem(
-                  value: PdfViewerMode.view,
-                  child: Row(
-                    children: [
-                      Icon(Icons.visibility_outlined),
-                      SizedBox(width: 8),
-                      Text('View'),
-                    ],
+            itemBuilder: (context) {
+              final menuL10n = AppLocalizations.of(context);
+              return [
+                if (currentMode != PdfViewerMode.view)
+                  PopupMenuItem(
+                    value: PdfViewerMode.view,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.visibility_outlined),
+                        const SizedBox(width: 8),
+                        Text(menuL10n.pdfNavModeView),
+                      ],
+                    ),
                   ),
-                ),
-              if (currentMode != PdfViewerMode.sign)
-                const PopupMenuItem(
-                  value: PdfViewerMode.sign,
-                  child: Row(
-                    children: [
-                      Icon(Icons.gesture),
-                      SizedBox(width: 8),
-                      Text('Place Signature'),
-                    ],
+                if (currentMode != PdfViewerMode.sign)
+                  PopupMenuItem(
+                    value: PdfViewerMode.sign,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.gesture),
+                        const SizedBox(width: 8),
+                        Text(menuL10n.pdfNavModePlaceSignature),
+                      ],
+                    ),
                   ),
-                ),
-              if (currentMode != PdfViewerMode.organize)
-                const PopupMenuItem(
-                  value: PdfViewerMode.organize,
-                  child: Row(
-                    children: [
-                      Icon(Icons.reorder),
-                      SizedBox(width: 8),
-                      Text('Organize Pages'),
-                    ],
+                if (currentMode != PdfViewerMode.organize)
+                  PopupMenuItem(
+                    value: PdfViewerMode.organize,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.reorder),
+                        const SizedBox(width: 8),
+                        Text(menuL10n.pdfNavModeOrganizePages),
+                      ],
+                    ),
                   ),
-                ),
-              if (currentMode != PdfViewerMode.flatten)
-                const PopupMenuItem(
-                  value: PdfViewerMode.flatten,
-                  child: Row(
-                    children: [
-                      Icon(Icons.photo_library_outlined),
-                      SizedBox(width: 8),
-                      Text('Flatten PDF'),
-                    ],
+                if (currentMode != PdfViewerMode.flatten)
+                  PopupMenuItem(
+                    value: PdfViewerMode.flatten,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.photo_library_outlined),
+                        const SizedBox(width: 8),
+                        Text(menuL10n.pdfNavModeFlattenPdf),
+                      ],
+                    ),
                   ),
-                ),
-              if (currentMode != PdfViewerMode.extractImages)
-                const PopupMenuItem(
-                  value: PdfViewerMode.extractImages,
-                  child: Row(
-                    children: [
-                      Icon(Icons.collections_outlined),
-                      SizedBox(width: 8),
-                      Text('Extract Images'),
-                    ],
+                if (currentMode != PdfViewerMode.extractImages)
+                  PopupMenuItem(
+                    value: PdfViewerMode.extractImages,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.collections_outlined),
+                        const SizedBox(width: 8),
+                        Text(menuL10n.pdfNavModeExtractImages),
+                      ],
+                    ),
                   ),
-                ),
-              if (currentMode != PdfViewerMode.metadata)
-                const PopupMenuItem(
-                  value: PdfViewerMode.metadata,
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline),
-                      SizedBox(width: 8),
-                      Text('Metadata'),
-                    ],
+                if (currentMode != PdfViewerMode.metadata)
+                  PopupMenuItem(
+                    value: PdfViewerMode.metadata,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline),
+                        const SizedBox(width: 8),
+                        Text(menuL10n.pdfNavModeMetadata),
+                      ],
+                    ),
                   ),
-                ),
-            ],
+              ];
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSearchHeader(ThemeData theme, double topPadding) {
+  Widget _buildSearchHeader(
+    BuildContext context,
+    ThemeData theme,
+    double topPadding,
+  ) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.only(
         top: topPadding + 12,
@@ -204,14 +214,14 @@ class PdfOverlayControls extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: onToggleSearch,
-            tooltip: 'Close Search',
+            tooltip: l10n.pdfNavCloseSearch,
           ),
           Expanded(
             child: TextField(
               controller: searchTextController,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'Search text...',
+              decoration: InputDecoration(
+                hintText: l10n.pdfNavSearchHint,
                 border: InputBorder.none,
               ),
               style: theme.textTheme.bodyMedium,
@@ -231,12 +241,12 @@ class PdfOverlayControls extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.keyboard_arrow_up),
             onPressed: totalMatches > 0 ? onPrevMatch : null,
-            tooltip: 'Previous Match',
+            tooltip: l10n.pdfNavPrevMatch,
           ),
           IconButton(
             icon: const Icon(Icons.keyboard_arrow_down),
             onPressed: totalMatches > 0 ? onNextMatch : null,
-            tooltip: 'Next Match',
+            tooltip: l10n.pdfNavNextMatch,
           ),
         ],
       ),
@@ -246,6 +256,7 @@ class PdfOverlayControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final topPadding = MediaQuery.of(context).padding.top;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
@@ -259,7 +270,7 @@ class PdfOverlayControls extends StatelessWidget {
           right: 0,
           child: RepaintBoundary(
             child: isSearchingText
-                ? _buildSearchHeader(theme, topPadding)
+                ? _buildSearchHeader(context, theme, topPadding)
                 : _buildNormalHeader(context, theme, topPadding),
           ),
         ),
@@ -294,7 +305,7 @@ class PdfOverlayControls extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.share_outlined),
                           onPressed: onShare,
-                          tooltip: 'Share File',
+                          tooltip: l10n.pdfNavShareFile,
                           iconSize: 16,
                           constraints: const BoxConstraints(
                             minWidth: 28,
@@ -304,7 +315,7 @@ class PdfOverlayControls extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.download_outlined),
                           onPressed: onDownload,
-                          tooltip: 'Save to Downloads',
+                          tooltip: l10n.pdfNavSaveToDownloads,
                           iconSize: 16,
                           constraints: const BoxConstraints(
                             minWidth: 28,
@@ -321,18 +332,19 @@ class PdfOverlayControls extends StatelessWidget {
                         totalPagesNotifier,
                       ]),
                       builder: (context, _) {
+                        final innerL10n = AppLocalizations.of(context);
                         final currentPage = currentPageNotifier.value;
                         final totalPages = totalPagesNotifier.value;
                         final pageText = totalPages > 0
-                            ? 'Page $currentPage of $totalPages'
-                            : 'Page $currentPage...';
+                            ? innerL10n.pdfNavPageOf(currentPage, totalPages)
+                            : innerL10n.pdfNavPageLoading(currentPage);
                         return Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.chevron_left),
                               onPressed: currentPage > 1 ? onPrevPage : null,
-                              tooltip: 'Previous Page',
+                              tooltip: innerL10n.pdfNavPrevPage,
                               iconSize: 16,
                               constraints: const BoxConstraints(
                                 minWidth: 28,
@@ -351,7 +363,7 @@ class PdfOverlayControls extends StatelessWidget {
                                   totalPages > 0 && currentPage < totalPages
                                   ? onNextPage
                                   : null,
-                              tooltip: 'Next Page',
+                              tooltip: innerL10n.pdfNavNextPage,
                               iconSize: 16,
                               constraints: const BoxConstraints(
                                 minWidth: 28,
@@ -370,7 +382,7 @@ class PdfOverlayControls extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.zoom_out),
                           onPressed: () => controller.zoomDown(),
-                          tooltip: 'Zoom Out',
+                          tooltip: l10n.pdfNavZoomOut,
                           iconSize: 16,
                           constraints: const BoxConstraints(
                             minWidth: 28,
@@ -383,7 +395,7 @@ class PdfOverlayControls extends StatelessWidget {
                             controller.centerPosition,
                             1.0,
                           ),
-                          tooltip: 'Reset Zoom',
+                          tooltip: l10n.pdfNavZoomReset,
                           iconSize: 16,
                           constraints: const BoxConstraints(
                             minWidth: 28,
@@ -393,7 +405,7 @@ class PdfOverlayControls extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.zoom_in),
                           onPressed: () => controller.zoomUp(),
-                          tooltip: 'Zoom In',
+                          tooltip: l10n.pdfNavZoomIn,
                           iconSize: 16,
                           constraints: const BoxConstraints(
                             minWidth: 28,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/images_to_pdf/config.dart';
 
 class ImagesToPdfSettingsDrawer extends StatelessWidget {
@@ -26,6 +27,7 @@ class ImagesToPdfSettingsDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accent = ImagesToPdfTool.config.accentColor;
+    final l10n = AppLocalizations.of(context);
 
     return Drawer(
       child: SafeArea(
@@ -43,7 +45,7 @@ class ImagesToPdfSettingsDrawer extends StatelessWidget {
                       Icon(Icons.tune, color: accent, size: 36),
                       const Spacer(),
                       IconButton(
-                        tooltip: 'Close',
+                        tooltip: l10n.commonClose,
                         icon: const Icon(Icons.close),
                         onPressed: () => Navigator.of(context).pop(),
                       ),
@@ -51,7 +53,7 @@ class ImagesToPdfSettingsDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'PDF Settings',
+                    l10n.img2pdfPdfSettings,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -64,7 +66,7 @@ class ImagesToPdfSettingsDrawer extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 children: [
                   Text(
-                    'Page Size',
+                    l10n.img2pdfPageSize,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -85,29 +87,29 @@ class ImagesToPdfSettingsDrawer extends StatelessWidget {
                         : (v) {
                             if (v != null) onPageSizeChanged(v);
                           },
-                    items: const [
-                      DropdownMenuItem(
+                    items: [
+                      const DropdownMenuItem(
                         value: ImageToPdfPageSize.a4,
                         child: Text('A4'),
                       ),
-                      DropdownMenuItem(
+                      const DropdownMenuItem(
                         value: ImageToPdfPageSize.letter,
                         child: Text('Letter'),
                       ),
-                      DropdownMenuItem(
+                      const DropdownMenuItem(
                         value: ImageToPdfPageSize.legal,
                         child: Text('Legal'),
                       ),
                       DropdownMenuItem(
                         value: ImageToPdfPageSize.fit,
-                        child: Text('Fit to Image'),
+                        child: Text(l10n.img2pdfFitToImage),
                       ),
                     ],
                   ),
                   if (pageSize != ImageToPdfPageSize.fit) ...[
                     const SizedBox(height: 20),
                     Text(
-                      'Orientation',
+                      l10n.img2pdfOrientation,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -115,7 +117,7 @@ class ImagesToPdfSettingsDrawer extends StatelessWidget {
                     const SizedBox(height: 8),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Landscape'),
+                      title: Text(l10n.img2pdfLandscape),
                       value: landscape,
                       onChanged: isProcessing ? null : onLandscapeChanged,
                     ),
@@ -125,7 +127,7 @@ class ImagesToPdfSettingsDrawer extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'JPEG Quality',
+                          l10n.img2pdfJpegQuality,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),

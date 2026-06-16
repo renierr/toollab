@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/info_card.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class GpsCard extends StatelessWidget {
   final double latitude;
@@ -28,10 +29,11 @@ class GpsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return InfoCard(
       icon: Icons.location_on,
-      title: 'GPS Location Information',
+      title: l10n.imgViewGpsTitle,
       backgroundColor: theme.colorScheme.primaryContainer.withValues(
         alpha: 0.25,
       ),
@@ -39,18 +41,24 @@ class GpsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _DetailRow(label: 'Latitude', value: latitude.toStringAsFixed(6)),
+          _DetailRow(
+            label: l10n.imgViewGpsLatitude,
+            value: latitude.toStringAsFixed(6),
+          ),
           const SizedBox(height: 8),
-          _DetailRow(label: 'Longitude', value: longitude.toStringAsFixed(6)),
+          _DetailRow(
+            label: l10n.imgViewGpsLongitude,
+            value: longitude.toStringAsFixed(6),
+          ),
           if (dms != null && dms!.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _DetailRow(label: 'Coordinates (DMS)', value: dms!),
+            _DetailRow(label: l10n.imgViewGpsCoordinatesDms, value: dms!),
           ],
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _openMap,
             icon: const Icon(Icons.map_outlined, size: 18),
-            label: const Text('Open in Maps'),
+            label: Text(l10n.imgViewOpenInMaps),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               foregroundColor: theme.colorScheme.onPrimary,

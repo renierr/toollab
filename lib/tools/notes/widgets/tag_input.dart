@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class TagInput extends StatefulWidget {
@@ -110,6 +111,7 @@ class _TagInputState extends State<TagInput> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Column(
@@ -150,7 +152,7 @@ class _TagInputState extends State<TagInput> {
                     onChanged: _onTextChanged,
                     onSubmitted: _onSubmit,
                     decoration: InputDecoration(
-                      hintText: 'Add tag...',
+                      hintText: l10n.notesAddTagHint,
                       hintStyle: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.35,

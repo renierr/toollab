@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'emf_colors.dart';
 import 'detector_state.dart';
 import 'feedback_button.dart';
@@ -17,6 +18,7 @@ class ScannerControlsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -76,8 +78,8 @@ class ScannerControlsCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 46.0),
                           child: Text(
                             state.isScanning
-                                ? 'STOP SCANNING'
-                                : 'START SCANNING',
+                                ? l10n.emfStopScanning
+                                : l10n.emfStartScanning,
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontFamily: 'monospace',
@@ -108,7 +110,7 @@ class ScannerControlsCard extends StatelessWidget {
               // Sound Toggle
               FeedbackButton(
                 icon: state.soundEnabled ? Icons.volume_up : Icons.volume_off,
-                label: 'AUDIO TICK',
+                label: l10n.emfAudioTick,
                 active: state.soundEnabled,
                 onTap: state.toggleSound,
               ),
@@ -118,7 +120,7 @@ class ScannerControlsCard extends StatelessWidget {
                 icon: wakeLockActive
                     ? Icons.screen_lock_rotation
                     : Icons.screen_rotation,
-                label: 'SCREEN ON',
+                label: l10n.emfScreenOn,
                 active: wakeLockActive,
                 onTap: onToggleWakeLock,
               ),
@@ -138,7 +140,7 @@ class ScannerControlsCard extends StatelessWidget {
                 runSpacing: 6,
                 children: [
                   Text(
-                    'CABLE TRIGGER THRESHOLD',
+                    l10n.emfCableTriggerThreshold,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import '../utils/image_metadata_extractor.dart';
 import 'image_metadata_dialog.dart';
 
@@ -68,6 +69,7 @@ class ImageViewerEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final showQualitySlider =
         selectedFormat == 'jpg' || selectedFormat == 'webp';
 
@@ -87,8 +89,8 @@ class ImageViewerEditor extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Info Section
-          const _SectionHeader(
-            title: 'Original File Details',
+          _SectionHeader(
+            title: l10n.imgViewOriginalFileDetails,
             icon: Icons.info_outline,
           ),
           const SizedBox(height: 12),
@@ -126,9 +128,12 @@ class ImageViewerEditor extends StatelessWidget {
                   ),
                 ),
                 const Divider(height: 16),
-                _InfoRow(label: 'Dimensions', value: originalDimensions),
+                _InfoRow(
+                  label: l10n.imgViewDimensions,
+                  value: originalDimensions,
+                ),
                 const Divider(height: 16),
-                _InfoRow(label: 'File Size', value: originalSize),
+                _InfoRow(label: l10n.imgViewFileSize, value: originalSize),
                 if (metadata != null) ...[
                   const Divider(height: 16),
                   TextButton.icon(
@@ -140,7 +145,7 @@ class ImageViewerEditor extends StatelessWidget {
                             fileName: fileName,
                           ),
                     icon: const Icon(Icons.info_outline, size: 18),
-                    label: const Text('More Information'),
+                    label: Text(l10n.imgViewMoreInformation),
                     style: TextButton.styleFrom(
                       minimumSize: Size.zero,
                       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -154,8 +159,8 @@ class ImageViewerEditor extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Transform Section
-          const _SectionHeader(
-            title: 'Transform',
+          _SectionHeader(
+            title: l10n.imgViewTransform,
             icon: Icons.transform_outlined,
           ),
           const SizedBox(height: 12),
@@ -181,8 +186,8 @@ class ImageViewerEditor extends StatelessWidget {
                       Expanded(
                         child: Text(
                           isCropMode
-                              ? 'Cropping Active. Adjust controls on the image display.'
-                              : 'Redacting Active. Adjust controls on the image display.',
+                              ? l10n.imgViewCroppingActive
+                              : l10n.imgViewRedactingActive,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onPrimaryContainer,
                             fontWeight: FontWeight.w500,
@@ -200,27 +205,27 @@ class ImageViewerEditor extends StatelessWidget {
                     IconButton.outlined(
                       onPressed: onRotateLeft,
                       icon: const Icon(Icons.rotate_left),
-                      tooltip: 'Rotate 90° Left',
+                      tooltip: l10n.imgViewRotateLeft,
                     ),
                     IconButton.outlined(
                       onPressed: onRotateRight,
                       icon: const Icon(Icons.rotate_right),
-                      tooltip: 'Rotate 90° Right',
+                      tooltip: l10n.imgViewRotateRight,
                     ),
                     IconButton.outlined(
                       onPressed: onFlipHorizontal,
                       icon: const Icon(Icons.swap_horiz),
-                      tooltip: 'Flip Horizontally',
+                      tooltip: l10n.imgViewFlipHorizontal,
                     ),
                     IconButton.outlined(
                       onPressed: onFlipVertical,
                       icon: const Icon(Icons.swap_vert),
-                      tooltip: 'Flip Vertically',
+                      tooltip: l10n.imgViewFlipVertical,
                     ),
                     OutlinedButton.icon(
                       onPressed: onToggleCropMode,
                       icon: const Icon(Icons.crop),
-                      label: const Text('Crop'),
+                      label: Text(l10n.imgViewCrop),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -230,7 +235,7 @@ class ImageViewerEditor extends StatelessWidget {
                     OutlinedButton.icon(
                       onPressed: onToggleRedactMode,
                       icon: const Icon(Icons.blur_on),
-                      label: const Text('Redact'),
+                      label: Text(l10n.imgViewRedact),
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -244,8 +249,8 @@ class ImageViewerEditor extends StatelessWidget {
           // Disable other controls during crop/redact mode to keep user focused
           if (!isCropMode && !isRedactMode) ...[
             // Resize Section
-            const _SectionHeader(
-              title: 'Resize Image',
+            _SectionHeader(
+              title: l10n.imgViewResizeImage,
               icon: Icons.aspect_ratio_outlined,
             ),
             const SizedBox(height: 12),
@@ -255,10 +260,10 @@ class ImageViewerEditor extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     controller: widthController,
-                    decoration: const InputDecoration(
-                      labelText: 'Width (px)',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
+                    decoration: InputDecoration(
+                      labelText: l10n.imgViewWidthLabel,
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,
                       ),
@@ -277,17 +282,17 @@ class ImageViewerEditor extends StatelessWidget {
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                   tooltip: keepAspectRatio
-                      ? 'Aspect ratio locked'
-                      : 'Aspect ratio unlocked',
+                      ? l10n.imgViewAspectRatioLocked
+                      : l10n.imgViewAspectRatioUnlocked,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: heightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Height (px)',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
+                    decoration: InputDecoration(
+                      labelText: l10n.imgViewHeightLabel,
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,
                       ),
@@ -304,7 +309,7 @@ class ImageViewerEditor extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: isProcessing ? null : onPreview,
               icon: const Icon(Icons.preview_outlined),
-              label: const Text('Preview Resize'),
+              label: Text(l10n.imgViewPreviewResize),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
@@ -315,8 +320,8 @@ class ImageViewerEditor extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Format Section
-            const _SectionHeader(
-              title: 'Output Format',
+            _SectionHeader(
+              title: l10n.imgViewOutputFormat,
               icon: Icons.image_search_outlined,
             ),
             const SizedBox(height: 12),
@@ -342,10 +347,8 @@ class ImageViewerEditor extends StatelessWidget {
 
             // EXIF Preserve Checkbox
             CheckboxListTile(
-              title: const Text('Preserve EXIF Metadata'),
-              subtitle: const Text(
-                'Keep GPS, camera tags, and date (JPEG only)',
-              ),
+              title: Text(l10n.imgViewPreserveExif),
+              subtitle: Text(l10n.imgViewPreserveExifSubtitle),
               value: preserveExif,
               onChanged: (val) {
                 if (val != null) onPreserveExifChanged(val);
@@ -359,7 +362,7 @@ class ImageViewerEditor extends StatelessWidget {
             // Quality Slider (for JPG and WebP)
             if (showQualitySlider) ...[
               Text(
-                'Compression Quality: ${quality.round()}%',
+                l10n.imgViewCompressionQuality(quality.round()),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -385,7 +388,7 @@ class ImageViewerEditor extends StatelessWidget {
                       ElevatedButton.icon(
                         onPressed: onSave,
                         icon: const Icon(Icons.save_alt),
-                        label: const Text('Save Image'),
+                        label: Text(l10n.imgViewSaveImage),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: theme.colorScheme.primary,
                           foregroundColor: theme.colorScheme.onPrimary,
@@ -399,7 +402,7 @@ class ImageViewerEditor extends StatelessWidget {
                       OutlinedButton.icon(
                         onPressed: onShare,
                         icon: const Icon(Icons.share_outlined),
-                        label: const Text('Share Image'),
+                        label: Text(l10n.imgViewShareImage),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(

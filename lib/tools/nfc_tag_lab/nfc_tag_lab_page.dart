@@ -8,6 +8,7 @@ import 'package:nfc_manager/nfc_manager_android.dart';
 
 import 'package:nfc_manager_ndef/nfc_manager_ndef.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
@@ -36,6 +37,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
   String _scannedTechs = '';
   String _scannedCapacity = '';
   String _scannedWritable = '';
+  bool _isTagWritable = false;
 
   List<DecodedRecord> _scannedRecords = [];
   TagTechData? _techData;
@@ -82,6 +84,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
       _scannedTechs = '';
       _scannedCapacity = '';
       _scannedWritable = '';
+      _isTagWritable = false;
       _scannedRecords = [];
       _techData = null;
       _currentTag = null;
@@ -103,17 +106,20 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
             });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('NFC scan session error: ${error.message}'),
+                content: Text(
+                  AppLocalizations.of(context).nfcSessionError(error.message),
+                ),
               ),
             );
           }
         },
         onDiscovered: (NfcTag tag) async {
           try {
+            final l10n = AppLocalizations.of(context);
             String uid = '';
             List<String> techs = [];
-            String capacity = 'Unknown';
-            String writable = 'Unknown';
+            String capacity = l10n.commonLoading;
+            bool tagWritable = false;
 
             final androidTag = NfcTagAndroid.from(tag);
             if (androidTag != null) {
@@ -132,7 +138,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
             if (ndef != null) {
               if (!techs.contains('Ndef')) techs.add('Ndef');
               capacity = '${ndef.maxSize} bytes';
-              writable = ndef.isWritable ? 'Yes' : 'No';
+              tagWritable = ndef.isWritable;
             }
 
             List<DecodedRecord> decodedRecords = [];
@@ -177,7 +183,8 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
                 _scannedUid = uid;
                 _scannedTechs = techs.join(', ');
                 _scannedCapacity = capacity;
-                _scannedWritable = writable;
+                _scannedWritable = tagWritable ? l10n.commonYes : l10n.commonNo;
+                _isTagWritable = tagWritable;
                 _scannedRecords = decodedRecords;
                 _techData = tagTechData;
                 _profile = profile;
@@ -186,7 +193,11 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Tag detected — ${profile.categoryLabel}'),
+                  content: Text(
+                    AppLocalizations.of(
+                      context,
+                    ).nfcTagDetected(profile.categoryLabel),
+                  ),
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -195,9 +206,13 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
             debugPrint('[NfcTagLab] Scan error: $e');
             if (mounted) {
               setState(() => _isScanning = false);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Scan failed: $e')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context).nfcScanFailed(e.toString()),
+                  ),
+                ),
+              );
             }
           } finally {
             try {
@@ -239,7 +254,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
   ) async {
     if (_currentTag == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No active tag. Scan a tag first.')),
+        SnackBar(content: Text(AppLocalizations.of(context).nfcNoActiveTag)),
       );
       return;
     }
@@ -247,17 +262,15 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
     final ndef = Ndef.from(_currentTag!);
     if (ndef == null || !ndef.isWritable) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tag is not writable or NDEF is unsupported.'),
-        ),
+        SnackBar(content: Text(AppLocalizations.of(context).nfcTagNotWritable)),
       );
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Writing to NFC tag...'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).nfcWritingToTag),
+        duration: const Duration(seconds: 1),
       ),
     );
 
@@ -293,7 +306,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('NDEF record written successfully!')),
+          SnackBar(content: Text(AppLocalizations.of(context).nfcWriteSuccess)),
         );
       }
 
@@ -317,9 +330,13 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to write: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).nfcWriteFailed(e.toString()),
+            ),
+          ),
+        );
       }
     }
   }
@@ -342,19 +359,24 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
         _generatedHex = hex;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('NDEF hex generated! Copy it below.'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).nfcHexGenerated),
+          duration: const Duration(seconds: 1),
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error generating hex: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).nfcHexGenerateError(e.toString()),
+          ),
+        ),
+      );
     }
   }
 
   void _parseHex(String hex) {
+    final l10n = AppLocalizations.of(context);
     try {
       final records = NdefCodec.parseNdefMessageHex(hex);
       final profile = ScanProfileClassifier.classify(
@@ -364,20 +386,20 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
         _scannedRecords = records;
         _profile = profile;
         _scannedUid = '';
-        _scannedTechs = 'Hex Emulator';
-        _scannedCapacity = '${records.length} records parsed';
-        _scannedWritable = 'No';
+        _scannedTechs = l10n.nfcHexEmulator;
+        _scannedCapacity = l10n.nfcRecordsParsed(records.length);
+        _scannedWritable = l10n.commonNo;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('NDEF Hex parsed successfully!'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text(l10n.nfcHexParsed),
+          duration: const Duration(seconds: 1),
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to parse hex: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.nfcHexParseFailed(e.toString()))),
+      );
     }
   }
 
@@ -398,6 +420,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return ToolLayout(
@@ -422,7 +445,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'NFC hardware scanning is only supported on mobile devices. You can still paste, parse, edit, and generate NDEF hexadecimal configurations locally.',
+                      l10n.nfcNoHardwareInfo,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withAlpha(180),
                         height: 1.35,
@@ -453,7 +476,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
           ),
           const SizedBox(height: 12),
           NfcEditorForm(
-            isWriteEnabled: _currentTag != null && _scannedWritable == 'Yes',
+            isWriteEnabled: _currentTag != null && _isTagWritable,
             initialRecordType: _editorRecordType,
             initialUrl: _editorUrl,
             initialPayload: _editorPayload,

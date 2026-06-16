@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import '../signature_models.dart';
 import 'signature_background.dart';
 
@@ -25,6 +26,7 @@ class SignatureGalleryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Card(
@@ -54,22 +56,22 @@ class SignatureGalleryItem extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _CompactIconButton(
-                tooltip: 'Load',
+                tooltip: l10n.sigLoad,
                 icon: Icons.edit_outlined,
                 onPressed: onLoad,
               ),
               _CompactIconButton(
-                tooltip: 'PNG',
+                tooltip: l10n.sigPng,
                 icon: Icons.image_outlined,
                 onPressed: onExportPng,
               ),
               _CompactIconButton(
-                tooltip: 'SVG',
+                tooltip: l10n.sigSvg,
                 icon: Icons.polyline_outlined,
                 onPressed: onExportSvg,
               ),
               _CompactIconButton(
-                tooltip: 'Delete',
+                tooltip: l10n.commonDelete,
                 icon: Icons.delete_outline,
                 color: theme.colorScheme.error,
                 onPressed: onDelete,

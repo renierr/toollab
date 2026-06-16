@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'emf_colors.dart';
 import 'detector_state.dart';
 
@@ -9,6 +10,7 @@ class ScannerHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Wrap(
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
@@ -28,15 +30,15 @@ class ScannerHeader extends StatelessWidget {
                     icon: const Icon(Icons.arrow_back),
                     color: Colors.white,
                     onPressed: () => Navigator.of(context).maybePop(),
-                    tooltip: 'Back',
+                    tooltip: l10n.commonBack,
                     iconSize: 20,
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
-                const Text(
-                  'EMF SCANNER',
-                  style: TextStyle(
+                Text(
+                  l10n.emfScannerTitle,
+                  style: const TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
@@ -53,9 +55,9 @@ class ScannerHeader extends StatelessWidget {
                     color: EmfColors.neonCyan.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text(
-                    'PRO',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.emfPro,
+                    style: const TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 8,
                       fontWeight: FontWeight.bold,
@@ -67,7 +69,7 @@ class ScannerHeader extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              'WALL CURRENT & CURRENT LOCATOR',
+              l10n.emfWallCurrentSubtitle,
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
@@ -112,7 +114,9 @@ class ScannerHeader extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  state.isSimulationActive ? 'SIMULATOR' : 'HARDWARE SENSOR',
+                  state.isSimulationActive
+                      ? l10n.emfSimulator
+                      : l10n.emfHardwareSensor,
                   style: TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 8,

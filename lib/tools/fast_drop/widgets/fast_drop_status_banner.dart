@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import '../fast_drop_state.dart';
 
@@ -15,6 +16,7 @@ class FastDropStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final error = appState.fastDropError;
 
@@ -48,7 +50,7 @@ class FastDropStatusBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Cloud Sync is Disabled',
+                    l10n.fastDropSyncDisabledTitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface,
@@ -56,7 +58,7 @@ class FastDropStatusBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Fast Drop requires cloud sync to be enabled in settings.',
+                    l10n.fastDropSyncDisabledBody,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
@@ -67,7 +69,7 @@ class FastDropStatusBanner extends StatelessWidget {
             const SizedBox(width: 8),
             TextButton(
               onPressed: () => context.push('/sync-settings'),
-              child: const Text('Enable'),
+              child: Text(l10n.fastDropEnableButton),
             ),
           ],
         ),
@@ -92,7 +94,7 @@ class FastDropStatusBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Not Configured',
+                    l10n.fastDropStatusNotConfigured,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurface,
@@ -100,7 +102,7 @@ class FastDropStatusBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Configure server URL in Cloud settings first.',
+                    l10n.fastDropConfigureServerBody,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
@@ -111,7 +113,7 @@ class FastDropStatusBanner extends StatelessWidget {
             const SizedBox(width: 8),
             TextButton(
               onPressed: () => context.push('/sync-settings'),
-              child: const Text('Settings'),
+              child: Text(l10n.commonSettings),
             ),
           ],
         ),
@@ -135,7 +137,7 @@ class FastDropStatusBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Sync Server Unreachable',
+                  l10n.fastDropServerUnreachable,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurface,
@@ -154,7 +156,7 @@ class FastDropStatusBanner extends StatelessWidget {
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.refresh, color: AppTheme.statusRed),
-            tooltip: 'Retry Connection',
+            tooltip: l10n.fastDropRetryConnection,
             onPressed: onRetry,
           ),
         ],

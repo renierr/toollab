@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_registry.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/tool_shortcut_row.dart';
@@ -12,12 +13,13 @@ class ShortcutsSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final appState = context.watch<AppState>();
     final isAndroid = !kIsWeb && Platform.isAndroid;
 
     return ToolLayout(
-      title: 'Tool Shortcuts',
+      title: l10n.coreShortcutsTitle,
       child: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -39,14 +41,14 @@ class ShortcutsSettingsPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Direct Access Launcher',
+                          l10n.coreShortcutsDirectAccessTitle,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Add separate home screen icons or app drawer launchers for your favorite tools. Tapping a shortcut will open the app directly inside that tool.',
+                          l10n.coreShortcutsDirectAccessSubtitle,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface.withValues(
                               alpha: 0.7,
@@ -80,7 +82,7 @@ class ShortcutsSettingsPage extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Android OS is required to pin native shortcuts or toggle app drawer icons. Toggles will persist locally but no native icons will be modified.',
+                      l10n.coreShortcutsAndroidRequired,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.8,
@@ -99,7 +101,7 @@ class ShortcutsSettingsPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
-              'Select Tools to Configure',
+              l10n.coreShortcutsSelectTools,
               style: theme.textTheme.labelLarge?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
@@ -113,6 +115,7 @@ class ShortcutsSettingsPage extends StatelessWidget {
               builder: (context) {
                 final tool = ToolRegistry.all[i];
                 final hasDrawerIcon = appState.drawerIcons[tool.id] ?? false;
+                final rowL10n = AppLocalizations.of(context);
 
                 return ToolShortcutRow(
                   tool: tool,
@@ -123,7 +126,7 @@ class ShortcutsSettingsPage extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Shortcut requested for ${tool.name}! Accept system dialog.',
+                          rowL10n.coreShortcutsPinRequested(tool.name),
                         ),
                         duration: const Duration(seconds: 2),
                       ),
@@ -136,8 +139,8 @@ class ShortcutsSettingsPage extends StatelessWidget {
                       SnackBar(
                         content: Text(
                           hasDrawerIcon
-                              ? 'Disabled App Drawer icon for ${tool.name}'
-                              : 'Enabled App Drawer icon for ${tool.name} (Updates in a few seconds).',
+                              ? rowL10n.coreShortcutsDrawerDisabled(tool.name)
+                              : rowL10n.coreShortcutsDrawerEnabled(tool.name),
                         ),
                         duration: const Duration(seconds: 2),
                       ),

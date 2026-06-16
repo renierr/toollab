@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_chip.dart';
 
 enum LevelMode { mode2d, mode1d }
@@ -38,6 +39,7 @@ class BubbleLevelToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -51,7 +53,7 @@ class BubbleLevelToolbar extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () => Navigator.of(context).maybePop(),
-                tooltip: 'Back',
+                tooltip: l10n.commonBack,
                 iconSize: 18,
                 visualDensity: VisualDensity.compact,
                 style: IconButton.styleFrom(
@@ -64,23 +66,23 @@ class BubbleLevelToolbar extends StatelessWidget {
                 ),
               ),
             ToolChip(
-              label: '2-Axis',
+              label: l10n.levelMode2Axis,
               selected: mode == LevelMode.mode2d,
               onTap: () => onModeChanged(LevelMode.mode2d),
             ),
             ToolChip(
-              label: 'Beam',
+              label: l10n.levelModeBeam,
               selected: mode == LevelMode.mode1d,
               onTap: () => onModeChanged(LevelMode.mode1d),
             ),
             ToolChip(
-              label: 'Ruler',
+              label: l10n.levelRuler,
               selected: rulerVisible,
               onTap: onToggleRuler,
             ),
             if (rulerVisible)
               ToolChip(
-                label: 'Calibrate Ruler',
+                label: l10n.levelCalibrateRuler,
                 selected: false,
                 onTap: onCalibrateRuler,
               ),
@@ -95,7 +97,9 @@ class BubbleLevelToolbar extends StatelessWidget {
                 icon: rotationLocked
                     ? Icons.screen_lock_portrait
                     : Icons.screen_rotation,
-                label: rotationLocked ? 'Locked' : 'Lock Rot.',
+                label: rotationLocked
+                    ? l10n.levelRotationLocked
+                    : l10n.levelLockRotation,
                 selected: rotationLocked,
                 onTap: onToggleRotationLock,
               ),
@@ -104,7 +108,7 @@ class BubbleLevelToolbar extends StatelessWidget {
             Expanded(
               child: ToolChip(
                 icon: Icons.lightbulb_outline,
-                label: 'Wake Lock',
+                label: l10n.levelWakeLock,
                 selected: wakeLocked,
                 onTap: onToggleWakeLock,
               ),
@@ -119,7 +123,7 @@ class BubbleLevelToolbar extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'TOLERANCE',
+                  l10n.levelTolerance,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -165,7 +169,10 @@ class BubbleLevelToolbar extends StatelessWidget {
               children: [
                 TextButton.icon(
                   icon: const Icon(Icons.gps_fixed, size: 14),
-                  label: const Text('Set Zero', style: TextStyle(fontSize: 12)),
+                  label: Text(
+                    l10n.levelSetZero,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   onPressed: onSetZero,
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
@@ -175,7 +182,10 @@ class BubbleLevelToolbar extends StatelessWidget {
                 const SizedBox(width: 4),
                 TextButton.icon(
                   icon: const Icon(Icons.refresh, size: 14),
-                  label: const Text('Reset', style: TextStyle(fontSize: 12)),
+                  label: Text(
+                    l10n.commonReset,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   onPressed: onResetZero,
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,

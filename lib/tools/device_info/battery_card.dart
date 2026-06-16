@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/status_badge.dart';
 
@@ -18,6 +19,7 @@ class BatteryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isCharging =
         state == BatteryState.charging || state == BatteryState.full;
 
@@ -54,7 +56,7 @@ class BatteryCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Power Status',
+                        l10n.miscBatteryPowerStatus,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSurface,
@@ -64,9 +66,9 @@ class BatteryCard extends StatelessWidget {
                       Text(
                         isCharging
                             ? (state == BatteryState.full
-                                  ? 'Fully Charged'
-                                  : 'Charging')
-                            : 'Discharging',
+                                  ? l10n.miscBatteryFullyCharged
+                                  : l10n.miscBatteryCharging)
+                            : l10n.miscBatteryDischarging,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withAlpha(140),
                         ),
@@ -75,7 +77,7 @@ class BatteryCard extends StatelessWidget {
                   ),
                   if (isSaverMode)
                     StatusBadge(
-                      label: 'Saver Active',
+                      label: l10n.miscBatterySaverActive,
                       color: AppTheme.statusOrange,
                       icon: Icons.energy_savings_leaf,
                     ),

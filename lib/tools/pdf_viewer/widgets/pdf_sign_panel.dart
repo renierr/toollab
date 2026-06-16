@@ -5,6 +5,7 @@ import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/signature_library.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 
@@ -80,9 +81,10 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
       if (mounted) setState(() => _loading = false);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to open PDF: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.pdfEditSignOpenError(e.toString()))),
+        );
         widget.onCancel();
       }
     }
@@ -187,9 +189,10 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
     } catch (e) {
       if (mounted) {
         setState(() => _phase = _Phase.place);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Signing failed: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.pdfEditSignFailed(e.toString()))),
+        );
       }
     }
   }
@@ -217,9 +220,10 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sign: ${widget.session.fileName}'),
+        title: Text(l10n.pdfEditSignTitle(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _phase == _Phase.processing ? null : widget.onCancel,
@@ -228,7 +232,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
           if (_phase == _Phase.place)
             IconButton(
               icon: const Icon(Icons.check),
-              tooltip: 'Apply',
+              tooltip: l10n.commonApply,
               onPressed: _placements.isEmpty ? null : _apply,
             ),
         ],
@@ -359,6 +363,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
   }
 
   Widget _buildBottomBar(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     final hasPlacement = _placements[_pageIndex] != null;
     return SafeArea(
       top: false,
@@ -371,10 +376,10 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
               onPressed: _pageIndex > 0
                   ? () => _goToPage(_pageIndex - 1)
                   : null,
-              tooltip: 'Previous page',
+              tooltip: l10n.pdfEditSignPrevPage,
             ),
             Text(
-              'Page ${_pageIndex + 1} of $_pageCount',
+              l10n.pdfEditSignPageOf(_pageIndex + 1, _pageCount),
               style: theme.textTheme.bodyMedium,
             ),
             IconButton(
@@ -382,16 +387,16 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
               onPressed: _pageIndex < _pageCount - 1
                   ? () => _goToPage(_pageIndex + 1)
                   : null,
-              tooltip: 'Next page',
+              tooltip: l10n.pdfEditSignNextPage,
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 hasPlacement
-                    ? 'Drag to position · resize/rotate at the handles'
+                    ? l10n.pdfEditSignDragHint
                     : _signatures.isEmpty
                     ? ''
-                    : 'Tap a signature above',
+                    : l10n.pdfEditSignTapHint,
                 textAlign: TextAlign.end,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -407,19 +412,21 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
   }
 
   Widget _buildProcessing(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const CircularProgressIndicator(),
           const SizedBox(height: 24),
-          Text('Stamping signature...', style: theme.textTheme.titleMedium),
+          Text(l10n.pdfEditSignStamping, style: theme.textTheme.titleMedium),
         ],
       ),
     );
   }
 
   Widget _buildDone(ThemeData theme) {
+    final l10n = AppLocalizations.of(context);
     final size = _resultSize;
     final sizeText = size > 1024 * 1024
         ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
@@ -439,10 +446,13 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
               color: theme.colorScheme.primary,
             ),
             const SizedBox(height: 16),
-            Text('Signature Placed', style: theme.textTheme.headlineSmall),
+            Text(
+              l10n.pdfEditSignDoneTitle,
+              style: theme.textTheme.headlineSmall,
+            ),
             const SizedBox(height: 8),
             Text(
-              'Signed PDF size: $sizeText',
+              l10n.pdfEditSignDoneSize(sizeText),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -454,13 +464,13 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
                 FilledButton.icon(
                   onPressed: _download,
                   icon: const Icon(Icons.download),
-                  label: const Text('Download'),
+                  label: Text(l10n.pdfEditDownload),
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
                   onPressed: _share,
                   icon: const Icon(Icons.share),
-                  label: const Text('Share'),
+                  label: Text(l10n.commonShare),
                 ),
               ],
             ),
@@ -469,10 +479,13 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
               onPressed: () =>
                   widget.onComplete(_resultPath!, '${_baseName}_signed.pdf'),
               icon: const Icon(Icons.open_in_new),
-              label: const Text('Open in Viewer'),
+              label: Text(l10n.pdfEditOpenInViewer),
             ),
             const SizedBox(height: 8),
-            TextButton(onPressed: widget.onCancel, child: const Text('Close')),
+            TextButton(
+              onPressed: widget.onCancel,
+              child: Text(l10n.commonClose),
+            ),
           ],
         ),
       ),

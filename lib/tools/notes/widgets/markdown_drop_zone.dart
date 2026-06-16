@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class MarkdownDropZone extends StatefulWidget {
@@ -22,6 +23,7 @@ class _MarkdownDropZoneState extends State<MarkdownDropZone> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return DropTarget(
@@ -35,11 +37,7 @@ class _MarkdownDropZoneState extends State<MarkdownDropZone> {
             } else {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Only Markdown (.md) or Text (.txt) files are supported',
-                    ),
-                  ),
+                  SnackBar(content: Text(l10n.notesDropZoneUnsupportedFile)),
                 );
               }
             }
@@ -77,7 +75,7 @@ class _MarkdownDropZoneState extends State<MarkdownDropZone> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Drop Markdown file here',
+                        l10n.notesDropZoneTitle,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppTheme.accentTeal,
