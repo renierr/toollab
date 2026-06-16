@@ -187,8 +187,8 @@ class _SignaturesPageState extends State<SignaturesPage>
           TabBar(
             controller: _tabController,
             tabs: const [
-              Tab(icon: Icon(Icons.draw_outlined), text: 'Draw'),
-              Tab(icon: Icon(Icons.collections_outlined), text: 'Saved'),
+              Tab(text: 'Draw'),
+              Tab(text: 'Saved'),
             ],
           ),
           Expanded(
