@@ -13,6 +13,7 @@ import 'package:tool_lab/tools/fast_drop/config.dart';
 import 'package:tool_lab/tools/images_to_pdf/config.dart';
 import 'package:tool_lab/tools/chiptune/config.dart';
 import 'package:tool_lab/tools/focus_noise/config.dart';
+import 'package:tool_lab/tools/signatures/config.dart';
 
 class ToolRegistry {
   static const Map<String, ToolSection> sections = {
@@ -48,5 +49,6 @@ class ToolRegistry {
     ImagesToPdfTool.config,
     ChiptuneTool.config,
     FocusNoiseTool.config,
+    SignaturesTool.config,
   ];
 }
