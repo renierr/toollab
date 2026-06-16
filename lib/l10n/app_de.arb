@@ -44,6 +44,7 @@
   "commonSearch": "Suchen",
   "commonConfirm": "Bestätigen",
   "commonBack": "Zurück",
+  "commonBrowseFiles": "Dateien durchsuchen",
   "chipFailedToParseModule": "Modul konnte nicht geladen werden: {error}",
   "chipFailedToOpenSharedFile": "Geteilte Datei konnte nicht geöffnet werden: {error}",
   "chipHideVisualizer": "Visualisierung ausblenden",

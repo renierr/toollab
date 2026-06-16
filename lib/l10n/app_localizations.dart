@@ -362,6 +362,12 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get commonBack;
 
+  /// No description provided for @commonBrowseFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Files'**
+  String get commonBrowseFiles;
+
   /// No description provided for @chipFailedToParseModule.
   ///
   /// In en, this message translates to:

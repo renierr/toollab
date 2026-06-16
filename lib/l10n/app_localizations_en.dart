@@ -142,6 +142,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonBack => 'Back';
 
   @override
+  String get commonBrowseFiles => 'Browse Files';
+
+  @override
   String chipFailedToParseModule(Object error) {
     return 'Failed to parse module: $error';
   }

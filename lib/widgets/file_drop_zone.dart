@@ -13,7 +13,7 @@ class FileDropZone extends StatefulWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final String buttonLabel;
+  final String? buttonLabel;
   final IconData buttonIcon;
   final List<Widget>? extraButtons;
   final bool compact;
@@ -30,7 +30,7 @@ class FileDropZone extends StatefulWidget {
     required this.subtitle,
     this.allowedMimeTypes,
     this.icon = Icons.description_outlined,
-    this.buttonLabel = 'Browse Files',
+    this.buttonLabel,
     this.buttonIcon = Icons.folder_open,
     this.extraButtons,
     this.compact = false,
@@ -93,6 +93,7 @@ class _FileDropZoneState extends State<FileDropZone> {
     final buttonForeground = widget.accentColor.computeLuminance() > 0.18
         ? Colors.black87
         : Colors.white;
+    final buttonLabel = widget.buttonLabel ?? l10n.commonBrowseFiles;
 
     return DropTarget(
       onDragDone: (details) {
@@ -185,7 +186,7 @@ class _FileDropZoneState extends State<FileDropZone> {
                             FilledButton.icon(
                               onPressed: _pickFile,
                               icon: Icon(widget.buttonIcon, size: 16),
-                              label: Text(widget.buttonLabel),
+                              label: Text(buttonLabel),
                               style: FilledButton.styleFrom(
                                 backgroundColor: widget.accentColor,
                                 foregroundColor: buttonForeground,
@@ -233,7 +234,7 @@ class _FileDropZoneState extends State<FileDropZone> {
                             FilledButton.icon(
                               onPressed: _pickFile,
                               icon: Icon(widget.buttonIcon),
-                              label: Text(widget.buttonLabel),
+                              label: Text(buttonLabel),
                               style: FilledButton.styleFrom(
                                 backgroundColor: widget.accentColor,
                                 foregroundColor: buttonForeground,

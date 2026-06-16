@@ -235,11 +235,19 @@ class SignaturesDbHelper {
     if (row == null || (row['deleted'] as int? ?? 0) == 1) return null;
     final image = _imageFromRow(row['image']);
     final imageData = image != null && image.isNotEmpty
-        ? 'data:image/png;base64,${base64Encode(image)}'
+        ? base64Encode(image)
+        : '';
+    final imageUri = imageData.isNotEmpty
+        ? 'data:image/png;base64,$imageData'
         : '';
     return {
       'id': shortId,
-      'image': imageData,
+      'image': imageUri,
+      'imageBlob': {
+        '__type': 'blob',
+        'mimeType': 'image/png',
+        'data': imageData,
+      },
       'width': (row['width'] as num).toDouble(),
       'height': (row['height'] as num).toDouble(),
       'timestamp': row['created_at'],

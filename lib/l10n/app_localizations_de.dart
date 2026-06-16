@@ -143,6 +143,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonBack => 'Zurück';
 
   @override
+  String get commonBrowseFiles => 'Dateien durchsuchen';
+
+  @override
   String chipFailedToParseModule(Object error) {
     return 'Modul konnte nicht geladen werden: $error';
   }

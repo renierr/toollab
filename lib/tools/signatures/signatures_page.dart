@@ -12,11 +12,14 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
+import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/theme/theme.dart';
 import 'config.dart';
 import 'signature_export.dart';
 import 'signature_models.dart';
 import 'signature_painter.dart';
 import 'signatures_state.dart';
+import 'signatures_sync_delegate.dart';
 import 'widgets/signature_advanced_panel.dart';
 import 'widgets/signature_canvas.dart';
 import 'widgets/signature_controls.dart';
@@ -43,6 +46,22 @@ class _SignaturesPageState extends State<SignaturesPage>
     _tempScope = TempFileManager.createScope();
     onDispose(_tabController.dispose);
     onDispose(() => _tempScope.cleanTracked());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final appState = context.read<AppState>();
+      if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty) {
+        appState
+            .syncWithBackend([SignaturesSyncDelegate()])
+            .then((_) {
+              if (mounted) {
+                context.read<SignaturesState>().refreshSaved();
+              }
+            })
+            .catchError((e) {
+              debugPrint('[SignaturesPage] Auto-sync on open failed: $e');
+            });
+      }
+    });
   }
 
   static const List<XTypeGroup> _pngGroups = [
@@ -126,6 +145,41 @@ class _SignaturesPageState extends State<SignaturesPage>
     if (ok && mounted) _toast(AppLocalizations.of(context).sigSaved);
   }
 
+  Future<void> _triggerSync() async {
+    final l10n = AppLocalizations.of(context);
+    final appState = context.read<AppState>();
+    if (appState.syncServerUrl.isEmpty) {
+      _toast(l10n.notesSyncConfigureServerUrl);
+      return;
+    }
+
+    try {
+      final results = await appState.syncWithBackend([
+        SignaturesSyncDelegate(),
+      ]);
+      if (results != null) {
+        if (mounted) {
+          context.read<SignaturesState>().refreshSaved();
+          _toast(
+            l10n.notesSyncFinished(
+              results['pulled'] ?? 0,
+              results['pushed'] ?? 0,
+              results['deleted'] ?? 0,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          _toast(l10n.notesSyncFailedEmpty);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _toast(l10n.notesSyncFailed(e.toString()));
+      }
+    }
+  }
+
   void _loadRecord(SignatureRecord record) {
     context.read<SignaturesState>().loadRecord(record);
     _tabController.animateTo(0);
@@ -177,11 +231,29 @@ class _SignaturesPageState extends State<SignaturesPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final appState = context.watch<AppState>();
     return ToolLayout(
       scaffoldKey: _scaffoldKey,
       title: SignaturesTool.config.name,
       endDrawer: const SignatureAdvancedPanel(),
       actions: [
+        if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty)
+          IconButton(
+            tooltip: l10n.chipSyncTooltip,
+            icon: appState.isSyncing
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppTheme.accentBlue,
+                      ),
+                    ),
+                  )
+                : const Icon(Icons.sync),
+            onPressed: appState.isSyncing ? null : _triggerSync,
+          ),
         IconButton(
           tooltip: l10n.sigAdvancedSettings,
           icon: const Icon(Icons.tune),
