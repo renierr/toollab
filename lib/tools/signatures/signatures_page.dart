@@ -7,6 +7,7 @@ import 'package:pasteboard/pasteboard.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
@@ -31,12 +32,15 @@ class _SignaturesPageState extends State<SignaturesPage>
     with DisposeCleanup, SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late final TabController _tabController;
+  late final TempFileScope _tempScope;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tempScope = TempFileManager.createScope();
     onDispose(_tabController.dispose);
+    onDispose(() => _tempScope.cleanTracked());
   }
 
   static const List<XTypeGroup> _pngGroups = [
@@ -95,6 +99,21 @@ class _SignaturesPageState extends State<SignaturesPage>
     if (bytes == null) return;
     await Pasteboard.writeImage(bytes);
     _toast('Signature copied to clipboard');
+  }
+
+  Future<void> _share() async {
+    final bytes = await context.read<SignaturesState>().exportCurrentPng();
+    if (bytes == null || !mounted) return;
+    final path = await _tempScope.createFile(
+      _fileName('png'),
+      bytes: Uint8List.fromList(bytes),
+    );
+    if (!mounted) return;
+    await FileSaveHelper.showShareChooser(
+      context: context,
+      path: path,
+      mimeType: 'image/png',
+    );
   }
 
   Future<void> _save() async {
@@ -178,6 +197,7 @@ class _SignaturesPageState extends State<SignaturesPage>
               children: [
                 _DrawTab(
                   onCopy: _copy,
+                  onShare: _share,
                   onExportPng: _exportCurrentPng,
                   onExportSvg: _exportCurrentSvg,
                   onSave: _save,
@@ -199,12 +219,14 @@ class _SignaturesPageState extends State<SignaturesPage>
 
 class _DrawTab extends StatelessWidget {
   final VoidCallback onCopy;
+  final VoidCallback onShare;
   final VoidCallback onExportPng;
   final VoidCallback onExportSvg;
   final VoidCallback onSave;
 
   const _DrawTab({
     required this.onCopy,
+    required this.onShare,
     required this.onExportPng,
     required this.onExportSvg,
     required this.onSave,
@@ -220,6 +242,7 @@ class _DrawTab extends StatelessWidget {
         const SignatureControls(),
         SignatureToolbar(
           onCopy: onCopy,
+          onShare: onShare,
           onExportPng: onExportPng,
           onExportSvg: onExportSvg,
           onSave: onSave,

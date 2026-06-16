@@ -8,6 +8,7 @@ import '../signatures_state.dart';
 /// export/copy/save are delegated to the page (they need platform helpers).
 class SignatureToolbar extends StatelessWidget {
   final VoidCallback onCopy;
+  final VoidCallback onShare;
   final VoidCallback onExportPng;
   final VoidCallback onExportSvg;
   final VoidCallback onSave;
@@ -15,6 +16,7 @@ class SignatureToolbar extends StatelessWidget {
   const SignatureToolbar({
     super.key,
     required this.onCopy,
+    required this.onShare,
     required this.onExportPng,
     required this.onExportSvg,
     required this.onSave,
@@ -59,6 +61,11 @@ class SignatureToolbar extends StatelessWidget {
             icon: Icons.copy_outlined,
             label: 'Copy',
             onTap: hasContent ? onCopy : () {},
+          ),
+          ToolChip(
+            icon: Icons.share_outlined,
+            label: 'Share',
+            onTap: hasContent ? onShare : () {},
           ),
           ToolChip(
             icon: Icons.image_outlined,
