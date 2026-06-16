@@ -1,0 +1,20 @@
+{
+  "@@locale": "de",
+  "appearanceTitle": "Darstellung",
+  "settingsTheme": "Design",
+  "settingsThemeSystem": "System",
+  "settingsThemeLight": "Hell",
+  "settingsThemeDark": "Dunkel",
+  "settingsLanguage": "Sprache",
+  "settingsLanguageSystem": "System",
+  "settingsLanguageEnglish": "Englisch",
+  "settingsLanguageGerman": "Deutsch",
+  "settingsCompactView": "Kompakte Ansicht",
+  "settingsCompactViewSubtitle": "Kleinere Karten, mehr Tools pro Zeile",
+  "settingsSystemNotifications": "Systembenachrichtigungen",
+  "settingsSystemNotificationsSubtitle": "Systembenachrichtigungen aktivieren oder deaktivieren",
+  "settingsSortBy": "Sortieren nach",
+  "settingsSortRecent": "Zuletzt verwendet",
+  "settingsSortDefaultOrder": "Standardreihenfolge",
+  "settingsSortName": "Name"
+}

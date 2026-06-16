@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/constants.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -212,6 +213,9 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: appState.themeMode,
+      locale: appState.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
     );

@@ -5,6 +5,7 @@ import 'package:tool_lab/services/database_service.dart';
 class SettingsService {
   static const String _toolId = '_app';
   static const String _keyThemeMode = 'theme_mode';
+  static const String _keyLocale = 'locale';
   static const String _keyCompactMode = 'compact_mode';
   static const String _keySortBy = 'sort_by';
   static const String _keySyncEnabled = 'sync_enabled';
@@ -33,6 +34,20 @@ class SettingsService {
     final value = mode.index.toString();
     _cache[_keyThemeMode] = value;
     await DatabaseService.instance.setSetting(_toolId, _keyThemeMode, value);
+  }
+
+  /// Returns the stored UI locale, or null to follow the system language.
+  Locale? getLocale() {
+    final code = _cache[_keyLocale];
+    if (code == null || code.isEmpty) return null;
+    return Locale(code);
+  }
+
+  /// Persists the UI locale. Pass null to follow the system language.
+  Future<void> setLocale(Locale? locale) async {
+    final value = locale?.languageCode ?? '';
+    _cache[_keyLocale] = value;
+    await DatabaseService.instance.setSetting(_toolId, _keyLocale, value);
   }
 
   bool getCompactMode() {

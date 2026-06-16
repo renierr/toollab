@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
@@ -11,6 +12,7 @@ class AppState extends ChangeNotifier {
 
   AppState(this._settingsService) {
     _themeMode = _settingsService.getThemeMode();
+    _locale = _settingsService.getLocale();
     _compactMode = _settingsService.getCompactMode();
     _sortBy = _settingsService.getSortBy();
     _syncEnabled = _settingsService.getSyncEnabled();
@@ -30,6 +32,7 @@ class AppState extends ChangeNotifier {
   }
 
   ThemeMode _themeMode = ThemeMode.system;
+  Locale? _locale;
   bool _compactMode = true;
   String _sortBy = 'recent';
   String _searchQuery = '';
@@ -50,6 +53,13 @@ class AppState extends ChangeNotifier {
   final List<SyncDelegate> _syncDelegates = [];
 
   ThemeMode get themeMode => _themeMode;
+
+  /// The selected UI locale, or null to follow the system language.
+  Locale? get locale => _locale;
+
+  /// Locales the app ships translations for.
+  List<Locale> get supportedLocales => AppLocalizations.supportedLocales;
+
   bool get compactMode => _compactMode;
   String get sortBy => _sortBy;
   String get searchQuery => _searchQuery;
@@ -160,6 +170,12 @@ class AppState extends ChangeNotifier {
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     await _settingsService.setThemeMode(mode);
+    notifyListeners();
+  }
+
+  Future<void> setLocale(Locale? locale) async {
+    _locale = locale;
+    await _settingsService.setLocale(locale);
     notifyListeners();
   }
 

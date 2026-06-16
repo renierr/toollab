@@ -37,6 +37,7 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
   3. **`TempFileManager.cleanSession()`** / **`cleanAll()`** — session-level / nuclear cleanup. `cleanSession` removes the current session dir; `cleanAll` nukes the entire `tool_lab/` base dir and re-initializes (use from maintenance page). `cleanSession` fires automatically on `AppLifecycleState.detached`.
 - **Large Data → Temp Files**: Prefer `TempFileManager.createFile()` or `scope.createFile()` for large binary data (images, PDFs, exports) instead of holding large `Uint8List` in memory. Small in-memory bytes (< 100 KB) are fine for fast access.
 - **Tool ID Single Source of Truth**: Never hardcode tool ID strings (`'fast-drop'`, `'notes'`, etc.) outside of `config.dart`. Always reference via `MyTool.config.id`. This applies to pages, sync delegates, DB helpers, archive classes — everywhere. The only occurrence of the literal tool ID string should be in `config.dart`.
+- **Localize User-Facing Strings**: Never hardcode UI text. Add a key to both `lib/l10n/app_en.arb` and `lib/l10n/app_de.arb` and read it via `AppLocalizations.of(context).<key>`. See [Core Guardrails §4](#4-localization-i18n).
 
 ---
 
@@ -143,6 +144,13 @@ For every tool added to the app, launcher entry points must be maintained:
 
 ### 3. Navigation
 - Standard: `go_router` for declarative routing.
+
+### 4. Localization (i18n)
+- The app supports **English (`en`)** and **German (`de`)** via Flutter's `gen_l10n` (`flutter_localizations` + `intl`). ARB sources live in `lib/l10n/app_en.arb` (template) and `lib/l10n/app_de.arb`; config is `l10n.yaml` at the project root.
+- **All new user-facing strings must be localized.** Never hardcode UI text (`Text('...')`, tooltips, hints, labels, snackbars, dialog titles). Add a key to **both** ARB files and read it via `AppLocalizations.of(context).<key>` (import `package:tool_lab/l10n/app_localizations.dart`). `en` is the template — every key added there must also exist in `de`.
+- After editing ARB files, regenerate with `flutter gen-l10n` (also runs on `flutter pub get` / build since `generate: true`). Generated output is `lib/l10n/app_localizations*.dart` — never edit it by hand.
+- The active locale is driven by `AppState.locale` (`null` = follow system) and persisted via `SettingsService.getLocale`/`setLocale`. The user switches it in the Appearance settings page. Default is the user's system language.
+- `ToolModel` names/descriptions in `config.dart` are compile-time `const` strings and are **not yet localized** (Phase B). When that lands, resolve them via keys at display time — do not add a `BuildContext` dependency to `config.dart`.
 
 ---
 

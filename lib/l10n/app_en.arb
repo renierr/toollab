@@ -1,0 +1,23 @@
+{
+  "@@locale": "en",
+  "appearanceTitle": "Appearance",
+  "@appearanceTitle": {
+    "description": "Title of the appearance settings page"
+  },
+  "settingsTheme": "Theme",
+  "settingsThemeSystem": "System",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsLanguage": "Language",
+  "settingsLanguageSystem": "System",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageGerman": "German",
+  "settingsCompactView": "Compact View",
+  "settingsCompactViewSubtitle": "Smaller cards, more tools per row",
+  "settingsSystemNotifications": "System Notifications",
+  "settingsSystemNotificationsSubtitle": "Enable or disable system notifications",
+  "settingsSortBy": "Sort by",
+  "settingsSortRecent": "Recent",
+  "settingsSortDefaultOrder": "Default order",
+  "settingsSortName": "Name"
+}
