@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'package:tool_lab/widgets/checkerboard_background.dart';
-
 import '../signature_models.dart';
+import 'signature_background.dart';
 
 /// A single saved-signature card with a transparency-aware preview and actions.
 class SignatureGalleryItem extends StatelessWidget {
   final SignatureRecord record;
+  final CanvasBackground background;
   final VoidCallback onLoad;
   final VoidCallback onDelete;
   final VoidCallback onExportPng;
@@ -15,6 +15,7 @@ class SignatureGalleryItem extends StatelessWidget {
   const SignatureGalleryItem({
     super.key,
     required this.record,
+    required this.background,
     required this.onLoad,
     required this.onDelete,
     required this.onExportPng,
@@ -32,7 +33,8 @@ class SignatureGalleryItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: CheckerboardBackground(
+            child: SignatureBackground(
+              background: background,
               child: record.image == null
                   ? const SizedBox.shrink()
                   : Padding(

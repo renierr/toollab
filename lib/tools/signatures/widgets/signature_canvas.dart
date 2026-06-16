@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../signature_models.dart';
-import 'package:tool_lab/widgets/checkerboard_background.dart';
-
 import '../signature_painter.dart';
 import '../signatures_state.dart';
+import 'signature_background.dart';
 
 /// The interactive drawing surface. Captures pointer input (with pressure)
 /// and renders the live signature via [SignaturePainter].
@@ -49,16 +47,8 @@ class SignatureCanvas extends StatelessWidget {
                 children: [
                   Positioned.fill(
                     child: Consumer<SignaturesState>(
-                      builder: (context, s, _) => switch (s.background) {
-                        CanvasBackground.checkerboard =>
-                          const CheckerboardBackground(),
-                        CanvasBackground.black => const ColoredBox(
-                          color: Colors.black,
-                        ),
-                        CanvasBackground.white => const ColoredBox(
-                          color: Colors.white,
-                        ),
-                      },
+                      builder: (context, s, _) =>
+                          SignatureBackground(background: s.background),
                     ),
                   ),
                   Positioned.fill(

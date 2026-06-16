@@ -23,7 +23,9 @@ class SignatureGallery extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final saved = context.watch<SignaturesState>().saved;
+    final state = context.watch<SignaturesState>();
+    final saved = state.saved;
+    final background = state.background;
 
     if (saved.isEmpty) {
       return Center(
@@ -60,6 +62,7 @@ class SignatureGallery extends StatelessWidget {
         final record = saved[index];
         return SignatureGalleryItem(
           record: record,
+          background: background,
           onLoad: () => onLoad(record),
           onDelete: () => onDelete(record),
           onExportPng: () => onExportPng(record),
