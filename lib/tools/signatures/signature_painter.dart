@@ -122,23 +122,33 @@ void paintSignatureStroke(
 double _hypot(double dx, double dy) => math.sqrt(dx * dx + dy * dy);
 
 /// Live painter bound to the drawing state; repaints on every notify.
+///
+/// Strokes are stored in a fixed content space and fitted into the current
+/// widget size via [transformGetter], so resizing only changes the transform.
 class SignaturePainter extends CustomPainter {
   final Listenable repaintListenable;
   final List<List<SignaturePoint>> Function() pathsGetter;
   final List<SignaturePoint> Function() currentGetter;
   final SignatureSettings Function() settingsGetter;
+  final ({double scale, double dx, double dy}) Function(Size view)
+  transformGetter;
 
   SignaturePainter({
     required this.repaintListenable,
     required this.pathsGetter,
     required this.currentGetter,
     required this.settingsGetter,
+    required this.transformGetter,
   }) : super(repaint: repaintListenable);
 
   @override
   void paint(Canvas canvas, Size size) {
     final s = settingsGetter();
     final color = colorFromHex(s.penColor);
+    final t = transformGetter(size);
+    canvas.save();
+    canvas.translate(t.dx, t.dy);
+    canvas.scale(t.scale);
     for (final stroke in pathsGetter()) {
       paintSignatureStroke(canvas, stroke, s, color);
     }
@@ -146,6 +156,7 @@ class SignaturePainter extends CustomPainter {
     if (current.isNotEmpty) {
       paintSignatureStroke(canvas, current, s, color);
     }
+    canvas.restore();
   }
 
   @override

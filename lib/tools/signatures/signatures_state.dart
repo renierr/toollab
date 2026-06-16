@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -25,7 +26,11 @@ class SignaturesState extends ChangeNotifier {
 
   SignatureSettings _settings = SignatureSettings.defaults;
   String? _lastLoadedId;
-  Size _canvasSize = const Size(300, 150);
+
+  /// Coordinate space the stored [_paths] live in. The canvas is rendered by
+  /// fitting this space into the current widget size, so resizing/rotating
+  /// never mutates geometry and is fully reversible.
+  Size _contentSize = const Size(300, 150);
 
   List<SignatureRecord> _saved = [];
   bool _isDrawing = false;
@@ -42,7 +47,30 @@ class SignaturesState extends ChangeNotifier {
   bool get canUndo => _undo.isNotEmpty;
   bool get canRedo => _redo.isNotEmpty;
   bool get isEmpty => _paths.isEmpty && _current.isEmpty;
-  Size get canvasSize => _canvasSize;
+  Size get contentSize => _contentSize;
+
+  /// Uniform scale + offset that fits [_contentSize] into [view], centered.
+  ({double scale, double dx, double dy}) fitTransform(Size view) {
+    if (_contentSize.width <= 0 || _contentSize.height <= 0) {
+      return (scale: 1, dx: 0, dy: 0);
+    }
+    final scale = math.min(
+      view.width / _contentSize.width,
+      view.height / _contentSize.height,
+    );
+    return (
+      scale: scale,
+      dx: (view.width - _contentSize.width * scale) / 2,
+      dy: (view.height - _contentSize.height * scale) / 2,
+    );
+  }
+
+  /// Maps a pointer position in [view] space into content space.
+  Offset _toContent(Offset p, Size view) {
+    final t = fitTransform(view);
+    if (t.scale == 0) return p;
+    return Offset((p.dx - t.dx) / t.scale, (p.dy - t.dy) / t.scale);
+  }
 
   Future<void> _load() async {
     final stored = await DatabaseService.instance.getSetting(
@@ -58,10 +86,6 @@ class SignaturesState extends ChangeNotifier {
     }
     await refreshSaved();
     notifyListeners();
-  }
-
-  void setCanvasSize(Size size) {
-    if (size.width > 0 && size.height > 0) _canvasSize = size;
   }
 
   // ---- Settings ----
@@ -80,32 +104,33 @@ class SignaturesState extends ChangeNotifier {
   double get _now => _clock.elapsedMicroseconds / 1000.0;
 
   // ---- Drawing ----
-  void startStroke(Offset pos, double pressure) {
+  void startStroke(Offset pos, double pressure, Size view) {
+    // A fresh drawing is authored in the current view space (identity fit).
+    if (isEmpty && view.width > 0 && view.height > 0) _contentSize = view;
+    final p = _toContent(pos, view);
     _isDrawing = true;
     _current
       ..clear()
       ..add(
-        SignaturePoint(
-          x: pos.dx,
-          y: pos.dy,
-          timestamp: _now,
-          pressure: pressure,
-        ),
+        SignaturePoint(x: p.dx, y: p.dy, timestamp: _now, pressure: pressure),
       );
     notifyListeners();
   }
 
-  void extendStroke(Offset pos, double pressure) {
+  void extendStroke(Offset pos, double pressure, Size view) {
     if (!_isDrawing) return;
+    final p = _toContent(pos, view);
     if (_current.isNotEmpty) {
       final prev = _current.last;
-      final dx = pos.dx - prev.x;
-      final dy = pos.dy - prev.y;
-      final tol = _settings.moveTolerance;
+      final dx = p.dx - prev.x;
+      final dy = p.dy - prev.y;
+      // Tolerance is in view pixels; compare in view space.
+      final t = fitTransform(view);
+      final tol = _settings.moveTolerance / (t.scale == 0 ? 1 : t.scale);
       if (dx * dx + dy * dy < tol * tol) return;
     }
     _current.add(
-      SignaturePoint(x: pos.dx, y: pos.dy, timestamp: _now, pressure: pressure),
+      SignaturePoint(x: p.dx, y: p.dy, timestamp: _now, pressure: pressure),
     );
     notifyListeners();
   }
@@ -231,33 +256,15 @@ class SignaturesState extends ChangeNotifier {
     await refreshSaved();
   }
 
-  /// Loads a saved signature back onto the canvas, scaled and centered.
+  /// Loads a saved signature back onto the canvas. The record's own logical
+  /// size becomes the content space, so it is rendered fitted to any view.
   void loadRecord(SignatureRecord record) {
     final prev = _clonePaths(_paths);
-    final scale = [
-      _canvasSize.width / record.width,
-      _canvasSize.height / record.height,
-      1.0,
-    ].reduce((a, b) => a < b ? a : b);
-    final offsetX = (_canvasSize.width - record.width * scale) / 2;
-    final offsetY = (_canvasSize.height - record.height * scale) / 2;
-
-    final scaled = record.rawPaths
-        .map(
-          (stroke) => stroke
-              .map(
-                (p) => p.copyWith(
-                  x: p.x * scale + offsetX,
-                  y: p.y * scale + offsetY,
-                ),
-              )
-              .toList(),
-        )
-        .toList();
-
-    _undo.add(ReplaceCmd(prev, _clonePaths(scaled)));
+    final loaded = _clonePaths(record.rawPaths);
+    _undo.add(ReplaceCmd(prev, _clonePaths(loaded)));
     _redo.clear();
-    _setPaths(scaled);
+    _setPaths(loaded);
+    _contentSize = Size(record.width, record.height);
     _settings = record.settings;
     _lastLoadedId = record.shortId;
     notifyListeners();

@@ -23,20 +23,16 @@ class SignatureCanvas extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          state.setCanvasSize(
-            Size(constraints.maxWidth, constraints.maxHeight),
-          );
-        });
+        final view = Size(constraints.maxWidth, constraints.maxHeight);
 
         return MouseRegion(
           cursor: SystemMouseCursors.precise,
           child: Listener(
             behavior: HitTestBehavior.opaque,
             onPointerDown: (e) =>
-                state.startStroke(e.localPosition, _pressure(e)),
+                state.startStroke(e.localPosition, _pressure(e), view),
             onPointerMove: (e) =>
-                state.extendStroke(e.localPosition, _pressure(e)),
+                state.extendStroke(e.localPosition, _pressure(e), view),
             onPointerUp: (_) => state.endStroke(),
             onPointerCancel: (_) => state.endStroke(),
             child: Container(
@@ -59,6 +55,7 @@ class SignatureCanvas extends StatelessWidget {
                           pathsGetter: () => state.paths,
                           currentGetter: () => state.currentStroke,
                           settingsGetter: () => state.settings,
+                          transformGetter: state.fitTransform,
                         ),
                       ),
                     ),
