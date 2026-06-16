@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:ffi/ffi.dart';
@@ -22,6 +23,9 @@ class SignatureStampRequest {
   final double fw;
   final double fh;
 
+  /// Clockwise rotation in radians (UI/screen convention), about the center.
+  final double rotation;
+
   const SignatureStampRequest({
     required this.pageIndex,
     required this.pngBytes,
@@ -29,6 +33,7 @@ class SignatureStampRequest {
     required this.fy,
     required this.fw,
     required this.fh,
+    this.rotation = 0,
   });
 }
 
@@ -576,22 +581,26 @@ class PdfEngineHelper {
           try {
             final pageW = pageSizes[stamp.pageIndex].width;
             final pageH = pageSizes[stamp.pageIndex].height;
-            final x = stamp.fx * pageW;
             final wPts = stamp.fw * pageW;
             final hPts = stamp.fh * pageH;
-            final yBottom = pageH * (1 - stamp.fy - stamp.fh);
+            // Center in page points (bottom-left origin; flip the top-left UI y).
+            final cxp = (stamp.fx + stamp.fw / 2) * pageW;
+            final cyp = pageH * (1 - (stamp.fy + stamp.fh / 2));
+            // Negate rotation: UI angle is clockwise in a y-down space, PDF is
+            // y-up. Matrix maps the unit square's u-axis to (a,b), v to (c,d).
+            final theta = -stamp.rotation;
+            final cosT = math.cos(theta);
+            final sinT = math.sin(theta);
+            final a = wPts * cosT;
+            final b = wPts * sinT;
+            final c = -hPts * sinT;
+            final d = hPts * cosT;
+            final e = cxp - 0.5 * (a + c);
+            final f = cyp - 0.5 * (b + d);
 
             final imageObject = pdf.FPDFPageObj_NewImageObj(documentHandle);
             pdf.FPDFImageObj_SetBitmap(nullptr, 0, imageObject, bitmap);
-            pdf.FPDFImageObj_SetMatrix(
-              imageObject,
-              wPts,
-              0,
-              0,
-              hPts,
-              x,
-              yBottom,
-            );
+            pdf.FPDFImageObj_SetMatrix(imageObject, a, b, c, d, e, f);
 
             // Bake the image into the page content. STAMP annotations with an
             // appended image are not reliably given an appearance stream by

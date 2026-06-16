@@ -19,6 +19,7 @@ class _Placement {
   double cx = 0.5;
   double cy = 0.5;
   double fw = 0.4;
+  double rotation = 0;
 
   _Placement(this.signature);
 }
@@ -165,6 +166,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
             fy: p.cy - fh / 2,
             fw: p.fw,
             fh: fh,
+            rotation: p.rotation,
           ),
         );
       }
@@ -329,20 +331,28 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
     final fh = _heightFraction(p, _pageIndex);
     final boxW = p.fw * dispW;
     final boxH = fh * dispH;
-    final left = dispLeft + (p.cx - p.fw / 2) * dispW;
-    final top = dispTop + (p.cy - fh / 2) * dispH;
     final image = p.signature.image;
     if (image == null) return const SizedBox.shrink();
 
+    // Inflate the positioned box by the overlay margins so the handles render
+    // inside the widget's bounds (the top margin is larger to host the rotate
+    // handle above the box).
+    const side = PdfSignaturePlacementOverlay.sideMargin;
+    const top = PdfSignaturePlacementOverlay.topMargin;
+    final boxLeft = dispLeft + (p.cx - p.fw / 2) * dispW;
+    final boxTop = dispTop + (p.cy - fh / 2) * dispH;
+
     return Positioned(
-      left: left,
-      top: top,
-      width: boxW,
-      height: boxH,
+      left: boxLeft - side,
+      top: boxTop - top,
+      width: boxW + 2 * side,
+      height: boxH + top + side,
       child: PdfSignaturePlacementOverlay(
         image: image,
+        rotation: p.rotation,
         onDrag: (d) => _drag(d, dispW, dispH),
         onResize: (d) => _resize(d.dx, dispW),
+        onRotate: (a) => setState(() => p.rotation = a),
         onRemove: _removeCurrent,
       ),
     );
@@ -374,15 +384,20 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
                   : null,
               tooltip: 'Next page',
             ),
-            const Spacer(),
-            Text(
-              hasPlacement
-                  ? 'Drag to position · resize at corner'
-                  : _signatures.isEmpty
-                  ? ''
-                  : 'Tap a signature above',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                hasPlacement
+                    ? 'Drag to position · resize/rotate at the handles'
+                    : _signatures.isEmpty
+                    ? ''
+                    : 'Tap a signature above',
+                textAlign: TextAlign.end,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           ],
