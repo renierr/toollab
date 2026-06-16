@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../signature_painter.dart';
 import '../signatures_state.dart';
+import 'checkerboard_background.dart';
 
 /// The interactive drawing surface. Captures pointer input (with pressure)
 /// and renders the live signature via [SignaturePainter].
@@ -40,7 +41,6 @@ class SignatureCanvas extends StatelessWidget {
             onPointerCancel: (_) => state.endStroke(),
             child: Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: theme.colorScheme.outline.withValues(alpha: 0.3),
@@ -49,6 +49,7 @@ class SignatureCanvas extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: Stack(
                 children: [
+                  const Positioned.fill(child: CheckerboardBackground()),
                   Positioned.fill(
                     child: RepaintBoundary(
                       child: CustomPaint(

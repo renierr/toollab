@@ -27,8 +27,17 @@ class SignaturesPage extends StatefulWidget {
   State<SignaturesPage> createState() => _SignaturesPageState();
 }
 
-class _SignaturesPageState extends State<SignaturesPage> with DisposeCleanup {
+class _SignaturesPageState extends State<SignaturesPage>
+    with DisposeCleanup, SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    onDispose(_tabController.dispose);
+  }
 
   static const List<XTypeGroup> _pngGroups = [
     XTypeGroup(label: 'PNG image', extensions: ['png']),
@@ -95,7 +104,7 @@ class _SignaturesPageState extends State<SignaturesPage> with DisposeCleanup {
 
   void _loadRecord(SignatureRecord record) {
     context.read<SignaturesState>().loadRecord(record);
-    DefaultTabController.of(context).animateTo(0);
+    _tabController.animateTo(0);
   }
 
   Future<void> _exportRecordPng(SignatureRecord record) async {
@@ -142,48 +151,47 @@ class _SignaturesPageState extends State<SignaturesPage> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: ToolLayout(
-        scaffoldKey: _scaffoldKey,
-        title: SignaturesTool.config.name,
-        endDrawer: const SignatureAdvancedPanel(),
-        actions: [
-          IconButton(
-            tooltip: 'Advanced settings',
-            icon: const Icon(Icons.tune),
-            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+    return ToolLayout(
+      scaffoldKey: _scaffoldKey,
+      title: SignaturesTool.config.name,
+      endDrawer: const SignatureAdvancedPanel(),
+      actions: [
+        IconButton(
+          tooltip: 'Advanced settings',
+          icon: const Icon(Icons.tune),
+          onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+        ),
+      ],
+      child: Column(
+        children: [
+          TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(icon: Icon(Icons.draw_outlined), text: 'Draw'),
+              Tab(icon: Icon(Icons.collections_outlined), text: 'Saved'),
+            ],
           ),
-        ],
-        child: Column(
-          children: [
-            const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.draw_outlined), text: 'Draw'),
-                Tab(icon: Icon(Icons.collections_outlined), text: 'Saved'),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _DrawTab(
+                  onCopy: _copy,
+                  onExportPng: _exportCurrentPng,
+                  onExportSvg: _exportCurrentSvg,
+                  onSave: _save,
+                ),
+                SignatureGallery(
+                  onLoad: _loadRecord,
+                  onDelete: _deleteRecord,
+                  onExportPng: _exportRecordPng,
+                  onExportSvg: _exportRecordSvg,
+                ),
               ],
             ),
-            Expanded(
-              child: TabBarView(
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _DrawTab(
-                    onCopy: _copy,
-                    onExportPng: _exportCurrentPng,
-                    onExportSvg: _exportCurrentSvg,
-                    onSave: _save,
-                  ),
-                  SignatureGallery(
-                    onLoad: _loadRecord,
-                    onDelete: _deleteRecord,
-                    onExportPng: _exportRecordPng,
-                    onExportSvg: _exportRecordSvg,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

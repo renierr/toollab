@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../signature_models.dart';
+import 'checkerboard_background.dart';
 
 /// A single saved-signature card with a transparency-aware preview and actions.
 class SignatureGalleryItem extends StatelessWidget {
@@ -29,12 +30,8 @@ class SignatureGalleryItem extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: 100,
-            child: CustomPaint(
-              painter: _CheckerboardPainter(
-                color: theme.colorScheme.surfaceContainerHighest,
-              ),
+          Expanded(
+            child: CheckerboardBackground(
               child: record.image == null
                   ? const SizedBox.shrink()
                   : Padding(
@@ -51,35 +48,28 @@ class SignatureGalleryItem extends StatelessWidget {
               style: theme.textTheme.labelSmall,
             ),
           ),
-          Wrap(
-            alignment: WrapAlignment.spaceEvenly,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(
+              _CompactIconButton(
                 tooltip: 'Load',
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.edit_outlined, size: 18),
+                icon: Icons.edit_outlined,
                 onPressed: onLoad,
               ),
-              IconButton(
+              _CompactIconButton(
                 tooltip: 'PNG',
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.image_outlined, size: 18),
+                icon: Icons.image_outlined,
                 onPressed: onExportPng,
               ),
-              IconButton(
+              _CompactIconButton(
                 tooltip: 'SVG',
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.polyline_outlined, size: 18),
+                icon: Icons.polyline_outlined,
                 onPressed: onExportSvg,
               ),
-              IconButton(
+              _CompactIconButton(
                 tooltip: 'Delete',
-                visualDensity: VisualDensity.compact,
-                icon: Icon(
-                  Icons.delete_outline,
-                  size: 18,
-                  color: theme.colorScheme.error,
-                ),
+                icon: Icons.delete_outline,
+                color: theme.colorScheme.error,
                 onPressed: onDelete,
               ),
             ],
@@ -92,25 +82,28 @@ class SignatureGalleryItem extends StatelessWidget {
   static String _two(int v) => v.toString().padLeft(2, '0');
 }
 
-class _CheckerboardPainter extends CustomPainter {
-  final Color color;
-  const _CheckerboardPainter({required this.color});
+class _CompactIconButton extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final Color? color;
+  final VoidCallback onPressed;
+
+  const _CompactIconButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+    this.color,
+  });
 
   @override
-  void paint(Canvas canvas, Size size) {
-    const cell = 10.0;
-    final paint = Paint()..color = color;
-    for (double y = 0; y < size.height; y += cell) {
-      for (double x = 0; x < size.width; x += cell) {
-        final even = ((x ~/ cell) + (y ~/ cell)) % 2 == 0;
-        if (even) {
-          canvas.drawRect(Rect.fromLTWH(x, y, cell, cell), paint);
-        }
-      }
-    }
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: tooltip,
+      icon: Icon(icon, size: 18, color: color),
+      onPressed: onPressed,
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant _CheckerboardPainter oldDelegate) =>
-      oldDelegate.color != color;
 }
