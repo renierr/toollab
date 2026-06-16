@@ -357,7 +357,9 @@ class FileSaveHelper {
           );
         }
         if (context.mounted) {
-          GoRouter.of(context).push(selectedTool.route, extra: file);
+          GoRouter.of(
+            context,
+          ).push(selectedTool.route, extra: SharedData.single(file));
         }
       }
     }
@@ -411,7 +413,9 @@ class FileSaveHelper {
           );
         }
         if (context.mounted) {
-          GoRouter.of(context).push(selectedTool.route, extra: file);
+          GoRouter.of(
+            context,
+          ).push(selectedTool.route, extra: SharedData.single(file));
         }
       }
     }
