@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:tool_lab/helpers/format_helper.dart';
 import '../signature_models.dart';
 import 'signature_background.dart';
 
@@ -25,7 +26,6 @@ class SignatureGalleryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final date = DateTime.fromMillisecondsSinceEpoch(record.updatedAt);
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -46,8 +46,7 @@ class SignatureGalleryItem extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Text(
-              '${date.year}-${_two(date.month)}-${_two(date.day)} '
-              '${_two(date.hour)}:${_two(date.minute)}',
+              FormatHelper.epoch(record.updatedAt),
               style: theme.textTheme.labelSmall,
             ),
           ),
@@ -81,8 +80,6 @@ class SignatureGalleryItem extends StatelessWidget {
       ),
     );
   }
-
-  static String _two(int v) => v.toString().padLeft(2, '0');
 }
 
 class _CompactIconButton extends StatelessWidget {

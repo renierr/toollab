@@ -1,5 +1,17 @@
 import 'dart:math' as math;
 
+/// Output shapes for date/time rendering. All ISO-ordered (YYYY-MM-DD).
+enum DateStyle {
+  /// `2026-06-16`
+  dateOnly,
+
+  /// `2026-06-16 14:30`
+  dateAndTime,
+
+  /// `2026-06-16 14:30:05`
+  dateTimeSeconds,
+}
+
 class FormatHelper {
   FormatHelper._();
 
@@ -10,13 +22,36 @@ class FormatHelper {
     return '${(bytes / math.pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
   }
 
-  static String dateTime(int timestampMs) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestampMs);
-    final month = date.month;
-    final day = date.day;
-    final year = date.year;
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '$month/$day/$year $hour:$minute';
+  /// Format a [DateTime] using the unified ISO-ordered [style].
+  static String dateTime(
+    DateTime date, {
+    DateStyle style = DateStyle.dateAndTime,
+  }) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = _two(date.month);
+    final day = _two(date.day);
+    final dateStr = '$year-$month-$day';
+    if (style == DateStyle.dateOnly) return dateStr;
+
+    final time = '${_two(date.hour)}:${_two(date.minute)}';
+    if (style == DateStyle.dateAndTime) return '$dateStr $time';
+
+    return '$dateStr $time:${_two(date.second)}';
   }
+
+  /// Format an epoch-millisecond timestamp. Returns [placeholder] when the
+  /// timestamp is null or zero.
+  static String epoch(
+    int? timestampMs, {
+    DateStyle style = DateStyle.dateAndTime,
+    String placeholder = '',
+  }) {
+    if (timestampMs == null || timestampMs == 0) return placeholder;
+    return dateTime(
+      DateTime.fromMillisecondsSinceEpoch(timestampMs),
+      style: style,
+    );
+  }
+
+  static String _two(int v) => v.toString().padLeft(2, '0');
 }

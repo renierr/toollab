@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/theme/theme.dart';
 
@@ -119,11 +120,10 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
           'CPU Cores': '${info.numberOfCores}',
           'System RAM':
               '${(info.systemMemoryInMegabytes / 1024).toStringAsFixed(2)} GB',
-          'Install Date': info.installDate
-              .toLocal()
-              .toString()
-              .split('.')
-              .first,
+          'Install Date': FormatHelper.dateTime(
+            info.installDate.toLocal(),
+            style: DateStyle.dateTimeSeconds,
+          ),
         };
       } else if (defaultTargetPlatform == TargetPlatform.linux) {
         final info = await _deviceInfo.linuxInfo;

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/notes/notes_state.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -154,7 +155,10 @@ class _NotesToolbarState extends State<NotesToolbar> {
       final jsonString = jsonEncode(backupData);
       final bytes = Uint8List.fromList(utf8.encode(jsonString));
 
-      final date = DateTime.now().toIso8601String().split('T')[0];
+      final date = FormatHelper.dateTime(
+        DateTime.now(),
+        style: DateStyle.dateOnly,
+      );
       if (!mounted) return;
       await FileSaveHelper.saveFile(
         context: context,

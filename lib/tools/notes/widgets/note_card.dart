@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -60,15 +61,7 @@ class NoteCard extends StatelessWidget {
     return remainingLines.join('\n');
   }
 
-  String _formatDate(int timestamp) {
-    if (timestamp == 0) return '';
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '${date.year}-$month-$day $hour:$minute';
-  }
+  String _formatDate(int timestamp) => FormatHelper.epoch(timestamp);
 
   Future<void> _exportMarkdown(BuildContext context) async {
     final content = note['content'] as String;

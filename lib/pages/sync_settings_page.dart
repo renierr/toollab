@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 
 class SyncSettingsPage extends StatefulWidget {
   const SyncSettingsPage({super.key});
@@ -120,13 +121,8 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
     if (timestamp == 0) {
       return 'Never synced';
     }
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    final second = date.second.toString().padLeft(2, '0');
-    return 'Last synced: ${date.year}-$month-$day $hour:$minute:$second';
+    return 'Last synced: '
+        '${FormatHelper.epoch(timestamp, style: DateStyle.dateTimeSeconds)}';
   }
 
   @override

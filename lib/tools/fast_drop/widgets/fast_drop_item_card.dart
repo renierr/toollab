@@ -54,7 +54,7 @@ class FastDropItemCard extends StatelessWidget {
     final icon = _getFileIcon(resolvedType);
     final isExpires = item.expiresAt != null;
     final expiresText = isExpires
-        ? 'Expires: ${FormatHelper.dateTime(item.expiresAt!)}'
+        ? 'Expires: ${FormatHelper.epoch(item.expiresAt!)}'
         : 'Indefinite retention';
 
     return Card(
@@ -172,7 +172,7 @@ class FastDropItemCard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'Uploaded: ${FormatHelper.dateTime(item.uploadedAt)}',
+                              'Uploaded: ${FormatHelper.epoch(item.uploadedAt)}',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurface.withValues(
                                   alpha: 0.6,
