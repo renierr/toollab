@@ -3,19 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/widgets/tool_chip.dart';
 
 import '../signature_models.dart';
+import '../signatures_colors.dart';
 import '../signatures_state.dart';
 
 /// Quick controls: pen width, color preset and curve mode.
 class SignatureControls extends StatelessWidget {
   const SignatureControls({super.key});
-
-  static const List<String> _presetColors = [
-    '#0B3D91',
-    '#111111',
-    '#1565C0',
-    '#C62828',
-    '#2E7D32',
-  ];
 
   static const Map<CurveMode, String> _curveLabels = {
     CurveMode.natural: 'Natural',
@@ -71,7 +64,7 @@ class SignatureControls extends StatelessWidget {
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              for (final hex in _presetColors)
+              for (final hex in SignaturesColors.penPresets)
                 _ColorSwatch(
                   hex: hex,
                   selected:

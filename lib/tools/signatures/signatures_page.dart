@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
@@ -149,7 +150,7 @@ class _SignaturesPageState extends State<SignaturesPage>
   Future<void> _deleteRecord(SignatureRecord record) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => ResponsiveAlertDialog(
         title: const Text('Delete signature?'),
         content: const Text('This signature will be removed.'),
         actions: [
