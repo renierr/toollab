@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:tool_lab/widgets/checkerboard_background.dart';
+
 import '../signature_models.dart';
-import 'checkerboard_background.dart';
 
 /// A single saved-signature card with a transparency-aware preview and actions.
 class SignatureGalleryItem extends StatelessWidget {

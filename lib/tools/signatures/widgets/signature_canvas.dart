@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../signature_models.dart';
+import 'package:tool_lab/widgets/checkerboard_background.dart';
+
 import '../signature_painter.dart';
 import '../signatures_state.dart';
-import 'checkerboard_background.dart';
 
 /// The interactive drawing surface. Captures pointer input (with pressure)
 /// and renders the live signature via [SignaturePainter].

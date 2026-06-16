@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// A two-tone checkerboard fill used to signal transparency behind a signature.
+/// A two-tone checkerboard fill used to signal transparency behind an image.
 class CheckerboardBackground extends StatelessWidget {
   final Widget? child;
   final double cell;

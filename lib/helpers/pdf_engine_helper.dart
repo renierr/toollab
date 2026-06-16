@@ -10,6 +10,28 @@ import 'package:pdfium_dart/pdfium_dart.dart' as pdfium;
 
 enum ImageToPdfPageSize { a4, letter, legal, fit }
 
+/// A request to stamp one signature image onto a PDF page.
+///
+/// Position is expressed as a fraction (0..1) of the page in top-left origin
+/// space (matching how the UI lays the overlay over a rendered page image).
+class SignatureStampRequest {
+  final int pageIndex;
+  final Uint8List pngBytes;
+  final double fx;
+  final double fy;
+  final double fw;
+  final double fh;
+
+  const SignatureStampRequest({
+    required this.pageIndex,
+    required this.pngBytes,
+    required this.fx,
+    required this.fy,
+    required this.fw,
+    required this.fh,
+  });
+}
+
 class PdfEmbeddedImageData {
   final String id;
   final int pageNumber;
@@ -492,6 +514,102 @@ class PdfEngineHelper {
         d.dispose();
       }
     }
+  }
+
+  /// Stamps each signature PNG onto its target page as a baked image page
+  /// object, then returns the re-encoded PDF bytes.
+  ///
+  /// The transparent PNG is decoded to BGRA and embedded as an image page
+  /// object, positioned via its matrix and committed with
+  /// FPDFPage_GenerateContent. Page coordinates are points with a bottom-left
+  /// origin, so the top-left UI fraction is flipped vertically.
+  static Future<Uint8List> stampSignatureAnnotations(
+    PdfDocument doc,
+    List<SignatureStampRequest> stamps,
+  ) async {
+    await _ensureInit();
+    if (stamps.isEmpty) return doc.encodePdf();
+
+    final pageSizes = [
+      for (final p in doc.pages) (width: p.width, height: p.height),
+    ];
+
+    await doc.useNativeDocumentHandle((nativeDocumentHandle) async {
+      final pdf = pdfium.getPdfium();
+      final documentHandle = pdfium.FPDF_DOCUMENT.fromAddress(
+        nativeDocumentHandle,
+      );
+
+      for (final stamp in stamps) {
+        if (stamp.pageIndex < 0 || stamp.pageIndex >= pageSizes.length) {
+          continue;
+        }
+        final decoded = img.decodeImage(stamp.pngBytes);
+        if (decoded == null) continue;
+
+        final rgbaImage = decoded.numChannels == 4
+            ? decoded
+            : decoded.convert(numChannels: 4);
+        final w = rgbaImage.width;
+        final h = rgbaImage.height;
+        final stride = w * 4;
+        final bgra = rgbaImage.getBytes(order: img.ChannelOrder.bgra);
+
+        final buffer = calloc<Uint8>(stride * h);
+        try {
+          buffer.asTypedList(stride * h).setRange(0, bgra.length, bgra);
+          final bitmap = pdf.FPDFBitmap_CreateEx(
+            w,
+            h,
+            pdfium.FPDFBitmap_BGRA,
+            buffer.cast<Void>(),
+            stride,
+          );
+          if (bitmap.address == 0) continue;
+
+          final page = pdf.FPDF_LoadPage(documentHandle, stamp.pageIndex);
+          if (page.address == 0) {
+            pdf.FPDFBitmap_Destroy(bitmap);
+            continue;
+          }
+
+          try {
+            final pageW = pageSizes[stamp.pageIndex].width;
+            final pageH = pageSizes[stamp.pageIndex].height;
+            final x = stamp.fx * pageW;
+            final wPts = stamp.fw * pageW;
+            final hPts = stamp.fh * pageH;
+            final yBottom = pageH * (1 - stamp.fy - stamp.fh);
+
+            final imageObject = pdf.FPDFPageObj_NewImageObj(documentHandle);
+            pdf.FPDFImageObj_SetBitmap(nullptr, 0, imageObject, bitmap);
+            pdf.FPDFImageObj_SetMatrix(
+              imageObject,
+              wPts,
+              0,
+              0,
+              hPts,
+              x,
+              yBottom,
+            );
+
+            // Bake the image into the page content. STAMP annotations with an
+            // appended image are not reliably given an appearance stream by
+            // PDFium on save, so they can disappear; a page object always
+            // renders and persists through encodePdf().
+            pdf.FPDFPage_InsertObject(page, imageObject);
+            pdf.FPDFPage_GenerateContent(page);
+          } finally {
+            pdf.FPDFBitmap_Destroy(bitmap);
+            pdf.FPDF_ClosePage(page);
+          }
+        } finally {
+          calloc.free(buffer);
+        }
+      }
+    });
+
+    return doc.encodePdf();
   }
 
   static Future<List<PdfEmbeddedImageData>> extractEmbeddedImages(

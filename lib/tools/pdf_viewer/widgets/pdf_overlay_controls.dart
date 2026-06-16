@@ -102,7 +102,9 @@ class PdfOverlayControls extends StatelessWidget {
           ),
           PopupMenuButton<PdfViewerMode>(
             icon: Icon(
-              currentMode == PdfViewerMode.organize
+              currentMode == PdfViewerMode.sign
+                  ? Icons.gesture
+                  : currentMode == PdfViewerMode.organize
                   ? Icons.reorder
                   : currentMode == PdfViewerMode.flatten
                   ? Icons.photo_library_outlined
@@ -123,6 +125,17 @@ class PdfOverlayControls extends StatelessWidget {
                       Icon(Icons.visibility_outlined),
                       SizedBox(width: 8),
                       Text('View'),
+                    ],
+                  ),
+                ),
+              if (currentMode != PdfViewerMode.sign)
+                const PopupMenuItem(
+                  value: PdfViewerMode.sign,
+                  child: Row(
+                    children: [
+                      Icon(Icons.gesture),
+                      SizedBox(width: 8),
+                      Text('Place Signature'),
                     ],
                   ),
                 ),

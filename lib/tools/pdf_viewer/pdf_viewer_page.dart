@@ -19,6 +19,7 @@ import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_organize_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_flatten_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_metadata_panel.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_sign_panel.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 
 class PdfViewerPage extends StatefulWidget {
@@ -292,6 +293,19 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     setState(() => _mode = mode);
   }
 
+  void _onSignComplete(String pdfPath, String name) {
+    _resetViewerState();
+    setState(() {
+      _mode = PdfViewerMode.view;
+      _filePath = pdfPath;
+      _fileName = name;
+    });
+  }
+
+  void _onSignCancel() {
+    setState(() => _mode = PdfViewerMode.view);
+  }
+
   void _onOrganizeComplete(String pdfPath, String name) {
     _resetViewerState();
     setState(() {
@@ -360,6 +374,21 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
           icon: Icons.picture_as_pdf_outlined,
           title: 'Open a PDF File',
           subtitle: 'Drag & drop a .pdf file here',
+        ),
+      );
+    }
+
+    if (_mode == PdfViewerMode.sign) {
+      return ToolLayout(
+        title: PdfViewerTool.config.name,
+        fullscreen: true,
+        showFloatingBackButton: false,
+        scaffoldKey: _scaffoldKey,
+        backgroundColor: theme.colorScheme.surface,
+        child: PdfSignPanel(
+          session: _operationSession,
+          onComplete: _onSignComplete,
+          onCancel: _onSignCancel,
         ),
       );
     }
