@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../signature_models.dart';
 import '../signature_painter.dart';
 import '../signatures_state.dart';
 import 'checkerboard_background.dart';
@@ -45,7 +46,20 @@ class SignatureCanvas extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: Stack(
                 children: [
-                  const Positioned.fill(child: CheckerboardBackground()),
+                  Positioned.fill(
+                    child: Consumer<SignaturesState>(
+                      builder: (context, s, _) => switch (s.background) {
+                        CanvasBackground.checkerboard =>
+                          const CheckerboardBackground(),
+                        CanvasBackground.black => const ColoredBox(
+                          color: Colors.black,
+                        ),
+                        CanvasBackground.white => const ColoredBox(
+                          color: Colors.white,
+                        ),
+                      },
+                    ),
+                  ),
                   Positioned.fill(
                     child: RepaintBoundary(
                       child: CustomPaint(

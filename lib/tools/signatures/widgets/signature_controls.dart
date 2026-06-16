@@ -10,6 +10,12 @@ import '../signatures_state.dart';
 class SignatureControls extends StatelessWidget {
   const SignatureControls({super.key});
 
+  static const Map<CanvasBackground, IconData> _backgroundIcons = {
+    CanvasBackground.checkerboard: Icons.grid_view_outlined,
+    CanvasBackground.black: Icons.dark_mode_outlined,
+    CanvasBackground.white: Icons.light_mode_outlined,
+  };
+
   static const Map<CurveMode, String> _curveLabels = {
     CurveMode.natural: 'Natural',
     CurveMode.fast: 'Fast',
@@ -81,6 +87,16 @@ class SignatureControls extends StatelessWidget {
                   onTap: () => context.read<SignaturesState>().updateSettings(
                     settings.copyWith(curveMode: entry.key),
                   ),
+                ),
+              Container(width: 1, height: 24, color: theme.dividerColor),
+              for (final entry in _backgroundIcons.entries)
+                ToolChip(
+                  icon: entry.value,
+                  label: entry.key.name,
+                  showLabel: false,
+                  selected: state.background == entry.key,
+                  onTap: () =>
+                      context.read<SignaturesState>().setBackground(entry.key),
                 ),
             ],
           ),

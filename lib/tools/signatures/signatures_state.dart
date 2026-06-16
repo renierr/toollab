@@ -15,6 +15,7 @@ import 'signatures_db_helper.dart';
 /// Drawing + persistence controller for the Signature Creator tool.
 class SignaturesState extends ChangeNotifier {
   static const String _settingsKey = 'config';
+  static const String _backgroundKey = 'background';
 
   final SignaturesDbHelper _db = SignaturesDbHelper.instance;
   final Stopwatch _clock = Stopwatch()..start();
@@ -25,6 +26,7 @@ class SignaturesState extends ChangeNotifier {
   final List<SignatureCmd> _redo = [];
 
   SignatureSettings _settings = SignatureSettings.defaults;
+  CanvasBackground _background = CanvasBackground.checkerboard;
   String? _lastLoadedId;
 
   /// Coordinate space the stored [_paths] live in. The canvas is rendered by
@@ -43,6 +45,7 @@ class SignaturesState extends ChangeNotifier {
   List<List<SignaturePoint>> get paths => _paths;
   List<SignaturePoint> get currentStroke => _current;
   SignatureSettings get settings => _settings;
+  CanvasBackground get background => _background;
   List<SignatureRecord> get saved => _saved;
   bool get canUndo => _undo.isNotEmpty;
   bool get canRedo => _redo.isNotEmpty;
@@ -84,8 +87,24 @@ class SignaturesState extends ChangeNotifier {
         );
       } catch (_) {}
     }
+    final bg = await DatabaseService.instance.getSetting(
+      SignaturesTool.config.id,
+      _backgroundKey,
+    );
+    if (bg != null) _background = canvasBackgroundFromString(bg);
     await refreshSaved();
     notifyListeners();
+  }
+
+  Future<void> setBackground(CanvasBackground bg) async {
+    if (_background == bg) return;
+    _background = bg;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      SignaturesTool.config.id,
+      _backgroundKey,
+      bg.name,
+    );
   }
 
   // ---- Settings ----

@@ -7,6 +7,15 @@ enum CurveMode { fast, natural, draft, none }
 /// Point-reduction (Ramer–Douglas–Peucker) aggressiveness.
 enum RdpMode { none, low, medium, high }
 
+/// Display-only background for the drawing canvas (not exported, not synced).
+enum CanvasBackground { checkerboard, black, white }
+
+CanvasBackground canvasBackgroundFromString(String? s) =>
+    CanvasBackground.values.firstWhere(
+      (b) => b.name == s,
+      orElse: () => CanvasBackground.checkerboard,
+    );
+
 CurveMode curveModeFromString(String? s) => CurveMode.values.firstWhere(
   (m) => m.name == s,
   orElse: () => CurveMode.natural,
