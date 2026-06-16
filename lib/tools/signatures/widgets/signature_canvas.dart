@@ -1,0 +1,93 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../signature_painter.dart';
+import '../signatures_state.dart';
+
+/// The interactive drawing surface. Captures pointer input (with pressure)
+/// and renders the live signature via [SignaturePainter].
+class SignatureCanvas extends StatelessWidget {
+  const SignatureCanvas({super.key});
+
+  double _pressure(PointerEvent e) {
+    final range = e.pressureMax - e.pressureMin;
+    if (range <= 0) return 1.0;
+    return ((e.pressure - e.pressureMin) / range).clamp(0.0, 1.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final state = context.read<SignaturesState>();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          state.setCanvasSize(
+            Size(constraints.maxWidth, constraints.maxHeight),
+          );
+        });
+
+        return MouseRegion(
+          cursor: SystemMouseCursors.precise,
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: (e) =>
+                state.startStroke(e.localPosition, _pressure(e)),
+            onPointerMove: (e) =>
+                state.extendStroke(e.localPosition, _pressure(e)),
+            onPointerUp: (_) => state.endStroke(),
+            onPointerCancel: (_) => state.endStroke(),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        size: Size.infinite,
+                        painter: SignaturePainter(
+                          repaintListenable: state,
+                          pathsGetter: () => state.paths,
+                          currentGetter: () => state.currentStroke,
+                          settingsGetter: () => state.settings,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Consumer<SignaturesState>(
+                        builder: (context, s, _) {
+                          if (!s.isEmpty) return const SizedBox.shrink();
+                          return Center(
+                            child: Text(
+                              'Sign here',
+                              style: TextStyle(
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.4),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
