@@ -2823,4 +2823,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get docScanCropCancel => 'Cancel';
+
+  @override
+  String get docScanActionScanMlKit => 'Scan Page (ML Kit)';
+
+  @override
+  String get docScanActionScanStandard => 'Scan Page (Standard)';
+
+  @override
+  String get docScanMethodTitle => 'Select Scan Method';
+
+  @override
+  String docScanFailedMlKit(String error) {
+    return 'ML Kit scan failed: $error';
+  }
 }

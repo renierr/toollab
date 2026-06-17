@@ -5071,6 +5071,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get docScanCropCancel;
+
+  /// No description provided for @docScanActionScanMlKit.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Page (ML Kit)'**
+  String get docScanActionScanMlKit;
+
+  /// No description provided for @docScanActionScanStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Page (Standard)'**
+  String get docScanActionScanStandard;
+
+  /// No description provided for @docScanMethodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Scan Method'**
+  String get docScanMethodTitle;
+
+  /// No description provided for @docScanFailedMlKit.
+  ///
+  /// In en, this message translates to:
+  /// **'ML Kit scan failed: {error}'**
+  String docScanFailedMlKit(String error);
 }
 
 class _AppLocalizationsDelegate

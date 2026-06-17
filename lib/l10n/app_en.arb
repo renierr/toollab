@@ -1713,5 +1713,17 @@
   "docScanCropReset": "Reset to Full",
   "docScanCropUndo": "Undo",
   "docScanCropApply": "Apply",
-  "docScanCropCancel": "Cancel"
+  "docScanCropCancel": "Cancel",
+  "docScanActionScanMlKit": "Scan Page (ML Kit)",
+  "docScanActionScanStandard": "Scan Page (Standard)",
+  "docScanMethodTitle": "Select Scan Method",
+  "docScanFailedMlKit": "ML Kit scan failed: {error}",
+  "@docScanFailedMlKit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }
+

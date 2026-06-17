@@ -1,6 +1,9 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
+import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
@@ -55,6 +58,86 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
           SnackBar(content: Text(l10n.docScanFailedCamera(e.toString()))),
         );
       }
+    }
+  }
+
+  Future<void> _captureFromMlKit(DocumentScannerState state) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      final options = DocumentScannerOptions(
+        documentFormats: {DocumentFormat.jpeg},
+        mode: ScannerMode.full,
+        isGalleryImport: false,
+      );
+      final documentScanner = DocumentScanner(options: options);
+      final result = await documentScanner.scanDocument();
+      documentScanner.close();
+
+      final images = result.images;
+      if (images != null && images.isNotEmpty) {
+        for (final path in images) {
+          await state.addPage(path, isPreCropped: true);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.docScanFailedMlKit(e.toString()))),
+        );
+      }
+    }
+  }
+
+  Future<void> _onScanPressed(DocumentScannerState state) async {
+    final l10n = AppLocalizations.of(context);
+    final isAndroid = !kIsWeb && Platform.isAndroid;
+
+    if (!isAndroid) {
+      await _captureFromCamera(state);
+      return;
+    }
+
+    if (!mounted) return;
+    final selection = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  l10n.docScanMethodTitle,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.auto_awesome),
+                title: Text(l10n.docScanActionScanMlKit),
+                onTap: () => Navigator.of(context).pop('mlkit'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: Text(l10n.docScanActionScanStandard),
+                onTap: () => Navigator.of(context).pop('standard'),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selection == 'mlkit') {
+      await _captureFromMlKit(state);
+    } else if (selection == 'standard') {
+      await _captureFromCamera(state);
     }
   }
 
@@ -279,7 +362,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
             hasPages: state.pages.isNotEmpty,
             isProcessing: state.isProcessing,
             accentColor: accentColor,
-            onAddCamera: () => _captureFromCamera(state),
+            onAddCamera: () => _onScanPressed(state),
             onAddGallery: () => _pickFromGallery(state),
             onCompilePdf: () => _compilePdf(state),
             onClearAll: () => _clearAll(state),

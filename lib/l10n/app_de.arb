@@ -908,5 +908,17 @@
   "docScanCropReset": "Zurücksetzen",
   "docScanCropUndo": "Rückgängig",
   "docScanCropApply": "Anwenden",
-  "docScanCropCancel": "Abbrechen"
+  "docScanCropCancel": "Abbrechen",
+  "docScanActionScanMlKit": "Seite scannen (ML Kit)",
+  "docScanActionScanStandard": "Seite scannen (Standard)",
+  "docScanMethodTitle": "Scan-Methode auswählen",
+  "docScanFailedMlKit": "ML Kit Scan fehlgeschlagen: {error}",
+  "@docScanFailedMlKit": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }
+

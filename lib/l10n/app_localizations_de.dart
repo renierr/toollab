@@ -2848,4 +2848,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get docScanCropCancel => 'Abbrechen';
+
+  @override
+  String get docScanActionScanMlKit => 'Seite scannen (ML Kit)';
+
+  @override
+  String get docScanActionScanStandard => 'Seite scannen (Standard)';
+
+  @override
+  String get docScanMethodTitle => 'Scan-Methode auswählen';
+
+  @override
+  String docScanFailedMlKit(String error) {
+    return 'ML Kit Scan fehlgeschlagen: $error';
+  }
 }

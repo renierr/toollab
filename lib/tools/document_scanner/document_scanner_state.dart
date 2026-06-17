@@ -84,7 +84,7 @@ class DocumentScannerState extends ChangeNotifier {
   }
 
   /// Adds a new page from a picked image path.
-  Future<void> addPage(String pickedPath) async {
+  Future<void> addPage(String pickedPath, {bool isPreCropped = false}) async {
     _setProcessing(true, text: 'Importing image...');
     try {
       final bytes = await File(pickedPath).readAsBytes();
@@ -100,16 +100,27 @@ class DocumentScannerState extends ChangeNotifier {
         bytes: origBytes,
       );
 
-      // Detect corners
-      final corners = AutoCropDetector.detect(decoded);
+      // Detect corners or use full bounds if pre-cropped
+      final corners = isPreCropped
+          ? [
+              Offset.zero,
+              Offset(decoded.width.toDouble(), 0),
+              Offset(decoded.width.toDouble(), decoded.height.toDouble()),
+              Offset(0, decoded.height.toDouble()),
+            ]
+          : AutoCropDetector.detect(decoded);
 
-      // Initial warp & clean filter
+      final filterType = isPreCropped
+          ? DocumentFilterType.none
+          : DocumentFilterType.clean;
+
+      // Initial warp & filter
       final processedImage = await compute(
         _warpAndFilterImageTask,
         _WarpFilterParams(
           image: decoded,
           corners: corners,
-          filter: DocumentFilterType.clean,
+          filter: filterType,
           rotation: 0,
         ),
       );
@@ -130,7 +141,7 @@ class DocumentScannerState extends ChangeNotifier {
         originalImagePath: originalImagePath,
         processedImagePath: processedImagePath,
         corners: corners,
-        filter: DocumentFilterType.clean,
+        filter: filterType,
         rotation: 0,
         width: processedImage.width.toDouble(),
         height: processedImage.height.toDouble(),
