@@ -1524,5 +1524,82 @@
   "toolNameFocusNoise": "Focus Noise & Breathing",
   "toolDescFocusNoise": "Ambient noise player with guided breathing patterns",
   "toolNameSignatures": "Signature Creator",
-  "toolDescSignatures": "Draw signatures and export them as transparent PNG or SVG"
+  "toolDescSignatures": "Draw signatures and export them as transparent PNG or SVG",
+  "toolNameQrCode": "QR Code",
+  "toolDescQrCode": "Scan QR codes with the camera or an image, and create your own",
+  "qrTabScan": "Scan",
+  "qrTabCreate": "Create",
+  "qrModeCamera": "Camera",
+  "qrModeImage": "Image",
+  "qrImagesLabel": "Images",
+  "qrScanDropTitle": "Scan a QR code from an image",
+  "qrScanDropSubtitle": "Drop an image here, or browse to pick one",
+  "qrBrowseImage": "Browse image",
+  "qrPasteImage": "Paste image",
+  "qrPickFromGallery": "Pick from gallery",
+  "qrNoCodeFound": "No QR code found in the image",
+  "qrNoImageInClipboard": "No image in the clipboard",
+  "qrScanAgain": "Scan again",
+  "qrResultOpen": "Open",
+  "qrActionCopy": "Copy",
+  "qrActionShare": "Share",
+  "qrCopied": "Copied to clipboard",
+  "qrOpenFailed": "Could not open this content",
+  "qrKindLink": "Link",
+  "qrKindWifi": "Wi-Fi network",
+  "qrKindEmail": "Email",
+  "qrKindPhone": "Phone number",
+  "qrKindSms": "SMS",
+  "qrKindLocation": "Location",
+  "qrKindContact": "Contact",
+  "qrKindText": "Text",
+  "qrTypeText": "Text",
+  "qrTypeUrl": "URL",
+  "qrTypeWifi": "Wi-Fi",
+  "qrTypeEmail": "Email",
+  "qrTypePhone": "Phone",
+  "qrTypeSms": "SMS",
+  "qrTypeGeo": "Location",
+  "qrTypeVcard": "Contact",
+  "qrFieldText": "Text",
+  "qrFieldUrl": "URL",
+  "qrFieldSsid": "Network name (SSID)",
+  "qrFieldPassword": "Password",
+  "qrFieldEncryption": "Encryption",
+  "qrFieldHidden": "Hidden network",
+  "qrEncWpa": "WPA/WPA2",
+  "qrEncWep": "WEP",
+  "qrEncNone": "None",
+  "qrFieldEmail": "Email address",
+  "qrFieldSubject": "Subject",
+  "qrFieldBody": "Message",
+  "qrFieldPhone": "Phone number",
+  "qrFieldMessage": "Message",
+  "qrFieldLatitude": "Latitude",
+  "qrFieldLongitude": "Longitude",
+  "qrFieldName": "Full name",
+  "qrFieldOrganization": "Organization",
+  "qrCreatePlaceholder": "Fill in the fields to generate a QR code",
+  "qrEncodeFailed": "Content is too long to encode as a QR code",
+  "qrActionSave": "Save",
+  "qrActionCopyImage": "Copy image",
+  "qrImageCopied": "QR image copied to clipboard",
+  "qrCopyImageFailed": "Could not copy the QR image",
+  "qrSavedToDownloads": "QR code saved to Downloads folder",
+  "qrSavedTo": "QR code saved to {path}",
+  "@qrSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "qrSaveFailed": "Failed to save QR code: {error}",
+  "@qrSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

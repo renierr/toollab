@@ -13,6 +13,7 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:tool_lab/widgets/drop_zone_action_button.dart';
 import 'package:tool_lab/tools/images_to_pdf/config.dart';
 import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_preview.dart';
 import 'package:tool_lab/tools/images_to_pdf/widgets/images_to_pdf_progress.dart';
@@ -240,17 +241,19 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
                       multiple: true,
                       extraButtons: [
                         const SizedBox(height: 16),
-                        _DropZoneActionButton(
+                        DropZoneActionButton(
                           onPressed: _pasteFromClipboard,
                           icon: Icons.paste_outlined,
                           label: l10n.img2pdfPasteFromClipboard,
+                          accentColor: ImagesToPdfTool.config.accentColor,
                         ),
                         if (Platform.isAndroid) ...[
                           const SizedBox(height: 12),
-                          _DropZoneActionButton(
+                          DropZoneActionButton(
                             onPressed: _pickFromGallery,
                             icon: Icons.photo_library_outlined,
                             label: l10n.img2pdfPickFromGallery,
+                            accentColor: ImagesToPdfTool.config.accentColor,
                           ),
                         ],
                       ],
@@ -321,32 +324,4 @@ class _ImageItem {
   final String name;
 
   const _ImageItem({required this.path, this.tempName, required this.name});
-}
-
-class _DropZoneActionButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  final IconData icon;
-  final String label;
-
-  const _DropZoneActionButton({
-    required this.onPressed,
-    required this.icon,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = ImagesToPdfTool.config.accentColor;
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: accent,
-        side: BorderSide(color: accent.withValues(alpha: 0.5)),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
 }

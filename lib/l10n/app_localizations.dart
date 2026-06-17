@@ -4495,6 +4495,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Draw signatures and export them as transparent PNG or SVG'**
   String get toolDescSignatures;
+
+  /// No description provided for @toolNameQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'QR Code'**
+  String get toolNameQrCode;
+
+  /// No description provided for @toolDescQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan QR codes with the camera or an image, and create your own'**
+  String get toolDescQrCode;
+
+  /// No description provided for @qrTabScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get qrTabScan;
+
+  /// No description provided for @qrTabCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get qrTabCreate;
+
+  /// No description provided for @qrModeCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get qrModeCamera;
+
+  /// No description provided for @qrModeImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get qrModeImage;
+
+  /// No description provided for @qrImagesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get qrImagesLabel;
+
+  /// No description provided for @qrScanDropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a QR code from an image'**
+  String get qrScanDropTitle;
+
+  /// No description provided for @qrScanDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop an image here, or browse to pick one'**
+  String get qrScanDropSubtitle;
+
+  /// No description provided for @qrBrowseImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse image'**
+  String get qrBrowseImage;
+
+  /// No description provided for @qrPasteImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste image'**
+  String get qrPasteImage;
+
+  /// No description provided for @qrPickFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick from gallery'**
+  String get qrPickFromGallery;
+
+  /// No description provided for @qrNoCodeFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No QR code found in the image'**
+  String get qrNoCodeFound;
+
+  /// No description provided for @qrNoImageInClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'No image in the clipboard'**
+  String get qrNoImageInClipboard;
+
+  /// No description provided for @qrScanAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan again'**
+  String get qrScanAgain;
+
+  /// No description provided for @qrResultOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get qrResultOpen;
+
+  /// No description provided for @qrActionCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get qrActionCopy;
+
+  /// No description provided for @qrActionShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get qrActionShare;
+
+  /// No description provided for @qrCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get qrCopied;
+
+  /// No description provided for @qrOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open this content'**
+  String get qrOpenFailed;
+
+  /// No description provided for @qrKindLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get qrKindLink;
+
+  /// No description provided for @qrKindWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi network'**
+  String get qrKindWifi;
+
+  /// No description provided for @qrKindEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get qrKindEmail;
+
+  /// No description provided for @qrKindPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get qrKindPhone;
+
+  /// No description provided for @qrKindSms.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS'**
+  String get qrKindSms;
+
+  /// No description provided for @qrKindLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get qrKindLocation;
+
+  /// No description provided for @qrKindContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get qrKindContact;
+
+  /// No description provided for @qrKindText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get qrKindText;
+
+  /// No description provided for @qrTypeText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get qrTypeText;
+
+  /// No description provided for @qrTypeUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get qrTypeUrl;
+
+  /// No description provided for @qrTypeWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi'**
+  String get qrTypeWifi;
+
+  /// No description provided for @qrTypeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get qrTypeEmail;
+
+  /// No description provided for @qrTypePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get qrTypePhone;
+
+  /// No description provided for @qrTypeSms.
+  ///
+  /// In en, this message translates to:
+  /// **'SMS'**
+  String get qrTypeSms;
+
+  /// No description provided for @qrTypeGeo.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get qrTypeGeo;
+
+  /// No description provided for @qrTypeVcard.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get qrTypeVcard;
+
+  /// No description provided for @qrFieldText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get qrFieldText;
+
+  /// No description provided for @qrFieldUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get qrFieldUrl;
+
+  /// No description provided for @qrFieldSsid.
+  ///
+  /// In en, this message translates to:
+  /// **'Network name (SSID)'**
+  String get qrFieldSsid;
+
+  /// No description provided for @qrFieldPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get qrFieldPassword;
+
+  /// No description provided for @qrFieldEncryption.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption'**
+  String get qrFieldEncryption;
+
+  /// No description provided for @qrFieldHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden network'**
+  String get qrFieldHidden;
+
+  /// No description provided for @qrEncWpa.
+  ///
+  /// In en, this message translates to:
+  /// **'WPA/WPA2'**
+  String get qrEncWpa;
+
+  /// No description provided for @qrEncWep.
+  ///
+  /// In en, this message translates to:
+  /// **'WEP'**
+  String get qrEncWep;
+
+  /// No description provided for @qrEncNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get qrEncNone;
+
+  /// No description provided for @qrFieldEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get qrFieldEmail;
+
+  /// No description provided for @qrFieldSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get qrFieldSubject;
+
+  /// No description provided for @qrFieldBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get qrFieldBody;
+
+  /// No description provided for @qrFieldPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get qrFieldPhone;
+
+  /// No description provided for @qrFieldMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get qrFieldMessage;
+
+  /// No description provided for @qrFieldLatitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude'**
+  String get qrFieldLatitude;
+
+  /// No description provided for @qrFieldLongitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude'**
+  String get qrFieldLongitude;
+
+  /// No description provided for @qrFieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get qrFieldName;
+
+  /// No description provided for @qrFieldOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization'**
+  String get qrFieldOrganization;
+
+  /// No description provided for @qrCreatePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the fields to generate a QR code'**
+  String get qrCreatePlaceholder;
+
+  /// No description provided for @qrEncodeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Content is too long to encode as a QR code'**
+  String get qrEncodeFailed;
+
+  /// No description provided for @qrActionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get qrActionSave;
+
+  /// No description provided for @qrActionCopyImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy image'**
+  String get qrActionCopyImage;
+
+  /// No description provided for @qrImageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'QR image copied to clipboard'**
+  String get qrImageCopied;
+
+  /// No description provided for @qrCopyImageFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the QR image'**
+  String get qrCopyImageFailed;
+
+  /// No description provided for @qrSavedToDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code saved to Downloads folder'**
+  String get qrSavedToDownloads;
+
+  /// No description provided for @qrSavedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code saved to {path}'**
+  String qrSavedTo(String path);
+
+  /// No description provided for @qrSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save QR code: {error}'**
+  String qrSaveFailed(String error);
 }
 
 class _AppLocalizationsDelegate

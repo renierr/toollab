@@ -2531,4 +2531,199 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get toolDescSignatures =>
       'Unterschriften zeichnen und als transparentes PNG oder SVG exportieren';
+
+  @override
+  String get toolNameQrCode => 'QR-Code';
+
+  @override
+  String get toolDescQrCode =>
+      'QR-Codes mit der Kamera oder einem Bild scannen und eigene erstellen';
+
+  @override
+  String get qrTabScan => 'Scannen';
+
+  @override
+  String get qrTabCreate => 'Erstellen';
+
+  @override
+  String get qrModeCamera => 'Kamera';
+
+  @override
+  String get qrModeImage => 'Bild';
+
+  @override
+  String get qrImagesLabel => 'Bilder';
+
+  @override
+  String get qrScanDropTitle => 'QR-Code aus einem Bild scannen';
+
+  @override
+  String get qrScanDropSubtitle => 'Bild hierher ziehen oder eines auswählen';
+
+  @override
+  String get qrBrowseImage => 'Bild auswählen';
+
+  @override
+  String get qrPasteImage => 'Bild einfügen';
+
+  @override
+  String get qrPickFromGallery => 'Aus Galerie wählen';
+
+  @override
+  String get qrNoCodeFound => 'Kein QR-Code im Bild gefunden';
+
+  @override
+  String get qrNoImageInClipboard => 'Kein Bild in der Zwischenablage';
+
+  @override
+  String get qrScanAgain => 'Erneut scannen';
+
+  @override
+  String get qrResultOpen => 'Öffnen';
+
+  @override
+  String get qrActionCopy => 'Kopieren';
+
+  @override
+  String get qrActionShare => 'Teilen';
+
+  @override
+  String get qrCopied => 'In die Zwischenablage kopiert';
+
+  @override
+  String get qrOpenFailed => 'Inhalt konnte nicht geöffnet werden';
+
+  @override
+  String get qrKindLink => 'Link';
+
+  @override
+  String get qrKindWifi => 'WLAN-Netzwerk';
+
+  @override
+  String get qrKindEmail => 'E-Mail';
+
+  @override
+  String get qrKindPhone => 'Telefonnummer';
+
+  @override
+  String get qrKindSms => 'SMS';
+
+  @override
+  String get qrKindLocation => 'Standort';
+
+  @override
+  String get qrKindContact => 'Kontakt';
+
+  @override
+  String get qrKindText => 'Text';
+
+  @override
+  String get qrTypeText => 'Text';
+
+  @override
+  String get qrTypeUrl => 'URL';
+
+  @override
+  String get qrTypeWifi => 'WLAN';
+
+  @override
+  String get qrTypeEmail => 'E-Mail';
+
+  @override
+  String get qrTypePhone => 'Telefon';
+
+  @override
+  String get qrTypeSms => 'SMS';
+
+  @override
+  String get qrTypeGeo => 'Standort';
+
+  @override
+  String get qrTypeVcard => 'Kontakt';
+
+  @override
+  String get qrFieldText => 'Text';
+
+  @override
+  String get qrFieldUrl => 'URL';
+
+  @override
+  String get qrFieldSsid => 'Netzwerkname (SSID)';
+
+  @override
+  String get qrFieldPassword => 'Passwort';
+
+  @override
+  String get qrFieldEncryption => 'Verschlüsselung';
+
+  @override
+  String get qrFieldHidden => 'Verstecktes Netzwerk';
+
+  @override
+  String get qrEncWpa => 'WPA/WPA2';
+
+  @override
+  String get qrEncWep => 'WEP';
+
+  @override
+  String get qrEncNone => 'Keine';
+
+  @override
+  String get qrFieldEmail => 'E-Mail-Adresse';
+
+  @override
+  String get qrFieldSubject => 'Betreff';
+
+  @override
+  String get qrFieldBody => 'Nachricht';
+
+  @override
+  String get qrFieldPhone => 'Telefonnummer';
+
+  @override
+  String get qrFieldMessage => 'Nachricht';
+
+  @override
+  String get qrFieldLatitude => 'Breitengrad';
+
+  @override
+  String get qrFieldLongitude => 'Längengrad';
+
+  @override
+  String get qrFieldName => 'Vollständiger Name';
+
+  @override
+  String get qrFieldOrganization => 'Organisation';
+
+  @override
+  String get qrCreatePlaceholder =>
+      'Felder ausfüllen, um einen QR-Code zu erzeugen';
+
+  @override
+  String get qrEncodeFailed => 'Inhalt ist zu lang für einen QR-Code';
+
+  @override
+  String get qrActionSave => 'Speichern';
+
+  @override
+  String get qrActionCopyImage => 'Bild kopieren';
+
+  @override
+  String get qrImageCopied => 'QR-Bild in die Zwischenablage kopiert';
+
+  @override
+  String get qrCopyImageFailed => 'QR-Bild konnte nicht kopiert werden';
+
+  @override
+  String get qrSavedToDownloads => 'QR-Code im Downloads-Ordner gespeichert';
+
+  @override
+  String qrSavedTo(String path) {
+    return 'QR-Code gespeichert unter $path';
+  }
+
+  @override
+  String qrSaveFailed(String error) {
+    return 'QR-Code konnte nicht gespeichert werden: $error';
+  }
 }

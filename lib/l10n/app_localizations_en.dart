@@ -2508,4 +2508,198 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get toolDescSignatures =>
       'Draw signatures and export them as transparent PNG or SVG';
+
+  @override
+  String get toolNameQrCode => 'QR Code';
+
+  @override
+  String get toolDescQrCode =>
+      'Scan QR codes with the camera or an image, and create your own';
+
+  @override
+  String get qrTabScan => 'Scan';
+
+  @override
+  String get qrTabCreate => 'Create';
+
+  @override
+  String get qrModeCamera => 'Camera';
+
+  @override
+  String get qrModeImage => 'Image';
+
+  @override
+  String get qrImagesLabel => 'Images';
+
+  @override
+  String get qrScanDropTitle => 'Scan a QR code from an image';
+
+  @override
+  String get qrScanDropSubtitle => 'Drop an image here, or browse to pick one';
+
+  @override
+  String get qrBrowseImage => 'Browse image';
+
+  @override
+  String get qrPasteImage => 'Paste image';
+
+  @override
+  String get qrPickFromGallery => 'Pick from gallery';
+
+  @override
+  String get qrNoCodeFound => 'No QR code found in the image';
+
+  @override
+  String get qrNoImageInClipboard => 'No image in the clipboard';
+
+  @override
+  String get qrScanAgain => 'Scan again';
+
+  @override
+  String get qrResultOpen => 'Open';
+
+  @override
+  String get qrActionCopy => 'Copy';
+
+  @override
+  String get qrActionShare => 'Share';
+
+  @override
+  String get qrCopied => 'Copied to clipboard';
+
+  @override
+  String get qrOpenFailed => 'Could not open this content';
+
+  @override
+  String get qrKindLink => 'Link';
+
+  @override
+  String get qrKindWifi => 'Wi-Fi network';
+
+  @override
+  String get qrKindEmail => 'Email';
+
+  @override
+  String get qrKindPhone => 'Phone number';
+
+  @override
+  String get qrKindSms => 'SMS';
+
+  @override
+  String get qrKindLocation => 'Location';
+
+  @override
+  String get qrKindContact => 'Contact';
+
+  @override
+  String get qrKindText => 'Text';
+
+  @override
+  String get qrTypeText => 'Text';
+
+  @override
+  String get qrTypeUrl => 'URL';
+
+  @override
+  String get qrTypeWifi => 'Wi-Fi';
+
+  @override
+  String get qrTypeEmail => 'Email';
+
+  @override
+  String get qrTypePhone => 'Phone';
+
+  @override
+  String get qrTypeSms => 'SMS';
+
+  @override
+  String get qrTypeGeo => 'Location';
+
+  @override
+  String get qrTypeVcard => 'Contact';
+
+  @override
+  String get qrFieldText => 'Text';
+
+  @override
+  String get qrFieldUrl => 'URL';
+
+  @override
+  String get qrFieldSsid => 'Network name (SSID)';
+
+  @override
+  String get qrFieldPassword => 'Password';
+
+  @override
+  String get qrFieldEncryption => 'Encryption';
+
+  @override
+  String get qrFieldHidden => 'Hidden network';
+
+  @override
+  String get qrEncWpa => 'WPA/WPA2';
+
+  @override
+  String get qrEncWep => 'WEP';
+
+  @override
+  String get qrEncNone => 'None';
+
+  @override
+  String get qrFieldEmail => 'Email address';
+
+  @override
+  String get qrFieldSubject => 'Subject';
+
+  @override
+  String get qrFieldBody => 'Message';
+
+  @override
+  String get qrFieldPhone => 'Phone number';
+
+  @override
+  String get qrFieldMessage => 'Message';
+
+  @override
+  String get qrFieldLatitude => 'Latitude';
+
+  @override
+  String get qrFieldLongitude => 'Longitude';
+
+  @override
+  String get qrFieldName => 'Full name';
+
+  @override
+  String get qrFieldOrganization => 'Organization';
+
+  @override
+  String get qrCreatePlaceholder => 'Fill in the fields to generate a QR code';
+
+  @override
+  String get qrEncodeFailed => 'Content is too long to encode as a QR code';
+
+  @override
+  String get qrActionSave => 'Save';
+
+  @override
+  String get qrActionCopyImage => 'Copy image';
+
+  @override
+  String get qrImageCopied => 'QR image copied to clipboard';
+
+  @override
+  String get qrCopyImageFailed => 'Could not copy the QR image';
+
+  @override
+  String get qrSavedToDownloads => 'QR code saved to Downloads folder';
+
+  @override
+  String qrSavedTo(String path) {
+    return 'QR code saved to $path';
+  }
+
+  @override
+  String qrSaveFailed(String error) {
+    return 'Failed to save QR code: $error';
+  }
 }
