@@ -69,9 +69,15 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load PDF: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              ).pdfNavOrganizeLoadFailed(e.toString()),
+            ),
+          ),
+        );
         widget.onCancel();
       }
     }
@@ -120,9 +126,15 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to open PDF: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              ).pdfNavOrganizeOpenFailed(e.toString()),
+            ),
+          ),
+        );
         setState(() => _isProcessing = false);
       }
     }
@@ -269,9 +281,15 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
           _phase = _OrganizePhase.editing;
           _isProcessing = false;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to reorganize: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              ).pdfNavOrganizeReorganizeFailed(e.toString()),
+            ),
+          ),
+        );
       }
     }
   }

@@ -72,6 +72,11 @@
   "chipMetricInstruments": "Instruments",
   "chipMetricBpm": "BPM",
   "chipMetricSpeed": "Speed",
+  "chipEmptyDropTitle": "Drop a tracker module",
+  "chipEmptyDropSubtitle": "MOD · XM · IT files",
+  "chipEmptyTypeLabel": "Tracker module",
+  "chipNotificationTitle": "Chiptune playback active",
+  "chipNotificationText": "ToolLab keeps audio running in background",
   "chipPauseTooltip": "Pause",
   "chipPlayTooltip": "Play",
   "chipStopTooltip": "Stop",
@@ -420,6 +425,41 @@
   },
   "focusSetTimer": "Set",
   "focusCancelTimer": "Cancel Timer",
+  "focusBreathingGuide": "Breathing Guide",
+  "focusStartBreathing": "Start Breathing",
+  "focusStopBreathing": "Stop Breathing",
+  "focusSoundLibrary": "Sound Library",
+  "focusPlayback": "Playback",
+  "focusStart": "Start",
+  "focusStop": "Stop",
+  "focusNotificationTitle": "Focus noise active",
+  "focusNotificationText": "ToolLab keeps ambient audio running",
+  "focusNoTimerSet": "No timer set",
+  "focusStopping": "Stopping...",
+  "focusWillStopIn": "Will stop in {time}",
+  "@focusWillStopIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPlayingSound": "Playing {name}",
+  "@focusPlayingSound": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "focusSelectedSound": "Selected {name}",
+  "@focusSelectedSound": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "img2pdfNoImageInClipboard": "No image found in clipboard",
   "img2pdfFailedReadClipboard": "Failed to read clipboard: {error}",
   "@img2pdfFailedReadClipboard": {
@@ -558,6 +598,7 @@
   "imgViewOpenInMaps": "Open in Maps",
   "imgViewBrowseGallery": "Browse Gallery",
   "imgViewTakePhoto": "Take Photo",
+  "imgViewExifThumbnailTitle": "EXIF Embedded Thumbnail",
   "imgViewMetadataDialogTitle": "Metadata & EXIF Info",
   "imgViewNoExifData": "No EXIF metadata found in this image.",
   "levelSensorsUnavailable": "Sensors not available on this device.",
@@ -610,6 +651,7 @@
   },
   "miscMarkdownOpenTitle": "Open a Markdown File",
   "miscMarkdownDropSubtitle": "Drag & drop a .md or .txt file here",
+  "miscMarkdownTypeLabel": "Markdown",
   "nfcEditorFormTitle": "NDEF Record Creator",
   "nfcTemplatePreset": "Template Preset",
   "nfcTemplateCustomRecord": "Custom Record",
@@ -1271,6 +1313,38 @@
     }
   },
   "pdfNavOrganizeNoPages": "No pages",
+  "pdfViewerShareFailed": "Failed to share file: {error}",
+  "@pdfViewerShareFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfNavOrganizeLoadFailed": "Failed to load PDF: {error}",
+  "@pdfNavOrganizeLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfNavOrganizeOpenFailed": "Failed to open PDF: {error}",
+  "@pdfNavOrganizeOpenFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfNavOrganizeReorganizeFailed": "Failed to reorganize: {error}",
+  "@pdfNavOrganizeReorganizeFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "pdfNavOrganizeCannotDeleteLastPage": "Cannot delete the last page",
   "pdfNavOrganizeRemovePageTitle": "Remove Page",
   "pdfNavOrganizeRemovePageMessage": "Remove page {pageNumber}?",

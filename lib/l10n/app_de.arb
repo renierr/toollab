@@ -69,6 +69,11 @@
   "chipMetricInstruments": "Instrumente",
   "chipMetricBpm": "BPM",
   "chipMetricSpeed": "Tempo",
+  "chipEmptyDropTitle": "Tracker-Modul hier ablegen",
+  "chipEmptyDropSubtitle": "MOD- · XM- · IT-Dateien",
+  "chipEmptyTypeLabel": "Tracker-Modul",
+  "chipNotificationTitle": "Chiptune-Wiedergabe aktiv",
+  "chipNotificationText": "ToolLab hält die Audiowiedergabe im Hintergrund aufrecht",
   "chipPauseTooltip": "Pause",
   "chipPlayTooltip": "Abspielen",
   "chipStopTooltip": "Stopp",
@@ -227,6 +232,41 @@
   "focusCustomMinutes": "Benutzerdefiniert: {minutes} Min.",
   "focusSetTimer": "Festlegen",
   "focusCancelTimer": "Timer abbrechen",
+  "focusBreathingGuide": "Atemführung",
+  "focusStartBreathing": "Atmung starten",
+  "focusStopBreathing": "Atmung stoppen",
+  "focusSoundLibrary": "Klangbibliothek",
+  "focusPlayback": "Wiedergabe",
+  "focusStart": "Start",
+  "focusStop": "Stopp",
+  "focusNotificationTitle": "Fokus-Geräusch aktiv",
+  "focusNotificationText": "ToolLab hält die Hintergrundgeräusche aktiv",
+  "focusNoTimerSet": "Kein Timer gesetzt",
+  "focusStopping": "Wird gestoppt …",
+  "focusWillStopIn": "Stoppt in {time}",
+  "@focusWillStopIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPlayingSound": "{name} wird abgespielt",
+  "@focusPlayingSound": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "focusSelectedSound": "{name} ausgewählt",
+  "@focusSelectedSound": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "img2pdfNoImageInClipboard": "Kein Bild in der Zwischenablage gefunden",
   "img2pdfFailedReadClipboard": "Fehler beim Lesen der Zwischenablage: {error}",
   "img2pdfSettingsTooltip": "PDF-Einstellungen",
@@ -323,6 +363,7 @@
   "imgViewOpenInMaps": "In Karte öffnen",
   "imgViewBrowseGallery": "Galerie durchsuchen",
   "imgViewTakePhoto": "Foto aufnehmen",
+  "imgViewExifThumbnailTitle": "Eingebettetes EXIF-Vorschaubild",
   "imgViewMetadataDialogTitle": "Metadaten & EXIF-Informationen",
   "imgViewNoExifData": "Keine EXIF-Metadaten in diesem Bild gefunden.",
   "levelSensorsUnavailable": "Sensoren auf diesem Gerät nicht verfügbar.",
@@ -361,6 +402,7 @@
   "miscMarkdownFailedToRead": "Datei konnte nicht gelesen werden: {error}",
   "miscMarkdownOpenTitle": "Markdown-Datei öffnen",
   "miscMarkdownDropSubtitle": "Lege eine .md- oder .txt-Datei hier ab",
+  "miscMarkdownTypeLabel": "Markdown",
   "nfcEditorFormTitle": "NDEF-Datensatz erstellen",
   "nfcTemplatePreset": "Vorlage",
   "nfcTemplateCustomRecord": "Benutzerdefiniert",
@@ -615,6 +657,38 @@
   "pdfNavOrganizeApplyTooltip": "Änderungen übernehmen",
   "pdfNavOrganizePageCountHint": "{count, plural, =1{1 Seite} other{{count} Seiten}} – ziehen zum Sortieren, tippen zur Vorschau",
   "pdfNavOrganizeNoPages": "Keine Seiten",
+  "pdfViewerShareFailed": "Datei konnte nicht geteilt werden: {error}",
+  "@pdfViewerShareFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfNavOrganizeLoadFailed": "PDF konnte nicht geladen werden: {error}",
+  "@pdfNavOrganizeLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfNavOrganizeOpenFailed": "PDF konnte nicht geöffnet werden: {error}",
+  "@pdfNavOrganizeOpenFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfNavOrganizeReorganizeFailed": "Neuanordnung fehlgeschlagen: {error}",
+  "@pdfNavOrganizeReorganizeFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "pdfNavOrganizeCannotDeleteLastPage": "Die letzte Seite kann nicht gelöscht werden",
   "pdfNavOrganizeRemovePageTitle": "Seite entfernen",
   "pdfNavOrganizeRemovePageMessage": "Seite {pageNumber} entfernen?",

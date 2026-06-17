@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 
 class FocusNoiseTransport extends StatelessWidget {
@@ -20,9 +21,10 @@ class FocusNoiseTransport extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return InfoCard(
       icon: Icons.tune,
-      title: 'Playback',
+      title: l10n.focusPlayback,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -50,7 +52,7 @@ class FocusNoiseTransport extends StatelessWidget {
           FilledButton.icon(
             onPressed: onTogglePlay,
             icon: Icon(isPlaying ? Icons.stop : Icons.play_arrow),
-            label: Text(isPlaying ? 'Stop' : 'Start'),
+            label: Text(isPlaying ? l10n.focusStop : l10n.focusStart),
           ),
         ],
       ),

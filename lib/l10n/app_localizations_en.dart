@@ -227,6 +227,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipMetricSpeed => 'Speed';
 
   @override
+  String get chipEmptyDropTitle => 'Drop a tracker module';
+
+  @override
+  String get chipEmptyDropSubtitle => 'MOD · XM · IT files';
+
+  @override
+  String get chipEmptyTypeLabel => 'Tracker module';
+
+  @override
+  String get chipNotificationTitle => 'Chiptune playback active';
+
+  @override
+  String get chipNotificationText =>
+      'ToolLab keeps audio running in background';
+
+  @override
   String get chipPauseTooltip => 'Pause';
 
   @override
@@ -776,6 +792,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get focusCancelTimer => 'Cancel Timer';
 
   @override
+  String get focusBreathingGuide => 'Breathing Guide';
+
+  @override
+  String get focusStartBreathing => 'Start Breathing';
+
+  @override
+  String get focusStopBreathing => 'Stop Breathing';
+
+  @override
+  String get focusSoundLibrary => 'Sound Library';
+
+  @override
+  String get focusPlayback => 'Playback';
+
+  @override
+  String get focusStart => 'Start';
+
+  @override
+  String get focusStop => 'Stop';
+
+  @override
+  String get focusNotificationTitle => 'Focus noise active';
+
+  @override
+  String get focusNotificationText => 'ToolLab keeps ambient audio running';
+
+  @override
+  String get focusNoTimerSet => 'No timer set';
+
+  @override
+  String get focusStopping => 'Stopping...';
+
+  @override
+  String focusWillStopIn(String time) {
+    return 'Will stop in $time';
+  }
+
+  @override
+  String focusPlayingSound(String name) {
+    return 'Playing $name';
+  }
+
+  @override
+  String focusSelectedSound(String name) {
+    return 'Selected $name';
+  }
+
+  @override
   String get img2pdfNoImageInClipboard => 'No image found in clipboard';
 
   @override
@@ -1081,6 +1145,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imgViewTakePhoto => 'Take Photo';
 
   @override
+  String get imgViewExifThumbnailTitle => 'EXIF Embedded Thumbnail';
+
+  @override
   String get imgViewMetadataDialogTitle => 'Metadata & EXIF Info';
 
   @override
@@ -1198,6 +1265,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get miscMarkdownDropSubtitle => 'Drag & drop a .md or .txt file here';
+
+  @override
+  String get miscMarkdownTypeLabel => 'Markdown';
 
   @override
   String get nfcEditorFormTitle => 'NDEF Record Creator';
@@ -2097,6 +2167,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pdfNavOrganizeNoPages => 'No pages';
+
+  @override
+  String pdfViewerShareFailed(String error) {
+    return 'Failed to share file: $error';
+  }
+
+  @override
+  String pdfNavOrganizeLoadFailed(String error) {
+    return 'Failed to load PDF: $error';
+  }
+
+  @override
+  String pdfNavOrganizeOpenFailed(String error) {
+    return 'Failed to open PDF: $error';
+  }
+
+  @override
+  String pdfNavOrganizeReorganizeFailed(String error) {
+    return 'Failed to reorganize: $error';
+  }
 
   @override
   String get pdfNavOrganizeCannotDeleteLastPage =>

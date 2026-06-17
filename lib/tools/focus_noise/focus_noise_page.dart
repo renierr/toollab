@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
@@ -57,6 +58,14 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     onDispose(() => _breathingTimer?.cancel());
     onDispose(() => _breathingWakeLock?.release());
     WidgetsBinding.instance.addPostFrameCallback((_) => _restoreSettings());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context);
+    _player.notificationTitle = l10n.focusNotificationTitle;
+    _player.notificationText = l10n.focusNotificationText;
   }
 
   Future<void> _restoreSettings() async {
@@ -151,13 +160,16 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   }
 
   String _timerLabel() {
+    final l10n = AppLocalizations.of(context);
     final target = _timerTarget;
-    if (target == null) return 'No timer set';
+    if (target == null) return l10n.focusNoTimerSet;
     final Duration remaining = target.difference(DateTime.now());
-    if (remaining <= Duration.zero) return 'Stopping...';
+    if (remaining <= Duration.zero) return l10n.focusStopping;
     final int minutes = remaining.inMinutes;
     final int seconds = remaining.inSeconds % 60;
-    return 'Will stop in ${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    final String time =
+        '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    return l10n.focusWillStopIn(time);
   }
 
   Future<void> _setBreathingMode(FocusBreathingMode mode) async {
@@ -228,9 +240,10 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final String statusText = _isPlaying
-        ? 'Playing ${_selectedSound.name}'
-        : 'Selected ${_selectedSound.name}';
+        ? l10n.focusPlayingSound(_selectedSound.name)
+        : l10n.focusSelectedSound(_selectedSound.name);
 
     final Widget content = SingleChildScrollView(
       padding: const EdgeInsets.all(16),

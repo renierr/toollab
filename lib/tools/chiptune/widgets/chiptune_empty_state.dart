@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 
 import '../chiptune_colors.dart';
@@ -19,6 +20,7 @@ class ChiptuneEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hasArchive = archivePanel != null;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -28,11 +30,11 @@ class ChiptuneEmptyState extends StatelessWidget {
           FileDropZone(
             compact: hasArchive,
             allowedExtensions: ChiptuneTool.config.fileExtensions,
-            typeLabel: 'Tracker module',
+            typeLabel: l10n.chipEmptyTypeLabel,
             accentColor: ChiptuneColors.accent,
             icon: Icons.music_note_outlined,
-            title: 'Drop a tracker module',
-            subtitle: 'MOD · XM · IT files',
+            title: l10n.chipEmptyDropTitle,
+            subtitle: l10n.chipEmptyDropSubtitle,
             onFileSelected: onFileSelected,
           ),
           if (hasArchive) ...[const SizedBox(height: 12), archivePanel!],

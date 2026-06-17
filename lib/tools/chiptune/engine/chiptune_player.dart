@@ -68,6 +68,11 @@ class ChiptunePlayer {
   double _volume = 0.7;
   bool _looping = false;
 
+  /// Localized text for the background-playback foreground notification.
+  /// Set by the page once a [BuildContext] is available.
+  String notificationTitle = 'Chiptune playback active';
+  String notificationText = 'ToolLab keeps audio running in background';
+
   // Reactive outputs for the UI.
   final ValueNotifier<ChiptunePlaybackState> state = ValueNotifier(
     ChiptunePlaybackState.stopped,
@@ -364,8 +369,8 @@ class ChiptunePlayer {
   Future<void> _acquirePlaybackRuntimeLocks() async {
     _partialWakeLock ??= await PowerWakeLockService.acquirePartial();
     _foregroundRuntimeLease ??= await ForegroundRuntimeService.acquire(
-      title: 'Chiptune playback active',
-      text: 'ToolLab keeps audio running in background',
+      title: notificationTitle,
+      text: notificationText,
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 
 import '../focus_noise_breathing.dart';
@@ -28,9 +29,10 @@ class FocusNoiseBreathingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return InfoCard(
       icon: Icons.air,
-      title: 'Breathing Guide',
+      title: l10n.focusBreathingGuide,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -100,7 +102,9 @@ class FocusNoiseBreathingCard extends StatelessWidget {
           FilledButton.icon(
             onPressed: onToggle,
             icon: Icon(active ? Icons.pause_circle : Icons.play_circle),
-            label: Text(active ? 'Stop Breathing' : 'Start Breathing'),
+            label: Text(
+              active ? l10n.focusStopBreathing : l10n.focusStartBreathing,
+            ),
           ),
         ],
       ),

@@ -119,7 +119,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
           onFileSelected: _onFileSelected,
           allowedExtensions: MarkdownViewerTool.config.fileExtensions,
           allowedMimeTypes: const ['text/markdown', 'text/plain'],
-          typeLabel: 'Markdown',
+          typeLabel: l10n.miscMarkdownTypeLabel,
           accentColor: accent,
           title: l10n.miscMarkdownOpenTitle,
           subtitle: l10n.miscMarkdownDropSubtitle,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 
 import '../focus_noise_sound.dart';
@@ -18,9 +19,10 @@ class FocusNoiseSoundSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return InfoCard(
       icon: Icons.library_music_outlined,
-      title: 'Sound Library',
+      title: l10n.focusSoundLibrary,
       child: Wrap(
         spacing: 10,
         runSpacing: 10,

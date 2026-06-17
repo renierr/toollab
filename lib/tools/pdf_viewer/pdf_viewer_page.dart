@@ -249,9 +249,13 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     } catch (e) {
       debugPrint('[PdfViewerPage] Share failed: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to share file: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).pdfViewerShareFailed(e.toString()),
+            ),
+          ),
+        );
       }
     }
   }

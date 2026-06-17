@@ -82,6 +82,14 @@ class _ChiptunePageState extends State<ChiptunePage>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context);
+    _player.notificationTitle = l10n.chipNotificationTitle;
+    _player.notificationText = l10n.chipNotificationText;
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final bool active = state == AppLifecycleState.resumed;
     _player.setUiUpdatesEnabled(active);

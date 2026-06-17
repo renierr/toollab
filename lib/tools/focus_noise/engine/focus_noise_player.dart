@@ -32,6 +32,11 @@ class FocusNoisePlayer {
   WakeLockLease? _partialWakeLock;
   ForegroundRuntimeLease? _foregroundRuntimeLease;
 
+  /// Localized text for the background-playback foreground notification.
+  /// Set by the page once a [BuildContext] is available.
+  String notificationTitle = 'Focus noise active';
+  String notificationText = 'ToolLab keeps ambient audio running';
+
   int _totalPushedFrames = 0;
   int _startedAt = 0;
 
@@ -184,8 +189,8 @@ class FocusNoisePlayer {
   Future<void> _acquireLocks() async {
     _partialWakeLock ??= await PowerWakeLockService.acquirePartial();
     _foregroundRuntimeLease ??= await ForegroundRuntimeService.acquire(
-      title: 'Focus noise active',
-      text: 'ToolLab keeps ambient audio running',
+      title: notificationTitle,
+      text: notificationText,
     );
   }
 

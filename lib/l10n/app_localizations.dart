@@ -512,6 +512,36 @@ abstract class AppLocalizations {
   /// **'Speed'**
   String get chipMetricSpeed;
 
+  /// No description provided for @chipEmptyDropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop a tracker module'**
+  String get chipEmptyDropTitle;
+
+  /// No description provided for @chipEmptyDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'MOD · XM · IT files'**
+  String get chipEmptyDropSubtitle;
+
+  /// No description provided for @chipEmptyTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracker module'**
+  String get chipEmptyTypeLabel;
+
+  /// No description provided for @chipNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chiptune playback active'**
+  String get chipNotificationTitle;
+
+  /// No description provided for @chipNotificationText.
+  ///
+  /// In en, this message translates to:
+  /// **'ToolLab keeps audio running in background'**
+  String get chipNotificationText;
+
   /// No description provided for @chipPauseTooltip.
   ///
   /// In en, this message translates to:
@@ -1460,6 +1490,90 @@ abstract class AppLocalizations {
   /// **'Cancel Timer'**
   String get focusCancelTimer;
 
+  /// No description provided for @focusBreathingGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Breathing Guide'**
+  String get focusBreathingGuide;
+
+  /// No description provided for @focusStartBreathing.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Breathing'**
+  String get focusStartBreathing;
+
+  /// No description provided for @focusStopBreathing.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Breathing'**
+  String get focusStopBreathing;
+
+  /// No description provided for @focusSoundLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound Library'**
+  String get focusSoundLibrary;
+
+  /// No description provided for @focusPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback'**
+  String get focusPlayback;
+
+  /// No description provided for @focusStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get focusStart;
+
+  /// No description provided for @focusStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get focusStop;
+
+  /// No description provided for @focusNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus noise active'**
+  String get focusNotificationTitle;
+
+  /// No description provided for @focusNotificationText.
+  ///
+  /// In en, this message translates to:
+  /// **'ToolLab keeps ambient audio running'**
+  String get focusNotificationText;
+
+  /// No description provided for @focusNoTimerSet.
+  ///
+  /// In en, this message translates to:
+  /// **'No timer set'**
+  String get focusNoTimerSet;
+
+  /// No description provided for @focusStopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping...'**
+  String get focusStopping;
+
+  /// No description provided for @focusWillStopIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Will stop in {time}'**
+  String focusWillStopIn(String time);
+
+  /// No description provided for @focusPlayingSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing {name}'**
+  String focusPlayingSound(String name);
+
+  /// No description provided for @focusSelectedSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected {name}'**
+  String focusSelectedSound(String name);
+
   /// No description provided for @img2pdfNoImageInClipboard.
   ///
   /// In en, this message translates to:
@@ -2036,6 +2150,12 @@ abstract class AppLocalizations {
   /// **'Take Photo'**
   String get imgViewTakePhoto;
 
+  /// No description provided for @imgViewExifThumbnailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'EXIF Embedded Thumbnail'**
+  String get imgViewExifThumbnailTitle;
+
   /// No description provided for @imgViewMetadataDialogTitle.
   ///
   /// In en, this message translates to:
@@ -2263,6 +2383,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drag & drop a .md or .txt file here'**
   String get miscMarkdownDropSubtitle;
+
+  /// No description provided for @miscMarkdownTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown'**
+  String get miscMarkdownTypeLabel;
 
   /// No description provided for @nfcEditorFormTitle.
   ///
@@ -3787,6 +3913,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No pages'**
   String get pdfNavOrganizeNoPages;
+
+  /// No description provided for @pdfViewerShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to share file: {error}'**
+  String pdfViewerShareFailed(String error);
+
+  /// No description provided for @pdfNavOrganizeLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load PDF: {error}'**
+  String pdfNavOrganizeLoadFailed(String error);
+
+  /// No description provided for @pdfNavOrganizeOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to open PDF: {error}'**
+  String pdfNavOrganizeOpenFailed(String error);
+
+  /// No description provided for @pdfNavOrganizeReorganizeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reorganize: {error}'**
+  String pdfNavOrganizeReorganizeFailed(String error);
 
   /// No description provided for @pdfNavOrganizeCannotDeleteLastPage.
   ///
