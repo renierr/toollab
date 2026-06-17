@@ -8,6 +8,7 @@ import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_empty_state.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_error_state.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_grid.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_header.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_item.dart';
@@ -32,8 +33,10 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
   bool _isExporting = false;
   bool _controlsExpanded = true;
   bool _didInitControlsExpanded = false;
+  bool _didStartLoad = false;
   double _progress = 0;
   String _statusText = '';
+  String? _errorText;
 
   List<PdfExtractedImageItem> _items = [];
   final Set<String> _selectedIds = <String>{};
@@ -41,35 +44,35 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
   String get _baseName => widget.session.fileName.replaceAll('.pdf', '');
 
   @override
-  void initState() {
-    super.initState();
-    _loadImages();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_didInitControlsExpanded) {
-      return;
+    if (!_didInitControlsExpanded) {
+      final media = MediaQuery.of(context);
+      final isCompactScreen = media.size.width < 600 || media.size.height < 760;
+      _controlsExpanded = !isCompactScreen;
+      _didInitControlsExpanded = true;
     }
-    final media = MediaQuery.of(context);
-    final isCompactScreen = media.size.width < 600 || media.size.height < 760;
-    _controlsExpanded = !isCompactScreen;
-    _didInitControlsExpanded = true;
+    // Kick off loading here (not in initState) so AppLocalizations.of(context)
+    // is a legal inherited-widget lookup.
+    if (!_didStartLoad) {
+      _didStartLoad = true;
+      _loadImages();
+    }
   }
 
   Future<void> _loadImages() async {
-    final l10n = AppLocalizations.of(context);
-    setState(() {
-      _isLoading = true;
-      _progress = 0;
-      _statusText = l10n.pdfEditExtractScanning;
-      _items = [];
-      _selectedIds.clear();
-    });
-
     PdfDocument? doc;
     try {
+      final l10n = AppLocalizations.of(context);
+      setState(() {
+        _isLoading = true;
+        _progress = 0;
+        _statusText = l10n.pdfEditExtractScanning;
+        _errorText = null;
+        _items = [];
+        _selectedIds.clear();
+      });
+
       doc = await widget.session.openDocument();
       final extracted = await PdfEngineHelper.extractEmbeddedImages(
         doc,
@@ -148,13 +151,15 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         return;
       }
       final l10nErr = AppLocalizations.of(context);
+      final message = l10nErr.pdfEditExtractFailed(e.toString());
       setState(() {
         _isLoading = false;
-        _statusText = e.toString();
+        _statusText = message;
+        _errorText = message;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10nErr.pdfEditExtractFailed(e.toString()))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       doc?.dispose();
     }
@@ -373,6 +378,11 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
+                : _errorText != null
+                ? PdfExtractImagesErrorState(
+                    message: _errorText!,
+                    onRetry: _loadImages,
+                  )
                 : _items.isEmpty
                 ? const PdfExtractImagesEmptyState()
                 : PdfExtractImagesGrid(
