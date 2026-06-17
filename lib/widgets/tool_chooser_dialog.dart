@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'responsive_alert_dialog.dart';
@@ -97,7 +98,7 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      tool.name,
+                                      tool.localizedName(l10n),
                                       style: theme.textTheme.bodyMedium
                                           ?.copyWith(
                                             fontWeight: FontWeight.bold,
@@ -105,7 +106,7 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      tool.description,
+                                      tool.localizedDescription(l10n),
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: theme.colorScheme.onSurface

@@ -2428,4 +2428,107 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get widgetShortcutDrawerSubtitle =>
       'Separates Symbol im App-Drawer anzeigen';
+
+  @override
+  String get sectionTitleSensors => 'Sensoren';
+
+  @override
+  String get sectionTitleUtilities => 'Werkzeuge';
+
+  @override
+  String get sectionTitleInfo => 'Information';
+
+  @override
+  String get toolNameCalculator => 'Rechner';
+
+  @override
+  String get toolDescCalculator =>
+      'Einfache und wissenschaftliche Berechnungen';
+
+  @override
+  String get toolNameBubbleLevel => 'Wasserwaage';
+
+  @override
+  String get toolDescBubbleLevel => 'Präzise Wasserwaage über Gerätesensoren';
+
+  @override
+  String get toolNameEmfDetector => 'EMF-Detektor';
+
+  @override
+  String get toolDescEmfDetector => 'Elektromagnetische Felder erkennen';
+
+  @override
+  String get toolNameDeviceInfo => 'Geräteinfo';
+
+  @override
+  String get toolDescDeviceInfo => 'Akku-, Sensor- und Systeminformationen';
+
+  @override
+  String get toolNameNfcTagLab => 'NFC Tag Lab';
+
+  @override
+  String get toolDescNfcTagLab =>
+      'NFC-Ziele scannen, NDEF dekodieren, Signaturen klassifizieren und Tags beschreiben.';
+
+  @override
+  String get toolNamePdfViewer => 'PDF-Viewer';
+
+  @override
+  String get toolDescPdfViewer => 'PDF-Dateien einfach im Vollbild ansehen';
+
+  @override
+  String get toolNameNotes => 'Notizen';
+
+  @override
+  String get toolDescNotes =>
+      'Einfaches Notiz-Tool mit Markdown-Unterstützung und Backend-Sync';
+
+  @override
+  String get toolNameMarkdownViewer => 'Markdown-Viewer';
+
+  @override
+  String get toolDescMarkdownViewer =>
+      'Markdown-Dateien einfach im Vollbild ansehen';
+
+  @override
+  String get toolNameImageViewer => 'Bildbetrachter';
+
+  @override
+  String get toolDescImageViewer =>
+      'Bilder ansehen, zoomen, skalieren und Formate konvertieren';
+
+  @override
+  String get toolNameFastDrop => 'Fast Drop';
+
+  @override
+  String get toolDescFastDrop =>
+      'Dateien oder Zwischenablage schnell zur temporären Ablage und Freigabe auf den Server übertragen';
+
+  @override
+  String get toolNameImagesToPdf => 'Bilder zu PDF';
+
+  @override
+  String get toolDescImagesToPdf =>
+      'Mehrere Bilder in ein einzelnes PDF-Dokument umwandeln';
+
+  @override
+  String get toolNameChiptune => 'Chiptune-Player';
+
+  @override
+  String get toolDescChiptune =>
+      'Amiga MOD-, XM- und IT-Tracker-Module abspielen';
+
+  @override
+  String get toolNameFocusNoise => 'Fokus-Rauschen & Atmung';
+
+  @override
+  String get toolDescFocusNoise =>
+      'Player für Umgebungsgeräusche mit geführten Atemübungen';
+
+  @override
+  String get toolNameSignatures => 'Unterschriften-Ersteller';
+
+  @override
+  String get toolDescSignatures =>
+      'Unterschriften zeichnen und als transparentes PNG oder SVG exportieren';
 }

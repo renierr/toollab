@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
@@ -48,14 +49,14 @@ class ToolShortcutRow extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        tool.name,
+                        tool.localizedName(l10n),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        tool.description,
+                        tool.localizedDescription(l10n),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
                             alpha: 0.6,

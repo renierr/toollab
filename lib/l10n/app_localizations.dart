@@ -4309,6 +4309,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show separate launcher icon in App Drawer'**
   String get widgetShortcutDrawerSubtitle;
+
+  /// No description provided for @sectionTitleSensors.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensors'**
+  String get sectionTitleSensors;
+
+  /// No description provided for @sectionTitleUtilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Utilities'**
+  String get sectionTitleUtilities;
+
+  /// No description provided for @sectionTitleInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Information'**
+  String get sectionTitleInfo;
+
+  /// No description provided for @toolNameCalculator.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculator'**
+  String get toolNameCalculator;
+
+  /// No description provided for @toolDescCalculator.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic and scientific calculations'**
+  String get toolDescCalculator;
+
+  /// No description provided for @toolNameBubbleLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bubble Level'**
+  String get toolNameBubbleLevel;
+
+  /// No description provided for @toolDescBubbleLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Precision spirit level using sensors'**
+  String get toolDescBubbleLevel;
+
+  /// No description provided for @toolNameEmfDetector.
+  ///
+  /// In en, this message translates to:
+  /// **'EMF Detector'**
+  String get toolNameEmfDetector;
+
+  /// No description provided for @toolDescEmfDetector.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect electromagnetic fields'**
+  String get toolDescEmfDetector;
+
+  /// No description provided for @toolNameDeviceInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Device Info'**
+  String get toolNameDeviceInfo;
+
+  /// No description provided for @toolDescDeviceInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery, sensors, and system information'**
+  String get toolDescDeviceInfo;
+
+  /// No description provided for @toolNameNfcTagLab.
+  ///
+  /// In en, this message translates to:
+  /// **'NFC Tag Lab'**
+  String get toolNameNfcTagLab;
+
+  /// No description provided for @toolDescNfcTagLab.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan NFC targets, decode NDEF, classify signatures, and write tags.'**
+  String get toolDescNfcTagLab;
+
+  /// No description provided for @toolNamePdfViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Viewer'**
+  String get toolNamePdfViewer;
+
+  /// No description provided for @toolDescPdfViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'View PDF files fullscreen with ease'**
+  String get toolDescPdfViewer;
+
+  /// No description provided for @toolNameNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get toolNameNotes;
+
+  /// No description provided for @toolDescNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple note taking tool with Markdown support and backend sync'**
+  String get toolDescNotes;
+
+  /// No description provided for @toolNameMarkdownViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown Viewer'**
+  String get toolNameMarkdownViewer;
+
+  /// No description provided for @toolDescMarkdownViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'View Markdown files fullscreen with ease'**
+  String get toolDescMarkdownViewer;
+
+  /// No description provided for @toolNameImageViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Viewer'**
+  String get toolNameImageViewer;
+
+  /// No description provided for @toolDescImageViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'View, zoom, resize, and convert image formats'**
+  String get toolDescImageViewer;
+
+  /// No description provided for @toolNameFastDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast Drop'**
+  String get toolNameFastDrop;
+
+  /// No description provided for @toolDescFastDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Quickly drop files or paste clipboard data to the server for temporary storage and sharing'**
+  String get toolDescFastDrop;
+
+  /// No description provided for @toolNameImagesToPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Images to PDF'**
+  String get toolNameImagesToPdf;
+
+  /// No description provided for @toolDescImagesToPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert multiple images into a single PDF document'**
+  String get toolDescImagesToPdf;
+
+  /// No description provided for @toolNameChiptune.
+  ///
+  /// In en, this message translates to:
+  /// **'Chiptune Player'**
+  String get toolNameChiptune;
+
+  /// No description provided for @toolDescChiptune.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Amiga MOD, XM and IT tracker modules'**
+  String get toolDescChiptune;
+
+  /// No description provided for @toolNameFocusNoise.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Noise & Breathing'**
+  String get toolNameFocusNoise;
+
+  /// No description provided for @toolDescFocusNoise.
+  ///
+  /// In en, this message translates to:
+  /// **'Ambient noise player with guided breathing patterns'**
+  String get toolDescFocusNoise;
+
+  /// No description provided for @toolNameSignatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Signature Creator'**
+  String get toolNameSignatures;
+
+  /// No description provided for @toolDescSignatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw signatures and export them as transparent PNG or SVG'**
+  String get toolDescSignatures;
 }
 
 class _AppLocalizationsDelegate

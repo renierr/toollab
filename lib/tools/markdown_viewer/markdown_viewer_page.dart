@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -114,7 +115,9 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
 
     if (_fileContent == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(MarkdownViewerTool.config.name)),
+        appBar: AppBar(
+          title: Text(MarkdownViewerTool.config.localizedName(l10n)),
+        ),
         body: FileDropZone(
           onFileSelected: _onFileSelected,
           allowedExtensions: MarkdownViewerTool.config.fileExtensions,
@@ -131,7 +134,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
       content: _fileContent!,
       config: MarkdownViewerConfig(
         accentColor: accent,
-        title: MarkdownViewerTool.config.name,
+        title: MarkdownViewerTool.config.localizedName(l10n),
         showShare: true,
         showExport: true,
         showEdit: false,

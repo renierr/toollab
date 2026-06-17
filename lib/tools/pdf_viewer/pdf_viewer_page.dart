@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
@@ -368,7 +369,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
     if (_filePath == null) {
       return ToolLayout(
-        title: PdfViewerTool.config.name,
+        title: PdfViewerTool.config.localizedName(l10n),
         child: FileDropZone(
           onFileSelected: _onFileSelected,
           allowedExtensions: PdfViewerTool.config.fileExtensions,
@@ -384,7 +385,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
     if (_mode == PdfViewerMode.sign) {
       return ToolLayout(
-        title: PdfViewerTool.config.name,
+        title: PdfViewerTool.config.localizedName(l10n),
         fullscreen: true,
         showFloatingBackButton: false,
         scaffoldKey: _scaffoldKey,
@@ -399,7 +400,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
     if (_mode == PdfViewerMode.organize) {
       return ToolLayout(
-        title: PdfViewerTool.config.name,
+        title: PdfViewerTool.config.localizedName(l10n),
         fullscreen: true,
         showFloatingBackButton: false,
         scaffoldKey: _scaffoldKey,
@@ -414,7 +415,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
     if (_mode == PdfViewerMode.flatten) {
       return ToolLayout(
-        title: PdfViewerTool.config.name,
+        title: PdfViewerTool.config.localizedName(l10n),
         fullscreen: true,
         showFloatingBackButton: false,
         scaffoldKey: _scaffoldKey,
@@ -429,7 +430,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
     if (_mode == PdfViewerMode.extractImages) {
       return ToolLayout(
-        title: PdfViewerTool.config.name,
+        title: PdfViewerTool.config.localizedName(l10n),
         fullscreen: true,
         showFloatingBackButton: false,
         scaffoldKey: _scaffoldKey,
@@ -443,7 +444,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
     if (_mode == PdfViewerMode.metadata) {
       return ToolLayout(
-        title: PdfViewerTool.config.name,
+        title: PdfViewerTool.config.localizedName(l10n),
         fullscreen: true,
         showFloatingBackButton: false,
         scaffoldKey: _scaffoldKey,
@@ -457,7 +458,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     }
 
     return ToolLayout(
-      title: PdfViewerTool.config.name,
+      title: PdfViewerTool.config.localizedName(l10n),
       fullscreen: true,
       showFloatingBackButton: false,
       scaffoldKey: _scaffoldKey,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -188,6 +189,7 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
   @override
   Widget build(BuildContext context) {
     _sensor.setUiOrientation(MediaQuery.of(context).orientation);
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final accentColor = theme.colorScheme.primary;
 
@@ -231,7 +233,7 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
     final leftPadding = _rulerVisible ? 80.0 : 16.0;
 
     return ToolLayout(
-      title: BubbleLevelTool.config.name,
+      title: BubbleLevelTool.config.localizedName(l10n),
       fullscreen: true,
       showFloatingBackButton: false,
       child: Stack(

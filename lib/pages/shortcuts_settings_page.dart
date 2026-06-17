@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
@@ -116,17 +117,18 @@ class ShortcutsSettingsPage extends StatelessWidget {
                 final tool = ToolRegistry.all[i];
                 final hasDrawerIcon = appState.drawerIcons[tool.id] ?? false;
                 final rowL10n = AppLocalizations.of(context);
+                final toolName = tool.localizedName(rowL10n);
 
                 return ToolShortcutRow(
                   tool: tool,
                   hasDrawerIcon: hasDrawerIcon,
                   onPinPressed: () {
-                    appState.pinShortcut(tool.id, tool.name);
+                    appState.pinShortcut(tool.id, toolName);
                     ScaffoldMessenger.of(context).hideCurrentSnackBar();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          rowL10n.coreShortcutsPinRequested(tool.name),
+                          rowL10n.coreShortcutsPinRequested(toolName),
                         ),
                         duration: const Duration(seconds: 2),
                       ),
@@ -139,8 +141,8 @@ class ShortcutsSettingsPage extends StatelessWidget {
                       SnackBar(
                         content: Text(
                           hasDrawerIcon
-                              ? rowL10n.coreShortcutsDrawerDisabled(tool.name)
-                              : rowL10n.coreShortcutsDrawerEnabled(tool.name),
+                              ? rowL10n.coreShortcutsDrawerDisabled(toolName)
+                              : rowL10n.coreShortcutsDrawerEnabled(toolName),
                         ),
                         duration: const Duration(seconds: 2),
                       ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_favorite_button.dart';
 
 class ToolCardNormal extends StatelessWidget {
@@ -15,6 +17,7 @@ class ToolCardNormal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final isNarrow = cardWidth < 200;
     final padding = isNarrow ? 8.0 : 12.0;
 
@@ -50,7 +53,7 @@ class ToolCardNormal extends StatelessWidget {
             ),
             SizedBox(height: isNarrow ? 6.0 : 8.0),
             Text(
-              tool.name,
+              tool.localizedName(l10n),
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 fontSize: isNarrow ? 13.0 : null,
@@ -61,7 +64,7 @@ class ToolCardNormal extends StatelessWidget {
             const SizedBox(height: 2),
             Expanded(
               child: Text(
-                tool.description,
+                tool.localizedDescription(l10n),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withAlpha(180),
                   height: 1.3,

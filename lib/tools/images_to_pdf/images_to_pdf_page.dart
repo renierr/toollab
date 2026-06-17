@@ -5,6 +5,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart'
     show XFile, XTypeGroup, openFiles;
 import 'package:image_picker/image_picker.dart' show ImagePicker;
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
@@ -200,7 +201,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return ToolLayout(
-      title: ImagesToPdfTool.config.name,
+      title: ImagesToPdfTool.config.localizedName(l10n),
       scaffoldKey: _scaffoldKey,
       actions: _items.isEmpty
           ? null

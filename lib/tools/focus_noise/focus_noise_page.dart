@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -264,7 +265,10 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
       ),
     );
 
-    return ToolLayout(title: FocusNoiseTool.config.name, child: content);
+    return ToolLayout(
+      title: FocusNoiseTool.config.localizedName(l10n),
+      child: content,
+    );
   }
 
   List<Widget> _buildCards(String statusText, {bool? leftSide}) {

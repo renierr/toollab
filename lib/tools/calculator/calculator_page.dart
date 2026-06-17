@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'core.dart';
@@ -226,6 +227,7 @@ class _CalculatorPageState extends State<CalculatorPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final sharedGrid = CalculatorGrid(
       onInput: _onInput,
       onClear: _onClear,
@@ -239,7 +241,7 @@ class _CalculatorPageState extends State<CalculatorPage>
         defaultTargetPlatform == TargetPlatform.linux;
 
     Widget result = ToolLayout(
-      title: CalculatorTool.config.name,
+      title: CalculatorTool.config.localizedName(l10n),
       fullscreen: true,
       child: Center(
         child: ConstrainedBox(

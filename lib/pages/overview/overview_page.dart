@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/constants.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/tool_registry.dart';
@@ -56,12 +57,14 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
     var tools = ToolRegistry.all.where((t) {
       if (query.isEmpty) return true;
       final q = query.toLowerCase();
-      return t.name.toLowerCase().contains(q) ||
-          t.description.toLowerCase().contains(q);
+      return t.localizedName(l10n).toLowerCase().contains(q) ||
+          t.localizedDescription(l10n).toLowerCase().contains(q);
     }).toList();
 
     if (sortBy == 'name') {
-      tools.sort((a, b) => a.name.compareTo(b.name));
+      tools.sort(
+        (a, b) => a.localizedName(l10n).compareTo(b.localizedName(l10n)),
+      );
     } else if (sortBy == 'recent') {
       tools.sort((a, b) {
         final ta = appState.getLastUsed(a.id);
@@ -205,7 +208,7 @@ class _OverviewPageState extends State<OverviewPage> with DisposeCleanup {
                             sliver: SliverToBoxAdapter(
                               child: SectionHeader(
                                 icon: section.icon,
-                                title: section.title,
+                                title: section.localizedTitle(l10n),
                                 toolCount: sectionTools.length,
                                 isCollapsed: isCollapsed,
                                 onToggle: () {

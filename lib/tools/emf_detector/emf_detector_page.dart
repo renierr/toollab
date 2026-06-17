@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
@@ -103,8 +105,9 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return ToolLayout(
-      title: EmfDetectorTool.config.name,
+      title: EmfDetectorTool.config.localizedName(l10n),
       fullscreen: true,
       showFloatingBackButton: false,
       backgroundColor: EmfColors.darkBg,

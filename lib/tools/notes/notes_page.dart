@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -291,7 +292,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     }
 
     return ToolLayout(
-      title: NotesTool.config.name,
+      title: NotesTool.config.localizedName(l10n),
       fullscreen: true,
       showFloatingBackButton: false,
       floatingActionButton: FloatingActionButton(

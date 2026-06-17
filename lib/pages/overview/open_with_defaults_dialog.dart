@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
@@ -112,7 +113,7 @@ class _OpenWithDefaultsDialogState extends State<OpenWithDefaultsDialog> {
                   ..._defaults.entries.map((e) {
                     final tool = ToolRegistry.all.where((t) => t.id == e.value);
                     final toolName = tool.isNotEmpty
-                        ? tool.first.name
+                        ? tool.first.localizedName(l10n)
                         : e.value;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),

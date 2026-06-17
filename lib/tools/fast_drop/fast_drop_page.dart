@@ -4,6 +4,7 @@ import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
@@ -452,7 +453,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         appState.syncEnabled && fastDropState.isServerAvailable;
 
     return ToolLayout(
-      title: FastDropTool.config.name,
+      title: FastDropTool.config.localizedName(l10n),
       fullscreen: true,
       showFloatingBackButton: false,
       child: Column(

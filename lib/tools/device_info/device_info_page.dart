@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -192,7 +193,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return ToolLayout(
-      title: DeviceInfoTool.config.name,
+      title: DeviceInfoTool.config.localizedName(l10n),
       child: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

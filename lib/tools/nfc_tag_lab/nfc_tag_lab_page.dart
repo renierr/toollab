@@ -7,6 +7,7 @@ import 'package:nfc_manager/ndef_record.dart';
 import 'package:nfc_manager/nfc_manager_android.dart';
 
 import 'package:nfc_manager_ndef/nfc_manager_ndef.dart';
+import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -424,7 +425,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
     final theme = Theme.of(context);
 
     return ToolLayout(
-      title: NfcTagLabTool.config.name,
+      title: NfcTagLabTool.config.localizedName(l10n),
       child: ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

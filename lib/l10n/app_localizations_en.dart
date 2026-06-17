@@ -2407,4 +2407,105 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get widgetShortcutDrawerSubtitle =>
       'Show separate launcher icon in App Drawer';
+
+  @override
+  String get sectionTitleSensors => 'Sensors';
+
+  @override
+  String get sectionTitleUtilities => 'Utilities';
+
+  @override
+  String get sectionTitleInfo => 'Information';
+
+  @override
+  String get toolNameCalculator => 'Calculator';
+
+  @override
+  String get toolDescCalculator => 'Basic and scientific calculations';
+
+  @override
+  String get toolNameBubbleLevel => 'Bubble Level';
+
+  @override
+  String get toolDescBubbleLevel => 'Precision spirit level using sensors';
+
+  @override
+  String get toolNameEmfDetector => 'EMF Detector';
+
+  @override
+  String get toolDescEmfDetector => 'Detect electromagnetic fields';
+
+  @override
+  String get toolNameDeviceInfo => 'Device Info';
+
+  @override
+  String get toolDescDeviceInfo => 'Battery, sensors, and system information';
+
+  @override
+  String get toolNameNfcTagLab => 'NFC Tag Lab';
+
+  @override
+  String get toolDescNfcTagLab =>
+      'Scan NFC targets, decode NDEF, classify signatures, and write tags.';
+
+  @override
+  String get toolNamePdfViewer => 'PDF Viewer';
+
+  @override
+  String get toolDescPdfViewer => 'View PDF files fullscreen with ease';
+
+  @override
+  String get toolNameNotes => 'Notes';
+
+  @override
+  String get toolDescNotes =>
+      'Simple note taking tool with Markdown support and backend sync';
+
+  @override
+  String get toolNameMarkdownViewer => 'Markdown Viewer';
+
+  @override
+  String get toolDescMarkdownViewer =>
+      'View Markdown files fullscreen with ease';
+
+  @override
+  String get toolNameImageViewer => 'Image Viewer';
+
+  @override
+  String get toolDescImageViewer =>
+      'View, zoom, resize, and convert image formats';
+
+  @override
+  String get toolNameFastDrop => 'Fast Drop';
+
+  @override
+  String get toolDescFastDrop =>
+      'Quickly drop files or paste clipboard data to the server for temporary storage and sharing';
+
+  @override
+  String get toolNameImagesToPdf => 'Images to PDF';
+
+  @override
+  String get toolDescImagesToPdf =>
+      'Convert multiple images into a single PDF document';
+
+  @override
+  String get toolNameChiptune => 'Chiptune Player';
+
+  @override
+  String get toolDescChiptune => 'Play Amiga MOD, XM and IT tracker modules';
+
+  @override
+  String get toolNameFocusNoise => 'Focus Noise & Breathing';
+
+  @override
+  String get toolDescFocusNoise =>
+      'Ambient noise player with guided breathing patterns';
+
+  @override
+  String get toolNameSignatures => 'Signature Creator';
+
+  @override
+  String get toolDescSignatures =>
+      'Draw signatures and export them as transparent PNG or SVG';
 }
