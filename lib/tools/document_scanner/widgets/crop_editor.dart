@@ -220,24 +220,26 @@ class _CropEditorState extends State<CropEditor> {
               return Positioned(
                 left: pt.dx - 22,
                 top: pt.dy - 22,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  alignment: Alignment.center,
+                child: IgnorePointer(
                   child: Container(
-                    width: isDragging ? 24 : 16,
-                    height: isDragging ? 24 : 16,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: widget.accentColor, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 4,
-                          spreadRadius: 1,
-                        ),
-                      ],
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    child: Container(
+                      width: isDragging ? 24 : 16,
+                      height: isDragging ? 24 : 16,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: widget.accentColor, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
