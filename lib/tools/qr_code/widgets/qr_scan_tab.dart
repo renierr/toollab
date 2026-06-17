@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
-import 'package:flutter_zxing/flutter_zxing.dart' show zx;
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
@@ -39,10 +38,6 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
     _scope = TempFileManager.createScope();
     onDispose(() => _scope.cleanTracked());
     _cameraMode = _cameraSupported;
-    if (_cameraSupported) {
-      zx.startCameraProcessing();
-      onDispose(() => zx.stopCameraProcessing());
-    }
   }
 
   Color get _accent => QrCodeTool.config.accentColor;
