@@ -7,6 +7,7 @@ import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/info_card.dart';
 
 /// Shows a decoded scan result with quick actions (open / copy / share) and a
 /// button to resume scanning.
@@ -164,76 +165,63 @@ class QrResultCard extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 520),
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(_kindIcon(), color: accentColor, size: 26),
-                      const SizedBox(width: 10),
-                      Text(
-                        _kindLabel(l10n),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+          child: InfoCard(
+            icon: _kindIcon(),
+            title: _kindLabel(l10n),
+            titleColor: accentColor,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SelectableText(
+                    text,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (canOpen)
+                      FilledButton.icon(
+                        onPressed: () => _open(context),
+                        icon: const Icon(Icons.open_in_new, size: 18),
+                        label: Text(l10n.qrResultOpen),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: accentColor,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(12),
+                    OutlinedButton.icon(
+                      onPressed: () => _copy(context),
+                      icon: const Icon(Icons.copy_outlined, size: 18),
+                      label: Text(l10n.qrActionCopy),
                     ),
-                    child: SelectableText(
-                      text,
-                      style: theme.textTheme.bodyMedium,
+                    OutlinedButton.icon(
+                      onPressed: () => _share(context),
+                      icon: const Icon(Icons.share_outlined, size: 18),
+                      label: Text(l10n.qrActionShare),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: onScanAgain,
+                    icon: const Icon(Icons.qr_code_scanner, size: 18),
+                    label: Text(l10n.qrScanAgain),
                   ),
-                  const SizedBox(height: 20),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (canOpen)
-                        FilledButton.icon(
-                          onPressed: () => _open(context),
-                          icon: const Icon(Icons.open_in_new, size: 18),
-                          label: Text(l10n.qrResultOpen),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: accentColor,
-                          ),
-                        ),
-                      OutlinedButton.icon(
-                        onPressed: () => _copy(context),
-                        icon: const Icon(Icons.copy_outlined, size: 18),
-                        label: Text(l10n.qrActionCopy),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () => _share(context),
-                        icon: const Icon(Icons.share_outlined, size: 18),
-                        label: Text(l10n.qrActionShare),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: onScanAgain,
-                      icon: const Icon(Icons.qr_code_scanner, size: 18),
-                      label: Text(l10n.qrScanAgain),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

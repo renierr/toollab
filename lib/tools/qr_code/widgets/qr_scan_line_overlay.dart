@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 
 /// Animated viewfinder drawn on top of the camera preview: a centered square
 /// reticle with corner brackets and a sweeping scan line.
@@ -12,7 +13,7 @@ class QrScanLineOverlay extends StatefulWidget {
 }
 
 class _QrScanLineOverlayState extends State<QrScanLineOverlay>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, DisposeCleanup {
   late final AnimationController _controller;
 
   @override
@@ -22,12 +23,7 @@ class _QrScanLineOverlayState extends State<QrScanLineOverlay>
       vsync: this,
       duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    onDispose(_controller.dispose);
   }
 
   @override

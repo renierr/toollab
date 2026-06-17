@@ -107,7 +107,13 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
             accentColor: _accent,
             onDetected: (text) => setState(() => _result = text),
           )
-        : _buildImageScanZone();
+        : _ImageScanZone(
+            accent: _accent,
+            extensions: QrCodeTool.config.fileExtensions,
+            onFile: _decodeXFile,
+            onPaste: _pasteFromClipboard,
+            onPickGallery: _pickFromGallery,
+          );
 
     if (!_cameraSupported) return body;
 
@@ -125,16 +131,34 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
       ],
     );
   }
+}
 
-  Widget _buildImageScanZone() {
+/// Empty-state for image scanning: drop zone plus paste / gallery actions.
+class _ImageScanZone extends StatelessWidget {
+  final Color accent;
+  final List<String> extensions;
+  final ValueChanged<XFile> onFile;
+  final VoidCallback onPaste;
+  final VoidCallback onPickGallery;
+
+  const _ImageScanZone({
+    required this.accent,
+    required this.extensions,
+    required this.onFile,
+    required this.onPaste,
+    required this.onPickGallery,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: FileDropZone(
-        onFileSelected: _decodeXFile,
-        allowedExtensions: QrCodeTool.config.fileExtensions,
+        onFileSelected: onFile,
+        allowedExtensions: extensions,
         typeLabel: l10n.qrImagesLabel,
-        accentColor: _accent,
+        accentColor: accent,
         icon: Icons.qr_code_2_outlined,
         title: l10n.qrScanDropTitle,
         subtitle: l10n.qrScanDropSubtitle,
@@ -143,18 +167,18 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
         extraButtons: [
           const SizedBox(height: 16),
           DropZoneActionButton(
-            onPressed: _pasteFromClipboard,
+            onPressed: onPaste,
             icon: Icons.paste_outlined,
             label: l10n.qrPasteImage,
-            accentColor: _accent,
+            accentColor: accent,
           ),
           if (Platform.isAndroid) ...[
             const SizedBox(height: 12),
             DropZoneActionButton(
-              onPressed: _pickFromGallery,
+              onPressed: onPickGallery,
               icon: Icons.photo_library_outlined,
               label: l10n.qrPickFromGallery,
-              accentColor: _accent,
+              accentColor: accent,
             ),
           ],
         ],
