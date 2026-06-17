@@ -913,6 +913,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get img2pdfCreatePdf => 'Create PDF';
 
   @override
+  String get img2pdfPreparing => 'Preparing…';
+
+  @override
+  String img2pdfProcessingImage(int done, int total) {
+    return 'Processing image $done of $total…';
+  }
+
+  @override
+  String get img2pdfSavingPdf => 'Saving PDF…';
+
+  @override
+  String img2pdfSavedTo(String path) {
+    return 'PDF saved to $path';
+  }
+
+  @override
+  String img2pdfSaveFailed(String error) {
+    return 'Failed to save PDF: $error';
+  }
+
+  @override
+  String img2pdfCreateFailed(String error) {
+    return 'Failed to create PDF: $error';
+  }
+
+  @override
   String get imgViewDiscardChangesTitle => 'Discard changes?';
 
   @override
@@ -1985,6 +2011,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pdfEditExtractDownloadAllZip => 'Download All (ZIP)';
+
+  @override
+  String get pdfEditExtractEmpty => 'No embedded images found in this PDF';
 
   @override
   String get pdfEditExtractScanning => 'Scanning PDF…';

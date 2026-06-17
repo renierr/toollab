@@ -139,10 +139,11 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
 
   Future<void> _createPdf() async {
     if (_items.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isProcessing = true;
       _progress = 0;
-      _progressText = 'Preparing...';
+      _progressText = l10n.img2pdfPreparing;
     });
 
     try {
@@ -155,7 +156,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
           if (mounted) {
             setState(() {
               _progress = total == 0 ? 0 : done / total;
-              _progressText = 'Processing image $done of $total...';
+              _progressText = l10n.img2pdfProcessingImage(done, total);
             });
           }
         },
@@ -164,7 +165,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
       if (mounted) {
         setState(() {
           _progress = 1;
-          _progressText = 'Saving PDF...';
+          _progressText = l10n.img2pdfSavingPdf;
         });
       }
 
@@ -180,14 +181,14 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
         context: context,
         suggestedName: 'images_export.pdf',
         sourcePath: pdfPath,
-        successMessageGeneralBuilder: (path) => 'PDF saved to $path',
-        errorMessageBuilder: (e) => 'Failed to save PDF: $e',
+        successMessageGeneralBuilder: (path) => l10n.img2pdfSavedTo(path),
+        errorMessageBuilder: (e) => l10n.img2pdfSaveFailed(e),
       );
     } catch (e) {
       if (mounted) {
         FileSaveHelper.showErrorNotification(
           context: context,
-          errorMessage: 'Failed to create PDF: $e',
+          errorMessage: l10n.img2pdfCreateFailed(e.toString()),
         );
       }
     } finally {

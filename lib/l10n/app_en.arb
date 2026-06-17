@@ -503,6 +503,43 @@
   },
   "img2pdfAddMore": "Add More",
   "img2pdfCreatePdf": "Create PDF",
+  "img2pdfPreparing": "Preparing…",
+  "img2pdfProcessingImage": "Processing image {done} of {total}…",
+  "@img2pdfProcessingImage": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "img2pdfSavingPdf": "Saving PDF…",
+  "img2pdfSavedTo": "PDF saved to {path}",
+  "@img2pdfSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "img2pdfSaveFailed": "Failed to save PDF: {error}",
+  "@img2pdfSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "img2pdfCreateFailed": "Failed to create PDF: {error}",
+  "@img2pdfCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "imgViewDiscardChangesTitle": "Discard changes?",
   "imgViewDiscardChangesMessage": "You have unsaved edits to this image. Leaving will discard them.",
   "imgViewDiscard": "Discard",
@@ -1150,6 +1187,7 @@
   "pdfEditExtractClearSelection": "Clear Selection",
   "pdfEditExtractDownloadSelected": "Download Selected",
   "pdfEditExtractDownloadAllZip": "Download All (ZIP)",
+  "pdfEditExtractEmpty": "No embedded images found in this PDF",
   "pdfEditExtractScanning": "Scanning PDF…",
   "pdfEditExtractScanningObjects": "Scanning PDF objects {done} of {total}…",
   "@pdfEditExtractScanningObjects": {

@@ -1706,6 +1706,42 @@ abstract class AppLocalizations {
   /// **'Create PDF'**
   String get img2pdfCreatePdf;
 
+  /// No description provided for @img2pdfPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing…'**
+  String get img2pdfPreparing;
+
+  /// No description provided for @img2pdfProcessingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing image {done} of {total}…'**
+  String img2pdfProcessingImage(int done, int total);
+
+  /// No description provided for @img2pdfSavingPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving PDF…'**
+  String get img2pdfSavingPdf;
+
+  /// No description provided for @img2pdfSavedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF saved to {path}'**
+  String img2pdfSavedTo(String path);
+
+  /// No description provided for @img2pdfSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save PDF: {error}'**
+  String img2pdfSaveFailed(String error);
+
+  /// No description provided for @img2pdfCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create PDF: {error}'**
+  String img2pdfCreateFailed(String error);
+
   /// No description provided for @imgViewDiscardChangesTitle.
   ///
   /// In en, this message translates to:
@@ -3631,6 +3667,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download All (ZIP)'**
   String get pdfEditExtractDownloadAllZip;
+
+  /// No description provided for @pdfEditExtractEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No embedded images found in this PDF'**
+  String get pdfEditExtractEmpty;
 
   /// No description provided for @pdfEditExtractScanning.
   ///

@@ -160,15 +160,15 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
     return (_permissionsRaw! & bitMask) != 0;
   }
 
-  String _formatFileSize(int bytes) {
-    if (bytes <= 0) return 'Unknown';
+  String _formatFileSize(int bytes, String unknown) {
+    if (bytes <= 0) return unknown;
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
-  String _formatPageSize(double width, double height) {
-    if (width == 0 || height == 0) return 'Unknown';
+  String _formatPageSize(double width, double height, String unknown) {
+    if (width == 0 || height == 0) return unknown;
     final widthInches = width / 72.0;
     final heightInches = height / 72.0;
     final widthMm = widthInches * 25.4;
@@ -267,7 +267,10 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
               const Divider(height: 16),
               InfoRow(
                 label: l10n.pdfEditMetaFileSize,
-                value: _formatFileSize(metadata.fileSize),
+                value: _formatFileSize(
+                  metadata.fileSize,
+                  l10n.pdfEditMetaUnknown,
+                ),
               ),
               const Divider(height: 16),
               InfoRow(
@@ -285,6 +288,7 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
                 value: _formatPageSize(
                   metadata.widthPoints,
                   metadata.heightPoints,
+                  l10n.pdfEditMetaUnknown,
                 ),
               ),
             ],
@@ -413,7 +417,7 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
   Widget _buildDone(ThemeData theme) {
     final l10n = AppLocalizations.of(context);
     final size = _resultSize;
-    final sizeText = _formatFileSize(size);
+    final sizeText = _formatFileSize(size, l10n.pdfEditMetaUnknown);
     final outName = '${_baseName}_unsecured.pdf';
 
     return Center(

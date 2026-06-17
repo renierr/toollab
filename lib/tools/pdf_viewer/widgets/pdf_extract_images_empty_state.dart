@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class PdfExtractImagesEmptyState extends StatelessWidget {
   const PdfExtractImagesEmptyState({super.key});
@@ -6,6 +7,7 @@ class PdfExtractImagesEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -19,7 +21,7 @@ class PdfExtractImagesEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'No embedded images found in this PDF',
+              l10n.pdfEditExtractEmpty,
               style: theme.textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),

@@ -289,6 +289,43 @@
   "img2pdfImageCountPlural": "{count} Bilder",
   "img2pdfAddMore": "Weitere hinzufügen",
   "img2pdfCreatePdf": "PDF erstellen",
+  "img2pdfPreparing": "Wird vorbereitet…",
+  "img2pdfProcessingImage": "Bild {done} von {total} wird verarbeitet…",
+  "@img2pdfProcessingImage": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "img2pdfSavingPdf": "PDF wird gespeichert…",
+  "img2pdfSavedTo": "PDF gespeichert unter {path}",
+  "@img2pdfSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "img2pdfSaveFailed": "PDF konnte nicht gespeichert werden: {error}",
+  "@img2pdfSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "img2pdfCreateFailed": "PDF konnte nicht erstellt werden: {error}",
+  "@img2pdfCreateFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "imgViewDiscardChangesTitle": "Änderungen verwerfen?",
   "imgViewDiscardChangesMessage": "Dieses Bild hat ungespeicherte Änderungen. Beim Verlassen werden sie verworfen.",
   "imgViewDiscard": "Verwerfen",
@@ -610,6 +647,7 @@
   "pdfEditExtractClearSelection": "Auswahl aufheben",
   "pdfEditExtractDownloadSelected": "Auswahl herunterladen",
   "pdfEditExtractDownloadAllZip": "Alle herunterladen (ZIP)",
+  "pdfEditExtractEmpty": "Keine eingebetteten Bilder in dieser PDF gefunden",
   "pdfEditExtractScanning": "PDF wird gescannt…",
   "pdfEditExtractScanningObjects": "PDF-Objekte {done} von {total} werden gescannt…",
   "pdfEditExtractPreparingImages": "Bilder {done} von {total} werden vorbereitet…",

@@ -922,6 +922,32 @@ class AppLocalizationsDe extends AppLocalizations {
   String get img2pdfCreatePdf => 'PDF erstellen';
 
   @override
+  String get img2pdfPreparing => 'Wird vorbereitet…';
+
+  @override
+  String img2pdfProcessingImage(int done, int total) {
+    return 'Bild $done von $total wird verarbeitet…';
+  }
+
+  @override
+  String get img2pdfSavingPdf => 'PDF wird gespeichert…';
+
+  @override
+  String img2pdfSavedTo(String path) {
+    return 'PDF gespeichert unter $path';
+  }
+
+  @override
+  String img2pdfSaveFailed(String error) {
+    return 'PDF konnte nicht gespeichert werden: $error';
+  }
+
+  @override
+  String img2pdfCreateFailed(String error) {
+    return 'PDF konnte nicht erstellt werden: $error';
+  }
+
+  @override
   String get imgViewDiscardChangesTitle => 'Änderungen verwerfen?';
 
   @override
@@ -2004,6 +2030,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pdfEditExtractDownloadAllZip => 'Alle herunterladen (ZIP)';
+
+  @override
+  String get pdfEditExtractEmpty =>
+      'Keine eingebetteten Bilder in dieser PDF gefunden';
 
   @override
   String get pdfEditExtractScanning => 'PDF wird gescannt…';
