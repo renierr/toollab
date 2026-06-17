@@ -68,7 +68,9 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
 
   Future<void> _init() async {
     try {
-      final doc = await widget.session.openDocument();
+      final doc = await widget.session.openDocument().timeout(
+        const Duration(seconds: 30),
+      );
       final signatures = await SignatureLibrary.instance.getSignatures();
       if (!mounted) {
         doc.dispose();
@@ -95,7 +97,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
     final bytes = await PdfEngineHelper.renderPageToBytes(
       _doc!.pages[index],
       dpi: 220,
-    );
+    ).timeout(const Duration(seconds: 60));
     if (mounted) setState(() => _pageImages[index] = bytes);
   }
 
@@ -175,7 +177,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
       final bytes = await PdfEngineHelper.stampSignatureAnnotations(
         _doc!,
         requests,
-      );
+      ).timeout(const Duration(minutes: 5));
       final path = await widget.session.tempScope.createFile(
         '${_baseName}_signed.pdf',
         bytes: bytes,
@@ -226,7 +228,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
         title: Text(l10n.pdfEditSignTitle(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: _phase == _Phase.processing ? null : widget.onCancel,
+          onPressed: widget.onCancel,
         ),
         actions: [
           if (_phase == _Phase.place)

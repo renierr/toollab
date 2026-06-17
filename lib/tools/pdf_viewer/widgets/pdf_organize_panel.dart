@@ -55,7 +55,9 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
 
   Future<void> _loadDocument() async {
     try {
-      final doc = await widget.session.openDocument();
+      final doc = await widget.session.openDocument().timeout(
+        const Duration(seconds: 30),
+      );
       final pages = <_PageItem>[];
       for (int i = 0; i < doc.pages.length; i++) {
         pages.add(_PageItem(index: i, page: doc.pages[i]));
@@ -118,7 +120,9 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
     try {
       setState(() => _isProcessing = true);
 
-      final insertDoc = await PdfEngineHelper.openPdf(xFile.path);
+      final insertDoc = await PdfEngineHelper.openPdf(
+        xFile.path,
+      ).timeout(const Duration(seconds: 30));
       final srcPages = insertDoc.pages.toList();
 
       if (mounted) {
@@ -258,7 +262,9 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
     try {
       final newDoc = await PdfDocument.createNew(sourceName: 'organized.pdf');
       newDoc.pages = _pages.map((p) => p.page).toList();
-      final bytes = await newDoc.encodePdf();
+      final bytes = await newDoc.encodePdf().timeout(
+        const Duration(minutes: 5),
+      );
       newDoc.dispose();
 
       // Stage to the parent scope so the result survives this panel closing.
@@ -332,7 +338,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
         title: Text(l10n.pdfNavOrganizeTitle(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: _isProcessing ? null : widget.onCancel,
+          onPressed: widget.onCancel,
         ),
         actions: [
           IconButton(

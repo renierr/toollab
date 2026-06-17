@@ -53,11 +53,13 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
 
     PdfDocument? doc;
     try {
-      doc = await widget.session.openDocument();
+      doc = await widget.session.openDocument().timeout(
+        const Duration(seconds: 30),
+      );
       final metadata = await PdfEngineHelper.readMetadata(
         doc,
         widget.session.filePath,
-      );
+      ).timeout(const Duration(seconds: 60));
       final permissions = doc.permissions;
 
       if (!mounted) {
@@ -93,8 +95,12 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
 
     PdfDocument? doc;
     try {
-      doc = await widget.session.openDocument();
-      final bytes = await PdfEngineHelper.createUnsecuredCopy(doc);
+      doc = await widget.session.openDocument().timeout(
+        const Duration(seconds: 30),
+      );
+      final bytes = await PdfEngineHelper.createUnsecuredCopy(
+        doc,
+      ).timeout(const Duration(minutes: 5));
 
       final outName = '${_baseName}_unsecured.pdf';
       final resultPath = await widget.session.tempScope.createFile(
@@ -476,9 +482,7 @@ class _PdfMetadataPanelState extends State<PdfMetadataPanel> {
         title: Text(l10n.pdfEditMetaTitle2(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: _phase == _MetadataPhase.processing
-              ? null
-              : widget.onCancel,
+          onPressed: widget.onCancel,
         ),
         actions: [
           IconButton(

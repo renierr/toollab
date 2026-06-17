@@ -46,7 +46,9 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
 
     PdfDocument? doc;
     try {
-      doc = await widget.session.openDocument();
+      doc = await widget.session.openDocument().timeout(
+        const Duration(seconds: 30),
+      );
       _totalPages = doc.pages.length;
 
       final pdfBytes = await PdfEngineHelper.flattenPdfDocument(
@@ -61,7 +63,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
             });
           }
         },
-      );
+      ).timeout(const Duration(minutes: 5));
 
       // The result lives in the parent scope so it survives this panel being
       // disposed when the viewer reopens it.
@@ -125,9 +127,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
         title: Text(l10n.pdfEditFlattenTitle(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: _phase == _FlattenPhase.processing
-              ? null
-              : widget.onCancel,
+          onPressed: widget.onCancel,
         ),
       ),
       body: switch (_phase) {

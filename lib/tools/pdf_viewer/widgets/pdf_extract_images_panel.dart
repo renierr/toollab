@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
@@ -73,7 +74,9 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         _selectedIds.clear();
       });
 
-      doc = await widget.session.openDocument();
+      doc = await widget.session.openDocument().timeout(
+        const Duration(seconds: 30),
+      );
       final extracted = await PdfEngineHelper.extractEmbeddedImages(
         doc,
         deduplicate: true,
@@ -88,7 +91,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
             _statusText = l10nCb.pdfEditExtractScanningObjects(done, total);
           });
         },
-      );
+      ).timeout(const Duration(minutes: 3));
 
       final items = <PdfExtractedImageItem>[];
       if (mounted && extracted.isNotEmpty) {
@@ -235,7 +238,9 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
       hasOpenZip = true;
       for (int i = 0; i < items.length; i++) {
         final item = items[i];
-        await encoder.addFile(File(item.path), item.fileName);
+        await encoder
+            .addFile(File(item.path), item.fileName)
+            .timeout(const Duration(seconds: 60));
         if (!mounted) {
           continue;
         }
@@ -246,7 +251,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
           _statusText = l10nZip.pdfEditExtractCreatingZip(done, items.length);
         });
       }
-      await encoder.close();
+      await encoder.close().timeout(const Duration(seconds: 30));
       hasOpenZip = false;
       if (!mounted) {
         return;
@@ -351,7 +356,7 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
         title: Text(l10n.pdfEditExtractTitle(widget.session.fileName)),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: _isLoading || _isExporting ? null : widget.onCancel,
+          onPressed: widget.onCancel,
         ),
       ),
       body: Column(

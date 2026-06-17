@@ -159,7 +159,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
             });
           }
         },
-      );
+      ).timeout(const Duration(minutes: 5));
 
       if (mounted) {
         setState(() {
