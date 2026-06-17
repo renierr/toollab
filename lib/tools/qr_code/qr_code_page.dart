@@ -39,11 +39,8 @@ class _QrCodePageState extends State<QrCodePage>
             indicatorColor: accent,
             labelColor: accent,
             tabs: [
-              Tab(
-                icon: const Icon(Icons.qr_code_scanner),
-                text: l10n.qrTabScan,
-              ),
-              Tab(icon: const Icon(Icons.qr_code_2), text: l10n.qrTabCreate),
+              Tab(text: l10n.qrTabScan),
+              Tab(text: l10n.qrTabCreate),
             ],
           ),
           Expanded(

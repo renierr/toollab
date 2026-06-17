@@ -97,6 +97,7 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
       return QrResultCard(
         text: _result!,
         accentColor: _accent,
+        scope: _scope,
         onScanAgain: () => setState(() => _result = null),
       );
     }

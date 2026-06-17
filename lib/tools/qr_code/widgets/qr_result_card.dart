@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
+import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 /// Shows a decoded scan result with quick actions (open / copy / share) and a
@@ -9,12 +13,14 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 class QrResultCard extends StatelessWidget {
   final String text;
   final Color accentColor;
+  final TempFileScope scope;
   final VoidCallback onScanAgain;
 
   const QrResultCard({
     super.key,
     required this.text,
     required this.accentColor,
+    required this.scope,
     required this.onScanAgain,
   });
 
@@ -136,8 +142,15 @@ class QrResultCard extends StatelessWidget {
     }
   }
 
-  Future<void> _share() async {
-    await SharePlus.instance.share(ShareParams(text: text));
+  Future<void> _share(BuildContext context) async {
+    final bytes = Uint8List.fromList(utf8.encode(text));
+    final path = await scope.createFile('qr_content.txt', bytes: bytes);
+    if (!context.mounted) return;
+    await FileSaveHelper.showShareChooser(
+      context: context,
+      path: path,
+      mimeType: 'text/plain',
+    );
   }
 
   @override
@@ -204,7 +217,7 @@ class QrResultCard extends StatelessWidget {
                         label: Text(l10n.qrActionCopy),
                       ),
                       OutlinedButton.icon(
-                        onPressed: _share,
+                        onPressed: () => _share(context),
                         icon: const Icon(Icons.share_outlined, size: 18),
                         label: Text(l10n.qrActionShare),
                       ),

@@ -56,9 +56,14 @@ class QrPreviewPanel extends StatelessWidget {
     }
   }
 
-  Future<void> _share() async {
+  Future<void> _share(BuildContext context) async {
     final path = await scope.createFile('qr_code.png', bytes: pngBytes!);
-    await FileSaveHelper.shareFile(path, 'image/png');
+    if (!context.mounted) return;
+    await FileSaveHelper.showShareChooser(
+      context: context,
+      path: path,
+      mimeType: 'image/png',
+    );
   }
 
   @override
@@ -145,7 +150,7 @@ class QrPreviewPanel extends StatelessWidget {
                   label: Text(l10n.qrActionCopyImage),
                 ),
                 OutlinedButton.icon(
-                  onPressed: _share,
+                  onPressed: () => _share(context),
                   icon: const Icon(Icons.share_outlined, size: 18),
                   label: Text(l10n.qrActionShare),
                 ),

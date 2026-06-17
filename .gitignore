@@ -4,6 +4,8 @@
 *.pyc
 *.swp
 .DS_Store
+# flutter_zxing native debug dump
+thresholds_new.pnm
 .atom/
 .build/
 .buildlog/

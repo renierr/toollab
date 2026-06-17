@@ -77,7 +77,13 @@ class _QrCreateFormState extends State<QrCreateForm> with DisposeCleanup {
   @override
   void didUpdateWidget(QrCreateForm old) {
     super.didUpdateWidget(old);
-    if (old.type != widget.type) _emit();
+    // Type switched: recompute the payload, but defer past this build frame so
+    // the parent's setState is not called while it is still building.
+    if (old.type != widget.type) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _emit();
+      });
+    }
   }
 
   void _emit() {

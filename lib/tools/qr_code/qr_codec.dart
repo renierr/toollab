@@ -47,8 +47,12 @@ class QrCodec {
       final Code result = await zx.readBarcodeImagePathString(
         path,
         DecodeParams(
-          format: Format.qrCode,
+          // readBarcodeImagePath feeds the decoder RGB bytes, so the image
+          // format must be rgb — the default (lum) would misread the data.
+          imageFormat: ImageFormat.rgb,
+          format: Format.any,
           tryHarder: true,
+          tryRotate: true,
           tryInverted: true,
         ),
       );
