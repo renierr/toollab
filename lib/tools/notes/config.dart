@@ -19,6 +19,8 @@ class NotesTool {
     route: '/notes',
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameNotes,
+    descriptionL10n: (l10n) => l10n.toolDescNotes,
     shareTarget: ShareTargetConfig(accept: ['text/markdown', 'text/plain']),
     fileExtensions: ['md', 'txt', 'markdown'],
     createPage: (sd) => NotesPage(sharedFile: sd?.firstFile),

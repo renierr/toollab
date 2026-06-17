@@ -5,7 +5,6 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart'
     show XFile, XTypeGroup, openFiles;
 import 'package:image_picker/image_picker.dart' show ImagePicker;
-import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';

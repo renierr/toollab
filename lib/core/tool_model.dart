@@ -4,6 +4,12 @@ import 'package:provider/single_child_widget.dart';
 import 'shared_file.dart';
 export 'shared_file.dart';
 import '../services/sync_service.dart';
+import '../l10n/app_localizations.dart';
+
+/// Resolves a localized string from the active [AppLocalizations].
+/// Lives in `config.dart` per-tool so localization stays self-contained —
+/// takes [AppLocalizations], never a `BuildContext`.
+typedef ToolL10nResolver = String Function(AppLocalizations l10n);
 
 class ShareTargetConfig {
   final List<String> accept;
@@ -25,6 +31,12 @@ class ToolModel {
   final SyncDelegate Function()? syncDelegateFactory;
   final List<SingleChildWidget> Function()? stateProviders;
 
+  /// Optional localized overrides. When set, [localizedName] /
+  /// [localizedDescription] use them; otherwise the raw [name] /
+  /// [description] are returned. Declared inline in each tool's `config.dart`.
+  final ToolL10nResolver? nameL10n;
+  final ToolL10nResolver? descriptionL10n;
+
   ToolModel({
     required this.id,
     required this.name,
@@ -37,8 +49,15 @@ class ToolModel {
     this.fileExtensions = const [],
     this.syncDelegateFactory,
     this.stateProviders,
+    this.nameL10n,
+    this.descriptionL10n,
     Widget Function(SharedData? sharedData)? createPage,
   }) : createPage = createPage ?? ((_) => const SizedBox.shrink());
+
+  String localizedName(AppLocalizations l10n) => nameL10n?.call(l10n) ?? name;
+
+  String localizedDescription(AppLocalizations l10n) =>
+      descriptionL10n?.call(l10n) ?? description;
 }
 
 class ToolSection {
@@ -46,11 +65,16 @@ class ToolSection {
   final String title;
   final IconData icon;
   final String? description;
+  final ToolL10nResolver? titleL10n;
 
   const ToolSection({
     required this.id,
     required this.title,
     required this.icon,
     this.description,
+    this.titleL10n,
   });
+
+  String localizedTitle(AppLocalizations l10n) =>
+      titleL10n?.call(l10n) ?? title;
 }

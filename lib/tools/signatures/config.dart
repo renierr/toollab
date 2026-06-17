@@ -18,6 +18,8 @@ class SignaturesTool {
     route: '/signatures',
     accentColor: AppTheme.accentBlue,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameSignatures,
+    descriptionL10n: (l10n) => l10n.toolDescSignatures,
     fileExtensions: ['png', 'svg'],
     createPage: (_) => const SignaturesPage(),
     syncDelegateFactory: SignaturesSyncDelegate.new,

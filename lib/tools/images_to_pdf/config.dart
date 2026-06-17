@@ -15,6 +15,8 @@ class ImagesToPdfTool {
     route: '/images-to-pdf',
     accentColor: AppTheme.accentRed,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameImagesToPdf,
+    descriptionL10n: (l10n) => l10n.toolDescImagesToPdf,
     fileExtensions: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'],
     createPage: (_) => const ImagesToPdfPage(),
   );

@@ -201,12 +201,14 @@ class MyNewTool {
   MyNewTool._();
   static ToolModel get config => ToolModel(
     id: 'my-new-tool',
-    name: 'My New Tool',
-    description: 'What it does',
+    name: 'My New Tool',                 // raw English fallback
+    description: 'What it does',         // raw English fallback
     icon: Icons.star_outlined,
     route: '/my-new-tool',
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameMyNewTool,        // localized; add keys to both ARB files
+    descriptionL10n: (l10n) => l10n.toolDescMyNewTool,
     fileExtensions: ['ext1', 'ext2'],   // for local file picker
     shareTarget: ShareTargetConfig(       // for incoming shared files
       accept: ['application/octet-stream'],
@@ -221,6 +223,8 @@ class MyNewTool {
   );
 }
 ```
+
+> **Localization:** names, descriptions, and section titles are localized per-tool — no central switch. Set `nameL10n` / `descriptionL10n` (and `titleL10n` on a `ToolSection`), add the matching keys to both `app_en.arb` and `app_de.arb`, then run `flutter gen-l10n`. The raw `name` / `description` stay as fallbacks. UI must read `tool.localizedName(l10n)` / `tool.localizedDescription(l10n)` / `section.localizedTitle(l10n)` — including the tool's own `ToolLayout(title: MyNewTool.config.localizedName(l10n))`. Never render `.name` / `.description` / `.title` directly.
 
 ### Step 2: Write `<name>_page.dart`
 ```dart

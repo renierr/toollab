@@ -15,6 +15,8 @@ class PdfViewerTool {
     route: '/pdf-viewer',
     accentColor: AppTheme.accentRed,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNamePdfViewer,
+    descriptionL10n: (l10n) => l10n.toolDescPdfViewer,
     shareTarget: ShareTargetConfig(accept: ['application/pdf']),
     fileExtensions: ['pdf'],
     createPage: (sd) => PdfViewerPage(sharedFile: sd?.firstFile),

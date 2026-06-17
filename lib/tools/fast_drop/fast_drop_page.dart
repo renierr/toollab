@@ -4,7 +4,6 @@ import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';

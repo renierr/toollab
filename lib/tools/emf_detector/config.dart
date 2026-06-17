@@ -15,6 +15,8 @@ class EmfDetectorTool {
     route: '/emf-detector',
     accentColor: AppTheme.accentAmber,
     sectionId: 'sensors',
+    nameL10n: (l10n) => l10n.toolNameEmfDetector,
+    descriptionL10n: (l10n) => l10n.toolDescEmfDetector,
     createPage: (_) => const EmfDetectorPage(),
   );
 }

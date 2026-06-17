@@ -15,6 +15,8 @@ class BubbleLevelTool {
     route: '/bubble-level',
     accentColor: AppTheme.accentGreen,
     sectionId: 'sensors',
+    nameL10n: (l10n) => l10n.toolNameBubbleLevel,
+    descriptionL10n: (l10n) => l10n.toolDescBubbleLevel,
     createPage: (_) => const BubbleLevelPage(),
   );
 }

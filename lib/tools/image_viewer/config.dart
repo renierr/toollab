@@ -15,6 +15,8 @@ class ImageViewerTool {
     route: '/image-viewer',
     accentColor: AppTheme.accentBlue,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameImageViewer,
+    descriptionL10n: (l10n) => l10n.toolDescImageViewer,
     shareTarget: ShareTargetConfig(accept: ['image/*']),
     fileExtensions: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'],
     createPage: (sd) => ImageViewerPage(sharedFile: sd?.firstFile),

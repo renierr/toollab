@@ -15,6 +15,8 @@ class ChiptuneTool {
     route: '/chiptune',
     accentColor: AppTheme.accentPurple,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameChiptune,
+    descriptionL10n: (l10n) => l10n.toolDescChiptune,
     shareTarget: ShareTargetConfig(accept: ['application/octet-stream']),
     fileExtensions: ['mod', 'xm', 'it', 's3m'],
     createPage: (sd) => ChiptunePage(sharedFile: sd?.firstFile),

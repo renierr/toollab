@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/calculator/config.dart';
 import 'package:tool_lab/tools/bubble_level/config.dart';
 import 'package:tool_lab/tools/emf_detector/config.dart';
@@ -16,22 +17,25 @@ import 'package:tool_lab/tools/focus_noise/config.dart';
 import 'package:tool_lab/tools/signatures/config.dart';
 
 class ToolRegistry {
-  static const Map<String, ToolSection> sections = {
+  static final Map<String, ToolSection> sections = {
     'sensors': ToolSection(
       id: 'sensors',
       title: 'Sensors',
       icon: Icons.sensors,
       description: 'Tools using device sensors',
+      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleSensors,
     ),
     'utilities': ToolSection(
       id: 'utilities',
       title: 'Utilities',
       icon: Icons.build_outlined,
+      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleUtilities,
     ),
     'info': ToolSection(
       id: 'info',
       title: 'Information',
       icon: Icons.info_outline,
+      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleInfo,
     ),
   };
 

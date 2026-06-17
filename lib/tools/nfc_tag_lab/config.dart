@@ -16,6 +16,8 @@ class NfcTagLabTool {
     route: '/nfc-tag-lab',
     accentColor: AppTheme.accentTeal,
     sectionId: 'sensors',
+    nameL10n: (l10n) => l10n.toolNameNfcTagLab,
+    descriptionL10n: (l10n) => l10n.toolDescNfcTagLab,
     createPage: (_) => const NfcTagLabPage(),
   );
 }

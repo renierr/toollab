@@ -15,6 +15,8 @@ class CalculatorTool {
     route: '/calculator',
     accentColor: AppTheme.accentBlue,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameCalculator,
+    descriptionL10n: (l10n) => l10n.toolDescCalculator,
     createPage: (_) => const CalculatorPage(),
   );
 }

@@ -15,6 +15,8 @@ class MarkdownViewerTool {
     route: '/markdown-viewer',
     accentColor: AppTheme.accentAmber,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameMarkdownViewer,
+    descriptionL10n: (l10n) => l10n.toolDescMarkdownViewer,
     shareTarget: ShareTargetConfig(
       accept: ['text/markdown', 'text/x-markdown', 'text/plain', 'text/*'],
     ),

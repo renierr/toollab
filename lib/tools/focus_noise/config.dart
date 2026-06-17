@@ -15,6 +15,8 @@ class FocusNoiseTool {
     route: '/focus-noise',
     accentColor: AppTheme.accentBlue,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameFocusNoise,
+    descriptionL10n: (l10n) => l10n.toolDescFocusNoise,
     createPage: (_) => const FocusNoisePage(),
   );
 }

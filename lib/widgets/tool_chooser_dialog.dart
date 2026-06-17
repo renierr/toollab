@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'responsive_alert_dialog.dart';

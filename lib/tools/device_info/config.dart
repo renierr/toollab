@@ -15,6 +15,8 @@ class DeviceInfoTool {
     route: '/device-info',
     accentColor: AppTheme.accentPurple,
     sectionId: 'info',
+    nameL10n: (l10n) => l10n.toolNameDeviceInfo,
+    descriptionL10n: (l10n) => l10n.toolDescDeviceInfo,
     createPage: (_) => const DeviceInfoPage(),
   );
 }

@@ -41,7 +41,7 @@ lib/tools/<name>/
 
 ## 2. Configuration & Metadata (`config.dart`)
 
-Define a static `const ToolModel` representing the tool inside `lib/tools/<name>/config.dart`:
+Define the tool's `ToolModel` inside `lib/tools/<name>/config.dart`. Use a `static ToolModel get config =>` getter (not `const`) — the localization resolvers below are closures, so the model can't be `const`:
 
 ```dart
 import 'package:flutter/material.dart';
@@ -51,14 +51,17 @@ import 'package:tool_lab/theme/theme.dart';
 class MyNewTool {
   MyNewTool._();
 
-  static const ToolModel config = ToolModel(
+  static ToolModel get config => ToolModel(
     id: 'my-new-tool',
-    name: 'My New Tool',
-    description: 'A brief explanation of what it does',
+    name: 'My New Tool',                          // raw English fallback
+    description: 'A brief explanation of what it does', // raw English fallback
     icon: Icons.star_outlined,
     route: '/my-new-tool',
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities', // 'utilities', 'sensors', etc.
+    // Localized name/description — see §2.2. Add the matching keys to both ARB files.
+    nameL10n: (l10n) => l10n.toolNameMyNewTool,
+    descriptionL10n: (l10n) => l10n.toolDescMyNewTool,
     fullscreen: true,       // Hides default AppBar, overlays floating back buttons
     shareTarget: ShareTargetConfig(
       accept: ['application/pdf', 'text/markdown'], // MIME types accepted by this tool
@@ -75,15 +78,27 @@ class MyNewTool {
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `id` | `String` | Unique string identifying the tool (used in routing and database namespaces). |
-| `name` | `String` | Human-readable display name of the tool. |
-| `description` | `String` | Brief text summarizing the tool's purpose (rendered on selection cards). |
+| `name` | `String` | Raw English display name. Acts as a fallback — the UI shows `nameL10n` when set. |
+| `description` | `String` | Raw English summary (fallback for `descriptionL10n`). |
 | `icon` | `IconData` | Icon representing the tool in drawers and chooser dialogs. |
 | `route` | `String` | Path mapping for GoRouter (e.g. `/my-new-tool`). |
 | `accentColor` | `Color` | Base thematic color (must reference AppTheme). |
 | `sectionId` | `String` | Category section in launchers (e.g. `'utilities'`, `'sensors'`). |
+| `nameL10n` | `String Function(AppLocalizations)?` | Localized name resolver, e.g. `(l10n) => l10n.toolNameMyTool`. Takes `AppLocalizations`, never a `BuildContext`. |
+| `descriptionL10n` | `String Function(AppLocalizations)?` | Localized description resolver. |
 | `fullscreen` | `bool` | Set `true` to hide standard AppBar and enable floating overlay buttons. |
 | `shareTarget` | `ShareTargetConfig?` | Declares accepted MIME types. Matches files shared natively or internally. |
 | `stateProviders` | `List<SingleChildWidget> Function()?` | Optional factory returning tool-specific `ChangeNotifierProvider`s. Auto-collected by `ToolRegistry.all` into `main.dart`. |
+
+### 2.2. Localizing the Tool Name & Description
+
+Tool names, descriptions, and section titles are **localized per-tool** — there is no central `id → string` switch. A new tool only edits its own `config.dart` plus the ARB files.
+
+1. Add keys to **both** `lib/l10n/app_en.arb` and `lib/l10n/app_de.arb` (template `en` first, e.g. `toolNameMyNewTool`, `toolDescMyNewTool`). German names may stay partly English where that reads better (`NFC Tag Lab`, `Fast Drop`).
+2. Set `nameL10n` / `descriptionL10n` in `config.dart` (see example above). Run `flutter gen-l10n`.
+3. Keep the raw `name` / `description` as sensible English fallbacks — they show if a resolver is omitted.
+4. **Never read `.name` / `.description` directly for UI.** Display code resolves the localized value via `tool.localizedName(l10n)` / `tool.localizedDescription(l10n)`. The tool's own page title (`ToolLayout(title: ...)`) must use `MyNewTool.config.localizedName(l10n)` too. Non-UI uses (DB keys, logs) may keep the raw `name`.
+5. Sections are localized the same way via `titleL10n` on `ToolSection` in `lib/core/tool_registry.dart`; read with `section.localizedTitle(l10n)`. You usually reuse an existing `sectionId` and don't touch this.
 
 ---
 

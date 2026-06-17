@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 import 'package:tool_lab/core/shared_file.dart';
-import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';

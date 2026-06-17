@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/constants.dart';
-import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/tool_registry.dart';

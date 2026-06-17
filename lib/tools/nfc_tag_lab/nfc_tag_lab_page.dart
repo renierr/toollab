@@ -7,7 +7,6 @@ import 'package:nfc_manager/ndef_record.dart';
 import 'package:nfc_manager/nfc_manager_android.dart';
 
 import 'package:nfc_manager_ndef/nfc_manager_ndef.dart';
-import 'package:tool_lab/core/tool_localization.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';

@@ -18,6 +18,8 @@ class FastDropTool {
     route: '/fast-drop',
     accentColor: AppTheme.accentTeal,
     sectionId: 'utilities',
+    nameL10n: (l10n) => l10n.toolNameFastDrop,
+    descriptionL10n: (l10n) => l10n.toolDescFastDrop,
     shareTarget: ShareTargetConfig(accept: ['*/*']),
     fileExtensions: const [],
     createPage: (sd) => FastDropPage(sharedData: sd),
