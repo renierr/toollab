@@ -72,7 +72,6 @@
   "chipMetricInstruments": "Instruments",
   "chipMetricBpm": "BPM",
   "chipMetricSpeed": "Speed",
-  "chipModArchiveTip": "Tip: most module collections live at modarchive.org",
   "chipPauseTooltip": "Pause",
   "chipPlayTooltip": "Play",
   "chipStopTooltip": "Stop",

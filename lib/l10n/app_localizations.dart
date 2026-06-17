@@ -512,12 +512,6 @@ abstract class AppLocalizations {
   /// **'Speed'**
   String get chipMetricSpeed;
 
-  /// No description provided for @chipModArchiveTip.
-  ///
-  /// In en, this message translates to:
-  /// **'Tip: most module collections live at modarchive.org'**
-  String get chipModArchiveTip;
-
   /// No description provided for @chipPauseTooltip.
   ///
   /// In en, this message translates to:

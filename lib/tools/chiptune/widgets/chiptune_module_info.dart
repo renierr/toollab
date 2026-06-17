@@ -14,7 +14,6 @@ class ChiptuneModuleInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final instrumentCount = module.instruments
         .where((i) => i.samples.isNotEmpty)
         .length;
@@ -54,13 +53,6 @@ class ChiptuneModuleInfo extends StatelessWidget {
                 value: '${module.defaultSpeed}',
               ),
             ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            l10n.chipModArchiveTip,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
           ),
         ],
       ),

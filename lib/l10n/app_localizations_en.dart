@@ -227,10 +227,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipMetricSpeed => 'Speed';
 
   @override
-  String get chipModArchiveTip =>
-      'Tip: most module collections live at modarchive.org';
-
-  @override
   String get chipPauseTooltip => 'Pause';
 
   @override
