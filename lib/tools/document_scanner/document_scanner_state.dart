@@ -9,6 +9,8 @@ import 'package:tool_lab/tools/document_scanner/utils/auto_crop_detector.dart';
 
 class ScannedPage {
   final String id;
+  final String originalFileName;
+  final String processedFileName;
   final String originalImagePath;
   final String processedImagePath;
   final List<Offset> corners;
@@ -19,6 +21,8 @@ class ScannedPage {
 
   const ScannedPage({
     required this.id,
+    required this.originalFileName,
+    required this.processedFileName,
     required this.originalImagePath,
     required this.processedImagePath,
     required this.corners,
@@ -29,6 +33,7 @@ class ScannedPage {
   });
 
   ScannedPage copyWith({
+    String? processedFileName,
     String? processedImagePath,
     List<Offset>? corners,
     DocumentFilterType? filter,
@@ -38,6 +43,8 @@ class ScannedPage {
   }) {
     return ScannedPage(
       id: id,
+      originalFileName: originalFileName,
+      processedFileName: processedFileName ?? this.processedFileName,
       originalImagePath: originalImagePath,
       processedImagePath: processedImagePath ?? this.processedImagePath,
       corners: corners ?? this.corners,
@@ -118,6 +125,8 @@ class DocumentScannerState extends ChangeNotifier {
 
       final page = ScannedPage(
         id: id,
+        originalFileName: origName,
+        processedFileName: procName,
         originalImagePath: originalImagePath,
         processedImagePath: processedImagePath,
         corners: corners,
@@ -142,7 +151,7 @@ class DocumentScannerState extends ChangeNotifier {
     _setProcessing(true, text: 'Warping image...');
     try {
       final page = _pages[index];
-      final origBytes = await File(page.originalImagePath).readAsBytes();
+      final origBytes = await _tempScope.readFile(page.originalFileName);
       final origImage = img.decodeImage(origBytes);
       if (origImage == null) throw Exception('Failed to decode original image');
 
@@ -159,10 +168,20 @@ class DocumentScannerState extends ChangeNotifier {
       final procBytes = Uint8List.fromList(
         img.encodeJpg(processedImage, quality: 90),
       );
-      // Overwrite the processed image file
-      await File(page.processedImagePath).writeAsBytes(procBytes);
+      final newProcName =
+          '${page.id}_processed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final newProcessedImagePath = await _tempScope.createFile(
+        newProcName,
+        bytes: procBytes,
+      );
+
+      try {
+        await _tempScope.deleteFile(page.processedFileName);
+      } catch (_) {}
 
       _pages[index] = page.copyWith(
+        processedFileName: newProcName,
+        processedImagePath: newProcessedImagePath,
         corners: newCorners,
         width: processedImage.width.toDouble(),
         height: processedImage.height.toDouble(),
@@ -181,7 +200,7 @@ class DocumentScannerState extends ChangeNotifier {
     _setProcessing(true, text: 'Applying filter...');
     try {
       final page = _pages[index];
-      final origBytes = await File(page.originalImagePath).readAsBytes();
+      final origBytes = await _tempScope.readFile(page.originalFileName);
       final origImage = img.decodeImage(origBytes);
       if (origImage == null) throw Exception('Failed to decode original image');
 
@@ -198,9 +217,20 @@ class DocumentScannerState extends ChangeNotifier {
       final procBytes = Uint8List.fromList(
         img.encodeJpg(processedImage, quality: 90),
       );
-      await File(page.processedImagePath).writeAsBytes(procBytes);
+      final newProcName =
+          '${page.id}_processed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final newProcessedImagePath = await _tempScope.createFile(
+        newProcName,
+        bytes: procBytes,
+      );
+
+      try {
+        await _tempScope.deleteFile(page.processedFileName);
+      } catch (_) {}
 
       _pages[index] = page.copyWith(
+        processedFileName: newProcName,
+        processedImagePath: newProcessedImagePath,
         filter: filter,
         width: processedImage.width.toDouble(),
         height: processedImage.height.toDouble(),
@@ -221,7 +251,7 @@ class DocumentScannerState extends ChangeNotifier {
       final page = _pages[index];
       final newRotation = (page.rotation + angleDegrees) % 360;
 
-      final origBytes = await File(page.originalImagePath).readAsBytes();
+      final origBytes = await _tempScope.readFile(page.originalFileName);
       final origImage = img.decodeImage(origBytes);
       if (origImage == null) throw Exception('Failed to decode original image');
 
@@ -238,9 +268,20 @@ class DocumentScannerState extends ChangeNotifier {
       final procBytes = Uint8List.fromList(
         img.encodeJpg(processedImage, quality: 90),
       );
-      await File(page.processedImagePath).writeAsBytes(procBytes);
+      final newProcName =
+          '${page.id}_processed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final newProcessedImagePath = await _tempScope.createFile(
+        newProcName,
+        bytes: procBytes,
+      );
+
+      try {
+        await _tempScope.deleteFile(page.processedFileName);
+      } catch (_) {}
 
       _pages[index] = page.copyWith(
+        processedFileName: newProcName,
+        processedImagePath: newProcessedImagePath,
         rotation: newRotation,
         width: processedImage.width.toDouble(),
         height: processedImage.height.toDouble(),
@@ -260,8 +301,8 @@ class DocumentScannerState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await File(page.originalImagePath).delete();
-      await File(page.processedImagePath).delete();
+      await _tempScope.deleteFile(page.originalFileName);
+      await _tempScope.deleteFile(page.processedFileName);
     } catch (e) {
       debugPrint(
         '[DocumentScannerState] Warning: Failed to delete page files: $e',
