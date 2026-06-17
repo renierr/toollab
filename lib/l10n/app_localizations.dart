@@ -4873,6 +4873,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to save QR code: {error}'**
   String qrSaveFailed(String error);
+
+  /// Name of the Document Scanner tool
+  ///
+  /// In en, this message translates to:
+  /// **'Document Scanner'**
+  String get toolNameDocumentScanner;
+
+  /// Description of the Document Scanner tool
+  ///
+  /// In en, this message translates to:
+  /// **'Scan documents via camera, adjust crop/skew, apply filters, and compile to PDF'**
+  String get toolDescDocumentScanner;
+
+  /// No description provided for @docScanNoPages.
+  ///
+  /// In en, this message translates to:
+  /// **'No scanned pages yet'**
+  String get docScanNoPages;
+
+  /// No description provided for @docScanAddHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add pages using the camera or gallery'**
+  String get docScanAddHint;
+
+  /// No description provided for @docScanPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {number}'**
+  String docScanPageTitle(int number);
+
+  /// No description provided for @docScanFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter: {filter}'**
+  String docScanFilterLabel(String filter);
+
+  /// No description provided for @docScanRotationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rot: {rotation}°'**
+  String docScanRotationLabel(int rotation);
+
+  /// No description provided for @docScanSizeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Size: {width}x{height}'**
+  String docScanSizeLabel(int width, int height);
+
+  /// No description provided for @docScanEditPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Page {number}'**
+  String docScanEditPageTitle(int number);
+
+  /// No description provided for @docScanRotateL.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate L'**
+  String get docScanRotateL;
+
+  /// No description provided for @docScanRotateR.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotate R'**
+  String get docScanRotateR;
+
+  /// No description provided for @docScanCropWarp.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop & Warp'**
+  String get docScanCropWarp;
+
+  /// No description provided for @docScanFiltersHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get docScanFiltersHeading;
+
+  /// No description provided for @docScanFilterOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get docScanFilterOriginal;
+
+  /// No description provided for @docScanFilterGrayscale.
+  ///
+  /// In en, this message translates to:
+  /// **'Grayscale'**
+  String get docScanFilterGrayscale;
+
+  /// No description provided for @docScanFilterBw.
+  ///
+  /// In en, this message translates to:
+  /// **'B&W'**
+  String get docScanFilterBw;
+
+  /// No description provided for @docScanFilterClean.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean Doc'**
+  String get docScanFilterClean;
+
+  /// No description provided for @docScanClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All Pages'**
+  String get docScanClearTitle;
+
+  /// No description provided for @docScanClearMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete all scanned pages? This cannot be undone.'**
+  String get docScanClearMessage;
+
+  /// No description provided for @docScanClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All'**
+  String get docScanClearConfirm;
+
+  /// No description provided for @docScanActionScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Page'**
+  String get docScanActionScan;
+
+  /// No description provided for @docScanActionGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Gallery'**
+  String get docScanActionGallery;
+
+  /// No description provided for @docScanActionSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save PDF Document'**
+  String get docScanActionSave;
+
+  /// No description provided for @docScanGeneratingPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating PDF Document...'**
+  String get docScanGeneratingPdf;
+
+  /// No description provided for @docScanSavedPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF saved to {path}'**
+  String docScanSavedPdf(String path);
+
+  /// No description provided for @docScanFailedPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save PDF: {error}'**
+  String docScanFailedPdf(String error);
+
+  /// No description provided for @docScanFailedCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF creation failed: {error}'**
+  String docScanFailedCreate(String error);
+
+  /// No description provided for @docScanFailedCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera capture failed: {error}'**
+  String docScanFailedCamera(String error);
+
+  /// No description provided for @docScanFailedGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to pick image: {error}'**
+  String docScanFailedGallery(String error);
+
+  /// No description provided for @docScanCropReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Full'**
+  String get docScanCropReset;
+
+  /// No description provided for @docScanCropUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get docScanCropUndo;
+
+  /// No description provided for @docScanCropApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get docScanCropApply;
+
+  /// No description provided for @docScanCropCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get docScanCropCancel;
 }
 
 class _AppLocalizationsDelegate

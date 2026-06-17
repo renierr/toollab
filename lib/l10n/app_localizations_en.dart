@@ -2702,4 +2702,125 @@ class AppLocalizationsEn extends AppLocalizations {
   String qrSaveFailed(String error) {
     return 'Failed to save QR code: $error';
   }
+
+  @override
+  String get toolNameDocumentScanner => 'Document Scanner';
+
+  @override
+  String get toolDescDocumentScanner =>
+      'Scan documents via camera, adjust crop/skew, apply filters, and compile to PDF';
+
+  @override
+  String get docScanNoPages => 'No scanned pages yet';
+
+  @override
+  String get docScanAddHint => 'Add pages using the camera or gallery';
+
+  @override
+  String docScanPageTitle(int number) {
+    return 'Page $number';
+  }
+
+  @override
+  String docScanFilterLabel(String filter) {
+    return 'Filter: $filter';
+  }
+
+  @override
+  String docScanRotationLabel(int rotation) {
+    return 'Rot: $rotation°';
+  }
+
+  @override
+  String docScanSizeLabel(int width, int height) {
+    return 'Size: ${width}x$height';
+  }
+
+  @override
+  String docScanEditPageTitle(int number) {
+    return 'Edit Page $number';
+  }
+
+  @override
+  String get docScanRotateL => 'Rotate L';
+
+  @override
+  String get docScanRotateR => 'Rotate R';
+
+  @override
+  String get docScanCropWarp => 'Crop & Warp';
+
+  @override
+  String get docScanFiltersHeading => 'Filters';
+
+  @override
+  String get docScanFilterOriginal => 'Original';
+
+  @override
+  String get docScanFilterGrayscale => 'Grayscale';
+
+  @override
+  String get docScanFilterBw => 'B&W';
+
+  @override
+  String get docScanFilterClean => 'Clean Doc';
+
+  @override
+  String get docScanClearTitle => 'Clear All Pages';
+
+  @override
+  String get docScanClearMessage =>
+      'Are you sure you want to delete all scanned pages? This cannot be undone.';
+
+  @override
+  String get docScanClearConfirm => 'Delete All';
+
+  @override
+  String get docScanActionScan => 'Scan Page';
+
+  @override
+  String get docScanActionGallery => 'Import from Gallery';
+
+  @override
+  String get docScanActionSave => 'Save PDF Document';
+
+  @override
+  String get docScanGeneratingPdf => 'Generating PDF Document...';
+
+  @override
+  String docScanSavedPdf(String path) {
+    return 'PDF saved to $path';
+  }
+
+  @override
+  String docScanFailedPdf(String error) {
+    return 'Failed to save PDF: $error';
+  }
+
+  @override
+  String docScanFailedCreate(String error) {
+    return 'PDF creation failed: $error';
+  }
+
+  @override
+  String docScanFailedCamera(String error) {
+    return 'Camera capture failed: $error';
+  }
+
+  @override
+  String docScanFailedGallery(String error) {
+    return 'Failed to pick image: $error';
+  }
+
+  @override
+  String get docScanCropReset => 'Reset to Full';
+
+  @override
+  String get docScanCropUndo => 'Undo';
+
+  @override
+  String get docScanCropApply => 'Apply';
+
+  @override
+  String get docScanCropCancel => 'Cancel';
 }

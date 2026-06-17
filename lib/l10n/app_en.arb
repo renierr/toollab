@@ -1601,5 +1601,117 @@
         "type": "String"
       }
     }
-  }
+  },
+  "toolNameDocumentScanner": "Document Scanner",
+  "@toolNameDocumentScanner": {
+    "description": "Name of the Document Scanner tool"
+  },
+  "toolDescDocumentScanner": "Scan documents via camera, adjust crop/skew, apply filters, and compile to PDF",
+  "@toolDescDocumentScanner": {
+    "description": "Description of the Document Scanner tool"
+  },
+  "docScanNoPages": "No scanned pages yet",
+  "docScanAddHint": "Add pages using the camera or gallery",
+  "docScanPageTitle": "Page {number}",
+  "@docScanPageTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "docScanFilterLabel": "Filter: {filter}",
+  "@docScanFilterLabel": {
+    "placeholders": {
+      "filter": {
+        "type": "String"
+      }
+    }
+  },
+  "docScanRotationLabel": "Rot: {rotation}°",
+  "@docScanRotationLabel": {
+    "placeholders": {
+      "rotation": {
+        "type": "int"
+      }
+    }
+  },
+  "docScanSizeLabel": "Size: {width}x{height}",
+  "@docScanSizeLabel": {
+    "placeholders": {
+      "width": {
+        "type": "int"
+      },
+      "height": {
+        "type": "int"
+      }
+    }
+  },
+  "docScanEditPageTitle": "Edit Page {number}",
+  "@docScanEditPageTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "docScanRotateL": "Rotate L",
+  "docScanRotateR": "Rotate R",
+  "docScanCropWarp": "Crop & Warp",
+  "docScanFiltersHeading": "Filters",
+  "docScanFilterOriginal": "Original",
+  "docScanFilterGrayscale": "Grayscale",
+  "docScanFilterBw": "B&W",
+  "docScanFilterClean": "Clean Doc",
+  "docScanClearTitle": "Clear All Pages",
+  "docScanClearMessage": "Are you sure you want to delete all scanned pages? This cannot be undone.",
+  "docScanClearConfirm": "Delete All",
+  "docScanActionScan": "Scan Page",
+  "docScanActionGallery": "Import from Gallery",
+  "docScanActionSave": "Save PDF Document",
+  "docScanGeneratingPdf": "Generating PDF Document...",
+  "docScanSavedPdf": "PDF saved to {path}",
+  "@docScanSavedPdf": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "docScanFailedPdf": "Failed to save PDF: {error}",
+  "@docScanFailedPdf": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "docScanFailedCreate": "PDF creation failed: {error}",
+  "@docScanFailedCreate": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "docScanFailedCamera": "Camera capture failed: {error}",
+  "@docScanFailedCamera": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "docScanFailedGallery": "Failed to pick image: {error}",
+  "@docScanFailedGallery": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "docScanCropReset": "Reset to Full",
+  "docScanCropUndo": "Undo",
+  "docScanCropApply": "Apply",
+  "docScanCropCancel": "Cancel"
 }

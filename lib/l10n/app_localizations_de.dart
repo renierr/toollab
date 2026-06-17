@@ -2726,4 +2726,126 @@ class AppLocalizationsDe extends AppLocalizations {
   String qrSaveFailed(String error) {
     return 'QR-Code konnte nicht gespeichert werden: $error';
   }
+
+  @override
+  String get toolNameDocumentScanner => 'Dokumentenscanner';
+
+  @override
+  String get toolDescDocumentScanner =>
+      'Dokumente per Kamera scannen, Zuschnitt/Verzerrung anpassen, Filter anwenden und als PDF zusammenstellen';
+
+  @override
+  String get docScanNoPages => 'Noch keine gescannten Seiten';
+
+  @override
+  String get docScanAddHint =>
+      'Fügen Sie Seiten mit der Kamera oder Galerie hinzu';
+
+  @override
+  String docScanPageTitle(int number) {
+    return 'Seite $number';
+  }
+
+  @override
+  String docScanFilterLabel(String filter) {
+    return 'Filter: $filter';
+  }
+
+  @override
+  String docScanRotationLabel(int rotation) {
+    return 'Drehung: $rotation°';
+  }
+
+  @override
+  String docScanSizeLabel(int width, int height) {
+    return 'Größe: ${width}x$height';
+  }
+
+  @override
+  String docScanEditPageTitle(int number) {
+    return 'Seite $number bearbeiten';
+  }
+
+  @override
+  String get docScanRotateL => 'Links drehen';
+
+  @override
+  String get docScanRotateR => 'Rechts drehen';
+
+  @override
+  String get docScanCropWarp => 'Zuschneiden & Entzerren';
+
+  @override
+  String get docScanFiltersHeading => 'Filter';
+
+  @override
+  String get docScanFilterOriginal => 'Original';
+
+  @override
+  String get docScanFilterGrayscale => 'Graustufen';
+
+  @override
+  String get docScanFilterBw => 'Schwarz-Weiß';
+
+  @override
+  String get docScanFilterClean => 'Dokument bereinigen';
+
+  @override
+  String get docScanClearTitle => 'Alle Seiten löschen';
+
+  @override
+  String get docScanClearMessage =>
+      'Sind Sie sicher, dass Sie alle gescannten Seiten löschen möchten? Dies kann nicht rückgängig gemacht werden.';
+
+  @override
+  String get docScanClearConfirm => 'Alle löschen';
+
+  @override
+  String get docScanActionScan => 'Seite scannen';
+
+  @override
+  String get docScanActionGallery => 'Aus Galerie importieren';
+
+  @override
+  String get docScanActionSave => 'PDF-Dokument speichern';
+
+  @override
+  String get docScanGeneratingPdf => 'PDF-Dokument wird erstellt...';
+
+  @override
+  String docScanSavedPdf(String path) {
+    return 'PDF gespeichert unter $path';
+  }
+
+  @override
+  String docScanFailedPdf(String error) {
+    return 'PDF konnte nicht gespeichert werden: $error';
+  }
+
+  @override
+  String docScanFailedCreate(String error) {
+    return 'PDF-Erstellung fehlgeschlagen: $error';
+  }
+
+  @override
+  String docScanFailedCamera(String error) {
+    return 'Kameraaufnahme fehlgeschlagen: $error';
+  }
+
+  @override
+  String docScanFailedGallery(String error) {
+    return 'Bildauswahl fehlgeschlagen: $error';
+  }
+
+  @override
+  String get docScanCropReset => 'Zurücksetzen';
+
+  @override
+  String get docScanCropUndo => 'Rückgängig';
+
+  @override
+  String get docScanCropApply => 'Anwenden';
+
+  @override
+  String get docScanCropCancel => 'Abbrechen';
 }

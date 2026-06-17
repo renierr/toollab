@@ -16,6 +16,7 @@ import 'package:tool_lab/tools/chiptune/config.dart';
 import 'package:tool_lab/tools/focus_noise/config.dart';
 import 'package:tool_lab/tools/signatures/config.dart';
 import 'package:tool_lab/tools/qr_code/config.dart';
+import 'package:tool_lab/tools/document_scanner/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -56,5 +57,6 @@ class ToolRegistry {
     FocusNoiseTool.config,
     SignaturesTool.config,
     QrCodeTool.config,
+    DocumentScannerTool.config,
   ];
 }
