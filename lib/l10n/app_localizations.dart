@@ -4589,7 +4589,7 @@ abstract class AppLocalizations {
   /// No description provided for @qrScannerEngineMlKit.
   ///
   /// In en, this message translates to:
-  /// **'Google ML Kit'**
+  /// **'ML Kit'**
   String get qrScannerEngineMlKit;
 
   /// No description provided for @qrImagesLabel.

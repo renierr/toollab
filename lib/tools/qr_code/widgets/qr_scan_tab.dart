@@ -44,7 +44,7 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
     super.initState();
     _scope = TempFileManager.createScope();
     onDispose(() => _scope.cleanTracked());
-    _cameraMode = _cameraSupported;
+    _cameraMode = false;
     _loadSettings();
   }
 
@@ -201,19 +201,17 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              _EngineToggle(
+                engine: _engine,
+                accentColor: _accent,
+                onChanged: _saveSetting,
+              ),
+              const SizedBox(height: 8),
               _ScanModeToggle(
                 cameraMode: _cameraMode,
                 accentColor: _accent,
                 onChanged: (camera) => setState(() => _cameraMode = camera),
               ),
-              if (_cameraMode) ...[
-                const SizedBox(height: 8),
-                _EngineToggle(
-                  engine: _engine,
-                  accentColor: _accent,
-                  onChanged: _saveSetting,
-                ),
-              ],
             ],
           ),
         ),

@@ -1554,7 +1554,7 @@
   "qrModeCamera": "Camera",
   "qrModeImage": "Image",
   "qrScannerEngineZxing": "ZXing",
-  "qrScannerEngineMlKit": "Google ML Kit",
+  "qrScannerEngineMlKit": "ML Kit",
   "qrImagesLabel": "Images",
   "qrScanDropTitle": "Scan a QR code from an image",
   "qrScanDropSubtitle": "Drop an image here, or browse to pick one",

@@ -2563,7 +2563,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrScannerEngineZxing => 'ZXing';
 
   @override
-  String get qrScannerEngineMlKit => 'Google ML Kit';
+  String get qrScannerEngineMlKit => 'ML Kit';
 
   @override
   String get qrImagesLabel => 'Images';

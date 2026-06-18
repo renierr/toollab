@@ -127,7 +127,7 @@ class QrCodec {
     return null;
   }
 
-  /// Decodes the first QR/barcode found in the image at [path] using Google ML Kit.
+  /// Decodes the first QR/barcode found in the image at [path] using ML Kit.
   /// Decodes an image file using ML Kit, returning text, bounding box, and size.
   static Future<QrDecodeResult?> decodeImageFileMlKit(String path) async {
     try {

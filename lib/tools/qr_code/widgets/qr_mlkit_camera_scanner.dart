@@ -10,7 +10,7 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'qr_scan_line_overlay.dart';
 import 'yuv_to_jpeg.dart';
 
-/// Camera scanner that uses Google ML Kit Barcode Scanning.
+/// Camera scanner that uses ML Kit Barcode Scanning.
 /// Designed for Android. Handles stream conversions and overlays.
 class QrMlKitCameraScanner extends StatefulWidget {
   final Color accentColor;

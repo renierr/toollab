@@ -828,7 +828,7 @@
   "qrModeCamera": "Kamera",
   "qrModeImage": "Bild",
   "qrScannerEngineZxing": "ZXing",
-  "qrScannerEngineMlKit": "Google ML Kit",
+  "qrScannerEngineMlKit": "ML Kit",
   "qrImagesLabel": "Bilder",
   "qrScanDropTitle": "QR-Code aus einem Bild scannen",
   "qrScanDropSubtitle": "Bild hierher ziehen oder eines auswählen",
