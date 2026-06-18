@@ -5,18 +5,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 
 import 'qr_scan_line_overlay.dart';
+import 'yuv_to_jpeg.dart';
 
 /// Camera scanner that uses Google ML Kit Barcode Scanning.
 /// Designed for Android. Handles stream conversions and overlays.
 class QrMlKitCameraScanner extends StatefulWidget {
   final Color accentColor;
-  final ValueChanged<String> onDetected;
+  final TempFileScope scope;
+  final Function(
+    String text,
+    Rect? boundingBox,
+    Size? frameSize,
+    String? imagePath,
+  )
+  onDetected;
 
   const QrMlKitCameraScanner({
     super.key,
     required this.accentColor,
+    required this.scope,
     required this.onDetected,
   });
 
@@ -97,7 +107,30 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
 
     _isProcessing = true;
     try {
-      final inputImage = _inputImageFromCameraImage(image, camera);
+      if (_controller == null) return;
+      final sensorOrientation = camera.sensorOrientation;
+
+      InputImageRotation? rotation;
+      int rotationCompensation = 0;
+      if (Platform.isAndroid) {
+        final deviceOrientation = _controller!.value.deviceOrientation;
+        final compensation = _orientations[deviceOrientation];
+        if (compensation == null) return;
+
+        if (camera.lensDirection == CameraLensDirection.front) {
+          rotationCompensation = (sensorOrientation + compensation) % 360;
+        } else {
+          rotationCompensation = (sensorOrientation - compensation + 360) % 360;
+        }
+        rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
+      } else {
+        rotationCompensation = sensorOrientation;
+        rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+      }
+
+      if (rotation == null) return;
+
+      final inputImage = _inputImageFromCameraImage(image, rotation);
       if (inputImage == null) return;
 
       final barcodes = await _barcodeScanner!.processImage(inputImage);
@@ -105,9 +138,25 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
 
       for (final barcode in barcodes) {
         final rawValue = barcode.rawValue;
+        final rect = barcode.boundingBox;
         if (rawValue != null && rawValue.isNotEmpty) {
           _handled = true;
-          widget.onDetected(rawValue);
+
+          final result = convertNv21ToJpeg(
+            image: image,
+            rotationDegrees: rotationCompensation,
+            barcodeRect: rect,
+          );
+          final path = await widget.scope.createFile(
+            'scan_capture_${DateTime.now().millisecondsSinceEpoch}.jpg',
+            bytes: result.jpegBytes,
+          );
+          final rotatedRect = result.rotatedRect;
+          final rotatedSize = result.rotatedSize;
+
+          if (mounted) {
+            widget.onDetected(rawValue, rotatedRect, rotatedSize, path);
+          }
           break;
         }
       }
@@ -120,31 +169,13 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
 
   InputImage? _inputImageFromCameraImage(
     CameraImage image,
-    CameraDescription camera,
+    InputImageRotation rotation,
   ) {
-    if (_controller == null) return null;
-
-    final sensorOrientation = camera.sensorOrientation;
-
-    InputImageRotation? rotation;
-    if (Platform.isAndroid) {
-      var rotationCompensation =
-          _orientations[_controller!.value.deviceOrientation];
-      if (rotationCompensation == null) return null;
-
-      if (camera.lensDirection == CameraLensDirection.front) {
-        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
-      } else {
-        rotationCompensation =
-            (sensorOrientation - rotationCompensation + 360) % 360;
-      }
-      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
-    }
-
-    if (rotation == null) return null;
-
-    final format = InputImageFormatValue.fromRawValue(image.format.raw);
-    if (format == null) return null;
+    final format =
+        InputImageFormatValue.fromRawValue(image.format.raw) ??
+        (Platform.isAndroid
+            ? InputImageFormat.nv21
+            : InputImageFormat.bgra8888);
 
     final WriteBuffer allBytes = WriteBuffer();
     for (final Plane plane in image.planes) {

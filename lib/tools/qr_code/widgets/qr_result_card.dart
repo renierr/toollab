@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -16,6 +17,9 @@ class QrResultCard extends StatelessWidget {
   final Color accentColor;
   final TempFileScope scope;
   final VoidCallback onScanAgain;
+  final String? capturedImagePath;
+  final Rect? barcodeRect;
+  final Size? cameraImageSize;
 
   const QrResultCard({
     super.key,
@@ -23,6 +27,9 @@ class QrResultCard extends StatelessWidget {
     required this.accentColor,
     required this.scope,
     required this.onScanAgain,
+    this.capturedImagePath,
+    this.barcodeRect,
+    this.cameraImageSize,
   });
 
   _ScanKind _detectKind() {
@@ -172,6 +179,31 @@ class QrResultCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (capturedImagePath != null &&
+                    barcodeRect != null &&
+                    cameraImageSize != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      children: [
+                        Image.file(
+                          File(capturedImagePath!),
+                          fit: BoxFit.contain,
+                        ),
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: _BarcodeBoxPainter(
+                              barcodeRect: barcodeRect!,
+                              cameraImageSize: cameraImageSize!,
+                              accentColor: accentColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
@@ -231,3 +263,44 @@ class QrResultCard extends StatelessWidget {
 }
 
 enum _ScanKind { link, wifi, email, phone, sms, location, contact, text }
+
+class _BarcodeBoxPainter extends CustomPainter {
+  final Rect barcodeRect;
+  final Size cameraImageSize;
+  final Color accentColor;
+
+  const _BarcodeBoxPainter({
+    required this.barcodeRect,
+    required this.cameraImageSize,
+    required this.accentColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double scaleX = size.width / cameraImageSize.width;
+    final double scaleY = size.height / cameraImageSize.height;
+
+    final scaledRect = Rect.fromLTRB(
+      barcodeRect.left * scaleX,
+      barcodeRect.top * scaleY,
+      barcodeRect.right * scaleX,
+      barcodeRect.bottom * scaleY,
+    );
+
+    final paint = Paint()
+      ..color = accentColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0
+      ..strokeCap = StrokeCap.round;
+
+    final rrect = RRect.fromRectAndRadius(scaledRect, const Radius.circular(8));
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BarcodeBoxPainter oldDelegate) {
+    return oldDelegate.barcodeRect != barcodeRect ||
+        oldDelegate.cameraImageSize != cameraImageSize ||
+        oldDelegate.accentColor != accentColor;
+  }
+}

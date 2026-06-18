@@ -33,6 +33,10 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
   int _seq = 0;
   String _engine = 'zxing';
 
+  String? _capturedImagePath;
+  Rect? _barcodeRect;
+  Size? _cameraImageSize;
+
   bool get _cameraSupported => Platform.isAndroid;
 
   @override
@@ -125,7 +129,17 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
         text: _result!,
         accentColor: _accent,
         scope: _scope,
-        onScanAgain: () => setState(() => _result = null),
+        onScanAgain: () {
+          setState(() {
+            _result = null;
+            _capturedImagePath = null;
+            _barcodeRect = null;
+            _cameraImageSize = null;
+          });
+        },
+        capturedImagePath: _capturedImagePath,
+        barcodeRect: _barcodeRect,
+        cameraImageSize: _cameraImageSize,
       );
     }
 
@@ -133,7 +147,15 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
     if (_engine == 'mlkit') {
       cameraView = QrMlKitCameraScanner(
         accentColor: _accent,
-        onDetected: (text) => setState(() => _result = text),
+        scope: _scope,
+        onDetected: (text, rect, size, path) {
+          setState(() {
+            _result = text;
+            _barcodeRect = rect;
+            _cameraImageSize = size;
+            _capturedImagePath = path;
+          });
+        },
       );
     } else {
       cameraView = QrCameraScanner(
