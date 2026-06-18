@@ -286,10 +286,6 @@ class _BarcodeBoxPainter extends CustomPainter {
     final double scaleX = size.width / cameraImageSize.width;
     final double scaleY = size.height / cameraImageSize.height;
 
-    debugPrint(
-      '[BarcodeBoxPainter] size=$size, cameraImageSize=$cameraImageSize, barcodeRect=$barcodeRect, scaleX=$scaleX, scaleY=$scaleY',
-    );
-
     final scaledRect = Rect.fromLTRB(
       barcodeRect.left * scaleX,
       barcodeRect.top * scaleY,

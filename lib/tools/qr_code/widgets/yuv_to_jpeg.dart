@@ -113,10 +113,6 @@ ConversionResult convertNv21ToJpeg({
     rotatedSize = Size(height.toDouble(), width.toDouble());
   }
 
-  debugPrint(
-    '[convertNv21ToJpeg] rotation=$rotationDegrees, rawRect=$barcodeRect, rotatedSize=$rotatedSize',
-  );
-
   final jpeg = img.encodeJpg(finalImage, quality: 85);
   return ConversionResult(
     jpegBytes: Uint8List.fromList(jpeg),
