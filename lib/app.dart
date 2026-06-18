@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -210,6 +211,7 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
     return MaterialApp.router(
+      scrollBehavior: const AppScrollBehavior(),
       title: AppConstants.appName,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
@@ -221,4 +223,16 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
     );
   }
+}
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
 }
