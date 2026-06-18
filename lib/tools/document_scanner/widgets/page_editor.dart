@@ -76,27 +76,31 @@ class PageEditor extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Action buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _ActionButton(
-                        icon: Icons.rotate_left_outlined,
-                        label: l10n.docScanRotateL,
-                        onPressed: () => onRotate(-90),
-                      ),
-                      _ActionButton(
-                        icon: Icons.rotate_right_outlined,
-                        label: l10n.docScanRotateR,
-                        onPressed: () => onRotate(90),
-                      ),
-                      _ActionButton(
-                        icon: Icons.crop_outlined,
-                        label: l10n.docScanCropWarp,
-                        onPressed: onAdjustCrop,
-                        primary: true,
-                        accentColor: accentColor,
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _ActionButton(
+                          icon: Icons.crop_outlined,
+                          label: l10n.docScanCropWarp,
+                          onPressed: onAdjustCrop,
+                          primary: true,
+                          accentColor: accentColor,
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionButton(
+                          icon: Icons.rotate_left_outlined,
+                          label: l10n.docScanRotateL,
+                          onPressed: () => onRotate(-90),
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionButton(
+                          icon: Icons.rotate_right_outlined,
+                          label: l10n.docScanRotateR,
+                          onPressed: () => onRotate(90),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
 
