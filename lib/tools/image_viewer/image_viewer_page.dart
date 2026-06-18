@@ -385,9 +385,15 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                           await _controller.segmentSubject();
                           _onResetZoom();
                         } catch (e) {
-                          _showError(
-                            l10n.imgViewSegmentSubjectFailed(e.toString()),
-                          );
+                          final errorMsg = e.toString();
+                          if (errorMsg.contains("Waiting for") ||
+                              errorMsg.contains("download")) {
+                            _showError(l10n.imgViewSegmentSubjectDownloading);
+                          } else {
+                            _showError(
+                              l10n.imgViewSegmentSubjectFailed(errorMsg),
+                            );
+                          }
                         }
                       }
                     : null,

@@ -1227,6 +1227,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get imgViewSegmentSubjectDownloading =>
+      'Google Play Services is downloading the required machine learning model. Please wait a minute and try again.';
+
+  @override
   String get levelSensorsUnavailable => 'Sensors not available on this device.';
 
   @override

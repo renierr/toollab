@@ -2276,6 +2276,12 @@ abstract class AppLocalizations {
   /// **'Failed to segment subject: {error}'**
   String imgViewSegmentSubjectFailed(String error);
 
+  /// No description provided for @imgViewSegmentSubjectDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play Services is downloading the required machine learning model. Please wait a minute and try again.'**
+  String get imgViewSegmentSubjectDownloading;
+
   /// No description provided for @levelSensorsUnavailable.
   ///
   /// In en, this message translates to:

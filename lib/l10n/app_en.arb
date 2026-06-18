@@ -671,6 +671,7 @@
       }
     }
   },
+  "imgViewSegmentSubjectDownloading": "Google Play Services is downloading the required machine learning model. Please wait a minute and try again.",
   "levelSensorsUnavailable": "Sensors not available on this device.",
   "levelCalibratedToZero": "Surface calibrated to zero.",
   "levelCalibrationReset": "Calibration reset.",
