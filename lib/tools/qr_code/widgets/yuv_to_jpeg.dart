@@ -99,43 +99,28 @@ ConversionResult convertNv21ToJpeg({
     }
   }
 
-  // Rotate image and coordinates
+  // Rotate image
   img.Image finalImage = rgbImage;
-  Rect rotatedRect = barcodeRect;
   Size rotatedSize = Size(width.toDouble(), height.toDouble());
 
   if (rotationDegrees == 90) {
     finalImage = img.copyRotate(rgbImage, angle: 90);
     rotatedSize = Size(height.toDouble(), width.toDouble());
-    rotatedRect = Rect.fromLTRB(
-      height - barcodeRect.bottom,
-      barcodeRect.left,
-      height - barcodeRect.top,
-      barcodeRect.right,
-    );
   } else if (rotationDegrees == 180) {
     finalImage = img.copyRotate(rgbImage, angle: 180);
-    rotatedRect = Rect.fromLTRB(
-      width - barcodeRect.right,
-      height - barcodeRect.bottom,
-      width - barcodeRect.left,
-      height - barcodeRect.top,
-    );
   } else if (rotationDegrees == 270) {
     finalImage = img.copyRotate(rgbImage, angle: 270);
     rotatedSize = Size(height.toDouble(), width.toDouble());
-    rotatedRect = Rect.fromLTRB(
-      barcodeRect.top,
-      width - barcodeRect.right,
-      barcodeRect.bottom,
-      width - barcodeRect.left,
-    );
   }
+
+  debugPrint(
+    '[convertNv21ToJpeg] rotation=$rotationDegrees, rawRect=$barcodeRect, rotatedSize=$rotatedSize',
+  );
 
   final jpeg = img.encodeJpg(finalImage, quality: 85);
   return ConversionResult(
     jpegBytes: Uint8List.fromList(jpeg),
-    rotatedRect: rotatedRect,
+    rotatedRect: barcodeRect,
     rotatedSize: rotatedSize,
   );
 }

@@ -182,24 +182,30 @@ class QrResultCard extends StatelessWidget {
                 if (capturedImagePath != null &&
                     barcodeRect != null &&
                     cameraImageSize != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Stack(
-                      children: [
-                        Image.file(
-                          File(capturedImagePath!),
-                          fit: BoxFit.contain,
-                        ),
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _BarcodeBoxPainter(
-                              barcodeRect: barcodeRect!,
-                              cameraImageSize: cameraImageSize!,
-                              accentColor: accentColor,
+                  AspectRatio(
+                    aspectRatio:
+                        cameraImageSize!.width / cameraImageSize!.height,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Image.file(
+                              File(capturedImagePath!),
+                              fit: BoxFit.fill,
                             ),
                           ),
-                        ),
-                      ],
+                          Positioned.fill(
+                            child: CustomPaint(
+                              painter: _BarcodeBoxPainter(
+                                barcodeRect: barcodeRect!,
+                                cameraImageSize: cameraImageSize!,
+                                accentColor: accentColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -279,6 +285,10 @@ class _BarcodeBoxPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final double scaleX = size.width / cameraImageSize.width;
     final double scaleY = size.height / cameraImageSize.height;
+
+    debugPrint(
+      '[BarcodeBoxPainter] size=$size, cameraImageSize=$cameraImageSize, barcodeRect=$barcodeRect, scaleX=$scaleX, scaleY=$scaleY',
+    );
 
     final scaledRect = Rect.fromLTRB(
       barcodeRect.left * scaleX,
