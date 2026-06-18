@@ -46,8 +46,8 @@ class QrCodec {
   }
 
   /// Decodes the first QR/barcode found in the image at [path].
-  /// Returns the decoded text, or null when nothing is detected.
-  static Future<String?> decodeImageFile(String path) async {
+  /// Returns the decoded text, bounding box, and size, or null when nothing is detected.
+  static Future<QrDecodeResult?> decodeImageFile(String path) async {
     try {
       final Code result = await zx.readBarcodeImagePathString(
         path,
@@ -61,8 +61,65 @@ class QrCodec {
           tryInverted: true,
         ),
       );
-      if (result.isValid && (result.text?.isNotEmpty ?? false)) {
-        return result.text;
+      final text = result.text;
+      if (result.isValid && text != null && text.isNotEmpty) {
+        Size? size;
+        try {
+          final bytes = await File(path).readAsBytes();
+          final codec = await ui.instantiateImageCodec(bytes);
+          final frameInfo = await codec.getNextFrame();
+          size = Size(
+            frameInfo.image.width.toDouble(),
+            frameInfo.image.height.toDouble(),
+          );
+        } catch (e) {
+          debugPrint('[QrCodec] Failed to get image size: $e');
+        }
+
+        Rect? rect;
+        final pos = result.position;
+        if (pos != null) {
+          final double minX = [
+            pos.topLeftX,
+            pos.topRightX,
+            pos.bottomLeftX,
+            pos.bottomRightX,
+          ].reduce((a, b) => a < b ? a : b).toDouble();
+          final double maxX = [
+            pos.topLeftX,
+            pos.topRightX,
+            pos.bottomLeftX,
+            pos.bottomRightX,
+          ].reduce((a, b) => a > b ? a : b).toDouble();
+          final double minY = [
+            pos.topLeftY,
+            pos.topRightY,
+            pos.bottomLeftY,
+            pos.bottomRightY,
+          ].reduce((a, b) => a < b ? a : b).toDouble();
+          final double maxY = [
+            pos.topLeftY,
+            pos.topRightY,
+            pos.bottomLeftY,
+            pos.bottomRightY,
+          ].reduce((a, b) => a > b ? a : b).toDouble();
+
+          if (size != null && pos.imageWidth > 0 && pos.imageHeight > 0) {
+            final double scaleX = size.width / pos.imageWidth;
+            final double scaleY = size.height / pos.imageHeight;
+            rect = Rect.fromLTRB(
+              minX * scaleX,
+              minY * scaleY,
+              maxX * scaleX,
+              maxY * scaleY,
+            );
+          } else {
+            rect = Rect.fromLTRB(minX, minY, maxX, maxY);
+            size = Size(pos.imageWidth.toDouble(), pos.imageHeight.toDouble());
+          }
+        }
+
+        return QrDecodeResult(text: text, rect: rect, size: size);
       }
     } catch (e) {
       debugPrint('[QrCodec] decode failed: $e');
@@ -72,7 +129,7 @@ class QrCodec {
 
   /// Decodes the first QR/barcode found in the image at [path] using Google ML Kit.
   /// Decodes an image file using ML Kit, returning text, bounding box, and size.
-  static Future<QrMlKitDecodeResult?> decodeImageFileMlKit(String path) async {
+  static Future<QrDecodeResult?> decodeImageFileMlKit(String path) async {
     try {
       final inputImage = InputImage.fromFilePath(path);
       final scanner = BarcodeScanner(formats: [BarcodeFormat.all]);
@@ -94,7 +151,7 @@ class QrCodec {
               debugPrint('[QrCodec] Failed to get image size: $e');
             }
 
-            return QrMlKitDecodeResult(
+            return QrDecodeResult(
               text: rawValue,
               rect: barcode.boundingBox,
               size: size,
@@ -111,10 +168,10 @@ class QrCodec {
   }
 }
 
-class QrMlKitDecodeResult {
+class QrDecodeResult {
   final String text;
   final Rect? rect;
   final Size? size;
 
-  const QrMlKitDecodeResult({required this.text, this.rect, this.size});
+  const QrDecodeResult({required this.text, this.rect, this.size});
 }
