@@ -375,6 +375,22 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                 },
                 isRedactMode: _controller.isRedactMode,
                 isWideScreen: isWideScreen,
+                onSegmentSubject: Platform.isAndroid
+                    ? () async {
+                        final l10n = AppLocalizations.of(context);
+                        if (!isWideScreen) {
+                          _scaffoldKey.currentState?.closeEndDrawer();
+                        }
+                        try {
+                          await _controller.segmentSubject();
+                          _onResetZoom();
+                        } catch (e) {
+                          _showError(
+                            l10n.imgViewSegmentSubjectFailed(e.toString()),
+                          );
+                        }
+                      }
+                    : null,
               )
             : const SizedBox.shrink();
 

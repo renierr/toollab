@@ -2252,6 +2252,30 @@ abstract class AppLocalizations {
   /// **'No EXIF metadata found in this image.'**
   String get imgViewNoExifData;
 
+  /// No description provided for @imgViewSegmentSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment Subject'**
+  String get imgViewSegmentSubject;
+
+  /// No description provided for @imgViewSegmentSubjectTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Isolate the subject from the background using ML'**
+  String get imgViewSegmentSubjectTooltip;
+
+  /// No description provided for @imgViewSegmentSubjectUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject segmentation is only supported on Android'**
+  String get imgViewSegmentSubjectUnsupported;
+
+  /// No description provided for @imgViewSegmentSubjectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to segment subject: {error}'**
+  String imgViewSegmentSubjectFailed(String error);
+
   /// No description provided for @levelSensorsUnavailable.
   ///
   /// In en, this message translates to:

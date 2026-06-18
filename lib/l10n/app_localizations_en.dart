@@ -1211,6 +1211,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imgViewNoExifData => 'No EXIF metadata found in this image.';
 
   @override
+  String get imgViewSegmentSubject => 'Segment Subject';
+
+  @override
+  String get imgViewSegmentSubjectTooltip =>
+      'Isolate the subject from the background using ML';
+
+  @override
+  String get imgViewSegmentSubjectUnsupported =>
+      'Subject segmentation is only supported on Android';
+
+  @override
+  String imgViewSegmentSubjectFailed(String error) {
+    return 'Failed to segment subject: $error';
+  }
+
+  @override
   String get levelSensorsUnavailable => 'Sensors not available on this device.';
 
   @override

@@ -660,6 +660,17 @@
   "imgViewExifThumbnailTitle": "EXIF Embedded Thumbnail",
   "imgViewMetadataDialogTitle": "Metadata & EXIF Info",
   "imgViewNoExifData": "No EXIF metadata found in this image.",
+  "imgViewSegmentSubject": "Segment Subject",
+  "imgViewSegmentSubjectTooltip": "Isolate the subject from the background using ML",
+  "imgViewSegmentSubjectUnsupported": "Subject segmentation is only supported on Android",
+  "imgViewSegmentSubjectFailed": "Failed to segment subject: {error}",
+  "@imgViewSegmentSubjectFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "levelSensorsUnavailable": "Sensors not available on this device.",
   "levelCalibratedToZero": "Surface calibrated to zero.",
   "levelCalibrationReset": "Calibration reset.",

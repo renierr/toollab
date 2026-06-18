@@ -1222,6 +1222,22 @@ class AppLocalizationsDe extends AppLocalizations {
       'Keine EXIF-Metadaten in diesem Bild gefunden.';
 
   @override
+  String get imgViewSegmentSubject => 'Motiv ausschneiden';
+
+  @override
+  String get imgViewSegmentSubjectTooltip =>
+      'Isoliert das Motiv mithilfe von ML vom Hintergrund';
+
+  @override
+  String get imgViewSegmentSubjectUnsupported =>
+      'Motiv-Segmentierung wird nur auf Android unterstützt';
+
+  @override
+  String imgViewSegmentSubjectFailed(String error) {
+    return 'Fehler beim Ausschneiden des Motivs: $error';
+  }
+
+  @override
   String get levelSensorsUnavailable =>
       'Sensoren auf diesem Gerät nicht verfügbar.';
 

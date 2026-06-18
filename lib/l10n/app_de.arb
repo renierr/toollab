@@ -411,6 +411,17 @@
   "imgViewExifThumbnailTitle": "Eingebettetes EXIF-Vorschaubild",
   "imgViewMetadataDialogTitle": "Metadaten & EXIF-Informationen",
   "imgViewNoExifData": "Keine EXIF-Metadaten in diesem Bild gefunden.",
+  "imgViewSegmentSubject": "Motiv ausschneiden",
+  "imgViewSegmentSubjectTooltip": "Isoliert das Motiv mithilfe von ML vom Hintergrund",
+  "imgViewSegmentSubjectUnsupported": "Motiv-Segmentierung wird nur auf Android unterstützt",
+  "imgViewSegmentSubjectFailed": "Fehler beim Ausschneiden des Motivs: {error}",
+  "@imgViewSegmentSubjectFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "levelSensorsUnavailable": "Sensoren auf diesem Gerät nicht verfügbar.",
   "levelCalibratedToZero": "Oberfläche auf null kalibriert.",
   "levelCalibrationReset": "Kalibrierung zurückgesetzt.",

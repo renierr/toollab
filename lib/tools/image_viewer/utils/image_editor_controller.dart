@@ -8,10 +8,12 @@ import 'package:image/image.dart' as img;
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:tool_lab/tools/image_viewer/utils/edit_history.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_canvas_ops.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
+import 'package:google_mlkit_subject_segmentation/google_mlkit_subject_segmentation.dart';
 
 class ImageEditorController extends ChangeNotifier {
   img.Image? _decodedImage;
@@ -436,6 +438,104 @@ class ImageEditorController extends ChangeNotifier {
       (current) => compute(flipImageTask, FlipParams(current, direction)),
       (_) async => FlipStep(direction),
     );
+  }
+
+  Future<void> segmentSubject() async {
+    if (_uiImage == null) return;
+    if (!Platform.isAndroid) {
+      throw UnsupportedError(
+        "Subject segmentation is only supported on Android.",
+      );
+    }
+
+    _isProcessing = true;
+    notifyListeners();
+
+    try {
+      await _ensureDecoded();
+      if (_decodedImage == null) {
+        throw Exception("Decoded image is null.");
+      }
+
+      // Convert current decoded image to PNG bytes to pass to ML Kit.
+      final beforePng = await compute(encodePngTask, _decodedImage!);
+
+      // Write PNG bytes to a temp file
+      final tempFilePath = await _scope.createFile(
+        'segment_input.png',
+        bytes: beforePng,
+      );
+
+      // Run ML Kit Subject Segmenter
+      final options = SubjectSegmenterOptions(
+        enableForegroundBitmap: true,
+        enableForegroundConfidenceMask: false,
+        enableMultipleSubjects: SubjectResultOptions(
+          enableConfidenceMask: false,
+          enableSubjectBitmap: false,
+        ),
+      );
+
+      SubjectSegmentationResult? result;
+      for (var attempt = 0; attempt < 2; attempt++) {
+        final segmenter = SubjectSegmenter(options: options);
+        try {
+          final inputImage = InputImage.fromFilePath(tempFilePath);
+          result = await segmenter.processImage(inputImage);
+          await segmenter.close();
+          break;
+        } catch (e) {
+          await segmenter.close();
+          if (e is PlatformException &&
+              (e.message?.contains("Waiting for") ?? false) &&
+              attempt == 0) {
+            // Wait 2.5 seconds and retry once while Google Play Services finishes downloading the model.
+            await Future<void>.delayed(const Duration(milliseconds: 2500));
+            continue;
+          }
+          rethrow;
+        }
+      }
+
+      // Clean up the temp file
+      try {
+        await _scope.deleteFile('segment_input.png');
+      } catch (_) {}
+
+      final segmentedBytes = result?.foregroundBitmap;
+      if (segmentedBytes == null) {
+        throw Exception(
+          "Failed to segment subject: no foreground bitmap returned.",
+        );
+      }
+
+      // Decode the output image
+      final codec = await ui.instantiateImageCodec(segmentedBytes);
+      final frame = await codec.getNextFrame();
+      final newUiImage = frame.image;
+
+      final newDecodedImage = await compute(decodeImageTask, segmentedBytes);
+
+      // Apply changes
+      _uiImage?.dispose();
+      _uiImage = newUiImage;
+      _decodedImage = newDecodedImage;
+      _originalWidth = newUiImage.width;
+      _originalHeight = newUiImage.height;
+      _isAnimated = false;
+      _syncDimensionFields();
+
+      // Record in history
+      _history.record(SegmentStep(beforePng, segmentedBytes));
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Subject segmentation failed: $e");
+      rethrow;
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
   }
 
   Future<void> cropImage(int x, int y, int w, int h) async {

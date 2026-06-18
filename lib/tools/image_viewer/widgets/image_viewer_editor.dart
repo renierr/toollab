@@ -34,6 +34,7 @@ class ImageViewerEditor extends StatelessWidget {
   final VoidCallback onToggleRedactMode;
   final bool isRedactMode;
   final bool isWideScreen;
+  final VoidCallback? onSegmentSubject;
 
   const ImageViewerEditor({
     super.key,
@@ -64,6 +65,7 @@ class ImageViewerEditor extends StatelessWidget {
     required this.onToggleRedactMode,
     required this.isRedactMode,
     required this.isWideScreen,
+    this.onSegmentSubject,
   });
 
   @override
@@ -242,6 +244,17 @@ class ImageViewerEditor extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (onSegmentSubject != null)
+                      OutlinedButton.icon(
+                        onPressed: onSegmentSubject,
+                        icon: const Icon(Icons.portrait),
+                        label: Text(l10n.imgViewSegmentSubject),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
           const SizedBox(height: 24),

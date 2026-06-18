@@ -116,6 +116,15 @@ class RedactStep extends _SnapshotStep {
   );
 }
 
+class SegmentStep extends _SnapshotStep {
+  final Uint8List afterPng;
+  SegmentStep(super.beforePng, this.afterPng);
+
+  @override
+  Future<img.Image> apply(img.Image before) =>
+      compute(decodeImageTask, afterPng);
+}
+
 /// Bounded undo/redo stack.
 ///
 /// Holds at most [maxSteps] edits. The current image is owned by the caller —
