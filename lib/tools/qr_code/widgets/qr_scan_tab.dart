@@ -83,15 +83,31 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
   }
 
   Future<void> _decodePath(String path) async {
-    final String? text;
+    String? text;
+    Rect? rect;
+    Size? size;
+    String? capturedPath;
+
     if (_engine == 'mlkit' && Platform.isAndroid) {
-      text = await QrCodec.decodeImageFileMlKit(path);
+      final result = await QrCodec.decodeImageFileMlKit(path);
+      if (result != null) {
+        text = result.text;
+        rect = result.rect;
+        size = result.size;
+        capturedPath = path;
+      }
     } else {
       text = await QrCodec.decodeImageFile(path);
     }
+
     if (!mounted) return;
     if (text != null) {
-      setState(() => _result = text);
+      setState(() {
+        _result = text;
+        _barcodeRect = rect;
+        _cameraImageSize = size;
+        _capturedImagePath = capturedPath;
+      });
     } else {
       final l10n = AppLocalizations.of(context);
       ScaffoldMessenger.of(

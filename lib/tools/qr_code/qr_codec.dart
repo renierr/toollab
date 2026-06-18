@@ -1,4 +1,8 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image/image.dart' as img;
@@ -67,8 +71,8 @@ class QrCodec {
   }
 
   /// Decodes the first QR/barcode found in the image at [path] using Google ML Kit.
-  /// Returns the decoded text, or null when nothing is detected.
-  static Future<String?> decodeImageFileMlKit(String path) async {
+  /// Decodes an image file using ML Kit, returning text, bounding box, and size.
+  static Future<QrMlKitDecodeResult?> decodeImageFileMlKit(String path) async {
     try {
       final inputImage = InputImage.fromFilePath(path);
       final scanner = BarcodeScanner(formats: [BarcodeFormat.all]);
@@ -77,7 +81,24 @@ class QrCodec {
         for (final barcode in barcodes) {
           final rawValue = barcode.rawValue;
           if (rawValue != null && rawValue.isNotEmpty) {
-            return rawValue;
+            Size? size;
+            try {
+              final bytes = await File(path).readAsBytes();
+              final codec = await ui.instantiateImageCodec(bytes);
+              final frameInfo = await codec.getNextFrame();
+              size = Size(
+                frameInfo.image.width.toDouble(),
+                frameInfo.image.height.toDouble(),
+              );
+            } catch (e) {
+              debugPrint('[QrCodec] Failed to get image size: $e');
+            }
+
+            return QrMlKitDecodeResult(
+              text: rawValue,
+              rect: barcode.boundingBox,
+              size: size,
+            );
           }
         }
       } finally {
@@ -88,4 +109,12 @@ class QrCodec {
     }
     return null;
   }
+}
+
+class QrMlKitDecodeResult {
+  final String text;
+  final Rect? rect;
+  final Size? size;
+
+  const QrMlKitDecodeResult({required this.text, this.rect, this.size});
 }
