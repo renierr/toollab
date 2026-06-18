@@ -27,6 +27,8 @@ class FastDropUploadPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isAndroid = Platform.isAndroid;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final useCompact = isAndroid || screenHeight < 700;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -40,8 +42,8 @@ class FastDropUploadPanel extends StatelessWidget {
           opacity: isActionsEnabled ? 1.0 : 0.5,
           child: AbsorbPointer(
             absorbing: !isActionsEnabled,
-            child: SizedBox(
-              height: isAndroid ? 160 : 290,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: useCompact ? 140 : 240),
               child: FileDropZone(
                 onFilesSelected: onFilesSelected,
                 allowedExtensions: FastDropTool.config.fileExtensions,
@@ -52,7 +54,7 @@ class FastDropUploadPanel extends StatelessWidget {
                     ? l10n.fastDropSelectFilesAndroid
                     : l10n.fastDropDropFilesHere,
                 subtitle: l10n.fastDropOrClickToBrowse,
-                compact: isAndroid,
+                compact: useCompact,
                 multiple: true,
               ),
             ),
