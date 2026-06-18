@@ -7,12 +7,14 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/drop_zone_action_button.dart';
 import 'package:tool_lab/tools/qr_code/config.dart';
 import 'package:tool_lab/tools/qr_code/qr_codec.dart';
 
 import 'qr_camera_scanner.dart';
+import 'qr_mlkit_camera_scanner.dart';
 import 'qr_result_card.dart';
 
 /// Scan tab: live camera scanning on Android plus scan-from-image
@@ -29,6 +31,7 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
   String? _result;
   bool _cameraMode = false;
   int _seq = 0;
+  String _engine = 'zxing';
 
   bool get _cameraSupported => Platform.isAndroid;
 
@@ -38,6 +41,30 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
     _scope = TempFileManager.createScope();
     onDispose(() => _scope.cleanTracked());
     _cameraMode = _cameraSupported;
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final stored = await DatabaseService.instance.getSetting(
+      QrCodeTool.config.id,
+      'scanner_engine',
+    );
+    if (stored != null && mounted) {
+      setState(() {
+        _engine = stored;
+      });
+    }
+  }
+
+  Future<void> _saveSetting(String value) async {
+    setState(() {
+      _engine = value;
+    });
+    await DatabaseService.instance.setSetting(
+      QrCodeTool.config.id,
+      'scanner_engine',
+      value,
+    );
   }
 
   Color get _accent => QrCodeTool.config.accentColor;
@@ -52,7 +79,12 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
   }
 
   Future<void> _decodePath(String path) async {
-    final text = await QrCodec.decodeImageFile(path);
+    final String? text;
+    if (_engine == 'mlkit' && Platform.isAndroid) {
+      text = await QrCodec.decodeImageFileMlKit(path);
+    } else {
+      text = await QrCodec.decodeImageFile(path);
+    }
     if (!mounted) return;
     if (text != null) {
       setState(() => _result = text);
@@ -97,11 +129,21 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
       );
     }
 
+    final Widget cameraView;
+    if (_engine == 'mlkit') {
+      cameraView = QrMlKitCameraScanner(
+        accentColor: _accent,
+        onDetected: (text) => setState(() => _result = text),
+      );
+    } else {
+      cameraView = QrCameraScanner(
+        accentColor: _accent,
+        onDetected: (text) => setState(() => _result = text),
+      );
+    }
+
     final body = (_cameraSupported && _cameraMode)
-        ? QrCameraScanner(
-            accentColor: _accent,
-            onDetected: (text) => setState(() => _result = text),
-          )
+        ? cameraView
         : _ImageScanZone(
             accent: _accent,
             extensions: QrCodeTool.config.fileExtensions,
@@ -116,10 +158,23 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: _ScanModeToggle(
-            cameraMode: _cameraMode,
-            accentColor: _accent,
-            onChanged: (camera) => setState(() => _cameraMode = camera),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ScanModeToggle(
+                cameraMode: _cameraMode,
+                accentColor: _accent,
+                onChanged: (camera) => setState(() => _cameraMode = camera),
+              ),
+              if (_cameraMode) ...[
+                const SizedBox(height: 8),
+                _EngineToggle(
+                  engine: _engine,
+                  accentColor: _accent,
+                  onChanged: _saveSetting,
+                ),
+              ],
+            ],
           ),
         ),
         Expanded(child: body),
@@ -212,6 +267,40 @@ class _ScanModeToggle extends StatelessWidget {
       selected: {cameraMode},
       onSelectionChanged: (s) => onChanged(s.first),
       style: ButtonStyle(visualDensity: VisualDensity.compact),
+    );
+  }
+}
+
+class _EngineToggle extends StatelessWidget {
+  final String engine;
+  final Color accentColor;
+  final ValueChanged<String> onChanged;
+
+  const _EngineToggle({
+    required this.engine,
+    required this.accentColor,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return SegmentedButton<String>(
+      segments: [
+        ButtonSegment(
+          value: 'zxing',
+          icon: const Icon(Icons.code, size: 18),
+          label: Text(l10n.qrScannerEngineZxing),
+        ),
+        ButtonSegment(
+          value: 'mlkit',
+          icon: const Icon(Icons.auto_awesome, size: 18),
+          label: Text(l10n.qrScannerEngineMlKit),
+        ),
+      ],
+      selected: {engine},
+      onSelectionChanged: (s) => onChanged(s.first),
+      style: const ButtonStyle(visualDensity: VisualDensity.compact),
     );
   }
 }

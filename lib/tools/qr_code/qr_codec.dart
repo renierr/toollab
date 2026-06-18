@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
+import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:image/image.dart' as img;
 
 /// Thin wrapper around flutter_zxing so the UI never touches the FFI types
@@ -61,6 +62,29 @@ class QrCodec {
       }
     } catch (e) {
       debugPrint('[QrCodec] decode failed: $e');
+    }
+    return null;
+  }
+
+  /// Decodes the first QR/barcode found in the image at [path] using Google ML Kit.
+  /// Returns the decoded text, or null when nothing is detected.
+  static Future<String?> decodeImageFileMlKit(String path) async {
+    try {
+      final inputImage = InputImage.fromFilePath(path);
+      final scanner = BarcodeScanner(formats: [BarcodeFormat.all]);
+      try {
+        final barcodes = await scanner.processImage(inputImage);
+        for (final barcode in barcodes) {
+          final rawValue = barcode.rawValue;
+          if (rawValue != null && rawValue.isNotEmpty) {
+            return rawValue;
+          }
+        }
+      } finally {
+        await scanner.close();
+      }
+    } catch (e) {
+      debugPrint('[QrCodec] ML Kit decode failed: $e');
     }
     return null;
   }

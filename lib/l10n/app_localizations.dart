@@ -4580,6 +4580,18 @@ abstract class AppLocalizations {
   /// **'Image'**
   String get qrModeImage;
 
+  /// No description provided for @qrScannerEngineZxing.
+  ///
+  /// In en, this message translates to:
+  /// **'ZXing'**
+  String get qrScannerEngineZxing;
+
+  /// No description provided for @qrScannerEngineMlKit.
+  ///
+  /// In en, this message translates to:
+  /// **'Google ML Kit'**
+  String get qrScannerEngineMlKit;
+
   /// No description provided for @qrImagesLabel.
   ///
   /// In en, this message translates to:

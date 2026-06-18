@@ -2560,6 +2560,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrModeImage => 'Image';
 
   @override
+  String get qrScannerEngineZxing => 'ZXing';
+
+  @override
+  String get qrScannerEngineMlKit => 'Google ML Kit';
+
+  @override
   String get qrImagesLabel => 'Images';
 
   @override
