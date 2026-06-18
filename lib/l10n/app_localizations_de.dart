@@ -318,6 +318,37 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get coreDangerZoneTitle => 'Gefahrenzone';
+
+  @override
+  String get coreDatabaseImportButton => 'Datenbank importieren (.db)';
+
+  @override
+  String get coreDatabaseImportDescription =>
+      'Stellt eine zuvor exportierte Datenbank wieder her. Dabei werden alle aktuellen Tool-Daten und Einstellungen unwiderruflich überschrieben.';
+
+  @override
+  String get coreDatabaseImportConfirmTitle => 'Datenbank importieren?';
+
+  @override
+  String get coreDatabaseImportConfirmMessage =>
+      'Dadurch werden alle aktuellen Daten und Einstellungen unwiderruflich durch den Inhalt des ausgewählten Backups überschrieben und die App wird neu geladen. Diese Aktion kann nicht rückgängig gemacht werden.';
+
+  @override
+  String coreDatabaseImportInvalid(String error) {
+    return 'Ungültige oder inkompatible Datenbankdatei: $error';
+  }
+
+  @override
+  String get coreDatabaseImportSuccess =>
+      'Datenbank erfolgreich importiert. Deine Daten und Einstellungen wurden wiederhergestellt.';
+
+  @override
+  String coreDatabaseImportFailed(String error) {
+    return 'Datenbankimport fehlgeschlagen: $error';
+  }
+
+  @override
   String get coreTempFilesTitle => 'Temporäre Dateien';
 
   @override

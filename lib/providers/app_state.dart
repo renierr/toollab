@@ -274,4 +274,25 @@ class AppState extends ChangeNotifier {
   String exportSettingsToJson() {
     return _settingsService.exportSettingsToJson();
   }
+
+  /// Reloads all in-memory state from the database after an import, so the UI
+  /// reflects the restored data and settings without an app restart.
+  Future<void> reloadFromDatabase() async {
+    await _settingsService.reload();
+    _themeMode = _settingsService.getThemeMode();
+    _locale = _settingsService.getLocale();
+    _compactMode = _settingsService.getCompactMode();
+    _sortBy = _settingsService.getSortBy();
+    _syncEnabled = _settingsService.getSyncEnabled();
+    _systemNotificationsEnabled = _settingsService
+        .getSystemNotificationsEnabled();
+    _syncServerUrl = _settingsService.getSyncServerUrl();
+    _syncUserId = _settingsService.getSyncUserId();
+    _syncLastSynced = _settingsService.getSyncLastSynced();
+    await _loadFavorites();
+    await _loadRecentTimestamps();
+    await _loadPinnedShortcuts();
+    await _loadDrawerIcons();
+    notifyListeners();
+  }
 }

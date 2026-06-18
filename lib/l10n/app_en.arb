@@ -138,6 +138,28 @@
       }
     }
   },
+  "coreDangerZoneTitle": "Danger Zone",
+  "coreDatabaseImportButton": "Import Database (.db)",
+  "coreDatabaseImportDescription": "Restore a previously exported database. This permanently overwrites all current tool data and settings. This cannot be undone.",
+  "coreDatabaseImportConfirmTitle": "Import Database?",
+  "coreDatabaseImportConfirmMessage": "This will permanently overwrite all current data and settings with the contents of the selected backup, and the app will reload. This action cannot be undone.",
+  "coreDatabaseImportInvalid": "Invalid or incompatible database file: {error}",
+  "@coreDatabaseImportInvalid": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "coreDatabaseImportSuccess": "Database imported successfully. Your data and settings have been restored.",
+  "coreDatabaseImportFailed": "Database import failed: {error}",
+  "@coreDatabaseImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "coreTempFilesTitle": "Temp Files",
   "coreTempFilesUsage": "{count} file(s) using {size}",
   "@coreTempFilesUsage": {

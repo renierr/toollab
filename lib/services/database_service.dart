@@ -217,6 +217,92 @@ class DatabaseService {
     }
     return await file.readAsBytes();
   }
+
+  /// Tables a valid ToolLab backup database must contain.
+  static const Set<String> _requiredTables = {
+    _tableFavorites,
+    _tableSettings,
+    _tableRecentUsage,
+  };
+
+  /// Validates that the file at [sourcePath] is a SQLite database compatible
+  /// with ToolLab.
+  ///
+  /// Throws a [FormatException] if the file is not a valid SQLite database or
+  /// is missing required tables. Does not touch the active database.
+  Future<void> validateDatabaseFile(String sourcePath) async {
+    final file = File(sourcePath);
+    if (!await file.exists()) {
+      throw const FormatException('Selected file does not exist.');
+    }
+
+    // Every SQLite file begins with the 16-byte header "SQLite format 3\x00".
+    const expectedHeader = <int>[
+      0x53, 0x51, 0x4C, 0x69, 0x74, 0x65, 0x20, 0x66, //
+      0x6F, 0x72, 0x6D, 0x61, 0x74, 0x20, 0x33, 0x00,
+    ];
+    final raf = await file.open();
+    try {
+      final headerBytes = await raf.read(expectedHeader.length);
+      if (headerBytes.length < expectedHeader.length) {
+        throw const FormatException(
+          'File is too small to be a SQLite database.',
+        );
+      }
+      for (var i = 0; i < expectedHeader.length; i++) {
+        if (headerBytes[i] != expectedHeader[i]) {
+          throw const FormatException('File is not a valid SQLite database.');
+        }
+      }
+    } finally {
+      await raf.close();
+    }
+
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+    }
+
+    Database? probe;
+    try {
+      probe = await openDatabase(sourcePath, readOnly: true);
+      final rows = await probe.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'table'",
+      );
+      final tables = rows.map((r) => r['name'] as String).toSet();
+      final missing = _requiredTables.difference(tables);
+      if (missing.isNotEmpty) {
+        throw FormatException(
+          'Incompatible database: missing tables ${missing.join(', ')}.',
+        );
+      }
+    } on FormatException {
+      rethrow;
+    } catch (e) {
+      throw FormatException('Could not read database file: $e');
+    } finally {
+      await probe?.close();
+    }
+  }
+
+  /// Replaces the active database file with the file at [sourcePath] after
+  /// validating it.
+  ///
+  /// Closes and reopens the connection so the imported data takes effect
+  /// (running any schema migrations). Throws if the file is invalid or
+  /// incompatible.
+  Future<void> importDatabaseFile(String sourcePath) async {
+    await validateDatabaseFile(sourcePath);
+
+    final db = await database;
+    final path = db.path;
+    await close();
+
+    await File(sourcePath).copy(path);
+
+    // Reopen so subsequent access uses the imported data.
+    await database;
+  }
 }
 
 /// A namespaced wrapper around a [DatabaseExecutor] (like [Database] or [Transaction])

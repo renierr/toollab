@@ -134,4 +134,13 @@ class SettingsService {
   String exportSettingsToJson() {
     return jsonEncode(Map<String, dynamic>.from(_cache));
   }
+
+  /// Re-reads all app settings from the database into the in-memory cache.
+  /// Used after a database import to pick up the restored values.
+  Future<void> reload() async {
+    final fresh = await DatabaseService.instance.getAllSettings(_toolId);
+    _cache
+      ..clear()
+      ..addAll(fresh);
+  }
 }

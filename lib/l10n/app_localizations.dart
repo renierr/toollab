@@ -656,6 +656,54 @@ abstract class AppLocalizations {
   /// **'Settings export failed: {error}'**
   String coreSettingsExportFailed(String error);
 
+  /// No description provided for @coreDangerZoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Danger Zone'**
+  String get coreDangerZoneTitle;
+
+  /// No description provided for @coreDatabaseImportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Database (.db)'**
+  String get coreDatabaseImportButton;
+
+  /// No description provided for @coreDatabaseImportDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore a previously exported database. This permanently overwrites all current tool data and settings. This cannot be undone.'**
+  String get coreDatabaseImportDescription;
+
+  /// No description provided for @coreDatabaseImportConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Database?'**
+  String get coreDatabaseImportConfirmTitle;
+
+  /// No description provided for @coreDatabaseImportConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently overwrite all current data and settings with the contents of the selected backup, and the app will reload. This action cannot be undone.'**
+  String get coreDatabaseImportConfirmMessage;
+
+  /// No description provided for @coreDatabaseImportInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid or incompatible database file: {error}'**
+  String coreDatabaseImportInvalid(String error);
+
+  /// No description provided for @coreDatabaseImportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Database imported successfully. Your data and settings have been restored.'**
+  String get coreDatabaseImportSuccess;
+
+  /// No description provided for @coreDatabaseImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Database import failed: {error}'**
+  String coreDatabaseImportFailed(String error);
+
   /// No description provided for @coreTempFilesTitle.
   ///
   /// In en, this message translates to:

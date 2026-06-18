@@ -316,6 +316,37 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get coreDangerZoneTitle => 'Danger Zone';
+
+  @override
+  String get coreDatabaseImportButton => 'Import Database (.db)';
+
+  @override
+  String get coreDatabaseImportDescription =>
+      'Restore a previously exported database. This permanently overwrites all current tool data and settings. This cannot be undone.';
+
+  @override
+  String get coreDatabaseImportConfirmTitle => 'Import Database?';
+
+  @override
+  String get coreDatabaseImportConfirmMessage =>
+      'This will permanently overwrite all current data and settings with the contents of the selected backup, and the app will reload. This action cannot be undone.';
+
+  @override
+  String coreDatabaseImportInvalid(String error) {
+    return 'Invalid or incompatible database file: $error';
+  }
+
+  @override
+  String get coreDatabaseImportSuccess =>
+      'Database imported successfully. Your data and settings have been restored.';
+
+  @override
+  String coreDatabaseImportFailed(String error) {
+    return 'Database import failed: $error';
+  }
+
+  @override
   String get coreTempFilesTitle => 'Temp Files';
 
   @override
