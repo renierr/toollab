@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
@@ -63,27 +64,51 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
 
   Future<void> _captureFromMlKit(DocumentScannerState state) async {
     final l10n = AppLocalizations.of(context);
-    try {
-      final options = DocumentScannerOptions(
-        documentFormats: {DocumentFormat.jpeg},
-        mode: ScannerMode.full,
-        isGalleryImport: false,
-      );
-      final documentScanner = DocumentScanner(options: options);
-      final result = await documentScanner.scanDocument();
-      documentScanner.close();
 
-      final images = result.images;
-      if (images != null && images.isNotEmpty) {
-        for (final path in images) {
-          await state.addPage(path, isPreCropped: true);
+    // Retry once on a real failure: on freshly sideloaded builds the Play
+    // Services scanner module can still be downloading on the first call.
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final documentScanner = DocumentScanner(
+        options: DocumentScannerOptions(
+          documentFormats: {DocumentFormat.jpeg},
+          mode: ScannerMode.full,
+          isGalleryImport: false,
+        ),
+      );
+      try {
+        final result = await documentScanner.scanDocument();
+        final images = result.images;
+        if (images != null && images.isNotEmpty) {
+          for (final path in images) {
+            await state.addPage(path, isPreCropped: true);
+          }
         }
-      }
-    } catch (e) {
-      if (mounted) {
+        return;
+      } on PlatformException catch (e) {
+        // The plugin reports a user cancellation as an error with this exact
+        // message — treat it as a silent cancel, never retry or fall back.
+        if (e.message == 'Operation cancelled') {
+          debugPrint('[DocumentScanner] Scan cancelled by user');
+          return;
+        }
+        // Otherwise the scanner module is unavailable (still downloading / no
+        // Play Services). Retry once, then fall back to the standard camera.
+        if (attempt == 0) {
+          await Future<void>.delayed(const Duration(seconds: 2));
+          continue;
+        }
+        debugPrint('[DocumentScanner] ML Kit unavailable, falling back: $e');
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.docScanFailedMlKit(e.toString()))),
+          SnackBar(content: Text(l10n.docScanMlKitUnavailableFallback)),
         );
+        await _captureFromCamera(state);
+        return;
+      } catch (e) {
+        debugPrint('[DocumentScanner] Scan failed or empty: $e');
+        return;
+      } finally {
+        documentScanner.close();
       }
     }
   }

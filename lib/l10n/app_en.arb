@@ -1724,6 +1724,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "docScanMlKitUnavailableFallback": "Document scanner unavailable, using the camera instead."
 }
 

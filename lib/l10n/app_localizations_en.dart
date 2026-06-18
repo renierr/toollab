@@ -2837,4 +2837,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String docScanFailedMlKit(String error) {
     return 'ML Kit scan failed: $error';
   }
+
+  @override
+  String get docScanMlKitUnavailableFallback =>
+      'Document scanner unavailable, using the camera instead.';
 }

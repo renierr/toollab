@@ -912,6 +912,7 @@
   "docScanActionScanMlKit": "Seite scannen (ML Kit)",
   "docScanActionScanStandard": "Seite scannen (Standard)",
   "docScanMethodTitle": "Scan-Methode auswählen",
+  "docScanMlKitUnavailableFallback": "Dokumentenscanner nicht verfügbar, Kamera wird stattdessen verwendet.",
   "docScanFailedMlKit": "ML Kit Scan fehlgeschlagen: {error}",
   "@docScanFailedMlKit": {
     "placeholders": {

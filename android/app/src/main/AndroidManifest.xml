@@ -265,6 +265,12 @@
             android:name=".ToolLabForegroundService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
+        <!-- ML Kit Document Scanner module — fetched from Google Play at install
+             time so scanDocument() doesn't fail with a null/PlatformException on
+             first use on real devices. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="docscanner" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

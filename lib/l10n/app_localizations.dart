@@ -5095,6 +5095,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ML Kit scan failed: {error}'**
   String docScanFailedMlKit(String error);
+
+  /// No description provided for @docScanMlKitUnavailableFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Document scanner unavailable, using the camera instead.'**
+  String get docScanMlKitUnavailableFallback;
 }
 
 class _AppLocalizationsDelegate
