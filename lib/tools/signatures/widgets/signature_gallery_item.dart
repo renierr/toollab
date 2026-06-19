@@ -52,8 +52,9 @@ class SignatureGalleryItem extends StatelessWidget {
               style: theme.textTheme.labelSmall,
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            alignment: WrapAlignment.spaceEvenly,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _CompactIconButton(
                 tooltip: l10n.sigLoad,
@@ -106,6 +107,11 @@ class _CompactIconButton extends StatelessWidget {
       padding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,
       constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+      style: IconButton.styleFrom(
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: EdgeInsets.zero,
+        minimumSize: const Size(30, 30),
+      ),
     );
   }
 }
