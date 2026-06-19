@@ -52,6 +52,16 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
       }
       _fullWakeLock = null;
     });
+    onDispose(() {
+      unawaited(
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]),
+      );
+    });
   }
 
   Future<void> _loadSettings() async {
