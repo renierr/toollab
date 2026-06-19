@@ -14,6 +14,7 @@ import 'package:tool_lab/tools/image_viewer/utils/image_canvas_ops.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
 import 'package:google_mlkit_subject_segmentation/google_mlkit_subject_segmentation.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 class ImageEditorController extends ChangeNotifier {
   img.Image? _decodedImage;
@@ -873,5 +874,55 @@ class ImageEditorController extends ChangeNotifier {
     const suffixes = ['B', 'KB', 'MB', 'GB'];
     final i = (math.log(bytes) / math.log(1024)).floor();
     return '${(bytes / math.pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
+  }
+
+  Future<String> extractText() async {
+    if (_uiImage == null) {
+      throw Exception("No image loaded.");
+    }
+    if (!Platform.isAndroid) {
+      throw UnsupportedError("Text extraction is only supported on Android.");
+    }
+
+    _isProcessing = true;
+    notifyListeners();
+
+    try {
+      await _ensureFullySynced();
+      if (_decodedImage == null) {
+        throw Exception("Decoded image is null.");
+      }
+
+      // Convert current decoded image to PNG bytes to pass to ML Kit.
+      final pngBytes = await compute(encodePngTask, _decodedImage!);
+
+      // Write PNG bytes to a temp file
+      final tempFilePath = await _scope.createFile(
+        'ocr_input.png',
+        bytes: pngBytes,
+      );
+
+      final textRecognizer = TextRecognizer(
+        script: TextRecognitionScript.latin,
+      );
+      final inputImage = InputImage.fromFilePath(tempFilePath);
+      final recognizedText = await textRecognizer.processImage(inputImage);
+      final extractedText = recognizedText.text;
+
+      await textRecognizer.close();
+
+      // Clean up the temp file
+      try {
+        await _scope.deleteFile('ocr_input.png');
+      } catch (_) {}
+
+      return extractedText;
+    } catch (e) {
+      debugPrint("Text extraction failed: $e");
+      rethrow;
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
   }
 }

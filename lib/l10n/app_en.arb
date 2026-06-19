@@ -672,6 +672,19 @@
     }
   },
   "imgViewSegmentSubjectDownloading": "Google Play Services is downloading the required machine learning model. Please wait a minute and try again.",
+  "imgViewExtractText": "Extract Text",
+  "imgViewExtractTextTooltip": "Extract text from the image using ML",
+  "imgViewExtractTextTitle": "Extracted Text",
+  "imgViewExtractTextNoText": "No text detected in the image.",
+  "imgViewExtractTextFailed": "Failed to extract text: {error}",
+  "@imgViewExtractTextFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "imgViewTextCopied": "Text copied to clipboard",
   "levelSensorsUnavailable": "Sensors not available on this device.",
   "levelCalibratedToZero": "Surface calibrated to zero.",
   "levelCalibrationReset": "Calibration reset.",

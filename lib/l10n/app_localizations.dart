@@ -2282,6 +2282,42 @@ abstract class AppLocalizations {
   /// **'Google Play Services is downloading the required machine learning model. Please wait a minute and try again.'**
   String get imgViewSegmentSubjectDownloading;
 
+  /// No description provided for @imgViewExtractText.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract Text'**
+  String get imgViewExtractText;
+
+  /// No description provided for @imgViewExtractTextTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract text from the image using ML'**
+  String get imgViewExtractTextTooltip;
+
+  /// No description provided for @imgViewExtractTextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracted Text'**
+  String get imgViewExtractTextTitle;
+
+  /// No description provided for @imgViewExtractTextNoText.
+  ///
+  /// In en, this message translates to:
+  /// **'No text detected in the image.'**
+  String get imgViewExtractTextNoText;
+
+  /// No description provided for @imgViewExtractTextFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to extract text: {error}'**
+  String imgViewExtractTextFailed(String error);
+
+  /// No description provided for @imgViewTextCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Text copied to clipboard'**
+  String get imgViewTextCopied;
+
   /// No description provided for @levelSensorsUnavailable.
   ///
   /// In en, this message translates to:

@@ -19,6 +19,7 @@ import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_crop_panel.dart
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_redact_panel.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_loading_overlay.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/android_picker_buttons.dart';
+import 'package:tool_lab/tools/image_viewer/widgets/extracted_text_dialog.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_controller.dart';
 
 class ImageViewerPage extends StatefulWidget {
@@ -538,6 +539,28 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                   },
                   tooltip: l10n.imgViewCopyToClipboard,
                 ),
+                if (Platform.isAndroid)
+                  IconButton(
+                    icon: const Icon(Icons.text_fields),
+                    onPressed: () async {
+                      try {
+                        final extractedText = await _controller.extractText();
+                        if (!context.mounted) return;
+                        ExtractedTextDialog.show(
+                          context: context,
+                          text: extractedText,
+                          fileName: _controller.fileName ?? 'image.png',
+                        );
+                      } catch (e) {
+                        _showError(
+                          l10n.imgViewExtractTextFailed(
+                            e.toString().replaceAll('Exception: ', ''),
+                          ),
+                        );
+                      }
+                    },
+                    tooltip: l10n.imgViewExtractTextTooltip,
+                  ),
                 if (isWideScreen)
                   IconButton(
                     icon: Icon(

@@ -1231,6 +1231,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Google Play Services is downloading the required machine learning model. Please wait a minute and try again.';
 
   @override
+  String get imgViewExtractText => 'Extract Text';
+
+  @override
+  String get imgViewExtractTextTooltip =>
+      'Extract text from the image using ML';
+
+  @override
+  String get imgViewExtractTextTitle => 'Extracted Text';
+
+  @override
+  String get imgViewExtractTextNoText => 'No text detected in the image.';
+
+  @override
+  String imgViewExtractTextFailed(String error) {
+    return 'Failed to extract text: $error';
+  }
+
+  @override
+  String get imgViewTextCopied => 'Text copied to clipboard';
+
+  @override
   String get levelSensorsUnavailable => 'Sensors not available on this device.';
 
   @override
