@@ -63,21 +63,27 @@ class ToolLayout extends StatelessWidget {
               const Positioned(left: 12, top: 12, child: FloatingBackButton()),
             if (fullscreen && actions != null)
               Positioned(
+                left: (showFloatingBackButton && Navigator.of(context).canPop())
+                    ? 64
+                    : 12,
                 right: 12,
                 top: 12,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: actions!.map((action) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Material(
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Wrap(
+                    spacing: 8.0,
+                    runSpacing: 8.0,
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: actions!.map((action) {
+                      return Material(
                         color: theme.colorScheme.surface.withAlpha(200),
                         shape: const CircleBorder(),
                         elevation: 2,
                         child: action,
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
           ],

@@ -483,15 +483,6 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
           }
         }
 
-        final Widget bodyContent = Stack(
-          children: [
-            mainContent,
-            if (!_controller.isCropMode && !_controller.isRedactMode)
-              const Positioned(left: 12, top: 12, child: FloatingBackButton()),
-            ImageViewerLoadingOverlay(isVisible: _controller.isProcessing),
-          ],
-        );
-
         final List<Widget>? actions =
             _controller.uiImage != null &&
                 !_controller.isCropMode &&
@@ -595,6 +586,67 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
               ]
             : null;
 
+        final Widget bodyContent = Stack(
+          children: [
+            mainContent,
+            if (!_controller.isCropMode && !_controller.isRedactMode) ...[
+              if (_controller.uiImage == null)
+                const Positioned(left: 12, top: 12, child: FloatingBackButton())
+              else
+                Positioned(
+                  left: 12,
+                  top: 12,
+                  right: 12,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Material(
+                        color: theme.colorScheme.surface.withAlpha(200),
+                        shape: const CircleBorder(),
+                        elevation: 2,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () async {
+                            final navigator = Navigator.of(context);
+                            if (await _confirmDiscardEdits()) {
+                              navigator.pop();
+                            }
+                          },
+                          tooltip: l10n.commonBack,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                      if (actions != null)
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.topRight,
+                            child: Wrap(
+                              spacing: 8.0,
+                              runSpacing: 8.0,
+                              alignment: WrapAlignment.end,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: actions.map((action) {
+                                return Material(
+                                  color: theme.colorScheme.surface.withAlpha(
+                                    200,
+                                  ),
+                                  shape: const CircleBorder(),
+                                  elevation: 2,
+                                  child: action,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+            ],
+            ImageViewerLoadingOverlay(isVisible: _controller.isProcessing),
+          ],
+        );
+
         final Widget? fab = null;
 
         final Widget? endDrawer = (_controller.uiImage != null && !isWideScreen)
@@ -635,7 +687,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
             fullscreen: true,
             showFloatingBackButton: false,
             scaffoldKey: _scaffoldKey,
-            actions: actions,
+            actions: null,
             floatingActionButton: fab,
             endDrawer: endDrawer,
             child: bodyContent,
