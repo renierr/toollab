@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <application
         android:label="ToolLab"
         android:name="${applicationName}"
@@ -242,6 +244,19 @@
             android:name="de.renier.tool_lab.QrCodeAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="QR Code"
+            android:icon="@mipmap/ic_launcher"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.GpsLocationStoreAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="GPS Location Store"
             android:icon="@mipmap/ic_launcher"
             android:enabled="false"
             android:exported="true">

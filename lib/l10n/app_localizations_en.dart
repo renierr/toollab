@@ -2898,4 +2898,74 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get docScanMlKitUnavailableFallback =>
       'Document scanner unavailable, using the camera instead.';
+
+  @override
+  String get toolNameGpsLocationStore => 'GPS Location Store';
+
+  @override
+  String get toolDescGpsLocationStore =>
+      'Capture and store your current location with notes and map links';
+
+  @override
+  String get gpsStoreCaptureButton => 'Save current location';
+
+  @override
+  String get gpsStoreLastSavedTitle => 'Last saved location';
+
+  @override
+  String get gpsStoreHistoryTitle => 'History';
+
+  @override
+  String get gpsStoreOpenGoogleMaps => 'Google Maps';
+
+  @override
+  String get gpsStoreOpenOsm => 'OpenStreetMap';
+
+  @override
+  String get gpsStoreSourceGps => 'GPS';
+
+  @override
+  String get gpsStoreSourceApproxIp => 'Approx (IP)';
+
+  @override
+  String gpsStoreAccuracyMeters(int meters) {
+    return '±$meters m';
+  }
+
+  @override
+  String get gpsStoreSaveLocationTitle => 'Save location';
+
+  @override
+  String get gpsStoreEditDescription => 'Edit description';
+
+  @override
+  String get gpsStoreDescriptionLabel => 'Description';
+
+  @override
+  String get gpsStoreDescriptionHint => 'Add a short note (optional)';
+
+  @override
+  String get gpsStoreIpFallbackNote =>
+      'Precise GPS was unavailable — this is an approximate position based on your IP address.';
+
+  @override
+  String get gpsStoreLocationSaved => 'Location saved';
+
+  @override
+  String get gpsStoreCaptureFailed =>
+      'Could not determine a location. Check location permissions and connectivity.';
+
+  @override
+  String get gpsStoreDeleteTitle => 'Delete location';
+
+  @override
+  String get gpsStoreDeleteMessage =>
+      'This location will be permanently removed.';
+
+  @override
+  String get gpsStoreEmptyTitle => 'No locations yet';
+
+  @override
+  String get gpsStoreEmptyMessage =>
+      'Tap \"Save current location\" to capture and store your position.';
 }

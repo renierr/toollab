@@ -2923,4 +2923,74 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get docScanMlKitUnavailableFallback =>
       'Dokumentenscanner nicht verfügbar, Kamera wird stattdessen verwendet.';
+
+  @override
+  String get toolNameGpsLocationStore => 'GPS-Standortspeicher';
+
+  @override
+  String get toolDescGpsLocationStore =>
+      'Aktuellen Standort mit Notizen und Kartenlinks erfassen und speichern';
+
+  @override
+  String get gpsStoreCaptureButton => 'Aktuellen Standort speichern';
+
+  @override
+  String get gpsStoreLastSavedTitle => 'Zuletzt gespeicherter Standort';
+
+  @override
+  String get gpsStoreHistoryTitle => 'Verlauf';
+
+  @override
+  String get gpsStoreOpenGoogleMaps => 'Google Maps';
+
+  @override
+  String get gpsStoreOpenOsm => 'OpenStreetMap';
+
+  @override
+  String get gpsStoreSourceGps => 'GPS';
+
+  @override
+  String get gpsStoreSourceApproxIp => 'Ungefähr (IP)';
+
+  @override
+  String gpsStoreAccuracyMeters(int meters) {
+    return '±$meters m';
+  }
+
+  @override
+  String get gpsStoreSaveLocationTitle => 'Standort speichern';
+
+  @override
+  String get gpsStoreEditDescription => 'Beschreibung bearbeiten';
+
+  @override
+  String get gpsStoreDescriptionLabel => 'Beschreibung';
+
+  @override
+  String get gpsStoreDescriptionHint => 'Kurze Notiz hinzufügen (optional)';
+
+  @override
+  String get gpsStoreIpFallbackNote =>
+      'Genaues GPS war nicht verfügbar — dies ist eine ungefähre Position basierend auf deiner IP-Adresse.';
+
+  @override
+  String get gpsStoreLocationSaved => 'Standort gespeichert';
+
+  @override
+  String get gpsStoreCaptureFailed =>
+      'Standort konnte nicht ermittelt werden. Berechtigungen und Verbindung prüfen.';
+
+  @override
+  String get gpsStoreDeleteTitle => 'Standort löschen';
+
+  @override
+  String get gpsStoreDeleteMessage =>
+      'Dieser Standort wird dauerhaft entfernt.';
+
+  @override
+  String get gpsStoreEmptyTitle => 'Noch keine Standorte';
+
+  @override
+  String get gpsStoreEmptyMessage =>
+      'Tippe auf \"Aktuellen Standort speichern\", um deine Position zu erfassen und zu speichern.';
 }

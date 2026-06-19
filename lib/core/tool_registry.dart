@@ -17,6 +17,7 @@ import 'package:tool_lab/tools/focus_noise/config.dart';
 import 'package:tool_lab/tools/signatures/config.dart';
 import 'package:tool_lab/tools/qr_code/config.dart';
 import 'package:tool_lab/tools/document_scanner/config.dart';
+import 'package:tool_lab/tools/gps_location_store/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -58,5 +59,6 @@ class ToolRegistry {
     SignaturesTool.config,
     QrCodeTool.config,
     DocumentScannerTool.config,
+    GpsLocationStoreTool.config,
   ];
 }

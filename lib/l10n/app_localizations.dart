@@ -5191,6 +5191,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Document scanner unavailable, using the camera instead.'**
   String get docScanMlKitUnavailableFallback;
+
+  /// No description provided for @toolNameGpsLocationStore.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS Location Store'**
+  String get toolNameGpsLocationStore;
+
+  /// No description provided for @toolDescGpsLocationStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture and store your current location with notes and map links'**
+  String get toolDescGpsLocationStore;
+
+  /// No description provided for @gpsStoreCaptureButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save current location'**
+  String get gpsStoreCaptureButton;
+
+  /// No description provided for @gpsStoreLastSavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Last saved location'**
+  String get gpsStoreLastSavedTitle;
+
+  /// No description provided for @gpsStoreHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get gpsStoreHistoryTitle;
+
+  /// No description provided for @gpsStoreOpenGoogleMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Maps'**
+  String get gpsStoreOpenGoogleMaps;
+
+  /// No description provided for @gpsStoreOpenOsm.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenStreetMap'**
+  String get gpsStoreOpenOsm;
+
+  /// No description provided for @gpsStoreSourceGps.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS'**
+  String get gpsStoreSourceGps;
+
+  /// No description provided for @gpsStoreSourceApproxIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Approx (IP)'**
+  String get gpsStoreSourceApproxIp;
+
+  /// No description provided for @gpsStoreAccuracyMeters.
+  ///
+  /// In en, this message translates to:
+  /// **'±{meters} m'**
+  String gpsStoreAccuracyMeters(int meters);
+
+  /// No description provided for @gpsStoreSaveLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save location'**
+  String get gpsStoreSaveLocationTitle;
+
+  /// No description provided for @gpsStoreEditDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit description'**
+  String get gpsStoreEditDescription;
+
+  /// No description provided for @gpsStoreDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get gpsStoreDescriptionLabel;
+
+  /// No description provided for @gpsStoreDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a short note (optional)'**
+  String get gpsStoreDescriptionHint;
+
+  /// No description provided for @gpsStoreIpFallbackNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Precise GPS was unavailable — this is an approximate position based on your IP address.'**
+  String get gpsStoreIpFallbackNote;
+
+  /// No description provided for @gpsStoreLocationSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Location saved'**
+  String get gpsStoreLocationSaved;
+
+  /// No description provided for @gpsStoreCaptureFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not determine a location. Check location permissions and connectivity.'**
+  String get gpsStoreCaptureFailed;
+
+  /// No description provided for @gpsStoreDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete location'**
+  String get gpsStoreDeleteTitle;
+
+  /// No description provided for @gpsStoreDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This location will be permanently removed.'**
+  String get gpsStoreDeleteMessage;
+
+  /// No description provided for @gpsStoreEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No locations yet'**
+  String get gpsStoreEmptyTitle;
+
+  /// No description provided for @gpsStoreEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \"Save current location\" to capture and store your position.'**
+  String get gpsStoreEmptyMessage;
 }
 
 class _AppLocalizationsDelegate

@@ -1761,6 +1761,34 @@
       }
     }
   },
-  "docScanMlKitUnavailableFallback": "Document scanner unavailable, using the camera instead."
+  "docScanMlKitUnavailableFallback": "Document scanner unavailable, using the camera instead.",
+  "toolNameGpsLocationStore": "GPS Location Store",
+  "toolDescGpsLocationStore": "Capture and store your current location with notes and map links",
+  "gpsStoreCaptureButton": "Save current location",
+  "gpsStoreLastSavedTitle": "Last saved location",
+  "gpsStoreHistoryTitle": "History",
+  "gpsStoreOpenGoogleMaps": "Google Maps",
+  "gpsStoreOpenOsm": "OpenStreetMap",
+  "gpsStoreSourceGps": "GPS",
+  "gpsStoreSourceApproxIp": "Approx (IP)",
+  "gpsStoreAccuracyMeters": "±{meters} m",
+  "@gpsStoreAccuracyMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
+  "gpsStoreSaveLocationTitle": "Save location",
+  "gpsStoreEditDescription": "Edit description",
+  "gpsStoreDescriptionLabel": "Description",
+  "gpsStoreDescriptionHint": "Add a short note (optional)",
+  "gpsStoreIpFallbackNote": "Precise GPS was unavailable — this is an approximate position based on your IP address.",
+  "gpsStoreLocationSaved": "Location saved",
+  "gpsStoreCaptureFailed": "Could not determine a location. Check location permissions and connectivity.",
+  "gpsStoreDeleteTitle": "Delete location",
+  "gpsStoreDeleteMessage": "This location will be permanently removed.",
+  "gpsStoreEmptyTitle": "No locations yet",
+  "gpsStoreEmptyMessage": "Tap \"Save current location\" to capture and store your position."
 }
 

@@ -942,6 +942,34 @@
         "type": "String"
       }
     }
-  }
+  },
+  "toolNameGpsLocationStore": "GPS-Standortspeicher",
+  "toolDescGpsLocationStore": "Aktuellen Standort mit Notizen und Kartenlinks erfassen und speichern",
+  "gpsStoreCaptureButton": "Aktuellen Standort speichern",
+  "gpsStoreLastSavedTitle": "Zuletzt gespeicherter Standort",
+  "gpsStoreHistoryTitle": "Verlauf",
+  "gpsStoreOpenGoogleMaps": "Google Maps",
+  "gpsStoreOpenOsm": "OpenStreetMap",
+  "gpsStoreSourceGps": "GPS",
+  "gpsStoreSourceApproxIp": "Ungefähr (IP)",
+  "gpsStoreAccuracyMeters": "±{meters} m",
+  "@gpsStoreAccuracyMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "int"
+      }
+    }
+  },
+  "gpsStoreSaveLocationTitle": "Standort speichern",
+  "gpsStoreEditDescription": "Beschreibung bearbeiten",
+  "gpsStoreDescriptionLabel": "Beschreibung",
+  "gpsStoreDescriptionHint": "Kurze Notiz hinzufügen (optional)",
+  "gpsStoreIpFallbackNote": "Genaues GPS war nicht verfügbar — dies ist eine ungefähre Position basierend auf deiner IP-Adresse.",
+  "gpsStoreLocationSaved": "Standort gespeichert",
+  "gpsStoreCaptureFailed": "Standort konnte nicht ermittelt werden. Berechtigungen und Verbindung prüfen.",
+  "gpsStoreDeleteTitle": "Standort löschen",
+  "gpsStoreDeleteMessage": "Dieser Standort wird dauerhaft entfernt.",
+  "gpsStoreEmptyTitle": "Noch keine Standorte",
+  "gpsStoreEmptyMessage": "Tippe auf \"Aktuellen Standort speichern\", um deine Position zu erfassen und zu speichern."
 }
 
