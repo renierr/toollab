@@ -116,11 +116,14 @@ class BubbleLevelToolbar extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        // Tolerance Dropdown and Calibration buttons
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
           children: [
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   l10n.levelTolerance,
@@ -166,6 +169,7 @@ class BubbleLevelToolbar extends StatelessWidget {
               ],
             ),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 TextButton.icon(
                   icon: const Icon(Icons.gps_fixed, size: 14),
