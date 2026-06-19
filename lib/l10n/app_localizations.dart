@@ -5204,11 +5204,23 @@ abstract class AppLocalizations {
   /// **'Capture and store your current location with notes and map links'**
   String get toolDescGpsLocationStore;
 
-  /// No description provided for @gpsStoreCaptureButton.
+  /// No description provided for @gpsStoreLocateButton.
   ///
   /// In en, this message translates to:
-  /// **'Save current location'**
-  String get gpsStoreCaptureButton;
+  /// **'Show current location'**
+  String get gpsStoreLocateButton;
+
+  /// No description provided for @gpsStoreCurrentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current location'**
+  String get gpsStoreCurrentTitle;
+
+  /// No description provided for @gpsStoreSaveThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this location'**
+  String get gpsStoreSaveThis;
 
   /// No description provided for @gpsStoreLastSavedTitle.
   ///
@@ -5315,8 +5327,62 @@ abstract class AppLocalizations {
   /// No description provided for @gpsStoreEmptyMessage.
   ///
   /// In en, this message translates to:
-  /// **'Tap \"Save current location\" to capture and store your position.'**
+  /// **'Tap \"Show current location\" to find where you are, then save it.'**
   String get gpsStoreEmptyMessage;
+
+  /// No description provided for @gpsStoreDistanceFromHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance and direction from your current position'**
+  String get gpsStoreDistanceFromHere;
+
+  /// No description provided for @gpsStoreCompassN.
+  ///
+  /// In en, this message translates to:
+  /// **'N'**
+  String get gpsStoreCompassN;
+
+  /// No description provided for @gpsStoreCompassNE.
+  ///
+  /// In en, this message translates to:
+  /// **'NE'**
+  String get gpsStoreCompassNE;
+
+  /// No description provided for @gpsStoreCompassE.
+  ///
+  /// In en, this message translates to:
+  /// **'E'**
+  String get gpsStoreCompassE;
+
+  /// No description provided for @gpsStoreCompassSE.
+  ///
+  /// In en, this message translates to:
+  /// **'SE'**
+  String get gpsStoreCompassSE;
+
+  /// No description provided for @gpsStoreCompassS.
+  ///
+  /// In en, this message translates to:
+  /// **'S'**
+  String get gpsStoreCompassS;
+
+  /// No description provided for @gpsStoreCompassSW.
+  ///
+  /// In en, this message translates to:
+  /// **'SW'**
+  String get gpsStoreCompassSW;
+
+  /// No description provided for @gpsStoreCompassW.
+  ///
+  /// In en, this message translates to:
+  /// **'W'**
+  String get gpsStoreCompassW;
+
+  /// No description provided for @gpsStoreCompassNW.
+  ///
+  /// In en, this message translates to:
+  /// **'NW'**
+  String get gpsStoreCompassNW;
 }
 
 class _AppLocalizationsDelegate

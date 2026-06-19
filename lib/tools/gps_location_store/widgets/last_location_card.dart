@@ -3,15 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import '../location_capture_service.dart';
 import '../location_format.dart';
 import '../saved_location.dart';
 import 'accuracy_badge.dart';
+import 'distance_indicator.dart';
 import 'map_links.dart';
 
 class LastLocationCard extends StatelessWidget {
   final SavedLocation location;
+  final LocationFix? currentPosition;
 
-  const LastLocationCard({super.key, required this.location});
+  const LastLocationCard({
+    super.key,
+    required this.location,
+    this.currentPosition,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,11 +63,23 @@ class LastLocationCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              formatTimestamp(location),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    formatTimestamp(location),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                if (currentPosition != null)
+                  DistanceIndicator(
+                    from: currentPosition!,
+                    targetLat: location.latitude,
+                    targetLon: location.longitude,
+                  ),
+              ],
             ),
             if (location.description.isNotEmpty) ...[
               const SizedBox(height: 12),

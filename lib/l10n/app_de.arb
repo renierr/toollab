@@ -945,7 +945,9 @@
   },
   "toolNameGpsLocationStore": "GPS-Standortspeicher",
   "toolDescGpsLocationStore": "Aktuellen Standort mit Notizen und Kartenlinks erfassen und speichern",
-  "gpsStoreCaptureButton": "Aktuellen Standort speichern",
+  "gpsStoreLocateButton": "Aktuellen Standort anzeigen",
+  "gpsStoreCurrentTitle": "Aktueller Standort",
+  "gpsStoreSaveThis": "Diesen Standort speichern",
   "gpsStoreLastSavedTitle": "Zuletzt gespeicherter Standort",
   "gpsStoreHistoryTitle": "Verlauf",
   "gpsStoreOpenGoogleMaps": "Google Maps",
@@ -970,6 +972,15 @@
   "gpsStoreDeleteTitle": "Standort löschen",
   "gpsStoreDeleteMessage": "Dieser Standort wird dauerhaft entfernt.",
   "gpsStoreEmptyTitle": "Noch keine Standorte",
-  "gpsStoreEmptyMessage": "Tippe auf \"Aktuellen Standort speichern\", um deine Position zu erfassen und zu speichern."
+  "gpsStoreEmptyMessage": "Tippe auf \"Aktuellen Standort anzeigen\", um deine Position zu ermitteln und anschließend zu speichern.",
+  "gpsStoreDistanceFromHere": "Entfernung und Richtung von deiner aktuellen Position",
+  "gpsStoreCompassN": "N",
+  "gpsStoreCompassNE": "NO",
+  "gpsStoreCompassE": "O",
+  "gpsStoreCompassSE": "SO",
+  "gpsStoreCompassS": "S",
+  "gpsStoreCompassSW": "SW",
+  "gpsStoreCompassW": "W",
+  "gpsStoreCompassNW": "NW"
 }
 

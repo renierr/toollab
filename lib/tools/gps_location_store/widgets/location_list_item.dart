@@ -2,19 +2,23 @@ import 'package:flutter/material.dart';
 
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../location_capture_service.dart';
 import '../location_format.dart';
 import '../saved_location.dart';
 import 'accuracy_badge.dart';
+import 'distance_indicator.dart';
 import 'map_links.dart';
 
 class LocationListItem extends StatelessWidget {
   final SavedLocation location;
+  final LocationFix? currentPosition;
   final VoidCallback onEditDescription;
   final VoidCallback onDelete;
 
   const LocationListItem({
     super.key,
     required this.location,
+    this.currentPosition,
     required this.onEditDescription,
     required this.onDelete,
   });
@@ -88,6 +92,12 @@ class LocationListItem extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (currentPosition != null)
+                  DistanceIndicator(
+                    from: currentPosition!,
+                    targetLat: location.latitude,
+                    targetLon: location.longitude,
+                  ),
               ],
             ),
             if (location.description.isNotEmpty) ...[

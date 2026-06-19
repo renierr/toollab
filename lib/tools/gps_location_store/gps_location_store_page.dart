@@ -11,6 +11,7 @@ import 'config.dart';
 import 'gps_location_store_state.dart';
 import 'location_capture_service.dart';
 import 'saved_location.dart';
+import 'widgets/current_location_card.dart';
 import 'widgets/last_location_card.dart';
 import 'widgets/location_description_dialog.dart';
 import 'widgets/location_list.dart';
@@ -32,33 +33,27 @@ class _GpsLocationStorePageState extends State<GpsLocationStorePage>
     });
   }
 
-  Future<void> _captureAndSave() async {
+  Future<void> _locate() async {
     final state = context.read<GpsLocationStoreState>();
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
 
-    LocationFix fix;
-    try {
-      fix = await state.captureCurrent();
-    } on LocationUnavailableException {
+    final ok = await state.locateCurrent();
+    if (!ok && mounted) {
       messenger.showSnackBar(
         SnackBar(
           content: Text(l10n.gpsStoreCaptureFailed),
           backgroundColor: AppTheme.accentRed,
         ),
       );
-      return;
-    } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l10n.gpsStoreCaptureFailed),
-          backgroundColor: AppTheme.accentRed,
-        ),
-      );
-      return;
     }
+  }
 
-    if (!mounted) return;
+  Future<void> _saveFix(LocationFix fix) async {
+    final state = context.read<GpsLocationStoreState>();
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
     final description = await LocationDescriptionDialog.show(
       context: context,
       title: l10n.gpsStoreSaveLocationTitle,
@@ -108,18 +103,21 @@ class _GpsLocationStorePageState extends State<GpsLocationStorePage>
     final l10n = AppLocalizations.of(context);
     final state = context.watch<GpsLocationStoreState>();
     final locations = state.locations;
+    final current = state.currentPosition;
     final last = state.lastLocation;
     final history = locations.length > 1
         ? locations.sublist(1)
         : <SavedLocation>[];
 
+    final hasContent = current != null || locations.isNotEmpty;
+
     return ToolLayout(
       title: GpsLocationStoreTool.config.localizedName(l10n),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: state.isCapturing ? null : _captureAndSave,
-        backgroundColor: AppTheme.accentGreen,
+        onPressed: state.isLocatingCurrent ? null : _locate,
+        backgroundColor: AppTheme.accentBlue,
         foregroundColor: Colors.white,
-        icon: state.isCapturing
+        icon: state.isLocatingCurrent
             ? const SizedBox(
                 width: 18,
                 height: 18,
@@ -128,8 +126,8 @@ class _GpsLocationStorePageState extends State<GpsLocationStorePage>
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : const Icon(Icons.add_location_alt_outlined),
-        label: Text(l10n.gpsStoreCaptureButton),
+            : const Icon(Icons.my_location),
+        label: Text(l10n.gpsStoreLocateButton),
       ),
       child: state.isLoading
           ? const Center(
@@ -137,16 +135,30 @@ class _GpsLocationStorePageState extends State<GpsLocationStorePage>
                 valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentGreen),
               ),
             )
-          : locations.isEmpty
-          ? _EmptyState(onCapture: state.isCapturing ? null : _captureAndSave)
+          : !hasContent
+          ? _EmptyState(
+              onLocate: state.isLocatingCurrent ? null : _locate,
+              isLocating: state.isLocatingCurrent,
+            )
           : ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
               children: [
-                if (last != null) LastLocationCard(location: last),
+                if (current != null) ...[
+                  CurrentLocationCard(
+                    fix: current,
+                    isLocating: state.isLocatingCurrent,
+                    onRefresh: _locate,
+                    onSave: () => _saveFix(current),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                if (last != null)
+                  LastLocationCard(location: last, currentPosition: current),
                 if (history.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   LocationList(
                     locations: history,
+                    currentPosition: current,
                     onEditDescription: _editDescription,
                     onDelete: _deleteLocation,
                   ),
@@ -158,9 +170,10 @@ class _GpsLocationStorePageState extends State<GpsLocationStorePage>
 }
 
 class _EmptyState extends StatelessWidget {
-  final VoidCallback? onCapture;
+  final VoidCallback? onLocate;
+  final bool isLocating;
 
-  const _EmptyState({this.onCapture});
+  const _EmptyState({this.onLocate, required this.isLocating});
 
   @override
   Widget build(BuildContext context) {
@@ -194,11 +207,17 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: onCapture,
-              icon: const Icon(Icons.add_location_alt_outlined),
-              label: Text(l10n.gpsStoreCaptureButton),
+              onPressed: onLocate,
+              icon: isLocating
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.my_location),
+              label: Text(l10n.gpsStoreLocateButton),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentGreen,
+                backgroundColor: AppTheme.accentBlue,
                 foregroundColor: Colors.white,
               ),
             ),

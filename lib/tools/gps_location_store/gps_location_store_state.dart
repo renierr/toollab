@@ -7,11 +7,16 @@ import 'saved_location.dart';
 class GpsLocationStoreState extends ChangeNotifier {
   List<SavedLocation> _locations = [];
   bool _isLoading = false;
-  bool _isCapturing = false;
+  LocationFix? _currentPosition;
+  bool _isLocatingCurrent = false;
 
   List<SavedLocation> get locations => _locations;
   bool get isLoading => _isLoading;
-  bool get isCapturing => _isCapturing;
+
+  /// Live position used to display the current spot and compute
+  /// distance/direction to stored locations. `null` until located.
+  LocationFix? get currentPosition => _currentPosition;
+  bool get isLocatingCurrent => _isLocatingCurrent;
 
   SavedLocation? get lastLocation =>
       _locations.isEmpty ? null : _locations.first;
@@ -29,19 +34,26 @@ class GpsLocationStoreState extends ChangeNotifier {
     }
   }
 
-  /// Captures the current position. Returns the fix for preview; does not store.
-  Future<LocationFix> captureCurrent() async {
-    _isCapturing = true;
+  /// Resolves the live position (GPS, falling back to IP) for display and
+  /// distance/direction calculations. Does not store anything. Returns `true`
+  /// on success.
+  Future<bool> locateCurrent() async {
+    _isLocatingCurrent = true;
     notifyListeners();
     try {
-      return await LocationCaptureService.capture();
+      _currentPosition = await LocationCaptureService.capture();
+      return true;
+    } catch (e) {
+      debugPrint('[GpsLocationStoreState] Current position unavailable: $e');
+      return false;
     } finally {
-      _isCapturing = false;
+      _isLocatingCurrent = false;
       notifyListeners();
     }
   }
 
   Future<void> saveFix(LocationFix fix, String description) async {
+    _currentPosition = fix;
     await GpsLocationStoreDbHelper.instance.insertLocation(
       latitude: fix.latitude,
       longitude: fix.longitude,

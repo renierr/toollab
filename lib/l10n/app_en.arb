@@ -1764,7 +1764,9 @@
   "docScanMlKitUnavailableFallback": "Document scanner unavailable, using the camera instead.",
   "toolNameGpsLocationStore": "GPS Location Store",
   "toolDescGpsLocationStore": "Capture and store your current location with notes and map links",
-  "gpsStoreCaptureButton": "Save current location",
+  "gpsStoreLocateButton": "Show current location",
+  "gpsStoreCurrentTitle": "Current location",
+  "gpsStoreSaveThis": "Save this location",
   "gpsStoreLastSavedTitle": "Last saved location",
   "gpsStoreHistoryTitle": "History",
   "gpsStoreOpenGoogleMaps": "Google Maps",
@@ -1789,6 +1791,15 @@
   "gpsStoreDeleteTitle": "Delete location",
   "gpsStoreDeleteMessage": "This location will be permanently removed.",
   "gpsStoreEmptyTitle": "No locations yet",
-  "gpsStoreEmptyMessage": "Tap \"Save current location\" to capture and store your position."
+  "gpsStoreEmptyMessage": "Tap \"Show current location\" to find where you are, then save it.",
+  "gpsStoreDistanceFromHere": "Distance and direction from your current position",
+  "gpsStoreCompassN": "N",
+  "gpsStoreCompassNE": "NE",
+  "gpsStoreCompassE": "E",
+  "gpsStoreCompassSE": "SE",
+  "gpsStoreCompassS": "S",
+  "gpsStoreCompassSW": "SW",
+  "gpsStoreCompassW": "W",
+  "gpsStoreCompassNW": "NW"
 }
 

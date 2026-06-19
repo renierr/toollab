@@ -2932,7 +2932,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Aktuellen Standort mit Notizen und Kartenlinks erfassen und speichern';
 
   @override
-  String get gpsStoreCaptureButton => 'Aktuellen Standort speichern';
+  String get gpsStoreLocateButton => 'Aktuellen Standort anzeigen';
+
+  @override
+  String get gpsStoreCurrentTitle => 'Aktueller Standort';
+
+  @override
+  String get gpsStoreSaveThis => 'Diesen Standort speichern';
 
   @override
   String get gpsStoreLastSavedTitle => 'Zuletzt gespeicherter Standort';
@@ -2992,5 +2998,33 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gpsStoreEmptyMessage =>
-      'Tippe auf \"Aktuellen Standort speichern\", um deine Position zu erfassen und zu speichern.';
+      'Tippe auf \"Aktuellen Standort anzeigen\", um deine Position zu ermitteln und anschließend zu speichern.';
+
+  @override
+  String get gpsStoreDistanceFromHere =>
+      'Entfernung und Richtung von deiner aktuellen Position';
+
+  @override
+  String get gpsStoreCompassN => 'N';
+
+  @override
+  String get gpsStoreCompassNE => 'NO';
+
+  @override
+  String get gpsStoreCompassE => 'O';
+
+  @override
+  String get gpsStoreCompassSE => 'SO';
+
+  @override
+  String get gpsStoreCompassS => 'S';
+
+  @override
+  String get gpsStoreCompassSW => 'SW';
+
+  @override
+  String get gpsStoreCompassW => 'W';
+
+  @override
+  String get gpsStoreCompassNW => 'NW';
 }

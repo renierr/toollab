@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../location_capture_service.dart';
 import '../saved_location.dart';
 import 'location_list_item.dart';
 
 class LocationList extends StatelessWidget {
   final List<SavedLocation> locations;
+  final LocationFix? currentPosition;
   final void Function(SavedLocation) onEditDescription;
   final void Function(SavedLocation) onDelete;
 
   const LocationList({
     super.key,
     required this.locations,
+    this.currentPosition,
     required this.onEditDescription,
     required this.onDelete,
   });
@@ -37,6 +40,7 @@ class LocationList extends StatelessWidget {
         ...locations.map(
           (loc) => LocationListItem(
             location: loc,
+            currentPosition: currentPosition,
             onEditDescription: () => onEditDescription(loc),
             onDelete: () => onDelete(loc),
           ),
