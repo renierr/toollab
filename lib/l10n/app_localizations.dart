@@ -5695,6 +5695,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this chat session and all its messages?'**
   String get chatAiDeleteSessionConfirm;
+
+  /// No description provided for @chatAiAttachImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach Image'**
+  String get chatAiAttachImage;
+
+  /// No description provided for @chatAiAttachDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach Document'**
+  String get chatAiAttachDocument;
+
+  /// No description provided for @chatAiClearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear History'**
+  String get chatAiClearHistory;
+
+  /// No description provided for @chatAiClearHistoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear all messages in this chat?'**
+  String get chatAiClearHistoryConfirm;
 }
 
 class _AppLocalizationsDelegate

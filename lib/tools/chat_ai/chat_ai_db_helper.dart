@@ -19,7 +19,7 @@ class ChatAiDbHelper {
     );
     try {
       await _cachedDb!.migrate(
-        currentVersion: 2,
+        currentVersion: 3,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -45,6 +45,14 @@ class ChatAiDbHelper {
           if (oldVersion < 2) {
             await txn.execute(
               'ALTER TABLE ${txn.nameTable(messageTable)} ADD COLUMN image_data BLOB',
+            );
+          }
+          if (oldVersion < 3) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(messageTable)} ADD COLUMN file_name TEXT',
+            );
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(messageTable)} ADD COLUMN file_content TEXT',
             );
           }
         },
@@ -126,6 +134,8 @@ class ChatAiDbHelper {
     String role,
     String content, {
     Uint8List? imageData,
+    String? fileName,
+    String? fileContent,
   }) async {
     final db = await _getDb();
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -134,9 +144,22 @@ class ChatAiDbHelper {
       'role': role,
       'content': content,
       'image_data': imageData,
+      'file_name': fileName,
+      'file_content': fileContent,
       'created_at': now,
     });
     await touchSession(sessionId);
     return id;
+  }
+
+  /// Clears all messages in a chat session.
+  Future<void> clearSessionMessages(int sessionId) async {
+    final db = await _getDb();
+    await db.delete(
+      messageTable,
+      where: 'session_id = ?',
+      whereArgs: [sessionId],
+    );
+    await touchSession(sessionId);
   }
 }

@@ -60,6 +60,51 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
                 const SizedBox(height: 8.0),
               ],
+              if (message['file_name'] != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(10.0),
+                  decoration: BoxDecoration(
+                    color: isUser
+                        ? theme.colorScheme.onPrimaryContainer.withValues(
+                            alpha: 0.1,
+                          )
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: isUser
+                          ? theme.colorScheme.onPrimaryContainer.withValues(
+                              alpha: 0.2,
+                            )
+                          : theme.colorScheme.outline.withValues(alpha: 0.15),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.insert_drive_file_outlined,
+                        color: isUser
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8.0),
+                      Flexible(
+                        child: Text(
+                          message['file_name'] as String,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isUser
+                                ? theme.colorScheme.onPrimaryContainer
+                                : theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8.0),
+              ],
               if (isUser)
                 SelectableText(
                   message['content'] as String,

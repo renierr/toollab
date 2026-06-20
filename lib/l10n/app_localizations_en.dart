@@ -3177,4 +3177,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatAiDeleteSessionConfirm =>
       'Are you sure you want to delete this chat session and all its messages?';
+
+  @override
+  String get chatAiAttachImage => 'Attach Image';
+
+  @override
+  String get chatAiAttachDocument => 'Attach Document';
+
+  @override
+  String get chatAiClearHistory => 'Clear History';
+
+  @override
+  String get chatAiClearHistoryConfirm =>
+      'Are you sure you want to clear all messages in this chat?';
 }

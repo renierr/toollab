@@ -1068,6 +1068,10 @@
   "chatAiDownloadButton": "Modell herunterladen",
   "chatAiInputPlaceholder": "Schreiben Sie eine Nachricht...",
   "chatAiDeleteSession": "Sitzung löschen",
-  "chatAiDeleteSessionConfirm": "Sind Sie sicher, dass Sie diese Chatsitzung und alle ihre Nachrichten löschen möchten?"
+  "chatAiDeleteSessionConfirm": "Sind Sie sicher, dass Sie diese Chatsitzung und alle ihre Nachrichten löschen möchten?",
+  "chatAiAttachImage": "Bild anfügen",
+  "chatAiAttachDocument": "Dokument anfügen",
+  "chatAiClearHistory": "Verlauf löschen",
+  "chatAiClearHistoryConfirm": "Sind Sie sicher, dass Sie alle Nachrichten in diesem Chat löschen möchten?"
 }
 

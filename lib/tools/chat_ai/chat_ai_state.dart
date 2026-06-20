@@ -16,6 +16,8 @@ class ChatAiState extends ChangeNotifier {
   Timer? _statusPollingTimer;
   Prompt? _prompt;
   Uint8List? _selectedImageBytes;
+  String? _attachedFileName;
+  String? _attachedFileContent;
 
   List<Map<String, dynamic>> get sessions => _sessions;
   int? get currentSessionId => _currentSessionId;
@@ -24,9 +26,24 @@ class ChatAiState extends ChangeNotifier {
   bool get isInitializing => _isInitializing;
   bool get isGenerating => _isGenerating;
   Uint8List? get selectedImageBytes => _selectedImageBytes;
+  String? get attachedFileName => _attachedFileName;
+  String? get attachedFileContent => _attachedFileContent;
 
   void selectImage(Uint8List? bytes) {
     _selectedImageBytes = bytes;
+    if (bytes != null) {
+      _attachedFileName = null;
+      _attachedFileContent = null;
+    }
+    notifyListeners();
+  }
+
+  void selectFile(String? name, String? content) {
+    _attachedFileName = name;
+    _attachedFileContent = content;
+    if (name != null) {
+      _selectedImageBytes = null;
+    }
     notifyListeners();
   }
 
@@ -148,18 +165,26 @@ class ChatAiState extends ChangeNotifier {
   }
 
   Future<void> sendMessage(String text) async {
-    if (text.trim().isEmpty && _selectedImageBytes == null) return;
+    if (text.trim().isEmpty &&
+        _selectedImageBytes == null &&
+        _attachedFileName == null) {
+      return;
+    }
     if (_currentSessionId == null) {
       final initialTitle = text.trim().isNotEmpty
           ? (text.length > 20 ? '${text.substring(0, 17)}...' : text)
-          : 'Image Prompt';
+          : (_attachedFileName ?? 'Image Prompt');
       await createNewSession(initialTitle: initialTitle);
     }
 
     final sessionId = _currentSessionId!;
     final imageToSend = _selectedImageBytes;
+    final fileNameToSend = _attachedFileName;
+    final fileContentToSend = _attachedFileContent;
 
     _selectedImageBytes = null;
+    _attachedFileName = null;
+    _attachedFileContent = null;
     notifyListeners();
 
     try {
@@ -169,6 +194,8 @@ class ChatAiState extends ChangeNotifier {
         'user',
         text,
         imageData: imageToSend,
+        fileName: fileNameToSend,
+        fileContent: fileContentToSend,
       );
       _messages = await ChatAiDbHelper.instance.getMessages(sessionId);
       notifyListeners();
@@ -176,9 +203,10 @@ class ChatAiState extends ChangeNotifier {
       // Update session title if default
       final currentSession = _sessions.firstWhere((s) => s['id'] == sessionId);
       if (currentSession['title'].startsWith('Chat ')) {
-        final newTitle = text.length > 25
-            ? '${text.substring(0, 22)}...'
-            : text;
+        final titleSource = text.isNotEmpty ? text : (fileNameToSend ?? 'Chat');
+        final newTitle = titleSource.length > 25
+            ? '${titleSource.substring(0, 22)}...'
+            : titleSource;
         await ChatAiDbHelper.instance.updateSessionTitle(sessionId, newTitle);
         await loadSessions();
       }
@@ -207,6 +235,9 @@ class ChatAiState extends ChangeNotifier {
         if (imageToSend != null) {
           response +=
               '\n\n[Simulated Image Analysis]: The model detected a multimodal input image (bytes size: ${imageToSend.length}). On supported Android devices, this image is processed locally on-device by Gemini Nano.';
+        } else if (fileNameToSend != null) {
+          response +=
+              '\n\n[Simulated Document Analysis]: The model detected an attached file "$fileNameToSend". On supported Android devices, the file content is processed locally along with your prompt.';
         } else if (!Platform.isAndroid) {
           response +=
               'On-device Gemini Nano is only supported on Android. For other platforms, please use a cloud model or simulate.';
@@ -248,10 +279,31 @@ class ChatAiState extends ChangeNotifier {
         : _messages;
     for (final msg in history) {
       final roleName = msg['role'] == 'user' ? 'User' : 'Model';
-      buffer.writeln('$roleName: ${msg['content']}');
+      buffer.write('$roleName: ');
+      if (msg['file_name'] != null && msg['file_content'] != null) {
+        final content = msg['file_content'] as String;
+        final truncatedContent = content.length > 2500
+            ? '${content.substring(0, 2500)}... [Truncated]'
+            : content;
+        buffer.writeln('[Attached File: ${msg['file_name']}]');
+        buffer.writeln(truncatedContent);
+        buffer.writeln('-----');
+      }
+      buffer.writeln(msg['content']);
     }
     buffer.writeln('Model:');
     return buffer.toString();
+  }
+
+  Future<void> clearCurrentSessionHistory() async {
+    if (_currentSessionId == null) return;
+    try {
+      await ChatAiDbHelper.instance.clearSessionMessages(_currentSessionId!);
+      _messages = [];
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[ChatAiState] Clear session history failed: $e');
+    }
   }
 
   @override

@@ -1894,6 +1894,10 @@
   "chatAiDownloadButton": "Download Model",
   "chatAiInputPlaceholder": "Type a message...",
   "chatAiDeleteSession": "Delete Session",
-  "chatAiDeleteSessionConfirm": "Are you sure you want to delete this chat session and all its messages?"
+  "chatAiDeleteSessionConfirm": "Are you sure you want to delete this chat session and all its messages?",
+  "chatAiAttachImage": "Attach Image",
+  "chatAiAttachDocument": "Attach Document",
+  "chatAiClearHistory": "Clear History",
+  "chatAiClearHistoryConfirm": "Are you sure you want to clear all messages in this chat?"
 }
 

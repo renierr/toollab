@@ -11,6 +11,9 @@ class ChatInputBar extends StatelessWidget {
   final Uint8List? selectedImageBytes;
   final VoidCallback onPickImage;
   final VoidCallback onRemoveImage;
+  final String? attachedFileName;
+  final VoidCallback onPickFile;
+  final VoidCallback onRemoveFile;
 
   const ChatInputBar({
     super.key,
@@ -21,6 +24,9 @@ class ChatInputBar extends StatelessWidget {
     required this.selectedImageBytes,
     required this.onPickImage,
     required this.onRemoveImage,
+    required this.attachedFileName,
+    required this.onPickFile,
+    required this.onRemoveFile,
   });
 
   @override
@@ -93,13 +99,115 @@ class ChatInputBar extends StatelessWidget {
                 ],
               ),
             ],
+            if (attachedFileName != null) ...[
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(
+                      bottom: 12.0,
+                      left: 4.0,
+                      top: 4.0,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0,
+                      vertical: 8.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withValues(
+                          alpha: 0.15,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.insert_drive_file_outlined,
+                          color: theme.colorScheme.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8.0),
+                        Flexible(
+                          child: Text(
+                            attachedFileName!,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: GestureDetector(
+                      onTap: onRemoveFile,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.cancel,
+                          size: 20,
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.add_photo_alternate_outlined),
-                  color: accentColor,
-                  tooltip: 'Attach Image',
-                  onPressed: enabled && !isGenerating ? onPickImage : null,
+                PopupMenuButton<int>(
+                  icon: Icon(
+                    Icons.add_circle_outline_rounded,
+                    color: accentColor,
+                  ),
+                  tooltip: 'Attach file or image',
+                  enabled: enabled && !isGenerating,
+                  onSelected: (value) {
+                    if (value == 1) {
+                      onPickImage();
+                    } else if (value == 2) {
+                      onPickFile();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 1,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.image_outlined,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(l10n.chatAiAttachImage),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 2,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.insert_drive_file_outlined,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(l10n.chatAiAttachDocument),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -142,6 +250,7 @@ class ChatInputBar extends StatelessWidget {
                       isGenerating ||
                           (!enabled &&
                               selectedImageBytes == null &&
+                              attachedFileName == null &&
                               controller.text.trim().isEmpty)
                       ? theme.colorScheme.surfaceContainerHighest
                       : accentColor,
@@ -151,6 +260,7 @@ class ChatInputBar extends StatelessWidget {
                         isGenerating ||
                             (!enabled &&
                                 selectedImageBytes == null &&
+                                attachedFileName == null &&
                                 controller.text.trim().isEmpty)
                         ? null
                         : onSend,
@@ -174,6 +284,7 @@ class ChatInputBar extends StatelessWidget {
                                   isGenerating ||
                                       (!enabled &&
                                           selectedImageBytes == null &&
+                                          attachedFileName == null &&
                                           controller.text.trim().isEmpty)
                                   ? theme.colorScheme.onSurface.withValues(
                                       alpha: 0.3,
