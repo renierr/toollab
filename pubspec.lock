@@ -509,6 +509,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.1"
+  google_mlkit_genai_prompt:
+    dependency: "direct main"
+    description:
+      name: google_mlkit_genai_prompt
+      sha256: "6f34563aea82727d1089b48553bccac6d4577390e149b5e1b5e9518a014503ff"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   google_mlkit_subject_segmentation:
     dependency: "direct main"
     description:

@@ -3159,4 +3159,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gpsInfoProviderDisabled => 'Deaktiviert';
+
+  @override
+  String get toolNameChatAi => 'KI Chat';
+
+  @override
+  String get toolDescChatAi =>
+      'Chatten Sie mit dem geräteinternen KI-Modell Gemini Nano über ML Kit';
+
+  @override
+  String get chatAiUnsupportedPlatform =>
+      'On-Device AI Chat wird nur unter Android unterstützt. Desktop- und iOS-Plattformen werden von der ML Kit GenAI Prompt API nicht unterstützt.';
+
+  @override
+  String get chatAiNewChat => 'Neuer Chat';
+
+  @override
+  String chatAiModelStatus(String status) {
+    return 'Modellstatus: $status';
+  }
+
+  @override
+  String get chatAiModelLoading =>
+      'Modell wird heruntergeladen... Dies kann eine Weile dauern.';
+
+  @override
+  String get chatAiModelReady => 'Modell bereit';
+
+  @override
+  String get chatAiModelNotDownloaded =>
+      'Modell nicht heruntergeladen. Tippen Sie auf Herunterladen, um zu starten.';
+
+  @override
+  String get chatAiDownloadButton => 'Modell herunterladen';
+
+  @override
+  String get chatAiInputPlaceholder => 'Schreiben Sie eine Nachricht...';
+
+  @override
+  String get chatAiDeleteSession => 'Sitzung löschen';
+
+  @override
+  String get chatAiDeleteSessionConfirm =>
+      'Sind Sie sicher, dass Sie diese Chatsitzung und alle ihre Nachrichten löschen möchten?';
 }

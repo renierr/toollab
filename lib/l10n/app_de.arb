@@ -1056,6 +1056,18 @@
     }
   },
   "gpsInfoProviderEnabled": "Aktiviert",
-  "gpsInfoProviderDisabled": "Deaktiviert"
+  "gpsInfoProviderDisabled": "Deaktiviert",
+  "toolNameChatAi": "KI Chat",
+  "toolDescChatAi": "Chatten Sie mit dem geräteinternen KI-Modell Gemini Nano über ML Kit",
+  "chatAiUnsupportedPlatform": "On-Device AI Chat wird nur unter Android unterstützt. Desktop- und iOS-Plattformen werden von der ML Kit GenAI Prompt API nicht unterstützt.",
+  "chatAiNewChat": "Neuer Chat",
+  "chatAiModelStatus": "Modellstatus: {status}",
+  "chatAiModelLoading": "Modell wird heruntergeladen... Dies kann eine Weile dauern.",
+  "chatAiModelReady": "Modell bereit",
+  "chatAiModelNotDownloaded": "Modell nicht heruntergeladen. Tippen Sie auf Herunterladen, um zu starten.",
+  "chatAiDownloadButton": "Modell herunterladen",
+  "chatAiInputPlaceholder": "Schreiben Sie eine Nachricht...",
+  "chatAiDeleteSession": "Sitzung löschen",
+  "chatAiDeleteSessionConfirm": "Sind Sie sicher, dass Sie diese Chatsitzung und alle ihre Nachrichten löschen möchten?"
 }
 

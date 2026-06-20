@@ -5623,6 +5623,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disabled'**
   String get gpsInfoProviderDisabled;
+
+  /// No description provided for @toolNameChatAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Chat'**
+  String get toolNameChatAi;
+
+  /// No description provided for @toolDescChatAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat with on-device AI model Gemini Nano using ML Kit'**
+  String get toolDescChatAi;
+
+  /// No description provided for @chatAiUnsupportedPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device AI Chat is only supported on Android. Desktop and iOS platforms are not supported by the ML Kit GenAI Prompt API.'**
+  String get chatAiUnsupportedPlatform;
+
+  /// No description provided for @chatAiNewChat.
+  ///
+  /// In en, this message translates to:
+  /// **'New Chat'**
+  String get chatAiNewChat;
+
+  /// No description provided for @chatAiModelStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Model Status: {status}'**
+  String chatAiModelStatus(String status);
+
+  /// No description provided for @chatAiModelLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading model... This may take a while.'**
+  String get chatAiModelLoading;
+
+  /// No description provided for @chatAiModelReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Model ready'**
+  String get chatAiModelReady;
+
+  /// No description provided for @chatAiModelNotDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Model not downloaded. Tap Download to start.'**
+  String get chatAiModelNotDownloaded;
+
+  /// No description provided for @chatAiDownloadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Model'**
+  String get chatAiDownloadButton;
+
+  /// No description provided for @chatAiInputPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a message...'**
+  String get chatAiInputPlaceholder;
+
+  /// No description provided for @chatAiDeleteSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Session'**
+  String get chatAiDeleteSession;
+
+  /// No description provided for @chatAiDeleteSessionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this chat session and all its messages?'**
+  String get chatAiDeleteSessionConfirm;
 }
 
 class _AppLocalizationsDelegate

@@ -3134,4 +3134,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpsInfoProviderDisabled => 'Disabled';
+
+  @override
+  String get toolNameChatAi => 'AI Chat';
+
+  @override
+  String get toolDescChatAi =>
+      'Chat with on-device AI model Gemini Nano using ML Kit';
+
+  @override
+  String get chatAiUnsupportedPlatform =>
+      'On-device AI Chat is only supported on Android. Desktop and iOS platforms are not supported by the ML Kit GenAI Prompt API.';
+
+  @override
+  String get chatAiNewChat => 'New Chat';
+
+  @override
+  String chatAiModelStatus(String status) {
+    return 'Model Status: $status';
+  }
+
+  @override
+  String get chatAiModelLoading =>
+      'Downloading model... This may take a while.';
+
+  @override
+  String get chatAiModelReady => 'Model ready';
+
+  @override
+  String get chatAiModelNotDownloaded =>
+      'Model not downloaded. Tap Download to start.';
+
+  @override
+  String get chatAiDownloadButton => 'Download Model';
+
+  @override
+  String get chatAiInputPlaceholder => 'Type a message...';
+
+  @override
+  String get chatAiDeleteSession => 'Delete Session';
+
+  @override
+  String get chatAiDeleteSessionConfirm =>
+      'Are you sure you want to delete this chat session and all its messages?';
 }
