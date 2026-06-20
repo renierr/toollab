@@ -17,7 +17,7 @@ class GpsLocationStoreTool {
     icon: Icons.location_on_outlined,
     route: '/gps-location-store',
     accentColor: AppTheme.accentGreen,
-    sectionId: 'utilities',
+    sectionId: 'sensors',
     nameL10n: (l10n) => l10n.toolNameGpsLocationStore,
     descriptionL10n: (l10n) => l10n.toolDescGpsLocationStore,
     createPage: (_) => const GpsLocationStorePage(),
