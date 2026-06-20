@@ -1075,6 +1075,8 @@
   "chatAiPrepareButton": "KI Core vorbereiten",
   "chatAiClearHistory": "Verlauf löschen",
   "chatAiClearHistoryConfirm": "Sind Sie sicher, dass Sie alle Nachrichten in diesem Chat löschen möchten?",
-  "chatAiThinking": "Überlegt..."
+  "chatAiThinking": "Überlegt...",
+  "chatAiSystemPromptTitle": "System-Prompt",
+  "chatAiSystemPromptDescription": "Passen Sie die Anweisungen für das KI-Modell an. Leer lassen, um den Standard zu verwenden."
 }
 

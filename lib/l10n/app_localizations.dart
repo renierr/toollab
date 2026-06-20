@@ -5737,6 +5737,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Thinking...'**
   String get chatAiThinking;
+
+  /// No description provided for @chatAiSystemPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System Prompt'**
+  String get chatAiSystemPromptTitle;
+
+  /// No description provided for @chatAiSystemPromptDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize the instructions for the AI model. Leave empty to use the default.'**
+  String get chatAiSystemPromptDescription;
 }
 
 class _AppLocalizationsDelegate

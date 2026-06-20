@@ -4,7 +4,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 // ignore: implementation_imports
 import 'package:google_mlkit_genai_prompt/src/prompt.dart';
+import 'package:tool_lab/services/database_service.dart';
 import 'chat_ai_db_helper.dart';
+import 'config.dart';
 
 class ChatAiState extends ChangeNotifier {
   List<Map<String, dynamic>> _sessions = [];
@@ -16,6 +18,15 @@ class ChatAiState extends ChangeNotifier {
   Timer? _statusPollingTimer;
   Prompt? _prompt;
   Uint8List? _selectedImageBytes;
+
+  static const String defaultSystemPrompt =
+      'You are a helpful, respectful, and honest on-device AI assistant. Respond in the same language as the user (e.g. if the user writes in German, respond in German; if the user writes in English, respond in English).';
+
+  String? _customSystemPrompt;
+
+  String get customSystemPrompt => _customSystemPrompt ?? '';
+
+  String get activeSystemPrompt => _customSystemPrompt ?? defaultSystemPrompt;
   String? _attachedFileName;
   String? _attachedFileContent;
   String? _modelError;
@@ -33,6 +44,26 @@ class ChatAiState extends ChangeNotifier {
 
   void clearModelError() {
     _modelError = null;
+    notifyListeners();
+  }
+
+  Future<void> updateSystemPrompt(String? newPrompt) async {
+    if (newPrompt == null ||
+        newPrompt.trim().isEmpty ||
+        newPrompt.trim() == defaultSystemPrompt) {
+      _customSystemPrompt = null;
+      await DatabaseService.instance.deleteSetting(
+        ChatAiTool.config.id,
+        'system_prompt',
+      );
+    } else {
+      _customSystemPrompt = newPrompt.trim();
+      await DatabaseService.instance.setSetting(
+        ChatAiTool.config.id,
+        'system_prompt',
+        _customSystemPrompt!,
+      );
+    }
     notifyListeners();
   }
 
@@ -67,6 +98,10 @@ class ChatAiState extends ChangeNotifier {
 
       if (Platform.isAndroid) {
         _prompt = Prompt();
+        _customSystemPrompt = await DatabaseService.instance.getSetting(
+          ChatAiTool.config.id,
+          'system_prompt',
+        );
         await updateFeatureStatus();
 
         if (_featureStatus == FeatureStatus.downloading) {
@@ -279,9 +314,7 @@ class ChatAiState extends ChangeNotifier {
 
   String _buildPromptText() {
     final buffer = StringBuffer();
-    buffer.writeln(
-      'You are a helpful, respectful, and honest on-device AI assistant. Respond in the same language as the user (e.g. if the user writes in German, respond in German; if the user writes in English, respond in English).',
-    );
+    buffer.writeln(activeSystemPrompt);
     buffer.writeln('Below is the history of the conversation so far.');
     buffer.writeln();
 

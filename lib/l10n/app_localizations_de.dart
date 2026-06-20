@@ -3224,4 +3224,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatAiThinking => 'Überlegt...';
+
+  @override
+  String get chatAiSystemPromptTitle => 'System-Prompt';
+
+  @override
+  String get chatAiSystemPromptDescription =>
+      'Passen Sie die Anweisungen für das KI-Modell an. Leer lassen, um den Standard zu verwenden.';
 }

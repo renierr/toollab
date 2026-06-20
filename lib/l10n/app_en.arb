@@ -1901,6 +1901,8 @@
   "chatAiPrepareButton": "Prepare AI Core",
   "chatAiClearHistory": "Clear History",
   "chatAiClearHistoryConfirm": "Are you sure you want to clear all messages in this chat?",
-  "chatAiThinking": "Thinking..."
+  "chatAiThinking": "Thinking...",
+  "chatAiSystemPromptTitle": "System Prompt",
+  "chatAiSystemPromptDescription": "Customize the instructions for the AI model. Leave empty to use the default."
 }
 

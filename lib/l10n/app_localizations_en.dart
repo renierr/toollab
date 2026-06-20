@@ -3199,4 +3199,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatAiThinking => 'Thinking...';
+
+  @override
+  String get chatAiSystemPromptTitle => 'System Prompt';
+
+  @override
+  String get chatAiSystemPromptDescription =>
+      'Customize the instructions for the AI model. Leave empty to use the default.';
 }

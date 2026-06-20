@@ -17,6 +17,7 @@ import 'widgets/chat_status_banner.dart';
 import 'widgets/chat_suggestions.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/chat_thinking_bubble.dart';
+import 'widgets/chat_system_prompt_dialog.dart';
 
 class ChatAiPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -180,6 +181,22 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
       title: l10n.toolNameChatAi,
       drawer: const ChatSessionDrawer(),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.settings_outlined),
+          tooltip: l10n.chatAiSystemPromptTitle,
+          onPressed: () async {
+            final newPrompt = await showDialog<String?>(
+              context: context,
+              builder: (context) => ChatSystemPromptDialog(
+                currentPrompt: state.customSystemPrompt,
+                defaultPrompt: ChatAiState.defaultSystemPrompt,
+              ),
+            );
+            if (newPrompt != null) {
+              await state.updateSystemPrompt(newPrompt);
+            }
+          },
+        ),
         if (state.messages.isNotEmpty)
           IconButton(
             icon: const Icon(Icons.delete_sweep_outlined),
