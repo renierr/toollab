@@ -22,7 +22,11 @@ class _ChatSystemPromptDialogState extends State<ChatSystemPromptDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.currentPrompt);
+    _controller = TextEditingController(
+      text: widget.currentPrompt.isNotEmpty
+          ? widget.currentPrompt
+          : widget.defaultPrompt,
+    );
   }
 
   @override
@@ -38,35 +42,38 @@ class _ChatSystemPromptDialogState extends State<ChatSystemPromptDialog> {
 
     return ResponsiveAlertDialog(
       title: Text(l10n.chatAiSystemPromptTitle),
+      scrollable: true,
       content: SizedBox(
         width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.chatAiSystemPromptDescription,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(height: 12.0),
-            TextField(
-              controller: _controller,
-              maxLines: 6,
-              minLines: 4,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                hintText: widget.defaultPrompt,
-                hintStyle: TextStyle(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.chatAiSystemPromptDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerLow,
               ),
-            ),
-          ],
+              const SizedBox(height: 12.0),
+              TextField(
+                controller: _controller,
+                maxLines: 6,
+                minLines: 4,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  hintText: widget.defaultPrompt,
+                  hintStyle: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerLow,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
