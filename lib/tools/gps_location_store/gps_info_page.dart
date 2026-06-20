@@ -87,6 +87,8 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
         return;
       }
 
+      if (!mounted) return;
+
       _positionSubscription =
           Geolocator.getPositionStream(
             locationSettings: const LocationSettings(
@@ -107,7 +109,15 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
           );
 
       if (Platform.isAndroid) {
+        if (!mounted) {
+          _channel.invokeMethod('stopGpsInfoUpdates');
+          return;
+        }
         await _channel.invokeMethod('startGpsInfoUpdates');
+        if (!mounted) {
+          _channel.invokeMethod('stopGpsInfoUpdates');
+          return;
+        }
         await _loadProviders();
       }
     } catch (e) {
@@ -339,35 +349,37 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
                       titleColor: AppTheme.accentAmber,
                       child: Container(
                         constraints: const BoxConstraints(maxHeight: 300),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: _satellites.length,
-                          separatorBuilder: (_, _) => const Divider(height: 1),
-                          itemBuilder: (context, index) {
-                            final sat = _satellites[index];
-                            final svid = sat['svid'] as int;
-                            final type = sat['constellationType'] as int;
-                            final cn0 = (sat['cn0DbHz'] as num).toDouble();
-                            final used = sat['usedInFix'] as bool;
-                            final elevation = (sat['elevationDegrees'] as num)
-                                .toDouble();
-                            final azimuth = (sat['azimuthDegrees'] as num)
-                                .toDouble();
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SizedBox(
+                            width: 530,
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: _satellites.length,
+                              separatorBuilder: (_, _) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final sat = _satellites[index];
+                                final svid = sat['svid'] as int;
+                                final type = sat['constellationType'] as int;
+                                final cn0 = (sat['cn0DbHz'] as num).toDouble();
+                                final used = sat['usedInFix'] as bool;
+                                final elevation =
+                                    (sat['elevationDegrees'] as num).toDouble();
+                                final azimuth = (sat['azimuthDegrees'] as num)
+                                    .toDouble();
 
-                            final constellationName = _getConstellationName(
-                              context,
-                              type,
-                            );
-                            final color = _getConstellationColor(type);
+                                final constellationName = _getConstellationName(
+                                  context,
+                                  type,
+                                );
+                                final color = _getConstellationColor(type);
 
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8.0,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0,
+                                  ),
+                                  child: Row(
                                     children: [
                                       Container(
                                         width: 8,
@@ -378,7 +390,8 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      Expanded(
+                                      SizedBox(
+                                        width: 170,
                                         child: Text(
                                           '$constellationName - ${l10n.gpsInfoSatelliteSvid(svid)}',
                                           style: theme.textTheme.bodyMedium
@@ -390,26 +403,25 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      Text(
-                                        l10n.gpsInfoSatelliteCn0(cn0),
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              fontFamily: 'monospace',
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                        maxLines: 1,
+                                      SizedBox(
+                                        width: 100,
+                                        child: Text(
+                                          l10n.gpsInfoSatelliteCn0(cn0),
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                fontFamily: 'monospace',
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                          maxLines: 1,
+                                        ),
                                       ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 16.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          '${l10n.gpsInfoSatelliteElevation(elevation)}  ${l10n.gpsInfoSatelliteAzimuth(azimuth)}',
+                                      const SizedBox(width: 8),
+                                      SizedBox(
+                                        width: 75,
+                                        child: Text(
+                                          l10n.gpsInfoSatelliteElevation(
+                                            elevation,
+                                          ),
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                                 color: theme
@@ -419,36 +431,62 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
                                               ),
                                           maxLines: 1,
                                         ),
-                                        if (used)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.statusGreen
-                                                  .withValues(alpha: 0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              l10n.gpsInfoSatelliteUsed,
-                                              style: theme.textTheme.labelSmall
-                                                  ?.copyWith(
-                                                    color: AppTheme.statusGreen,
-                                                    fontSize: 9,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                              maxLines: 1,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      SizedBox(
+                                        width: 75,
+                                        child: Text(
+                                          l10n.gpsInfoSatelliteAzimuth(azimuth),
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withValues(alpha: 0.6),
+                                              ),
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      SizedBox(
+                                        width: 60,
+                                        child: used
+                                            ? Container(
+                                                alignment: Alignment.center,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 4,
+                                                      vertical: 2,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.statusGreen
+                                                      .withValues(alpha: 0.15),
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  l10n.gpsInfoSatelliteUsed,
+                                                  style: theme
+                                                      .textTheme
+                                                      .labelSmall
+                                                      ?.copyWith(
+                                                        color: AppTheme
+                                                            .statusGreen,
+                                                        fontSize: 9,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                  maxLines: 1,
+                                                ),
+                                              )
+                                            : const SizedBox.shrink(),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            );
-                          },
+                                );
+                              },
+                            ),
+                          ),
                         ),
                       ),
                     ),
