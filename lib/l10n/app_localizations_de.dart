@@ -3213,6 +3213,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatAiAttachTooltip => 'Datei oder Bild anfügen';
 
   @override
+  String get chatAiPrepareButton => 'KI Core vorbereiten';
+
+  @override
   String get chatAiClearHistory => 'Verlauf löschen';
 
   @override

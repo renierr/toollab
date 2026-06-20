@@ -57,12 +57,20 @@ class ChatStatusBanner extends StatelessWidget {
               ),
             ),
           ),
-          if (status == FeatureStatus.downloadable)
+          if (status == FeatureStatus.downloadable ||
+              status == FeatureStatus.unavailable)
             TextButton.icon(
               onPressed: onDownload,
-              icon: const Icon(Icons.download_rounded, size: 16),
+              icon: Icon(
+                status == FeatureStatus.unavailable
+                    ? Icons.settings_suggest_outlined
+                    : Icons.download_rounded,
+                size: 16,
+              ),
               label: Text(
-                l10n.chatAiDownloadButton,
+                status == FeatureStatus.unavailable
+                    ? l10n.chatAiPrepareButton
+                    : l10n.chatAiDownloadButton,
                 style: const TextStyle(fontSize: 12),
               ),
               style: TextButton.styleFrom(

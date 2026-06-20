@@ -1072,6 +1072,7 @@
   "chatAiAttachImage": "Bild anfügen",
   "chatAiAttachDocument": "Dokument anfügen",
   "chatAiAttachTooltip": "Datei oder Bild anfügen",
+  "chatAiPrepareButton": "KI Core vorbereiten",
   "chatAiClearHistory": "Verlauf löschen",
   "chatAiClearHistoryConfirm": "Sind Sie sicher, dass Sie alle Nachrichten in diesem Chat löschen möchten?"
 }

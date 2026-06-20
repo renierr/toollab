@@ -3188,6 +3188,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatAiAttachTooltip => 'Attach file or image';
 
   @override
+  String get chatAiPrepareButton => 'Prepare AI Core';
+
+  @override
   String get chatAiClearHistory => 'Clear History';
 
   @override

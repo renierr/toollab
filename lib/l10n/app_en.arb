@@ -1898,6 +1898,7 @@
   "chatAiAttachImage": "Attach Image",
   "chatAiAttachDocument": "Attach Document",
   "chatAiAttachTooltip": "Attach file or image",
+  "chatAiPrepareButton": "Prepare AI Core",
   "chatAiClearHistory": "Clear History",
   "chatAiClearHistoryConfirm": "Are you sure you want to clear all messages in this chat?"
 }

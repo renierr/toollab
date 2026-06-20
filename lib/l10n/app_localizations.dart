@@ -5714,6 +5714,12 @@ abstract class AppLocalizations {
   /// **'Attach file or image'**
   String get chatAiAttachTooltip;
 
+  /// No description provided for @chatAiPrepareButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepare AI Core'**
+  String get chatAiPrepareButton;
+
   /// No description provided for @chatAiClearHistory.
   ///
   /// In en, this message translates to:
