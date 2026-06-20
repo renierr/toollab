@@ -3210,6 +3210,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatAiAttachDocument => 'Dokument anfügen';
 
   @override
+  String get chatAiAttachTooltip => 'Datei oder Bild anfügen';
+
+  @override
   String get chatAiClearHistory => 'Verlauf löschen';
 
   @override

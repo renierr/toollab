@@ -171,7 +171,7 @@ class ChatInputBar extends StatelessWidget {
                     Icons.add_circle_outline_rounded,
                     color: accentColor,
                   ),
-                  tooltip: 'Attach file or image',
+                  tooltip: l10n.chatAiAttachTooltip,
                   enabled: enabled && !isGenerating,
                   onSelected: (value) {
                     if (value == 1) {

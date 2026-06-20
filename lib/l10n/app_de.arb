@@ -1071,6 +1071,7 @@
   "chatAiDeleteSessionConfirm": "Sind Sie sicher, dass Sie diese Chatsitzung und alle ihre Nachrichten löschen möchten?",
   "chatAiAttachImage": "Bild anfügen",
   "chatAiAttachDocument": "Dokument anfügen",
+  "chatAiAttachTooltip": "Datei oder Bild anfügen",
   "chatAiClearHistory": "Verlauf löschen",
   "chatAiClearHistoryConfirm": "Sind Sie sicher, dass Sie alle Nachrichten in diesem Chat löschen möchten?"
 }

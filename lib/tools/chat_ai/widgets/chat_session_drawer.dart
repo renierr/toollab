@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import '../chat_ai_state.dart';
 
 class ChatSessionDrawer extends StatelessWidget {
@@ -65,7 +66,7 @@ class ChatSessionDrawer extends StatelessWidget {
                             onPressed: () async {
                               final confirm = await showDialog<bool>(
                                 context: context,
-                                builder: (context) => AlertDialog(
+                                builder: (context) => ResponsiveAlertDialog(
                                   title: Text(l10n.chatAiDeleteSession),
                                   content: Text(
                                     l10n.chatAiDeleteSessionConfirm,

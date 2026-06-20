@@ -8,6 +8,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'chat_ai_state.dart';
 import 'widgets/chat_message_bubble.dart';
@@ -180,7 +181,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
             onPressed: () async {
               final confirm = await showDialog<bool>(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (context) => ResponsiveAlertDialog(
                   title: Text(l10n.chatAiClearHistory),
                   content: Text(l10n.chatAiClearHistoryConfirm),
                   actions: [

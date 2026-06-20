@@ -5708,6 +5708,12 @@ abstract class AppLocalizations {
   /// **'Attach Document'**
   String get chatAiAttachDocument;
 
+  /// No description provided for @chatAiAttachTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach file or image'**
+  String get chatAiAttachTooltip;
+
   /// No description provided for @chatAiClearHistory.
   ///
   /// In en, this message translates to:
