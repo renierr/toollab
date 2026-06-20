@@ -364,30 +364,50 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
                               padding: const EdgeInsets.symmetric(
                                 vertical: 8.0,
                               ),
-                              child: Row(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: color,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
                                           '$constellationName - ${l10n.gpsInfoSatelliteSvid(svid)}',
                                           style: theme.textTheme.bodyMedium
                                               ?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                               ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 2),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        l10n.gpsInfoSatelliteCn0(cn0),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              fontFamily: 'monospace',
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                        maxLines: 1,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 16.0),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
                                         Text(
                                           '${l10n.gpsInfoSatelliteElevation(elevation)}  ${l10n.gpsInfoSatelliteAzimuth(azimuth)}',
                                           style: theme.textTheme.bodySmall
@@ -397,46 +417,33 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
                                                     .onSurface
                                                     .withValues(alpha: 0.6),
                                               ),
+                                          maxLines: 1,
                                         ),
+                                        if (used)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.statusGreen
+                                                  .withValues(alpha: 0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              l10n.gpsInfoSatelliteUsed,
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                    color: AppTheme.statusGreen,
+                                                    fontSize: 9,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                              maxLines: 1,
+                                            ),
+                                          ),
                                       ],
                                     ),
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        l10n.gpsInfoSatelliteCn0(cn0),
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              fontFamily: 'monospace',
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                      if (used)
-                                        Container(
-                                          margin: const EdgeInsets.only(top: 2),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.statusGreen
-                                                .withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            l10n.gpsInfoSatelliteUsed,
-                                            style: theme.textTheme.labelSmall
-                                                ?.copyWith(
-                                                  color: AppTheme.statusGreen,
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                          ),
-                                        ),
-                                    ],
                                   ),
                                 ],
                               ),
