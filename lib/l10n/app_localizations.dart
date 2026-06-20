@@ -5419,6 +5419,210 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'NW'**
   String get gpsStoreCompassNW;
+
+  /// No description provided for @gpsInfoButtonTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS Hardware Details'**
+  String get gpsInfoButtonTooltip;
+
+  /// No description provided for @gpsInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS & Satellite Info'**
+  String get gpsInfoTitle;
+
+  /// No description provided for @gpsInfoLatitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude'**
+  String get gpsInfoLatitude;
+
+  /// No description provided for @gpsInfoLongitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude'**
+  String get gpsInfoLongitude;
+
+  /// No description provided for @gpsInfoAltitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Altitude'**
+  String get gpsInfoAltitude;
+
+  /// No description provided for @gpsInfoSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get gpsInfoSpeed;
+
+  /// No description provided for @gpsInfoHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get gpsInfoHeading;
+
+  /// No description provided for @gpsInfoAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
+  String get gpsInfoAccuracy;
+
+  /// No description provided for @gpsInfoTimestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Fix Time'**
+  String get gpsInfoTimestamp;
+
+  /// No description provided for @gpsInfoProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Source Provider'**
+  String get gpsInfoProvider;
+
+  /// No description provided for @gpsInfoMocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Mocked Location'**
+  String get gpsInfoMocked;
+
+  /// No description provided for @gpsInfoPositionDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Position Data'**
+  String get gpsInfoPositionDetails;
+
+  /// No description provided for @gpsInfoHardwareDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'GNSS Constellations & Hardware'**
+  String get gpsInfoHardwareDetails;
+
+  /// No description provided for @gpsInfoSatelliteCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Visible Satellites'**
+  String get gpsInfoSatelliteCount;
+
+  /// No description provided for @gpsInfoSatelliteCountUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Satellites Used in Fix'**
+  String get gpsInfoSatelliteCountUsed;
+
+  /// No description provided for @gpsInfoLocationProviders.
+  ///
+  /// In en, this message translates to:
+  /// **'System Location Providers'**
+  String get gpsInfoLocationProviders;
+
+  /// No description provided for @gpsInfoConstellationGps.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS (USA)'**
+  String get gpsInfoConstellationGps;
+
+  /// No description provided for @gpsInfoConstellationGlonass.
+  ///
+  /// In en, this message translates to:
+  /// **'GLONASS (Russia)'**
+  String get gpsInfoConstellationGlonass;
+
+  /// No description provided for @gpsInfoConstellationGalileo.
+  ///
+  /// In en, this message translates to:
+  /// **'Galileo (EU)'**
+  String get gpsInfoConstellationGalileo;
+
+  /// No description provided for @gpsInfoConstellationBeidou.
+  ///
+  /// In en, this message translates to:
+  /// **'BeiDou (China)'**
+  String get gpsInfoConstellationBeidou;
+
+  /// No description provided for @gpsInfoConstellationQzss.
+  ///
+  /// In en, this message translates to:
+  /// **'QZSS (Japan)'**
+  String get gpsInfoConstellationQzss;
+
+  /// No description provided for @gpsInfoConstellationSbas.
+  ///
+  /// In en, this message translates to:
+  /// **'SBAS'**
+  String get gpsInfoConstellationSbas;
+
+  /// No description provided for @gpsInfoConstellationIrnss.
+  ///
+  /// In en, this message translates to:
+  /// **'NavIC / IRNSS (India)'**
+  String get gpsInfoConstellationIrnss;
+
+  /// No description provided for @gpsInfoConstellationUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Constellation'**
+  String get gpsInfoConstellationUnknown;
+
+  /// No description provided for @gpsInfoStatusScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Acquiring satellite signals...'**
+  String get gpsInfoStatusScanning;
+
+  /// No description provided for @gpsInfoStatusNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Satellite status not supported on this platform.'**
+  String get gpsInfoStatusNotAvailable;
+
+  /// No description provided for @gpsInfoSatelliteList.
+  ///
+  /// In en, this message translates to:
+  /// **'Satellite Details'**
+  String get gpsInfoSatelliteList;
+
+  /// No description provided for @gpsInfoSatelliteSvid.
+  ///
+  /// In en, this message translates to:
+  /// **'SVID: {svid}'**
+  String gpsInfoSatelliteSvid(int svid);
+
+  /// No description provided for @gpsInfoSatelliteCn0.
+  ///
+  /// In en, this message translates to:
+  /// **'SNR: {cn0} dB-Hz'**
+  String gpsInfoSatelliteCn0(double cn0);
+
+  /// No description provided for @gpsInfoSatelliteUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Used in Fix'**
+  String get gpsInfoSatelliteUsed;
+
+  /// No description provided for @gpsInfoSatelliteElevation.
+  ///
+  /// In en, this message translates to:
+  /// **'El: {elevation}°'**
+  String gpsInfoSatelliteElevation(double elevation);
+
+  /// No description provided for @gpsInfoSatelliteAzimuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Az: {azimuth}°'**
+  String gpsInfoSatelliteAzimuth(double azimuth);
+
+  /// No description provided for @gpsInfoProviderEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get gpsInfoProviderEnabled;
+
+  /// No description provided for @gpsInfoProviderDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get gpsInfoProviderDisabled;
 }
 
 class _AppLocalizationsDelegate

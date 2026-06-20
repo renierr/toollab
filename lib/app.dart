@@ -19,6 +19,7 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
+import 'package:tool_lab/tools/gps_location_store/gps_info_page.dart';
 
 final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -55,6 +56,11 @@ final _router = GoRouter(
       path: '/about',
       name: 'about',
       builder: (_, _) => const AboutPage(),
+    ),
+    GoRoute(
+      path: '/gps-location-store/gps-info',
+      name: 'gps-info',
+      builder: (_, _) => const GpsInfoPage(),
     ),
     ...ToolRegistry.all.map(
       (tool) => GoRoute(

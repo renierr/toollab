@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -113,6 +114,13 @@ class _GpsLocationStorePageState extends State<GpsLocationStorePage>
 
     return ToolLayout(
       title: GpsLocationStoreTool.config.localizedName(l10n),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.satellite_alt_outlined),
+          tooltip: l10n.gpsInfoButtonTooltip,
+          onPressed: () => context.push('/gps-location-store/gps-info'),
+        ),
+      ],
       floatingActionButton: FloatingActionButton.extended(
         onPressed: state.isLocatingCurrent ? null : _locate,
         backgroundColor: AppTheme.accentBlue,

@@ -3023,4 +3023,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpsStoreCompassNW => 'NW';
+
+  @override
+  String get gpsInfoButtonTooltip => 'GPS Hardware Details';
+
+  @override
+  String get gpsInfoTitle => 'GPS & Satellite Info';
+
+  @override
+  String get gpsInfoLatitude => 'Latitude';
+
+  @override
+  String get gpsInfoLongitude => 'Longitude';
+
+  @override
+  String get gpsInfoAltitude => 'Altitude';
+
+  @override
+  String get gpsInfoSpeed => 'Speed';
+
+  @override
+  String get gpsInfoHeading => 'Heading';
+
+  @override
+  String get gpsInfoAccuracy => 'Accuracy';
+
+  @override
+  String get gpsInfoTimestamp => 'Last Fix Time';
+
+  @override
+  String get gpsInfoProvider => 'Source Provider';
+
+  @override
+  String get gpsInfoMocked => 'Mocked Location';
+
+  @override
+  String get gpsInfoPositionDetails => 'Current Position Data';
+
+  @override
+  String get gpsInfoHardwareDetails => 'GNSS Constellations & Hardware';
+
+  @override
+  String get gpsInfoSatelliteCount => 'Visible Satellites';
+
+  @override
+  String get gpsInfoSatelliteCountUsed => 'Satellites Used in Fix';
+
+  @override
+  String get gpsInfoLocationProviders => 'System Location Providers';
+
+  @override
+  String get gpsInfoConstellationGps => 'GPS (USA)';
+
+  @override
+  String get gpsInfoConstellationGlonass => 'GLONASS (Russia)';
+
+  @override
+  String get gpsInfoConstellationGalileo => 'Galileo (EU)';
+
+  @override
+  String get gpsInfoConstellationBeidou => 'BeiDou (China)';
+
+  @override
+  String get gpsInfoConstellationQzss => 'QZSS (Japan)';
+
+  @override
+  String get gpsInfoConstellationSbas => 'SBAS';
+
+  @override
+  String get gpsInfoConstellationIrnss => 'NavIC / IRNSS (India)';
+
+  @override
+  String get gpsInfoConstellationUnknown => 'Unknown Constellation';
+
+  @override
+  String get gpsInfoStatusScanning => 'Acquiring satellite signals...';
+
+  @override
+  String get gpsInfoStatusNotAvailable =>
+      'Satellite status not supported on this platform.';
+
+  @override
+  String get gpsInfoSatelliteList => 'Satellite Details';
+
+  @override
+  String gpsInfoSatelliteSvid(int svid) {
+    return 'SVID: $svid';
+  }
+
+  @override
+  String gpsInfoSatelliteCn0(double cn0) {
+    return 'SNR: $cn0 dB-Hz';
+  }
+
+  @override
+  String get gpsInfoSatelliteUsed => 'Used in Fix';
+
+  @override
+  String gpsInfoSatelliteElevation(double elevation) {
+    return 'El: $elevation°';
+  }
+
+  @override
+  String gpsInfoSatelliteAzimuth(double azimuth) {
+    return 'Az: $azimuth°';
+  }
+
+  @override
+  String get gpsInfoProviderEnabled => 'Enabled';
+
+  @override
+  String get gpsInfoProviderDisabled => 'Disabled';
 }

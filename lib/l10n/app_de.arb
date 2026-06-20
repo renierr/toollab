@@ -994,6 +994,68 @@
   "gpsStoreCompassS": "S",
   "gpsStoreCompassSW": "SW",
   "gpsStoreCompassW": "W",
-  "gpsStoreCompassNW": "NW"
+  "gpsStoreCompassNW": "NW",
+  "gpsInfoButtonTooltip": "GPS-Hardware-Details",
+  "gpsInfoTitle": "GPS- & Satelliteninfo",
+  "gpsInfoLatitude": "Breitengrad",
+  "gpsInfoLongitude": "Längengrad",
+  "gpsInfoAltitude": "Höhe",
+  "gpsInfoSpeed": "Geschwindigkeit",
+  "gpsInfoHeading": "Kurs",
+  "gpsInfoAccuracy": "Genauigkeit",
+  "gpsInfoTimestamp": "Letzter Fix-Zeitpunkt",
+  "gpsInfoProvider": "Quell-Provider",
+  "gpsInfoMocked": "Simulierter Standort",
+  "gpsInfoPositionDetails": "Aktuelle Positionsdaten",
+  "gpsInfoHardwareDetails": "GNSS-Konstellationen & Hardware",
+  "gpsInfoSatelliteCount": "Sichtbare Satelliten",
+  "gpsInfoSatelliteCountUsed": "Verwendete Satelliten",
+  "gpsInfoLocationProviders": "System-Standortanbieter",
+  "gpsInfoConstellationGps": "GPS (USA)",
+  "gpsInfoConstellationGlonass": "GLONASS (Russland)",
+  "gpsInfoConstellationGalileo": "Galileo (EU)",
+  "gpsInfoConstellationBeidou": "BeiDou (China)",
+  "gpsInfoConstellationQzss": "QZSS (Japan)",
+  "gpsInfoConstellationSbas": "SBAS",
+  "gpsInfoConstellationIrnss": "NavIC / IRNSS (Indien)",
+  "gpsInfoConstellationUnknown": "Unbekannte Konstellation",
+  "gpsInfoStatusScanning": "Satellitensignale werden erfasst...",
+  "gpsInfoStatusNotAvailable": "Satellitenstatus auf dieser Plattform nicht unterstützt.",
+  "gpsInfoSatelliteList": "Satelliten-Details",
+  "gpsInfoSatelliteSvid": "SVID: {svid}",
+  "@gpsInfoSatelliteSvid": {
+    "placeholders": {
+      "svid": {
+        "type": "int"
+      }
+    }
+  },
+  "gpsInfoSatelliteCn0": "SNR: {cn0} dB-Hz",
+  "@gpsInfoSatelliteCn0": {
+    "placeholders": {
+      "cn0": {
+        "type": "double"
+      }
+    }
+  },
+  "gpsInfoSatelliteUsed": "In Fix verwendet",
+  "gpsInfoSatelliteElevation": "H: {elevation}°",
+  "@gpsInfoSatelliteElevation": {
+    "placeholders": {
+      "elevation": {
+        "type": "double"
+      }
+    }
+  },
+  "gpsInfoSatelliteAzimuth": "Az: {azimuth}°",
+  "@gpsInfoSatelliteAzimuth": {
+    "placeholders": {
+      "azimuth": {
+        "type": "double"
+      }
+    }
+  },
+  "gpsInfoProviderEnabled": "Aktiviert",
+  "gpsInfoProviderDisabled": "Deaktiviert"
 }
 

@@ -3048,4 +3048,115 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get gpsStoreCompassNW => 'NW';
+
+  @override
+  String get gpsInfoButtonTooltip => 'GPS-Hardware-Details';
+
+  @override
+  String get gpsInfoTitle => 'GPS- & Satelliteninfo';
+
+  @override
+  String get gpsInfoLatitude => 'Breitengrad';
+
+  @override
+  String get gpsInfoLongitude => 'Längengrad';
+
+  @override
+  String get gpsInfoAltitude => 'Höhe';
+
+  @override
+  String get gpsInfoSpeed => 'Geschwindigkeit';
+
+  @override
+  String get gpsInfoHeading => 'Kurs';
+
+  @override
+  String get gpsInfoAccuracy => 'Genauigkeit';
+
+  @override
+  String get gpsInfoTimestamp => 'Letzter Fix-Zeitpunkt';
+
+  @override
+  String get gpsInfoProvider => 'Quell-Provider';
+
+  @override
+  String get gpsInfoMocked => 'Simulierter Standort';
+
+  @override
+  String get gpsInfoPositionDetails => 'Aktuelle Positionsdaten';
+
+  @override
+  String get gpsInfoHardwareDetails => 'GNSS-Konstellationen & Hardware';
+
+  @override
+  String get gpsInfoSatelliteCount => 'Sichtbare Satelliten';
+
+  @override
+  String get gpsInfoSatelliteCountUsed => 'Verwendete Satelliten';
+
+  @override
+  String get gpsInfoLocationProviders => 'System-Standortanbieter';
+
+  @override
+  String get gpsInfoConstellationGps => 'GPS (USA)';
+
+  @override
+  String get gpsInfoConstellationGlonass => 'GLONASS (Russland)';
+
+  @override
+  String get gpsInfoConstellationGalileo => 'Galileo (EU)';
+
+  @override
+  String get gpsInfoConstellationBeidou => 'BeiDou (China)';
+
+  @override
+  String get gpsInfoConstellationQzss => 'QZSS (Japan)';
+
+  @override
+  String get gpsInfoConstellationSbas => 'SBAS';
+
+  @override
+  String get gpsInfoConstellationIrnss => 'NavIC / IRNSS (Indien)';
+
+  @override
+  String get gpsInfoConstellationUnknown => 'Unbekannte Konstellation';
+
+  @override
+  String get gpsInfoStatusScanning => 'Satellitensignale werden erfasst...';
+
+  @override
+  String get gpsInfoStatusNotAvailable =>
+      'Satellitenstatus auf dieser Plattform nicht unterstützt.';
+
+  @override
+  String get gpsInfoSatelliteList => 'Satelliten-Details';
+
+  @override
+  String gpsInfoSatelliteSvid(int svid) {
+    return 'SVID: $svid';
+  }
+
+  @override
+  String gpsInfoSatelliteCn0(double cn0) {
+    return 'SNR: $cn0 dB-Hz';
+  }
+
+  @override
+  String get gpsInfoSatelliteUsed => 'In Fix verwendet';
+
+  @override
+  String gpsInfoSatelliteElevation(double elevation) {
+    return 'H: $elevation°';
+  }
+
+  @override
+  String gpsInfoSatelliteAzimuth(double azimuth) {
+    return 'Az: $azimuth°';
+  }
+
+  @override
+  String get gpsInfoProviderEnabled => 'Aktiviert';
+
+  @override
+  String get gpsInfoProviderDisabled => 'Deaktiviert';
 }

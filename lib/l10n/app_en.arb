@@ -1813,6 +1813,68 @@
   "gpsStoreCompassS": "S",
   "gpsStoreCompassSW": "SW",
   "gpsStoreCompassW": "W",
-  "gpsStoreCompassNW": "NW"
+  "gpsStoreCompassNW": "NW",
+  "gpsInfoButtonTooltip": "GPS Hardware Details",
+  "gpsInfoTitle": "GPS & Satellite Info",
+  "gpsInfoLatitude": "Latitude",
+  "gpsInfoLongitude": "Longitude",
+  "gpsInfoAltitude": "Altitude",
+  "gpsInfoSpeed": "Speed",
+  "gpsInfoHeading": "Heading",
+  "gpsInfoAccuracy": "Accuracy",
+  "gpsInfoTimestamp": "Last Fix Time",
+  "gpsInfoProvider": "Source Provider",
+  "gpsInfoMocked": "Mocked Location",
+  "gpsInfoPositionDetails": "Current Position Data",
+  "gpsInfoHardwareDetails": "GNSS Constellations & Hardware",
+  "gpsInfoSatelliteCount": "Visible Satellites",
+  "gpsInfoSatelliteCountUsed": "Satellites Used in Fix",
+  "gpsInfoLocationProviders": "System Location Providers",
+  "gpsInfoConstellationGps": "GPS (USA)",
+  "gpsInfoConstellationGlonass": "GLONASS (Russia)",
+  "gpsInfoConstellationGalileo": "Galileo (EU)",
+  "gpsInfoConstellationBeidou": "BeiDou (China)",
+  "gpsInfoConstellationQzss": "QZSS (Japan)",
+  "gpsInfoConstellationSbas": "SBAS",
+  "gpsInfoConstellationIrnss": "NavIC / IRNSS (India)",
+  "gpsInfoConstellationUnknown": "Unknown Constellation",
+  "gpsInfoStatusScanning": "Acquiring satellite signals...",
+  "gpsInfoStatusNotAvailable": "Satellite status not supported on this platform.",
+  "gpsInfoSatelliteList": "Satellite Details",
+  "gpsInfoSatelliteSvid": "SVID: {svid}",
+  "@gpsInfoSatelliteSvid": {
+    "placeholders": {
+      "svid": {
+        "type": "int"
+      }
+    }
+  },
+  "gpsInfoSatelliteCn0": "SNR: {cn0} dB-Hz",
+  "@gpsInfoSatelliteCn0": {
+    "placeholders": {
+      "cn0": {
+        "type": "double"
+      }
+    }
+  },
+  "gpsInfoSatelliteUsed": "Used in Fix",
+  "gpsInfoSatelliteElevation": "El: {elevation}°",
+  "@gpsInfoSatelliteElevation": {
+    "placeholders": {
+      "elevation": {
+        "type": "double"
+      }
+    }
+  },
+  "gpsInfoSatelliteAzimuth": "Az: {azimuth}°",
+  "@gpsInfoSatelliteAzimuth": {
+    "placeholders": {
+      "azimuth": {
+        "type": "double"
+      }
+    }
+  },
+  "gpsInfoProviderEnabled": "Enabled",
+  "gpsInfoProviderDisabled": "Disabled"
 }
 
