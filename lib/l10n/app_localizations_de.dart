@@ -3221,4 +3221,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get chatAiClearHistoryConfirm =>
       'Sind Sie sicher, dass Sie alle Nachrichten in diesem Chat löschen möchten?';
+
+  @override
+  String get chatAiThinking => 'Überlegt...';
 }

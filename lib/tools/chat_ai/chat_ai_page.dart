@@ -16,6 +16,7 @@ import 'widgets/chat_session_drawer.dart';
 import 'widgets/chat_status_banner.dart';
 import 'widgets/chat_suggestions.dart';
 import 'widgets/chat_input_bar.dart';
+import 'widgets/chat_thinking_bubble.dart';
 
 class ChatAiPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -59,6 +60,11 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
 
   void _onStateChanged() {
     if (mounted) {
+      final state = context.read<ChatAiState>();
+      if (state.modelError != null) {
+        _showError(state.modelError!);
+        state.clearModelError();
+      }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToBottom();
       });
@@ -226,9 +232,12 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                   )
                 : ListView.builder(
                     controller: _scrollController,
-                    itemCount: state.messages.length,
+                    itemCount: state.messages.length + (state.isGenerating ? 1 : 0),
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     itemBuilder: (context, index) {
+                      if (index == state.messages.length) {
+                        return const ChatThinkingBubble();
+                      }
                       final message = state.messages[index];
                       return ChatMessageBubble(message: message);
                     },

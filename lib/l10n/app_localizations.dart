@@ -5731,6 +5731,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to clear all messages in this chat?'**
   String get chatAiClearHistoryConfirm;
+
+  /// No description provided for @chatAiThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking...'**
+  String get chatAiThinking;
 }
 
 class _AppLocalizationsDelegate

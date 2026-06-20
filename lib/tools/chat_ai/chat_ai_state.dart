@@ -18,6 +18,7 @@ class ChatAiState extends ChangeNotifier {
   Uint8List? _selectedImageBytes;
   String? _attachedFileName;
   String? _attachedFileContent;
+  String? _modelError;
 
   List<Map<String, dynamic>> get sessions => _sessions;
   int? get currentSessionId => _currentSessionId;
@@ -28,6 +29,12 @@ class ChatAiState extends ChangeNotifier {
   Uint8List? get selectedImageBytes => _selectedImageBytes;
   String? get attachedFileName => _attachedFileName;
   String? get attachedFileContent => _attachedFileContent;
+  String? get modelError => _modelError;
+
+  void clearModelError() {
+    _modelError = null;
+    notifyListeners();
+  }
 
   void selectImage(Uint8List? bytes) {
     _selectedImageBytes = bytes;
@@ -82,6 +89,7 @@ class ChatAiState extends ChangeNotifier {
         _featureStatus = await _prompt!.checkFeatureStatus();
       } catch (e) {
         debugPrint('[ChatAiState] Check feature status failed: $e');
+        _modelError = e.toString();
         _featureStatus = FeatureStatus.unavailable;
       }
     } else {
@@ -104,12 +112,16 @@ class ChatAiState extends ChangeNotifier {
 
   Future<void> downloadModel() async {
     if (!Platform.isAndroid || _prompt == null) return;
+    _modelError = null;
+    notifyListeners();
     try {
       await _prompt!.downloadFeature();
       await updateFeatureStatus();
       _startStatusPolling();
     } catch (e) {
       debugPrint('[ChatAiState] Model download trigger failed: $e');
+      _modelError = e.toString();
+      notifyListeners();
     }
   }
 
@@ -268,7 +280,7 @@ class ChatAiState extends ChangeNotifier {
   String _buildPromptText() {
     final buffer = StringBuffer();
     buffer.writeln(
-      'You are a helpful, respectful, and honest on-device AI assistant.',
+      'You are a helpful, respectful, and honest on-device AI assistant. Respond in the same language as the user (e.g. if the user writes in German, respond in German; if the user writes in English, respond in English).',
     );
     buffer.writeln('Below is the history of the conversation so far.');
     buffer.writeln();
