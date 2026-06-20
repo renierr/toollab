@@ -26,7 +26,10 @@ class ChatStatusBanner extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: AppTheme.statusAmber),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: AppTheme.statusAmber,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(

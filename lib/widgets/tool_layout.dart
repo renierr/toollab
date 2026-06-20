@@ -9,6 +9,7 @@ class ToolLayout extends StatelessWidget {
   final bool showFloatingBackButton;
   final Widget? drawer;
   final Widget? endDrawer;
+  final Widget? leading;
   final Widget? floatingActionButton;
   final Color? backgroundColor;
   final GlobalKey<ScaffoldState>? scaffoldKey;
@@ -22,6 +23,7 @@ class ToolLayout extends StatelessWidget {
     this.showFloatingBackButton = true,
     this.drawer,
     this.endDrawer,
+    this.leading,
     this.floatingActionButton,
     this.backgroundColor,
     this.scaffoldKey,
@@ -45,6 +47,14 @@ class ToolLayout extends StatelessWidget {
               preferredSize: Size.fromHeight(appBarHeight),
               child: AppBar(
                 toolbarHeight: appBarHeight,
+                leading:
+                    leading ??
+                    (Navigator.of(context).canPop()
+                        ? IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () => Navigator.of(context).pop(),
+                          )
+                        : null),
                 title: Text(
                   title,
                   style: TextStyle(
