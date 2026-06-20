@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 // ignore: implementation_imports
 import 'package:google_mlkit_genai_prompt/src/prompt.dart';
@@ -14,6 +15,7 @@ class ChatAiState extends ChangeNotifier {
   bool _isGenerating = false;
   Timer? _statusPollingTimer;
   Prompt? _prompt;
+  Uint8List? _selectedImageBytes;
 
   List<Map<String, dynamic>> get sessions => _sessions;
   int? get currentSessionId => _currentSessionId;
@@ -21,6 +23,12 @@ class ChatAiState extends ChangeNotifier {
   FeatureStatus get featureStatus => _featureStatus;
   bool get isInitializing => _isInitializing;
   bool get isGenerating => _isGenerating;
+  Uint8List? get selectedImageBytes => _selectedImageBytes;
+
+  void selectImage(Uint8List? bytes) {
+    _selectedImageBytes = bytes;
+    notifyListeners();
+  }
 
   ChatAiState() {
     init();
@@ -140,17 +148,28 @@ class ChatAiState extends ChangeNotifier {
   }
 
   Future<void> sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+    if (text.trim().isEmpty && _selectedImageBytes == null) return;
     if (_currentSessionId == null) {
-      await createNewSession(
-        initialTitle: text.length > 20 ? '${text.substring(0, 17)}...' : text,
-      );
+      final initialTitle = text.trim().isNotEmpty
+          ? (text.length > 20 ? '${text.substring(0, 17)}...' : text)
+          : 'Image Prompt';
+      await createNewSession(initialTitle: initialTitle);
     }
 
     final sessionId = _currentSessionId!;
+    final imageToSend = _selectedImageBytes;
+
+    _selectedImageBytes = null;
+    notifyListeners();
+
     try {
       // Save user message
-      await ChatAiDbHelper.instance.insertMessage(sessionId, 'user', text);
+      await ChatAiDbHelper.instance.insertMessage(
+        sessionId,
+        'user',
+        text,
+        imageData: imageToSend,
+      );
       _messages = await ChatAiDbHelper.instance.getMessages(sessionId);
       notifyListeners();
 
@@ -172,7 +191,10 @@ class ChatAiState extends ChangeNotifier {
           _featureStatus == FeatureStatus.available &&
           _prompt != null) {
         final promptText = _buildPromptText();
-        final response = await _prompt!.runInference(promptText);
+        final response = await _prompt!.runInference(
+          promptText,
+          imageData: imageToSend,
+        );
         await ChatAiDbHelper.instance.insertMessage(
           sessionId,
           'model',
@@ -182,7 +204,10 @@ class ChatAiState extends ChangeNotifier {
         // Fallback for non-Android platforms or if model is not ready
         await Future.delayed(const Duration(seconds: 1));
         String response = 'This is a simulated AI response. ';
-        if (!Platform.isAndroid) {
+        if (imageToSend != null) {
+          response +=
+              '\n\n[Simulated Image Analysis]: The model detected a multimodal input image (bytes size: ${imageToSend.length}). On supported Android devices, this image is processed locally on-device by Gemini Nano.';
+        } else if (!Platform.isAndroid) {
           response +=
               'On-device Gemini Nano is only supported on Android. For other platforms, please use a cloud model or simulate.';
         } else {

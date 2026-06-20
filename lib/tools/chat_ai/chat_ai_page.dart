@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -85,9 +86,27 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
     }
   }
 
+  Future<void> _pickImage(ChatAiState state) async {
+    try {
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 80,
+      );
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        state.selectImage(bytes);
+      }
+    } catch (e) {
+      debugPrint('[ChatAiPage] Error picking image: $e');
+    }
+  }
+
   void _handleSend(ChatAiState state) {
     final text = _textController.text.trim();
-    if (text.isNotEmpty) {
+    if (text.isNotEmpty || state.selectedImageBytes != null) {
       state.sendMessage(text);
       _textController.clear();
     }
@@ -140,6 +159,9 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
             onSend: () => _handleSend(state),
             isGenerating: state.isGenerating,
             enabled: !state.isInitializing,
+            selectedImageBytes: state.selectedImageBytes,
+            onPickImage: () => _pickImage(state),
+            onRemoveImage: () => state.selectImage(null),
           ),
         ],
       ),

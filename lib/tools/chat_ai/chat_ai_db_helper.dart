@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:tool_lab/services/database_service.dart';
 import 'config.dart';
@@ -18,7 +19,7 @@ class ChatAiDbHelper {
     );
     try {
       await _cachedDb!.migrate(
-        currentVersion: 1,
+        currentVersion: 2,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -40,6 +41,11 @@ class ChatAiDbHelper {
                 FOREIGN KEY (session_id) REFERENCES ${txn.nameTable(sessionTable)} (id) ON DELETE CASCADE
               )
             ''');
+          }
+          if (oldVersion < 2) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(messageTable)} ADD COLUMN image_data BLOB',
+            );
           }
         },
       );
@@ -115,13 +121,19 @@ class ChatAiDbHelper {
   }
 
   /// Inserts a message into a chat session.
-  Future<int> insertMessage(int sessionId, String role, String content) async {
+  Future<int> insertMessage(
+    int sessionId,
+    String role,
+    String content, {
+    Uint8List? imageData,
+  }) async {
     final db = await _getDb();
     final now = DateTime.now().millisecondsSinceEpoch;
     final id = await db.insert(messageTable, {
       'session_id': sessionId,
       'role': role,
       'content': content,
+      'image_data': imageData,
       'created_at': now,
     });
     await touchSession(sessionId);

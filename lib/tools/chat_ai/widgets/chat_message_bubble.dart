@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import '../config.dart';
@@ -49,6 +50,16 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4.0),
+              if (message['image_data'] != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12.0),
+                  child: Image.memory(
+                    message['image_data'] as Uint8List,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 8.0),
+              ],
               if (isUser)
                 SelectableText(
                   message['content'] as String,
