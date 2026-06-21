@@ -1077,6 +1077,75 @@
   "chatAiClearHistoryConfirm": "Sind Sie sicher, dass Sie alle Nachrichten in diesem Chat löschen möchten?",
   "chatAiThinking": "Überlegt...",
   "chatAiSystemPromptTitle": "System-Prompt",
-  "chatAiSystemPromptDescription": "Passen Sie die Anweisungen für das KI-Modell an. Leer lassen, um den Standard zu verwenden."
+  "chatAiSystemPromptDescription": "Passen Sie die Anweisungen für das KI-Modell an. Leer lassen, um den Standard zu verwenden.",
+  "toolNameHexEditor": "Hex-Editor",
+  "toolDescHexEditor": "Dateien in Hexadezimal- und ASCII-Ansichten inspizieren und bearbeiten",
+  "hexEditorTypeLabel": "Jede Datei",
+  "hexEditorOpenTitle": "Beliebige Datei öffnen",
+  "hexEditorDropSubtitle": "Ziehen Sie eine beliebige Datei hierher",
+  "hexEditorStringsTitle": "Druckbare Zeichenketten",
+  "hexEditorMinLength": "Mindestlänge",
+  "hexEditorScan": "Scannen",
+  "hexEditorScanning": "Scannen...",
+  "hexEditorScannedBytes": "{scanned} / {total} Bytes gescannt",
+  "@hexEditorScannedBytes": {
+    "placeholders": {
+      "scanned": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "hexEditorFoundStrings": "{count} Zeichenketten gefunden",
+  "@hexEditorFoundStrings": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "hexEditorCancelled": "Abgebrochen",
+  "hexEditorNoStringsFound": "Keine Zeichenketten gefunden",
+  "hexEditorExportStarted": "Export gestartet",
+  "hexEditorExportFailed": "Export fehlgeschlagen: {error}",
+  "@hexEditorExportFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "hexEditorFailedToLoad": "Datei konnte nicht geladen werden: {error}",
+  "@hexEditorFailedToLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "hexEditorOffset": "Offset",
+  "hexEditorSize": "Größe: {size} Bytes",
+  "@hexEditorSize": {
+    "placeholders": {
+      "size": { "type": "String" }
+    }
+  },
+  "hexEditorSearchType": "Suchtyp",
+  "hexEditorSearchHex": "Hexadezimal",
+  "hexEditorSearchText": "Text",
+  "hexEditorSearchPlaceholder": "Suchmuster",
+  "hexEditorShowAscii": "ASCII-Ansicht anzeigen",
+  "hexEditorReset": "Zurücksetzen",
+  "hexEditorStringsTooltip": "Strings",
+  "hexEditorSearchNext": "Nächster Treffer",
+  "hexEditorSearchPrev": "Vorheriger Treffer",
+  "hexEditorInvalidHex": "Ungültiges Hex-Muster",
+  "hexEditorHexLengthEven": "Hex-Suche muss eine gerade Länge haben",
+  "hexEditorPatternNotFound": "Muster nicht gefunden",
+  "hexEditorEditByteTitle": "Byte bearbeiten bei {offset}",
+  "@hexEditorEditByteTitle": {
+    "placeholders": {
+      "offset": { "type": "String" }
+    }
+  },
+  "hexEditorEditByteHex": "Hex",
+  "hexEditorEditByteAscii": "ASCII",
+  "hexEditorSave": "Speichern",
+  "hexEditorDiscardChangesTitle": "Änderungen verwerfen?",
+  "hexEditorDiscardChangesMessage": "Möchten Sie Ihre Änderungen verwerfen?",
+  "hexEditorKeepEditing": "Weiter bearbeiten",
+  "hexEditorDiscard": "Verwerfen"
 }
 

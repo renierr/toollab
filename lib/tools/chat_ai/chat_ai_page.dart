@@ -249,7 +249,8 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
                   )
                 : ListView.builder(
                     controller: _scrollController,
-                    itemCount: state.messages.length + (state.isGenerating ? 1 : 0),
+                    itemCount:
+                        state.messages.length + (state.isGenerating ? 1 : 0),
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     itemBuilder: (context, index) {
                       if (index == state.messages.length) {

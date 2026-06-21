@@ -3206,4 +3206,132 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chatAiSystemPromptDescription =>
       'Customize the instructions for the AI model. Leave empty to use the default.';
+
+  @override
+  String get toolNameHexEditor => 'Hex Editor';
+
+  @override
+  String get toolDescHexEditor =>
+      'Inspect and edit files in hexadecimal and ASCII views';
+
+  @override
+  String get hexEditorTypeLabel => 'Any file';
+
+  @override
+  String get hexEditorOpenTitle => 'Open any file';
+
+  @override
+  String get hexEditorDropSubtitle => 'Drop any file here';
+
+  @override
+  String get hexEditorStringsTitle => 'Printable Strings';
+
+  @override
+  String get hexEditorMinLength => 'Minimum Length';
+
+  @override
+  String get hexEditorScan => 'Scan';
+
+  @override
+  String get hexEditorScanning => 'Scanning...';
+
+  @override
+  String hexEditorScannedBytes(String scanned, String total) {
+    return 'Scanned $scanned / $total bytes';
+  }
+
+  @override
+  String hexEditorFoundStrings(int count) {
+    return 'Found $count strings';
+  }
+
+  @override
+  String get hexEditorCancelled => 'Cancelled';
+
+  @override
+  String get hexEditorNoStringsFound => 'No strings found';
+
+  @override
+  String get hexEditorExportStarted => 'Export started';
+
+  @override
+  String hexEditorExportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String hexEditorFailedToLoad(String error) {
+    return 'Failed to load file: $error';
+  }
+
+  @override
+  String get hexEditorOffset => 'Offset';
+
+  @override
+  String hexEditorSize(String size) {
+    return 'Size: $size bytes';
+  }
+
+  @override
+  String get hexEditorSearchType => 'Search type';
+
+  @override
+  String get hexEditorSearchHex => 'Hexadecimal';
+
+  @override
+  String get hexEditorSearchText => 'Text';
+
+  @override
+  String get hexEditorSearchPlaceholder => 'Search pattern';
+
+  @override
+  String get hexEditorShowAscii => 'Show ASCII View';
+
+  @override
+  String get hexEditorReset => 'Reset';
+
+  @override
+  String get hexEditorStringsTooltip => 'Strings';
+
+  @override
+  String get hexEditorSearchNext => 'Next Match';
+
+  @override
+  String get hexEditorSearchPrev => 'Prev Match';
+
+  @override
+  String get hexEditorInvalidHex => 'Invalid hex pattern';
+
+  @override
+  String get hexEditorHexLengthEven => 'Hex search must be even length';
+
+  @override
+  String get hexEditorPatternNotFound => 'Pattern not found';
+
+  @override
+  String hexEditorEditByteTitle(String offset) {
+    return 'Edit Byte at $offset';
+  }
+
+  @override
+  String get hexEditorEditByteHex => 'Hex';
+
+  @override
+  String get hexEditorEditByteAscii => 'ASCII';
+
+  @override
+  String get hexEditorSave => 'Save';
+
+  @override
+  String get hexEditorDiscardChangesTitle => 'Discard changes?';
+
+  @override
+  String get hexEditorDiscardChangesMessage =>
+      'Do you want to discard your modifications?';
+
+  @override
+  String get hexEditorKeepEditing => 'Keep editing';
+
+  @override
+  String get hexEditorDiscard => 'Discard';
 }

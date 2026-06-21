@@ -5749,6 +5749,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customize the instructions for the AI model. Leave empty to use the default.'**
   String get chatAiSystemPromptDescription;
+
+  /// No description provided for @toolNameHexEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex Editor'**
+  String get toolNameHexEditor;
+
+  /// No description provided for @toolDescHexEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect and edit files in hexadecimal and ASCII views'**
+  String get toolDescHexEditor;
+
+  /// No description provided for @hexEditorTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Any file'**
+  String get hexEditorTypeLabel;
+
+  /// No description provided for @hexEditorOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open any file'**
+  String get hexEditorOpenTitle;
+
+  /// No description provided for @hexEditorDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop any file here'**
+  String get hexEditorDropSubtitle;
+
+  /// No description provided for @hexEditorStringsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Printable Strings'**
+  String get hexEditorStringsTitle;
+
+  /// No description provided for @hexEditorMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum Length'**
+  String get hexEditorMinLength;
+
+  /// No description provided for @hexEditorScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get hexEditorScan;
+
+  /// No description provided for @hexEditorScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning...'**
+  String get hexEditorScanning;
+
+  /// No description provided for @hexEditorScannedBytes.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanned {scanned} / {total} bytes'**
+  String hexEditorScannedBytes(String scanned, String total);
+
+  /// No description provided for @hexEditorFoundStrings.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} strings'**
+  String hexEditorFoundStrings(int count);
+
+  /// No description provided for @hexEditorCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get hexEditorCancelled;
+
+  /// No description provided for @hexEditorNoStringsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No strings found'**
+  String get hexEditorNoStringsFound;
+
+  /// No description provided for @hexEditorExportStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Export started'**
+  String get hexEditorExportStarted;
+
+  /// No description provided for @hexEditorExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String hexEditorExportFailed(String error);
+
+  /// No description provided for @hexEditorFailedToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load file: {error}'**
+  String hexEditorFailedToLoad(String error);
+
+  /// No description provided for @hexEditorOffset.
+  ///
+  /// In en, this message translates to:
+  /// **'Offset'**
+  String get hexEditorOffset;
+
+  /// No description provided for @hexEditorSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size: {size} bytes'**
+  String hexEditorSize(String size);
+
+  /// No description provided for @hexEditorSearchType.
+  ///
+  /// In en, this message translates to:
+  /// **'Search type'**
+  String get hexEditorSearchType;
+
+  /// No description provided for @hexEditorSearchHex.
+  ///
+  /// In en, this message translates to:
+  /// **'Hexadecimal'**
+  String get hexEditorSearchHex;
+
+  /// No description provided for @hexEditorSearchText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get hexEditorSearchText;
+
+  /// No description provided for @hexEditorSearchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search pattern'**
+  String get hexEditorSearchPlaceholder;
+
+  /// No description provided for @hexEditorShowAscii.
+  ///
+  /// In en, this message translates to:
+  /// **'Show ASCII View'**
+  String get hexEditorShowAscii;
+
+  /// No description provided for @hexEditorReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get hexEditorReset;
+
+  /// No description provided for @hexEditorStringsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Strings'**
+  String get hexEditorStringsTooltip;
+
+  /// No description provided for @hexEditorSearchNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Match'**
+  String get hexEditorSearchNext;
+
+  /// No description provided for @hexEditorSearchPrev.
+  ///
+  /// In en, this message translates to:
+  /// **'Prev Match'**
+  String get hexEditorSearchPrev;
+
+  /// No description provided for @hexEditorInvalidHex.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid hex pattern'**
+  String get hexEditorInvalidHex;
+
+  /// No description provided for @hexEditorHexLengthEven.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex search must be even length'**
+  String get hexEditorHexLengthEven;
+
+  /// No description provided for @hexEditorPatternNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern not found'**
+  String get hexEditorPatternNotFound;
+
+  /// No description provided for @hexEditorEditByteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Byte at {offset}'**
+  String hexEditorEditByteTitle(String offset);
+
+  /// No description provided for @hexEditorEditByteHex.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex'**
+  String get hexEditorEditByteHex;
+
+  /// No description provided for @hexEditorEditByteAscii.
+  ///
+  /// In en, this message translates to:
+  /// **'ASCII'**
+  String get hexEditorEditByteAscii;
+
+  /// No description provided for @hexEditorSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get hexEditorSave;
+
+  /// No description provided for @hexEditorDiscardChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get hexEditorDiscardChangesTitle;
+
+  /// No description provided for @hexEditorDiscardChangesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to discard your modifications?'**
+  String get hexEditorDiscardChangesMessage;
+
+  /// No description provided for @hexEditorKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get hexEditorKeepEditing;
+
+  /// No description provided for @hexEditorDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get hexEditorDiscard;
 }
 
 class _AppLocalizationsDelegate

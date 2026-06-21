@@ -19,6 +19,7 @@ import 'package:tool_lab/tools/qr_code/config.dart';
 import 'package:tool_lab/tools/document_scanner/config.dart';
 import 'package:tool_lab/tools/gps_location_store/config.dart';
 import 'package:tool_lab/tools/chat_ai/config.dart';
+import 'package:tool_lab/tools/hex_editor/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -62,5 +63,6 @@ class ToolRegistry {
     DocumentScannerTool.config,
     GpsLocationStoreTool.config,
     ChatAiTool.config,
+    HexEditorTool.config,
   ];
 }

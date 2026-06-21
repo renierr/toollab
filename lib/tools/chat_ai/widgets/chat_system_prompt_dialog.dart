@@ -67,7 +67,9 @@ class _ChatSystemPromptDialogState extends State<ChatSystemPromptDialog> {
                   hintStyle: TextStyle(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   filled: true,
                   fillColor: theme.colorScheme.surfaceContainerLow,
                 ),

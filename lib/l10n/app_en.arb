@@ -1903,6 +1903,75 @@
   "chatAiClearHistoryConfirm": "Are you sure you want to clear all messages in this chat?",
   "chatAiThinking": "Thinking...",
   "chatAiSystemPromptTitle": "System Prompt",
-  "chatAiSystemPromptDescription": "Customize the instructions for the AI model. Leave empty to use the default."
+  "chatAiSystemPromptDescription": "Customize the instructions for the AI model. Leave empty to use the default.",
+  "toolNameHexEditor": "Hex Editor",
+  "toolDescHexEditor": "Inspect and edit files in hexadecimal and ASCII views",
+  "hexEditorTypeLabel": "Any file",
+  "hexEditorOpenTitle": "Open any file",
+  "hexEditorDropSubtitle": "Drop any file here",
+  "hexEditorStringsTitle": "Printable Strings",
+  "hexEditorMinLength": "Minimum Length",
+  "hexEditorScan": "Scan",
+  "hexEditorScanning": "Scanning...",
+  "hexEditorScannedBytes": "Scanned {scanned} / {total} bytes",
+  "@hexEditorScannedBytes": {
+    "placeholders": {
+      "scanned": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "hexEditorFoundStrings": "Found {count} strings",
+  "@hexEditorFoundStrings": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "hexEditorCancelled": "Cancelled",
+  "hexEditorNoStringsFound": "No strings found",
+  "hexEditorExportStarted": "Export started",
+  "hexEditorExportFailed": "Export failed: {error}",
+  "@hexEditorExportFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "hexEditorFailedToLoad": "Failed to load file: {error}",
+  "@hexEditorFailedToLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "hexEditorOffset": "Offset",
+  "hexEditorSize": "Size: {size} bytes",
+  "@hexEditorSize": {
+    "placeholders": {
+      "size": { "type": "String" }
+    }
+  },
+  "hexEditorSearchType": "Search type",
+  "hexEditorSearchHex": "Hexadecimal",
+  "hexEditorSearchText": "Text",
+  "hexEditorSearchPlaceholder": "Search pattern",
+  "hexEditorShowAscii": "Show ASCII View",
+  "hexEditorReset": "Reset",
+  "hexEditorStringsTooltip": "Strings",
+  "hexEditorSearchNext": "Next Match",
+  "hexEditorSearchPrev": "Prev Match",
+  "hexEditorInvalidHex": "Invalid hex pattern",
+  "hexEditorHexLengthEven": "Hex search must be even length",
+  "hexEditorPatternNotFound": "Pattern not found",
+  "hexEditorEditByteTitle": "Edit Byte at {offset}",
+  "@hexEditorEditByteTitle": {
+    "placeholders": {
+      "offset": { "type": "String" }
+    }
+  },
+  "hexEditorEditByteHex": "Hex",
+  "hexEditorEditByteAscii": "ASCII",
+  "hexEditorSave": "Save",
+  "hexEditorDiscardChangesTitle": "Discard changes?",
+  "hexEditorDiscardChangesMessage": "Do you want to discard your modifications?",
+  "hexEditorKeepEditing": "Keep editing",
+  "hexEditorDiscard": "Discard"
 }
 

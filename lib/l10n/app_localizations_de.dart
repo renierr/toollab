@@ -3231,4 +3231,132 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get chatAiSystemPromptDescription =>
       'Passen Sie die Anweisungen für das KI-Modell an. Leer lassen, um den Standard zu verwenden.';
+
+  @override
+  String get toolNameHexEditor => 'Hex-Editor';
+
+  @override
+  String get toolDescHexEditor =>
+      'Dateien in Hexadezimal- und ASCII-Ansichten inspizieren und bearbeiten';
+
+  @override
+  String get hexEditorTypeLabel => 'Jede Datei';
+
+  @override
+  String get hexEditorOpenTitle => 'Beliebige Datei öffnen';
+
+  @override
+  String get hexEditorDropSubtitle => 'Ziehen Sie eine beliebige Datei hierher';
+
+  @override
+  String get hexEditorStringsTitle => 'Druckbare Zeichenketten';
+
+  @override
+  String get hexEditorMinLength => 'Mindestlänge';
+
+  @override
+  String get hexEditorScan => 'Scannen';
+
+  @override
+  String get hexEditorScanning => 'Scannen...';
+
+  @override
+  String hexEditorScannedBytes(String scanned, String total) {
+    return '$scanned / $total Bytes gescannt';
+  }
+
+  @override
+  String hexEditorFoundStrings(int count) {
+    return '$count Zeichenketten gefunden';
+  }
+
+  @override
+  String get hexEditorCancelled => 'Abgebrochen';
+
+  @override
+  String get hexEditorNoStringsFound => 'Keine Zeichenketten gefunden';
+
+  @override
+  String get hexEditorExportStarted => 'Export gestartet';
+
+  @override
+  String hexEditorExportFailed(String error) {
+    return 'Export fehlgeschlagen: $error';
+  }
+
+  @override
+  String hexEditorFailedToLoad(String error) {
+    return 'Datei konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String get hexEditorOffset => 'Offset';
+
+  @override
+  String hexEditorSize(String size) {
+    return 'Größe: $size Bytes';
+  }
+
+  @override
+  String get hexEditorSearchType => 'Suchtyp';
+
+  @override
+  String get hexEditorSearchHex => 'Hexadezimal';
+
+  @override
+  String get hexEditorSearchText => 'Text';
+
+  @override
+  String get hexEditorSearchPlaceholder => 'Suchmuster';
+
+  @override
+  String get hexEditorShowAscii => 'ASCII-Ansicht anzeigen';
+
+  @override
+  String get hexEditorReset => 'Zurücksetzen';
+
+  @override
+  String get hexEditorStringsTooltip => 'Strings';
+
+  @override
+  String get hexEditorSearchNext => 'Nächster Treffer';
+
+  @override
+  String get hexEditorSearchPrev => 'Vorheriger Treffer';
+
+  @override
+  String get hexEditorInvalidHex => 'Ungültiges Hex-Muster';
+
+  @override
+  String get hexEditorHexLengthEven => 'Hex-Suche muss eine gerade Länge haben';
+
+  @override
+  String get hexEditorPatternNotFound => 'Muster nicht gefunden';
+
+  @override
+  String hexEditorEditByteTitle(String offset) {
+    return 'Byte bearbeiten bei $offset';
+  }
+
+  @override
+  String get hexEditorEditByteHex => 'Hex';
+
+  @override
+  String get hexEditorEditByteAscii => 'ASCII';
+
+  @override
+  String get hexEditorSave => 'Speichern';
+
+  @override
+  String get hexEditorDiscardChangesTitle => 'Änderungen verwerfen?';
+
+  @override
+  String get hexEditorDiscardChangesMessage =>
+      'Möchten Sie Ihre Änderungen verwerfen?';
+
+  @override
+  String get hexEditorKeepEditing => 'Weiter bearbeiten';
+
+  @override
+  String get hexEditorDiscard => 'Verwerfen';
 }
