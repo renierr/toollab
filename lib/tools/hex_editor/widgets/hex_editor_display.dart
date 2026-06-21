@@ -17,13 +17,21 @@ class HexEditorDisplay extends StatefulWidget {
 
 class _HexEditorDisplayState extends State<HexEditorDisplay> {
   final FocusNode _focusNode = FocusNode();
+  late final ScrollController _horizontalScrollController;
   int? _highNibble;
 
   static const double _rowHeight = 28.0;
 
   @override
+  void initState() {
+    super.initState();
+    _horizontalScrollController = ScrollController();
+  }
+
+  @override
   void dispose() {
     _focusNode.dispose();
+    _horizontalScrollController.dispose();
     super.dispose();
   }
 
@@ -140,9 +148,9 @@ class _HexEditorDisplayState extends State<HexEditorDisplay> {
         .padLeft(8, '0')
         .toUpperCase();
 
-    // 16 cells for hex bytes
+    // 16 cells for hex bytes and ASCII characters
     final List<Widget> hexCells = [];
-    final List<String> asciiChars = [];
+    final List<Widget> asciiCells = [];
 
     for (int i = 0; i < 16; i++) {
       final cellOffset = rowOffset + i;
@@ -153,6 +161,7 @@ class _HexEditorDisplayState extends State<HexEditorDisplay> {
             child: Text('  ', style: TextStyle(fontFamily: 'monospace')),
           ),
         );
+        asciiCells.add(const SizedBox(width: 9));
         continue;
       }
 
@@ -162,7 +171,7 @@ class _HexEditorDisplayState extends State<HexEditorDisplay> {
       final byteStr = byteVal != null
           ? byteVal.toRadixString(16).padLeft(2, '0').toUpperCase()
           : '??';
-      asciiChars.add(byteVal != null ? _formatAscii(byteVal) : '.');
+      final charStr = byteVal != null ? _formatAscii(byteVal) : '.';
 
       final isSelected = cellOffset == state.selectedOffset;
       final isMatch =
@@ -199,8 +208,45 @@ class _HexEditorDisplayState extends State<HexEditorDisplay> {
               byteStr,
               style: TextStyle(
                 fontFamily: 'monospace',
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 color: textStyleColor,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // ASCII cells
+      Color asciiTextStyleColor = isDark
+          ? Colors.tealAccent
+          : Colors.teal.shade700;
+      Color? asciiBg;
+      if (isSelected) {
+        asciiBg = AppTheme.accentPurple.withValues(alpha: 0.4);
+        asciiTextStyleColor = Colors.white;
+      } else if (isMatch) {
+        asciiBg = AppTheme.accentAmber.withValues(alpha: 0.3);
+      }
+
+      asciiCells.add(
+        GestureDetector(
+          onTap: () {
+            state.setSelectedOffset(cellOffset);
+            _highNibble = null;
+            _focusNode.requestFocus();
+          },
+          child: Container(
+            width: 9,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: asciiBg,
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: Text(
+              charStr,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                color: asciiTextStyleColor,
                 fontSize: 13,
               ),
             ),
@@ -216,8 +262,6 @@ class _HexEditorDisplayState extends State<HexEditorDisplay> {
       }
     }
 
-    final asciiString = asciiChars.join('');
-
     return Container(
       height: _rowHeight,
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -229,41 +273,25 @@ class _HexEditorDisplayState extends State<HexEditorDisplay> {
       child: Row(
         children: [
           // Offset
-          Text(
-            offsetText,
-            style: TextStyle(
-              fontFamily: 'monospace',
-              color: isDark ? AppTheme.accentPurple : Colors.purple.shade700,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
+          SizedBox(
+            width: 75,
+            child: Text(
+              offsetText,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                color: isDark ? AppTheme.accentPurple : Colors.purple.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
           ),
           const VerticalDivider(width: 24, indent: 4, endIndent: 4),
           // Hex representation
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const NeverScrollableScrollPhysics(),
-              child: Row(children: hexCells),
-            ),
-          ),
+          Row(children: hexCells),
           if (state.showAscii) ...[
             const VerticalDivider(width: 24, indent: 4, endIndent: 4),
             // ASCII representation
-            SizedBox(
-              width: 140,
-              child: Text(
-                asciiString,
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  color: isDark ? Colors.tealAccent : Colors.teal.shade700,
-                  fontSize: 13,
-                  letterSpacing: 1.5,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.clip,
-              ),
-            ),
+            Row(children: asciiCells),
           ],
         ],
       ),
@@ -274,19 +302,35 @@ class _HexEditorDisplayState extends State<HexEditorDisplay> {
   Widget build(BuildContext context) {
     final state = context.watch<HexEditorState>();
     final rowCount = (state.totalSize / 16).ceil();
+    final tableWidth = state.showAscii ? 760.0 : 600.0;
 
-    return Focus(
-      focusNode: _focusNode,
-      onKeyEvent: (node, event) {
-        final handled = _handleKeyEvent(event);
-        return handled ? KeyEventResult.handled : KeyEventResult.ignored;
-      },
-      autofocus: true,
-      child: ListView.builder(
-        controller: widget.scrollController,
-        itemCount: rowCount,
-        itemExtent: _rowHeight,
-        itemBuilder: (context, index) => _buildRow(context, index, state),
+    return GestureDetector(
+      onTap: () => _focusNode.requestFocus(),
+      child: Focus(
+        focusNode: _focusNode,
+        onKeyEvent: (node, event) {
+          final handled = _handleKeyEvent(event);
+          return handled ? KeyEventResult.handled : KeyEventResult.ignored;
+        },
+        autofocus: true,
+        child: Scrollbar(
+          controller: _horizontalScrollController,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: _horizontalScrollController,
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: tableWidth,
+              child: ListView.builder(
+                controller: widget.scrollController,
+                itemCount: rowCount,
+                itemExtent: _rowHeight,
+                itemBuilder: (context, index) =>
+                    _buildRow(context, index, state),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
