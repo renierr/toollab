@@ -78,7 +78,12 @@ class _MarkdownCodec extends DocumentCodec {
   @override
   Future<Uint8List> encode(DocxBuiltDocument doc) async {
     // No native Markdown writer: serialize to HTML, then HTML -> Markdown.
-    final markdown = html2md.convert(HtmlExporter().export(doc));
+    // HtmlExporter emits a full document with a <style> head block; ignore
+    // non-content tags so their CSS/text never leaks into the Markdown.
+    final markdown = html2md.convert(
+      HtmlExporter().export(doc),
+      ignore: const ['style', 'script', 'head', 'title'],
+    );
     return Uint8List.fromList(utf8.encode(markdown));
   }
 }

@@ -81,6 +81,24 @@ void main() {
       expect(_str(out.sublist(0, 4)), '%PDF');
     });
 
+    test('docx -> markdown does not leak the <style> CSS block', () async {
+      // md -> docx, then docx -> md (exercises HtmlExporter's style head).
+      final docx = await DocumentConverter.convert(
+        _bytes(_markdown),
+        DocFormat.md,
+        DocFormat.docx,
+      );
+      final md = await DocumentConverter.convert(
+        docx,
+        DocFormat.docx,
+        DocFormat.md,
+      );
+      final text = _str(md);
+      expect(text, isNot(contains('font-family')));
+      expect(text, isNot(contains('max-width')));
+      expect(text, contains('Title'));
+    });
+
     test('markdown -> docx -> markdown round-trips the title', () async {
       final docx = await DocumentConverter.convert(
         _bytes(_markdown),
