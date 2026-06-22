@@ -75,7 +75,7 @@ lib/tools/<name>/
 ```
 - **`config.dart`** — Tool metadata (name, icon, route, color). Exports a static `const ToolModel` via a tool class.
 - **`<name>_page.dart`** — Tool entry point page. Must be a thin coordinator — only `StatefulWidget` state + build method that composes extracted widgets. No inline `Widget _buildFoo(...)` methods.
-- **`widgets/` subfolder** — ALWAYS place tool-specific component widgets here (e.g. `widgets/<name>_display.dart`, `widgets/<name>_toolbar.dart`, `widgets/<name>_panel.dart`). Never inline builders in the page file, and never scatter widget files at the tool root. Only `config.dart`, `<name>_page.dart`, optional `<name>_colors.dart`, and non-widget files (enums, models) sit at the tool root.
+- **`widgets/` subfolder** — ALWAYS place tool-specific component widgets here (e.g. `widgets/<name>_display.dart`, `widgets/<name>_toolbar.dart`, `widgets/<name>_panel.dart`). Never inline builders in the page file, and never scatter widget files at the tool root. `config.dart`, `<name>_page.dart`, and optional `<name>_colors.dart` sit at the tool root. Non-widget files (enums, models, codecs, parsers, services) may sit at the tool root or be grouped into descriptively named subfolders (e.g. `converters/`, `models/`) when that improves clarity — use subfolders only for non-widget logic; widget files always live under `widgets/`.
 
 ### 2. Tool Development, Adaptation & Creation
 See the comprehensive guide at [`docs/creating-a-tool.md`](docs/creating-a-tool.md) for details on:

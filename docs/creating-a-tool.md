@@ -17,7 +17,7 @@ lib/tools/<name>/
     <name>_display.dart
     <name>_toolbar.dart
 ```
-Only `config.dart`, `<name>_page.dart`, the optional `<name>_state.dart` / `<name>_colors.dart`, and non-widget files (enums, models) sit at the tool root — all widget files live under `widgets/`.
+`config.dart`, `<name>_page.dart`, and the optional `<name>_state.dart` / `<name>_colors.dart` sit at the tool root. Non-widget files (enums, models, codecs, parsers, services) may sit at the tool root or, when it improves clarity, be grouped into descriptively named subfolders (e.g. `converters/`, `models/`). All widget files live under `widgets/` — subfolders are for non-widget logic only.
 
 ---
 
