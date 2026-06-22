@@ -34,7 +34,7 @@ class _FileConverterPageState extends State<FileConverterPage>
     onDispose(() => _scope.cleanTracked());
 
     final state = context.read<FileConverterState>();
-    onDispose(state.clear);
+    onDispose(() => Future.microtask(state.clear));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.sharedFile != null) {
