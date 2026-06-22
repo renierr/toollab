@@ -160,6 +160,21 @@ class ChatAiState extends ChangeNotifier {
     }
   }
 
+  void onEnterTool() {
+    if (_featureStatus == FeatureStatus.downloading) {
+      _startStatusPolling();
+    }
+  }
+
+  void onLeaveTool() {
+    _statusPollingTimer?.cancel();
+    _statusPollingTimer = null;
+    _selectedImageBytes = null;
+    _attachedFileName = null;
+    _attachedFileContent = null;
+    notifyListeners();
+  }
+
   Future<void> loadSessions() async {
     try {
       _sessions = await ChatAiDbHelper.instance.getSessions();

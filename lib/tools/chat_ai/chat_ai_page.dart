@@ -38,9 +38,11 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
     super.initState();
     final state = context.read<ChatAiState>();
     state.addListener(_onStateChanged);
+    state.onEnterTool();
 
     onDispose(() {
       state.removeListener(_onStateChanged);
+      state.onLeaveTool();
       _textController.dispose();
       _scrollController.dispose();
     });

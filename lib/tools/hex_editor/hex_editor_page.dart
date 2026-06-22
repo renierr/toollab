@@ -37,6 +37,9 @@ class _HexEditorPageState extends State<HexEditorPage> with DisposeCleanup {
     onDispose(() => _scope.cleanTracked());
     onDispose(_scrollController.dispose);
 
+    final state = context.read<HexEditorState>();
+    onDispose(state.closeFile);
+
     // Load initial file if provided
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.sharedFile != null) {
