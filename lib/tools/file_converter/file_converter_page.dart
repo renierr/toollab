@@ -33,6 +33,9 @@ class _FileConverterPageState extends State<FileConverterPage>
     _scope = TempFileManager.createScope();
     onDispose(() => _scope.cleanTracked());
 
+    final state = context.read<FileConverterState>();
+    onDispose(state.clear);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.sharedFile != null) {
         _loadSharedFile(widget.sharedFile!);
