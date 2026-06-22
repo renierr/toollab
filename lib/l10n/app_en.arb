@@ -1972,6 +1972,26 @@
   "hexEditorDiscardChangesTitle": "Discard changes?",
   "hexEditorDiscardChangesMessage": "Do you want to discard your modifications?",
   "hexEditorKeepEditing": "Keep editing",
-  "hexEditorDiscard": "Discard"
+  "hexEditorDiscard": "Discard",
+  "toolNameFileConverter": "File Converter",
+  "toolDescFileConverter": "Convert documents between DOCX, PDF, HTML, Markdown and text",
+  "fileConverterTypeLabel": "Documents",
+  "fileConverterOpenTitle": "Open a document",
+  "fileConverterDropSubtitle": "Drop a DOCX, PDF, HTML, Markdown or text file here",
+  "fileConverterConvertTo": "Convert to",
+  "fileConverterConvert": "Convert",
+  "fileConverterConverting": "Converting…",
+  "fileConverterUnsupported": "This file type can't be converted",
+  "fileConverterError": "Conversion failed: {error}",
+  "@fileConverterError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "fileConverterFormatDocx": "Word (DOCX)",
+  "fileConverterFormatPdf": "PDF",
+  "fileConverterFormatHtml": "HTML",
+  "fileConverterFormatMd": "Markdown",
+  "fileConverterFormatTxt": "Plain text"
 }
 

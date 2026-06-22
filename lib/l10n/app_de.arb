@@ -1146,6 +1146,26 @@
   "hexEditorDiscardChangesTitle": "Änderungen verwerfen?",
   "hexEditorDiscardChangesMessage": "Möchten Sie Ihre Änderungen verwerfen?",
   "hexEditorKeepEditing": "Weiter bearbeiten",
-  "hexEditorDiscard": "Verwerfen"
+  "hexEditorDiscard": "Verwerfen",
+  "toolNameFileConverter": "Datei-Konverter",
+  "toolDescFileConverter": "Dokumente zwischen DOCX, PDF, HTML, Markdown und Text konvertieren",
+  "fileConverterTypeLabel": "Dokumente",
+  "fileConverterOpenTitle": "Dokument öffnen",
+  "fileConverterDropSubtitle": "DOCX-, PDF-, HTML-, Markdown- oder Textdatei hierher ziehen",
+  "fileConverterConvertTo": "Konvertieren zu",
+  "fileConverterConvert": "Konvertieren",
+  "fileConverterConverting": "Konvertiere…",
+  "fileConverterUnsupported": "Dieser Dateityp kann nicht konvertiert werden",
+  "fileConverterError": "Konvertierung fehlgeschlagen: {error}",
+  "@fileConverterError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "fileConverterFormatDocx": "Word (DOCX)",
+  "fileConverterFormatPdf": "PDF",
+  "fileConverterFormatHtml": "HTML",
+  "fileConverterFormatMd": "Markdown",
+  "fileConverterFormatTxt": "Nur Text"
 }
 

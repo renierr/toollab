@@ -5977,6 +5977,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discard'**
   String get hexEditorDiscard;
+
+  /// No description provided for @toolNameFileConverter.
+  ///
+  /// In en, this message translates to:
+  /// **'File Converter'**
+  String get toolNameFileConverter;
+
+  /// No description provided for @toolDescFileConverter.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert documents between DOCX, PDF, HTML, Markdown and text'**
+  String get toolDescFileConverter;
+
+  /// No description provided for @fileConverterTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get fileConverterTypeLabel;
+
+  /// No description provided for @fileConverterOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a document'**
+  String get fileConverterOpenTitle;
+
+  /// No description provided for @fileConverterDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop a DOCX, PDF, HTML, Markdown or text file here'**
+  String get fileConverterDropSubtitle;
+
+  /// No description provided for @fileConverterConvertTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to'**
+  String get fileConverterConvertTo;
+
+  /// No description provided for @fileConverterConvert.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert'**
+  String get fileConverterConvert;
+
+  /// No description provided for @fileConverterConverting.
+  ///
+  /// In en, this message translates to:
+  /// **'Converting…'**
+  String get fileConverterConverting;
+
+  /// No description provided for @fileConverterUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This file type can\'t be converted'**
+  String get fileConverterUnsupported;
+
+  /// No description provided for @fileConverterError.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversion failed: {error}'**
+  String fileConverterError(String error);
+
+  /// No description provided for @fileConverterFormatDocx.
+  ///
+  /// In en, this message translates to:
+  /// **'Word (DOCX)'**
+  String get fileConverterFormatDocx;
+
+  /// No description provided for @fileConverterFormatPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get fileConverterFormatPdf;
+
+  /// No description provided for @fileConverterFormatHtml.
+  ///
+  /// In en, this message translates to:
+  /// **'HTML'**
+  String get fileConverterFormatHtml;
+
+  /// No description provided for @fileConverterFormatMd.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown'**
+  String get fileConverterFormatMd;
+
+  /// No description provided for @fileConverterFormatTxt.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain text'**
+  String get fileConverterFormatTxt;
 }
 
 class _AppLocalizationsDelegate

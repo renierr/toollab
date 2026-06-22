@@ -3359,4 +3359,54 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get hexEditorDiscard => 'Verwerfen';
+
+  @override
+  String get toolNameFileConverter => 'Datei-Konverter';
+
+  @override
+  String get toolDescFileConverter =>
+      'Dokumente zwischen DOCX, PDF, HTML, Markdown und Text konvertieren';
+
+  @override
+  String get fileConverterTypeLabel => 'Dokumente';
+
+  @override
+  String get fileConverterOpenTitle => 'Dokument öffnen';
+
+  @override
+  String get fileConverterDropSubtitle =>
+      'DOCX-, PDF-, HTML-, Markdown- oder Textdatei hierher ziehen';
+
+  @override
+  String get fileConverterConvertTo => 'Konvertieren zu';
+
+  @override
+  String get fileConverterConvert => 'Konvertieren';
+
+  @override
+  String get fileConverterConverting => 'Konvertiere…';
+
+  @override
+  String get fileConverterUnsupported =>
+      'Dieser Dateityp kann nicht konvertiert werden';
+
+  @override
+  String fileConverterError(String error) {
+    return 'Konvertierung fehlgeschlagen: $error';
+  }
+
+  @override
+  String get fileConverterFormatDocx => 'Word (DOCX)';
+
+  @override
+  String get fileConverterFormatPdf => 'PDF';
+
+  @override
+  String get fileConverterFormatHtml => 'HTML';
+
+  @override
+  String get fileConverterFormatMd => 'Markdown';
+
+  @override
+  String get fileConverterFormatTxt => 'Nur Text';
 }

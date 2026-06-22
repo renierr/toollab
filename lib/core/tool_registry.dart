@@ -20,6 +20,7 @@ import 'package:tool_lab/tools/document_scanner/config.dart';
 import 'package:tool_lab/tools/gps_location_store/config.dart';
 import 'package:tool_lab/tools/chat_ai/config.dart';
 import 'package:tool_lab/tools/hex_editor/config.dart';
+import 'package:tool_lab/tools/file_converter/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -64,5 +65,6 @@ class ToolRegistry {
     GpsLocationStoreTool.config,
     ChatAiTool.config,
     HexEditorTool.config,
+    FileConverterTool.config,
   ];
 }
