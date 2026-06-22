@@ -71,11 +71,10 @@ class _FileConverterPageState extends State<FileConverterPage>
     final state = context.watch<FileConverterState>();
 
     if (state.inputPath == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(FileConverterTool.config.localizedName(l10n)),
-        ),
-        body: Padding(
+      return ToolLayout(
+        title: FileConverterTool.config.localizedName(l10n),
+        fullscreen: false,
+        child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: FileDropZone(
             onFileSelected: _onFileSelected,
