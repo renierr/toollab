@@ -2054,6 +2054,19 @@
   "sketchDiscardTitle": "Discard changes?",
   "sketchDiscardMessage": "You have unsaved changes. Discard them?",
   "sketchDiscard": "Discard",
-  "sketchKeepEditing": "Keep editing"
+  "sketchKeepEditing": "Keep editing",
+  "sketchBringToFront": "Bring to front",
+  "sketchSendToBack": "Send to back",
+  "sketchGroup": "Group",
+  "sketchUngroup": "Ungroup",
+  "sketchInsertImage": "Insert image",
+  "sketchPasteImage": "Paste image",
+  "sketchNoClipboardImage": "No image in clipboard",
+  "sketchPropBrush": "Brush",
+  "sketchBrushNormal": "Normal",
+  "sketchBrushShaky": "Shaky",
+  "sketchBrushNatural": "Natural",
+  "sketchSelectBox": "Box select",
+  "sketchSelectLasso": "Lasso select"
 }
 

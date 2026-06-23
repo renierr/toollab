@@ -137,6 +137,43 @@ class _SketchBoardPageState extends State<SketchBoardPage>
     );
   }
 
+  String _mimeFor(String name) {
+    final n = name.toLowerCase();
+    if (n.endsWith('.jpg') || n.endsWith('.jpeg')) return 'image/jpeg';
+    if (n.endsWith('.gif')) return 'image/gif';
+    if (n.endsWith('.webp')) return 'image/webp';
+    if (n.endsWith('.bmp')) return 'image/bmp';
+    return 'image/png';
+  }
+
+  Future<void> _insertImage() async {
+    final file = await openFile(
+      acceptedTypeGroups: const [
+        XTypeGroup(
+          label: 'Image',
+          extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
+        ),
+      ],
+    );
+    if (file == null || !mounted) return;
+    final bytes = await file.readAsBytes();
+    if (!mounted) return;
+    await context.read<SketchBoardState>().addImage(
+      bytes,
+      mime: _mimeFor(file.name),
+    );
+  }
+
+  Future<void> _pasteImage() async {
+    final bytes = await Pasteboard.image;
+    if (!mounted) return;
+    if (bytes == null) {
+      _toast(AppLocalizations.of(context).sketchNoClipboardImage);
+      return;
+    }
+    await context.read<SketchBoardState>().addImage(bytes);
+  }
+
   Future<void> _save() async {
     final state = context.read<SketchBoardState>();
     if (state.isEmpty) {
@@ -317,6 +354,11 @@ class _SketchBoardPageState extends State<SketchBoardPage>
           const _UndoButton(),
           const _RedoButton(),
           IconButton(
+            tooltip: l10n.sketchInsertImage,
+            icon: const Icon(Icons.add_photo_alternate_outlined),
+            onPressed: _insertImage,
+          ),
+          IconButton(
             tooltip: l10n.commonSave,
             icon: const Icon(Icons.save_outlined),
             onPressed: _save,
@@ -324,6 +366,8 @@ class _SketchBoardPageState extends State<SketchBoardPage>
           PopupMenuButton<String>(
             onSelected: (v) {
               switch (v) {
+                case 'paste-image':
+                  _pasteImage();
                 case 'export':
                   _exportPng();
                 case 'copy':
@@ -339,6 +383,10 @@ class _SketchBoardPageState extends State<SketchBoardPage>
               }
             },
             itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'paste-image',
+                child: Text(l10n.sketchPasteImage),
+              ),
               PopupMenuItem(value: 'export', child: Text(l10n.commonExport)),
               PopupMenuItem(value: 'copy', child: Text(l10n.commonCopy)),
               PopupMenuItem(value: 'share', child: Text(l10n.commonShare)),
@@ -409,22 +457,75 @@ class _DrawTab extends StatelessWidget {
   }
 }
 
+typedef _SelInfo = ({bool has, int count, bool group});
+
 class _SelectionActions extends StatelessWidget {
   const _SelectionActions();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Selector<SketchBoardState, String?>(
-      selector: (_, s) => s.selectedId,
-      builder: (context, selectedId, _) {
-        if (selectedId == null) return const SizedBox.shrink();
-        return FloatingActionButton.small(
-          heroTag: 'sketch-delete',
-          tooltip: l10n.commonDelete,
-          backgroundColor: AppTheme.statusRed,
-          onPressed: () => context.read<SketchBoardState>().deleteSelected(),
-          child: const Icon(Icons.delete_outline, color: Colors.white),
+    final theme = Theme.of(context);
+    return Selector<SketchBoardState, _SelInfo>(
+      selector: (_, s) => (
+        has: s.hasSelection,
+        count: s.selectionCount,
+        group: s.hasGroupSelected,
+      ),
+      builder: (context, info, _) {
+        if (!info.has) return const SizedBox.shrink();
+        final state = context.read<SketchBoardState>();
+        return Material(
+          color: theme.colorScheme.surface.withValues(alpha: 0.95),
+          elevation: 3,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: l10n.sketchBringToFront,
+                  icon: const Icon(Icons.flip_to_front, size: 20),
+                  onPressed: state.bringToFront,
+                  visualDensity: VisualDensity.compact,
+                ),
+                IconButton(
+                  tooltip: l10n.sketchSendToBack,
+                  icon: const Icon(Icons.flip_to_back, size: 20),
+                  onPressed: state.sendToBack,
+                  visualDensity: VisualDensity.compact,
+                ),
+                if (info.count >= 2)
+                  IconButton(
+                    tooltip: l10n.sketchGroup,
+                    icon: const Icon(
+                      Icons.dashboard_customize_outlined,
+                      size: 20,
+                    ),
+                    onPressed: state.groupSelected,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                if (info.group)
+                  IconButton(
+                    tooltip: l10n.sketchUngroup,
+                    icon: const Icon(Icons.grid_view_outlined, size: 20),
+                    onPressed: state.ungroupSelected,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                IconButton(
+                  tooltip: l10n.commonDelete,
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 20,
+                    color: AppTheme.statusRed,
+                  ),
+                  onPressed: state.deleteSelected,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

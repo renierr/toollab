@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../models/sketch_element.dart';
 import '../models/sketch_enums.dart';
+import '../shapes/brush.dart';
 import '../shapes/shape_renderer.dart';
 import 'element_bounds.dart';
 
@@ -85,6 +86,16 @@ void _drawFreehand(Canvas canvas, FreehandElement el, Paint paint) {
         ..color = paint.color
         ..style = PaintingStyle.fill
         ..isAntiAlias = true,
+    );
+    return;
+  }
+  if (!isPlainBrush(el.brushStyle)) {
+    drawBrushPath(
+      canvas,
+      pts.map((p) => p.offset).toList(),
+      el.brushStyle,
+      paint,
+      null,
     );
     return;
   }

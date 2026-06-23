@@ -46,8 +46,10 @@ ToolMode toolModeFromWire(String? s) {
   }
 }
 
-/// Stroke rendering style. Only `normal` is rendered in this port; the field is
-/// preserved verbatim so drawings round-trip with the browser tool.
+/// How a marquee selection captures elements.
+enum SelectionType { box, lasso }
+
+/// Stroke rendering style.
 enum BrushStyle { normal, shaky, natural }
 
 BrushStyle brushStyleFromWire(String? s) => BrushStyle.values.firstWhere(

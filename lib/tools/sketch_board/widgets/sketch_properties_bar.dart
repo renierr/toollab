@@ -14,9 +14,18 @@ typedef _Props = ({
   double width,
   bool fillCtx,
   bool textCtx,
+  bool brushCtx,
+  BrushStyle brush,
   bool bold,
   bool italic,
 });
+
+const _nonDrawModes = {
+  ToolMode.select,
+  ToolMode.pan,
+  ToolMode.text,
+  ToolMode.image,
+};
 
 const _fillableTypes = {
   'rect',
@@ -52,6 +61,12 @@ class SketchPropertiesBar extends StatelessWidget {
             sel is ShapeElement && _fillableTypes.contains(sel.shapeType);
         final fillCtx = _fillModes.contains(s.mode) || isFillShape;
         final textCtx = s.mode == ToolMode.text || sel is TextElement;
+        final strokeShape = sel is FreehandElement || sel is ShapeElement;
+        final brushCtx =
+            strokeShape || (sel == null && !_nonDrawModes.contains(s.mode));
+        final brush = strokeShape
+            ? brushStyleFromWire(sel!.brushStyle)
+            : s.brushStyle;
         // Reflect the selected element when one is active; otherwise the tool
         // defaults used for the next drawn element.
         return (
@@ -60,6 +75,8 @@ class SketchPropertiesBar extends StatelessWidget {
           width: sel?.width ?? s.strokeWidth,
           fillCtx: fillCtx,
           textCtx: textCtx,
+          brushCtx: brushCtx,
+          brush: brush,
           bold: sel is TextElement ? sel.fontWeight == 'bold' : s.fontBold,
           italic: sel is TextElement ? sel.fontStyle == 'italic' : s.fontItalic,
         );
@@ -89,6 +106,8 @@ class SketchPropertiesBar extends StatelessWidget {
                     onPicked: state.setFillColor,
                   ),
                 _WidthControl(width: p.width, onChanged: state.setStrokeWidth),
+                if (p.brushCtx)
+                  _BrushControl(brush: p.brush, onChanged: state.setBrushStyle),
                 if (p.textCtx)
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -174,6 +193,59 @@ class _ColorButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BrushControl extends StatelessWidget {
+  final BrushStyle brush;
+  final ValueChanged<BrushStyle> onChanged;
+
+  const _BrushControl({required this.brush, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final items = <(BrushStyle, IconData, String)>[
+      (BrushStyle.normal, Icons.remove, l10n.sketchBrushNormal),
+      (BrushStyle.shaky, Icons.gesture, l10n.sketchBrushShaky),
+      (BrushStyle.natural, Icons.brush, l10n.sketchBrushNatural),
+    ];
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          l10n.sketchPropBrush,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(width: 4),
+        for (final it in items)
+          Tooltip(
+            message: it.$3,
+            child: GestureDetector(
+              onTap: () => onChanged(it.$1),
+              child: Container(
+                width: 28,
+                height: 26,
+                margin: const EdgeInsets.symmetric(horizontal: 1),
+                decoration: BoxDecoration(
+                  color: brush == it.$1
+                      ? theme.colorScheme.primaryContainer
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  it.$2,
+                  size: 16,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

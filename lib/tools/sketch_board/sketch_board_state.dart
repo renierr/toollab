@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -15,12 +17,15 @@ import 'models/sketch_history.dart';
 import 'sketch_board_colors.dart';
 import 'sketch_board_db_helper.dart';
 
-enum _DragKind { none, draw, move, resize }
+enum _DragKind { none, draw, move, resize, rotate, marquee }
 
 /// Drawing + viewport + persistence controller for the Sketch Board tool.
 class SketchBoardState extends ChangeNotifier {
   static const String _settingsKey = 'config';
   static const String _backgroundKey = 'background';
+
+  /// Screen-space gap from the selection top edge to the rotation handle.
+  static const double rotationHandleGap = 28;
 
   final SketchBoardDbHelper _db = SketchBoardDbHelper.instance;
 
@@ -29,9 +34,10 @@ class SketchBoardState extends ChangeNotifier {
   SketchElement? _draft;
   final SketchHistory _history = SketchHistory();
 
-  // ---- Viewport (matches browser `viewport {x,y,scale}`) ----
+  // ---- Viewport ----
   Offset _offset = Offset.zero;
   double _scale = 1.0;
+  Size _viewSize = const Size(800, 600);
 
   // ---- Tool + properties ----
   ToolMode _mode = ToolMode.freehand;
@@ -42,16 +48,22 @@ class SketchBoardState extends ChangeNotifier {
   final String _fontFamily = 'sans-serif';
   String _fontWeight = 'normal';
   String _fontStyle = 'normal';
-  final BrushStyle _brushStyle = BrushStyle.normal;
+  BrushStyle _brushStyle = BrushStyle.normal;
   CanvasBackground _background = CanvasBackground.checkerboard;
+  SelectionType _selectionType = SelectionType.box;
 
   // ---- Selection / interaction ----
-  String? _selectedId;
+  final Set<String> _selectedIds = {};
   _DragKind _drag = _DragKind.none;
   Offset _lastWorld = Offset.zero;
   ResizeHandle? _activeHandle;
-  SketchElement? _resizeOriginal;
-  Rect _resizeOrigBounds = Rect.zero;
+  Map<String, SketchElement> _origClones = {};
+  Rect _origUnion = Rect.zero;
+  Offset _rotatePivot = Offset.zero;
+  double _rotateStartAngle = 0;
+  Offset? _marqueeStartW;
+  Offset _marqueeCurW = Offset.zero;
+  final List<Offset> _lassoW = [];
   bool _gestureIsCamera = false;
   double _baseScale = 1;
   Offset _baseOffset = Offset.zero;
@@ -67,7 +79,7 @@ class SketchBoardState extends ChangeNotifier {
   String? _loadedShortId;
   bool _dirty = false;
 
-  // ---- Image decode cache (for rendering embedded/synced images) ----
+  // ---- Image decode cache ----
   final Map<String, ui.Image> _imageCache = {};
   final Set<String> _decoding = {};
 
@@ -87,23 +99,54 @@ class SketchBoardState extends ChangeNotifier {
   double get fontSize => _fontSize;
   bool get fontBold => _fontWeight == 'bold';
   bool get fontItalic => _fontStyle == 'italic';
+  BrushStyle get brushStyle => _brushStyle;
   CanvasBackground get background => _background;
+  SelectionType get selectionType => _selectionType;
   bool get canUndo => _history.canUndo;
   bool get canRedo => _history.canRedo;
   bool get isEmpty => _elements.isEmpty && _draft == null;
   bool get hasUnsavedChanges => _dirty;
   List<DrawingRecord> get saved => _saved;
-  String? get selectedId => _selectedId;
   TextElement? get editingText => _editingText;
   SkPoint? get pendingTextPos => _pendingTextPos;
 
+  Set<String> get selectedIds => _selectedIds;
+  bool get hasSelection => _selectedIds.isNotEmpty;
+  int get selectionCount => _selectedIds.length;
+  bool get hasGroupSelected => selectedElements.any((e) => e is GroupElement);
+
+  List<SketchElement> get selectedElements =>
+      _elements.where((e) => _selectedIds.contains(e.id)).toList();
+
+  /// The element when exactly one is selected (used to drive the properties bar).
   SketchElement? get selectedElement {
-    if (_selectedId == null) return null;
+    if (_selectedIds.length != 1) return null;
     for (final el in _elements) {
-      if (el.id == _selectedId) return el;
+      if (el.id == _selectedIds.first) return el;
     }
     return null;
   }
+
+  Rect? get selectionBounds {
+    Rect? acc;
+    for (final e in selectedElements) {
+      final b = elementBounds(e);
+      acc = acc == null ? b : acc.expandToInclude(b);
+    }
+    return acc;
+  }
+
+  Rect? get marqueeRectWorld =>
+      (_drag == _DragKind.marquee &&
+          _selectionType == SelectionType.box &&
+          _marqueeStartW != null)
+      ? Rect.fromPoints(_marqueeStartW!, _marqueeCurW)
+      : null;
+
+  List<Offset> get lassoWorld =>
+      (_drag == _DragKind.marquee && _selectionType == SelectionType.lasso)
+      ? _lassoW
+      : const [];
 
   ui.Image? imageFor(String data) => _imageCache[data];
 
@@ -116,6 +159,9 @@ class SketchBoardState extends ChangeNotifier {
 
   ViewportState get viewportState =>
       ViewportState(x: _offset.dx, y: _offset.dy, scale: _scale);
+
+  /// Reported by the painter so inserted images land in the visible centre.
+  void setViewSize(Size s) => _viewSize = s;
 
   // ---- Settings load/persist ----
   Future<void> _load() async {
@@ -158,7 +204,13 @@ class SketchBoardState extends ChangeNotifier {
   void setMode(ToolMode m) {
     if (_mode == m) return;
     _mode = m;
-    if (m != ToolMode.select) _selectedId = null;
+    if (m != ToolMode.select) _selectedIds.clear();
+    notifyListeners();
+  }
+
+  void setSelectionType(SelectionType t) {
+    if (_selectionType == t) return;
+    _selectionType = t;
     notifyListeners();
   }
 
@@ -195,6 +247,12 @@ class SketchBoardState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setBrushStyle(BrushStyle b) {
+    _brushStyle = b;
+    _mutateSelected((e) => e.brushStyle = b.name);
+    notifyListeners();
+  }
+
   void toggleBold() {
     _fontWeight = _fontWeight == 'bold' ? 'normal' : 'bold';
     _mutateSelected((e) {
@@ -211,12 +269,14 @@ class SketchBoardState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Applies [fn] to the selected element (if any), recording one undo step.
+  /// Applies [fn] to every selected element, recording one undo step.
   void _mutateSelected(void Function(SketchElement e) fn) {
-    final sel = selectedElement;
-    if (sel == null) return;
+    final sel = selectedElements;
+    if (sel.isEmpty) return;
     _history.push(_elements);
-    fn(sel);
+    for (final e in sel) {
+      fn(e);
+    }
     _dirty = true;
   }
 
@@ -249,7 +309,6 @@ class SketchBoardState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Mouse-wheel / trackpad zoom around [focalScreen].
   void zoomBy(double factor, Offset focalScreen) {
     final newScale = (_scale * factor).clamp(0.1, 8.0);
     final worldUnder = screenToWorld(focalScreen);
@@ -268,21 +327,24 @@ class SketchBoardState extends ChangeNotifier {
   void handleTap(Offset screen) {
     final world = screenToWorld(screen);
     if (_mode == ToolMode.select) {
-      SketchElement? hit;
-      for (final el in _elements.reversed) {
-        if (el is RawElement) continue;
-        if (hitTestElement(el, world, padding: 8 / _scale)) {
-          hit = el;
-          break;
-        }
-      }
-      _selectedId = hit?.id;
+      final hit = _topmostAt(world);
+      _selectedIds
+        ..clear()
+        ..addAll(hit == null ? const [] : [hit.id]);
       notifyListeners();
     } else if (_mode == ToolMode.text) {
       _pendingTextPos = SkPoint.fromOffset(world);
       _editingText = null;
       onRequestText?.call();
     }
+  }
+
+  SketchElement? _topmostAt(Offset world) {
+    for (final el in _elements.reversed) {
+      if (el is RawElement) continue;
+      if (hitTestElement(el, world, padding: 8 / _scale)) return el;
+    }
+    return null;
   }
 
   // ---- Gesture routing ----
@@ -298,7 +360,6 @@ class SketchBoardState extends ChangeNotifier {
 
   void gestureUpdate(Offset localFocal, double gestureScale, int pointerCount) {
     if (!_gestureIsCamera && pointerCount >= 2) {
-      // A second finger joined mid-stroke: abandon the draft and pan/zoom.
       _draft = null;
       _drag = _DragKind.none;
       _gestureIsCamera = true;
@@ -317,7 +378,7 @@ class SketchBoardState extends ChangeNotifier {
     _gestureIsCamera = false;
   }
 
-  // ---- Interaction (draw / select / move / resize) ----
+  // ---- Interaction ----
   void _beginInteraction(Offset world, Offset screen) {
     _lastWorld = world;
     switch (_mode) {
@@ -363,43 +424,67 @@ class SketchBoardState extends ChangeNotifier {
   }.contains(m);
 
   void _beginSelect(Offset world, Offset screen) {
-    // 1) Resize handle of the current selection?
-    final sel = selectedElement;
-    if (sel != null) {
-      final handle = _hitHandle(sel, screen);
+    final bounds = selectionBounds;
+    if (bounds != null && (bounds.width > 0 || bounds.height > 0)) {
+      if (_hitRotation(bounds, screen)) {
+        _history.push(_elements);
+        _drag = _DragKind.rotate;
+        _origUnion = bounds;
+        _rotatePivot = bounds.center;
+        _rotateStartAngle = math.atan2(
+          world.dy - bounds.center.dy,
+          world.dx - bounds.center.dx,
+        );
+        _snapshotClones();
+        return;
+      }
+      final handle = _hitHandle(bounds, screen);
       if (handle != null) {
         _history.push(_elements);
         _drag = _DragKind.resize;
         _activeHandle = handle;
-        _resizeOriginal = sel.clone();
-        _resizeOrigBounds = elementBounds(sel);
+        _origUnion = bounds;
+        _snapshotClones();
         return;
       }
     }
-    // 2) Topmost element under the pointer?
-    SketchElement? hit;
-    for (final el in _elements.reversed) {
-      if (el is RawElement) continue;
-      if (hitTestElement(el, world, padding: 6 / _scale)) {
-        hit = el;
-        break;
-      }
-    }
+
+    final hit = _topmostAt(world);
     if (hit != null) {
-      _selectedId = hit.id;
+      if (!_selectedIds.contains(hit.id)) {
+        _selectedIds
+          ..clear()
+          ..add(hit.id);
+      }
       _history.push(_elements);
       _drag = _DragKind.move;
     } else {
-      _selectedId = null;
-      _drag = _DragKind.none;
+      _selectedIds.clear();
+      _drag = _DragKind.marquee;
+      if (_selectionType == SelectionType.box) {
+        _marqueeStartW = world;
+        _marqueeCurW = world;
+      } else {
+        _lassoW
+          ..clear()
+          ..add(world);
+      }
     }
   }
 
-  ResizeHandle? _hitHandle(SketchElement el, Offset screen) {
-    final b = elementBounds(el);
-    if (b.width <= 0 && b.height <= 0) return null;
+  void _snapshotClones() {
+    _origClones = {for (final e in selectedElements) e.id: e.clone()};
+  }
+
+  bool _hitRotation(Rect bounds, Offset screen) {
+    final pos =
+        worldToScreen(bounds.topCenter) - const Offset(0, rotationHandleGap);
+    return (pos - screen).distance <= 14;
+  }
+
+  ResizeHandle? _hitHandle(Rect bounds, Offset screen) {
     const radius = 14.0;
-    for (final entry in handlePositions(b).entries) {
+    for (final entry in handlePositions(bounds).entries) {
       final sp = worldToScreen(entry.value);
       if ((sp - screen).distance <= radius) return entry.key;
     }
@@ -422,33 +507,59 @@ class SketchBoardState extends ChangeNotifier {
         }
         notifyListeners();
       case _DragKind.move:
-        final sel = selectedElement;
-        if (sel != null) {
+        for (final e in selectedElements) {
           translateElement(
-            sel,
+            e,
             world.dx - _lastWorld.dx,
             world.dy - _lastWorld.dy,
           );
-          _lastWorld = world;
-          _dirty = true;
-          notifyListeners();
         }
+        _lastWorld = world;
+        _dirty = true;
+        notifyListeners();
       case _DragKind.resize:
         _applyResize(world);
+      case _DragKind.rotate:
+        _applyRotate(world);
+      case _DragKind.marquee:
+        if (_selectionType == SelectionType.box) {
+          _marqueeCurW = world;
+        } else {
+          _lassoW.add(world);
+        }
+        notifyListeners();
       case _DragKind.none:
         break;
     }
   }
 
   void _applyResize(Offset world) {
-    final original = _resizeOriginal;
     final handle = _activeHandle;
-    if (original == null || handle == null) return;
-    final nb = _resizedBounds(_resizeOrigBounds, handle, world);
-    final fresh = original.clone();
-    resizeElement(fresh, _resizeOrigBounds, nb);
-    final idx = _elements.indexWhere((e) => e.id == fresh.id);
-    if (idx != -1) _elements[idx] = fresh;
+    if (handle == null || _origClones.isEmpty) return;
+    final nb = _resizedBounds(_origUnion, handle, world);
+    _origClones.forEach((id, clone) {
+      final fresh = clone.clone();
+      resizeElement(fresh, _origUnion, nb);
+      final idx = _elements.indexWhere((e) => e.id == id);
+      if (idx != -1) _elements[idx] = fresh;
+    });
+    _dirty = true;
+    notifyListeners();
+  }
+
+  void _applyRotate(Offset world) {
+    if (_origClones.isEmpty) return;
+    final angle = math.atan2(
+      world.dy - _rotatePivot.dy,
+      world.dx - _rotatePivot.dx,
+    );
+    final delta = angle - _rotateStartAngle;
+    _origClones.forEach((id, clone) {
+      final fresh = clone.clone();
+      rotateElementAbout(fresh, _rotatePivot, delta);
+      final idx = _elements.indexWhere((e) => e.id == id);
+      if (idx != -1) _elements[idx] = fresh;
+    });
     _dirty = true;
     notifyListeners();
   }
@@ -495,16 +606,55 @@ class SketchBoardState extends ChangeNotifier {
       if (d != null && _isDraftValid(d)) {
         _history.push(_elements);
         _elements.add(d);
-        if (_mode != ToolMode.freehand) {
-          _selectedId = null;
-        }
         _dirty = true;
       }
+    } else if (_drag == _DragKind.marquee) {
+      _finishMarquee();
     }
     _drag = _DragKind.none;
     _activeHandle = null;
-    _resizeOriginal = null;
+    _origClones = {};
+    _marqueeStartW = null;
+    _lassoW.clear();
     notifyListeners();
+  }
+
+  void _finishMarquee() {
+    if (_selectionType == SelectionType.box && _marqueeStartW != null) {
+      final rect = Rect.fromPoints(_marqueeStartW!, _marqueeCurW);
+      if (rect.width < 2 && rect.height < 2) return;
+      _selectedIds
+        ..clear()
+        ..addAll(
+          _elements
+              .where((e) => e is! RawElement && elementBounds(e).overlaps(rect))
+              .map((e) => e.id),
+        );
+    } else if (_selectionType == SelectionType.lasso && _lassoW.length > 2) {
+      _selectedIds
+        ..clear()
+        ..addAll(
+          _elements
+              .where(
+                (e) =>
+                    e is! RawElement &&
+                    _pointInPolygon(elementBounds(e).center, _lassoW),
+              )
+              .map((e) => e.id),
+        );
+    }
+  }
+
+  bool _pointInPolygon(Offset p, List<Offset> poly) {
+    var inside = false;
+    for (int i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      final a = poly[i], b = poly[j];
+      if (((a.dy > p.dy) != (b.dy > p.dy)) &&
+          (p.dx < (b.dx - a.dx) * (p.dy - a.dy) / (b.dy - a.dy) + a.dx)) {
+        inside = !inside;
+      }
+    }
+    return inside;
   }
 
   bool _isDraftValid(SketchElement d) {
@@ -525,7 +675,7 @@ class SketchBoardState extends ChangeNotifier {
       _history.push(_elements);
       if (text.trim().isEmpty) {
         _elements.removeWhere((e) => e.id == editing.id);
-        _selectedId = null;
+        _selectedIds.clear();
       } else {
         editing.text = text;
       }
@@ -562,7 +712,9 @@ class SketchBoardState extends ChangeNotifier {
     final world = screenToWorld(screen);
     for (final el in _elements.reversed) {
       if (el is TextElement && hitTestElement(el, world, padding: 6 / _scale)) {
-        _selectedId = el.id;
+        _selectedIds
+          ..clear()
+          ..add(el.id);
         editSelectedText();
         return;
       }
@@ -580,7 +732,124 @@ class SketchBoardState extends ChangeNotifier {
     return false;
   }
 
-  // ---- History / scene mutations ----
+  // ---- Selection ops: z-order, group, image, delete ----
+  void bringToFront() {
+    if (_selectedIds.isEmpty) return;
+    _history.push(_elements);
+    final sel = _elements.where((e) => _selectedIds.contains(e.id)).toList();
+    _elements.removeWhere((e) => _selectedIds.contains(e.id));
+    _elements.addAll(sel);
+    _dirty = true;
+    notifyListeners();
+  }
+
+  void sendToBack() {
+    if (_selectedIds.isEmpty) return;
+    _history.push(_elements);
+    final sel = _elements.where((e) => _selectedIds.contains(e.id)).toList();
+    _elements.removeWhere((e) => _selectedIds.contains(e.id));
+    _elements.insertAll(0, sel);
+    _dirty = true;
+    notifyListeners();
+  }
+
+  void groupSelected() {
+    if (_selectedIds.length < 2) return;
+    final sel = _elements.where((e) => _selectedIds.contains(e.id)).toList();
+    _history.push(_elements);
+    final group = GroupElement(
+      id: _db.generateUuid(),
+      color: sel.first.color,
+      fillColor: sel.first.fillColor,
+      width: sel.first.width,
+      brushStyle: sel.first.brushStyle,
+      elements: sel.map((e) => e.clone()).toList(),
+    );
+    final firstIdx = _elements.indexWhere((e) => _selectedIds.contains(e.id));
+    _elements.removeWhere((e) => _selectedIds.contains(e.id));
+    _elements.insert(firstIdx.clamp(0, _elements.length), group);
+    _selectedIds
+      ..clear()
+      ..add(group.id);
+    _dirty = true;
+    notifyListeners();
+  }
+
+  void ungroupSelected() {
+    final groups = selectedElements.whereType<GroupElement>().toList();
+    if (groups.isEmpty) return;
+    _history.push(_elements);
+    final newSel = <String>{};
+    for (final g in groups) {
+      final idx = _elements.indexOf(g);
+      if (idx == -1) continue;
+      final children = g.elements.map((c) => c.clone()).toList();
+      if (g.rotation != 0) {
+        final pivot = elementBounds(g).center;
+        for (final c in children) {
+          rotateElementAbout(c, pivot, g.rotation);
+        }
+      }
+      _elements.removeAt(idx);
+      _elements.insertAll(idx, children);
+      newSel.addAll(children.map((c) => c.id));
+    }
+    _selectedIds
+      ..clear()
+      ..addAll(newSel);
+    _ensureImages();
+    _dirty = true;
+    notifyListeners();
+  }
+
+  Future<void> addImage(Uint8List bytes, {String mime = 'image/png'}) async {
+    ui.Image img;
+    try {
+      final codec = await ui.instantiateImageCodec(bytes);
+      img = (await codec.getNextFrame()).image;
+    } catch (_) {
+      return;
+    }
+    final w0 = img.width.toDouble(), h0 = img.height.toDouble();
+    const maxDim = 400.0;
+    final f = (w0 > maxDim || h0 > maxDim) ? maxDim / math.max(w0, h0) : 1.0;
+    final w = w0 * f, h = h0 * f;
+    final dataUrl = 'data:$mime;base64,${base64Encode(bytes)}';
+    _imageCache[dataUrl] = img;
+    final center = screenToWorld(
+      Offset(_viewSize.width / 2, _viewSize.height / 2),
+    );
+    final el = ImageElement(
+      id: _db.generateUuid(),
+      color: '#000000',
+      width: 1,
+      position: SkPoint(center.dx - w / 2, center.dy - h / 2),
+      imageWidth: w,
+      imageHeight: h,
+      imageData: dataUrl,
+      originalWidth: w0,
+      originalHeight: h0,
+    );
+    _history.push(_elements);
+    _elements.add(el);
+    _mode = ToolMode.select;
+    _selectedIds
+      ..clear()
+      ..add(el.id);
+    _dirty = true;
+    notifyListeners();
+  }
+
+  void deleteSelected() {
+    if (_selectedIds.isEmpty) return;
+    _history.push(_elements);
+    _elements.removeWhere((e) => _selectedIds.contains(e.id));
+    _selectedIds.clear();
+    _dirty = true;
+    notifyListeners();
+  }
+
+  // ---- History ----
   void undo() {
     final prev = _history.undo(_elements);
     if (prev == null) return;
@@ -601,18 +870,8 @@ class SketchBoardState extends ChangeNotifier {
     _elements
       ..clear()
       ..addAll(next);
-    if (_selectedId != null && selectedElement == null) _selectedId = null;
+    _selectedIds.removeWhere((id) => !_elements.any((e) => e.id == id));
     _ensureImages();
-  }
-
-  void deleteSelected() {
-    final id = _selectedId;
-    if (id == null) return;
-    _history.push(_elements);
-    _elements.removeWhere((e) => e.id == id);
-    _selectedId = null;
-    _dirty = true;
-    notifyListeners();
   }
 
   void clear() {
@@ -620,7 +879,7 @@ class SketchBoardState extends ChangeNotifier {
     _history.push(_elements);
     _elements.clear();
     _draft = null;
-    _selectedId = null;
+    _selectedIds.clear();
     _loadedShortId = null;
     _dirty = true;
     notifyListeners();
@@ -630,7 +889,7 @@ class SketchBoardState extends ChangeNotifier {
     if (_elements.isNotEmpty) _history.push(_elements);
     _elements.clear();
     _draft = null;
-    _selectedId = null;
+    _selectedIds.clear();
     _loadedShortId = null;
     _dirty = false;
     resetView();
@@ -700,7 +959,7 @@ class SketchBoardState extends ChangeNotifier {
     _offset = Offset(record.viewport.x, record.viewport.y);
     _scale = record.viewport.scale == 0 ? 1.0 : record.viewport.scale;
     _loadedShortId = record.shortId;
-    _selectedId = null;
+    _selectedIds.clear();
     _dirty = false;
     notifyListeners();
   }

@@ -3545,4 +3545,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sketchKeepEditing => 'Keep editing';
+
+  @override
+  String get sketchBringToFront => 'Bring to front';
+
+  @override
+  String get sketchSendToBack => 'Send to back';
+
+  @override
+  String get sketchGroup => 'Group';
+
+  @override
+  String get sketchUngroup => 'Ungroup';
+
+  @override
+  String get sketchInsertImage => 'Insert image';
+
+  @override
+  String get sketchPasteImage => 'Paste image';
+
+  @override
+  String get sketchNoClipboardImage => 'No image in clipboard';
+
+  @override
+  String get sketchPropBrush => 'Brush';
+
+  @override
+  String get sketchBrushNormal => 'Normal';
+
+  @override
+  String get sketchBrushShaky => 'Shaky';
+
+  @override
+  String get sketchBrushNatural => 'Natural';
+
+  @override
+  String get sketchSelectBox => 'Box select';
+
+  @override
+  String get sketchSelectLasso => 'Lasso select';
 }

@@ -94,10 +94,49 @@ class SketchToolbar extends StatelessWidget {
                     onTap: () => state.setMode(ToolMode.text),
                   ),
                 ),
+                if (selected == ToolMode.select) const _SelectionTypeToggle(),
               ],
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _SelectionTypeToggle extends StatelessWidget {
+  const _SelectionTypeToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final state = context.read<SketchBoardState>();
+    return Selector<SketchBoardState, SelectionType>(
+      selector: (_, s) => s.selectionType,
+      builder: (context, type, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Tooltip(
+            message: l10n.sketchSelectBox,
+            child: ToolChip(
+              icon: Icons.highlight_alt,
+              label: l10n.sketchSelectBox,
+              showLabel: false,
+              selected: type == SelectionType.box,
+              onTap: () => state.setSelectionType(SelectionType.box),
+            ),
+          ),
+          Tooltip(
+            message: l10n.sketchSelectLasso,
+            child: ToolChip(
+              icon: Icons.polyline,
+              label: l10n.sketchSelectLasso,
+              showLabel: false,
+              selected: type == SelectionType.lasso,
+              onTap: () => state.setSelectionType(SelectionType.lasso),
+            ),
+          ),
+        ],
       ),
     );
   }

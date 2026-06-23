@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../models/sketch_element.dart';
+import 'brush.dart';
 import 'shape_renderer.dart';
 
 class ArrowShape extends ShapeRenderer {
@@ -15,6 +16,7 @@ class ArrowShape extends ShapeRenderer {
       el.end.offset,
       el.width,
       stroke,
+      el.brushStyle,
       startHead: false,
     );
   }
@@ -31,6 +33,7 @@ class DoubleArrowShape extends ShapeRenderer {
       el.end.offset,
       el.width,
       stroke,
+      el.brushStyle,
       startHead: true,
     );
   }
@@ -41,7 +44,8 @@ void paintArrow(
   Offset start,
   Offset end,
   double strokeW,
-  Paint stroke, {
+  Paint stroke,
+  String? brush, {
   required bool startHead,
 }) {
   final dx = end.dx - start.dx;
@@ -51,6 +55,43 @@ void paintArrow(
 
   final angle = math.atan2(dy, dx);
   final headLen = math.min(len * 0.3, math.max(strokeW * 3, 10.0));
+
+  if (!isPlainBrush(brush)) {
+    final endWings = [
+      Offset(
+        end.dx - headLen * math.cos(angle - math.pi / 6),
+        end.dy - headLen * math.sin(angle - math.pi / 6),
+      ),
+      end,
+      Offset(
+        end.dx - headLen * math.cos(angle + math.pi / 6),
+        end.dy - headLen * math.sin(angle + math.pi / 6),
+      ),
+    ];
+    drawBrushPath(canvas, [start, end], brush, stroke, null);
+    drawBrushPath(canvas, endWings, brush, stroke, null);
+    if (startHead) {
+      drawBrushPath(
+        canvas,
+        [
+          Offset(
+            start.dx + headLen * math.cos(angle - math.pi / 6),
+            start.dy + headLen * math.sin(angle - math.pi / 6),
+          ),
+          start,
+          Offset(
+            start.dx + headLen * math.cos(angle + math.pi / 6),
+            start.dy + headLen * math.sin(angle + math.pi / 6),
+          ),
+        ],
+        brush,
+        stroke,
+        null,
+      );
+    }
+    return;
+  }
+
   final spread = math.pi / 6;
   final halfBase = math.max(strokeW * 1.5, headLen * math.sin(spread));
   final perp = Offset(-math.sin(angle), math.cos(angle));

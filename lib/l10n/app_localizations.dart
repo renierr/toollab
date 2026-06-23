@@ -6379,6 +6379,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep editing'**
   String get sketchKeepEditing;
+
+  /// No description provided for @sketchBringToFront.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring to front'**
+  String get sketchBringToFront;
+
+  /// No description provided for @sketchSendToBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to back'**
+  String get sketchSendToBack;
+
+  /// No description provided for @sketchGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get sketchGroup;
+
+  /// No description provided for @sketchUngroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Ungroup'**
+  String get sketchUngroup;
+
+  /// No description provided for @sketchInsertImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert image'**
+  String get sketchInsertImage;
+
+  /// No description provided for @sketchPasteImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste image'**
+  String get sketchPasteImage;
+
+  /// No description provided for @sketchNoClipboardImage.
+  ///
+  /// In en, this message translates to:
+  /// **'No image in clipboard'**
+  String get sketchNoClipboardImage;
+
+  /// No description provided for @sketchPropBrush.
+  ///
+  /// In en, this message translates to:
+  /// **'Brush'**
+  String get sketchPropBrush;
+
+  /// No description provided for @sketchBrushNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get sketchBrushNormal;
+
+  /// No description provided for @sketchBrushShaky.
+  ///
+  /// In en, this message translates to:
+  /// **'Shaky'**
+  String get sketchBrushShaky;
+
+  /// No description provided for @sketchBrushNatural.
+  ///
+  /// In en, this message translates to:
+  /// **'Natural'**
+  String get sketchBrushNatural;
+
+  /// No description provided for @sketchSelectBox.
+  ///
+  /// In en, this message translates to:
+  /// **'Box select'**
+  String get sketchSelectBox;
+
+  /// No description provided for @sketchSelectLasso.
+  ///
+  /// In en, this message translates to:
+  /// **'Lasso select'**
+  String get sketchSelectLasso;
 }
 
 class _AppLocalizationsDelegate

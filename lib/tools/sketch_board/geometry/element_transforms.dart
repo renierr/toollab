@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../models/sketch_element.dart';
+import 'element_bounds.dart';
 
 /// Moves [el] by ([dx], [dy]) in world space, mutating it in place.
 void translateElement(SketchElement el, double dx, double dy) {
@@ -23,6 +26,20 @@ void translateElement(SketchElement el, double dx, double dy) {
     case RawElement():
       break;
   }
+}
+
+/// Rotates [el] by [delta] radians about [pivot] (world space): orbits the
+/// element's centre around [pivot] and adds [delta] to its own rotation.
+void rotateElementAbout(SketchElement el, Offset pivot, double delta) {
+  final c = elementBounds(el).center;
+  final cos = math.cos(delta), sin = math.sin(delta);
+  final dx = c.dx - pivot.dx, dy = c.dy - pivot.dy;
+  final nc = Offset(
+    pivot.dx + dx * cos - dy * sin,
+    pivot.dy + dx * sin + dy * cos,
+  );
+  translateElement(el, nc.dx - c.dx, nc.dy - c.dy);
+  el.rotation += delta;
 }
 
 /// Remaps [el]'s geometry from the [from] bounding box to the [to] box,

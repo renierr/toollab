@@ -1228,6 +1228,19 @@
   "sketchDiscardTitle": "Änderungen verwerfen?",
   "sketchDiscardMessage": "Es gibt ungespeicherte Änderungen. Verwerfen?",
   "sketchDiscard": "Verwerfen",
-  "sketchKeepEditing": "Weiter bearbeiten"
+  "sketchKeepEditing": "Weiter bearbeiten",
+  "sketchBringToFront": "In den Vordergrund",
+  "sketchSendToBack": "In den Hintergrund",
+  "sketchGroup": "Gruppieren",
+  "sketchUngroup": "Gruppierung aufheben",
+  "sketchInsertImage": "Bild einfügen",
+  "sketchPasteImage": "Bild aus Zwischenablage",
+  "sketchNoClipboardImage": "Kein Bild in der Zwischenablage",
+  "sketchPropBrush": "Pinsel",
+  "sketchBrushNormal": "Normal",
+  "sketchBrushShaky": "Wackelig",
+  "sketchBrushNatural": "Natürlich",
+  "sketchSelectBox": "Rechteckauswahl",
+  "sketchSelectLasso": "Lasso-Auswahl"
 }
 

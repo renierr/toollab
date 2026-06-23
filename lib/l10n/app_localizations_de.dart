@@ -3572,4 +3572,43 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sketchKeepEditing => 'Weiter bearbeiten';
+
+  @override
+  String get sketchBringToFront => 'In den Vordergrund';
+
+  @override
+  String get sketchSendToBack => 'In den Hintergrund';
+
+  @override
+  String get sketchGroup => 'Gruppieren';
+
+  @override
+  String get sketchUngroup => 'Gruppierung aufheben';
+
+  @override
+  String get sketchInsertImage => 'Bild einfügen';
+
+  @override
+  String get sketchPasteImage => 'Bild aus Zwischenablage';
+
+  @override
+  String get sketchNoClipboardImage => 'Kein Bild in der Zwischenablage';
+
+  @override
+  String get sketchPropBrush => 'Pinsel';
+
+  @override
+  String get sketchBrushNormal => 'Normal';
+
+  @override
+  String get sketchBrushShaky => 'Wackelig';
+
+  @override
+  String get sketchBrushNatural => 'Natürlich';
+
+  @override
+  String get sketchSelectBox => 'Rechteckauswahl';
+
+  @override
+  String get sketchSelectLasso => 'Lasso-Auswahl';
 }
