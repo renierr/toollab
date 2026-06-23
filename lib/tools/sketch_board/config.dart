@@ -22,7 +22,8 @@ class SketchBoardTool {
     nameL10n: (l10n) => l10n.toolNameSketchBoard,
     descriptionL10n: (l10n) => l10n.toolDescSketchBoard,
     fileExtensions: ['png'],
-    createPage: (_) => const SketchBoardPage(),
+    shareTarget: const ShareTargetConfig(accept: ['image/*']),
+    createPage: (sd) => SketchBoardPage(sharedFile: sd?.firstFile),
     syncDelegateFactory: SketchBoardSyncDelegate.new,
     stateProviders: () => [
       ChangeNotifierProvider<SketchBoardState>(

@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
@@ -29,7 +31,9 @@ import 'geometry/element_bounds.dart';
 import 'models/sketch_element.dart';
 
 class SketchBoardPage extends StatefulWidget {
-  const SketchBoardPage({super.key});
+  final SharedFile? sharedFile;
+
+  const SketchBoardPage({super.key, this.sharedFile});
 
   @override
   State<SketchBoardPage> createState() => _SketchBoardPageState();
@@ -64,6 +68,21 @@ class _SketchBoardPageState extends State<SketchBoardPage>
             })
             .catchError((e) {
               debugPrint('[SketchBoardPage] Auto-sync on open failed: $e');
+            });
+      }
+
+      if (widget.sharedFile != null) {
+        state.newDrawing();
+        final file = File(widget.sharedFile!.path);
+        file
+            .readAsBytes()
+            .then((bytes) {
+              if (mounted) {
+                state.addImage(bytes, mime: widget.sharedFile!.mimeType);
+              }
+            })
+            .catchError((e) {
+              debugPrint('Failed to load shared image: $e');
             });
       }
     });
