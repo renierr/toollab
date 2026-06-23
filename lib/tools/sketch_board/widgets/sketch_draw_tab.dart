@@ -18,19 +18,29 @@ class SketchDrawTab extends StatelessWidget {
     return Stack(
       children: [
         const Positioned.fill(child: SketchCanvas()),
-        if (bounds != null && state.selectedIds.isNotEmpty)
-          Positioned(
-            top: 12,
-            left: 12,
-            child: _SelectionSizeBadge(bounds: bounds),
-          ),
-        const Positioned(
+        Positioned(
           top: 8,
           left: 8,
           right: 8,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: SketchPropertiesBar(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Align(
+                alignment: Alignment.topCenter,
+                child: SketchPropertiesBar(),
+              ),
+              if (bounds != null && state.selectedIds.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: _SelectionSizeBadge(bounds: bounds),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         const Positioned(
