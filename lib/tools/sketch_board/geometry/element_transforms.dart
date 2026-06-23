@@ -44,13 +44,24 @@ void rotateElementAbout(SketchElement el, Offset pivot, double delta) {
 
 /// Remaps [el]'s geometry from the [from] bounding box to the [to] box,
 /// mutating it in place. Used by the resize handles.
-void resizeElement(SketchElement el, Rect from, Rect to) {
+void resizeElement(
+  SketchElement el,
+  Rect from,
+  Rect to, {
+  bool flipX = false,
+  bool flipY = false,
+}) {
   if (from.width == 0 || from.height == 0) return;
   final sx = to.width / from.width;
   final sy = to.height / from.height;
 
-  SkPoint map(SkPoint p) =>
-      SkPoint(to.left + (p.x - from.left) * sx, to.top + (p.y - from.top) * sy);
+  SkPoint map(SkPoint p) {
+    double x = to.left + (p.x - from.left) * sx;
+    double y = to.top + (p.y - from.top) * sy;
+    if (flipX) x = 2 * to.center.dx - x;
+    if (flipY) y = 2 * to.center.dy - y;
+    return SkPoint(x, y);
+  }
 
   switch (el) {
     case FreehandElement():
@@ -68,7 +79,7 @@ void resizeElement(SketchElement el, Rect from, Rect to) {
       el.imageHeight = (el.imageHeight * sy).abs();
     case GroupElement():
       for (final sub in el.elements) {
-        resizeElement(sub, from, to);
+        resizeElement(sub, from, to, flipX: flipX, flipY: flipY);
       }
     case RawElement():
       break;

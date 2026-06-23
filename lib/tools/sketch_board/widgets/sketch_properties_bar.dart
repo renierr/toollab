@@ -15,6 +15,7 @@ typedef _Props = ({
   bool fillCtx,
   bool textCtx,
   bool brushCtx,
+  bool imageCtx,
   BrushStyle brush,
   bool bold,
   bool italic,
@@ -67,6 +68,7 @@ class SketchPropertiesBar extends StatelessWidget {
         final brush = strokeShape
             ? brushStyleFromWire(sel!.brushStyle)
             : s.brushStyle;
+        final imageCtx = sel is ImageElement;
         // Reflect the selected element when one is active; otherwise the tool
         // defaults used for the next drawn element.
         return (
@@ -76,6 +78,7 @@ class SketchPropertiesBar extends StatelessWidget {
           fillCtx: fillCtx,
           textCtx: textCtx,
           brushCtx: brushCtx,
+          imageCtx: imageCtx,
           brush: brush,
           bold: sel is TextElement ? sel.fontWeight == 'bold' : s.fontBold,
           italic: sel is TextElement ? sel.fontStyle == 'italic' : s.fontItalic,
@@ -125,6 +128,13 @@ class SketchPropertiesBar extends StatelessWidget {
                         visualDensity: VisualDensity.compact,
                       ),
                     ],
+                  ),
+                if (p.imageCtx)
+                  IconButton(
+                    tooltip: l10n.sketchResetImageSize,
+                    icon: const Icon(Icons.aspect_ratio_outlined, size: 18),
+                    onPressed: state.resetImageSize,
+                    visualDensity: VisualDensity.compact,
                   ),
               ],
             ),

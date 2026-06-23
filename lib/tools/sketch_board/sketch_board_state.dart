@@ -536,10 +536,79 @@ class SketchBoardState extends ChangeNotifier {
   void _applyResize(Offset world) {
     final handle = _activeHandle;
     if (handle == null || _origClones.isEmpty) return;
-    final nb = _resizedBounds(_origUnion, handle, world);
+
+    final hasImage = _origClones.values.any((e) => e is ImageElement);
+    final isCorner =
+        handle == ResizeHandle.tl ||
+        handle == ResizeHandle.tr ||
+        handle == ResizeHandle.br ||
+        handle == ResizeHandle.bl;
+
+    Rect nb;
+    if (hasImage && isCorner) {
+      final wFrom = _origUnion.width;
+      final hFrom = _origUnion.height;
+      if (wFrom == 0 || hFrom == 0) {
+        nb = _resizedBounds(_origUnion, handle, world);
+      } else {
+        Offset fixedPoint;
+        switch (handle) {
+          case ResizeHandle.tl:
+            fixedPoint = _origUnion.bottomRight;
+          case ResizeHandle.tr:
+            fixedPoint = _origUnion.bottomLeft;
+          case ResizeHandle.br:
+            fixedPoint = _origUnion.topLeft;
+          case ResizeHandle.bl:
+            fixedPoint = _origUnion.topRight;
+          default:
+            fixedPoint = _origUnion.center;
+        }
+        final scaleX = (world.dx - fixedPoint.dx).abs() / wFrom;
+        final scaleY = (world.dy - fixedPoint.dy).abs() / hFrom;
+        final scale = (scaleX + scaleY) / 2.0;
+        final wNew = wFrom * scale;
+        final hNew = hFrom * scale;
+        final signX = (world.dx - fixedPoint.dx) >= 0 ? 1.0 : -1.0;
+        final signY = (world.dy - fixedPoint.dy) >= 0 ? 1.0 : -1.0;
+        final newCorner = Offset(
+          fixedPoint.dx + signX * wNew,
+          fixedPoint.dy + signY * hNew,
+        );
+        nb = Rect.fromPoints(fixedPoint, newCorner);
+      }
+    } else {
+      nb = _resizedBounds(_origUnion, handle, world);
+    }
+
+    bool flipX = false;
+    bool flipY = false;
+    switch (handle) {
+      case ResizeHandle.tl:
+        flipX = world.dx > _origUnion.right;
+        flipY = world.dy > _origUnion.bottom;
+      case ResizeHandle.tr:
+        flipX = world.dx < _origUnion.left;
+        flipY = world.dy > _origUnion.bottom;
+      case ResizeHandle.br:
+        flipX = world.dx < _origUnion.left;
+        flipY = world.dy < _origUnion.top;
+      case ResizeHandle.bl:
+        flipX = world.dx > _origUnion.right;
+        flipY = world.dy < _origUnion.top;
+      case ResizeHandle.t:
+        flipY = world.dy > _origUnion.bottom;
+      case ResizeHandle.b:
+        flipY = world.dy < _origUnion.top;
+      case ResizeHandle.l:
+        flipX = world.dx > _origUnion.right;
+      case ResizeHandle.r:
+        flipX = world.dx < _origUnion.left;
+    }
+
     _origClones.forEach((id, clone) {
       final fresh = clone.clone();
-      resizeElement(fresh, _origUnion, nb);
+      resizeElement(fresh, _origUnion, nb, flipX: flipX, flipY: flipY);
       final idx = _elements.indexWhere((e) => e.id == id);
       if (idx != -1) _elements[idx] = fresh;
     });
@@ -847,6 +916,24 @@ class SketchBoardState extends ChangeNotifier {
     _selectedIds.clear();
     _dirty = true;
     notifyListeners();
+  }
+
+  void resetImageSize() {
+    final sel = selectedElement;
+    if (sel is ImageElement &&
+        sel.originalWidth != null &&
+        sel.originalHeight != null) {
+      _history.push(_elements);
+      final idx = _elements.indexWhere((e) => e.id == sel.id);
+      if (idx != -1) {
+        final fresh = sel.clone();
+        fresh.imageWidth = sel.originalWidth!;
+        fresh.imageHeight = sel.originalHeight!;
+        _elements[idx] = fresh;
+        _dirty = true;
+        notifyListeners();
+      }
+    }
   }
 
   // ---- History ----

@@ -2067,6 +2067,7 @@
   "sketchBrushShaky": "Shaky",
   "sketchBrushNatural": "Natural",
   "sketchSelectBox": "Box select",
-  "sketchSelectLasso": "Lasso select"
+  "sketchSelectLasso": "Lasso select",
+  "sketchResetImageSize": "Reset image size"
 }
 

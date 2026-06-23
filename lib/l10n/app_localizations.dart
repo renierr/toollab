@@ -6457,6 +6457,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lasso select'**
   String get sketchSelectLasso;
+
+  /// No description provided for @sketchResetImageSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset image size'**
+  String get sketchResetImageSize;
 }
 
 class _AppLocalizationsDelegate

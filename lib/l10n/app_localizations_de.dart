@@ -3611,4 +3611,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sketchSelectLasso => 'Lasso-Auswahl';
+
+  @override
+  String get sketchResetImageSize => 'Bildgröße zurücksetzen';
 }

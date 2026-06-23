@@ -1241,6 +1241,7 @@
   "sketchBrushShaky": "Wackelig",
   "sketchBrushNatural": "Natürlich",
   "sketchSelectBox": "Rechteckauswahl",
-  "sketchSelectLasso": "Lasso-Auswahl"
+  "sketchSelectLasso": "Lasso-Auswahl",
+  "sketchResetImageSize": "Bildgröße zurücksetzen"
 }
 
