@@ -3614,4 +3614,46 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sketchResetImageSize => 'Bildgröße zurücksetzen';
+
+  @override
+  String get sketchMenuInfo => 'Board-Info';
+
+  @override
+  String get sketchInfoTitle => 'Sketch-Board-Informationen';
+
+  @override
+  String get sketchInfoViewportSize => 'Viewport-Größe';
+
+  @override
+  String get sketchInfoContentBounds => 'Inhaltsabmessungen';
+
+  @override
+  String get sketchInfoTotalElements => 'Gesamte Elemente';
+
+  @override
+  String get sketchInfoZoomLevel => 'Zoom-Stufe';
+
+  @override
+  String get sketchInfoElementsBreakdown => 'Elemente-Aufteilung';
+
+  @override
+  String get sketchInfoPenElements => 'Stift-Elemente';
+
+  @override
+  String get sketchInfoShapeElements => 'Form-Elemente';
+
+  @override
+  String get sketchInfoTextElements => 'Text-Elemente';
+
+  @override
+  String get sketchInfoImageElements => 'Bild-Elemente';
+
+  @override
+  String get sketchInfoGroupElements => 'Gruppen-Elemente';
+
+  @override
+  String get sketchInfoViewOffset => 'Kameraposition';
+
+  @override
+  String get sketchInfoUnsavedChanges => 'Ungespeicherte Änderungen';
 }

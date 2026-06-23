@@ -1242,6 +1242,20 @@
   "sketchBrushNatural": "Natürlich",
   "sketchSelectBox": "Rechteckauswahl",
   "sketchSelectLasso": "Lasso-Auswahl",
-  "sketchResetImageSize": "Bildgröße zurücksetzen"
+  "sketchResetImageSize": "Bildgröße zurücksetzen",
+  "sketchMenuInfo": "Board-Info",
+  "sketchInfoTitle": "Sketch-Board-Informationen",
+  "sketchInfoViewportSize": "Viewport-Größe",
+  "sketchInfoContentBounds": "Inhaltsabmessungen",
+  "sketchInfoTotalElements": "Gesamte Elemente",
+  "sketchInfoZoomLevel": "Zoom-Stufe",
+  "sketchInfoElementsBreakdown": "Elemente-Aufteilung",
+  "sketchInfoPenElements": "Stift-Elemente",
+  "sketchInfoShapeElements": "Form-Elemente",
+  "sketchInfoTextElements": "Text-Elemente",
+  "sketchInfoImageElements": "Bild-Elemente",
+  "sketchInfoGroupElements": "Gruppen-Elemente",
+  "sketchInfoViewOffset": "Kameraposition",
+  "sketchInfoUnsavedChanges": "Ungespeicherte Änderungen"
 }
 

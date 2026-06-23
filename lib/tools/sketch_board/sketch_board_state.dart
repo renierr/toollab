@@ -160,6 +160,8 @@ class SketchBoardState extends ChangeNotifier {
   ViewportState get viewportState =>
       ViewportState(x: _offset.dx, y: _offset.dy, scale: _scale);
 
+  Size get viewSize => _viewSize;
+
   /// Reported by the painter so inserted images land in the visible centre.
   void setViewSize(Size s) => _viewSize = s;
 

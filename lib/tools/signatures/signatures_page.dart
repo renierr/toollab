@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:pasteboard/pasteboard.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
@@ -120,9 +120,13 @@ class _SignaturesPageState extends State<SignaturesPage>
   Future<void> _copy() async {
     final bytes = await context.read<SignaturesState>().exportCurrentPng();
     if (bytes == null) return;
-    await Pasteboard.writeImage(bytes);
+    final success = await ClipboardHelper.copyImageBytes(bytes);
     if (!mounted) return;
-    _toast(AppLocalizations.of(context).sigCopiedToClipboard);
+    if (success) {
+      _toast(AppLocalizations.of(context).sigCopiedToClipboard);
+    } else {
+      _toast('Copy to clipboard failed');
+    }
   }
 
   Future<void> _share() async {

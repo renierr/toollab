@@ -6463,6 +6463,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reset image size'**
   String get sketchResetImageSize;
+
+  /// No description provided for @sketchMenuInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Board info'**
+  String get sketchMenuInfo;
+
+  /// No description provided for @sketchInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sketch Board Information'**
+  String get sketchInfoTitle;
+
+  /// No description provided for @sketchInfoViewportSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewport Size'**
+  String get sketchInfoViewportSize;
+
+  /// No description provided for @sketchInfoContentBounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Content Dimensions'**
+  String get sketchInfoContentBounds;
+
+  /// No description provided for @sketchInfoTotalElements.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Elements'**
+  String get sketchInfoTotalElements;
+
+  /// No description provided for @sketchInfoZoomLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom Level'**
+  String get sketchInfoZoomLevel;
+
+  /// No description provided for @sketchInfoElementsBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Elements Breakdown'**
+  String get sketchInfoElementsBreakdown;
+
+  /// No description provided for @sketchInfoPenElements.
+  ///
+  /// In en, this message translates to:
+  /// **'Pen Elements'**
+  String get sketchInfoPenElements;
+
+  /// No description provided for @sketchInfoShapeElements.
+  ///
+  /// In en, this message translates to:
+  /// **'Shape Elements'**
+  String get sketchInfoShapeElements;
+
+  /// No description provided for @sketchInfoTextElements.
+  ///
+  /// In en, this message translates to:
+  /// **'Text Elements'**
+  String get sketchInfoTextElements;
+
+  /// No description provided for @sketchInfoImageElements.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Elements'**
+  String get sketchInfoImageElements;
+
+  /// No description provided for @sketchInfoGroupElements.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Elements'**
+  String get sketchInfoGroupElements;
+
+  /// No description provided for @sketchInfoViewOffset.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera Position'**
+  String get sketchInfoViewOffset;
+
+  /// No description provided for @sketchInfoUnsavedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved Changes'**
+  String get sketchInfoUnsavedChanges;
 }
 
 class _AppLocalizationsDelegate

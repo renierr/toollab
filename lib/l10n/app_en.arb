@@ -2068,6 +2068,20 @@
   "sketchBrushNatural": "Natural",
   "sketchSelectBox": "Box select",
   "sketchSelectLasso": "Lasso select",
-  "sketchResetImageSize": "Reset image size"
+  "sketchResetImageSize": "Reset image size",
+  "sketchMenuInfo": "Board info",
+  "sketchInfoTitle": "Sketch Board Information",
+  "sketchInfoViewportSize": "Viewport Size",
+  "sketchInfoContentBounds": "Content Dimensions",
+  "sketchInfoTotalElements": "Total Elements",
+  "sketchInfoZoomLevel": "Zoom Level",
+  "sketchInfoElementsBreakdown": "Elements Breakdown",
+  "sketchInfoPenElements": "Pen Elements",
+  "sketchInfoShapeElements": "Shape Elements",
+  "sketchInfoTextElements": "Text Elements",
+  "sketchInfoImageElements": "Image Elements",
+  "sketchInfoGroupElements": "Group Elements",
+  "sketchInfoViewOffset": "Camera Position",
+  "sketchInfoUnsavedChanges": "Unsaved Changes"
 }
 

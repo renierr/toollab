@@ -1,13 +1,13 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:pasteboard/pasteboard.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -24,6 +24,9 @@ import 'widgets/sketch_gallery.dart';
 import 'widgets/sketch_redo_button.dart';
 import 'widgets/sketch_text_editor.dart';
 import 'widgets/sketch_undo_button.dart';
+import '../../widgets/data_row.dart';
+import 'geometry/element_bounds.dart';
+import 'models/sketch_element.dart';
 
 class SketchBoardPage extends StatefulWidget {
   const SketchBoardPage({super.key});
@@ -117,9 +120,13 @@ class _SketchBoardPageState extends State<SketchBoardPage>
       _toast(AppLocalizations.of(context).sketchNothingToExport);
       return;
     }
-    await Pasteboard.writeImage(bytes);
+    final success = await ClipboardHelper.copyImageBytes(bytes);
     if (!mounted) return;
-    _toast(AppLocalizations.of(context).sketchCopied);
+    if (success) {
+      _toast(AppLocalizations.of(context).sketchCopied);
+    } else {
+      _toast('Copy to clipboard failed');
+    }
   }
 
   Future<void> _share() async {
@@ -165,7 +172,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
   }
 
   Future<void> _pasteImage() async {
-    final bytes = await Pasteboard.image;
+    final bytes = await ClipboardHelper.getImagePng();
     if (!mounted) return;
     if (bytes == null) {
       _toast(AppLocalizations.of(context).sketchNoClipboardImage);
@@ -244,6 +251,108 @@ class _SketchBoardPageState extends State<SketchBoardPage>
       ),
     );
     if (bg != null) state.setBackground(bg);
+  }
+
+  void _showBoardInfo() {
+    final state = context.read<SketchBoardState>();
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    final viewportStr =
+        '${state.viewSize.width.round()} x ${state.viewSize.height.round()} px';
+
+    final bounds = sceneBounds(state.elements);
+    final boundsStr = bounds != null
+        ? '${bounds.width.round()} x ${bounds.height.round()} px'
+        : '-';
+
+    final totalCount = state.elements.length;
+
+    final penCount = state.elements.whereType<FreehandElement>().length;
+    final shapeCount = state.elements.whereType<ShapeElement>().length;
+    final textCount = state.elements.whereType<TextElement>().length;
+    final imageCount = state.elements.whereType<ImageElement>().length;
+    final groupCount = state.elements.whereType<GroupElement>().length;
+
+    final zoomStr = '${(state.scale * 100).round()}%';
+    final cameraStr =
+        'x: ${state.offset.dx.round()}, y: ${state.offset.dy.round()}';
+    final unsavedStr = state.hasUnsavedChanges ? l10n.commonYes : l10n.commonNo;
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => ResponsiveAlertDialog(
+        title: Text(l10n.sketchInfoTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InfoRow(label: l10n.sketchInfoViewportSize, value: viewportStr),
+            const SizedBox(height: 8),
+            InfoRow(label: l10n.sketchInfoContentBounds, value: boundsStr),
+            const SizedBox(height: 8),
+            InfoRow(label: l10n.sketchInfoTotalElements, value: '$totalCount'),
+            const SizedBox(height: 8),
+            InfoRow(label: l10n.sketchInfoZoomLevel, value: zoomStr),
+            const SizedBox(height: 8),
+            InfoRow(label: l10n.sketchInfoViewOffset, value: cameraStr),
+            const SizedBox(height: 8),
+            InfoRow(label: l10n.sketchInfoUnsavedChanges, value: unsavedStr),
+            if (totalCount > 0) ...[
+              const SizedBox(height: 16),
+              Divider(color: theme.colorScheme.outline.withValues(alpha: 0.15)),
+              const SizedBox(height: 12),
+              Text(
+                l10n.sketchInfoElementsBreakdown,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (penCount > 0) ...[
+                InfoRow(label: l10n.sketchInfoPenElements, value: '$penCount'),
+                const SizedBox(height: 6),
+              ],
+              if (shapeCount > 0) ...[
+                InfoRow(
+                  label: l10n.sketchInfoShapeElements,
+                  value: '$shapeCount',
+                ),
+                const SizedBox(height: 6),
+              ],
+              if (textCount > 0) ...[
+                InfoRow(
+                  label: l10n.sketchInfoTextElements,
+                  value: '$textCount',
+                ),
+                const SizedBox(height: 6),
+              ],
+              if (imageCount > 0) ...[
+                InfoRow(
+                  label: l10n.sketchInfoImageElements,
+                  value: '$imageCount',
+                ),
+                const SizedBox(height: 6),
+              ],
+              if (groupCount > 0) ...[
+                InfoRow(
+                  label: l10n.sketchInfoGroupElements,
+                  value: '$groupCount',
+                ),
+                const SizedBox(height: 6),
+              ],
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(MaterialLocalizations.of(ctx).okButtonLabel),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<bool> _confirmDiscard() async {
@@ -389,6 +498,8 @@ class _SketchBoardPageState extends State<SketchBoardPage>
                   _pickBackground();
                 case 'reset':
                   context.read<SketchBoardState>().resetView();
+                case 'info':
+                  _showBoardInfo();
                 case 'clear':
                   _confirmClear();
               }
@@ -474,6 +585,16 @@ class _SketchBoardPageState extends State<SketchBoardPage>
                     const Icon(Icons.zoom_out_map_outlined, size: 20),
                     const SizedBox(width: 10),
                     Text(l10n.sketchMenuResetView),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'info',
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, size: 20),
+                    const SizedBox(width: 10),
+                    Text(l10n.sketchMenuInfo),
                   ],
                 ),
               ),
