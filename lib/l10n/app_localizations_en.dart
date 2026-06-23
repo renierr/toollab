@@ -3422,6 +3422,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sketchToolDiamond => 'Diamond';
 
   @override
+  String get sketchToolTriangle => 'Triangle';
+
+  @override
+  String get sketchToolHexagon => 'Hexagon';
+
+  @override
+  String get sketchToolDoubleArrow => 'Double arrow';
+
+  @override
+  String get sketchToolSpeechBubble => 'Speech bubble';
+
+  @override
+  String get sketchToolCheckmark => 'Checkmark';
+
+  @override
   String get sketchToolText => 'Text';
 
   @override
@@ -3509,4 +3524,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sketchRedo => 'Redo';
+
+  @override
+  String get sketchToolShapes => 'Shapes';
+
+  @override
+  String get sketchColorTitle => 'Color';
+
+  @override
+  String get sketchColorOpacity => 'Opacity';
+
+  @override
+  String get sketchDiscardTitle => 'Discard changes?';
+
+  @override
+  String get sketchDiscardMessage => 'You have unsaved changes. Discard them?';
+
+  @override
+  String get sketchDiscard => 'Discard';
+
+  @override
+  String get sketchKeepEditing => 'Keep editing';
 }

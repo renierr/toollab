@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/checkerboard_background.dart';
 
 import '../models/sketch_enums.dart';
 import '../sketch_board_state.dart';
@@ -29,11 +30,13 @@ class SketchCanvas extends StatelessWidget {
         onScaleUpdate: (d) =>
             state.gestureUpdate(d.localFocalPoint, d.scale, d.pointerCount),
         onScaleEnd: (_) => state.gestureEnd(),
+        onTapDown: (d) => state.handleTap(d.localPosition),
         onDoubleTapDown: (d) => state.doubleTapAt(d.localPosition),
         onDoubleTap: () {},
         child: _CursorRegion(
           child: Stack(
             children: [
+              const Positioned.fill(child: _Background()),
               Positioned.fill(
                 child: RepaintBoundary(
                   child: CustomPaint(
@@ -47,6 +50,27 @@ class SketchCanvas extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _Background extends StatelessWidget {
+  const _Background();
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<SketchBoardState, CanvasBackground>(
+      selector: (_, s) => s.background,
+      builder: (context, bg, _) {
+        switch (bg) {
+          case CanvasBackground.white:
+            return const ColoredBox(color: Colors.white);
+          case CanvasBackground.black:
+            return const ColoredBox(color: Color(0xFF111111));
+          case CanvasBackground.checkerboard:
+            return const CheckerboardBackground();
+        }
+      },
     );
   }
 }

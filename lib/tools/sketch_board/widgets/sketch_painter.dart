@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../geometry/element_bounds.dart';
 import '../geometry/element_renderer.dart';
-import '../models/sketch_enums.dart';
 import '../sketch_board_state.dart';
 
 /// Renders the whole scene: background, committed elements, the live draft, and
@@ -16,8 +15,6 @@ class SketchPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _paintBackground(canvas, size);
-
     canvas.save();
     canvas.translate(state.offset.dx, state.offset.dy);
     canvas.scale(state.scale);
@@ -32,26 +29,6 @@ class SketchPainter extends CustomPainter {
     canvas.restore();
 
     _paintSelection(canvas);
-  }
-
-  void _paintBackground(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    switch (state.background) {
-      case CanvasBackground.white:
-        canvas.drawRect(rect, Paint()..color = Colors.white);
-      case CanvasBackground.black:
-        canvas.drawRect(rect, Paint()..color = const Color(0xFF111111));
-      case CanvasBackground.checkerboard:
-        canvas.drawRect(rect, Paint()..color = const Color(0xFFF5F5F7));
-        const tile = 16.0;
-        final light = Paint()..color = const Color(0xFFE9E9EE);
-        for (double y = 0; y < size.height; y += tile) {
-          for (double x = 0; x < size.width; x += tile) {
-            final even = (((x ~/ tile) + (y ~/ tile)) % 2) == 0;
-            if (even) canvas.drawRect(Rect.fromLTWH(x, y, tile, tile), light);
-          }
-        }
-    }
   }
 
   void _paintSelection(Canvas canvas) {

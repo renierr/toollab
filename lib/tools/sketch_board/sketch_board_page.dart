@@ -9,6 +9,7 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:file_selector/file_selector.dart';
@@ -208,7 +209,22 @@ class _SketchBoardPageState extends State<SketchBoardPage>
     if (bg != null) state.setBackground(bg);
   }
 
-  void _loadRecord(DrawingRecord record) {
+  Future<bool> _confirmDiscard() async {
+    final state = context.read<SketchBoardState>();
+    if (!state.hasUnsavedChanges) return true;
+    final l10n = AppLocalizations.of(context);
+    final discard = await ConfirmActionDialog.show(
+      context: context,
+      title: l10n.sketchDiscardTitle,
+      message: l10n.sketchDiscardMessage,
+      confirmLabel: l10n.sketchDiscard,
+      cancelLabel: l10n.sketchKeepEditing,
+    );
+    return discard ?? false;
+  }
+
+  Future<void> _loadRecord(DrawingRecord record) async {
+    if (!await _confirmDiscard() || !mounted) return;
     context.read<SketchBoardState>().loadRecord(record);
     _tabController.animateTo(0);
   }
@@ -271,82 +287,94 @@ class _SketchBoardPageState extends State<SketchBoardPage>
     final l10n = AppLocalizations.of(context);
     final appState = context.watch<AppState>();
 
-    return ToolLayout(
-      scaffoldKey: _scaffoldKey,
-      title: SketchBoardTool.config.localizedName(l10n),
-      actions: [
-        if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty)
+    return Selector<SketchBoardState, bool>(
+      selector: (_, s) => s.hasUnsavedChanges,
+      builder: (context, dirty, child) => PopScope(
+        canPop: !dirty,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          final navigator = Navigator.of(context);
+          if (await _confirmDiscard() && mounted) navigator.pop();
+        },
+        child: child!,
+      ),
+      child: ToolLayout(
+        scaffoldKey: _scaffoldKey,
+        title: SketchBoardTool.config.localizedName(l10n),
+        actions: [
+          if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty)
+            IconButton(
+              tooltip: l10n.chipSyncTooltip,
+              icon: appState.isSyncing
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.sync),
+              onPressed: appState.isSyncing ? null : _triggerSync,
+            ),
+          const _UndoButton(),
+          const _RedoButton(),
           IconButton(
-            tooltip: l10n.chipSyncTooltip,
-            icon: appState.isSyncing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.sync),
-            onPressed: appState.isSyncing ? null : _triggerSync,
+            tooltip: l10n.commonSave,
+            icon: const Icon(Icons.save_outlined),
+            onPressed: _save,
           ),
-        const _UndoButton(),
-        const _RedoButton(),
-        IconButton(
-          tooltip: l10n.commonSave,
-          icon: const Icon(Icons.save_outlined),
-          onPressed: _save,
-        ),
-        PopupMenuButton<String>(
-          onSelected: (v) {
-            switch (v) {
-              case 'export':
-                _exportPng();
-              case 'copy':
-                _copy();
-              case 'share':
-                _share();
-              case 'background':
-                _pickBackground();
-              case 'reset':
-                context.read<SketchBoardState>().resetView();
-              case 'clear':
-                _confirmClear();
-            }
-          },
-          itemBuilder: (context) => [
-            PopupMenuItem(value: 'export', child: Text(l10n.commonExport)),
-            PopupMenuItem(value: 'copy', child: Text(l10n.commonCopy)),
-            PopupMenuItem(value: 'share', child: Text(l10n.commonShare)),
-            PopupMenuItem(
-              value: 'background',
-              child: Text(l10n.sketchMenuBackground),
-            ),
-            PopupMenuItem(
-              value: 'reset',
-              child: Text(l10n.sketchMenuResetView),
-            ),
-            PopupMenuItem(value: 'clear', child: Text(l10n.commonClear)),
-          ],
-        ),
-      ],
-      child: Column(
-        children: [
-          TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(text: l10n.sketchTabDraw),
-              Tab(text: l10n.sketchTabSaved),
+          PopupMenuButton<String>(
+            onSelected: (v) {
+              switch (v) {
+                case 'export':
+                  _exportPng();
+                case 'copy':
+                  _copy();
+                case 'share':
+                  _share();
+                case 'background':
+                  _pickBackground();
+                case 'reset':
+                  context.read<SketchBoardState>().resetView();
+                case 'clear':
+                  _confirmClear();
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'export', child: Text(l10n.commonExport)),
+              PopupMenuItem(value: 'copy', child: Text(l10n.commonCopy)),
+              PopupMenuItem(value: 'share', child: Text(l10n.commonShare)),
+              PopupMenuItem(
+                value: 'background',
+                child: Text(l10n.sketchMenuBackground),
+              ),
+              PopupMenuItem(
+                value: 'reset',
+                child: Text(l10n.sketchMenuResetView),
+              ),
+              PopupMenuItem(value: 'clear', child: Text(l10n.commonClear)),
             ],
           ),
-          Expanded(
-            child: TabBarView(
+        ],
+        child: Column(
+          children: [
+            TabBar(
               controller: _tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                const _DrawTab(),
-                SketchGallery(onLoad: _loadRecord, onDelete: _deleteRecord),
+              tabs: [
+                Tab(text: l10n.sketchTabDraw),
+                Tab(text: l10n.sketchTabSaved),
               ],
             ),
-          ),
-        ],
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  const _DrawTab(),
+                  SketchGallery(onLoad: _loadRecord, onDelete: _deleteRecord),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -360,16 +388,13 @@ class _DrawTab extends StatelessWidget {
     return Stack(
       children: [
         const Positioned.fill(child: SketchCanvas()),
-        Positioned(
+        const Positioned(
           top: 8,
           left: 8,
           right: 8,
           child: Align(
             alignment: Alignment.topCenter,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: const SketchPropertiesBar(),
-            ),
+            child: SketchPropertiesBar(),
           ),
         ),
         const Positioned(

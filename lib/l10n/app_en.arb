@@ -2005,6 +2005,11 @@
   "sketchToolRect": "Rectangle",
   "sketchToolEllipse": "Ellipse",
   "sketchToolDiamond": "Diamond",
+  "sketchToolTriangle": "Triangle",
+  "sketchToolHexagon": "Hexagon",
+  "sketchToolDoubleArrow": "Double arrow",
+  "sketchToolSpeechBubble": "Speech bubble",
+  "sketchToolCheckmark": "Checkmark",
   "sketchToolText": "Text",
   "sketchPropStroke": "Stroke",
   "sketchPropFill": "Fill",
@@ -2042,6 +2047,13 @@
   "sketchMenuBackground": "Background",
   "sketchMenuResetView": "Reset view",
   "sketchUndo": "Undo",
-  "sketchRedo": "Redo"
+  "sketchRedo": "Redo",
+  "sketchToolShapes": "Shapes",
+  "sketchColorTitle": "Color",
+  "sketchColorOpacity": "Opacity",
+  "sketchDiscardTitle": "Discard changes?",
+  "sketchDiscardMessage": "You have unsaved changes. Discard them?",
+  "sketchDiscard": "Discard",
+  "sketchKeepEditing": "Keep editing"
 }
 

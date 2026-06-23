@@ -94,3 +94,13 @@ String hexFromColor(Color color) {
   final rgb = color.toARGB32() & 0xFFFFFF;
   return '#${rgb.toRadixString(16).padLeft(6, '0').toUpperCase()}';
 }
+
+/// Serializes a [Color] to `#RRGGBB` (opaque) or `#RRGGBBAA` (translucent).
+String hexFromColorWithAlpha(Color color) {
+  final argb = color.toARGB32();
+  final a = (argb >> 24) & 0xFF;
+  final rgb = (argb & 0xFFFFFF).toRadixString(16).padLeft(6, '0');
+  if (a == 0xFF) return '#${rgb.toUpperCase()}';
+  final aa = a.toRadixString(16).padLeft(2, '0');
+  return '#${rgb.toUpperCase()}${aa.toUpperCase()}';
+}

@@ -65,6 +65,7 @@ class SketchBoardState extends ChangeNotifier {
   // ---- Persistence ----
   List<DrawingRecord> _saved = [];
   String? _loadedShortId;
+  bool _dirty = false;
 
   // ---- Image decode cache (for rendering embedded/synced images) ----
   final Map<String, ui.Image> _imageCache = {};
@@ -90,6 +91,7 @@ class SketchBoardState extends ChangeNotifier {
   bool get canUndo => _history.canUndo;
   bool get canRedo => _history.canRedo;
   bool get isEmpty => _elements.isEmpty && _draft == null;
+  bool get hasUnsavedChanges => _dirty;
   List<DrawingRecord> get saved => _saved;
   String? get selectedId => _selectedId;
   TextElement? get editingText => _editingText;
@@ -215,6 +217,7 @@ class SketchBoardState extends ChangeNotifier {
     if (sel == null) return;
     _history.push(_elements);
     fn(sel);
+    _dirty = true;
   }
 
   Future<void> setBackground(CanvasBackground bg) async {
@@ -261,6 +264,27 @@ class SketchBoardState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Immediate tap (no drag): select in select-mode, place text in text-mode.
+  void handleTap(Offset screen) {
+    final world = screenToWorld(screen);
+    if (_mode == ToolMode.select) {
+      SketchElement? hit;
+      for (final el in _elements.reversed) {
+        if (el is RawElement) continue;
+        if (hitTestElement(el, world, padding: 8 / _scale)) {
+          hit = el;
+          break;
+        }
+      }
+      _selectedId = hit?.id;
+      notifyListeners();
+    } else if (_mode == ToolMode.text) {
+      _pendingTextPos = SkPoint.fromOffset(world);
+      _editingText = null;
+      onRequestText?.call();
+    }
+  }
+
   // ---- Gesture routing ----
   void gestureStart(Offset localFocal, int pointerCount) {
     if (_mode == ToolMode.pan || pointerCount >= 2) {
@@ -300,10 +324,7 @@ class SketchBoardState extends ChangeNotifier {
       case ToolMode.select:
         _beginSelect(world, screen);
       case ToolMode.text:
-        _pendingTextPos = SkPoint.fromOffset(world);
-        _editingText = null;
         _drag = _DragKind.none;
-        onRequestText?.call();
       case ToolMode.freehand:
         _draft = FreehandElement(
           id: _db.generateUuid(),
@@ -409,6 +430,7 @@ class SketchBoardState extends ChangeNotifier {
             world.dy - _lastWorld.dy,
           );
           _lastWorld = world;
+          _dirty = true;
           notifyListeners();
         }
       case _DragKind.resize:
@@ -427,6 +449,7 @@ class SketchBoardState extends ChangeNotifier {
     resizeElement(fresh, _resizeOrigBounds, nb);
     final idx = _elements.indexWhere((e) => e.id == fresh.id);
     if (idx != -1) _elements[idx] = fresh;
+    _dirty = true;
     notifyListeners();
   }
 
@@ -473,9 +496,9 @@ class SketchBoardState extends ChangeNotifier {
         _history.push(_elements);
         _elements.add(d);
         if (_mode != ToolMode.freehand) {
-          // After placing a shape, keep selection convenient.
           _selectedId = null;
         }
+        _dirty = true;
       }
     }
     _drag = _DragKind.none;
@@ -506,6 +529,7 @@ class SketchBoardState extends ChangeNotifier {
       } else {
         editing.text = text;
       }
+      _dirty = true;
     } else if (pos != null && text.trim().isNotEmpty) {
       _history.push(_elements);
       _elements.add(
@@ -521,6 +545,7 @@ class SketchBoardState extends ChangeNotifier {
           fontStyle: _fontStyle,
         ),
       );
+      _dirty = true;
     }
     _pendingTextPos = null;
     _editingText = null;
@@ -560,6 +585,7 @@ class SketchBoardState extends ChangeNotifier {
     final prev = _history.undo(_elements);
     if (prev == null) return;
     _setElements(prev);
+    _dirty = true;
     notifyListeners();
   }
 
@@ -567,6 +593,7 @@ class SketchBoardState extends ChangeNotifier {
     final next = _history.redo(_elements);
     if (next == null) return;
     _setElements(next);
+    _dirty = true;
     notifyListeners();
   }
 
@@ -584,6 +611,7 @@ class SketchBoardState extends ChangeNotifier {
     _history.push(_elements);
     _elements.removeWhere((e) => e.id == id);
     _selectedId = null;
+    _dirty = true;
     notifyListeners();
   }
 
@@ -594,6 +622,7 @@ class SketchBoardState extends ChangeNotifier {
     _draft = null;
     _selectedId = null;
     _loadedShortId = null;
+    _dirty = true;
     notifyListeners();
   }
 
@@ -603,6 +632,7 @@ class SketchBoardState extends ChangeNotifier {
     _draft = null;
     _selectedId = null;
     _loadedShortId = null;
+    _dirty = false;
     resetView();
   }
 
@@ -658,18 +688,20 @@ class SketchBoardState extends ChangeNotifier {
       meta: meta,
     );
     _loadedShortId = shortId;
+    _dirty = false;
     await refreshSaved();
     notifyListeners();
     return true;
   }
 
   void loadRecord(DrawingRecord record) {
-    if (_elements.isNotEmpty) _history.push(_elements);
     _setElements(record.elements.map((e) => e.clone()).toList());
+    _history.clear();
     _offset = Offset(record.viewport.x, record.viewport.y);
     _scale = record.viewport.scale == 0 ? 1.0 : record.viewport.scale;
     _loadedShortId = record.shortId;
     _selectedId = null;
+    _dirty = false;
     notifyListeners();
   }
 

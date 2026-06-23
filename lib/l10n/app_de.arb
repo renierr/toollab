@@ -1179,6 +1179,11 @@
   "sketchToolRect": "Rechteck",
   "sketchToolEllipse": "Ellipse",
   "sketchToolDiamond": "Raute",
+  "sketchToolTriangle": "Dreieck",
+  "sketchToolHexagon": "Sechseck",
+  "sketchToolDoubleArrow": "Doppelpfeil",
+  "sketchToolSpeechBubble": "Sprechblase",
+  "sketchToolCheckmark": "Häkchen",
   "sketchToolText": "Text",
   "sketchPropStroke": "Linie",
   "sketchPropFill": "Füllung",
@@ -1216,6 +1221,13 @@
   "sketchMenuBackground": "Hintergrund",
   "sketchMenuResetView": "Ansicht zurücksetzen",
   "sketchUndo": "Rückgängig",
-  "sketchRedo": "Wiederholen"
+  "sketchRedo": "Wiederholen",
+  "sketchToolShapes": "Formen",
+  "sketchColorTitle": "Farbe",
+  "sketchColorOpacity": "Deckkraft",
+  "sketchDiscardTitle": "Änderungen verwerfen?",
+  "sketchDiscardMessage": "Es gibt ungespeicherte Änderungen. Verwerfen?",
+  "sketchDiscard": "Verwerfen",
+  "sketchKeepEditing": "Weiter bearbeiten"
 }
 

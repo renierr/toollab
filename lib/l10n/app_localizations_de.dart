@@ -3448,6 +3448,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sketchToolDiamond => 'Raute';
 
   @override
+  String get sketchToolTriangle => 'Dreieck';
+
+  @override
+  String get sketchToolHexagon => 'Sechseck';
+
+  @override
+  String get sketchToolDoubleArrow => 'Doppelpfeil';
+
+  @override
+  String get sketchToolSpeechBubble => 'Sprechblase';
+
+  @override
+  String get sketchToolCheckmark => 'Häkchen';
+
+  @override
   String get sketchToolText => 'Text';
 
   @override
@@ -3535,4 +3550,26 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sketchRedo => 'Wiederholen';
+
+  @override
+  String get sketchToolShapes => 'Formen';
+
+  @override
+  String get sketchColorTitle => 'Farbe';
+
+  @override
+  String get sketchColorOpacity => 'Deckkraft';
+
+  @override
+  String get sketchDiscardTitle => 'Änderungen verwerfen?';
+
+  @override
+  String get sketchDiscardMessage =>
+      'Es gibt ungespeicherte Änderungen. Verwerfen?';
+
+  @override
+  String get sketchDiscard => 'Verwerfen';
+
+  @override
+  String get sketchKeepEditing => 'Weiter bearbeiten';
 }

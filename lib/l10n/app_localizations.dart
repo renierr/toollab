@@ -6140,6 +6140,36 @@ abstract class AppLocalizations {
   /// **'Diamond'**
   String get sketchToolDiamond;
 
+  /// No description provided for @sketchToolTriangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Triangle'**
+  String get sketchToolTriangle;
+
+  /// No description provided for @sketchToolHexagon.
+  ///
+  /// In en, this message translates to:
+  /// **'Hexagon'**
+  String get sketchToolHexagon;
+
+  /// No description provided for @sketchToolDoubleArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Double arrow'**
+  String get sketchToolDoubleArrow;
+
+  /// No description provided for @sketchToolSpeechBubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech bubble'**
+  String get sketchToolSpeechBubble;
+
+  /// No description provided for @sketchToolCheckmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkmark'**
+  String get sketchToolCheckmark;
+
   /// No description provided for @sketchToolText.
   ///
   /// In en, this message translates to:
@@ -6307,6 +6337,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Redo'**
   String get sketchRedo;
+
+  /// No description provided for @sketchToolShapes.
+  ///
+  /// In en, this message translates to:
+  /// **'Shapes'**
+  String get sketchToolShapes;
+
+  /// No description provided for @sketchColorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get sketchColorTitle;
+
+  /// No description provided for @sketchColorOpacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Opacity'**
+  String get sketchColorOpacity;
+
+  /// No description provided for @sketchDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get sketchDiscardTitle;
+
+  /// No description provided for @sketchDiscardMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. Discard them?'**
+  String get sketchDiscardMessage;
+
+  /// No description provided for @sketchDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get sketchDiscard;
+
+  /// No description provided for @sketchKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get sketchKeepEditing;
 }
 
 class _AppLocalizationsDelegate
