@@ -3383,4 +3383,130 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileConverterFormatTxt => 'Plain text';
+
+  @override
+  String get toolNameSketchBoard => 'Sketch Board';
+
+  @override
+  String get toolDescSketchBoard =>
+      'Infinite-canvas whiteboard with freehand, shapes, text and saved drawings';
+
+  @override
+  String get sketchTabDraw => 'Draw';
+
+  @override
+  String get sketchTabSaved => 'Saved';
+
+  @override
+  String get sketchToolSelect => 'Select';
+
+  @override
+  String get sketchToolPan => 'Pan';
+
+  @override
+  String get sketchToolPen => 'Pen';
+
+  @override
+  String get sketchToolLine => 'Line';
+
+  @override
+  String get sketchToolArrow => 'Arrow';
+
+  @override
+  String get sketchToolRect => 'Rectangle';
+
+  @override
+  String get sketchToolEllipse => 'Ellipse';
+
+  @override
+  String get sketchToolDiamond => 'Diamond';
+
+  @override
+  String get sketchToolText => 'Text';
+
+  @override
+  String get sketchPropStroke => 'Stroke';
+
+  @override
+  String get sketchPropFill => 'Fill';
+
+  @override
+  String get sketchPropWidth => 'Width';
+
+  @override
+  String get sketchPropText => 'Text';
+
+  @override
+  String get sketchEmptyHint => 'Pick a tool and start drawing';
+
+  @override
+  String get sketchGalleryEmpty => 'No drawings saved yet.';
+
+  @override
+  String sketchElementCount(int count) {
+    return '$count elements';
+  }
+
+  @override
+  String get sketchTextTitle => 'Add text';
+
+  @override
+  String get sketchTextHint => 'Type text…';
+
+  @override
+  String get sketchSaveTitle => 'Save drawing';
+
+  @override
+  String get sketchSaveHint => 'Drawing name';
+
+  @override
+  String sketchDefaultName(String date) {
+    return 'Drawing $date';
+  }
+
+  @override
+  String get sketchSaved => 'Drawing saved';
+
+  @override
+  String get sketchNothingToExport => 'Nothing to draw yet';
+
+  @override
+  String get sketchCopied => 'Copied to clipboard';
+
+  @override
+  String get sketchDeleteTitle => 'Delete drawing';
+
+  @override
+  String get sketchDeleteContent =>
+      'This will permanently remove the saved drawing.';
+
+  @override
+  String get sketchClearTitle => 'Clear canvas';
+
+  @override
+  String get sketchClearContent => 'Remove everything from the canvas?';
+
+  @override
+  String get sketchBackgroundTitle => 'Background';
+
+  @override
+  String get sketchBgCheckerboard => 'Checkerboard';
+
+  @override
+  String get sketchBgWhite => 'White';
+
+  @override
+  String get sketchBgBlack => 'Black';
+
+  @override
+  String get sketchMenuBackground => 'Background';
+
+  @override
+  String get sketchMenuResetView => 'Reset view';
+
+  @override
+  String get sketchUndo => 'Undo';
+
+  @override
+  String get sketchRedo => 'Redo';
 }

@@ -1992,6 +1992,56 @@
   "fileConverterFormatPdf": "PDF",
   "fileConverterFormatHtml": "HTML",
   "fileConverterFormatMd": "Markdown",
-  "fileConverterFormatTxt": "Plain text"
+  "fileConverterFormatTxt": "Plain text",
+  "toolNameSketchBoard": "Sketch Board",
+  "toolDescSketchBoard": "Infinite-canvas whiteboard with freehand, shapes, text and saved drawings",
+  "sketchTabDraw": "Draw",
+  "sketchTabSaved": "Saved",
+  "sketchToolSelect": "Select",
+  "sketchToolPan": "Pan",
+  "sketchToolPen": "Pen",
+  "sketchToolLine": "Line",
+  "sketchToolArrow": "Arrow",
+  "sketchToolRect": "Rectangle",
+  "sketchToolEllipse": "Ellipse",
+  "sketchToolDiamond": "Diamond",
+  "sketchToolText": "Text",
+  "sketchPropStroke": "Stroke",
+  "sketchPropFill": "Fill",
+  "sketchPropWidth": "Width",
+  "sketchPropText": "Text",
+  "sketchEmptyHint": "Pick a tool and start drawing",
+  "sketchGalleryEmpty": "No drawings saved yet.",
+  "sketchElementCount": "{count} elements",
+  "@sketchElementCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sketchTextTitle": "Add text",
+  "sketchTextHint": "Type text…",
+  "sketchSaveTitle": "Save drawing",
+  "sketchSaveHint": "Drawing name",
+  "sketchDefaultName": "Drawing {date}",
+  "@sketchDefaultName": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "sketchSaved": "Drawing saved",
+  "sketchNothingToExport": "Nothing to draw yet",
+  "sketchCopied": "Copied to clipboard",
+  "sketchDeleteTitle": "Delete drawing",
+  "sketchDeleteContent": "This will permanently remove the saved drawing.",
+  "sketchClearTitle": "Clear canvas",
+  "sketchClearContent": "Remove everything from the canvas?",
+  "sketchBackgroundTitle": "Background",
+  "sketchBgCheckerboard": "Checkerboard",
+  "sketchBgWhite": "White",
+  "sketchBgBlack": "Black",
+  "sketchMenuBackground": "Background",
+  "sketchMenuResetView": "Reset view",
+  "sketchUndo": "Undo",
+  "sketchRedo": "Redo"
 }
 

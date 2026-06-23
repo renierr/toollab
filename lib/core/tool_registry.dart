@@ -21,6 +21,7 @@ import 'package:tool_lab/tools/gps_location_store/config.dart';
 import 'package:tool_lab/tools/chat_ai/config.dart';
 import 'package:tool_lab/tools/hex_editor/config.dart';
 import 'package:tool_lab/tools/file_converter/config.dart';
+import 'package:tool_lab/tools/sketch_board/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -66,5 +67,6 @@ class ToolRegistry {
     ChatAiTool.config,
     HexEditorTool.config,
     FileConverterTool.config,
+    SketchBoardTool.config,
   ];
 }

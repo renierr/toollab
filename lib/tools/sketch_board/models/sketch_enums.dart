@@ -1,0 +1,96 @@
+import 'package:flutter/material.dart';
+
+/// Interaction / drawing modes. Wire names use hyphens (e.g. `double-arrow`),
+/// so [wire] / [toolModeFromWire] bridge the enum and the JSON form.
+enum ToolMode {
+  pan,
+  select,
+  freehand,
+  line,
+  rect,
+  ellipse,
+  triangle,
+  diamond,
+  hexagon,
+  arrow,
+  doubleArrow,
+  speechBubble,
+  checkmark,
+  text,
+  image;
+
+  /// JSON / browser-toolkit identifier for this mode.
+  String get wire {
+    switch (this) {
+      case ToolMode.doubleArrow:
+        return 'double-arrow';
+      case ToolMode.speechBubble:
+        return 'speech-bubble';
+      default:
+        return name;
+    }
+  }
+}
+
+ToolMode toolModeFromWire(String? s) {
+  switch (s) {
+    case 'double-arrow':
+      return ToolMode.doubleArrow;
+    case 'speech-bubble':
+      return ToolMode.speechBubble;
+    default:
+      return ToolMode.values.firstWhere(
+        (m) => m.name == s,
+        orElse: () => ToolMode.pan,
+      );
+  }
+}
+
+/// Stroke rendering style. Only `normal` is rendered in this port; the field is
+/// preserved verbatim so drawings round-trip with the browser tool.
+enum BrushStyle { normal, shaky, natural }
+
+BrushStyle brushStyleFromWire(String? s) => BrushStyle.values.firstWhere(
+  (b) => b.name == s,
+  orElse: () => BrushStyle.normal,
+);
+
+/// Display-only canvas backdrop (not part of element geometry).
+enum CanvasBackground { checkerboard, white, black }
+
+CanvasBackground canvasBackgroundFromString(String? s) =>
+    CanvasBackground.values.firstWhere(
+      (b) => b.name == s,
+      orElse: () => CanvasBackground.checkerboard,
+    );
+
+/// Parses a `#RGB`, `#RRGGBB`, or `#RRGGBBAA` hex string into a [Color].
+/// Returns `null` for `transparent`/empty so callers can treat it as "no fill".
+Color? colorFromHexOrNull(String? hex) {
+  if (hex == null) return null;
+  final t = hex.trim();
+  if (t.isEmpty || t.toLowerCase() == 'transparent') return null;
+  var h = t.replaceAll('#', '');
+  if (h.length == 3) {
+    h = h.split('').map((ch) => '$ch$ch').join();
+  }
+  if (h.length == 6) h = 'FF$h';
+  if (h.length == 8) {
+    // Hex is RRGGBBAA from the web; reorder to AARRGGBB for dart:ui.
+    final rgb = h.substring(0, 6);
+    final a = h.substring(6, 8);
+    h = '$a$rgb';
+  }
+  final v = int.tryParse(h, radix: 16);
+  return v == null ? null : Color(v);
+}
+
+/// Like [colorFromHexOrNull] but falls back to opaque black.
+Color colorFromHex(String? hex) =>
+    colorFromHexOrNull(hex) ?? const Color(0xFF000000);
+
+/// Serializes an opaque [Color] to `#RRGGBB`.
+String hexFromColor(Color color) {
+  final rgb = color.toARGB32() & 0xFFFFFF;
+  return '#${rgb.toRadixString(16).padLeft(6, '0').toUpperCase()}';
+}

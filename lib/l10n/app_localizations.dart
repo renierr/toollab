@@ -6067,6 +6067,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plain text'**
   String get fileConverterFormatTxt;
+
+  /// No description provided for @toolNameSketchBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Sketch Board'**
+  String get toolNameSketchBoard;
+
+  /// No description provided for @toolDescSketchBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Infinite-canvas whiteboard with freehand, shapes, text and saved drawings'**
+  String get toolDescSketchBoard;
+
+  /// No description provided for @sketchTabDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw'**
+  String get sketchTabDraw;
+
+  /// No description provided for @sketchTabSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get sketchTabSaved;
+
+  /// No description provided for @sketchToolSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get sketchToolSelect;
+
+  /// No description provided for @sketchToolPan.
+  ///
+  /// In en, this message translates to:
+  /// **'Pan'**
+  String get sketchToolPan;
+
+  /// No description provided for @sketchToolPen.
+  ///
+  /// In en, this message translates to:
+  /// **'Pen'**
+  String get sketchToolPen;
+
+  /// No description provided for @sketchToolLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line'**
+  String get sketchToolLine;
+
+  /// No description provided for @sketchToolArrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrow'**
+  String get sketchToolArrow;
+
+  /// No description provided for @sketchToolRect.
+  ///
+  /// In en, this message translates to:
+  /// **'Rectangle'**
+  String get sketchToolRect;
+
+  /// No description provided for @sketchToolEllipse.
+  ///
+  /// In en, this message translates to:
+  /// **'Ellipse'**
+  String get sketchToolEllipse;
+
+  /// No description provided for @sketchToolDiamond.
+  ///
+  /// In en, this message translates to:
+  /// **'Diamond'**
+  String get sketchToolDiamond;
+
+  /// No description provided for @sketchToolText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get sketchToolText;
+
+  /// No description provided for @sketchPropStroke.
+  ///
+  /// In en, this message translates to:
+  /// **'Stroke'**
+  String get sketchPropStroke;
+
+  /// No description provided for @sketchPropFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill'**
+  String get sketchPropFill;
+
+  /// No description provided for @sketchPropWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Width'**
+  String get sketchPropWidth;
+
+  /// No description provided for @sketchPropText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get sketchPropText;
+
+  /// No description provided for @sketchEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a tool and start drawing'**
+  String get sketchEmptyHint;
+
+  /// No description provided for @sketchGalleryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No drawings saved yet.'**
+  String get sketchGalleryEmpty;
+
+  /// No description provided for @sketchElementCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} elements'**
+  String sketchElementCount(int count);
+
+  /// No description provided for @sketchTextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add text'**
+  String get sketchTextTitle;
+
+  /// No description provided for @sketchTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type text…'**
+  String get sketchTextHint;
+
+  /// No description provided for @sketchSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save drawing'**
+  String get sketchSaveTitle;
+
+  /// No description provided for @sketchSaveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing name'**
+  String get sketchSaveHint;
+
+  /// No description provided for @sketchDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing {date}'**
+  String sketchDefaultName(String date);
+
+  /// No description provided for @sketchSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing saved'**
+  String get sketchSaved;
+
+  /// No description provided for @sketchNothingToExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to draw yet'**
+  String get sketchNothingToExport;
+
+  /// No description provided for @sketchCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get sketchCopied;
+
+  /// No description provided for @sketchDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete drawing'**
+  String get sketchDeleteTitle;
+
+  /// No description provided for @sketchDeleteContent.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently remove the saved drawing.'**
+  String get sketchDeleteContent;
+
+  /// No description provided for @sketchClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear canvas'**
+  String get sketchClearTitle;
+
+  /// No description provided for @sketchClearContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove everything from the canvas?'**
+  String get sketchClearContent;
+
+  /// No description provided for @sketchBackgroundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get sketchBackgroundTitle;
+
+  /// No description provided for @sketchBgCheckerboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkerboard'**
+  String get sketchBgCheckerboard;
+
+  /// No description provided for @sketchBgWhite.
+  ///
+  /// In en, this message translates to:
+  /// **'White'**
+  String get sketchBgWhite;
+
+  /// No description provided for @sketchBgBlack.
+  ///
+  /// In en, this message translates to:
+  /// **'Black'**
+  String get sketchBgBlack;
+
+  /// No description provided for @sketchMenuBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get sketchMenuBackground;
+
+  /// No description provided for @sketchMenuResetView.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset view'**
+  String get sketchMenuResetView;
+
+  /// No description provided for @sketchUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get sketchUndo;
+
+  /// No description provided for @sketchRedo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get sketchRedo;
 }
 
 class _AppLocalizationsDelegate

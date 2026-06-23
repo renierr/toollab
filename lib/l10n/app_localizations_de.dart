@@ -3409,4 +3409,130 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileConverterFormatTxt => 'Nur Text';
+
+  @override
+  String get toolNameSketchBoard => 'Skizzenbrett';
+
+  @override
+  String get toolDescSketchBoard =>
+      'Unendliche Zeichenfläche mit Freihand, Formen, Text und gespeicherten Zeichnungen';
+
+  @override
+  String get sketchTabDraw => 'Zeichnen';
+
+  @override
+  String get sketchTabSaved => 'Gespeichert';
+
+  @override
+  String get sketchToolSelect => 'Auswählen';
+
+  @override
+  String get sketchToolPan => 'Verschieben';
+
+  @override
+  String get sketchToolPen => 'Stift';
+
+  @override
+  String get sketchToolLine => 'Linie';
+
+  @override
+  String get sketchToolArrow => 'Pfeil';
+
+  @override
+  String get sketchToolRect => 'Rechteck';
+
+  @override
+  String get sketchToolEllipse => 'Ellipse';
+
+  @override
+  String get sketchToolDiamond => 'Raute';
+
+  @override
+  String get sketchToolText => 'Text';
+
+  @override
+  String get sketchPropStroke => 'Linie';
+
+  @override
+  String get sketchPropFill => 'Füllung';
+
+  @override
+  String get sketchPropWidth => 'Breite';
+
+  @override
+  String get sketchPropText => 'Text';
+
+  @override
+  String get sketchEmptyHint => 'Werkzeug wählen und loszeichnen';
+
+  @override
+  String get sketchGalleryEmpty => 'Noch keine Zeichnungen gespeichert.';
+
+  @override
+  String sketchElementCount(int count) {
+    return '$count Elemente';
+  }
+
+  @override
+  String get sketchTextTitle => 'Text hinzufügen';
+
+  @override
+  String get sketchTextHint => 'Text eingeben…';
+
+  @override
+  String get sketchSaveTitle => 'Zeichnung speichern';
+
+  @override
+  String get sketchSaveHint => 'Name der Zeichnung';
+
+  @override
+  String sketchDefaultName(String date) {
+    return 'Zeichnung $date';
+  }
+
+  @override
+  String get sketchSaved => 'Zeichnung gespeichert';
+
+  @override
+  String get sketchNothingToExport => 'Noch nichts zu zeichnen';
+
+  @override
+  String get sketchCopied => 'In Zwischenablage kopiert';
+
+  @override
+  String get sketchDeleteTitle => 'Zeichnung löschen';
+
+  @override
+  String get sketchDeleteContent =>
+      'Die gespeicherte Zeichnung wird endgültig entfernt.';
+
+  @override
+  String get sketchClearTitle => 'Leinwand leeren';
+
+  @override
+  String get sketchClearContent => 'Alles von der Leinwand entfernen?';
+
+  @override
+  String get sketchBackgroundTitle => 'Hintergrund';
+
+  @override
+  String get sketchBgCheckerboard => 'Schachbrett';
+
+  @override
+  String get sketchBgWhite => 'Weiß';
+
+  @override
+  String get sketchBgBlack => 'Schwarz';
+
+  @override
+  String get sketchMenuBackground => 'Hintergrund';
+
+  @override
+  String get sketchMenuResetView => 'Ansicht zurücksetzen';
+
+  @override
+  String get sketchUndo => 'Rückgängig';
+
+  @override
+  String get sketchRedo => 'Wiederholen';
 }

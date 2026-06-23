@@ -1,0 +1,439 @@
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:pasteboard/pasteboard.dart';
+import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:file_selector/file_selector.dart';
+
+import 'config.dart';
+import 'geometry/sketch_export.dart';
+import 'models/drawing_record.dart';
+import 'models/sketch_enums.dart';
+import 'sketch_board_state.dart';
+import 'sketch_board_sync_delegate.dart';
+import 'widgets/sketch_canvas.dart';
+import 'widgets/sketch_gallery.dart';
+import 'widgets/sketch_properties_bar.dart';
+import 'widgets/sketch_text_editor.dart';
+import 'widgets/sketch_toolbar.dart';
+
+class SketchBoardPage extends StatefulWidget {
+  const SketchBoardPage({super.key});
+
+  @override
+  State<SketchBoardPage> createState() => _SketchBoardPageState();
+}
+
+class _SketchBoardPageState extends State<SketchBoardPage>
+    with DisposeCleanup, SingleTickerProviderStateMixin {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late final TabController _tabController;
+  late final TempFileScope _tempScope;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tempScope = TempFileManager.createScope();
+    onDispose(_tabController.dispose);
+    onDispose(() => _tempScope.cleanTracked());
+
+    final state = context.read<SketchBoardState>();
+    state.onRequestText = _openTextEditor;
+    onDispose(() => state.onRequestText = null);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final appState = context.read<AppState>();
+      if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty) {
+        appState
+            .syncWithBackend([SketchBoardSyncDelegate()])
+            .then((_) {
+              if (mounted) context.read<SketchBoardState>().refreshSaved();
+            })
+            .catchError((e) {
+              debugPrint('[SketchBoardPage] Auto-sync on open failed: $e');
+            });
+      }
+    });
+  }
+
+  void _toast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _fileName() => 'sketch-${DateTime.now().millisecondsSinceEpoch}.png';
+
+  Future<void> _openTextEditor() async {
+    final state = context.read<SketchBoardState>();
+    final initial = state.editingText?.text ?? '';
+    final result = await showSketchTextDialog(context, initial);
+    if (result == null) {
+      state.cancelText();
+    } else {
+      state.commitText(result);
+    }
+  }
+
+  Future<Uint8List?> _renderPng() {
+    final state = context.read<SketchBoardState>();
+    return renderPng(state.elements);
+  }
+
+  Future<void> _exportPng() async {
+    final bytes = await _renderPng();
+    if (!mounted) return;
+    if (bytes == null) {
+      _toast(AppLocalizations.of(context).sketchNothingToExport);
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    await FileSaveHelper.saveFile(
+      context: context,
+      suggestedName: _fileName(),
+      bytes: bytes,
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'PNG image', extensions: ['png']),
+      ],
+      successMessageAndroid: l10n.sigSavedToDownloads,
+    );
+  }
+
+  Future<void> _copy() async {
+    final bytes = await _renderPng();
+    if (!mounted) return;
+    if (bytes == null) {
+      _toast(AppLocalizations.of(context).sketchNothingToExport);
+      return;
+    }
+    await Pasteboard.writeImage(bytes);
+    if (!mounted) return;
+    _toast(AppLocalizations.of(context).sketchCopied);
+  }
+
+  Future<void> _share() async {
+    final bytes = await _renderPng();
+    if (bytes == null || !mounted) {
+      if (mounted) _toast(AppLocalizations.of(context).sketchNothingToExport);
+      return;
+    }
+    final path = await _tempScope.createFile(_fileName(), bytes: bytes);
+    if (!mounted) return;
+    await FileSaveHelper.showShareChooser(
+      context: context,
+      path: path,
+      mimeType: 'image/png',
+    );
+  }
+
+  Future<void> _save() async {
+    final state = context.read<SketchBoardState>();
+    if (state.isEmpty) {
+      _toast(AppLocalizations.of(context).sketchNothingToExport);
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    final defaultName = l10n.sketchDefaultName(
+      DateTime.now().toString().split('.').first,
+    );
+    final name = await showSketchNameDialog(context, defaultName);
+    if (name == null || name.trim().isEmpty || !mounted) return;
+    final ok = await state.save(name.trim());
+    if (ok && mounted) _toast(l10n.sketchSaved);
+  }
+
+  Future<void> _confirmClear() async {
+    final l10n = AppLocalizations.of(context);
+    final state = context.read<SketchBoardState>();
+    if (state.isEmpty) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => ResponsiveAlertDialog(
+        title: Text(l10n.sketchClearTitle),
+        content: Text(l10n.sketchClearContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.commonClear),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && mounted) state.clear();
+  }
+
+  Future<void> _pickBackground() async {
+    final l10n = AppLocalizations.of(context);
+    final state = context.read<SketchBoardState>();
+    final bg = await showDialog<CanvasBackground>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.sketchBackgroundTitle),
+        children: [
+          RadioGroup<CanvasBackground>(
+            groupValue: state.background,
+            onChanged: (v) => Navigator.of(ctx).pop(v),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final entry in <(CanvasBackground, String)>[
+                  (CanvasBackground.checkerboard, l10n.sketchBgCheckerboard),
+                  (CanvasBackground.white, l10n.sketchBgWhite),
+                  (CanvasBackground.black, l10n.sketchBgBlack),
+                ])
+                  RadioListTile<CanvasBackground>(
+                    value: entry.$1,
+                    title: Text(entry.$2),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (bg != null) state.setBackground(bg);
+  }
+
+  void _loadRecord(DrawingRecord record) {
+    context.read<SketchBoardState>().loadRecord(record);
+    _tabController.animateTo(0);
+  }
+
+  Future<void> _deleteRecord(DrawingRecord record) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => ResponsiveAlertDialog(
+        title: Text(l10n.sketchDeleteTitle),
+        content: Text(l10n.sketchDeleteContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await context.read<SketchBoardState>().deleteSaved(record.shortId);
+  }
+
+  Future<void> _triggerSync() async {
+    final l10n = AppLocalizations.of(context);
+    final appState = context.read<AppState>();
+    if (appState.syncServerUrl.isEmpty) {
+      _toast(l10n.notesSyncConfigureServerUrl);
+      return;
+    }
+    try {
+      final results = await appState.syncWithBackend([
+        SketchBoardSyncDelegate(),
+      ]);
+      if (results != null) {
+        if (mounted) {
+          context.read<SketchBoardState>().refreshSaved();
+          _toast(
+            l10n.notesSyncFinished(
+              results['pulled'] ?? 0,
+              results['pushed'] ?? 0,
+              results['deleted'] ?? 0,
+            ),
+          );
+        }
+      } else if (mounted) {
+        _toast(l10n.notesSyncFailedEmpty);
+      }
+    } catch (e) {
+      if (mounted) _toast(l10n.notesSyncFailed(e.toString()));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final appState = context.watch<AppState>();
+
+    return ToolLayout(
+      scaffoldKey: _scaffoldKey,
+      title: SketchBoardTool.config.localizedName(l10n),
+      actions: [
+        if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty)
+          IconButton(
+            tooltip: l10n.chipSyncTooltip,
+            icon: appState.isSyncing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync),
+            onPressed: appState.isSyncing ? null : _triggerSync,
+          ),
+        const _UndoButton(),
+        const _RedoButton(),
+        IconButton(
+          tooltip: l10n.commonSave,
+          icon: const Icon(Icons.save_outlined),
+          onPressed: _save,
+        ),
+        PopupMenuButton<String>(
+          onSelected: (v) {
+            switch (v) {
+              case 'export':
+                _exportPng();
+              case 'copy':
+                _copy();
+              case 'share':
+                _share();
+              case 'background':
+                _pickBackground();
+              case 'reset':
+                context.read<SketchBoardState>().resetView();
+              case 'clear':
+                _confirmClear();
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(value: 'export', child: Text(l10n.commonExport)),
+            PopupMenuItem(value: 'copy', child: Text(l10n.commonCopy)),
+            PopupMenuItem(value: 'share', child: Text(l10n.commonShare)),
+            PopupMenuItem(
+              value: 'background',
+              child: Text(l10n.sketchMenuBackground),
+            ),
+            PopupMenuItem(
+              value: 'reset',
+              child: Text(l10n.sketchMenuResetView),
+            ),
+            PopupMenuItem(value: 'clear', child: Text(l10n.commonClear)),
+          ],
+        ),
+      ],
+      child: Column(
+        children: [
+          TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(text: l10n.sketchTabDraw),
+              Tab(text: l10n.sketchTabSaved),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                const _DrawTab(),
+                SketchGallery(onLoad: _loadRecord, onDelete: _deleteRecord),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DrawTab extends StatelessWidget {
+  const _DrawTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        const Positioned.fill(child: SketchCanvas()),
+        Positioned(
+          top: 8,
+          left: 8,
+          right: 8,
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: const SketchPropertiesBar(),
+            ),
+          ),
+        ),
+        const Positioned(
+          bottom: 12,
+          left: 0,
+          right: 0,
+          child: Center(child: SketchToolbar()),
+        ),
+        const Positioned(right: 12, bottom: 12, child: _SelectionActions()),
+      ],
+    );
+  }
+}
+
+class _SelectionActions extends StatelessWidget {
+  const _SelectionActions();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Selector<SketchBoardState, String?>(
+      selector: (_, s) => s.selectedId,
+      builder: (context, selectedId, _) {
+        if (selectedId == null) return const SizedBox.shrink();
+        return FloatingActionButton.small(
+          heroTag: 'sketch-delete',
+          tooltip: l10n.commonDelete,
+          backgroundColor: AppTheme.statusRed,
+          onPressed: () => context.read<SketchBoardState>().deleteSelected(),
+          child: const Icon(Icons.delete_outline, color: Colors.white),
+        );
+      },
+    );
+  }
+}
+
+class _UndoButton extends StatelessWidget {
+  const _UndoButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<SketchBoardState, bool>(
+      selector: (_, s) => s.canUndo,
+      builder: (context, canUndo, _) => IconButton(
+        tooltip: AppLocalizations.of(context).sketchUndo,
+        icon: const Icon(Icons.undo),
+        onPressed: canUndo ? context.read<SketchBoardState>().undo : null,
+      ),
+    );
+  }
+}
+
+class _RedoButton extends StatelessWidget {
+  const _RedoButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<SketchBoardState, bool>(
+      selector: (_, s) => s.canRedo,
+      builder: (context, canRedo, _) => IconButton(
+        tooltip: AppLocalizations.of(context).sketchRedo,
+        icon: const Icon(Icons.redo),
+        onPressed: canRedo ? context.read<SketchBoardState>().redo : null,
+      ),
+    );
+  }
+}

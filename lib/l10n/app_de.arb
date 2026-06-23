@@ -1166,6 +1166,56 @@
   "fileConverterFormatPdf": "PDF",
   "fileConverterFormatHtml": "HTML",
   "fileConverterFormatMd": "Markdown",
-  "fileConverterFormatTxt": "Nur Text"
+  "fileConverterFormatTxt": "Nur Text",
+  "toolNameSketchBoard": "Skizzenbrett",
+  "toolDescSketchBoard": "Unendliche Zeichenfläche mit Freihand, Formen, Text und gespeicherten Zeichnungen",
+  "sketchTabDraw": "Zeichnen",
+  "sketchTabSaved": "Gespeichert",
+  "sketchToolSelect": "Auswählen",
+  "sketchToolPan": "Verschieben",
+  "sketchToolPen": "Stift",
+  "sketchToolLine": "Linie",
+  "sketchToolArrow": "Pfeil",
+  "sketchToolRect": "Rechteck",
+  "sketchToolEllipse": "Ellipse",
+  "sketchToolDiamond": "Raute",
+  "sketchToolText": "Text",
+  "sketchPropStroke": "Linie",
+  "sketchPropFill": "Füllung",
+  "sketchPropWidth": "Breite",
+  "sketchPropText": "Text",
+  "sketchEmptyHint": "Werkzeug wählen und loszeichnen",
+  "sketchGalleryEmpty": "Noch keine Zeichnungen gespeichert.",
+  "sketchElementCount": "{count} Elemente",
+  "@sketchElementCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sketchTextTitle": "Text hinzufügen",
+  "sketchTextHint": "Text eingeben…",
+  "sketchSaveTitle": "Zeichnung speichern",
+  "sketchSaveHint": "Name der Zeichnung",
+  "sketchDefaultName": "Zeichnung {date}",
+  "@sketchDefaultName": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "sketchSaved": "Zeichnung gespeichert",
+  "sketchNothingToExport": "Noch nichts zu zeichnen",
+  "sketchCopied": "In Zwischenablage kopiert",
+  "sketchDeleteTitle": "Zeichnung löschen",
+  "sketchDeleteContent": "Die gespeicherte Zeichnung wird endgültig entfernt.",
+  "sketchClearTitle": "Leinwand leeren",
+  "sketchClearContent": "Alles von der Leinwand entfernen?",
+  "sketchBackgroundTitle": "Hintergrund",
+  "sketchBgCheckerboard": "Schachbrett",
+  "sketchBgWhite": "Weiß",
+  "sketchBgBlack": "Schwarz",
+  "sketchMenuBackground": "Hintergrund",
+  "sketchMenuResetView": "Ansicht zurücksetzen",
+  "sketchUndo": "Rückgängig",
+  "sketchRedo": "Wiederholen"
 }
 
