@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/services/database_service.dart';
 
@@ -24,8 +24,52 @@ class SketchBoardState extends ChangeNotifier {
   static const String _settingsKey = 'config';
   static const String _backgroundKey = 'background';
 
+  /// Whether the current device is a mobile platform (Android/iOS).
+  bool get isMobile =>
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
+
   /// Screen-space gap from the selection top edge to the rotation handle.
-  static const double rotationHandleGap = 28;
+  double get rotationHandleGap => isMobile ? 40.0 : 28.0;
+
+  /// Calculate dynamic hit test radius for selection handles, scaling down for small selections.
+  double handleHitRadius(Rect worldBounds) {
+    final base = isMobile ? 22.0 : 14.0;
+    final screenTopLeft = worldToScreen(worldBounds.topLeft);
+    final screenBottomRight = worldToScreen(worldBounds.bottomRight);
+    final screenW = (screenBottomRight.dx - screenTopLeft.dx).abs();
+    final screenH = (screenBottomRight.dy - screenTopLeft.dy).abs();
+    final minDim = math.min(screenW, screenH);
+    if (minDim <= 0) return base;
+    // Keep hit radius under 40% of the selection size to prevent overlapping targets.
+    return math.min(base, minDim * 0.4);
+  }
+
+  /// Dynamic size for the resize handle (squares).
+  double resizeHandleSize(Rect worldBounds) {
+    final base = isMobile ? 14.0 : 9.0;
+    final screenTopLeft = worldToScreen(worldBounds.topLeft);
+    final screenBottomRight = worldToScreen(worldBounds.bottomRight);
+    final screenW = (screenBottomRight.dx - screenTopLeft.dx).abs();
+    final screenH = (screenBottomRight.dy - screenTopLeft.dy).abs();
+    final minDim = math.min(screenW, screenH);
+    if (minDim <= 0) return base;
+    // Keep visual handle size under 30% of selection size.
+    return math.min(base, minDim * 0.3);
+  }
+
+  /// Dynamic radius for the rotation handle knob (circle).
+  double rotationHandleRadius(Rect worldBounds) {
+    final base = isMobile ? 9.0 : 6.0;
+    final screenTopLeft = worldToScreen(worldBounds.topLeft);
+    final screenBottomRight = worldToScreen(worldBounds.bottomRight);
+    final screenW = (screenBottomRight.dx - screenTopLeft.dx).abs();
+    final screenH = (screenBottomRight.dy - screenTopLeft.dy).abs();
+    final minDim = math.min(screenW, screenH);
+    if (minDim <= 0) return base;
+    // Keep visual knob radius under 20% of selection size.
+    return math.min(base, minDim * 0.2);
+  }
 
   final SketchBoardDbHelper _db = SketchBoardDbHelper.instance;
 
@@ -492,13 +536,12 @@ class SketchBoardState extends ChangeNotifier {
   }
 
   bool _hitRotation(Rect bounds, Offset screen) {
-    final pos =
-        worldToScreen(bounds.topCenter) - const Offset(0, rotationHandleGap);
-    return (pos - screen).distance <= 14;
+    final pos = worldToScreen(bounds.topCenter) - Offset(0, rotationHandleGap);
+    return (pos - screen).distance <= handleHitRadius(bounds);
   }
 
   ResizeHandle? _hitHandle(Rect bounds, Offset screen) {
-    const radius = 14.0;
+    final radius = handleHitRadius(bounds);
     for (final entry in handlePositions(bounds).entries) {
       final sp = worldToScreen(entry.value);
       if ((sp - screen).distance <= radius) return entry.key;

@@ -69,7 +69,10 @@ class SketchPainter extends CustomPainter {
 
     // Rotation handle (stem + knob above the top edge).
     final top = screenRect.topCenter;
-    final knob = top - const Offset(0, SketchBoardState.rotationHandleGap);
+    final rotationRadius = state.rotationHandleRadius(union);
+    final resizeSize = state.resizeHandleSize(union);
+
+    final knob = top - Offset(0, state.rotationHandleGap);
     canvas.drawLine(
       top,
       knob,
@@ -77,10 +80,10 @@ class SketchPainter extends CustomPainter {
         ..color = handleColor
         ..strokeWidth = 1.5,
     );
-    canvas.drawCircle(knob, 6, Paint()..color = Colors.white);
+    canvas.drawCircle(knob, rotationRadius, Paint()..color = Colors.white);
     canvas.drawCircle(
       knob,
-      6,
+      rotationRadius,
       Paint()
         ..color = handleColor
         ..style = PaintingStyle.stroke
@@ -95,8 +98,8 @@ class SketchPainter extends CustomPainter {
     for (final p in handlePositions(union).values) {
       final r = Rect.fromCenter(
         center: state.worldToScreen(p),
-        width: 9,
-        height: 9,
+        width: resizeSize,
+        height: resizeSize,
       );
       canvas.drawRect(r, fill);
       canvas.drawRect(r, stroke);
