@@ -30,7 +30,7 @@ class SketchCanvas extends StatelessWidget {
         onScaleUpdate: (d) =>
             state.gestureUpdate(d.localFocalPoint, d.scale, d.pointerCount),
         onScaleEnd: (_) => state.gestureEnd(),
-        onTapDown: (d) => state.handleTap(d.localPosition),
+        onTapUp: (d) => state.handleTap(d.localPosition),
         onDoubleTapDown: (d) => state.doubleTapAt(d.localPosition),
         onDoubleTap: () {},
         child: _CursorRegion(

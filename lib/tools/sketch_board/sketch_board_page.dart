@@ -8,7 +8,6 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
-import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -20,11 +19,11 @@ import 'models/drawing_record.dart';
 import 'models/sketch_enums.dart';
 import 'sketch_board_state.dart';
 import 'sketch_board_sync_delegate.dart';
-import 'widgets/sketch_canvas.dart';
+import 'widgets/sketch_draw_tab.dart';
 import 'widgets/sketch_gallery.dart';
-import 'widgets/sketch_properties_bar.dart';
+import 'widgets/sketch_redo_button.dart';
 import 'widgets/sketch_text_editor.dart';
-import 'widgets/sketch_toolbar.dart';
+import 'widgets/sketch_undo_button.dart';
 
 class SketchBoardPage extends StatefulWidget {
   const SketchBoardPage({super.key});
@@ -351,8 +350,8 @@ class _SketchBoardPageState extends State<SketchBoardPage>
                   : const Icon(Icons.sync),
               onPressed: appState.isSyncing ? null : _triggerSync,
             ),
-          const _UndoButton(),
-          const _RedoButton(),
+          const SketchUndoButton(),
+          const SketchRedoButton(),
           IconButton(
             tooltip: l10n.sketchInsertImage,
             icon: const Icon(Icons.add_photo_alternate_outlined),
@@ -416,149 +415,13 @@ class _SketchBoardPageState extends State<SketchBoardPage>
                 controller: _tabController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  const _DrawTab(),
+                  const SketchDrawTab(),
                   SketchGallery(onLoad: _loadRecord, onDelete: _deleteRecord),
                 ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _DrawTab extends StatelessWidget {
-  const _DrawTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        const Positioned.fill(child: SketchCanvas()),
-        const Positioned(
-          top: 8,
-          left: 8,
-          right: 8,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: SketchPropertiesBar(),
-          ),
-        ),
-        const Positioned(
-          bottom: 12,
-          left: 0,
-          right: 0,
-          child: Center(child: SketchToolbar()),
-        ),
-        const Positioned(right: 12, bottom: 12, child: _SelectionActions()),
-      ],
-    );
-  }
-}
-
-typedef _SelInfo = ({bool has, int count, bool group});
-
-class _SelectionActions extends StatelessWidget {
-  const _SelectionActions();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    return Selector<SketchBoardState, _SelInfo>(
-      selector: (_, s) => (
-        has: s.hasSelection,
-        count: s.selectionCount,
-        group: s.hasGroupSelected,
-      ),
-      builder: (context, info, _) {
-        if (!info.has) return const SizedBox.shrink();
-        final state = context.read<SketchBoardState>();
-        return Material(
-          color: theme.colorScheme.surface.withValues(alpha: 0.95),
-          elevation: 3,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: l10n.sketchBringToFront,
-                  icon: const Icon(Icons.flip_to_front, size: 20),
-                  onPressed: state.bringToFront,
-                  visualDensity: VisualDensity.compact,
-                ),
-                IconButton(
-                  tooltip: l10n.sketchSendToBack,
-                  icon: const Icon(Icons.flip_to_back, size: 20),
-                  onPressed: state.sendToBack,
-                  visualDensity: VisualDensity.compact,
-                ),
-                if (info.count >= 2)
-                  IconButton(
-                    tooltip: l10n.sketchGroup,
-                    icon: const Icon(
-                      Icons.dashboard_customize_outlined,
-                      size: 20,
-                    ),
-                    onPressed: state.groupSelected,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                if (info.group)
-                  IconButton(
-                    tooltip: l10n.sketchUngroup,
-                    icon: const Icon(Icons.grid_view_outlined, size: 20),
-                    onPressed: state.ungroupSelected,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                IconButton(
-                  tooltip: l10n.commonDelete,
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: 20,
-                    color: AppTheme.statusRed,
-                  ),
-                  onPressed: state.deleteSelected,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _UndoButton extends StatelessWidget {
-  const _UndoButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Selector<SketchBoardState, bool>(
-      selector: (_, s) => s.canUndo,
-      builder: (context, canUndo, _) => IconButton(
-        tooltip: AppLocalizations.of(context).sketchUndo,
-        icon: const Icon(Icons.undo),
-        onPressed: canUndo ? context.read<SketchBoardState>().undo : null,
-      ),
-    );
-  }
-}
-
-class _RedoButton extends StatelessWidget {
-  const _RedoButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Selector<SketchBoardState, bool>(
-      selector: (_, s) => s.canRedo,
-      builder: (context, canRedo, _) => IconButton(
-        tooltip: AppLocalizations.of(context).sketchRedo,
-        icon: const Icon(Icons.redo),
-        onPressed: canRedo ? context.read<SketchBoardState>().redo : null,
       ),
     );
   }
