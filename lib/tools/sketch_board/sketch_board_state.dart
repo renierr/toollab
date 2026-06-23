@@ -271,15 +271,28 @@ class SketchBoardState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Applies [fn] to every selected element, recording one undo step.
+  /// Applies [fn] to every selected element (recursively for grouped items),
+  /// recording one undo step.
   void _mutateSelected(void Function(SketchElement e) fn) {
     final sel = selectedElements;
     if (sel.isEmpty) return;
     _history.push(_elements);
     for (final e in sel) {
-      fn(e);
+      _mutateElementRecursive(e, fn);
     }
     _dirty = true;
+  }
+
+  void _mutateElementRecursive(
+    SketchElement e,
+    void Function(SketchElement) fn,
+  ) {
+    fn(e);
+    if (e is GroupElement) {
+      for (final child in e.elements) {
+        _mutateElementRecursive(child, fn);
+      }
+    }
   }
 
   Future<void> setBackground(CanvasBackground bg) async {
