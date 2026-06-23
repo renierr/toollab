@@ -880,11 +880,11 @@ class SketchBoardState extends ChangeNotifier {
       return;
     }
     final w0 = img.width.toDouble(), h0 = img.height.toDouble();
-    const maxDim = 400.0;
-    final f = (w0 > maxDim || h0 > maxDim) ? maxDim / math.max(w0, h0) : 1.0;
-    final w = w0 * f, h = h0 * f;
+    final w = w0, h = h0;
     final dataUrl = 'data:$mime;base64,${base64Encode(bytes)}';
     _imageCache[dataUrl] = img;
+
+    final isFirst = _elements.isEmpty;
     final center = screenToWorld(
       Offset(_viewSize.width / 2, _viewSize.height / 2),
     );
@@ -901,6 +901,17 @@ class SketchBoardState extends ChangeNotifier {
     );
     _history.push(_elements);
     _elements.add(el);
+
+    if (isFirst && _viewSize.width > 0 && _viewSize.height > 0) {
+      final scaleFit =
+          math.min(_viewSize.width / w, _viewSize.height / h) * 0.9;
+      _scale = math.min(1.0, scaleFit).clamp(0.1, 8.0);
+      _offset = Offset(
+        _viewSize.width / 2 - center.dx * _scale,
+        _viewSize.height / 2 - center.dy * _scale,
+      );
+    }
+
     _mode = ToolMode.select;
     _selectedIds
       ..clear()
