@@ -49,6 +49,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
     final state = context.read<SketchBoardState>();
     state.onRequestText = _openTextEditor;
     onDispose(() => state.onRequestText = null);
+    onDispose(() => state.clearMemory(notify: false));
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final appState = context.read<AppState>();
@@ -321,6 +322,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final isNarrow = MediaQuery.of(context).size.width < 480;
     final appState = context.watch<AppState>();
 
     return Selector<SketchBoardState, bool>(
@@ -330,7 +332,11 @@ class _SketchBoardPageState extends State<SketchBoardPage>
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) return;
           final navigator = Navigator.of(context);
-          if (await _confirmDiscard() && mounted) navigator.pop();
+          final state = context.read<SketchBoardState>();
+          if (await _confirmDiscard() && mounted) {
+            state.discardChanges();
+            navigator.pop();
+          }
         },
         child: child!,
       ),
@@ -352,19 +358,25 @@ class _SketchBoardPageState extends State<SketchBoardPage>
             ),
           const SketchUndoButton(),
           const SketchRedoButton(),
-          IconButton(
-            tooltip: l10n.sketchInsertImage,
-            icon: const Icon(Icons.add_photo_alternate_outlined),
-            onPressed: _insertImage,
-          ),
-          IconButton(
-            tooltip: l10n.commonSave,
-            icon: const Icon(Icons.save_outlined),
-            onPressed: _save,
-          ),
+          if (!isNarrow) ...[
+            IconButton(
+              tooltip: l10n.sketchInsertImage,
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+              onPressed: _insertImage,
+            ),
+            IconButton(
+              tooltip: l10n.commonSave,
+              icon: const Icon(Icons.save_outlined),
+              onPressed: _save,
+            ),
+          ],
           PopupMenuButton<String>(
             onSelected: (v) {
               switch (v) {
+                case 'insert-image':
+                  _insertImage();
+                case 'save':
+                  _save();
                 case 'paste-image':
                   _pasteImage();
                 case 'export':
@@ -382,22 +394,99 @@ class _SketchBoardPageState extends State<SketchBoardPage>
               }
             },
             itemBuilder: (context) => [
+              if (isNarrow) ...[
+                PopupMenuItem(
+                  value: 'insert-image',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.add_photo_alternate_outlined, size: 20),
+                      const SizedBox(width: 10),
+                      Text(l10n.sketchInsertImage),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'save',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.save_outlined, size: 20),
+                      const SizedBox(width: 10),
+                      Text(l10n.commonSave),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+              ],
               PopupMenuItem(
                 value: 'paste-image',
-                child: Text(l10n.sketchPasteImage),
+                child: Row(
+                  children: [
+                    const Icon(Icons.content_paste_outlined, size: 20),
+                    const SizedBox(width: 10),
+                    Text(l10n.sketchPasteImage),
+                  ],
+                ),
               ),
-              PopupMenuItem(value: 'export', child: Text(l10n.commonExport)),
-              PopupMenuItem(value: 'copy', child: Text(l10n.commonCopy)),
-              PopupMenuItem(value: 'share', child: Text(l10n.commonShare)),
+              PopupMenuItem(
+                value: 'export',
+                child: Row(
+                  children: [
+                    const Icon(Icons.file_download_outlined, size: 20),
+                    const SizedBox(width: 10),
+                    Text(l10n.commonExport),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'copy',
+                child: Row(
+                  children: [
+                    const Icon(Icons.content_copy_outlined, size: 20),
+                    const SizedBox(width: 10),
+                    Text(l10n.commonCopy),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'share',
+                child: Row(
+                  children: [
+                    const Icon(Icons.share_outlined, size: 20),
+                    const SizedBox(width: 10),
+                    Text(l10n.commonShare),
+                  ],
+                ),
+              ),
               PopupMenuItem(
                 value: 'background',
-                child: Text(l10n.sketchMenuBackground),
+                child: Row(
+                  children: [
+                    const Icon(Icons.grid_on_outlined, size: 20),
+                    const SizedBox(width: 10),
+                    Text(l10n.sketchMenuBackground),
+                  ],
+                ),
               ),
               PopupMenuItem(
                 value: 'reset',
-                child: Text(l10n.sketchMenuResetView),
+                child: Row(
+                  children: [
+                    const Icon(Icons.zoom_out_map_outlined, size: 20),
+                    const SizedBox(width: 10),
+                    Text(l10n.sketchMenuResetView),
+                  ],
+                ),
               ),
-              PopupMenuItem(value: 'clear', child: Text(l10n.commonClear)),
+              PopupMenuItem(
+                value: 'clear',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete_sweep_outlined, size: 20),
+                    const SizedBox(width: 10),
+                    Text(l10n.commonClear),
+                  ],
+                ),
+              ),
             ],
           ),
         ],

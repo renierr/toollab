@@ -30,7 +30,7 @@ class SketchDrawTab extends StatelessWidget {
         ),
         const Positioned(
           right: 12,
-          bottom: 12,
+          bottom: 80,
           child: SketchSelectionActions(),
         ),
       ],

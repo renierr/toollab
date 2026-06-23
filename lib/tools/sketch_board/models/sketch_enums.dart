@@ -76,8 +76,10 @@ Color? colorFromHexOrNull(String? hex) {
   if (h.length == 3) {
     h = h.split('').map((ch) => '$ch$ch').join();
   }
-  if (h.length == 6) h = 'FF$h';
-  if (h.length == 8) {
+  if (h.length != 6 && h.length != 8) return null;
+  if (h.length == 6) {
+    h = 'FF$h';
+  } else if (h.length == 8) {
     // Hex is RRGGBBAA from the web; reorder to AARRGGBB for dart:ui.
     final rgb = h.substring(0, 6);
     final a = h.substring(6, 8);

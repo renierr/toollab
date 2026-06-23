@@ -29,8 +29,8 @@ class SketchToolbar extends StatelessWidget {
     final theme = Theme.of(context);
 
     final primary = <(ToolMode, IconData, String)>[
-      (ToolMode.select, Icons.near_me_outlined, l10n.sketchToolSelect),
       (ToolMode.pan, Icons.pan_tool_outlined, l10n.sketchToolPan),
+      (ToolMode.select, Icons.near_me_outlined, l10n.sketchToolSelect),
       (ToolMode.freehand, Icons.gesture, l10n.sketchToolPen),
     ];
     final shapes = <(ToolMode, IconData, String)>[

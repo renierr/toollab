@@ -62,7 +62,9 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
     final parsed = colorFromHexOrNull(widget.current);
     _none = widget.allowNone && parsed == null;
     _color = parsed ?? const Color(0xFF1E1E1E);
-    _hex = TextEditingController(text: hexFromColorWithAlpha(_color));
+    _hex = TextEditingController(
+      text: hexFromColorWithAlpha(_color).replaceAll('#', ''),
+    );
   }
 
   @override
@@ -75,13 +77,16 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
     setState(() {
       _color = c;
       _none = false;
-      if (syncHex) _hex.text = hexFromColorWithAlpha(c);
+      if (syncHex) _hex.text = hexFromColorWithAlpha(c).replaceAll('#', '');
     });
   }
 
   void _applyHex(String value) {
-    final c = colorFromHexOrNull(value);
-    if (c != null) _setColor(c, syncHex: false);
+    final clean = value.replaceAll('#', '').trim();
+    if (clean.length == 3 || clean.length == 6 || clean.length == 8) {
+      final c = colorFromHexOrNull(clean);
+      if (c != null) _setColor(c, syncHex: false);
+    }
   }
 
   int get _r => (_color.r * 255).round();

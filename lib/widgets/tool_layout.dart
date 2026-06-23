@@ -52,7 +52,7 @@ class ToolLayout extends StatelessWidget {
                     (Navigator.of(context).canPop()
                         ? IconButton(
                             icon: const Icon(Icons.arrow_back),
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: () => Navigator.of(context).maybePop(),
                           )
                         : null),
                 title: Text(

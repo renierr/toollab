@@ -970,12 +970,29 @@ class SketchBoardState extends ChangeNotifier {
     await refreshSaved();
   }
 
-  @override
-  void dispose() {
+  void discardChanges() {
+    _dirty = false;
+    notifyListeners();
+  }
+
+  void clearMemory({bool notify = true}) {
+    _elements.clear();
+    _draft = null;
+    _selectedIds.clear();
+    _loadedShortId = null;
+    _dirty = false;
+    _history.clear();
     for (final img in _imageCache.values) {
       img.dispose();
     }
     _imageCache.clear();
+    _decoding.clear();
+    if (notify) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    clearMemory(notify: false);
     super.dispose();
   }
 }
