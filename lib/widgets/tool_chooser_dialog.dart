@@ -19,13 +19,121 @@ class ToolChooserDialog extends StatefulWidget {
   State<ToolChooserDialog> createState() => _ToolChooserDialogState();
 }
 
+class _RememberChoiceCheckbox extends StatefulWidget {
+  final bool value;
+  final ValueChanged<bool?> onChanged;
+  final String labelText;
+
+  const _RememberChoiceCheckbox({
+    required this.value,
+    required this.onChanged,
+    required this.labelText,
+  });
+
+  @override
+  State<_RememberChoiceCheckbox> createState() =>
+      _RememberChoiceCheckboxState();
+}
+
+class _RememberChoiceCheckboxState extends State<_RememberChoiceCheckbox> {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Checkbox(value: widget.value, onChanged: widget.onChanged),
+        Expanded(
+          child: Text(
+            widget.labelText,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ToolChooserDialogState extends State<ToolChooserDialog> {
   bool _rememberChoice = false;
+
+  Widget _buildToolItem(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    ToolModel tool,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).pop((tool, _rememberChoice));
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: tool.accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(tool.icon, color: tool.accentColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tool.localizedName(l10n),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      tool.localizedDescription(l10n),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+
+    final internalTools = widget.tools
+        .where((t) => t.id != 'system-share' && t.id != 'system-default')
+        .toList();
+    final systemTools = widget.tools
+        .where((t) => t.id == 'system-share' || t.id == 'system-default')
+        .toList();
 
     return ResponsiveAlertDialog(
       title: Text(
@@ -58,100 +166,28 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
             Flexible(
               child: SingleChildScrollView(
                 child: Column(
-                  children: widget.tools.map((tool) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.of(context).pop((tool, _rememberChoice));
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: theme.colorScheme.outlineVariant
-                                  .withValues(alpha: 0.5),
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: tool.accentColor.withValues(
-                                    alpha: 0.15,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  tool.icon,
-                                  color: tool.accentColor,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      tool.localizedName(l10n),
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      tool.localizedDescription(l10n),
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withValues(alpha: 0.7),
-                                          ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.5,
-                                ),
-                                size: 16,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
+                  children: internalTools.map((tool) {
+                    return _buildToolItem(context, theme, l10n, tool);
                   }).toList(),
                 ),
               ),
             ),
+            if (systemTools.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              ...systemTools.map((tool) {
+                return _buildToolItem(context, theme, l10n, tool);
+              }),
+            ],
             if (widget.showRememberChoice) ...[
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Checkbox(
-                    value: _rememberChoice,
-                    onChanged: (val) {
-                      setState(() {
-                        _rememberChoice = val ?? false;
-                      });
-                    },
-                  ),
-                  Expanded(
-                    child: Text(
-                      l10n.widgetToolChooserAlwaysUseTool,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ),
-                ],
+              _RememberChoiceCheckbox(
+                value: _rememberChoice,
+                onChanged: (val) {
+                  setState(() {
+                    _rememberChoice = val ?? false;
+                  });
+                },
+                labelText: l10n.widgetToolChooserAlwaysUseTool,
               ),
             ],
           ],
