@@ -46,6 +46,20 @@ ToolMode toolModeFromWire(String? s) {
   }
 }
 
+/// Bitmap format the board can be exported to. WebP is intentionally absent —
+/// the bundled `image` package can decode but not encode it.
+enum ExportFormat {
+  png,
+  jpeg;
+
+  String get extension => this == ExportFormat.jpeg ? 'jpg' : 'png';
+  String get mimeType => this == ExportFormat.jpeg ? 'image/jpeg' : 'image/png';
+  String get label => this == ExportFormat.jpeg ? 'JPEG' : 'PNG';
+
+  /// Whether a quality setting is meaningful (PNG is lossless).
+  bool get isLossy => this == ExportFormat.jpeg;
+}
+
 /// How a marquee selection captures elements.
 enum SelectionType { box, lasso }
 

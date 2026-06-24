@@ -3486,6 +3486,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sketchNothingToExport => 'Nothing to draw yet';
 
   @override
+  String get sketchExportTitle => 'Export image';
+
+  @override
+  String get sketchExportFormat => 'Format';
+
+  @override
+  String get sketchExportQuality => 'Quality';
+
+  @override
+  String get sketchExportLossless => 'PNG is lossless — no quality setting.';
+
+  @override
   String get sketchCopied => 'Copied to clipboard';
 
   @override

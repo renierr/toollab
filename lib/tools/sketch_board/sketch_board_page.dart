@@ -22,6 +22,7 @@ import 'models/sketch_enums.dart';
 import 'sketch_board_state.dart';
 import 'sketch_board_sync_delegate.dart';
 import 'widgets/sketch_draw_tab.dart';
+import 'widgets/sketch_export_dialog.dart';
 import 'widgets/sketch_gallery.dart';
 import 'widgets/sketch_redo_button.dart';
 import 'widgets/sketch_text_editor.dart';
@@ -95,7 +96,8 @@ class _SketchBoardPageState extends State<SketchBoardPage>
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  String _fileName() => 'sketch-${DateTime.now().millisecondsSinceEpoch}.png';
+  String _fileName({String ext = 'png'}) =>
+      'sketch-${DateTime.now().millisecondsSinceEpoch}.$ext';
 
   Future<void> _openTextEditor() async {
     final state = context.read<SketchBoardState>();
@@ -114,7 +116,18 @@ class _SketchBoardPageState extends State<SketchBoardPage>
   }
 
   Future<void> _exportPng() async {
-    final bytes = await _renderPng();
+    final state = context.read<SketchBoardState>();
+    if (state.isEmpty) {
+      _toast(AppLocalizations.of(context).sketchNothingToExport);
+      return;
+    }
+    final options = await showSketchExportDialog(context);
+    if (options == null || !mounted) return;
+    final bytes = await renderImage(
+      state.elements,
+      format: options.format,
+      quality: options.quality,
+    );
     if (!mounted) return;
     if (bytes == null) {
       _toast(AppLocalizations.of(context).sketchNothingToExport);
@@ -123,10 +136,13 @@ class _SketchBoardPageState extends State<SketchBoardPage>
     final l10n = AppLocalizations.of(context);
     await FileSaveHelper.saveFile(
       context: context,
-      suggestedName: _fileName(),
+      suggestedName: _fileName(ext: options.format.extension),
       bytes: bytes,
-      acceptedTypeGroups: const [
-        XTypeGroup(label: 'PNG image', extensions: ['png']),
+      acceptedTypeGroups: [
+        XTypeGroup(
+          label: '${options.format.label} image',
+          extensions: [options.format.extension],
+        ),
       ],
       successMessageAndroid: l10n.sigSavedToDownloads,
     );

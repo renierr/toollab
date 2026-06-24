@@ -4,8 +4,10 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 
 import '../models/sketch_element.dart';
+import '../models/sketch_enums.dart';
 import 'element_bounds.dart';
 import 'element_renderer.dart';
 
@@ -46,10 +48,14 @@ Future<Map<String, ui.Image>> decodeImages(List<SketchElement> elements) async {
   return out;
 }
 
-/// Renders [elements] to a cropped PNG. Returns null when there is nothing to
-/// draw. [scale] supersamples for crispness; [background] fills behind content.
-Future<Uint8List?> renderPng(
+/// Renders [elements] to a cropped bitmap in [format]. Returns null when there
+/// is nothing to draw. [scale] supersamples for crispness; [background] fills
+/// behind content. [quality] (1–100) only applies to lossy formats (JPEG);
+/// JPEG has no alpha, so a transparent [background] is forced to white.
+Future<Uint8List?> renderImage(
   List<SketchElement> elements, {
+  ExportFormat format = ExportFormat.png,
+  int quality = 92,
   double scale = 2.0,
   Color? background,
 }) async {
@@ -64,8 +70,11 @@ Future<Uint8List?> renderPng(
   canvas.scale(scale);
   canvas.translate(-bounds.left, -bounds.top);
 
-  if (background != null) {
-    canvas.drawRect(bounds, Paint()..color = background);
+  final bg = format == ExportFormat.jpeg
+      ? (background ?? const Color(0xFFFFFFFF))
+      : background;
+  if (bg != null) {
+    canvas.drawRect(bounds, Paint()..color = bg);
   }
   for (final el in elements) {
     drawElement(canvas, el, imageResolver: resolver);
@@ -75,14 +84,40 @@ Future<Uint8List?> renderPng(
   final w = math.max(1, (bounds.width * scale).ceil());
   final h = math.max(1, (bounds.height * scale).ceil());
   final image = await picture.toImage(w, h);
-  final data = await image.toByteData(format: ui.ImageByteFormat.png);
+
+  Uint8List? out;
+  if (format == ExportFormat.png) {
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    out = data?.buffer.asUint8List();
+  } else {
+    final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (data != null) {
+      final raw = img.Image.fromBytes(
+        width: w,
+        height: h,
+        bytes: data.buffer,
+        numChannels: 4,
+        order: img.ChannelOrder.rgba,
+      );
+      out = img.encodeJpg(raw, quality: quality.clamp(1, 100));
+    }
+  }
+
   image.dispose();
   picture.dispose();
-  for (final img in images.values) {
-    img.dispose();
+  for (final i in images.values) {
+    i.dispose();
   }
-  return data?.buffer.asUint8List();
+  return out;
 }
+
+/// Renders [elements] to a cropped PNG (lossless). Convenience wrapper around
+/// [renderImage] for the clipboard / share paths that always want PNG.
+Future<Uint8List?> renderPng(
+  List<SketchElement> elements, {
+  double scale = 2.0,
+  Color? background,
+}) => renderImage(elements, scale: scale, background: background);
 
 /// Renders a fitted ~320x200 thumbnail PNG for the gallery. Returns empty bytes
 /// when there is nothing to draw.

@@ -3512,6 +3512,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sketchNothingToExport => 'Noch nichts zu zeichnen';
 
   @override
+  String get sketchExportTitle => 'Bild exportieren';
+
+  @override
+  String get sketchExportFormat => 'Format';
+
+  @override
+  String get sketchExportQuality => 'Qualität';
+
+  @override
+  String get sketchExportLossless =>
+      'PNG ist verlustfrei — keine Qualitätseinstellung.';
+
+  @override
   String get sketchCopied => 'In Zwischenablage kopiert';
 
   @override

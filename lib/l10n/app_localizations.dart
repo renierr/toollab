@@ -6260,6 +6260,30 @@ abstract class AppLocalizations {
   /// **'Nothing to draw yet'**
   String get sketchNothingToExport;
 
+  /// No description provided for @sketchExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export image'**
+  String get sketchExportTitle;
+
+  /// No description provided for @sketchExportFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get sketchExportFormat;
+
+  /// No description provided for @sketchExportQuality.
+  ///
+  /// In en, this message translates to:
+  /// **'Quality'**
+  String get sketchExportQuality;
+
+  /// No description provided for @sketchExportLossless.
+  ///
+  /// In en, this message translates to:
+  /// **'PNG is lossless — no quality setting.'**
+  String get sketchExportLossless;
+
   /// No description provided for @sketchCopied.
   ///
   /// In en, this message translates to:
