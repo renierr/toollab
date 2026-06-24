@@ -1213,6 +1213,8 @@
   "sketchExportFormat": "Format",
   "sketchExportQuality": "Qualität",
   "sketchExportLossless": "PNG ist verlustfrei — keine Qualitätseinstellung.",
+  "sketchExportResolution": "Auflösung",
+  "sketchExportEstimatedSize": "Geschätzte Größe",
   "sketchCopied": "In Zwischenablage kopiert",
   "sketchDeleteTitle": "Zeichnung löschen",
   "sketchDeleteContent": "Die gespeicherte Zeichnung wird endgültig entfernt.",

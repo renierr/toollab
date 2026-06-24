@@ -3525,6 +3525,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'PNG ist verlustfrei — keine Qualitätseinstellung.';
 
   @override
+  String get sketchExportResolution => 'Auflösung';
+
+  @override
+  String get sketchExportEstimatedSize => 'Geschätzte Größe';
+
+  @override
   String get sketchCopied => 'In Zwischenablage kopiert';
 
   @override

@@ -3498,6 +3498,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sketchExportLossless => 'PNG is lossless — no quality setting.';
 
   @override
+  String get sketchExportResolution => 'Resolution';
+
+  @override
+  String get sketchExportEstimatedSize => 'Estimated size';
+
+  @override
   String get sketchCopied => 'Copied to clipboard';
 
   @override

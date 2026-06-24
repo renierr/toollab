@@ -6284,6 +6284,18 @@ abstract class AppLocalizations {
   /// **'PNG is lossless — no quality setting.'**
   String get sketchExportLossless;
 
+  /// No description provided for @sketchExportResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolution'**
+  String get sketchExportResolution;
+
+  /// No description provided for @sketchExportEstimatedSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated size'**
+  String get sketchExportEstimatedSize;
+
   /// No description provided for @sketchCopied.
   ///
   /// In en, this message translates to:

@@ -121,14 +121,29 @@ class _SketchBoardPageState extends State<SketchBoardPage>
       _toast(AppLocalizations.of(context).sketchNothingToExport);
       return;
     }
-    final options = await showSketchExportDialog(context);
-    if (options == null || !mounted) return;
-    final bytes = await renderImage(
-      state.elements,
-      format: options.format,
-      quality: options.quality,
-      background: options.format.isLossy ? state.backgroundColor : null,
+    final bounds = sceneBounds(state.elements, padding: 8);
+    if (bounds == null) {
+      _toast(AppLocalizations.of(context).sketchNothingToExport);
+      return;
+    }
+    Future<Uint8List?> render(ExportFormat format, int quality, double scale) {
+      return renderImage(
+        state.elements,
+        format: format,
+        quality: quality,
+        scale: scale,
+        background: format.isLossy ? state.backgroundColor : null,
+      );
+    }
+
+    final options = await showSketchExportDialog(
+      context,
+      bounds.size,
+      (format, quality, scale) async =>
+          (await render(format, quality, scale))?.length,
     );
+    if (options == null || !mounted) return;
+    final bytes = await render(options.format, options.quality, options.scale);
     if (!mounted) return;
     if (bytes == null) {
       _toast(AppLocalizations.of(context).sketchNothingToExport);
