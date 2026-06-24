@@ -396,6 +396,19 @@ class SketchBoardState extends ChangeNotifier {
       _pendingTextPos = SkPoint.fromOffset(world);
       _editingText = null;
       onRequestText?.call();
+    } else if (_mode == ToolMode.freehand) {
+      _history.push(_elements);
+      _elements.add(
+        FreehandElement(
+          id: _db.generateUuid(),
+          color: _strokeColor,
+          width: _strokeWidth,
+          brushStyle: _brushStyle.name,
+          points: [SkPoint.fromOffset(world)],
+        ),
+      );
+      _dirty = true;
+      notifyListeners();
     }
   }
 
@@ -786,7 +799,7 @@ class SketchBoardState extends ChangeNotifier {
   }
 
   bool _isDraftValid(SketchElement d) {
-    if (d is FreehandElement) return d.points.length > 1;
+    if (d is FreehandElement) return d.points.isNotEmpty;
     if (d is ShapeElement) {
       final dx = (d.end.x - d.start.x).abs();
       final dy = (d.end.y - d.start.y).abs();
