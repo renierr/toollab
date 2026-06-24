@@ -3586,6 +3586,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sketchUngroup => 'Gruppierung aufheben';
 
   @override
+  String get sketchResetRotation => 'Drehung zurücksetzen';
+
+  @override
   String get sketchInsertImage => 'Bild einfügen';
 
   @override

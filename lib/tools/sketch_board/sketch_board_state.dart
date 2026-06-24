@@ -158,6 +158,7 @@ class SketchBoardState extends ChangeNotifier {
   bool get hasSelection => _selectedIds.isNotEmpty;
   int get selectionCount => _selectedIds.length;
   bool get hasGroupSelected => selectedElements.any((e) => e is GroupElement);
+  bool get hasRotatedSelection => selectedElements.any((e) => e.rotation != 0);
 
   List<SketchElement> get selectedElements =>
       _elements.where((e) => _selectedIds.contains(e.id)).toList();
@@ -983,6 +984,21 @@ class SketchBoardState extends ChangeNotifier {
     _history.push(_elements);
     _elements.removeWhere((e) => _selectedIds.contains(e.id));
     _selectedIds.clear();
+    _dirty = true;
+    notifyListeners();
+  }
+
+  void resetRotation() {
+    final rotated = selectedElements.where((e) => e.rotation != 0).toList();
+    if (rotated.isEmpty) return;
+    _history.push(_elements);
+    for (final el in rotated) {
+      final idx = _elements.indexWhere((e) => e.id == el.id);
+      if (idx == -1) continue;
+      final fresh = el.clone();
+      fresh.rotation = 0;
+      _elements[idx] = fresh;
+    }
     _dirty = true;
     notifyListeners();
   }

@@ -3559,6 +3559,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sketchUngroup => 'Ungroup';
 
   @override
+  String get sketchResetRotation => 'Reset rotation';
+
+  @override
   String get sketchInsertImage => 'Insert image';
 
   @override

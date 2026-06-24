@@ -2059,6 +2059,7 @@
   "sketchSendToBack": "Send to back",
   "sketchGroup": "Group",
   "sketchUngroup": "Ungroup",
+  "sketchResetRotation": "Reset rotation",
   "sketchInsertImage": "Insert image",
   "sketchPasteImage": "Paste image",
   "sketchNoClipboardImage": "No image in clipboard",

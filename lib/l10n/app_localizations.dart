@@ -6404,6 +6404,12 @@ abstract class AppLocalizations {
   /// **'Ungroup'**
   String get sketchUngroup;
 
+  /// No description provided for @sketchResetRotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset rotation'**
+  String get sketchResetRotation;
+
   /// No description provided for @sketchInsertImage.
   ///
   /// In en, this message translates to:

@@ -5,7 +5,7 @@ import 'package:tool_lab/theme/theme.dart';
 
 import '../sketch_board_state.dart';
 
-typedef _SelInfo = ({bool has, int count, bool group});
+typedef _SelInfo = ({bool has, int count, bool group, bool rotated});
 
 class SketchSelectionActions extends StatelessWidget {
   const SketchSelectionActions({super.key});
@@ -19,6 +19,7 @@ class SketchSelectionActions extends StatelessWidget {
         has: s.hasSelection,
         count: s.selectionCount,
         group: s.hasGroupSelected,
+        rotated: s.hasRotatedSelection,
       ),
       builder: (context, info, _) {
         if (!info.has) return const SizedBox.shrink();
@@ -59,6 +60,13 @@ class SketchSelectionActions extends StatelessWidget {
                     tooltip: l10n.sketchUngroup,
                     icon: const Icon(Icons.grid_view_outlined, size: 20),
                     onPressed: state.ungroupSelected,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                if (info.rotated)
+                  IconButton(
+                    tooltip: l10n.sketchResetRotation,
+                    icon: const Icon(Icons.restart_alt, size: 20),
+                    onPressed: state.resetRotation,
                     visualDensity: VisualDensity.compact,
                   ),
                 IconButton(

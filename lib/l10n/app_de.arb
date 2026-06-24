@@ -1233,6 +1233,7 @@
   "sketchSendToBack": "In den Hintergrund",
   "sketchGroup": "Gruppieren",
   "sketchUngroup": "Gruppierung aufheben",
+  "sketchResetRotation": "Drehung zurücksetzen",
   "sketchInsertImage": "Bild einfügen",
   "sketchPasteImage": "Bild aus Zwischenablage",
   "sketchNoClipboardImage": "Kein Bild in der Zwischenablage",
