@@ -127,6 +127,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
       state.elements,
       format: options.format,
       quality: options.quality,
+      background: options.format.isLossy ? state.backgroundColor : null,
     );
     if (!mounted) return;
     if (bytes == null) {

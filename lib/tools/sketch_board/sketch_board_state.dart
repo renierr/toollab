@@ -145,6 +145,14 @@ class SketchBoardState extends ChangeNotifier {
   bool get fontItalic => _fontStyle == 'italic';
   BrushStyle get brushStyle => _brushStyle;
   CanvasBackground get background => _background;
+
+  /// Solid fill color for the current backdrop, or null when transparent
+  /// (checkerboard). Used as the export background.
+  Color? get backgroundColor => switch (_background) {
+    CanvasBackground.white => const Color(0xFFFFFFFF),
+    CanvasBackground.black => const Color(0xFF111111),
+    CanvasBackground.checkerboard => null,
+  };
   SelectionType get selectionType => _selectionType;
   bool get canUndo => _history.canUndo;
   bool get canRedo => _history.canRedo;
