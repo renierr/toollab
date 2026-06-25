@@ -2546,6 +2546,30 @@ abstract class AppLocalizations {
   /// **'General Settings'**
   String get miscDeviceInfoGeneralSettings;
 
+  /// No description provided for @miscDeviceInfoStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage & Memory'**
+  String get miscDeviceInfoStorage;
+
+  /// No description provided for @miscDeviceInfoNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network Connection'**
+  String get miscDeviceInfoNetwork;
+
+  /// No description provided for @miscDeviceInfoSensors.
+  ///
+  /// In en, this message translates to:
+  /// **'Available Sensors'**
+  String get miscDeviceInfoSensors;
+
+  /// No description provided for @miscDeviceInfoAppInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Application Info'**
+  String get miscDeviceInfoAppInfo;
+
   /// No description provided for @miscMarkdownFailedToLoad.
   ///
   /// In en, this message translates to:

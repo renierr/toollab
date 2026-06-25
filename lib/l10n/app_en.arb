@@ -723,6 +723,10 @@
   "miscDeviceInfoHardwareSpecs": "Hardware Specs",
   "miscDeviceInfoDisplayDetails": "Display Details",
   "miscDeviceInfoGeneralSettings": "General Settings",
+  "miscDeviceInfoStorage": "Storage & Memory",
+  "miscDeviceInfoNetwork": "Network Connection",
+  "miscDeviceInfoSensors": "Available Sensors",
+  "miscDeviceInfoAppInfo": "Application Info",
   "miscMarkdownFailedToLoad": "Failed to load file: {error}",
   "@miscMarkdownFailedToLoad": {
     "placeholders": {

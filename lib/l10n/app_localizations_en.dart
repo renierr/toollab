@@ -1367,6 +1367,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get miscDeviceInfoGeneralSettings => 'General Settings';
 
   @override
+  String get miscDeviceInfoStorage => 'Storage & Memory';
+
+  @override
+  String get miscDeviceInfoNetwork => 'Network Connection';
+
+  @override
+  String get miscDeviceInfoSensors => 'Available Sensors';
+
+  @override
+  String get miscDeviceInfoAppInfo => 'Application Info';
+
+  @override
   String miscMarkdownFailedToLoad(String error) {
     return 'Failed to load file: $error';
   }

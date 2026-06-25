@@ -124,6 +124,43 @@ bool FlutterWindow::OnCreate() {
         }
       });
 
+  // Register device info MethodChannel
+  const std::string device_info_channel_name("de.renier.tool_lab/device_info");
+  auto device_info_channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(),
+      device_info_channel_name,
+      &flutter::StandardMethodCodec::GetInstance());
+
+  device_info_channel->SetMethodCallHandler(
+      [](const flutter::MethodCall<flutter::EncodableValue>& call,
+         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+        if (call.method_name().compare("getStorageInfo") == 0) {
+          ULARGE_INTEGER freeBytesAvailableToCaller;
+          ULARGE_INTEGER totalNumberOfBytes;
+          ULARGE_INTEGER totalNumberOfFreeBytes;
+          if (GetDiskFreeSpaceExW(L"C:\\", &freeBytesAvailableToCaller, &totalNumberOfBytes, &totalNumberOfFreeBytes)) {
+            flutter::EncodableMap storage_map = {
+              {flutter::EncodableValue("free"), flutter::EncodableValue(static_cast<int64_t>(freeBytesAvailableToCaller.QuadPart))},
+              {flutter::EncodableValue("total"), flutter::EncodableValue(static_cast<int64_t>(totalNumberOfBytes.QuadPart))}
+            };
+            result->Success(flutter::EncodableValue(storage_map));
+          } else {
+            result->Error("STORAGE_ERROR", "Failed to query storage info via GetDiskFreeSpaceExW");
+          }
+        } else if (call.method_name().compare("getSensorInfo") == 0) {
+          flutter::EncodableMap sensor_map = {
+            {flutter::EncodableValue("accelerometer"), flutter::EncodableValue(false)},
+            {flutter::EncodableValue("gyroscope"), flutter::EncodableValue(false)},
+            {flutter::EncodableValue("magnetometer"), flutter::EncodableValue(false)},
+            {flutter::EncodableValue("barometer"), flutter::EncodableValue(false)},
+            {flutter::EncodableValue("light"), flutter::EncodableValue(false)}
+          };
+          result->Success(flutter::EncodableValue(sensor_map));
+        } else {
+          result->NotImplemented();
+        }
+      });
+
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {

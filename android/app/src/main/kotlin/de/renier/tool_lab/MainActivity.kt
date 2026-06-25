@@ -18,6 +18,10 @@ import android.os.Handler
 import android.os.Looper
 import android.os.BatteryManager
 import android.content.IntentFilter
+import android.os.StatFs
+import android.os.Environment
+import android.hardware.Sensor
+import android.hardware.SensorManager
 
 class MainActivity : FlutterActivity() {
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
@@ -27,6 +31,7 @@ class MainActivity : FlutterActivity() {
     private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
     private val GPS_INFO_CHANNEL = "de.renier.tool_lab/gps_info"
     private val BATTERY_DETAILS_CHANNEL = "de.renier.tool_lab/battery_details"
+    private val DEVICE_INFO_CHANNEL = "de.renier.tool_lab/device_info"
 
     private var launchRoute: String? = null
     private var pendingSharedFiles: List<Map<String, String>>? = null
@@ -449,6 +454,48 @@ class MainActivity : FlutterActivity() {
                     }
                 } else {
                     result.notImplemented()
+                }
+            }
+
+        // Device Info MethodChannel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, DEVICE_INFO_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getStorageInfo" -> {
+                        try {
+                            val path = Environment.getDataDirectory().path
+                            val stat = StatFs(path)
+                            val blockSize = stat.blockSizeLong
+                            val availableBlocks = stat.availableBlocksLong
+                            val totalBlocks = stat.blockCountLong
+
+                            val details = mapOf(
+                                "free" to (availableBlocks * blockSize),
+                                "total" to (totalBlocks * blockSize)
+                            )
+                            result.success(details)
+                        } catch (e: Exception) {
+                            result.error("STORAGE_ERROR", e.message, null)
+                        }
+                    }
+                    "getSensorInfo" -> {
+                        try {
+                            val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+                            val sensors = mapOf(
+                                "accelerometer" to (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null),
+                                "gyroscope" to (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null),
+                                "magnetometer" to (sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) != null),
+                                "barometer" to (sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) != null),
+                                "light" to (sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null)
+                            )
+                            result.success(sensors)
+                        } catch (e: Exception) {
+                            result.error("SENSOR_ERROR", e.message, null)
+                        }
+                    }
+                    else -> {
+                        result.notImplemented()
+                    }
                 }
             }
     }

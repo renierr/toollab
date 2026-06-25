@@ -1,13 +1,16 @@
 import 'dart:async';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, NetworkInterface, InternetAddressType;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:nfc_manager/nfc_manager.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/battery_details_service.dart';
+import 'package:tool_lab/services/system_specs_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/theme/theme.dart';
 
@@ -44,6 +47,10 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
   Map<String, String> _hardwareInfo = {};
   Map<String, String> _displayInfo = {};
   Map<String, String> _generalInfo = {};
+  Map<String, String> _storageInfo = {};
+  Map<String, String> _networkInfo = {};
+  Map<String, String> _sensorsInfo = {};
+  Map<String, String> _appInfo = {};
 
   @override
   void initState() {
@@ -181,6 +188,111 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       _systemInfo = {'Error': e.toString()};
     }
 
+    // Fetch Storage and RAM
+    try {
+      final storage = await SystemSpecsService.getStorageInfo();
+      final totalStorageGb = storage['total']! / (1024 * 1024 * 1024);
+      final freeStorageGb = storage['free']! / (1024 * 1024 * 1024);
+      final usedStorageGb = totalStorageGb - freeStorageGb;
+      _storageInfo = {
+        'Total Space': totalStorageGb > 0
+            ? '${totalStorageGb.toStringAsFixed(2)} GB'
+            : 'N/A',
+        'Free Space': totalStorageGb > 0
+            ? '${freeStorageGb.toStringAsFixed(2)} GB'
+            : 'N/A',
+        'Used Space': totalStorageGb > 0
+            ? '${usedStorageGb.toStringAsFixed(2)} GB'
+            : 'N/A',
+      };
+
+      final memory = await SystemSpecsService.getMemoryInfo();
+      final totalMemoryGb = memory['total']! / (1024 * 1024 * 1024);
+      final freeMemoryGb = memory['free']! / (1024 * 1024 * 1024);
+      final usedMemoryGb = totalMemoryGb - freeMemoryGb;
+      if (totalMemoryGb > 0) {
+        _storageInfo['Total RAM'] = '${totalMemoryGb.toStringAsFixed(2)} GB';
+        _storageInfo['Available RAM'] = '${freeMemoryGb.toStringAsFixed(2)} GB';
+        _storageInfo['Used RAM'] = '${usedMemoryGb.toStringAsFixed(2)} GB';
+      }
+    } catch (e) {
+      debugPrint('[DeviceInfo] Failed to read storage/memory: $e');
+    }
+
+    // Fetch Network Info
+    try {
+      final Map<String, String> network = {};
+      final interfaces = await NetworkInterface.list(
+        includeLoopback: false,
+        type: InternetAddressType.any,
+      );
+      if (interfaces.isEmpty) {
+        network['Status'] = 'Disconnected';
+      } else {
+        network['Status'] = 'Connected';
+        for (final interface in interfaces) {
+          final name = interface.name.toLowerCase();
+          String type = 'Other';
+          if (name.contains('wlan') || name.contains('wifi')) {
+            type = 'Wi-Fi';
+          } else if (name.contains('eth')) {
+            type = 'Ethernet';
+          } else if (name.contains('rmnet') ||
+              name.contains('ccmni') ||
+              name.contains('ppp')) {
+            type = 'Cellular';
+          }
+          final ips = interface.addresses
+              .map((addr) => addr.address)
+              .join(', ');
+          if (ips.isNotEmpty) {
+            network['${interface.name} ($type)'] = ips;
+          }
+        }
+      }
+      _networkInfo = network;
+    } catch (e) {
+      debugPrint('[DeviceInfo] Failed to read network: $e');
+    }
+
+    // Fetch Sensors Info
+    try {
+      final sensors = await SystemSpecsService.getSensorInfo();
+      final availability = await NfcManager.instance.checkAvailability();
+      final String nfcStatus = availability == NfcAvailability.enabled
+          ? 'Available'
+          : (availability == NfcAvailability.disabled
+                ? 'Disabled'
+                : 'Not Supported');
+      _sensorsInfo = {
+        'Accelerometer': sensors['accelerometer']!
+            ? 'Available'
+            : 'Not Supported',
+        'Gyroscope': sensors['gyroscope']! ? 'Available' : 'Not Supported',
+        'Magnetometer': sensors['magnetometer']!
+            ? 'Available'
+            : 'Not Supported',
+        'Barometer': sensors['barometer']! ? 'Available' : 'Not Supported',
+        'Light Sensor': sensors['light']! ? 'Available' : 'Not Supported',
+        'NFC': nfcStatus,
+      };
+    } catch (e) {
+      debugPrint('[DeviceInfo] Failed to read sensors: $e');
+    }
+
+    // Fetch App Info
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      _appInfo = {
+        'App Name': packageInfo.appName,
+        'Package Name': packageInfo.packageName,
+        'Version': packageInfo.version,
+        'Build Number': packageInfo.buildNumber,
+      };
+    } catch (e) {
+      debugPrint('[DeviceInfo] Failed to read app info: $e');
+    }
+
     if (mounted) {
       final mediaQuery = MediaQuery.of(context);
       _displayInfo = {
@@ -260,6 +372,42 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
                   accentColor: AppTheme.accentAmber,
                   items: _generalInfo,
                 ),
+                if (_storageInfo.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  InfoCard(
+                    title: l10n.miscDeviceInfoStorage,
+                    icon: Icons.storage_outlined,
+                    accentColor: AppTheme.accentBlue,
+                    items: _storageInfo,
+                  ),
+                ],
+                if (_networkInfo.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  InfoCard(
+                    title: l10n.miscDeviceInfoNetwork,
+                    icon: Icons.wifi_outlined,
+                    accentColor: AppTheme.accentGreen,
+                    items: _networkInfo,
+                  ),
+                ],
+                if (_sensorsInfo.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  InfoCard(
+                    title: l10n.miscDeviceInfoSensors,
+                    icon: Icons.sensors_outlined,
+                    accentColor: AppTheme.accentTeal,
+                    items: _sensorsInfo,
+                  ),
+                ],
+                if (_appInfo.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  InfoCard(
+                    title: l10n.miscDeviceInfoAppInfo,
+                    icon: Icons.info_outline,
+                    accentColor: AppTheme.accentPurple,
+                    items: _appInfo,
+                  ),
+                ],
               ],
             ),
     );
