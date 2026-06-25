@@ -69,6 +69,19 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
         });
       });
       onDispose(() => _batterySubscription?.cancel());
+
+      final timer = Timer.periodic(const Duration(seconds: 5), (_) async {
+        if (!mounted) return;
+        final level = await _battery.batteryLevel;
+        final state = await _battery.batteryState;
+        final details = await BatteryDetailsService.getBatteryDetails();
+        setState(() {
+          _batteryLevel = level;
+          _batteryState = state;
+          _batteryDetails = details;
+        });
+      });
+      onDispose(() => timer.cancel());
     } catch (e) {
       debugPrint('[DeviceInfo] Failed to read battery: $e');
     }
