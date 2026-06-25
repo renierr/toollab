@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
 
@@ -45,6 +44,14 @@ class BatteryDetailsService {
   }
 
   static Future<BatteryDetails> _getAndroidBatteryDetails() async {
+    return _getBatteryDetailsFromChannel();
+  }
+
+  static Future<BatteryDetails> _getWindowsBatteryDetails() async {
+    return _getBatteryDetailsFromChannel();
+  }
+
+  static Future<BatteryDetails> _getBatteryDetailsFromChannel() async {
     try {
       final Map<dynamic, dynamic>? res = await _channel
           .invokeMethod<Map<dynamic, dynamic>>('getBatteryDetails');
@@ -58,7 +65,6 @@ class BatteryDetailsService {
           ? voltageMilliVolts / 1000.0
           : null;
       // Convert current from microamperes to Amperes.
-      // We take absolute value for current if we are charging to calculate charging speed correctly.
       final double? current = currentMicroAmps != 0
           ? currentMicroAmps / 1000000.0
           : null;
@@ -83,74 +89,6 @@ class BatteryDetailsService {
           if (absCurrent >= 1.8) {
             chargingSpeed = 'fast';
           } else if (absCurrent < 0.8) {
-            chargingSpeed = 'slow';
-          } else {
-            chargingSpeed = 'normal';
-          }
-        }
-      }
-
-      return BatteryDetails(
-        voltage: voltage,
-        current: current,
-        power: power,
-        isCharging: isCharging,
-        chargingSpeed: chargingSpeed,
-      );
-    } catch (_) {
-      return BatteryDetails.unknown();
-    }
-  }
-
-  static Future<BatteryDetails> _getWindowsBatteryDetails() async {
-    try {
-      // Run PowerShell command to query BatteryStatus from root/wmi
-      final ProcessResult result = await Process.run('powershell.exe', [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        'Get-CimInstance -Namespace "root/wmi" -ClassName "BatteryStatus" | Select-Object -Property Charging, Discharging, Rate, Voltage | ConvertTo-Json',
-      ]);
-
-      if (result.exitCode != 0 || (result.stdout as String).trim().isEmpty) {
-        return BatteryDetails.unknown();
-      }
-
-      final String stdout = result.stdout as String;
-      final dynamic decoded = jsonDecode(stdout);
-
-      Map<String, dynamic> data;
-      if (decoded is List) {
-        if (decoded.isEmpty) return BatteryDetails.unknown();
-        data = Map<String, dynamic>.from(decoded.first as Map);
-      } else if (decoded is Map) {
-        data = Map<String, dynamic>.from(decoded);
-      } else {
-        return BatteryDetails.unknown();
-      }
-
-      final bool isCharging = data['Charging'] as bool? ?? false;
-      final int rateMilliWatts = data['Rate'] as int? ?? 0;
-      final int voltageMilliVolts = data['Voltage'] as int? ?? 0;
-
-      final double? voltage = voltageMilliVolts > 0
-          ? voltageMilliVolts / 1000.0
-          : null;
-      final double? power = rateMilliWatts != 0
-          ? (rateMilliWatts / 1000.0).abs()
-          : null;
-
-      double? current;
-      if (power != null && voltage != null && voltage > 0) {
-        current = power / voltage;
-      }
-
-      String chargingSpeed = 'unknown';
-      if (isCharging) {
-        if (power != null) {
-          if (power >= 10.0) {
-            chargingSpeed = 'fast';
-          } else if (power < 4.5) {
             chargingSpeed = 'slow';
           } else {
             chargingSpeed = 'normal';
