@@ -4892,6 +4892,42 @@ abstract class AppLocalizations {
   /// **'Use in Calculator'**
   String get qrResultUseInCalc;
 
+  /// No description provided for @qrResultSimulatePasskey.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate Passkey'**
+  String get qrResultSimulatePasskey;
+
+  /// No description provided for @qrPasskeySimTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Passkey Simulator'**
+  String get qrPasskeySimTitle;
+
+  /// No description provided for @qrPasskeySimSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Mock Passkey successfully signed the request!'**
+  String get qrPasskeySimSuccess;
+
+  /// No description provided for @qrPasskeySimPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm biometric fingerprint or PIN to authorize authentication.'**
+  String get qrPasskeySimPrompt;
+
+  /// No description provided for @qrPasskeySimUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User: alice@example.com'**
+  String get qrPasskeySimUser;
+
+  /// No description provided for @qrPasskeySimDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Domain: secure.login'**
+  String get qrPasskeySimDomain;
+
   /// No description provided for @qrTypeText.
   ///
   /// In en, this message translates to:

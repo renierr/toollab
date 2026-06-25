@@ -2724,6 +2724,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qrResultUseInCalc => 'Use in Calculator';
 
   @override
+  String get qrResultSimulatePasskey => 'Simulate Passkey';
+
+  @override
+  String get qrPasskeySimTitle => 'Passkey Simulator';
+
+  @override
+  String get qrPasskeySimSuccess =>
+      'Mock Passkey successfully signed the request!';
+
+  @override
+  String get qrPasskeySimPrompt =>
+      'Confirm biometric fingerprint or PIN to authorize authentication.';
+
+  @override
+  String get qrPasskeySimUser => 'User: alice@example.com';
+
+  @override
+  String get qrPasskeySimDomain => 'Domain: secure.login';
+
+  @override
   String get qrTypeText => 'Text';
 
   @override

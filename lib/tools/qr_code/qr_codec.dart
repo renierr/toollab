@@ -49,7 +49,7 @@ class QrCodec {
   /// Returns the decoded text, bounding box, and size, or null when nothing is detected.
   static Future<QrDecodeResult?> decodeImageFile(String path) async {
     try {
-      final Code result = await zx.readBarcodeImagePathString(
+      var result = await zx.readBarcodeImagePathString(
         path,
         DecodeParams(
           // readBarcodeImagePath feeds the decoder RGB bytes, so the image
@@ -61,6 +61,21 @@ class QrCodec {
           tryInverted: true,
         ),
       );
+
+      // Fallback to luminance (grayscale/optimized black-and-white) if RGB decoding fails.
+      if (!result.isValid || result.text == null || result.text!.isEmpty) {
+        result = await zx.readBarcodeImagePathString(
+          path,
+          DecodeParams(
+            imageFormat: ImageFormat.lum,
+            format: Format.any,
+            tryHarder: true,
+            tryRotate: true,
+            tryInverted: true,
+          ),
+        );
+      }
+
       final text = result.text;
       if (result.isValid && text != null && text.isNotEmpty) {
         Size? size;

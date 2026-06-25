@@ -2747,6 +2747,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get qrResultUseInCalc => 'Im Rechner verwenden';
 
   @override
+  String get qrResultSimulatePasskey => 'Passkey simulieren';
+
+  @override
+  String get qrPasskeySimTitle => 'Passkey-Simulator';
+
+  @override
+  String get qrPasskeySimSuccess =>
+      'Mock-Passkey hat die Anfrage erfolgreich signiert!';
+
+  @override
+  String get qrPasskeySimPrompt =>
+      'Bestätigen Sie Ihren Fingerabdruck oder PIN, um die Authentifizierung freizugeben.';
+
+  @override
+  String get qrPasskeySimUser => 'Benutzer: alice@example.com';
+
+  @override
+  String get qrPasskeySimDomain => 'Domain: secure.login';
+
+  @override
   String get qrTypeText => 'Text';
 
   @override

@@ -11,6 +11,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/info_card.dart';
+import 'passkey_sim_dialog.dart';
 
 /// Shows a decoded scan result with quick actions (open / copy / share) and a
 /// button to resume scanning.
@@ -318,6 +319,19 @@ class QrResultCard extends StatelessWidget {
                         onPressed: () => _open(context),
                         icon: Icon(_openIcon(), size: 18),
                         label: Text(_openLabel(l10n)),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: accentColor,
+                        ),
+                      ),
+                    if (_detectKind() == _ScanKind.fido)
+                      FilledButton.icon(
+                        onPressed: () => PasskeySimDialog.show(
+                          context,
+                          text.trim(),
+                          accentColor,
+                        ),
+                        icon: const Icon(Icons.fingerprint, size: 18),
+                        label: Text(l10n.qrResultSimulatePasskey),
                         style: FilledButton.styleFrom(
                           backgroundColor: accentColor,
                         ),
