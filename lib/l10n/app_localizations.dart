@@ -6589,6 +6589,774 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unsaved Changes'**
   String get sketchInfoUnsavedChanges;
+
+  /// No description provided for @toolNameUnitConverter.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit Converter'**
+  String get toolNameUnitConverter;
+
+  /// No description provided for @toolDescUnitConverter.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert between units across many categories'**
+  String get toolDescUnitConverter;
+
+  /// No description provided for @ucFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get ucFrom;
+
+  /// No description provided for @ucTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get ucTo;
+
+  /// No description provided for @ucSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap units'**
+  String get ucSwap;
+
+  /// No description provided for @ucCopyResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy result'**
+  String get ucCopyResult;
+
+  /// No description provided for @ucCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get ucCopied;
+
+  /// No description provided for @ucValueHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter value'**
+  String get ucValueHint;
+
+  /// No description provided for @ucAllUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'All units'**
+  String get ucAllUnits;
+
+  /// No description provided for @ucCatLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Length'**
+  String get ucCatLength;
+
+  /// No description provided for @ucCatMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Mass'**
+  String get ucCatMass;
+
+  /// No description provided for @ucCatTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get ucCatTemperature;
+
+  /// No description provided for @ucCatArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Area'**
+  String get ucCatArea;
+
+  /// No description provided for @ucCatVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get ucCatVolume;
+
+  /// No description provided for @ucCatSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get ucCatSpeed;
+
+  /// No description provided for @ucCatTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get ucCatTime;
+
+  /// No description provided for @ucCatData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get ucCatData;
+
+  /// No description provided for @ucCatPressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Pressure'**
+  String get ucCatPressure;
+
+  /// No description provided for @ucCatEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy'**
+  String get ucCatEnergy;
+
+  /// No description provided for @ucCatPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get ucCatPower;
+
+  /// No description provided for @ucCatAngle.
+  ///
+  /// In en, this message translates to:
+  /// **'Angle'**
+  String get ucCatAngle;
+
+  /// No description provided for @ucCatFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get ucCatFrequency;
+
+  /// No description provided for @ucCatDataRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Rate'**
+  String get ucCatDataRate;
+
+  /// No description provided for @ucCatFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel Economy'**
+  String get ucCatFuel;
+
+  /// No description provided for @ucuMeter.
+  ///
+  /// In en, this message translates to:
+  /// **'Meter'**
+  String get ucuMeter;
+
+  /// No description provided for @ucuKilometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilometer'**
+  String get ucuKilometer;
+
+  /// No description provided for @ucuCentimeter.
+  ///
+  /// In en, this message translates to:
+  /// **'Centimeter'**
+  String get ucuCentimeter;
+
+  /// No description provided for @ucuMillimeter.
+  ///
+  /// In en, this message translates to:
+  /// **'Millimeter'**
+  String get ucuMillimeter;
+
+  /// No description provided for @ucuMile.
+  ///
+  /// In en, this message translates to:
+  /// **'Mile'**
+  String get ucuMile;
+
+  /// No description provided for @ucuYard.
+  ///
+  /// In en, this message translates to:
+  /// **'Yard'**
+  String get ucuYard;
+
+  /// No description provided for @ucuFoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Foot'**
+  String get ucuFoot;
+
+  /// No description provided for @ucuInch.
+  ///
+  /// In en, this message translates to:
+  /// **'Inch'**
+  String get ucuInch;
+
+  /// No description provided for @ucuKilogram.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilogram'**
+  String get ucuKilogram;
+
+  /// No description provided for @ucuGram.
+  ///
+  /// In en, this message translates to:
+  /// **'Gram'**
+  String get ucuGram;
+
+  /// No description provided for @ucuMilligram.
+  ///
+  /// In en, this message translates to:
+  /// **'Milligram'**
+  String get ucuMilligram;
+
+  /// No description provided for @ucuMetricTon.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric ton'**
+  String get ucuMetricTon;
+
+  /// No description provided for @ucuPound.
+  ///
+  /// In en, this message translates to:
+  /// **'Pound'**
+  String get ucuPound;
+
+  /// No description provided for @ucuOunce.
+  ///
+  /// In en, this message translates to:
+  /// **'Ounce'**
+  String get ucuOunce;
+
+  /// No description provided for @ucuStone.
+  ///
+  /// In en, this message translates to:
+  /// **'Stone'**
+  String get ucuStone;
+
+  /// No description provided for @ucuUsTon.
+  ///
+  /// In en, this message translates to:
+  /// **'US ton'**
+  String get ucuUsTon;
+
+  /// No description provided for @ucuCelsius.
+  ///
+  /// In en, this message translates to:
+  /// **'Celsius'**
+  String get ucuCelsius;
+
+  /// No description provided for @ucuFahrenheit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fahrenheit'**
+  String get ucuFahrenheit;
+
+  /// No description provided for @ucuKelvin.
+  ///
+  /// In en, this message translates to:
+  /// **'Kelvin'**
+  String get ucuKelvin;
+
+  /// No description provided for @ucuRankine.
+  ///
+  /// In en, this message translates to:
+  /// **'Rankine'**
+  String get ucuRankine;
+
+  /// No description provided for @ucuSquareMeter.
+  ///
+  /// In en, this message translates to:
+  /// **'Square meter'**
+  String get ucuSquareMeter;
+
+  /// No description provided for @ucuSquareKilometer.
+  ///
+  /// In en, this message translates to:
+  /// **'Square kilometer'**
+  String get ucuSquareKilometer;
+
+  /// No description provided for @ucuSquareCentimeter.
+  ///
+  /// In en, this message translates to:
+  /// **'Square centimeter'**
+  String get ucuSquareCentimeter;
+
+  /// No description provided for @ucuHectare.
+  ///
+  /// In en, this message translates to:
+  /// **'Hectare'**
+  String get ucuHectare;
+
+  /// No description provided for @ucuSquareMile.
+  ///
+  /// In en, this message translates to:
+  /// **'Square mile'**
+  String get ucuSquareMile;
+
+  /// No description provided for @ucuAcre.
+  ///
+  /// In en, this message translates to:
+  /// **'Acre'**
+  String get ucuAcre;
+
+  /// No description provided for @ucuSquareFoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Square foot'**
+  String get ucuSquareFoot;
+
+  /// No description provided for @ucuLiter.
+  ///
+  /// In en, this message translates to:
+  /// **'Liter'**
+  String get ucuLiter;
+
+  /// No description provided for @ucuMilliliter.
+  ///
+  /// In en, this message translates to:
+  /// **'Milliliter'**
+  String get ucuMilliliter;
+
+  /// No description provided for @ucuCubicMeter.
+  ///
+  /// In en, this message translates to:
+  /// **'Cubic meter'**
+  String get ucuCubicMeter;
+
+  /// No description provided for @ucuGallonUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallon (US)'**
+  String get ucuGallonUs;
+
+  /// No description provided for @ucuQuartUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Quart (US)'**
+  String get ucuQuartUs;
+
+  /// No description provided for @ucuPintUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Pint (US)'**
+  String get ucuPintUs;
+
+  /// No description provided for @ucuCupUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Cup (US)'**
+  String get ucuCupUs;
+
+  /// No description provided for @ucuFluidOunceUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Fluid ounce (US)'**
+  String get ucuFluidOunceUs;
+
+  /// No description provided for @ucuMeterPerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Meter per second'**
+  String get ucuMeterPerSecond;
+
+  /// No description provided for @ucuKilometerPerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilometer per hour'**
+  String get ucuKilometerPerHour;
+
+  /// No description provided for @ucuMilePerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Mile per hour'**
+  String get ucuMilePerHour;
+
+  /// No description provided for @ucuFootPerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Foot per second'**
+  String get ucuFootPerSecond;
+
+  /// No description provided for @ucuKnot.
+  ///
+  /// In en, this message translates to:
+  /// **'Knot'**
+  String get ucuKnot;
+
+  /// No description provided for @ucuMach.
+  ///
+  /// In en, this message translates to:
+  /// **'Mach'**
+  String get ucuMach;
+
+  /// No description provided for @ucuSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Second'**
+  String get ucuSecond;
+
+  /// No description provided for @ucuMillisecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Millisecond'**
+  String get ucuMillisecond;
+
+  /// No description provided for @ucuMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Minute'**
+  String get ucuMinute;
+
+  /// No description provided for @ucuHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Hour'**
+  String get ucuHour;
+
+  /// No description provided for @ucuDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get ucuDay;
+
+  /// No description provided for @ucuWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get ucuWeek;
+
+  /// No description provided for @ucuMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get ucuMonth;
+
+  /// No description provided for @ucuYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get ucuYear;
+
+  /// No description provided for @ucuByte.
+  ///
+  /// In en, this message translates to:
+  /// **'Byte'**
+  String get ucuByte;
+
+  /// No description provided for @ucuKilobyte.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilobyte'**
+  String get ucuKilobyte;
+
+  /// No description provided for @ucuMegabyte.
+  ///
+  /// In en, this message translates to:
+  /// **'Megabyte'**
+  String get ucuMegabyte;
+
+  /// No description provided for @ucuGigabyte.
+  ///
+  /// In en, this message translates to:
+  /// **'Gigabyte'**
+  String get ucuGigabyte;
+
+  /// No description provided for @ucuTerabyte.
+  ///
+  /// In en, this message translates to:
+  /// **'Terabyte'**
+  String get ucuTerabyte;
+
+  /// No description provided for @ucuKibibyte.
+  ///
+  /// In en, this message translates to:
+  /// **'Kibibyte'**
+  String get ucuKibibyte;
+
+  /// No description provided for @ucuMebibyte.
+  ///
+  /// In en, this message translates to:
+  /// **'Mebibyte'**
+  String get ucuMebibyte;
+
+  /// No description provided for @ucuGibibyte.
+  ///
+  /// In en, this message translates to:
+  /// **'Gibibyte'**
+  String get ucuGibibyte;
+
+  /// No description provided for @ucuBit.
+  ///
+  /// In en, this message translates to:
+  /// **'Bit'**
+  String get ucuBit;
+
+  /// No description provided for @ucuMegabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Megabit'**
+  String get ucuMegabit;
+
+  /// No description provided for @ucuPascal.
+  ///
+  /// In en, this message translates to:
+  /// **'Pascal'**
+  String get ucuPascal;
+
+  /// No description provided for @ucuKilopascal.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilopascal'**
+  String get ucuKilopascal;
+
+  /// No description provided for @ucuBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar'**
+  String get ucuBar;
+
+  /// No description provided for @ucuMillibar.
+  ///
+  /// In en, this message translates to:
+  /// **'Millibar'**
+  String get ucuMillibar;
+
+  /// No description provided for @ucuAtmosphere.
+  ///
+  /// In en, this message translates to:
+  /// **'Atmosphere'**
+  String get ucuAtmosphere;
+
+  /// No description provided for @ucuTorr.
+  ///
+  /// In en, this message translates to:
+  /// **'Torr'**
+  String get ucuTorr;
+
+  /// No description provided for @ucuPsi.
+  ///
+  /// In en, this message translates to:
+  /// **'Pounds per square inch'**
+  String get ucuPsi;
+
+  /// No description provided for @ucuMmhg.
+  ///
+  /// In en, this message translates to:
+  /// **'Millimeter of mercury'**
+  String get ucuMmhg;
+
+  /// No description provided for @ucuJoule.
+  ///
+  /// In en, this message translates to:
+  /// **'Joule'**
+  String get ucuJoule;
+
+  /// No description provided for @ucuKilojoule.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilojoule'**
+  String get ucuKilojoule;
+
+  /// No description provided for @ucuCalorie.
+  ///
+  /// In en, this message translates to:
+  /// **'Calorie'**
+  String get ucuCalorie;
+
+  /// No description provided for @ucuKilocalorie.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilocalorie'**
+  String get ucuKilocalorie;
+
+  /// No description provided for @ucuWattHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Watt hour'**
+  String get ucuWattHour;
+
+  /// No description provided for @ucuKilowattHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilowatt hour'**
+  String get ucuKilowattHour;
+
+  /// No description provided for @ucuElectronvolt.
+  ///
+  /// In en, this message translates to:
+  /// **'Electronvolt'**
+  String get ucuElectronvolt;
+
+  /// No description provided for @ucuBtu.
+  ///
+  /// In en, this message translates to:
+  /// **'British thermal unit'**
+  String get ucuBtu;
+
+  /// No description provided for @ucuWatt.
+  ///
+  /// In en, this message translates to:
+  /// **'Watt'**
+  String get ucuWatt;
+
+  /// No description provided for @ucuKilowatt.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilowatt'**
+  String get ucuKilowatt;
+
+  /// No description provided for @ucuMegawatt.
+  ///
+  /// In en, this message translates to:
+  /// **'Megawatt'**
+  String get ucuMegawatt;
+
+  /// No description provided for @ucuMilliwatt.
+  ///
+  /// In en, this message translates to:
+  /// **'Milliwatt'**
+  String get ucuMilliwatt;
+
+  /// No description provided for @ucuHorsepower.
+  ///
+  /// In en, this message translates to:
+  /// **'Horsepower'**
+  String get ucuHorsepower;
+
+  /// No description provided for @ucuMetricHorsepower.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric horsepower'**
+  String get ucuMetricHorsepower;
+
+  /// No description provided for @ucuDegree.
+  ///
+  /// In en, this message translates to:
+  /// **'Degree'**
+  String get ucuDegree;
+
+  /// No description provided for @ucuRadian.
+  ///
+  /// In en, this message translates to:
+  /// **'Radian'**
+  String get ucuRadian;
+
+  /// No description provided for @ucuGradian.
+  ///
+  /// In en, this message translates to:
+  /// **'Gradian'**
+  String get ucuGradian;
+
+  /// No description provided for @ucuArcminute.
+  ///
+  /// In en, this message translates to:
+  /// **'Arcminute'**
+  String get ucuArcminute;
+
+  /// No description provided for @ucuArcsecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Arcsecond'**
+  String get ucuArcsecond;
+
+  /// No description provided for @ucuTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn'**
+  String get ucuTurn;
+
+  /// No description provided for @ucuHertz.
+  ///
+  /// In en, this message translates to:
+  /// **'Hertz'**
+  String get ucuHertz;
+
+  /// No description provided for @ucuKilohertz.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilohertz'**
+  String get ucuKilohertz;
+
+  /// No description provided for @ucuMegahertz.
+  ///
+  /// In en, this message translates to:
+  /// **'Megahertz'**
+  String get ucuMegahertz;
+
+  /// No description provided for @ucuGigahertz.
+  ///
+  /// In en, this message translates to:
+  /// **'Gigahertz'**
+  String get ucuGigahertz;
+
+  /// No description provided for @ucuRpm.
+  ///
+  /// In en, this message translates to:
+  /// **'Revolutions per minute'**
+  String get ucuRpm;
+
+  /// No description provided for @ucuBitPerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Bit per second'**
+  String get ucuBitPerSecond;
+
+  /// No description provided for @ucuKilobitPerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilobit per second'**
+  String get ucuKilobitPerSecond;
+
+  /// No description provided for @ucuMegabitPerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Megabit per second'**
+  String get ucuMegabitPerSecond;
+
+  /// No description provided for @ucuGigabitPerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Gigabit per second'**
+  String get ucuGigabitPerSecond;
+
+  /// No description provided for @ucuBytePerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Byte per second'**
+  String get ucuBytePerSecond;
+
+  /// No description provided for @ucuKilobytePerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilobyte per second'**
+  String get ucuKilobytePerSecond;
+
+  /// No description provided for @ucuMegabytePerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Megabyte per second'**
+  String get ucuMegabytePerSecond;
+
+  /// No description provided for @ucuGigabytePerSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Gigabyte per second'**
+  String get ucuGigabytePerSecond;
+
+  /// No description provided for @ucuKmPerLiter.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilometers per liter'**
+  String get ucuKmPerLiter;
+
+  /// No description provided for @ucuLiterPer100km.
+  ///
+  /// In en, this message translates to:
+  /// **'Liters per 100 km'**
+  String get ucuLiterPer100km;
+
+  /// No description provided for @ucuMpgUs.
+  ///
+  /// In en, this message translates to:
+  /// **'Miles per gallon (US)'**
+  String get ucuMpgUs;
+
+  /// No description provided for @ucuMpgUk.
+  ///
+  /// In en, this message translates to:
+  /// **'Miles per gallon (UK)'**
+  String get ucuMpgUk;
 }
 
 class _AppLocalizationsDelegate

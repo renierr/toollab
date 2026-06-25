@@ -3650,4 +3650,389 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sketchInfoUnsavedChanges => 'Unsaved Changes';
+
+  @override
+  String get toolNameUnitConverter => 'Unit Converter';
+
+  @override
+  String get toolDescUnitConverter =>
+      'Convert between units across many categories';
+
+  @override
+  String get ucFrom => 'From';
+
+  @override
+  String get ucTo => 'To';
+
+  @override
+  String get ucSwap => 'Swap units';
+
+  @override
+  String get ucCopyResult => 'Copy result';
+
+  @override
+  String get ucCopied => 'Copied to clipboard';
+
+  @override
+  String get ucValueHint => 'Enter value';
+
+  @override
+  String get ucAllUnits => 'All units';
+
+  @override
+  String get ucCatLength => 'Length';
+
+  @override
+  String get ucCatMass => 'Mass';
+
+  @override
+  String get ucCatTemperature => 'Temperature';
+
+  @override
+  String get ucCatArea => 'Area';
+
+  @override
+  String get ucCatVolume => 'Volume';
+
+  @override
+  String get ucCatSpeed => 'Speed';
+
+  @override
+  String get ucCatTime => 'Time';
+
+  @override
+  String get ucCatData => 'Data';
+
+  @override
+  String get ucCatPressure => 'Pressure';
+
+  @override
+  String get ucCatEnergy => 'Energy';
+
+  @override
+  String get ucCatPower => 'Power';
+
+  @override
+  String get ucCatAngle => 'Angle';
+
+  @override
+  String get ucCatFrequency => 'Frequency';
+
+  @override
+  String get ucCatDataRate => 'Data Rate';
+
+  @override
+  String get ucCatFuel => 'Fuel Economy';
+
+  @override
+  String get ucuMeter => 'Meter';
+
+  @override
+  String get ucuKilometer => 'Kilometer';
+
+  @override
+  String get ucuCentimeter => 'Centimeter';
+
+  @override
+  String get ucuMillimeter => 'Millimeter';
+
+  @override
+  String get ucuMile => 'Mile';
+
+  @override
+  String get ucuYard => 'Yard';
+
+  @override
+  String get ucuFoot => 'Foot';
+
+  @override
+  String get ucuInch => 'Inch';
+
+  @override
+  String get ucuKilogram => 'Kilogram';
+
+  @override
+  String get ucuGram => 'Gram';
+
+  @override
+  String get ucuMilligram => 'Milligram';
+
+  @override
+  String get ucuMetricTon => 'Metric ton';
+
+  @override
+  String get ucuPound => 'Pound';
+
+  @override
+  String get ucuOunce => 'Ounce';
+
+  @override
+  String get ucuStone => 'Stone';
+
+  @override
+  String get ucuUsTon => 'US ton';
+
+  @override
+  String get ucuCelsius => 'Celsius';
+
+  @override
+  String get ucuFahrenheit => 'Fahrenheit';
+
+  @override
+  String get ucuKelvin => 'Kelvin';
+
+  @override
+  String get ucuRankine => 'Rankine';
+
+  @override
+  String get ucuSquareMeter => 'Square meter';
+
+  @override
+  String get ucuSquareKilometer => 'Square kilometer';
+
+  @override
+  String get ucuSquareCentimeter => 'Square centimeter';
+
+  @override
+  String get ucuHectare => 'Hectare';
+
+  @override
+  String get ucuSquareMile => 'Square mile';
+
+  @override
+  String get ucuAcre => 'Acre';
+
+  @override
+  String get ucuSquareFoot => 'Square foot';
+
+  @override
+  String get ucuLiter => 'Liter';
+
+  @override
+  String get ucuMilliliter => 'Milliliter';
+
+  @override
+  String get ucuCubicMeter => 'Cubic meter';
+
+  @override
+  String get ucuGallonUs => 'Gallon (US)';
+
+  @override
+  String get ucuQuartUs => 'Quart (US)';
+
+  @override
+  String get ucuPintUs => 'Pint (US)';
+
+  @override
+  String get ucuCupUs => 'Cup (US)';
+
+  @override
+  String get ucuFluidOunceUs => 'Fluid ounce (US)';
+
+  @override
+  String get ucuMeterPerSecond => 'Meter per second';
+
+  @override
+  String get ucuKilometerPerHour => 'Kilometer per hour';
+
+  @override
+  String get ucuMilePerHour => 'Mile per hour';
+
+  @override
+  String get ucuFootPerSecond => 'Foot per second';
+
+  @override
+  String get ucuKnot => 'Knot';
+
+  @override
+  String get ucuMach => 'Mach';
+
+  @override
+  String get ucuSecond => 'Second';
+
+  @override
+  String get ucuMillisecond => 'Millisecond';
+
+  @override
+  String get ucuMinute => 'Minute';
+
+  @override
+  String get ucuHour => 'Hour';
+
+  @override
+  String get ucuDay => 'Day';
+
+  @override
+  String get ucuWeek => 'Week';
+
+  @override
+  String get ucuMonth => 'Month';
+
+  @override
+  String get ucuYear => 'Year';
+
+  @override
+  String get ucuByte => 'Byte';
+
+  @override
+  String get ucuKilobyte => 'Kilobyte';
+
+  @override
+  String get ucuMegabyte => 'Megabyte';
+
+  @override
+  String get ucuGigabyte => 'Gigabyte';
+
+  @override
+  String get ucuTerabyte => 'Terabyte';
+
+  @override
+  String get ucuKibibyte => 'Kibibyte';
+
+  @override
+  String get ucuMebibyte => 'Mebibyte';
+
+  @override
+  String get ucuGibibyte => 'Gibibyte';
+
+  @override
+  String get ucuBit => 'Bit';
+
+  @override
+  String get ucuMegabit => 'Megabit';
+
+  @override
+  String get ucuPascal => 'Pascal';
+
+  @override
+  String get ucuKilopascal => 'Kilopascal';
+
+  @override
+  String get ucuBar => 'Bar';
+
+  @override
+  String get ucuMillibar => 'Millibar';
+
+  @override
+  String get ucuAtmosphere => 'Atmosphere';
+
+  @override
+  String get ucuTorr => 'Torr';
+
+  @override
+  String get ucuPsi => 'Pounds per square inch';
+
+  @override
+  String get ucuMmhg => 'Millimeter of mercury';
+
+  @override
+  String get ucuJoule => 'Joule';
+
+  @override
+  String get ucuKilojoule => 'Kilojoule';
+
+  @override
+  String get ucuCalorie => 'Calorie';
+
+  @override
+  String get ucuKilocalorie => 'Kilocalorie';
+
+  @override
+  String get ucuWattHour => 'Watt hour';
+
+  @override
+  String get ucuKilowattHour => 'Kilowatt hour';
+
+  @override
+  String get ucuElectronvolt => 'Electronvolt';
+
+  @override
+  String get ucuBtu => 'British thermal unit';
+
+  @override
+  String get ucuWatt => 'Watt';
+
+  @override
+  String get ucuKilowatt => 'Kilowatt';
+
+  @override
+  String get ucuMegawatt => 'Megawatt';
+
+  @override
+  String get ucuMilliwatt => 'Milliwatt';
+
+  @override
+  String get ucuHorsepower => 'Horsepower';
+
+  @override
+  String get ucuMetricHorsepower => 'Metric horsepower';
+
+  @override
+  String get ucuDegree => 'Degree';
+
+  @override
+  String get ucuRadian => 'Radian';
+
+  @override
+  String get ucuGradian => 'Gradian';
+
+  @override
+  String get ucuArcminute => 'Arcminute';
+
+  @override
+  String get ucuArcsecond => 'Arcsecond';
+
+  @override
+  String get ucuTurn => 'Turn';
+
+  @override
+  String get ucuHertz => 'Hertz';
+
+  @override
+  String get ucuKilohertz => 'Kilohertz';
+
+  @override
+  String get ucuMegahertz => 'Megahertz';
+
+  @override
+  String get ucuGigahertz => 'Gigahertz';
+
+  @override
+  String get ucuRpm => 'Revolutions per minute';
+
+  @override
+  String get ucuBitPerSecond => 'Bit per second';
+
+  @override
+  String get ucuKilobitPerSecond => 'Kilobit per second';
+
+  @override
+  String get ucuMegabitPerSecond => 'Megabit per second';
+
+  @override
+  String get ucuGigabitPerSecond => 'Gigabit per second';
+
+  @override
+  String get ucuBytePerSecond => 'Byte per second';
+
+  @override
+  String get ucuKilobytePerSecond => 'Kilobyte per second';
+
+  @override
+  String get ucuMegabytePerSecond => 'Megabyte per second';
+
+  @override
+  String get ucuGigabytePerSecond => 'Gigabyte per second';
+
+  @override
+  String get ucuKmPerLiter => 'Kilometers per liter';
+
+  @override
+  String get ucuLiterPer100km => 'Liters per 100 km';
+
+  @override
+  String get ucuMpgUs => 'Miles per gallon (US)';
+
+  @override
+  String get ucuMpgUk => 'Miles per gallon (UK)';
 }
