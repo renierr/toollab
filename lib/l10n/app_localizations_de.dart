@@ -1349,6 +1349,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String get miscBatterySaverActive => 'Energiesparen aktiv';
 
   @override
+  String get miscBatteryChargingSlow => 'Langsames Laden';
+
+  @override
+  String get miscBatteryChargingNormal => 'Laden';
+
+  @override
+  String get miscBatteryChargingFast => 'Schnellladen';
+
+  @override
+  String get miscBatteryVoltage => 'Spannung';
+
+  @override
+  String get miscBatteryCurrent => 'Stromstärke';
+
+  @override
+  String get miscBatteryPower => 'Leistung';
+
+  @override
   String get miscDeviceInfoSystemOs => 'System & Betriebssystem';
 
   @override

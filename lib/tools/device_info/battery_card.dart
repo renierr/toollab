@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/battery_details_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/status_badge.dart';
 
@@ -8,12 +9,14 @@ class BatteryCard extends StatelessWidget {
   final int level;
   final BatteryState state;
   final bool isSaverMode;
+  final BatteryDetails? details;
 
   const BatteryCard({
     super.key,
     required this.level,
     required this.state,
     required this.isSaverMode,
+    this.details,
   });
 
   @override
@@ -67,7 +70,11 @@ class BatteryCard extends StatelessWidget {
                         isCharging
                             ? (state == BatteryState.full
                                   ? l10n.miscBatteryFullyCharged
-                                  : l10n.miscBatteryCharging)
+                                  : (details?.chargingSpeed == 'fast'
+                                        ? l10n.miscBatteryChargingFast
+                                        : details?.chargingSpeed == 'slow'
+                                        ? l10n.miscBatteryChargingSlow
+                                        : l10n.miscBatteryChargingNormal))
                             : l10n.miscBatteryDischarging,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withAlpha(140),
@@ -126,10 +133,70 @@ class BatteryCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (details != null &&
+                  (details!.voltage != null ||
+                      details!.current != null ||
+                      details!.power != null)) ...[
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (details!.voltage != null)
+                      _BatteryMetric(
+                        label: l10n.miscBatteryVoltage,
+                        value: '${details!.voltage!.toStringAsFixed(2)} V',
+                      ),
+                    if (details!.current != null)
+                      _BatteryMetric(
+                        label: l10n.miscBatteryCurrent,
+                        value:
+                            '${(details!.current!.abs() * 1000).toStringAsFixed(0)} mA',
+                      ),
+                    if (details!.power != null)
+                      _BatteryMetric(
+                        label: l10n.miscBatteryPower,
+                        value: '${details!.power!.toStringAsFixed(1)} W',
+                      ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BatteryMetric extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _BatteryMetric({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withAlpha(140),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+      ],
     );
   }
 }

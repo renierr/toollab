@@ -105,7 +105,8 @@ class UnitConverterState extends ChangeNotifier {
       final category = UnitCatalog.categoryById(settings[_keyCategory] ?? '');
       if (category != null) {
         _category = category;
-        _from = category.unitById(settings[_keyFrom] ?? '') ?? category.units.first;
+        _from =
+            category.unitById(settings[_keyFrom] ?? '') ?? category.units.first;
         _to =
             category.unitById(settings[_keyTo] ?? '') ??
             (category.units.length > 1

@@ -396,14 +396,24 @@ class UnitCatalog {
       icon: Icons.compress,
       name: (l) => l.ucCatPressure,
       units: [
-        UnitDef(id: 'pascal', symbol: 'Pa', factor: 1, name: (l) => l.ucuPascal),
+        UnitDef(
+          id: 'pascal',
+          symbol: 'Pa',
+          factor: 1,
+          name: (l) => l.ucuPascal,
+        ),
         UnitDef(
           id: 'kilopascal',
           symbol: 'kPa',
           factor: 1000,
           name: (l) => l.ucuKilopascal,
         ),
-        UnitDef(id: 'bar', symbol: 'bar', factor: 100000, name: (l) => l.ucuBar),
+        UnitDef(
+          id: 'bar',
+          symbol: 'bar',
+          factor: 100000,
+          name: (l) => l.ucuBar,
+        ),
         UnitDef(
           id: 'millibar',
           symbol: 'mbar',
@@ -557,7 +567,12 @@ class UnitCatalog {
           factor: 1 / 3600,
           name: (l) => l.ucuArcsecond,
         ),
-        UnitDef(id: 'turn', symbol: 'turn', factor: 360, name: (l) => l.ucuTurn),
+        UnitDef(
+          id: 'turn',
+          symbol: 'turn',
+          factor: 360,
+          name: (l) => l.ucuTurn,
+        ),
       ],
     ),
     // ------------------------------------------------------------- Frequency

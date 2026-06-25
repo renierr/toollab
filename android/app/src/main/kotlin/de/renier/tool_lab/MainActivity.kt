@@ -16,6 +16,8 @@ import android.location.LocationManager
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.os.BatteryManager
+import android.content.IntentFilter
 
 class MainActivity : FlutterActivity() {
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
@@ -24,6 +26,7 @@ class MainActivity : FlutterActivity() {
     private val WAKE_LOCK_CHANNEL = "de.renier.tool_lab/wake_lock"
     private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
     private val GPS_INFO_CHANNEL = "de.renier.tool_lab/gps_info"
+    private val BATTERY_DETAILS_CHANNEL = "de.renier.tool_lab/battery_details"
 
     private var launchRoute: String? = null
     private var pendingSharedFiles: List<Map<String, String>>? = null
@@ -413,11 +416,41 @@ class MainActivity : FlutterActivity() {
                     val providers = getProvidersInfo()
                     result.success(providers)
                 }
-                else -> {
+            }
+        }
+
+        // Battery Details MethodChannel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BATTERY_DETAILS_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                if (call.method == "getBatteryDetails") {
+                    try {
+                        val batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+                        val currentMicroAmps = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                            batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
+                        } else {
+                            0L
+                        }
+
+                        val intent = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+                        val voltageMilliVolts = intent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) ?: -1
+                        val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+                        val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
+                        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+
+                        val details = mapOf(
+                            "voltage" to voltageMilliVolts,
+                            "current" to currentMicroAmps,
+                            "isCharging" to isCharging,
+                            "pluggedType" to plugged
+                        )
+                        result.success(details)
+                    } catch (e: Exception) {
+                        result.error("BATTERY_ERROR", e.message, null)
+                    }
+                } else {
                     result.notImplemented()
                 }
             }
-        }
     }
 
     private fun startGpsInfoUpdates(): Boolean {

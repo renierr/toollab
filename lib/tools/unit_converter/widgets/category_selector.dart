@@ -33,9 +33,8 @@ class CategorySelector extends StatelessWidget {
             label: category.name(l10n),
             selected: selected,
             accent: accent,
-            onTap: () => context.read<UnitConverterState>().selectCategory(
-              category.id,
-            ),
+            onTap: () =>
+                context.read<UnitConverterState>().selectCategory(category.id),
             theme: theme,
           );
         },

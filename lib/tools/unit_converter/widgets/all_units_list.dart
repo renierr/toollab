@@ -99,9 +99,7 @@ class AllUnitsList extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontFeatures: const [FontFeature.tabularFigures()],
-                            color: isTo
-                                ? accent
-                                : theme.colorScheme.onSurface,
+                            color: isTo ? accent : theme.colorScheme.onSurface,
                           ),
                         ),
                       ),

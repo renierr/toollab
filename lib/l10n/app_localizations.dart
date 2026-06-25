@@ -2486,6 +2486,42 @@ abstract class AppLocalizations {
   /// **'Saver Active'**
   String get miscBatterySaverActive;
 
+  /// No description provided for @miscBatteryChargingSlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow Charging'**
+  String get miscBatteryChargingSlow;
+
+  /// No description provided for @miscBatteryChargingNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Charging'**
+  String get miscBatteryChargingNormal;
+
+  /// No description provided for @miscBatteryChargingFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast Charging'**
+  String get miscBatteryChargingFast;
+
+  /// No description provided for @miscBatteryVoltage.
+  ///
+  /// In en, this message translates to:
+  /// **'Voltage'**
+  String get miscBatteryVoltage;
+
+  /// No description provided for @miscBatteryCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get miscBatteryCurrent;
+
+  /// No description provided for @miscBatteryPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get miscBatteryPower;
+
   /// No description provided for @miscDeviceInfoSystemOs.
   ///
   /// In en, this message translates to:

@@ -7,6 +7,7 @@ import 'package:battery_plus/battery_plus.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/battery_details_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/theme/theme.dart';
 
@@ -30,6 +31,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
   bool _loading = true;
   int? _batteryLevel;
   BatteryState? _batteryState;
+  BatteryDetails? _batteryDetails;
   final bool _isBatterySaver = false;
   StreamSubscription<BatteryState>? _batterySubscription;
 
@@ -53,14 +55,17 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
     try {
       _batteryLevel = await _battery.batteryLevel;
       _batteryState = await _battery.batteryState;
+      _batteryDetails = await BatteryDetailsService.getBatteryDetails();
       _batterySubscription = _battery.onBatteryStateChanged.listen((
         state,
       ) async {
         if (!mounted) return;
         final level = await _battery.batteryLevel;
+        final details = await BatteryDetailsService.getBatteryDetails();
         setState(() {
           _batteryState = state;
           _batteryLevel = level;
+          _batteryDetails = details;
         });
       });
       onDispose(() => _batterySubscription?.cancel());
@@ -211,6 +216,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
                     level: _batteryLevel!,
                     state: _batteryState!,
                     isSaverMode: _isBatterySaver,
+                    details: _batteryDetails,
                   ),
                   const SizedBox(height: 12),
                 ],
