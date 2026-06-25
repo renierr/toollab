@@ -1,44 +1,20 @@
 package de.renier.tool_lab
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.os.PowerManager
-import android.provider.OpenableColumns
-import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import java.io.File
-import java.io.FileOutputStream
-import android.location.GnssStatus
-import android.location.LocationManager
-import android.content.Context
-import android.os.Handler
-import android.os.Looper
-import android.os.BatteryManager
-import android.content.IntentFilter
-import android.os.StatFs
-import android.os.Environment
-import android.hardware.Sensor
-import android.hardware.SensorManager
 
 class MainActivity : FlutterActivity() {
-    private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
     private val SHORTCUTS_CHANNEL = "de.renier.tool_lab/shortcuts"
-    private val SHARING_CHANNEL = "de.renier.tool_lab/sharing"
-    private val WAKE_LOCK_CHANNEL = "de.renier.tool_lab/wake_lock"
     private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
-    private val GPS_INFO_CHANNEL = "de.renier.tool_lab/gps_info"
-    private val BATTERY_DETAILS_CHANNEL = "de.renier.tool_lab/battery_details"
-    private val DEVICE_INFO_CHANNEL = "de.renier.tool_lab/device_info"
+    private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
+
+    private lateinit var gpsInfoHelper: GpsInfoHelper
+    private lateinit var wakeLockHelper: WakeLockHelper
 
     private var launchRoute: String? = null
-    private var pendingSharedFiles: List<Map<String, String>>? = null
-    private var partialWakeLock: PowerManager.WakeLock? = null
-    private var gpsInfoMethodChannel: MethodChannel? = null
-    private var gnssStatusCallback: Any? = null
-    private var locationManager: LocationManager? = null
 
     companion object {
         private const val ALIAS_PREFIX = "de.renier.tool_lab."
@@ -57,217 +33,57 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        handleIntent(intent)
+        gpsInfoHelper = GpsInfoHelper(this)
+        wakeLockHelper = WakeLockHelper(this)
+        resolveLaunchRoute(intent)
+        SharingHelper.handleIntent(this, intent, null)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handleIntent(intent)
+        val messenger = flutterEngine?.dartExecutor?.binaryMessenger
+        resolveLaunchRoute(intent)
+        SharingHelper.handleIntent(this, intent, messenger)
+        
         launchRoute?.let { route ->
-            flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
+            if (messenger != null) {
                 MethodChannel(messenger, SHORTCUTS_CHANNEL).invokeMethod("onShortcutRoute", route)
                 launchRoute = null
             }
         }
     }
 
-    private fun handleIntent(intent: Intent?) {
-        launchRoute = null
-        if (intent != null) {
-            val action = intent.action
-            val isSend = action == Intent.ACTION_SEND
-            val isSendMultiple = action == Intent.ACTION_SEND_MULTIPLE
-            val isView = action == Intent.ACTION_VIEW
+    override fun onDestroy() {
+        gpsInfoHelper.stopGpsInfoUpdates()
+        super.onDestroy()
+    }
 
-            if (isSend || isSendMultiple || isView) {
-                val uris = when {
-                    isSendMultiple -> {
-                        intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
-                    }
-                    isSend -> {
-                        intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)?.let { arrayListOf(it) }
-                    }
-                    else -> {
-                        intent.data?.let { arrayListOf(it) }
-                    }
-                }
-
-                if (uris != null && uris.isNotEmpty()) {
-                    try {
-                        val filesList = mutableListOf<Map<String, String>>()
-                        val cacheDir = File(cacheDir, "shared_files")
-                        if (!cacheDir.exists()) cacheDir.mkdirs()
-
-                        for (uri in uris) {
-                            val mimeType = intent.type ?: contentResolver.getType(uri) ?: "application/octet-stream"
-                            var name = "shared_file"
-                            var path: String? = null
-
-                            if (uri.scheme == "file") {
-                                path = uri.path
-                                if (path != null) {
-                                    name = File(path).name
-                                }
-                            }
-
-                            if (path == null) {
-                                val cursor = contentResolver.query(uri, null, null, null, null)
-                                cursor?.use {
-                                    if (it.moveToFirst()) {
-                                        val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                                        if (nameIndex != -1) {
-                                            name = it.getString(nameIndex)
-                                        }
-                                    }
-                                }
-
-                                val cleanName = name.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
-                                var tempFile = File(cacheDir, cleanName)
-                                if (tempFile.exists()) {
-                                    val base = cleanName.substringBeforeLast(".")
-                                    val ext = cleanName.substringAfterLast(".", "")
-                                    val extSuffix = if (ext.isNotEmpty()) ".$ext" else ""
-                                    var counter = 1
-                                    while (tempFile.exists()) {
-                                        tempFile = File(cacheDir, "${base}_$counter$extSuffix")
-                                        counter++
-                                    }
-                                }
-
-                                contentResolver.openInputStream(uri).use { input ->
-                                    FileOutputStream(tempFile).use { output ->
-                                        input?.copyTo(output)
-                                    }
-                                }
-                                path = tempFile.absolutePath
-                            }
-
-                            if (path != null) {
-                                filesList.add(mapOf(
-                                    "path" to path,
-                                    "name" to name,
-                                    "mimeType" to mimeType
-                                ))
-                            }
-                        }
-
-                        pendingSharedFiles = filesList
-
-                        // If app is already running, notify Flutter immediately
-                        flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
-                            if (filesList.size == 1) {
-                                MethodChannel(messenger, SHARING_CHANNEL).invokeMethod("onSharedFile", filesList.first())
-                            } else if (filesList.size > 1) {
-                                MethodChannel(messenger, SHARING_CHANNEL).invokeMethod("onSharedFiles", filesList)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-            } else if (intent.hasExtra("route")) {
-                launchRoute = intent.getStringExtra("route")
-            } else {
-                launchRoute = intent.component?.className?.let { aliasClassNameToRoute(it) }
-            }
+    private fun resolveLaunchRoute(intent: Intent?) {
+        if (intent == null) return
+        val action = intent.action
+        if (action == Intent.ACTION_SEND || action == Intent.ACTION_SEND_MULTIPLE || action == Intent.ACTION_VIEW) {
+            // Sharing intent - handled separately via SharingHelper
+            return
+        }
+        if (intent.hasExtra("route")) {
+            launchRoute = intent.getStringExtra("route")
+        } else {
+            launchRoute = intent.component?.className?.let { aliasClassNameToRoute(it) }
         }
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        val messenger = flutterEngine.dartExecutor.binaryMessenger
 
-        // Sharing MethodChannel
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHARING_CHANNEL)
-            .setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "getSharedFile" -> {
-                        result.success(pendingSharedFiles?.firstOrNull())
-                        pendingSharedFiles = null
-                    }
-                    "clearSharedFile" -> {
-                        pendingSharedFiles = null
-                        result.success(true)
-                    }
-                    "getSharedFiles" -> {
-                        result.success(pendingSharedFiles)
-                        pendingSharedFiles = null
-                    }
-                    "clearSharedFiles" -> {
-                        pendingSharedFiles = null
-                        result.success(true)
-                    }
-                    else -> {
-                        result.notImplemented()
-                    }
-                }
-            }
-
-        // Wake Lock MethodChannel
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, WAKE_LOCK_CHANNEL)
-            .setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "acquirePartial" -> {
-                        if (partialWakeLock == null) {
-                            val pm = getSystemService(POWER_SERVICE) as PowerManager
-                            partialWakeLock = pm.newWakeLock(
-                                PowerManager.PARTIAL_WAKE_LOCK,
-                                "ToolLab::PartialWakeLock"
-                            )
-                            partialWakeLock?.setReferenceCounted(false)
-                        }
-                        if (partialWakeLock?.isHeld != true) {
-                            partialWakeLock?.acquire()
-                        }
-                        result.success(true)
-                    }
-                    "releasePartial" -> {
-                        if (partialWakeLock?.isHeld == true) {
-                            partialWakeLock?.release()
-                        }
-                        partialWakeLock = null
-                        result.success(true)
-                    }
-                    "acquireFull" -> {
-                        runOnUiThread {
-                            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                            result.success(true)
-                        }
-                    }
-                    "releaseFull" -> {
-                        runOnUiThread {
-                            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                            result.success(true)
-                        }
-                    }
-                    "acquire" -> {
-                        if (partialWakeLock == null) {
-                            val pm = getSystemService(POWER_SERVICE) as PowerManager
-                            partialWakeLock = pm.newWakeLock(
-                                PowerManager.PARTIAL_WAKE_LOCK,
-                                "ToolLab::PartialWakeLock"
-                            )
-                            partialWakeLock?.setReferenceCounted(false)
-                        }
-                        if (partialWakeLock?.isHeld != true) {
-                            partialWakeLock?.acquire()
-                        }
-                        result.success(true)
-                    }
-                    "release" -> {
-                        if (partialWakeLock?.isHeld == true) {
-                            partialWakeLock?.release()
-                        }
-                        partialWakeLock = null
-                        result.success(true)
-                    }
-                    else -> {
-                        result.notImplemented()
-                    }
-                }
-            }
+        // Register custom helpers
+        SharingHelper.registerChannel(messenger)
+        wakeLockHelper.registerChannel(messenger)
+        gpsInfoHelper.registerChannel(messenger)
+        DeviceInfoHelper.registerChannels(this, messenger)
 
         // Foreground Runtime MethodChannel
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FOREGROUND_RUNTIME_CHANNEL)
+        MethodChannel(messenger, FOREGROUND_RUNTIME_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "start" -> {
@@ -293,7 +109,7 @@ class MainActivity : FlutterActivity() {
             }
 
         // Shortcuts MethodChannel
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SHORTCUTS_CHANNEL)
+        MethodChannel(messenger, SHORTCUTS_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "getLaunchRoute" -> {
@@ -335,9 +151,8 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
-
         // File Save MethodChannel
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, FILE_SAVE_CHANNEL)
+        MethodChannel(messenger, FILE_SAVE_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "saveToDownloads" -> {
@@ -404,204 +219,5 @@ class MainActivity : FlutterActivity() {
                     }
                 }
             }
-
-        // GPS Info MethodChannel
-        gpsInfoMethodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, GPS_INFO_CHANNEL)
-        gpsInfoMethodChannel?.setMethodCallHandler { call, result ->
-            when (call.method) {
-                "startGpsInfoUpdates" -> {
-                    val success = startGpsInfoUpdates()
-                    result.success(success)
-                }
-                "stopGpsInfoUpdates" -> {
-                    stopGpsInfoUpdates()
-                    result.success(true)
-                }
-                "getProviders" -> {
-                    val providers = getProvidersInfo()
-                    result.success(providers)
-                }
-            }
-        }
-
-        // Battery Details MethodChannel
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BATTERY_DETAILS_CHANNEL)
-            .setMethodCallHandler { call, result ->
-                if (call.method == "getBatteryDetails") {
-                    try {
-                        val batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-                        val currentMicroAmps = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                            batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW)
-                        } else {
-                            0L
-                        }
-
-                        val intent = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-                        val voltageMilliVolts = intent?.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) ?: -1
-                        val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-                        val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
-                        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
-
-                        val details = mapOf(
-                            "voltage" to voltageMilliVolts,
-                            "current" to currentMicroAmps,
-                            "isCharging" to isCharging,
-                            "pluggedType" to plugged
-                        )
-                        result.success(details)
-                    } catch (e: Exception) {
-                        result.error("BATTERY_ERROR", e.message, null)
-                    }
-                } else {
-                    result.notImplemented()
-                }
-            }
-
-        // Device Info MethodChannel
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, DEVICE_INFO_CHANNEL)
-            .setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "getStorageInfo" -> {
-                        try {
-                            val path = Environment.getDataDirectory().path
-                            val stat = StatFs(path)
-                            val blockSize = stat.blockSizeLong
-                            val availableBlocks = stat.availableBlocksLong
-                            val totalBlocks = stat.blockCountLong
-
-                            val details = mapOf(
-                                "free" to (availableBlocks * blockSize),
-                                "total" to (totalBlocks * blockSize)
-                            )
-                            result.success(details)
-                        } catch (e: Exception) {
-                            result.error("STORAGE_ERROR", e.message, null)
-                        }
-                    }
-                    "getSensorInfo" -> {
-                        try {
-                            val sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-                            val sensors = mapOf(
-                                "accelerometer" to (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null),
-                                "gyroscope" to (sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null),
-                                "magnetometer" to (sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) != null),
-                                "barometer" to (sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE) != null),
-                                "light" to (sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT) != null)
-                            )
-                            result.success(sensors)
-                        } catch (e: Exception) {
-                            result.error("SENSOR_ERROR", e.message, null)
-                        }
-                    }
-                    else -> {
-                        result.notImplemented()
-                    }
-                }
-            }
-    }
-
-    private fun startGpsInfoUpdates(): Boolean {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N) {
-            return false
-        }
-        try {
-            if (locationManager == null) {
-                locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            }
-            if (gnssStatusCallback == null) {
-                gnssStatusCallback = object : GnssStatus.Callback() {
-                    override fun onSatelliteStatusChanged(status: GnssStatus) {
-                        val count = status.satelliteCount
-                        val satellitesList = mutableListOf<Map<String, Any>>()
-                        var usedInFixCount = 0
-                        
-                        for (i in 0 until count) {
-                            val used = status.usedInFix(i)
-                            if (used) {
-                                usedInFixCount++
-                            }
-                            
-                            val satMap = mapOf(
-                                "svid" to status.getSvid(i),
-                                "constellationType" to status.getConstellationType(i),
-                                "cn0DbHz" to status.getCn0DbHz(i),
-                                "hasAlmanacData" to status.hasAlmanacData(i),
-                                "hasEphemerisData" to status.hasEphemerisData(i),
-                                "usedInFix" to used,
-                                "elevationDegrees" to status.getElevationDegrees(i),
-                                "azimuthDegrees" to status.getAzimuthDegrees(i)
-                            )
-                            satellitesList.add(satMap)
-                        }
-                        
-                        runOnUiThread {
-                            gpsInfoMethodChannel?.invokeMethod("onGnssStatusChanged", mapOf(
-                                "satelliteCount" to count,
-                                "usedInFixCount" to usedInFixCount,
-                                "satellites" to satellitesList
-                            ))
-                        }
-                    }
-                    
-                    override fun onStarted() {
-                        runOnUiThread {
-                            gpsInfoMethodChannel?.invokeMethod("onGnssStarted", null)
-                        }
-                    }
-                    
-                    override fun onStopped() {
-                        runOnUiThread {
-                            gpsInfoMethodChannel?.invokeMethod("onGnssStopped", null)
-                        }
-                    }
-                }
-            }
-            
-            locationManager?.registerGnssStatusCallback(
-                gnssStatusCallback as GnssStatus.Callback,
-                Handler(Looper.getMainLooper())
-            )
-            return true
-        } catch (e: SecurityException) {
-            e.printStackTrace()
-            return false
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return false
-        }
-    }
-
-    private fun stopGpsInfoUpdates() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            try {
-                if (locationManager != null && gnssStatusCallback != null) {
-                    locationManager?.unregisterGnssStatusCallback(gnssStatusCallback as GnssStatus.Callback)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private fun getProvidersInfo(): List<Map<String, Any>> {
-        val resultList = mutableListOf<Map<String, Any>>()
-        try {
-            if (locationManager == null) {
-                locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            }
-            val mgr = locationManager ?: return resultList
-            val all = mgr.allProviders
-            for (provider in all) {
-                val enabled = mgr.isProviderEnabled(provider)
-                val info = mapOf(
-                    "name" to provider,
-                    "enabled" to enabled
-                )
-                resultList.add(info)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return resultList
     }
 }
