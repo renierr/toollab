@@ -19,7 +19,7 @@ class UnitConverterTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameUnitConverter,
     descriptionL10n: (l10n) => l10n.toolDescUnitConverter,
-    createPage: (_) => const UnitConverterPage(),
+    createPage: (sharedData) => UnitConverterPage(sharedData: sharedData),
     stateProviders: () => [
       ChangeNotifierProvider<UnitConverterState>(
         create: (_) => UnitConverterState(),

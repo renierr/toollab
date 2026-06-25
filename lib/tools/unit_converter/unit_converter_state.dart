@@ -84,6 +84,14 @@ class UnitConverterState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Sets the input programmatically, bumping the revision to update the text field.
+  void setInputProgrammatic(String value) {
+    if (value == _input) return;
+    _input = value;
+    _inputRevision++;
+    notifyListeners();
+  }
+
   /// Swaps the from/to units and moves the current result into the input.
   void swap() {
     final previousResult = result;

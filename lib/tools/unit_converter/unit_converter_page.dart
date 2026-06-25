@@ -9,8 +9,14 @@ import 'widgets/all_units_list.dart';
 import 'widgets/category_selector.dart';
 import 'widgets/conversion_card.dart';
 
+import 'package:tool_lab/core/shared_file.dart';
+import 'package:provider/provider.dart';
+import 'unit_converter_state.dart';
+
 class UnitConverterPage extends StatefulWidget {
-  const UnitConverterPage({super.key});
+  final SharedData? sharedData;
+
+  const UnitConverterPage({super.key, this.sharedData});
 
   @override
   State<UnitConverterPage> createState() => _UnitConverterPageState();
@@ -18,6 +24,20 @@ class UnitConverterPage extends StatefulWidget {
 
 class _UnitConverterPageState extends State<UnitConverterPage>
     with DisposeCleanup {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.sharedData?.text != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<UnitConverterState>().setInputProgrammatic(
+            widget.sharedData!.text!,
+          );
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);

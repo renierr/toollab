@@ -14,8 +14,12 @@ import 'calculator_history_panel.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
 
+import 'package:tool_lab/core/shared_file.dart';
+
 class CalculatorPage extends StatefulWidget {
-  const CalculatorPage({super.key});
+  final SharedData? sharedData;
+
+  const CalculatorPage({super.key, this.sharedData});
 
   @override
   State<CalculatorPage> createState() => _CalculatorPageState();
@@ -36,6 +40,9 @@ class _CalculatorPageState extends State<CalculatorPage>
   void initState() {
     super.initState();
     _history.load();
+    if (widget.sharedData?.text != null) {
+      _core.setInput(widget.sharedData!.text!);
+    }
     _textController.text = _core.input;
     onDispose(() {
       _textController.dispose();

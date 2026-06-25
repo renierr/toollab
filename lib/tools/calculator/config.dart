@@ -17,6 +17,6 @@ class CalculatorTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameCalculator,
     descriptionL10n: (l10n) => l10n.toolDescCalculator,
-    createPage: (_) => const CalculatorPage(),
+    createPage: (sharedData) => CalculatorPage(sharedData: sharedData),
   );
 }

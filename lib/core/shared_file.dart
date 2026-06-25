@@ -35,13 +35,15 @@ class SharedFile {
 
 class SharedData {
   final List<SharedFile> files;
+  final String? text;
 
-  SharedData(this.files);
+  SharedData(this.files, {this.text});
 
   factory SharedData.single(SharedFile file) => SharedData([file]);
+  factory SharedData.text(String text) => SharedData([], text: text);
 
   bool get isMultiple => files.length > 1;
-  bool get isEmpty => files.isEmpty;
+  bool get isEmpty => files.isEmpty && text == null;
 
   SharedFile? get firstFile => files.isNotEmpty ? files.first : null;
 }

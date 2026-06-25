@@ -4826,6 +4826,72 @@ abstract class AppLocalizations {
   /// **'Text'**
   String get qrKindText;
 
+  /// No description provided for @qrKindFido.
+  ///
+  /// In en, this message translates to:
+  /// **'Passkey Request'**
+  String get qrKindFido;
+
+  /// No description provided for @qrKindOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'2FA / Authenticator'**
+  String get qrKindOtp;
+
+  /// No description provided for @qrKindMath.
+  ///
+  /// In en, this message translates to:
+  /// **'Mathematical Expression'**
+  String get qrKindMath;
+
+  /// No description provided for @qrKindCoordinate.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinates'**
+  String get qrKindCoordinate;
+
+  /// No description provided for @qrKindNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Numeric Value'**
+  String get qrKindNumber;
+
+  /// No description provided for @qrResultFulfillPasskey.
+  ///
+  /// In en, this message translates to:
+  /// **'Fulfill Passkey'**
+  String get qrResultFulfillPasskey;
+
+  /// No description provided for @qrResultOpenAuthenticator.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Authenticator'**
+  String get qrResultOpenAuthenticator;
+
+  /// No description provided for @qrResultCalculate.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculate'**
+  String get qrResultCalculate;
+
+  /// No description provided for @qrResultShowOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Show on Map'**
+  String get qrResultShowOnMap;
+
+  /// No description provided for @qrResultConvertUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert Unit'**
+  String get qrResultConvertUnit;
+
+  /// No description provided for @qrResultUseInCalc.
+  ///
+  /// In en, this message translates to:
+  /// **'Use in Calculator'**
+  String get qrResultUseInCalc;
+
   /// No description provided for @qrTypeText.
   ///
   /// In en, this message translates to:

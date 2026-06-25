@@ -3,7 +3,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
@@ -46,6 +48,28 @@ class QrResultCard extends StatelessWidget {
     }
     if (lower.startsWith('geo:')) return _ScanKind.location;
     if (lower.startsWith('begin:vcard')) return _ScanKind.contact;
+
+    if (lower.startsWith('fido:') ||
+        lower.startsWith('fido-hybrid:') ||
+        RegExp(r'^\d{30,}$').hasMatch(t)) {
+      return _ScanKind.fido;
+    }
+    if (lower.startsWith('otpauth://')) {
+      return _ScanKind.otp;
+    }
+    final coordRegex = RegExp(
+      r'^[-+]?([0-9]*\.[0-9]+|[0-9]+)\s*,\s*[-+]?([0-9]*\.[0-9]+|[0-9]+)$',
+    );
+    if (coordRegex.hasMatch(t)) {
+      return _ScanKind.coordinate;
+    }
+    final mathAllowed = RegExp(r'^[0-9+\-*/%^().\s]+$');
+    if (mathAllowed.hasMatch(t) && RegExp(r'[+\-*/%^]').hasMatch(t)) {
+      return _ScanKind.math;
+    }
+    if (RegExp(r'^[-+]?([0-9]*\.[0-9]+|[0-9]+)$').hasMatch(t)) {
+      return _ScanKind.number;
+    }
     return _ScanKind.text;
   }
 
@@ -71,8 +95,22 @@ class QrResultCard extends StatelessWidget {
           );
         }
         return Uri.tryParse(t);
+      case _ScanKind.fido:
+        if (t.toLowerCase().startsWith('fido:') ||
+            t.toLowerCase().startsWith('fido-hybrid:')) {
+          return Uri.tryParse(t);
+        }
+        return Uri.tryParse('fido:/$t');
+      case _ScanKind.otp:
+        return Uri.tryParse(t);
+      case _ScanKind.coordinate:
+        return Uri.tryParse(
+          'https://maps.google.com/?q=${t.replaceAll(' ', '')}',
+        );
       case _ScanKind.wifi:
       case _ScanKind.contact:
+      case _ScanKind.math:
+      case _ScanKind.number:
       case _ScanKind.text:
         return null;
     }
@@ -94,6 +132,16 @@ class QrResultCard extends StatelessWidget {
         return l10n.qrKindLocation;
       case _ScanKind.contact:
         return l10n.qrKindContact;
+      case _ScanKind.fido:
+        return l10n.qrKindFido;
+      case _ScanKind.otp:
+        return l10n.qrKindOtp;
+      case _ScanKind.math:
+        return l10n.qrKindMath;
+      case _ScanKind.coordinate:
+        return l10n.qrKindCoordinate;
+      case _ScanKind.number:
+        return l10n.qrKindNumber;
       case _ScanKind.text:
         return l10n.qrKindText;
     }
@@ -115,8 +163,44 @@ class QrResultCard extends StatelessWidget {
         return Icons.place_outlined;
       case _ScanKind.contact:
         return Icons.contact_page_outlined;
+      case _ScanKind.fido:
+        return Icons.fingerprint_outlined;
+      case _ScanKind.otp:
+        return Icons.security_outlined;
+      case _ScanKind.math:
+        return Icons.calculate_outlined;
+      case _ScanKind.coordinate:
+        return Icons.map_outlined;
+      case _ScanKind.number:
+        return Icons.numbers_outlined;
       case _ScanKind.text:
         return Icons.notes_outlined;
+    }
+  }
+
+  String _openLabel(AppLocalizations l10n) {
+    switch (_detectKind()) {
+      case _ScanKind.fido:
+        return l10n.qrResultFulfillPasskey;
+      case _ScanKind.otp:
+        return l10n.qrResultOpenAuthenticator;
+      case _ScanKind.coordinate:
+        return l10n.qrResultShowOnMap;
+      default:
+        return l10n.qrResultOpen;
+    }
+  }
+
+  IconData _openIcon() {
+    switch (_detectKind()) {
+      case _ScanKind.fido:
+        return Icons.fingerprint;
+      case _ScanKind.otp:
+        return Icons.security;
+      case _ScanKind.coordinate:
+        return Icons.map_outlined;
+      default:
+        return Icons.open_in_new;
     }
   }
 
@@ -232,12 +316,54 @@ class QrResultCard extends StatelessWidget {
                     if (canOpen)
                       FilledButton.icon(
                         onPressed: () => _open(context),
-                        icon: const Icon(Icons.open_in_new, size: 18),
-                        label: Text(l10n.qrResultOpen),
+                        icon: Icon(_openIcon(), size: 18),
+                        label: Text(_openLabel(l10n)),
                         style: FilledButton.styleFrom(
                           backgroundColor: accentColor,
                         ),
                       ),
+                    if (_detectKind() == _ScanKind.math)
+                      FilledButton.icon(
+                        onPressed: () {
+                          GoRouter.of(context).push(
+                            '/calculator',
+                            extra: SharedData.text(text.trim()),
+                          );
+                        },
+                        icon: const Icon(Icons.calculate_outlined, size: 18),
+                        label: Text(l10n.qrResultCalculate),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: accentColor,
+                        ),
+                      ),
+                    if (_detectKind() == _ScanKind.number) ...[
+                      FilledButton.icon(
+                        onPressed: () {
+                          GoRouter.of(context).push(
+                            '/unit-converter',
+                            extra: SharedData.text(text.trim()),
+                          );
+                        },
+                        icon: const Icon(Icons.swap_horiz, size: 18),
+                        label: Text(l10n.qrResultConvertUnit),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: accentColor,
+                        ),
+                      ),
+                      FilledButton.icon(
+                        onPressed: () {
+                          GoRouter.of(context).push(
+                            '/calculator',
+                            extra: SharedData.text(text.trim()),
+                          );
+                        },
+                        icon: const Icon(Icons.calculate_outlined, size: 18),
+                        label: Text(l10n.qrResultUseInCalc),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: accentColor,
+                        ),
+                      ),
+                    ],
                     OutlinedButton.icon(
                       onPressed: () => _copy(context),
                       icon: const Icon(Icons.copy_outlined, size: 18),
@@ -268,7 +394,21 @@ class QrResultCard extends StatelessWidget {
   }
 }
 
-enum _ScanKind { link, wifi, email, phone, sms, location, contact, text }
+enum _ScanKind {
+  link,
+  wifi,
+  email,
+  phone,
+  sms,
+  location,
+  contact,
+  fido,
+  otp,
+  math,
+  coordinate,
+  number,
+  text,
+}
 
 class _BarcodeBoxPainter extends CustomPainter {
   final Rect barcodeRect;

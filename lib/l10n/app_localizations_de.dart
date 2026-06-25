@@ -2714,6 +2714,39 @@ class AppLocalizationsDe extends AppLocalizations {
   String get qrKindText => 'Text';
 
   @override
+  String get qrKindFido => 'Passkey-Anfrage';
+
+  @override
+  String get qrKindOtp => '2FA / Authentifikator';
+
+  @override
+  String get qrKindMath => 'Mathematischer Ausdruck';
+
+  @override
+  String get qrKindCoordinate => 'Koordinaten';
+
+  @override
+  String get qrKindNumber => 'Numerischer Wert';
+
+  @override
+  String get qrResultFulfillPasskey => 'Passkey ausführen';
+
+  @override
+  String get qrResultOpenAuthenticator => 'Zum Authentifikator hinzufügen';
+
+  @override
+  String get qrResultCalculate => 'Berechnen';
+
+  @override
+  String get qrResultShowOnMap => 'Auf Karte zeigen';
+
+  @override
+  String get qrResultConvertUnit => 'Einheit umrechnen';
+
+  @override
+  String get qrResultUseInCalc => 'Im Rechner verwenden';
+
+  @override
   String get qrTypeText => 'Text';
 
   @override
