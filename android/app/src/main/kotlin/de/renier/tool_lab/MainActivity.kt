@@ -11,9 +11,7 @@ class MainActivity : FlutterActivity() {
     private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
 
-    private lateinit var gpsInfoHelper: GpsInfoHelper
-    private lateinit var wakeLockHelper: WakeLockHelper
-
+    private var gpsInfoHelper: GpsInfoHelper? = null
     private var launchRoute: String? = null
 
     companion object {
@@ -33,8 +31,6 @@ class MainActivity : FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        gpsInfoHelper = GpsInfoHelper(this)
-        wakeLockHelper = WakeLockHelper(this)
         resolveLaunchRoute(intent)
         SharingHelper.handleIntent(this, intent, null)
     }
@@ -54,7 +50,7 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
-        gpsInfoHelper.stopGpsInfoUpdates()
+        gpsInfoHelper?.stopGpsInfoUpdates()
         super.onDestroy()
     }
 
@@ -78,8 +74,14 @@ class MainActivity : FlutterActivity() {
 
         // Register custom helpers
         SharingHelper.registerChannel(messenger)
+        
+        val wakeLockHelper = WakeLockHelper(this)
         wakeLockHelper.registerChannel(messenger)
-        gpsInfoHelper.registerChannel(messenger)
+
+        val gps = GpsInfoHelper(this)
+        gpsInfoHelper = gps
+        gps.registerChannel(messenger)
+
         DeviceInfoHelper.registerChannels(this, messenger)
 
         // Foreground Runtime MethodChannel
