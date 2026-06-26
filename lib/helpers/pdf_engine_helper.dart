@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' show Rect;
 import 'package:crypto/crypto.dart';
 import 'package:ffi/ffi.dart';
 import 'package:image/image.dart' as img;
@@ -518,6 +519,206 @@ class PdfEngineHelper {
       for (final d in imageDocs) {
         d.dispose();
       }
+    }
+  }
+
+  /// Permanently removes content in the given redaction rectangles and paints
+  /// solid black filled rectangles over those areas.
+  ///
+  /// [redactionMarks] maps a zero-based page index to a list of rectangles in
+  /// PDF points (bottom-left origin). The method:
+  /// 1. Recursively walks page objects (including Form XObject children) and
+  ///    removes/deactivates those overlapping redaction areas.
+  /// 2. Inserts solid black filled rectangles over each area.
+  /// 3. Regenerates the content stream via FPDFPage_GenerateContent.
+  /// 4. Re-hosts the modified pages into a new document to strip the
+  ///    /StructTreeRoot (tagged PDF text layer), ensuring text is truly gone.
+  static Future<Uint8List> redactPdfDocument(
+    PdfDocument doc,
+    Map<int, List<Rect>> redactionMarks, {
+    void Function(int done, int total)? onProgress,
+  }) async {
+    await _ensureInit();
+    if (redactionMarks.isEmpty) return doc.encodePdf();
+
+    final pages = doc.pages.toList();
+    final count = pages.length;
+
+    await doc.useNativeDocumentHandle((nativeDocumentHandle) async {
+      final pdf = pdfium.getPdfium();
+      final documentHandle = pdfium.FPDF_DOCUMENT.fromAddress(
+        nativeDocumentHandle,
+      );
+
+      for (int pageIdx = 0; pageIdx < count; pageIdx++) {
+        final marks = redactionMarks[pageIdx];
+        if (marks == null || marks.isEmpty) {
+          onProgress?.call(pageIdx + 1, count);
+          continue;
+        }
+
+        final pageHandle = pdf.FPDF_LoadPage(documentHandle, pageIdx);
+        if (pageHandle.address == 0) {
+          onProgress?.call(pageIdx + 1, count);
+          continue;
+        }
+
+        try {
+          _redactPageObjects(
+            pdf: pdf,
+            pageHandle: pageHandle,
+            objectHandle: null,
+            marks: marks,
+          );
+
+          // Also check annotation objects
+          final annotCount = pdf.FPDFPage_GetAnnotCount(pageHandle);
+          for (int ai = 0; ai < annotCount; ai++) {
+            final annotHandle = pdf.FPDFPage_GetAnnot(pageHandle, ai);
+            if (annotHandle.address == 0) continue;
+            try {
+              final annotObjCount = pdf.FPDFAnnot_GetObjectCount(annotHandle);
+              for (int oi = 0; oi < annotObjCount; oi++) {
+                final obj = pdf.FPDFAnnot_GetObject(annotHandle, oi);
+                if (obj.address == 0) continue;
+                _tryRemoveObject(
+                  pdf: pdf,
+                  pageHandle: pageHandle,
+                  obj: obj,
+                  marks: marks,
+                );
+              }
+            } finally {
+              pdf.FPDFPage_CloseAnnot(annotHandle);
+            }
+          }
+
+          for (final redact in marks) {
+            // Dart Rect uses top=smallerY, bottom=largerY. PDF coords:
+            // smaller Y = bottom of page (passed as y to CreateNewRect).
+            final rectObj = pdf.FPDFPageObj_CreateNewRect(
+              redact.left,
+              redact.top,
+              redact.width,
+              redact.height,
+            );
+            if (rectObj.address == 0) continue;
+
+            pdf.FPDFPageObj_SetFillColor(rectObj, 0, 0, 0, 255);
+            pdf.FPDFPath_SetDrawMode(
+              rectObj,
+              pdfium.FPDF_FILLMODE_ALTERNATE,
+              0,
+            );
+            pdf.FPDFPage_InsertObject(pageHandle, rectObj);
+          }
+
+          pdf.FPDFPage_GenerateContent(pageHandle);
+        } finally {
+          pdf.FPDF_ClosePage(pageHandle);
+        }
+
+        onProgress?.call(pageIdx + 1, count);
+      }
+    });
+
+    // Create a new document and copy all pages to strip the /StructTreeRoot
+    // (tagged PDF text layer) and any other catalog-level content references.
+    final newDoc = await PdfDocument.createNew(sourceName: 'redacted.pdf');
+    newDoc.pages = doc.pages.toList();
+    final bytes = await newDoc.encodePdf();
+    newDoc.dispose();
+    return bytes;
+  }
+
+  /// Recursively walks page objects (including Form XObject children) and
+  /// removes/deactivates those whose bounds overlap any redaction mark.
+  static void _redactPageObjects({
+    required pdfium.PDFium pdf,
+    required pdfium.FPDF_PAGE pageHandle,
+    required pdfium.FPDF_PAGEOBJECT? objectHandle,
+    required List<Rect> marks,
+  }) {
+    final objCount = objectHandle != null
+        ? pdf.FPDFFormObj_CountObjects(objectHandle)
+        : pdf.FPDFPage_CountObjects(pageHandle);
+
+    for (int i = 0; i < objCount; i++) {
+      final obj = objectHandle != null
+          ? pdf.FPDFFormObj_GetObject(objectHandle, i)
+          : pdf.FPDFPage_GetObject(pageHandle, i);
+      if (obj.address == 0) continue;
+
+      final objType = pdf.FPDFPageObj_GetType(obj);
+
+      // Recurse into Form XObjects to find nested content
+      if (objType == pdfium.FPDF_PAGEOBJ_FORM) {
+        _redactPageObjects(
+          pdf: pdf,
+          pageHandle: pageHandle,
+          objectHandle: obj,
+          marks: marks,
+        );
+      }
+
+      _tryRemoveObject(
+        pdf: pdf,
+        pageHandle: pageHandle,
+        obj: obj,
+        marks: marks,
+      );
+    }
+  }
+
+  /// Checks [obj] against all [marks] and removes (or deactivates) it if its
+  /// bounds overlap. Text objects are deactivated via SetIsActive(false);
+  /// others are removed via RemoveObject.
+  static void _tryRemoveObject({
+    required pdfium.PDFium pdf,
+    required pdfium.FPDF_PAGE pageHandle,
+    required pdfium.FPDF_PAGEOBJECT obj,
+    required List<Rect> marks,
+  }) {
+    final left = calloc<Float>();
+    final bottom = calloc<Float>();
+    final right = calloc<Float>();
+    final top = calloc<Float>();
+    try {
+      final ok = pdf.FPDFPageObj_GetBounds(obj, left, bottom, right, top);
+      if (ok == 0) return;
+
+      final objRect = Rect.fromLTRB(
+        left.value,
+        bottom.value,
+        right.value,
+        top.value,
+      );
+
+      bool overlaps = false;
+      for (final redact in marks) {
+        if (objRect.overlaps(redact)) {
+          overlaps = true;
+          break;
+        }
+      }
+      if (!overlaps) return;
+
+      final objType = pdf.FPDFPageObj_GetType(obj);
+      if (objType == pdfium.FPDF_PAGEOBJ_TEXT) {
+        // FPDFPage_RemoveObject does not fully remove text from the content
+        // stream; deactivating the object causes GenerateContent to skip it.
+        pdf.FPDFPageObj_SetIsActive(obj, 0);
+      } else {
+        final removed = pdf.FPDFPage_RemoveObject(pageHandle, obj);
+        if (removed != 0) {
+          pdf.FPDFPageObj_Destroy(obj);
+        }
+      }
+    } finally {
+      calloc.free(left);
+      calloc.free(bottom);
+      calloc.free(right);
+      calloc.free(top);
     }
   }
 

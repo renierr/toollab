@@ -1,1 +1,9 @@
-enum PdfViewerMode { view, sign, organize, flatten, extractImages, metadata }
+enum PdfViewerMode {
+  view,
+  sign,
+  organize,
+  flatten,
+  extractImages,
+  metadata,
+  redact,
+}

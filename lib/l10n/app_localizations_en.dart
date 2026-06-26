@@ -1960,6 +1960,51 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String pdfEditRedactTitle(String fileName) {
+    return 'Redact: $fileName';
+  }
+
+  @override
+  String pdfEditRedactFailed(String error) {
+    return 'Redaction failed: $error';
+  }
+
+  @override
+  String pdfEditRedactPageOf(int current, int total) {
+    return 'Page $current of $total';
+  }
+
+  @override
+  String get pdfEditRedactDrawHint => 'Drag to draw a redaction rectangle';
+
+  @override
+  String get pdfEditRedactModeDraw => 'Draw';
+
+  @override
+  String get pdfEditRedactModeNavigate => 'Navigate';
+
+  @override
+  String get pdfEditRedactModeSelect => 'Select Text';
+
+  @override
+  String get pdfEditRedactProcessing => 'Applying redactions…';
+
+  @override
+  String get pdfEditRedactDoneTitle => 'Redaction Complete';
+
+  @override
+  String pdfEditRedactDoneSize(String size) {
+    return 'Redacted PDF size: $size';
+  }
+
+  @override
+  String get pdfEditRedactRedactSelected => 'Redact Selected';
+
+  @override
+  String get pdfEditRedactSelectHint =>
+      'Select text in the document, then tap \"Redact Selected\"';
+
+  @override
   String pdfEditMetaTitle2(String fileName) {
     return 'Metadata: $fileName';
   }
@@ -2230,6 +2275,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pdfNavModeMetadata => 'Metadata';
+
+  @override
+  String get pdfNavModeRedact => 'Redact PDF';
 
   @override
   String get pdfNavCloseSearch => 'Close Search';

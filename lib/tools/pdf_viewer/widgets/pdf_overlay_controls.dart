@@ -114,6 +114,8 @@ class PdfOverlayControls extends StatelessWidget {
                   ? Icons.collections_outlined
                   : currentMode == PdfViewerMode.metadata
                   ? Icons.info_outline
+                  : currentMode == PdfViewerMode.redact
+                  ? Icons.edit_note_outlined
                   : Icons.more_vert,
             ),
             tooltip: l10n.pdfNavMore,
@@ -184,6 +186,17 @@ class PdfOverlayControls extends StatelessWidget {
                         const Icon(Icons.info_outline),
                         const SizedBox(width: 8),
                         Text(menuL10n.pdfNavModeMetadata),
+                      ],
+                    ),
+                  ),
+                if (currentMode != PdfViewerMode.redact)
+                  PopupMenuItem(
+                    value: PdfViewerMode.redact,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.edit_note_outlined),
+                        const SizedBox(width: 8),
+                        Text(menuL10n.pdfNavModeRedact),
                       ],
                     ),
                   ),

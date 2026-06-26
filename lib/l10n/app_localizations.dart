@@ -3560,6 +3560,78 @@ abstract class AppLocalizations {
   /// **'New PDF size: {size}'**
   String pdfEditFlattenDoneSize(String size);
 
+  /// No description provided for @pdfEditRedactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Redact: {fileName}'**
+  String pdfEditRedactTitle(String fileName);
+
+  /// No description provided for @pdfEditRedactFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Redaction failed: {error}'**
+  String pdfEditRedactFailed(String error);
+
+  /// No description provided for @pdfEditRedactPageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {current} of {total}'**
+  String pdfEditRedactPageOf(int current, int total);
+
+  /// No description provided for @pdfEditRedactDrawHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to draw a redaction rectangle'**
+  String get pdfEditRedactDrawHint;
+
+  /// No description provided for @pdfEditRedactModeDraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw'**
+  String get pdfEditRedactModeDraw;
+
+  /// No description provided for @pdfEditRedactModeNavigate.
+  ///
+  /// In en, this message translates to:
+  /// **'Navigate'**
+  String get pdfEditRedactModeNavigate;
+
+  /// No description provided for @pdfEditRedactModeSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Text'**
+  String get pdfEditRedactModeSelect;
+
+  /// No description provided for @pdfEditRedactProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying redactions…'**
+  String get pdfEditRedactProcessing;
+
+  /// No description provided for @pdfEditRedactDoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Redaction Complete'**
+  String get pdfEditRedactDoneTitle;
+
+  /// No description provided for @pdfEditRedactDoneSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Redacted PDF size: {size}'**
+  String pdfEditRedactDoneSize(String size);
+
+  /// No description provided for @pdfEditRedactRedactSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Redact Selected'**
+  String get pdfEditRedactRedactSelected;
+
+  /// No description provided for @pdfEditRedactSelectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select text in the document, then tap \"Redact Selected\"'**
+  String get pdfEditRedactSelectHint;
+
   /// No description provided for @pdfEditMetaTitle2.
   ///
   /// In en, this message translates to:
@@ -4021,6 +4093,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Metadata'**
   String get pdfNavModeMetadata;
+
+  /// No description provided for @pdfNavModeRedact.
+  ///
+  /// In en, this message translates to:
+  /// **'Redact PDF'**
+  String get pdfNavModeRedact;
 
   /// No description provided for @pdfNavCloseSearch.
   ///

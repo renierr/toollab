@@ -1145,6 +1145,49 @@
       }
     }
   },
+  "pdfEditRedactTitle": "Redact: {fileName}",
+  "@pdfEditRedactTitle": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfEditRedactFailed": "Redaction failed: {error}",
+  "@pdfEditRedactFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfEditRedactPageOf": "Page {current} of {total}",
+  "@pdfEditRedactPageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfEditRedactDrawHint": "Drag to draw a redaction rectangle",
+  "pdfEditRedactModeDraw": "Draw",
+  "pdfEditRedactModeNavigate": "Navigate",
+  "pdfEditRedactModeSelect": "Select Text",
+  "pdfEditRedactProcessing": "Applying redactions…",
+  "pdfEditRedactDoneTitle": "Redaction Complete",
+  "pdfEditRedactDoneSize": "Redacted PDF size: {size}",
+  "@pdfEditRedactDoneSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfEditRedactRedactSelected": "Redact Selected",
+  "pdfEditRedactSelectHint": "Select text in the document, then tap \"Redact Selected\"",
   "pdfEditMetaTitle2": "Metadata: {fileName}",
   "@pdfEditMetaTitle2": {
     "placeholders": {
@@ -1358,7 +1401,8 @@
   "pdfNavModeOrganizePages": "Organize Pages",
   "pdfNavModeFlattenPdf": "Flatten PDF",
   "pdfNavModeExtractImages": "Extract Images",
-  "pdfNavModeMetadata": "Metadata",
+   "pdfNavModeMetadata": "Metadata",
+  "pdfNavModeRedact": "Redact PDF",
   "pdfNavCloseSearch": "Close Search",
   "pdfNavSearchHint": "Search text...",
   "pdfNavPrevMatch": "Previous Match",

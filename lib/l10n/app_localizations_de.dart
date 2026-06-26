@@ -1978,6 +1978,52 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String pdfEditRedactTitle(String fileName) {
+    return 'Schwärzen: $fileName';
+  }
+
+  @override
+  String pdfEditRedactFailed(String error) {
+    return 'Schwärzen fehlgeschlagen: $error';
+  }
+
+  @override
+  String pdfEditRedactPageOf(int current, int total) {
+    return 'Seite $current von $total';
+  }
+
+  @override
+  String get pdfEditRedactDrawHint =>
+      'Zum Zeichnen eines Schwärzungsrechtecks ziehen';
+
+  @override
+  String get pdfEditRedactModeDraw => 'Zeichnen';
+
+  @override
+  String get pdfEditRedactModeNavigate => 'Navigieren';
+
+  @override
+  String get pdfEditRedactModeSelect => 'Text auswählen';
+
+  @override
+  String get pdfEditRedactProcessing => 'Schwärzungen werden angewendet…';
+
+  @override
+  String get pdfEditRedactDoneTitle => 'Schwärzung abgeschlossen';
+
+  @override
+  String pdfEditRedactDoneSize(String size) {
+    return 'Neue PDF-Größe: $size';
+  }
+
+  @override
+  String get pdfEditRedactRedactSelected => 'Auswahl schwärzen';
+
+  @override
+  String get pdfEditRedactSelectHint =>
+      'Text im Dokument auswählen, dann auf \"Auswahl schwärzen\" tippen';
+
+  @override
   String pdfEditMetaTitle2(String fileName) {
     return 'Metadaten: $fileName';
   }
@@ -2250,6 +2296,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pdfNavModeMetadata => 'Metadaten';
+
+  @override
+  String get pdfNavModeRedact => 'PDF schwärzen';
 
   @override
   String get pdfNavCloseSearch => 'Suche schließen';

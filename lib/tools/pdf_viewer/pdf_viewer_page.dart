@@ -21,6 +21,7 @@ import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_flatten_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_metadata_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_sign_panel.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_redact_panel.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 
 class PdfViewerPage extends StatefulWidget {
@@ -352,6 +353,19 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     setState(() => _mode = PdfViewerMode.view);
   }
 
+  void _onRedactComplete(String pdfPath, String name) {
+    _resetViewerState();
+    setState(() {
+      _mode = PdfViewerMode.view;
+      _filePath = pdfPath;
+      _fileName = name;
+    });
+  }
+
+  void _onRedactCancel() {
+    setState(() => _mode = PdfViewerMode.view);
+  }
+
   PdfOperationSession get _operationSession {
     return PdfOperationSession(
       filePath: _filePath!,
@@ -452,6 +466,21 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
           session: _operationSession,
           onComplete: _onMetadataComplete,
           onCancel: _onMetadataCancel,
+        ),
+      );
+    }
+
+    if (_mode == PdfViewerMode.redact) {
+      return ToolLayout(
+        title: PdfViewerTool.config.localizedName(l10n),
+        fullscreen: true,
+        showFloatingBackButton: false,
+        scaffoldKey: _scaffoldKey,
+        backgroundColor: theme.colorScheme.surface,
+        child: PdfRedactPanel(
+          session: _operationSession,
+          onComplete: _onRedactComplete,
+          onCancel: _onRedactCancel,
         ),
       );
     }

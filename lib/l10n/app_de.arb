@@ -643,6 +643,49 @@
   "pdfEditFlattenFailed": "Reduzieren fehlgeschlagen: {error}",
   "pdfEditFlattenDoneTitle": "Reduzieren abgeschlossen",
   "pdfEditFlattenDoneSize": "Neue PDF-Größe: {size}",
+  "pdfEditRedactTitle": "Schwärzen: {fileName}",
+  "@pdfEditRedactTitle": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfEditRedactFailed": "Schwärzen fehlgeschlagen: {error}",
+  "@pdfEditRedactFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfEditRedactPageOf": "Seite {current} von {total}",
+  "@pdfEditRedactPageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfEditRedactDrawHint": "Zum Zeichnen eines Schwärzungsrechtecks ziehen",
+  "pdfEditRedactModeDraw": "Zeichnen",
+  "pdfEditRedactModeNavigate": "Navigieren",
+  "pdfEditRedactModeSelect": "Text auswählen",
+  "pdfEditRedactProcessing": "Schwärzungen werden angewendet…",
+  "pdfEditRedactDoneTitle": "Schwärzung abgeschlossen",
+  "pdfEditRedactDoneSize": "Neue PDF-Größe: {size}",
+  "@pdfEditRedactDoneSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfEditRedactRedactSelected": "Auswahl schwärzen",
+  "pdfEditRedactSelectHint": "Text im Dokument auswählen, dann auf \"Auswahl schwärzen\" tippen",
   "pdfEditMetaTitle2": "Metadaten: {fileName}",
   "pdfEditMetaReload": "Metadaten neu laden",
   "pdfEditMetaLoadFailed": "Metadaten konnten nicht geladen werden",
@@ -719,7 +762,8 @@
   "pdfNavModeOrganizePages": "Seiten anordnen",
   "pdfNavModeFlattenPdf": "PDF reduzieren",
   "pdfNavModeExtractImages": "Bilder extrahieren",
-  "pdfNavModeMetadata": "Metadaten",
+   "pdfNavModeMetadata": "Metadaten",
+  "pdfNavModeRedact": "PDF schwärzen",
   "pdfNavCloseSearch": "Suche schließen",
   "pdfNavSearchHint": "Text suchen …",
   "pdfNavPrevMatch": "Vorheriger Treffer",
