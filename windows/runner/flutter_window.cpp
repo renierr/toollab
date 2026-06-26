@@ -22,13 +22,13 @@ flutter::EncodableMap GetBatteryDetailsWin32() {
     result[flutter::EncodableValue("isCharging")] = flutter::EncodableValue(false);
     result[flutter::EncodableValue("pluggedType")] = flutter::EncodableValue(-1);
 
-    HDEVINFO hdev = SetupDiGetClassDevs(&GUID_DEVINTERFACE_BATTERY, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+    HDEVINFO hdev = SetupDiGetClassDevs(&GUID_DEVICE_BATTERY, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
     if (hdev == INVALID_HANDLE_VALUE) {
         return result;
     }
 
     SP_DEVICE_INTERFACE_DATA did = { sizeof(SP_DEVICE_INTERFACE_DATA) };
-    for (DWORD i = 0; SetupDiEnumDeviceInterfaces(hdev, NULL, &GUID_DEVINTERFACE_BATTERY, i, &did); ++i) {
+    for (DWORD i = 0; SetupDiEnumDeviceInterfaces(hdev, NULL, &GUID_DEVICE_BATTERY, i, &did); ++i) {
         DWORD cbRequired = 0;
         SetupDiGetDeviceInterfaceDetail(hdev, &did, NULL, 0, &cbRequired, NULL);
         if (cbRequired == 0) continue;
