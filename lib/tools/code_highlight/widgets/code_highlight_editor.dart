@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../code_highlight_state.dart';
 import '../code_highlight_engine.dart';
@@ -124,7 +125,31 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
   void _onTextChanged() {
     if (_controller != null && _state != null && _state!.code != null) {
       _state!.setCode(_controller!.text);
+      setState(() {});
     }
+  }
+
+  void _insertTab() {
+    if (_controller == null) return;
+    final val = _controller!.value;
+    final text = val.text;
+    final selection = val.selection;
+
+    final start = selection.start;
+    final end = selection.end;
+
+    if (start < 0) return;
+
+    const tabString = '  ';
+    final newText = text.replaceRange(start, end, tabString);
+    final newSelection = TextSelection.collapsed(
+      offset: start + tabString.length,
+    );
+
+    _controller!.value = TextEditingValue(
+      text: newText,
+      selection: newSelection,
+    );
   }
 
   @override
@@ -134,6 +159,12 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
     }
 
     final theme = Theme.of(context);
+    final text = _controller!.text;
+    final lineCount = '\n'.allMatches(text).length + 1;
+    final lineNumbersText = List.generate(
+      lineCount,
+      (i) => '${i + 1}',
+    ).join('\n');
 
     return Container(
       decoration: BoxDecoration(
@@ -148,19 +179,67 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
           thumbVisibility: true,
           child: SingleChildScrollView(
             controller: _scrollController,
-            child: TextField(
-              controller: _controller!,
-              maxLines: null,
-              keyboardType: TextInputType.multiline,
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 14,
-                height: 1.4,
-              ),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.all(16),
-              ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.only(
+                    top: 16,
+                    bottom: 16,
+                    left: 16,
+                    right: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.15,
+                    ),
+                    border: Border(
+                      right: BorderSide(
+                        color: theme.colorScheme.outlineVariant,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    lineNumbersText,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 14,
+                      height: 1.4,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                Expanded(
+                  child: CallbackShortcuts(
+                    bindings: {
+                      const SingleActivator(LogicalKeyboardKey.tab): _insertTab,
+                    },
+                    child: TextField(
+                      controller: _controller!,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.only(
+                          top: 16,
+                          bottom: 16,
+                          left: 16,
+                          right: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
