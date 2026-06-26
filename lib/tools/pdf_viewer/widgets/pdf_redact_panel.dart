@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -9,9 +8,11 @@ import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 
-import 'pdf_redact_overlay.dart';
-
-enum _InputMode { draw, select }
+import 'pdf_redact_done_page.dart';
+import 'pdf_redact_draw_view.dart';
+import 'pdf_redact_edit_appbar.dart';
+import 'pdf_redact_processing_page.dart';
+import 'pdf_redact_select_view.dart';
 
 enum _Phase { edit, processing, done }
 
@@ -39,7 +40,7 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
   int _pageIndex = 0;
   bool _loading = true;
 
-  _InputMode _inputMode = _InputMode.draw;
+  PdfRedactEditMode _inputMode = PdfRedactEditMode.draw;
   bool _isDrawing = false;
   _Phase _phase = _Phase.edit;
 
@@ -59,6 +60,7 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
     super.initState();
     onDispose(() {
       _doc?.dispose();
+      _pageImages.clear();
     });
     _init();
   }
@@ -161,7 +163,7 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
     }
   }
 
-  void _inputModeChanged(_InputMode mode) {
+  void _inputModeChanged(PdfRedactEditMode mode) {
     if (mode == _inputMode) return;
     setState(() {
       _inputMode = mode;
@@ -200,7 +202,7 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
     }
 
     setState(() {
-      _inputMode = _InputMode.draw;
+      _inputMode = PdfRedactEditMode.draw;
       _hasTextSelection = false;
     });
     _renderPage(_pageIndex);
@@ -264,7 +266,6 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
     if (_loading) {
@@ -281,130 +282,61 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
     }
 
     return switch (_phase) {
-      _Phase.edit => _buildEdit(theme, l10n),
-      _Phase.processing => _buildProcessing(theme, l10n),
-      _Phase.done => _buildDone(theme, l10n),
+      _Phase.edit => _editScaffold(l10n),
+      _Phase.processing => PdfRedactProcessingPage(
+        fileName: widget.session.fileName,
+        onClose: widget.onCancel,
+      ),
+      _Phase.done => PdfRedactDonePage(
+        fileName: widget.session.fileName,
+        resultSize: _resultSize,
+        onDownload: _download,
+        onShare: _share,
+        onOpen: () =>
+            widget.onComplete(_resultPath!, '${_baseName}_redacted.pdf'),
+        onClose: widget.onCancel,
+      ),
     };
   }
 
-  Widget _buildEdit(ThemeData theme, AppLocalizations l10n) {
+  Scaffold _editScaffold(AppLocalizations l10n) {
     return Scaffold(
-      appBar: _buildEditAppBar(theme, l10n),
-      body: _inputMode == _InputMode.draw
-          ? _buildDrawMode(theme)
-          : _buildSelectMode(theme, l10n),
-    );
-  }
-
-  PreferredSizeWidget _buildEditAppBar(ThemeData theme, AppLocalizations l10n) {
-    return AppBar(
-      title: Text(l10n.pdfEditRedactTitle(widget.session.fileName)),
-      leading: IconButton(
-        icon: const Icon(Icons.close),
-        onPressed: widget.onCancel,
-      ),
-      actions: [
-        if (_inputMode == _InputMode.select)
-          IconButton(
-            icon: const Icon(Icons.text_fields),
-            tooltip: l10n.pdfEditRedactRedactSelected,
-            onPressed: _hasTextSelection ? _redactSelectedText : null,
-          ),
-        if (_inputMode == _InputMode.select)
-          IconButton(
-            icon: const Icon(Icons.draw),
-            tooltip: l10n.pdfEditRedactModeDraw,
-            onPressed: () => _inputModeChanged(_InputMode.draw),
-          ),
-        if (_inputMode == _InputMode.draw)
-          IconButton(
-            icon: const Icon(Icons.text_fields),
-            tooltip: l10n.pdfEditRedactModeSelect,
-            onPressed: () => _inputModeChanged(_InputMode.select),
-          ),
-        if (_inputMode == _InputMode.draw)
-          IconButton(
-            icon: Icon(
-              Icons.check,
-              color: _totalMarkCount > 0
-                  ? null
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.38),
-            ),
-            tooltip: l10n.commonApply,
-            onPressed: _totalMarkCount > 0 ? _apply : null,
-          ),
-      ],
-    );
-  }
-
-  Widget _buildDrawMode(ThemeData theme) {
-    final image = _pageImages[_pageIndex];
-    if (image == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final marks = _redactionMarks[_pageIndex] ?? [];
-    final marksFrac = marks.map(_pdfRectToFrac).toList();
-
-    return Column(
-      children: [
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final areaW = constraints.maxWidth;
-              final areaH = constraints.maxHeight;
-              final pageAspect = _pageAspect(_pageIndex);
-              final dispW = areaW;
-              final dispH = dispW / pageAspect;
-              final dispLeft = 0.0;
-              final dispTop = dispH < areaH ? (areaH - dispH) / 2 : 0.0;
-
-              return InteractiveViewer(
-                minScale: 1,
-                maxScale: 6,
-                constrained: false,
-                child: SizedBox(
-                  width: areaW,
-                  height: max(areaH, dispH),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: dispLeft,
-                        top: dispTop,
-                        width: dispW,
-                        height: dispH,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: Image.memory(image, fit: BoxFit.fill),
-                        ),
-                      ),
-                      PdfRedactOverlay(
-                        marks: marksFrac,
-                        dispLeft: dispLeft,
-                        dispTop: dispTop,
-                        dispW: dispW,
-                        dispH: dispH,
-                        onDeleteMark: _removeMark,
-                        onNewMark: _addMark,
-                        isDrawing: _isDrawing,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+      appBar: PdfRedactEditAppBar(
+        fileName: widget.session.fileName,
+        mode: _inputMode,
+        hasTextSelection: _hasTextSelection,
+        totalMarkCount: _totalMarkCount,
+        onCancel: widget.onCancel,
+        onModeChange: () => _inputModeChanged(
+          _inputMode == PdfRedactEditMode.draw
+              ? PdfRedactEditMode.select
+              : PdfRedactEditMode.draw,
         ),
-        _buildBottomBar(theme),
-      ],
+        onRedactSelected: _redactSelectedText,
+        onApply: _apply,
+      ),
+      body: _inputMode == PdfRedactEditMode.draw
+          ? PdfRedactDrawView(
+              pageImage: _pageImages[_pageIndex]!,
+              marksFrac: _redactionMarks[_pageIndex]!
+                  .map(_pdfRectToFrac)
+                  .toList(),
+              pageAspect: _pageAspect(_pageIndex),
+              pageIndex: _pageIndex,
+              pageCount: _pageCount,
+              totalMarkCount: _totalMarkCount,
+              isDrawing: _isDrawing,
+              onNewMark: _addMark,
+              onDeleteMark: _removeMark,
+              onPrevPage: () => _goToPage(_pageIndex - 1),
+              onNextPage: () => _goToPage(_pageIndex + 1),
+              onToggleDraw: () => setState(() => _isDrawing = !_isDrawing),
+            )
+          : PdfRedactSelectView(
+              filePath: widget.session.filePath,
+              passwordProvider: widget.session.passwordProvider,
+              onTextSelectionChange: _onTextSelectionChange,
+            ),
     );
   }
 
@@ -416,180 +348,6 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
       (ph - pdf.top) / ph,
       pdf.right / pw,
       (ph - pdf.bottom) / ph,
-    );
-  }
-
-  Widget _buildSelectMode(ThemeData theme, AppLocalizations l10n) {
-    return PdfViewer.file(
-      widget.session.filePath,
-      passwordProvider: widget.session.passwordProvider,
-      params: PdfViewerParams(
-        textSelectionParams: PdfTextSelectionParams(
-          enabled: true,
-          onTextSelectionChange: _onTextSelectionChange,
-        ),
-        onViewerReady: (doc, ctrl) {},
-        getPageRenderingScale: (ctx, page, ctrl, estimated) {
-          final scale = estimated.clamp(1.0, 3.0);
-          return scale;
-        },
-        maxImageBytesCachedOnMemory: 128 * 1024 * 1024,
-        scrollPhysics: PdfViewerParams.getScrollPhysics(context),
-      ),
-    );
-  }
-
-  Widget _buildBottomBar(ThemeData theme) {
-    final l10n = AppLocalizations.of(context);
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.chevron_left),
-              onPressed: _pageIndex > 0
-                  ? () => _goToPage(_pageIndex - 1)
-                  : null,
-            ),
-            Text(
-              l10n.pdfEditRedactPageOf(_pageIndex + 1, _pageCount),
-              style: theme.textTheme.bodyMedium,
-            ),
-            IconButton(
-              icon: const Icon(Icons.chevron_right),
-              onPressed: _pageIndex < _pageCount - 1
-                  ? () => _goToPage(_pageIndex + 1)
-                  : null,
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              icon: Icon(_isDrawing ? Icons.edit : Icons.pan_tool_outlined),
-              tooltip: _isDrawing
-                  ? l10n.pdfEditRedactModeNavigate
-                  : l10n.pdfEditRedactModeDraw,
-              onPressed: () => setState(() => _isDrawing = !_isDrawing),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _totalMarkCount > 0
-                    ? l10n.pdfEditRedactDrawHint
-                    : l10n.pdfEditRedactSelectHint,
-                textAlign: TextAlign.end,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProcessing(ThemeData theme, AppLocalizations l10n) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.pdfEditRedactTitle(widget.session.fileName)),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: widget.onCancel,
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 24),
-            Text(
-              l10n.pdfEditRedactProcessing,
-              style: theme.textTheme.titleMedium,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDone(ThemeData theme, AppLocalizations l10n) {
-    final size = _resultSize;
-    final sizeText = size > 1024 * 1024
-        ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
-        : size > 1024
-        ? '${(size / 1024).toStringAsFixed(1)} KB'
-        : '$size B';
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.pdfEditRedactTitle(widget.session.fileName)),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: widget.onCancel,
-        ),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.check_circle,
-                size: 64,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.pdfEditRedactDoneTitle,
-                style: theme.textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.pdfEditRedactDoneSize(sizeText),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FilledButton.icon(
-                    onPressed: _download,
-                    icon: const Icon(Icons.download),
-                    label: Text(l10n.pdfEditDownload),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: _share,
-                    icon: const Icon(Icons.share),
-                    label: Text(l10n.commonShare),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextButton.icon(
-                onPressed: () => widget.onComplete(
-                  _resultPath!,
-                  '${_baseName}_redacted.pdf',
-                ),
-                icon: const Icon(Icons.open_in_new),
-                label: Text(l10n.pdfEditOpenInViewer),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: widget.onCancel,
-                child: Text(l10n.commonClose),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
