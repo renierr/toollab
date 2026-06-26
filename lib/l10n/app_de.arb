@@ -1438,6 +1438,33 @@
   "sigPngImage": "PNG-Bild",
   "sigSvgImage": "SVG-Bild",
   "sigCopyFailed": "In Zwischenablage kopieren fehlgeschlagen",
-  "chatAiDocumentsLabel": "Dokumente"
+  "chatAiDocumentsLabel": "Dokumente",
+  "toolNameCodeHighlight": "Code Highlight & Edit",
+  "toolDescCodeHighlight": "Syntax-Hervorhebung und Bearbeitung von Code-Dateien",
+  "codeHighlightPasteCode": "Code einfügen",
+  "codeHighlightLoadFile": "Datei laden",
+  "codeHighlightLanguage": "Sprache",
+  "codeHighlightTheme": "Design",
+  "codeHighlightEditorTitle": "Code-Editor",
+  "codeHighlightEmptyText": "Code einfügen oder eine Datei hierher ziehen, um zu beginnen",
+  "codeHighlightFailedToLoad": "Code konnte nicht geladen werden: {error}",
+  "@codeHighlightFailedToLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "codeHighlightCopied": "Code in die Zwischenablage kopiert",
+  "codeHighlightFailedToCopy": "Fehler beim Kopieren des Codes: {error}",
+  "@codeHighlightFailedToCopy": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "codeHighlightTypeLabel": "Text- oder Quellcodedateien",
+  "codeHighlightOpenTitle": "Codedatei öffnen",
+  "codeHighlightDropSubtitle": "Datei hierher ziehen oder zum Auswählen klicken",
+  "codeHighlightOpenInViewer": "Im Code-Highlighter öffnen",
+  "codeHighlightThemeLight": "Helles Design",
+  "codeHighlightThemeDark": "Dunkles Design"
 }
 

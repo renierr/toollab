@@ -7609,6 +7609,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Documents'**
   String get chatAiDocumentsLabel;
+
+  /// No description provided for @toolNameCodeHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Code Highlight & Edit'**
+  String get toolNameCodeHighlight;
+
+  /// No description provided for @toolDescCodeHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight syntax and edit code files'**
+  String get toolDescCodeHighlight;
+
+  /// No description provided for @codeHighlightPasteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste Code'**
+  String get codeHighlightPasteCode;
+
+  /// No description provided for @codeHighlightLoadFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Load File'**
+  String get codeHighlightLoadFile;
+
+  /// No description provided for @codeHighlightLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get codeHighlightLanguage;
+
+  /// No description provided for @codeHighlightTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get codeHighlightTheme;
+
+  /// No description provided for @codeHighlightEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Code Editor'**
+  String get codeHighlightEditorTitle;
+
+  /// No description provided for @codeHighlightEmptyText.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste code or drop a file here to get started'**
+  String get codeHighlightEmptyText;
+
+  /// No description provided for @codeHighlightFailedToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load code: {error}'**
+  String codeHighlightFailedToLoad(String error);
+
+  /// No description provided for @codeHighlightCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied to clipboard'**
+  String get codeHighlightCopied;
+
+  /// No description provided for @codeHighlightFailedToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to copy code: {error}'**
+  String codeHighlightFailedToCopy(String error);
+
+  /// No description provided for @codeHighlightTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Text or source code files'**
+  String get codeHighlightTypeLabel;
+
+  /// No description provided for @codeHighlightOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open code file'**
+  String get codeHighlightOpenTitle;
+
+  /// No description provided for @codeHighlightDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop file here or click to choose'**
+  String get codeHighlightDropSubtitle;
+
+  /// No description provided for @codeHighlightOpenInViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Code Highlighter'**
+  String get codeHighlightOpenInViewer;
+
+  /// No description provided for @codeHighlightThemeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light Theme'**
+  String get codeHighlightThemeLight;
+
+  /// No description provided for @codeHighlightThemeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Theme'**
+  String get codeHighlightThemeDark;
 }
 
 class _AppLocalizationsDelegate

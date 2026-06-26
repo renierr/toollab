@@ -4165,4 +4165,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatAiDocumentsLabel => 'Documents';
+
+  @override
+  String get toolNameCodeHighlight => 'Code Highlight & Edit';
+
+  @override
+  String get toolDescCodeHighlight => 'Highlight syntax and edit code files';
+
+  @override
+  String get codeHighlightPasteCode => 'Paste Code';
+
+  @override
+  String get codeHighlightLoadFile => 'Load File';
+
+  @override
+  String get codeHighlightLanguage => 'Language';
+
+  @override
+  String get codeHighlightTheme => 'Theme';
+
+  @override
+  String get codeHighlightEditorTitle => 'Code Editor';
+
+  @override
+  String get codeHighlightEmptyText =>
+      'Paste code or drop a file here to get started';
+
+  @override
+  String codeHighlightFailedToLoad(String error) {
+    return 'Failed to load code: $error';
+  }
+
+  @override
+  String get codeHighlightCopied => 'Code copied to clipboard';
+
+  @override
+  String codeHighlightFailedToCopy(String error) {
+    return 'Failed to copy code: $error';
+  }
+
+  @override
+  String get codeHighlightTypeLabel => 'Text or source code files';
+
+  @override
+  String get codeHighlightOpenTitle => 'Open code file';
+
+  @override
+  String get codeHighlightDropSubtitle => 'Drop file here or click to choose';
+
+  @override
+  String get codeHighlightOpenInViewer => 'Open in Code Highlighter';
+
+  @override
+  String get codeHighlightThemeLight => 'Light Theme';
+
+  @override
+  String get codeHighlightThemeDark => 'Dark Theme';
 }

@@ -4193,4 +4193,62 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chatAiDocumentsLabel => 'Dokumente';
+
+  @override
+  String get toolNameCodeHighlight => 'Code Highlight & Edit';
+
+  @override
+  String get toolDescCodeHighlight =>
+      'Syntax-Hervorhebung und Bearbeitung von Code-Dateien';
+
+  @override
+  String get codeHighlightPasteCode => 'Code einfügen';
+
+  @override
+  String get codeHighlightLoadFile => 'Datei laden';
+
+  @override
+  String get codeHighlightLanguage => 'Sprache';
+
+  @override
+  String get codeHighlightTheme => 'Design';
+
+  @override
+  String get codeHighlightEditorTitle => 'Code-Editor';
+
+  @override
+  String get codeHighlightEmptyText =>
+      'Code einfügen oder eine Datei hierher ziehen, um zu beginnen';
+
+  @override
+  String codeHighlightFailedToLoad(String error) {
+    return 'Code konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String get codeHighlightCopied => 'Code in die Zwischenablage kopiert';
+
+  @override
+  String codeHighlightFailedToCopy(String error) {
+    return 'Fehler beim Kopieren des Codes: $error';
+  }
+
+  @override
+  String get codeHighlightTypeLabel => 'Text- oder Quellcodedateien';
+
+  @override
+  String get codeHighlightOpenTitle => 'Codedatei öffnen';
+
+  @override
+  String get codeHighlightDropSubtitle =>
+      'Datei hierher ziehen oder zum Auswählen klicken';
+
+  @override
+  String get codeHighlightOpenInViewer => 'Im Code-Highlighter öffnen';
+
+  @override
+  String get codeHighlightThemeLight => 'Helles Design';
+
+  @override
+  String get codeHighlightThemeDark => 'Dunkles Design';
 }

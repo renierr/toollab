@@ -2264,6 +2264,33 @@
   "sigPngImage": "PNG image",
   "sigSvgImage": "SVG image",
   "sigCopyFailed": "Copy to clipboard failed",
-  "chatAiDocumentsLabel": "Documents"
+  "chatAiDocumentsLabel": "Documents",
+  "toolNameCodeHighlight": "Code Highlight & Edit",
+  "toolDescCodeHighlight": "Highlight syntax and edit code files",
+  "codeHighlightPasteCode": "Paste Code",
+  "codeHighlightLoadFile": "Load File",
+  "codeHighlightLanguage": "Language",
+  "codeHighlightTheme": "Theme",
+  "codeHighlightEditorTitle": "Code Editor",
+  "codeHighlightEmptyText": "Paste code or drop a file here to get started",
+  "codeHighlightFailedToLoad": "Failed to load code: {error}",
+  "@codeHighlightFailedToLoad": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "codeHighlightCopied": "Code copied to clipboard",
+  "codeHighlightFailedToCopy": "Failed to copy code: {error}",
+  "@codeHighlightFailedToCopy": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "codeHighlightTypeLabel": "Text or source code files",
+  "codeHighlightOpenTitle": "Open code file",
+  "codeHighlightDropSubtitle": "Drop file here or click to choose",
+  "codeHighlightOpenInViewer": "Open in Code Highlighter",
+  "codeHighlightThemeLight": "Light Theme",
+  "codeHighlightThemeDark": "Dark Theme"
 }
 
