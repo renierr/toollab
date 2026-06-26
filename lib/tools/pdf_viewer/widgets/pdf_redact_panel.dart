@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -16,12 +17,14 @@ enum _Phase { edit, processing, done }
 
 class PdfRedactPanel extends StatefulWidget {
   final PdfOperationSession session;
+  final PdfTextSelection? initialTextSelection;
   final void Function(String pdfPath, String name) onComplete;
   final VoidCallback onCancel;
 
   const PdfRedactPanel({
     super.key,
     required this.session,
+    this.initialTextSelection,
     required this.onComplete,
     required this.onCancel,
   });
@@ -75,7 +78,34 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
       for (int i = 0; i < _pageCount; i++) {
         _redactionMarks[i] = [];
       }
-      await _renderPage(0);
+
+      int initialPageIndex = 0;
+      final initialSel = widget.initialTextSelection;
+      if (initialSel != null && initialSel.hasSelectedText) {
+        final ranges = await initialSel.getSelectedTextRanges();
+        if (ranges.isNotEmpty) {
+          initialPageIndex = (ranges.first.pageNumber - 1).clamp(
+            0,
+            _pageCount - 1,
+          );
+        }
+        for (final range in ranges) {
+          final pdfRect = range.bounds;
+          final pageIdx = range.pageNumber - 1;
+          if (pageIdx >= 0 && pageIdx < _pageCount) {
+            final rect = Rect.fromLTRB(
+              pdfRect.left,
+              pdfRect.bottom,
+              pdfRect.right,
+              pdfRect.top,
+            );
+            _redactionMarks[pageIdx]!.add(rect);
+          }
+        }
+      }
+
+      _pageIndex = initialPageIndex;
+      await _renderPage(_pageIndex);
       if (mounted) setState(() => _loading = false);
     } catch (e) {
       if (mounted) {
@@ -324,23 +354,18 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
               final areaW = constraints.maxWidth;
               final areaH = constraints.maxHeight;
               final pageAspect = _pageAspect(_pageIndex);
-              double dispW, dispH;
-              if (areaW / areaH > pageAspect) {
-                dispH = areaH;
-                dispW = dispH * pageAspect;
-              } else {
-                dispW = areaW;
-                dispH = dispW / pageAspect;
-              }
-              final dispLeft = (areaW - dispW) / 2;
-              final dispTop = (areaH - dispH) / 2;
+              final dispW = areaW;
+              final dispH = dispW / pageAspect;
+              final dispLeft = 0.0;
+              final dispTop = dispH < areaH ? (areaH - dispH) / 2 : 0.0;
 
               return InteractiveViewer(
                 minScale: 1,
                 maxScale: 6,
+                constrained: false,
                 child: SizedBox(
                   width: areaW,
-                  height: areaH,
+                  height: max(areaH, dispH),
                   child: Stack(
                     children: [
                       Positioned(

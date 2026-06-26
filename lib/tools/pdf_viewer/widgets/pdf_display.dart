@@ -16,6 +16,7 @@ class PdfDisplay extends StatelessWidget {
   final PdfPageLayoutFunction? layoutPages;
   final void Function(PdfDocument document, PdfViewerController controller)?
   onViewerReady;
+  final void Function(PdfTextSelection? selection)? onTextSelectionChange;
 
   const PdfDisplay({
     super.key,
@@ -29,6 +30,7 @@ class PdfDisplay extends StatelessWidget {
     required this.pagePaintCallbacks,
     this.layoutPages,
     this.onViewerReady,
+    this.onTextSelectionChange,
   });
 
   @override
@@ -38,7 +40,10 @@ class PdfDisplay extends StatelessWidget {
       passwordProvider: passwordProvider,
       controller: controller,
       params: PdfViewerParams(
-        textSelectionParams: const PdfTextSelectionParams(enabled: true),
+        textSelectionParams: PdfTextSelectionParams(
+          enabled: true,
+          onTextSelectionChange: onTextSelectionChange,
+        ),
         onPageChanged: onPageChanged,
         boundaryMargin: boundaryMargin,
         pagePaintCallbacks: pagePaintCallbacks,

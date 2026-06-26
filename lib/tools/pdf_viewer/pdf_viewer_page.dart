@@ -58,6 +58,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
 
   PdfViewerMode _mode = PdfViewerMode.view;
   late final TempFileScope _tempScope;
+  PdfTextSelection? _currentTextSelection;
   String? _resolvedPdfPassword;
   String? _lastProvidedPdfPassword;
   Future<String?>? _passwordDialogFuture;
@@ -139,6 +140,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
       _outline = null;
       _isSearchingText = false;
       _searchTextController.clear();
+      _currentTextSelection = null;
     }
 
     if (notify) {
@@ -479,6 +481,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         backgroundColor: theme.colorScheme.surface,
         child: PdfRedactPanel(
           session: _operationSession,
+          initialTextSelection: _currentTextSelection,
           onComplete: _onRedactComplete,
           onCancel: _onRedactCancel,
         ),
@@ -506,6 +509,9 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
               filePath: _filePath!,
               controller: _pdfController,
               passwordProvider: _providePdfPassword,
+              onTextSelectionChange: (selection) {
+                _currentTextSelection = selection;
+              },
               onDocumentLoadFinished: _handleDocumentLoadFinished,
               boundaryMargin: EdgeInsets.only(
                 top: _showOverlays
