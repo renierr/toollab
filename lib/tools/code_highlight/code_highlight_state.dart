@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:syntax_highlight/syntax_highlight.dart';
+import 'code_highlight_engine.dart';
 
 class CodeHighlightState extends ChangeNotifier {
-  bool _initialized = false;
-  bool get initialized => _initialized;
+  bool get initialized => true;
 
   String? _code;
   String? get code => _code;
@@ -14,33 +13,11 @@ class CodeHighlightState extends ChangeNotifier {
   String? _fileName;
   String? get fileName => _fileName;
 
-  HighlighterTheme? _lightTheme;
-  HighlighterTheme? _darkTheme;
-
-  Highlighter? _lightHighlighter;
-  Highlighter? get lightHighlighter => _lightHighlighter;
-
-  Highlighter? _darkHighlighter;
-  Highlighter? get darkHighlighter => _darkHighlighter;
-
-  final List<String> supportedLanguages = const ['dart', 'json', 'sql', 'yaml'];
+  final List<String> supportedLanguages =
+      CodeHighlightEngine.supportedLanguages;
 
   Future<void> initialize() async {
-    if (_initialized) return;
-
-    try {
-      await Highlighter.initialize(supportedLanguages);
-      _lightTheme = await HighlighterTheme.loadLightTheme();
-      _darkTheme = await HighlighterTheme.loadDarkTheme();
-      _updateHighlighters();
-      _initialized = true;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Failed to initialize syntax highlighter: $e');
-      // Still set initialized to true so the UI doesn't hang, but highlighters will be null
-      _initialized = true;
-      notifyListeners();
-    }
+    // Synchronous init is already complete, keeping signature for compatibility
   }
 
   void setCode(String code) {
@@ -51,7 +28,6 @@ class CodeHighlightState extends ChangeNotifier {
   void setLanguage(String language) {
     if (_language == language) return;
     _language = language;
-    _updateHighlighters();
     notifyListeners();
   }
 
@@ -59,7 +35,6 @@ class CodeHighlightState extends ChangeNotifier {
     _code = content;
     _fileName = fileName;
     _language = detectedLang;
-    _updateHighlighters();
     notifyListeners();
   }
 
@@ -67,29 +42,7 @@ class CodeHighlightState extends ChangeNotifier {
     _code = null;
     _fileName = null;
     _language = 'dart';
-    _updateHighlighters();
     notifyListeners();
-  }
-
-  void _updateHighlighters() {
-    final themeL = _lightTheme;
-    final themeD = _darkTheme;
-    if (themeL == null ||
-        themeD == null ||
-        !supportedLanguages.contains(_language)) {
-      _lightHighlighter = null;
-      _darkHighlighter = null;
-      return;
-    }
-
-    try {
-      _lightHighlighter = Highlighter(language: _language, theme: themeL);
-      _darkHighlighter = Highlighter(language: _language, theme: themeD);
-    } catch (e) {
-      debugPrint('Failed to create highlighter for $_language: $e');
-      _lightHighlighter = null;
-      _darkHighlighter = null;
-    }
   }
 
   String detectLanguage(String fileNameOrExtension) {
@@ -98,9 +51,20 @@ class CodeHighlightState extends ChangeNotifier {
     final ext = parts.last.toLowerCase();
     return switch (ext) {
       'dart' => 'dart',
+      'js' || 'mjs' || 'cjs' => 'javascript',
+      'ts' || 'mts' || 'cts' => 'typescript',
+      'py' || 'pyw' => 'python',
       'json' => 'json',
-      'sql' => 'sql',
       'yaml' || 'yml' => 'yaml',
+      'sql' => 'sql',
+      'html' || 'htm' => 'html',
+      'css' => 'css',
+      'rs' => 'rust',
+      'go' => 'go',
+      'java' => 'java',
+      'kt' || 'kts' => 'kotlin',
+      'sh' || 'bash' => 'bash',
+      'md' || 'markdown' => 'markdown',
       _ => 'plain',
     };
   }

@@ -46,6 +46,8 @@ class CodeHighlightTool {
       'json',
       'yaml',
       'yml',
+      'md',
+      'markdown',
       'js',
       'ts',
       'html',

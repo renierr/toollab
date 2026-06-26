@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:syntax_highlight/syntax_highlight.dart';
 import '../code_highlight_state.dart';
+import '../code_highlight_engine.dart';
 
 class SyntaxHighlightEditingController extends TextEditingController {
-  final Highlighter lightHighlighter;
-  final Highlighter darkHighlighter;
+  final String language;
 
-  SyntaxHighlightEditingController({
-    super.text,
-    required this.lightHighlighter,
-    required this.darkHighlighter,
-  });
+  SyntaxHighlightEditingController({super.text, required this.language});
 
   @override
   TextSpan buildTextSpan({
@@ -20,9 +15,7 @@ class SyntaxHighlightEditingController extends TextEditingController {
     required bool withComposing,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final highlighter = isDark ? darkHighlighter : lightHighlighter;
-    return highlighter.highlight(text);
+    return CodeHighlightEngine.highlight(text, language, theme);
   }
 }
 
@@ -45,7 +38,7 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
     super.dispose();
   }
 
-  void _updateControllerHighlighters() {
+  void _updateControllerLanguage() {
     if (_controller == null) return;
     final state = context.read<CodeHighlightState>();
     final text = _controller!.text;
@@ -54,8 +47,7 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
     _controller!.dispose();
     _controller = SyntaxHighlightEditingController(
       text: text,
-      lightHighlighter: state.lightHighlighter!,
-      darkHighlighter: state.darkHighlighter!,
+      language: state.language,
     );
     _controller!.selection = selection;
     _controller!.addListener(_onTextChanged);
@@ -72,17 +64,14 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
     super.didChangeDependencies();
     final state = context.watch<CodeHighlightState>();
 
-    if (state.lightHighlighter == null || state.darkHighlighter == null) return;
-
     if (_lastLanguage != state.language) {
       _lastLanguage = state.language;
       if (_controller != null) {
-        _updateControllerHighlighters();
+        _updateControllerLanguage();
       } else {
         _controller = SyntaxHighlightEditingController(
           text: state.code ?? '',
-          lightHighlighter: state.lightHighlighter!,
-          darkHighlighter: state.darkHighlighter!,
+          language: state.language,
         );
         _controller!.addListener(_onTextChanged);
       }
