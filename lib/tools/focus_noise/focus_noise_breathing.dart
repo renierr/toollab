@@ -1,3 +1,5 @@
+import 'package:tool_lab/l10n/app_localizations.dart';
+
 enum FocusBreathingMode { box, relax, calm }
 
 class BreathingStep {
@@ -10,6 +12,19 @@ class BreathingStep {
     required this.duration,
     required this.scale,
   });
+
+  String localizedLabel(AppLocalizations l10n) {
+    switch (label) {
+      case 'Inhale':
+        return l10n.focusBreathingInhale;
+      case 'Hold':
+        return l10n.focusBreathingHold;
+      case 'Exhale':
+        return l10n.focusBreathingExhale;
+      default:
+        return label;
+    }
+  }
 }
 
 class FocusBreathingPattern {
@@ -22,6 +37,17 @@ class FocusBreathingPattern {
     required this.label,
     required this.steps,
   });
+
+  String localizedLabel(AppLocalizations l10n) {
+    switch (mode) {
+      case FocusBreathingMode.box:
+        return l10n.focusBreathingBox;
+      case FocusBreathingMode.relax:
+        return l10n.focusBreathingRelax;
+      case FocusBreathingMode.calm:
+        return l10n.focusBreathingCalm;
+    }
+  }
 }
 
 class FocusBreathingCatalog {

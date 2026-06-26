@@ -8,6 +8,7 @@ import 'package:image/image.dart' as img;
 
 import '../models/sketch_element.dart';
 import '../models/sketch_enums.dart';
+import '../sketch_board_colors.dart';
 import 'element_bounds.dart';
 import 'element_renderer.dart';
 
@@ -71,7 +72,7 @@ Future<Uint8List?> renderImage(
   canvas.translate(-bounds.left, -bounds.top);
 
   final bg = format == ExportFormat.jpeg
-      ? (background ?? const Color(0xFFFFFFFF))
+      ? (background ?? SketchBoardColors.white)
       : background;
   if (bg != null) {
     canvas.drawRect(bounds, Paint()..color = bg);

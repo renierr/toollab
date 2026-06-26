@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'emf_colors.dart';
-import 'emf_reading.dart';
-import 'detector_state.dart';
+import '../emf_colors.dart';
+import '../emf_reading.dart';
+import '../detector_state.dart';
 import 'axis_bar.dart';
 
 class VectorReadoutCard extends StatelessWidget {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'emf_colors.dart';
-import 'sensor_service.dart';
-import 'detector_state.dart';
+import '../emf_colors.dart';
+import '../sensor_service.dart';
+import '../detector_state.dart';
 import 'preset_chip.dart';
 import 'manual_vector_slider.dart';
 

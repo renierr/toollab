@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../bubble_level_colors.dart';
 
 class BubbleLevelView2d extends StatelessWidget {
   final double normalizedPitch;
@@ -116,10 +117,13 @@ class _Bubble2dPainter extends CustomPainter {
         center: const Alignment(-0.3, -0.3),
         radius: 1,
         colors: [
-          const Color(0xFFF7FFD8),
-          const Color(0xFFB9FF79),
-          const Color(0xFF65DE42),
-          if (locked) const Color(0xFF309A29) else const Color(0xFF888888),
+          BubbleLevelColors.bubble2dTop,
+          BubbleLevelColors.bubble2dMid1,
+          BubbleLevelColors.bubble2dMid2,
+          if (locked)
+            BubbleLevelColors.bubble2dBottomLocked
+          else
+            BubbleLevelColors.bubble2dBottomUnlocked,
         ],
         stops: const [0, 0.42, 0.72, 1],
       ).createShader(Rect.fromCircle(center: bc, radius: br));
@@ -128,8 +132,8 @@ class _Bubble2dPainter extends CustomPainter {
     final glowPaint = Paint()
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12)
       ..color = locked
-          ? const Color(0xFFA4FF80).withAlpha(160)
-          : const Color(0xFF7EFF57).withAlpha(100);
+          ? BubbleLevelColors.glowLocked.withAlpha(160)
+          : BubbleLevelColors.glowUnlocked.withAlpha(100);
     canvas.drawCircle(bc, br * 0.8, glowPaint);
 
     final highlightPaint = Paint()

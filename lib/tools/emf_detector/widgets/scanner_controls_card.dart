@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'emf_colors.dart';
-import 'detector_state.dart';
+import '../emf_colors.dart';
+import '../detector_state.dart';
 import 'feedback_button.dart';
 
 class ScannerControlsCard extends StatelessWidget {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../sketch_board_colors.dart';
+
 /// Interaction / drawing modes. Wire names use hyphens (e.g. `double-arrow`),
 /// so [wire] / [toolModeFromWire] bridge the enum and the JSON form.
 enum ToolMode {
@@ -105,7 +107,7 @@ Color? colorFromHexOrNull(String? hex) {
 
 /// Like [colorFromHexOrNull] but falls back to opaque black.
 Color colorFromHex(String? hex) =>
-    colorFromHexOrNull(hex) ?? const Color(0xFF000000);
+    colorFromHexOrNull(hex) ?? SketchBoardColors.black;
 
 /// Serializes an opaque [Color] to `#RRGGBB`.
 String hexFromColor(Color color) {

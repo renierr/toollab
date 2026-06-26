@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../models/sketch_enums.dart';
+import '../sketch_board_colors.dart';
 
 const _palette = <String>[
   '#1E1E1E',
@@ -61,7 +62,7 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
     super.initState();
     final parsed = colorFromHexOrNull(widget.current);
     _none = widget.allowNone && parsed == null;
-    _color = parsed ?? const Color(0xFF1E1E1E);
+    _color = parsed ?? SketchBoardColors.defaultColor;
     _hex = TextEditingController(
       text: hexFromColorWithAlpha(_color).replaceAll('#', ''),
     );

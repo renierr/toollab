@@ -302,7 +302,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
               final files = await openFiles(
                 acceptedTypeGroups: [
                   XTypeGroup(
-                    label: 'Images',
+                    label: l10n.img2pdfImagesLabel,
                     extensions: ImagesToPdfTool.config.fileExtensions,
                     mimeTypes: ['image/*'],
                   ),

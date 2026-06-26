@@ -2244,6 +2244,26 @@
   "ucuKmPerLiter": "Kilometers per liter",
   "ucuLiterPer100km": "Liters per 100 km",
   "ucuMpgUs": "Miles per gallon (US)",
-  "ucuMpgUk": "Miles per gallon (UK)"
+  "ucuMpgUk": "Miles per gallon (UK)",
+  "focusBreathingBox": "Box 4-4-4-4",
+  "focusBreathingRelax": "Relax 4-7-8",
+  "focusBreathingCalm": "Calm 5-5",
+  "focusBreathingInhale": "Inhale",
+  "focusBreathingHold": "Hold",
+  "focusBreathingExhale": "Exhale",
+  "focusReady": "Ready",
+  "hexEditorModified": "MODIFIED",
+  "sketchCopyFailed": "Copy to clipboard failed",
+  "sketchExportLabelImage": "{format} image",
+  "@sketchExportLabelImage": {
+    "placeholders": {
+      "format": { "type": "String" }
+    }
+  },
+  "sketchImageLabel": "Image",
+  "sigPngImage": "PNG image",
+  "sigSvgImage": "SVG image",
+  "sigCopyFailed": "Copy to clipboard failed",
+  "chatAiDocumentsLabel": "Documents"
 }
 

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 
@@ -474,9 +475,10 @@ class HexEditorState extends ChangeNotifier {
     } catch (e) {
       debugPrint('[HexEditorState] Export failed: $e');
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.hexEditorExportFailed(e.toString()))),
+        );
       }
     }
   }

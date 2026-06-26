@@ -7,6 +7,7 @@ import '../models/sketch_element.dart';
 import '../models/sketch_enums.dart';
 import '../shapes/brush.dart';
 import '../shapes/shape_renderer.dart';
+import '../sketch_board_colors.dart';
 import 'element_bounds.dart';
 
 /// Resolves an already-decoded image for an [ImageElement.imageData] key, or
@@ -136,7 +137,7 @@ void _drawImage(
     el.imageHeight,
   );
   if (img == null) {
-    canvas.drawRect(dst, Paint()..color = const Color(0x22808080));
+    canvas.drawRect(dst, Paint()..color = SketchBoardColors.imagePlaceholder);
     return;
   }
   final src = Rect.fromLTWH(0, 0, img.width.toDouble(), img.height.toDouble());
@@ -147,6 +148,6 @@ void _drawImage(
     Paint()
       ..isAntiAlias = true
       ..filterQuality = FilterQuality.medium
-      ..color = const Color(0xFFFFFFFF).withValues(alpha: alpha),
+      ..color = SketchBoardColors.white.withValues(alpha: alpha),
   );
 }

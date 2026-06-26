@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'emf_colors.dart';
-import 'detector_state.dart';
+import '../emf_colors.dart';
+import '../detector_state.dart';
 
 class CalibrationPanel extends StatelessWidget {
   final DetectorState state;

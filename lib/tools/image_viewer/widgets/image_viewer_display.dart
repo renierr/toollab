@@ -106,14 +106,9 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    final checkerboardColor1 = isDark
-        ? const Color(0xFF1E293B)
-        : const Color(0xFFE0E0E0);
-    final checkerboardColor2 = isDark
-        ? const Color(0xFF0F172A)
-        : const Color(0xFFF5F5F5);
+    final checkerboardColor1 = theme.colorScheme.surfaceContainerHigh;
+    final checkerboardColor2 = theme.colorScheme.surfaceContainerLow;
 
     return Focus(
       autofocus: widget.showSiblingNav,

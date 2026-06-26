@@ -7519,6 +7519,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Miles per gallon (UK)'**
   String get ucuMpgUk;
+
+  /// No description provided for @focusBreathingBox.
+  ///
+  /// In en, this message translates to:
+  /// **'Box 4-4-4-4'**
+  String get focusBreathingBox;
+
+  /// No description provided for @focusBreathingRelax.
+  ///
+  /// In en, this message translates to:
+  /// **'Relax 4-7-8'**
+  String get focusBreathingRelax;
+
+  /// No description provided for @focusBreathingCalm.
+  ///
+  /// In en, this message translates to:
+  /// **'Calm 5-5'**
+  String get focusBreathingCalm;
+
+  /// No description provided for @focusBreathingInhale.
+  ///
+  /// In en, this message translates to:
+  /// **'Inhale'**
+  String get focusBreathingInhale;
+
+  /// No description provided for @focusBreathingHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold'**
+  String get focusBreathingHold;
+
+  /// No description provided for @focusBreathingExhale.
+  ///
+  /// In en, this message translates to:
+  /// **'Exhale'**
+  String get focusBreathingExhale;
+
+  /// No description provided for @focusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get focusReady;
+
+  /// No description provided for @hexEditorModified.
+  ///
+  /// In en, this message translates to:
+  /// **'MODIFIED'**
+  String get hexEditorModified;
+
+  /// No description provided for @sketchCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy to clipboard failed'**
+  String get sketchCopyFailed;
+
+  /// No description provided for @sketchExportLabelImage.
+  ///
+  /// In en, this message translates to:
+  /// **'{format} image'**
+  String sketchExportLabelImage(String format);
+
+  /// No description provided for @sketchImageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get sketchImageLabel;
+
+  /// No description provided for @sigPngImage.
+  ///
+  /// In en, this message translates to:
+  /// **'PNG image'**
+  String get sigPngImage;
+
+  /// No description provided for @sigSvgImage.
+  ///
+  /// In en, this message translates to:
+  /// **'SVG image'**
+  String get sigSvgImage;
+
+  /// No description provided for @sigCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy to clipboard failed'**
+  String get sigCopyFailed;
+
+  /// No description provided for @chatAiDocumentsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get chatAiDocumentsLabel;
 }
 
 class _AppLocalizationsDelegate

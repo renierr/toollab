@@ -144,10 +144,11 @@ class _ChiptunePageState extends State<ChiptunePage>
   }
 
   Future<void> _pickAndLoad() async {
+    final l10n = AppLocalizations.of(context);
     final file = await openFile(
       acceptedTypeGroups: [
         XTypeGroup(
-          label: 'Tracker module',
+          label: l10n.chipEmptyTypeLabel,
           extensions: ChiptuneTool.config.fileExtensions,
         ),
       ],

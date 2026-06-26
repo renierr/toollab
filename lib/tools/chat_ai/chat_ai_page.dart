@@ -129,11 +129,12 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
 
   Future<void> _pickFile(ChatAiState state) async {
     try {
-      const typeGroup = XTypeGroup(
-        label: 'Documents',
+      final l10n = AppLocalizations.of(context);
+      final typeGroup = XTypeGroup(
+        label: l10n.chatAiDocumentsLabel,
         extensions: ['txt', 'md', 'markdown', 'pdf'],
       );
-      final file = await openFile(acceptedTypeGroups: const [typeGroup]);
+      final file = await openFile(acceptedTypeGroups: [typeGroup]);
       if (file == null) return;
 
       if (file.name.toLowerCase().endsWith('.pdf')) {

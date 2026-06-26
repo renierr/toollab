@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'history.dart';
+import '../history.dart';
 
 class CalculatorDisplay extends StatelessWidget {
   final String expression;

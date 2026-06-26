@@ -13,4 +13,7 @@ class ChiptuneColors {
   static const Color visBar = Color(0xFF7C4DFF);
   static const Color visPeak = Color(0xFFE05CFF);
   static const Color visualizerBg = Color(0xFF120E20);
+  static const Color pulseGridCyan = Color(0xFF00FFFF);
+  static const Color pulseGridMagenta = Color(0xFFFF00FF);
+  static const Color pulseGridScanline = Color(0xFF121010);
 }

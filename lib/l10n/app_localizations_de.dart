@@ -4146,4 +4146,51 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get ucuMpgUk => 'Meilen pro Gallone (UK)';
+
+  @override
+  String get focusBreathingBox => 'Box 4-4-4-4';
+
+  @override
+  String get focusBreathingRelax => 'Entspannung 4-7-8';
+
+  @override
+  String get focusBreathingCalm => 'Ruhe 5-5';
+
+  @override
+  String get focusBreathingInhale => 'Einatmen';
+
+  @override
+  String get focusBreathingHold => 'Anhalten';
+
+  @override
+  String get focusBreathingExhale => 'Ausatmen';
+
+  @override
+  String get focusReady => 'Bereit';
+
+  @override
+  String get hexEditorModified => 'MODIFIZIERT';
+
+  @override
+  String get sketchCopyFailed => 'In Zwischenablage kopieren fehlgeschlagen';
+
+  @override
+  String sketchExportLabelImage(String format) {
+    return '$format-Bild';
+  }
+
+  @override
+  String get sketchImageLabel => 'Bild';
+
+  @override
+  String get sigPngImage => 'PNG-Bild';
+
+  @override
+  String get sigSvgImage => 'SVG-Bild';
+
+  @override
+  String get sigCopyFailed => 'In Zwischenablage kopieren fehlgeschlagen';
+
+  @override
+  String get chatAiDocumentsLabel => 'Dokumente';
 }

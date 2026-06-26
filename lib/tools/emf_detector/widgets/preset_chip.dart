@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'emf_colors.dart';
-import 'sensor_service.dart';
-import 'detector_state.dart';
+import '../emf_colors.dart';
+import '../sensor_service.dart';
+import '../detector_state.dart';
 
 class PresetChip extends StatelessWidget {
   final DetectorState state;

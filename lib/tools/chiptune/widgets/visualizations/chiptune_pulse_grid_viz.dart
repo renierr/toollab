@@ -84,7 +84,7 @@ class _PulseGridPainter extends CustomPainter {
 
     final gridAlpha = (0.1 + bass * 0.3).clamp(0.0, 1.0);
     final gridPaint = Paint()
-      ..color = const Color(0xFF00FFFF).withValues(alpha: gridAlpha)
+      ..color = ChiptuneColors.pulseGridCyan.withValues(alpha: gridAlpha)
       ..strokeWidth = 1;
 
     for (int y = 0; y < 15; y++) {
@@ -128,7 +128,7 @@ class _PulseGridPainter extends CustomPainter {
     }
 
     final wavePaint = Paint()
-      ..color = const Color(0xFFFF00FF).withValues(alpha: 0.8)
+      ..color = ChiptuneColors.pulseGridMagenta.withValues(alpha: 0.8)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
 
@@ -147,7 +147,7 @@ class _PulseGridPainter extends CustomPainter {
     canvas.drawPath(wavePath, wavePaint);
 
     final scanPaint = Paint()
-      ..color = const Color(0xFF121010).withValues(alpha: 0.1);
+      ..color = ChiptuneColors.pulseGridScanline.withValues(alpha: 0.1);
     for (double i = 0; i < h; i += 4) {
       canvas.drawRect(Rect.fromLTWH(0, i, w, 1), scanPaint);
     }

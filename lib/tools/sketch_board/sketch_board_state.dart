@@ -24,10 +24,8 @@ class SketchBoardState extends ChangeNotifier {
   static const String _settingsKey = 'config';
   static const String _backgroundKey = 'background';
 
-  /// Whether the current device is a mobile platform (Android/iOS).
-  bool get isMobile =>
-      defaultTargetPlatform == TargetPlatform.android ||
-      defaultTargetPlatform == TargetPlatform.iOS;
+  /// Whether the current device is a mobile platform (Android).
+  bool get isMobile => defaultTargetPlatform == TargetPlatform.android;
 
   /// Screen-space gap from the selection top edge to the rotation handle.
   double get rotationHandleGap => isMobile ? 40.0 : 28.0;
@@ -149,8 +147,8 @@ class SketchBoardState extends ChangeNotifier {
   /// Solid fill color for the current backdrop, or null when transparent
   /// (checkerboard). Used as the export background.
   Color? get backgroundColor => switch (_background) {
-    CanvasBackground.white => const Color(0xFFFFFFFF),
-    CanvasBackground.black => const Color(0xFF111111),
+    CanvasBackground.white => SketchBoardColors.canvasWhite,
+    CanvasBackground.black => SketchBoardColors.canvasBlack,
     CanvasBackground.checkerboard => null,
   };
   SelectionType get selectionType => _selectionType;

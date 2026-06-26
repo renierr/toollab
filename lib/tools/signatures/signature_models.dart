@@ -191,7 +191,7 @@ Color colorFromHex(String hex) {
     h = h.split('').map((ch) => '$ch$ch').join();
   }
   final v = int.tryParse(h, radix: 16) ?? 0x0B3D91;
-  return Color(0xFF000000 | (v & 0xFFFFFF));
+  return Color.fromARGB(255, (v >> 16) & 0xFF, (v >> 8) & 0xFF, v & 0xFF);
 }
 
 /// Serializes an opaque [Color] to `#RRGGBB`.

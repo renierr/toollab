@@ -5,6 +5,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/checkerboard_background.dart';
 
 import '../models/sketch_enums.dart';
+import '../sketch_board_colors.dart';
 import '../sketch_board_state.dart';
 import 'sketch_painter.dart';
 
@@ -66,7 +67,7 @@ class _Background extends StatelessWidget {
           case CanvasBackground.white:
             return const ColoredBox(color: Colors.white);
           case CanvasBackground.black:
-            return const ColoredBox(color: Color(0xFF111111));
+            return ColoredBox(color: SketchBoardColors.canvasBlack);
           case CanvasBackground.checkerboard:
             return const CheckerboardBackground();
         }

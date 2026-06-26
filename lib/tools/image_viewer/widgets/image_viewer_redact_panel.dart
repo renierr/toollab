@@ -63,10 +63,10 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
     Colors.black,
     Colors.white,
     Colors.grey,
-    Color(0xFFF44336), // Red
-    Color(0xFFFFC107), // Amber/Yellow
-    Color(0xFF4CAF50), // Green
-    Color(0xFF2196F3), // Blue
+    Colors.red,
+    Colors.amber,
+    Colors.green,
+    Colors.blue,
   ];
 
   @override

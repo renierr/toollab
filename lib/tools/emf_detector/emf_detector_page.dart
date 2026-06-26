@@ -9,14 +9,14 @@ import 'config.dart';
 import 'emf_colors.dart';
 import 'emf_reading.dart';
 import 'detector_state.dart';
-import 'circular_gauge.dart';
-import 'oscilloscope_chart.dart';
-import 'scanner_header.dart';
-import 'cable_detected_banner.dart';
-import 'calibration_panel.dart';
-import 'oscilloscope_header.dart';
-import 'scanner_controls_card.dart';
-import 'simulator_lab_card.dart';
+import 'widgets/circular_gauge.dart';
+import 'widgets/oscilloscope_chart.dart';
+import 'widgets/scanner_header.dart';
+import 'widgets/cable_detected_banner.dart';
+import 'widgets/calibration_panel.dart';
+import 'widgets/oscilloscope_header.dart';
+import 'widgets/scanner_controls_card.dart';
+import 'widgets/simulator_lab_card.dart';
 
 class EmfDetectorPage extends StatefulWidget {
   const EmfDetectorPage({super.key});

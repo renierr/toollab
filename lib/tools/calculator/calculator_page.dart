@@ -6,11 +6,11 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'core.dart';
 import 'history.dart';
-import 'calculator_display.dart';
-import 'calculator_grid.dart';
-import 'calculator_toolbar.dart';
-import 'calculator_sci_buttons.dart';
-import 'calculator_history_panel.dart';
+import 'widgets/calculator_display.dart';
+import 'widgets/calculator_grid.dart';
+import 'widgets/calculator_toolbar.dart';
+import 'widgets/calculator_sci_buttons.dart';
+import 'widgets/calculator_history_panel.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
 

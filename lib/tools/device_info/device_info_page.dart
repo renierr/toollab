@@ -15,9 +15,9 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'config.dart';
-import 'battery_card.dart';
-import 'info_card.dart';
-import 'system_overview_header.dart';
+import 'widgets/battery_card.dart';
+import 'widgets/info_card.dart';
+import 'widgets/system_overview_header.dart';
 
 class DeviceInfoPage extends StatefulWidget {
   const DeviceInfoPage({super.key});

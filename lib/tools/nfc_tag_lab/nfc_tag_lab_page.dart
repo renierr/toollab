@@ -14,10 +14,10 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
 import 'ndef_codec.dart';
 import 'scan_profile.dart';
-import 'nfc_scan_status_card.dart';
-import 'nfc_record_list.dart';
-import 'nfc_editor_form.dart';
-import 'nfc_hex_panel.dart';
+import 'widgets/nfc_scan_status_card.dart';
+import 'widgets/nfc_record_list.dart';
+import 'widgets/nfc_editor_form.dart';
+import 'widgets/nfc_hex_panel.dart';
 import 'emv_parser.dart';
 import 'tag_tech_data.dart';
 

@@ -5,17 +5,13 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
-import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
 import 'engine/focus_noise_player.dart';
 import 'focus_noise_breathing.dart';
 import 'focus_noise_sound.dart';
-import 'widgets/focus_noise_breathing_card.dart';
-import 'widgets/focus_noise_sound_selector.dart';
-import 'widgets/focus_noise_timer_card.dart';
-import 'widgets/focus_noise_transport.dart';
+import 'widgets/focus_noise_cards.dart';
 
 class FocusNoisePage extends StatefulWidget {
   const FocusNoisePage({super.key});
@@ -46,7 +42,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   FocusBreathingMode _breathingMode = FocusBreathingMode.relax;
   Timer? _breathingTimer;
   int _breathingStepIndex = 0;
-  String _breathingStepLabel = 'Ready';
+  String? _breathingStepLabel;
   double _breathingScale = 1.0;
   Duration _breathingAnimDuration = const Duration(milliseconds: 400);
 
@@ -208,7 +204,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     _breathingTimer?.cancel();
     _breathingTimer = null;
     setState(() {
-      _breathingStepLabel = 'Ready';
+      _breathingStepLabel = AppLocalizations.of(context).focusReady;
       _breathingScale = 1.0;
       _breathingAnimDuration = const Duration(milliseconds: 350);
     });
@@ -226,7 +222,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
         pattern.steps[_breathingStepIndex % pattern.steps.length];
 
     setState(() {
-      _breathingStepLabel = step.label;
+      _breathingStepLabel = step.localizedLabel(AppLocalizations.of(context));
       _breathingScale = step.scale;
       _breathingAnimDuration = step.duration;
     });
@@ -247,50 +243,22 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
 
     final Widget content = SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: ResponsiveOrientationLayout(
-        portrait: Column(children: _buildCards(statusText)),
-        landscape: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(children: _buildCards(statusText, leftSide: true)),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(children: _buildCards(statusText, leftSide: false)),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    return ToolLayout(
-      title: FocusNoiseTool.config.localizedName(l10n),
-      child: content,
-    );
-  }
-
-  List<Widget> _buildCards(String statusText, {bool? leftSide}) {
-    final List<Widget> cards = [
-      FocusNoiseSoundSelector(
-        sounds: FocusNoiseCatalog.sounds,
-        selectedSoundId: _selectedSound.id,
-        onSelected: _selectSound,
-      ),
-      const SizedBox(height: 12),
-      FocusNoiseTransport(
-        isPlaying: _isPlaying,
+      child: FocusNoiseCards(
         statusText: statusText,
-        volume: _volume,
-        onVolumeChanged: _setVolume,
-        onTogglePlay: _togglePlayback,
-      ),
-      const SizedBox(height: 12),
-      FocusNoiseTimerCard(
+        selectedSound: _selectedSound,
         isPlaying: _isPlaying,
-        hasTimer: _timerTarget != null,
+        volume: _volume,
+        timerTarget: _timerTarget,
         timerLabel: _timerLabel(),
         customMinutes: _customMinutes,
+        breathingMode: _breathingMode,
+        breathingActive: _breathingActive,
+        breathingStepLabel: _breathingStepLabel ?? l10n.focusReady,
+        breathingScale: _breathingScale,
+        breathingAnimDuration: _breathingAnimDuration,
+        onSelectSound: _selectSound,
+        onVolumeChanged: _setVolume,
+        onTogglePlay: _togglePlayback,
         onCustomMinutesDecrement: () {
           setState(() => _customMinutes = (_customMinutes - 1).clamp(1, 1440));
         },
@@ -300,26 +268,14 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
         onSetPresetMinutes: _setTimerMinutes,
         onSetCustomTimer: () => _setTimerMinutes(_customMinutes),
         onCancelTimer: _cancelTimer,
+        onBreathingModeChanged: _setBreathingMode,
+        onToggleBreathing: _toggleBreathing,
       ),
-      const SizedBox(height: 12),
-      FocusNoiseBreathingCard(
-        patterns: FocusBreathingCatalog.patterns,
-        selectedMode: _breathingMode,
-        active: _breathingActive,
-        stepText: _breathingStepLabel,
-        circleScale: _breathingScale,
-        animationDuration: _breathingAnimDuration,
-        onModeChanged: _setBreathingMode,
-        onToggle: _toggleBreathing,
-      ),
-    ];
+    );
 
-    if (leftSide == true) {
-      return cards.take(2).toList();
-    }
-    if (leftSide == false) {
-      return cards.skip(2).toList();
-    }
-    return cards;
+    return ToolLayout(
+      title: FocusNoiseTool.config.localizedName(l10n),
+      child: content,
+    );
   }
 }

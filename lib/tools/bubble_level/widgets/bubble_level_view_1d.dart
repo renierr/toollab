@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../bubble_level_colors.dart';
 
 class BubbleLevelView1d extends StatelessWidget {
   final double normalizedRoll;
@@ -98,20 +99,23 @@ class _BeamPainter extends CustomPainter {
         canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
       }
     } else {
-      canvas.drawRRect(rrect, Paint()..color = const Color(0xFFE0E0E0));
+      canvas.drawRRect(rrect, Paint()..color = BubbleLevelColors.trackLight);
       canvas.drawRRect(
         rrect,
         Paint()
           ..shader = LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [const Color(0xFFBDBDBD), const Color(0xFFE0E0E0)],
+            colors: [
+              BubbleLevelColors.trackGradientTop,
+              BubbleLevelColors.trackGradientBottom,
+            ],
           ).createShader(trackRect),
       );
       canvas.drawRRect(
         rrect,
         Paint()
-          ..color = const Color(0xFF757575)
+          ..color = BubbleLevelColors.trackBorder
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5,
       );
@@ -158,9 +162,9 @@ class _BeamPainter extends CustomPainter {
             center: const Alignment(-0.3, -0.3),
             radius: 1,
             colors: const [
-              Color(0xFF1565C0),
-              Color(0xFF0D47A1),
-              Color(0xFF0A2E6E),
+              BubbleLevelColors.bubbleLightTop,
+              BubbleLevelColors.bubbleLightMid,
+              BubbleLevelColors.bubbleLightBottom,
             ],
             stops: [0, 0.5, 1],
           ).createShader(bubbleRect),
@@ -168,7 +172,7 @@ class _BeamPainter extends CustomPainter {
     }
 
     if (locked) {
-      const lockedColor = Color(0xFF1B5E20);
+      const lockedColor = BubbleLevelColors.lockedGreen;
       canvas.drawRRect(
         RRect.fromRectAndRadius(bubbleRect, Radius.circular(bh / 2)),
         Paint()
@@ -191,7 +195,7 @@ class _BeamPainter extends CustomPainter {
         Paint()
           ..color = isDark
               ? Colors.white.withValues(alpha: 0.8)
-              : const Color(0xFF1565C0)
+              : BubbleLevelColors.bubbleLightTop
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2,
       );

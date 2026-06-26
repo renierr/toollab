@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'emf_colors.dart';
+import '../emf_colors.dart';
 
 class ManualVectorSlider extends StatelessWidget {
   final String label;

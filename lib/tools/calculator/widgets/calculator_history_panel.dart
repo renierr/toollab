@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'history.dart';
+import '../history.dart';
 
 class CalculatorHistoryPanel extends StatelessWidget {
   final HistoryManager history;

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/data_row.dart' as shared;
-import 'scan_profile.dart';
-import 'tag_tech_data.dart';
-import 'widgets/tag_tech_panel.dart';
+import '../nfc_colors.dart';
+import '../scan_profile.dart';
+import '../tag_tech_data.dart';
+import 'tag_tech_panel.dart';
 
 class NfcScanStatusCard extends StatelessWidget {
   final bool isScanning;
@@ -316,18 +317,21 @@ class _PremiumCreditCard extends StatelessWidget {
     }
 
     List<Color> gradientColors = [
-      const Color(0xFF1E293B),
-      const Color(0xFF0F172A),
+      NfcColors.cardDefaultStart,
+      NfcColors.cardDefaultEnd,
     ];
     if (cardBrand.toLowerCase().contains('visa')) {
-      gradientColors = [const Color(0xFF1E3C72), const Color(0xFF2A5298)];
+      gradientColors = [NfcColors.cardVisaStart, NfcColors.cardVisaEnd];
     } else if (cardBrand.toLowerCase().contains('mastercard')) {
-      gradientColors = [const Color(0xFF3F2B96), const Color(0xFFA8C0FF)];
+      gradientColors = [
+        NfcColors.cardMastercardStart,
+        NfcColors.cardMastercardEnd,
+      ];
     } else if (cardBrand.toLowerCase().contains('american express')) {
       gradientColors = [
-        const Color(0xFF0F2027),
-        const Color(0xFF203A43),
-        const Color(0xFF2C5364),
+        NfcColors.cardAmexStart,
+        NfcColors.cardAmexMid,
+        NfcColors.cardAmexEnd,
       ];
     }
 
@@ -388,7 +392,7 @@ class _PremiumCreditCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFF5D061), Color(0xFFE6B822)],
+                    colors: [NfcColors.chipStart, NfcColors.chipEnd],
                   ),
                 ),
                 child: Stack(

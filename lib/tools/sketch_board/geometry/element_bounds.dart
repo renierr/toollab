@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../models/sketch_element.dart';
+import '../sketch_board_colors.dart';
 
 /// Axis-aligned rectangle from two corner points (any winding order).
 Rect normalizeRect(SkPoint a, SkPoint b) {
@@ -23,7 +24,7 @@ Size measureText(TextElement el) {
 
 /// Builds the [TextStyle] used both for measuring and painting a text element.
 TextStyle textStyleFor(TextElement el) => TextStyle(
-  color: const Color(0xFF000000), // overridden by painter; only metrics matter
+  color: SketchBoardColors.black, // overridden by painter; only metrics matter
   fontSize: el.fontSize,
   height: 1.2,
   fontWeight: el.fontWeight == 'bold' ? FontWeight.bold : FontWeight.normal,

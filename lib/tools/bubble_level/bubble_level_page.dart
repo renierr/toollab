@@ -10,11 +10,11 @@ import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
 import 'bubble_level_sensor.dart';
-import 'bubble_level_view_2d.dart';
-import 'bubble_level_view_1d.dart';
-import 'bubble_level_readout.dart';
-import 'bubble_level_toolbar.dart';
-import 'bubble_level_ruler.dart';
+import 'widgets/bubble_level_view_2d.dart';
+import 'widgets/bubble_level_view_1d.dart';
+import 'widgets/bubble_level_readout.dart';
+import 'widgets/bubble_level_toolbar.dart';
+import 'widgets/bubble_level_ruler.dart';
 
 class BubbleLevelPage extends StatefulWidget {
   const BubbleLevelPage({super.key});

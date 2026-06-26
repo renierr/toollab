@@ -64,13 +64,6 @@ class _SignaturesPageState extends State<SignaturesPage>
     });
   }
 
-  static const List<XTypeGroup> _pngGroups = [
-    XTypeGroup(label: 'PNG image', extensions: ['png']),
-  ];
-  static const List<XTypeGroup> _svgGroups = [
-    XTypeGroup(label: 'SVG image', extensions: ['svg']),
-  ];
-
   String _fileName(String ext) =>
       'signature-${DateTime.now().millisecondsSinceEpoch}.$ext';
 
@@ -88,7 +81,9 @@ class _SignaturesPageState extends State<SignaturesPage>
       context: context,
       suggestedName: _fileName('png'),
       bytes: Uint8List.fromList(bytes),
-      acceptedTypeGroups: _pngGroups,
+      acceptedTypeGroups: [
+        XTypeGroup(label: l10n.sigPngImage, extensions: ['png']),
+      ],
       successMessageAndroid: l10n.sigSavedToDownloads,
     );
   }
@@ -100,7 +95,9 @@ class _SignaturesPageState extends State<SignaturesPage>
       context: context,
       suggestedName: _fileName('svg'),
       bytes: Uint8List.fromList(utf8.encode(svg)),
-      acceptedTypeGroups: _svgGroups,
+      acceptedTypeGroups: [
+        XTypeGroup(label: l10n.sigSvgImage, extensions: ['svg']),
+      ],
       successMessageAndroid: l10n.sigSavedToDownloads,
     );
   }
@@ -125,7 +122,7 @@ class _SignaturesPageState extends State<SignaturesPage>
     if (success) {
       _toast(AppLocalizations.of(context).sigCopiedToClipboard);
     } else {
-      _toast('Copy to clipboard failed');
+      _toast(AppLocalizations.of(context).sigCopyFailed);
     }
   }
 

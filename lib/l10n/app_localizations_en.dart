@@ -4118,4 +4118,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ucuMpgUk => 'Miles per gallon (UK)';
+
+  @override
+  String get focusBreathingBox => 'Box 4-4-4-4';
+
+  @override
+  String get focusBreathingRelax => 'Relax 4-7-8';
+
+  @override
+  String get focusBreathingCalm => 'Calm 5-5';
+
+  @override
+  String get focusBreathingInhale => 'Inhale';
+
+  @override
+  String get focusBreathingHold => 'Hold';
+
+  @override
+  String get focusBreathingExhale => 'Exhale';
+
+  @override
+  String get focusReady => 'Ready';
+
+  @override
+  String get hexEditorModified => 'MODIFIED';
+
+  @override
+  String get sketchCopyFailed => 'Copy to clipboard failed';
+
+  @override
+  String sketchExportLabelImage(String format) {
+    return '$format image';
+  }
+
+  @override
+  String get sketchImageLabel => 'Image';
+
+  @override
+  String get sigPngImage => 'PNG image';
+
+  @override
+  String get sigSvgImage => 'SVG image';
+
+  @override
+  String get sigCopyFailed => 'Copy to clipboard failed';
+
+  @override
+  String get chatAiDocumentsLabel => 'Documents';
 }

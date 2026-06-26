@@ -156,7 +156,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
       bytes: bytes,
       acceptedTypeGroups: [
         XTypeGroup(
-          label: '${options.format.label} image',
+          label: l10n.sketchExportLabelImage(options.format.label),
           extensions: [options.format.extension],
         ),
       ],
@@ -176,7 +176,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
     if (success) {
       _toast(AppLocalizations.of(context).sketchCopied);
     } else {
-      _toast('Copy to clipboard failed');
+      _toast(AppLocalizations.of(context).sketchCopyFailed);
     }
   }
 
@@ -205,10 +205,11 @@ class _SketchBoardPageState extends State<SketchBoardPage>
   }
 
   Future<void> _insertImage() async {
+    final l10n = AppLocalizations.of(context);
     final file = await openFile(
-      acceptedTypeGroups: const [
+      acceptedTypeGroups: [
         XTypeGroup(
-          label: 'Image',
+          label: l10n.sketchImageLabel,
           extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
         ),
       ],

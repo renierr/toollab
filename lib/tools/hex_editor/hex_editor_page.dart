@@ -195,8 +195,8 @@ class _HexEditorPageState extends State<HexEditorPage> with DisposeCleanup {
                               width: 0.5,
                             ),
                           ),
-                          child: const Text(
-                            'MODIFIED',
+                          child: Text(
+                            l10n.hexEditorModified,
                             style: TextStyle(
                               color: AppTheme.statusOrange,
                               fontSize: 10,

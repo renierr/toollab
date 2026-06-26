@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
-import 'ndef_codec.dart';
+import '../ndef_codec.dart';
 
 class NfcRecordList extends StatelessWidget {
   final List<DecodedRecord> records;

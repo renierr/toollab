@@ -1418,6 +1418,26 @@
   "ucuKmPerLiter": "Kilometer pro Liter",
   "ucuLiterPer100km": "Liter pro 100 km",
   "ucuMpgUs": "Meilen pro Gallone (US)",
-  "ucuMpgUk": "Meilen pro Gallone (UK)"
+  "ucuMpgUk": "Meilen pro Gallone (UK)",
+  "focusBreathingBox": "Box 4-4-4-4",
+  "focusBreathingRelax": "Entspannung 4-7-8",
+  "focusBreathingCalm": "Ruhe 5-5",
+  "focusBreathingInhale": "Einatmen",
+  "focusBreathingHold": "Anhalten",
+  "focusBreathingExhale": "Ausatmen",
+  "focusReady": "Bereit",
+  "hexEditorModified": "MODIFIZIERT",
+  "sketchCopyFailed": "In Zwischenablage kopieren fehlgeschlagen",
+  "sketchExportLabelImage": "{format}-Bild",
+  "@sketchExportLabelImage": {
+    "placeholders": {
+      "format": { "type": "String" }
+    }
+  },
+  "sketchImageLabel": "Bild",
+  "sigPngImage": "PNG-Bild",
+  "sigSvgImage": "SVG-Bild",
+  "sigCopyFailed": "In Zwischenablage kopieren fehlgeschlagen",
+  "chatAiDocumentsLabel": "Dokumente"
 }
 

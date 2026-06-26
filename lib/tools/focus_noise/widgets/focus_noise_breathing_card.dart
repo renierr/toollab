@@ -42,7 +42,7 @@ class FocusNoiseBreathingCard extends StatelessWidget {
             children: patterns.map((pattern) {
               return ChoiceChip(
                 selected: pattern.mode == selectedMode,
-                label: Text(pattern.label),
+                label: Text(pattern.localizedLabel(l10n)),
                 onSelected: (_) => onModeChanged(pattern.mode),
               );
             }).toList(),
