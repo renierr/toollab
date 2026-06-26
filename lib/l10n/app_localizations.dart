@@ -7843,6 +7843,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to save image: {error}'**
   String codeHighlightFailedToSaveImage(String error);
+
+  /// No description provided for @codeHighlightExportWarningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Large Image Warning'**
+  String get codeHighlightExportWarningTitle;
+
+  /// No description provided for @codeHighlightExportWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains {lines} lines. Exporting very long code files as an image may fail to render due to memory limits, or the text might be too small to be readable. We recommend exporting as a raw text file instead.'**
+  String codeHighlightExportWarningMessage(int lines);
 }
 
 class _AppLocalizationsDelegate

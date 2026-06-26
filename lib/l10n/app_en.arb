@@ -2354,6 +2354,13 @@
     "placeholders": {
       "error": { "type": "String" }
     }
+  },
+  "codeHighlightExportWarningTitle": "Large Image Warning",
+  "codeHighlightExportWarningMessage": "This file contains {lines} lines. Exporting very long code files as an image may fail to render due to memory limits, or the text might be too small to be readable. We recommend exporting as a raw text file instead.",
+  "@codeHighlightExportWarningMessage": {
+    "placeholders": {
+      "lines": { "type": "int" }
+    }
   }
 }
 

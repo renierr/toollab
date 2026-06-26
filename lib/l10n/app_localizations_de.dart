@@ -4331,4 +4331,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String codeHighlightFailedToSaveImage(String error) {
     return 'Fehler beim Speichern des Bildes: $error';
   }
+
+  @override
+  String get codeHighlightExportWarningTitle => 'Warnung: Großes Bild';
+
+  @override
+  String codeHighlightExportWarningMessage(int lines) {
+    return 'Diese Datei enthält $lines Zeilen. Der Export sehr langer Codedateien als Bild schlägt möglicherweise aufgrund von Speicherbeschränkungen fehl oder der Text ist zu klein, um lesbar zu sein. Wir empfehlen stattdessen den Export als reine Textdatei.';
+  }
 }

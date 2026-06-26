@@ -1528,6 +1528,13 @@
     "placeholders": {
       "error": { "type": "String" }
     }
+  },
+  "codeHighlightExportWarningTitle": "Warnung: Großes Bild",
+  "codeHighlightExportWarningMessage": "Diese Datei enthält {lines} Zeilen. Der Export sehr langer Codedateien als Bild schlägt möglicherweise aufgrund von Speicherbeschränkungen fehl oder der Text ist zu klein, um lesbar zu sein. Wir empfehlen stattdessen den Export als reine Textdatei.",
+  "@codeHighlightExportWarningMessage": {
+    "placeholders": {
+      "lines": { "type": "int" }
+    }
   }
 }
 

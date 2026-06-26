@@ -4300,4 +4300,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String codeHighlightFailedToSaveImage(String error) {
     return 'Failed to save image: $error';
   }
+
+  @override
+  String get codeHighlightExportWarningTitle => 'Large Image Warning';
+
+  @override
+  String codeHighlightExportWarningMessage(int lines) {
+    return 'This file contains $lines lines. Exporting very long code files as an image may fail to render due to memory limits, or the text might be too small to be readable. We recommend exporting as a raw text file instead.';
+  }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:image/image.dart' as img;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/info_card.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'code_highlight_preview.dart';
@@ -76,14 +77,38 @@ class _CodeHighlightImageExportDialogState
         ],
       ),
       content: SingleChildScrollView(
-        child: RepaintBoundary(
-          key: _exportBoundaryKey,
-          child: CodeHighlightPreview(
-            code: widget.code,
-            tokens: widget.tokens,
-            scopes: widget.scopes,
-            fileName: widget.fileName,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.code.split('\n').length > 100) ...[
+              InfoCard(
+                icon: Icons.warning_amber_rounded,
+                title: l10n.codeHighlightExportWarningTitle,
+                titleColor: theme.colorScheme.error,
+                borderColor: theme.colorScheme.error.withValues(alpha: 0.3),
+                backgroundColor: theme.colorScheme.errorContainer.withValues(
+                  alpha: 0.1,
+                ),
+                child: Text(
+                  l10n.codeHighlightExportWarningMessage(
+                    widget.code.split('\n').length,
+                  ),
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            RepaintBoundary(
+              key: _exportBoundaryKey,
+              child: CodeHighlightPreview(
+                code: widget.code,
+                tokens: widget.tokens,
+                scopes: widget.scopes,
+                fileName: widget.fileName,
+              ),
+            ),
+          ],
         ),
       ),
       actions: [
