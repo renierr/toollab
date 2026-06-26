@@ -128,13 +128,15 @@ class CodeHighlightState extends ChangeNotifier {
     rehighlight();
   }
 
-  void clear() {
+  void clear({bool notify = true}) {
     _code = null;
     _fileName = null;
     _language = 'dart';
     _cachedTokens = [];
     _cachedScopes = [];
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   String detectLanguage(String fileNameOrExtension) {

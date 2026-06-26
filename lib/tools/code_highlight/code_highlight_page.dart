@@ -41,7 +41,7 @@ class _CodeHighlightToolPageState extends State<CodeHighlightToolPage>
 
     _highlightState = context.read<CodeHighlightState>();
     onDispose(() {
-      _highlightState.clear();
+      _highlightState.clear(notify: false);
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
