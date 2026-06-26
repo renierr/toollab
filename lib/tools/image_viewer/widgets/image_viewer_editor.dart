@@ -351,6 +351,7 @@ class ImageViewerEditor extends StatelessWidget {
                 DropdownMenuItem(value: 'png', child: Text('PNG (.png)')),
                 DropdownMenuItem(value: 'jpg', child: Text('JPEG (.jpg)')),
                 DropdownMenuItem(value: 'bmp', child: Text('BMP (.bmp)')),
+                DropdownMenuItem(value: 'webp', child: Text('WebP (.webp)')),
               ],
               onChanged: (val) {
                 if (val != null) onFormatChanged(val);

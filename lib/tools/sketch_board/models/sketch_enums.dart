@@ -48,17 +48,37 @@ ToolMode toolModeFromWire(String? s) {
   }
 }
 
-/// Bitmap format the board can be exported to. WebP is intentionally absent —
-/// the bundled `image` package can decode but not encode it.
+/// Bitmap format the board can be exported to.
 enum ExportFormat {
   png,
-  jpeg;
+  jpeg,
+  webp;
 
-  String get extension => this == ExportFormat.jpeg ? 'jpg' : 'png';
-  String get mimeType => this == ExportFormat.jpeg ? 'image/jpeg' : 'image/png';
-  String get label => this == ExportFormat.jpeg ? 'JPEG' : 'PNG';
+  String get extension {
+    return switch (this) {
+      ExportFormat.jpeg => 'jpg',
+      ExportFormat.webp => 'webp',
+      ExportFormat.png => 'png',
+    };
+  }
 
-  /// Whether a quality setting is meaningful (PNG is lossless).
+  String get mimeType {
+    return switch (this) {
+      ExportFormat.jpeg => 'image/jpeg',
+      ExportFormat.webp => 'image/webp',
+      ExportFormat.png => 'image/png',
+    };
+  }
+
+  String get label {
+    return switch (this) {
+      ExportFormat.jpeg => 'JPEG',
+      ExportFormat.webp => 'WebP',
+      ExportFormat.png => 'PNG',
+    };
+  }
+
+  /// Whether a quality setting is meaningful (PNG, WebP are lossless).
   bool get isLossy => this == ExportFormat.jpeg;
 }
 

@@ -100,7 +100,11 @@ Future<Uint8List?> renderImage(
         numChannels: 4,
         order: img.ChannelOrder.rgba,
       );
-      out = img.encodeJpg(raw, quality: quality.clamp(1, 100));
+      out = switch (format) {
+        ExportFormat.jpeg => img.encodeJpg(raw, quality: quality.clamp(1, 100)),
+        ExportFormat.webp => img.encodeWebP(raw),
+        ExportFormat.png => null, // handled above
+      };
     }
   }
 

@@ -149,6 +149,9 @@ Uint8List resizeAndEncodeTask(ImageResizeParams params) {
     case 'bmp':
       encoded = img.encodeBmp(targetImage);
       break;
+    case 'webp':
+      encoded = img.encodeWebP(targetImage);
+      break;
     default:
       encoded = img.encodePng(targetImage);
   }
