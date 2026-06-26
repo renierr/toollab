@@ -1,625 +1,424 @@
 import 'package:flutter/material.dart';
 
-class SyntaxRule {
-  final RegExp regex;
-  final TextStyle Function(ThemeData theme) styleBuilder;
+class Grammar {
+  final Map<String, dynamic> raw;
+  final Map<String, Rule> repository = {};
+  late final List<Rule> patterns;
 
-  SyntaxRule(
-    String pattern,
-    this.styleBuilder, {
-    bool caseSensitive = true,
-    bool multiLine = false,
-  }) : regex = RegExp(
-         pattern,
-         caseSensitive: caseSensitive,
-         multiLine: multiLine,
-       );
+  Grammar(this.raw) {
+    final repoMap = raw['repository'] as Map<String, dynamic>?;
+    if (repoMap != null) {
+      repoMap.forEach((key, val) {
+        repository[key] = Rule.fromJson(val, this);
+      });
+    }
+    patterns =
+        (raw['patterns'] as List?)
+            ?.map((val) => Rule.fromJson(val, this))
+            .toList() ??
+        [];
+  }
 }
 
-class CodeHighlightEngine {
-  CodeHighlightEngine._();
+class Rule {
+  final String? name;
+  final RegExp? matchRegExp;
+  final RegExp? beginRegExp;
+  final RegExp? endRegExp;
+  final Map<int, String>? captures;
+  final Map<int, String>? beginCaptures;
+  final Map<int, String>? endCaptures;
+  final String? include;
+  final List<Rule>? patterns;
 
-  static const List<String> supportedLanguages = [
-    'dart',
-    'javascript',
-    'typescript',
-    'python',
-    'json',
-    'yaml',
-    'sql',
-    'html',
-    'css',
-    'rust',
-    'go',
-    'java',
-    'kotlin',
-    'bash',
-    'markdown',
-  ];
+  Rule({
+    this.name,
+    this.matchRegExp,
+    this.beginRegExp,
+    this.endRegExp,
+    this.captures,
+    this.beginCaptures,
+    this.endCaptures,
+    this.include,
+    this.patterns,
+  });
 
-  static final Map<String, List<SyntaxRule>> _languageRules = {
-    'dart': [
-      // Comments
-      SyntaxRule(
-        r'//.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      SyntaxRule(
-        r'/\*[\s\S]*?\*/',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Triple quoted strings
-      SyntaxRule(
-        r'r?\"\"\"[\s\S]*?\"\"\"',
-        (t) => const TextStyle(color: Colors.green),
-      ),
-      SyntaxRule(
-        r"r?'''[\s\S]*?'''",
-        (t) => const TextStyle(color: Colors.green),
-      ),
-      // Single/Double quoted strings
-      SyntaxRule(r'r?".*?"', (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r"r?'.*?'", (t) => const TextStyle(color: Colors.green)),
-      // Keywords
-      SyntaxRule(
-        r'\b(void|class|import|export|as|show|hide|extends|implements|with|mixin|enum|final|const|late|var|dynamic|int|double|num|bool|String|List|Map|Set|Future|Stream|get|set|static|factory|operator|typedef|return|if|else|switch|case|default|break|continue|for|in|while|do|try|catch|finally|throw|rethrow|async|await|yield|new|this|super|is|null|true|false)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Annotations
-      SyntaxRule(r'@\w+', (t) => const TextStyle(color: Colors.teal)),
-      // Numbers
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-      // Functions
-      SyntaxRule(
-        r'\b\w+(?=\s*\()',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blueAccent,
-        ),
-      ),
-      // Types (Capitalized identifiers)
-      SyntaxRule(r'\b[A-Z]\w*\b', (t) => const TextStyle(color: Colors.teal)),
-    ],
-    'javascript': [
-      // Comments
-      SyntaxRule(
-        r'//.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      SyntaxRule(
-        r'/\*[\s\S]*?\*/',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Strings
-      SyntaxRule(r'".*?"', (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r"'.*?'", (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r'`[\s\S]*?`', (t) => const TextStyle(color: Colors.green)),
-      // Keywords
-      SyntaxRule(
-        r'\b(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|new|return|super|switch|this|throw|try|typeof|var|void|while|with|yield|let|package|private|protected|public|static|any|boolean|constructor|declare|get|module|require|number|readonly|set|string|symbol|type|from|of|null|true|false)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Numbers
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-      // Functions
-      SyntaxRule(
-        r'\b\w+(?=\s*\()',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blueAccent,
-        ),
-      ),
-    ],
-    'typescript': [
-      // Same as JS but with specific TS types
-      SyntaxRule(
-        r'//.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      SyntaxRule(
-        r'/\*[\s\S]*?\*/',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      SyntaxRule(r'".*?"', (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r"'.*?'", (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r'`[\s\S]*?`', (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(
-        r'\b(break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|in|instanceof|new|return|super|switch|this|throw|try|typeof|var|void|while|with|yield|let|package|private|protected|public|static|any|boolean|constructor|declare|get|module|require|number|readonly|set|string|symbol|type|from|of|interface|enum|implements|keyof|namespace|as|unknown|never|void|null|true|false)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-      SyntaxRule(
-        r'\b\w+(?=\s*\()',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blueAccent,
-        ),
-      ),
-    ],
-    'python': [
-      // Comments
-      SyntaxRule(
-        r'#.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Triple quoted strings
-      SyntaxRule(
-        r'\"{3}[\s\S]*?\"{3}',
-        (t) => const TextStyle(color: Colors.green),
-      ),
-      SyntaxRule(
-        r"'{3}[\s\S]*?'{3}",
-        (t) => const TextStyle(color: Colors.green),
-      ),
-      // Strings
-      SyntaxRule(r'r?".*?"', (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r"r?'.*?'", (t) => const TextStyle(color: Colors.green)),
-      // Keywords
-      SyntaxRule(
-        r'\b(False|None|True|and|as|assert|async|await|break|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Decorators
-      SyntaxRule(r'@\w+', (t) => const TextStyle(color: Colors.teal)),
-      // Numbers
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-      // Functions
-      SyntaxRule(
-        r'\b\w+(?=\s*\()',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blueAccent,
-        ),
-      ),
-    ],
-    'json': [
-      // Keys
-      SyntaxRule(
-        r'\".*?\"(?=\s*:)',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.indigoAccent
-              : Colors.indigo,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Strings
-      SyntaxRule(r'\".*?\"', (t) => const TextStyle(color: Colors.green)),
-      // Numbers
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-      // Booleans / Null
-      SyntaxRule(
-        r'\b(true|false|null)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-        ),
-      ),
-    ],
-    'yaml': [
-      // Comments
-      SyntaxRule(
-        r'#.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Keys
-      SyntaxRule(
-        r'[\w-]+(?=\s*:)',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.indigoAccent
-              : Colors.indigo,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Strings
-      SyntaxRule(r'".*?"', (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r"'.*?'", (t) => const TextStyle(color: Colors.green)),
-      // Booleans
-      SyntaxRule(
-        r'\b(true|false|null|yes|no)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-        ),
-      ),
-    ],
-    'sql': [
-      // Comments
-      SyntaxRule(
-        r'--.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      SyntaxRule(
-        r'/\*[\s\S]*?\*/',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Strings
-      SyntaxRule(r"'.*?'", (t) => const TextStyle(color: Colors.green)),
-      // Keywords (Case Insensitive)
-      SyntaxRule(
-        r'\b(SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|ON|AND|OR|NOT|IN|LIKE|IS|NULL|AS|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|ALTER|DROP|INDEX|PRIMARY|KEY|FOREIGN|REFERENCES|GROUP|BY|ORDER|HAVING|LIMIT|OFFSET|UNION|ALL|DISTINCT|CASE|WHEN|THEN|ELSE|END|DATABASE|SCHEMA|VIEW)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-        caseSensitive: false,
-      ),
-      // Numbers
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-    ],
-    'html': [
-      // Comments
-      SyntaxRule(
-        r'<!--[\s\S]*?-->',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Tag opening & closing
-      SyntaxRule(
-        r'</?\w+',
-        (t) => const TextStyle(
-          color: Colors.redAccent,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      SyntaxRule(
-        r'/?>',
-        (t) => const TextStyle(
-          color: Colors.redAccent,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Attributes
-      SyntaxRule(
-        r'\b[\w-]+(?=\s*=)',
-        (t) => const TextStyle(color: Colors.teal),
-      ),
-      // Attribute values (strings)
-      SyntaxRule(r'".*?"', (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r"'.*?'", (t) => const TextStyle(color: Colors.green)),
-    ],
-    'css': [
-      // Comments
-      SyntaxRule(
-        r'/\*[\s\S]*?\*/',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Selectors
-      SyntaxRule(
-        r'[\w#.+-]+(?=\s*\{)',
-        (t) => const TextStyle(
-          color: Colors.redAccent,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Properties
-      SyntaxRule(
-        r'\b[\w-]+(?=\s*:)',
-        (t) => const TextStyle(color: Colors.teal),
-      ),
-      // Units / Numbers
-      SyntaxRule(
-        r'\b\d+(px|em|rem|%|s|ms|vh|vw|deg)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-    ],
-    'rust': [
-      // Comments
-      SyntaxRule(
-        r'//.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      SyntaxRule(
-        r'/\*[\s\S]*?\*/',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Strings
-      SyntaxRule(r'r?".*?"', (t) => const TextStyle(color: Colors.green)),
-      // Keywords
-      SyntaxRule(
-        r'\b(as|async|await|break|const|continue|crate|dyn|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|ref|return|self|Self|static|struct|super|trait|true|type|unsafe|use|where|while|macro_rules|Box|Option|Result|String|Vec)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Macros
-      SyntaxRule(r'\w+!', (t) => const TextStyle(color: Colors.teal)),
-      // Numbers
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-    ],
-    'go': [
-      // Comments
-      SyntaxRule(
-        r'//.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      SyntaxRule(
-        r'/\*[\s\S]*?\*/',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Strings
-      SyntaxRule(r'".*?"', (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r'`[\s\S]*?`', (t) => const TextStyle(color: Colors.green)),
-      // Keywords
-      SyntaxRule(
-        r'\b(break|default|func|interface|select|case|defer|go|map|struct|chan|else|goto|package|switch|const|fallthrough|if|range|type|continue|for|import|return|var|nil|true|false|int|string|bool|float64|error)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Numbers
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-    ],
-    'java': [
-      // Comments
-      SyntaxRule(
-        r'//.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      SyntaxRule(
-        r'/\*[\s\S]*?\*/',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Strings
-      SyntaxRule(r'".*?"', (t) => const TextStyle(color: Colors.green)),
-      // Keywords
-      SyntaxRule(
-        r'\b(abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|final|finally|float|for|goto|if|implements|import|instanceof|int|interface|long|native|new|package|private|protected|public|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|transient|try|void|volatile|while|null|true|false)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Numbers
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-    ],
-    'kotlin': [
-      // Comments
-      SyntaxRule(
-        r'//.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      SyntaxRule(
-        r'/\*[\s\S]*?\*/',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Strings
-      SyntaxRule(r'".*?"', (t) => const TextStyle(color: Colors.green)),
-      // Keywords
-      SyntaxRule(
-        r'\b(val|var|fun|class|interface|object|constructor|init|override|open|sealed|data|internal|private|protected|public|import|package|if|else|when|for|while|do|break|continue|return|throw|try|catch|finally|this|super|null|true|false|as|is|in|get|set|by|out|to)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Numbers
-      SyntaxRule(
-        r'\b\d+(\.\d+)?\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.lightBlueAccent
-              : Colors.blue,
-        ),
-      ),
-    ],
-    'bash': [
-      // Comments
-      SyntaxRule(
-        r'#.*',
-        (t) => const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-      ),
-      // Strings
-      SyntaxRule(r'".*?"', (t) => const TextStyle(color: Colors.green)),
-      SyntaxRule(r"'.*?'", (t) => const TextStyle(color: Colors.green)),
-      // Keywords
-      SyntaxRule(
-        r'\b(if|then|else|elif|fi|case|esac|for|while|until|do|done|in|function|local|return|exit|export|alias|echo|read|set|unset)\b',
-        (t) => TextStyle(
-          color: t.brightness == Brightness.dark
-              ? Colors.orangeAccent
-              : Colors.deepOrange,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ],
-    'markdown': [
-      // Headers
-      SyntaxRule(
-        r'^#+ .*',
-        (t) => const TextStyle(
-          color: Colors.blueAccent,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      // Code blocks
-      SyntaxRule(r'```[\s\S]*?```', (t) => const TextStyle(color: Colors.teal)),
-      // Inline code
-      SyntaxRule(r'`[^`]+`', (t) => const TextStyle(color: Colors.teal)),
-      // Bold
-      SyntaxRule(
-        r'\*\*.*?\*\*',
-        (t) => const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      // Italic
-      SyntaxRule(
-        r'\*.*?\*',
-        (t) => const TextStyle(fontStyle: FontStyle.italic),
-      ),
-      // Links
-      SyntaxRule(
-        r'\[.*?\]\(.*?\)',
-        (t) => const TextStyle(
-          color: Colors.blue,
-          decoration: TextDecoration.underline,
-        ),
-      ),
-    ],
-  };
-
-  static TextSpan highlight(String text, String language, ThemeData theme) {
-    final rules = _languageRules[language];
-    if (rules == null || rules.isEmpty) {
-      return TextSpan(
-        text: text,
-        style: TextStyle(
-          color: theme.colorScheme.onSurface,
-          fontFamily: 'monospace',
-        ),
-      );
+  factory Rule.fromJson(dynamic json, Grammar grammar) {
+    if (json is! Map<String, dynamic>) {
+      return Rule();
     }
 
-    final List<TextSpan> children = [];
-    int start = 0;
-    final length = text.length;
+    final include = json['include'] as String?;
+    if (include != null) {
+      return Rule(include: include);
+    }
 
-    String accumulatedPlain = '';
-
-    void flushPlain() {
-      if (accumulatedPlain.isNotEmpty) {
-        children.add(TextSpan(text: accumulatedPlain));
-        accumulatedPlain = '';
+    RegExp? parseRegExp(String? pat) {
+      if (pat == null) return null;
+      try {
+        final sanitized = pat
+            .replaceAll(r'\h', r'[ \t]')
+            .replaceAll(r'\v', r'[\n\r]')
+            .replaceAll(r'\G', '');
+        return RegExp(sanitized);
+      } catch (e) {
+        return null;
       }
     }
 
-    while (start < length) {
-      Match? bestMatch;
-      SyntaxRule? bestRule;
+    Map<int, String>? parseCaptures(dynamic caps) {
+      if (caps == null) return null;
+      final map = <int, String>{};
+      if (caps is Map) {
+        caps.forEach((key, val) {
+          final idx = int.tryParse(key.toString());
+          if (idx != null && val is Map) {
+            final name = val['name'] as String?;
+            if (name != null) {
+              map[idx] = name;
+            }
+          }
+        });
+      }
+      return map;
+    }
 
-      for (final rule in rules) {
-        final match = rule.regex.matchAsPrefix(text, start);
-        if (match != null) {
-          bestMatch = match;
-          bestRule = rule;
+    return Rule(
+      name: json['name'] as String?,
+      matchRegExp: parseRegExp(json['match'] as String?),
+      beginRegExp: parseRegExp(json['begin'] as String?),
+      endRegExp: parseRegExp(json['end'] as String?),
+      captures: parseCaptures(json['captures'] ?? json['captures']),
+      beginCaptures: parseCaptures(json['beginCaptures']),
+      endCaptures: parseCaptures(json['endCaptures']),
+      patterns: (json['patterns'] as List?)
+          ?.map((val) => Rule.fromJson(val, grammar))
+          .toList(),
+    );
+  }
+}
+
+class MatchResult {
+  final Rule rule;
+  final Match match;
+  final bool isEnd;
+
+  MatchResult(this.rule, this.match, this.isEnd);
+}
+
+class IsolateResult {
+  final List<String> scopes;
+  final List<int> tokens;
+
+  IsolateResult(this.scopes, this.tokens);
+}
+
+class TextMateEngine {
+  TextMateEngine._();
+
+  static List<Rule> resolveRules(
+    List<Rule> rules,
+    Grammar grammar,
+    Set<String> visited,
+  ) {
+    final List<Rule> resolved = [];
+    for (final rule in rules) {
+      if (rule.include != null) {
+        final inc = rule.include!;
+        if (inc == r'$self' || inc == 'self') {
+          if (!visited.contains(r'$self')) {
+            visited.add(r'$self');
+            resolved.addAll(resolveRules(grammar.patterns, grammar, visited));
+            visited.remove(r'$self');
+          }
+        } else if (inc.startsWith('#')) {
+          final key = inc.substring(1);
+          if (!visited.contains(key)) {
+            visited.add(key);
+            final repoRule = grammar.repository[key];
+            if (repoRule != null) {
+              resolved.addAll(resolveRules([repoRule], grammar, visited));
+            }
+            visited.remove(key);
+          }
+        }
+      } else if (rule.beginRegExp == null &&
+          rule.matchRegExp == null &&
+          rule.patterns != null) {
+        resolved.addAll(resolveRules(rule.patterns!, grammar, visited));
+      } else {
+        resolved.add(rule);
+      }
+    }
+    return resolved;
+  }
+
+  static MatchResult? findEarliestMatch(
+    String line,
+    int pos,
+    List<Rule> rules,
+    Rule? activeBlock,
+    Grammar grammar,
+  ) {
+    int bestStart = -1;
+    MatchResult? bestResult;
+
+    void updateBest(Rule rule, Match match, bool isEnd) {
+      if (match.start < pos) return;
+      if (bestStart == -1 || match.start < bestStart) {
+        bestStart = match.start;
+        bestResult = MatchResult(rule, match, isEnd);
+      }
+    }
+
+    if (activeBlock != null && activeBlock.endRegExp != null) {
+      final matches = activeBlock.endRegExp!.allMatches(line, pos);
+      if (matches.isNotEmpty) {
+        updateBest(activeBlock, matches.first, true);
+      }
+    }
+
+    final resolved = resolveRules(rules, grammar, {});
+    for (final rule in resolved) {
+      if (rule.matchRegExp != null) {
+        final matches = rule.matchRegExp!.allMatches(line, pos);
+        if (matches.isNotEmpty) {
+          updateBest(rule, matches.first, false);
+        }
+      } else if (rule.beginRegExp != null) {
+        final matches = rule.beginRegExp!.allMatches(line, pos);
+        if (matches.isNotEmpty) {
+          updateBest(rule, matches.first, false);
+        }
+      }
+    }
+
+    return bestResult;
+  }
+
+  static IsolateResult tokenize(String text, Map<String, dynamic> grammarJson) {
+    final grammar = Grammar(grammarJson);
+    final scopesList = <String>[];
+    final scopesMap = <String, int>{};
+
+    int getScopeId(String scope) {
+      return scopesMap.putIfAbsent(scope, () {
+        scopesList.add(scope);
+        return scopesList.length - 1;
+      });
+    }
+
+    final tokens = <int>[];
+    final lines = text.split('\n');
+
+    final List<Rule> stack = [];
+    int currentOffset = 0;
+
+    for (int lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+      final line = lines[lineIdx];
+      int pos = 0;
+
+      while (pos < line.length) {
+        final List<Rule> activePatterns =
+            stack.isNotEmpty && stack.last.patterns != null
+            ? stack.last.patterns!
+            : grammar.patterns;
+
+        final earliest = findEarliestMatch(
+          line,
+          pos,
+          activePatterns,
+          stack.isNotEmpty ? stack.last : null,
+          grammar,
+        );
+
+        if (earliest == null) {
+          if (stack.isNotEmpty && stack.last.name != null) {
+            tokens.add(currentOffset + pos);
+            tokens.add(line.length - pos);
+            tokens.add(getScopeId(stack.last.name!));
+          }
           break;
+        }
+
+        final matchStart = earliest.match.start;
+        final matchEnd = earliest.match.end;
+
+        if (matchStart > pos) {
+          if (stack.isNotEmpty && stack.last.name != null) {
+            tokens.add(currentOffset + pos);
+            tokens.add(matchStart - pos);
+            tokens.add(getScopeId(stack.last.name!));
+          }
+        }
+
+        if (earliest.isEnd) {
+          _addCaptureTokens(
+            line,
+            currentOffset,
+            matchStart,
+            earliest.match,
+            earliest.rule.endCaptures,
+            earliest.rule.name,
+            getScopeId,
+            tokens,
+          );
+          if (stack.isNotEmpty) {
+            stack.removeLast();
+          }
+        } else {
+          final rule = earliest.rule;
+          if (rule.beginRegExp != null) {
+            _addCaptureTokens(
+              line,
+              currentOffset,
+              matchStart,
+              earliest.match,
+              rule.beginCaptures,
+              rule.name,
+              getScopeId,
+              tokens,
+            );
+            stack.add(rule);
+          } else {
+            _addCaptureTokens(
+              line,
+              currentOffset,
+              matchStart,
+              earliest.match,
+              rule.captures,
+              rule.name,
+              getScopeId,
+              tokens,
+            );
+          }
+        }
+
+        if (matchEnd == pos) {
+          pos++;
+        } else {
+          pos = matchEnd;
         }
       }
 
-      if (bestMatch != null && bestRule != null) {
-        flushPlain();
-        final matchedText = text.substring(start, bestMatch.end);
-        children.add(
-          TextSpan(text: matchedText, style: bestRule.styleBuilder(theme)),
-        );
-        start = bestMatch.end;
-      } else {
-        accumulatedPlain += text[start];
-        start++;
-      }
+      currentOffset += line.length + 1;
     }
 
-    flushPlain();
-    return TextSpan(
-      children: children,
-      style: TextStyle(
-        color: theme.colorScheme.onSurface,
-        fontFamily: 'monospace',
-      ),
-    );
+    return IsolateResult(scopesList, tokens);
+  }
+
+  static void _addCaptureTokens(
+    String line,
+    int currentOffset,
+    int matchStart,
+    Match match,
+    Map<int, String>? captures,
+    String? ruleName,
+    int Function(String) getScopeId,
+    List<int> tokens,
+  ) {
+    if (captures != null && captures.isNotEmpty) {
+      captures.forEach((groupIndex, scope) {
+        if (groupIndex <= match.groupCount) {
+          final groupText = match.group(groupIndex);
+          if (groupText != null && groupText.isNotEmpty) {
+            final idx = match.group(0)!.indexOf(groupText);
+            if (idx != -1) {
+              final gStart = match.start + idx;
+              tokens.add(currentOffset + gStart);
+              tokens.add(groupText.length);
+              tokens.add(getScopeId(scope));
+            }
+          }
+        }
+      });
+    } else if (ruleName != null) {
+      tokens.add(currentOffset + match.start);
+      tokens.add(match.end - match.start);
+      tokens.add(getScopeId(ruleName));
+    }
+  }
+
+  static TextStyle getScopeStyle(String scope, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+    final parts = scope.split('.');
+    for (int i = parts.length; i > 0; i--) {
+      final subScope = parts.take(i).join('.');
+      switch (subScope) {
+        case 'comment':
+        case 'punctuation.definition.comment':
+          return const TextStyle(
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
+          );
+        case 'string':
+        case 'punctuation.definition.string':
+          return const TextStyle(color: Colors.green);
+        case 'keyword':
+        case 'storage':
+          return TextStyle(
+            color: isDark ? Colors.orangeAccent : Colors.deepOrange,
+            fontWeight: FontWeight.bold,
+          );
+        case 'constant':
+        case 'support.constant':
+          return TextStyle(
+            color: isDark ? Colors.lightBlueAccent : Colors.blue,
+          );
+        case 'entity.name.function':
+        case 'support.function':
+          return TextStyle(
+            color: isDark ? Colors.lightBlueAccent : Colors.blueAccent,
+          );
+        case 'entity.name.type':
+        case 'entity.name.class':
+        case 'support.class':
+        case 'support.type':
+          return const TextStyle(color: Colors.teal);
+        case 'variable':
+        case 'variable.parameter':
+          return TextStyle(color: isDark ? Colors.white70 : Colors.black87);
+        case 'meta.structure.dictionary.key':
+        case 'entity.name.tag.yaml':
+        case 'support.type.property-name':
+          return TextStyle(
+            color: isDark ? Colors.indigoAccent : Colors.indigo,
+            fontWeight: FontWeight.bold,
+          );
+        case 'markup.heading':
+          return const TextStyle(
+            color: Colors.blueAccent,
+            fontWeight: FontWeight.bold,
+          );
+        case 'markup.bold':
+          return TextStyle(
+            color: isDark ? Colors.orangeAccent : Colors.orange,
+            fontWeight: FontWeight.bold,
+          );
+        case 'markup.italic':
+          return TextStyle(
+            color: isDark ? Colors.amberAccent : Colors.amber,
+            fontStyle: FontStyle.italic,
+          );
+        case 'markup.underline.link':
+          return const TextStyle(
+            color: Colors.blue,
+            decoration: TextDecoration.underline,
+          );
+        case 'markup.raw':
+          return const TextStyle(color: Colors.teal);
+        case 'markup.quote':
+          return const TextStyle(
+            color: Colors.grey,
+            fontStyle: FontStyle.italic,
+          );
+        case 'markup.list':
+          return const TextStyle(
+            color: Colors.redAccent,
+            fontWeight: FontWeight.bold,
+          );
+      }
+    }
+    return TextStyle(color: theme.colorScheme.onSurface);
   }
 }

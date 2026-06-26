@@ -37,6 +37,9 @@ class _CodeHighlightToolPageState extends State<CodeHighlightToolPage>
     super.initState();
     _scope = TempFileManager.createScope();
     onDispose(() => _scope.cleanTracked());
+    onDispose(() {
+      context.read<CodeHighlightState>().clear();
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CodeHighlightState>().initialize();
