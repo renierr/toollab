@@ -2335,6 +2335,25 @@
   "codeHighlightDropSubtitle": "Drop file here or click to choose",
   "codeHighlightOpenInViewer": "Open in Code Highlighter",
   "codeHighlightThemeLight": "Light Theme",
-  "codeHighlightThemeDark": "Dark Theme"
+  "codeHighlightThemeDark": "Dark Theme",
+  "codeHighlightExportTitle": "Export Option",
+  "codeHighlightExportText": "Export as Raw Text File",
+  "codeHighlightExportImage": "Export as Colored Image",
+  "codeHighlightSaveImage": "Save Image",
+  "codeHighlightCopyImage": "Copy Image",
+  "codeHighlightCopiedImage": "Image copied to clipboard",
+  "codeHighlightFailedToCopyImage": "Failed to copy image: {error}",
+  "codeHighlightFormat": "Format",
+  "@codeHighlightFailedToCopyImage": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "codeHighlightFailedToSaveImage": "Failed to save image: {error}",
+  "@codeHighlightFailedToSaveImage": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  }
 }
 

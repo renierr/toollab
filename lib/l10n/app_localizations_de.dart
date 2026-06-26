@@ -4300,4 +4300,35 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get codeHighlightThemeDark => 'Dunkles Design';
+
+  @override
+  String get codeHighlightExportTitle => 'Export-Option';
+
+  @override
+  String get codeHighlightExportText => 'Als reine Textdatei exportieren';
+
+  @override
+  String get codeHighlightExportImage => 'Als farbiges Bild exportieren';
+
+  @override
+  String get codeHighlightSaveImage => 'Bild speichern';
+
+  @override
+  String get codeHighlightCopyImage => 'Bild kopieren';
+
+  @override
+  String get codeHighlightCopiedImage => 'Bild in die Zwischenablage kopiert';
+
+  @override
+  String codeHighlightFailedToCopyImage(String error) {
+    return 'Fehler beim Kopieren des Bildes: $error';
+  }
+
+  @override
+  String get codeHighlightFormat => 'Format';
+
+  @override
+  String codeHighlightFailedToSaveImage(String error) {
+    return 'Fehler beim Speichern des Bildes: $error';
+  }
 }

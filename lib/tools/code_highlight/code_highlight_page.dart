@@ -18,6 +18,7 @@ import 'config.dart';
 import 'code_highlight_state.dart';
 import 'widgets/code_highlight_toolbar.dart';
 import 'widgets/code_highlight_editor.dart';
+import 'widgets/code_highlight_export_dialog.dart';
 
 class CodeHighlightToolPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -121,15 +122,6 @@ class _CodeHighlightToolPageState extends State<CodeHighlightToolPage>
         );
       }
     }
-  }
-
-  Future<void> _exportFile(String text, String? fileName) async {
-    final bytes = Uint8List.fromList(utf8.encode(text));
-    await FileSaveHelper.saveFile(
-      context: context,
-      suggestedName: fileName ?? 'code.txt',
-      bytes: bytes,
-    );
   }
 
   Future<void> _shareFile(String text, String? fileName) async {
@@ -247,7 +239,13 @@ class _CodeHighlightToolPageState extends State<CodeHighlightToolPage>
         IconButton(
           icon: const Icon(Icons.download),
           tooltip: l10n.commonExport,
-          onPressed: () => _exportFile(state.code!, state.fileName),
+          onPressed: () => showDialog(
+            context: context,
+            builder: (dialogCtx) => CodeHighlightExportDialog(
+              code: state.code!,
+              fileName: state.fileName,
+            ),
+          ),
         ),
         IconButton(
           icon: const Icon(Icons.close),

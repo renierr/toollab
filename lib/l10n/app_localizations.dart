@@ -7789,6 +7789,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark Theme'**
   String get codeHighlightThemeDark;
+
+  /// No description provided for @codeHighlightExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Option'**
+  String get codeHighlightExportTitle;
+
+  /// No description provided for @codeHighlightExportText.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as Raw Text File'**
+  String get codeHighlightExportText;
+
+  /// No description provided for @codeHighlightExportImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as Colored Image'**
+  String get codeHighlightExportImage;
+
+  /// No description provided for @codeHighlightSaveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Image'**
+  String get codeHighlightSaveImage;
+
+  /// No description provided for @codeHighlightCopyImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Image'**
+  String get codeHighlightCopyImage;
+
+  /// No description provided for @codeHighlightCopiedImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image copied to clipboard'**
+  String get codeHighlightCopiedImage;
+
+  /// No description provided for @codeHighlightFailedToCopyImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to copy image: {error}'**
+  String codeHighlightFailedToCopyImage(String error);
+
+  /// No description provided for @codeHighlightFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get codeHighlightFormat;
+
+  /// No description provided for @codeHighlightFailedToSaveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save image: {error}'**
+  String codeHighlightFailedToSaveImage(String error);
 }
 
 class _AppLocalizationsDelegate

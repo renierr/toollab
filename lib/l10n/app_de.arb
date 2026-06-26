@@ -1509,6 +1509,25 @@
   "codeHighlightDropSubtitle": "Datei hierher ziehen oder zum Auswählen klicken",
   "codeHighlightOpenInViewer": "Im Code-Highlighter öffnen",
   "codeHighlightThemeLight": "Helles Design",
-  "codeHighlightThemeDark": "Dunkles Design"
+  "codeHighlightThemeDark": "Dunkles Design",
+  "codeHighlightExportTitle": "Export-Option",
+  "codeHighlightExportText": "Als reine Textdatei exportieren",
+  "codeHighlightExportImage": "Als farbiges Bild exportieren",
+  "codeHighlightSaveImage": "Bild speichern",
+  "codeHighlightCopyImage": "Bild kopieren",
+  "codeHighlightCopiedImage": "Bild in die Zwischenablage kopiert",
+  "codeHighlightFailedToCopyImage": "Fehler beim Kopieren des Bildes: {error}",
+  "codeHighlightFormat": "Format",
+  "@codeHighlightFailedToCopyImage": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "codeHighlightFailedToSaveImage": "Fehler beim Speichern des Bildes: {error}",
+  "@codeHighlightFailedToSaveImage": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  }
 }
 

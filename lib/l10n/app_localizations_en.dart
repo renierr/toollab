@@ -4269,4 +4269,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get codeHighlightThemeDark => 'Dark Theme';
+
+  @override
+  String get codeHighlightExportTitle => 'Export Option';
+
+  @override
+  String get codeHighlightExportText => 'Export as Raw Text File';
+
+  @override
+  String get codeHighlightExportImage => 'Export as Colored Image';
+
+  @override
+  String get codeHighlightSaveImage => 'Save Image';
+
+  @override
+  String get codeHighlightCopyImage => 'Copy Image';
+
+  @override
+  String get codeHighlightCopiedImage => 'Image copied to clipboard';
+
+  @override
+  String codeHighlightFailedToCopyImage(String error) {
+    return 'Failed to copy image: $error';
+  }
+
+  @override
+  String get codeHighlightFormat => 'Format';
+
+  @override
+  String codeHighlightFailedToSaveImage(String error) {
+    return 'Failed to save image: $error';
+  }
 }
