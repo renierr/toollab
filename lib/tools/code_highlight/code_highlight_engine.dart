@@ -56,11 +56,26 @@ class Rule {
     RegExp? parseRegExp(String? pat) {
       if (pat == null) return null;
       try {
-        final sanitized = pat
+        bool caseSensitive = true;
+        String sanitized = pat;
+
+        if (sanitized.contains('(?i)')) {
+          caseSensitive = false;
+          sanitized = sanitized.replaceAll('(?i)', '');
+        }
+
+        sanitized = sanitized
+            .replaceAll('*+', '*')
+            .replaceAll('++', '+')
+            .replaceAll('?+', '?')
+            .replaceAll('}+', '}')
             .replaceAll(r'\h', r'[ \t]')
             .replaceAll(r'\v', r'[\n\r]')
-            .replaceAll(r'\G', '');
-        return RegExp(sanitized);
+            .replaceAll(r'\G', '')
+            .replaceAll('[]]', r'[\]]')
+            .replaceAll('[^]]', r'[^\]]');
+
+        return RegExp(sanitized, caseSensitive: caseSensitive);
       } catch (e) {
         return null;
       }

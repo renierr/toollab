@@ -31,14 +31,17 @@ class CodeHighlightToolPage extends StatefulWidget {
 class _CodeHighlightToolPageState extends State<CodeHighlightToolPage>
     with DisposeCleanup {
   late final TempFileScope _scope;
+  late final CodeHighlightState _highlightState;
 
   @override
   void initState() {
     super.initState();
     _scope = TempFileManager.createScope();
     onDispose(() => _scope.cleanTracked());
+
+    _highlightState = context.read<CodeHighlightState>();
     onDispose(() {
-      context.read<CodeHighlightState>().clear();
+      _highlightState.clear();
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
