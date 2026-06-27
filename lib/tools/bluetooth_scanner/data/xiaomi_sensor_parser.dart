@@ -84,12 +84,12 @@ class XiaomiSensorParser {
       switch (eventType) {
         case 0x1004:
           if (eventLen >= 2) {
-            temperature = _toSigned16(data[offset], data[offset + 1]) / 100.0;
+            temperature = _toSigned16(data[offset], data[offset + 1]) / 10.0;
           }
           break;
         case 0x1006:
           if (eventLen >= 2) {
-            humidity = ((data[offset] << 8) | data[offset + 1]) / 100.0;
+            humidity = ((data[offset + 1] << 8) | data[offset]) / 10.0;
           }
           break;
         case 0x100A:
@@ -99,8 +99,8 @@ class XiaomiSensorParser {
           break;
         case 0x100D:
           if (eventLen >= 4) {
-            temperature = _toSigned16(data[offset], data[offset + 1]) / 100.0;
-            humidity = ((data[offset + 2] << 8) | data[offset + 3]) / 100.0;
+            temperature = _toSigned16(data[offset], data[offset + 1]) / 10.0;
+            humidity = ((data[offset + 3] << 8) | data[offset + 2]) / 10.0;
           }
           break;
       }
@@ -138,21 +138,25 @@ class XiaomiSensorParser {
       switch (eventType) {
         case 0x1004:
           if (eventLen >= 2) {
-            temperature = _toSigned16(data[i + 3], data[i + 4]) / 100.0;
+            temperature = _toSigned16(data[i + 3], data[i + 4]) / 10.0;
           }
+          break;
         case 0x1006:
           if (eventLen >= 2) {
-            humidity = ((data[i + 3] << 8) | data[i + 4]) / 100.0;
+            humidity = ((data[i + 4] << 8) | data[i + 3]) / 10.0;
           }
+          break;
         case 0x100A:
           if (eventLen >= 1) {
             battery = data[i + 3];
           }
+          break;
         case 0x100D:
           if (eventLen >= 4) {
-            temperature = _toSigned16(data[i + 3], data[i + 4]) / 100.0;
-            humidity = ((data[i + 5] << 8) | data[i + 6]) / 100.0;
+            temperature = _toSigned16(data[i + 3], data[i + 4]) / 10.0;
+            humidity = ((data[i + 6] << 8) | data[i + 5]) / 10.0;
           }
+          break;
       }
     }
 
