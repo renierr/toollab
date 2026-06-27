@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:universal_ble/universal_ble.dart';
 import 'package:flutter_bluetooth_classic_serial/flutter_bluetooth_classic.dart'
     as classic;
@@ -62,6 +63,9 @@ class BluetoothScannerState extends ChangeNotifier {
 
   final classic.FlutterBluetoothClassic _classicPlugin =
       classic.FlutterBluetoothClassic();
+  static const _classicMethodChannel = MethodChannel(
+    'com.flutter_bluetooth_classic.plugin/flutter_bluetooth_classic',
+  );
   Timer? _classicPollTimer;
 
   bool get isScanning => _isScanning;
@@ -163,9 +167,12 @@ class BluetoothScannerState extends ChangeNotifier {
   }
 
   Future<void> _startClassicScan() async {
+    try {
+      await _classicPlugin.startDiscovery();
+    } catch (_) {}
     await _loadClassicDevices();
     _classicPollTimer = Timer.periodic(
-      const Duration(seconds: 5),
+      const Duration(seconds: 10),
       (_) => _loadClassicDevices(),
     );
   }
@@ -180,11 +187,25 @@ class BluetoothScannerState extends ChangeNotifier {
 
   Future<void> _loadClassicDevices() async {
     try {
-      await _classicPlugin.startDiscovery();
       final paired = await _classicPlugin.getPairedDevices();
       for (final device in paired) {
         final parsed = DeviceParser.parseClassicDevice(device);
         _devices[parsed.id] = parsed;
+      }
+      final discovered = await _classicMethodChannel.invokeMethod<List>(
+        'getDiscoveredDevices',
+      );
+      if (discovered != null) {
+        for (final d in discovered) {
+          final map = Map<String, dynamic>.from(d as Map);
+          final classicDevice = classic.BluetoothDevice(
+            name: map['name'] as String? ?? 'Unknown',
+            address: map['address'] as String? ?? '',
+            paired: map['paired'] as bool? ?? false,
+          );
+          final parsed = DeviceParser.parseClassicDevice(classicDevice);
+          _devices[parsed.id] = parsed;
+        }
       }
       _deviceCount = _devices.length;
       notifyListeners();
