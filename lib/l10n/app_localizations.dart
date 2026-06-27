@@ -8425,6 +8425,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No embedded URL detected.'**
   String get stringTransformerNoEmbeddedUrl;
+
+  /// No description provided for @toolNameTreadmillControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Treadmill Control'**
+  String get toolNameTreadmillControl;
+
+  /// No description provided for @toolDescTreadmillControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Control your treadmill and monitor heart rate via Bluetooth'**
+  String get toolDescTreadmillControl;
+
+  /// No description provided for @speedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get speedLabel;
+
+  /// No description provided for @inclineLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Incline'**
+  String get inclineLabel;
+
+  /// No description provided for @hrLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart Rate'**
+  String get hrLabel;
+
+  /// No description provided for @elapsedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get elapsedTime;
+
+  /// No description provided for @distance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get distance;
+
+  /// No description provided for @calories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get calories;
+
+  /// No description provided for @steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get steps;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout History'**
+  String get historyTitle;
+
+  /// No description provided for @workoutStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get workoutStart;
+
+  /// No description provided for @workoutPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get workoutPause;
+
+  /// No description provided for @workoutStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get workoutStop;
+
+  /// No description provided for @importHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Workouts'**
+  String get importHistory;
+
+  /// No description provided for @exportHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Workouts'**
+  String get exportHistory;
 }
 
 class _AppLocalizationsDelegate

@@ -2532,6 +2532,21 @@
       "message": { "type": "String" }
     }
   },
-  "stringTransformerNoEmbeddedUrl": "No embedded URL detected."
+  "stringTransformerNoEmbeddedUrl": "No embedded URL detected.",
+  "toolNameTreadmillControl": "Treadmill Control",
+  "toolDescTreadmillControl": "Control your treadmill and monitor heart rate via Bluetooth",
+  "speedLabel": "Speed",
+  "inclineLabel": "Incline",
+  "hrLabel": "Heart Rate",
+  "elapsedTime": "Duration",
+  "distance": "Distance",
+  "calories": "Calories",
+  "steps": "Steps",
+  "historyTitle": "Workout History",
+  "workoutStart": "Start",
+  "workoutPause": "Pause",
+  "workoutStop": "Stop",
+  "importHistory": "Import Workouts",
+  "exportHistory": "Export Workouts"
 }
 

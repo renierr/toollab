@@ -1706,6 +1706,21 @@
       "message": { "type": "String" }
     }
   },
-  "stringTransformerNoEmbeddedUrl": "Keine eingebettete URL erkannt."
+  "stringTransformerNoEmbeddedUrl": "Keine eingebettete URL erkannt.",
+  "toolNameTreadmillControl": "Laufband-Steuerung",
+  "toolDescTreadmillControl": "Steuere dein Laufband und überwache deine Herzfrequenz über Bluetooth",
+  "speedLabel": "Geschwindigkeit",
+  "inclineLabel": "Steigung",
+  "hrLabel": "Herzfrequenz",
+  "elapsedTime": "Dauer",
+  "distance": "Distanz",
+  "calories": "Kalorien",
+  "steps": "Schritte",
+  "historyTitle": "Trainingsverlauf",
+  "workoutStart": "Start",
+  "workoutPause": "Pause",
+  "workoutStop": "Stopp",
+  "importHistory": "Workouts importieren",
+  "exportHistory": "Workouts exportieren"
 }
 

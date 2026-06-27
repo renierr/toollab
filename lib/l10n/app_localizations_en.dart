@@ -4628,4 +4628,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stringTransformerNoEmbeddedUrl => 'No embedded URL detected.';
+
+  @override
+  String get toolNameTreadmillControl => 'Treadmill Control';
+
+  @override
+  String get toolDescTreadmillControl =>
+      'Control your treadmill and monitor heart rate via Bluetooth';
+
+  @override
+  String get speedLabel => 'Speed';
+
+  @override
+  String get inclineLabel => 'Incline';
+
+  @override
+  String get hrLabel => 'Heart Rate';
+
+  @override
+  String get elapsedTime => 'Duration';
+
+  @override
+  String get distance => 'Distance';
+
+  @override
+  String get calories => 'Calories';
+
+  @override
+  String get steps => 'Steps';
+
+  @override
+  String get historyTitle => 'Workout History';
+
+  @override
+  String get workoutStart => 'Start';
+
+  @override
+  String get workoutPause => 'Pause';
+
+  @override
+  String get workoutStop => 'Stop';
+
+  @override
+  String get importHistory => 'Import Workouts';
+
+  @override
+  String get exportHistory => 'Export Workouts';
 }
