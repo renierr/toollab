@@ -93,6 +93,15 @@ class DeviceCard extends StatelessWidget {
                       '${device.rssi} dBm',
                       style: theme.textTheme.labelSmall,
                     ),
+                    if (device.estimatedDistance != null) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '~${device.estimatedDistance!.toStringAsFixed(1)} m',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ] else
                     Icon(
                       Icons.bluetooth,

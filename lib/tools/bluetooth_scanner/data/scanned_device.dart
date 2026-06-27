@@ -1,3 +1,5 @@
+import 'dart:math';
+
 enum Confidence { low, medium, high }
 
 enum Transport { ble, classic }
@@ -37,6 +39,12 @@ class ScannedDevice {
   final bool? isSystemDevice;
   final Transport transport;
   final DateTime timestamp;
+
+  double? get estimatedDistance {
+    if (rssi >= 0) return null;
+    final tx = (txPower ?? -59).toDouble();
+    return pow(10, (tx - rssi) / 20.0).toDouble();
+  }
 
   ScannedDevice({
     required this.id,
