@@ -13,179 +13,184 @@ class DeviceDetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return ResponsiveAlertDialog(
-      title: Row(
-        children: [
-          Icon(Icons.bluetooth, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              device.knownName ?? device.name,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+      title: SelectionArea(
+        child: Row(
+          children: [
+            Icon(Icons.bluetooth, size: 20, color: theme.colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                device.knownName ?? device.name,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _infoRow(
-              context,
-              'Confidence',
-              device.confidence.name.toUpperCase(),
-            ),
-            _infoRow(context, 'Category', device.identifiedCategory),
-            _infoRow(context, 'Type', device.identifiedType),
-            _infoRow(context, 'Role', device.likelyRole),
-            _infoRow(context, 'RSSI', '${device.rssi} dBm'),
-            if (device.estimatedDistance != null)
+        child: SelectionArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
               _infoRow(
                 context,
-                'Distance',
-                '~${device.estimatedDistance!.toStringAsFixed(1)} m',
+                'Confidence',
+                device.confidence.name.toUpperCase(),
               ),
-            if (device.manufacturer != null)
-              _infoRow(context, 'Manufacturer', device.manufacturer!),
-            if (device.knownName != null)
-              _infoRow(context, 'Identified As', device.knownName!),
-            if (history != null) ...[
-              const Divider(height: 16),
-              _infoRow(
-                context,
-                'First seen',
-                _formatDateTime(history!.firstSeen),
-              ),
-              _infoRow(
-                context,
-                'Last seen',
-                _formatDateTime(history!.lastSeen),
-              ),
-              _infoRow(context, 'Sightings', '${history!.sightings}'),
-              if (history!.strongestRssi != null)
+              _infoRow(context, 'Category', device.identifiedCategory),
+              _infoRow(context, 'Type', device.identifiedType),
+              _infoRow(context, 'Role', device.likelyRole),
+              _infoRow(context, 'RSSI', '${device.rssi} dBm'),
+              if (device.estimatedDistance != null)
                 _infoRow(
                   context,
-                  'Strongest RSSI',
-                  '${history!.strongestRssi} dBm',
+                  'Distance',
+                  '~${device.estimatedDistance!.toStringAsFixed(1)} m',
                 ),
-            ],
-            if (device.sensorData != null) ...[
-              const Divider(height: 16),
-              Text(
-                'Sensor Data',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              if (device.sensorData!.temperatureCelsius != null)
+              if (device.manufacturer != null)
+                _infoRow(context, 'Manufacturer', device.manufacturer!),
+              if (device.knownName != null)
+                _infoRow(context, 'Identified As', device.knownName!),
+              if (history != null) ...[
+                const Divider(height: 16),
                 _infoRow(
                   context,
-                  'Temperature',
-                  '${device.sensorData!.temperatureCelsius!.toStringAsFixed(1)} °C',
+                  'First seen',
+                  _formatDateTime(history!.firstSeen),
                 ),
-              if (device.sensorData!.humidityPercent != null)
                 _infoRow(
                   context,
-                  'Humidity',
-                  '${device.sensorData!.humidityPercent!.toStringAsFixed(1)} %',
+                  'Last seen',
+                  _formatDateTime(history!.lastSeen),
                 ),
-              if (device.sensorData!.batteryPercent != null)
-                _infoRow(
-                  context,
-                  'Battery',
-                  '${device.sensorData!.batteryPercent} %',
-                ),
-            ],
-            if (device.beacons.isNotEmpty) ...[
-              const Divider(height: 16),
-              Text(
-                'Beacons',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              for (final beacon in device.beacons) ...[
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  margin: const EdgeInsets.only(bottom: 4),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(6),
+                _infoRow(context, 'Sightings', '${history!.sightings}'),
+                if (history!.strongestRssi != null)
+                  _infoRow(
+                    context,
+                    'Strongest RSSI',
+                    '${history!.strongestRssi} dBm',
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        beacon.type,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(beacon.format, style: theme.textTheme.bodySmall),
-                      if (beacon.details.isNotEmpty)
-                        ...beacon.details.map(
-                          (d) => Text(d, style: theme.textTheme.bodySmall),
-                        ),
-                    ],
+              ],
+              if (device.sensorData != null) ...[
+                const Divider(height: 16),
+                Text(
+                  'Sensor Data',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
+                ),
+                const SizedBox(height: 4),
+                if (device.sensorData!.temperatureCelsius != null)
+                  _infoRow(
+                    context,
+                    'Temperature',
+                    '${device.sensorData!.temperatureCelsius!.toStringAsFixed(1)} °C',
+                  ),
+                if (device.sensorData!.humidityPercent != null)
+                  _infoRow(
+                    context,
+                    'Humidity',
+                    '${device.sensorData!.humidityPercent!.toStringAsFixed(1)} %',
+                  ),
+                if (device.sensorData!.batteryPercent != null)
+                  _infoRow(
+                    context,
+                    'Battery',
+                    '${device.sensorData!.batteryPercent} %',
+                  ),
+              ],
+              if (device.beacons.isNotEmpty) ...[
+                const Divider(height: 16),
+                Text(
+                  'Beacons',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                for (final beacon in device.beacons) ...[
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    margin: const EdgeInsets.only(bottom: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          beacon.type,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(beacon.format, style: theme.textTheme.bodySmall),
+                        if (beacon.details.isNotEmpty)
+                          ...beacon.details.map(
+                            (d) => Text(d, style: theme.textTheme.bodySmall),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+              if (device.serviceNames.isNotEmpty) ...[
+                const Divider(height: 16),
+                Text(
+                  'Services',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: device.serviceNames
+                      .map(
+                        (s) => Chip(
+                          label: Text(s, style: theme.textTheme.labelSmall),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
+                      .toList(),
                 ),
               ],
-            ],
-            if (device.serviceNames.isNotEmpty) ...[
-              const Divider(height: 16),
-              Text(
-                'Services',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 4,
-                runSpacing: 4,
-                children: device.serviceNames
-                    .map(
-                      (s) => Chip(
-                        label: Text(s, style: theme.textTheme.labelSmall),
-                        visualDensity: VisualDensity.compact,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ],
-            if (device.confidenceReasons.isNotEmpty) ...[
-              const Divider(height: 16),
-              Text(
-                'Why identified',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              for (final reason in device.confidenceReasons)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        size: 14,
-                        color: Colors.green,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(reason, style: theme.textTheme.bodySmall),
-                      ),
-                    ],
+              if (device.confidenceReasons.isNotEmpty) ...[
+                const Divider(height: 16),
+                Text(
+                  'Why identified',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                const SizedBox(height: 4),
+                for (final reason in device.confidenceReasons)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline,
+                          size: 14,
+                          color: Colors.green,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(reason, style: theme.textTheme.bodySmall),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
       actions: [
