@@ -228,6 +228,7 @@ const Map<String, ServiceInfo> serviceUuids = {
     category: 'Health',
   ),
   'feaa': ServiceInfo(uuid: 'feaa', name: 'Eddystone', category: 'Beacon'),
+  'fe95': ServiceInfo(uuid: 'fe95', name: 'Xiaomi IoT', category: 'IoT'),
   'febc': ServiceInfo(uuid: 'febc', name: 'Tile', category: 'IoT'),
   'febf': ServiceInfo(
     uuid: 'febf',

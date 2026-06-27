@@ -41,6 +41,12 @@ class DeviceDetailsDialog extends StatelessWidget {
             _infoRow(context, 'Type', device.identifiedType),
             _infoRow(context, 'Role', device.likelyRole),
             _infoRow(context, 'RSSI', '${device.rssi} dBm'),
+            if (device.estimatedDistance != null)
+              _infoRow(
+                context,
+                'Distance',
+                '~${device.estimatedDistance!.toStringAsFixed(1)} m',
+              ),
             if (device.manufacturer != null)
               _infoRow(context, 'Manufacturer', device.manufacturer!),
             if (device.knownName != null)
@@ -63,6 +69,34 @@ class DeviceDetailsDialog extends StatelessWidget {
                   context,
                   'Strongest RSSI',
                   '${history!.strongestRssi} dBm',
+                ),
+            ],
+            if (device.sensorData != null) ...[
+              const Divider(height: 16),
+              Text(
+                'Sensor Data',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              if (device.sensorData!.temperatureCelsius != null)
+                _infoRow(
+                  context,
+                  'Temperature',
+                  '${device.sensorData!.temperatureCelsius!.toStringAsFixed(1)} °C',
+                ),
+              if (device.sensorData!.humidityPercent != null)
+                _infoRow(
+                  context,
+                  'Humidity',
+                  '${device.sensorData!.humidityPercent!.toStringAsFixed(1)} %',
+                ),
+              if (device.sensorData!.batteryPercent != null)
+                _infoRow(
+                  context,
+                  'Battery',
+                  '${device.sensorData!.batteryPercent} %',
                 ),
             ],
             if (device.beacons.isNotEmpty) ...[

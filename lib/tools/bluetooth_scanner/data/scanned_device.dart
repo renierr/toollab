@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'environmental_reading.dart';
 
 enum Confidence { low, medium, high }
 
@@ -37,6 +38,7 @@ class ScannedDevice {
   final int? txPower;
   final bool? paired;
   final bool? isSystemDevice;
+  final EnvironmentalReading? sensorData;
   final Transport transport;
   final DateTime timestamp;
 
@@ -67,6 +69,7 @@ class ScannedDevice {
     this.txPower,
     this.paired,
     this.isSystemDevice,
+    this.sensorData,
     this.transport = Transport.ble,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();

@@ -284,6 +284,13 @@ final List<DevicePattern> devicePatterns = [
 
   // Xiaomi
   DevicePattern(
+    pattern: r'MJ_HT_V1',
+    name: 'Mi Temperature / Humidity',
+    type: 'Environmental Sensor',
+    category: 'IoT',
+    manufacturer: 'Xiaomi',
+  ),
+  DevicePattern(
     pattern: r'Redmi Buds',
     name: 'Redmi Buds',
     type: 'Earbuds',

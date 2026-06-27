@@ -5,6 +5,7 @@ import 'service_uuids.dart';
 import 'manufacturer_ids.dart';
 import 'device_patterns.dart';
 import 'beacon_detector.dart';
+import 'xiaomi_sensor_parser.dart';
 
 class DeviceParser {
   static ScannedDevice parseBleDevice(
@@ -99,6 +100,8 @@ class DeviceParser {
           .join(' ');
     }
 
+    final sensorData = XiaomiSensorParser.parseServiceData(serviceDataMap);
+
     return ScannedDevice(
       id: device.deviceId,
       name: name,
@@ -119,6 +122,7 @@ class DeviceParser {
       manufacturerData: mfrDataStrings.isNotEmpty ? mfrDataStrings : null,
       paired: device.paired,
       isSystemDevice: device.isSystemDevice,
+      sensorData: sensorData,
     );
   }
 
