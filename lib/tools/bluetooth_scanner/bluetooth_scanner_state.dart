@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
 import 'package:flutter_classic_bluetooth/flutter_classic_bluetooth.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'config.dart';
 import 'data/device_parser.dart';
 import 'data/scanned_device.dart';
 
@@ -251,7 +252,11 @@ class BluetoothScannerState extends ChangeNotifier {
 
   void clearHistory() {
     _history.clear();
-    DatabaseService.instance.setSetting('bluetooth-scanner', 'history', '{}');
+    DatabaseService.instance.setSetting(
+      BluetoothScannerTool.config.id,
+      'history',
+      '{}',
+    );
     notifyListeners();
   }
 
@@ -276,7 +281,7 @@ class BluetoothScannerState extends ChangeNotifier {
   Future<void> _loadHistory() async {
     try {
       final raw = await DatabaseService.instance.getSetting(
-        'bluetooth-scanner',
+        BluetoothScannerTool.config.id,
         'history',
       );
       if (raw != null && raw.isNotEmpty) {
@@ -310,7 +315,7 @@ class BluetoothScannerState extends ChangeNotifier {
     try {
       final json = _history.map((k, v) => MapEntry(k, v.toJson()));
       await DatabaseService.instance.setSetting(
-        'bluetooth-scanner',
+        BluetoothScannerTool.config.id,
         'history',
         json.toString(),
       );

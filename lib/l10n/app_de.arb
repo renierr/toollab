@@ -1547,6 +1547,65 @@
   "bleFilterBeacons": "Beacons",
   "bleFilterUnknown": "Unbekannt",
   "bleFilterRecent": "Kürzlich",
-  "bleFilterStrongSignal": "Starkes Signal"
+  "bleFilterStrongSignal": "Starkes Signal",
+  "bleBluetoothOff": "Bluetooth aus",
+  "bleDeviceCount": "{count, plural, =1{1 Gerät} other{{count} Geräte}}",
+  "@bleDeviceCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "bleCategoryAudio": "Audio",
+  "bleCategoryWearables": "Wearables",
+  "bleCategoryHealth": "Gesundheit",
+  "bleCategoryFitness": "Fitness",
+  "bleCategoryIoT": "IoT",
+  "bleCategoryPhones": "Telefone",
+  "bleCategoryComputers": "Computer",
+  "bleCategoryInput": "Eingabegeräte",
+  "bleCategoryGaming": "Gaming",
+  "bleCategoryVehicle": "Fahrzeuge",
+  "bleCategoryUnidentified": "Nicht identifiziert",
+  "bleConfidenceMedium": "Mittel",
+  "bleConfidenceLow": "Niedrig",
+  "bleDetailConfidence": "Zuverlässigkeit",
+  "bleDetailCategory": "Kategorie",
+  "bleDetailType": "Typ",
+  "bleDetailRole": "Rolle",
+  "bleDetailRSSI": "RSSI",
+  "bleDetailDistance": "Entfernung",
+  "bleDetailManufacturer": "Hersteller",
+  "bleDetailIdentifiedAs": "Identifiziert als",
+  "bleDetailFirstSeen": "Zuerst gesehen",
+  "bleDetailLastSeen": "Zuletzt gesehen",
+  "bleDetailSightings": "Sichtungen",
+  "bleDetailStrongestRSSI": "Stärkste RSSI",
+  "bleDetailSensorData": "Sensordaten",
+  "bleDetailTemperature": "Temperatur",
+  "bleDetailHumidity": "Luftfeuchtigkeit",
+  "bleDetailBattery": "Batterie",
+  "bleDetailBeacons": "Beacons",
+  "bleDetailServices": "Dienste",
+  "bleDetailWhyIdentified": "Grund für Identifizierung",
+  "bleDetailRawData": "Rohdaten",
+  "bleTimeJustNow": "Gerade eben",
+  "bleTimeMinutesAgo": "vor {minutes} Min.",
+  "@bleTimeMinutesAgo": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "bleTimeHoursAgo": "vor {hours} Std.",
+  "@bleTimeHoursAgo": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "bleTimeDaysAgo": "vor {days} Tagen",
+  "@bleTimeDaysAgo": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  }
 }
 

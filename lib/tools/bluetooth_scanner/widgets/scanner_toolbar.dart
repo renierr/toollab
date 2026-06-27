@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/bluetooth_scanner_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'scanner_filter_chip.dart';
 
 class ScannerToolbar extends StatelessWidget {
   final bool isScanning;
@@ -91,56 +92,44 @@ class ScannerToolbar extends StatelessWidget {
           spacing: 6,
           runSpacing: 6,
           children: [
-            _filterChip(
-              context,
-              DeviceFilter.highConfidence,
-              l10n.bleFilterHighConfidence,
-              Icons.verified_outlined,
+            ScannerFilterChip(
+              filter: DeviceFilter.highConfidence,
+              label: l10n.bleFilterHighConfidence,
+              icon: Icons.verified_outlined,
+              isActive: activeFilters.contains(DeviceFilter.highConfidence),
+              onToggle: onToggleFilter,
             ),
-            _filterChip(
-              context,
-              DeviceFilter.beacons,
-              l10n.bleFilterBeacons,
-              Icons.signal_cellular_alt,
+            ScannerFilterChip(
+              filter: DeviceFilter.beacons,
+              label: l10n.bleFilterBeacons,
+              icon: Icons.signal_cellular_alt,
+              isActive: activeFilters.contains(DeviceFilter.beacons),
+              onToggle: onToggleFilter,
             ),
-            _filterChip(
-              context,
-              DeviceFilter.unknown,
-              l10n.bleFilterUnknown,
-              Icons.help_outline,
+            ScannerFilterChip(
+              filter: DeviceFilter.unknown,
+              label: l10n.bleFilterUnknown,
+              icon: Icons.help_outline,
+              isActive: activeFilters.contains(DeviceFilter.unknown),
+              onToggle: onToggleFilter,
             ),
-            _filterChip(
-              context,
-              DeviceFilter.recent,
-              l10n.bleFilterRecent,
-              Icons.schedule,
+            ScannerFilterChip(
+              filter: DeviceFilter.recent,
+              label: l10n.bleFilterRecent,
+              icon: Icons.schedule,
+              isActive: activeFilters.contains(DeviceFilter.recent),
+              onToggle: onToggleFilter,
             ),
-            _filterChip(
-              context,
-              DeviceFilter.strongSignal,
-              l10n.bleFilterStrongSignal,
-              Icons.signal_wifi_4_bar,
+            ScannerFilterChip(
+              filter: DeviceFilter.strongSignal,
+              label: l10n.bleFilterStrongSignal,
+              icon: Icons.signal_wifi_4_bar,
+              isActive: activeFilters.contains(DeviceFilter.strongSignal),
+              onToggle: onToggleFilter,
             ),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _filterChip(
-    BuildContext context,
-    DeviceFilter filter,
-    String label,
-    IconData icon,
-  ) {
-    final isActive = activeFilters.contains(filter);
-    final theme = Theme.of(context);
-    return FilterChip(
-      selected: isActive,
-      label: Text(label, style: theme.textTheme.labelSmall),
-      avatar: Icon(icon, size: 14),
-      onSelected: (_) => onToggleFilter(filter),
-      visualDensity: VisualDensity.compact,
     );
   }
 }

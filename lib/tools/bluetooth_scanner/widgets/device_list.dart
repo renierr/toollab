@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/data/scanned_device.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/bluetooth_scanner_state.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'device_card.dart';
 import 'device_details_dialog.dart';
+import 'scanner_empty_state.dart';
 
 class DeviceList extends StatelessWidget {
   final Map<String, ScannedDevice> devices;
@@ -26,7 +28,7 @@ class DeviceList extends StatelessWidget {
   Widget build(BuildContext context) {
     final filtered = _filterDevices(context);
     if (filtered.isEmpty) {
-      return _emptyState(context);
+      return const ScannerEmptyState();
     }
 
     final grouped = _groupByCategory(filtered);
@@ -58,7 +60,7 @@ class DeviceList extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          category,
+                          _localizeCategory(context, category),
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.w600),
                         ),
@@ -208,35 +210,40 @@ class DeviceList extends StatelessWidget {
     return a.compareTo(b);
   }
 
-  Widget _emptyState(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.bluetooth_searching,
-            size: 64,
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No devices found',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Start scanning to discover nearby BLE devices',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
+  String _localizeCategory(BuildContext context, String category) {
+    final l10n = AppLocalizations.of(context);
+    if (category.startsWith('Unknown - ')) {
+      final mfr = category.substring('Unknown - '.length);
+      return '${l10n.bleFilterUnknown} - $mfr';
+    }
+    switch (category) {
+      case 'Beacons':
+        return l10n.bleFilterBeacons;
+      case 'Audio':
+        return l10n.bleCategoryAudio;
+      case 'Wearables':
+        return l10n.bleCategoryWearables;
+      case 'Health':
+        return l10n.bleCategoryHealth;
+      case 'Fitness':
+        return l10n.bleCategoryFitness;
+      case 'IoT':
+        return l10n.bleCategoryIoT;
+      case 'Phones':
+        return l10n.bleCategoryPhones;
+      case 'Computers':
+        return l10n.bleCategoryComputers;
+      case 'Input':
+        return l10n.bleCategoryInput;
+      case 'Gaming':
+        return l10n.bleCategoryGaming;
+      case 'Vehicle':
+        return l10n.bleCategoryVehicle;
+      case 'Unidentified':
+        return l10n.bleCategoryUnidentified;
+      default:
+        return category;
+    }
   }
 
   IconData _categoryIcon(String category) {

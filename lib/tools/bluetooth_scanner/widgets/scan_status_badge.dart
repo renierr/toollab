@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class ScanStatusBadge extends StatelessWidget {
   final bool isScanning;
@@ -13,6 +14,7 @@ class ScanStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -37,7 +39,7 @@ class ScanStatusBadge extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            '$deviceCount device${deviceCount == 1 ? '' : 's'}',
+            l10n.bleDeviceCount(deviceCount),
             style: theme.textTheme.labelSmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: isScanning

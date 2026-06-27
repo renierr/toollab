@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/data/scanned_device.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/bluetooth_scanner_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'device_info_row.dart';
 
 class DeviceDetailsDialog extends StatelessWidget {
   final ScannedDevice device;
@@ -12,6 +15,7 @@ class DeviceDetailsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return ResponsiveAlertDialog(
       title: SelectionArea(
         child: Row(
@@ -35,77 +39,96 @@ class DeviceDetailsDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _infoRow(
-                context,
-                'Confidence',
-                device.confidence.name.toUpperCase(),
+              DeviceInfoRow(
+                label: l10n.bleDetailConfidence,
+                value: switch (device.confidence) {
+                  Confidence.high => l10n.bleFilterHighConfidence,
+                  Confidence.medium => l10n.bleConfidenceMedium,
+                  Confidence.low => l10n.bleConfidenceLow,
+                }.toUpperCase(),
               ),
-              _infoRow(context, 'Category', device.identifiedCategory),
-              _infoRow(context, 'Type', device.identifiedType),
-              _infoRow(context, 'Role', device.likelyRole),
-              _infoRow(context, 'RSSI', '${device.rssi} dBm'),
+              DeviceInfoRow(
+                label: l10n.bleDetailCategory,
+                value: device.identifiedCategory,
+              ),
+              DeviceInfoRow(
+                label: l10n.bleDetailType,
+                value: device.identifiedType,
+              ),
+              DeviceInfoRow(
+                label: l10n.bleDetailRole,
+                value: device.likelyRole,
+              ),
+              DeviceInfoRow(
+                label: l10n.bleDetailRSSI,
+                value: '${device.rssi} dBm',
+              ),
               if (device.estimatedDistance != null)
-                _infoRow(
-                  context,
-                  'Distance',
-                  '~${device.estimatedDistance!.toStringAsFixed(1)} m',
+                DeviceInfoRow(
+                  label: l10n.bleDetailDistance,
+                  value: '~${device.estimatedDistance!.toStringAsFixed(1)} m',
                 ),
               if (device.manufacturer != null)
-                _infoRow(context, 'Manufacturer', device.manufacturer!),
+                DeviceInfoRow(
+                  label: l10n.bleDetailManufacturer,
+                  value: device.manufacturer!,
+                ),
               if (device.knownName != null)
-                _infoRow(context, 'Identified As', device.knownName!),
+                DeviceInfoRow(
+                  label: l10n.bleDetailIdentifiedAs,
+                  value: device.knownName!,
+                ),
               if (history != null) ...[
                 const Divider(height: 16),
-                _infoRow(
-                  context,
-                  'First seen',
-                  _formatDateTime(history!.firstSeen),
+                DeviceInfoRow(
+                  label: l10n.bleDetailFirstSeen,
+                  value: _formatDateTime(context, history!.firstSeen),
                 ),
-                _infoRow(
-                  context,
-                  'Last seen',
-                  _formatDateTime(history!.lastSeen),
+                DeviceInfoRow(
+                  label: l10n.bleDetailLastSeen,
+                  value: _formatDateTime(context, history!.lastSeen),
                 ),
-                _infoRow(context, 'Sightings', '${history!.sightings}'),
+                DeviceInfoRow(
+                  label: l10n.bleDetailSightings,
+                  value: '${history!.sightings}',
+                ),
                 if (history!.strongestRssi != null)
-                  _infoRow(
-                    context,
-                    'Strongest RSSI',
-                    '${history!.strongestRssi} dBm',
+                  DeviceInfoRow(
+                    label: l10n.bleDetailStrongestRSSI,
+                    value: '${history!.strongestRssi} dBm',
                   ),
               ],
               if (device.sensorData != null) ...[
                 const Divider(height: 16),
                 Text(
-                  'Sensor Data',
+                  l10n.bleDetailSensorData,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
                 if (device.sensorData!.temperatureCelsius != null)
-                  _infoRow(
-                    context,
-                    'Temperature',
-                    '${device.sensorData!.temperatureCelsius!.toStringAsFixed(1)} °C',
+                  DeviceInfoRow(
+                    label: l10n.bleDetailTemperature,
+                    value:
+                        '${device.sensorData!.temperatureCelsius!.toStringAsFixed(1)} °C',
                   ),
                 if (device.sensorData!.humidityPercent != null)
-                  _infoRow(
-                    context,
-                    'Humidity',
-                    '${device.sensorData!.humidityPercent!.toStringAsFixed(1)} %',
+                  DeviceInfoRow(
+                    label: l10n.bleDetailHumidity,
+                    value:
+                        '${device.sensorData!.humidityPercent!.toStringAsFixed(1)} %',
                   ),
                 if (device.sensorData!.batteryPercent != null)
-                  _infoRow(
-                    context,
-                    'Battery',
-                    '${device.sensorData!.batteryPercent} %',
+                  DeviceInfoRow(
+                    label: l10n.bleDetailBattery,
+                    value: '${device.sensorData!.batteryPercent} %',
                   ),
               ],
               if (device.beacons.isNotEmpty) ...[
                 const Divider(height: 16),
                 Text(
-                  'Beacons',
+                  l10n.bleDetailBeacons,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -141,7 +164,7 @@ class DeviceDetailsDialog extends StatelessWidget {
               if (device.serviceNames.isNotEmpty) ...[
                 const Divider(height: 16),
                 Text(
-                  'Services',
+                  l10n.bleDetailServices,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -165,7 +188,7 @@ class DeviceDetailsDialog extends StatelessWidget {
               if (device.confidenceReasons.isNotEmpty) ...[
                 const Divider(height: 16),
                 Text(
-                  'Why identified',
+                  l10n.bleDetailWhyIdentified,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -176,10 +199,10 @@ class DeviceDetailsDialog extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 2),
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.check_circle_outline,
                           size: 14,
-                          color: Colors.green,
+                          color: AppTheme.statusGreen,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -189,7 +212,7 @@ class DeviceDetailsDialog extends StatelessWidget {
                     ),
                   ),
               ],
-              ..._rawDataWidgets(theme),
+              ..._rawDataWidgets(context),
             ],
           ),
         ),
@@ -203,7 +226,9 @@ class DeviceDetailsDialog extends StatelessWidget {
     );
   }
 
-  List<Widget> _rawDataWidgets(ThemeData theme) {
+  List<Widget> _rawDataWidgets(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final widgets = <Widget>[];
     if (device.manufacturerData == null && device.serviceDataRaw == null) {
       return widgets;
@@ -212,7 +237,7 @@ class DeviceDetailsDialog extends StatelessWidget {
     widgets.add(const Divider(height: 16));
     widgets.add(
       Text(
-        'Raw Data',
+        l10n.bleDetailRawData,
         style: theme.textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w600,
         ),
@@ -279,78 +304,14 @@ class DeviceDetailsDialog extends StatelessWidget {
     return widgets;
   }
 
-  Widget _infoRow(BuildContext context, String label, String value) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(child: Text(value, style: theme.textTheme.bodySmall)),
-        ],
-      ),
-    );
-  }
-
-  String _formatDateTime(DateTime dt) {
+  String _formatDateTime(BuildContext context, DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inSeconds < 60) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    final l10n = AppLocalizations.of(context);
+    if (diff.inSeconds < 60) return l10n.bleTimeJustNow;
+    if (diff.inMinutes < 60) return l10n.bleTimeMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.bleTimeHoursAgo(diff.inHours);
+    if (diff.inDays < 7) return l10n.bleTimeDaysAgo(diff.inDays);
     return '${dt.month}/${dt.day}/${dt.year}';
-  }
-}
-
-class ResponsiveAlertDialog extends StatelessWidget {
-  final Widget title;
-  final Widget content;
-  final List<Widget> actions;
-
-  const ResponsiveAlertDialog({
-    super.key,
-    required this.title,
-    required this.content,
-    this.actions = const [],
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 480, maxHeight: 600),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: title,
-            ),
-            Flexible(
-              child: Padding(padding: const EdgeInsets.all(16), child: content),
-            ),
-            if (actions.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: actions,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
   }
 }

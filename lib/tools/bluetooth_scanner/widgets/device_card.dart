@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/data/scanned_device.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/bluetooth_scanner_state.dart';
+import 'package:tool_lab/theme/theme.dart';
+import 'signal_strength_indicator.dart';
 
 class DeviceCard extends StatelessWidget {
   final ScannedDevice device;
@@ -87,7 +89,7 @@ class DeviceCard extends StatelessWidget {
               Row(
                 children: [
                   if (device.transport == Transport.ble) ...[
-                    _signalIcon(signalBars, theme),
+                    SignalStrengthIndicator(bars: signalBars),
                     const SizedBox(width: 4),
                     Text(
                       '${device.rssi} dBm',
@@ -159,7 +161,7 @@ class DeviceCard extends StatelessWidget {
                           label:
                               '${device.sensorData!.temperatureCelsius!.toStringAsFixed(1)}°C',
                           icon: Icons.thermostat,
-                          color: Colors.orange,
+                          color: AppTheme.statusOrange,
                           theme: theme,
                         ),
                       if (device.sensorData?.humidityPercent != null)
@@ -167,14 +169,14 @@ class DeviceCard extends StatelessWidget {
                           label:
                               '${device.sensorData!.humidityPercent!.toStringAsFixed(0)}%',
                           icon: Icons.water_drop,
-                          color: Colors.blue,
+                          color: AppTheme.statusBlue,
                           theme: theme,
                         ),
                       if (device.sensorData?.batteryPercent != null)
                         _SensorBadge(
                           label: '${device.sensorData!.batteryPercent}%',
                           icon: Icons.battery_std,
-                          color: Colors.green,
+                          color: AppTheme.statusGreen,
                           theme: theme,
                         ),
                     ],
@@ -195,32 +197,14 @@ class DeviceCard extends StatelessWidget {
     return 0;
   }
 
-  Widget _signalIcon(int bars, ThemeData theme) {
-    return Row(
-      children: List.generate(4, (i) {
-        return Container(
-          width: 4,
-          height: 4 + i * 3,
-          margin: const EdgeInsets.only(right: 1),
-          decoration: BoxDecoration(
-            color: i < bars
-                ? theme.colorScheme.primary
-                : theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(1),
-          ),
-        );
-      }),
-    );
-  }
-
   Color _confidenceColor(ThemeData theme, Confidence c) {
     switch (c) {
       case Confidence.high:
-        return Colors.green;
+        return AppTheme.statusGreen;
       case Confidence.medium:
-        return Colors.orange;
+        return AppTheme.statusOrange;
       case Confidence.low:
-        return Colors.grey;
+        return theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
     }
   }
 
@@ -307,7 +291,9 @@ class _TransportBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
       decoration: BoxDecoration(
-        color: (isBle ? Colors.blue : Colors.indigo).withValues(alpha: 0.12),
+        color: (isBle ? AppTheme.statusBlue : AppTheme.accentPurple).withValues(
+          alpha: 0.12,
+        ),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -315,7 +301,7 @@ class _TransportBadge extends StatelessWidget {
         style: theme.textTheme.labelSmall?.copyWith(
           fontSize: 7,
           fontWeight: FontWeight.bold,
-          color: isBle ? Colors.blue : Colors.indigo,
+          color: isBle ? AppTheme.statusBlue : AppTheme.accentPurple,
         ),
       ),
     );

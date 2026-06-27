@@ -4346,4 +4346,135 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bleFilterStrongSignal => 'Strong Signal';
+
+  @override
+  String get bleBluetoothOff => 'Bluetooth Off';
+
+  @override
+  String bleDeviceCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count devices',
+      one: '1 device',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bleCategoryAudio => 'Audio';
+
+  @override
+  String get bleCategoryWearables => 'Wearables';
+
+  @override
+  String get bleCategoryHealth => 'Health';
+
+  @override
+  String get bleCategoryFitness => 'Fitness';
+
+  @override
+  String get bleCategoryIoT => 'IoT';
+
+  @override
+  String get bleCategoryPhones => 'Phones';
+
+  @override
+  String get bleCategoryComputers => 'Computers';
+
+  @override
+  String get bleCategoryInput => 'Input';
+
+  @override
+  String get bleCategoryGaming => 'Gaming';
+
+  @override
+  String get bleCategoryVehicle => 'Vehicle';
+
+  @override
+  String get bleCategoryUnidentified => 'Unidentified';
+
+  @override
+  String get bleConfidenceMedium => 'Medium';
+
+  @override
+  String get bleConfidenceLow => 'Low';
+
+  @override
+  String get bleDetailConfidence => 'Confidence';
+
+  @override
+  String get bleDetailCategory => 'Category';
+
+  @override
+  String get bleDetailType => 'Type';
+
+  @override
+  String get bleDetailRole => 'Role';
+
+  @override
+  String get bleDetailRSSI => 'RSSI';
+
+  @override
+  String get bleDetailDistance => 'Distance';
+
+  @override
+  String get bleDetailManufacturer => 'Manufacturer';
+
+  @override
+  String get bleDetailIdentifiedAs => 'Identified As';
+
+  @override
+  String get bleDetailFirstSeen => 'First seen';
+
+  @override
+  String get bleDetailLastSeen => 'Last seen';
+
+  @override
+  String get bleDetailSightings => 'Sightings';
+
+  @override
+  String get bleDetailStrongestRSSI => 'Strongest RSSI';
+
+  @override
+  String get bleDetailSensorData => 'Sensor Data';
+
+  @override
+  String get bleDetailTemperature => 'Temperature';
+
+  @override
+  String get bleDetailHumidity => 'Humidity';
+
+  @override
+  String get bleDetailBattery => 'Battery';
+
+  @override
+  String get bleDetailBeacons => 'Beacons';
+
+  @override
+  String get bleDetailServices => 'Services';
+
+  @override
+  String get bleDetailWhyIdentified => 'Why identified';
+
+  @override
+  String get bleDetailRawData => 'Raw Data';
+
+  @override
+  String get bleTimeJustNow => 'Just now';
+
+  @override
+  String bleTimeMinutesAgo(int minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String bleTimeHoursAgo(int hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String bleTimeDaysAgo(int days) {
+    return '${days}d ago';
+  }
 }

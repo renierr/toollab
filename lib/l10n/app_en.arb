@@ -2373,6 +2373,65 @@
   "bleFilterBeacons": "Beacons",
   "bleFilterUnknown": "Unknown",
   "bleFilterRecent": "Recent",
-  "bleFilterStrongSignal": "Strong Signal"
+  "bleFilterStrongSignal": "Strong Signal",
+  "bleBluetoothOff": "Bluetooth Off",
+  "bleDeviceCount": "{count, plural, =1{1 device} other{{count} devices}}",
+  "@bleDeviceCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "bleCategoryAudio": "Audio",
+  "bleCategoryWearables": "Wearables",
+  "bleCategoryHealth": "Health",
+  "bleCategoryFitness": "Fitness",
+  "bleCategoryIoT": "IoT",
+  "bleCategoryPhones": "Phones",
+  "bleCategoryComputers": "Computers",
+  "bleCategoryInput": "Input",
+  "bleCategoryGaming": "Gaming",
+  "bleCategoryVehicle": "Vehicle",
+  "bleCategoryUnidentified": "Unidentified",
+  "bleConfidenceMedium": "Medium",
+  "bleConfidenceLow": "Low",
+  "bleDetailConfidence": "Confidence",
+  "bleDetailCategory": "Category",
+  "bleDetailType": "Type",
+  "bleDetailRole": "Role",
+  "bleDetailRSSI": "RSSI",
+  "bleDetailDistance": "Distance",
+  "bleDetailManufacturer": "Manufacturer",
+  "bleDetailIdentifiedAs": "Identified As",
+  "bleDetailFirstSeen": "First seen",
+  "bleDetailLastSeen": "Last seen",
+  "bleDetailSightings": "Sightings",
+  "bleDetailStrongestRSSI": "Strongest RSSI",
+  "bleDetailSensorData": "Sensor Data",
+  "bleDetailTemperature": "Temperature",
+  "bleDetailHumidity": "Humidity",
+  "bleDetailBattery": "Battery",
+  "bleDetailBeacons": "Beacons",
+  "bleDetailServices": "Services",
+  "bleDetailWhyIdentified": "Why identified",
+  "bleDetailRawData": "Raw Data",
+  "bleTimeJustNow": "Just now",
+  "bleTimeMinutesAgo": "{minutes}m ago",
+  "@bleTimeMinutesAgo": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "bleTimeHoursAgo": "{hours}h ago",
+  "@bleTimeHoursAgo": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "bleTimeDaysAgo": "{days}d ago",
+  "@bleTimeDaysAgo": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  }
 }
 

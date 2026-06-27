@@ -75,7 +75,7 @@ class _BluetoothScannerPageState extends State<BluetoothScannerPage>
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        'Bluetooth Off',
+                        l10n.bleBluetoothOff,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Theme.of(context).colorScheme.onErrorContainer,
                         ),

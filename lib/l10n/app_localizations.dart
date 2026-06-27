@@ -7927,6 +7927,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Strong Signal'**
   String get bleFilterStrongSignal;
+
+  /// No description provided for @bleBluetoothOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth Off'**
+  String get bleBluetoothOff;
+
+  /// No description provided for @bleDeviceCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 device} other{{count} devices}}'**
+  String bleDeviceCount(int count);
+
+  /// No description provided for @bleCategoryAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get bleCategoryAudio;
+
+  /// No description provided for @bleCategoryWearables.
+  ///
+  /// In en, this message translates to:
+  /// **'Wearables'**
+  String get bleCategoryWearables;
+
+  /// No description provided for @bleCategoryHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get bleCategoryHealth;
+
+  /// No description provided for @bleCategoryFitness.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness'**
+  String get bleCategoryFitness;
+
+  /// No description provided for @bleCategoryIoT.
+  ///
+  /// In en, this message translates to:
+  /// **'IoT'**
+  String get bleCategoryIoT;
+
+  /// No description provided for @bleCategoryPhones.
+  ///
+  /// In en, this message translates to:
+  /// **'Phones'**
+  String get bleCategoryPhones;
+
+  /// No description provided for @bleCategoryComputers.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers'**
+  String get bleCategoryComputers;
+
+  /// No description provided for @bleCategoryInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Input'**
+  String get bleCategoryInput;
+
+  /// No description provided for @bleCategoryGaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Gaming'**
+  String get bleCategoryGaming;
+
+  /// No description provided for @bleCategoryVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get bleCategoryVehicle;
+
+  /// No description provided for @bleCategoryUnidentified.
+  ///
+  /// In en, this message translates to:
+  /// **'Unidentified'**
+  String get bleCategoryUnidentified;
+
+  /// No description provided for @bleConfidenceMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get bleConfidenceMedium;
+
+  /// No description provided for @bleConfidenceLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get bleConfidenceLow;
+
+  /// No description provided for @bleDetailConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence'**
+  String get bleDetailConfidence;
+
+  /// No description provided for @bleDetailCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get bleDetailCategory;
+
+  /// No description provided for @bleDetailType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get bleDetailType;
+
+  /// No description provided for @bleDetailRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get bleDetailRole;
+
+  /// No description provided for @bleDetailRSSI.
+  ///
+  /// In en, this message translates to:
+  /// **'RSSI'**
+  String get bleDetailRSSI;
+
+  /// No description provided for @bleDetailDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get bleDetailDistance;
+
+  /// No description provided for @bleDetailManufacturer.
+  ///
+  /// In en, this message translates to:
+  /// **'Manufacturer'**
+  String get bleDetailManufacturer;
+
+  /// No description provided for @bleDetailIdentifiedAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Identified As'**
+  String get bleDetailIdentifiedAs;
+
+  /// No description provided for @bleDetailFirstSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'First seen'**
+  String get bleDetailFirstSeen;
+
+  /// No description provided for @bleDetailLastSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen'**
+  String get bleDetailLastSeen;
+
+  /// No description provided for @bleDetailSightings.
+  ///
+  /// In en, this message translates to:
+  /// **'Sightings'**
+  String get bleDetailSightings;
+
+  /// No description provided for @bleDetailStrongestRSSI.
+  ///
+  /// In en, this message translates to:
+  /// **'Strongest RSSI'**
+  String get bleDetailStrongestRSSI;
+
+  /// No description provided for @bleDetailSensorData.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor Data'**
+  String get bleDetailSensorData;
+
+  /// No description provided for @bleDetailTemperature.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperature'**
+  String get bleDetailTemperature;
+
+  /// No description provided for @bleDetailHumidity.
+  ///
+  /// In en, this message translates to:
+  /// **'Humidity'**
+  String get bleDetailHumidity;
+
+  /// No description provided for @bleDetailBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get bleDetailBattery;
+
+  /// No description provided for @bleDetailBeacons.
+  ///
+  /// In en, this message translates to:
+  /// **'Beacons'**
+  String get bleDetailBeacons;
+
+  /// No description provided for @bleDetailServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get bleDetailServices;
+
+  /// No description provided for @bleDetailWhyIdentified.
+  ///
+  /// In en, this message translates to:
+  /// **'Why identified'**
+  String get bleDetailWhyIdentified;
+
+  /// No description provided for @bleDetailRawData.
+  ///
+  /// In en, this message translates to:
+  /// **'Raw Data'**
+  String get bleDetailRawData;
+
+  /// No description provided for @bleTimeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get bleTimeJustNow;
+
+  /// No description provided for @bleTimeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m ago'**
+  String bleTimeMinutesAgo(int minutes);
+
+  /// No description provided for @bleTimeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String bleTimeHoursAgo(int hours);
+
+  /// No description provided for @bleTimeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String bleTimeDaysAgo(int days);
 }
 
 class _AppLocalizationsDelegate
