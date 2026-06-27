@@ -4339,4 +4339,42 @@ class AppLocalizationsDe extends AppLocalizations {
   String codeHighlightExportWarningMessage(int lines) {
     return 'Diese Datei enthält $lines Zeilen. Der Export sehr langer Codedateien als Bild schlägt möglicherweise aufgrund von Speicherbeschränkungen fehl oder der Text ist zu klein, um lesbar zu sein. Wir empfehlen stattdessen den Export als reine Textdatei.';
   }
+
+  @override
+  String get toolNameBluetoothScanner => 'Bluetooth-Scanner';
+
+  @override
+  String get toolDescBluetoothScanner =>
+      'Scannen Sie nach nahegelegenen Bluetooth Low Energy Geräten und identifizieren Sie diese.';
+
+  @override
+  String get bleStartScan => 'Scan starten';
+
+  @override
+  String get bleStopScan => 'Stop';
+
+  @override
+  String get bleStartScanning =>
+      'Starte Scan, um nahegelegene BLE-Geräte zu finden';
+
+  @override
+  String get bleNoDevicesFound => 'Keine Geräte gefunden';
+
+  @override
+  String get bleClearHistory => 'Verlauf löschen';
+
+  @override
+  String get bleFilterHighConfidence => 'Hohe Zuverlässigkeit';
+
+  @override
+  String get bleFilterBeacons => 'Beacons';
+
+  @override
+  String get bleFilterUnknown => 'Unbekannt';
+
+  @override
+  String get bleFilterRecent => 'Kürzlich';
+
+  @override
+  String get bleFilterStrongSignal => 'Starkes Signal';
 }

@@ -24,6 +24,7 @@ import 'package:tool_lab/tools/file_converter/config.dart';
 import 'package:tool_lab/tools/sketch_board/config.dart';
 import 'package:tool_lab/tools/unit_converter/config.dart';
 import 'package:tool_lab/tools/code_highlight/config.dart';
+import 'package:tool_lab/tools/bluetooth_scanner/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -72,5 +73,6 @@ class ToolRegistry {
     SketchBoardTool.config,
     UnitConverterTool.config,
     CodeHighlightTool.config,
+    BluetoothScannerTool.config,
   ];
 }

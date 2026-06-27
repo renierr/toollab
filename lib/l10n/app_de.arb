@@ -1535,6 +1535,18 @@
     "placeholders": {
       "lines": { "type": "int" }
     }
-  }
+  },
+  "toolNameBluetoothScanner": "Bluetooth-Scanner",
+  "toolDescBluetoothScanner": "Scannen Sie nach nahegelegenen Bluetooth Low Energy Geräten und identifizieren Sie diese.",
+  "bleStartScan": "Scan starten",
+  "bleStopScan": "Stop",
+  "bleStartScanning": "Starte Scan, um nahegelegene BLE-Geräte zu finden",
+  "bleNoDevicesFound": "Keine Geräte gefunden",
+  "bleClearHistory": "Verlauf löschen",
+  "bleFilterHighConfidence": "Hohe Zuverlässigkeit",
+  "bleFilterBeacons": "Beacons",
+  "bleFilterUnknown": "Unbekannt",
+  "bleFilterRecent": "Kürzlich",
+  "bleFilterStrongSignal": "Starkes Signal"
 }
 

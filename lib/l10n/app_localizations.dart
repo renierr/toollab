@@ -7855,6 +7855,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This file contains {lines} lines. Exporting very long code files as an image may fail to render due to memory limits, or the text might be too small to be readable. We recommend exporting as a raw text file instead.'**
   String codeHighlightExportWarningMessage(int lines);
+
+  /// No description provided for @toolNameBluetoothScanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth Scanner'**
+  String get toolNameBluetoothScanner;
+
+  /// No description provided for @toolDescBluetoothScanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan for nearby Bluetooth Low Energy devices and identify them.'**
+  String get toolDescBluetoothScanner;
+
+  /// No description provided for @bleStartScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Scan'**
+  String get bleStartScan;
+
+  /// No description provided for @bleStopScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get bleStopScan;
+
+  /// No description provided for @bleStartScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Start scanning to discover nearby BLE devices'**
+  String get bleStartScanning;
+
+  /// No description provided for @bleNoDevicesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices found'**
+  String get bleNoDevicesFound;
+
+  /// No description provided for @bleClearHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear History'**
+  String get bleClearHistory;
+
+  /// No description provided for @bleFilterHighConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'High Confidence'**
+  String get bleFilterHighConfidence;
+
+  /// No description provided for @bleFilterBeacons.
+  ///
+  /// In en, this message translates to:
+  /// **'Beacons'**
+  String get bleFilterBeacons;
+
+  /// No description provided for @bleFilterUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get bleFilterUnknown;
+
+  /// No description provided for @bleFilterRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get bleFilterRecent;
+
+  /// No description provided for @bleFilterStrongSignal.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong Signal'**
+  String get bleFilterStrongSignal;
 }
 
 class _AppLocalizationsDelegate

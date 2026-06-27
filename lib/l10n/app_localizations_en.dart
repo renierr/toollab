@@ -4308,4 +4308,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String codeHighlightExportWarningMessage(int lines) {
     return 'This file contains $lines lines. Exporting very long code files as an image may fail to render due to memory limits, or the text might be too small to be readable. We recommend exporting as a raw text file instead.';
   }
+
+  @override
+  String get toolNameBluetoothScanner => 'Bluetooth Scanner';
+
+  @override
+  String get toolDescBluetoothScanner =>
+      'Scan for nearby Bluetooth Low Energy devices and identify them.';
+
+  @override
+  String get bleStartScan => 'Start Scan';
+
+  @override
+  String get bleStopScan => 'Stop';
+
+  @override
+  String get bleStartScanning =>
+      'Start scanning to discover nearby BLE devices';
+
+  @override
+  String get bleNoDevicesFound => 'No devices found';
+
+  @override
+  String get bleClearHistory => 'Clear History';
+
+  @override
+  String get bleFilterHighConfidence => 'High Confidence';
+
+  @override
+  String get bleFilterBeacons => 'Beacons';
+
+  @override
+  String get bleFilterUnknown => 'Unknown';
+
+  @override
+  String get bleFilterRecent => 'Recent';
+
+  @override
+  String get bleFilterStrongSignal => 'Strong Signal';
 }

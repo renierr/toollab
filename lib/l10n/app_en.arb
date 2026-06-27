@@ -2361,6 +2361,18 @@
     "placeholders": {
       "lines": { "type": "int" }
     }
-  }
+  },
+  "toolNameBluetoothScanner": "Bluetooth Scanner",
+  "toolDescBluetoothScanner": "Scan for nearby Bluetooth Low Energy devices and identify them.",
+  "bleStartScan": "Start Scan",
+  "bleStopScan": "Stop",
+  "bleStartScanning": "Start scanning to discover nearby BLE devices",
+  "bleNoDevicesFound": "No devices found",
+  "bleClearHistory": "Clear History",
+  "bleFilterHighConfidence": "High Confidence",
+  "bleFilterBeacons": "Beacons",
+  "bleFilterUnknown": "Unknown",
+  "bleFilterRecent": "Recent",
+  "bleFilterStrongSignal": "Strong Signal"
 }
 

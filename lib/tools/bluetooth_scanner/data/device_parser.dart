@@ -1,0 +1,209 @@
+import 'package:universal_ble/universal_ble.dart';
+import 'scanned_device.dart';
+import 'service_uuids.dart';
+import 'manufacturer_ids.dart';
+import 'device_patterns.dart';
+import 'beacon_detector.dart';
+
+class DeviceParser {
+  static ScannedDevice parseBleDevice(
+    BleDevice device,
+    ScannedDevice? existing,
+  ) {
+    final name = (device.name ?? '').isNotEmpty ? device.name! : 'Unknown';
+    final deviceInfo = matchDevicePattern(name);
+
+    final services = device.services;
+    final serviceUuidShort = services
+        .map((u) => u.toLowerCase().replaceAll('-', ''))
+        .toList();
+
+    final serviceNames = <String>[];
+    for (final uuid in serviceUuidShort) {
+      final sn = getServiceName(uuid);
+      serviceNames.add(
+        sn ?? '0x${uuid.length >= 4 ? uuid.substring(0, 4) : uuid}',
+      );
+    }
+
+    final matchedFilters = getMatchingServiceFilters(services);
+
+    final mfrDataMap = <int, List<int>>{};
+    for (final mfrData in device.manufacturerDataList) {
+      mfrDataMap[mfrData.companyId] = mfrData.payload.toList();
+    }
+
+    final serviceDataMap = <String, List<int>>{};
+    for (final entry in device.serviceData.entries) {
+      serviceDataMap[entry.key] = entry.value.toList();
+    }
+
+    final beacons = detectBeacons(
+      serviceUuids: services,
+      serviceData: serviceDataMap,
+      manufacturerData: mfrDataMap,
+    );
+
+    final mfrName = _deriveManufacturer(
+      deviceInfo: deviceInfo,
+      manufacturerData: mfrDataMap,
+    );
+
+    final identifiedType =
+        deviceInfo?.type ??
+        (beacons.isNotEmpty ? beacons.first.type : 'Unknown');
+    final identifiedCategory = beacons.isNotEmpty
+        ? 'Beacon'
+        : (deviceInfo?.category ?? 'Unknown');
+    final likelyRole = _deriveRole(identifiedCategory, matchedFilters, beacons);
+    final confidenceResult = _calculateConfidence(
+      hasKnownDevice: deviceInfo != null,
+      hasManufacturer: mfrName != null,
+      hasManufacturerData: mfrDataMap.isNotEmpty,
+      matchedFilterCount: matchedFilters.length,
+      serviceCount: serviceNames.length,
+      beaconCount: beacons.length,
+    );
+
+    final fingerprint = _createFingerprint(
+      manufacturer: mfrName,
+      category: identifiedCategory,
+      type: identifiedType,
+      beacons: beacons,
+      filters: matchedFilters,
+    );
+
+    final hints = <String>[];
+    if (mfrName != null) hints.add('Manufacturer $mfrName');
+    for (final b in beacons) {
+      hints.add('Beacon ${b.type}');
+    }
+    for (final f in matchedFilters.take(2)) {
+      hints.add('Service profile ${f.replaceAll('_', ' ')}');
+    }
+    if (serviceNames.isNotEmpty) hints.add('Advertises ${serviceNames.first}');
+
+    final mfrDataStrings = <int, String>{};
+    for (final entry in mfrDataMap.entries) {
+      mfrDataStrings[entry.key] = entry.value
+          .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+          .join(' ');
+    }
+
+    return ScannedDevice(
+      id: device.deviceId,
+      name: name,
+      knownName: deviceInfo?.name,
+      rssi: device.rssi ?? 0,
+      manufacturer: mfrName,
+      identifiedType: identifiedType,
+      identifiedCategory: identifiedCategory,
+      likelyRole: likelyRole,
+      fingerprint: fingerprint,
+      confidence: confidenceResult.level,
+      confidenceReasons: confidenceResult.reasons,
+      serviceUuids: serviceUuidShort,
+      serviceNames: serviceNames,
+      matchedFilters: matchedFilters,
+      beacons: beacons,
+      hints: hints,
+      manufacturerData: mfrDataStrings.isNotEmpty ? mfrDataStrings : null,
+    );
+  }
+
+  static String? _deriveManufacturer({
+    DevicePattern? deviceInfo,
+    required Map<int, List<int>> manufacturerData,
+  }) {
+    if (deviceInfo?.manufacturer != null) return deviceInfo!.manufacturer;
+    for (final entry in manufacturerData.entries) {
+      final name = getManufacturerName(entry.key);
+      if (name != null) return name;
+    }
+    return null;
+  }
+
+  static String _deriveRole(
+    String category,
+    List<String> filters,
+    List<BeaconInfo> beacons,
+  ) {
+    if (beacons.isNotEmpty) return 'Beacon';
+    if (filters.contains('heart_rate')) return 'Health Sensor';
+    if (filters.contains('audio')) return 'Audio Device';
+    if (category == 'Wearables') return 'Wearable';
+    if (category == 'IoT') return 'IoT Device';
+    if (category == 'Unknown') return 'Unclassified Device';
+    return category;
+  }
+
+  static ({Confidence level, List<String> reasons}) _calculateConfidence({
+    required bool hasKnownDevice,
+    required bool hasManufacturer,
+    required bool hasManufacturerData,
+    required int matchedFilterCount,
+    required int serviceCount,
+    required int beaconCount,
+  }) {
+    int score = 0;
+    final reasons = <String>[];
+
+    if (hasKnownDevice) {
+      score += 4;
+      reasons.add('Known device pattern');
+    }
+    if (hasManufacturer) {
+      score += 2;
+      reasons.add('Known manufacturer');
+    }
+    if (hasManufacturerData) {
+      score += 1;
+      reasons.add('Manufacturer payload');
+    }
+    if (matchedFilterCount > 0) {
+      score += 1;
+      reasons.add('Service profile match');
+    }
+    if (serviceCount > 0) {
+      score += 1;
+      reasons.add('Advertised service');
+    }
+    if (beaconCount > 0) {
+      score += 3;
+      reasons.add('Beacon signature parsed');
+    }
+
+    return (
+      level: score >= 6
+          ? Confidence.high
+          : (score >= 3 ? Confidence.medium : Confidence.low),
+      reasons: reasons,
+    );
+  }
+
+  static String _createFingerprint({
+    String? manufacturer,
+    required String category,
+    required String type,
+    required List<BeaconInfo> beacons,
+    required List<String> filters,
+  }) {
+    final parts = [
+      manufacturer ?? 'unknown-mfr',
+      category,
+      type,
+      beacons.map((b) => b.type).join('|'),
+      filters.join('|'),
+    ];
+    final input = parts.join('::');
+    return 'fp-${_hashString(input)}';
+  }
+
+  static String _hashString(String value) {
+    int hash = 5381;
+    for (int i = 0; i < value.length; i++) {
+      hash = ((hash << 5) + hash) ^ value.codeUnitAt(i);
+    }
+    return (hash & 0xFFFFFFFF).toRadixString(16);
+  }
+}
