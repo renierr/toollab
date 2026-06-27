@@ -8287,6 +8287,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{days}d ago'**
   String bleTimeDaysAgo(int days);
+
+  /// No description provided for @toolNameStringTransformer.
+  ///
+  /// In en, this message translates to:
+  /// **'String Transformer'**
+  String get toolNameStringTransformer;
+
+  /// No description provided for @toolDescStringTransformer.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert text between various formats: camelCase, snake_case, kebab-case, PascalCase, URL slugs, Base64, Hex, and decode ad URLs.'**
+  String get toolDescStringTransformer;
+
+  /// No description provided for @stringTransformerInputLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Input Text'**
+  String get stringTransformerInputLabel;
+
+  /// No description provided for @stringTransformerOutputLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Output Text'**
+  String get stringTransformerOutputLabel;
+
+  /// No description provided for @stringTransformerSelectTransform.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Transformation'**
+  String get stringTransformerSelectTransform;
+
+  /// No description provided for @stringTransformerCharsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} chars'**
+  String stringTransformerCharsCount(int count);
+
+  /// No description provided for @stringTransformerSwap.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap Input/Output'**
+  String get stringTransformerSwap;
+
+  /// No description provided for @stringTransformerTypeCamel.
+  ///
+  /// In en, this message translates to:
+  /// **'camelCase'**
+  String get stringTransformerTypeCamel;
+
+  /// No description provided for @stringTransformerTypeSnake.
+  ///
+  /// In en, this message translates to:
+  /// **'snake_case'**
+  String get stringTransformerTypeSnake;
+
+  /// No description provided for @stringTransformerTypeKebab.
+  ///
+  /// In en, this message translates to:
+  /// **'kebab-case'**
+  String get stringTransformerTypeKebab;
+
+  /// No description provided for @stringTransformerTypePascal.
+  ///
+  /// In en, this message translates to:
+  /// **'PascalCase'**
+  String get stringTransformerTypePascal;
+
+  /// No description provided for @stringTransformerTypeUrlSlug.
+  ///
+  /// In en, this message translates to:
+  /// **'URL Slug'**
+  String get stringTransformerTypeUrlSlug;
+
+  /// No description provided for @stringTransformerTypeBase64Encode.
+  ///
+  /// In en, this message translates to:
+  /// **'Base64 Encode'**
+  String get stringTransformerTypeBase64Encode;
+
+  /// No description provided for @stringTransformerTypeBase64Decode.
+  ///
+  /// In en, this message translates to:
+  /// **'Base64 Decode'**
+  String get stringTransformerTypeBase64Decode;
+
+  /// No description provided for @stringTransformerTypeHexEncode.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex Encode'**
+  String get stringTransformerTypeHexEncode;
+
+  /// No description provided for @stringTransformerTypeHexDecode.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex Decode'**
+  String get stringTransformerTypeHexDecode;
+
+  /// No description provided for @stringTransformerTypeAdUrlDecode.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad URL Decode'**
+  String get stringTransformerTypeAdUrlDecode;
+
+  /// No description provided for @stringTransformerPlaceholderInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Type or paste text here...'**
+  String get stringTransformerPlaceholderInput;
+
+  /// No description provided for @stringTransformerPlaceholderOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Result will appear here...'**
+  String get stringTransformerPlaceholderOutput;
+
+  /// No description provided for @stringTransformerCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get stringTransformerCopied;
+
+  /// No description provided for @stringTransformerFailedToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to copy: {error}'**
+  String stringTransformerFailedToCopy(String error);
+
+  /// No description provided for @stringTransformerInvalidInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {message}'**
+  String stringTransformerInvalidInput(String message);
+
+  /// No description provided for @stringTransformerNoEmbeddedUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'No embedded URL detected.'**
+  String get stringTransformerNoEmbeddedUrl;
 }
 
 class _AppLocalizationsDelegate

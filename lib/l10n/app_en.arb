@@ -2494,6 +2494,44 @@
     "placeholders": {
       "days": { "type": "int" }
     }
-  }
+  },
+  "toolNameStringTransformer": "String Transformer",
+  "toolDescStringTransformer": "Convert text between various formats: camelCase, snake_case, kebab-case, PascalCase, URL slugs, Base64, Hex, and decode ad URLs.",
+  "stringTransformerInputLabel": "Input Text",
+  "stringTransformerOutputLabel": "Output Text",
+  "stringTransformerSelectTransform": "Select Transformation",
+  "stringTransformerCharsCount": "{count} chars",
+  "@stringTransformerCharsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "stringTransformerSwap": "Swap Input/Output",
+  "stringTransformerTypeCamel": "camelCase",
+  "stringTransformerTypeSnake": "snake_case",
+  "stringTransformerTypeKebab": "kebab-case",
+  "stringTransformerTypePascal": "PascalCase",
+  "stringTransformerTypeUrlSlug": "URL Slug",
+  "stringTransformerTypeBase64Encode": "Base64 Encode",
+  "stringTransformerTypeBase64Decode": "Base64 Decode",
+  "stringTransformerTypeHexEncode": "Hex Encode",
+  "stringTransformerTypeHexDecode": "Hex Decode",
+  "stringTransformerTypeAdUrlDecode": "Ad URL Decode",
+  "stringTransformerPlaceholderInput": "Type or paste text here...",
+  "stringTransformerPlaceholderOutput": "Result will appear here...",
+  "stringTransformerCopied": "Copied to clipboard",
+  "stringTransformerFailedToCopy": "Failed to copy: {error}",
+  "@stringTransformerFailedToCopy": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "stringTransformerInvalidInput": "Error: {message}",
+  "@stringTransformerInvalidInput": {
+    "placeholders": {
+      "message": { "type": "String" }
+    }
+  },
+  "stringTransformerNoEmbeddedUrl": "No embedded URL detected."
 }
 

@@ -4552,4 +4552,80 @@ class AppLocalizationsEn extends AppLocalizations {
   String bleTimeDaysAgo(int days) {
     return '${days}d ago';
   }
+
+  @override
+  String get toolNameStringTransformer => 'String Transformer';
+
+  @override
+  String get toolDescStringTransformer =>
+      'Convert text between various formats: camelCase, snake_case, kebab-case, PascalCase, URL slugs, Base64, Hex, and decode ad URLs.';
+
+  @override
+  String get stringTransformerInputLabel => 'Input Text';
+
+  @override
+  String get stringTransformerOutputLabel => 'Output Text';
+
+  @override
+  String get stringTransformerSelectTransform => 'Select Transformation';
+
+  @override
+  String stringTransformerCharsCount(int count) {
+    return '$count chars';
+  }
+
+  @override
+  String get stringTransformerSwap => 'Swap Input/Output';
+
+  @override
+  String get stringTransformerTypeCamel => 'camelCase';
+
+  @override
+  String get stringTransformerTypeSnake => 'snake_case';
+
+  @override
+  String get stringTransformerTypeKebab => 'kebab-case';
+
+  @override
+  String get stringTransformerTypePascal => 'PascalCase';
+
+  @override
+  String get stringTransformerTypeUrlSlug => 'URL Slug';
+
+  @override
+  String get stringTransformerTypeBase64Encode => 'Base64 Encode';
+
+  @override
+  String get stringTransformerTypeBase64Decode => 'Base64 Decode';
+
+  @override
+  String get stringTransformerTypeHexEncode => 'Hex Encode';
+
+  @override
+  String get stringTransformerTypeHexDecode => 'Hex Decode';
+
+  @override
+  String get stringTransformerTypeAdUrlDecode => 'Ad URL Decode';
+
+  @override
+  String get stringTransformerPlaceholderInput => 'Type or paste text here...';
+
+  @override
+  String get stringTransformerPlaceholderOutput => 'Result will appear here...';
+
+  @override
+  String get stringTransformerCopied => 'Copied to clipboard';
+
+  @override
+  String stringTransformerFailedToCopy(String error) {
+    return 'Failed to copy: $error';
+  }
+
+  @override
+  String stringTransformerInvalidInput(String message) {
+    return 'Error: $message';
+  }
+
+  @override
+  String get stringTransformerNoEmbeddedUrl => 'No embedded URL detected.';
 }

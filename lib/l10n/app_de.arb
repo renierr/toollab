@@ -1668,6 +1668,44 @@
     "placeholders": {
       "days": { "type": "int" }
     }
-  }
+  },
+  "toolNameStringTransformer": "String-Transformer",
+  "toolDescStringTransformer": "Konvertieren Sie Text zwischen verschiedenen Formaten: camelCase, snake_case, kebab-case, PascalCase, URL-Slugs, Base64, Hex und dekodieren Sie Werbe-URLs.",
+  "stringTransformerInputLabel": "Eingabetext",
+  "stringTransformerOutputLabel": "Ausgabetext",
+  "stringTransformerSelectTransform": "Transformation auswählen",
+  "stringTransformerCharsCount": "{count} Zeichen",
+  "@stringTransformerCharsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "stringTransformerSwap": "Eingabe/Ausgabe vertauschen",
+  "stringTransformerTypeCamel": "camelCase",
+  "stringTransformerTypeSnake": "snake_case",
+  "stringTransformerTypeKebab": "kebab-case",
+  "stringTransformerTypePascal": "PascalCase",
+  "stringTransformerTypeUrlSlug": "URL-Slug",
+  "stringTransformerTypeBase64Encode": "Base64 kodieren",
+  "stringTransformerTypeBase64Decode": "Base64 dekodieren",
+  "stringTransformerTypeHexEncode": "Hex kodieren",
+  "stringTransformerTypeHexDecode": "Hex dekodieren",
+  "stringTransformerTypeAdUrlDecode": "Werbe-URL dekodieren",
+  "stringTransformerPlaceholderInput": "Text hier eingeben oder einfügen...",
+  "stringTransformerPlaceholderOutput": "Das Ergebnis wird hier angezeigt...",
+  "stringTransformerCopied": "In die Zwischenablage kopiert",
+  "stringTransformerFailedToCopy": "Kopieren fehlgeschlagen: {error}",
+  "@stringTransformerFailedToCopy": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "stringTransformerInvalidInput": "Fehler: {message}",
+  "@stringTransformerInvalidInput": {
+    "placeholders": {
+      "message": { "type": "String" }
+    }
+  },
+  "stringTransformerNoEmbeddedUrl": "Keine eingebettete URL erkannt."
 }
 

@@ -4583,4 +4583,83 @@ class AppLocalizationsDe extends AppLocalizations {
   String bleTimeDaysAgo(int days) {
     return 'vor $days Tagen';
   }
+
+  @override
+  String get toolNameStringTransformer => 'String-Transformer';
+
+  @override
+  String get toolDescStringTransformer =>
+      'Konvertieren Sie Text zwischen verschiedenen Formaten: camelCase, snake_case, kebab-case, PascalCase, URL-Slugs, Base64, Hex und dekodieren Sie Werbe-URLs.';
+
+  @override
+  String get stringTransformerInputLabel => 'Eingabetext';
+
+  @override
+  String get stringTransformerOutputLabel => 'Ausgabetext';
+
+  @override
+  String get stringTransformerSelectTransform => 'Transformation auswählen';
+
+  @override
+  String stringTransformerCharsCount(int count) {
+    return '$count Zeichen';
+  }
+
+  @override
+  String get stringTransformerSwap => 'Eingabe/Ausgabe vertauschen';
+
+  @override
+  String get stringTransformerTypeCamel => 'camelCase';
+
+  @override
+  String get stringTransformerTypeSnake => 'snake_case';
+
+  @override
+  String get stringTransformerTypeKebab => 'kebab-case';
+
+  @override
+  String get stringTransformerTypePascal => 'PascalCase';
+
+  @override
+  String get stringTransformerTypeUrlSlug => 'URL-Slug';
+
+  @override
+  String get stringTransformerTypeBase64Encode => 'Base64 kodieren';
+
+  @override
+  String get stringTransformerTypeBase64Decode => 'Base64 dekodieren';
+
+  @override
+  String get stringTransformerTypeHexEncode => 'Hex kodieren';
+
+  @override
+  String get stringTransformerTypeHexDecode => 'Hex dekodieren';
+
+  @override
+  String get stringTransformerTypeAdUrlDecode => 'Werbe-URL dekodieren';
+
+  @override
+  String get stringTransformerPlaceholderInput =>
+      'Text hier eingeben oder einfügen...';
+
+  @override
+  String get stringTransformerPlaceholderOutput =>
+      'Das Ergebnis wird hier angezeigt...';
+
+  @override
+  String get stringTransformerCopied => 'In die Zwischenablage kopiert';
+
+  @override
+  String stringTransformerFailedToCopy(String error) {
+    return 'Kopieren fehlgeschlagen: $error';
+  }
+
+  @override
+  String stringTransformerInvalidInput(String message) {
+    return 'Fehler: $message';
+  }
+
+  @override
+  String get stringTransformerNoEmbeddedUrl =>
+      'Keine eingebettete URL erkannt.';
 }
