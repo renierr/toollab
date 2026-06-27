@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:tool_lab/services/database_service.dart';
+import 'config.dart';
 import 'grocery_item.dart';
 
 class GroceryListDbHelper {
@@ -15,7 +16,9 @@ class GroceryListDbHelper {
 
   Future<ToolDatabase> _getDb() async {
     if (_cachedDb != null) return _cachedDb!;
-    _cachedDb = await DatabaseService.instance.getToolDatabase('grocery-list');
+    _cachedDb = await DatabaseService.instance.getToolDatabase(
+      GroceryListTool.config.id,
+    );
     try {
       await _cachedDb!.migrate(
         currentVersion: 1,
