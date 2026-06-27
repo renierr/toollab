@@ -97,10 +97,10 @@ class DeviceList extends StatelessWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 220,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                          childAspectRatio: 1.4,
+                          maxCrossAxisExtent: 200,
+                          mainAxisSpacing: 6,
+                          crossAxisSpacing: 6,
+                          childAspectRatio: 1.5,
                         ),
                     itemCount: categoryDevices.length,
                     itemBuilder: (context, i) {

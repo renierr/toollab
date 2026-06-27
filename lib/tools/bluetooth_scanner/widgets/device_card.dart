@@ -26,9 +26,10 @@ class DeviceCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
@@ -37,14 +38,14 @@ class DeviceCard extends StatelessWidget {
                       device.identifiedCategory,
                       device.beacons.isNotEmpty,
                     ),
-                    size: 20,
+                    size: 16,
                     color: theme.colorScheme.primary,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       name,
-                      style: theme.textTheme.titleSmall?.copyWith(
+                      style: theme.textTheme.labelLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
@@ -53,42 +54,36 @@ class DeviceCard extends StatelessWidget {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
+                      horizontal: 5,
+                      vertical: 1,
                     ),
                     decoration: BoxDecoration(
                       color: confidenceColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       device.confidence.name.toUpperCase(),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: confidenceColor,
                         fontWeight: FontWeight.bold,
-                        fontSize: 9,
+                        fontSize: 8,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Row(
                 children: [
                   _signalIcon(signalBars, theme),
-                  const SizedBox(width: 6),
-                  Text('${device.rssi} dBm', style: theme.textTheme.bodySmall),
+                  const SizedBox(width: 4),
+                  Text('${device.rssi} dBm', style: theme.textTheme.labelSmall),
                   if (device.manufacturer != null) ...[
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.business,
-                      size: 12,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 3),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         device.manufacturer!,
-                        style: theme.textTheme.bodySmall?.copyWith(
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         maxLines: 1,
@@ -98,65 +93,37 @@ class DeviceCard extends StatelessWidget {
                   ],
                 ],
               ),
-              if (device.serviceNames.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 2,
-                  children: device.serviceNames
-                      .take(3)
-                      .map(
-                        (s) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            s,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontSize: 9,
+              if (device.serviceNames.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Wrap(
+                    spacing: 3,
+                    runSpacing: 2,
+                    children: device.serviceNames
+                        .take(2)
+                        .map(
+                          (s) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: Text(
+                              s,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontSize: 8,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-              if (device.hints.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  device.hints.take(2).join(' • '),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 10,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              if (history != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  '${history!.sightings} sighting${history!.sightings == 1 ? '' : 's'}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 9,
+                        )
+                        .toList(),
                   ),
                 ),
-              ],
-              Text(
-                device.likelyRole,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontSize: 9,
-                ),
-              ),
             ],
           ),
         ),

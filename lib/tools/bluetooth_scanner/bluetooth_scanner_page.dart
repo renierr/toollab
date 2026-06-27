@@ -18,15 +18,20 @@ class BluetoothScannerPage extends StatefulWidget {
 
 class _BluetoothScannerPageState extends State<BluetoothScannerPage>
     with DisposeCleanup<BluetoothScannerPage> {
+  BluetoothScannerState? _state;
+
   @override
   void initState() {
     super.initState();
-    onDispose(() {});
+    onDispose(() {
+      _state?.stopScan();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<BluetoothScannerState>();
+    _state = state;
     final l10n = AppLocalizations.of(context);
 
     return ToolLayout(
