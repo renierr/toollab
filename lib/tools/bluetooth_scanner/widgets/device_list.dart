@@ -100,7 +100,7 @@ class DeviceList extends StatelessWidget {
                           maxCrossAxisExtent: 200,
                           mainAxisSpacing: 6,
                           crossAxisSpacing: 6,
-                          childAspectRatio: 1.5,
+                          childAspectRatio: 1.35,
                         ),
                     itemCount: categoryDevices.length,
                     itemBuilder: (context, i) {
