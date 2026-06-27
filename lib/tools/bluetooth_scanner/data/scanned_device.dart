@@ -31,6 +31,8 @@ class ScannedDevice {
   final List<String> hints;
   final Map<int, String>? manufacturerData;
   final int? txPower;
+  final bool? paired;
+  final bool? isSystemDevice;
   final DateTime timestamp;
 
   ScannedDevice({
@@ -52,6 +54,8 @@ class ScannedDevice {
     this.hints = const [],
     this.manufacturerData,
     this.txPower,
+    this.paired,
+    this.isSystemDevice,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 }

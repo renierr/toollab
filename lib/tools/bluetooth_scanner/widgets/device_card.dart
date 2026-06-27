@@ -52,6 +52,15 @@ class DeviceCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (device.paired == true)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 3),
+                      child: Icon(
+                        Icons.link,
+                        size: 12,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 5,

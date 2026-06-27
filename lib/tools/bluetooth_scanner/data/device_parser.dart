@@ -48,6 +48,9 @@ class DeviceParser {
       deviceInfo: deviceInfo,
       manufacturerData: mfrDataMap,
     );
+    final mfrIsKnownName =
+        deviceInfo?.manufacturer != null ||
+        mfrDataMap.keys.any((k) => getManufacturerName(k) != null);
 
     final identifiedType =
         deviceInfo?.type ??
@@ -58,11 +61,12 @@ class DeviceParser {
     final likelyRole = _deriveRole(identifiedCategory, matchedFilters, beacons);
     final confidenceResult = _calculateConfidence(
       hasKnownDevice: deviceInfo != null,
-      hasManufacturer: mfrName != null,
+      hasManufacturer: mfrIsKnownName,
       hasManufacturerData: mfrDataMap.isNotEmpty,
       matchedFilterCount: matchedFilters.length,
       serviceCount: serviceNames.length,
       beaconCount: beacons.length,
+      isPaired: device.paired == true,
     );
 
     final fingerprint = _createFingerprint(
@@ -74,7 +78,11 @@ class DeviceParser {
     );
 
     final hints = <String>[];
-    if (mfrName != null) hints.add('Manufacturer $mfrName');
+    if (mfrIsKnownName) {
+      hints.add('Manufacturer $mfrName');
+    } else if (mfrDataMap.isNotEmpty) {
+      hints.add('Raw mfr $mfrName');
+    }
     for (final b in beacons) {
       hints.add('Beacon ${b.type}');
     }
@@ -108,6 +116,8 @@ class DeviceParser {
       beacons: beacons,
       hints: hints,
       manufacturerData: mfrDataStrings.isNotEmpty ? mfrDataStrings : null,
+      paired: device.paired,
+      isSystemDevice: device.isSystemDevice,
     );
   }
 
@@ -115,10 +125,17 @@ class DeviceParser {
     DevicePattern? deviceInfo,
     required Map<int, List<int>> manufacturerData,
   }) {
-    if (deviceInfo?.manufacturer != null) return deviceInfo!.manufacturer;
+    if (deviceInfo != null && deviceInfo.manufacturer != null) {
+      return deviceInfo.manufacturer!;
+    }
     for (final entry in manufacturerData.entries) {
       final name = getManufacturerName(entry.key);
-      if (name != null) return name;
+      if (name != null) {
+        return name;
+      }
+    }
+    if (manufacturerData.isNotEmpty) {
+      return '0x${manufacturerData.keys.first.toRadixString(16).padLeft(4, '0').toUpperCase()}';
     }
     return null;
   }
@@ -144,6 +161,7 @@ class DeviceParser {
     required int matchedFilterCount,
     required int serviceCount,
     required int beaconCount,
+    required bool isPaired,
   }) {
     int score = 0;
     final reasons = <String>[];
@@ -155,10 +173,9 @@ class DeviceParser {
     if (hasManufacturer) {
       score += 2;
       reasons.add('Known manufacturer');
-    }
-    if (hasManufacturerData) {
+    } else if (hasManufacturerData) {
       score += 1;
-      reasons.add('Manufacturer payload');
+      reasons.add('Raw manufacturer data');
     }
     if (matchedFilterCount > 0) {
       score += 1;
@@ -171,6 +188,10 @@ class DeviceParser {
     if (beaconCount > 0) {
       score += 3;
       reasons.add('Beacon signature parsed');
+    }
+    if (isPaired) {
+      score += 2;
+      reasons.add('Previously paired');
     }
 
     return (
