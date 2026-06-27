@@ -6,7 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   battery_plus
   desktop_drop
   file_selector_windows
-  flutter_bluetooth_classic_serial
+  flutter_classic_bluetooth
   geolocator_windows
   pasteboard
   share_plus

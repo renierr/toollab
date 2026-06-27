@@ -1,6 +1,5 @@
 import 'package:universal_ble/universal_ble.dart';
-import 'package:flutter_bluetooth_classic_serial/flutter_bluetooth_classic.dart'
-    as classic;
+import 'package:flutter_classic_bluetooth/flutter_classic_bluetooth.dart';
 import 'scanned_device.dart';
 import 'service_uuids.dart';
 import 'manufacturer_ids.dart';
@@ -123,10 +122,11 @@ class DeviceParser {
     );
   }
 
-  static ScannedDevice parseClassicDevice(classic.BluetoothDevice device) {
-    final name = device.name.isNotEmpty ? device.name : 'Unknown';
+  static ScannedDevice parseClassicDevice(BtcDevice device) {
+    final name = (device.name?.isNotEmpty ?? false) ? device.name! : 'Unknown';
     final deviceInfo = matchDevicePattern(name);
 
+    final isPaired = device.bondState == BtcBondState.bonded;
     final confidenceResult = _calculateConfidence(
       hasKnownDevice: deviceInfo != null,
       hasManufacturer: false,
@@ -134,14 +134,14 @@ class DeviceParser {
       matchedFilterCount: 0,
       serviceCount: 0,
       beaconCount: 0,
-      isPaired: device.paired,
+      isPaired: isPaired,
     );
 
     final hints = <String>['Classic Bluetooth'];
     if (deviceInfo != null) {
       hints.add('Known device pattern');
     }
-    if (device.paired) {
+    if (isPaired) {
       hints.add('Paired');
     }
 
@@ -158,7 +158,7 @@ class DeviceParser {
       confidence: confidenceResult.level,
       confidenceReasons: confidenceResult.reasons,
       hints: hints,
-      paired: device.paired,
+      paired: isPaired,
       transport: Transport.classic,
     );
   }

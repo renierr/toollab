@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:universal_ble/universal_ble.dart';
-import 'package:flutter_bluetooth_classic_serial/flutter_bluetooth_classic.dart'
-    as classic;
+import 'package:flutter_classic_bluetooth/flutter_classic_bluetooth.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'data/device_parser.dart';
 import 'data/scanned_device.dart';
@@ -61,11 +59,8 @@ class BluetoothScannerState extends ChangeNotifier {
   String? _error;
   int _deviceCount = 0;
 
-  final classic.FlutterBluetoothClassic _classicPlugin =
-      classic.FlutterBluetoothClassic();
-  static const _classicMethodChannel = MethodChannel(
-    'com.flutter_bluetooth_classic.plugin/flutter_bluetooth_classic',
-  );
+  final _btPlugin = FlutterClassicBluetooth();
+  StreamSubscription<BtcDevice>? _discoverySubscription;
   Timer? _classicPollTimer;
 
   bool get isScanning => _isScanning;
@@ -167,9 +162,13 @@ class BluetoothScannerState extends ChangeNotifier {
   }
 
   Future<void> _startClassicScan() async {
-    try {
-      await _classicPlugin.startDiscovery();
-    } catch (_) {}
+    await _btPlugin.startDiscovery();
+    _discoverySubscription = _btPlugin.discoveryResults.listen((device) {
+      final parsed = DeviceParser.parseClassicDevice(device);
+      _devices[parsed.id] = parsed;
+      _deviceCount = _devices.length;
+      notifyListeners();
+    });
     await _loadClassicDevices();
     _classicPollTimer = Timer.periodic(
       const Duration(seconds: 10),
@@ -180,32 +179,19 @@ class BluetoothScannerState extends ChangeNotifier {
   Future<void> _stopClassicScan() async {
     _classicPollTimer?.cancel();
     _classicPollTimer = null;
+    _discoverySubscription?.cancel();
+    _discoverySubscription = null;
     try {
-      await _classicPlugin.stopDiscovery();
+      await _btPlugin.stopDiscovery();
     } catch (_) {}
   }
 
   Future<void> _loadClassicDevices() async {
     try {
-      final paired = await _classicPlugin.getPairedDevices();
+      final paired = await _btPlugin.getPairedDevices();
       for (final device in paired) {
         final parsed = DeviceParser.parseClassicDevice(device);
         _devices[parsed.id] = parsed;
-      }
-      final discovered = await _classicMethodChannel.invokeMethod<List>(
-        'getDiscoveredDevices',
-      );
-      if (discovered != null) {
-        for (final d in discovered) {
-          final map = Map<String, dynamic>.from(d as Map);
-          final classicDevice = classic.BluetoothDevice(
-            name: map['name'] as String? ?? 'Unknown',
-            address: map['address'] as String? ?? '',
-            paired: map['paired'] as bool? ?? false,
-          );
-          final parsed = DeviceParser.parseClassicDevice(classicDevice);
-          _devices[parsed.id] = parsed;
-        }
       }
       _deviceCount = _devices.length;
       notifyListeners();
@@ -336,7 +322,9 @@ class BluetoothScannerState extends ChangeNotifier {
     _scanSubscription?.cancel();
     _availabilitySubscription?.cancel();
     _classicPollTimer?.cancel();
+    _discoverySubscription?.cancel();
     UniversalBle.stopScan();
+    _btPlugin.stopDiscovery();
     super.dispose();
   }
 }
