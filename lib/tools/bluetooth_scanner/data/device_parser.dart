@@ -5,6 +5,7 @@ import 'service_uuids.dart';
 import 'manufacturer_ids.dart';
 import 'device_patterns.dart';
 import 'beacon_detector.dart';
+import 'environmental_reading.dart';
 import 'xiaomi_sensor_parser.dart';
 
 class DeviceParser {
@@ -100,7 +101,30 @@ class DeviceParser {
           .join(' ');
     }
 
-    final sensorData = XiaomiSensorParser.parseServiceData(serviceDataMap);
+    final serviceDataStrings = <String, String>{};
+    for (final entry in serviceDataMap.entries) {
+      serviceDataStrings[entry.key] = entry.value
+          .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+          .join(' ');
+    }
+
+    final sensorData = _mergeEnvironmental(
+      existing: existing?.sensorData,
+      incoming: XiaomiSensorParser.parse(serviceDataMap, mfrDataMap),
+    );
+
+    final mergedServiceUuids = serviceUuidShort.isNotEmpty
+        ? serviceUuidShort
+        : (existing?.serviceUuids ?? const <String>[]);
+    final mergedServiceNames = serviceNames.isNotEmpty
+        ? serviceNames
+        : (existing?.serviceNames ?? const <String>[]);
+    final mergedManufacturerData = mfrDataStrings.isNotEmpty
+        ? mfrDataStrings
+        : existing?.manufacturerData;
+    final mergedServiceDataRaw = serviceDataStrings.isNotEmpty
+        ? serviceDataStrings
+        : existing?.serviceDataRaw;
 
     return ScannedDevice(
       id: device.deviceId,
@@ -114,12 +138,13 @@ class DeviceParser {
       fingerprint: fingerprint,
       confidence: confidenceResult.level,
       confidenceReasons: confidenceResult.reasons,
-      serviceUuids: serviceUuidShort,
-      serviceNames: serviceNames,
+      serviceUuids: mergedServiceUuids,
+      serviceNames: mergedServiceNames,
       matchedFilters: matchedFilters,
       beacons: beacons,
       hints: hints,
-      manufacturerData: mfrDataStrings.isNotEmpty ? mfrDataStrings : null,
+      manufacturerData: mergedManufacturerData,
+      serviceDataRaw: mergedServiceDataRaw,
       paired: device.paired,
       isSystemDevice: device.isSystemDevice,
       sensorData: sensorData,
@@ -272,5 +297,19 @@ class DeviceParser {
       hash = ((hash << 5) + hash) ^ value.codeUnitAt(i);
     }
     return (hash & 0xFFFFFFFF).toRadixString(16);
+  }
+
+  static EnvironmentalReading? _mergeEnvironmental({
+    required EnvironmentalReading? existing,
+    required EnvironmentalReading? incoming,
+  }) {
+    if (existing == null) return incoming;
+    if (incoming == null) return existing;
+    return EnvironmentalReading(
+      temperatureCelsius:
+          incoming.temperatureCelsius ?? existing.temperatureCelsius,
+      humidityPercent: incoming.humidityPercent ?? existing.humidityPercent,
+      batteryPercent: incoming.batteryPercent ?? existing.batteryPercent,
+    );
   }
 }

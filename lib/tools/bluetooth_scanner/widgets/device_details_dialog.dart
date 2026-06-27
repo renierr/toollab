@@ -189,6 +189,7 @@ class DeviceDetailsDialog extends StatelessWidget {
                     ),
                   ),
               ],
+              ..._rawDataWidgets(theme),
             ],
           ),
         ),
@@ -200,6 +201,82 @@ class DeviceDetailsDialog extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  List<Widget> _rawDataWidgets(ThemeData theme) {
+    final widgets = <Widget>[];
+    if (device.manufacturerData == null && device.serviceDataRaw == null) {
+      return widgets;
+    }
+
+    widgets.add(const Divider(height: 16));
+    widgets.add(
+      Text(
+        'Raw Data',
+        style: theme.textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+    widgets.add(const SizedBox(height: 4));
+
+    if (device.manufacturerData != null) {
+      for (final entry in device.manufacturerData!.entries) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Mfr 0x${entry.key.toRadixString(16).padLeft(4, '0').toUpperCase()}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  entry.value,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontSize: 9,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    if (device.serviceDataRaw != null) {
+      for (final entry in device.serviceDataRaw!.entries) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Service ${entry.key}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  entry.value,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    fontSize: 9,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    return widgets;
   }
 
   Widget _infoRow(BuildContext context, String label, String value) {

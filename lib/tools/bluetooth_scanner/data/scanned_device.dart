@@ -39,6 +39,7 @@ class ScannedDevice {
   final bool? paired;
   final bool? isSystemDevice;
   final EnvironmentalReading? sensorData;
+  final Map<String, String>? serviceDataRaw;
   final Transport transport;
   final DateTime timestamp;
 
@@ -70,6 +71,7 @@ class ScannedDevice {
     this.paired,
     this.isSystemDevice,
     this.sensorData,
+    this.serviceDataRaw,
     this.transport = Transport.ble,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
