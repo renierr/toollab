@@ -1612,6 +1612,68 @@
   "toolDescPdfViewer": "View PDF files fullscreen with ease",
   "toolNameNotes": "Notes",
   "toolDescNotes": "Simple note taking tool with Markdown support and backend sync",
+  "toolNameGroceryList": "Grocery List",
+  "toolDescGroceryList": "Create grocery lists with quantities, reusable items, and check-off tracking",
+  "groceryNoItems": "No items in your grocery list",
+  "groceryAddItem": "Add Item",
+  "groceryEditItem": "Edit Item",
+  "groceryItemName": "Item name",
+  "groceryAmount": "Qty",
+  "groceryUnit": "Unit",
+  "groceryAdd": "Add",
+  "groceryUpdate": "Update",
+  "groceryClearBought": "Clear bought",
+  "groceryReAddBought": "Re-add bought",
+  "groceryExport": "Export",
+  "groceryImport": "Import",
+  "groceryConfirmClearBought": "Remove {count} bought item(s)?",
+  "@groceryConfirmClearBought": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groceryConfirmDelete": "Delete \"{name}\"?",
+  "@groceryConfirmDelete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groceryImportComplete": "Import complete! Imported: {imported}, Skipped: {skipped} (duplicates).",
+  "@groceryImportComplete": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "groceryImportFailed": "Import failed: {error}",
+  "@groceryImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groceryItemsCount": "{unchecked} to buy, {checked} bought",
+  "@groceryItemsCount": {
+    "placeholders": {
+      "unchecked": {
+        "type": "int"
+      },
+      "checked": {
+        "type": "int"
+      }
+    }
+  },
+  "groceryAllBoughtMovedBack": "All bought items moved back to list.",
+  "grocerySync": "Sync",
   "toolNameMarkdownViewer": "Markdown Viewer",
   "toolDescMarkdownViewer": "View Markdown files fullscreen with ease",
   "toolNameImageViewer": "Image Viewer",

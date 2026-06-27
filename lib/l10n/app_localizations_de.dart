@@ -2635,6 +2635,81 @@ class AppLocalizationsDe extends AppLocalizations {
       'Einfaches Notiz-Tool mit Markdown-Unterstützung und Backend-Sync';
 
   @override
+  String get toolNameGroceryList => 'Einkaufsliste';
+
+  @override
+  String get toolDescGroceryList =>
+      'Erstelle Einkaufslisten mit Mengen, wiederverwendbaren Artikeln und Abhakkontrolle';
+
+  @override
+  String get groceryNoItems => 'Keine Artikel in deiner Einkaufsliste';
+
+  @override
+  String get groceryAddItem => 'Artikel hinzufügen';
+
+  @override
+  String get groceryEditItem => 'Artikel bearbeiten';
+
+  @override
+  String get groceryItemName => 'Artikelname';
+
+  @override
+  String get groceryAmount => 'Menge';
+
+  @override
+  String get groceryUnit => 'Einheit';
+
+  @override
+  String get groceryAdd => 'Hinzufügen';
+
+  @override
+  String get groceryUpdate => 'Aktualisieren';
+
+  @override
+  String get groceryClearBought => 'Gekaufte löschen';
+
+  @override
+  String get groceryReAddBought => 'Gekaufte wieder hinzufügen';
+
+  @override
+  String get groceryExport => 'Exportieren';
+
+  @override
+  String get groceryImport => 'Importieren';
+
+  @override
+  String groceryConfirmClearBought(int count) {
+    return '$count gekaufte(n) Artikel entfernen?';
+  }
+
+  @override
+  String groceryConfirmDelete(String name) {
+    return '\"$name\" löschen?';
+  }
+
+  @override
+  String groceryImportComplete(int imported, int skipped) {
+    return 'Import abgeschlossen! Importiert: $imported, Übersprungen: $skipped (Duplikate).';
+  }
+
+  @override
+  String groceryImportFailed(String error) {
+    return 'Import fehlgeschlagen: $error';
+  }
+
+  @override
+  String groceryItemsCount(int unchecked, int checked) {
+    return '$unchecked zu kaufen, $checked gekauft';
+  }
+
+  @override
+  String get groceryAllBoughtMovedBack =>
+      'Alle gekauften Artikel wieder zur Liste hinzugefügt.';
+
+  @override
+  String get grocerySync => 'Synchronisieren';
+
+  @override
   String get toolNameMarkdownViewer => 'Markdown-Viewer';
 
   @override

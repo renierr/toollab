@@ -4664,6 +4664,132 @@ abstract class AppLocalizations {
   /// **'Simple note taking tool with Markdown support and backend sync'**
   String get toolDescNotes;
 
+  /// No description provided for @toolNameGroceryList.
+  ///
+  /// In en, this message translates to:
+  /// **'Grocery List'**
+  String get toolNameGroceryList;
+
+  /// No description provided for @toolDescGroceryList.
+  ///
+  /// In en, this message translates to:
+  /// **'Create grocery lists with quantities, reusable items, and check-off tracking'**
+  String get toolDescGroceryList;
+
+  /// No description provided for @groceryNoItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No items in your grocery list'**
+  String get groceryNoItems;
+
+  /// No description provided for @groceryAddItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get groceryAddItem;
+
+  /// No description provided for @groceryEditItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Item'**
+  String get groceryEditItem;
+
+  /// No description provided for @groceryItemName.
+  ///
+  /// In en, this message translates to:
+  /// **'Item name'**
+  String get groceryItemName;
+
+  /// No description provided for @groceryAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get groceryAmount;
+
+  /// No description provided for @groceryUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get groceryUnit;
+
+  /// No description provided for @groceryAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get groceryAdd;
+
+  /// No description provided for @groceryUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get groceryUpdate;
+
+  /// No description provided for @groceryClearBought.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear bought'**
+  String get groceryClearBought;
+
+  /// No description provided for @groceryReAddBought.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-add bought'**
+  String get groceryReAddBought;
+
+  /// No description provided for @groceryExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get groceryExport;
+
+  /// No description provided for @groceryImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get groceryImport;
+
+  /// No description provided for @groceryConfirmClearBought.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {count} bought item(s)?'**
+  String groceryConfirmClearBought(int count);
+
+  /// No description provided for @groceryConfirmDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"?'**
+  String groceryConfirmDelete(String name);
+
+  /// No description provided for @groceryImportComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Import complete! Imported: {imported}, Skipped: {skipped} (duplicates).'**
+  String groceryImportComplete(int imported, int skipped);
+
+  /// No description provided for @groceryImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}'**
+  String groceryImportFailed(String error);
+
+  /// No description provided for @groceryItemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{unchecked} to buy, {checked} bought'**
+  String groceryItemsCount(int unchecked, int checked);
+
+  /// No description provided for @groceryAllBoughtMovedBack.
+  ///
+  /// In en, this message translates to:
+  /// **'All bought items moved back to list.'**
+  String get groceryAllBoughtMovedBack;
+
+  /// No description provided for @grocerySync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get grocerySync;
+
   /// No description provided for @toolNameMarkdownViewer.
   ///
   /// In en, this message translates to:

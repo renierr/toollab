@@ -2612,6 +2612,81 @@ class AppLocalizationsEn extends AppLocalizations {
       'Simple note taking tool with Markdown support and backend sync';
 
   @override
+  String get toolNameGroceryList => 'Grocery List';
+
+  @override
+  String get toolDescGroceryList =>
+      'Create grocery lists with quantities, reusable items, and check-off tracking';
+
+  @override
+  String get groceryNoItems => 'No items in your grocery list';
+
+  @override
+  String get groceryAddItem => 'Add Item';
+
+  @override
+  String get groceryEditItem => 'Edit Item';
+
+  @override
+  String get groceryItemName => 'Item name';
+
+  @override
+  String get groceryAmount => 'Qty';
+
+  @override
+  String get groceryUnit => 'Unit';
+
+  @override
+  String get groceryAdd => 'Add';
+
+  @override
+  String get groceryUpdate => 'Update';
+
+  @override
+  String get groceryClearBought => 'Clear bought';
+
+  @override
+  String get groceryReAddBought => 'Re-add bought';
+
+  @override
+  String get groceryExport => 'Export';
+
+  @override
+  String get groceryImport => 'Import';
+
+  @override
+  String groceryConfirmClearBought(int count) {
+    return 'Remove $count bought item(s)?';
+  }
+
+  @override
+  String groceryConfirmDelete(String name) {
+    return 'Delete \"$name\"?';
+  }
+
+  @override
+  String groceryImportComplete(int imported, int skipped) {
+    return 'Import complete! Imported: $imported, Skipped: $skipped (duplicates).';
+  }
+
+  @override
+  String groceryImportFailed(String error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String groceryItemsCount(int unchecked, int checked) {
+    return '$unchecked to buy, $checked bought';
+  }
+
+  @override
+  String get groceryAllBoughtMovedBack =>
+      'All bought items moved back to list.';
+
+  @override
+  String get grocerySync => 'Sync';
+
+  @override
   String get toolNameMarkdownViewer => 'Markdown Viewer';
 
   @override

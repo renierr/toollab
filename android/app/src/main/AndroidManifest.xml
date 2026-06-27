@@ -155,6 +155,19 @@
         </activity-alias>
 
         <activity-alias
+            android:name="de.renier.tool_lab.GroceryListAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="Grocery List"
+            android:icon="@mipmap/ic_launcher"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
             android:name="de.renier.tool_lab.MarkdownViewerAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Markdown Viewer"

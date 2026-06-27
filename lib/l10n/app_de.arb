@@ -886,6 +886,68 @@
   "toolDescPdfViewer": "PDF-Dateien einfach im Vollbild ansehen",
   "toolNameNotes": "Notizen",
   "toolDescNotes": "Einfaches Notiz-Tool mit Markdown-Unterstützung und Backend-Sync",
+  "toolNameGroceryList": "Einkaufsliste",
+  "toolDescGroceryList": "Erstelle Einkaufslisten mit Mengen, wiederverwendbaren Artikeln und Abhakkontrolle",
+  "groceryNoItems": "Keine Artikel in deiner Einkaufsliste",
+  "groceryAddItem": "Artikel hinzufügen",
+  "groceryEditItem": "Artikel bearbeiten",
+  "groceryItemName": "Artikelname",
+  "groceryAmount": "Menge",
+  "groceryUnit": "Einheit",
+  "groceryAdd": "Hinzufügen",
+  "groceryUpdate": "Aktualisieren",
+  "groceryClearBought": "Gekaufte löschen",
+  "groceryReAddBought": "Gekaufte wieder hinzufügen",
+  "groceryExport": "Exportieren",
+  "groceryImport": "Importieren",
+  "groceryConfirmClearBought": "{count} gekaufte(n) Artikel entfernen?",
+  "@groceryConfirmClearBought": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groceryConfirmDelete": "\"{name}\" löschen?",
+  "@groceryConfirmDelete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groceryImportComplete": "Import abgeschlossen! Importiert: {imported}, Übersprungen: {skipped} (Duplikate).",
+  "@groceryImportComplete": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "groceryImportFailed": "Import fehlgeschlagen: {error}",
+  "@groceryImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "groceryItemsCount": "{unchecked} zu kaufen, {checked} gekauft",
+  "@groceryItemsCount": {
+    "placeholders": {
+      "unchecked": {
+        "type": "int"
+      },
+      "checked": {
+        "type": "int"
+      }
+    }
+  },
+  "groceryAllBoughtMovedBack": "Alle gekauften Artikel wieder zur Liste hinzugefügt.",
+  "grocerySync": "Synchronisieren",
   "toolNameMarkdownViewer": "Markdown-Viewer",
   "toolDescMarkdownViewer": "Markdown-Dateien einfach im Vollbild ansehen",
   "toolNameImageViewer": "Bildbetrachter",
