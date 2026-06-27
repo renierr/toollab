@@ -61,6 +61,8 @@ class DeviceCard extends StatelessWidget {
                         color: theme.colorScheme.primary,
                       ),
                     ),
+                  _TransportBadge(transport: device.transport),
+                  const SizedBox(width: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 5,
@@ -84,9 +86,19 @@ class DeviceCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  _signalIcon(signalBars, theme),
-                  const SizedBox(width: 4),
-                  Text('${device.rssi} dBm', style: theme.textTheme.labelSmall),
+                  if (device.transport == Transport.ble) ...[
+                    _signalIcon(signalBars, theme),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${device.rssi} dBm',
+                      style: theme.textTheme.labelSmall,
+                    ),
+                  ] else
+                    Icon(
+                      Icons.bluetooth,
+                      size: 14,
+                      color: theme.colorScheme.primary,
+                    ),
                   if (device.manufacturer != null) ...[
                     const SizedBox(width: 6),
                     Expanded(
@@ -102,7 +114,8 @@ class DeviceCard extends StatelessWidget {
                   ],
                 ],
               ),
-              if (device.serviceNames.isNotEmpty)
+              if (device.transport == Transport.ble &&
+                  device.serviceNames.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Wrap(
@@ -205,5 +218,32 @@ class DeviceCard extends StatelessWidget {
       default:
         return Icons.devices_other;
     }
+  }
+}
+
+class _TransportBadge extends StatelessWidget {
+  final Transport transport;
+
+  const _TransportBadge({required this.transport});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isBle = transport == Transport.ble;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: (isBle ? Colors.blue : Colors.indigo).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        isBle ? 'BLE' : 'CL',
+        style: theme.textTheme.labelSmall?.copyWith(
+          fontSize: 7,
+          fontWeight: FontWeight.bold,
+          color: isBle ? Colors.blue : Colors.indigo,
+        ),
+      ),
+    );
   }
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
+import 'package:flutter_bluetooth_classic_serial/flutter_bluetooth_classic.dart'
+    as classic;
 import 'package:tool_lab/services/database_service.dart';
 import 'data/device_parser.dart';
 import 'data/scanned_device.dart';
@@ -57,6 +59,10 @@ class BluetoothScannerState extends ChangeNotifier {
   StreamSubscription<AvailabilityState>? _availabilitySubscription;
   String? _error;
   int _deviceCount = 0;
+
+  final classic.FlutterBluetoothClassic _classicPlugin =
+      classic.FlutterBluetoothClassic();
+  Timer? _classicPollTimer;
 
   bool get isScanning => _isScanning;
   bool get isBluetoothOn => _isBluetoothOn;
@@ -131,6 +137,7 @@ class BluetoothScannerState extends ChangeNotifier {
         ),
       );
 
+      await _startClassicScan();
       _isScanning = true;
       _error = null;
       notifyListeners();
@@ -150,8 +157,38 @@ class BluetoothScannerState extends ChangeNotifier {
     } catch (_) {}
     _scanSubscription?.cancel();
     _scanSubscription = null;
+    await _stopClassicScan();
     _isScanning = false;
     notifyListeners();
+  }
+
+  Future<void> _startClassicScan() async {
+    await _loadClassicDevices();
+    _classicPollTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _loadClassicDevices(),
+    );
+  }
+
+  Future<void> _stopClassicScan() async {
+    _classicPollTimer?.cancel();
+    _classicPollTimer = null;
+    try {
+      await _classicPlugin.stopDiscovery();
+    } catch (_) {}
+  }
+
+  Future<void> _loadClassicDevices() async {
+    try {
+      await _classicPlugin.startDiscovery();
+      final paired = await _classicPlugin.getPairedDevices();
+      for (final device in paired) {
+        final parsed = DeviceParser.parseClassicDevice(device);
+        _devices[parsed.id] = parsed;
+      }
+      _deviceCount = _devices.length;
+      notifyListeners();
+    } catch (_) {}
   }
 
   void _onDeviceDiscovered(BleDevice bleDevice) {
@@ -277,6 +314,7 @@ class BluetoothScannerState extends ChangeNotifier {
   void dispose() {
     _scanSubscription?.cancel();
     _availabilitySubscription?.cancel();
+    _classicPollTimer?.cancel();
     UniversalBle.stopScan();
     super.dispose();
   }

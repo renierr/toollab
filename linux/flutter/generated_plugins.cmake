@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   file_selector_linux
+  flutter_bluetooth_classic_serial
   pasteboard
   url_launcher_linux
 )

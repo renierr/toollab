@@ -1,5 +1,7 @@
 enum Confidence { low, medium, high }
 
+enum Transport { ble, classic }
+
 class BeaconInfo {
   final String type;
   final String format;
@@ -33,6 +35,7 @@ class ScannedDevice {
   final int? txPower;
   final bool? paired;
   final bool? isSystemDevice;
+  final Transport transport;
   final DateTime timestamp;
 
   ScannedDevice({
@@ -56,6 +59,7 @@ class ScannedDevice {
     this.txPower,
     this.paired,
     this.isSystemDevice,
+    this.transport = Transport.ble,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 }
