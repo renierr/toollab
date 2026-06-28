@@ -28,6 +28,11 @@ class WorkoutMetricsGrid extends StatelessWidget {
     final String distanceStr = state.distance.toStringAsFixed(2);
     final String caloriesStr = '${state.calories}';
 
+    final rollingLimit = DateTime.now().subtract(const Duration(minutes: 5));
+    final rollingHistory = state.hrmHistory
+        .where((p) => p.timestamp.isAfter(rollingLimit))
+        .toList();
+
     final speedCard = _MetricCard(
       label: l10n.speedLabel,
       value: speedStr,
@@ -46,9 +51,9 @@ class WorkoutMetricsGrid extends StatelessWidget {
       isLarge: true,
       pulse:
           state.heartRate > 0 && state.workoutStatus == WorkoutStatus.running,
-      backgroundPainter: state.hrmHistory.length >= 2
+      backgroundPainter: rollingHistory.length >= 2
           ? HeartRateChartPainter(
-              history: state.hrmHistory,
+              history: rollingHistory,
               lineColor: TreadmillColors.redMetric,
             )
           : null,

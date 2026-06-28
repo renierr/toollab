@@ -20,6 +20,11 @@ class HeartRateChartDialog extends StatelessWidget {
       );
     }
 
+    final limit = DateTime.now().subtract(const Duration(minutes: 5));
+    final rollingHistory = history
+        .where((p) => p.timestamp.isAfter(limit))
+        .toList();
+
     final current = history.last.heartRate;
     final minVal = history.map((p) => p.heartRate).reduce(min);
     final maxVal = history.map((p) => p.heartRate).reduce(max);
@@ -35,7 +40,7 @@ class HeartRateChartDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Stats Row
+            // Stats Row (Overall Session)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -62,7 +67,7 @@ class HeartRateChartDialog extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            // The Detailed Graph
+            // The Detailed Graph (Rolling 5m Window)
             Container(
               height: 220,
               padding: const EdgeInsets.only(right: 8, top: 8),
@@ -73,13 +78,20 @@ class HeartRateChartDialog extends StatelessWidget {
                   color: (isDark ? Colors.white24 : Colors.black12),
                 ),
               ),
-              child: CustomPaint(
-                painter: DetailedHeartRateChartPainter(
-                  history: history,
-                  lineColor: Colors.red,
-                  isDark: isDark,
-                ),
-              ),
+              child: rollingHistory.length < 2
+                  ? const Center(
+                      child: Text(
+                        'Accumulating data for chart...',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    )
+                  : CustomPaint(
+                      painter: DetailedHeartRateChartPainter(
+                        history: rollingHistory,
+                        lineColor: Colors.red,
+                        isDark: isDark,
+                      ),
+                    ),
             ),
           ],
         ),
