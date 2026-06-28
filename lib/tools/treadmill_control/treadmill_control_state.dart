@@ -555,6 +555,9 @@ class TreadmillControlState extends ChangeNotifier {
         ).getUint16(offset, Endian.little);
       }
     }
+    if (speed > 0.0) {
+      _autoStartIfNeeded();
+    }
     notifyListeners();
   }
 
@@ -584,13 +587,68 @@ class TreadmillControlState extends ChangeNotifier {
       workoutStatus = WorkoutStatus.starting;
     } else if (runningStateBits == 8) {
       workoutStatus = WorkoutStatus.running;
+      _autoStartIfNeeded();
     } else if (runningStateBits == 16) {
-      workoutStatus = WorkoutStatus.paused;
+      if (workoutStatus == WorkoutStatus.running) {
+        workoutStatus = WorkoutStatus.paused;
+        _workoutTimer?.cancel();
+      }
     } else {
-      workoutStatus = WorkoutStatus.inactive;
+      if (workoutStatus == WorkoutStatus.running ||
+          workoutStatus == WorkoutStatus.paused) {
+        stopWorkout();
+      }
+    }
+
+    if (speed > 0.0) {
+      _autoStartIfNeeded();
     }
 
     notifyListeners();
+  }
+
+  void _autoStartIfNeeded() {
+    if (workoutStatus == WorkoutStatus.inactive ||
+        workoutStatus == WorkoutStatus.stopped) {
+      workoutStatus = WorkoutStatus.running;
+      elapsedTime = 0;
+      distance = 0.0;
+      calories = 0;
+      steps = 0;
+      dataPoints.clear();
+      _setWakeLock(true);
+      _startTimer();
+    }
+  }
+
+  Future<void> _writeTreadmill(
+    String service,
+    String characteristic,
+    Uint8List value, {
+    bool withoutResponse = false,
+  }) async {
+    if (treadmillDeviceId == null) return;
+    try {
+      await UniversalBle.write(
+        treadmillDeviceId!,
+        service,
+        characteristic,
+        value,
+        withoutResponse: withoutResponse,
+      );
+    } catch (e) {
+      if (withoutResponse) {
+        try {
+          await UniversalBle.write(
+            treadmillDeviceId!,
+            service,
+            characteristic,
+            value,
+            withoutResponse: false,
+          );
+        } catch (_) {}
+      }
+    }
   }
 
   // Workout Controls (Start, Incline, Speed)
@@ -614,8 +672,7 @@ class TreadmillControlState extends ChangeNotifier {
           treadmillDeviceId != null) {
         if (treadmillType == TreadmillType.pitpat) {
           final pkt = makePitPatPacket('START', speed > 0 ? speed : 1.0);
-          await UniversalBle.write(
-            treadmillDeviceId!,
+          await _writeTreadmill(
             _actualTreadmillService ?? pitpatService,
             _actualTreadmillWriteChar ?? pitpatWriteChar,
             pkt,
@@ -638,8 +695,7 @@ class TreadmillControlState extends ChangeNotifier {
         treadmillDeviceId != null) {
       if (treadmillType == TreadmillType.pitpat) {
         final pkt = makePitPatPacket('PAUSE', speed);
-        await UniversalBle.write(
-          treadmillDeviceId!,
+        await _writeTreadmill(
           _actualTreadmillService ?? pitpatService,
           _actualTreadmillWriteChar ?? pitpatWriteChar,
           pkt,
@@ -665,8 +721,7 @@ class TreadmillControlState extends ChangeNotifier {
         treadmillDeviceId != null) {
       if (treadmillType == TreadmillType.pitpat) {
         final pkt = makePitPatPacket('STOP', speed);
-        await UniversalBle.write(
-          treadmillDeviceId!,
+        await _writeTreadmill(
           _actualTreadmillService ?? pitpatService,
           _actualTreadmillWriteChar ?? pitpatWriteChar,
           pkt,
@@ -733,8 +788,7 @@ class TreadmillControlState extends ChangeNotifier {
         treadmillDeviceId != null) {
       if (treadmillType == TreadmillType.pitpat) {
         final pkt = makePitPatPacket('SPEED', targetSpeed);
-        await UniversalBle.write(
-          treadmillDeviceId!,
+        await _writeTreadmill(
           _actualTreadmillService ?? pitpatService,
           _actualTreadmillWriteChar ?? pitpatWriteChar,
           pkt,
@@ -841,15 +895,12 @@ class TreadmillControlState extends ChangeNotifier {
     ) async {
       if (treadmillConnection == BleConnectionState.connected &&
           treadmillDeviceId != null) {
-        try {
-          await UniversalBle.write(
-            treadmillDeviceId!,
-            _actualTreadmillService ?? pitpatService,
-            _actualTreadmillWriteChar ?? pitpatWriteChar,
-            heartbeatPacket,
-            withoutResponse: true,
-          );
-        } catch (_) {}
+        await _writeTreadmill(
+          _actualTreadmillService ?? pitpatService,
+          _actualTreadmillWriteChar ?? pitpatWriteChar,
+          heartbeatPacket,
+          withoutResponse: true,
+        );
       } else {
         _stopPitPatHeartbeat();
       }
@@ -899,21 +950,17 @@ class TreadmillControlState extends ChangeNotifier {
     final cpChar = _actualTreadmillControlPointChar ?? ftmsControlPointChar;
 
     if (!_isControlRequested) {
-      try {
-        await UniversalBle.write(
-          treadmillDeviceId!,
-          service,
-          cpChar,
-          Uint8List.fromList([0x00]),
-        );
-        _isControlRequested = true;
-      } catch (_) {}
+      await _writeTreadmill(
+        service,
+        cpChar,
+        Uint8List.fromList([0x00]),
+        withoutResponse: false,
+      );
+      _isControlRequested = true;
     }
 
     final payload = Uint8List.fromList([command, ...params]);
-    try {
-      await UniversalBle.write(treadmillDeviceId!, service, cpChar, payload);
-    } catch (_) {}
+    await _writeTreadmill(service, cpChar, payload, withoutResponse: false);
   }
 
   // Delete / Clear Logs
