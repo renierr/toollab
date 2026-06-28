@@ -53,7 +53,30 @@ class DeviceConnectionSheet extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Simulate Device',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Switch(
+                  value: state.isSimulator,
+                  onChanged: (val) {
+                    state.toggleSimulator(val);
+                    if (val) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Divider(),
+            const SizedBox(height: 8),
             if (state.isScanning)
               const LinearProgressIndicator()
             else

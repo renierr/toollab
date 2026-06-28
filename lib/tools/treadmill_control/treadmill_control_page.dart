@@ -48,7 +48,6 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
     final state = context.watch<TreadmillControlState>();
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     final List<Widget> actions = [
       IconButton(
@@ -68,64 +67,26 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
       ),
     ];
 
-    final Widget connectionBar = Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.02)
-            : Colors.black.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Connections',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Row(
-                children: [
-                  const Text('Simulator'),
-                  const SizedBox(width: 4),
-                  Switch(
-                    value: state.isSimulator,
-                    onChanged: (val) => state.toggleSimulator(val),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildDeviceBadge(
-                context: context,
-                label: 'Treadmill',
-                connectionState: state.treadmillConnection,
-                deviceType: state.treadmillType == TreadmillType.pitpat
-                    ? 'PITPAT'
-                    : (state.treadmillType == TreadmillType.ftms
-                          ? 'FTMS'
-                          : null),
-                onTap: _showConnectionSheet,
-              ),
-              _buildDeviceBadge(
-                context: context,
-                label: 'Heart Rate',
-                connectionState: state.hrmConnection,
-                onTap: _showConnectionSheet,
-              ),
-            ],
-          ),
-        ],
-      ),
+    final Widget connectionBadges = Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _buildDeviceBadge(
+          context: context,
+          label: 'Treadmill',
+          connectionState: state.treadmillConnection,
+          deviceType: state.treadmillType == TreadmillType.pitpat
+              ? 'PITPAT'
+              : (state.treadmillType == TreadmillType.ftms ? 'FTMS' : null),
+          onTap: _showConnectionSheet,
+        ),
+        _buildDeviceBadge(
+          context: context,
+          label: 'Heart Rate',
+          connectionState: state.hrmConnection,
+          onTap: _showConnectionSheet,
+        ),
+      ],
     );
 
     return ToolLayout(
@@ -137,14 +98,14 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              connectionBar,
-              const SizedBox(height: 16),
               WorkoutMetricsGrid(isLandscape: false),
               const SizedBox(height: 16),
               const WorkoutChart(),
               const SizedBox(height: 16),
               WorkoutControlsPanel(isLandscape: false),
               const SizedBox(height: 24),
+              connectionBadges,
+              const SizedBox(height: 16),
               const SessionHistoryList(),
             ],
           ),
@@ -159,8 +120,6 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    connectionBar,
-                    const SizedBox(height: 16),
                     WorkoutControlsPanel(isLandscape: true),
                     const SizedBox(height: 16),
                     const WorkoutChart(),
@@ -178,6 +137,8 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
                   children: [
                     WorkoutMetricsGrid(isLandscape: true),
                     const SizedBox(height: 24),
+                    connectionBadges,
+                    const SizedBox(height: 16),
                     const SessionHistoryList(),
                   ],
                 ),

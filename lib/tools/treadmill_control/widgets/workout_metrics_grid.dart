@@ -28,167 +28,139 @@ class WorkoutMetricsGrid extends StatelessWidget {
     final String distanceStr = state.distance.toStringAsFixed(2);
     final String caloriesStr = '${state.calories}';
 
-    if (isLandscape) {
-      return GridView.count(
-        crossAxisCount: 2,
-        childAspectRatio: 2.5,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          _MetricCard(
-            label: l10n.speedLabel,
-            value: speedStr,
-            unit: 'km/h',
-            color: TreadmillColors.cyanMetric,
-            icon: Icons.speed,
-            isLarge: true,
-          ),
-          _MetricCard(
-            label: l10n.hrLabel,
-            value: hrStr,
-            unit: 'bpm',
-            color: TreadmillColors.redMetric,
-            icon: Icons.favorite,
-            isLarge: true,
-            pulse:
-                state.heartRate > 0 &&
-                state.workoutStatus == WorkoutStatus.running,
-            backgroundPainter: state.hrmHistory.length >= 2
-                ? HeartRateChartPainter(
-                    history: state.hrmHistory,
-                    lineColor: TreadmillColors.redMetric,
-                  )
-                : null,
-            onTap: state.hrmHistory.isNotEmpty
-                ? () {
-                    showDialog(
-                      context: context,
-                      builder: (context) =>
-                          HeartRateChartDialog(history: state.hrmHistory),
-                    );
-                  }
-                : null,
-          ),
-          _MetricCard(
-            label: l10n.inclineLabel,
-            value: inclineStr,
-            unit: '%',
-            color: Colors.orange,
-            icon: Icons.trending_up,
-          ),
-          _MetricCard(
-            label: l10n.elapsedTime,
-            value: durationStr,
-            unit: '',
-            color: TreadmillColors.amberMetric,
-            icon: Icons.timer,
-          ),
-          _MetricCard(
-            label: l10n.distance,
-            value: distanceStr,
-            unit: 'km',
-            color: Colors.green,
-            icon: Icons.map,
-          ),
-          _MetricCard(
-            label: l10n.calories,
-            value: caloriesStr,
-            unit: 'kcal',
-            color: TreadmillColors.greenMetric,
-            icon: Icons.local_fire_department,
-          ),
-        ],
-      );
-    } else {
-      return Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _MetricCard(
-                  label: l10n.speedLabel,
-                  value: speedStr,
-                  unit: 'km/h',
-                  color: TreadmillColors.cyanMetric,
-                  icon: Icons.speed,
-                  isLarge: true,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _MetricCard(
-                  label: l10n.hrLabel,
-                  value: hrStr,
-                  unit: 'bpm',
-                  color: TreadmillColors.redMetric,
-                  icon: Icons.favorite,
-                  isLarge: true,
-                  pulse:
-                      state.heartRate > 0 &&
-                      state.workoutStatus == WorkoutStatus.running,
-                  backgroundPainter: state.hrmHistory.length >= 2
-                      ? HeartRateChartPainter(
-                          history: state.hrmHistory,
-                          lineColor: TreadmillColors.redMetric,
-                        )
-                      : null,
-                  onTap: state.hrmHistory.isNotEmpty
-                      ? () {
-                          showDialog(
-                            context: context,
-                            builder: (context) =>
-                                HeartRateChartDialog(history: state.hrmHistory),
-                          );
-                        }
-                      : null,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          GridView.count(
-            crossAxisCount: 2,
-            childAspectRatio: 1.8,
+    final speedCard = _MetricCard(
+      label: l10n.speedLabel,
+      value: speedStr,
+      unit: 'km/h',
+      color: TreadmillColors.cyanMetric,
+      icon: Icons.speed,
+      isLarge: true,
+    );
+
+    final hrCard = _MetricCard(
+      label: l10n.hrLabel,
+      value: hrStr,
+      unit: 'bpm',
+      color: TreadmillColors.redMetric,
+      icon: Icons.favorite,
+      isLarge: true,
+      pulse:
+          state.heartRate > 0 && state.workoutStatus == WorkoutStatus.running,
+      backgroundPainter: state.hrmHistory.length >= 2
+          ? HeartRateChartPainter(
+              history: state.hrmHistory,
+              lineColor: TreadmillColors.redMetric,
+            )
+          : null,
+      onTap: state.hrmHistory.isNotEmpty
+          ? () {
+              showDialog(
+                context: context,
+                builder: (context) =>
+                    HeartRateChartDialog(history: state.hrmHistory),
+              );
+            }
+          : null,
+    );
+
+    final inclineCard = _MetricCard(
+      label: l10n.inclineLabel,
+      value: inclineStr,
+      unit: '%',
+      color: Colors.orange,
+      icon: Icons.trending_up,
+    );
+
+    final timeCard = _MetricCard(
+      label: l10n.elapsedTime,
+      value: durationStr,
+      unit: '',
+      color: TreadmillColors.amberMetric,
+      icon: Icons.timer,
+    );
+
+    final distanceCard = _MetricCard(
+      label: l10n.distance,
+      value: distanceStr,
+      unit: 'km',
+      color: Colors.green,
+      icon: Icons.map,
+    );
+
+    final caloriesCard = _MetricCard(
+      label: l10n.calories,
+      value: caloriesStr,
+      unit: 'kcal',
+      color: TreadmillColors.greenMetric,
+      icon: Icons.local_fire_department,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool narrow = constraints.maxWidth < 360;
+
+        if (isLandscape) {
+          final int crossCount = narrow ? 1 : 2;
+          final double ratio = narrow ? 4.5 : 2.5;
+          return GridView.count(
+            crossAxisCount: crossCount,
+            childAspectRatio: ratio,
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
-              _MetricCard(
-                label: l10n.inclineLabel,
-                value: inclineStr,
-                unit: '%',
-                color: Colors.orange,
-                icon: Icons.trending_up,
-              ),
-              _MetricCard(
-                label: l10n.elapsedTime,
-                value: durationStr,
-                unit: '',
-                color: TreadmillColors.amberMetric,
-                icon: Icons.timer,
-              ),
-              _MetricCard(
-                label: l10n.distance,
-                value: distanceStr,
-                unit: 'km',
-                color: Colors.green,
-                icon: Icons.map,
-              ),
-              _MetricCard(
-                label: l10n.calories,
-                value: caloriesStr,
-                unit: 'kcal',
-                color: TreadmillColors.greenMetric,
-                icon: Icons.local_fire_department,
-              ),
+              speedCard,
+              hrCard,
+              inclineCard,
+              timeCard,
+              distanceCard,
+              caloriesCard,
             ],
-          ),
-        ],
-      );
-    }
+          );
+        } else {
+          if (narrow) {
+            return Column(
+              children: [
+                speedCard,
+                const SizedBox(height: 8),
+                hrCard,
+                const SizedBox(height: 8),
+                inclineCard,
+                const SizedBox(height: 8),
+                timeCard,
+                const SizedBox(height: 8),
+                distanceCard,
+                const SizedBox(height: 8),
+                caloriesCard,
+              ],
+            );
+          } else {
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: speedCard),
+                    const SizedBox(width: 8),
+                    Expanded(child: hrCard),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                GridView.count(
+                  crossAxisCount: 2,
+                  childAspectRatio: 1.8,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [inclineCard, timeCard, distanceCard, caloriesCard],
+                ),
+              ],
+            );
+          }
+        }
+      },
+    );
   }
 }
 
@@ -299,6 +271,8 @@ class _MetricCardState extends State<_MetricCard>
                   children: [
                     Text(
                       widget.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.hintColor,
                         fontSize: widget.isLarge ? 12 : 10,
