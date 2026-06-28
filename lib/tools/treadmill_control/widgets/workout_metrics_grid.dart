@@ -61,8 +61,7 @@ class WorkoutMetricsGrid extends StatelessWidget {
           ? () {
               showDialog(
                 context: context,
-                builder: (context) =>
-                    HeartRateChartDialog(history: state.hrmHistory),
+                builder: (context) => const HeartRateChartDialog(),
               );
             }
           : null,

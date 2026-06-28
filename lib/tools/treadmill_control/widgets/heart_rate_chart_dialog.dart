@@ -1,17 +1,18 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../treadmill_control_state.dart';
 import '../../../../widgets/responsive_alert_dialog.dart';
 
 class HeartRateChartDialog extends StatelessWidget {
-  final List<HeartRateHistoryPoint> history;
-
-  const HeartRateChartDialog({super.key, required this.history});
+  const HeartRateChartDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final state = context.watch<TreadmillControlState>();
+    final history = state.hrmHistory;
 
     if (history.isEmpty) {
       return const ResponsiveAlertDialog(
@@ -32,6 +33,18 @@ class HeartRateChartDialog extends StatelessWidget {
         history.map((p) => p.heartRate).reduce((a, b) => a + b) /
         history.length;
 
+    final totalDuration = history.last.timestamp.difference(
+      history.first.timestamp,
+    );
+    String durationStr = '';
+    if (totalDuration.inHours > 0) {
+      durationStr += '${totalDuration.inHours}h ';
+    }
+    if (totalDuration.inMinutes > 0 || totalDuration.inHours > 0) {
+      durationStr += '${totalDuration.inMinutes % 60}m ';
+    }
+    durationStr += '${totalDuration.inSeconds % 60}s';
+
     return ResponsiveAlertDialog(
       title: const Text('Heart Rate History'),
       content: SizedBox(
@@ -40,9 +53,11 @@ class HeartRateChartDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Stats Row (Overall Session)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Stats (Overall Session)
+            Wrap(
+              spacing: 16,
+              runSpacing: 12,
+              alignment: WrapAlignment.spaceBetween,
               children: [
                 _StatItem(
                   label: 'Current',
@@ -63,6 +78,11 @@ class HeartRateChartDialog extends StatelessWidget {
                   label: 'Min',
                   value: '$minVal bpm',
                   color: Colors.green,
+                ),
+                _StatItem(
+                  label: 'Duration',
+                  value: durationStr,
+                  color: Colors.purple,
                 ),
               ],
             ),
