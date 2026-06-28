@@ -65,6 +65,57 @@ class DeviceConnectionSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Connected Devices Section
+                    if (state.treadmillConnection ==
+                            BleConnectionState.connected ||
+                        state.hrmConnection ==
+                            BleConnectionState.connected) ...[
+                      Text(
+                        'Connected Devices',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      if (state.treadmillConnection ==
+                              BleConnectionState.connected &&
+                          state.treadmillDeviceId != null)
+                        ListTile(
+                          leading: Icon(
+                            Icons.directions_run_outlined,
+                            color: theme.colorScheme.primary,
+                          ),
+                          title: Text(state.treadmillName ?? 'Treadmill'),
+                          subtitle: Text(
+                            'Connected | ${state.treadmillDeviceId}',
+                          ),
+                          trailing: TextButton(
+                            onPressed: () => state.disconnectTreadmill(),
+                            child: Text(
+                              'Disconnect',
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
+                          ),
+                        ),
+                      if (state.hrmConnection == BleConnectionState.connected &&
+                          state.hrmDeviceId != null)
+                        ListTile(
+                          leading: const Icon(
+                            Icons.favorite_border,
+                            color: Colors.red,
+                          ),
+                          title: Text(state.hrmName ?? 'Heart Rate Monitor'),
+                          subtitle: Text('Connected | ${state.hrmDeviceId}'),
+                          trailing: TextButton(
+                            onPressed: () => state.disconnectHrm(),
+                            child: Text(
+                              'Disconnect',
+                              style: TextStyle(color: theme.colorScheme.error),
+                            ),
+                          ),
+                        ),
+                      const Divider(),
+                    ],
                     // Treadmills Section
                     Text(
                       'Treadmills',

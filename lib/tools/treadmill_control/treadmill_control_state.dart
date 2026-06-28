@@ -59,6 +59,18 @@ class TreadmillControlState extends ChangeNotifier {
   String? hrmName;
   BleConnectionState hrmConnection = BleConnectionState.disconnected;
 
+  // Resolved BLE UUIDs from Discovery
+  String? _actualTreadmillService;
+  String? _actualTreadmillDataChar;
+  String? _actualTreadmillControlPointChar;
+  String? _actualTreadmillFeatureChar;
+  String? _actualTreadmillWriteChar;
+
+  String? _actualHrmService;
+  String? _actualHrmChar;
+  String? _actualBatteryService;
+  String? _actualBatteryChar;
+
   // Active Telemetry (Metrics)
   double speed = 0.0;
   double incline = 0.0;
@@ -242,42 +254,104 @@ class TreadmillControlState extends ChangeNotifier {
 
         bool hasPitPat = false;
         bool hasFtms = false;
+
+        _actualTreadmillService = null;
+        _actualTreadmillDataChar = null;
+        _actualTreadmillControlPointChar = null;
+        _actualTreadmillFeatureChar = null;
+        _actualTreadmillWriteChar = null;
+
         for (final s in services) {
           final uuid = s.uuid.toLowerCase();
-          if (uuid == pitpatService) hasPitPat = true;
-          if (uuid == ftmsService) hasFtms = true;
+          if (uuid.contains('fba0')) {
+            hasPitPat = true;
+            _actualTreadmillService = s.uuid;
+            for (final c in s.characteristics) {
+              final cUuid = c.uuid.toLowerCase();
+              if (cUuid.contains('fba2')) {
+                _actualTreadmillDataChar = c.uuid;
+              }
+              if (cUuid.contains('fba1')) {
+                _actualTreadmillWriteChar = c.uuid;
+              }
+            }
+          }
+          if (uuid.contains('1826')) {
+            hasFtms = true;
+            _actualTreadmillService = s.uuid;
+            for (final c in s.characteristics) {
+              final cUuid = c.uuid.toLowerCase();
+              if (cUuid.contains('2acd')) {
+                _actualTreadmillDataChar = c.uuid;
+              }
+              if (cUuid.contains('2ad9')) {
+                _actualTreadmillControlPointChar = c.uuid;
+              }
+              if (cUuid.contains('2acc')) {
+                _actualTreadmillFeatureChar = c.uuid;
+              }
+            }
+          }
         }
 
         treadmillType = hasPitPat && !hasFtms
             ? TreadmillType.pitpat
             : TreadmillType.ftms;
 
+        _actualTreadmillService ??= treadmillType == TreadmillType.pitpat
+            ? pitpatService
+            : ftmsService;
+        _actualTreadmillDataChar ??= treadmillType == TreadmillType.pitpat
+            ? pitpatNotifyChar
+            : ftmsDataChar;
+        _actualTreadmillControlPointChar ??= ftmsControlPointChar;
+        _actualTreadmillWriteChar ??= pitpatWriteChar;
+
         if (treadmillType == TreadmillType.pitpat) {
           await UniversalBle.subscribeNotifications(
             deviceId,
-            pitpatService,
-            pitpatNotifyChar,
+            _actualTreadmillService!,
+            _actualTreadmillDataChar!,
           );
           _startPitPatHeartbeat();
         } else {
           await UniversalBle.subscribeNotifications(
             deviceId,
-            ftmsService,
-            ftmsDataChar,
+            _actualTreadmillService!,
+            _actualTreadmillDataChar!,
           );
-          // Try to discover features
+
+          if (_actualTreadmillControlPointChar != null) {
+            try {
+              await UniversalBle.subscribeIndications(
+                deviceId,
+                _actualTreadmillService!,
+                _actualTreadmillControlPointChar!,
+              );
+            } catch (_) {}
+          }
+
           try {
-            await UniversalBle.read(deviceId, ftmsService, ftmsFeatureChar);
+            await UniversalBle.read(
+              deviceId,
+              _actualTreadmillService!,
+              _actualTreadmillFeatureChar ?? ftmsFeatureChar,
+            );
           } catch (_) {}
         }
 
         // Check if RSC service is also available for cadence
-        if (services.any((s) => s.uuid.toLowerCase() == rscService)) {
+        if (services.any((s) => s.uuid.toLowerCase().contains('1814'))) {
           try {
+            final rscServiceDiscovered = services.firstWhere(
+              (s) => s.uuid.toLowerCase().contains('1814'),
+            );
+            final rscCharDiscovered = rscServiceDiscovered.characteristics
+                .firstWhere((c) => c.uuid.toLowerCase().contains('2a53'));
             await UniversalBle.subscribeNotifications(
               deviceId,
-              rscService,
-              rscChar,
+              rscServiceDiscovered.uuid,
+              rscCharDiscovered.uuid,
             );
           } catch (_) {}
         }
@@ -290,18 +364,53 @@ class TreadmillControlState extends ChangeNotifier {
     } else if (deviceId == hrmDeviceId) {
       hrmConnection = state;
       if (state == BleConnectionState.connected) {
-        await UniversalBle.discoverServices(deviceId);
-        await UniversalBle.subscribeNotifications(deviceId, hrService, hrChar);
+        final services = await UniversalBle.discoverServices(deviceId);
+
+        _actualHrmService = null;
+        _actualHrmChar = null;
+        _actualBatteryService = null;
+        _actualBatteryChar = null;
+
+        for (final s in services) {
+          final uuid = s.uuid.toLowerCase();
+          if (uuid.contains('180d')) {
+            _actualHrmService = s.uuid;
+            for (final c in s.characteristics) {
+              if (c.uuid.toLowerCase().contains('2a37')) {
+                _actualHrmChar = c.uuid;
+              }
+            }
+          }
+          if (uuid.contains('180f')) {
+            _actualBatteryService = s.uuid;
+            for (final c in s.characteristics) {
+              if (c.uuid.toLowerCase().contains('2a19')) {
+                _actualBatteryChar = c.uuid;
+              }
+            }
+          }
+        }
+
+        _actualHrmService ??= hrService;
+        _actualHrmChar ??= hrChar;
+        _actualBatteryService ??= batteryService;
+        _actualBatteryChar ??= batteryChar;
+
+        await UniversalBle.subscribeNotifications(
+          deviceId,
+          _actualHrmService!,
+          _actualHrmChar!,
+        );
         try {
           await UniversalBle.subscribeNotifications(
             deviceId,
-            batteryService,
-            batteryChar,
+            _actualBatteryService!,
+            _actualBatteryChar!,
           );
           final bat = await UniversalBle.read(
             deviceId,
-            batteryService,
-            batteryChar,
+            _actualBatteryService!,
+            _actualBatteryChar!,
           );
           if (bat.isNotEmpty) {
             batteryLevel = bat[0];
@@ -323,17 +432,17 @@ class TreadmillControlState extends ChangeNotifier {
   ) {
     final charId = characteristicId.toLowerCase();
     if (deviceId == treadmillDeviceId) {
-      if (charId == ftmsDataChar) {
+      if (charId.contains('2acd')) {
         _parseFtmsData(value);
-      } else if (charId == pitpatNotifyChar) {
+      } else if (charId.contains('fba2')) {
         _parsePitPatData(value);
-      } else if (charId == rscChar) {
+      } else if (charId.contains('2a53')) {
         _parseRscData(value);
       }
     } else if (deviceId == hrmDeviceId) {
-      if (charId == hrChar) {
+      if (charId.contains('2a37')) {
         _parseHrmData(value);
-      } else if (charId == batteryChar && value.isNotEmpty) {
+      } else if (charId.contains('2a19') && value.isNotEmpty) {
         batteryLevel = value[0];
         notifyListeners();
       }
@@ -358,8 +467,28 @@ class TreadmillControlState extends ChangeNotifier {
 
   void _parseRscData(Uint8List value) {
     if (value.length < 4) return;
-    steps = value[3]; // Update cadence/steps spm
-    notifyListeners();
+    try {
+      final flags = value[0];
+      int offset = 3;
+
+      offset += 1; // skip cadence
+
+      if ((flags & 0x01) != 0 && value.length >= offset + 2) {
+        offset += 2;
+      }
+
+      if ((flags & 0x02) != 0 && value.length >= offset + 4) {
+        offset += 4;
+      }
+
+      final remaining = value.length - offset;
+      if (remaining >= 4) {
+        steps = ByteData.sublistView(value).getUint32(offset, Endian.little);
+      } else if (remaining >= 2) {
+        steps = ByteData.sublistView(value).getUint16(offset, Endian.little);
+      }
+      notifyListeners();
+    } catch (_) {}
   }
 
   void _parseFtmsData(Uint8List value) {
@@ -487,8 +616,8 @@ class TreadmillControlState extends ChangeNotifier {
           final pkt = makePitPatPacket('START', speed > 0 ? speed : 1.0);
           await UniversalBle.write(
             treadmillDeviceId!,
-            pitpatService,
-            pitpatWriteChar,
+            _actualTreadmillService ?? pitpatService,
+            _actualTreadmillWriteChar ?? pitpatWriteChar,
             pkt,
             withoutResponse: true,
           );
@@ -511,8 +640,8 @@ class TreadmillControlState extends ChangeNotifier {
         final pkt = makePitPatPacket('PAUSE', speed);
         await UniversalBle.write(
           treadmillDeviceId!,
-          pitpatService,
-          pitpatWriteChar,
+          _actualTreadmillService ?? pitpatService,
+          _actualTreadmillWriteChar ?? pitpatWriteChar,
           pkt,
           withoutResponse: true,
         );
@@ -538,8 +667,8 @@ class TreadmillControlState extends ChangeNotifier {
         final pkt = makePitPatPacket('STOP', speed);
         await UniversalBle.write(
           treadmillDeviceId!,
-          pitpatService,
-          pitpatWriteChar,
+          _actualTreadmillService ?? pitpatService,
+          _actualTreadmillWriteChar ?? pitpatWriteChar,
           pkt,
           withoutResponse: true,
         );
@@ -606,8 +735,8 @@ class TreadmillControlState extends ChangeNotifier {
         final pkt = makePitPatPacket('SPEED', targetSpeed);
         await UniversalBle.write(
           treadmillDeviceId!,
-          pitpatService,
-          pitpatWriteChar,
+          _actualTreadmillService ?? pitpatService,
+          _actualTreadmillWriteChar ?? pitpatWriteChar,
           pkt,
           withoutResponse: true,
         );
@@ -715,8 +844,8 @@ class TreadmillControlState extends ChangeNotifier {
         try {
           await UniversalBle.write(
             treadmillDeviceId!,
-            pitpatService,
-            pitpatWriteChar,
+            _actualTreadmillService ?? pitpatService,
+            _actualTreadmillWriteChar ?? pitpatWriteChar,
             heartbeatPacket,
             withoutResponse: true,
           );
@@ -766,12 +895,15 @@ class TreadmillControlState extends ChangeNotifier {
 
   Future<void> _sendFtmsControl(int command, List<int> params) async {
     if (treadmillDeviceId == null) return;
+    final service = _actualTreadmillService ?? ftmsService;
+    final cpChar = _actualTreadmillControlPointChar ?? ftmsControlPointChar;
+
     if (!_isControlRequested) {
       try {
         await UniversalBle.write(
           treadmillDeviceId!,
-          ftmsService,
-          ftmsControlPointChar,
+          service,
+          cpChar,
           Uint8List.fromList([0x00]),
         );
         _isControlRequested = true;
@@ -780,12 +912,7 @@ class TreadmillControlState extends ChangeNotifier {
 
     final payload = Uint8List.fromList([command, ...params]);
     try {
-      await UniversalBle.write(
-        treadmillDeviceId!,
-        ftmsService,
-        ftmsControlPointChar,
-        payload,
-      );
+      await UniversalBle.write(treadmillDeviceId!, service, cpChar, payload);
     } catch (_) {}
   }
 
