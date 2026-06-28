@@ -66,6 +66,10 @@ class TreadmillControlState extends ChangeNotifier {
   String? hrmName;
   BleConnectionState hrmConnection = BleConnectionState.disconnected;
 
+  // Support flags determined on connection
+  bool speedControlSupported = false;
+  bool inclineControlSupported = false;
+
   // Resolved BLE UUIDs from Discovery
   String? _actualTreadmillService;
   String? _actualTreadmillDataChar;
@@ -241,6 +245,8 @@ class TreadmillControlState extends ChangeNotifier {
     steps = 0;
     elapsedTime = 0;
     hrmHistory.clear();
+    speedControlSupported = false;
+    inclineControlSupported = false;
 
     notifyListeners();
 
@@ -352,6 +358,8 @@ class TreadmillControlState extends ChangeNotifier {
         _actualTreadmillWriteChar ??= pitpatWriteChar;
 
         if (treadmillType == TreadmillType.pitpat) {
+          speedControlSupported = true;
+          inclineControlSupported = false;
           await UniversalBle.subscribeNotifications(
             deviceId,
             _actualTreadmillService!,
@@ -376,12 +384,17 @@ class TreadmillControlState extends ChangeNotifier {
           }
 
           try {
-            await UniversalBle.read(
+            final featBytes = await UniversalBle.read(
               deviceId,
               _actualTreadmillService!,
               _actualTreadmillFeatureChar ?? ftmsFeatureChar,
             );
-          } catch (_) {}
+            _parseFeatures(featBytes);
+          } catch (_) {
+            speedControlSupported = true;
+            inclineControlSupported = true;
+            notifyListeners();
+          }
         }
 
         // Check if RSC service is also available for cadence
@@ -419,6 +432,8 @@ class TreadmillControlState extends ChangeNotifier {
         steps = 0;
         elapsedTime = 0;
         hrmHistory.clear();
+        speedControlSupported = false;
+        inclineControlSupported = false;
       }
       notifyListeners();
     } else if (deviceId == hrmDeviceId) {
@@ -949,8 +964,12 @@ class TreadmillControlState extends ChangeNotifier {
   void toggleSimulator(bool enable) {
     isSimulator = enable;
     if (enable) {
+      speedControlSupported = true;
+      inclineControlSupported = true;
       disconnectTreadmill();
     } else {
+      speedControlSupported = false;
+      inclineControlSupported = false;
       if (workoutStatus == WorkoutStatus.running) {
         stopWorkout();
       }
@@ -1046,6 +1065,28 @@ class TreadmillControlState extends ChangeNotifier {
     await loadSessions();
   }
 
+  void _parseFeatures(Uint8List value) {
+    if (value.length < 8) return;
+    try {
+      final data = ByteData.sublistView(value);
+      final machineFeatures = data.getUint32(0, Endian.little);
+
+      if ((machineFeatures & (1 << 14)) != 0) {
+        final targetFeatures = data.getUint32(4, Endian.little);
+        speedControlSupported = (targetFeatures & (1 << 0)) != 0;
+        inclineControlSupported = (targetFeatures & (1 << 1)) != 0;
+      } else {
+        speedControlSupported = false;
+        inclineControlSupported = false;
+      }
+      notifyListeners();
+    } catch (_) {
+      speedControlSupported = true;
+      inclineControlSupported = true;
+      notifyListeners();
+    }
+  }
+
   void resetState() {
     stopScan();
     disconnectTreadmill();
@@ -1065,6 +1106,8 @@ class TreadmillControlState extends ChangeNotifier {
     discoveredHrms.clear();
     isScanning = false;
     hrmHistory.clear();
+    speedControlSupported = false;
+    inclineControlSupported = false;
     notifyListeners();
   }
 
