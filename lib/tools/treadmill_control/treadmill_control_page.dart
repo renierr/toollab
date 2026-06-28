@@ -28,7 +28,7 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
     super.initState();
     final state = context.read<TreadmillControlState>();
     onDispose(() {
-      state.resetState();
+      state.resetState(notify: false);
     });
   }
 

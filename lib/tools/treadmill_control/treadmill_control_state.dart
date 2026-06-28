@@ -1087,7 +1087,7 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
-  void resetState() {
+  void resetState({bool notify = true}) {
     stopScan();
     disconnectTreadmill();
     disconnectHrm();
@@ -1108,7 +1108,9 @@ class TreadmillControlState extends ChangeNotifier {
     hrmHistory.clear();
     speedControlSupported = false;
     inclineControlSupported = false;
-    notifyListeners();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   @override
