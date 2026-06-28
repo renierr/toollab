@@ -26,11 +26,9 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
   @override
   void initState() {
     super.initState();
+    final state = context.read<TreadmillControlState>();
     onDispose(() {
-      final state = context.read<TreadmillControlState>();
-      state.stopScan();
-      state.disconnectTreadmill();
-      state.disconnectHrm();
+      state.resetState();
     });
   }
 

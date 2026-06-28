@@ -210,9 +210,31 @@ class TreadmillControlState extends ChangeNotifier {
 
   Future<void> disconnectTreadmill() async {
     if (treadmillDeviceId == null) return;
+    final deviceId = treadmillDeviceId!;
+
+    if (workoutStatus == WorkoutStatus.running ||
+        workoutStatus == WorkoutStatus.paused) {
+      await stopWorkout();
+    }
+
+    treadmillConnection = BleConnectionState.disconnected;
+    treadmillDeviceId = null;
+    treadmillName = null;
+    treadmillType = TreadmillType.none;
+    _isControlRequested = false;
+    _stopPitPatHeartbeat();
+
+    speed = 0.0;
+    incline = 0.0;
+    distance = 0.0;
+    calories = 0;
+    steps = 0;
+    elapsedTime = 0;
+
+    notifyListeners();
+
     try {
-      _stopPitPatHeartbeat();
-      await UniversalBle.disconnect(treadmillDeviceId!);
+      await UniversalBle.disconnect(deviceId);
     } catch (_) {}
   }
 
@@ -233,8 +255,18 @@ class TreadmillControlState extends ChangeNotifier {
 
   Future<void> disconnectHrm() async {
     if (hrmDeviceId == null) return;
+    final deviceId = hrmDeviceId!;
+
+    hrmConnection = BleConnectionState.disconnected;
+    hrmDeviceId = null;
+    hrmName = null;
+    batteryLevel = null;
+    heartRate = 0;
+
+    notifyListeners();
+
     try {
-      await UniversalBle.disconnect(hrmDeviceId!);
+      await UniversalBle.disconnect(deviceId);
     } catch (_) {}
   }
 
@@ -359,6 +391,21 @@ class TreadmillControlState extends ChangeNotifier {
         _stopPitPatHeartbeat();
         treadmillType = TreadmillType.none;
         _isControlRequested = false;
+
+        treadmillDeviceId = null;
+        treadmillName = null;
+
+        if (workoutStatus == WorkoutStatus.running ||
+            workoutStatus == WorkoutStatus.paused) {
+          stopWorkout();
+        }
+
+        speed = 0.0;
+        incline = 0.0;
+        distance = 0.0;
+        calories = 0;
+        steps = 0;
+        elapsedTime = 0;
       }
       notifyListeners();
     } else if (deviceId == hrmDeviceId) {
@@ -418,6 +465,9 @@ class TreadmillControlState extends ChangeNotifier {
         } catch (_) {}
       } else if (state == BleConnectionState.disconnected) {
         batteryLevel = null;
+        hrmDeviceId = null;
+        hrmName = null;
+        heartRate = 0;
       }
       notifyListeners();
     }
@@ -972,6 +1022,27 @@ class TreadmillControlState extends ChangeNotifier {
   Future<void> importSessions(List<TreadmillSession> sessions) async {
     await TreadmillControlDb.instance.importSessions(sessions);
     await loadSessions();
+  }
+
+  void resetState() {
+    stopScan();
+    disconnectTreadmill();
+    disconnectHrm();
+
+    speed = 0.0;
+    incline = 0.0;
+    heartRate = 0;
+    distance = 0.0;
+    calories = 0;
+    steps = 0;
+    elapsedTime = 0;
+    batteryLevel = null;
+    workoutStatus = WorkoutStatus.inactive;
+    dataPoints.clear();
+    discoveredTreadmills.clear();
+    discoveredHrms.clear();
+    isScanning = false;
+    notifyListeners();
   }
 
   @override
