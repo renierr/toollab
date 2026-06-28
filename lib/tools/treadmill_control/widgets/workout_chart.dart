@@ -31,9 +31,10 @@ class WorkoutChart extends StatelessWidget {
       );
     }
 
-    final List<WorkoutDataPoint> points = state.dataPoints.length > 60
-        ? state.dataPoints.sublist(state.dataPoints.length - 60)
-        : state.dataPoints;
+    final lastTime = state.dataPoints.last.timestamp;
+    final List<WorkoutDataPoint> points = state.dataPoints
+        .where((p) => p.timestamp >= lastTime - 300)
+        .toList();
 
     return Container(
       height: 120,
@@ -65,45 +66,63 @@ class _ChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (points.isEmpty) return;
 
-    final paintSpeed = Paint()
-      ..color = TreadmillColors.cyanMetric
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+    // Apply moving average smoothing
+    final List<double> smoothedSpeed = [];
+    final List<double> smoothedHr = [];
+    const int windowSize = 3;
 
-    final paintHr = Paint()
-      ..color = TreadmillColors.redMetric
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+    for (int i = 0; i < points.length; i++) {
+      // Speed
+      double speedSum = 0;
+      int speedCount = 0;
+      for (int w = i - windowSize ~/ 2; w <= i + windowSize ~/ 2; w++) {
+        if (w >= 0 && w < points.length) {
+          speedSum += points[w].speed;
+          speedCount++;
+        }
+      }
+      smoothedSpeed.add(speedSum / speedCount);
 
-    final paintGrid = Paint()
-      ..color = isDark
-          ? Colors.white.withValues(alpha: 0.05)
-          : Colors.black.withValues(alpha: 0.05)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    for (int i = 1; i < 4; i++) {
-      final y = size.height * (i / 4);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paintGrid);
+      // Heart Rate
+      double hrSum = 0;
+      int hrCount = 0;
+      for (int w = i - windowSize ~/ 2; w <= i + windowSize ~/ 2; w++) {
+        if (w >= 0 && w < points.length) {
+          if (points[w].heartRate > 0) {
+            hrSum += points[w].heartRate;
+            hrCount++;
+          }
+        }
+      }
+      smoothedHr.add(hrCount > 0 ? hrSum / hrCount : 0.0);
     }
 
+    // Determine min/max for normalization
     double maxSpeed = 12.0;
-    double maxHr = 180.0;
-    double minHr = 60.0;
-
-    for (final p in points) {
-      if (p.speed > maxSpeed) {
-        maxSpeed = p.speed;
-      }
-      if (p.heartRate > maxHr) {
-        maxHr = p.heartRate.toDouble();
-      }
-      if (p.heartRate > 0 && p.heartRate < minHr) {
-        minHr = p.heartRate.toDouble();
-      }
+    double minSpeed = 0.0;
+    final speedValues = smoothedSpeed.where((s) => s > 0).toList();
+    if (speedValues.isNotEmpty) {
+      maxSpeed = speedValues.reduce(max);
+      minSpeed = speedValues.reduce(min);
     }
+    if (maxSpeed == minSpeed) {
+      maxSpeed += 2.0;
+      minSpeed = max(0.0, minSpeed - 2.0);
+    }
+    final double speedRange = maxSpeed - minSpeed;
 
-    final double hrRange = max(40.0, maxHr - minHr);
+    double maxHr = 150.0;
+    double minHr = 60.0;
+    final hrValues = smoothedHr.where((h) => h > 0).toList();
+    if (hrValues.isNotEmpty) {
+      maxHr = hrValues.reduce(max);
+      minHr = hrValues.reduce(min);
+    }
+    if (maxHr == minHr) {
+      maxHr += 10.0;
+      minHr = max(0.0, minHr - 10.0);
+    }
+    final double hrRange = maxHr - minHr;
 
     final speedPoints = <Offset>[];
     final hrPoints = <Offset>[];
@@ -113,33 +132,110 @@ class _ChartPainter extends CustomPainter {
         : size.width;
 
     for (int i = 0; i < points.length; i++) {
-      final p = points[i];
       final x = i * dx;
 
-      final ySpeed = size.height - (p.speed / maxSpeed) * size.height;
+      // Speed y
+      final ySpeed =
+          size.height -
+          ((smoothedSpeed[i] - minSpeed) / speedRange) * (size.height - 16) -
+          8;
       speedPoints.add(Offset(x, ySpeed));
 
-      if (p.heartRate > 0) {
+      // Heart Rate y
+      if (smoothedHr[i] > 0) {
         final yHr =
-            size.height - ((p.heartRate - minHr) / hrRange) * size.height;
+            size.height -
+            ((smoothedHr[i] - minHr) / hrRange) * (size.height - 16) -
+            8;
         hrPoints.add(Offset(x, yHr));
       }
     }
 
-    if (speedPoints.length > 1) {
-      final path = Path()..moveTo(speedPoints[0].dx, speedPoints[0].dy);
-      for (int i = 1; i < speedPoints.length; i++) {
-        path.lineTo(speedPoints[i].dx, speedPoints[i].dy);
-      }
-      canvas.drawPath(path, paintSpeed);
+    // Paint subtle background grid lines
+    final paintGrid = Paint()
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.03)
+          : Colors.black.withValues(alpha: 0.03)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    for (int i = 1; i < 4; i++) {
+      final y = size.height * (i / 4);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paintGrid);
     }
 
+    // Draw Speed Path
+    if (speedPoints.length > 1) {
+      final path = Path()..moveTo(speedPoints[0].dx, speedPoints[0].dy);
+      for (int i = 0; i < speedPoints.length - 1; i++) {
+        final p0 = speedPoints[i];
+        final p1 = speedPoints[i + 1];
+        final cp1 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p0.dy);
+        final cp2 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p1.dy);
+        path.cubicTo(cp1.dx, cp1.dy, cp2.dx, cp2.dy, p1.dx, p1.dy);
+      }
+
+      // Fill Gradient
+      final fillPath = Path.from(path)
+        ..lineTo(size.width, size.height)
+        ..lineTo(0, size.height)
+        ..close();
+      final fillPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            TreadmillColors.cyanMetric.withValues(alpha: 0.12),
+            TreadmillColors.cyanMetric.withValues(alpha: 0.0),
+          ],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+        ..style = PaintingStyle.fill;
+      canvas.drawPath(fillPath, fillPaint);
+
+      // Line Stroke
+      final linePaint = Paint()
+        ..color = TreadmillColors.cyanMetric
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round;
+      canvas.drawPath(path, linePaint);
+    }
+
+    // Draw Heart Rate Path
     if (hrPoints.length > 1) {
       final path = Path()..moveTo(hrPoints[0].dx, hrPoints[0].dy);
-      for (int i = 1; i < hrPoints.length; i++) {
-        path.lineTo(hrPoints[i].dx, hrPoints[i].dy);
+      for (int i = 0; i < hrPoints.length - 1; i++) {
+        final p0 = hrPoints[i];
+        final p1 = hrPoints[i + 1];
+        final cp1 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p0.dy);
+        final cp2 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p1.dy);
+        path.cubicTo(cp1.dx, cp1.dy, cp2.dx, cp2.dy, p1.dx, p1.dy);
       }
-      canvas.drawPath(path, paintHr);
+
+      // Fill Gradient
+      final fillPath = Path.from(path)
+        ..lineTo(hrPoints.last.dx, size.height)
+        ..lineTo(hrPoints.first.dx, size.height)
+        ..close();
+      final fillPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            TreadmillColors.redMetric.withValues(alpha: 0.12),
+            TreadmillColors.redMetric.withValues(alpha: 0.0),
+          ],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+        ..style = PaintingStyle.fill;
+      canvas.drawPath(fillPath, fillPaint);
+
+      // Line Stroke
+      final linePaint = Paint()
+        ..color = TreadmillColors.redMetric
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round;
+      canvas.drawPath(path, linePaint);
     }
   }
 
