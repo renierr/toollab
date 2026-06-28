@@ -10,6 +10,13 @@ enum WorkoutStatus { inactive, starting, running, paused, stopped }
 
 enum TreadmillType { ftms, pitpat, none }
 
+class HeartRateHistoryPoint {
+  final DateTime timestamp;
+  final int heartRate;
+
+  HeartRateHistoryPoint({required this.timestamp, required this.heartRate});
+}
+
 class DiscoveredBleDevice {
   final String id;
   final String name;
@@ -70,6 +77,9 @@ class TreadmillControlState extends ChangeNotifier {
   String? _actualHrmChar;
   String? _actualBatteryService;
   String? _actualBatteryChar;
+
+  // HRM In-Memory History (Tracked continuously as long as connected)
+  final List<HeartRateHistoryPoint> hrmHistory = [];
 
   // Active Telemetry (Metrics)
   double speed = 0.0;
@@ -230,6 +240,7 @@ class TreadmillControlState extends ChangeNotifier {
     calories = 0;
     steps = 0;
     elapsedTime = 0;
+    hrmHistory.clear();
 
     notifyListeners();
 
@@ -262,6 +273,7 @@ class TreadmillControlState extends ChangeNotifier {
     hrmName = null;
     batteryLevel = null;
     heartRate = 0;
+    hrmHistory.clear();
 
     notifyListeners();
 
@@ -406,6 +418,7 @@ class TreadmillControlState extends ChangeNotifier {
         calories = 0;
         steps = 0;
         elapsedTime = 0;
+        hrmHistory.clear();
       }
       notifyListeners();
     } else if (deviceId == hrmDeviceId) {
@@ -468,6 +481,7 @@ class TreadmillControlState extends ChangeNotifier {
         hrmDeviceId = null;
         hrmName = null;
         heartRate = 0;
+        hrmHistory.clear();
       }
       notifyListeners();
     }
@@ -511,6 +525,9 @@ class TreadmillControlState extends ChangeNotifier {
     }
     if (hr > 0) {
       heartRate = hr;
+      hrmHistory.add(
+        HeartRateHistoryPoint(timestamp: DateTime.now(), heartRate: hr),
+      );
       notifyListeners();
     }
   }
@@ -586,9 +603,14 @@ class TreadmillControlState extends ChangeNotifier {
     }
 
     if ((flags & (1 << 8)) != 0 && value.length >= offset + 1) {
-      // If treadmill has handgrip sensor, use it as fallback heart rate if no dedicated HRM
+      final hr = value[offset];
       if (hrmConnection != BleConnectionState.connected) {
-        heartRate = value[offset];
+        heartRate = hr;
+        if (hr > 0) {
+          hrmHistory.add(
+            HeartRateHistoryPoint(timestamp: DateTime.now(), heartRate: hr),
+          );
+        }
       }
       offset += 1;
     }
@@ -1042,6 +1064,7 @@ class TreadmillControlState extends ChangeNotifier {
     discoveredTreadmills.clear();
     discoveredHrms.clear();
     isScanning = false;
+    hrmHistory.clear();
     notifyListeners();
   }
 

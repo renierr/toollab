@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../treadmill_control_state.dart';
 import '../treadmill_control_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'heart_rate_chart_dialog.dart';
 
 class WorkoutMetricsGrid extends StatelessWidget {
   final bool isLandscape;
@@ -54,6 +55,21 @@ class WorkoutMetricsGrid extends StatelessWidget {
             pulse:
                 state.heartRate > 0 &&
                 state.workoutStatus == WorkoutStatus.running,
+            backgroundPainter: state.hrmHistory.length >= 2
+                ? HeartRateChartPainter(
+                    history: state.hrmHistory,
+                    lineColor: TreadmillColors.redMetric,
+                  )
+                : null,
+            onTap: state.hrmHistory.isNotEmpty
+                ? () {
+                    showDialog(
+                      context: context,
+                      builder: (context) =>
+                          HeartRateChartDialog(history: state.hrmHistory),
+                    );
+                  }
+                : null,
           ),
           _MetricCard(
             label: l10n.inclineLabel,
@@ -112,6 +128,21 @@ class WorkoutMetricsGrid extends StatelessWidget {
                   pulse:
                       state.heartRate > 0 &&
                       state.workoutStatus == WorkoutStatus.running,
+                  backgroundPainter: state.hrmHistory.length >= 2
+                      ? HeartRateChartPainter(
+                          history: state.hrmHistory,
+                          lineColor: TreadmillColors.redMetric,
+                        )
+                      : null,
+                  onTap: state.hrmHistory.isNotEmpty
+                      ? () {
+                          showDialog(
+                            context: context,
+                            builder: (context) =>
+                                HeartRateChartDialog(history: state.hrmHistory),
+                          );
+                        }
+                      : null,
                 ),
               ),
             ],
@@ -169,6 +200,8 @@ class _MetricCard extends StatefulWidget {
   final IconData icon;
   final bool isLarge;
   final bool pulse;
+  final CustomPainter? backgroundPainter;
+  final VoidCallback? onTap;
 
   const _MetricCard({
     required this.label,
@@ -178,6 +211,8 @@ class _MetricCard extends StatefulWidget {
     required this.icon,
     this.isLarge = false,
     this.pulse = false,
+    this.backgroundPainter,
+    this.onTap,
   });
 
   @override
@@ -221,7 +256,8 @@ class _MetricCardState extends State<_MetricCard>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
+    Widget cardContent = Container(
+      clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isDark
@@ -233,68 +269,166 @@ class _MetricCardState extends State<_MetricCard>
           width: 1.5,
         ),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              final scale = 1.0 + (_pulseController.value * 0.15);
-              return Transform.scale(
-                scale: widget.pulse ? scale : 1.0,
-                child: Icon(
-                  widget.icon,
-                  color: widget.color,
-                  size: widget.isLarge ? 28 : 22,
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
-                    fontSize: widget.isLarge ? 12 : 10,
-                  ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+          if (widget.backgroundPainter != null)
+            Positioned.fill(
+              child: CustomPaint(painter: widget.backgroundPainter),
+            ),
+          Row(
+            children: [
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  final scale = 1.0 + (_pulseController.value * 0.15);
+                  return Transform.scale(
+                    scale: widget.pulse ? scale : 1.0,
+                    child: Icon(
+                      widget.icon,
+                      color: widget.color,
+                      size: widget.isLarge ? 28 : 22,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        widget.value,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : Colors.black,
-                          fontSize: widget.isLarge ? 24 : 18,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'monospace',
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      widget.label,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.hintColor,
+                        fontSize: widget.isLarge ? 12 : 10,
                       ),
                     ),
-                    if (widget.unit.isNotEmpty) ...[
-                      const SizedBox(width: 2),
-                      Text(
-                        widget.unit,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: widget.isLarge ? 12 : 9,
-                          color: theme.hintColor,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.value,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                              fontSize: widget.isLarge ? 24 : 18,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                        if (widget.unit.isNotEmpty) ...[
+                          const SizedBox(width: 2),
+                          Text(
+                            widget.unit,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: widget.isLarge ? 12 : 9,
+                              color: theme.hintColor,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
     );
+
+    if (widget.onTap != null) {
+      return GestureDetector(
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: cardContent,
+        ),
+      );
+    }
+
+    return cardContent;
+  }
+}
+
+class HeartRateChartPainter extends CustomPainter {
+  final List<HeartRateHistoryPoint> history;
+  final Color lineColor;
+
+  HeartRateChartPainter({required this.history, required this.lineColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (history.length < 2) return;
+
+    final paint = Paint()
+      ..color = lineColor.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    int minHr = history.map((p) => p.heartRate).reduce((a, b) => a < b ? a : b);
+    int maxHr = history.map((p) => p.heartRate).reduce((a, b) => a > b ? a : b);
+
+    if (maxHr == minHr) {
+      maxHr += 10;
+      minHr -= 10;
+    }
+    final int hrRange = maxHr - minHr;
+
+    final path = Path();
+    final List<Offset> points = [];
+    final double stepX = size.width / (history.length - 1);
+
+    for (int i = 0; i < history.length; i++) {
+      final double x = i * stepX;
+      final double normalizedY = (history[i].heartRate - minHr) / hrRange;
+      final double y = size.height - (normalizedY * (size.height - 8) + 4);
+      points.add(Offset(x, y));
+    }
+
+    path.moveTo(points[0].dx, points[0].dy);
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = points[i];
+      final p1 = points[i + 1];
+      final controlPoint1 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p0.dy);
+      final controlPoint2 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p1.dy);
+      path.cubicTo(
+        controlPoint1.dx,
+        controlPoint1.dy,
+        controlPoint2.dx,
+        controlPoint2.dy,
+        p1.dx,
+        p1.dy,
+      );
+    }
+
+    final fillPath = Path.from(path);
+    fillPath.lineTo(size.width, size.height);
+    fillPath.lineTo(0, size.height);
+    fillPath.close();
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          lineColor.withValues(alpha: 0.15),
+          lineColor.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant HeartRateChartPainter oldDelegate) {
+    return oldDelegate.history != history;
   }
 }
