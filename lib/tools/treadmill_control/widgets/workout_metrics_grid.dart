@@ -344,19 +344,34 @@ class HeartRateChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (history.length < 2) return;
 
+    // Apply moving average smoothing
+    final List<double> smoothedHrs = [];
+    const int windowSize = 5;
+    for (int i = 0; i < history.length; i++) {
+      double sum = 0;
+      int count = 0;
+      for (int w = i - windowSize ~/ 2; w <= i + windowSize ~/ 2; w++) {
+        if (w >= 0 && w < history.length) {
+          sum += history[w].heartRate;
+          count++;
+        }
+      }
+      smoothedHrs.add(sum / count);
+    }
+
     final paint = Paint()
       ..color = lineColor.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
-    int minHr = history.map((p) => p.heartRate).reduce((a, b) => a < b ? a : b);
-    int maxHr = history.map((p) => p.heartRate).reduce((a, b) => a > b ? a : b);
+    double minHr = smoothedHrs.reduce((a, b) => a < b ? a : b);
+    double maxHr = smoothedHrs.reduce((a, b) => a > b ? a : b);
 
     if (maxHr == minHr) {
       maxHr += 10;
       minHr -= 10;
     }
-    final int hrRange = maxHr - minHr;
+    final double hrRange = maxHr - minHr;
 
     final path = Path();
     final List<Offset> points = [];
@@ -364,7 +379,7 @@ class HeartRateChartPainter extends CustomPainter {
 
     for (int i = 0; i < history.length; i++) {
       final double x = i * stepX;
-      final double normalizedY = (history[i].heartRate - minHr) / hrRange;
+      final double normalizedY = (smoothedHrs[i] - minHr) / hrRange;
       final double y = size.height - (normalizedY * (size.height - 8) + 4);
       points.add(Offset(x, y));
     }
