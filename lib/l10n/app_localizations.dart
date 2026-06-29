@@ -542,6 +542,18 @@ abstract class AppLocalizations {
   /// **'ToolLab keeps audio running in background'**
   String get chipNotificationText;
 
+  /// No description provided for @treadmillNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Treadmill workout active'**
+  String get treadmillNotificationTitle;
+
+  /// No description provided for @treadmillNotificationText.
+  ///
+  /// In en, this message translates to:
+  /// **'ToolLab keeps recording your session'**
+  String get treadmillNotificationText;
+
   /// No description provided for @chipPauseTooltip.
   ///
   /// In en, this message translates to:

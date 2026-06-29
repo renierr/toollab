@@ -49,6 +49,9 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
+    state.notificationTitle = l10n.treadmillNotificationTitle;
+    state.notificationText = l10n.treadmillNotificationText;
+
     final List<Widget> actions = [
       IconButton(
         icon: Icon(

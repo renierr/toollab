@@ -243,6 +243,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'ToolLab keeps audio running in background';
 
   @override
+  String get treadmillNotificationTitle => 'Treadmill workout active';
+
+  @override
+  String get treadmillNotificationText =>
+      'ToolLab keeps recording your session';
+
+  @override
   String get chipPauseTooltip => 'Pause';
 
   @override

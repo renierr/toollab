@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
+import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'treadmill_control_db.dart';
 import 'treadmill_session.dart';
 
@@ -112,8 +113,20 @@ class TreadmillControlState extends ChangeNotifier {
   WakeLockLease? _wakeLockLease;
   bool _isControlRequested = false;
 
+  // Session keep-alive (CPU + foreground service) — independent of the
+  // user-facing screen wake lock, so data stays reliable with the screen off.
+  WakeLockLease? _sessionCpuLease;
+  ForegroundRuntimeLease? _foregroundLease;
+
+  // Foreground-service notification strings (localized by the page).
+  String notificationTitle = 'Treadmill workout active';
+  String notificationText = 'ToolLab keeps recording your session';
+
   // Characteristics that rejected WriteWithoutResponse — write with response.
   final Set<String> _noWriteWithoutResponse = {};
+
+  // Aborts an in-flight connect retry loop (user cancelled / disconnected).
+  bool _treadmillConnectAbort = false;
 
   TreadmillControlState() {
     _init();
@@ -214,18 +227,56 @@ class TreadmillControlState extends ChangeNotifier {
     treadmillDeviceId = deviceId;
     treadmillName = name;
     treadmillConnection = BleConnectionState.connecting;
+    _treadmillConnectAbort = false;
     notifyListeners();
     await stopScan();
-    try {
-      await UniversalBle.connect(deviceId);
-    } catch (e) {
+
+    const int maxAttempts = 4;
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      // Stop retrying if the user cancelled, switched target, or the OS
+      // already reported a real connection via _onConnectionChange.
+      if (_treadmillConnectAbort ||
+          treadmillDeviceId != deviceId ||
+          treadmillConnection == BleConnectionState.connected) {
+        return;
+      }
+      try {
+        await UniversalBle.connect(deviceId);
+        // A successful return only means the request was accepted; the green
+        // "connected" state is set by _onConnectionChange when the link is up.
+        return;
+      } catch (e) {
+        debugPrint(
+          '[TreadmillControl] Connect attempt $attempt/$maxAttempts failed: $e',
+        );
+        // The link can still come up via the callback shortly after a throw.
+        if (treadmillConnection == BleConnectionState.connected ||
+            _treadmillConnectAbort ||
+            treadmillDeviceId != deviceId) {
+          return;
+        }
+        if (attempt < maxAttempts) {
+          await Future.delayed(Duration(milliseconds: 600 * attempt));
+        }
+      }
+    }
+
+    // Exhausted retries — only downgrade if no real connection arrived.
+    if (treadmillConnection != BleConnectionState.connected &&
+        treadmillDeviceId == deviceId &&
+        !_treadmillConnectAbort) {
       treadmillConnection = BleConnectionState.disconnected;
+      treadmillDeviceId = null;
+      treadmillName = null;
       notifyListeners();
-      debugPrint('[TreadmillControl] Connection failed: $e');
+      debugPrint(
+        '[TreadmillControl] Connection failed after $maxAttempts attempts',
+      );
     }
   }
 
   Future<void> disconnectTreadmill({bool notify = true}) async {
+    _treadmillConnectAbort = true;
     if (treadmillDeviceId == null) return;
     final deviceId = treadmillDeviceId!;
 
@@ -731,6 +782,7 @@ class TreadmillControlState extends ChangeNotifier {
       steps = 0;
       dataPoints.clear();
       _setWakeLock(true);
+      _setSessionKeepAlive(true);
       _startTimer();
     }
   }
@@ -784,6 +836,7 @@ class TreadmillControlState extends ChangeNotifier {
 
     // Automatically trigger WakeLock
     _setWakeLock(true);
+    _setSessionKeepAlive(true);
 
     if (isSimulator) {
       speed = 3.0;
@@ -837,6 +890,7 @@ class TreadmillControlState extends ChangeNotifier {
 
     // Disable WakeLock
     _setWakeLock(false);
+    _setSessionKeepAlive(false);
 
     if (!isSimulator &&
         treadmillConnection == BleConnectionState.connected &&
@@ -966,6 +1020,26 @@ class TreadmillControlState extends ChangeNotifier {
 
   Future<void> toggleWakeLock() async {
     await _setWakeLock(!wakeLockEnabled);
+  }
+
+  // Keeps the CPU and process alive while a session is active, so telemetry
+  // keeps flowing even if the user lets the screen turn off. Held only for a
+  // running/paused session; released on stop, reset, and dispose.
+  Future<void> _setSessionKeepAlive(bool enable) async {
+    if (enable) {
+      _sessionCpuLease ??= await PowerWakeLockService.acquirePartial();
+      _foregroundLease ??= await ForegroundRuntimeService.acquire(
+        title: notificationTitle,
+        text: notificationText,
+      );
+    } else {
+      final cpu = _sessionCpuLease;
+      _sessionCpuLease = null;
+      if (cpu != null) unawaited(cpu.release());
+      final fg = _foregroundLease;
+      _foregroundLease = null;
+      if (fg != null) unawaited(fg.release());
+    }
   }
 
   // Timer Tick & Simulator Mode
@@ -1126,6 +1200,8 @@ class TreadmillControlState extends ChangeNotifier {
     stopScan();
     disconnectTreadmill(notify: notify);
     disconnectHrm(notify: notify);
+    _setSessionKeepAlive(false);
+    _setWakeLock(false);
 
     speed = 0.0;
     incline = 0.0;
@@ -1154,6 +1230,7 @@ class TreadmillControlState extends ChangeNotifier {
     _pitpatHeartbeatTimer?.cancel();
     _scanSubscription?.cancel();
     _setWakeLock(false);
+    _setSessionKeepAlive(false);
     super.dispose();
   }
 }

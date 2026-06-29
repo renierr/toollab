@@ -74,6 +74,8 @@
   "chipEmptyTypeLabel": "Tracker-Modul",
   "chipNotificationTitle": "Chiptune-Wiedergabe aktiv",
   "chipNotificationText": "ToolLab hält die Audiowiedergabe im Hintergrund aufrecht",
+  "treadmillNotificationTitle": "Laufband-Training aktiv",
+  "treadmillNotificationText": "ToolLab zeichnet deine Sitzung weiter auf",
   "chipPauseTooltip": "Pause",
   "chipPlayTooltip": "Abspielen",
   "chipStopTooltip": "Stopp",
