@@ -112,6 +112,9 @@ class TreadmillControlState extends ChangeNotifier {
   WakeLockLease? _wakeLockLease;
   bool _isControlRequested = false;
 
+  // Characteristics that rejected WriteWithoutResponse — write with response.
+  final Set<String> _noWriteWithoutResponse = {};
+
   TreadmillControlState() {
     _init();
   }
@@ -222,7 +225,7 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
-  Future<void> disconnectTreadmill() async {
+  Future<void> disconnectTreadmill({bool notify = true}) async {
     if (treadmillDeviceId == null) return;
     final deviceId = treadmillDeviceId!;
 
@@ -236,6 +239,7 @@ class TreadmillControlState extends ChangeNotifier {
     treadmillName = null;
     treadmillType = TreadmillType.none;
     _isControlRequested = false;
+    _noWriteWithoutResponse.clear();
     _stopPitPatHeartbeat();
 
     speed = 0.0;
@@ -248,7 +252,7 @@ class TreadmillControlState extends ChangeNotifier {
     speedControlSupported = false;
     inclineControlSupported = false;
 
-    notifyListeners();
+    if (notify) notifyListeners();
 
     try {
       await UniversalBle.disconnect(deviceId);
@@ -270,7 +274,7 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
-  Future<void> disconnectHrm() async {
+  Future<void> disconnectHrm({bool notify = true}) async {
     if (hrmDeviceId == null) return;
     final deviceId = hrmDeviceId!;
 
@@ -281,7 +285,7 @@ class TreadmillControlState extends ChangeNotifier {
     heartRate = 0;
     hrmHistory.clear();
 
-    notifyListeners();
+    if (notify) notifyListeners();
 
     try {
       await UniversalBle.disconnect(deviceId);
@@ -348,6 +352,12 @@ class TreadmillControlState extends ChangeNotifier {
             ? TreadmillType.pitpat
             : TreadmillType.ftms;
 
+        debugPrint(
+          '[TreadmillControl] Connected $deviceId type=$treadmillType '
+          'svc=$_actualTreadmillService data=$_actualTreadmillDataChar '
+          'write=$_actualTreadmillWriteChar cp=$_actualTreadmillControlPointChar',
+        );
+
         _actualTreadmillService ??= treadmillType == TreadmillType.pitpat
             ? pitpatService
             : ftmsService;
@@ -360,11 +370,16 @@ class TreadmillControlState extends ChangeNotifier {
         if (treadmillType == TreadmillType.pitpat) {
           speedControlSupported = true;
           inclineControlSupported = false;
-          await UniversalBle.subscribeNotifications(
-            deviceId,
-            _actualTreadmillService!,
-            _actualTreadmillDataChar!,
-          );
+          try {
+            await UniversalBle.subscribeNotifications(
+              deviceId,
+              _actualTreadmillService!,
+              _actualTreadmillDataChar!,
+            );
+            debugPrint('[TreadmillControl] PitPat notify subscribed OK');
+          } catch (e) {
+            debugPrint('[TreadmillControl] PitPat notify subscribe FAILED: $e');
+          }
           _startPitPatHeartbeat();
         } else {
           await UniversalBle.subscribeNotifications(
@@ -416,6 +431,7 @@ class TreadmillControlState extends ChangeNotifier {
         _stopPitPatHeartbeat();
         treadmillType = TreadmillType.none;
         _isControlRequested = false;
+        _noWriteWithoutResponse.clear();
 
         treadmillDeviceId = null;
         treadmillName = null;
@@ -649,7 +665,12 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   void _parsePitPatData(Uint8List value) {
-    if (value.length < 31) return;
+    if (value.length < 31) {
+      debugPrint(
+        '[TreadmillControl] PitPat packet too short (${value.length}<31), ignored',
+      );
+      return;
+    }
     int rawSpeed = (value[3] << 8) | value[4];
     int rawDist =
         (value[7] << 24) | (value[8] << 16) | (value[9] << 8) | value[10];
@@ -673,8 +694,14 @@ class TreadmillControlState extends ChangeNotifier {
     if (runningStateBits == 24) {
       workoutStatus = WorkoutStatus.starting;
     } else if (runningStateBits == 8) {
-      workoutStatus = WorkoutStatus.running;
-      _autoStartIfNeeded();
+      if (workoutStatus == WorkoutStatus.paused) {
+        // Resume from pause: keep accumulated metrics, restart data sampling.
+        workoutStatus = WorkoutStatus.running;
+        _startTimer();
+      } else {
+        workoutStatus = WorkoutStatus.running;
+        _autoStartIfNeeded();
+      }
     } else if (runningStateBits == 16) {
       if (workoutStatus == WorkoutStatus.running) {
         workoutStatus = WorkoutStatus.paused;
@@ -715,16 +742,20 @@ class TreadmillControlState extends ChangeNotifier {
     bool withoutResponse = false,
   }) async {
     if (treadmillDeviceId == null) return;
+    final bool tryWithoutResponse =
+        withoutResponse && !_noWriteWithoutResponse.contains(characteristic);
     try {
       await UniversalBle.write(
         treadmillDeviceId!,
         service,
         characteristic,
         value,
-        withoutResponse: withoutResponse,
+        withoutResponse: tryWithoutResponse,
       );
     } catch (e) {
-      if (withoutResponse) {
+      if (tryWithoutResponse) {
+        // Characteristic only supports WriteWithResponse — remember and retry.
+        _noWriteWithoutResponse.add(characteristic);
         try {
           await UniversalBle.write(
             treadmillDeviceId!,
@@ -733,7 +764,11 @@ class TreadmillControlState extends ChangeNotifier {
             value,
             withoutResponse: false,
           );
-        } catch (_) {}
+        } catch (e2) {
+          debugPrint('[TreadmillControl] write failed on $characteristic: $e2');
+        }
+      } else {
+        debugPrint('[TreadmillControl] write failed on $characteristic: $e');
       }
     }
   }
@@ -1089,8 +1124,8 @@ class TreadmillControlState extends ChangeNotifier {
 
   void resetState({bool notify = true}) {
     stopScan();
-    disconnectTreadmill();
-    disconnectHrm();
+    disconnectTreadmill(notify: notify);
+    disconnectHrm(notify: notify);
 
     speed = 0.0;
     incline = 0.0;
