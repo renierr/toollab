@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../treadmill_control_state.dart';
 import '../treadmill_control_colors.dart';
 import '../../../../l10n/app_localizations.dart';
+import 'workout_action_button.dart';
 
 class WorkoutControlsPanel extends StatelessWidget {
   final bool isLandscape;
@@ -23,73 +24,34 @@ class WorkoutControlsPanel extends StatelessWidget {
           children: [
             if (state.workoutStatus == WorkoutStatus.inactive ||
                 state.workoutStatus == WorkoutStatus.stopped)
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: TreadmillColors.greenMetric,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(120, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                ),
+              WorkoutActionButton(
+                color: TreadmillColors.greenMetric,
+                icon: Icons.play_arrow,
+                label: l10n.workoutStart,
+                minWidth: 120,
                 onPressed: () => state.startWorkout(),
-                icon: const Icon(Icons.play_arrow),
-                label: Text(
-                  l10n.workoutStart,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
               )
             else ...[
               if (state.workoutStatus == WorkoutStatus.running)
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(100, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
+                WorkoutActionButton(
+                  color: Colors.amber,
+                  icon: Icons.pause,
+                  label: l10n.workoutPause,
                   onPressed: () => state.pauseWorkout(),
-                  icon: const Icon(Icons.pause),
-                  label: Text(
-                    l10n.workoutPause,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
                 )
               else if (state.workoutStatus == WorkoutStatus.paused)
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: TreadmillColors.greenMetric,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(100, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
+                WorkoutActionButton(
+                  color: TreadmillColors.greenMetric,
+                  icon: Icons.play_arrow,
+                  label: l10n.workoutResume,
                   onPressed: () => state.startWorkout(),
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text(
-                    'Resume',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
                 ),
               const SizedBox(width: 8),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(100, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                ),
+              WorkoutActionButton(
+                color: Colors.red,
+                icon: Icons.stop,
+                label: l10n.workoutStop,
                 onPressed: () => state.stopWorkout(),
-                icon: const Icon(Icons.stop),
-                label: Text(
-                  l10n.workoutStop,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
               ),
             ],
           ],

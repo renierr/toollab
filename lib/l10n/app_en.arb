@@ -2547,6 +2547,7 @@
   "historyTitle": "Workout History",
   "workoutStart": "Start",
   "workoutPause": "Pause",
+  "workoutResume": "Resume",
   "workoutStop": "Stop",
   "importHistory": "Import Workouts",
   "exportHistory": "Export Workouts"

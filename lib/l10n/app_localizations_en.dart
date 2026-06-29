@@ -4674,6 +4674,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutPause => 'Pause';
 
   @override
+  String get workoutResume => 'Resume';
+
+  @override
   String get workoutStop => 'Stop';
 
   @override

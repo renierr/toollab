@@ -8510,6 +8510,12 @@ abstract class AppLocalizations {
   /// **'Pause'**
   String get workoutPause;
 
+  /// No description provided for @workoutResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get workoutResume;
+
   /// No description provided for @workoutStop.
   ///
   /// In en, this message translates to:

@@ -1721,6 +1721,7 @@
   "historyTitle": "Trainingsverlauf",
   "workoutStart": "Start",
   "workoutPause": "Pause",
+  "workoutResume": "Fortsetzen",
   "workoutStop": "Stopp",
   "importHistory": "Workouts importieren",
   "exportHistory": "Workouts exportieren"
