@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 class WorkoutDataPoint {
   final int timestamp; // seconds since workout start
@@ -79,6 +80,52 @@ class TreadmillSession {
     required this.updatedAt,
     required this.createdAt,
   });
+
+  /// Builds a completed session from the sampled data points, computing
+  /// avg/max speed and heart rate. [nowMs] is the end timestamp; start is
+  /// derived from [elapsedTime].
+  factory TreadmillSession.fromWorkout({
+    required List<WorkoutDataPoint> dataPoints,
+    required double distance,
+    required int calories,
+    required int steps,
+    required int elapsedTime,
+    required int nowMs,
+  }) {
+    final double maxSpd = dataPoints.isEmpty
+        ? 0.0
+        : dataPoints.map((d) => d.speed).reduce(max);
+    final double avgSpd = dataPoints.isEmpty
+        ? 0.0
+        : dataPoints.map((d) => d.speed).reduce((a, b) => a + b) /
+              dataPoints.length;
+    final double avgHr = dataPoints.isEmpty
+        ? 0.0
+        : dataPoints.map((d) => d.heartRate).reduce((a, b) => a + b) /
+              dataPoints.length;
+    final double maxHr = dataPoints.isEmpty
+        ? 0.0
+        : dataPoints.map((d) => d.heartRate).reduce(max).toDouble();
+
+    return TreadmillSession(
+      uid: '',
+      startTime: nowMs - (elapsedTime * 1000),
+      endTime: nowMs,
+      avgSpeed: avgSpd,
+      maxSpeed: maxSpd,
+      distance: distance,
+      calories: calories,
+      steps: steps,
+      avgHeartRate: avgHr,
+      maxHeartRate: maxHr,
+      elapsedTime: elapsedTime,
+      dataPoints: List.from(dataPoints),
+      synced: false,
+      deleted: false,
+      updatedAt: nowMs,
+      createdAt: nowMs,
+    );
+  }
 
   TreadmillSession copyWith({
     int? id,

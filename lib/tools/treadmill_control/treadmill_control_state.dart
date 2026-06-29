@@ -8,6 +8,7 @@ import 'treadmill_control_db.dart';
 import 'treadmill_session.dart';
 import 'treadmill_models.dart';
 import 'treadmill_protocol.dart';
+import 'treadmill_gatt_resolver.dart';
 
 export 'treadmill_models.dart';
 
@@ -316,51 +317,13 @@ class TreadmillControlState extends ChangeNotifier {
         _isControlRequested = false;
         final services = await UniversalBle.discoverServices(deviceId);
 
-        bool hasPitPat = false;
-        bool hasFtms = false;
-
-        _actualTreadmillService = null;
-        _actualTreadmillDataChar = null;
-        _actualTreadmillControlPointChar = null;
-        _actualTreadmillFeatureChar = null;
-        _actualTreadmillWriteChar = null;
-
-        for (final s in services) {
-          final uuid = s.uuid.toLowerCase();
-          if (uuid.contains('fba0')) {
-            hasPitPat = true;
-            _actualTreadmillService = s.uuid;
-            for (final c in s.characteristics) {
-              final cUuid = c.uuid.toLowerCase();
-              if (cUuid.contains('fba2')) {
-                _actualTreadmillDataChar = c.uuid;
-              }
-              if (cUuid.contains('fba1')) {
-                _actualTreadmillWriteChar = c.uuid;
-              }
-            }
-          }
-          if (uuid.contains('1826')) {
-            hasFtms = true;
-            _actualTreadmillService = s.uuid;
-            for (final c in s.characteristics) {
-              final cUuid = c.uuid.toLowerCase();
-              if (cUuid.contains('2acd')) {
-                _actualTreadmillDataChar = c.uuid;
-              }
-              if (cUuid.contains('2ad9')) {
-                _actualTreadmillControlPointChar = c.uuid;
-              }
-              if (cUuid.contains('2acc')) {
-                _actualTreadmillFeatureChar = c.uuid;
-              }
-            }
-          }
-        }
-
-        treadmillType = hasPitPat && !hasFtms
-            ? TreadmillType.pitpat
-            : TreadmillType.ftms;
+        final profile = resolveTreadmillGatt(services);
+        _actualTreadmillService = profile.service;
+        _actualTreadmillDataChar = profile.dataChar;
+        _actualTreadmillControlPointChar = profile.controlPointChar;
+        _actualTreadmillFeatureChar = profile.featureChar;
+        _actualTreadmillWriteChar = profile.writeChar;
+        treadmillType = profile.type;
 
         debugPrint(
           '[TreadmillControl] Connected $deviceId type=$treadmillType '
@@ -467,30 +430,11 @@ class TreadmillControlState extends ChangeNotifier {
       if (state == BleConnectionState.connected) {
         final services = await UniversalBle.discoverServices(deviceId);
 
-        _actualHrmService = null;
-        _actualHrmChar = null;
-        _actualBatteryService = null;
-        _actualBatteryChar = null;
-
-        for (final s in services) {
-          final uuid = s.uuid.toLowerCase();
-          if (uuid.contains('180d')) {
-            _actualHrmService = s.uuid;
-            for (final c in s.characteristics) {
-              if (c.uuid.toLowerCase().contains('2a37')) {
-                _actualHrmChar = c.uuid;
-              }
-            }
-          }
-          if (uuid.contains('180f')) {
-            _actualBatteryService = s.uuid;
-            for (final c in s.characteristics) {
-              if (c.uuid.toLowerCase().contains('2a19')) {
-                _actualBatteryChar = c.uuid;
-              }
-            }
-          }
-        }
+        final hrmProfile = resolveHrmGatt(services);
+        _actualHrmService = hrmProfile.hrService;
+        _actualHrmChar = hrmProfile.hrChar;
+        _actualBatteryService = hrmProfile.batteryService;
+        _actualBatteryChar = hrmProfile.batteryChar;
 
         _actualHrmService ??= hrService;
         _actualHrmChar ??= hrChar;
@@ -704,6 +648,16 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
+  // Sends a PitPat control packet (START / PAUSE / STOP / SPEED).
+  Future<void> _writePitPatCommand(String action, double speedKph) {
+    return _writeTreadmill(
+      _actualTreadmillService ?? pitpatService,
+      _actualTreadmillWriteChar ?? pitpatWriteChar,
+      makePitPatPacket(action, speedKph),
+      withoutResponse: true,
+    );
+  }
+
   // Workout Controls (Start, Incline, Speed)
   Future<void> startWorkout() async {
     workoutStatus = WorkoutStatus.running;
@@ -725,13 +679,7 @@ class TreadmillControlState extends ChangeNotifier {
       if (treadmillConnection == BleConnectionState.connected &&
           treadmillDeviceId != null) {
         if (treadmillType == TreadmillType.pitpat) {
-          final pkt = makePitPatPacket('START', speed > 0 ? speed : 1.0);
-          await _writeTreadmill(
-            _actualTreadmillService ?? pitpatService,
-            _actualTreadmillWriteChar ?? pitpatWriteChar,
-            pkt,
-            withoutResponse: true,
-          );
+          await _writePitPatCommand('START', speed > 0 ? speed : 1.0);
         } else {
           await _sendFtmsControl(0x07, []); // Start command
         }
@@ -748,13 +696,7 @@ class TreadmillControlState extends ChangeNotifier {
         treadmillConnection == BleConnectionState.connected &&
         treadmillDeviceId != null) {
       if (treadmillType == TreadmillType.pitpat) {
-        final pkt = makePitPatPacket('PAUSE', speed);
-        await _writeTreadmill(
-          _actualTreadmillService ?? pitpatService,
-          _actualTreadmillWriteChar ?? pitpatWriteChar,
-          pkt,
-          withoutResponse: true,
-        );
+        await _writePitPatCommand('PAUSE', speed);
       } else {
         await _sendFtmsControl(0x08, [0x02]); // Pause stop command
       }
@@ -775,13 +717,7 @@ class TreadmillControlState extends ChangeNotifier {
         treadmillConnection == BleConnectionState.connected &&
         treadmillDeviceId != null) {
       if (treadmillType == TreadmillType.pitpat) {
-        final pkt = makePitPatPacket('STOP', speed);
-        await _writeTreadmill(
-          _actualTreadmillService ?? pitpatService,
-          _actualTreadmillWriteChar ?? pitpatWriteChar,
-          pkt,
-          withoutResponse: true,
-        );
+        await _writePitPatCommand('STOP', speed);
       } else {
         await _sendFtmsControl(0x08, [0x01]); // Stop command
       }
@@ -789,38 +725,13 @@ class TreadmillControlState extends ChangeNotifier {
 
     // Save session to DB
     if (dataPoints.isNotEmpty) {
-      final double maxSpd = dataPoints.isEmpty
-          ? 0.0
-          : dataPoints.map((d) => d.speed).reduce(max);
-      final double avgSpd = dataPoints.isEmpty
-          ? 0.0
-          : dataPoints.map((d) => d.speed).reduce((a, b) => a + b) /
-                dataPoints.length;
-      final double avgHr = dataPoints.isEmpty
-          ? 0.0
-          : dataPoints.map((d) => d.heartRate).reduce((a, b) => a + b) /
-                dataPoints.length;
-      final double maxHr = dataPoints.isEmpty
-          ? 0.0
-          : dataPoints.map((d) => d.heartRate).reduce(max).toDouble();
-
-      final session = TreadmillSession(
-        uid: '',
-        startTime: DateTime.now().millisecondsSinceEpoch - (elapsedTime * 1000),
-        endTime: DateTime.now().millisecondsSinceEpoch,
-        avgSpeed: avgSpd,
-        maxSpeed: maxSpd,
+      final session = TreadmillSession.fromWorkout(
+        dataPoints: dataPoints,
         distance: distance,
         calories: calories,
         steps: steps,
-        avgHeartRate: avgHr,
-        maxHeartRate: maxHr,
         elapsedTime: elapsedTime,
-        dataPoints: List.from(dataPoints),
-        synced: false,
-        deleted: false,
-        updatedAt: DateTime.now().millisecondsSinceEpoch,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
+        nowMs: DateTime.now().millisecondsSinceEpoch,
       );
 
       await TreadmillControlDb.instance.saveSession(session);
@@ -842,13 +753,7 @@ class TreadmillControlState extends ChangeNotifier {
         treadmillConnection == BleConnectionState.connected &&
         treadmillDeviceId != null) {
       if (treadmillType == TreadmillType.pitpat) {
-        final pkt = makePitPatPacket('SPEED', targetSpeed);
-        await _writeTreadmill(
-          _actualTreadmillService ?? pitpatService,
-          _actualTreadmillWriteChar ?? pitpatWriteChar,
-          pkt,
-          withoutResponse: true,
-        );
+        await _writePitPatCommand('SPEED', targetSpeed);
       } else {
         final speedUint16 = (targetSpeed * 100).round();
         await _sendFtmsControl(0x02, [
