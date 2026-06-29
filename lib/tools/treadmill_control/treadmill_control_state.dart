@@ -6,53 +6,12 @@ import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'treadmill_control_db.dart';
 import 'treadmill_session.dart';
+import 'treadmill_models.dart';
+import 'treadmill_protocol.dart';
 
-enum WorkoutStatus { inactive, starting, running, paused, stopped }
-
-enum TreadmillType { ftms, pitpat, none }
-
-class HeartRateHistoryPoint {
-  final DateTime timestamp;
-  final int heartRate;
-
-  HeartRateHistoryPoint({required this.timestamp, required this.heartRate});
-}
-
-class DiscoveredBleDevice {
-  final String id;
-  final String name;
-  final List<String> services;
-  final int rssi;
-
-  DiscoveredBleDevice({
-    required this.id,
-    required this.name,
-    required this.services,
-    required this.rssi,
-  });
-}
+export 'treadmill_models.dart';
 
 class TreadmillControlState extends ChangeNotifier {
-  // Constants (GATT UUIDs)
-  static const String ftmsService = '00001826-0000-1000-8000-00805f9b34fb';
-  static const String ftmsDataChar = '00002acd-0000-1000-8000-00805f9b34fb';
-  static const String ftmsFeatureChar = '00002acc-0000-1000-8000-00805f9b34fb';
-  static const String ftmsControlPointChar =
-      '00002ad9-0000-1000-8000-00805f9b34fb';
-
-  static const String pitpatService = '0000fba0-0000-1000-8000-00805f9b34fb';
-  static const String pitpatNotifyChar = '0000fba2-0000-1000-8000-00805f9b34fb';
-  static const String pitpatWriteChar = '0000fba1-0000-1000-8000-00805f9b34fb';
-
-  static const String rscService = '00001814-0000-1000-8000-00805f9b34fb';
-  static const String rscChar = '00002a53-0000-1000-8000-00805f9b34fb';
-
-  static const String hrService = '0000180d-0000-1000-8000-00805f9b34fb';
-  static const String hrChar = '00002a37-0000-1000-8000-00805f9b34fb';
-
-  static const String batteryService = '0000180f-0000-1000-8000-00805f9b34fb';
-  static const String batteryChar = '00002a19-0000-1000-8000-00805f9b34fb';
-
   // Scanning & Connection Status
   bool isScanning = false;
   final List<DiscoveredBleDevice> discoveredTreadmills = [];
@@ -596,15 +555,7 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   void _parseHrmData(Uint8List value) {
-    if (value.isEmpty) return;
-    final flags = value[0];
-    final is16bit = (flags & 0x01) == 1;
-    int hr = 0;
-    if (is16bit && value.length >= 3) {
-      hr = ByteData.sublistView(value).getUint16(1, Endian.little);
-    } else if (value.length >= 2) {
-      hr = value[1];
-    }
+    final hr = decodeHeartRate(value);
     if (hr > 0) {
       heartRate = hr;
       hrmHistory.add(
@@ -615,100 +566,38 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   void _parseRscData(Uint8List value) {
-    if (value.length < 4) return;
-    try {
-      final flags = value[0];
-      int offset = 3;
-
-      offset += 1; // skip cadence
-
-      if ((flags & 0x01) != 0 && value.length >= offset + 2) {
-        offset += 2;
-      }
-
-      if ((flags & 0x02) != 0 && value.length >= offset + 4) {
-        offset += 4;
-      }
-
-      final remaining = value.length - offset;
-      if (remaining >= 4) {
-        steps = ByteData.sublistView(value).getUint32(offset, Endian.little);
-      } else if (remaining >= 2) {
-        steps = ByteData.sublistView(value).getUint16(offset, Endian.little);
-      }
-      notifyListeners();
-    } catch (_) {}
+    final stepsVal = decodeRscSteps(value);
+    if (stepsVal == null) return;
+    steps = stepsVal;
+    notifyListeners();
   }
 
   void _parseFtmsData(Uint8List value) {
-    if (value.length < 4) return;
-    final flags = ByteData.sublistView(value).getUint16(0, Endian.little);
-    int offset = 2;
+    final t = decodeFtmsTelemetry(value);
+    if (t == null) return;
 
-    speed =
-        ByteData.sublistView(value).getUint16(offset, Endian.little) / 100.0;
-    offset += 2;
+    speed = t.speed;
+    if (t.distance != null) distance = t.distance!;
+    if (t.incline != null) incline = t.incline!;
+    if (t.calories != null) calories = t.calories!;
 
-    if ((flags & (1 << 1)) != 0 && value.length >= offset + 2) {
-      offset += 2;
-    }
-
-    if ((flags & (1 << 2)) != 0 && value.length >= offset + 3) {
-      final d1 = value[offset];
-      final d2 = value[offset + 1];
-      final d3 = value[offset + 2];
-      distance = (d1 | (d2 << 8) | (d3 << 16)) / 1000.0;
-      offset += 3;
-    }
-
-    if ((flags & (1 << 3)) != 0 && value.length >= offset + 2) {
-      incline =
-          ByteData.sublistView(value).getInt16(offset, Endian.little) / 10.0;
-      offset += 4; // Skip inclination + suspension
-    }
-
-    if ((flags & (1 << 4)) != 0 && value.length >= offset + 4) {
-      offset += 4;
-    }
-
-    if ((flags & (1 << 5)) != 0 && value.length >= offset + 1) {
-      offset += 1;
-    }
-
-    if ((flags & (1 << 6)) != 0 && value.length >= offset + 1) {
-      offset += 1;
-    }
-
-    if ((flags & (1 << 7)) != 0 && value.length >= offset + 5) {
-      calories = ByteData.sublistView(value).getUint16(offset, Endian.little);
-      offset += 5;
-    }
-
-    if ((flags & (1 << 8)) != 0 && value.length >= offset + 1) {
-      final hr = value[offset];
-      if (hrmConnection != BleConnectionState.connected) {
-        heartRate = hr;
-        if (hr > 0) {
-          hrmHistory.add(
-            HeartRateHistoryPoint(timestamp: DateTime.now(), heartRate: hr),
-          );
-        }
-      }
-      offset += 1;
-    }
-
-    if ((flags & (1 << 9)) != 0 && value.length >= offset + 1) {
-      offset += 1;
-    }
-
-    if ((flags & (1 << 10)) != 0 && value.length >= offset + 2) {
-      // elapsed time from treadmill, only override if workout is running
-      if (workoutStatus == WorkoutStatus.running) {
-        elapsedTime = ByteData.sublistView(
-          value,
-        ).getUint16(offset, Endian.little);
+    if (t.heartRate != null && hrmConnection != BleConnectionState.connected) {
+      heartRate = t.heartRate!;
+      if (t.heartRate! > 0) {
+        hrmHistory.add(
+          HeartRateHistoryPoint(
+            timestamp: DateTime.now(),
+            heartRate: t.heartRate!,
+          ),
+        );
       }
     }
+
+    // Elapsed time from the treadmill only overrides while a workout runs.
+    if (t.elapsedTimeSec != null && workoutStatus == WorkoutStatus.running) {
+      elapsedTime = t.elapsedTimeSec!;
+    }
+
     if (speed > 0.0) {
       _autoStartIfNeeded();
     }
@@ -716,35 +605,25 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   void _parsePitPatData(Uint8List value) {
-    if (value.length < 31) {
+    final frame = decodePitPatTelemetry(value);
+    if (frame == null) {
       debugPrint(
         '[TreadmillControl] PitPat packet too short (${value.length}<31), ignored',
       );
       return;
     }
-    int rawSpeed = (value[3] << 8) | value[4];
-    int rawDist =
-        (value[7] << 24) | (value[8] << 16) | (value[9] << 8) | value[10];
-    int stepsVal =
-        (value[14] << 24) | (value[15] << 16) | (value[16] << 8) | value[17];
-    int cals = (value[18] << 8) | value[19];
-    int durationMs =
-        (value[20] << 24) | (value[21] << 16) | (value[22] << 8) | value[23];
 
-    int flags = value[26];
-    int runningStateBits = flags & 24;
-
-    speed = rawSpeed / 1000.0;
-    distance = rawDist / 1000.0;
-    calories = cals;
-    steps = stepsVal;
+    speed = frame.speed;
+    distance = frame.distance;
+    calories = frame.calories;
+    steps = frame.steps;
     if (workoutStatus == WorkoutStatus.running) {
-      elapsedTime = (durationMs / 1000).round();
+      elapsedTime = (frame.durationMs / 1000).round();
     }
 
-    if (runningStateBits == 24) {
+    if (frame.runningStateBits == pitpatStateStarting) {
       workoutStatus = WorkoutStatus.starting;
-    } else if (runningStateBits == 8) {
+    } else if (frame.runningStateBits == pitpatStateRunning) {
       if (workoutStatus == WorkoutStatus.paused) {
         // Resume from pause: keep accumulated metrics, restart data sampling.
         workoutStatus = WorkoutStatus.running;
@@ -753,7 +632,7 @@ class TreadmillControlState extends ChangeNotifier {
         workoutStatus = WorkoutStatus.running;
         _autoStartIfNeeded();
       }
-    } else if (runningStateBits == 16) {
+    } else if (frame.runningStateBits == pitpatStatePaused) {
       if (workoutStatus == WorkoutStatus.running) {
         workoutStatus = WorkoutStatus.paused;
         _workoutTimer?.cancel();
@@ -1089,7 +968,6 @@ class TreadmillControlState extends ChangeNotifier {
   // PitPat Commands & Heartbeats
   void _startPitPatHeartbeat() {
     _pitpatHeartbeatTimer?.cancel();
-    final heartbeatPacket = Uint8List.fromList([0x6a, 0x05, 0xfd, 0xf8, 0x43]);
     _pitpatHeartbeatTimer = Timer.periodic(const Duration(milliseconds: 500), (
       timer,
     ) async {
@@ -1098,7 +976,7 @@ class TreadmillControlState extends ChangeNotifier {
         await _writeTreadmill(
           _actualTreadmillService ?? pitpatService,
           _actualTreadmillWriteChar ?? pitpatWriteChar,
-          heartbeatPacket,
+          pitpatHeartbeatPacket,
           withoutResponse: true,
         );
       } else {
@@ -1110,38 +988,6 @@ class TreadmillControlState extends ChangeNotifier {
   void _stopPitPatHeartbeat() {
     _pitpatHeartbeatTimer?.cancel();
     _pitpatHeartbeatTimer = null;
-  }
-
-  Uint8List makePitPatPacket(String action, double speedKph) {
-    final arr = Uint8List(23);
-    arr[0] = 0x6a;
-    arr[1] = 0x17;
-
-    final int speedUnit = (speedKph * 1000).round();
-    arr[6] = (speedUnit >> 8) & 0xff;
-    arr[7] = speedUnit & 0xff;
-
-    arr[8] = action == 'SPEED' ? 0x05 : 0x01;
-    arr[9] = 0x00;
-    arr[10] = 80;
-    arr[11] = 0x00;
-
-    int cmd = action == 'PAUSE' ? 2 : (action == 'STOP' ? 0 : 4);
-    arr[12] = cmd & 0xf7;
-
-    const int userId = 58965456623;
-    for (int i = 0; i < 8; ++i) {
-      arr[13 + i] = (userId >> (56 - i * 8)) & 0xff;
-    }
-
-    int checksum = 0;
-    for (int i = 1; i <= 20; ++i) {
-      checksum ^= arr[i];
-    }
-    arr[21] = checksum;
-    arr[22] = 0x43;
-
-    return arr;
   }
 
   Future<void> _sendFtmsControl(int command, List<int> params) async {
@@ -1175,25 +1021,11 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   void _parseFeatures(Uint8List value) {
-    if (value.length < 8) return;
-    try {
-      final data = ByteData.sublistView(value);
-      final machineFeatures = data.getUint32(0, Endian.little);
-
-      if ((machineFeatures & (1 << 14)) != 0) {
-        final targetFeatures = data.getUint32(4, Endian.little);
-        speedControlSupported = (targetFeatures & (1 << 0)) != 0;
-        inclineControlSupported = (targetFeatures & (1 << 1)) != 0;
-      } else {
-        speedControlSupported = false;
-        inclineControlSupported = false;
-      }
-      notifyListeners();
-    } catch (_) {
-      speedControlSupported = true;
-      inclineControlSupported = true;
-      notifyListeners();
-    }
+    final support = decodeFtmsFeatures(value);
+    if (support == null) return;
+    speedControlSupported = support.speed;
+    inclineControlSupported = support.incline;
+    notifyListeners();
   }
 
   void resetState({bool notify = true}) {
