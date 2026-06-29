@@ -218,7 +218,6 @@ class _GroceryListInputFormState extends State<GroceryListInputForm>
                             right: 0,
                             child: Material(
                               elevation: 8,
-                              borderRadius: BorderRadius.circular(12),
                               color: Theme.of(context).colorScheme.surface,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
