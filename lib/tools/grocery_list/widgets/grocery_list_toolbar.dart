@@ -134,8 +134,12 @@ class GroceryListToolbar extends StatelessWidget {
             );
           } else {
             return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [stats, actions],
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                stats,
+                const SizedBox(width: 12),
+                Flexible(child: actions),
+              ],
             );
           }
         },
