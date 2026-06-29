@@ -17,7 +17,7 @@ import 'grocery_list_state.dart';
 import 'grocery_list_sync_delegate.dart';
 import 'widgets/grocery_list_input_form.dart';
 import 'widgets/grocery_list_item_row.dart';
-import 'widgets/grocery_list_toolbar.dart';
+import 'widgets/grocery_list_menu.dart';
 
 class GroceryListPage extends StatefulWidget {
   const GroceryListPage({super.key});
@@ -315,6 +315,18 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
     return ToolLayout(
       title: GroceryListTool.config.localizedName(l10n),
       fullscreen: false,
+      actions: [
+        GroceryListMenu(
+          checkedCount: checked.length,
+          onReAddBought: _onReAddBought,
+          onClearBought: _onClearBought,
+          onImport: _onImport,
+          onExport: _onExport,
+          onSync: _onSync,
+          isSyncing: appState.isSyncing,
+          hasBackend: appState.syncServerUrl.isNotEmpty,
+        ),
+      ],
       child: Column(
         children: [
           Expanded(
@@ -329,18 +341,23 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
                     onCancelEdit: _onCancelEdit,
                   ),
                   const SizedBox(height: 8),
-                  GroceryListToolbar(
-                    uncheckedCount: unchecked.length,
-                    checkedCount: checked.length,
-                    onReAddBought: _onReAddBought,
-                    onClearBought: _onClearBought,
-                    onImport: _onImport,
-                    onExport: _onExport,
-                    onSync: _onSync,
-                    isSyncing: appState.isSyncing,
-                    hasBackend: appState.syncServerUrl.isNotEmpty,
-                  ),
-                  const SizedBox(height: 8),
+                  if (checked.isNotEmpty || unchecked.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        l10n.groceryItemsCount(
+                          unchecked.length,
+                          checked.length,
+                        ),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
                   if (items.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 48.0),
