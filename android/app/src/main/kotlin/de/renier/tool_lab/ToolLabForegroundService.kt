@@ -25,46 +25,26 @@ class ToolLabForegroundService : Service() {
 
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_TEXT = "text"
-        private const val EXTRA_ACTIONS = "actions"
 
-        private var lastTitle: String = "ToolLab active"
-        private var lastText: String = "Running in background"
-        private var lastActions: ArrayList<String>? = null
-
-        fun start(context: Context, title: String, text: String, actions: List<String>?) {
-            lastTitle = title
-            lastText = text
-            lastActions = actions?.let { ArrayList(it) }
+        fun start(context: Context, title: String, text: String) {
             val intent = Intent(context, ToolLabForegroundService::class.java).apply {
                 action = ACTION_START
                 putExtra(EXTRA_TITLE, title)
                 putExtra(EXTRA_TEXT, text)
-                if (actions != null) {
-                    putStringArrayListExtra(EXTRA_ACTIONS, ArrayList(actions))
-                }
             }
             ContextCompat.startForegroundService(context, intent)
         }
 
-        fun update(context: Context, title: String, text: String, actions: List<String>?) {
-            lastTitle = title
-            lastText = text
-            lastActions = actions?.let { ArrayList(it) }
+        fun update(context: Context, title: String, text: String) {
             val intent = Intent(context, ToolLabForegroundService::class.java).apply {
                 action = ACTION_UPDATE
                 putExtra(EXTRA_TITLE, title)
                 putExtra(EXTRA_TEXT, text)
-                if (actions != null) {
-                    putStringArrayListExtra(EXTRA_ACTIONS, ArrayList(actions))
-                }
             }
             context.startService(intent)
         }
 
         fun stop(context: Context) {
-            lastTitle = "ToolLab active"
-            lastText = "Running in background"
-            lastActions = null
             val intent = Intent(context, ToolLabForegroundService::class.java).apply {
                 action = ACTION_STOP
             }
@@ -77,52 +57,42 @@ class ToolLabForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         ensureChannel()
 
-        val action = intent?.action
-        if (action != null && action.startsWith("de.renier.tool_lab.foreground.action.")) {
-            val actionName = action.removePrefix("de.renier.tool_lab.foreground.action.")
-            sendActionToFlutter(actionName)
-            return START_STICKY
-        }
-
-        when (action) {
+        when (intent?.action) {
             ACTION_START -> {
                 val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
                 val text = intent.getStringExtra(EXTRA_TEXT) ?: "Running in background"
-                val actions = intent.getStringArrayListExtra(EXTRA_ACTIONS)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     startForeground(
                         NOTIFICATION_ID,
-                        buildNotification(title, text, actions),
+                        buildNotification(title, text),
                         android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
                     )
                 } else {
-                    startForeground(NOTIFICATION_ID, buildNotification(title, text, actions))
+                    startForeground(NOTIFICATION_ID, buildNotification(title, text))
                 }
             }
             ACTION_UPDATE -> {
                 val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
                 val text = intent.getStringExtra(EXTRA_TEXT) ?: "Running in background"
-                val actions = intent.getStringArrayListExtra(EXTRA_ACTIONS)
                 val manager =
                     getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                manager.notify(NOTIFICATION_ID, buildNotification(title, text, actions))
+                manager.notify(NOTIFICATION_ID, buildNotification(title, text))
             }
             ACTION_STOP -> {
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
             }
             else -> {
-                val title = lastTitle
-                val text = lastText
-                val actions = lastActions
+                val title = "ToolLab active"
+                val text = "Running in background"
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     startForeground(
                         NOTIFICATION_ID,
-                        buildNotification(title, text, actions),
+                        buildNotification(title, text),
                         android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
                     )
                 } else {
-                    startForeground(NOTIFICATION_ID, buildNotification(title, text, actions))
+                    startForeground(NOTIFICATION_ID, buildNotification(title, text))
                 }
             }
         }
@@ -130,16 +100,7 @@ class ToolLabForegroundService : Service() {
         return START_STICKY
     }
 
-    private fun sendActionToFlutter(actionName: String) {
-        val channel = MainActivity.channel
-        if (channel != null) {
-            android.os.Handler(android.os.Looper.getMainLooper()).post {
-                channel.invokeMethod("onAction", actionName)
-            }
-        }
-    }
-
-    private fun buildNotification(title: String, text: String, actions: List<String>?): Notification {
+    private fun buildNotification(title: String, text: String): Notification {
         val openIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -148,7 +109,7 @@ class ToolLabForegroundService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+        return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentTitle(title)
             .setContentText(text)
@@ -156,38 +117,7 @@ class ToolLabForegroundService : Service() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-
-        actions?.forEach { action ->
-            val icon = when (action) {
-                "play" -> android.R.drawable.ic_media_play
-                "pause" -> android.R.drawable.ic_media_pause
-                "stop" -> android.R.drawable.ic_menu_close_clear_cancel
-                "next" -> android.R.drawable.ic_media_next
-                "previous" -> android.R.drawable.ic_media_previous
-                else -> return@forEach
-            }
-            val label = when (action) {
-                "play" -> "Play"
-                "pause" -> "Pause"
-                "stop" -> "Stop"
-                "next" -> "Next"
-                "previous" -> "Previous"
-                else -> action.replaceFirstChar { it.uppercase() }
-            }
-
-            val actionIntent = Intent(this, ToolLabForegroundService::class.java).apply {
-                this.action = "de.renier.tool_lab.foreground.action.$action"
-            }
-            val pendingAction = PendingIntent.getService(
-                this,
-                action.hashCode(),
-                actionIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            builder.addAction(icon, label, pendingAction)
-        }
-
-        return builder.build()
+            .build()
     }
 
     private fun ensureChannel() {

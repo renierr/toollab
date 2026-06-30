@@ -65,7 +65,6 @@ class _ChiptunePageState extends State<ChiptunePage>
     onDispose(_player.dispose);
 
     _player.onEnded = _onPlaybackEnded;
-    _player.onNext = _onPlaybackNext;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _restoreSettings();
@@ -231,28 +230,6 @@ class _ChiptunePageState extends State<ChiptunePage>
     }
     // 'next' behaviour: advance to the next archived module if one follows.
     if (_currentArchiveId != null) {
-      final idx = _archive.indexWhere((m) => m.id == _currentArchiveId);
-      if (idx >= 0 && idx + 1 < _archive.length) {
-        _playArchived(_archive[idx + 1].id);
-      }
-    }
-  }
-
-  Future<void> _onPlaybackNext() async {
-    if (_randomMode) {
-      if (_appInForeground) {
-        await _skipRandom();
-      } else {
-        try {
-          final tune = await _modArchive.fetchRandom();
-          if (!mounted) return;
-          await _loadBytes(tune.bytes, tune.fileName);
-          await _player.play();
-        } catch (_) {
-          // Keep current playback or do nothing on background fetch failure
-        }
-      }
-    } else if (_currentArchiveId != null) {
       final idx = _archive.indexWhere((m) => m.id == _currentArchiveId);
       if (idx >= 0 && idx + 1 < _archive.length) {
         _playArchived(_archive[idx + 1].id);
