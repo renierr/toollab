@@ -317,6 +317,13 @@ class TreadmillControlState extends ChangeNotifier {
         _isControlRequested = false;
         final services = await UniversalBle.discoverServices(deviceId);
 
+        // Android keeps the ATT MTU at 23 (20-byte notifications) until asked;
+        // PitPat telemetry frames are 31 bytes and would arrive truncated.
+        // Best-effort on Windows, which already negotiates a large MTU.
+        try {
+          await UniversalBle.requestMtu(deviceId, 247);
+        } catch (_) {}
+
         final profile = resolveTreadmillGatt(services);
         _actualTreadmillService = profile.service;
         _actualTreadmillDataChar = profile.dataChar;
