@@ -655,13 +655,19 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
+  // Android silently drops Write-Without-Response to a characteristic lacking
+  // the no-response property (no throw), so the self-healing retry in
+  // _writeTreadmill never triggers. Use Write-With-Response on Android.
+  bool get _pitPatWithoutResponse =>
+      defaultTargetPlatform != TargetPlatform.android;
+
   // Sends a PitPat control packet (START / PAUSE / STOP / SPEED).
   Future<void> _writePitPatCommand(String action, double speedKph) {
     return _writeTreadmill(
       _actualTreadmillService ?? pitpatService,
       _actualTreadmillWriteChar ?? pitpatWriteChar,
       makePitPatPacket(action, speedKph),
-      withoutResponse: true,
+      withoutResponse: _pitPatWithoutResponse,
     );
   }
 
@@ -889,7 +895,7 @@ class TreadmillControlState extends ChangeNotifier {
           _actualTreadmillService ?? pitpatService,
           _actualTreadmillWriteChar ?? pitpatWriteChar,
           pitpatHeartbeatPacket,
-          withoutResponse: true,
+          withoutResponse: _pitPatWithoutResponse,
         );
       } else {
         _stopPitPatHeartbeat();
