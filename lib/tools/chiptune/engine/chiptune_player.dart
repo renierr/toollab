@@ -58,6 +58,10 @@ class ChiptunePlayer {
   ModuleFile? _module;
   WorkletModule? _worklet;
   Duration _totalDuration = Duration.zero;
+
+  /// Added to the audio stream's own consumed-time so the elapsed read-out
+  /// stays correct after a seek (the stream timer restarts from zero on seek).
+  Duration _elapsedBase = Duration.zero;
   WakeLockLease? _partialWakeLock;
   ForegroundRuntimeLease? _foregroundRuntimeLease;
   DateTime? _lastUiUpdateAt;
@@ -166,6 +170,7 @@ class ChiptunePlayer {
     _module = mod;
     _worklet = serializeModuleForWorklet(mod);
     _totalDuration = estimateSongDuration(mod);
+    _elapsedBase = Duration.zero;
     channelActivity.value = List<bool>.filled(mod.channels, false);
     position.value = const SongPosition(0, 0);
     elapsed.value = Duration.zero;
@@ -188,6 +193,7 @@ class ChiptunePlayer {
     _stopInternal();
     await _acquirePlaybackRuntimeLocks();
 
+    _elapsedBase = Duration.zero;
     _ended = false;
     await _renderWorker.start(
       module: _worklet!,
@@ -226,6 +232,7 @@ class ChiptunePlayer {
     _stopInternal();
     state.value = ChiptunePlaybackState.stopped;
     position.value = const SongPosition(0, 0);
+    _elapsedBase = Duration.zero;
     elapsed.value = Duration.zero;
     final mod = _module;
     if (mod != null) {
@@ -241,6 +248,12 @@ class ChiptunePlayer {
     if (_stream != null) {
       SoLoud.instance.resetBufferStream(_stream!);
     }
+    // The stream's consumed-time timer restarts at zero after the reset, so
+    // anchor the elapsed read-out to the seek target's song time.
+    final mod = _module;
+    _elapsedBase = mod != null ? songTimeAt(mod, order, row) : Duration.zero;
+    elapsed.value = _elapsedBase;
+    position.value = SongPosition(order, row);
     if (wasPlaying) {
       unawaited(_feed());
     }
@@ -291,7 +304,8 @@ class ChiptunePlayer {
         final DateTime? last = _lastElapsedUpdateAt;
         if (last == null || now.difference(last) >= _elapsedUpdateInterval) {
           _lastElapsedUpdateAt = now;
-          elapsed.value = SoLoud.instance.getStreamTimeConsumed(stream);
+          elapsed.value =
+              _elapsedBase + SoLoud.instance.getStreamTimeConsumed(stream);
         }
       }
 

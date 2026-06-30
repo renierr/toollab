@@ -84,4 +84,23 @@ void main() {
   test('empty module yields zero', () {
     expect(estimateSongDuration(_mod(patterns: [], sequence: [])), Duration.zero);
   });
+
+  test('songTimeAt returns cumulative time at a seek position', () {
+    final mod = _mod(
+      patterns: [_emptyPattern(64, 1), _emptyPattern(64, 1)],
+      sequence: [0, 1],
+    );
+    // Order 0 start = 0.
+    expect(songTimeAt(mod, 0, 0), Duration.zero);
+    // Row 32 of order 0 = 32 base rows in.
+    expect(
+      songTimeAt(mod, 0, 32).inMilliseconds,
+      (32 * _baseRowSeconds * 1000).round(),
+    );
+    // Start of order 1 = a full 64-row pattern in.
+    expect(
+      songTimeAt(mod, 1, 0).inMilliseconds,
+      (64 * _baseRowSeconds * 1000).round(),
+    );
+  });
 }

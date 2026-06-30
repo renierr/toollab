@@ -20,7 +20,15 @@ const int _fxItSetTempo = 0x21; // IT Txx
 ///
 /// IT per-tick tempo slides (Txx slide) are not modelled — they are rare and
 /// would require a tick-level pass; the result is otherwise accurate.
-Duration estimateSongDuration(ModuleFile mod) {
+Duration estimateSongDuration(ModuleFile mod) => _simulate(mod);
+
+/// Cumulative play time from the song start up to the first time the play head
+/// reaches order [targetOrder], row [targetRow]. Used to keep the elapsed-time
+/// readout correct after seeking (the audio stream's own timer resets on seek).
+Duration songTimeAt(ModuleFile mod, int targetOrder, int targetRow) =>
+    _simulate(mod, targetOrder: targetOrder, targetRow: targetRow);
+
+Duration _simulate(ModuleFile mod, {int? targetOrder, int? targetRow}) {
   if (mod.sequence.isEmpty || mod.patterns.isEmpty) return Duration.zero;
 
   final bool isMod = mod.type == 'MOD';
@@ -71,6 +79,14 @@ Duration estimateSongDuration(ModuleFile mod) {
       }
     }
     if (position < 0 || position >= mod.sequence.length) break;
+
+    // Stop once the play head reaches the requested seek position: the time
+    // accumulated so far is the elapsed time at the start of that row.
+    if (targetOrder != null &&
+        (position > targetOrder ||
+            (position == targetOrder && rowIndex >= targetRow!))) {
+      break;
+    }
 
     final pat = patternAt(position);
     if (pat == null || rowIndex < 0 || rowIndex >= pat.rows.length) {
