@@ -83,6 +83,7 @@ class ChiptunePlayerView extends StatelessWidget {
             builder: (_, elapsed, _) => ChiptuneSeekBar(
               position: position,
               elapsed: elapsed,
+              total: player.totalDuration,
               rowsPerPattern: module.rowsPerPattern,
               totalRows: player.totalRows,
               onSeekFraction: (f) {

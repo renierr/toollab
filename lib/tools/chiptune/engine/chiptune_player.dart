@@ -7,6 +7,7 @@ import '../../../services/foreground_runtime_service.dart';
 import '../../../services/power_wake_lock_service.dart';
 import 'module.dart';
 import 'render_worker.dart';
+import 'song_duration.dart';
 
 enum ChiptunePlaybackState { stopped, playing, paused }
 
@@ -56,6 +57,7 @@ class ChiptunePlayer {
 
   ModuleFile? _module;
   WorkletModule? _worklet;
+  Duration _totalDuration = Duration.zero;
   WakeLockLease? _partialWakeLock;
   ForegroundRuntimeLease? _foregroundRuntimeLease;
   DateTime? _lastUiUpdateAt;
@@ -89,6 +91,9 @@ class ChiptunePlayer {
   ModuleFile? get module => _module;
   bool get isPlaying => state.value == ChiptunePlaybackState.playing;
   bool get hasModule => _worklet != null;
+
+  /// Estimated full play duration of the loaded module (zero if none / unknown).
+  Duration get totalDuration => _totalDuration;
 
   void setUiUpdatesEnabled(bool enabled) {
     _uiUpdatesEnabled = enabled;
@@ -160,6 +165,7 @@ class ChiptunePlayer {
     _stopInternal();
     _module = mod;
     _worklet = serializeModuleForWorklet(mod);
+    _totalDuration = estimateSongDuration(mod);
     channelActivity.value = List<bool>.filled(mod.channels, false);
     position.value = const SongPosition(0, 0);
     elapsed.value = Duration.zero;

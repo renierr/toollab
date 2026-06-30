@@ -7,6 +7,7 @@ import '../engine/chiptune_player.dart';
 class ChiptuneSeekBar extends StatelessWidget {
   final SongPosition position;
   final Duration elapsed;
+  final Duration total;
   final int rowsPerPattern;
   final int totalRows;
   final ValueChanged<double> onSeekFraction;
@@ -15,6 +16,7 @@ class ChiptuneSeekBar extends StatelessWidget {
     super.key,
     required this.position,
     required this.elapsed,
+    required this.total,
     required this.rowsPerPattern,
     required this.totalRows,
     required this.onSeekFraction,
@@ -59,7 +61,12 @@ class ChiptuneSeekBar extends StatelessWidget {
                 'Row ${position.row.toString().padLeft(2, '0')}',
                 style: style,
               ),
-              Text(_fmt(elapsed), style: style),
+              Text(
+                total > Duration.zero
+                    ? '${_fmt(elapsed)} / ${_fmt(total)}'
+                    : _fmt(elapsed),
+                style: style,
+              ),
             ],
           ),
         ),
