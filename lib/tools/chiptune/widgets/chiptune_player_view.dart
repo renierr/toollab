@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../engine/chiptune_player.dart';
 import '../engine/module.dart';
+import '../modarchive_service.dart';
 import 'chiptune_channel_activity.dart';
+import 'chiptune_modarchive_info.dart';
 import 'chiptune_module_info.dart';
 import 'chiptune_sample_list.dart';
 import 'chiptune_seek_bar.dart';
@@ -19,6 +21,9 @@ class ChiptunePlayerView extends StatelessWidget {
   final bool visualizerEnabled;
   final String currentVizId;
   final ValueChanged<String> onVizChanged;
+
+  /// When set (random mode), shows the tune's modarchive.org info + link.
+  final ModArchiveTune? randomTune;
   final Widget archivePanel;
   final VoidCallback onPlayPause;
   final VoidCallback onStop;
@@ -36,6 +41,7 @@ class ChiptunePlayerView extends StatelessWidget {
     required this.visualizerEnabled,
     required this.currentVizId,
     required this.onVizChanged,
+    this.randomTune,
     required this.archivePanel,
     required this.onPlayPause,
     required this.onStop,
@@ -57,6 +63,18 @@ class ChiptunePlayerView extends StatelessWidget {
             onVizChanged: onVizChanged,
           ),
         ChiptuneModuleInfo(module: module),
+        if (randomTune != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ChiptuneModArchiveInfo(tune: randomTune!),
+          ),
+        ],
         const SizedBox(height: 8),
         ValueListenableBuilder(
           valueListenable: player.position,

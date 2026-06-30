@@ -46,6 +46,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   String _currentFormat = '';
   String? _currentArchiveId;
   bool _randomMode = false;
+  ModArchiveTune? _currentTune;
 
   List<ArchivedModule> _archive = [];
   bool _syncing = false;
@@ -133,6 +134,7 @@ class _ChiptunePageState extends State<ChiptunePage>
         _currentFormat = mod.type;
         _currentArchiveId = null;
         _randomMode = false;
+        _currentTune = null;
       });
     } catch (e) {
       if (mounted) {
@@ -259,7 +261,10 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _playRandomTune(ModArchiveTune tune) async {
     await _loadBytes(tune.bytes, tune.fileName);
     if (!mounted) return;
-    setState(() => _randomMode = true);
+    setState(() {
+      _randomMode = true;
+      _currentTune = tune;
+    });
     await _player.play();
     if (mounted) {
       _showSnack(
@@ -446,6 +451,7 @@ class _ChiptunePageState extends State<ChiptunePage>
               visualizerEnabled: _visualizerEnabled && _appInForeground,
               currentVizId: _currentVizId,
               onVizChanged: _setVizId,
+              randomTune: _randomMode ? _currentTune : null,
               archivePanel: ChiptuneArchivePanel(
                 modules: _archive,
                 canSave: _currentBytes != null,
