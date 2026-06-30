@@ -188,24 +188,30 @@ class FocusNoisePlayer {
 
   Future<void> _acquireLocks() async {
     _partialWakeLock ??= await PowerWakeLockService.acquirePartial();
-    _foregroundRuntimeLease ??= await ForegroundRuntimeService.acquire(
-      title: notificationTitle,
-      text: notificationText,
-    );
+    if (_foregroundRuntimeLease == null) {
+      _foregroundRuntimeLease = await ForegroundRuntimeService.acquire(
+        title: notificationTitle,
+        text: notificationText,
+        actions: const ['stop'],
+      );
+      ForegroundRuntimeService.addActionListener(_handleNotificationAction);
+    }
   }
 
   void _releaseLocks() {
+    if (_foregroundRuntimeLease != null) {
+      ForegroundRuntimeService.removeActionListener(_handleNotificationAction);
+      final lease = _foregroundRuntimeLease;
+      _foregroundRuntimeLease = null;
+      if (lease != null) unawaited(lease.release());
+    }
     final WakeLockLease? wakeLock = _partialWakeLock;
-    if (wakeLock != null) {
-      unawaited(wakeLock.release());
-    }
     _partialWakeLock = null;
+    if (wakeLock != null) unawaited(wakeLock.release());
+  }
 
-    final ForegroundRuntimeLease? runtime = _foregroundRuntimeLease;
-    if (runtime != null) {
-      unawaited(runtime.release());
-    }
-    _foregroundRuntimeLease = null;
+  void _handleNotificationAction(String action) {
+    if (action == 'stop') stop();
   }
 
   Future<void> dispose() async {

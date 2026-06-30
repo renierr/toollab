@@ -1,7 +1,10 @@
 package de.renier.tool_lab
 
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import androidx.core.app.ActivityCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -108,6 +111,21 @@ class MainActivity : FlutterActivity() {
                 }
                 "stop" -> {
                     ToolLabForegroundService.stop(this)
+                    result.success(true)
+                }
+                "requestNotificationPermission" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (checkSelfPermission(
+                                android.Manifest.permission.POST_NOTIFICATIONS,
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            ActivityCompat.requestPermissions(
+                                this,
+                                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                                1001,
+                            )
+                        }
+                    }
                     result.success(true)
                 }
                 else -> {

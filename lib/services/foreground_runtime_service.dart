@@ -74,11 +74,25 @@ class ForegroundRuntimeService {
     }
   }
 
+  static Future<bool> requestNotificationPermission() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return true;
+    try {
+      final ok = await _channel.invokeMethod<bool>(
+        'requestNotificationPermission',
+      );
+      return ok ?? true;
+    } catch (e) {
+      debugPrint('[$_logPrefix] requestNotificationPermission failed: $e');
+      return true;
+    }
+  }
+
   static Future<ForegroundRuntimeLease> acquire({
     required String title,
     required String text,
     List<String>? actions,
   }) async {
+    await requestNotificationPermission();
     final int leaseId = _nextLeaseId++;
     final bool wasInactive = _activeLeases.isEmpty;
     _activeLeases[leaseId] = (title: title, text: text, actions: actions);
