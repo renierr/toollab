@@ -9,20 +9,31 @@ import '../modarchive_service.dart';
 /// Modal that fetches a random tune from The Mod Archive, shows its details
 /// and source credits, and returns the [ModArchiveTune] when the user plays it.
 ///
+/// When [autoPlay] is true, the modal only shows fetch progress and returns
+/// the tune as soon as it loads (no details or play/shuffle buttons) — used
+/// for skip-next where playback should resume immediately.
+///
 /// Returns the chosen tune via `Navigator.pop`, or `null` if cancelled.
 class ModArchiveFetchDialog extends StatefulWidget {
   final ModArchiveService service;
+  final bool autoPlay;
 
-  const ModArchiveFetchDialog({super.key, required this.service});
+  const ModArchiveFetchDialog({
+    super.key,
+    required this.service,
+    this.autoPlay = false,
+  });
 
   static Future<ModArchiveTune?> show(
     BuildContext context,
-    ModArchiveService service,
-  ) {
+    ModArchiveService service, {
+    bool autoPlay = false,
+  }) {
     return showDialog<ModArchiveTune>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => ModArchiveFetchDialog(service: service),
+      builder: (_) =>
+          ModArchiveFetchDialog(service: service, autoPlay: autoPlay),
     );
   }
 
@@ -50,6 +61,10 @@ class _ModArchiveFetchDialogState extends State<ModArchiveFetchDialog> {
     try {
       final tune = await widget.service.fetchRandom();
       if (!mounted) return;
+      if (widget.autoPlay) {
+        Navigator.of(context).pop(tune);
+        return;
+      }
       setState(() {
         _tune = tune;
         _loading = false;

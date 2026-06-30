@@ -245,7 +245,20 @@ class _ChiptunePageState extends State<ChiptunePage>
     await _playRandomTune(tune);
   }
 
-  /// Silently fetches the next random tune and plays it (auto-advance / skip).
+  /// Skips to the next random tune. Shows a fetch-progress modal that closes
+  /// and plays directly once loaded.
+  Future<void> _skipRandom() async {
+    if (_fetchingRandom) return;
+    final tune = await ModArchiveFetchDialog.show(
+      context,
+      _modArchive,
+      autoPlay: true,
+    );
+    if (tune == null || !mounted) return;
+    await _playRandomTune(tune);
+  }
+
+  /// Silently fetches the next random tune and plays it (auto-advance on end).
   Future<void> _nextRandom() async {
     if (_fetchingRandom) return;
     setState(() => _fetchingRandom = true);
@@ -473,7 +486,7 @@ class _ChiptunePageState extends State<ChiptunePage>
               ),
               onPlayPause: _playPause,
               onStop: _player.stop,
-              onNext: _randomMode ? _nextRandom : null,
+              onNext: _randomMode ? _skipRandom : null,
               onLoopChanged: _setLooping,
               onVolumeChanged: _setVolume,
               onSeek: _player.seek,
