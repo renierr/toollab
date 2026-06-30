@@ -61,15 +61,7 @@ class ToolLabForegroundService : Service() {
             ACTION_START -> {
                 val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
                 val text = intent.getStringExtra(EXTRA_TEXT) ?: "Running in background"
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    startForeground(
-                        NOTIFICATION_ID,
-                        buildNotification(title, text),
-                        android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                    )
-                } else {
-                    startForeground(NOTIFICATION_ID, buildNotification(title, text))
-                }
+                startForeground(NOTIFICATION_ID, buildNotification(title, text))
             }
             ACTION_UPDATE -> {
                 val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
@@ -83,17 +75,12 @@ class ToolLabForegroundService : Service() {
                 stopSelf()
             }
             else -> {
-                val title = "ToolLab active"
-                val text = "Running in background"
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    startForeground(
-                        NOTIFICATION_ID,
-                        buildNotification(title, text),
-                        android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                    )
-                } else {
-                    startForeground(NOTIFICATION_ID, buildNotification(title, text))
-                }
+                val manager =
+                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                manager.notify(
+                    NOTIFICATION_ID,
+                    buildNotification("ToolLab active", "Running in background")
+                )
             }
         }
 
