@@ -66,6 +66,7 @@ class ChiptunePlayer {
   ForegroundRuntimeLease? _foregroundRuntimeLease;
   DateTime? _lastUiUpdateAt;
   DateTime? _lastElapsedUpdateAt;
+  DateTime? _lastNotificationUpdateAt;
   bool _uiUpdatesEnabled = true;
   Duration _feedInterval = _feedIntervalForeground;
   Duration _uiUpdateInterval = _uiUpdateIntervalForeground;
@@ -114,6 +115,7 @@ class ChiptunePlayer {
     if (!enabled) {
       _lastUiUpdateAt = null;
       _lastElapsedUpdateAt = null;
+      _lastNotificationUpdateAt = null;
     }
   }
 
@@ -313,14 +315,32 @@ class ChiptunePlayer {
     }
 
     try {
+      final DateTime now = DateTime.now();
       if (_uiUpdatesEnabled && _handle != null) {
-        final DateTime now = DateTime.now();
         final DateTime? last = _lastElapsedUpdateAt;
         if (last == null || now.difference(last) >= _elapsedUpdateInterval) {
           _lastElapsedUpdateAt = now;
           elapsed.value =
               _elapsedBase + SoLoud.instance.getStreamTimeConsumed(stream);
         }
+      }
+
+      if (_foregroundRuntimeLease != null &&
+          state.value == ChiptunePlaybackState.playing &&
+          (_lastNotificationUpdateAt == null ||
+              now.difference(_lastNotificationUpdateAt!) >=
+                  const Duration(seconds: 30))) {
+        _lastNotificationUpdateAt = now;
+        notificationText = formatTime(elapsed.value, _totalDuration);
+        final actions = <String>['pause', 'stop'];
+        if (onNext != null) actions.add('next');
+        unawaited(
+          _foregroundRuntimeLease!.update(
+            title: notificationTitle,
+            text: notificationText,
+            actions: actions,
+          ),
+        );
       }
 
       if (_ended) {
@@ -363,6 +383,15 @@ class ChiptunePlayer {
     }
   }
 
+  static String formatTime(Duration elapsed, Duration total) {
+    final e =
+        '${_twoDigits(elapsed.inMinutes.remainder(60))}:${_twoDigits(elapsed.inSeconds.remainder(60))}';
+    if (total == Duration.zero) return e;
+    return '$e / ${_twoDigits(total.inMinutes.remainder(60))}:${_twoDigits(total.inSeconds.remainder(60))}';
+  }
+
+  static String _twoDigits(int n) => n.toString().padLeft(2, '0');
+
   void _onSongEnded() {
     _feedTimer?.cancel();
     _feedTimer = null;
@@ -370,6 +399,7 @@ class ChiptunePlayer {
       SoLoud.instance.setDataIsEnded(_stream!);
     }
     state.value = ChiptunePlaybackState.stopped;
+    notificationText = formatTime(Duration.zero, _totalDuration);
     _releasePlaybackRuntimeLocks();
     onEnded?.call();
   }
@@ -386,6 +416,7 @@ class ChiptunePlayer {
     _feedInProgress = false;
     _lastUiUpdateAt = null;
     _lastElapsedUpdateAt = null;
+    _lastNotificationUpdateAt = null;
     unawaited(_renderWorker.stop());
     final handle = _handle;
     if (handle != null) {

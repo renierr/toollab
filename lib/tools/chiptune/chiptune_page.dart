@@ -128,6 +128,11 @@ class _ChiptunePageState extends State<ChiptunePage>
     try {
       final mod = parseModule(bytes);
       _player.loadModule(mod);
+      _player.notificationTitle = mod.title.isNotEmpty ? mod.title : fileName;
+      _player.notificationText = ChiptunePlayer.formatTime(
+        Duration.zero,
+        _player.totalDuration,
+      );
       if (!mounted) return;
       setState(() {
         _currentBytes = bytes;
