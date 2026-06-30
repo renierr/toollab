@@ -10,6 +10,9 @@ class ChiptuneTransportBar extends StatelessWidget {
   final double volume;
   final VoidCallback onPlayPause;
   final VoidCallback onStop;
+
+  /// When non-null (random mode), shows a skip-to-next-random-tune button.
+  final VoidCallback? onNext;
   final ValueChanged<bool> onLoopChanged;
   final ValueChanged<double> onVolumeChanged;
 
@@ -20,6 +23,7 @@ class ChiptuneTransportBar extends StatelessWidget {
     required this.volume,
     required this.onPlayPause,
     required this.onStop,
+    this.onNext,
     required this.onLoopChanged,
     required this.onVolumeChanged,
   });
@@ -42,6 +46,12 @@ class ChiptuneTransportBar extends StatelessWidget {
           icon: const Icon(Icons.stop),
           tooltip: l10n.chipStopTooltip,
         ),
+        if (onNext != null)
+          IconButton(
+            onPressed: onNext,
+            icon: const Icon(Icons.skip_next),
+            tooltip: l10n.chipNextRandomTooltip,
+          ),
         IconButton(
           onPressed: () => onLoopChanged(!looping),
           icon: Icon(

@@ -267,6 +267,53 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipLoopOffTooltip => 'Schleife aus';
 
   @override
+  String get chipRandomTooltip => 'Zufälliges Stück von The Mod Archive';
+
+  @override
+  String get chipNextRandomTooltip => 'Nächstes Zufallsstück';
+
+  @override
+  String get chipRandomTitle => 'Zufälliges Stück';
+
+  @override
+  String get chipRandomFetching =>
+      'Zufälliges Stück von The Mod Archive wird geladen…';
+
+  @override
+  String chipRandomFetchFailed(Object error) {
+    return 'Zufälliges Stück konnte nicht geladen werden: $error';
+  }
+
+  @override
+  String get chipRandomRetry => 'Erneut versuchen';
+
+  @override
+  String get chipRandomShuffleAgain => 'Neu mischen';
+
+  @override
+  String get chipRandomCredits =>
+      'Quelle: The Mod Archive — eine freie Sammlung von Tracker-Musik. Alle Rechte liegen bei den ursprünglichen Künstlern.';
+
+  @override
+  String chipRandomSourceLink(Object moduleId) {
+    return 'Modul #$moduleId auf modarchive.org ansehen';
+  }
+
+  @override
+  String chipRandomNowPlaying(Object title) {
+    return 'Zufall: $title — von modarchive.org';
+  }
+
+  @override
+  String get chipMetricFormat => 'Format';
+
+  @override
+  String get chipMetricGenre => 'Genre';
+
+  @override
+  String get chipMetricSize => 'Größe';
+
+  @override
   String coreNoToolsFoundToOpen(String name) {
     return 'Keine Tools gefunden zum Öffnen von \"$name\"';
   }

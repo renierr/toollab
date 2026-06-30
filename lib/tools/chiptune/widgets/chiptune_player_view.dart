@@ -22,6 +22,7 @@ class ChiptunePlayerView extends StatelessWidget {
   final Widget archivePanel;
   final VoidCallback onPlayPause;
   final VoidCallback onStop;
+  final VoidCallback? onNext;
   final ValueChanged<bool> onLoopChanged;
   final ValueChanged<double> onVolumeChanged;
   final void Function(int order, int row) onSeek;
@@ -38,6 +39,7 @@ class ChiptunePlayerView extends StatelessWidget {
     required this.archivePanel,
     required this.onPlayPause,
     required this.onStop,
+    this.onNext,
     required this.onLoopChanged,
     required this.onVolumeChanged,
     required this.onSeek,
@@ -82,6 +84,7 @@ class ChiptunePlayerView extends StatelessWidget {
             volume: volume,
             onPlayPause: onPlayPause,
             onStop: onStop,
+            onNext: onNext,
             onLoopChanged: onLoopChanged,
             onVolumeChanged: onVolumeChanged,
           ),

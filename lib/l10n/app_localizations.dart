@@ -584,6 +584,84 @@ abstract class AppLocalizations {
   /// **'Loop off'**
   String get chipLoopOffTooltip;
 
+  /// No description provided for @chipRandomTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Random tune from The Mod Archive'**
+  String get chipRandomTooltip;
+
+  /// No description provided for @chipNextRandomTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Next random tune'**
+  String get chipNextRandomTooltip;
+
+  /// No description provided for @chipRandomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Random Tune'**
+  String get chipRandomTitle;
+
+  /// No description provided for @chipRandomFetching.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching a random tune from The Mod Archive…'**
+  String get chipRandomFetching;
+
+  /// No description provided for @chipRandomFetchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not fetch a random tune: {error}'**
+  String chipRandomFetchFailed(Object error);
+
+  /// No description provided for @chipRandomRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get chipRandomRetry;
+
+  /// No description provided for @chipRandomShuffleAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle again'**
+  String get chipRandomShuffleAgain;
+
+  /// No description provided for @chipRandomCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: The Mod Archive — a free repository of tracker music. All rights belong to the original artists.'**
+  String get chipRandomCredits;
+
+  /// No description provided for @chipRandomSourceLink.
+  ///
+  /// In en, this message translates to:
+  /// **'View module #{moduleId} on modarchive.org'**
+  String chipRandomSourceLink(Object moduleId);
+
+  /// No description provided for @chipRandomNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Random: {title} — from modarchive.org'**
+  String chipRandomNowPlaying(Object title);
+
+  /// No description provided for @chipMetricFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get chipMetricFormat;
+
+  /// No description provided for @chipMetricGenre.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre'**
+  String get chipMetricGenre;
+
+  /// No description provided for @chipMetricSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get chipMetricSize;
+
   /// No description provided for @coreNoToolsFoundToOpen.
   ///
   /// In en, this message translates to:

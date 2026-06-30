@@ -265,6 +265,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipLoopOffTooltip => 'Loop off';
 
   @override
+  String get chipRandomTooltip => 'Random tune from The Mod Archive';
+
+  @override
+  String get chipNextRandomTooltip => 'Next random tune';
+
+  @override
+  String get chipRandomTitle => 'Random Tune';
+
+  @override
+  String get chipRandomFetching =>
+      'Fetching a random tune from The Mod Archive…';
+
+  @override
+  String chipRandomFetchFailed(Object error) {
+    return 'Could not fetch a random tune: $error';
+  }
+
+  @override
+  String get chipRandomRetry => 'Retry';
+
+  @override
+  String get chipRandomShuffleAgain => 'Shuffle again';
+
+  @override
+  String get chipRandomCredits =>
+      'Source: The Mod Archive — a free repository of tracker music. All rights belong to the original artists.';
+
+  @override
+  String chipRandomSourceLink(Object moduleId) {
+    return 'View module #$moduleId on modarchive.org';
+  }
+
+  @override
+  String chipRandomNowPlaying(Object title) {
+    return 'Random: $title — from modarchive.org';
+  }
+
+  @override
+  String get chipMetricFormat => 'Format';
+
+  @override
+  String get chipMetricGenre => 'Genre';
+
+  @override
+  String get chipMetricSize => 'Size';
+
+  @override
   String coreNoToolsFoundToOpen(String name) {
     return 'No tools found to open \"$name\"';
   }

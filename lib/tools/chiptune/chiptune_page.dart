@@ -21,9 +21,11 @@ import 'chiptune_sync_delegate.dart';
 import 'config.dart';
 import 'engine/chiptune_player.dart';
 import 'engine/parser.dart';
+import 'modarchive_service.dart';
 import 'widgets/chiptune_archive_panel.dart';
 import 'widgets/chiptune_empty_state.dart';
 import 'widgets/chiptune_player_view.dart';
+import 'widgets/modarchive_fetch_dialog.dart';
 import 'widgets/visualizations/chiptune_viz_registry.dart';
 
 class ChiptunePage extends StatefulWidget {
@@ -37,11 +39,14 @@ class ChiptunePage extends StatefulWidget {
 class _ChiptunePageState extends State<ChiptunePage>
     with DisposeCleanup, WidgetsBindingObserver {
   final ChiptunePlayer _player = ChiptunePlayer();
+  final ModArchiveService _modArchive = ModArchiveService();
 
   Uint8List? _currentBytes;
   String _currentFileName = '';
   String _currentFormat = '';
   String? _currentArchiveId;
+  bool _randomMode = false;
+  bool _fetchingRandom = false;
 
   List<ArchivedModule> _archive = [];
   bool _syncing = false;
@@ -128,6 +133,7 @@ class _ChiptunePageState extends State<ChiptunePage>
         _currentFileName = fileName;
         _currentFormat = mod.type;
         _currentArchiveId = null;
+        _randomMode = false;
       });
     } catch (e) {
       if (mounted) {
@@ -216,12 +222,57 @@ class _ChiptunePageState extends State<ChiptunePage>
 
   void _onPlaybackEnded() {
     if (_looping) return;
+    // Random mode: auto-advance to a freshly fetched random tune.
+    if (_randomMode) {
+      _nextRandom();
+      return;
+    }
     // 'next' behaviour: advance to the next archived module if one follows.
     if (_currentArchiveId != null) {
       final idx = _archive.indexWhere((m) => m.id == _currentArchiveId);
       if (idx >= 0 && idx + 1 < _archive.length) {
         _playArchived(_archive[idx + 1].id);
       }
+    }
+  }
+
+  // ---- Random (The Mod Archive) ----
+
+  /// Opens the fetch modal, and on confirmation plays the tune in random mode.
+  Future<void> _startRandom() async {
+    final tune = await ModArchiveFetchDialog.show(context, _modArchive);
+    if (tune == null || !mounted) return;
+    await _playRandomTune(tune);
+  }
+
+  /// Silently fetches the next random tune and plays it (auto-advance / skip).
+  Future<void> _nextRandom() async {
+    if (_fetchingRandom) return;
+    setState(() => _fetchingRandom = true);
+    try {
+      final tune = await _modArchive.fetchRandom();
+      if (!mounted) return;
+      await _playRandomTune(tune);
+    } catch (e) {
+      if (mounted) {
+        _showSnack(AppLocalizations.of(context).chipRandomFetchFailed('$e'));
+      }
+    } finally {
+      if (mounted) setState(() => _fetchingRandom = false);
+    }
+  }
+
+  Future<void> _playRandomTune(ModArchiveTune tune) async {
+    await _loadBytes(tune.bytes, tune.fileName);
+    if (!mounted) return;
+    setState(() => _randomMode = true);
+    await _player.play();
+    if (mounted) {
+      _showSnack(
+        AppLocalizations.of(
+          context,
+        ).chipRandomNowPlaying(tune.title.isEmpty ? tune.fileName : tune.title),
+      );
     }
   }
 
@@ -370,6 +421,17 @@ class _ChiptunePageState extends State<ChiptunePage>
     return ToolLayout(
       title: ChiptuneTool.config.localizedName(l10n),
       actions: [
+        IconButton(
+          tooltip: l10n.chipRandomTooltip,
+          icon: _fetchingRandom
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.casino_outlined),
+          onPressed: _fetchingRandom ? null : _startRandom,
+        ),
         if (hasModule) ...[
           IconButton(
             tooltip: _visualizerEnabled
@@ -411,6 +473,7 @@ class _ChiptunePageState extends State<ChiptunePage>
               ),
               onPlayPause: _playPause,
               onStop: _player.stop,
+              onNext: _randomMode ? _nextRandom : null,
               onLoopChanged: _setLooping,
               onVolumeChanged: _setVolume,
               onSeek: _player.seek,
