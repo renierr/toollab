@@ -15,6 +15,8 @@ class MainActivity : FlutterActivity() {
     private var launchRoute: String? = null
 
     companion object {
+        var channel: MethodChannel? = null
+
         private const val ALIAS_PREFIX = "de.renier.tool_lab."
         private const val ALIAS_SUFFIX = "Alias"
 
@@ -50,6 +52,7 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        channel = null
         gpsInfoHelper?.stopGpsInfoUpdates()
         super.onDestroy()
     }
@@ -85,30 +88,33 @@ class MainActivity : FlutterActivity() {
         DeviceInfoHelper.registerChannels(this, messenger)
 
         // Foreground Runtime MethodChannel
-        MethodChannel(messenger, FOREGROUND_RUNTIME_CHANNEL)
-            .setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "start" -> {
-                        val title = call.argument<String>("title") ?: "ToolLab active"
-                        val text = call.argument<String>("text") ?: "Running in background"
-                        ToolLabForegroundService.start(this, title, text)
-                        result.success(true)
-                    }
-                    "update" -> {
-                        val title = call.argument<String>("title") ?: "ToolLab active"
-                        val text = call.argument<String>("text") ?: "Running in background"
-                        ToolLabForegroundService.update(this, title, text)
-                        result.success(true)
-                    }
-                    "stop" -> {
-                        ToolLabForegroundService.stop(this)
-                        result.success(true)
-                    }
-                    else -> {
-                        result.notImplemented()
-                    }
+        val channelInstance = MethodChannel(messenger, FOREGROUND_RUNTIME_CHANNEL)
+        channel = channelInstance
+        channelInstance.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "start" -> {
+                    val title = call.argument<String>("title") ?: "ToolLab active"
+                    val text = call.argument<String>("text") ?: "Running in background"
+                    val actions = call.argument<List<String>>("actions")
+                    ToolLabForegroundService.start(this, title, text, actions)
+                    result.success(true)
+                }
+                "update" -> {
+                    val title = call.argument<String>("title") ?: "ToolLab active"
+                    val text = call.argument<String>("text") ?: "Running in background"
+                    val actions = call.argument<List<String>>("actions")
+                    ToolLabForegroundService.update(this, title, text, actions)
+                    result.success(true)
+                }
+                "stop" -> {
+                    ToolLabForegroundService.stop(this)
+                    result.success(true)
+                }
+                else -> {
+                    result.notImplemented()
                 }
             }
+        }
 
         // Shortcuts MethodChannel
         MethodChannel(messenger, SHORTCUTS_CHANNEL)

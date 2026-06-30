@@ -2,11 +2,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class ForegroundRuntimeLease {
-  ForegroundRuntimeLease._(this._id, {required this.title, required this.text});
+  ForegroundRuntimeLease._(
+    this._id, {
+    required this.title,
+    required this.text,
+    this.actions,
+  });
 
   final int _id;
   final String title;
   final String text;
+  final List<String>? actions;
   bool _released = false;
 
   Future<void> release() async {
@@ -15,9 +21,18 @@ class ForegroundRuntimeLease {
     await ForegroundRuntimeService._releaseLease(_id);
   }
 
-  Future<void> update({required String title, required String text}) async {
+  Future<void> update({
+    required String title,
+    required String text,
+    List<String>? actions,
+  }) async {
     if (_released) return;
-    await ForegroundRuntimeService._updateLease(_id, title: title, text: text);
+    await ForegroundRuntimeService._updateLease(
+      _id,
+      title: title,
+      text: text,
+      actions: actions,
+    );
   }
 }
 
@@ -28,25 +43,64 @@ class ForegroundRuntimeService {
     'de.renier.tool_lab/foreground_runtime',
   );
 
-  static final Map<int, ({String title, String text})> _activeLeases =
-      <int, ({String title, String text})>{};
+  static final Map<int, ({String title, String text, List<String>? actions})>
+  _activeLeases = <int, ({String title, String text, List<String>? actions})>{};
   static int _nextLeaseId = 1;
 
+  static final List<void Function(String action)> _actionListeners = [];
+
   static bool get isActive => _activeLeases.isNotEmpty;
+
+  static void addActionListener(void Function(String action) listener) {
+    if (_actionListeners.isEmpty) {
+      _channel.setMethodCallHandler(_handleMethodCall);
+    }
+    _actionListeners.add(listener);
+  }
+
+  static void removeActionListener(void Function(String action) listener) {
+    _actionListeners.remove(listener);
+    if (_actionListeners.isEmpty) {
+      _channel.setMethodCallHandler(null);
+    }
+  }
+
+  static Future<void> _handleMethodCall(MethodCall call) async {
+    if (call.method == 'onAction') {
+      final action = call.arguments as String;
+      for (final listener in List.of(_actionListeners)) {
+        listener(action);
+      }
+    }
+  }
 
   static Future<ForegroundRuntimeLease> acquire({
     required String title,
     required String text,
+    List<String>? actions,
   }) async {
     final int leaseId = _nextLeaseId++;
     final bool wasInactive = _activeLeases.isEmpty;
-    _activeLeases[leaseId] = (title: title, text: text);
+    _activeLeases[leaseId] = (title: title, text: text, actions: actions);
     if (wasInactive) {
-      await _invoke('start', {'title': title, 'text': text});
+      await _invoke('start', {
+        'title': title,
+        'text': text,
+        'actions': actions,
+      });
     } else {
-      await _invoke('update', {'title': title, 'text': text});
+      await _invoke('update', {
+        'title': title,
+        'text': text,
+        'actions': actions,
+      });
     }
-    return ForegroundRuntimeLease._(leaseId, title: title, text: text);
+    return ForegroundRuntimeLease._(
+      leaseId,
+      title: title,
+      text: text,
+      actions: actions,
+    );
   }
 
   static Future<void> releaseAll() async {
@@ -58,10 +112,11 @@ class ForegroundRuntimeService {
     int leaseId, {
     required String title,
     required String text,
+    List<String>? actions,
   }) async {
     if (!_activeLeases.containsKey(leaseId)) return;
-    _activeLeases[leaseId] = (title: title, text: text);
-    await _invoke('update', {'title': title, 'text': text});
+    _activeLeases[leaseId] = (title: title, text: text, actions: actions);
+    await _invoke('update', {'title': title, 'text': text, 'actions': actions});
   }
 
   static Future<void> _releaseLease(int leaseId) async {
@@ -73,8 +128,12 @@ class ForegroundRuntimeService {
       return;
     }
 
-    final ({String title, String text}) latest = _activeLeases.values.last;
-    await _invoke('update', {'title': latest.title, 'text': latest.text});
+    final latest = _activeLeases.values.last;
+    await _invoke('update', {
+      'title': latest.title,
+      'text': latest.text,
+      'actions': latest.actions,
+    });
   }
 
   static Future<void> _invoke(

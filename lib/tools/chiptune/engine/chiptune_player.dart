@@ -92,6 +92,9 @@ class ChiptunePlayer {
   /// Fired once when a non-looping song reaches its end.
   VoidCallback? onEnded;
 
+  /// Fired when 'next' is clicked in the foreground service notification.
+  VoidCallback? onNext;
+
   ModuleFile? get module => _module;
   bool get isPlaying => state.value == ChiptunePlaybackState.playing;
   bool get hasModule => _worklet != null;
@@ -398,24 +401,48 @@ class ChiptunePlayer {
 
   Future<void> _acquirePlaybackRuntimeLocks() async {
     _partialWakeLock ??= await PowerWakeLockService.acquirePartial();
-    _foregroundRuntimeLease ??= await ForegroundRuntimeService.acquire(
-      title: notificationTitle,
-      text: notificationText,
-    );
+    if (_foregroundRuntimeLease == null) {
+      final List<String> actions = ['pause', 'stop'];
+      if (onNext != null) {
+        actions.add('next');
+      }
+      _foregroundRuntimeLease = await ForegroundRuntimeService.acquire(
+        title: notificationTitle,
+        text: notificationText,
+        actions: actions,
+      );
+      ForegroundRuntimeService.addActionListener(_handleNotificationAction);
+    }
   }
 
   void _releasePlaybackRuntimeLocks() {
+    if (_foregroundRuntimeLease != null) {
+      ForegroundRuntimeService.removeActionListener(_handleNotificationAction);
+      final foregroundLease = _foregroundRuntimeLease;
+      _foregroundRuntimeLease = null;
+      if (foregroundLease != null) {
+        unawaited(foregroundLease.release());
+      }
+    }
     final partialLease = _partialWakeLock;
+    _partialWakeLock = null;
     if (partialLease != null) {
       unawaited(partialLease.release());
     }
-    _partialWakeLock = null;
+  }
 
-    final foregroundLease = _foregroundRuntimeLease;
-    if (foregroundLease != null) {
-      unawaited(foregroundLease.release());
+  void _handleNotificationAction(String action) {
+    switch (action) {
+      case 'pause':
+        pause();
+        break;
+      case 'stop':
+        stop();
+        break;
+      case 'next':
+        onNext?.call();
+        break;
     }
-    _foregroundRuntimeLease = null;
   }
 
   void dispose() {
