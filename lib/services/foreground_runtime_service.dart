@@ -143,8 +143,10 @@ class ForegroundRuntimeService {
     if (defaultTargetPlatform != TargetPlatform.android) return;
     try {
       await _channel.invokeMethod<void>(method, arguments);
-    } catch (_) {
-      // Unsupported platform/channel: no-op.
+    } catch (e) {
+      debugPrint('[$_logPrefix] _invoke($method) failed: $e');
     }
   }
+
+  static const String _logPrefix = 'ForegroundRuntimeService';
 }

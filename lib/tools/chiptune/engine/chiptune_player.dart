@@ -186,6 +186,7 @@ class ChiptunePlayer {
       await _acquirePlaybackRuntimeLocks();
       SoLoud.instance.setPause(_handle!, false);
       state.value = ChiptunePlaybackState.playing;
+      _updateNotificationForResume();
       await _feed();
       _startFeed();
       return;
@@ -227,7 +228,7 @@ class ChiptunePlayer {
     SoLoud.instance.setPause(_handle!, true);
     _feedTimer?.cancel();
     _feedTimer = null;
-    _releasePlaybackRuntimeLocks();
+    _updateNotificationForPause();
     state.value = ChiptunePlaybackState.paused;
   }
 
@@ -431,8 +432,37 @@ class ChiptunePlayer {
     }
   }
 
+  void _updateNotificationForPause() {
+    final lease = _foregroundRuntimeLease;
+    if (lease == null) return;
+    unawaited(
+      lease.update(
+        title: notificationTitle,
+        text: notificationText,
+        actions: ['play', 'stop'],
+      ),
+    );
+  }
+
+  void _updateNotificationForResume() {
+    final lease = _foregroundRuntimeLease;
+    if (lease == null) return;
+    final actions = <String>['pause', 'stop'];
+    if (onNext != null) actions.add('next');
+    unawaited(
+      lease.update(
+        title: notificationTitle,
+        text: notificationText,
+        actions: actions,
+      ),
+    );
+  }
+
   void _handleNotificationAction(String action) {
     switch (action) {
+      case 'play':
+        unawaited(play());
+        break;
       case 'pause':
         pause();
         break;

@@ -75,59 +75,71 @@ class ToolLabForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        ensureChannel()
+        try {
+            ensureChannel()
 
-        val action = intent?.action
-        if (action != null && action.startsWith("de.renier.tool_lab.foreground.action.")) {
-            val actionName = action.removePrefix("de.renier.tool_lab.foreground.action.")
-            sendActionToFlutter(actionName)
-            return START_STICKY
-        }
+            if (intent == null) {
+                startForegroundSafely(buildNotification(lastTitle, lastText, lastActions))
+                return START_STICKY
+            }
 
-        when (action) {
-            ACTION_START -> {
-                val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
-                val text = intent.getStringExtra(EXTRA_TEXT) ?: "Running in background"
-                val actions = intent.getStringArrayListExtra(EXTRA_ACTIONS)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    startForeground(
-                        NOTIFICATION_ID,
-                        buildNotification(title, text, actions),
-                        android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                    )
-                } else {
-                    startForeground(NOTIFICATION_ID, buildNotification(title, text, actions))
+            val action = intent.action
+            if (action != null && action.startsWith("de.renier.tool_lab.foreground.action.")) {
+                val actionName = action.removePrefix("de.renier.tool_lab.foreground.action.")
+                sendActionToFlutter(actionName)
+                return START_STICKY
+            }
+
+            when (action) {
+                ACTION_START -> {
+                    val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
+                    val text = intent.getStringExtra(EXTRA_TEXT) ?: "Running in background"
+                    val actions = intent.getStringArrayListExtra(EXTRA_ACTIONS)
+                    startForegroundSafely(buildNotification(title, text, actions))
+                }
+                ACTION_UPDATE -> {
+                    val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
+                    val text = intent.getStringExtra(EXTRA_TEXT) ?: "Running in background"
+                    val actions = intent.getStringArrayListExtra(EXTRA_ACTIONS)
+                    val manager =
+                        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    manager.notify(NOTIFICATION_ID, buildNotification(title, text, actions))
+                }
+                ACTION_STOP -> {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                }
+                else -> {
+                    startForegroundSafely(buildNotification(lastTitle, lastText, lastActions))
                 }
             }
-            ACTION_UPDATE -> {
-                val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
-                val text = intent.getStringExtra(EXTRA_TEXT) ?: "Running in background"
-                val actions = intent.getStringArrayListExtra(EXTRA_ACTIONS)
-                val manager =
-                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                manager.notify(NOTIFICATION_ID, buildNotification(title, text, actions))
-            }
-            ACTION_STOP -> {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
-            }
-            else -> {
-                val title = lastTitle
-                val text = lastText
-                val actions = lastActions
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    startForeground(
-                        NOTIFICATION_ID,
-                        buildNotification(title, text, actions),
-                        android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-                    )
-                } else {
-                    startForeground(NOTIFICATION_ID, buildNotification(title, text, actions))
-                }
+        } catch (e: Exception) {
+            android.util.Log.e("ToolLabFGS", "Error in onStartCommand: ", e)
+            try {
+                val fallbackNotification = NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(android.R.drawable.ic_media_play)
+                    .setContentTitle("ToolLab active")
+                    .setContentText("Running in background")
+                    .build()
+                startForegroundSafely(fallbackNotification)
+            } catch (ex: Exception) {
+                android.util.Log.e("ToolLabFGS", "Fatal fallback error: ", ex)
             }
         }
 
         return START_STICKY
+    }
+
+    private fun startForegroundSafely(notification: Notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
+        }
     }
 
     private fun sendActionToFlutter(actionName: String) {
