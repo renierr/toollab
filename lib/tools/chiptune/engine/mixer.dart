@@ -1731,6 +1731,8 @@ class ChiptuneMixer {
 
   /// 'seek' branch.
   void seek(int position, int rowIndex) {
+    final int len = mod?.length ?? 0;
+    if (len > 0) position = position.clamp(0, len - 1);
     this.position = position;
     this.rowIndex = rowIndex - 1;
     tick = ticksPerRow;

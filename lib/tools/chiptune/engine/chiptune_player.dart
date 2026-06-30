@@ -243,6 +243,17 @@ class ChiptunePlayer {
   /// Seeks to an order/row and keeps playing if currently active.
   void seek(int order, int row) {
     if (_worklet == null) return;
+    final mod = _module;
+    // Clamp to valid bounds — the slider's last position can map one order past
+    // the end, which would crash the mixer's pattern lookup.
+    if (mod != null && mod.sequence.isNotEmpty) {
+      order = order.clamp(0, mod.sequence.length - 1);
+      final patIdx = mod.sequence[order];
+      final rowCount = (patIdx >= 0 && patIdx < mod.patterns.length)
+          ? mod.patterns[patIdx].rows.length
+          : 0;
+      row = rowCount > 0 ? row.clamp(0, rowCount - 1) : 0;
+    }
     final wasPlaying = state.value == ChiptunePlaybackState.playing;
     _renderWorker.seek(order, row);
     if (_stream != null) {
@@ -250,7 +261,6 @@ class ChiptunePlayer {
     }
     // The stream's consumed-time timer restarts at zero after the reset, so
     // anchor the elapsed read-out to the seek target's song time.
-    final mod = _module;
     _elapsedBase = mod != null ? songTimeAt(mod, order, row) : Duration.zero;
     elapsed.value = _elapsedBase;
     position.value = SongPosition(order, row);

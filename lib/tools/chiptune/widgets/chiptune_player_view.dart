@@ -62,20 +62,6 @@ class ChiptunePlayerView extends StatelessWidget {
             currentVizId: currentVizId,
             onVizChanged: onVizChanged,
           ),
-        ChiptuneModuleInfo(module: module),
-        if (randomTune != null) ...[
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ChiptuneModArchiveInfo(tune: randomTune!),
-          ),
-        ],
-        const SizedBox(height: 8),
         ValueListenableBuilder(
           valueListenable: player.position,
           builder: (_, position, _) => ValueListenableBuilder(
@@ -113,6 +99,20 @@ class ChiptunePlayerView extends StatelessWidget {
           valueListenable: player.channelActivity,
           builder: (_, active, _) => ChiptuneChannelActivity(active: active),
         ),
+        const SizedBox(height: 12),
+        ChiptuneModuleInfo(module: module),
+        if (randomTune != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ChiptuneModArchiveInfo(tune: randomTune!),
+          ),
+        ],
         const SizedBox(height: 8),
         ChiptuneSampleList(module: module),
         const Divider(height: 24),
