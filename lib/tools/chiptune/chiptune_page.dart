@@ -46,7 +46,6 @@ class _ChiptunePageState extends State<ChiptunePage>
   String _currentFormat = '';
   String? _currentArchiveId;
   bool _randomMode = false;
-  bool _fetchingRandom = false;
 
   List<ArchivedModule> _archive = [];
   bool _syncing = false;
@@ -222,9 +221,9 @@ class _ChiptunePageState extends State<ChiptunePage>
 
   void _onPlaybackEnded() {
     if (_looping) return;
-    // Random mode: auto-advance to a freshly fetched random tune.
+    // Random mode: auto-advance the same way the skip-next button does.
     if (_randomMode) {
-      _nextRandom();
+      _skipRandom();
       return;
     }
     // 'next' behaviour: advance to the next archived module if one follows.
@@ -248,7 +247,6 @@ class _ChiptunePageState extends State<ChiptunePage>
   /// Skips to the next random tune. Shows a fetch-progress modal that closes
   /// and plays directly once loaded.
   Future<void> _skipRandom() async {
-    if (_fetchingRandom) return;
     final tune = await ModArchiveFetchDialog.show(
       context,
       _modArchive,
@@ -256,23 +254,6 @@ class _ChiptunePageState extends State<ChiptunePage>
     );
     if (tune == null || !mounted) return;
     await _playRandomTune(tune);
-  }
-
-  /// Silently fetches the next random tune and plays it (auto-advance on end).
-  Future<void> _nextRandom() async {
-    if (_fetchingRandom) return;
-    setState(() => _fetchingRandom = true);
-    try {
-      final tune = await _modArchive.fetchRandom();
-      if (!mounted) return;
-      await _playRandomTune(tune);
-    } catch (e) {
-      if (mounted) {
-        _showSnack(AppLocalizations.of(context).chipRandomFetchFailed('$e'));
-      }
-    } finally {
-      if (mounted) setState(() => _fetchingRandom = false);
-    }
   }
 
   Future<void> _playRandomTune(ModArchiveTune tune) async {
@@ -436,14 +417,8 @@ class _ChiptunePageState extends State<ChiptunePage>
       actions: [
         IconButton(
           tooltip: l10n.chipRandomTooltip,
-          icon: _fetchingRandom
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.casino_outlined),
-          onPressed: _fetchingRandom ? null : _startRandom,
+          icon: const Icon(Icons.casino_outlined),
+          onPressed: _startRandom,
         ),
         if (hasModule) ...[
           IconButton(
