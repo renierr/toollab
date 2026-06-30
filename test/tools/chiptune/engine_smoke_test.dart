@@ -78,4 +78,39 @@ void main() {
     mixer.render(out, 256);
     expect(out.every((s) => s == 0.0), isTrue);
   });
+
+  test('pattern loop (E6x) terminates instead of playing forever', () {
+    // Row 0: loop start (E60); row 1: loop twice (E62); rows 2-3 follow.
+    final rows = <List<Note>>[
+      [Note(effect: 0x0e, effectParam: 0x60)],
+      [Note(effect: 0x0e, effectParam: 0x62)],
+      [Note()],
+      [Note()],
+    ];
+    final mod = ModuleFile(
+      type: 'MOD',
+      patterns: [Pattern(rows: rows)],
+      sequence: [0],
+      channels: 1,
+      defaultBpm: 125,
+      defaultSpeed: 1, // 1 tick/row -> advances quickly
+      rowsPerPattern: 4,
+    );
+
+    final mixer = ChiptuneMixer();
+    bool ended = false;
+    mixer.onEnded = () => ended = true;
+    // Non-looping: the song must end on its own once the pattern loop expires.
+    mixer.loadAndPlay(serializeModuleForWorklet(mod), 44100, looping: false);
+
+    const frames = 4096;
+    final out = Float32List(frames * 2);
+    // ~10s of audio is far more than this <1s song needs; a broken loop would
+    // never set `ended` no matter how long we render.
+    for (int i = 0; i < 120 && !ended; i++) {
+      mixer.render(out, frames);
+    }
+
+    expect(ended, isTrue, reason: 'pattern loop never terminated');
+  });
 }

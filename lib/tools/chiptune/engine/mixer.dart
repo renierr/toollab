@@ -1136,7 +1136,7 @@ class WorkletChannel {
             if (subParam == 0) {
               worklet.setPatternLoopStart();
             } else {
-              worklet.setPatternLoop(subParam);
+              worklet.handlePatternLoop(subParam);
             }
             break;
           case 0x7:
@@ -1662,6 +1662,7 @@ class ChiptuneMixer {
   int patternLoopRow = -1;
   int patternLoopCount = 0;
   int patternLoopPosition = -1;
+  bool loopJumpPending = false;
   int jumpPosition = -1;
   int jumpRowIndex = -1;
   int patternDelay = 0;
@@ -1707,6 +1708,14 @@ class ChiptuneMixer {
     position = mod.restartPosition;
     rowIndex = -1;
     tick = ticksPerRow; // Force immediate Row 0 trigger on first process sample
+    // Reset sequencing state so nothing carries over from a previous song.
+    jumpPosition = -1;
+    jumpRowIndex = -1;
+    patternLoopRow = -1;
+    patternLoopCount = 0;
+    patternLoopPosition = -1;
+    loopJumpPending = false;
+    patternDelay = 0;
     backgroundVoices = [];
     playing = true;
   }
@@ -1736,6 +1745,12 @@ class ChiptuneMixer {
     this.position = position;
     this.rowIndex = rowIndex - 1;
     tick = ticksPerRow;
+    // Drop any pending jump / pattern-loop state from before the seek.
+    jumpPosition = -1;
+    jumpRowIndex = -1;
+    loopJumpPending = false;
+    patternLoopRow = -1;
+    patternLoopCount = 0;
     for (final ch in channels) {
       ch.reset();
     }
@@ -1783,8 +1798,19 @@ class ChiptuneMixer {
     patternLoopPosition = position;
   }
 
-  void setPatternLoop(int count) {
-    patternLoopCount = count;
+  /// Standard E6x pattern-loop counting. The first encounter arms the counter
+  /// and jumps back; subsequent encounters decrement until it expires. The
+  /// counter must NOT be re-initialised on the looped-back re-trigger, or the
+  /// loop never ends (the cause of some modules playing forever).
+  void handlePatternLoop(int count) {
+    if (patternLoopRow < 0) return; // no loop start seen yet
+    if (patternLoopCount > 0) {
+      patternLoopCount--;
+      if (patternLoopCount > 0) loopJumpPending = true;
+    } else {
+      patternLoopCount = count;
+      loopJumpPending = true;
+    }
   }
 
   void setPatternDelay(int frames) {
@@ -1815,12 +1841,19 @@ class ChiptuneMixer {
   }
 
   void nextRow() {
+    // Once playback has ended, do not advance again — the order list has been
+    // exhausted and indexing it would be out of range.
+    if (!playing || mod == null) return;
     if (patternDelay > 0) {
       patternDelay--;
       return;
     }
     final previousPosition = position;
-    if (jumpPosition != -1) {
+    if (loopJumpPending) {
+      rowIndex = patternLoopRow;
+      position = patternLoopPosition;
+      loopJumpPending = false;
+    } else if (jumpPosition != -1) {
       if (!isLooping && jumpPosition <= previousPosition) {
         playing = false;
         onEnded?.call();
@@ -1832,10 +1865,6 @@ class ChiptuneMixer {
       rowIndex = jumpRowIndex != -1 ? jumpRowIndex : 0;
       jumpPosition = -1;
       jumpRowIndex = -1;
-    } else if (patternLoopRow >= 0 && patternLoopCount > 0) {
-      rowIndex = patternLoopRow;
-      position = patternLoopPosition;
-      patternLoopCount--;
     } else {
       rowIndex++;
       final curPatIdx = mod!.patternTable[position];
