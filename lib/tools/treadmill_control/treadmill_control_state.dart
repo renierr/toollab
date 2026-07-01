@@ -73,6 +73,11 @@ class TreadmillControlState extends ChangeNotifier {
   WakeLockLease? _wakeLockLease;
   bool _isControlRequested = false;
 
+  // After a stop the treadmill coasts down and keeps sending speed>0 frames;
+  // suppress auto-start until it has fully decelerated back to 0, so the
+  // deceleration ramp can't spawn a fresh session on every frame.
+  bool _awaitingSpeedZero = false;
+
   // Session keep-alive (CPU + foreground service) — independent of the
   // user-facing screen wake lock, so data stays reliable with the screen off.
   WakeLockLease? _sessionCpuLease;
@@ -528,6 +533,7 @@ class TreadmillControlState extends ChangeNotifier {
     if (t == null) return;
 
     speed = t.speed;
+    if (speed <= 0.0) _awaitingSpeedZero = false;
     if (t.distance != null) distance = t.distance!;
     if (t.incline != null) incline = t.incline!;
     if (t.calories != null) calories = t.calories!;
@@ -565,6 +571,7 @@ class TreadmillControlState extends ChangeNotifier {
     }
 
     speed = frame.speed;
+    if (speed <= 0.0) _awaitingSpeedZero = false;
     distance = frame.distance;
     calories = frame.calories;
     steps = frame.steps;
@@ -572,6 +579,9 @@ class TreadmillControlState extends ChangeNotifier {
       elapsedTime = (frame.durationMs / 1000).round();
     }
 
+    // PitPat is state-driven: the running-state bits are authoritative, so the
+    // session transitions follow them (never raw speed, which also ramps up
+    // during deceleration after a stop).
     if (frame.runningStateBits == pitpatStateStarting) {
       workoutStatus = WorkoutStatus.starting;
     } else if (frame.runningStateBits == pitpatStateRunning) {
@@ -580,7 +590,9 @@ class TreadmillControlState extends ChangeNotifier {
         workoutStatus = WorkoutStatus.running;
         _startTimer();
       } else {
-        workoutStatus = WorkoutStatus.running;
+        // inactive / stopped / starting → begin a fresh session. Must run
+        // through _autoStartIfNeeded so the timer, wake locks and data buffer
+        // are actually initialised, not just the status flag.
         _autoStartIfNeeded();
       }
     } else if (frame.runningStateBits == pitpatStatePaused) {
@@ -595,16 +607,15 @@ class TreadmillControlState extends ChangeNotifier {
       }
     }
 
-    if (speed > 0.0) {
-      _autoStartIfNeeded();
-    }
-
     notifyListeners();
   }
 
   void _autoStartIfNeeded() {
+    // Don't relaunch while the treadmill is still coasting down from a stop.
+    if (_awaitingSpeedZero) return;
     if (workoutStatus == WorkoutStatus.inactive ||
-        workoutStatus == WorkoutStatus.stopped) {
+        workoutStatus == WorkoutStatus.stopped ||
+        workoutStatus == WorkoutStatus.starting) {
       workoutStatus = WorkoutStatus.running;
       elapsedTime = 0;
       distance = 0.0;
@@ -674,6 +685,7 @@ class TreadmillControlState extends ChangeNotifier {
   // Workout Controls (Start, Incline, Speed)
   Future<void> startWorkout() async {
     workoutStatus = WorkoutStatus.running;
+    _awaitingSpeedZero = false;
     elapsedTime = 0;
     distance = 0.0;
     calories = 0;
@@ -719,6 +731,7 @@ class TreadmillControlState extends ChangeNotifier {
 
   Future<void> stopWorkout() async {
     workoutStatus = WorkoutStatus.stopped;
+    _awaitingSpeedZero = true;
     _workoutTimer?.cancel();
     _workoutTimer = null;
 
