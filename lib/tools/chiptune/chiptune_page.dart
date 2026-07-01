@@ -251,8 +251,7 @@ class _ChiptunePageState extends State<ChiptunePage>
         try {
           final tune = await _modArchive.fetchRandom();
           if (!mounted) return;
-          await _loadBytes(tune.bytes, tune.fileName);
-          await _player.play();
+          await _playRandomTune(tune);
         } catch (_) {
           // Keep current playback or do nothing on background fetch failure
         }
