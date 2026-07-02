@@ -83,6 +83,7 @@
   "chipLoopOffTooltip": "Schleife aus",
   "chipRandomTooltip": "Zufälliges Stück von The Mod Archive",
   "chipNextRandomTooltip": "Nächstes Zufallsstück",
+  "chipNextTrackTooltip": "Nächster Titel",
   "chipRandomTitle": "Zufälliges Stück",
   "chipRandomFetching": "Zufälliges Stück von The Mod Archive wird geladen…",
   "chipRandomFetchFailed": "Zufälliges Stück konnte nicht geladen werden: {error}",

@@ -232,6 +232,16 @@ class _ChiptunePageState extends State<ChiptunePage>
     DatabaseService.instance.setSetting(ChiptuneArchive.toolId, 'vis_id', id);
   }
 
+  /// Callback for the transport bar's next button, or null to hide it.
+  /// Random mode always fetches another tune; archive playback advances to the
+  /// next archived module when one follows.
+  VoidCallback? _nextButtonAction() {
+    if (_randomMode) return _skipRandom;
+    final next = _nextArchivedId();
+    if (next != null) return () => _playArchived(next);
+    return null;
+  }
+
   /// Id of the archived module following the current one, or null if none.
   String? _nextArchivedId() {
     if (_currentArchiveId == null) return null;
@@ -522,7 +532,10 @@ class _ChiptunePageState extends State<ChiptunePage>
               ),
               onPlayPause: _playPause,
               onStop: _player.stop,
-              onNext: _randomMode ? _skipRandom : null,
+              onNext: _nextButtonAction(),
+              nextTooltip: _randomMode
+                  ? l10n.chipNextRandomTooltip
+                  : l10n.chipNextTrackTooltip,
               onLoopChanged: _setLooping,
               onVolumeChanged: _setVolume,
               onSeek: _player.seek,

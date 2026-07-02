@@ -86,6 +86,7 @@
   "chipLoopOffTooltip": "Loop off",
   "chipRandomTooltip": "Random tune from The Mod Archive",
   "chipNextRandomTooltip": "Next random tune",
+  "chipNextTrackTooltip": "Next track",
   "chipRandomTitle": "Random Tune",
   "chipRandomFetching": "Fetching a random tune from The Mod Archive…",
   "chipRandomFetchFailed": "Could not fetch a random tune: {error}",
