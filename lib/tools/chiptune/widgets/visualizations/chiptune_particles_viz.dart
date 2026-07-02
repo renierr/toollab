@@ -13,36 +13,48 @@ class ChiptuneParticlesViz extends StatefulWidget {
 }
 
 class _Particle {
-  double x, y, vx, vy, size, hue, life, maxLife;
+  double angle, radius, speed, baseRadius, size, hue;
   _Particle({
-    required this.x,
-    required this.y,
-    required this.vx,
-    required this.vy,
+    required this.angle,
+    required this.radius,
+    required this.speed,
+    required this.baseRadius,
     required this.size,
     required this.hue,
-    required this.life,
-    required this.maxLife,
   });
 }
 
 class _ChiptuneParticlesVizState extends State<ChiptuneParticlesViz> {
-  static const int _count = 120;
+  static const int _count = 80;
   final List<_Particle> _particles = [];
   final _rng = math.Random();
+  double _cx = 400;
+  double _cy = 200;
+  double _maxR = 200;
+  double _bassPulse = 0;
+  double _bassDecay = 0;
 
-  _Particle _spawn(double w, double h) {
-    final maxLife = 3 + _rng.nextDouble() * 4;
-    return _Particle(
-      x: _rng.nextDouble() * w,
-      y: _rng.nextDouble() * h,
-      vx: (_rng.nextDouble() - 0.5) * 60,
-      vy: (_rng.nextDouble() - 0.5) * 60,
-      size: 1 + _rng.nextDouble() * 4,
-      hue: _rng.nextDouble() * 360,
-      life: maxLife,
-      maxLife: maxLife,
-    );
+  @override
+  void initState() {
+    super.initState();
+    _initParticles();
+  }
+
+  void _initParticles() {
+    _particles.clear();
+    for (int i = 0; i < _count; i++) {
+      final t = i / _count;
+      _particles.add(
+        _Particle(
+          angle: _rng.nextDouble() * math.pi * 2,
+          radius: 0,
+          speed: 0.3 + _rng.nextDouble() * 0.7,
+          baseRadius: t * 0.9,
+          size: 1.5 + _rng.nextDouble() * 3.5,
+          hue: 180 + t * 180,
+        ),
+      );
+    }
   }
 
   @override
@@ -50,50 +62,48 @@ class _ChiptuneParticlesVizState extends State<ChiptuneParticlesViz> {
     super.didUpdateWidget(oldWidget);
     final data = widget.data;
     if (data == null) return;
-    if (_particles.isEmpty) {
-      for (int i = 0; i < _count; i++) {
-        _particles.add(_spawn(400, 200));
-      }
-    }
+    if (_particles.isEmpty) _initParticles();
 
     final dt = data.deltaTime.clamp(0.001, 0.05);
-    final bassPush = 1 + data.bass * 5;
-    final freqAvg = data.freq.reduce((a, b) => a + b) / data.freq.length;
-    final jitter = freqAvg * 80;
+    final bass = (data.bass * 1.5).clamp(0.0, 1.0);
+
+    _bassPulse = math.max(bass, _bassPulse * (1 - dt * 8));
+    _bassDecay = _bassDecay * (1 - dt * 4) + bass * dt * 4;
 
     for (int i = 0; i < _particles.length; i++) {
       final p = _particles[i];
-      p.x += p.vx * dt * bassPush;
-      p.y += p.vy * dt * bassPush;
+      p.angle += p.speed * dt * (1 + _bassDecay * 0.5);
+      if (p.angle > math.pi * 2) p.angle -= math.pi * 2;
 
-      p.vx += data.wave[(i * 8) % 256] * jitter * dt;
-      p.vy += data.wave[(i * 8 + 4) % 256] * jitter * dt;
+      final bin = (i * 128 ~/ _count).clamp(0, 127);
+      final freqVal = data.freq[bin];
+      final targetRadius =
+          p.baseRadius * (1 + freqVal * 0.6) + _bassPulse * 0.25;
+      p.radius += (targetRadius - p.radius) * 0.1;
 
-      p.vx *= 0.98;
-      p.vy *= 0.98;
-
-      final speedLimit = 120 + data.bass * 200;
-      final spd = math.sqrt(p.vx * p.vx + p.vy * p.vy);
-      if (spd > speedLimit) {
-        p.vx = p.vx / spd * speedLimit;
-        p.vy = p.vy / spd * speedLimit;
-      }
-
-      p.hue = (p.hue + data.bass * 20 * dt) % 360;
-      p.life -= dt * (0.3 + data.bass * 0.5);
-
-      if (p.life <= 0 || p.x < -50 || p.x > 500 || p.y < -50 || p.y > 300) {
-        _particles[i] = _spawn(400, 200);
-      }
+      p.size += (1.5 + freqVal * 5 - p.size) * 0.08;
+      p.hue = (p.hue + dt * 15) % 360;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      child: CustomPaint(
-        painter: _ParticlesPainter(particles: _particles),
-        size: Size.infinite,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          _cx = constraints.maxWidth / 2;
+          _cy = constraints.maxHeight / 2;
+          _maxR = math.min(constraints.maxWidth, constraints.maxHeight) * 0.4;
+          return CustomPaint(
+            painter: _ParticlesPainter(
+              particles: _particles,
+              cx: _cx,
+              cy: _cy,
+              maxR: _maxR,
+            ),
+            size: Size.infinite,
+          );
+        },
       ),
     );
   }
@@ -101,39 +111,42 @@ class _ChiptuneParticlesVizState extends State<ChiptuneParticlesViz> {
 
 class _ParticlesPainter extends CustomPainter {
   final List<_Particle> particles;
-  const _ParticlesPainter({required this.particles});
+  final double cx, cy, maxR;
+  const _ParticlesPainter({
+    required this.particles,
+    required this.cx,
+    required this.cy,
+    required this.maxR,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    if (w <= 0 || h <= 0) return;
+    if (maxR <= 0) return;
 
     canvas.drawRect(
-      Rect.fromLTWH(0, 0, w, h),
+      Rect.fromLTWH(0, 0, cx * 2, cy * 2),
       Paint()..color = ChiptuneColors.visualizerBg,
     );
 
-    final blur = MaskFilter.blur(BlurStyle.normal, 8);
-
     for (final p in particles) {
-      final lifeRatio = (p.life / p.maxLife).clamp(0.0, 1.0);
-      final alpha = lifeRatio * 0.85;
+      final r = p.radius * maxR;
+      final x = cx + math.cos(p.angle) * r;
+      final y = cy + math.sin(p.angle) * r;
+      final pos = Offset(x, y);
 
-      final color = HSVColor.fromAHSV(alpha, p.hue, 0.9, 0.9).toColor();
-      final pos = Offset(p.x * w / 400, p.y * h / 200);
+      final color = HSVColor.fromAHSV(0.7, p.hue, 0.85, 0.9).toColor();
 
       final glowPaint = Paint()
-        ..color = color.withValues(alpha: alpha * 0.25)
-        ..maskFilter = blur;
-      canvas.drawCircle(pos, p.size * 2, glowPaint);
+        ..color = color.withValues(alpha: 0.15)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, p.size * 1.5);
+      canvas.drawCircle(pos, p.size * 1.2, glowPaint);
 
       canvas.drawCircle(pos, p.size, Paint()..color = color);
 
       canvas.drawCircle(
         pos,
-        p.size * 0.5,
-        Paint()..color = HSVColor.fromAHSV(alpha, p.hue, 0.2, 1).toColor(),
+        p.size * 0.35,
+        Paint()..color = HSVColor.fromAHSV(0.8, p.hue, 0.1, 1).toColor(),
       );
     }
   }
