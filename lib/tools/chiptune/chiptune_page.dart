@@ -47,6 +47,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   String? _currentArchiveId;
   bool _randomMode = false;
   ModArchiveTune? _currentTune;
+  bool _advancing = false;
 
   List<ArchivedModule> _archive = [];
   bool _syncing = false;
@@ -66,6 +67,10 @@ class _ChiptunePageState extends State<ChiptunePage>
 
     _player.onEnded = _onPlaybackEnded;
     _player.onNext = _onPlaybackNext;
+    // Hold the wakelock + foreground service across a song-end when another
+    // track will auto-follow, so the (possibly background) fetch is not killed.
+    _player.shouldKeepPlaybackAlive = () =>
+        !_looping && (_randomMode || _nextArchivedId() != null);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _restoreSettings();
@@ -227,20 +232,33 @@ class _ChiptunePageState extends State<ChiptunePage>
     DatabaseService.instance.setSetting(ChiptuneArchive.toolId, 'vis_id', id);
   }
 
+  /// Id of the archived module following the current one, or null if none.
+  String? _nextArchivedId() {
+    if (_currentArchiveId == null) return null;
+    final idx = _archive.indexWhere((m) => m.id == _currentArchiveId);
+    if (idx >= 0 && idx + 1 < _archive.length) {
+      return _archive[idx + 1].id;
+    }
+    return null;
+  }
+
   void _onPlaybackEnded() {
     if (_looping) return;
-    // Random mode: auto-advance the same way the skip-next button does.
     if (_randomMode) {
-      _skipRandom();
+      if (_appInForeground) {
+        // Foreground: show the fetch-progress modal like the skip-next button.
+        _skipRandom();
+      } else {
+        // Background: fetch silently. The player kept its runtime locks alive
+        // for us; release them if the fetch fails so the notification clears.
+        _advanceRandomInBackground(stopOnFailure: true);
+      }
       return;
     }
     // 'next' behaviour: advance to the next archived module if one follows.
-    if (_currentArchiveId != null) {
-      final idx = _archive.indexWhere((m) => m.id == _currentArchiveId);
-      if (idx >= 0 && idx + 1 < _archive.length) {
-        _playArchived(_archive[idx + 1].id);
-      }
-    }
+    // If none follows the player already released its locks on song-end.
+    final next = _nextArchivedId();
+    if (next != null) _playArchived(next);
   }
 
   Future<void> _onPlaybackNext() async {
@@ -248,19 +266,29 @@ class _ChiptunePageState extends State<ChiptunePage>
       if (_appInForeground) {
         await _skipRandom();
       } else {
-        try {
-          final tune = await _modArchive.fetchRandom();
-          if (!mounted) return;
-          await _playRandomTune(tune);
-        } catch (_) {
-          // Keep current playback or do nothing on background fetch failure
-        }
+        // Next pressed mid-playback: current track still plays (locks held), so
+        // keep it on fetch failure rather than tearing down the session.
+        await _advanceRandomInBackground(stopOnFailure: false);
       }
-    } else if (_currentArchiveId != null) {
-      final idx = _archive.indexWhere((m) => m.id == _currentArchiveId);
-      if (idx >= 0 && idx + 1 < _archive.length) {
-        _playArchived(_archive[idx + 1].id);
-      }
+    } else {
+      final next = _nextArchivedId();
+      if (next != null) _playArchived(next);
+    }
+  }
+
+  /// Fetches and plays the next random tune without a modal (used when the app
+  /// is backgrounded). Guards against overlapping fetches.
+  Future<void> _advanceRandomInBackground({required bool stopOnFailure}) async {
+    if (_advancing) return;
+    _advancing = true;
+    try {
+      final tune = await _modArchive.fetchRandom();
+      if (!mounted) return;
+      await _playRandomTune(tune);
+    } catch (_) {
+      if (stopOnFailure) _player.stop();
+    } finally {
+      _advancing = false;
     }
   }
 

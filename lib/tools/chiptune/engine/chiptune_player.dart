@@ -96,6 +96,14 @@ class ChiptunePlayer {
   /// Fired when 'next' is clicked in the foreground service notification.
   VoidCallback? onNext;
 
+  /// Set by the page. Returns true when a song reaching its end will auto-advance
+  /// to another track (random mode, or a following archived module). In that case
+  /// the wakelock + foreground service must stay held across the (possibly slow,
+  /// background) fetch of the next track instead of being released — releasing the
+  /// last lease tears down the foreground service and lets Android suspend/kill the
+  /// process mid-fetch, so the next track never starts.
+  bool Function()? shouldKeepPlaybackAlive;
+
   ModuleFile? get module => _module;
   bool get isPlaying => state.value == ChiptunePlaybackState.playing;
   bool get hasModule => _worklet != null;
@@ -236,6 +244,7 @@ class ChiptunePlayer {
 
   void stop() {
     _stopInternal();
+    _releasePlaybackRuntimeLocks();
     state.value = ChiptunePlaybackState.stopped;
     position.value = const SongPosition(0, 0);
     _elapsedBase = Duration.zero;
@@ -400,7 +409,13 @@ class ChiptunePlayer {
     }
     state.value = ChiptunePlaybackState.stopped;
     notificationText = formatTime(Duration.zero, _totalDuration);
-    _releasePlaybackRuntimeLocks();
+    // Keep the wakelock + foreground service alive across an auto-advance so the
+    // next-track fetch (potentially slow, in the background) is not killed. The
+    // subsequent play() reuses the still-held leases; if the page decides not to
+    // advance (or the fetch fails) it calls stop() to release them.
+    if (!(shouldKeepPlaybackAlive?.call() ?? false)) {
+      _releasePlaybackRuntimeLocks();
+    }
     onEnded?.call();
   }
 
@@ -428,7 +443,10 @@ class ChiptunePlayer {
       SoLoud.instance.disposeSource(stream);
       _stream = null;
     }
-    _releasePlaybackRuntimeLocks();
+    // Note: runtime locks (wakelock + foreground service) are intentionally NOT
+    // released here. _stopInternal runs during song→song transitions (play() and
+    // loadModule()) where the locks must stay held. They are released explicitly
+    // at genuine stop points: stop(), dispose(), and _onSongEnded (no auto-advance).
   }
 
   Future<void> _acquirePlaybackRuntimeLocks() async {
@@ -508,6 +526,7 @@ class ChiptunePlayer {
 
   void dispose() {
     _stopInternal();
+    _releasePlaybackRuntimeLocks();
     _rowSubscription?.cancel();
     _endedSubscription?.cancel();
     unawaited(_renderWorker.dispose());
