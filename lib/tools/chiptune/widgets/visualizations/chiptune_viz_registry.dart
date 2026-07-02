@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'chiptune_circular_viz.dart';
+import 'chiptune_mirrored_bars_viz.dart';
 import 'chiptune_pulse_grid_viz.dart';
 import 'chiptune_spectrum_viz.dart';
 import 'chiptune_viz_data.dart';
@@ -46,6 +48,20 @@ class ChiptuneVizRegistry {
       icon: Icons.grid_on,
       create: ({VizData? data, Key? key}) =>
           ChiptunePulseGridViz(key: key, data: data),
+    ),
+    VizDefinition(
+      id: 'circular',
+      label: 'Circular',
+      icon: Icons.donut_large_outlined,
+      create: ({VizData? data, Key? key}) =>
+          ChiptuneCircularViz(key: key, data: data),
+    ),
+    VizDefinition(
+      id: 'mirrored-bars',
+      label: 'Mirrored Bars',
+      icon: Icons.flip_to_front,
+      create: ({VizData? data, Key? key}) =>
+          ChiptuneMirroredBarsViz(key: key, data: data),
     ),
   ];
 
