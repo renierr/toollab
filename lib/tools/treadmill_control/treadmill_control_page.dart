@@ -6,7 +6,6 @@ import 'treadmill_control_colors.dart';
 import 'widgets/device_connection_sheet.dart';
 import 'widgets/workout_metrics_grid.dart';
 import 'widgets/workout_controls_panel.dart';
-import 'widgets/workout_chart.dart';
 import 'widgets/session_history_list.dart';
 import '../../core/tool_page_state.dart';
 import '../../widgets/tool_layout.dart';
@@ -103,8 +102,6 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
             children: [
               WorkoutMetricsGrid(isLandscape: false),
               const SizedBox(height: 16),
-              const WorkoutChart(),
-              const SizedBox(height: 16),
               WorkoutControlsPanel(isLandscape: false),
               const SizedBox(height: 24),
               connectionBadges,
@@ -122,11 +119,7 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    WorkoutControlsPanel(isLandscape: true),
-                    const SizedBox(height: 16),
-                    const WorkoutChart(),
-                  ],
+                  children: [WorkoutControlsPanel(isLandscape: true)],
                 ),
               ),
             ),

@@ -1,7 +1,9 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../treadmill_control_state.dart';
 import '../treadmill_control_colors.dart';
+import '../treadmill_session.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'heart_rate_chart_dialog.dart';
 
@@ -33,6 +35,13 @@ class WorkoutMetricsGrid extends StatelessWidget {
         .where((p) => p.timestamp.isAfter(rollingLimit))
         .toList();
 
+    final lastTime = state.dataPoints.isEmpty
+        ? 0
+        : state.dataPoints.last.timestamp;
+    final recentSpeedPoints = state.dataPoints
+        .where((p) => p.timestamp >= lastTime - 300)
+        .toList();
+
     final speedCard = _MetricCard(
       label: l10n.speedLabel,
       value: speedStr,
@@ -40,6 +49,12 @@ class WorkoutMetricsGrid extends StatelessWidget {
       color: TreadmillColors.cyanMetric,
       icon: Icons.speed,
       isLarge: true,
+      backgroundPainter: recentSpeedPoints.length >= 2
+          ? SpeedChartPainter(
+              points: recentSpeedPoints,
+              lineColor: TreadmillColors.cyanMetric,
+            )
+          : null,
     );
 
     final hrCard = _MetricCard(
@@ -331,6 +346,97 @@ class _MetricCardState extends State<_MetricCard>
     }
 
     return cardContent;
+  }
+}
+
+class SpeedChartPainter extends CustomPainter {
+  final List<WorkoutDataPoint> points;
+  final Color lineColor;
+
+  SpeedChartPainter({required this.points, required this.lineColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+
+    final List<double> smoothedSpeeds = [];
+    const int windowSize = 3;
+    for (int i = 0; i < points.length; i++) {
+      double sum = 0;
+      int count = 0;
+      for (int w = i - windowSize ~/ 2; w <= i + windowSize ~/ 2; w++) {
+        if (w >= 0 && w < points.length) {
+          sum += points[w].speed;
+          count++;
+        }
+      }
+      smoothedSpeeds.add(sum / count);
+    }
+
+    double minSpd = smoothedSpeeds.reduce((a, b) => a < b ? a : b);
+    double maxSpd = smoothedSpeeds.reduce((a, b) => a > b ? a : b);
+
+    if (maxSpd == minSpd) {
+      maxSpd += 2;
+      minSpd = max(0.0, minSpd - 2);
+    }
+    final double range = maxSpd - minSpd;
+
+    final path = Path();
+    final List<Offset> pts = [];
+    final double stepX = size.width / (points.length - 1);
+
+    for (int i = 0; i < points.length; i++) {
+      final double x = i * stepX;
+      final double normalizedY = (smoothedSpeeds[i] - minSpd) / range;
+      final double y = size.height - (normalizedY * (size.height - 8) + 4);
+      pts.add(Offset(x, y));
+    }
+
+    path.moveTo(pts[0].dx, pts[0].dy);
+    for (int i = 0; i < pts.length - 1; i++) {
+      final p0 = pts[i];
+      final p1 = pts[i + 1];
+      final controlPoint1 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p0.dy);
+      final controlPoint2 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p1.dy);
+      path.cubicTo(
+        controlPoint1.dx,
+        controlPoint1.dy,
+        controlPoint2.dx,
+        controlPoint2.dy,
+        p1.dx,
+        p1.dy,
+      );
+    }
+
+    final fillPath = Path.from(path);
+    fillPath.lineTo(size.width, size.height);
+    fillPath.lineTo(0, size.height);
+    fillPath.close();
+
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          lineColor.withValues(alpha: 0.15),
+          lineColor.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(fillPath, fillPaint);
+
+    final linePaint = Paint()
+      ..color = lineColor.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawPath(path, linePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant SpeedChartPainter oldDelegate) {
+    return oldDelegate.points != points;
   }
 }
 
