@@ -105,10 +105,10 @@ class _PulseGridPainter extends CustomPainter {
 
     for (int i = 0; i < 32; i++) {
       final val = freq[i * 4];
-      if (val <= 0.05) continue;
+      if (val <= 0.03) continue;
 
       final percent = val.clamp(0.0, 1.0);
-      final sizeVal = percent * 6;
+      final coreSize = percent * 8;
       final angle = (i / 32) * math.pi - math.pi / 2;
       final dist = 50 + percent * 150;
 
@@ -116,14 +116,27 @@ class _PulseGridPainter extends CustomPainter {
       final py = horizonY - math.cos(angle) * dist * 0.5;
 
       final hue = 180.0 + percent * 100;
-      final sparkColor = HSVColor.fromAHSV(1, hue, 1, 0.7).toColor();
+      final pos = Offset(px, py);
+
+      final glowPaint = Paint()
+        ..color = HSVColor.fromAHSV(0.3, hue, 1, 1).toColor();
+      canvas.drawRect(
+        Rect.fromCenter(center: pos, width: coreSize * 3, height: coreSize * 3),
+        glowPaint,
+      );
+
+      canvas.drawRect(
+        Rect.fromCenter(center: pos, width: coreSize, height: coreSize),
+        Paint()..color = HSVColor.fromAHSV(1, hue, 0.2, 1).toColor(),
+      );
+
       canvas.drawRect(
         Rect.fromCenter(
-          center: Offset(px, py),
-          width: sizeVal,
-          height: sizeVal,
+          center: pos,
+          width: coreSize * 0.6,
+          height: coreSize * 0.6,
         ),
-        Paint()..color = sparkColor,
+        Paint()..color = HSVColor.fromAHSV(1, hue, 0, 1).toColor(),
       );
     }
 
