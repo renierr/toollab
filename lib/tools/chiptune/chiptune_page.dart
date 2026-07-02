@@ -25,6 +25,7 @@ import 'modarchive_service.dart';
 import 'widgets/chiptune_archive_panel.dart';
 import 'widgets/chiptune_empty_state.dart';
 import 'widgets/chiptune_player_view.dart';
+import 'widgets/chiptune_random_button.dart';
 import 'widgets/modarchive_fetch_dialog.dart';
 import 'widgets/visualizations/chiptune_viz_registry.dart';
 
@@ -49,6 +50,10 @@ class _ChiptunePageState extends State<ChiptunePage>
   ModArchiveTune? _currentTune;
   bool _advancing = false;
 
+  /// Prefetch of the next random tune; resolves to null if the fetch failed.
+  Future<ModArchiveTune?>? _prefetch;
+  bool _fetchingNext = false;
+
   List<ArchivedModule> _archive = [];
   bool _syncing = false;
   bool _backendAvailable = false;
@@ -67,6 +72,7 @@ class _ChiptunePageState extends State<ChiptunePage>
 
     _player.onEnded = _onPlaybackEnded;
     _player.onNext = _onPlaybackNext;
+    _player.onNearEnd = _onNearEnd;
     // Hold the wakelock + foreground service across a song-end when another
     // track will auto-follow, so the (possibly background) fetch is not killed.
     _player.shouldKeepPlaybackAlive = () =>
@@ -146,6 +152,7 @@ class _ChiptunePageState extends State<ChiptunePage>
         _currentArchiveId = null;
         _randomMode = false;
         _currentTune = null;
+        _prefetch = null;
       });
     } catch (e) {
       if (mounted) {
@@ -232,9 +239,6 @@ class _ChiptunePageState extends State<ChiptunePage>
     DatabaseService.instance.setSetting(ChiptuneArchive.toolId, 'vis_id', id);
   }
 
-  /// Callback for the transport bar's next button, or null to hide it.
-  /// Random mode always fetches another tune; archive playback advances to the
-  /// next archived module when one follows.
   VoidCallback? _nextButtonAction() {
     if (_randomMode) return _skipRandom;
     final next = _nextArchivedId();
@@ -242,7 +246,6 @@ class _ChiptunePageState extends State<ChiptunePage>
     return null;
   }
 
-  /// Id of the archived module following the current one, or null if none.
   String? _nextArchivedId() {
     if (_currentArchiveId == null) return null;
     final idx = _archive.indexWhere((m) => m.id == _currentArchiveId);
@@ -255,64 +258,75 @@ class _ChiptunePageState extends State<ChiptunePage>
   void _onPlaybackEnded() {
     if (_looping) return;
     if (_randomMode) {
-      if (_appInForeground) {
-        // Foreground: show the fetch-progress modal like the skip-next button.
-        _skipRandom();
-      } else {
-        // Background: fetch silently. The player kept its runtime locks alive
-        // for us; release them if the fetch fails so the notification clears.
-        _advanceRandomInBackground(stopOnFailure: true);
-      }
+      // Nothing left playing to keep, so tear down the session on failure.
+      _advanceRandom(stopOnFailure: true);
       return;
     }
-    // 'next' behaviour: advance to the next archived module if one follows.
-    // If none follows the player already released its locks on song-end.
     final next = _nextArchivedId();
     if (next != null) _playArchived(next);
   }
 
   Future<void> _onPlaybackNext() async {
     if (_randomMode) {
-      if (_appInForeground) {
-        await _skipRandom();
-      } else {
-        // Next pressed mid-playback: current track still plays (locks held), so
-        // keep it on fetch failure rather than tearing down the session.
-        await _advanceRandomInBackground(stopOnFailure: false);
-      }
+      await _advanceRandom(stopOnFailure: false);
     } else {
       final next = _nextArchivedId();
       if (next != null) _playArchived(next);
     }
   }
 
-  /// Fetches and plays the next random tune without a modal (used when the app
-  /// is backgrounded). Guards against overlapping fetches.
-  Future<void> _advanceRandomInBackground({required bool stopOnFailure}) async {
+  // ---- Random (The Mod Archive) ----
+
+  void _onNearEnd() {
+    if (!_randomMode || _looping) return;
+    _startPrefetch();
+  }
+
+  void _startPrefetch() {
+    if (_prefetch != null) return;
+    setState(() => _fetchingNext = true);
+    final future = _fetchRandomOrNull();
+    _prefetch = future;
+    future.whenComplete(() {
+      if (mounted) setState(() => _fetchingNext = false);
+    });
+  }
+
+  Future<ModArchiveTune?> _fetchRandomOrNull() async {
+    try {
+      return await _modArchive.fetchRandom();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Uses the prefetched tune when ready, else fetches live, for a gapless jump.
+  Future<void> _advanceRandom({required bool stopOnFailure}) async {
     if (_advancing) return;
     _advancing = true;
+    setState(() => _fetchingNext = true);
     try {
-      final tune = await _modArchive.fetchRandom();
+      final pending = _prefetch;
+      _prefetch = null;
+      ModArchiveTune? tune = pending != null ? await pending : null;
+      tune ??= await _modArchive.fetchRandom();
       if (!mounted) return;
       await _playRandomTune(tune);
     } catch (_) {
       if (stopOnFailure) _player.stop();
     } finally {
       _advancing = false;
+      if (mounted) setState(() => _fetchingNext = false);
     }
   }
 
-  // ---- Random (The Mod Archive) ----
-
-  /// Opens the fetch modal, and on confirmation plays the tune in random mode.
   Future<void> _startRandom() async {
     final tune = await ModArchiveFetchDialog.show(context, _modArchive);
     if (tune == null || !mounted) return;
     await _playRandomTune(tune);
   }
 
-  /// Skips to the next random tune. Shows a fetch-progress modal that closes
-  /// and plays directly once loaded.
+  /// Manual skip via the transport next button — keeps the fetch-progress modal.
   Future<void> _skipRandom() async {
     final tune = await ModArchiveFetchDialog.show(
       context,
@@ -485,9 +499,9 @@ class _ChiptunePageState extends State<ChiptunePage>
     return ToolLayout(
       title: ChiptuneTool.config.localizedName(l10n),
       actions: [
-        IconButton(
+        ChiptuneRandomButton(
+          busy: _fetchingNext,
           tooltip: l10n.chipRandomTooltip,
-          icon: const Icon(Icons.casino_outlined),
           onPressed: _startRandom,
         ),
         if (hasModule) ...[

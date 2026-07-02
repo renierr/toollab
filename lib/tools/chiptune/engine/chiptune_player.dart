@@ -36,6 +36,9 @@ class ChiptunePlayer {
 
   // Larger look-ahead keeps playback stable under background throttling.
   static const double _bufferAheadSeconds = 6.0;
+  // How long before a song's end [onNearEnd] fires, giving the page time to
+  // prefetch the next track so the transition is gapless.
+  static const Duration _prefetchLead = Duration(seconds: 10);
   static const int _chunkFrames = 8192;
   static const Duration _feedIntervalForeground = Duration(milliseconds: 16);
   static const Duration _feedIntervalBackground = Duration(milliseconds: 48);
@@ -72,6 +75,7 @@ class ChiptunePlayer {
   Duration _uiUpdateInterval = _uiUpdateIntervalForeground;
   Duration _elapsedUpdateInterval = _elapsedUpdateIntervalForeground;
   bool _ended = false;
+  bool _nearEndFired = false;
   double _volume = 0.7;
   bool _looping = false;
 
@@ -95,6 +99,10 @@ class ChiptunePlayer {
 
   /// Fired when 'next' is clicked in the foreground service notification.
   VoidCallback? onNext;
+
+  /// Fired once per song, [_prefetchLead] before its end; re-armed when a fresh
+  /// song starts. Lets the page prefetch the next track for a gapless jump.
+  VoidCallback? onNearEnd;
 
   /// Set by the page. Returns true when a song reaching its end will auto-advance
   /// to another track (random mode, or a following archived module). In that case
@@ -209,6 +217,7 @@ class ChiptunePlayer {
 
     _elapsedBase = Duration.zero;
     _ended = false;
+    _nearEndFired = false;
     await _renderWorker.start(
       module: _worklet!,
       sampleRate: sampleRate,
@@ -331,6 +340,22 @@ class ChiptunePlayer {
           _lastElapsedUpdateAt = now;
           elapsed.value =
               _elapsedBase + SoLoud.instance.getStreamTimeConsumed(stream);
+        }
+      }
+
+      // Computed independently of the UI-throttled elapsed read-out so it also
+      // works in the background. For songs shorter than the lead the threshold
+      // is <= 0, so the prefetch fires as soon as playback starts.
+      if (!_nearEndFired &&
+          !_looping &&
+          onNearEnd != null &&
+          _handle != null &&
+          _totalDuration > Duration.zero) {
+        final Duration playbackTime =
+            _elapsedBase + SoLoud.instance.getStreamTimeConsumed(stream);
+        if (playbackTime >= _totalDuration - _prefetchLead) {
+          _nearEndFired = true;
+          onNearEnd!.call();
         }
       }
 
