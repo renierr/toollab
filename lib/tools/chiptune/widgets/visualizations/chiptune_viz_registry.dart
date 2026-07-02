@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'chiptune_circular_viz.dart';
 import 'chiptune_mirrored_bars_viz.dart';
+import 'chiptune_particles_viz.dart';
 import 'chiptune_pulse_grid_viz.dart';
 import 'chiptune_spectrum_viz.dart';
 import 'chiptune_viz_data.dart';
@@ -62,6 +63,13 @@ class ChiptuneVizRegistry {
       icon: Icons.flip_to_front,
       create: ({VizData? data, Key? key}) =>
           ChiptuneMirroredBarsViz(key: key, data: data),
+    ),
+    VizDefinition(
+      id: 'particles',
+      label: 'Particles',
+      icon: Icons.blur_on,
+      create: ({VizData? data, Key? key}) =>
+          ChiptuneParticlesViz(key: key, data: data),
     ),
   ];
 
