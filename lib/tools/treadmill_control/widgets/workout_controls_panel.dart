@@ -97,7 +97,7 @@ class WorkoutControlsPanel extends StatelessWidget {
           Wrap(
             spacing: 8,
             runSpacing: 4,
-            children: [2.0, 4.0, 6.0, 8.0, 10.0].map((s) {
+            children: [2.0, 4.0, 5.0, 6.0, 8.0].map((s) {
               return ChoiceChip(
                 label: Text('${s.toInt()}'),
                 selected: (state.speed - s).abs() < 0.1,
