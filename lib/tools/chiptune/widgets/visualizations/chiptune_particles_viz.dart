@@ -78,7 +78,7 @@ class _ChiptuneParticlesVizState extends State<ChiptuneParticlesViz> {
       final bin = (i * 128 ~/ _count).clamp(0, 127);
       final freqVal = data.freq[bin];
       final targetRadius =
-          p.baseRadius * (1 + freqVal * 0.6) + _bassPulse * 0.25;
+          p.baseRadius * (1 + freqVal * 0.6) + _bassPulse * 0.5;
       p.radius += (targetRadius - p.radius) * 0.1;
 
       p.size += (1.5 + freqVal * 5 - p.size) * 0.08;
