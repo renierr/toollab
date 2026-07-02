@@ -271,6 +271,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipNextRandomTooltip => 'Next random tune';
 
   @override
+  String get chipNextTrackTooltip => 'Next track';
+
+  @override
   String get chipRandomTitle => 'Random Tune';
 
   @override

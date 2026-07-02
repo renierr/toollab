@@ -596,6 +596,12 @@ abstract class AppLocalizations {
   /// **'Next random tune'**
   String get chipNextRandomTooltip;
 
+  /// No description provided for @chipNextTrackTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Next track'**
+  String get chipNextTrackTooltip;
+
   /// No description provided for @chipRandomTitle.
   ///
   /// In en, this message translates to:

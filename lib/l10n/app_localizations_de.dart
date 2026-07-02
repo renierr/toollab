@@ -273,6 +273,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipNextRandomTooltip => 'Nächstes Zufallsstück';
 
   @override
+  String get chipNextTrackTooltip => 'Nächster Titel';
+
+  @override
   String get chipRandomTitle => 'Zufälliges Stück';
 
   @override
