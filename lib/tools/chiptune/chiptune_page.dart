@@ -512,6 +512,16 @@ class _ChiptunePageState extends State<ChiptunePage>
       if (!mounted) return;
       await _loadBytes(tune.bytes, tune.fileName);
       if (!mounted) return;
+      final mod = _player.module;
+      if (mod != null && mod.title.isNotEmpty) {
+        tune = CollectionTune(
+          id: tune.id,
+          fileName: tune.fileName,
+          format: tune.format,
+          title: mod.title,
+          bytes: tune.bytes,
+        );
+      }
       setState(() {
         _serverRandomMode = true;
         _currentServerTune = tune;
