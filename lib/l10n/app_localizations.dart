@@ -614,6 +614,18 @@ abstract class AppLocalizations {
   /// **'Playlist ({count})'**
   String chipPlaylistTitle(Object count);
 
+  /// No description provided for @chipFolderTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Play folder'**
+  String get chipFolderTooltip;
+
+  /// No description provided for @chipFolderEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No playable module files in this folder'**
+  String get chipFolderEmpty;
+
   /// No description provided for @chipPlaylistNoSupported.
   ///
   /// In en, this message translates to:

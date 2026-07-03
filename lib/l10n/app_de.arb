@@ -86,6 +86,8 @@
   "chipNextTrackTooltip": "Nächster Titel",
   "chipPlaylistTooltip": "Mehrere Dateien abspielen",
   "chipPlaylistTitle": "Wiedergabeliste ({count})",
+  "chipFolderTooltip": "Ordner abspielen",
+  "chipFolderEmpty": "Keine abspielbaren Moduldateien in diesem Ordner",
   "chipPlaylistNoSupported": "Keine unterstützten Moduldateien ausgewählt",
   "chipPlaylistNowPlaying": "Wiedergabe: {name} ({current}/{total})",
   "chipRandomTitle": "Zufälliges Stück",

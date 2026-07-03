@@ -89,6 +89,8 @@
   "chipNextTrackTooltip": "Next track",
   "chipPlaylistTooltip": "Play multiple files",
   "chipPlaylistTitle": "Playlist ({count})",
+  "chipFolderTooltip": "Play folder",
+  "chipFolderEmpty": "No playable module files in this folder",
   "chipPlaylistNoSupported": "No supported module files selected",
   "chipPlaylistNowPlaying": "Playing {name} ({current}/{total})",
   "chipRandomTitle": "Random Tune",

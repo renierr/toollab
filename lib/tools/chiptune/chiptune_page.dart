@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart'
-    show XFile, XTypeGroup, openFile, openFiles;
+    show XFile, XTypeGroup, openFile, openFiles, getDirectoryPath;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -215,6 +215,46 @@ class _ChiptunePageState extends State<ChiptunePage>
     }
     setState(() {
       _playlist = supported;
+      _playlistIndex = -1;
+    });
+    await _playPlaylistIndex(0);
+  }
+
+  /// Directory picking + local enumeration only works on desktop; Android hands
+  /// back a SAF tree URI that dart:io cannot list.
+  bool get _folderPickSupported => Platform.isWindows || Platform.isLinux;
+
+  Future<void> _pickFolder() async {
+    final l10n = AppLocalizations.of(context);
+    final dir = await getDirectoryPath();
+    if (dir == null || !mounted) return;
+    List<XFile> files;
+    try {
+      final entries = await Directory(dir).list(followLinks: false).toList();
+      files =
+          entries
+              .whereType<File>()
+              .where((f) {
+                final lower = f.path.toLowerCase();
+                return ChiptuneTool.config.fileExtensions.any(
+                  (e) => lower.endsWith('.$e'),
+                );
+              })
+              .map((f) => XFile(f.path))
+              .toList()
+            ..sort(
+              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+            );
+    } catch (e) {
+      if (mounted) _showSnack(l10n.chipFolderEmpty);
+      return;
+    }
+    if (files.isEmpty) {
+      _showSnack(l10n.chipFolderEmpty);
+      return;
+    }
+    setState(() {
+      _playlist = files;
       _playlistIndex = -1;
     });
     await _playPlaylistIndex(0);
@@ -591,6 +631,12 @@ class _ChiptunePageState extends State<ChiptunePage>
           icon: const Icon(Icons.queue_music_outlined),
           onPressed: _pickPlaylist,
         ),
+        if (_folderPickSupported)
+          IconButton(
+            tooltip: l10n.chipFolderTooltip,
+            icon: const Icon(Icons.folder_open_outlined),
+            onPressed: _pickFolder,
+          ),
         if (hasModule) ...[
           IconButton(
             tooltip: _visualizerEnabled
@@ -652,6 +698,7 @@ class _ChiptunePageState extends State<ChiptunePage>
           : ChiptuneEmptyState(
               onFileSelected: _onFilePicked,
               onPickPlaylist: _pickPlaylist,
+              onPickFolder: _folderPickSupported ? _pickFolder : null,
               archivePanel: (_archive.isNotEmpty || _backendAvailable)
                   ? ChiptuneArchivePanel(
                       modules: _archive,

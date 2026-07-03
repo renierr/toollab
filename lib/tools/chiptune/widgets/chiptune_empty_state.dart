@@ -11,12 +11,16 @@ import '../config.dart';
 class ChiptuneEmptyState extends StatelessWidget {
   final ValueChanged<XFile> onFileSelected;
   final VoidCallback onPickPlaylist;
+
+  /// Desktop-only folder playlist action; null hides the button.
+  final VoidCallback? onPickFolder;
   final Widget? archivePanel;
 
   const ChiptuneEmptyState({
     super.key,
     required this.onFileSelected,
     required this.onPickPlaylist,
+    this.onPickFolder,
     this.archivePanel,
   });
 
@@ -40,10 +44,23 @@ class ChiptuneEmptyState extends StatelessWidget {
             onFileSelected: onFileSelected,
           ),
           const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: onPickPlaylist,
-            icon: const Icon(Icons.queue_music_outlined),
-            label: Text(l10n.chipPlaylistTooltip),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: onPickPlaylist,
+                icon: const Icon(Icons.queue_music_outlined),
+                label: Text(l10n.chipPlaylistTooltip),
+              ),
+              if (onPickFolder != null)
+                OutlinedButton.icon(
+                  onPressed: onPickFolder,
+                  icon: const Icon(Icons.folder_open_outlined),
+                  label: Text(l10n.chipFolderTooltip),
+                ),
+            ],
           ),
           if (hasArchive) ...[const SizedBox(height: 12), archivePanel!],
         ],

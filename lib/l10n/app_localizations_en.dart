@@ -282,6 +282,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get chipFolderTooltip => 'Play folder';
+
+  @override
+  String get chipFolderEmpty => 'No playable module files in this folder';
+
+  @override
   String get chipPlaylistNoSupported => 'No supported module files selected';
 
   @override

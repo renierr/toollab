@@ -284,6 +284,13 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get chipFolderTooltip => 'Ordner abspielen';
+
+  @override
+  String get chipFolderEmpty =>
+      'Keine abspielbaren Moduldateien in diesem Ordner';
+
+  @override
   String get chipPlaylistNoSupported =>
       'Keine unterstützten Moduldateien ausgewählt';
 
