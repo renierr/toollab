@@ -188,6 +188,11 @@ class ChiptunePlayer {
   /// Loads a parsed module but does not start playback.
   void loadModule(ModuleFile mod) {
     _stopInternal();
+    // _stopInternal tears down the handle/stream/feed loop; the state must
+    // follow, otherwise a load-without-play (e.g. "load another") leaves state
+    // stuck at `playing` with no handle — the play/pause button then no-ops and
+    // the tool appears frozen.
+    state.value = ChiptunePlaybackState.stopped;
     _module = mod;
     _worklet = serializeModuleForWorklet(mod);
     _totalDuration = estimateSongDuration(mod);
@@ -400,6 +405,11 @@ class ChiptunePlayer {
 
         final Float32List chunk = await _renderWorker.render(_chunkFrames);
         if (chunk.isEmpty) break;
+        // The stream can be disposed/replaced (stop, seek, loadModule, play
+        // restart) while this render await is pending. Touching the old native
+        // source after that is a use-after-free that can hang the app, so bail
+        // if it is no longer the current stream.
+        if (!identical(_stream, stream)) break;
 
         try {
           SoLoud.instance.addAudioDataStream(
