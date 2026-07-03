@@ -602,6 +602,24 @@ abstract class AppLocalizations {
   /// **'Next track'**
   String get chipNextTrackTooltip;
 
+  /// No description provided for @chipPlaylistTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Play multiple files'**
+  String get chipPlaylistTooltip;
+
+  /// No description provided for @chipPlaylistNoSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'No supported module files selected'**
+  String get chipPlaylistNoSupported;
+
+  /// No description provided for @chipPlaylistNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing {name} ({current}/{total})'**
+  String chipPlaylistNowPlaying(Object current, Object name, Object total);
+
   /// No description provided for @chipRandomTitle.
   ///
   /// In en, this message translates to:

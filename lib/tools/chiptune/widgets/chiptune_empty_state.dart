@@ -10,11 +10,13 @@ import '../config.dart';
 /// archive list (when there are saved modules to pick from).
 class ChiptuneEmptyState extends StatelessWidget {
   final ValueChanged<XFile> onFileSelected;
+  final VoidCallback onPickPlaylist;
   final Widget? archivePanel;
 
   const ChiptuneEmptyState({
     super.key,
     required this.onFileSelected,
+    required this.onPickPlaylist,
     this.archivePanel,
   });
 
@@ -36,6 +38,12 @@ class ChiptuneEmptyState extends StatelessWidget {
             title: l10n.chipEmptyDropTitle,
             subtitle: l10n.chipEmptyDropSubtitle,
             onFileSelected: onFileSelected,
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onPickPlaylist,
+            icon: const Icon(Icons.queue_music_outlined),
+            label: Text(l10n.chipPlaylistTooltip),
           ),
           if (hasArchive) ...[const SizedBox(height: 12), archivePanel!],
         ],

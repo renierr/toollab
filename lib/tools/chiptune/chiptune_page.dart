@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart'
-    show XFile, XTypeGroup, openFile;
+    show XFile, XTypeGroup, openFile, openFiles;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -46,6 +46,12 @@ class _ChiptunePageState extends State<ChiptunePage>
   String _currentFileName = '';
   String _currentFormat = '';
   String? _currentArchiveId;
+
+  /// Transient playlist from a multi-file selection. [_playlistIndex] is the
+  /// currently-playing entry, or -1 when not in playlist mode.
+  List<XFile> _playlist = [];
+  int _playlistIndex = -1;
+
   bool _randomMode = false;
   ModArchiveTune? _currentTune;
   bool _advancing = false;
@@ -76,7 +82,10 @@ class _ChiptunePageState extends State<ChiptunePage>
     // Hold the wakelock + foreground service across a song-end when another
     // track will auto-follow, so the (possibly background) fetch is not killed.
     _player.shouldKeepPlaybackAlive = () =>
-        !_looping && (_randomMode || _nextArchivedId() != null);
+        !_looping &&
+        (_randomMode ||
+            _nextPlaylistIndex() != null ||
+            _nextArchivedId() != null);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _restoreSettings();
@@ -150,6 +159,7 @@ class _ChiptunePageState extends State<ChiptunePage>
         _currentFileName = fileName;
         _currentFormat = mod.type;
         _currentArchiveId = null;
+        _playlistIndex = -1;
         _randomMode = false;
         _currentTune = null;
         _prefetch = null;
@@ -179,6 +189,59 @@ class _ChiptunePageState extends State<ChiptunePage>
       ],
     );
     if (file != null) await _onFilePicked(file);
+  }
+
+  Future<void> _pickPlaylist() async {
+    final l10n = AppLocalizations.of(context);
+    final files = await openFiles(
+      acceptedTypeGroups: [
+        XTypeGroup(
+          label: l10n.chipEmptyTypeLabel,
+          extensions: ChiptuneTool.config.fileExtensions,
+        ),
+      ],
+    );
+    if (files.isEmpty || !mounted) return;
+    final supported = files.where((f) {
+      final lower = f.name.toLowerCase();
+      return ChiptuneTool.config.fileExtensions.any(
+        (e) => lower.endsWith('.$e'),
+      );
+    }).toList();
+    if (supported.isEmpty) {
+      _showSnack(l10n.chipPlaylistNoSupported);
+      return;
+    }
+    setState(() {
+      _playlist = supported;
+      _playlistIndex = -1;
+    });
+    await _playPlaylistIndex(0);
+  }
+
+  Future<void> _playPlaylistIndex(int index) async {
+    if (index < 0 || index >= _playlist.length) return;
+    final file = _playlist[index];
+    try {
+      final bytes = await file.readAsBytes();
+      await _loadBytes(bytes, file.name);
+      if (!mounted) return;
+      setState(() => _playlistIndex = index);
+      await _player.play();
+      if (mounted) {
+        _showSnack(
+          AppLocalizations.of(
+            context,
+          ).chipPlaylistNowPlaying(file.name, index + 1, _playlist.length),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnack(
+          AppLocalizations.of(context).chipFailedToOpenSharedFile(e.toString()),
+        );
+      }
+    }
   }
 
   Future<void> _loadSharedFile(SharedFile file) async {
@@ -241,9 +304,17 @@ class _ChiptunePageState extends State<ChiptunePage>
 
   VoidCallback? _nextButtonAction() {
     if (_randomMode) return _skipRandom;
+    final nextPlaylist = _nextPlaylistIndex();
+    if (nextPlaylist != null) return () => _playPlaylistIndex(nextPlaylist);
     final next = _nextArchivedId();
     if (next != null) return () => _playArchived(next);
     return null;
+  }
+
+  int? _nextPlaylistIndex() {
+    if (_playlistIndex < 0) return null;
+    final next = _playlistIndex + 1;
+    return next < _playlist.length ? next : null;
   }
 
   String? _nextArchivedId() {
@@ -262,6 +333,11 @@ class _ChiptunePageState extends State<ChiptunePage>
       _advanceRandom(stopOnFailure: true);
       return;
     }
+    final nextPlaylist = _nextPlaylistIndex();
+    if (nextPlaylist != null) {
+      _playPlaylistIndex(nextPlaylist);
+      return;
+    }
     final next = _nextArchivedId();
     if (next != null) _playArchived(next);
   }
@@ -269,10 +345,15 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _onPlaybackNext() async {
     if (_randomMode) {
       await _advanceRandom(stopOnFailure: false);
-    } else {
-      final next = _nextArchivedId();
-      if (next != null) _playArchived(next);
+      return;
     }
+    final nextPlaylist = _nextPlaylistIndex();
+    if (nextPlaylist != null) {
+      await _playPlaylistIndex(nextPlaylist);
+      return;
+    }
+    final next = _nextArchivedId();
+    if (next != null) _playArchived(next);
   }
 
   // ---- Random (The Mod Archive) ----
@@ -504,6 +585,11 @@ class _ChiptunePageState extends State<ChiptunePage>
           tooltip: l10n.chipRandomTooltip,
           onPressed: _startRandom,
         ),
+        IconButton(
+          tooltip: l10n.chipPlaylistTooltip,
+          icon: const Icon(Icons.queue_music_outlined),
+          onPressed: _pickPlaylist,
+        ),
         if (hasModule) ...[
           IconButton(
             tooltip: _visualizerEnabled
@@ -556,6 +642,7 @@ class _ChiptunePageState extends State<ChiptunePage>
             )
           : ChiptuneEmptyState(
               onFileSelected: _onFilePicked,
+              onPickPlaylist: _pickPlaylist,
               archivePanel: (_archive.isNotEmpty || _backendAvailable)
                   ? ChiptuneArchivePanel(
                       modules: _archive,

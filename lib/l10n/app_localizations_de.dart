@@ -276,6 +276,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipNextTrackTooltip => 'Nächster Titel';
 
   @override
+  String get chipPlaylistTooltip => 'Mehrere Dateien abspielen';
+
+  @override
+  String get chipPlaylistNoSupported =>
+      'Keine unterstützten Moduldateien ausgewählt';
+
+  @override
+  String chipPlaylistNowPlaying(Object current, Object name, Object total) {
+    return 'Wiedergabe: $name ($current/$total)';
+  }
+
+  @override
   String get chipRandomTitle => 'Zufälliges Stück';
 
   @override
