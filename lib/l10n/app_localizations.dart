@@ -392,11 +392,11 @@ abstract class AppLocalizations {
   /// **'Show visualizer'**
   String get chipShowVisualizer;
 
-  /// No description provided for @chipLoadAnother.
+  /// No description provided for @chipLoadFiles.
   ///
   /// In en, this message translates to:
-  /// **'Load another'**
-  String get chipLoadAnother;
+  /// **'Load files'**
+  String get chipLoadFiles;
 
   /// No description provided for @chipModuleArchived.
   ///
@@ -601,12 +601,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next track'**
   String get chipNextTrackTooltip;
-
-  /// No description provided for @chipPlaylistTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Play multiple files'**
-  String get chipPlaylistTooltip;
 
   /// No description provided for @chipPlaylistTitle.
   ///

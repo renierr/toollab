@@ -162,7 +162,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipShowVisualizer => 'Visualisierung einblenden';
 
   @override
-  String get chipLoadAnother => 'Andere laden';
+  String get chipLoadFiles => 'Dateien laden';
 
   @override
   String get chipModuleArchived => 'Modul archiviert';
@@ -274,9 +274,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chipNextTrackTooltip => 'Nächster Titel';
-
-  @override
-  String get chipPlaylistTooltip => 'Mehrere Dateien abspielen';
 
   @override
   String chipPlaylistTitle(Object count) {

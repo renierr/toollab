@@ -6,20 +6,18 @@ import 'package:tool_lab/widgets/file_drop_zone.dart';
 import '../chiptune_colors.dart';
 import '../config.dart';
 
-/// Initial state shown when no module is loaded: a drop zone plus the
-/// archive list (when there are saved modules to pick from).
+/// Initial state shown when no module is loaded: a multi-file drop zone plus
+/// the archive list (when there are saved modules to pick from).
 class ChiptuneEmptyState extends StatelessWidget {
-  final ValueChanged<XFile> onFileSelected;
-  final VoidCallback onPickPlaylist;
+  final ValueChanged<List<XFile>> onFilesSelected;
 
-  /// Desktop-only folder playlist action; null hides the button.
+  /// Desktop-only whole-folder action; null hides the button.
   final VoidCallback? onPickFolder;
   final Widget? archivePanel;
 
   const ChiptuneEmptyState({
     super.key,
-    required this.onFileSelected,
-    required this.onPickPlaylist,
+    required this.onFilesSelected,
     this.onPickFolder,
     this.archivePanel,
   });
@@ -35,33 +33,23 @@ class ChiptuneEmptyState extends StatelessWidget {
         children: [
           FileDropZone(
             compact: hasArchive,
+            multiple: true,
             allowedExtensions: ChiptuneTool.config.fileExtensions,
             typeLabel: l10n.chipEmptyTypeLabel,
             accentColor: ChiptuneColors.accent,
             icon: Icons.music_note_outlined,
             title: l10n.chipEmptyDropTitle,
             subtitle: l10n.chipEmptyDropSubtitle,
-            onFileSelected: onFileSelected,
+            onFilesSelected: onFilesSelected,
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: [
-              OutlinedButton.icon(
-                onPressed: onPickPlaylist,
-                icon: const Icon(Icons.queue_music_outlined),
-                label: Text(l10n.chipPlaylistTooltip),
-              ),
-              if (onPickFolder != null)
-                OutlinedButton.icon(
-                  onPressed: onPickFolder,
-                  icon: const Icon(Icons.folder_open_outlined),
-                  label: Text(l10n.chipFolderTooltip),
-                ),
-            ],
-          ),
+          if (onPickFolder != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onPickFolder,
+              icon: const Icon(Icons.folder_special_outlined),
+              label: Text(l10n.chipFolderTooltip),
+            ),
+          ],
           if (hasArchive) ...[const SizedBox(height: 12), archivePanel!],
         ],
       ),
