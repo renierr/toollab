@@ -864,7 +864,10 @@ class TreadmillControlState extends ChangeNotifier {
         heartRate = (70 + speed * 6 + Random().nextInt(6)).round();
         if (heartRate > 0) {
           hrmHistory.add(
-            HeartRateHistoryPoint(timestamp: DateTime.now(), heartRate: heartRate),
+            HeartRateHistoryPoint(
+              timestamp: DateTime.now(),
+              heartRate: heartRate,
+            ),
           );
         }
       }
