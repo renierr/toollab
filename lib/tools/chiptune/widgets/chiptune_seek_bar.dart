@@ -48,10 +48,11 @@ class _ChiptuneSeekBarState extends State<ChiptuneSeekBar> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentRow =
-        widget.position.order * widget.rowsPerPattern + widget.position.row;
-    final fraction = widget.totalRows > 0
-        ? (currentRow / widget.totalRows).clamp(0.0, 1.0)
+    final fraction = widget.total > Duration.zero
+        ? (widget.elapsed.inMicroseconds / widget.total.inMicroseconds).clamp(
+            0.0,
+            1.0,
+          )
         : 0.0;
     final displayFraction = _isDragging
         ? _dragFraction.clamp(0.0, 1.0)

@@ -86,10 +86,32 @@ class ChiptunePlayerView extends StatelessWidget {
               rowsPerPattern: module.rowsPerPattern,
               totalRows: player.totalRows,
               onSeekFraction: (f) {
-                final targetRow = (f * player.totalRows).floor();
-                final order = (targetRow / module.rowsPerPattern).floor();
-                final row = targetRow % module.rowsPerPattern;
-                onSeek(order, row);
+                final targetRow = (f * player.totalRows).round().clamp(
+                  0,
+                  player.totalRows,
+                );
+                int accumulated = 0;
+                for (int o = 0; o < module.sequence.length; o++) {
+                  final patIdx = module.sequence[o];
+                  final rowCount =
+                      (patIdx >= 0 && patIdx < module.patterns.length)
+                      ? module.patterns[patIdx].rows.length
+                      : 0;
+                  if (accumulated + rowCount > targetRow) {
+                    onSeek(o, targetRow - accumulated);
+                    return;
+                  }
+                  accumulated += rowCount;
+                }
+                if (module.sequence.isNotEmpty) {
+                  final lastOrder = module.sequence.length - 1;
+                  final patIdx = module.sequence.last;
+                  final lastRow =
+                      (patIdx >= 0 && patIdx < module.patterns.length)
+                      ? module.patterns[patIdx].rows.length - 1
+                      : 0;
+                  onSeek(lastOrder, lastRow);
+                }
               },
             ),
           ),
