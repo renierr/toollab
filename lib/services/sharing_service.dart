@@ -115,18 +115,27 @@ class SharingService {
 
   List<ToolModel> getMatchingTools(SharedFile file) {
     final mime = file.mimeType.toLowerCase();
+    final ext = _fileExtension(file.name);
     final matching = <ToolModel>[];
     for (final tool in ToolRegistry.all) {
-      if (tool.shareTarget != null) {
-        for (final pattern in tool.shareTarget!.accept) {
-          if (_mimeTypeMatches(mime, pattern.toLowerCase())) {
-            matching.add(tool);
-            break;
-          }
-        }
-      }
+      if (tool.shareTarget == null) continue;
+      final mimeMatch = tool.shareTarget!.accept.any(
+        (pattern) => _mimeTypeMatches(mime, pattern.toLowerCase()),
+      );
+      // Extension match covers files whose resolved MIME does not match a
+      // tool's declared accepts (cross-platform MIME resolution is unreliable,
+      // e.g. tracker modules resolve to audio/x-mod, not octet-stream).
+      final extMatch =
+          ext != null && tool.fileExtensions.any((e) => e.toLowerCase() == ext);
+      if (mimeMatch || extMatch) matching.add(tool);
     }
     return matching;
+  }
+
+  String? _fileExtension(String name) {
+    final dot = name.lastIndexOf('.');
+    if (dot < 0 || dot == name.length - 1) return null;
+    return name.substring(dot + 1).toLowerCase();
   }
 
   bool _mimeTypeMatches(String mime, String pattern) {

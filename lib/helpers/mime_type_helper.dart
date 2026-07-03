@@ -104,6 +104,8 @@ class MimeTypeHelper {
         return 'audio/x-xm';
       case 'it':
         return 'audio/x-it';
+      case 's3m':
+        return 'audio/x-s3m';
       // Video
       case 'mp4':
         return 'video/mp4';

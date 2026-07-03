@@ -17,7 +17,15 @@ class ChiptuneTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameChiptune,
     descriptionL10n: (l10n) => l10n.toolDescChiptune,
-    shareTarget: ShareTargetConfig(accept: ['application/octet-stream']),
+    shareTarget: ShareTargetConfig(
+      accept: [
+        'audio/x-mod',
+        'audio/x-xm',
+        'audio/x-it',
+        'audio/x-s3m',
+        'application/octet-stream',
+      ],
+    ),
     fileExtensions: ['mod', 'xm', 'it', 's3m'],
     createPage: (sd) => ChiptunePage(sharedFile: sd?.firstFile),
     syncDelegateFactory: ChiptuneSyncDelegate.new,
