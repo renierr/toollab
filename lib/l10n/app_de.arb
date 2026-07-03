@@ -85,6 +85,7 @@
   "chipNextRandomTooltip": "Nächstes Zufallsstück",
   "chipNextTrackTooltip": "Nächster Titel",
   "chipPlaylistTooltip": "Mehrere Dateien abspielen",
+  "chipPlaylistTitle": "Wiedergabeliste ({count})",
   "chipPlaylistNoSupported": "Keine unterstützten Moduldateien ausgewählt",
   "chipPlaylistNowPlaying": "Wiedergabe: {name} ({current}/{total})",
   "chipRandomTitle": "Zufälliges Stück",

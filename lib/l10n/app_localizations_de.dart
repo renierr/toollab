@@ -279,6 +279,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipPlaylistTooltip => 'Mehrere Dateien abspielen';
 
   @override
+  String chipPlaylistTitle(Object count) {
+    return 'Wiedergabeliste ($count)';
+  }
+
+  @override
   String get chipPlaylistNoSupported =>
       'Keine unterstützten Moduldateien ausgewählt';
 

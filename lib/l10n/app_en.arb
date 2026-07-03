@@ -88,6 +88,7 @@
   "chipNextRandomTooltip": "Next random tune",
   "chipNextTrackTooltip": "Next track",
   "chipPlaylistTooltip": "Play multiple files",
+  "chipPlaylistTitle": "Playlist ({count})",
   "chipPlaylistNoSupported": "No supported module files selected",
   "chipPlaylistNowPlaying": "Playing {name} ({current}/{total})",
   "chipRandomTitle": "Random Tune",

@@ -24,6 +24,9 @@ class ChiptunePlayerView extends StatelessWidget {
 
   /// When set (random mode), shows the tune's modarchive.org info + link.
   final ModArchiveTune? randomTune;
+
+  /// When set (playlist mode), shows the current multi-file queue.
+  final Widget? playlistPanel;
   final Widget archivePanel;
   final VoidCallback onPlayPause;
   final VoidCallback onStop;
@@ -43,6 +46,7 @@ class ChiptunePlayerView extends StatelessWidget {
     required this.currentVizId,
     required this.onVizChanged,
     this.randomTune,
+    this.playlistPanel,
     required this.archivePanel,
     required this.onPlayPause,
     required this.onStop,
@@ -118,6 +122,10 @@ class ChiptunePlayerView extends StatelessWidget {
         ],
         const SizedBox(height: 8),
         ChiptuneSampleList(module: module),
+        if (playlistPanel != null) ...[
+          const Divider(height: 24),
+          playlistPanel!,
+        ],
         const Divider(height: 24),
         archivePanel,
       ],

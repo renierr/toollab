@@ -608,6 +608,12 @@ abstract class AppLocalizations {
   /// **'Play multiple files'**
   String get chipPlaylistTooltip;
 
+  /// No description provided for @chipPlaylistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist ({count})'**
+  String chipPlaylistTitle(Object count);
+
   /// No description provided for @chipPlaylistNoSupported.
   ///
   /// In en, this message translates to:

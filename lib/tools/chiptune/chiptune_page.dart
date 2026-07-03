@@ -25,6 +25,7 @@ import 'modarchive_service.dart';
 import 'widgets/chiptune_archive_panel.dart';
 import 'widgets/chiptune_empty_state.dart';
 import 'widgets/chiptune_player_view.dart';
+import 'widgets/chiptune_playlist_panel.dart';
 import 'widgets/chiptune_random_button.dart';
 import 'widgets/modarchive_fetch_dialog.dart';
 import 'widgets/visualizations/chiptune_viz_registry.dart';
@@ -617,6 +618,14 @@ class _ChiptunePageState extends State<ChiptunePage>
               currentVizId: _currentVizId,
               onVizChanged: _setVizId,
               randomTune: _randomMode ? _currentTune : null,
+              playlistPanel: _playlistIndex >= 0
+                  ? ChiptunePlaylistPanel(
+                      fileNames: [for (final f in _playlist) f.name],
+                      currentIndex: _playlistIndex,
+                      inScrollableParent: true,
+                      onPlay: _playPlaylistIndex,
+                    )
+                  : null,
               archivePanel: ChiptuneArchivePanel(
                 modules: _archive,
                 canSave: _currentBytes != null,
