@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/collapsible_section.dart';
 import 'package:tool_lab/widgets/status_badge.dart';
 
 import '../chiptune_colors.dart';
@@ -23,37 +24,22 @@ class ChiptunePlaylistPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.queue_music_outlined,
-              size: 18,
-              color: ChiptuneColors.accent,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              l10n.chipPlaylistTitle(fileNames.length),
-              style: theme.textTheme.titleSmall,
-            ),
-          ],
+    return CollapsibleSection(
+      icon: Icons.queue_music_outlined,
+      iconColor: ChiptuneColors.accent,
+      title: l10n.chipPlaylistTitle(fileNames.length),
+      child: ListView.builder(
+        shrinkWrap: inScrollableParent,
+        physics: inScrollableParent
+            ? const NeverScrollableScrollPhysics()
+            : null,
+        itemCount: fileNames.length,
+        itemBuilder: (_, i) => _PlaylistItem(
+          fileName: fileNames[i],
+          isCurrent: i == currentIndex,
+          onPlay: () => onPlay(i),
         ),
-        ListView.builder(
-          shrinkWrap: inScrollableParent,
-          physics: inScrollableParent
-              ? const NeverScrollableScrollPhysics()
-              : null,
-          itemCount: fileNames.length,
-          itemBuilder: (_, i) => _PlaylistItem(
-            fileName: fileNames[i],
-            isCurrent: i == currentIndex,
-            onPlay: () => onPlay(i),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

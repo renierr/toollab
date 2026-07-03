@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/collapsible_section.dart';
 import 'package:tool_lab/widgets/status_badge.dart';
 
 import '../chiptune_archive.dart';
@@ -38,67 +39,53 @@ class ChiptuneArchivePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.library_music_outlined,
-              size: 18,
-              color: ChiptuneColors.accent,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              l10n.chipArchiveTitle(modules.length),
-              style: theme.textTheme.titleSmall,
-            ),
-            const Spacer(),
-            if (showSync)
-              IconButton(
-                onPressed: syncing ? null : onSync,
-                tooltip: l10n.chipSyncTooltip,
-                icon: syncing
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.sync, size: 20),
-              ),
-            TextButton.icon(
-              onPressed: canSave ? onSave : null,
-              icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-              label: Text(l10n.commonSave),
-            ),
-          ],
-        ),
-        if (modules.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            child: Text(
-              l10n.chipNoArchivedModules,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          )
-        else
-          ListView.builder(
-            shrinkWrap: inScrollableParent,
-            physics: inScrollableParent
-                ? const NeverScrollableScrollPhysics()
-                : null,
-            itemCount: modules.length,
-            itemBuilder: (_, i) => _ArchiveItem(
-              module: modules[i],
-              isCurrent: modules[i].id == currentId,
-              onPlay: () => onPlay(modules[i].id),
-              onDownload: () => onDownload(modules[i].id),
-              onDelete: () => onDelete(modules[i].id),
-            ),
+    return CollapsibleSection(
+      icon: Icons.library_music_outlined,
+      iconColor: ChiptuneColors.accent,
+      title: l10n.chipArchiveTitle(modules.length),
+      actions: [
+        if (showSync)
+          IconButton(
+            onPressed: syncing ? null : onSync,
+            tooltip: l10n.chipSyncTooltip,
+            icon: syncing
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.sync, size: 20),
           ),
+        TextButton.icon(
+          onPressed: canSave ? onSave : null,
+          icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+          label: Text(l10n.commonSave),
+        ),
       ],
+      child: modules.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              child: Text(
+                l10n.chipNoArchivedModules,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            )
+          : ListView.builder(
+              shrinkWrap: inScrollableParent,
+              physics: inScrollableParent
+                  ? const NeverScrollableScrollPhysics()
+                  : null,
+              itemCount: modules.length,
+              itemBuilder: (_, i) => _ArchiveItem(
+                module: modules[i],
+                isCurrent: modules[i].id == currentId,
+                onPlay: () => onPlay(modules[i].id),
+                onDownload: () => onDownload(modules[i].id),
+                onDelete: () => onDelete(modules[i].id),
+              ),
+            ),
     );
   }
 }
