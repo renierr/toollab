@@ -602,6 +602,36 @@ abstract class AppLocalizations {
   /// **'Next track'**
   String get chipNextTrackTooltip;
 
+  /// No description provided for @chipRandomMenuTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Random tune'**
+  String get chipRandomMenuTooltip;
+
+  /// No description provided for @chipRandomSourceModArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'The Mod Archive'**
+  String get chipRandomSourceModArchive;
+
+  /// No description provided for @chipRandomSourceServer.
+  ///
+  /// In en, this message translates to:
+  /// **'My collection (server)'**
+  String get chipRandomSourceServer;
+
+  /// No description provided for @chipServerRandomNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Playing {name} — from your collection'**
+  String chipServerRandomNowPlaying(Object name);
+
+  /// No description provided for @chipServerRandomFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection fetch failed: {error}'**
+  String chipServerRandomFailed(Object error);
+
   /// No description provided for @chipPlaylistTitle.
   ///
   /// In en, this message translates to:

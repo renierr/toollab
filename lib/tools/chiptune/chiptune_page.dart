@@ -18,6 +18,7 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'chiptune_archive.dart';
 import 'chiptune_sync_delegate.dart';
+import 'collection_service.dart';
 import 'config.dart';
 import 'engine/chiptune_player.dart';
 import 'engine/parser.dart';
@@ -42,6 +43,7 @@ class _ChiptunePageState extends State<ChiptunePage>
     with DisposeCleanup, WidgetsBindingObserver {
   final ChiptunePlayer _player = ChiptunePlayer();
   final ModArchiveService _modArchive = ModArchiveService();
+  final ChiptuneCollectionService _collection = ChiptuneCollectionService();
 
   Uint8List? _currentBytes;
   String _currentFileName = '';
@@ -55,6 +57,9 @@ class _ChiptunePageState extends State<ChiptunePage>
 
   bool _randomMode = false;
   ModArchiveTune? _currentTune;
+
+  /// Random playback from the user's own backend collection (no prefetch).
+  bool _serverRandomMode = false;
   bool _advancing = false;
 
   /// Prefetch of the next random tune; resolves to null if the fetch failed.
@@ -85,6 +90,7 @@ class _ChiptunePageState extends State<ChiptunePage>
     _player.shouldKeepPlaybackAlive = () =>
         !_looping &&
         (_randomMode ||
+            _serverRandomMode ||
             _nextPlaylistIndex() != null ||
             _nextArchivedId() != null);
 
@@ -162,6 +168,7 @@ class _ChiptunePageState extends State<ChiptunePage>
         _currentArchiveId = null;
         _playlistIndex = -1;
         _randomMode = false;
+        _serverRandomMode = false;
         _currentTune = null;
         _prefetch = null;
       });
@@ -314,6 +321,9 @@ class _ChiptunePageState extends State<ChiptunePage>
 
   VoidCallback? _nextButtonAction() {
     if (_randomMode) return _skipRandom;
+    if (_serverRandomMode) {
+      return () => _advanceServerRandom(stopOnFailure: false);
+    }
     final nextPlaylist = _nextPlaylistIndex();
     if (nextPlaylist != null) return () => _playPlaylistIndex(nextPlaylist);
     final next = _nextArchivedId();
@@ -343,6 +353,10 @@ class _ChiptunePageState extends State<ChiptunePage>
       _advanceRandom(stopOnFailure: true);
       return;
     }
+    if (_serverRandomMode) {
+      _advanceServerRandom(stopOnFailure: true);
+      return;
+    }
     final nextPlaylist = _nextPlaylistIndex();
     if (nextPlaylist != null) {
       _playPlaylistIndex(nextPlaylist);
@@ -355,6 +369,10 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _onPlaybackNext() async {
     if (_randomMode) {
       await _advanceRandom(stopOnFailure: false);
+      return;
+    }
+    if (_serverRandomMode) {
+      await _advanceServerRandom(stopOnFailure: false);
       return;
     }
     final nextPlaylist = _nextPlaylistIndex();
@@ -442,6 +460,45 @@ class _ChiptunePageState extends State<ChiptunePage>
           context,
         ).chipRandomNowPlaying(tune.title.isEmpty ? tune.fileName : tune.title),
       );
+    }
+  }
+
+  // ---- Random (my server collection) ----
+
+  Future<void> _startServerRandom() =>
+      _advanceServerRandom(stopOnFailure: false);
+
+  /// Fetches and plays a random module from the user's backend collection.
+  /// No prefetch — the next track is fetched only on song-end or Next.
+  Future<void> _advanceServerRandom({required bool stopOnFailure}) async {
+    if (_advancing) return;
+    _advancing = true;
+    setState(() => _fetchingNext = true);
+    final baseUrl = context.read<AppState>().syncServerUrl;
+    try {
+      final tune = await _collection.fetchRandom(baseUrl);
+      if (!mounted) return;
+      await _loadBytes(tune.bytes, tune.fileName);
+      if (!mounted) return;
+      setState(() => _serverRandomMode = true);
+      await _player.play();
+      if (mounted) {
+        _showSnack(
+          AppLocalizations.of(
+            context,
+          ).chipServerRandomNowPlaying(tune.fileName),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnack(
+          AppLocalizations.of(context).chipServerRandomFailed(e.toString()),
+        );
+        if (stopOnFailure) _player.stop();
+      }
+    } finally {
+      _advancing = false;
+      if (mounted) setState(() => _fetchingNext = false);
     }
   }
 
@@ -586,14 +643,20 @@ class _ChiptunePageState extends State<ChiptunePage>
     final l10n = AppLocalizations.of(context);
     final module = _player.module;
     final hasModule = module != null;
+    final hasServer = context.watch<AppState>().syncServerUrl.trim().isNotEmpty;
 
     return ToolLayout(
       title: ChiptuneTool.config.localizedName(l10n),
       actions: [
         ChiptuneRandomButton(
           busy: _fetchingNext,
-          tooltip: l10n.chipRandomTooltip,
-          onPressed: _startRandom,
+          tooltip: hasServer
+              ? l10n.chipRandomMenuTooltip
+              : l10n.chipRandomTooltip,
+          onModArchive: _startRandom,
+          onServerCollection: hasServer ? _startServerRandom : null,
+          modArchiveLabel: l10n.chipRandomSourceModArchive,
+          serverLabel: l10n.chipRandomSourceServer,
         ),
         IconButton(
           tooltip: l10n.chipLoadFiles,
@@ -651,7 +714,7 @@ class _ChiptunePageState extends State<ChiptunePage>
               onPlayPause: _playPause,
               onStop: _player.stop,
               onNext: _nextButtonAction(),
-              nextTooltip: _randomMode
+              nextTooltip: (_randomMode || _serverRandomMode)
                   ? l10n.chipNextRandomTooltip
                   : l10n.chipNextTrackTooltip,
               onLoopChanged: _setLooping,

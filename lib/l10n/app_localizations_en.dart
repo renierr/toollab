@@ -274,6 +274,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipNextTrackTooltip => 'Next track';
 
   @override
+  String get chipRandomMenuTooltip => 'Random tune';
+
+  @override
+  String get chipRandomSourceModArchive => 'The Mod Archive';
+
+  @override
+  String get chipRandomSourceServer => 'My collection (server)';
+
+  @override
+  String chipServerRandomNowPlaying(Object name) {
+    return 'Playing $name — from your collection';
+  }
+
+  @override
+  String chipServerRandomFailed(Object error) {
+    return 'Collection fetch failed: $error';
+  }
+
+  @override
   String chipPlaylistTitle(Object count) {
     return 'Playlist ($count)';
   }
