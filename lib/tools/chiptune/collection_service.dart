@@ -17,12 +17,14 @@ class CollectionTune {
   final String id;
   final String fileName;
   final String format;
+  final String title;
   final Uint8List bytes;
 
   const CollectionTune({
     required this.id,
     required this.fileName,
     required this.format,
+    required this.title,
     required this.bytes,
   });
 }
@@ -63,10 +65,12 @@ class ChiptuneCollectionService {
           'Module download failed (HTTP ${fileRes.statusCode})',
         );
       }
+      final fileName = (json['fileName'] ?? 'module').toString();
       return CollectionTune(
         id: (json['id'] ?? '').toString(),
-        fileName: (json['fileName'] ?? 'module').toString(),
+        fileName: fileName,
         format: (json['format'] ?? '').toString(),
+        title: (json['title'] ?? fileName).toString(),
         bytes: fileRes.bodyBytes,
       );
     } on ChiptuneCollectionException {

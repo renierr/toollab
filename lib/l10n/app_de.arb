@@ -85,6 +85,7 @@
   "chipNextRandomTooltip": "Nächstes Zufallsstück",
   "chipNextTrackTooltip": "Nächster Titel",
   "chipRandomMenuTooltip": "Zufälliges Stück",
+  "chipRandomSourceLabel": "Quelle",
   "chipRandomSourceModArchive": "The Mod Archive",
   "chipRandomSourceServer": "Meine Sammlung (Server)",
   "chipServerRandomNowPlaying": "Wiedergabe: {name} — aus deiner Sammlung",

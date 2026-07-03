@@ -608,6 +608,12 @@ abstract class AppLocalizations {
   /// **'Random tune'**
   String get chipRandomMenuTooltip;
 
+  /// No description provided for @chipRandomSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get chipRandomSourceLabel;
+
   /// No description provided for @chipRandomSourceModArchive.
   ///
   /// In en, this message translates to:

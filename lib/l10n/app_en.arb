@@ -88,6 +88,7 @@
   "chipNextRandomTooltip": "Next random tune",
   "chipNextTrackTooltip": "Next track",
   "chipRandomMenuTooltip": "Random tune",
+  "chipRandomSourceLabel": "Source",
   "chipRandomSourceModArchive": "The Mod Archive",
   "chipRandomSourceServer": "My collection (server)",
   "chipServerRandomNowPlaying": "Playing {name} — from your collection",

@@ -277,6 +277,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipRandomMenuTooltip => 'Random tune';
 
   @override
+  String get chipRandomSourceLabel => 'Source';
+
+  @override
   String get chipRandomSourceModArchive => 'The Mod Archive';
 
   @override

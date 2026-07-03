@@ -58,12 +58,16 @@ class _ChiptunePageState extends State<ChiptunePage>
   bool _randomMode = false;
   ModArchiveTune? _currentTune;
 
-  /// Random playback from the user's own backend collection (no prefetch).
+  /// Random playback from the user's own backend collection.
   bool _serverRandomMode = false;
+  CollectionTune? _currentServerTune;
   bool _advancing = false;
 
-  /// Prefetch of the next random tune; resolves to null if the fetch failed.
+  /// Prefetch of the next random tune (ModArchive); resolves to null if failed.
   Future<ModArchiveTune?>? _prefetch;
+
+  /// Prefetch of the next random tune (own server); resolves to null if failed.
+  Future<CollectionTune?>? _serverPrefetch;
   bool _fetchingNext = false;
 
   List<ArchivedModule> _archive = [];
@@ -170,7 +174,9 @@ class _ChiptunePageState extends State<ChiptunePage>
         _randomMode = false;
         _serverRandomMode = false;
         _currentTune = null;
+        _currentServerTune = null;
         _prefetch = null;
+        _serverPrefetch = null;
       });
     } catch (e) {
       if (mounted) {
@@ -387,8 +393,12 @@ class _ChiptunePageState extends State<ChiptunePage>
   // ---- Random (The Mod Archive) ----
 
   void _onNearEnd() {
-    if (!_randomMode || _looping) return;
-    _startPrefetch();
+    if (_looping) return;
+    if (_randomMode) {
+      _startPrefetch();
+    } else if (_serverRandomMode) {
+      _startServerPrefetch();
+    }
   }
 
   void _startPrefetch() {
@@ -468,19 +478,44 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _startServerRandom() =>
       _advanceServerRandom(stopOnFailure: false);
 
+  void _startServerPrefetch() {
+    if (_serverPrefetch != null) return;
+    setState(() => _fetchingNext = true);
+    final future = _fetchServerRandomOrNull();
+    _serverPrefetch = future;
+    future.whenComplete(() {
+      if (mounted) setState(() => _fetchingNext = false);
+    });
+  }
+
+  Future<CollectionTune?> _fetchServerRandomOrNull() async {
+    final baseUrl = context.read<AppState>().syncServerUrl;
+    try {
+      return await _collection.fetchRandom(baseUrl);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Fetches and plays a random module from the user's backend collection.
-  /// No prefetch — the next track is fetched only on song-end or Next.
+  /// Uses prefetched tune when available for gapless transition.
   Future<void> _advanceServerRandom({required bool stopOnFailure}) async {
     if (_advancing) return;
     _advancing = true;
     setState(() => _fetchingNext = true);
     final baseUrl = context.read<AppState>().syncServerUrl;
     try {
-      final tune = await _collection.fetchRandom(baseUrl);
+      final pending = _serverPrefetch;
+      _serverPrefetch = null;
+      CollectionTune? tune = pending != null ? await pending : null;
+      tune ??= await _collection.fetchRandom(baseUrl);
       if (!mounted) return;
       await _loadBytes(tune.bytes, tune.fileName);
       if (!mounted) return;
-      setState(() => _serverRandomMode = true);
+      setState(() {
+        _serverRandomMode = true;
+        _currentServerTune = tune;
+      });
       await _player.play();
       if (mounted) {
         _showSnack(
@@ -690,6 +725,7 @@ class _ChiptunePageState extends State<ChiptunePage>
               currentVizId: _currentVizId,
               onVizChanged: _setVizId,
               randomTune: _randomMode ? _currentTune : null,
+              serverTune: _serverRandomMode ? _currentServerTune : null,
               playlistPanel: _playlistIndex >= 0 && _playlist.length > 1
                   ? ChiptunePlaylistPanel(
                       fileNames: [for (final f in _playlist) f.name],

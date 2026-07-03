@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../chiptune_colors.dart';
+import '../collection_service.dart';
 import '../engine/chiptune_player.dart';
 import '../engine/module.dart';
 import '../modarchive_service.dart';
@@ -25,6 +28,9 @@ class ChiptunePlayerView extends StatelessWidget {
   /// When set (random mode), shows the tune's modarchive.org info + link.
   final ModArchiveTune? randomTune;
 
+  /// When set (server random mode), shows the collection tune's info.
+  final CollectionTune? serverTune;
+
   /// When set (playlist mode), shows the current multi-file queue.
   final Widget? playlistPanel;
   final Widget archivePanel;
@@ -46,6 +52,7 @@ class ChiptunePlayerView extends StatelessWidget {
     required this.currentVizId,
     required this.onVizChanged,
     this.randomTune,
+    this.serverTune,
     this.playlistPanel,
     required this.archivePanel,
     required this.onPlayPause,
@@ -120,6 +127,18 @@ class ChiptunePlayerView extends StatelessWidget {
             child: ChiptuneModArchiveInfo(tune: randomTune!),
           ),
         ],
+        if (serverTune != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: _ChiptuneCollectionInfo(tune: serverTune!),
+          ),
+        ],
         const SizedBox(height: 8),
         ChiptuneSampleList(module: module),
         if (playlistPanel != null) ...[
@@ -128,6 +147,53 @@ class ChiptunePlayerView extends StatelessWidget {
         ],
         const Divider(height: 24),
         archivePanel,
+      ],
+    );
+  }
+}
+
+/// Info card for a collection (own server) tune — shows title, file name,
+/// format and source label.
+class _ChiptuneCollectionInfo extends StatelessWidget {
+  final CollectionTune tune;
+
+  const _ChiptuneCollectionInfo({required this.tune});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          tune.title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: ChiptuneColors.accentBright,
+          ),
+        ),
+        Text(
+          tune.fileName,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ChiptuneDetailChip(
+              label: l10n.chipMetricFormat,
+              value: tune.format,
+            ),
+            ChiptuneDetailChip(
+              label: l10n.chipRandomSourceLabel,
+              value: l10n.chipRandomSourceServer,
+            ),
+          ],
+        ),
       ],
     );
   }
