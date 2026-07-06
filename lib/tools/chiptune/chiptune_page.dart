@@ -41,6 +41,11 @@ class ChiptunePage extends StatefulWidget {
 
 class _ChiptunePageState extends State<ChiptunePage>
     with DisposeCleanup, WidgetsBindingObserver {
+  /// How many random tracks to fetch-and-try before giving up when modules keep
+  /// failing to load. Bounds the skip loop so a run of bad modules can't spin
+  /// forever.
+  static const int _maxRandomLoadAttempts = 5;
+
   final ChiptunePlayer _player = ChiptunePlayer();
   final ModArchiveService _modArchive = ModArchiveService();
   final ChiptuneCollectionService _collection = ChiptuneCollectionService();
@@ -155,7 +160,16 @@ class _ChiptunePageState extends State<ChiptunePage>
 
   // ---- File loading ----
 
-  Future<void> _loadBytes(Uint8List bytes, String fileName) async {
+  /// Parses [bytes] and hands the module to the player. Returns `false` when the
+  /// module cannot be parsed (unplayable), so auto-advance paths can skip to the
+  /// next track instead of silently replaying the previous one. When
+  /// [notifyOnError] is false the parse-failure snackbar is suppressed — used by
+  /// retry/skip loops that only report once all candidates fail.
+  Future<bool> _loadBytes(
+    Uint8List bytes,
+    String fileName, {
+    bool notifyOnError = true,
+  }) async {
     try {
       final mod = parseModule(bytes);
       _player.loadModule(mod);
@@ -164,7 +178,7 @@ class _ChiptunePageState extends State<ChiptunePage>
         Duration.zero,
         _player.totalDuration,
       );
-      if (!mounted) return;
+      if (!mounted) return true;
       setState(() {
         _currentBytes = bytes;
         _currentFileName = fileName;
@@ -178,12 +192,14 @@ class _ChiptunePageState extends State<ChiptunePage>
         _prefetch = null;
         _serverPrefetch = null;
       });
+      return true;
     } catch (e) {
-      if (mounted) {
+      if (mounted && notifyOnError) {
         _showSnack(
           AppLocalizations.of(context).chipFailedToParseModule(e.toString()),
         );
       }
+      return false;
     }
   }
 
@@ -245,18 +261,25 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _playPlaylistIndex(int index) async {
     if (index < 0 || index >= _playlist.length) return;
     final file = _playlist[index];
+    bool loaded = false;
     try {
       final bytes = await file.readAsBytes();
-      await _loadBytes(bytes, file.name);
-      if (!mounted) return;
+      loaded = await _loadBytes(bytes, file.name, notifyOnError: false);
+    } catch (_) {
+      loaded = false;
+    }
+    if (!mounted) return;
+    if (loaded) {
       setState(() => _playlistIndex = index);
       await _player.play();
-    } catch (e) {
-      if (mounted) {
-        _showSnack(
-          AppLocalizations.of(context).chipFailedToOpenSharedFile(e.toString()),
-        );
-      }
+      return;
+    }
+    // Unplayable entry — skip to the next one instead of stalling on it.
+    final next = index + 1;
+    if (next < _playlist.length) {
+      await _playPlaylistIndex(next);
+    } else {
+      _showSnack(AppLocalizations.of(context).chipPlaylistNoSupported);
     }
   }
 
@@ -413,6 +436,9 @@ class _ChiptunePageState extends State<ChiptunePage>
   }
 
   /// Uses the prefetched tune when ready, else fetches live, for a gapless jump.
+  /// A fetched module that fails to load is skipped and another is pulled, up to
+  /// [_maxRandomLoadAttempts] times, so an unplayable random pick advances rather
+  /// than stalling.
   Future<void> _advanceRandom({required bool stopOnFailure}) async {
     if (_advancing) return;
     _advancing = true;
@@ -420,10 +446,15 @@ class _ChiptunePageState extends State<ChiptunePage>
     try {
       final pending = _prefetch;
       _prefetch = null;
-      ModArchiveTune? tune = pending != null ? await pending : null;
-      tune ??= await _modArchive.fetchRandom();
-      if (!mounted) return;
-      await _playRandomTune(tune);
+      for (int attempt = 0; attempt < _maxRandomLoadAttempts; attempt++) {
+        ModArchiveTune? tune = attempt == 0 && pending != null
+            ? await pending
+            : null;
+        tune ??= await _modArchive.fetchRandom();
+        if (!mounted) return;
+        if (await _playRandomTune(tune)) return;
+      }
+      if (stopOnFailure) _player.stop();
     } catch (_) {
       if (stopOnFailure) _player.stop();
     } finally {
@@ -435,7 +466,11 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _startRandom() async {
     final tune = await ModArchiveFetchDialog.show(context, _modArchive);
     if (tune == null || !mounted) return;
-    await _playRandomTune(tune);
+    if (!await _playRandomTune(tune) && mounted) {
+      _showSnack(
+        AppLocalizations.of(context).chipFailedToParseModule(tune.fileName),
+      );
+    }
   }
 
   /// Manual skip via the transport next button — keeps the fetch-progress modal.
@@ -446,17 +481,26 @@ class _ChiptunePageState extends State<ChiptunePage>
       autoPlay: true,
     );
     if (tune == null || !mounted) return;
-    await _playRandomTune(tune);
+    if (!await _playRandomTune(tune) && mounted) {
+      _showSnack(
+        AppLocalizations.of(context).chipFailedToParseModule(tune.fileName),
+      );
+    }
   }
 
-  Future<void> _playRandomTune(ModArchiveTune tune) async {
-    await _loadBytes(tune.bytes, tune.fileName);
-    if (!mounted) return;
+  /// Returns `true` when the tune loaded and playback started, `false` when the
+  /// module was unplayable (so callers can try the next one).
+  Future<bool> _playRandomTune(ModArchiveTune tune) async {
+    if (!await _loadBytes(tune.bytes, tune.fileName, notifyOnError: false)) {
+      return false;
+    }
+    if (!mounted) return false;
     setState(() {
       _randomMode = true;
       _currentTune = tune;
     });
     await _player.play();
+    return true;
   }
 
   // ---- Random (my server collection) ----
@@ -493,26 +537,40 @@ class _ChiptunePageState extends State<ChiptunePage>
     try {
       final pending = _serverPrefetch;
       _serverPrefetch = null;
-      CollectionTune? tune = pending != null ? await pending : null;
-      tune ??= await _collection.fetchRandom(baseUrl);
-      if (!mounted) return;
-      await _loadBytes(tune.bytes, tune.fileName);
-      if (!mounted) return;
-      final mod = _player.module;
-      if (mod != null && mod.title.isNotEmpty) {
-        tune = CollectionTune(
-          id: tune.id,
-          fileName: tune.fileName,
-          format: tune.format,
-          title: mod.title,
-          bytes: tune.bytes,
-        );
+      for (int attempt = 0; attempt < _maxRandomLoadAttempts; attempt++) {
+        CollectionTune? tune = attempt == 0 && pending != null
+            ? await pending
+            : null;
+        tune ??= await _collection.fetchRandom(baseUrl);
+        if (!mounted) return;
+        // Skip unplayable picks and fetch another instead of stalling on them.
+        if (!await _loadBytes(
+          tune.bytes,
+          tune.fileName,
+          notifyOnError: false,
+        )) {
+          continue;
+        }
+        if (!mounted) return;
+        final mod = _player.module;
+        if (mod != null && mod.title.isNotEmpty) {
+          tune = CollectionTune(
+            id: tune.id,
+            fileName: tune.fileName,
+            format: tune.format,
+            title: mod.title,
+            bytes: tune.bytes,
+          );
+        }
+        setState(() {
+          _serverRandomMode = true;
+          _currentServerTune = tune;
+        });
+        await _player.play();
+        return;
       }
-      setState(() {
-        _serverRandomMode = true;
-        _currentServerTune = tune;
-      });
-      await _player.play();
+      // Every attempt produced an unplayable module.
+      if (mounted && stopOnFailure) _player.stop();
     } catch (e) {
       if (mounted) {
         _showSnack(
@@ -571,7 +629,20 @@ class _ChiptunePageState extends State<ChiptunePage>
       return;
     }
     final entry = _archive.firstWhere((m) => m.id == id);
-    await _loadBytes(bytes, entry.fileName);
+    if (!await _loadBytes(bytes, entry.fileName, notifyOnError: false)) {
+      // Unplayable archived module — advance to the next entry if there is one.
+      if (!mounted) return;
+      final idx = _archive.indexWhere((m) => m.id == id);
+      if (idx >= 0 && idx + 1 < _archive.length) {
+        await _playArchived(_archive[idx + 1].id);
+      } else {
+        _showSnack(
+          AppLocalizations.of(context).chipFailedToParseModule(entry.fileName),
+        );
+      }
+      return;
+    }
+    if (!mounted) return;
     setState(() => _currentArchiveId = id);
     await _player.play();
   }
