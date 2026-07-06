@@ -251,13 +251,6 @@ class _ChiptunePageState extends State<ChiptunePage>
       if (!mounted) return;
       setState(() => _playlistIndex = index);
       await _player.play();
-      if (mounted) {
-        _showSnack(
-          AppLocalizations.of(
-            context,
-          ).chipPlaylistNowPlaying(file.name, index + 1, _playlist.length),
-        );
-      }
     } catch (e) {
       if (mounted) {
         _showSnack(
@@ -464,13 +457,6 @@ class _ChiptunePageState extends State<ChiptunePage>
       _currentTune = tune;
     });
     await _player.play();
-    if (mounted) {
-      _showSnack(
-        AppLocalizations.of(
-          context,
-        ).chipRandomNowPlaying(tune.title.isEmpty ? tune.fileName : tune.title),
-      );
-    }
   }
 
   // ---- Random (my server collection) ----
@@ -527,13 +513,6 @@ class _ChiptunePageState extends State<ChiptunePage>
         _currentServerTune = tune;
       });
       await _player.play();
-      if (mounted) {
-        _showSnack(
-          AppLocalizations.of(
-            context,
-          ).chipServerRandomNowPlaying(tune.fileName),
-        );
-      }
     } catch (e) {
       if (mounted) {
         _showSnack(

@@ -286,11 +286,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipRandomSourceServer => 'My collection (server)';
 
   @override
-  String chipServerRandomNowPlaying(Object name) {
-    return 'Playing $name — from your collection';
-  }
-
-  @override
   String chipServerRandomFailed(Object error) {
     return 'Collection fetch failed: $error';
   }
@@ -308,11 +303,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chipPlaylistNoSupported => 'No supported module files selected';
-
-  @override
-  String chipPlaylistNowPlaying(Object current, Object name, Object total) {
-    return 'Playing $name ($current/$total)';
-  }
 
   @override
   String get chipRandomTitle => 'Random Tune';
@@ -339,11 +329,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String chipRandomSourceLink(Object moduleId) {
     return 'View module #$moduleId on modarchive.org';
-  }
-
-  @override
-  String chipRandomNowPlaying(Object title) {
-    return 'Random: $title — from modarchive.org';
   }
 
   @override

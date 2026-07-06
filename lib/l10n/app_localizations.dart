@@ -626,12 +626,6 @@ abstract class AppLocalizations {
   /// **'My collection (server)'**
   String get chipRandomSourceServer;
 
-  /// No description provided for @chipServerRandomNowPlaying.
-  ///
-  /// In en, this message translates to:
-  /// **'Playing {name} — from your collection'**
-  String chipServerRandomNowPlaying(Object name);
-
   /// No description provided for @chipServerRandomFailed.
   ///
   /// In en, this message translates to:
@@ -661,12 +655,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No supported module files selected'**
   String get chipPlaylistNoSupported;
-
-  /// No description provided for @chipPlaylistNowPlaying.
-  ///
-  /// In en, this message translates to:
-  /// **'Playing {name} ({current}/{total})'**
-  String chipPlaylistNowPlaying(Object current, Object name, Object total);
 
   /// No description provided for @chipRandomTitle.
   ///
@@ -709,12 +697,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View module #{moduleId} on modarchive.org'**
   String chipRandomSourceLink(Object moduleId);
-
-  /// No description provided for @chipRandomNowPlaying.
-  ///
-  /// In en, this message translates to:
-  /// **'Random: {title} — from modarchive.org'**
-  String chipRandomNowPlaying(Object title);
 
   /// No description provided for @chipMetricFormat.
   ///
