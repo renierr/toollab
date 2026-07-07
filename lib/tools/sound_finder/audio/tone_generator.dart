@@ -15,9 +15,16 @@ enum ToneWaveform { sine, square, triangle, sawtooth }
 class ToneGenerator {
   static const int _sampleRate = 48000;
   static const int _chunkFrames = 4096;
-  static const int _initialRounds = 8;
+  static const int _initialRounds = 40; // ~3.4 s pre-fill before playback
   static const int _pushRounds = 4;
   static const Duration _pushInterval = Duration(milliseconds: 200);
+
+  // A non-zero rebuffer window lets SoLoud pause-and-resume on an underrun
+  // instead of ending the stream, and a wide buffer target absorbs background
+  // feed-timer throttling so the tone keeps playing in long sessions.
+  static const double _bufferingTimeNeeds = 2;
+  static const int _bufferTargetSeconds = 8;
+  static const Duration _maxBufferDuration = Duration(seconds: 12);
 
   SoundHandle? _handle;
   AudioSource? _stream;
@@ -61,20 +68,58 @@ class ToneGenerator {
     _phase = 0;
     _totalPushedFrames = 0;
     _startedAt = 0;
-    _stream = SoLoud.instance.setBufferStream(
-      sampleRate: _sampleRate,
-      channels: Channels.mono,
-      format: BufferType.f32le,
-      bufferingType: BufferingType.released,
-      bufferingTimeNeeds: 0,
-      maxBufferSizeDuration: const Duration(seconds: 4),
-    );
+    _stream = _openStream();
 
     _push(_initialRounds);
     _handle = SoLoud.instance.play(_stream!, volume: _volume);
     _isPlaying = true;
     _startedAt = DateTime.now().microsecondsSinceEpoch;
     _schedule();
+  }
+
+  AudioSource _openStream() {
+    return SoLoud.instance.setBufferStream(
+      sampleRate: _sampleRate,
+      channels: Channels.mono,
+      format: BufferType.f32le,
+      bufferingType: BufferingType.released,
+      bufferingTimeNeeds: _bufferingTimeNeeds,
+      maxBufferSizeDuration: _maxBufferDuration,
+    );
+  }
+
+  /// Recreates the buffer stream after it ended (e.g. a long background
+  /// underrun) so the tone resumes instead of dying permanently. Phase is kept
+  /// continuous across the recovery.
+  void _recoverStream() {
+    if (!_isPlaying) return;
+    debugPrint('[ToneGenerator] stream ended; recovering');
+
+    final SoundHandle? oldHandle = _handle;
+    final AudioSource? oldStream = _stream;
+    _handle = null;
+    _stream = null;
+    if (oldHandle != null) {
+      unawaited(SoLoud.instance.stop(oldHandle).catchError((_) {}));
+    }
+    if (oldStream != null) {
+      try {
+        SoLoud.instance.disposeSource(oldStream);
+      } catch (_) {}
+    }
+
+    _totalPushedFrames = 0;
+    _startedAt = 0;
+    try {
+      _stream = _openStream();
+      _push(_initialRounds);
+      _handle = SoLoud.instance.play(_stream!, volume: _volume);
+      _startedAt = DateTime.now().microsecondsSinceEpoch;
+      _schedule();
+    } catch (e) {
+      debugPrint('[ToneGenerator] recovery failed: $e');
+      _isPlaying = false;
+    }
   }
 
   void _schedule() {
@@ -84,15 +129,19 @@ class ToneGenerator {
   void _onTimer() {
     if (_pushing || _stream == null) return;
     _pushing = true;
+    bool ended = false;
     try {
       _push(_pushRounds);
     } on SoLoudStreamEndedAlreadyCppException {
-      _isPlaying = false;
-      _feedTimer = null;
+      ended = true;
     } catch (e) {
       debugPrint('[ToneGenerator] push failed: $e');
     } finally {
       _pushing = false;
+    }
+    if (ended) {
+      _recoverStream();
+      return;
     }
     if (_isPlaying) _schedule();
   }
@@ -107,7 +156,9 @@ class ToneGenerator {
   void _push(int rounds) {
     final AudioSource? stream = _stream;
     if (stream == null) return;
-    if (_estimatedBufferedFrames() >= 2 * _sampleRate) return;
+    if (_estimatedBufferedFrames() >= _bufferTargetSeconds * _sampleRate) {
+      return;
+    }
 
     final int total = rounds * _chunkFrames;
     _totalPushedFrames += total;

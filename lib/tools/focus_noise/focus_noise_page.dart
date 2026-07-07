@@ -27,7 +27,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   static const String _keyBreathingMode = 'breathing_mode';
   static const String _keyTimerCustomMinutes = 'timer_custom_minutes';
 
-  final FocusNoisePlayer _player = FocusNoisePlayer();
+  final FocusNoisePlayer _player = FocusNoisePlayer.instance;
 
   FocusNoiseSound _selectedSound = FocusNoiseCatalog.sounds.first;
   double _volume = 0.65;
@@ -49,8 +49,15 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   @override
   void initState() {
     super.initState();
+    // Reuse the shared player and reflect any playback still running in the
+    // background instead of tearing it down on page leave.
+    _isPlaying = _player.isPlaying;
+    if (_isPlaying && _player.currentSound != null) {
+      _selectedSound = _player.currentSound!;
+      _volume = _player.volume;
+    }
     _player.onExternalStop = _onPlayerExternalStop;
-    onDispose(() => _player.dispose());
+    onDispose(() => _player.onExternalStop = null);
     onDispose(() => _timerTicker?.cancel());
     onDispose(() => _breathingTimer?.cancel());
     onDispose(() => _breathingWakeLock?.release());
@@ -74,10 +81,14 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
 
     if (!mounted) return;
     setState(() {
-      if (soundId != null && soundId.isNotEmpty) {
-        _selectedSound = FocusNoiseCatalog.byId(soundId);
+      // When returning to an active session, keep the sound/volume that is
+      // actually playing rather than the last persisted values.
+      if (!_player.isPlaying) {
+        if (soundId != null && soundId.isNotEmpty) {
+          _selectedSound = FocusNoiseCatalog.byId(soundId);
+        }
+        _volume = double.tryParse(volumeRaw ?? '')?.clamp(0.0, 1.0) ?? 0.65;
       }
-      _volume = double.tryParse(volumeRaw ?? '')?.clamp(0.0, 1.0) ?? 0.65;
       _breathingMode = switch (modeRaw) {
         'box' => FocusBreathingMode.box,
         'calm' => FocusBreathingMode.calm,
@@ -85,7 +96,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
       };
       _customMinutes = int.tryParse(customRaw ?? '')?.clamp(1, 1440) ?? 30;
     });
-    _player.setVolume(_volume);
+    if (!_player.isPlaying) _player.setVolume(_volume);
   }
 
   Future<void> _selectSound(FocusNoiseSound sound) async {

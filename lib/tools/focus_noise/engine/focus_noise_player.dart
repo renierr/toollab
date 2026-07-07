@@ -9,12 +9,26 @@ import '../focus_noise_sound.dart';
 import 'noise_pcm_generator.dart';
 
 class FocusNoisePlayer {
+  FocusNoisePlayer._();
+
+  /// Shared instance so playback survives leaving the tool page and keeps
+  /// running in the background via the foreground service.
+  static final FocusNoisePlayer instance = FocusNoisePlayer._();
+
   static const int _sampleRate = 48000;
   static const int _channels = 2;
   static const int _chunkFrames = 4096;
   static const int _pushRounds = 24;
   static const int _initialRounds = 96;
   static const Duration _pushInterval = Duration(seconds: 2);
+
+  // A non-zero rebuffer window lets SoLoud pause-and-resume on an underrun
+  // instead of ending the stream. Combined with a wide buffer target it keeps
+  // generated audio alive when Android throttles the feed timer in the
+  // background.
+  static const double _bufferingTimeNeeds = 2;
+  static const int _bufferTargetSeconds = 20;
+  static const Duration _maxBufferDuration = Duration(seconds: 30);
 
   final NoisePcmGenerator _generator = NoisePcmGenerator(
     sampleRate: _sampleRate,
@@ -85,14 +99,7 @@ class FocusNoisePlayer {
     _generator.reset();
     _startedAt = 0;
     _totalPushedFrames = 0;
-    _stream = SoLoud.instance.setBufferStream(
-      sampleRate: _sampleRate,
-      channels: Channels.stereo,
-      format: BufferType.f32le,
-      bufferingType: BufferingType.released,
-      bufferingTimeNeeds: 0,
-      maxBufferSizeDuration: const Duration(seconds: 16),
-    );
+    _stream = _openGeneratedStream();
 
     _push(type, _initialRounds);
     _handle = SoLoud.instance.play(_stream!, volume: _volume);
@@ -102,6 +109,50 @@ class FocusNoisePlayer {
     _schedulePush(type);
   }
 
+  AudioSource _openGeneratedStream() {
+    return SoLoud.instance.setBufferStream(
+      sampleRate: _sampleRate,
+      channels: Channels.stereo,
+      format: BufferType.f32le,
+      bufferingType: BufferingType.released,
+      bufferingTimeNeeds: _bufferingTimeNeeds,
+      maxBufferSizeDuration: _maxBufferDuration,
+    );
+  }
+
+  /// Recreates the buffer stream after it ended (e.g. a long background
+  /// underrun) so playback resumes instead of dying permanently.
+  void _recoverGeneratedStream(GeneratedNoiseType type) {
+    if (!_isPlaying) return;
+    debugPrint('[FocusNoisePlayer] generated stream ended; recovering');
+
+    final SoundHandle? oldHandle = _handle;
+    final AudioSource? oldStream = _stream;
+    _handle = null;
+    _stream = null;
+    if (oldHandle != null) {
+      unawaited(SoLoud.instance.stop(oldHandle).catchError((_) {}));
+    }
+    if (oldStream != null) {
+      try {
+        SoLoud.instance.disposeSource(oldStream);
+      } catch (_) {}
+    }
+
+    _startedAt = 0;
+    _totalPushedFrames = 0;
+    try {
+      _stream = _openGeneratedStream();
+      _push(type, _initialRounds);
+      _handle = SoLoud.instance.play(_stream!, volume: _volume);
+      _startedAt = DateTime.now().microsecondsSinceEpoch;
+      _schedulePush(type);
+    } catch (e) {
+      debugPrint('[FocusNoisePlayer] recovery failed: $e');
+      _isPlaying = false;
+    }
+  }
+
   void _schedulePush(GeneratedNoiseType type) {
     _feedTimer = Timer(_pushInterval, () => _onTimer(type));
   }
@@ -109,15 +160,19 @@ class FocusNoisePlayer {
   void _onTimer(GeneratedNoiseType type) {
     if (_pushing || _stream == null) return;
     _pushing = true;
+    bool ended = false;
     try {
       _push(type, _pushRounds);
     } on SoLoudStreamEndedAlreadyCppException {
-      _isPlaying = false;
-      _feedTimer = null;
+      ended = true;
     } catch (e) {
       debugPrint('[FocusNoisePlayer] Push failed: $e');
     } finally {
       _pushing = false;
+    }
+    if (ended) {
+      _recoverGeneratedStream(type);
+      return;
     }
     if (_isPlaying) {
       _schedulePush(type);
@@ -133,7 +188,9 @@ class FocusNoisePlayer {
 
   void _push(GeneratedNoiseType type, int rounds) {
     if (_stream == null) return;
-    if (_estimatedBufferedFrames() >= 12 * _sampleRate) return;
+    if (_estimatedBufferedFrames() >= _bufferTargetSeconds * _sampleRate) {
+      return;
+    }
     final int totalFrames = rounds * _chunkFrames;
     _totalPushedFrames += totalFrames;
     final Float32List buffer = Float32List(totalFrames * _channels);
