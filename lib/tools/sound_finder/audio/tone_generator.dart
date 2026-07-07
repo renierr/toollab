@@ -42,6 +42,10 @@ class ToneGenerator {
   String notificationTitle = 'Tone active';
   String notificationText = 'ToolLab is generating a tone';
 
+  /// Invoked when playback is stopped from outside the app (the notification's
+  /// stop action), so the owning state can sync its UI flags.
+  VoidCallback? onExternalStop;
+
   bool get isPlaying => _isPlaying;
   double get frequency => _frequency;
   ToneWaveform get waveform => _waveform;
@@ -193,7 +197,10 @@ class ToneGenerator {
   }
 
   void _handleNotificationAction(String action) {
-    if (action == 'stop') stop();
+    if (action == 'stop') {
+      unawaited(stop());
+      onExternalStop?.call();
+    }
   }
 
   Future<void> dispose() async {

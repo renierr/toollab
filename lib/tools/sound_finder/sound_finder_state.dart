@@ -63,7 +63,14 @@ class SoundFinderState extends ChangeNotifier {
 
   SoundFinderState() {
     _micSub = _mic.stream.listen(_onAnalysis);
+    _tone.onExternalStop = _onToneExternalStop;
     _restore();
+  }
+
+  void _onToneExternalStop() {
+    _tonePlaying = false;
+    _toneOwner = null;
+    notifyListeners();
   }
 
   // Getters.
@@ -293,10 +300,11 @@ class SoundFinderState extends ChangeNotifier {
     if (_mode != SfMode.generator) await ensureMic();
   }
 
-  /// Called when the tool page is disposed. Releases the mic and any tone so
-  /// the app-lifetime state holds no active audio resources in the background.
+  /// Called when the tool page is disposed. Releases the mic, but keeps any
+  /// playing tone alive in the background via the foreground service — it is
+  /// stopped from the notification's stop action or when playback is toggled
+  /// off again in the tool.
   Future<void> onPageLeave() async {
-    await _stopTone();
     await _stopMic();
     _peakHoldDb = -90;
     _referenceDb = null;
