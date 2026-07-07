@@ -28,6 +28,7 @@ import 'package:tool_lab/tools/code_highlight/config.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/config.dart';
 import 'package:tool_lab/tools/string_transformer/config.dart';
 import 'package:tool_lab/tools/treadmill_control/config.dart';
+import 'package:tool_lab/tools/sound_finder/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -56,6 +57,7 @@ class ToolRegistry {
     CalculatorTool.config,
     BubbleLevelTool.config,
     EmfDetectorTool.config,
+    SoundFinderTool.config,
     DeviceInfoTool.config,
     NfcTagLabTool.config,
     PdfViewerTool.config,

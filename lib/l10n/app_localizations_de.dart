@@ -4796,4 +4796,152 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get exportHistory => 'Workouts exportieren';
+
+  @override
+  String get toolNameSoundFinder => 'Sound Finder';
+
+  @override
+  String get toolDescSoundFinder =>
+      'Raumgeräusche mit dem Mikrofon orten, überdecken und erzeugen';
+
+  @override
+  String get sfModeTracker => 'Orten';
+
+  @override
+  String get sfModeCounter => 'Gegenschall';
+
+  @override
+  String get sfModeGenerator => 'Generator';
+
+  @override
+  String get sfStop => 'Stopp';
+
+  @override
+  String get sfPlayTone => 'Ton abspielen';
+
+  @override
+  String get sfPlayCounter => 'Gegenton abspielen';
+
+  @override
+  String get sfMicDeniedTitle => 'Mikrofonberechtigung nötig';
+
+  @override
+  String get sfMicDeniedBody =>
+      'Erlaube den Mikrofonzugriff, um Raumgeräusche zu orten und zu analysieren.';
+
+  @override
+  String get sfMicUnavailableTitle => 'Mikrofonaufnahme nicht verfügbar';
+
+  @override
+  String get sfMicUnavailableBody =>
+      'Live-Mikrofonanalyse wird auf dieser Plattform nicht unterstützt. Der Frequenzgenerator funktioniert weiterhin.';
+
+  @override
+  String get sfGrantPermission => 'Zugriff erlauben';
+
+  @override
+  String get sfOpenGenerator => 'Generator öffnen';
+
+  @override
+  String get sfTrackerTitle => 'Quelle orten';
+
+  @override
+  String get sfTrackerHint =>
+      'Gehe langsam durch den Raum. Messwert und Hinweis reagieren auf die Lautstärke – lauter heißt näher an der Quelle.';
+
+  @override
+  String get sfLevel => 'Pegel';
+
+  @override
+  String get sfDominant => 'Dominant';
+
+  @override
+  String get sfPeakHold => 'Spitze';
+
+  @override
+  String get sfGuidanceHotter => 'Wärmer – näher an der Quelle';
+
+  @override
+  String get sfGuidanceColder => 'Kälter – du entfernst dich';
+
+  @override
+  String get sfGuidanceSteady => 'Konstant – bewege dich für neue Werte';
+
+  @override
+  String get sfGuidanceSilent => 'Zu leise – kein klares Geräusch erkannt';
+
+  @override
+  String get sfSetReference => 'Punkt merken';
+
+  @override
+  String get sfClearReference => 'Löschen';
+
+  @override
+  String get sfResetPeak => 'Spitze zurücksetzen';
+
+  @override
+  String get sfVsReference => 'ggü. Merkpunkt';
+
+  @override
+  String get sfSpectrum => 'Spektrum';
+
+  @override
+  String get sfCounterTitle => 'Gegen-/Maskierton';
+
+  @override
+  String get sfCounterDisclaimer =>
+      'Ein Handylautsprecher kann Raumlärm nicht wirklich auslöschen. Dies spielt einen passenden Ton (optional phaseninvertiert) plus optionales Maskierrauschen, um das Geräusch weniger auffällig zu machen.';
+
+  @override
+  String get sfDetected => 'Erkannt';
+
+  @override
+  String get sfUseDetected => 'Übernehmen';
+
+  @override
+  String get sfCounterMicOff =>
+      'Mikrofonanalyse ist aus – stelle die Zielfrequenz unten manuell ein.';
+
+  @override
+  String get sfTargetFrequency => 'Zielfrequenz';
+
+  @override
+  String get sfWaveform => 'Wellenform';
+
+  @override
+  String get sfPhase => 'Phase';
+
+  @override
+  String get sfInvertPhase => 'Phase invertieren (180°)';
+
+  @override
+  String get sfMaskNoise => 'Maskierrauschen';
+
+  @override
+  String get sfVolume => 'Lautstärke';
+
+  @override
+  String get sfGeneratorTitle => 'Frequenzgenerator';
+
+  @override
+  String get sfGeneratorHint =>
+      'Wähle Frequenz und Wellenform, um einen reinen Testton zu erzeugen.';
+
+  @override
+  String get sfWaveSine => 'Sinus';
+
+  @override
+  String get sfWaveSquare => 'Rechteck';
+
+  @override
+  String get sfWaveTriangle => 'Dreieck';
+
+  @override
+  String get sfWaveSawtooth => 'Sägezahn';
+
+  @override
+  String get sfToneNotificationTitle => 'Ton aktiv';
+
+  @override
+  String get sfToneNotificationText => 'ToolLab erzeugt einen Ton';
 }

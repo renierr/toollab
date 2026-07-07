@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_classic_bluetooth
   geolocator_windows
   pasteboard
+  record_windows
   share_plus
   universal_ble
   url_launcher_windows

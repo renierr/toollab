@@ -1,0 +1,204 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
+import 'package:record/record.dart';
+
+import 'fft.dart';
+
+enum MicStartResult { ok, denied, unavailable }
+
+/// A single frame of microphone analysis.
+class MicAnalysis {
+  final double rms; // 0..1 linear loudness of the window
+  final double db; // dBFS (<= 0), loudness proxy for the tracker
+  final double peakFreqHz; // dominant frequency in the window
+  final double peakLevel; // linear magnitude of the dominant bin
+  final Float64List bars; // log-spaced spectrum bars, each 0..1 (dB scaled)
+
+  const MicAnalysis({
+    required this.rms,
+    required this.db,
+    required this.peakFreqHz,
+    required this.peakLevel,
+    required this.bars,
+  });
+
+  static const int barCount = 48;
+
+  factory MicAnalysis.zero() => MicAnalysis(
+    rms: 0,
+    db: -90,
+    peakFreqHz: 0,
+    peakLevel: 0,
+    bars: Float64List(barCount),
+  );
+}
+
+/// Captures raw, unfiltered microphone PCM and derives loudness + a frequency
+/// spectrum from it. Auto-gain / echo / noise suppression are disabled so the
+/// mic stays as sensitive and unprocessed as possible.
+class MicAnalyzer {
+  static const int sampleRate = 44100;
+  static const int fftSize = 4096; // ~93 ms window, ~10.8 Hz bin resolution
+  static const double _minFreqHz = 20;
+
+  final AudioRecorder _recorder = AudioRecorder();
+  StreamSubscription<Uint8List>? _sub;
+  final Float64List _ring = Float64List(fftSize);
+  int _filled = 0;
+
+  final StreamController<MicAnalysis> _controller =
+      StreamController<MicAnalysis>.broadcast();
+  Stream<MicAnalysis> get stream => _controller.stream;
+
+  bool _running = false;
+  bool get isRunning => _running;
+
+  Future<bool> hasPermission() async {
+    try {
+      return await _recorder.hasPermission();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<MicStartResult> start() async {
+    if (_running) return MicStartResult.ok;
+
+    bool granted;
+    try {
+      granted = await _recorder.hasPermission();
+    } catch (e) {
+      debugPrint('[MicAnalyzer] permission check failed: $e');
+      return MicStartResult.unavailable;
+    }
+    if (!granted) return MicStartResult.denied;
+
+    try {
+      final Stream<Uint8List> stream = await _recorder.startStream(
+        const RecordConfig(
+          encoder: AudioEncoder.pcm16bits,
+          sampleRate: sampleRate,
+          numChannels: 1,
+          autoGain: false,
+          echoCancel: false,
+          noiseSuppress: false,
+        ),
+      );
+      _filled = 0;
+      _sub = stream.listen(
+        _onData,
+        onError: (Object e) => debugPrint('[MicAnalyzer] stream error: $e'),
+      );
+      _running = true;
+      return MicStartResult.ok;
+    } catch (e) {
+      debugPrint('[MicAnalyzer] start failed: $e');
+      return MicStartResult.unavailable;
+    }
+  }
+
+  void _onData(Uint8List bytes) {
+    final int count = bytes.length ~/ 2;
+    final ByteData view = bytes.buffer.asByteData(
+      bytes.offsetInBytes,
+      count * 2,
+    );
+    for (int i = 0; i < count; i++) {
+      _ring[_filled] = view.getInt16(i * 2, Endian.little) / 32768.0;
+      _filled++;
+      if (_filled == fftSize) {
+        _analyze();
+        _filled = 0;
+      }
+    }
+  }
+
+  void _analyze() {
+    final SpectrumResult spec = Fft.magnitudeSpectrum(
+      Float64List.fromList(_ring),
+      sampleRate,
+    );
+    final Float64List mags = spec.magnitudes;
+
+    double sumSq = 0;
+    for (int i = 0; i < fftSize; i++) {
+      sumSq += _ring[i] * _ring[i];
+    }
+    final double rms = math.sqrt(sumSq / fftSize);
+    final double db = rms > 1e-7 ? 20 * (math.log(rms) / math.ln10) : -90.0;
+
+    final int minBin = math.max(1, (_minFreqHz / spec.binHz).floor());
+    int peakIdx = minBin;
+    double peakVal = 0;
+    for (int i = minBin; i < mags.length; i++) {
+      if (mags[i] > peakVal) {
+        peakVal = mags[i];
+        peakIdx = i;
+      }
+    }
+
+    // Parabolic interpolation around the peak for sub-bin frequency accuracy.
+    double peakFreq = peakIdx * spec.binHz;
+    if (peakIdx > 0 && peakIdx < mags.length - 1) {
+      final double a = mags[peakIdx - 1];
+      final double b = mags[peakIdx];
+      final double c = mags[peakIdx + 1];
+      final double denom = a - 2 * b + c;
+      if (denom != 0) {
+        peakFreq = (peakIdx + 0.5 * (a - c) / denom) * spec.binHz;
+      }
+    }
+
+    _controller.add(
+      MicAnalysis(
+        rms: rms,
+        db: db,
+        peakFreqHz: peakFreq,
+        peakLevel: peakVal,
+        bars: _buildBars(mags, spec.binHz),
+      ),
+    );
+  }
+
+  Float64List _buildBars(Float64List mags, double binHz) {
+    final bars = Float64List(MicAnalysis.barCount);
+    final double logMin = math.log(_minFreqHz);
+    final double logMax = math.log(sampleRate / 2);
+    for (int b = 0; b < MicAnalysis.barCount; b++) {
+      final double lo = math.exp(
+        logMin + (logMax - logMin) * b / MicAnalysis.barCount,
+      );
+      final double hi = math.exp(
+        logMin + (logMax - logMin) * (b + 1) / MicAnalysis.barCount,
+      );
+      final int loBin = (lo / binHz).floor().clamp(1, mags.length - 1);
+      final int hiBin = (hi / binHz).ceil().clamp(1, mags.length);
+      double peak = 0;
+      for (int i = loBin; i < hiBin; i++) {
+        if (mags[i] > peak) peak = mags[i];
+      }
+      final double d = peak > 1e-7 ? 20 * (math.log(peak) / math.ln10) : -80.0;
+      bars[b] = ((d + 80) / 80).clamp(0.0, 1.0);
+    }
+    return bars;
+  }
+
+  Future<void> stop() async {
+    _running = false;
+    await _sub?.cancel();
+    _sub = null;
+    try {
+      await _recorder.stop();
+    } catch (_) {}
+  }
+
+  Future<void> dispose() async {
+    await stop();
+    try {
+      await _recorder.dispose();
+    } catch (_) {}
+    await _controller.close();
+  }
+}

@@ -8665,6 +8665,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export Workouts'**
   String get exportHistory;
+
+  /// No description provided for @toolNameSoundFinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound Finder'**
+  String get toolNameSoundFinder;
+
+  /// No description provided for @toolDescSoundFinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Locate, mask and generate room sounds with the microphone'**
+  String get toolDescSoundFinder;
+
+  /// No description provided for @sfModeTracker.
+  ///
+  /// In en, this message translates to:
+  /// **'Locate'**
+  String get sfModeTracker;
+
+  /// No description provided for @sfModeCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter'**
+  String get sfModeCounter;
+
+  /// No description provided for @sfModeGenerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Generator'**
+  String get sfModeGenerator;
+
+  /// No description provided for @sfStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get sfStop;
+
+  /// No description provided for @sfPlayTone.
+  ///
+  /// In en, this message translates to:
+  /// **'Play tone'**
+  String get sfPlayTone;
+
+  /// No description provided for @sfPlayCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Play counter tone'**
+  String get sfPlayCounter;
+
+  /// No description provided for @sfMicDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission needed'**
+  String get sfMicDeniedTitle;
+
+  /// No description provided for @sfMicDeniedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant microphone access to locate and analyze room sounds.'**
+  String get sfMicDeniedBody;
+
+  /// No description provided for @sfMicUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone capture unavailable'**
+  String get sfMicUnavailableTitle;
+
+  /// No description provided for @sfMicUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Live microphone analysis isn\'t supported on this platform. The frequency generator still works.'**
+  String get sfMicUnavailableBody;
+
+  /// No description provided for @sfGrantPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant access'**
+  String get sfGrantPermission;
+
+  /// No description provided for @sfOpenGenerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Open generator'**
+  String get sfOpenGenerator;
+
+  /// No description provided for @sfTrackerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Locate the source'**
+  String get sfTrackerTitle;
+
+  /// No description provided for @sfTrackerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Slowly walk around the room. The meter and guidance react to how loud the sound gets — louder means you\'re closer.'**
+  String get sfTrackerHint;
+
+  /// No description provided for @sfLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get sfLevel;
+
+  /// No description provided for @sfDominant.
+  ///
+  /// In en, this message translates to:
+  /// **'Dominant'**
+  String get sfDominant;
+
+  /// No description provided for @sfPeakHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak'**
+  String get sfPeakHold;
+
+  /// No description provided for @sfGuidanceHotter.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting warmer — closer to the source'**
+  String get sfGuidanceHotter;
+
+  /// No description provided for @sfGuidanceColder.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting colder — moving away'**
+  String get sfGuidanceColder;
+
+  /// No description provided for @sfGuidanceSteady.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady — move to change the reading'**
+  String get sfGuidanceSteady;
+
+  /// No description provided for @sfGuidanceSilent.
+  ///
+  /// In en, this message translates to:
+  /// **'Too quiet — no clear sound detected'**
+  String get sfGuidanceSilent;
+
+  /// No description provided for @sfSetReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark spot'**
+  String get sfSetReference;
+
+  /// No description provided for @sfClearReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get sfClearReference;
+
+  /// No description provided for @sfResetPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset peak'**
+  String get sfResetPeak;
+
+  /// No description provided for @sfVsReference.
+  ///
+  /// In en, this message translates to:
+  /// **'vs. marked spot'**
+  String get sfVsReference;
+
+  /// No description provided for @sfSpectrum.
+  ///
+  /// In en, this message translates to:
+  /// **'Spectrum'**
+  String get sfSpectrum;
+
+  /// No description provided for @sfCounterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter / mask tone'**
+  String get sfCounterTitle;
+
+  /// No description provided for @sfCounterDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'A phone speaker can\'t truly cancel room noise. This plays a matching tone (optionally phase-inverted) plus optional masking noise to make the sound less noticeable.'**
+  String get sfCounterDisclaimer;
+
+  /// No description provided for @sfDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected'**
+  String get sfDetected;
+
+  /// No description provided for @sfUseDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Use detected'**
+  String get sfUseDetected;
+
+  /// No description provided for @sfCounterMicOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone analysis is off — set the target frequency manually below.'**
+  String get sfCounterMicOff;
+
+  /// No description provided for @sfTargetFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Target frequency'**
+  String get sfTargetFrequency;
+
+  /// No description provided for @sfWaveform.
+  ///
+  /// In en, this message translates to:
+  /// **'Waveform'**
+  String get sfWaveform;
+
+  /// No description provided for @sfPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Phase'**
+  String get sfPhase;
+
+  /// No description provided for @sfInvertPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Invert phase (180°)'**
+  String get sfInvertPhase;
+
+  /// No description provided for @sfMaskNoise.
+  ///
+  /// In en, this message translates to:
+  /// **'Masking noise'**
+  String get sfMaskNoise;
+
+  /// No description provided for @sfVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get sfVolume;
+
+  /// No description provided for @sfGeneratorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency generator'**
+  String get sfGeneratorTitle;
+
+  /// No description provided for @sfGeneratorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a frequency and waveform to generate a pure test tone.'**
+  String get sfGeneratorHint;
+
+  /// No description provided for @sfWaveSine.
+  ///
+  /// In en, this message translates to:
+  /// **'Sine'**
+  String get sfWaveSine;
+
+  /// No description provided for @sfWaveSquare.
+  ///
+  /// In en, this message translates to:
+  /// **'Square'**
+  String get sfWaveSquare;
+
+  /// No description provided for @sfWaveTriangle.
+  ///
+  /// In en, this message translates to:
+  /// **'Triangle'**
+  String get sfWaveTriangle;
+
+  /// No description provided for @sfWaveSawtooth.
+  ///
+  /// In en, this message translates to:
+  /// **'Sawtooth'**
+  String get sfWaveSawtooth;
+
+  /// No description provided for @sfToneNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tone active'**
+  String get sfToneNotificationTitle;
+
+  /// No description provided for @sfToneNotificationText.
+  ///
+  /// In en, this message translates to:
+  /// **'ToolLab is generating a tone'**
+  String get sfToneNotificationText;
 }
 
 class _AppLocalizationsDelegate
