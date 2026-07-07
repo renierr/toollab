@@ -37,6 +37,10 @@ class FocusNoisePlayer {
   String notificationTitle = 'Focus noise active';
   String notificationText = 'ToolLab keeps ambient audio running';
 
+  /// Invoked when playback is stopped from outside the app (the notification's
+  /// stop action), so the page can sync its UI state.
+  VoidCallback? onExternalStop;
+
   int _totalPushedFrames = 0;
   int _startedAt = 0;
 
@@ -211,7 +215,10 @@ class FocusNoisePlayer {
   }
 
   void _handleNotificationAction(String action) {
-    if (action == 'stop') stop();
+    if (action == 'stop') {
+      unawaited(stop());
+      onExternalStop?.call();
+    }
   }
 
   Future<void> dispose() async {

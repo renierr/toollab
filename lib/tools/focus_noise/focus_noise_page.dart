@@ -49,6 +49,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   @override
   void initState() {
     super.initState();
+    _player.onExternalStop = _onPlayerExternalStop;
     onDispose(() => _player.dispose());
     onDispose(() => _timerTicker?.cancel());
     onDispose(() => _breathingTimer?.cancel());
@@ -94,6 +95,16 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
       await _player.play(sound);
       _player.setVolume(_volume);
     }
+  }
+
+  void _onPlayerExternalStop() {
+    if (!mounted) return;
+    if (_breathingActive) {
+      _toggleBreathing();
+    }
+    _timerTarget = null;
+    _timerTicker?.cancel();
+    setState(() => _isPlaying = false);
   }
 
   Future<void> _togglePlayback() async {
