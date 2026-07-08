@@ -2619,6 +2619,8 @@
   "sfWaveTriangle": "Triangle",
   "sfWaveSawtooth": "Sawtooth",
   "sfToneNotificationTitle": "Tone active",
-  "sfToneNotificationText": "ToolLab is generating a tone"
+  "sfToneNotificationText": "ToolLab is generating a tone",
+  "sfMicDefault": "Default microphone",
+  "sfRefreshMics": "Rescan microphones"
 }
 

@@ -48,6 +48,21 @@ class MicAnalyzer {
   final Float64List _ring = Float64List(fftSize);
   int _filled = 0;
 
+  /// Selected capture device. `null` follows the platform default mic.
+  InputDevice? device;
+
+  /// Enumerates the available capture devices (built-in, wired, USB, Bluetooth
+  /// SCO on Android; WASAPI capture endpoints on Windows). Returns empty on
+  /// platforms/permissions that do not expose device lists.
+  Future<List<InputDevice>> listInputDevices() async {
+    try {
+      return await _recorder.listInputDevices();
+    } catch (e) {
+      debugPrint('[MicAnalyzer] listInputDevices failed: $e');
+      return const [];
+    }
+  }
+
   final StreamController<MicAnalysis> _controller =
       StreamController<MicAnalysis>.broadcast();
   Stream<MicAnalysis> get stream => _controller.stream;
@@ -77,10 +92,11 @@ class MicAnalyzer {
 
     try {
       final Stream<Uint8List> stream = await _recorder.startStream(
-        const RecordConfig(
+        RecordConfig(
           encoder: AudioEncoder.pcm16bits,
           sampleRate: sampleRate,
           numChannels: 1,
+          device: device,
           autoGain: false,
           echoCancel: false,
           noiseSuppress: false,

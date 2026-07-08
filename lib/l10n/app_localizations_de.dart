@@ -4944,4 +4944,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sfToneNotificationText => 'ToolLab erzeugt einen Ton';
+
+  @override
+  String get sfMicDefault => 'Standardmikrofon';
+
+  @override
+  String get sfRefreshMics => 'Mikrofone neu suchen';
 }

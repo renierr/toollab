@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:record/record.dart';
 
 import '../../services/database_service.dart';
 import 'audio/mic_analyzer.dart';
@@ -27,6 +28,7 @@ class SoundFinderState extends ChangeNotifier {
   static const String _kCtrVol = 'ctr_vol';
   static const String _kCtrPhase = 'ctr_phase';
   static const String _kCtrNoise = 'ctr_noise';
+  static const String _kMicDevice = 'mic_device';
 
   final MicAnalyzer _mic = MicAnalyzer();
   final ToneGenerator _tone = ToneGenerator();
@@ -34,6 +36,11 @@ class SoundFinderState extends ChangeNotifier {
 
   SfMode _mode = SfMode.tracker;
   MicStatus _micStatus = MicStatus.idle;
+
+  // Input device selection.
+  List<InputDevice> _inputDevices = const [];
+  InputDevice? _selectedDevice;
+  String? _pendingDeviceId; // restored id, matched once devices are listed
 
   // Smoothed live analysis.
   MicAnalysis _analysis = MicAnalysis.zero();
@@ -76,6 +83,8 @@ class SoundFinderState extends ChangeNotifier {
   // Getters.
   SfMode get mode => _mode;
   MicStatus get micStatus => _micStatus;
+  List<InputDevice> get inputDevices => _inputDevices;
+  InputDevice? get selectedDevice => _selectedDevice;
   MicAnalysis get analysis => _analysis;
   double get smoothDb => _smoothDb;
   double get smoothPeakHz => _smoothPeakHz;
@@ -142,6 +151,54 @@ class SoundFinderState extends ChangeNotifier {
       MicStartResult.unavailable => MicStatus.unavailable,
     };
     notifyListeners();
+    if (_micStatus == MicStatus.running) await refreshInputDevices();
+  }
+
+  /// Re-enumerates capture devices and reconciles the current selection: a
+  /// vanished device falls back to the default, and a pending restored id is
+  /// resolved once it appears.
+  Future<void> refreshInputDevices() async {
+    _inputDevices = await _mic.listInputDevices();
+    if (_selectedDevice != null && _findDevice(_selectedDevice!.id) == null) {
+      _selectedDevice = null;
+      _mic.device = null;
+    } else if (_selectedDevice == null && _pendingDeviceId != null) {
+      final InputDevice? match = _findDevice(_pendingDeviceId!);
+      if (match != null) {
+        _selectedDevice = match;
+        _mic.device = match;
+        if (_micStatus == MicStatus.running) await _restartMic();
+      }
+    }
+    notifyListeners();
+  }
+
+  Future<void> selectInputDevice(InputDevice? device) async {
+    if (device?.id == _selectedDevice?.id) return;
+    _selectedDevice = device;
+    _pendingDeviceId = device?.id;
+    _mic.device = device;
+    _save(_kMicDevice, device?.id ?? '');
+    if (_micStatus == MicStatus.running) await _restartMic();
+    notifyListeners();
+  }
+
+  InputDevice? _findDevice(String id) {
+    for (final InputDevice d in _inputDevices) {
+      if (d.id == id) return d;
+    }
+    return null;
+  }
+
+  Future<void> _restartMic() async {
+    await _mic.stop();
+    _micStatus = MicStatus.idle;
+    final MicStartResult result = await _mic.start();
+    _micStatus = switch (result) {
+      MicStartResult.ok => MicStatus.running,
+      MicStartResult.denied => MicStatus.denied,
+      MicStartResult.unavailable => MicStatus.unavailable,
+    };
   }
 
   void _onAnalysis(MicAnalysis a) {
@@ -324,6 +381,10 @@ class SoundFinderState extends ChangeNotifier {
     final ctrVol = await db.getSetting(_toolId, _kCtrVol);
     final ctrPhase = await db.getSetting(_toolId, _kCtrPhase);
     final ctrNoise = await db.getSetting(_toolId, _kCtrNoise);
+    final micDevice = await db.getSetting(_toolId, _kMicDevice);
+    _pendingDeviceId = (micDevice != null && micDevice.isNotEmpty)
+        ? micDevice
+        : null;
 
     _genFreq = double.tryParse(genFreq ?? '')?.clamp(20, 20000) ?? 440;
     _genWave = _waveFromName(genWave) ?? ToneWaveform.sine;

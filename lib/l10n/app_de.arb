@@ -1793,6 +1793,8 @@
   "sfWaveTriangle": "Dreieck",
   "sfWaveSawtooth": "Sägezahn",
   "sfToneNotificationTitle": "Ton aktiv",
-  "sfToneNotificationText": "ToolLab erzeugt einen Ton"
+  "sfToneNotificationText": "ToolLab erzeugt einen Ton",
+  "sfMicDefault": "Standardmikrofon",
+  "sfRefreshMics": "Mikrofone neu suchen"
 }
 

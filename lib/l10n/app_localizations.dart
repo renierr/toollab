@@ -8947,6 +8947,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ToolLab is generating a tone'**
   String get sfToneNotificationText;
+
+  /// No description provided for @sfMicDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default microphone'**
+  String get sfMicDefault;
+
+  /// No description provided for @sfRefreshMics.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan microphones'**
+  String get sfRefreshMics;
 }
 
 class _AppLocalizationsDelegate
