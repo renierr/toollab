@@ -38,6 +38,10 @@ $FileTypes = @(
   @{ Extension = '.xm';      ProgId = "$AppName.xm";      Description = 'Tracker Module';    MimeType = 'audio/x-xm' }
   @{ Extension = '.it';      ProgId = "$AppName.it";      Description = 'Tracker Module';    MimeType = 'audio/x-it' }
   @{ Extension = '.s3m';     ProgId = "$AppName.s3m";     Description = 'Tracker Module';    MimeType = 'audio/x-s3m' }
+  @{ Extension = '.wav';     ProgId = "$AppName.wav";     Description = 'WAV Audio';         MimeType = 'audio/wav' }
+  @{ Extension = '.mp3';     ProgId = "$AppName.mp3";     Description = 'MP3 Audio';         MimeType = 'audio/mpeg' }
+  @{ Extension = '.ogg';     ProgId = "$AppName.ogg";     Description = 'OGG Audio';         MimeType = 'audio/ogg' }
+  @{ Extension = '.flac';    ProgId = "$AppName.flac";    Description = 'FLAC Audio';        MimeType = 'audio/flac' }
 )
 
 function Write-Info  { Write-Host "INFO: $($args[0])" -ForegroundColor Cyan }
@@ -220,7 +224,7 @@ function Install-All {
     exit 1
   }
   if (-not $Silent) {
-    $answer = Read-Host "Install $AppName to $InstallDir and register file associations (.pdf, .md, .markdown, .txt, images, tracker modules)? [Y/n]"
+    $answer = Read-Host "Install $AppName to $InstallDir and register file associations (.pdf, .md, .markdown, .txt, images, tracker modules, audio files)? [Y/n]"
     if ($answer -ne '' -and $answer -notmatch '^[Yy]') {
       Write-Info "Install cancelled"
       exit 0
