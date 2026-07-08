@@ -24,6 +24,7 @@ import 'engine/chiptune_player.dart';
 import 'engine/parser.dart';
 import 'modarchive_service.dart';
 import 'widgets/chiptune_archive_panel.dart';
+import 'widgets/chiptune_audio_view.dart';
 import 'widgets/chiptune_empty_state.dart';
 import 'widgets/chiptune_player_view.dart';
 import 'widgets/chiptune_playlist_panel.dart';
@@ -45,6 +46,23 @@ class _ChiptunePageState extends State<ChiptunePage>
   /// failing to load. Bounds the skip loop so a run of bad modules can't spin
   /// forever.
   static const int _maxRandomLoadAttempts = 5;
+
+  /// Extensions decoded natively by SoLoud (not tracker modules). Everything
+  /// else in [ChiptuneTool.config.fileExtensions] goes through the module parser.
+  static const List<String> _nativeAudioExtensions = [
+    'wav',
+    'mp3',
+    'ogg',
+    'flac',
+  ];
+
+  static bool _isNativeAudioName(String name) {
+    final lower = name.toLowerCase();
+    return _nativeAudioExtensions.any((e) => lower.endsWith('.$e'));
+  }
+
+  static String _extensionOf(String name) =>
+      name.contains('.') ? name.split('.').last : '';
 
   final ChiptunePlayer _player = ChiptunePlayer();
   final ModArchiveService _modArchive = ModArchiveService();
@@ -171,9 +189,17 @@ class _ChiptunePageState extends State<ChiptunePage>
     bool notifyOnError = true,
   }) async {
     try {
-      final mod = parseModule(bytes);
-      _player.loadModule(mod);
-      _player.notificationTitle = mod.title.isNotEmpty ? mod.title : fileName;
+      final String format;
+      if (_isNativeAudioName(fileName)) {
+        await _player.loadAudio(bytes, fileName);
+        format = _extensionOf(fileName).toUpperCase();
+        _player.notificationTitle = fileName;
+      } else {
+        final mod = parseModule(bytes);
+        _player.loadModule(mod);
+        format = mod.type;
+        _player.notificationTitle = mod.title.isNotEmpty ? mod.title : fileName;
+      }
       _player.notificationText = ChiptunePlayer.formatTime(
         Duration.zero,
         _player.totalDuration,
@@ -182,7 +208,7 @@ class _ChiptunePageState extends State<ChiptunePage>
       setState(() {
         _currentBytes = bytes;
         _currentFileName = fileName;
-        _currentFormat = mod.type;
+        _currentFormat = format;
         _currentArchiveId = null;
         _playlistIndex = -1;
         _randomMode = false;
@@ -599,14 +625,19 @@ class _ChiptunePageState extends State<ChiptunePage>
 
   Future<void> _saveCurrent() async {
     final bytes = _currentBytes;
+    if (bytes == null) return;
+    // Native audio files have no module metadata; fall back to the file name and
+    // zero channels (the archive is format-agnostic — it only stores bytes).
     final mod = _player.module;
-    if (bytes == null || mod == null) return;
+    final title = mod != null && mod.title.isNotEmpty
+        ? mod.title
+        : _currentFileName;
     final ok = await ChiptuneArchive.instance.saveModule(
       bytes: bytes,
       fileName: _currentFileName,
       format: _currentFormat,
-      title: mod.title.isEmpty ? _currentFileName : mod.title,
-      channels: mod.channels,
+      title: title,
+      channels: mod?.channels ?? 0,
     );
     if (!mounted) return;
     _showSnack(
@@ -733,12 +764,97 @@ class _ChiptunePageState extends State<ChiptunePage>
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  ChiptuneArchivePanel _buildArchivePanel() => ChiptuneArchivePanel(
+    modules: _archive,
+    canSave: _currentBytes != null,
+    syncing: _syncing,
+    showSync: _backendAvailable,
+    currentId: _currentArchiveId,
+    inScrollableParent: true,
+    onSave: _saveCurrent,
+    onSync: _runSync,
+    onPlay: _playArchived,
+    onDownload: _downloadArchived,
+    onDelete: _deleteArchived,
+  );
+
+  Widget? _buildPlaylistPanel() {
+    if (_playlistIndex < 0 || _playlist.length <= 1) return null;
+    return ChiptunePlaylistPanel(
+      fileNames: [for (final f in _playlist) f.name],
+      currentIndex: _playlistIndex,
+      inScrollableParent: true,
+      onPlay: _playPlaylistIndex,
+    );
+  }
+
+  void _seekFraction(double f) {
+    final total = _player.totalDuration.inMilliseconds;
+    _player.seekTo(Duration(milliseconds: (f.clamp(0.0, 1.0) * total).round()));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final module = _player.module;
-    final hasModule = module != null;
+    final hasPlayable = _player.hasAudio;
+    final isNative = _player.isNative;
     final hasServer = context.watch<AppState>().syncServerUrl.trim().isNotEmpty;
+
+    final Widget content;
+    if (!hasPlayable) {
+      content = ChiptuneEmptyState(
+        onFilesSelected: (files) =>
+            _startFiles(files, l10n.chipPlaylistNoSupported),
+        onPickFolder: _folderPickSupported ? _pickFolder : null,
+        archivePanel: (_archive.isNotEmpty || _backendAvailable)
+            ? _buildArchivePanel()
+            : null,
+      );
+    } else if (isNative) {
+      content = ChiptuneAudioView(
+        player: _player,
+        fileName: _currentFileName,
+        format: _currentFormat,
+        looping: _looping,
+        volume: _volume,
+        visualizerEnabled: _visualizerEnabled && _appInForeground,
+        currentVizId: _currentVizId,
+        onVizChanged: _setVizId,
+        playlistPanel: _buildPlaylistPanel(),
+        archivePanel: _buildArchivePanel(),
+        onPlayPause: _playPause,
+        onStop: _player.stop,
+        onNext: _nextButtonAction(),
+        nextTooltip: l10n.chipNextTrackTooltip,
+        onLoopChanged: _setLooping,
+        onVolumeChanged: _setVolume,
+        onSeekFraction: _seekFraction,
+      );
+    } else {
+      content = ChiptunePlayerView(
+        player: _player,
+        module: module!,
+        looping: _looping,
+        volume: _volume,
+        visualizerEnabled: _visualizerEnabled && _appInForeground,
+        currentVizId: _currentVizId,
+        onVizChanged: _setVizId,
+        randomTune: _randomMode ? _currentTune : null,
+        serverTune: _serverRandomMode ? _currentServerTune : null,
+        playlistPanel: _buildPlaylistPanel(),
+        archivePanel: _buildArchivePanel(),
+        onPlayPause: _playPause,
+        onStop: _player.stop,
+        onNext: _nextButtonAction(),
+        nextTooltip: (_randomMode || _serverRandomMode)
+            ? l10n.chipNextRandomTooltip
+            : l10n.chipNextTrackTooltip,
+        onLoopChanged: _setLooping,
+        onVolumeChanged: _setVolume,
+        onSeek: _player.seek,
+      );
+    }
 
     return ToolLayout(
       title: ChiptuneTool.config.localizedName(l10n),
@@ -764,7 +880,7 @@ class _ChiptunePageState extends State<ChiptunePage>
             icon: const Icon(Icons.folder_special_outlined),
             onPressed: _pickFolder,
           ),
-        if (hasModule)
+        if (hasPlayable)
           IconButton(
             tooltip: _visualizerEnabled
                 ? l10n.chipHideVisualizer
@@ -775,68 +891,7 @@ class _ChiptunePageState extends State<ChiptunePage>
             onPressed: () => _setVisualizerEnabled(!_visualizerEnabled),
           ),
       ],
-      child: hasModule
-          ? ChiptunePlayerView(
-              player: _player,
-              module: module,
-              looping: _looping,
-              volume: _volume,
-              visualizerEnabled: _visualizerEnabled && _appInForeground,
-              currentVizId: _currentVizId,
-              onVizChanged: _setVizId,
-              randomTune: _randomMode ? _currentTune : null,
-              serverTune: _serverRandomMode ? _currentServerTune : null,
-              playlistPanel: _playlistIndex >= 0 && _playlist.length > 1
-                  ? ChiptunePlaylistPanel(
-                      fileNames: [for (final f in _playlist) f.name],
-                      currentIndex: _playlistIndex,
-                      inScrollableParent: true,
-                      onPlay: _playPlaylistIndex,
-                    )
-                  : null,
-              archivePanel: ChiptuneArchivePanel(
-                modules: _archive,
-                canSave: _currentBytes != null,
-                syncing: _syncing,
-                showSync: _backendAvailable,
-                currentId: _currentArchiveId,
-                inScrollableParent: true,
-                onSave: _saveCurrent,
-                onSync: _runSync,
-                onPlay: _playArchived,
-                onDownload: _downloadArchived,
-                onDelete: _deleteArchived,
-              ),
-              onPlayPause: _playPause,
-              onStop: _player.stop,
-              onNext: _nextButtonAction(),
-              nextTooltip: (_randomMode || _serverRandomMode)
-                  ? l10n.chipNextRandomTooltip
-                  : l10n.chipNextTrackTooltip,
-              onLoopChanged: _setLooping,
-              onVolumeChanged: _setVolume,
-              onSeek: _player.seek,
-            )
-          : ChiptuneEmptyState(
-              onFilesSelected: (files) =>
-                  _startFiles(files, l10n.chipPlaylistNoSupported),
-              onPickFolder: _folderPickSupported ? _pickFolder : null,
-              archivePanel: (_archive.isNotEmpty || _backendAvailable)
-                  ? ChiptuneArchivePanel(
-                      modules: _archive,
-                      canSave: _currentBytes != null,
-                      syncing: _syncing,
-                      showSync: _backendAvailable,
-                      currentId: _currentArchiveId,
-                      inScrollableParent: true,
-                      onSave: _saveCurrent,
-                      onSync: _runSync,
-                      onPlay: _playArchived,
-                      onDownload: _downloadArchived,
-                      onDelete: _deleteArchived,
-                    )
-                  : null,
-            ),
+      child: content,
     );
   }
 }

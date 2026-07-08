@@ -341,6 +341,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipMetricSize => 'Size';
 
   @override
+  String get chipMetricDuration => 'Duration';
+
+  @override
+  String get chipAudioFile => 'Audio file';
+
+  @override
   String coreNoToolsFoundToOpen(String name) {
     return 'No tools found to open \"$name\"';
   }
@@ -2801,7 +2807,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolNameChiptune => 'Chiptune Player';
 
   @override
-  String get toolDescChiptune => 'Play Amiga MOD, XM and IT tracker modules';
+  String get toolDescChiptune =>
+      'Play MOD, XM, IT tracker modules and WAV, MP3, OGG audio';
 
   @override
   String get toolNameFocusNoise => 'Focus Noise & Breathing';

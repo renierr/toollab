@@ -716,6 +716,18 @@ abstract class AppLocalizations {
   /// **'Size'**
   String get chipMetricSize;
 
+  /// No description provided for @chipMetricDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get chipMetricDuration;
+
+  /// No description provided for @chipAudioFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio file'**
+  String get chipAudioFile;
+
   /// No description provided for @coreNoToolsFoundToOpen.
   ///
   /// In en, this message translates to:
@@ -4991,7 +5003,7 @@ abstract class AppLocalizations {
   /// No description provided for @toolDescChiptune.
   ///
   /// In en, this message translates to:
-  /// **'Play Amiga MOD, XM and IT tracker modules'**
+  /// **'Play MOD, XM, IT tracker modules and WAV, MP3, OGG audio'**
   String get toolDescChiptune;
 
   /// No description provided for @toolNameFocusNoise.

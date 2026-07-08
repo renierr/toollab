@@ -106,6 +106,8 @@
   "chipMetricFormat": "Format",
   "chipMetricGenre": "Genre",
   "chipMetricSize": "Size",
+  "chipMetricDuration": "Duration",
+  "chipAudioFile": "Audio file",
   "coreNoToolsFoundToOpen": "No tools found to open \"{name}\"",
   "@coreNoToolsFoundToOpen": {
     "placeholders": {
@@ -1707,7 +1709,7 @@
   "toolNameImagesToPdf": "Images to PDF",
   "toolDescImagesToPdf": "Convert multiple images into a single PDF document",
   "toolNameChiptune": "Chiptune Player",
-  "toolDescChiptune": "Play Amiga MOD, XM and IT tracker modules",
+  "toolDescChiptune": "Play MOD, XM, IT tracker modules and WAV, MP3, OGG audio",
   "toolNameFocusNoise": "Focus Noise & Breathing",
   "toolDescFocusNoise": "Ambient noise player with guided breathing patterns",
   "toolNameSignatures": "Signature Creator",

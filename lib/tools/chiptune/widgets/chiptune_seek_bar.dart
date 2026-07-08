@@ -6,20 +6,18 @@ import '../engine/chiptune_player.dart';
 /// A seek bar with a large gradient progress track, glowing thumb, and
 /// time tooltip on drag — click anywhere to seek.
 class ChiptuneSeekBar extends StatefulWidget {
-  final SongPosition position;
+  /// Tracker position shown as the "Pos/Row" label. Null for native audio,
+  /// where only the time read-out is shown.
+  final SongPosition? position;
   final Duration elapsed;
   final Duration total;
-  final int rowsPerPattern;
-  final int totalRows;
   final ValueChanged<double> onSeekFraction;
 
   const ChiptuneSeekBar({
     super.key,
-    required this.position,
+    this.position,
     required this.elapsed,
     required this.total,
-    required this.rowsPerPattern,
-    required this.totalRows,
     required this.onSeekFraction,
   });
 
@@ -114,13 +112,16 @@ class _ChiptuneSeekBarState extends State<ChiptuneSeekBar> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: widget.position != null
+                ? MainAxisAlignment.spaceBetween
+                : MainAxisAlignment.end,
             children: [
-              Text(
-                'Pos ${widget.position.order.toString().padLeft(2, '0')} · '
-                'Row ${widget.position.row.toString().padLeft(2, '0')}',
-                style: style,
-              ),
+              if (widget.position != null)
+                Text(
+                  'Pos ${widget.position!.order.toString().padLeft(2, '0')} · '
+                  'Row ${widget.position!.row.toString().padLeft(2, '0')}',
+                  style: style,
+                ),
               Text(
                 _isDragging
                     ? _durationAtFraction(_dragFraction)

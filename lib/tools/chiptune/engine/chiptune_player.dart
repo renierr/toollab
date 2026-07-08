@@ -52,6 +52,11 @@ class ChiptunePlayer {
   final ChiptuneRenderWorker _renderWorker = ChiptuneRenderWorker();
 
   AudioSource? _stream;
+  // A natively-decoded audio file (wav/mp3/ogg/flac). When set, playback runs
+  // through SoLoud's own decoder + a lightweight position poll instead of the
+  // software mixer + PCM feed loop used for tracker modules.
+  AudioSource? _nativeSource;
+  bool _isNative = false;
   SoundHandle? _handle;
   Timer? _feedTimer;
   bool _feedInProgress = false;
@@ -115,6 +120,13 @@ class ChiptunePlayer {
   ModuleFile? get module => _module;
   bool get isPlaying => state.value == ChiptunePlaybackState.playing;
   bool get hasModule => _worklet != null;
+
+  /// True when the loaded source is a natively-decoded audio file rather than a
+  /// tracker module.
+  bool get isNative => _isNative;
+
+  /// True when anything playable is loaded (module or native audio).
+  bool get hasAudio => hasModule || _nativeSource != null;
 
   /// Estimated full play duration of the loaded module (zero if none / unknown).
   Duration get totalDuration => _totalDuration;
@@ -193,6 +205,8 @@ class ChiptunePlayer {
     // stuck at `playing` with no handle — the play/pause button then no-ops and
     // the tool appears frozen.
     state.value = ChiptunePlaybackState.stopped;
+    _disposeNativeSource();
+    _isNative = false;
     _module = mod;
     _worklet = serializeModuleForWorklet(mod);
     _totalDuration = estimateSongDuration(mod);
@@ -202,16 +216,47 @@ class ChiptunePlayer {
     elapsed.value = Duration.zero;
   }
 
+  /// Loads a natively-decoded audio file (wav/mp3/ogg/flac) but does not start
+  /// playback. [name] is only used as a SoLoud identifier for the loaded source.
+  Future<void> loadAudio(Uint8List bytes, String name) async {
+    _stopInternal();
+    state.value = ChiptunePlaybackState.stopped;
+    await _ensureInit();
+    _disposeNativeSource();
+    _module = null;
+    _worklet = null;
+    _isNative = true;
+    _nativeSource = await SoLoud.instance.loadMem(name, bytes);
+    _totalDuration = SoLoud.instance.getLength(_nativeSource!);
+    _elapsedBase = Duration.zero;
+    channelActivity.value = const [];
+    position.value = const SongPosition(0, 0);
+    elapsed.value = Duration.zero;
+  }
+
+  void _disposeNativeSource() {
+    final source = _nativeSource;
+    _nativeSource = null;
+    if (source != null) {
+      unawaited(SoLoud.instance.disposeSource(source));
+    }
+  }
+
   Future<void> play() async {
-    if (_worklet == null) return;
+    if (!hasAudio) return;
 
     if (state.value == ChiptunePlaybackState.paused && _handle != null) {
       await _acquirePlaybackRuntimeLocks();
       SoLoud.instance.setPause(_handle!, false);
       state.value = ChiptunePlaybackState.playing;
       _updateNotificationForResume();
-      await _feed();
+      if (!_isNative) await _feed();
       _startFeed();
+      return;
+    }
+
+    if (_isNative) {
+      await _playNative();
       return;
     }
 
@@ -243,6 +288,24 @@ class ChiptunePlayer {
     // Pre-fill before starting so playback begins instantly.
     await _feed();
     _handle = SoLoud.instance.play(_stream!, volume: 1);
+    state.value = ChiptunePlaybackState.playing;
+    _startFeed();
+  }
+
+  Future<void> _playNative() async {
+    final source = _nativeSource;
+    if (source == null) return;
+    await _ensureInit();
+    _stopInternal();
+    await _acquirePlaybackRuntimeLocks();
+
+    _elapsedBase = Duration.zero;
+    _ended = false;
+    _nearEndFired = false;
+    // Native decode plays the source directly; volume is applied at the handle
+    // (unlike the module path, where the mixer applies it and the stream plays
+    // at unity gain).
+    _handle = SoLoud.instance.play(source, volume: _volume, looping: _looping);
     state.value = ChiptunePlaybackState.playing;
     _startFeed();
   }
@@ -298,16 +361,45 @@ class ChiptunePlayer {
     }
   }
 
-  void setVolume(double volume) {
-    _volume = volume.clamp(0.0, 1.0);
-    _renderWorker.setVolume(_volume);
+  /// Seeks native audio to an absolute position (no-op for tracker modules,
+  /// which seek by order/row via [seek]).
+  void seekTo(Duration pos) {
+    if (!_isNative || _nativeSource == null) return;
+    Duration target = pos < Duration.zero ? Duration.zero : pos;
+    if (_totalDuration > Duration.zero && target > _totalDuration) {
+      target = _totalDuration;
+    }
+    if (_handle != null) SoLoud.instance.seek(_handle!, target);
+    _elapsedBase = target;
+    elapsed.value = target;
+    // Re-arm the near-end prefetch when seeking back before the lead point.
+    if (_totalDuration > Duration.zero &&
+        target < _totalDuration - _prefetchLead) {
+      _nearEndFired = false;
+    }
   }
 
-  void setSpeed(int speed) => _renderWorker.setSpeed(speed);
+  void setVolume(double volume) {
+    _volume = volume.clamp(0.0, 1.0);
+    if (_isNative) {
+      if (_handle != null) SoLoud.instance.setVolume(_handle!, _volume);
+    } else {
+      _renderWorker.setVolume(_volume);
+    }
+  }
+
+  void setSpeed(int speed) {
+    if (_isNative) return;
+    _renderWorker.setSpeed(speed);
+  }
 
   void setLooping(bool looping) {
     _looping = looping;
-    _renderWorker.setLooping(looping);
+    if (_isNative) {
+      if (_handle != null) SoLoud.instance.setLooping(_handle!, looping);
+    } else {
+      _renderWorker.setLooping(looping);
+    }
   }
 
   void _startFeed() {
@@ -330,6 +422,15 @@ class ChiptunePlayer {
   Future<void> _feed() async {
     if (_feedInProgress) return;
     _feedInProgress = true;
+
+    if (_isNative) {
+      try {
+        _nativeTick();
+      } finally {
+        _feedInProgress = false;
+      }
+      return;
+    }
 
     final stream = _stream;
     if (stream == null) {
@@ -364,23 +465,7 @@ class ChiptunePlayer {
         }
       }
 
-      if (_foregroundRuntimeLease != null &&
-          state.value == ChiptunePlaybackState.playing &&
-          (_lastNotificationUpdateAt == null ||
-              now.difference(_lastNotificationUpdateAt!) >=
-                  const Duration(seconds: 30))) {
-        _lastNotificationUpdateAt = now;
-        notificationText = formatTime(elapsed.value, _totalDuration);
-        final actions = <String>['pause', 'stop'];
-        if (onNext != null) actions.add('next');
-        unawaited(
-          _foregroundRuntimeLease!.update(
-            title: notificationTitle,
-            text: notificationText,
-            actions: actions,
-          ),
-        );
-      }
+      _maybePushNotificationUpdate(now);
 
       if (_ended) {
         _onSongEnded();
@@ -425,6 +510,66 @@ class ChiptunePlayer {
     } finally {
       _feedInProgress = false;
     }
+  }
+
+  /// Polls native-decode playback: updates the elapsed read-out, fires the
+  /// near-end prefetch, and detects the end (the voice handle goes invalid when
+  /// a non-looping source finishes).
+  void _nativeTick() {
+    final handle = _handle;
+    if (handle == null) return;
+
+    if (!_looping && !SoLoud.instance.getIsValidVoiceHandle(handle)) {
+      _ended = true;
+      _onSongEnded();
+      return;
+    }
+
+    final DateTime now = DateTime.now();
+    final Duration pos = SoLoud.instance.getPosition(handle);
+
+    if (_uiUpdatesEnabled) {
+      final DateTime? last = _lastElapsedUpdateAt;
+      if (last == null || now.difference(last) >= _elapsedUpdateInterval) {
+        _lastElapsedUpdateAt = now;
+        elapsed.value = pos;
+      }
+    }
+
+    if (!_nearEndFired &&
+        !_looping &&
+        onNearEnd != null &&
+        _totalDuration > Duration.zero &&
+        pos >= _totalDuration - _prefetchLead) {
+      _nearEndFired = true;
+      onNearEnd!.call();
+    }
+
+    _maybePushNotificationUpdate(now);
+  }
+
+  /// Throttled (30 s) refresh of the background-playback notification text.
+  void _maybePushNotificationUpdate(DateTime now) {
+    if (_foregroundRuntimeLease == null ||
+        state.value != ChiptunePlaybackState.playing) {
+      return;
+    }
+    if (_lastNotificationUpdateAt != null &&
+        now.difference(_lastNotificationUpdateAt!) <
+            const Duration(seconds: 30)) {
+      return;
+    }
+    _lastNotificationUpdateAt = now;
+    notificationText = formatTime(elapsed.value, _totalDuration);
+    final actions = <String>['pause', 'stop'];
+    if (onNext != null) actions.add('next');
+    unawaited(
+      _foregroundRuntimeLease!.update(
+        title: notificationTitle,
+        text: notificationText,
+        actions: actions,
+      ),
+    );
   }
 
   static String formatTime(Duration elapsed, Duration total) {
@@ -561,6 +706,7 @@ class ChiptunePlayer {
 
   void dispose() {
     _stopInternal();
+    _disposeNativeSource();
     _releasePlaybackRuntimeLocks();
     _rowSubscription?.cancel();
     _endedSubscription?.cancel();

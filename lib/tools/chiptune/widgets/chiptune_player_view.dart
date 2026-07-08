@@ -83,8 +83,6 @@ class ChiptunePlayerView extends StatelessWidget {
               position: position,
               elapsed: elapsed,
               total: player.totalDuration,
-              rowsPerPattern: module.rowsPerPattern,
-              totalRows: player.totalRows,
               onSeekFraction: (f) {
                 final targetRow = (f * player.totalRows).round().clamp(
                   0,

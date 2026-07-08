@@ -345,6 +345,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipMetricSize => 'Größe';
 
   @override
+  String get chipMetricDuration => 'Dauer';
+
+  @override
+  String get chipAudioFile => 'Audiodatei';
+
+  @override
   String coreNoToolsFoundToOpen(String name) {
     return 'Keine Tools gefunden zum Öffnen von \"$name\"';
   }
@@ -2827,7 +2833,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get toolDescChiptune =>
-      'Amiga MOD-, XM- und IT-Tracker-Module abspielen';
+      'MOD-, XM-, IT-Tracker-Module und WAV-, MP3-, OGG-Audio abspielen';
 
   @override
   String get toolNameFocusNoise => 'Fokus-Rauschen & Atmung';
