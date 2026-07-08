@@ -8959,6 +8959,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rescan microphones'**
   String get sfRefreshMics;
+
+  /// No description provided for @sfMicGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Mic gain'**
+  String get sfMicGain;
 }
 
 class _AppLocalizationsDelegate

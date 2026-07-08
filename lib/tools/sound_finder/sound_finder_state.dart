@@ -29,6 +29,9 @@ class SoundFinderState extends ChangeNotifier {
   static const String _kCtrPhase = 'ctr_phase';
   static const String _kCtrNoise = 'ctr_noise';
   static const String _kMicDevice = 'mic_device';
+  static const String _kMicGain = 'mic_gain';
+
+  static const double maxMicGain = 20;
 
   final MicAnalyzer _mic = MicAnalyzer();
   final ToneGenerator _tone = ToneGenerator();
@@ -41,6 +44,7 @@ class SoundFinderState extends ChangeNotifier {
   List<InputDevice> _inputDevices = const [];
   InputDevice? _selectedDevice;
   String? _pendingDeviceId; // restored id, matched once devices are listed
+  double _micGain = 1.0;
 
   // Smoothed live analysis.
   MicAnalysis _analysis = MicAnalysis.zero();
@@ -85,6 +89,7 @@ class SoundFinderState extends ChangeNotifier {
   MicStatus get micStatus => _micStatus;
   List<InputDevice> get inputDevices => _inputDevices;
   InputDevice? get selectedDevice => _selectedDevice;
+  double get micGain => _micGain;
   MicAnalysis get analysis => _analysis;
   double get smoothDb => _smoothDb;
   double get smoothPeakHz => _smoothPeakHz;
@@ -170,6 +175,15 @@ class SoundFinderState extends ChangeNotifier {
         if (_micStatus == MicStatus.running) await _restartMic();
       }
     }
+    notifyListeners();
+  }
+
+  void setMicGain(double gain) {
+    final double clamped = gain.clamp(1.0, maxMicGain);
+    if (clamped == _micGain) return;
+    _micGain = clamped;
+    _mic.gain = clamped;
+    _save(_kMicGain, clamped.toStringAsFixed(2));
     notifyListeners();
   }
 
@@ -382,9 +396,12 @@ class SoundFinderState extends ChangeNotifier {
     final ctrPhase = await db.getSetting(_toolId, _kCtrPhase);
     final ctrNoise = await db.getSetting(_toolId, _kCtrNoise);
     final micDevice = await db.getSetting(_toolId, _kMicDevice);
+    final micGain = await db.getSetting(_toolId, _kMicGain);
     _pendingDeviceId = (micDevice != null && micDevice.isNotEmpty)
         ? micDevice
         : null;
+    _micGain = double.tryParse(micGain ?? '')?.clamp(1.0, maxMicGain) ?? 1.0;
+    _mic.gain = _micGain;
 
     _genFreq = double.tryParse(genFreq ?? '')?.clamp(20, 20000) ?? 440;
     _genWave = _waveFromName(genWave) ?? ToneWaveform.sine;

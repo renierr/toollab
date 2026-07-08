@@ -4950,4 +4950,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sfRefreshMics => 'Mikrofone neu suchen';
+
+  @override
+  String get sfMicGain => 'Mikrofonverstärkung';
 }

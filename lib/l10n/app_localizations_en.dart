@@ -4914,4 +4914,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sfRefreshMics => 'Rescan microphones';
+
+  @override
+  String get sfMicGain => 'Mic gain';
 }

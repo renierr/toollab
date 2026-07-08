@@ -51,6 +51,12 @@ class MicAnalyzer {
   /// Selected capture device. `null` follows the platform default mic.
   InputDevice? device;
 
+  /// Linear gain applied to the raw PCM before analysis. 1.0 is unmodified;
+  /// higher values boost quiet input at the cost of clipping loud peaks (the
+  /// signal is clamped to the ±1.0 full-scale range). Applied in software since
+  /// hardware auto-gain is intentionally disabled.
+  double gain = 1.0;
+
   /// Enumerates the available capture devices (built-in, wired, USB, Bluetooth
   /// SCO on Android; WASAPI capture endpoints on Windows). Returns empty on
   /// platforms/permissions that do not expose device lists.
@@ -121,8 +127,10 @@ class MicAnalyzer {
       bytes.offsetInBytes,
       count * 2,
     );
+    final double g = gain;
     for (int i = 0; i < count; i++) {
-      _ring[_filled] = view.getInt16(i * 2, Endian.little) / 32768.0;
+      final double sample = view.getInt16(i * 2, Endian.little) / 32768.0;
+      _ring[_filled] = g == 1.0 ? sample : (sample * g).clamp(-1.0, 1.0);
       _filled++;
       if (_filled == fftSize) {
         _analyze();

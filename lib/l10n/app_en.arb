@@ -2621,6 +2621,7 @@
   "sfToneNotificationTitle": "Tone active",
   "sfToneNotificationText": "ToolLab is generating a tone",
   "sfMicDefault": "Default microphone",
-  "sfRefreshMics": "Rescan microphones"
+  "sfRefreshMics": "Rescan microphones",
+  "sfMicGain": "Mic gain"
 }
 
