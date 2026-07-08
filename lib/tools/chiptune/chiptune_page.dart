@@ -102,9 +102,14 @@ class _ChiptunePageState extends State<ChiptunePage>
   bool _appInForeground = true;
   String _currentVizId = ChiptuneVizRegistry.defaultId;
 
+  /// True while an externally-opened/shared file is being read + decoded, so the
+  /// view shows a spinner instead of briefly flashing the empty upload zone.
+  bool _openingSharedFile = false;
+
   @override
   void initState() {
     super.initState();
+    _openingSharedFile = widget.sharedFile != null;
     WidgetsBinding.instance.addObserver(this);
     onDispose(() => WidgetsBinding.instance.removeObserver(this));
     onDispose(_player.dispose);
@@ -122,12 +127,16 @@ class _ChiptunePageState extends State<ChiptunePage>
             _nextArchivedId() != null);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Restore settings first (fast db reads for volume/looping), then load the
+      // opened file so playback starts ASAP. The archive + auto-sync (which can
+      // do slow network calls) run afterwards — they only populate the local
+      // files panel and must not delay playback of a file the user just opened.
       await _restoreSettings();
-      await _loadArchive();
-      await _maybeAutoSync();
       if (widget.sharedFile != null) {
         await _loadSharedFile(widget.sharedFile!);
       }
+      await _loadArchive();
+      await _maybeAutoSync();
     });
 
     final sub = SharingService.instance.onSharedFile.listen((file) {
@@ -310,6 +319,9 @@ class _ChiptunePageState extends State<ChiptunePage>
   }
 
   Future<void> _loadSharedFile(SharedFile file) async {
+    if (mounted && !_openingSharedFile) {
+      setState(() => _openingSharedFile = true);
+    }
     try {
       final bytes = await File(file.path).readAsBytes();
       await _loadBytes(bytes, file.name);
@@ -320,6 +332,8 @@ class _ChiptunePageState extends State<ChiptunePage>
           AppLocalizations.of(context).chipFailedToOpenSharedFile(e.toString()),
         );
       }
+    } finally {
+      if (mounted) setState(() => _openingSharedFile = false);
     }
   }
 
@@ -802,7 +816,9 @@ class _ChiptunePageState extends State<ChiptunePage>
     final hasServer = context.watch<AppState>().syncServerUrl.trim().isNotEmpty;
 
     final Widget content;
-    if (!hasPlayable) {
+    if (_openingSharedFile && !hasPlayable) {
+      content = const Center(child: CircularProgressIndicator());
+    } else if (!hasPlayable) {
       content = ChiptuneEmptyState(
         onFilesSelected: (files) =>
             _startFiles(files, l10n.chipPlaylistNoSupported),
