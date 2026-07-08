@@ -4917,4 +4917,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sfMicGain => 'Mic gain';
+
+  @override
+  String get sfRecordClip => 'Record clip';
+
+  @override
+  String get sfStopAndSave => 'Stop & save';
+
+  @override
+  String get sfClipSavedAndroid => 'Audio clip saved to Downloads';
+
+  @override
+  String sfClipSaved(String path) {
+    return 'Clip saved to $path';
+  }
+
+  @override
+  String get sfClipSaveError => 'Couldn\'t save the audio clip';
 }

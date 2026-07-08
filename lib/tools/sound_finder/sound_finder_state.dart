@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 
+import '../../helpers/wav_pcm16_encoder.dart';
 import '../../services/database_service.dart';
 import 'audio/mic_analyzer.dart';
 import 'audio/tone_generator.dart';
@@ -75,6 +76,7 @@ class SoundFinderState extends ChangeNotifier {
   SoundFinderState() {
     _micSub = _mic.stream.listen(_onAnalysis);
     _tone.onExternalStop = _onToneExternalStop;
+    _mic.onRecordLimitReached = notifyListeners;
     _restore();
   }
 
@@ -90,6 +92,9 @@ class SoundFinderState extends ChangeNotifier {
   List<InputDevice> get inputDevices => _inputDevices;
   InputDevice? get selectedDevice => _selectedDevice;
   double get micGain => _micGain;
+  bool get isRecording => _mic.isRecording;
+  double get recordedSeconds => _mic.recordedSeconds;
+  static int get maxRecordSeconds => MicAnalyzer.maxRecordSeconds;
   MicAnalysis get analysis => _analysis;
   double get smoothDb => _smoothDb;
   double get smoothPeakHz => _smoothPeakHz;
@@ -185,6 +190,26 @@ class SoundFinderState extends ChangeNotifier {
     _mic.gain = clamped;
     _save(_kMicGain, clamped.toStringAsFixed(2));
     notifyListeners();
+  }
+
+  void startRecording() {
+    if (_micStatus != MicStatus.running || _mic.isRecording) return;
+    _mic.startRecording();
+    notifyListeners();
+  }
+
+  /// Stops the active recording and returns it as a 16-bit PCM WAV, or `null`
+  /// if nothing was captured.
+  Uint8List? stopRecordingToWav() {
+    final Float32List samples = _mic.stopRecording();
+    notifyListeners();
+    if (samples.isEmpty) return null;
+    return WavPcm16Encoder.encode(
+      samples,
+      frames: samples.length,
+      sampleRate: MicAnalyzer.sampleRate,
+      channels: 1,
+    );
   }
 
   Future<void> selectInputDevice(InputDevice? device) async {

@@ -2622,6 +2622,18 @@
   "sfToneNotificationText": "ToolLab is generating a tone",
   "sfMicDefault": "Default microphone",
   "sfRefreshMics": "Rescan microphones",
-  "sfMicGain": "Mic gain"
+  "sfMicGain": "Mic gain",
+  "sfRecordClip": "Record clip",
+  "sfStopAndSave": "Stop & save",
+  "sfClipSavedAndroid": "Audio clip saved to Downloads",
+  "sfClipSaved": "Clip saved to {path}",
+  "@sfClipSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "sfClipSaveError": "Couldn't save the audio clip"
 }
 

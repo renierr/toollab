@@ -1796,6 +1796,18 @@
   "sfToneNotificationText": "ToolLab erzeugt einen Ton",
   "sfMicDefault": "Standardmikrofon",
   "sfRefreshMics": "Mikrofone neu suchen",
-  "sfMicGain": "Mikrofonverstärkung"
+  "sfMicGain": "Mikrofonverstärkung",
+  "sfRecordClip": "Clip aufnehmen",
+  "sfStopAndSave": "Stopp & speichern",
+  "sfClipSavedAndroid": "Audioclip in Downloads gespeichert",
+  "sfClipSaved": "Clip gespeichert unter {path}",
+  "@sfClipSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "sfClipSaveError": "Audioclip konnte nicht gespeichert werden"
 }
 

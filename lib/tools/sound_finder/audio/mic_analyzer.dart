@@ -43,10 +43,63 @@ class MicAnalyzer {
   static const int fftSize = 4096; // ~93 ms window, ~10.8 Hz bin resolution
   static const double _minFreqHz = 20;
 
+  /// Longest clip that can be captured into memory before recording auto-stops.
+  static const int maxRecordSeconds = 60;
+
   final AudioRecorder _recorder = AudioRecorder();
   StreamSubscription<Uint8List>? _sub;
   final Float64List _ring = Float64List(fftSize);
   int _filled = 0;
+
+  // Clip recording: gained samples are accumulated in chunks and concatenated
+  // on stop, capped at [maxRecordSeconds].
+  static final int _maxRecordFrames = sampleRate * maxRecordSeconds;
+  final List<Float32List> _recChunks = [];
+  int _recFrames = 0;
+  bool _recording = false;
+
+  bool get isRecording => _recording;
+  int get recordedFrames => _recFrames;
+  double get recordedSeconds => _recFrames / sampleRate;
+
+  /// Fires when a running recording hits [maxRecordSeconds] and auto-stops, so
+  /// the UI can refresh without polling.
+  VoidCallback? onRecordLimitReached;
+
+  void startRecording() {
+    _recChunks.clear();
+    _recFrames = 0;
+    _recording = true;
+  }
+
+  /// Stops recording and returns the captured mono samples (empty if nothing
+  /// was captured). Safe to call when not recording.
+  Float32List stopRecording() {
+    _recording = false;
+    final Float32List out = Float32List(_recFrames);
+    int offset = 0;
+    for (final Float32List chunk in _recChunks) {
+      out.setRange(offset, offset + chunk.length, chunk);
+      offset += chunk.length;
+    }
+    _recChunks.clear();
+    _recFrames = 0;
+    return out;
+  }
+
+  void _appendRecording(Float32List chunk) {
+    final int room = _maxRecordFrames - _recFrames;
+    if (room <= 0) return;
+    if (chunk.length <= room) {
+      _recChunks.add(chunk);
+      _recFrames += chunk.length;
+    } else {
+      _recChunks.add(Float32List.sublistView(chunk, 0, room));
+      _recFrames += room;
+      _recording = false;
+      onRecordLimitReached?.call();
+    }
+  }
 
   /// Selected capture device. `null` follows the platform default mic.
   InputDevice? device;
@@ -128,15 +181,19 @@ class MicAnalyzer {
       count * 2,
     );
     final double g = gain;
+    final Float32List? rec = _recording ? Float32List(count) : null;
     for (int i = 0; i < count; i++) {
       final double sample = view.getInt16(i * 2, Endian.little) / 32768.0;
-      _ring[_filled] = g == 1.0 ? sample : (sample * g).clamp(-1.0, 1.0);
+      final double v = g == 1.0 ? sample : (sample * g).clamp(-1.0, 1.0);
+      _ring[_filled] = v;
+      if (rec != null) rec[i] = v;
       _filled++;
       if (_filled == fftSize) {
         _analyze();
         _filled = 0;
       }
     }
+    if (rec != null) _appendRecording(rec);
   }
 
   void _analyze() {
@@ -211,6 +268,9 @@ class MicAnalyzer {
 
   Future<void> stop() async {
     _running = false;
+    _recording = false;
+    _recChunks.clear();
+    _recFrames = 0;
     await _sub?.cancel();
     _sub = null;
     try {

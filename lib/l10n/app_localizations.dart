@@ -8965,6 +8965,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mic gain'**
   String get sfMicGain;
+
+  /// No description provided for @sfRecordClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Record clip'**
+  String get sfRecordClip;
+
+  /// No description provided for @sfStopAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop & save'**
+  String get sfStopAndSave;
+
+  /// No description provided for @sfClipSavedAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio clip saved to Downloads'**
+  String get sfClipSavedAndroid;
+
+  /// No description provided for @sfClipSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip saved to {path}'**
+  String sfClipSaved(String path);
+
+  /// No description provided for @sfClipSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the audio clip'**
+  String get sfClipSaveError;
 }
 
 class _AppLocalizationsDelegate

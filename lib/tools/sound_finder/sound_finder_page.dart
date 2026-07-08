@@ -9,6 +9,7 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
 import 'sound_finder_state.dart';
+import 'widgets/sf_clip_recorder.dart';
 import 'widgets/sf_counter_view.dart';
 import 'widgets/sf_gain_control.dart';
 import 'widgets/sf_generator_view.dart';
@@ -88,6 +89,10 @@ class _SoundFinderPageState extends State<SoundFinderPage>
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
               child: SfGainControl(),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: SfClipRecorder(),
             ),
           ],
           Expanded(
