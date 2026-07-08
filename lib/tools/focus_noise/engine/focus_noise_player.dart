@@ -6,6 +6,7 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 import '../../../services/foreground_runtime_service.dart';
 import '../../../services/power_wake_lock_service.dart';
 import '../focus_noise_sound.dart';
+import 'noise_loop_builder.dart';
 import 'noise_pcm_generator.dart';
 
 class FocusNoisePlayer {
@@ -15,36 +16,16 @@ class FocusNoisePlayer {
   /// running in the background via the foreground service.
   static final FocusNoisePlayer instance = FocusNoisePlayer._();
 
-  static const int _sampleRate = 48000;
-  static const int _channels = 2;
-  static const int _chunkFrames = 4096;
-  static const int _pushRounds = 24;
-  static const int _initialRounds = 96;
-  static const Duration _pushInterval = Duration(seconds: 2);
-
-  // A non-zero rebuffer window lets SoLoud pause-and-resume on an underrun
-  // instead of ending the stream. Combined with a wide buffer target it keeps
-  // generated audio alive when Android throttles the feed timer in the
-  // background.
-  static const double _bufferingTimeNeeds = 2;
-  static const int _bufferTargetSeconds = 20;
-  static const Duration _maxBufferDuration = Duration(seconds: 30);
-
-  final NoisePcmGenerator _generator = NoisePcmGenerator(
-    sampleRate: _sampleRate,
-    channels: _channels,
-  );
-
   SoundHandle? _handle;
-  AudioSource? _stream;
-  AudioSource? _assetSource;
-  Timer? _feedTimer;
-  bool _pushing = false;
+  AudioSource? _source;
   bool _isPlaying = false;
   double _volume = 0.65;
   FocusNoiseSound? _currentSound;
   WakeLockLease? _partialWakeLock;
   ForegroundRuntimeLease? _foregroundRuntimeLease;
+
+  /// Guards against a late-arriving [play] result overwriting a newer request.
+  int _playGeneration = 0;
 
   /// Localized text for the background-playback foreground notification.
   /// Set by the page once a [BuildContext] is available.
@@ -55,9 +36,6 @@ class FocusNoisePlayer {
   /// stop action), so the page can sync its UI state.
   VoidCallback? onExternalStop;
 
-  int _totalPushedFrames = 0;
-  int _startedAt = 0;
-
   bool get isPlaying => _isPlaying;
   double get volume => _volume;
   FocusNoiseSound? get currentSound => _currentSound;
@@ -66,27 +44,31 @@ class FocusNoisePlayer {
     await _ensureInit();
     await stop();
 
+    final int generation = ++_playGeneration;
     _currentSound = sound;
     await _acquireLocks();
 
-    if (sound.isAsset) {
-      await _playAsset(sound);
+    final AudioSource source = sound.isAsset
+        ? await _loadAsset(sound)
+        : await _loadGenerated(sound);
+
+    // A newer play()/stop() ran while we were rendering/decoding — discard.
+    if (generation != _playGeneration) {
+      SoLoud.instance.disposeSource(source);
       return;
     }
 
-    await _playGenerated(sound);
-  }
-
-  Future<void> _playAsset(FocusNoiseSound sound) async {
-    final String? assetPath = sound.assetPath;
-    if (assetPath == null) return;
-    _assetSource = await SoLoud.instance.loadAsset(assetPath);
-    _handle = SoLoud.instance.play(_assetSource!, volume: _volume);
+    _source = source;
+    _handle = SoLoud.instance.play(source, volume: _volume);
     SoLoud.instance.setLooping(_handle!, true);
     _isPlaying = true;
   }
 
-  Future<void> _playGenerated(FocusNoiseSound sound) async {
+  Future<AudioSource> _loadAsset(FocusNoiseSound sound) {
+    return SoLoud.instance.loadAsset(sound.assetPath!);
+  }
+
+  Future<AudioSource> _loadGenerated(FocusNoiseSound sound) async {
     final GeneratedNoiseType type = switch (sound.id) {
       'white' => GeneratedNoiseType.white,
       'pink' => GeneratedNoiseType.pink,
@@ -95,120 +77,13 @@ class FocusNoisePlayer {
       'green' => GeneratedNoiseType.green,
       _ => GeneratedNoiseType.pink,
     };
-
-    _generator.reset();
-    _startedAt = 0;
-    _totalPushedFrames = 0;
-    _stream = _openGeneratedStream();
-
-    _push(type, _initialRounds);
-    _handle = SoLoud.instance.play(_stream!, volume: _volume);
-    _isPlaying = true;
-    _startedAt = DateTime.now().microsecondsSinceEpoch;
-
-    _schedulePush(type);
-  }
-
-  AudioSource _openGeneratedStream() {
-    return SoLoud.instance.setBufferStream(
-      sampleRate: _sampleRate,
-      channels: Channels.stereo,
-      format: BufferType.f32le,
-      bufferingType: BufferingType.released,
-      bufferingTimeNeeds: _bufferingTimeNeeds,
-      maxBufferSizeDuration: _maxBufferDuration,
-    );
-  }
-
-  /// Recreates the buffer stream after it ended (e.g. a long background
-  /// underrun) so playback resumes instead of dying permanently.
-  void _recoverGeneratedStream(GeneratedNoiseType type) {
-    if (!_isPlaying) return;
-    debugPrint('[FocusNoisePlayer] generated stream ended; recovering');
-
-    final SoundHandle? oldHandle = _handle;
-    final AudioSource? oldStream = _stream;
-    _handle = null;
-    _stream = null;
-    if (oldHandle != null) {
-      unawaited(SoLoud.instance.stop(oldHandle).catchError((_) {}));
-    }
-    if (oldStream != null) {
-      try {
-        SoLoud.instance.disposeSource(oldStream);
-      } catch (_) {}
-    }
-
-    _startedAt = 0;
-    _totalPushedFrames = 0;
-    try {
-      _stream = _openGeneratedStream();
-      _push(type, _initialRounds);
-      _handle = SoLoud.instance.play(_stream!, volume: _volume);
-      _startedAt = DateTime.now().microsecondsSinceEpoch;
-      _schedulePush(type);
-    } catch (e) {
-      debugPrint('[FocusNoisePlayer] recovery failed: $e');
-      _isPlaying = false;
-    }
-  }
-
-  void _schedulePush(GeneratedNoiseType type) {
-    _feedTimer = Timer(_pushInterval, () => _onTimer(type));
-  }
-
-  void _onTimer(GeneratedNoiseType type) {
-    if (_pushing || _stream == null) return;
-    _pushing = true;
-    bool ended = false;
-    try {
-      _push(type, _pushRounds);
-    } on SoLoudStreamEndedAlreadyCppException {
-      ended = true;
-    } catch (e) {
-      debugPrint('[FocusNoisePlayer] Push failed: $e');
-    } finally {
-      _pushing = false;
-    }
-    if (ended) {
-      _recoverGeneratedStream(type);
-      return;
-    }
-    if (_isPlaying) {
-      _schedulePush(type);
-    }
-  }
-
-  int _estimatedBufferedFrames() {
-    if (_startedAt == 0) return 0;
-    final int elapsed = DateTime.now().microsecondsSinceEpoch - _startedAt;
-    final int consumed = (elapsed * _sampleRate ~/ 1000000);
-    return (_totalPushedFrames - consumed).clamp(0, _totalPushedFrames);
-  }
-
-  void _push(GeneratedNoiseType type, int rounds) {
-    if (_stream == null) return;
-    if (_estimatedBufferedFrames() >= _bufferTargetSeconds * _sampleRate) {
-      return;
-    }
-    final int totalFrames = rounds * _chunkFrames;
-    _totalPushedFrames += totalFrames;
-    final Float32List buffer = Float32List(totalFrames * _channels);
-    int offset = 0;
-    for (int i = 0; i < rounds; i++) {
-      final Float32List chunk = _generator.generate(
-        type: type,
-        frames: _chunkFrames,
-      );
-      buffer.setRange(offset, offset + chunk.length, chunk);
-      offset += chunk.length;
-    }
-    SoLoud.instance.addAudioDataStream(_stream!, buffer.buffer.asUint8List());
+    final Uint8List wav = await NoiseLoopBuilder.buildWav(type: type);
+    return SoLoud.instance.loadMem('focus_${sound.id}.wav', wav);
   }
 
   void setVolume(double value) {
     _volume = value.clamp(0.0, 1.0);
-    final handle = _handle;
+    final SoundHandle? handle = _handle;
     if (handle != null) {
       SoLoud.instance.setVolume(handle, _volume);
     }
@@ -216,9 +91,7 @@ class FocusNoisePlayer {
 
   Future<void> stop() async {
     _isPlaying = false;
-    _feedTimer?.cancel();
-    _feedTimer = null;
-    _pushing = false;
+    _playGeneration++;
 
     final SoundHandle? handle = _handle;
     if (handle != null) {
@@ -226,16 +99,10 @@ class FocusNoisePlayer {
       _handle = null;
     }
 
-    final AudioSource? stream = _stream;
-    if (stream != null) {
-      SoLoud.instance.disposeSource(stream);
-      _stream = null;
-    }
-
-    final AudioSource? asset = _assetSource;
-    if (asset != null) {
-      SoLoud.instance.disposeSource(asset);
-      _assetSource = null;
+    final AudioSource? source = _source;
+    if (source != null) {
+      SoLoud.instance.disposeSource(source);
+      _source = null;
     }
 
     _releaseLocks();
@@ -262,7 +129,7 @@ class FocusNoisePlayer {
   void _releaseLocks() {
     if (_foregroundRuntimeLease != null) {
       ForegroundRuntimeService.removeActionListener(_handleNotificationAction);
-      final lease = _foregroundRuntimeLease;
+      final ForegroundRuntimeLease? lease = _foregroundRuntimeLease;
       _foregroundRuntimeLease = null;
       if (lease != null) unawaited(lease.release());
     }
