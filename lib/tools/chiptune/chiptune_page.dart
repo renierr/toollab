@@ -31,6 +31,8 @@ import 'widgets/chiptune_playlist_panel.dart';
 import 'widgets/chiptune_random_button.dart';
 import 'widgets/modarchive_fetch_dialog.dart';
 import 'widgets/visualizations/chiptune_viz_registry.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class ChiptunePage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -101,6 +103,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   bool _visualizerEnabled = true;
   bool _appInForeground = true;
   String _currentVizId = ChiptuneVizRegistry.defaultId;
+  int? _outputDeviceId;
 
   /// True while an externally-opened/shared file is being read + decoded, so the
   /// view shows a spinner instead of briefly flashing the empty upload zone.
@@ -174,15 +177,21 @@ class _ChiptunePageState extends State<ChiptunePage>
     final loop = await db.getSetting(ChiptuneArchive.toolId, 'looping');
     final vis = await db.getSetting(ChiptuneArchive.toolId, 'vis_id');
     final visOn = await db.getSetting(ChiptuneArchive.toolId, 'visualizer');
+    final deviceIdStr = await db.getSetting(
+      ChiptuneArchive.toolId,
+      'output_device_id',
+    );
     if (!mounted) return;
     setState(() {
       _volume = double.tryParse(vol ?? '') ?? 0.7;
       _looping = loop == '1';
       _visualizerEnabled = visOn != '0';
       _currentVizId = vis ?? ChiptuneVizRegistry.defaultId;
+      _outputDeviceId = int.tryParse(deviceIdStr ?? '');
     });
     _player.setVolume(_volume);
     _player.setLooping(_looping);
+    _player.setInitialDeviceId(_outputDeviceId);
   }
 
   // ---- File loading ----
@@ -379,6 +388,86 @@ class _ChiptunePageState extends State<ChiptunePage>
   void _setVizId(String id) {
     setState(() => _currentVizId = id);
     DatabaseService.instance.setSetting(ChiptuneArchive.toolId, 'vis_id', id);
+  }
+
+  void _setOutputDevice(PlaybackDevice? device) {
+    setState(() => _outputDeviceId = device?.id);
+    _player.setOutputDevice(device);
+    DatabaseService.instance.setSetting(
+      ChiptuneArchive.toolId,
+      'output_device_id',
+      device?.id.toString() ?? '',
+    );
+  }
+
+  void _showDeviceSelectionDialog(List<PlaybackDevice> devices) {
+    final l10n = AppLocalizations.of(context);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return ResponsiveAlertDialog(
+              title: Text(l10n.chipSelectOutputDevice),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: devices.length,
+                  itemBuilder: (context, index) {
+                    final device = devices[index];
+                    final isSelected =
+                        (_outputDeviceId == null && device.isDefault) ||
+                        (_outputDeviceId == device.id);
+                    return ListTile(
+                      leading: Icon(
+                        device.isDefault
+                            ? Icons.speaker_outlined
+                            : Icons.volume_up_outlined,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                      ),
+                      title: Text(
+                        device.isDefault
+                            ? '${device.name} (${l10n.chipDefaultDevice})'
+                            : device.name,
+                        style: TextStyle(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                          fontWeight: isSelected ? FontWeight.bold : null,
+                        ),
+                      ),
+                      trailing: isSelected
+                          ? Icon(
+                              Icons.check,
+                              color: Theme.of(context).colorScheme.primary,
+                            )
+                          : null,
+                      onTap: () {
+                        setDialogState(() {
+                          _outputDeviceId = device.isDefault ? null : device.id;
+                        });
+                        _setOutputDevice(device.isDefault ? null : device);
+                        Navigator.of(context).pop();
+                        _showSnack(l10n.chipOutputDeviceChanged(device.name));
+                      },
+                    );
+                  },
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(l10n.commonBack),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   VoidCallback? _nextButtonAction() {
@@ -815,6 +904,12 @@ class _ChiptunePageState extends State<ChiptunePage>
     final isNative = _player.isNative;
     final hasServer = context.watch<AppState>().syncServerUrl.trim().isNotEmpty;
 
+    List<PlaybackDevice> devices = [];
+    try {
+      devices = SoLoud.instance.listPlaybackDevices();
+    } catch (_) {}
+    final hasMultipleDevices = devices.length > 1;
+
     final Widget content;
     if (_openingSharedFile && !hasPlayable) {
       content = const Center(child: CircularProgressIndicator());
@@ -885,6 +980,12 @@ class _ChiptunePageState extends State<ChiptunePage>
           modArchiveLabel: l10n.chipRandomSourceModArchive,
           serverLabel: l10n.chipRandomSourceServer,
         ),
+        if (hasMultipleDevices)
+          IconButton(
+            tooltip: l10n.chipSelectOutputDevice,
+            icon: const Icon(Icons.speaker_group_outlined),
+            onPressed: () => _showDeviceSelectionDialog(devices),
+          ),
         IconButton(
           tooltip: l10n.chipLoadFiles,
           icon: const Icon(Icons.folder_open),

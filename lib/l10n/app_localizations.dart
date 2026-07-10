@@ -656,6 +656,24 @@ abstract class AppLocalizations {
   /// **'No supported module files selected'**
   String get chipPlaylistNoSupported;
 
+  /// No description provided for @chipSelectOutputDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Output Device'**
+  String get chipSelectOutputDevice;
+
+  /// No description provided for @chipDefaultDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Device'**
+  String get chipDefaultDevice;
+
+  /// No description provided for @chipOutputDeviceChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Output device changed to {name}'**
+  String chipOutputDeviceChanged(Object name);
+
   /// No description provided for @chipRandomTitle.
   ///
   /// In en, this message translates to:

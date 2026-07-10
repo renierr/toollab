@@ -309,6 +309,17 @@ class AppLocalizationsDe extends AppLocalizations {
       'Keine unterstützten Moduldateien ausgewählt';
 
   @override
+  String get chipSelectOutputDevice => 'Ausgabegerät auswählen';
+
+  @override
+  String get chipDefaultDevice => 'Standardgerät';
+
+  @override
+  String chipOutputDeviceChanged(Object name) {
+    return 'Ausgabegerät geändert auf $name';
+  }
+
+  @override
   String get chipRandomTitle => 'Zufälliges Stück';
 
   @override

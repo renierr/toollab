@@ -83,6 +83,7 @@ class ChiptunePlayer {
   bool _nearEndFired = false;
   double _volume = 0.7;
   bool _looping = false;
+  int? _savedDeviceId;
 
   /// Localized text for the background-playback foreground notification.
   /// Set by the page once a [BuildContext] is available.
@@ -402,6 +403,21 @@ class ChiptunePlayer {
     }
   }
 
+  void setInitialDeviceId(int? deviceId) {
+    _savedDeviceId = deviceId;
+  }
+
+  void setOutputDevice(PlaybackDevice? device) {
+    _savedDeviceId = device?.id;
+    if (SoLoud.instance.isInitialized) {
+      try {
+        SoLoud.instance.changeDevice(newDevice: device);
+      } catch (e) {
+        debugPrint('$_logPrefix Error changing output device: $e');
+      }
+    }
+  }
+
   void _startFeed() {
     _feedTimer?.cancel();
     _scheduleFeedLoop();
@@ -600,8 +616,30 @@ class ChiptunePlayer {
   }
 
   Future<void> _ensureInit() async {
+    PlaybackDevice? savedDevice;
+    final savedId = _savedDeviceId;
+    if (savedId != null) {
+      try {
+        final devices = SoLoud.instance.listPlaybackDevices();
+        for (final d in devices) {
+          if (d.id == savedId) {
+            savedDevice = d;
+            break;
+          }
+        }
+      } catch (e) {
+        debugPrint('$_logPrefix Error listing devices during init: $e');
+      }
+    }
+
     if (!SoLoud.instance.isInitialized) {
-      await SoLoud.instance.init();
+      await SoLoud.instance.init(device: savedDevice);
+    } else if (savedDevice != null) {
+      try {
+        SoLoud.instance.changeDevice(newDevice: savedDevice);
+      } catch (e) {
+        debugPrint('$_logPrefix Error changing device during init: $e');
+      }
     }
   }
 

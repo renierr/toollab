@@ -305,6 +305,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipPlaylistNoSupported => 'No supported module files selected';
 
   @override
+  String get chipSelectOutputDevice => 'Select Output Device';
+
+  @override
+  String get chipDefaultDevice => 'Default Device';
+
+  @override
+  String chipOutputDeviceChanged(Object name) {
+    return 'Output device changed to $name';
+  }
+
+  @override
   String get chipRandomTitle => 'Random Tune';
 
   @override
