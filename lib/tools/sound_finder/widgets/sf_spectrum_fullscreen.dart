@@ -22,18 +22,15 @@ import 'sf_readout.dart';
 import 'sf_spectrogram_view.dart';
 import 'sf_spectrum_view.dart';
 
-/// Encodes captured RGBA frames into an animated GIF. Runs in a background
-/// isolate (via [compute]) so the per-frame color quantization never blocks
-/// the UI. [args] carries `fps` (int) and `frames` (list of {w, h, bytes}).
-Uint8List _encodeSpectrumGif(Map<String, dynamic> args) {
+/// Encodes captured RGBA frames into an animated PNG (APNG) — lossless and
+/// full-color, unlike GIF's 256-color palette. Runs in a background isolate
+/// (via [compute]) so zlib compression never blocks the UI. [args] carries
+/// `fps` (int) and `frames` (list of {w, h, bytes}).
+Uint8List _encodeSpectrumApng(Map<String, dynamic> args) {
   final int fps = args['fps'] as int;
   final List<dynamic> frames = args['frames'] as List<dynamic>;
-  final encoder = img.GifEncoder(
-    repeat: 0,
-    quantizerType: img.QuantizerType.octree,
-    dither: img.DitherKernel.none,
-  );
-  final int durationCs = (100 / fps).round();
+  final int durationMs = (1000 / fps).round();
+  final encoder = img.PngEncoder()..start(frames.length);
   for (final dynamic f in frames) {
     final Map<dynamic, dynamic> m = f as Map<dynamic, dynamic>;
     final image = img.Image.fromBytes(
@@ -42,8 +39,8 @@ Uint8List _encodeSpectrumGif(Map<String, dynamic> args) {
       bytes: (m['bytes'] as Uint8List).buffer,
       numChannels: 4,
       order: img.ChannelOrder.rgba,
-    );
-    encoder.addFrame(image, duration: durationCs);
+    )..frameDuration = durationMs;
+    encoder.addFrame(image);
   }
   return encoder.finish() ?? Uint8List(0);
 }
@@ -75,11 +72,11 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
   bool _maxHold = true;
   bool _showSpectrogram = true;
 
-  // GIF recording of the live visualization.
+  // APNG recording of the live visualization.
   static const int _recFps = 10;
   static const int _recMaxFrames = 200; // ~20 s hard cap
   static const double _recMaxWidth =
-      360; // downscale wide screens to bound size
+      540; // cap capture width (APNG is lossless, so keep it crisp)
   bool _recording = false;
   bool _saving = false;
   bool _capturing = false;
@@ -221,18 +218,18 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
     if (_frames.isEmpty) return;
 
     setState(() => _saving = true);
-    final Uint8List gif = await compute(_encodeSpectrumGif, <String, dynamic>{
+    final Uint8List apng = await compute(_encodeSpectrumApng, <String, dynamic>{
       'fps': _recFps,
       'frames': List<Map<String, dynamic>>.from(_frames),
     });
     _frames.clear();
     if (!mounted) return;
     setState(() => _saving = false);
-    if (gif.isEmpty) return;
+    if (apng.isEmpty) return;
     await FileSaveHelper.saveFile(
       context: context,
-      suggestedName: 'spectrum.gif',
-      bytes: gif,
+      suggestedName: 'spectrum-clip.png',
+      bytes: apng,
     );
   }
 
@@ -422,8 +419,14 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          color: theme.colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.4),
+                          // Opaque equivalent of the 0.4 surface tint over the
+                          // scaffold — looks identical on screen but keeps
+                          // captured frames/screenshots free of partial alpha.
+                          color: Color.alphaBlend(
+                            theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.4),
+                            theme.scaffoldBackgroundColor,
+                          ),
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               final double width = constraints.maxWidth;
