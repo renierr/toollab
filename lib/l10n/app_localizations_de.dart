@@ -4992,4 +4992,19 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get sfZoomHint =>
       'Zoomen mit Ziehen oder Scrollen · zum Verschieben wischen · Doppeltippen setzt zurück';
+
+  @override
+  String get sfScreenshot => 'Screenshot';
+
+  @override
+  String get sfCopyImage => 'In Zwischenablage kopieren';
+
+  @override
+  String get sfSaveImage => 'Bild speichern';
+
+  @override
+  String get sfImageCopied => 'Spektrum in die Zwischenablage kopiert';
+
+  @override
+  String get sfImageCopyFailed => 'Spektrumbild konnte nicht kopiert werden';
 }

@@ -2641,6 +2641,11 @@
   "sfMaxHold": "Max hold",
   "sfResetZoom": "Reset zoom",
   "sfRange": "Range",
-  "sfZoomHint": "Pinch or scroll to zoom · drag to pan · double-tap to reset"
+  "sfZoomHint": "Pinch or scroll to zoom · drag to pan · double-tap to reset",
+  "sfScreenshot": "Screenshot",
+  "sfCopyImage": "Copy to clipboard",
+  "sfSaveImage": "Save image",
+  "sfImageCopied": "Spectrum copied to clipboard",
+  "sfImageCopyFailed": "Couldn't copy the spectrum image"
 }
 

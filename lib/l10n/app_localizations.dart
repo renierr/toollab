@@ -9037,6 +9037,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pinch or scroll to zoom · drag to pan · double-tap to reset'**
   String get sfZoomHint;
+
+  /// No description provided for @sfScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot'**
+  String get sfScreenshot;
+
+  /// No description provided for @sfCopyImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy to clipboard'**
+  String get sfCopyImage;
+
+  /// No description provided for @sfSaveImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Save image'**
+  String get sfSaveImage;
+
+  /// No description provided for @sfImageCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Spectrum copied to clipboard'**
+  String get sfImageCopied;
+
+  /// No description provided for @sfImageCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t copy the spectrum image'**
+  String get sfImageCopyFailed;
 }
 
 class _AppLocalizationsDelegate

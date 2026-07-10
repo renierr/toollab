@@ -4957,4 +4957,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sfZoomHint =>
       'Pinch or scroll to zoom · drag to pan · double-tap to reset';
+
+  @override
+  String get sfScreenshot => 'Screenshot';
+
+  @override
+  String get sfCopyImage => 'Copy to clipboard';
+
+  @override
+  String get sfSaveImage => 'Save image';
+
+  @override
+  String get sfImageCopied => 'Spectrum copied to clipboard';
+
+  @override
+  String get sfImageCopyFailed => 'Couldn\'t copy the spectrum image';
 }

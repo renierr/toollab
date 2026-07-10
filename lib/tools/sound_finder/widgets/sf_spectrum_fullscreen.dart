@@ -1,8 +1,13 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/clipboard_helper.dart';
+import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../sf_format.dart';
@@ -30,6 +35,8 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
   static const double _minHz = 20;
   static const double _defaultMaxHz = 22050;
   static const double _minSpan = 0.26; // ~1.3× narrowest visible range
+
+  final GlobalKey _shotKey = GlobalKey();
 
   double? _logLo;
   double? _logHi;
@@ -71,6 +78,45 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
       _logLo = newLo;
       _logHi = newLo + newSpan;
     });
+  }
+
+  /// Renders the spectrum graph to PNG bytes at the display pixel ratio.
+  Future<Uint8List?> _capturePng() async {
+    final RenderRepaintBoundary? boundary =
+        _shotKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final double ratio = MediaQuery.of(context).devicePixelRatio;
+    final ui.Image image = await boundary.toImage(pixelRatio: ratio);
+    try {
+      final ByteData? data = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      return data?.buffer.asUint8List();
+    } finally {
+      image.dispose();
+    }
+  }
+
+  Future<void> _copyImage() async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final Uint8List? bytes = await _capturePng();
+    if (bytes == null) return;
+    final bool ok = await ClipboardHelper.copyImageBytes(bytes);
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(content: Text(ok ? l10n.sfImageCopied : l10n.sfImageCopyFailed)),
+    );
+  }
+
+  Future<void> _saveImage() async {
+    final Uint8List? bytes = await _capturePng();
+    if (bytes == null || !mounted) return;
+    await FileSaveHelper.saveFile(
+      context: context,
+      suggestedName: 'spectrum.png',
+      bytes: bytes,
+    );
   }
 
   void _onScaleStart(ScaleStartDetails d, double width) {
@@ -125,6 +171,33 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
             tooltip: l10n.sfResetZoom,
             onPressed: () => _reset(nyquist),
           ),
+          PopupMenuButton<int>(
+            icon: const Icon(Icons.photo_camera_outlined),
+            tooltip: l10n.sfScreenshot,
+            onSelected: (v) => v == 0 ? _copyImage() : _saveImage(),
+            itemBuilder: (context) => [
+              PopupMenuItem<int>(
+                value: 0,
+                child: Row(
+                  children: [
+                    const Icon(Icons.copy, size: 20),
+                    const SizedBox(width: 12),
+                    Text(l10n.sfCopyImage),
+                  ],
+                ),
+              ),
+              PopupMenuItem<int>(
+                value: 1,
+                child: Row(
+                  children: [
+                    const Icon(Icons.download, size: 20),
+                    const SizedBox(width: 12),
+                    Text(l10n.sfSaveImage),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: Padding(
@@ -152,46 +225,49 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.4,
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final double width = constraints.maxWidth;
-                      return Listener(
-                        onPointerSignal: (event) {
-                          if (event is PointerScrollEvent) {
-                            final double factor = event.scrollDelta.dy < 0
-                                ? 1.2
-                                : 1 / 1.2;
-                            _zoomAt(
-                              factor,
-                              event.localPosition.dx,
-                              width,
-                              nyquist,
-                            );
-                          }
-                        },
-                        child: GestureDetector(
-                          onScaleStart: (d) => _onScaleStart(d, width),
-                          onScaleUpdate: (d) =>
-                              _onScaleUpdate(d, width, nyquist),
-                          onDoubleTap: () => _reset(nyquist),
-                          child: SfSpectrumView(
-                            magnitudes: analysis.magnitudes,
-                            binHz: analysis.binHz,
-                            peakFreqHz: state.smoothPeakHz,
-                            minHz: visMin,
-                            maxHz: visMax,
-                            showAxes: true,
-                            maxHold: _maxHold,
+              child: RepaintBoundary(
+                key: _shotKey,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.4,
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final double width = constraints.maxWidth;
+                        return Listener(
+                          onPointerSignal: (event) {
+                            if (event is PointerScrollEvent) {
+                              final double factor = event.scrollDelta.dy < 0
+                                  ? 1.2
+                                  : 1 / 1.2;
+                              _zoomAt(
+                                factor,
+                                event.localPosition.dx,
+                                width,
+                                nyquist,
+                              );
+                            }
+                          },
+                          child: GestureDetector(
+                            onScaleStart: (d) => _onScaleStart(d, width),
+                            onScaleUpdate: (d) =>
+                                _onScaleUpdate(d, width, nyquist),
+                            onDoubleTap: () => _reset(nyquist),
+                            child: SfSpectrumView(
+                              magnitudes: analysis.magnitudes,
+                              binHz: analysis.binHz,
+                              peakFreqHz: state.smoothPeakHz,
+                              minHz: visMin,
+                              maxHz: visMax,
+                              showAxes: true,
+                              maxHold: _maxHold,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
