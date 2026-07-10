@@ -28,8 +28,10 @@ class _ChiptunePulseGridVizState extends State<ChiptunePulseGridViz> {
       final dt = data.deltaTime;
       final speed = 1 + data.bass * 5;
 
+      final len = data.freq.length;
       for (int i = 0; i < 128; i++) {
-        _freq[i] = _freq[i] * 0.7 + data.freq[i] * 0.3;
+        final srcIdx = (i * (len - 1) ~/ 127).clamp(0, len - 1);
+        _freq[i] = _freq[i] * 0.7 + data.freq[srcIdx] * 0.3;
       }
       for (int i = 0; i < 256; i++) {
         _wave[i] = _wave[i] * 0.6 + data.wave[i] * 0.4;

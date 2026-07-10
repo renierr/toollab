@@ -7,6 +7,7 @@ import 'chiptune_pulse_grid_viz.dart';
 import 'chiptune_spectrum_viz.dart';
 import 'chiptune_viz_data.dart';
 import 'chiptune_waveform_viz.dart';
+import 'chiptune_waterfall_viz.dart';
 
 /// Metadata + factory for a single chiptune visualization.
 class VizDefinition {
@@ -70,6 +71,13 @@ class ChiptuneVizRegistry {
       icon: Icons.blur_on,
       create: ({VizData? data, Key? key}) =>
           ChiptuneParticlesViz(key: key, data: data),
+    ),
+    VizDefinition(
+      id: 'waterfall',
+      label: 'Waterfall',
+      icon: Icons.waves,
+      create: ({VizData? data, Key? key}) =>
+          ChiptuneWaterfallViz(key: key, data: data),
     ),
   ];
 

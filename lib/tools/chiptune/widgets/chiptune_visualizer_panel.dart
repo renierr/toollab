@@ -87,10 +87,10 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
 
       final freq = <double>[];
       double bassSum = 0;
-      for (int i = 0; i < 128; i++) {
+      for (int i = 0; i < 256; i++) {
         final v = all[i].clamp(0.0, 1.0);
         freq.add(v);
-        if (i < 8) bassSum += v;
+        if (i < 16) bassSum += v;
       }
 
       final wave = <double>[];
@@ -101,7 +101,7 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
       _latestData = VizData(
         freq: freq,
         wave: wave,
-        bass: bassSum / 8,
+        bass: bassSum / 16,
         deltaTime: dt,
       );
 
