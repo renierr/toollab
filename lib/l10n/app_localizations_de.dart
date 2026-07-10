@@ -4961,6 +4961,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfMicGain => 'Mikrofonverstärkung';
 
   @override
+  String get sfInputSettings => 'Eingangseinstellungen';
+
+  @override
   String get sfRecordClip => 'Clip aufnehmen';
 
   @override

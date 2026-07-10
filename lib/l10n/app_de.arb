@@ -1799,6 +1799,7 @@
   "sfMicDefault": "Standardmikrofon",
   "sfRefreshMics": "Mikrofone neu suchen",
   "sfMicGain": "Mikrofonverstärkung",
+  "sfInputSettings": "Eingangseinstellungen",
   "sfRecordClip": "Clip aufnehmen",
   "sfStopAndSave": "Stopp & speichern",
   "sfClipSavedAndroid": "Audioclip in Downloads gespeichert",

@@ -2625,6 +2625,7 @@
   "sfMicDefault": "Default microphone",
   "sfRefreshMics": "Rescan microphones",
   "sfMicGain": "Mic gain",
+  "sfInputSettings": "Input settings",
   "sfRecordClip": "Record clip",
   "sfStopAndSave": "Stop & save",
   "sfClipSavedAndroid": "Audio clip saved to Downloads",

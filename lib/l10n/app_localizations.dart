@@ -8978,6 +8978,12 @@ abstract class AppLocalizations {
   /// **'Mic gain'**
   String get sfMicGain;
 
+  /// No description provided for @sfInputSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Input settings'**
+  String get sfInputSettings;
+
   /// No description provided for @sfRecordClip.
   ///
   /// In en, this message translates to:

@@ -4926,6 +4926,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfMicGain => 'Mic gain';
 
   @override
+  String get sfInputSettings => 'Input settings';
+
+  @override
   String get sfRecordClip => 'Record clip';
 
   @override

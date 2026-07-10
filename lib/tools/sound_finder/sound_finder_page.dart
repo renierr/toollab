@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
+import 'package:tool_lab/widgets/collapsible_section.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
@@ -66,6 +67,9 @@ class _SoundFinderPageState extends State<SoundFinderPage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final SfMode mode = context.select<SoundFinderState, SfMode>((s) => s.mode);
+    final bool isMicRunning = context.select<SoundFinderState, bool>(
+      (s) => s.micStatus == MicStatus.running,
+    );
 
     final Widget view = switch (mode) {
       SfMode.tracker => const SfTrackerView(),
@@ -81,20 +85,25 @@ class _SoundFinderPageState extends State<SoundFinderPage>
             padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: SfModeTabs(),
           ),
-          if (mode != SfMode.generator) ...[
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 4, 16, 0),
-              child: SfMicSelector(),
+          if (mode != SfMode.generator && isMicRunning)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              child: CollapsibleSection(
+                icon: Icons.tune_outlined,
+                title: l10n.sfInputSettings,
+                initiallyExpanded: true,
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SfMicSelector(),
+                    SizedBox(height: 8),
+                    SfGainControl(),
+                    SizedBox(height: 8),
+                    SfClipRecorder(),
+                  ],
+                ),
+              ),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-              child: SfGainControl(),
-            ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 4, 16, 0),
-              child: SfClipRecorder(),
-            ),
-          ],
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
