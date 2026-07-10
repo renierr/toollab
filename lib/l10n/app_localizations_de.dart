@@ -4990,10 +4990,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfRange => 'Bereich';
 
   @override
-  String get sfZoomHint =>
-      'Zoomen mit Ziehen oder Scrollen · zum Verschieben wischen · Doppeltippen setzt zurück';
-
-  @override
   String get sfScreenshot => 'Screenshot';
 
   @override
@@ -5007,6 +5003,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sfImageCopyFailed => 'Spektrumbild konnte nicht kopiert werden';
+
+  @override
+  String get sfSpectrogram => 'Spektrogramm';
 
   @override
   String get sfResFast => 'Schnell';

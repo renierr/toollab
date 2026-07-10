@@ -4955,10 +4955,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfRange => 'Range';
 
   @override
-  String get sfZoomHint =>
-      'Pinch or scroll to zoom · drag to pan · double-tap to reset';
-
-  @override
   String get sfScreenshot => 'Screenshot';
 
   @override
@@ -4972,6 +4968,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sfImageCopyFailed => 'Couldn\'t copy the spectrum image';
+
+  @override
+  String get sfSpectrogram => 'Spectrogram';
 
   @override
   String get sfResFast => 'Fast';

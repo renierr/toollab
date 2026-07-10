@@ -15,6 +15,7 @@ import '../sf_format.dart';
 import '../sound_finder_colors.dart';
 import '../sound_finder_state.dart';
 import 'sf_readout.dart';
+import 'sf_spectrogram_view.dart';
 import 'sf_spectrum_view.dart';
 
 /// Enlarged, zoomable spectrum for pinpointing a frequency. Pinch to zoom the
@@ -42,6 +43,7 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
   double? _logLo;
   double? _logHi;
   bool _maxHold = true;
+  bool _showSpectrogram = true;
 
   double _startLo = 0;
   double _startSpan = 1;
@@ -168,6 +170,15 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
             onPressed: () => setState(() => _maxHold = !_maxHold),
           ),
           IconButton(
+            icon: Icon(
+              _showSpectrogram ? Icons.gradient : Icons.gradient_outlined,
+              color: _showSpectrogram ? SoundFinderColors.spectrumHigh : null,
+            ),
+            tooltip: l10n.sfSpectrogram,
+            onPressed: () =>
+                setState(() => _showSpectrogram = !_showSpectrogram),
+          ),
+          IconButton(
             icon: const Icon(Icons.zoom_out_map),
             tooltip: l10n.sfResetZoom,
             onPressed: () => _reset(nyquist),
@@ -207,20 +218,27 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SfReadout(
-                  label: l10n.sfDominant,
-                  value: formatHz(state.smoothPeakHz),
-                  valueColor: SoundFinderColors.spectrumHigh,
+                Flexible(
+                  child: SfReadout(
+                    label: l10n.sfDominant,
+                    value: formatHz(state.smoothPeakHz),
+                    valueColor: SoundFinderColors.spectrumHigh,
+                  ),
                 ),
-                SfReadout(
-                  label: l10n.sfLevel,
-                  value: '${state.smoothDb.toStringAsFixed(0)} dB',
+                const SizedBox(width: 12),
+                Flexible(
+                  child: SfReadout(
+                    label: l10n.sfLevel,
+                    value: '${state.smoothDb.toStringAsFixed(0)} dB',
+                  ),
                 ),
-                SfReadout(
-                  label: l10n.sfRange,
-                  value: '${formatHz(visMin)} – ${formatHz(visMax)}',
+                const SizedBox(width: 12),
+                Flexible(
+                  child: SfReadout(
+                    label: l10n.sfRange,
+                    value: '${formatHz(visMin)} – ${formatHz(visMax)}',
+                  ),
                 ),
               ],
             ),
@@ -288,18 +306,37 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
                             }
                           },
                           child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
                             onScaleStart: (d) => _onScaleStart(d, width),
                             onScaleUpdate: (d) =>
                                 _onScaleUpdate(d, width, nyquist),
                             onDoubleTap: () => _reset(nyquist),
-                            child: SfSpectrumView(
-                              magnitudes: analysis.magnitudes,
-                              binHz: analysis.binHz,
-                              peakFreqHz: state.smoothPeakHz,
-                              minHz: visMin,
-                              maxHz: visMax,
-                              showAxes: true,
-                              maxHold: _maxHold,
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  flex: _showSpectrogram ? 5 : 10,
+                                  child: SfSpectrumView(
+                                    magnitudes: analysis.magnitudes,
+                                    binHz: analysis.binHz,
+                                    peakFreqHz: state.smoothPeakHz,
+                                    minHz: visMin,
+                                    maxHz: visMax,
+                                    showAxes: true,
+                                    maxHold: _maxHold,
+                                  ),
+                                ),
+                                if (_showSpectrogram)
+                                  Expanded(
+                                    flex: 5,
+                                    child: SfSpectrogramView(
+                                      magnitudes: analysis.magnitudes,
+                                      binHz: analysis.binHz,
+                                      minHz: visMin,
+                                      maxHz: visMax,
+                                      fullMaxHz: nyquist,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         );
@@ -307,14 +344,6 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
                     ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.sfZoomHint,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],

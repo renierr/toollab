@@ -9032,12 +9032,6 @@ abstract class AppLocalizations {
   /// **'Range'**
   String get sfRange;
 
-  /// No description provided for @sfZoomHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Pinch or scroll to zoom · drag to pan · double-tap to reset'**
-  String get sfZoomHint;
-
   /// No description provided for @sfScreenshot.
   ///
   /// In en, this message translates to:
@@ -9067,6 +9061,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t copy the spectrum image'**
   String get sfImageCopyFailed;
+
+  /// No description provided for @sfSpectrogram.
+  ///
+  /// In en, this message translates to:
+  /// **'Spectrogram'**
+  String get sfSpectrogram;
 
   /// No description provided for @sfResFast.
   ///
