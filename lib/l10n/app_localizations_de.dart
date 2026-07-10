@@ -4991,5 +4991,5 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sfZoomHint =>
-      'Zum Zoomen ziehen · zum Verschieben wischen · Doppeltippen setzt zurück';
+      'Zoomen mit Ziehen oder Scrollen · zum Verschieben wischen · Doppeltippen setzt zurück';
 }

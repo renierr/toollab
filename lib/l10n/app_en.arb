@@ -2641,6 +2641,6 @@
   "sfMaxHold": "Max hold",
   "sfResetZoom": "Reset zoom",
   "sfRange": "Range",
-  "sfZoomHint": "Pinch to zoom · drag to pan · double-tap to reset"
+  "sfZoomHint": "Pinch or scroll to zoom · drag to pan · double-tap to reset"
 }
 

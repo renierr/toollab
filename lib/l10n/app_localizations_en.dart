@@ -4955,5 +4955,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfRange => 'Range';
 
   @override
-  String get sfZoomHint => 'Pinch to zoom · drag to pan · double-tap to reset';
+  String get sfZoomHint =>
+      'Pinch or scroll to zoom · drag to pan · double-tap to reset';
 }

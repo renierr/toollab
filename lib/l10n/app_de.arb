@@ -1815,6 +1815,6 @@
   "sfMaxHold": "Maximum halten",
   "sfResetZoom": "Zoom zurücksetzen",
   "sfRange": "Bereich",
-  "sfZoomHint": "Zum Zoomen ziehen · zum Verschieben wischen · Doppeltippen setzt zurück"
+  "sfZoomHint": "Zoomen mit Ziehen oder Scrollen · zum Verschieben wischen · Doppeltippen setzt zurück"
 }
 

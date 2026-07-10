@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -55,6 +56,23 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
     });
   }
 
+  /// Zooms the visible range by [factor] (>1 zooms in) anchored at [focalX],
+  /// keeping the frequency under the cursor fixed. Used for mouse-wheel zoom.
+  void _zoomAt(double factor, double focalX, double width, double nyquist) {
+    final double lo = _logLo!;
+    final double span = _logHi! - lo;
+    final double fullSpan = _fullMax(nyquist) - _fullMin;
+    final double newSpan = (span / factor).clamp(_minSpan, fullSpan);
+    final double frac = (focalX / width).clamp(0.0, 1.0);
+    final double focalLog = lo + frac * span;
+    final double maxLo = math.max(_fullMin, _fullMax(nyquist) - newSpan);
+    final double newLo = (focalLog - frac * newSpan).clamp(_fullMin, maxLo);
+    setState(() {
+      _logLo = newLo;
+      _logHi = newLo + newSpan;
+    });
+  }
+
   void _onScaleStart(ScaleStartDetails d, double width) {
     _startLo = _logLo!;
     _startSpan = _logHi! - _logLo!;
@@ -66,8 +84,10 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
     final double fullSpan = _fullMax(nyquist) - _fullMin;
     final double newSpan = (_startSpan / d.scale).clamp(_minSpan, fullSpan);
     final double frac = (d.localFocalPoint.dx / width).clamp(0.0, 1.0);
-    double lo = _startFocalLog - frac * newSpan;
-    lo = lo.clamp(_fullMin, _fullMax(nyquist) - newSpan);
+    // math.max guards against float rounding making the upper bound dip just
+    // below _fullMin when fully zoomed out (clamp throws if lower > upper).
+    final double maxLo = math.max(_fullMin, _fullMax(nyquist) - newSpan);
+    final double lo = (_startFocalLog - frac * newSpan).clamp(_fullMin, maxLo);
     setState(() {
       _logLo = lo;
       _logHi = lo + newSpan;
@@ -141,18 +161,34 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final double width = constraints.maxWidth;
-                      return GestureDetector(
-                        onScaleStart: (d) => _onScaleStart(d, width),
-                        onScaleUpdate: (d) => _onScaleUpdate(d, width, nyquist),
-                        onDoubleTap: () => _reset(nyquist),
-                        child: SfSpectrumView(
-                          magnitudes: analysis.magnitudes,
-                          binHz: analysis.binHz,
-                          peakFreqHz: state.smoothPeakHz,
-                          minHz: visMin,
-                          maxHz: visMax,
-                          showAxes: true,
-                          maxHold: _maxHold,
+                      return Listener(
+                        onPointerSignal: (event) {
+                          if (event is PointerScrollEvent) {
+                            final double factor = event.scrollDelta.dy < 0
+                                ? 1.2
+                                : 1 / 1.2;
+                            _zoomAt(
+                              factor,
+                              event.localPosition.dx,
+                              width,
+                              nyquist,
+                            );
+                          }
+                        },
+                        child: GestureDetector(
+                          onScaleStart: (d) => _onScaleStart(d, width),
+                          onScaleUpdate: (d) =>
+                              _onScaleUpdate(d, width, nyquist),
+                          onDoubleTap: () => _reset(nyquist),
+                          child: SfSpectrumView(
+                            magnitudes: analysis.magnitudes,
+                            binHz: analysis.binHz,
+                            peakFreqHz: state.smoothPeakHz,
+                            minHz: visMin,
+                            maxHz: visMax,
+                            showAxes: true,
+                            maxHold: _maxHold,
+                          ),
                         ),
                       );
                     },

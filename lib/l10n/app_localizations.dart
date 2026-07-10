@@ -9035,7 +9035,7 @@ abstract class AppLocalizations {
   /// No description provided for @sfZoomHint.
   ///
   /// In en, this message translates to:
-  /// **'Pinch to zoom · drag to pan · double-tap to reset'**
+  /// **'Pinch or scroll to zoom · drag to pan · double-tap to reset'**
   String get sfZoomHint;
 }
 
