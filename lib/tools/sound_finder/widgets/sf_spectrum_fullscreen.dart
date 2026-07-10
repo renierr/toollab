@@ -13,6 +13,7 @@ import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/collapsible_section.dart';
 
 import '../audio/mic_analyzer.dart';
 import '../sf_format.dart';
@@ -342,69 +343,81 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // One FittedBox around the whole row so all three readouts shrink
-            // by the same factor on narrow screens instead of independently.
-            SizedBox(
-              width: double.infinity,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SfReadout(
-                      label: l10n.sfDominant,
-                      value: formatHz(state.smoothPeakHz),
-                      valueColor: SoundFinderColors.spectrumHigh,
+            CollapsibleSection(
+              icon: Icons.tune_outlined,
+              title: l10n.sfSpectrumSettings,
+              initiallyExpanded: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 8),
+                  // One FittedBox around the whole row so all three readouts shrink
+                  // by the same factor on narrow screens instead of independently.
+                  SizedBox(
+                    width: double.infinity,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SfReadout(
+                            label: l10n.sfDominant,
+                            value: formatHz(state.smoothPeakHz),
+                            valueColor: SoundFinderColors.spectrumHigh,
+                          ),
+                          const SizedBox(width: 24),
+                          SfReadout(
+                            label: l10n.sfLevel,
+                            value: '${state.smoothDb.toStringAsFixed(0)} dB',
+                          ),
+                          const SizedBox(width: 24),
+                          SfReadout(
+                            label: l10n.sfRange,
+                            value: '${formatHz(visMin)} – ${formatHz(visMax)}',
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 24),
-                    SfReadout(
-                      label: l10n.sfLevel,
-                      value: '${state.smoothDb.toStringAsFixed(0)} dB',
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<SpectrumResolution>(
+                    showSelectedIcon: false,
+                    style: const ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    const SizedBox(width: 24),
-                    SfReadout(
-                      label: l10n.sfRange,
-                      value: '${formatHz(visMin)} – ${formatHz(visMax)}',
+                    segments: [
+                      ButtonSegment(
+                        value: SpectrumResolution.fast,
+                        label: Text(l10n.sfResFast),
+                      ),
+                      ButtonSegment(
+                        value: SpectrumResolution.balanced,
+                        label: Text(l10n.sfResBalanced),
+                      ),
+                      ButtonSegment(
+                        value: SpectrumResolution.fine,
+                        label: Text(l10n.sfResFine),
+                      ),
+                    ],
+                    selected: {state.spectrumResolution},
+                    onSelectionChanged: (sel) => context
+                        .read<SoundFinderState>()
+                        .setSpectrumResolution(sel.first),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.sfBinWidth(
+                      state.spectrumResolution.binHz.toStringAsFixed(1),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SegmentedButton<SpectrumResolution>(
-              showSelectedIcon: false,
-              style: const ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              segments: [
-                ButtonSegment(
-                  value: SpectrumResolution.fast,
-                  label: Text(l10n.sfResFast),
-                ),
-                ButtonSegment(
-                  value: SpectrumResolution.balanced,
-                  label: Text(l10n.sfResBalanced),
-                ),
-                ButtonSegment(
-                  value: SpectrumResolution.fine,
-                  label: Text(l10n.sfResFine),
-                ),
-              ],
-              selected: {state.spectrumResolution},
-              onSelectionChanged: (sel) => context
-                  .read<SoundFinderState>()
-                  .setSpectrumResolution(sel.first),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.sfBinWidth(
-                state.spectrumResolution.binHz.toStringAsFixed(1),
-              ),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
             const SizedBox(height: 12),

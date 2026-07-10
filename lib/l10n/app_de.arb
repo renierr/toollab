@@ -1800,6 +1800,7 @@
   "sfRefreshMics": "Mikrofone neu suchen",
   "sfMicGain": "Mikrofonverstärkung",
   "sfInputSettings": "Eingangseinstellungen",
+  "sfSpectrumSettings": "Spektrum-Einstellungen",
   "sfRecordClip": "Clip aufnehmen",
   "sfStopAndSave": "Stopp & speichern",
   "sfClipSavedAndroid": "Audioclip in Downloads gespeichert",

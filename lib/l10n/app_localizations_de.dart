@@ -4964,6 +4964,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfInputSettings => 'Eingangseinstellungen';
 
   @override
+  String get sfSpectrumSettings => 'Spektrum-Einstellungen';
+
+  @override
   String get sfRecordClip => 'Clip aufnehmen';
 
   @override

@@ -8984,6 +8984,12 @@ abstract class AppLocalizations {
   /// **'Input settings'**
   String get sfInputSettings;
 
+  /// No description provided for @sfSpectrumSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Spectrum settings'**
+  String get sfSpectrumSettings;
+
   /// No description provided for @sfRecordClip.
   ///
   /// In en, this message translates to:
