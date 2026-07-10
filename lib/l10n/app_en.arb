@@ -2590,7 +2590,6 @@
   "sfGrantPermission": "Grant access",
   "sfOpenGenerator": "Open generator",
   "sfTrackerTitle": "Locate the source",
-  "sfTrackerHint": "Slowly walk around the room. The meter and guidance react to how loud the sound gets — louder means you're closer.",
   "sfLevel": "Level",
   "sfDominant": "Dominant",
   "sfPeakHold": "Peak",

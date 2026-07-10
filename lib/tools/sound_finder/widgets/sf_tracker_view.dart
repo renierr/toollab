@@ -112,13 +112,6 @@ class SfTrackerView extends StatelessWidget {
                 ),
               ],
               const SizedBox(height: 12),
-              Text(
-                l10n.sfTrackerHint,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,

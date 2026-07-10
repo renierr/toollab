@@ -4817,10 +4817,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfTrackerTitle => 'Locate the source';
 
   @override
-  String get sfTrackerHint =>
-      'Slowly walk around the room. The meter and guidance react to how loud the sound gets — louder means you\'re closer.';
-
-  @override
   String get sfLevel => 'Level';
 
   @override

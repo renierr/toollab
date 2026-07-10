@@ -4852,10 +4852,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfTrackerTitle => 'Quelle orten';
 
   @override
-  String get sfTrackerHint =>
-      'Gehe langsam durch den Raum. Messwert und Hinweis reagieren auf die Lautstärke – lauter heißt näher an der Quelle.';
-
-  @override
   String get sfLevel => 'Pegel';
 
   @override

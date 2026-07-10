@@ -1764,7 +1764,6 @@
   "sfGrantPermission": "Zugriff erlauben",
   "sfOpenGenerator": "Generator öffnen",
   "sfTrackerTitle": "Quelle orten",
-  "sfTrackerHint": "Gehe langsam durch den Raum. Messwert und Hinweis reagieren auf die Lautstärke – lauter heißt näher an der Quelle.",
   "sfLevel": "Pegel",
   "sfDominant": "Dominant",
   "sfPeakHold": "Spitze",

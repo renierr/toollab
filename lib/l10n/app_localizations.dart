@@ -8768,12 +8768,6 @@ abstract class AppLocalizations {
   /// **'Locate the source'**
   String get sfTrackerTitle;
 
-  /// No description provided for @sfTrackerHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Slowly walk around the room. The meter and guidance react to how loud the sound gets — louder means you\'re closer.'**
-  String get sfTrackerHint;
-
   /// No description provided for @sfLevel.
   ///
   /// In en, this message translates to:
