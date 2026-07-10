@@ -1820,6 +1820,17 @@
   "sfCopyImage": "In Zwischenablage kopieren",
   "sfSaveImage": "Bild speichern",
   "sfImageCopied": "Spektrum in die Zwischenablage kopiert",
-  "sfImageCopyFailed": "Spektrumbild konnte nicht kopiert werden"
+  "sfImageCopyFailed": "Spektrumbild konnte nicht kopiert werden",
+  "sfResFast": "Schnell",
+  "sfResBalanced": "Ausgewogen",
+  "sfResFine": "Fein",
+  "sfBinWidth": "≈ {hz} Hz pro Bin",
+  "@sfBinWidth": {
+    "placeholders": {
+      "hz": {
+        "type": "String"
+      }
+    }
+  }
 }
 

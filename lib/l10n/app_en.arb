@@ -2646,6 +2646,17 @@
   "sfCopyImage": "Copy to clipboard",
   "sfSaveImage": "Save image",
   "sfImageCopied": "Spectrum copied to clipboard",
-  "sfImageCopyFailed": "Couldn't copy the spectrum image"
+  "sfImageCopyFailed": "Couldn't copy the spectrum image",
+  "sfResFast": "Fast",
+  "sfResBalanced": "Balanced",
+  "sfResFine": "Fine",
+  "sfBinWidth": "≈ {hz} Hz per bin",
+  "@sfBinWidth": {
+    "placeholders": {
+      "hz": {
+        "type": "String"
+      }
+    }
+  }
 }
 

@@ -10,6 +10,7 @@ import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../audio/mic_analyzer.dart';
 import '../sf_format.dart';
 import '../sound_finder_colors.dart';
 import '../sound_finder_state.dart';
@@ -222,6 +223,42 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
                   value: '${formatHz(visMin)} – ${formatHz(visMax)}',
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<SpectrumResolution>(
+              showSelectedIcon: false,
+              style: const ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              segments: [
+                ButtonSegment(
+                  value: SpectrumResolution.fast,
+                  label: Text(l10n.sfResFast),
+                ),
+                ButtonSegment(
+                  value: SpectrumResolution.balanced,
+                  label: Text(l10n.sfResBalanced),
+                ),
+                ButtonSegment(
+                  value: SpectrumResolution.fine,
+                  label: Text(l10n.sfResFine),
+                ),
+              ],
+              selected: {state.spectrumResolution},
+              onSelectionChanged: (sel) => context
+                  .read<SoundFinderState>()
+                  .setSpectrumResolution(sel.first),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.sfBinWidth(
+                state.spectrumResolution.binHz.toStringAsFixed(1),
+              ),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             Expanded(

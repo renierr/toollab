@@ -31,6 +31,7 @@ class SoundFinderState extends ChangeNotifier {
   static const String _kCtrNoise = 'ctr_noise';
   static const String _kMicDevice = 'mic_device';
   static const String _kMicGain = 'mic_gain';
+  static const String _kSpectrumRes = 'spectrum_res';
 
   static const double maxMicGain = 20;
 
@@ -92,6 +93,7 @@ class SoundFinderState extends ChangeNotifier {
   List<InputDevice> get inputDevices => _inputDevices;
   InputDevice? get selectedDevice => _selectedDevice;
   double get micGain => _micGain;
+  SpectrumResolution get spectrumResolution => _mic.resolution;
   bool get isRecording => _mic.isRecording;
   double get recordedSeconds => _mic.recordedSeconds;
   static int get maxRecordSeconds => MicAnalyzer.maxRecordSeconds;
@@ -180,6 +182,13 @@ class SoundFinderState extends ChangeNotifier {
         if (_micStatus == MicStatus.running) await _restartMic();
       }
     }
+    notifyListeners();
+  }
+
+  void setSpectrumResolution(SpectrumResolution r) {
+    if (r == _mic.resolution) return;
+    _mic.setResolution(r);
+    _save(_kSpectrumRes, r.name);
     notifyListeners();
   }
 
@@ -422,6 +431,9 @@ class SoundFinderState extends ChangeNotifier {
     final ctrNoise = await db.getSetting(_toolId, _kCtrNoise);
     final micDevice = await db.getSetting(_toolId, _kMicDevice);
     final micGain = await db.getSetting(_toolId, _kMicGain);
+    final spectrumRes = await db.getSetting(_toolId, _kSpectrumRes);
+    final SpectrumResolution? res = _resolutionFromName(spectrumRes);
+    if (res != null) _mic.setResolution(res);
     _pendingDeviceId = (micDevice != null && micDevice.isNotEmpty)
         ? micDevice
         : null;
@@ -437,6 +449,14 @@ class SoundFinderState extends ChangeNotifier {
         double.tryParse(ctrPhase ?? '')?.clamp(0.0, 360.0) ?? 180;
     _counterNoise = double.tryParse(ctrNoise ?? '')?.clamp(0.0, 1.0) ?? 0;
     notifyListeners();
+  }
+
+  SpectrumResolution? _resolutionFromName(String? name) {
+    if (name == null) return null;
+    for (final r in SpectrumResolution.values) {
+      if (r.name == name) return r;
+    }
+    return null;
   }
 
   ToneWaveform? _waveFromName(String? name) {

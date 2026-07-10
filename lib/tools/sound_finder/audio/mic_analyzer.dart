@@ -8,6 +8,23 @@ import 'fft.dart';
 
 enum MicStartResult { ok, denied, unavailable }
 
+/// Spectrum detail presets. The bin resolution is `sampleRate / fftSize`
+/// (a fundamental time–frequency tradeoff: finer bins need a longer window).
+/// The hop is held constant across presets so the refresh rate stays ~10.8/s
+/// regardless of window size — larger windows just overlap more.
+enum SpectrumResolution {
+  fast(8192, 4096), // ~5.4 Hz bins, 186 ms window, 50% overlap
+  balanced(16384, 4096), // ~2.7 Hz bins, 372 ms window, 75% overlap
+  fine(32768, 4096); // ~1.3 Hz bins, 743 ms window, 87.5% overlap
+
+  const SpectrumResolution(this.fftSize, this.hop);
+
+  final int fftSize;
+  final int hop;
+
+  double get binHz => MicAnalyzer.sampleRate / fftSize;
+}
+
 /// A single frame of microphone analysis.
 class MicAnalysis {
   final double rms; // 0..1 linear loudness of the window
@@ -44,10 +61,6 @@ class MicAnalysis {
 /// mic stays as sensitive and unprocessed as possible.
 class MicAnalyzer {
   static const int sampleRate = 44100;
-  static const int fftSize = 8192; // ~186 ms window, ~5.4 Hz bin resolution
-  // 50% overlap keeps the refresh rate (~10.8/s) responsive despite the larger
-  // window: after each transform the newest half of the ring is retained.
-  static const int _hop = fftSize ~/ 2;
   static const double _minFreqHz = 20;
 
   /// Longest clip that can be captured into memory before recording auto-stops.
@@ -55,8 +68,28 @@ class MicAnalyzer {
 
   final AudioRecorder _recorder = AudioRecorder();
   StreamSubscription<Uint8List>? _sub;
-  final Float64List _ring = Float64List(fftSize);
+
+  // Analysis window. Configurable at runtime via [setResolution]; a larger
+  // window yields finer frequency bins. The ring is refilled by [_hop] samples
+  // between transforms (the rest is retained), so overlap = 1 - hop/fftSize.
+  SpectrumResolution _resolution = SpectrumResolution.balanced;
+  int _fftSize = SpectrumResolution.balanced.fftSize;
+  int _hop = SpectrumResolution.balanced.hop;
+  Float64List _ring = Float64List(SpectrumResolution.balanced.fftSize);
   int _filled = 0;
+
+  SpectrumResolution get resolution => _resolution;
+
+  /// Switches the analysis window. Safe to call while running — the in-flight
+  /// partial window is discarded and the next frame uses the new size.
+  void setResolution(SpectrumResolution r) {
+    if (r == _resolution) return;
+    _resolution = r;
+    _fftSize = r.fftSize;
+    _hop = r.hop;
+    _ring = Float64List(_fftSize);
+    _filled = 0;
+  }
 
   // Clip recording: gained samples are accumulated in chunks and concatenated
   // on stop, capped at [maxRecordSeconds].
@@ -195,11 +228,11 @@ class MicAnalyzer {
       _ring[_filled] = v;
       if (rec != null) rec[i] = v;
       _filled++;
-      if (_filled == fftSize) {
+      if (_filled == _fftSize) {
         _analyze();
-        // Slide the window: keep the newest [_hop] samples for the next frame.
-        _ring.setRange(0, fftSize - _hop, _ring, _hop);
-        _filled = fftSize - _hop;
+        // Slide the window: keep everything past the newest [_hop] samples.
+        _ring.setRange(0, _fftSize - _hop, _ring, _hop);
+        _filled = _fftSize - _hop;
       }
     }
     if (rec != null) _appendRecording(rec);
@@ -213,10 +246,10 @@ class MicAnalyzer {
     final Float64List mags = spec.magnitudes;
 
     double sumSq = 0;
-    for (int i = 0; i < fftSize; i++) {
+    for (int i = 0; i < _fftSize; i++) {
       sumSq += _ring[i] * _ring[i];
     }
-    final double rms = math.sqrt(sumSq / fftSize);
+    final double rms = math.sqrt(sumSq / _fftSize);
     final double db = rms > 1e-7 ? 20 * (math.log(rms) / math.ln10) : -90.0;
 
     final int minBin = math.max(1, (_minFreqHz / spec.binHz).floor());

@@ -4972,4 +4972,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sfImageCopyFailed => 'Couldn\'t copy the spectrum image';
+
+  @override
+  String get sfResFast => 'Fast';
+
+  @override
+  String get sfResBalanced => 'Balanced';
+
+  @override
+  String get sfResFine => 'Fine';
+
+  @override
+  String sfBinWidth(String hz) {
+    return '≈ $hz Hz per bin';
+  }
 }

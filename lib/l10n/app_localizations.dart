@@ -9067,6 +9067,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t copy the spectrum image'**
   String get sfImageCopyFailed;
+
+  /// No description provided for @sfResFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get sfResFast;
+
+  /// No description provided for @sfResBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get sfResBalanced;
+
+  /// No description provided for @sfResFine.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine'**
+  String get sfResFine;
+
+  /// No description provided for @sfBinWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'≈ {hz} Hz per bin'**
+  String sfBinWidth(String hz);
 }
 
 class _AppLocalizationsDelegate
