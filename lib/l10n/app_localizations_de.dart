@@ -4976,4 +4976,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sfClipSaveError => 'Audioclip konnte nicht gespeichert werden';
+
+  @override
+  String get sfEnlargeSpectrum => 'Spektrum vergrößern';
+
+  @override
+  String get sfMaxHold => 'Maximum halten';
+
+  @override
+  String get sfResetZoom => 'Zoom zurücksetzen';
+
+  @override
+  String get sfRange => 'Bereich';
+
+  @override
+  String get sfZoomHint =>
+      'Zum Zoomen ziehen · zum Verschieben wischen · Doppeltippen setzt zurück';
 }

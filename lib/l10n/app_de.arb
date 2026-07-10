@@ -1810,6 +1810,11 @@
       }
     }
   },
-  "sfClipSaveError": "Audioclip konnte nicht gespeichert werden"
+  "sfClipSaveError": "Audioclip konnte nicht gespeichert werden",
+  "sfEnlargeSpectrum": "Spektrum vergrößern",
+  "sfMaxHold": "Maximum halten",
+  "sfResetZoom": "Zoom zurücksetzen",
+  "sfRange": "Bereich",
+  "sfZoomHint": "Zum Zoomen ziehen · zum Verschieben wischen · Doppeltippen setzt zurück"
 }
 

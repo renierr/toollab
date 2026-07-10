@@ -11,7 +11,7 @@ import '../sound_finder_state.dart';
 import 'sf_frequency_control.dart';
 import 'sf_labeled_slider.dart';
 import 'sf_readout.dart';
-import 'sf_spectrum.dart';
+import 'sf_spectrum_panel.dart';
 import 'sf_waveform_selector.dart';
 
 class SfCounterView extends StatelessWidget {
@@ -64,10 +64,7 @@ class SfCounterView extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                SfSpectrum(
-                  bars: state.analysis.bars,
-                  peakFreqHz: state.smoothPeakHz,
-                ),
+                const SfSpectrumPanel(),
               ],
             ),
           )

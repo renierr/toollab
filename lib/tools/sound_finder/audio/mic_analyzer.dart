@@ -14,24 +14,28 @@ class MicAnalysis {
   final double db; // dBFS (<= 0), loudness proxy for the tracker
   final double peakFreqHz; // dominant frequency in the window
   final double peakLevel; // linear magnitude of the dominant bin
-  final Float64List bars; // log-spaced spectrum bars, each 0..1 (dB scaled)
+  final Float64List magnitudes; // full linear magnitude spectrum, one per bin
+  final double binHz; // frequency width of a single bin
 
   const MicAnalysis({
     required this.rms,
     required this.db,
     required this.peakFreqHz,
     required this.peakLevel,
-    required this.bars,
+    required this.magnitudes,
+    required this.binHz,
   });
 
-  static const int barCount = 48;
+  /// Highest frequency represented in [magnitudes] (the Nyquist frequency).
+  double get maxFreqHz => binHz * magnitudes.length;
 
   factory MicAnalysis.zero() => MicAnalysis(
     rms: 0,
     db: -90,
     peakFreqHz: 0,
     peakLevel: 0,
-    bars: Float64List(barCount),
+    magnitudes: Float64List(0),
+    binHz: 1,
   );
 }
 
@@ -40,7 +44,10 @@ class MicAnalysis {
 /// mic stays as sensitive and unprocessed as possible.
 class MicAnalyzer {
   static const int sampleRate = 44100;
-  static const int fftSize = 4096; // ~93 ms window, ~10.8 Hz bin resolution
+  static const int fftSize = 8192; // ~186 ms window, ~5.4 Hz bin resolution
+  // 50% overlap keeps the refresh rate (~10.8/s) responsive despite the larger
+  // window: after each transform the newest half of the ring is retained.
+  static const int _hop = fftSize ~/ 2;
   static const double _minFreqHz = 20;
 
   /// Longest clip that can be captured into memory before recording auto-stops.
@@ -190,7 +197,9 @@ class MicAnalyzer {
       _filled++;
       if (_filled == fftSize) {
         _analyze();
-        _filled = 0;
+        // Slide the window: keep the newest [_hop] samples for the next frame.
+        _ring.setRange(0, fftSize - _hop, _ring, _hop);
+        _filled = fftSize - _hop;
       }
     }
     if (rec != null) _appendRecording(rec);
@@ -238,32 +247,10 @@ class MicAnalyzer {
         db: db,
         peakFreqHz: peakFreq,
         peakLevel: peakVal,
-        bars: _buildBars(mags, spec.binHz),
+        magnitudes: mags,
+        binHz: spec.binHz,
       ),
     );
-  }
-
-  Float64List _buildBars(Float64List mags, double binHz) {
-    final bars = Float64List(MicAnalysis.barCount);
-    final double logMin = math.log(_minFreqHz);
-    final double logMax = math.log(sampleRate / 2);
-    for (int b = 0; b < MicAnalysis.barCount; b++) {
-      final double lo = math.exp(
-        logMin + (logMax - logMin) * b / MicAnalysis.barCount,
-      );
-      final double hi = math.exp(
-        logMin + (logMax - logMin) * (b + 1) / MicAnalysis.barCount,
-      );
-      final int loBin = (lo / binHz).floor().clamp(1, mags.length - 1);
-      final int hiBin = (hi / binHz).ceil().clamp(1, mags.length);
-      double peak = 0;
-      for (int i = loBin; i < hiBin; i++) {
-        if (mags[i] > peak) peak = mags[i];
-      }
-      final double d = peak > 1e-7 ? 20 * (math.log(peak) / math.ln10) : -80.0;
-      bars[b] = ((d + 80) / 80).clamp(0.0, 1.0);
-    }
-    return bars;
   }
 
   Future<void> stop() async {

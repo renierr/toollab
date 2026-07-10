@@ -9007,6 +9007,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t save the audio clip'**
   String get sfClipSaveError;
+
+  /// No description provided for @sfEnlargeSpectrum.
+  ///
+  /// In en, this message translates to:
+  /// **'Enlarge spectrum'**
+  String get sfEnlargeSpectrum;
+
+  /// No description provided for @sfMaxHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Max hold'**
+  String get sfMaxHold;
+
+  /// No description provided for @sfResetZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset zoom'**
+  String get sfResetZoom;
+
+  /// No description provided for @sfRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Range'**
+  String get sfRange;
+
+  /// No description provided for @sfZoomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinch to zoom · drag to pan · double-tap to reset'**
+  String get sfZoomHint;
 }
 
 class _AppLocalizationsDelegate

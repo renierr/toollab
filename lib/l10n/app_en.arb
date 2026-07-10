@@ -2636,6 +2636,11 @@
       }
     }
   },
-  "sfClipSaveError": "Couldn't save the audio clip"
+  "sfClipSaveError": "Couldn't save the audio clip",
+  "sfEnlargeSpectrum": "Enlarge spectrum",
+  "sfMaxHold": "Max hold",
+  "sfResetZoom": "Reset zoom",
+  "sfRange": "Range",
+  "sfZoomHint": "Pinch to zoom · drag to pan · double-tap to reset"
 }
 

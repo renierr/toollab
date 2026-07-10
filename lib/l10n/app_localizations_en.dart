@@ -4941,4 +4941,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sfClipSaveError => 'Couldn\'t save the audio clip';
+
+  @override
+  String get sfEnlargeSpectrum => 'Enlarge spectrum';
+
+  @override
+  String get sfMaxHold => 'Max hold';
+
+  @override
+  String get sfResetZoom => 'Reset zoom';
+
+  @override
+  String get sfRange => 'Range';
+
+  @override
+  String get sfZoomHint => 'Pinch to zoom · drag to pan · double-tap to reset';
 }

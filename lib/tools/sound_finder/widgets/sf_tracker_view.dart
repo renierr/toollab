@@ -9,7 +9,7 @@ import '../sound_finder_state.dart';
 import 'sf_level_meter.dart';
 import 'sf_permission_notice.dart';
 import 'sf_readout.dart';
-import 'sf_spectrum.dart';
+import 'sf_spectrum_panel.dart';
 
 class SfTrackerView extends StatelessWidget {
   const SfTrackerView({super.key});
@@ -151,10 +151,7 @@ class SfTrackerView extends StatelessWidget {
         InfoCard(
           icon: Icons.graphic_eq_outlined,
           title: l10n.sfSpectrum,
-          child: SfSpectrum(
-            bars: state.analysis.bars,
-            peakFreqHz: state.smoothPeakHz,
-          ),
+          child: const SfSpectrumPanel(),
         ),
       ],
     );
