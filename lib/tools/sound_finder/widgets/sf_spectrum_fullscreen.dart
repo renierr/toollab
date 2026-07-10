@@ -1,14 +1,18 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:image/image.dart' as img;
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 import '../audio/mic_analyzer.dart';
 import '../sf_format.dart';
@@ -17,6 +21,32 @@ import '../sound_finder_state.dart';
 import 'sf_readout.dart';
 import 'sf_spectrogram_view.dart';
 import 'sf_spectrum_view.dart';
+
+/// Encodes captured RGBA frames into an animated GIF. Runs in a background
+/// isolate (via [compute]) so the per-frame color quantization never blocks
+/// the UI. [args] carries `fps` (int) and `frames` (list of {w, h, bytes}).
+Uint8List _encodeSpectrumGif(Map<String, dynamic> args) {
+  final int fps = args['fps'] as int;
+  final List<dynamic> frames = args['frames'] as List<dynamic>;
+  final encoder = img.GifEncoder(
+    repeat: 0,
+    quantizerType: img.QuantizerType.octree,
+    dither: img.DitherKernel.none,
+  );
+  final int durationCs = (100 / fps).round();
+  for (final dynamic f in frames) {
+    final Map<dynamic, dynamic> m = f as Map<dynamic, dynamic>;
+    final image = img.Image.fromBytes(
+      width: m['w'] as int,
+      height: m['h'] as int,
+      bytes: (m['bytes'] as Uint8List).buffer,
+      numChannels: 4,
+      order: img.ChannelOrder.rgba,
+    );
+    encoder.addFrame(image, duration: durationCs);
+  }
+  return encoder.finish() ?? Uint8List(0);
+}
 
 /// Enlarged, zoomable spectrum for pinpointing a frequency. Pinch to zoom the
 /// log-frequency axis and drag to pan; double-tap resets to the full range.
@@ -44,6 +74,17 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
   double? _logHi;
   bool _maxHold = true;
   bool _showSpectrogram = true;
+
+  // GIF recording of the live visualization.
+  static const int _recFps = 10;
+  static const int _recMaxFrames = 200; // ~20 s hard cap
+  static const double _recMaxWidth =
+      360; // downscale wide screens to bound size
+  bool _recording = false;
+  bool _saving = false;
+  bool _capturing = false;
+  Timer? _recTimer;
+  final List<Map<String, dynamic>> _frames = [];
 
   double _startLo = 0;
   double _startSpan = 1;
@@ -122,6 +163,85 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
     );
   }
 
+  void _toggleRecording() {
+    if (_saving) return;
+    if (_recording) {
+      _stopRecording();
+    } else {
+      _startRecording();
+    }
+  }
+
+  void _startRecording() {
+    _frames.clear();
+    setState(() => _recording = true);
+    _recTimer = Timer.periodic(
+      Duration(milliseconds: (1000 / _recFps).round()),
+      (_) => _captureFrame(),
+    );
+  }
+
+  /// Grabs the current visualization as raw RGBA (downscaled to bound size).
+  /// Cheap GPU→CPU readback only — encoding is deferred to [_stopRecording].
+  Future<void> _captureFrame() async {
+    if (_capturing || !_recording) return;
+    _capturing = true;
+    try {
+      final RenderRepaintBoundary? boundary =
+          _shotKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
+      final double ratio = (_recMaxWidth / boundary.size.width).clamp(0.1, 1.0);
+      final ui.Image image = await boundary.toImage(pixelRatio: ratio);
+      final int w = image.width;
+      final int h = image.height;
+      final ByteData? data = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      image.dispose();
+      if (data == null || !_recording) return;
+      _frames.add({
+        'w': w,
+        'h': h,
+        'bytes': Uint8List.fromList(
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        ),
+      });
+      if (mounted) setState(() {});
+      if (_frames.length >= _recMaxFrames) _stopRecording();
+    } finally {
+      _capturing = false;
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    _recTimer?.cancel();
+    _recTimer = null;
+    if (!_recording) return;
+    setState(() => _recording = false);
+    if (_frames.isEmpty) return;
+
+    setState(() => _saving = true);
+    final Uint8List gif = await compute(_encodeSpectrumGif, <String, dynamic>{
+      'fps': _recFps,
+      'frames': List<Map<String, dynamic>>.from(_frames),
+    });
+    _frames.clear();
+    if (!mounted) return;
+    setState(() => _saving = false);
+    if (gif.isEmpty) return;
+    await FileSaveHelper.saveFile(
+      context: context,
+      suggestedName: 'spectrum.gif',
+      bytes: gif,
+    );
+  }
+
+  @override
+  void dispose() {
+    _recTimer?.cancel();
+    super.dispose();
+  }
+
   void _onScaleStart(ScaleStartDetails d, double width) {
     _startLo = _logLo!;
     _startSpan = _logHi! - _logLo!;
@@ -182,6 +302,14 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
             icon: const Icon(Icons.zoom_out_map),
             tooltip: l10n.sfResetZoom,
             onPressed: () => _reset(nyquist),
+          ),
+          IconButton(
+            icon: Icon(
+              _recording ? Icons.stop_circle : Icons.fiber_manual_record,
+              color: _recording ? AppTheme.statusRed : null,
+            ),
+            tooltip: _recording ? l10n.sfStopRecording : l10n.sfRecordClip,
+            onPressed: _saving ? null : _toggleRecording,
           ),
           PopupMenuButton<int>(
             icon: const Icon(Icons.photo_camera_outlined),
@@ -284,74 +412,148 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
             ),
             const SizedBox(height: 12),
             Expanded(
-              child: RepaintBoundary(
-                key: _shotKey,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.4,
-                    ),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final double width = constraints.maxWidth;
-                        return Listener(
-                          onPointerSignal: (event) {
-                            if (event is PointerScrollEvent) {
-                              final double factor = event.scrollDelta.dy < 0
-                                  ? 1.2
-                                  : 1 / 1.2;
-                              _zoomAt(
-                                factor,
-                                event.localPosition.dx,
-                                width,
-                                nyquist,
-                              );
-                            }
-                          },
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onScaleStart: (d) => _onScaleStart(d, width),
-                            onScaleUpdate: (d) =>
-                                _onScaleUpdate(d, width, nyquist),
-                            onDoubleTap: () => _reset(nyquist),
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  flex: _showSpectrogram ? 5 : 10,
-                                  child: SfSpectrumView(
-                                    magnitudes: analysis.magnitudes,
-                                    binHz: analysis.binHz,
-                                    peakFreqHz: state.smoothPeakHz,
-                                    minHz: visMin,
-                                    maxHz: visMax,
-                                    showAxes: true,
-                                    maxHold: _maxHold,
+              child: Stack(
+                children: [
+                  // The RepaintBoundary is the sole capture source; the REC and
+                  // saving overlays are siblings so they never land in a frame.
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      key: _shotKey,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          color: theme.colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.4),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final double width = constraints.maxWidth;
+                              return Listener(
+                                onPointerSignal: (event) {
+                                  if (event is PointerScrollEvent) {
+                                    final double factor =
+                                        event.scrollDelta.dy < 0
+                                        ? 1.2
+                                        : 1 / 1.2;
+                                    _zoomAt(
+                                      factor,
+                                      event.localPosition.dx,
+                                      width,
+                                      nyquist,
+                                    );
+                                  }
+                                },
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onScaleStart: (d) => _onScaleStart(d, width),
+                                  onScaleUpdate: (d) =>
+                                      _onScaleUpdate(d, width, nyquist),
+                                  onDoubleTap: () => _reset(nyquist),
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        flex: _showSpectrogram ? 5 : 10,
+                                        child: SfSpectrumView(
+                                          magnitudes: analysis.magnitudes,
+                                          binHz: analysis.binHz,
+                                          peakFreqHz: state.smoothPeakHz,
+                                          minHz: visMin,
+                                          maxHz: visMax,
+                                          showAxes: true,
+                                          maxHold: _maxHold,
+                                        ),
+                                      ),
+                                      if (_showSpectrogram)
+                                        Expanded(
+                                          flex: 5,
+                                          child: SfSpectrogramView(
+                                            magnitudes: analysis.magnitudes,
+                                            binHz: analysis.binHz,
+                                            minHz: visMin,
+                                            maxHz: visMax,
+                                            fullMaxHz: nyquist,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
-                                if (_showSpectrogram)
-                                  Expanded(
-                                    flex: 5,
-                                    child: SfSpectrogramView(
-                                      magnitudes: analysis.magnitudes,
-                                      binHz: analysis.binHz,
-                                      minHz: visMin,
-                                      maxHz: visMax,
-                                      fullMaxHz: nyquist,
-                                    ),
-                                  ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (_recording)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: _RecBadge(seconds: _frames.length / _recFps),
+                    ),
+                  if (_saving) const Positioned.fill(child: _SavingOverlay()),
+                ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Recording indicator overlaid on the spectrum (outside the capture boundary).
+class _RecBadge extends StatelessWidget {
+  final double seconds;
+
+  const _RecBadge({required this.seconds});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.fiber_manual_record,
+            color: AppTheme.statusRed,
+            size: 12,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '${l10n.sfRecordingLabel} ${seconds.toStringAsFixed(1)}s',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Dimmed overlay with a spinner shown while the GIF is being encoded.
+class _SavingOverlay extends StatelessWidget {
+  const _SavingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return ColoredBox(
+      color: Colors.black.withValues(alpha: 0.45),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 12),
+          Text(l10n.sfSavingClip, style: const TextStyle(color: Colors.white)),
+        ],
       ),
     );
   }

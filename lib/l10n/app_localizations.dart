@@ -9068,6 +9068,24 @@ abstract class AppLocalizations {
   /// **'Spectrogram'**
   String get sfSpectrogram;
 
+  /// No description provided for @sfStopRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop recording'**
+  String get sfStopRecording;
+
+  /// No description provided for @sfRecordingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'REC'**
+  String get sfRecordingLabel;
+
+  /// No description provided for @sfSavingClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving clip…'**
+  String get sfSavingClip;
+
   /// No description provided for @sfResFast.
   ///
   /// In en, this message translates to:

@@ -5008,6 +5008,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfSpectrogram => 'Spektrogramm';
 
   @override
+  String get sfStopRecording => 'Aufnahme stoppen';
+
+  @override
+  String get sfRecordingLabel => 'REC';
+
+  @override
+  String get sfSavingClip => 'Clip wird gespeichert…';
+
+  @override
   String get sfResFast => 'Schnell';
 
   @override
