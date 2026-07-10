@@ -217,30 +217,34 @@ class _SfSpectrumFullscreenState extends State<SfSpectrumFullscreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Flexible(
-                  child: SfReadout(
-                    label: l10n.sfDominant,
-                    value: formatHz(state.smoothPeakHz),
-                    valueColor: SoundFinderColors.spectrumHigh,
-                  ),
+            // One FittedBox around the whole row so all three readouts shrink
+            // by the same factor on narrow screens instead of independently.
+            SizedBox(
+              width: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SfReadout(
+                      label: l10n.sfDominant,
+                      value: formatHz(state.smoothPeakHz),
+                      valueColor: SoundFinderColors.spectrumHigh,
+                    ),
+                    const SizedBox(width: 24),
+                    SfReadout(
+                      label: l10n.sfLevel,
+                      value: '${state.smoothDb.toStringAsFixed(0)} dB',
+                    ),
+                    const SizedBox(width: 24),
+                    SfReadout(
+                      label: l10n.sfRange,
+                      value: '${formatHz(visMin)} – ${formatHz(visMax)}',
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: SfReadout(
-                    label: l10n.sfLevel,
-                    value: '${state.smoothDb.toStringAsFixed(0)} dB',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Flexible(
-                  child: SfReadout(
-                    label: l10n.sfRange,
-                    value: '${formatHz(visMin)} – ${formatHz(visMax)}',
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 12),
             SegmentedButton<SpectrumResolution>(
