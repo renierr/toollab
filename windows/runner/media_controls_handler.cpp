@@ -17,7 +17,13 @@
 #include <systemmediatransportcontrolsinterop.h>
 #include <shobjidl.h>
 
+#include <chrono>
+#include <commctrl.h>
+
 #include "media_controls_handler.h"
+
+#pragma comment(lib, "comctl32.lib")
+#define WM_USER_MEDIA_BUTTON (WM_USER + 101)
 
 using flutter::EncodableMap;
 using flutter::EncodableValue;
@@ -27,6 +33,7 @@ struct MediaControlsContext {
   winrt::Windows::Media::SystemMediaTransportControls smtc{nullptr};
   winrt::event_token buttonToken{};
   std::unique_ptr<flutter::MethodChannel<EncodableValue>> channel;
+  int64_t duration_ms = 0;
 };
 
 static std::string
@@ -48,29 +55,89 @@ ButtonToString(
   }
 }
 
+static std::string GetStringOrEmpty(const EncodableValue& val) {
+  if (std::holds_alternative<std::string>(val)) {
+    return std::get<std::string>(val);
+  }
+  return "";
+}
+
+static LRESULT CALLBACK MediaControlsSubclassProc(
+    HWND hwnd,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam,
+    UINT_PTR uIdSubclass,
+    DWORD_PTR dwRefData) {
+  if (uMsg == WM_USER_MEDIA_BUTTON) {
+    auto* ctx = reinterpret_cast<MediaControlsContext*>(dwRefData);
+    if (ctx && ctx->channel) {
+      auto btn = static_cast<winrt::Windows::Media::SystemMediaTransportControlsButton>(wParam);
+      auto btnName = ButtonToString(btn);
+      if (!btnName.empty()) {
+        ctx->channel->InvokeMethod(
+            "onButton",
+            std::make_unique<EncodableValue>(btnName));
+      }
+    }
+    return 0;
+  }
+  return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+}
+
 static void UpdateSmtcMetadata(
-    winrt::Windows::Media::SystemMediaTransportControls const& smtc,
+    MediaControlsContext* ctx,
     EncodableMap const& args) {
+  auto& smtc = ctx->smtc;
   auto updater = smtc.DisplayUpdater();
   updater.Type(winrt::Windows::Media::MediaPlaybackType::Music);
   auto music = updater.MusicProperties();
 
   auto it = args.find(EncodableValue("title"));
   if (it != args.end()) {
-    music.Title(
-        winrt::to_hstring(std::get<std::string>(it->second)));
+    auto val = GetStringOrEmpty(it->second);
+    if (!val.empty()) {
+      music.Title(winrt::to_hstring(val));
+    }
   }
   it = args.find(EncodableValue("artist"));
   if (it != args.end()) {
-    music.Artist(
-        winrt::to_hstring(std::get<std::string>(it->second)));
+    auto val = GetStringOrEmpty(it->second);
+    if (!val.empty()) {
+      music.Artist(winrt::to_hstring(val));
+    }
   }
   it = args.find(EncodableValue("album"));
   if (it != args.end()) {
-    music.AlbumTitle(
-        winrt::to_hstring(std::get<std::string>(it->second)));
+    auto val = GetStringOrEmpty(it->second);
+    if (!val.empty()) {
+      music.AlbumTitle(winrt::to_hstring(val));
+    }
   }
   updater.Update();
+
+  it = args.find(EncodableValue("durationMs"));
+  if (it != args.end() && !it->second.IsNull()) {
+    int64_t durationMs = 0;
+    if (std::holds_alternative<int32_t>(it->second)) {
+      durationMs = std::get<int32_t>(it->second);
+    } else if (std::holds_alternative<int64_t>(it->second)) {
+      durationMs = std::get<int64_t>(it->second);
+    }
+    ctx->duration_ms = durationMs;
+
+    if (durationMs > 0) {
+      winrt::Windows::Media::SystemMediaTransportControlsTimelineProperties timeline;
+      timeline.StartTime(winrt::Windows::Foundation::TimeSpan::zero());
+      timeline.MinSeekTime(winrt::Windows::Foundation::TimeSpan::zero());
+      timeline.MaxSeekTime(std::chrono::milliseconds(durationMs));
+      timeline.EndTime(std::chrono::milliseconds(durationMs));
+      timeline.Position(winrt::Windows::Foundation::TimeSpan::zero());
+      smtc.UpdateTimelineProperties(timeline);
+    }
+  } else {
+    ctx->duration_ms = 0;
+  }
 }
 
 MediaControlsContext*
@@ -113,27 +180,22 @@ InitMediaControls(
         "de.renier.tool_lab/media_controls",
         &flutter::StandardMethodCodec::GetInstance());
 
-    auto weak_ctx = ctx.get();
+    SetWindowSubclass(window_hwnd, MediaControlsSubclassProc, 1, reinterpret_cast<DWORD_PTR>(ctx.get()));
+
+    HWND hwnd = window_hwnd;
     ctx->buttonToken =
         smtc.ButtonPressed(
-            [weak_ctx](
+            [hwnd](
                 const winrt::Windows::Media::
                     SystemMediaTransportControls&,
                 const winrt::Windows::Media::
                     SystemMediaTransportControlsButtonPressedEventArgs&
                     args) {
-              if (!weak_ctx || !weak_ctx->channel)
-                return;
-              auto btnName = ButtonToString(
-                  args.Button());
-              if (!btnName.empty()) {
-                weak_ctx->channel->InvokeMethod(
-                    "onButton",
-                    std::make_unique<EncodableValue>(
-                        btnName));
-              }
+              auto btn = args.Button();
+              PostMessage(hwnd, WM_USER_MEDIA_BUTTON, static_cast<WPARAM>(btn), 0);
             });
 
+    auto weak_ctx = ctx.get();
     ctx->channel->SetMethodCallHandler(
         [weak_ctx](
             const flutter::MethodCall<EncodableValue>&
@@ -155,7 +217,7 @@ InitMediaControls(
               const auto& args =
                   std::get<EncodableMap>(
                       *call.arguments());
-              UpdateSmtcMetadata(smtc, args);
+              UpdateSmtcMetadata(weak_ctx, args);
               result->Success();
 
             } else if (
@@ -187,9 +249,28 @@ InitMediaControls(
 
             } else if (
                 method == "updatePosition") {
+              int64_t positionMs = 0;
+              const auto* args = call.arguments();
+              if (args) {
+                if (std::holds_alternative<int32_t>(*args)) {
+                  positionMs = std::get<int32_t>(*args);
+                } else if (std::holds_alternative<int64_t>(*args)) {
+                  positionMs = std::get<int64_t>(*args);
+                }
+              }
+              if (weak_ctx->duration_ms > 0) {
+                winrt::Windows::Media::SystemMediaTransportControlsTimelineProperties timeline;
+                timeline.StartTime(winrt::Windows::Foundation::TimeSpan::zero());
+                timeline.MinSeekTime(winrt::Windows::Foundation::TimeSpan::zero());
+                timeline.MaxSeekTime(std::chrono::milliseconds(weak_ctx->duration_ms));
+                timeline.EndTime(std::chrono::milliseconds(weak_ctx->duration_ms));
+                timeline.Position(std::chrono::milliseconds(positionMs));
+                smtc.UpdateTimelineProperties(timeline);
+              }
               result->Success();
 
             } else if (method == "clear") {
+              weak_ctx->duration_ms = 0;
               smtc.PlaybackStatus(
                   winrt::Windows::Media::
                       MediaPlaybackStatus::Stopped);
@@ -209,6 +290,15 @@ InitMediaControls(
               music.Artist(L"");
               music.AlbumTitle(L"");
               updater.Update();
+
+              winrt::Windows::Media::SystemMediaTransportControlsTimelineProperties timeline;
+              timeline.StartTime(winrt::Windows::Foundation::TimeSpan::zero());
+              timeline.MinSeekTime(winrt::Windows::Foundation::TimeSpan::zero());
+              timeline.MaxSeekTime(winrt::Windows::Foundation::TimeSpan::zero());
+              timeline.EndTime(winrt::Windows::Foundation::TimeSpan::zero());
+              timeline.Position(winrt::Windows::Foundation::TimeSpan::zero());
+              smtc.UpdateTimelineProperties(timeline);
+
               result->Success();
 
             } else if (
@@ -247,10 +337,10 @@ void DisposeMediaControls(
     MediaControlsContext* context) {
   if (!context)
     return;
+  RemoveWindowSubclass(context->hwnd, MediaControlsSubclassProc, 1);
   try {
     if (context->smtc &&
-        context->buttonToken.value !=
-            -1) {
+        context->buttonToken.value != 0) {
       context->smtc.ButtonPressed(
           context->buttonToken);
     }
