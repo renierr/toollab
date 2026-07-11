@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../../services/foreground_runtime_service.dart';
+import '../../../services/media_controls_service.dart';
 import '../../../services/power_wake_lock_service.dart';
 import 'module.dart';
 import 'render_worker.dart';
@@ -251,6 +252,12 @@ class ChiptunePlayer {
       SoLoud.instance.setPause(_handle!, false);
       state.value = ChiptunePlaybackState.playing;
       _updateNotificationForResume();
+      _updateMediaControls(
+        _module?.title.isNotEmpty == true ? _module!.title : notificationTitle,
+        MediaPlaybackStatus.playing,
+        duration: _totalDuration > Duration.zero ? _totalDuration : null,
+        hasNext: onNext != null,
+      );
       if (!_isNative) await _feed();
       _startFeed();
       return;
@@ -291,6 +298,12 @@ class ChiptunePlayer {
     _handle = SoLoud.instance.play(_stream!, volume: 1);
     state.value = ChiptunePlaybackState.playing;
     _startFeed();
+    _updateMediaControls(
+      _module?.title.isNotEmpty == true ? _module!.title : notificationTitle,
+      MediaPlaybackStatus.playing,
+      duration: _totalDuration > Duration.zero ? _totalDuration : null,
+      hasNext: onNext != null,
+    );
   }
 
   Future<void> _playNative() async {
@@ -309,6 +322,12 @@ class ChiptunePlayer {
     _handle = SoLoud.instance.play(source, volume: _volume, looping: _looping);
     state.value = ChiptunePlaybackState.playing;
     _startFeed();
+    _updateMediaControls(
+      notificationTitle,
+      MediaPlaybackStatus.playing,
+      duration: _totalDuration > Duration.zero ? _totalDuration : null,
+      hasNext: onNext != null,
+    );
   }
 
   void pause() {
@@ -318,6 +337,10 @@ class ChiptunePlayer {
     _feedTimer = null;
     _updateNotificationForPause();
     state.value = ChiptunePlaybackState.paused;
+    _updateMediaControls(
+      _module?.title.isNotEmpty == true ? _module!.title : notificationTitle,
+      MediaPlaybackStatus.paused,
+    );
   }
 
   void stop() {
@@ -331,6 +354,7 @@ class ChiptunePlayer {
     if (mod != null) {
       channelActivity.value = List<bool>.filled(mod.channels, false);
     }
+    unawaited(MediaControlsService.instance.clear());
   }
 
   /// Seeks to an order/row and keeps playing if currently active.
@@ -586,6 +610,7 @@ class ChiptunePlayer {
         actions: actions,
       ),
     );
+    _updateMediaPosition(elapsed.value);
   }
 
   static String formatTime(Duration elapsed, Duration total) {
@@ -605,6 +630,7 @@ class ChiptunePlayer {
     }
     state.value = ChiptunePlaybackState.stopped;
     notificationText = formatTime(Duration.zero, _totalDuration);
+    unawaited(MediaControlsService.instance.clear());
     // Keep the wakelock + foreground service alive across an auto-advance so the
     // next-track fetch (potentially slow, in the background) is not killed. The
     // subsequent play() reuses the still-held leases; if the page decides not to
@@ -725,6 +751,52 @@ class ChiptunePlayer {
     );
   }
 
+  VoidCallback? onPrevious;
+  StreamSubscription<MediaButton>? _mediaButtonSub;
+
+  void _initMediaControls() {
+    _mediaButtonSub ??= MediaControlsService.instance.buttonEvents.listen((
+      button,
+    ) {
+      switch (button) {
+        case MediaButton.play:
+          unawaited(play());
+          break;
+        case MediaButton.pause:
+          pause();
+          break;
+        case MediaButton.stop:
+          stop();
+          break;
+        case MediaButton.next:
+          onNext?.call();
+          break;
+        case MediaButton.previous:
+          onPrevious?.call();
+          break;
+      }
+    });
+  }
+
+  void _updateMediaControls(
+    String title,
+    MediaPlaybackStatus status, {
+    Duration? duration,
+    bool hasNext = false,
+  }) {
+    _initMediaControls();
+    unawaited(
+      MediaControlsService.instance.updateMetadata(
+        MediaMetadata(title: title, duration: duration),
+      ),
+    );
+    unawaited(MediaControlsService.instance.updatePlaybackStatus(status));
+  }
+
+  void _updateMediaPosition(Duration position) {
+    unawaited(MediaControlsService.instance.updatePosition(position));
+  }
+
   void _handleNotificationAction(String action) {
     switch (action) {
       case 'play':
@@ -748,6 +820,8 @@ class ChiptunePlayer {
     _releasePlaybackRuntimeLocks();
     _rowSubscription?.cancel();
     _endedSubscription?.cancel();
+    _mediaButtonSub?.cancel();
+    _mediaButtonSub = null;
     unawaited(_renderWorker.dispose());
     state.dispose();
     position.dispose();

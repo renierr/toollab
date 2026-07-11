@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../../services/foreground_runtime_service.dart';
+import '../../../services/media_controls_service.dart';
 import '../../../services/power_wake_lock_service.dart';
 import '../focus_noise_sound.dart';
 import 'noise_loop_builder.dart';
@@ -35,6 +36,26 @@ class FocusNoisePlayer {
   /// Invoked when playback is stopped from outside the app (the notification's
   /// stop action), so the page can sync its UI state.
   VoidCallback? onExternalStop;
+  StreamSubscription<MediaButton>? _mediaButtonSub;
+
+  void _initMediaControls() {
+    _mediaButtonSub ??= MediaControlsService.instance.buttonEvents.listen((
+      button,
+    ) {
+      if (button == MediaButton.stop || button == MediaButton.pause) {
+        unawaited(stop());
+        onExternalStop?.call();
+      }
+    });
+  }
+
+  void _updateMediaControls(String title, MediaPlaybackStatus status) {
+    _initMediaControls();
+    unawaited(
+      MediaControlsService.instance.updateMetadata(MediaMetadata(title: title)),
+    );
+    unawaited(MediaControlsService.instance.updatePlaybackStatus(status));
+  }
 
   bool get isPlaying => _isPlaying;
   double get volume => _volume;
@@ -62,6 +83,7 @@ class FocusNoisePlayer {
     _handle = SoLoud.instance.play(source, volume: _volume);
     SoLoud.instance.setLooping(_handle!, true);
     _isPlaying = true;
+    _updateMediaControls(sound.name, MediaPlaybackStatus.playing);
   }
 
   Future<AudioSource> _loadAsset(FocusNoiseSound sound) {
@@ -93,6 +115,7 @@ class FocusNoisePlayer {
     _isPlaying = false;
     _playGeneration++;
 
+    unawaited(MediaControlsService.instance.clear());
     final SoundHandle? handle = _handle;
     if (handle != null) {
       await SoLoud.instance.stop(handle);
@@ -147,5 +170,7 @@ class FocusNoisePlayer {
 
   Future<void> dispose() async {
     await stop();
+    _mediaButtonSub?.cancel();
+    _mediaButtonSub = null;
   }
 }

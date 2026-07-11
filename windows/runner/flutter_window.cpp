@@ -1,4 +1,5 @@
 #include "flutter_window.h"
+#include "media_controls_handler.h"
 
 #include <optional>
 #include <vector>
@@ -161,6 +162,10 @@ bool FlutterWindow::OnCreate() {
         }
       });
 
+  // Register System Media Transport Controls (SMTC) handler.
+  auto* messenger = flutter_controller_->engine()->messenger();
+  RegisterMediaControlsHandler(messenger);
+
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -175,7 +180,17 @@ bool FlutterWindow::OnCreate() {
   return true;
 }
 
+void FlutterWindow::RegisterMediaControlsHandler(
+    flutter::BinaryMessenger* messenger) {
+  HWND hwnd = GetHandle();
+  if (!hwnd) return;
+  media_controls_ctx_ = InitMediaControls(messenger, hwnd);
+}
+
 void FlutterWindow::OnDestroy() {
+  DisposeMediaControls(media_controls_ctx_);
+  media_controls_ctx_ = nullptr;
+
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }

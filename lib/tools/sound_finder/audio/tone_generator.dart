@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../../services/foreground_runtime_service.dart';
+import '../../../services/media_controls_service.dart';
 import '../../../services/power_wake_lock_service.dart';
 import 'tone_loop_builder.dart';
 import 'tone_waveform.dart';
@@ -50,6 +51,26 @@ class ToneGenerator {
   /// Invoked when playback is stopped from outside the app (the notification's
   /// stop action), so the owning state can sync its UI flags.
   VoidCallback? onExternalStop;
+  StreamSubscription<MediaButton>? _mediaButtonSub;
+
+  void _initMediaControls() {
+    _mediaButtonSub ??= MediaControlsService.instance.buttonEvents.listen((
+      button,
+    ) {
+      if (button == MediaButton.stop || button == MediaButton.pause) {
+        unawaited(stop());
+        onExternalStop?.call();
+      }
+    });
+  }
+
+  void _updateMediaControls(String title, MediaPlaybackStatus status) {
+    _initMediaControls();
+    unawaited(
+      MediaControlsService.instance.updateMetadata(MediaMetadata(title: title)),
+    );
+    unawaited(MediaControlsService.instance.updatePlaybackStatus(status));
+  }
 
   bool get isPlaying => _isPlaying;
   double get frequency => _frequency;
@@ -73,6 +94,11 @@ class ToneGenerator {
     final int generation = ++_generation;
     await _spawnTone(generation);
     if (_noiseMix > 0) await _spawnNoise(generation);
+
+    _updateMediaControls(
+      '${_frequency.round()} Hz ${_waveform.name}',
+      MediaPlaybackStatus.playing,
+    );
   }
 
   Future<void> _spawnTone(int generation) async {
@@ -201,6 +227,7 @@ class ToneGenerator {
     _noiseSource = null;
 
     _releaseLocks();
+    unawaited(MediaControlsService.instance.clear());
   }
 
   Future<void> _stopSource(SoundHandle? handle, AudioSource? source) async {
@@ -251,5 +278,7 @@ class ToneGenerator {
 
   Future<void> dispose() async {
     await stop();
+    _mediaButtonSub?.cancel();
+    _mediaButtonSub = null;
   }
 }

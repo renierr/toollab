@@ -60,6 +60,7 @@ dependencies:
   universal_ble: ^2.1.0
   flutter_classic_bluetooth: ^0.1.2
   record: ^7.1.1
+  dbus: ^0.7.14
 
 dev_dependencies:
   flutter_test:
