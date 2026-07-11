@@ -413,6 +413,30 @@ class SoundFinderState extends ChangeNotifier {
     await _stopMic();
     _peakHoldDb = -90;
     _referenceDb = null;
+    _suspended = false;
+  }
+
+  bool _suspended = false;
+
+  /// App went to background while a tone is playing — suspend the mic and all
+  /// graph visualizations to reduce CPU.
+  Future<void> onAppBackgrounded() async {
+    if (!_tonePlaying) return;
+    if (_micStatus != MicStatus.running) return;
+    await _mic.stop();
+    _micStatus = MicStatus.idle;
+    _suspended = true;
+    notifyListeners();
+  }
+
+  /// App returned to foreground — resume the mic if it was suspended.
+  Future<void> onAppForegrounded() async {
+    if (!_suspended) return;
+    _suspended = false;
+    if (_tonePlaying && _mode != SfMode.generator) {
+      await ensureMic();
+    }
+    notifyListeners();
   }
 
   void setNotificationText({required String title, required String text}) {

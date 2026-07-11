@@ -26,12 +26,13 @@ class SoundFinderPage extends StatefulWidget {
 }
 
 class _SoundFinderPageState extends State<SoundFinderPage>
-    with DisposeCleanup<SoundFinderPage> {
+    with DisposeCleanup<SoundFinderPage>, WidgetsBindingObserver {
   WakeLockLease? _wakeLock;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final state = context.read<SoundFinderState>();
     WidgetsBinding.instance.addPostFrameCallback((_) => state.onPageEnter());
 
@@ -45,12 +46,25 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       }),
     );
 
+    onDispose(() => WidgetsBinding.instance.removeObserver(this));
     onDispose(() => unawaited(state.onPageLeave()));
     onDispose(() {
       final lease = _wakeLock;
       _wakeLock = null;
       if (lease != null) unawaited(lease.release());
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final bool active = state == AppLifecycleState.resumed;
+    if (!mounted) return;
+    final sfState = context.read<SoundFinderState>();
+    if (active) {
+      unawaited(sfState.onAppForegrounded());
+    } else {
+      unawaited(sfState.onAppBackgrounded());
+    }
   }
 
   @override
