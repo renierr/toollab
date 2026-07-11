@@ -52,7 +52,16 @@ class FocusNoisePlayer {
   void _updateMediaControls(String title, MediaPlaybackStatus status) {
     _initMediaControls();
     unawaited(
-      MediaControlsService.instance.updateMetadata(MediaMetadata(title: title)),
+      MediaControlsService.instance.updateMetadata(
+        MediaMetadata(
+          title: title,
+          supportedButtons: const [
+            MediaButton.play,
+            MediaButton.pause,
+            MediaButton.stop,
+          ],
+        ),
+      ),
     );
     unawaited(MediaControlsService.instance.updatePlaybackStatus(status));
   }

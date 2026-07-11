@@ -34,6 +34,11 @@ struct MediaControlsContext {
   winrt::event_token buttonToken{};
   std::unique_ptr<flutter::MethodChannel<EncodableValue>> channel;
   int64_t duration_ms = 0;
+  bool play_supported = true;
+  bool pause_supported = true;
+  bool stop_supported = true;
+  bool next_supported = true;
+  bool prev_supported = true;
 };
 
 static std::string
@@ -138,6 +143,37 @@ static void UpdateSmtcMetadata(
   } else {
     ctx->duration_ms = 0;
   }
+
+  it = args.find(EncodableValue("supportedButtons"));
+  if (it != args.end() && !it->second.IsNull()) {
+    ctx->play_supported = false;
+    ctx->pause_supported = false;
+    ctx->stop_supported = false;
+    ctx->next_supported = false;
+    ctx->prev_supported = false;
+
+    if (std::holds_alternative<std::vector<EncodableValue>>(it->second)) {
+      const auto& list = std::get<std::vector<EncodableValue>>(it->second);
+      for (const auto& item : list) {
+        if (std::holds_alternative<std::string>(item)) {
+          const auto& name = std::get<std::string>(item);
+          if (name == "play") ctx->play_supported = true;
+          else if (name == "pause") ctx->pause_supported = true;
+          else if (name == "stop") ctx->stop_supported = true;
+          else if (name == "next") ctx->next_supported = true;
+          else if (name == "previous") ctx->prev_supported = true;
+        }
+      }
+    }
+
+    if (smtc.PlaybackStatus() == winrt::Windows::Media::MediaPlaybackStatus::Playing) {
+      smtc.IsPlayEnabled(ctx->play_supported);
+      smtc.IsPauseEnabled(ctx->pause_supported);
+      smtc.IsStopEnabled(ctx->stop_supported);
+      smtc.IsNextEnabled(ctx->next_supported);
+      smtc.IsPreviousEnabled(ctx->prev_supported);
+    }
+  }
 }
 
 MediaControlsContext*
@@ -230,11 +266,11 @@ InitMediaControls(
                 smtc.PlaybackStatus(
                     winrt::Windows::Media::
                         MediaPlaybackStatus::Playing);
-                smtc.IsPlayEnabled(true);
-                smtc.IsPauseEnabled(true);
-                smtc.IsStopEnabled(true);
-                smtc.IsNextEnabled(true);
-                smtc.IsPreviousEnabled(true);
+                smtc.IsPlayEnabled(weak_ctx->play_supported);
+                smtc.IsPauseEnabled(weak_ctx->pause_supported);
+                smtc.IsStopEnabled(weak_ctx->stop_supported);
+                smtc.IsNextEnabled(weak_ctx->next_supported);
+                smtc.IsPreviousEnabled(weak_ctx->prev_supported);
               } else if (
                   status == "paused") {
                 smtc.PlaybackStatus(
@@ -271,6 +307,11 @@ InitMediaControls(
 
             } else if (method == "clear") {
               weak_ctx->duration_ms = 0;
+              weak_ctx->play_supported = true;
+              weak_ctx->pause_supported = true;
+              weak_ctx->stop_supported = true;
+              weak_ctx->next_supported = true;
+              weak_ctx->prev_supported = true;
               smtc.PlaybackStatus(
                   winrt::Windows::Media::
                       MediaPlaybackStatus::Stopped);

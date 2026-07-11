@@ -14,12 +14,14 @@ class MediaMetadata {
   final String? artist;
   final String? album;
   final Duration? duration;
+  final List<MediaButton>? supportedButtons;
 
   const MediaMetadata({
     required this.title,
     this.artist,
     this.album,
     this.duration,
+    this.supportedButtons,
   });
 }
 
@@ -146,6 +148,10 @@ class MediaControlsWindowsImpl extends MediaControlsService {
         if (metadata.album != null) 'album': metadata.album,
         if (metadata.duration != null)
           'durationMs': metadata.duration!.inMilliseconds,
+        if (metadata.supportedButtons != null)
+          'supportedButtons': metadata.supportedButtons!
+              .map((b) => b.name)
+              .toList(),
       });
     } catch (e) {
       debugPrint('[$_logPrefix] updateMetadata failed: $e');
@@ -305,11 +311,18 @@ class MprisObject extends DBusObject {
   Map<String, DBusValue> metadata = {};
   double volume = 1.0;
   int positionUs = 0;
+  List<MediaButton>? supportedButtons;
 
   final StreamController<MediaButton> _controller =
       StreamController<MediaButton>.broadcast();
 
   Stream<MediaButton> get buttonEvents => _controller.stream;
+
+  bool get _canGoNext => supportedButtons?.contains(MediaButton.next) ?? true;
+  bool get _canGoPrevious =>
+      supportedButtons?.contains(MediaButton.previous) ?? true;
+  bool get _canPlay => supportedButtons?.contains(MediaButton.play) ?? true;
+  bool get _canPause => supportedButtons?.contains(MediaButton.pause) ?? true;
 
   void updatePlaybackStatus(MediaPlaybackStatus status) {
     final oldStatus = playbackStatus;
@@ -333,6 +346,13 @@ class MprisObject extends DBusObject {
   }
 
   void updateMetadata(MediaMetadata meta) {
+    final oldGoNext = _canGoNext;
+    final oldGoPrev = _canGoPrevious;
+    final oldPlay = _canPlay;
+    final oldPause = _canPause;
+
+    supportedButtons = meta.supportedButtons;
+
     final newMetadata = {
       'mpris:trackid': DBusObjectPath('/org/mpris/MediaPlayer2/track/0'),
       'xesam:title': DBusString(meta.title),
@@ -342,9 +362,20 @@ class MprisObject extends DBusObject {
         'mpris:length': DBusInt64(meta.duration!.inMicroseconds),
     };
     metadata = newMetadata;
+
+    final changed = <String, DBusValue>{
+      'Metadata': DBusDict.stringVariant(metadata),
+    };
+    if (oldGoNext != _canGoNext) changed['CanGoNext'] = DBusBoolean(_canGoNext);
+    if (oldGoPrev != _canGoPrevious) {
+      changed['CanGoPrevious'] = DBusBoolean(_canGoPrevious);
+    }
+    if (oldPlay != _canPlay) changed['CanPlay'] = DBusBoolean(_canPlay);
+    if (oldPause != _canPause) changed['CanPause'] = DBusBoolean(_canPause);
+
     emitPropertiesChanged(
       'org.mpris.MediaPlayer2.Player',
-      changedProperties: {'Metadata': DBusDict.stringVariant(metadata)},
+      changedProperties: changed,
     );
   }
 
@@ -355,11 +386,16 @@ class MprisObject extends DBusObject {
   void clear() {
     metadata = {};
     playbackStatus = 'Stopped';
+    supportedButtons = null;
     emitPropertiesChanged(
       'org.mpris.MediaPlayer2.Player',
       changedProperties: {
         'Metadata': DBusDict.stringVariant({}),
         'PlaybackStatus': DBusString('Stopped'),
+        'CanGoNext': DBusBoolean(true),
+        'CanGoPrevious': DBusBoolean(true),
+        'CanPlay': DBusBoolean(true),
+        'CanPause': DBusBoolean(true),
       },
     );
   }
@@ -406,13 +442,13 @@ class MprisObject extends DBusObject {
         case 'MaximumRate':
           return DBusGetPropertyResponse(DBusDouble(1.0));
         case 'CanGoNext':
-          return DBusGetPropertyResponse(DBusBoolean(true));
+          return DBusGetPropertyResponse(DBusBoolean(_canGoNext));
         case 'CanGoPrevious':
-          return DBusGetPropertyResponse(DBusBoolean(true));
+          return DBusGetPropertyResponse(DBusBoolean(_canGoPrevious));
         case 'CanPlay':
-          return DBusGetPropertyResponse(DBusBoolean(true));
+          return DBusGetPropertyResponse(DBusBoolean(_canPlay));
         case 'CanPause':
-          return DBusGetPropertyResponse(DBusBoolean(true));
+          return DBusGetPropertyResponse(DBusBoolean(_canPause));
         case 'CanSeek':
           return DBusGetPropertyResponse(DBusBoolean(false));
         case 'CanControl':
@@ -442,10 +478,10 @@ class MprisObject extends DBusObject {
         'Position': DBusInt64(positionUs),
         'MinimumRate': DBusDouble(1.0),
         'MaximumRate': DBusDouble(1.0),
-        'CanGoNext': DBusBoolean(true),
-        'CanGoPrevious': DBusBoolean(true),
-        'CanPlay': DBusBoolean(true),
-        'CanPause': DBusBoolean(true),
+        'CanGoNext': DBusBoolean(_canGoNext),
+        'CanGoPrevious': DBusBoolean(_canGoPrevious),
+        'CanPlay': DBusBoolean(_canPlay),
+        'CanPause': DBusBoolean(_canPause),
         'CanSeek': DBusBoolean(false),
         'CanControl': DBusBoolean(true),
       });
@@ -462,26 +498,34 @@ class MprisObject extends DBusObject {
     } else if (methodCall.interface == 'org.mpris.MediaPlayer2.Player') {
       switch (methodCall.name) {
         case 'Next':
-          _controller.add(MediaButton.next);
+          if (_canGoNext) {
+            _controller.add(MediaButton.next);
+          }
           return DBusMethodSuccessResponse([]);
         case 'Previous':
-          _controller.add(MediaButton.previous);
+          if (_canGoPrevious) {
+            _controller.add(MediaButton.previous);
+          }
           return DBusMethodSuccessResponse([]);
         case 'Pause':
-          _controller.add(MediaButton.pause);
+          if (_canPause) {
+            _controller.add(MediaButton.pause);
+          }
           return DBusMethodSuccessResponse([]);
         case 'PlayPause':
           if (playbackStatus == 'Playing') {
-            _controller.add(MediaButton.pause);
+            if (_canPause) _controller.add(MediaButton.pause);
           } else {
-            _controller.add(MediaButton.play);
+            if (_canPlay) _controller.add(MediaButton.play);
           }
           return DBusMethodSuccessResponse([]);
         case 'Stop':
           _controller.add(MediaButton.stop);
           return DBusMethodSuccessResponse([]);
         case 'Play':
-          _controller.add(MediaButton.play);
+          if (_canPlay) {
+            _controller.add(MediaButton.play);
+          }
           return DBusMethodSuccessResponse([]);
       }
     }

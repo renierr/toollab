@@ -787,7 +787,16 @@ class ChiptunePlayer {
     _initMediaControls();
     unawaited(
       MediaControlsService.instance.updateMetadata(
-        MediaMetadata(title: title, duration: duration),
+        MediaMetadata(
+          title: title,
+          duration: duration,
+          supportedButtons: [
+            MediaButton.play,
+            MediaButton.pause,
+            MediaButton.stop,
+            if (hasNext) MediaButton.next,
+          ],
+        ),
       ),
     );
     unawaited(MediaControlsService.instance.updatePlaybackStatus(status));
