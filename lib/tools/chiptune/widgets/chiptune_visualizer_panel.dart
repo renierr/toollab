@@ -13,12 +13,14 @@ class ChiptuneVisualizerPanel extends StatefulWidget {
   final ChiptunePlayer player;
   final String currentVizId;
   final ValueChanged<String> onVizChanged;
+  final bool animate;
 
   const ChiptuneVisualizerPanel({
     super.key,
     required this.player,
     required this.currentVizId,
     required this.onVizChanged,
+    this.animate = true,
   });
 
   @override
@@ -44,18 +46,29 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
     );
     _ticker = createTicker(_onTick);
     widget.player.state.addListener(_onStateChanged);
-    if (widget.player.state.value == ChiptunePlaybackState.playing) {
-      _ticker.start();
-    }
+    _updateTicker();
   }
 
   void _onStateChanged() {
-    if (widget.player.state.value == ChiptunePlaybackState.playing) {
-      _ticker.start();
+    _updateTicker();
+  }
+
+  void _updateTicker() {
+    final shouldPlay =
+        widget.player.state.value == ChiptunePlaybackState.playing &&
+        widget.animate;
+    if (shouldPlay) {
+      if (!_ticker.isActive) {
+        _ticker.start();
+      }
     } else {
-      _ticker.stop();
+      if (_ticker.isActive) {
+        _ticker.stop();
+      }
       _lastElapsed = Duration.zero;
-      _latestData = null;
+      if (widget.player.state.value != ChiptunePlaybackState.playing) {
+        _latestData = null;
+      }
       if (mounted) setState(() {});
     }
   }
@@ -118,6 +131,9 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
         _pageController.jumpToPage(idx);
       }
     }
+    if (oldWidget.animate != widget.animate) {
+      _updateTicker();
+    }
   }
 
   @override
@@ -150,75 +166,66 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
     final width = MediaQuery.sizeOf(context).width;
     final height = (width * 6 / 16).clamp(80.0, 180.0);
 
-    return ValueListenableBuilder<ChiptunePlaybackState>(
-      valueListenable: widget.player.state,
-      builder: (context, state, _) {
-        if (state == ChiptunePlaybackState.stopped) {
-          return const SizedBox.shrink();
-        }
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: ColoredBox(
-                color: ChiptuneColors.visualizerBg,
-                child: SizedBox(
-                  width: double.infinity,
-                  height: height,
-                  child: Stack(
-                    children: [
-                      PageView.builder(
-                        controller: _pageController,
-                        itemCount: vizList.length,
-                        onPageChanged: (page) =>
-                            widget.onVizChanged(vizList[page].id),
-                        itemBuilder: (_, idx) => vizList[idx].create(
-                          data: data,
-                          key: ValueKey(vizList[idx].id),
-                        ),
-                      ),
-                      if (index > 0)
-                        Positioned(
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: _VizArrow(
-                            icon: Icons.chevron_left,
-                            onTap: () => _goTo(index - 1),
-                          ),
-                        ),
-                      if (index < vizList.length - 1)
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: _VizArrow(
-                            icon: Icons.chevron_right,
-                            onTap: () => _goTo(index + 1),
-                          ),
-                        ),
-                    ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: ColoredBox(
+            color: ChiptuneColors.visualizerBg,
+            child: SizedBox(
+              width: double.infinity,
+              height: height,
+              child: Stack(
+                children: [
+                  PageView.builder(
+                    controller: _pageController,
+                    itemCount: vizList.length,
+                    onPageChanged: (page) =>
+                        widget.onVizChanged(vizList[page].id),
+                    itemBuilder: (_, idx) => vizList[idx].create(
+                      data: data,
+                      key: ValueKey(vizList[idx].id),
+                    ),
                   ),
-                ),
+                  if (index > 0)
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: _VizArrow(
+                        icon: Icons.chevron_left,
+                        onTap: () => _goTo(index - 1),
+                      ),
+                    ),
+                  if (index < vizList.length - 1)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: _VizArrow(
+                        icon: Icons.chevron_right,
+                        onTap: () => _goTo(index + 1),
+                      ),
+                    ),
+                ],
               ),
             ),
-            if (multi) ...[
-              const SizedBox(height: 6),
-              Text(
-                vizList[index].label,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: ChiptuneColors.visPeak),
-              ),
-              const SizedBox(height: 2),
-              _PageDots(count: vizList.length, currentIndex: index),
-              const SizedBox(height: 6),
-            ],
-          ],
-        );
-      },
+          ),
+        ),
+        if (multi) ...[
+          const SizedBox(height: 6),
+          Text(
+            vizList[index].label,
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: ChiptuneColors.visPeak),
+          ),
+          const SizedBox(height: 2),
+          _PageDots(count: vizList.length, currentIndex: index),
+          const SizedBox(height: 6),
+        ],
+      ],
     );
   }
 }

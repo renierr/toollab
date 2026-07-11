@@ -20,6 +20,7 @@ class ChiptuneAudioView extends StatelessWidget {
   final bool looping;
   final double volume;
   final bool visualizerEnabled;
+  final bool animateVisualizer;
   final String currentVizId;
   final ValueChanged<String> onVizChanged;
 
@@ -44,6 +45,7 @@ class ChiptuneAudioView extends StatelessWidget {
     required this.looping,
     required this.volume,
     required this.visualizerEnabled,
+    required this.animateVisualizer,
     required this.currentVizId,
     required this.onVizChanged,
     this.playlistPanel,
@@ -67,6 +69,7 @@ class ChiptuneAudioView extends StatelessWidget {
             player: player,
             currentVizId: currentVizId,
             onVizChanged: onVizChanged,
+            animate: animateVisualizer,
           ),
         ValueListenableBuilder(
           valueListenable: player.elapsed,
