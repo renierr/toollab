@@ -31,8 +31,16 @@ void main() {
       expect(sessions.first['title'], 'Test Chat');
 
       // 3. Insert messages
-      final userMsgId = await dbHelper.insertMessage(sessionId, 'user', 'Hello AI!');
-      final aiMsgId = await dbHelper.insertMessage(sessionId, 'model', 'Hello User!');
+      final userMsgId = await dbHelper.insertMessage(
+        sessionId,
+        'user',
+        'Hello AI!',
+      );
+      final aiMsgId = await dbHelper.insertMessage(
+        sessionId,
+        'model',
+        'Hello User!',
+      );
 
       expect(userMsgId > 0, true);
       expect(aiMsgId > 0, true);

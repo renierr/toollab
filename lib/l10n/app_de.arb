@@ -1838,6 +1838,13 @@
         "type": "String"
       }
     }
-  }
+  },
+  "toolNameCompass": "Kompass",
+  "toolDescCompass": "Kompensierter Richtungskompass mit Magnetfeld-Status",
+  "compassHeading": "Kurs",
+  "compassMagneticField": "Magnetfeld",
+  "compassInterferenceNormal": "Normal",
+  "compassInterferenceWarning": "Störung Erkannt",
+  "compassCalibrateTip": "Von Metall oder Magneten fernhalten, wenn der Kurs ungenau erscheint."
 }
 

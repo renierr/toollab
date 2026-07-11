@@ -2664,6 +2664,13 @@
         "type": "String"
       }
     }
-  }
+  },
+  "toolNameCompass": "Compass",
+  "toolDescCompass": "Tilt-compensated heading dial with magnetic status",
+  "compassHeading": "Heading",
+  "compassMagneticField": "Magnetic Field",
+  "compassInterferenceNormal": "Normal",
+  "compassInterferenceWarning": "Interference Detected",
+  "compassCalibrateTip": "Keep away from metal or magnets if heading feels inaccurate."
 }
 

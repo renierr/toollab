@@ -7,10 +7,7 @@ const double _baseRowSeconds = 6 * 2.5 / 125;
 
 Pattern _emptyPattern(int rows, int channels) {
   return Pattern(
-    rows: List.generate(
-      rows,
-      (_) => List.generate(channels, (_) => Note()),
-    ),
+    rows: List.generate(rows, (_) => List.generate(channels, (_) => Note())),
   );
 }
 
@@ -71,18 +68,27 @@ void main() {
     expect(d.inMilliseconds, (8 * _baseRowSeconds * 1000).round());
   });
 
-  test('backward position jump (Bxx) terminates instead of looping forever', () {
-    final pat = _emptyPattern(2, 1);
-    pat.rows[1][0] = Note(effect: 0x0b, effectParam: 0); // jump back to order 0
-    final mod = _mod(patterns: [pat], sequence: [0]);
-    final d = estimateSongDuration(mod);
-    // Plays both rows once, then the backward jump ends the song.
-    expect(d.inMilliseconds, (2 * _baseRowSeconds * 1000).round());
-    expect(d.inSeconds, lessThan(5));
-  });
+  test(
+    'backward position jump (Bxx) terminates instead of looping forever',
+    () {
+      final pat = _emptyPattern(2, 1);
+      pat.rows[1][0] = Note(
+        effect: 0x0b,
+        effectParam: 0,
+      ); // jump back to order 0
+      final mod = _mod(patterns: [pat], sequence: [0]);
+      final d = estimateSongDuration(mod);
+      // Plays both rows once, then the backward jump ends the song.
+      expect(d.inMilliseconds, (2 * _baseRowSeconds * 1000).round());
+      expect(d.inSeconds, lessThan(5));
+    },
+  );
 
   test('empty module yields zero', () {
-    expect(estimateSongDuration(_mod(patterns: [], sequence: [])), Duration.zero);
+    expect(
+      estimateSongDuration(_mod(patterns: [], sequence: [])),
+      Duration.zero,
+    );
   });
 
   test('songTimeAt returns cumulative time at a seek position', () {

@@ -5042,4 +5042,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String sfBinWidth(String hz) {
     return '≈ $hz Hz pro Bin';
   }
+
+  @override
+  String get toolNameCompass => 'Kompass';
+
+  @override
+  String get toolDescCompass =>
+      'Kompensierter Richtungskompass mit Magnetfeld-Status';
+
+  @override
+  String get compassHeading => 'Kurs';
+
+  @override
+  String get compassMagneticField => 'Magnetfeld';
+
+  @override
+  String get compassInterferenceNormal => 'Normal';
+
+  @override
+  String get compassInterferenceWarning => 'Störung Erkannt';
+
+  @override
+  String get compassCalibrateTip =>
+      'Von Metall oder Magneten fernhalten, wenn der Kurs ungenau erscheint.';
 }

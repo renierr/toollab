@@ -9133,6 +9133,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'≈ {hz} Hz per bin'**
   String sfBinWidth(String hz);
+
+  /// No description provided for @toolNameCompass.
+  ///
+  /// In en, this message translates to:
+  /// **'Compass'**
+  String get toolNameCompass;
+
+  /// No description provided for @toolDescCompass.
+  ///
+  /// In en, this message translates to:
+  /// **'Tilt-compensated heading dial with magnetic status'**
+  String get toolDescCompass;
+
+  /// No description provided for @compassHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get compassHeading;
+
+  /// No description provided for @compassMagneticField.
+  ///
+  /// In en, this message translates to:
+  /// **'Magnetic Field'**
+  String get compassMagneticField;
+
+  /// No description provided for @compassInterferenceNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get compassInterferenceNormal;
+
+  /// No description provided for @compassInterferenceWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Interference Detected'**
+  String get compassInterferenceWarning;
+
+  /// No description provided for @compassCalibrateTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep away from metal or magnets if heading feels inaccurate.'**
+  String get compassCalibrateTip;
 }
 
 class _AppLocalizationsDelegate

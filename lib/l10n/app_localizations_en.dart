@@ -5007,4 +5007,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String sfBinWidth(String hz) {
     return '≈ $hz Hz per bin';
   }
+
+  @override
+  String get toolNameCompass => 'Compass';
+
+  @override
+  String get toolDescCompass =>
+      'Tilt-compensated heading dial with magnetic status';
+
+  @override
+  String get compassHeading => 'Heading';
+
+  @override
+  String get compassMagneticField => 'Magnetic Field';
+
+  @override
+  String get compassInterferenceNormal => 'Normal';
+
+  @override
+  String get compassInterferenceWarning => 'Interference Detected';
+
+  @override
+  String get compassCalibrateTip =>
+      'Keep away from metal or magnets if heading feels inaccurate.';
 }
