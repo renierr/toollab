@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/tool_back_button.dart';
 import '../emf_colors.dart';
 import '../detector_state.dart';
 
@@ -25,17 +26,13 @@ class ScannerHeader extends StatelessWidget {
               spacing: 6,
               runSpacing: 4,
               children: [
-                if (Navigator.of(context).canPop())
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    color: Colors.white,
-                    onPressed: () => Navigator.of(context).maybePop(),
-                    tooltip: l10n.commonBack,
-                    iconSize: 20,
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
+                ToolBackButton(
+                  color: Colors.white,
+                  iconSize: 20,
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
                 Text(
                   l10n.emfScannerTitle,
                   style: const TextStyle(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/widgets/tool_chip.dart';
 
 enum LevelMode { mode2d, mode1d }
@@ -49,22 +50,18 @@ class BubbleLevelToolbar extends StatelessWidget {
           runSpacing: 6,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            if (Navigator.of(context).canPop())
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).maybePop(),
-                tooltip: l10n.commonBack,
-                iconSize: 18,
-                visualDensity: VisualDensity.compact,
-                style: IconButton.styleFrom(
-                  backgroundColor: theme.colorScheme.surface.withAlpha(200),
-                  foregroundColor: theme.colorScheme.onSurface,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.all(6),
+            ToolBackButton(
+              iconSize: 18,
+              visualDensity: VisualDensity.compact,
+              style: IconButton.styleFrom(
+                backgroundColor: theme.colorScheme.surface.withAlpha(200),
+                foregroundColor: theme.colorScheme.onSurface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                padding: const EdgeInsets.all(6),
               ),
+            ),
             ToolChip(
               label: l10n.levelMode2Axis,
               selected: mode == LevelMode.mode2d,

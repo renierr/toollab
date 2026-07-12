@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/floating_back_button.dart';
+import 'package:tool_lab/widgets/tool_back_button.dart';
 
 class ToolLayout extends StatelessWidget {
   final String title;
@@ -49,22 +48,7 @@ class ToolLayout extends StatelessWidget {
               preferredSize: Size.fromHeight(appBarHeight),
               child: AppBar(
                 toolbarHeight: appBarHeight,
-                leading:
-                    leading ??
-                    (Navigator.of(context).canPop()
-                        ? IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () => Navigator.of(context).maybePop(),
-                          )
-                        : (GoRouterState.of(context).matchedLocation != '/'
-                              ? IconButton(
-                                  icon: const Icon(Icons.home_outlined),
-                                  onPressed: () => context.go('/'),
-                                  tooltip: AppLocalizations.of(
-                                    context,
-                                  ).commonHome,
-                                )
-                              : null)),
+                leading: leading ?? const ToolBackButton(),
                 title: Text(
                   title,
                   style: TextStyle(

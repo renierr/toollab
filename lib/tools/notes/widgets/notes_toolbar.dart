@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/notes/notes_state.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -247,12 +248,7 @@ class _NotesToolbarState extends State<NotesToolbar> {
         children: [
           Row(
             children: [
-              if (Navigator.of(context).canPop())
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: l10n.commonBack,
-                  onPressed: () => Navigator.of(context).maybePop(),
-                ),
+              const ToolBackButton(),
               Expanded(
                 child: Container(
                   height: 44,

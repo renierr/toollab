@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -18,6 +17,7 @@ import 'package:tool_lab/tools/fast_drop/fast_drop_state.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:tool_lab/widgets/tool_back_button.dart';
 
 import 'config.dart';
 import 'fast_drop_model.dart';
@@ -462,17 +462,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  tooltip: l10n.commonBack,
-                  onPressed: () {
-                    if (Navigator.of(context).canPop()) {
-                      Navigator.of(context).pop();
-                    } else {
-                      context.go('/');
-                    }
-                  },
-                ),
+                const ToolBackButton(),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
