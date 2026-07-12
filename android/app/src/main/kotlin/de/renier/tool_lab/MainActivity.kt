@@ -41,8 +41,10 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
-        val isLauncherIntent = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
-        if (isLauncherIntent) {
+        val isMainLauncherIntent = intent.action == Intent.ACTION_MAIN &&
+                intent.hasCategory(Intent.CATEGORY_LAUNCHER) &&
+                intent.component?.className == "de.renier.tool_lab.MainActivity"
+        if (isMainLauncherIntent) {
             return
         }
 
@@ -68,15 +70,19 @@ class MainActivity : FlutterActivity() {
 
     private fun resolveLaunchRoute(intent: Intent?) {
         if (intent == null) return
+        if (intent.hasExtra("route")) {
+            launchRoute = intent.getStringExtra("route")
+            return
+        }
+        val aliasRoute = intent.component?.className?.let { aliasClassNameToRoute(it) }
+        if (aliasRoute != null) {
+            launchRoute = aliasRoute
+            return
+        }
         val action = intent.action
         if (action == Intent.ACTION_SEND || action == Intent.ACTION_SEND_MULTIPLE || action == Intent.ACTION_VIEW) {
             // Sharing intent - handled separately via SharingHelper
             return
-        }
-        if (intent.hasExtra("route")) {
-            launchRoute = intent.getStringExtra("route")
-        } else {
-            launchRoute = intent.component?.className?.let { aliasClassNameToRoute(it) }
         }
     }
 
