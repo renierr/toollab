@@ -64,9 +64,49 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="de.renier.tool_lab.CalculatorActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":calculator"
+            android:taskAffinity="de.renier.tool_lab.calculator"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+        </activity>
+
+        <activity
+            android:name="de.renier.tool_lab.PdfViewerActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":pdf_viewer"
+            android:taskAffinity="de.renier.tool_lab.pdf_viewer"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/pdf" />
+            </intent-filter>
+        </activity>
+
         <activity-alias
             android:name="de.renier.tool_lab.CalculatorAlias"
-            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:targetActivity="de.renier.tool_lab.CalculatorActivity"
             android:label="Calculator"
             android:icon="@mipmap/ic_launcher_calculator"
             android:enabled="false"
@@ -144,7 +184,7 @@
 
         <activity-alias
             android:name="de.renier.tool_lab.PdfViewerAlias"
-            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:targetActivity="de.renier.tool_lab.PdfViewerActivity"
             android:label="PDF Viewer"
             android:icon="@mipmap/ic_launcher_pdf_viewer"
             android:enabled="false"

@@ -279,3 +279,49 @@ await DatabaseService.instance.getToolDatabase('notes');
 ```
 
 This applies everywhere: pages, sync delegates, DB helpers, archive classes, and any other file referencing the tool's namespace. A grep for the literal tool ID string should return only the `config.dart` definition.
+
+---
+
+## 8. Android Multi-Process Isolation (Running in Parallel)
+
+To allow a tool (such as `calculator` or `pdf-viewer`) to run in parallel with the main app or other tools on Android (e.g. in native split-screen or multi-window mode) without FFI crashes (`rhttp`/`flutter_rust_bridge`) or SQLite database locks, configure it to run in a separate process:
+
+1. **Enable isolated property in Dart**:
+   Set `androidProcessIsolated: true` in the tool's `ToolModel` config inside `config.dart`.
+
+2. **Add Activity in Kotlin**:
+   In [MainActivity.kt](file:///C:/dev/flutter/toolkit/android/app/src/main/kotlin/de/renier/tool_lab/MainActivity.kt), declare a subclass of `MainActivity` at the bottom of the file:
+   ```kotlin
+   class MyToolActivity : MainActivity()
+   ```
+
+3. **Update Manifest**:
+   In [AndroidManifest.xml](file:///C:/dev/flutter/toolkit/android/app/src/main/AndroidManifest.xml), declare the new activity with a unique process name and task affinity:
+   ```xml
+   <activity
+       android:name="de.renier.tool_lab.MyToolActivity"
+       android:exported="false"
+       android:launchMode="singleTask"
+       android:process=":my_tool"
+       android:taskAffinity="de.renier.tool_lab.my_tool"
+       android:theme="@style/LaunchTheme"
+       android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+       android:hardwareAccelerated="true"
+       android:windowSoftInputMode="adjustResize">
+       <meta-data
+         android:name="io.flutter.embedding.android.NormalTheme"
+         android:resource="@style/NormalTheme"
+         />
+   </activity>
+   ```
+   Then change the tool's `<activity-alias>` to point to this target activity:
+   ```xml
+   <activity-alias
+       android:name="de.renier.tool_lab.MyToolAlias"
+       android:targetActivity="de.renier.tool_lab.MyToolActivity"
+       ...
+   ```
+
+4. **Register in Kotlin shortcut helper**:
+   In [ShortcutHelper.kt](file:///C:/dev/flutter/toolkit/android/app/src/main/kotlin/de/renier/tool_lab/ShortcutHelper.kt), add the tool ID to the `isolatedTools` set inside `toolIdToActivityClassName()`.
+

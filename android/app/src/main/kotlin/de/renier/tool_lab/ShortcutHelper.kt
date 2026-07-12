@@ -25,9 +25,10 @@ object ShortcutHelper {
             }
 
             if (shortcutManager.isRequestPinShortcutSupported) {
-                val intent = Intent(context, MainActivity::class.java).apply {
+                val targetClassName = toolIdToActivityClassName(toolId)
+                val intent = Intent().apply {
+                    setClassName(context.packageName, targetClassName)
                     action = Intent.ACTION_VIEW
-                    setPackage(context.packageName)
                     putExtra("route", "/$toolId")
                 }
 
@@ -76,5 +77,14 @@ object ShortcutHelper {
         val parts = toolId.split("-").map { it.replaceFirstChar { c -> c.uppercase() } }
         if (parts.isEmpty()) return null
         return "de.renier.tool_lab.${parts.joinToString("")}Alias"
+    }
+
+    private fun toolIdToActivityClassName(toolId: String): String {
+        val isolatedTools = setOf("calculator", "pdf-viewer")
+        if (isolatedTools.contains(toolId)) {
+            val parts = toolId.split("-").map { it.replaceFirstChar { c -> c.uppercase() } }
+            return "de.renier.tool_lab.${parts.joinToString("")}Activity"
+        }
+        return "de.renier.tool_lab.MainActivity"
     }
 }

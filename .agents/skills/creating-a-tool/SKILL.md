@@ -89,6 +89,7 @@ class MyNewTool {
 | `fullscreen` | `bool` | Set `true` to hide standard AppBar and enable floating overlay buttons. |
 | `shareTarget` | `ShareTargetConfig?` | Declares accepted MIME types. Matches files shared natively or internally. |
 | `stateProviders` | `List<SingleChildWidget> Function()?` | Optional factory returning tool-specific `ChangeNotifierProvider`s. Auto-collected by `ToolRegistry.all` into `main.dart`. |
+| `androidProcessIsolated` | `bool` | Set `true` to run this tool in a separate Android OS process and task for split-screen/multi-window. |
 
 ### 2.2. Localizing the Tool Name & Description
 
@@ -237,4 +238,5 @@ Avoid writing presentation logic or dropzones from scratch. Use existing widgets
     - Never update local state variables inside views for persistent/syncable data.
 11. **Temporary Files**: Use `TempFileManager` (`lib/helpers/temp_file_manager.dart`) for all temp file creation — never raw `getTemporaryDirectory()`. Temp files are auto-tracked. Register cleanup via `onDispose(() => TempFileManager.cleanTracked())` on any StatefulWidget that creates temp files. Files from StatelessWidgets or static helpers are cleaned by `cleanSession()` on app close. External apps get their own copy/handle, and internal tools read into memory immediately — so cleanup on dispose is always safe.
 12. **Tool ID References**: Never hardcode tool ID strings (e.g. `'fast-drop'`, `'notes'`) outside of `config.dart`. Reference them via `MyTool.config.id` everywhere else — pages, sync delegates, DB helpers, archive classes. This keeps IDs in a single source of truth and prevents drift.
+13. **Android Process Isolation**: To run a tool in its own OS process/task on Android (enabling crash-free split-screen/multi-window usage alongside the main app), set `androidProcessIsolated: true` in `config.dart`, define a subclass in `MainActivity.kt` (e.g., `class MyToolActivity : MainActivity()`), register it in `AndroidManifest.xml` with its own `process` and `taskAffinity`, and add it to `ShortcutHelper.kt`'s `isolatedTools` list.
 

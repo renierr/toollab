@@ -56,12 +56,16 @@ class DatabaseService {
       path = p.join(docDir.path, _dbName);
     }
 
-    return await openDatabase(
+    final db = await openDatabase(
       path,
       version: _dbVersion,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
+    try {
+      await db.execute('PRAGMA journal_mode=WAL;');
+    } catch (_) {}
+    return db;
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -210,6 +214,9 @@ class DatabaseService {
   /// Reads the raw bytes of the active SQLite database file for backup/export.
   Future<Uint8List> getDatabaseBytes() async {
     final db = await database;
+    try {
+      await db.execute('PRAGMA wal_checkpoint(FULL);');
+    } catch (_) {}
     final path = db.path;
     final file = File(path);
     if (!await file.exists()) {

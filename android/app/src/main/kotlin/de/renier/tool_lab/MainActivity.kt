@@ -9,7 +9,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+open class MainActivity : FlutterActivity() {
     private val SHORTCUTS_CHANNEL = "de.renier.tool_lab/shortcuts"
     private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
@@ -25,8 +25,13 @@ class MainActivity : FlutterActivity() {
 
         private fun aliasClassNameToRoute(className: String): String? {
             if (className == "${ALIAS_PREFIX}MainActivity") return null
-            if (!className.startsWith(ALIAS_PREFIX) || !className.endsWith(ALIAS_SUFFIX)) return null
-            val name = className.removePrefix(ALIAS_PREFIX).removeSuffix(ALIAS_SUFFIX)
+            if (!className.startsWith(ALIAS_PREFIX)) return null
+            val cleanName = className.removePrefix(ALIAS_PREFIX)
+            val name = when {
+                cleanName.endsWith(ALIAS_SUFFIX) -> cleanName.removeSuffix(ALIAS_SUFFIX)
+                cleanName.endsWith("Activity") -> cleanName.removeSuffix("Activity")
+                else -> return null
+            }
             return "/${name.toKebabCase()}"
         }
 
@@ -259,3 +264,6 @@ class MainActivity : FlutterActivity() {
             }
     }
 }
+
+class CalculatorActivity : MainActivity()
+class PdfViewerActivity : MainActivity()

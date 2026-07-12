@@ -19,6 +19,7 @@ class PdfViewerTool {
     descriptionL10n: (l10n) => l10n.toolDescPdfViewer,
     shareTarget: ShareTargetConfig(accept: ['application/pdf']),
     fileExtensions: ['pdf'],
+    androidProcessIsolated: true,
     createPage: (sd) => PdfViewerPage(sharedFile: sd?.firstFile),
   );
 }

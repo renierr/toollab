@@ -37,6 +37,8 @@ class ToolModel {
   final ToolL10nResolver? nameL10n;
   final ToolL10nResolver? descriptionL10n;
 
+  final bool androidProcessIsolated;
+
   ToolModel({
     required this.id,
     required this.name,
@@ -51,6 +53,7 @@ class ToolModel {
     this.stateProviders,
     this.nameL10n,
     this.descriptionL10n,
+    this.androidProcessIsolated = false,
     Widget Function(SharedData? sharedData)? createPage,
   }) : createPage = createPage ?? ((_) => const SizedBox.shrink());
 
