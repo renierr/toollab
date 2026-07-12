@@ -88,6 +88,8 @@ class ToolLabApp extends StatefulWidget {
 class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   StreamSubscription<String>? _shortcutSubscription;
   StreamSubscription<SharedData>? _sharingSubscription;
+  String? _lastSharedFilePath;
+  DateTime? _lastSharedTime;
 
   @override
   void initState() {
@@ -134,6 +136,15 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
     await SharingService.instance.clearSharedData();
     final firstFile = data.firstFile;
     if (firstFile == null) return;
+
+    final now = DateTime.now();
+    if (_lastSharedFilePath == firstFile.path &&
+        _lastSharedTime != null &&
+        now.difference(_lastSharedTime!) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastSharedFilePath = firstFile.path;
+    _lastSharedTime = now;
 
     final matchingTools = SharingService.instance.getMatchingTools(firstFile);
     if (matchingTools.isEmpty) {

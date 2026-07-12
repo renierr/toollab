@@ -24,7 +24,7 @@ class MainActivity : FlutterActivity() {
         private const val ALIAS_SUFFIX = "Alias"
 
         private fun aliasClassNameToRoute(className: String): String? {
-            if (className == "${ALIAS_PREFIX}MainActivity") return "/"
+            if (className == "${ALIAS_PREFIX}MainActivity") return null
             if (!className.startsWith(ALIAS_PREFIX) || !className.endsWith(ALIAS_SUFFIX)) return null
             val name = className.removePrefix(ALIAS_PREFIX).removeSuffix(ALIAS_SUFFIX)
             return "/${name.toKebabCase()}"
@@ -41,7 +41,13 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
+        val isLauncherIntent = intent.action == Intent.ACTION_MAIN && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
+        if (isLauncherIntent) {
+            return
+        }
+
         super.onNewIntent(intent)
+        setIntent(intent)
         val messenger = flutterEngine?.dartExecutor?.binaryMessenger
         resolveLaunchRoute(intent)
         SharingHelper.handleIntent(this, intent, messenger)
