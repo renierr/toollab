@@ -11,6 +11,7 @@ import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/floating_back_button.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/tools/image_viewer/config.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_display.dart';
@@ -606,14 +607,25 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                         shape: const CircleBorder(),
                         elevation: 2,
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back),
+                          icon: Icon(
+                            Navigator.of(context).canPop()
+                                ? Icons.arrow_back
+                                : Icons.home_outlined,
+                          ),
                           onPressed: () async {
                             final navigator = Navigator.of(context);
+                            final router = GoRouter.of(context);
                             if (await _confirmDiscardEdits()) {
-                              navigator.pop();
+                              if (navigator.canPop()) {
+                                navigator.pop();
+                              } else {
+                                router.go('/');
+                              }
                             }
                           },
-                          tooltip: l10n.commonBack,
+                          tooltip: Navigator.of(context).canPop()
+                              ? l10n.commonBack
+                              : l10n.commonHome,
                           visualDensity: VisualDensity.compact,
                         ),
                       ),
