@@ -47,6 +47,7 @@
   "commonSearch": "Search",
   "commonConfirm": "Confirm",
   "commonBack": "Back",
+  "commonHome": "Home",
   "commonBrowseFiles": "Browse Files",
   "chipFailedToParseModule": "Failed to parse module: {error}",
   "chipFailedToOpenSharedFile": "Failed to open shared file: {error}",

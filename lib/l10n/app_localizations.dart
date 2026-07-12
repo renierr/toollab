@@ -362,6 +362,12 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get commonBack;
 
+  /// No description provided for @commonHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get commonHome;
+
   /// No description provided for @commonBrowseFiles.
   ///
   /// In en, this message translates to:

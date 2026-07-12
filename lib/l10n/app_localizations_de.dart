@@ -143,6 +143,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonBack => 'Zurück';
 
   @override
+  String get commonHome => 'Startseite';
+
+  @override
   String get commonBrowseFiles => 'Dateien durchsuchen';
 
   @override

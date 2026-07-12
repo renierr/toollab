@@ -142,6 +142,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonBack => 'Back';
 
   @override
+  String get commonHome => 'Home';
+
+  @override
   String get commonBrowseFiles => 'Browse Files';
 
   @override

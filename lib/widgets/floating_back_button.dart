@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 /// A premium, floating circular back button that can be positioned
@@ -8,9 +9,13 @@ class FloatingBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!Navigator.of(context).canPop()) {
+    final canPop = Navigator.of(context).canPop();
+    final isRoot = GoRouterState.of(context).matchedLocation == '/';
+
+    if (!canPop && isRoot) {
       return const SizedBox.shrink();
     }
+
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return Material(
@@ -18,9 +23,15 @@ class FloatingBackButton extends StatelessWidget {
       shape: const CircleBorder(),
       elevation: 2,
       child: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.of(context).maybePop(),
-        tooltip: l10n.commonBack,
+        icon: Icon(canPop ? Icons.arrow_back : Icons.home_outlined),
+        onPressed: () {
+          if (canPop) {
+            Navigator.of(context).maybePop();
+          } else {
+            context.go('/');
+          }
+        },
+        tooltip: canPop ? l10n.commonBack : l10n.commonHome,
         visualDensity: VisualDensity.compact,
       ),
     );

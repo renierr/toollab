@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/floating_back_button.dart';
 
 class ToolLayout extends StatelessWidget {
@@ -54,7 +56,15 @@ class ToolLayout extends StatelessWidget {
                             icon: const Icon(Icons.arrow_back),
                             onPressed: () => Navigator.of(context).maybePop(),
                           )
-                        : null),
+                        : (GoRouterState.of(context).matchedLocation != '/'
+                              ? IconButton(
+                                  icon: const Icon(Icons.home_outlined),
+                                  onPressed: () => context.go('/'),
+                                  tooltip: AppLocalizations.of(
+                                    context,
+                                  ).commonHome,
+                                )
+                              : null)),
                 title: Text(
                   title,
                   style: TextStyle(
