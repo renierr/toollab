@@ -23,7 +23,11 @@
 #include "media_controls_handler.h"
 
 #pragma comment(lib, "comctl32.lib")
-#define WM_USER_MEDIA_BUTTON (WM_USER + 101)
+// Must live in the WM_APP range, not WM_USER: the record_windows plugin posts
+// WM_RUN_DELEGATE (WM_USER + 101) to this same top-level window to deliver
+// captured audio packets to Dart. A collision here made our subclass swallow
+// those packets, silently killing all mic streaming (e.g. Sound Finder).
+#define WM_USER_MEDIA_BUTTON (WM_APP + 101)
 
 using flutter::EncodableMap;
 using flutter::EncodableValue;
