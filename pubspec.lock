@@ -545,26 +545,26 @@ packages:
     dependency: "direct main"
     description:
       name: google_mlkit_barcode_scanning
-      sha256: dbf4df99cb490b12e95dcedde3e6741ce711942904f7049da601dfede91c1e0f
+      sha256: "98800c658f10014ca42b6032b1121881ef1913f546517d2ecfcccb5a80681f70"
       url: "https://pub.dev"
     source: hosted
-    version: "0.14.2"
+    version: "0.15.0"
   google_mlkit_commons:
     dependency: transitive
     description:
       name: google_mlkit_commons
-      sha256: "3e69fea4211727732cc385104e675ad1e40b29f12edd492ee52fa108423a6124"
+      sha256: c7fc384bdb66c3b83e24e3a41818e61d7a378d900f65f5e775344fbca95a0917
       url: "https://pub.dev"
     source: hosted
-    version: "0.11.1"
+    version: "0.12.0"
   google_mlkit_document_scanner:
     dependency: "direct main"
     description:
       name: google_mlkit_document_scanner
-      sha256: a4f0266255eeca3b98bd00b00153661f159c27ff6102de963a1155e25c8fc77d
+      sha256: d60c2b8bd73e7d4fb6c255f82ebcdca68101378a86080d945e7bafb7456af7f0
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.1"
+    version: "0.5.0"
   google_mlkit_genai_prompt:
     dependency: "direct main"
     description:
@@ -576,18 +576,18 @@ packages:
     dependency: "direct main"
     description:
       name: google_mlkit_subject_segmentation
-      sha256: "36ed01758f226cea209320740ef72a0b334cede2747a7da5904102b4a143fe7b"
+      sha256: db813d9efe235491f8f062ca73a458bb3a353dcd4b4a20840f617db4d23571ea
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.3"
+    version: "0.1.0"
   google_mlkit_text_recognition:
     dependency: "direct main"
     description:
       name: google_mlkit_text_recognition
-      sha256: "10a8d1a64fa21efda89514f6df88bbb7885be3ae1bfb7a6d229132d802a20d22"
+      sha256: "8324fdc2628ebeb63568ad06437b984b716d938d87e4ce63ab24dfd3eeebf08a"
       url: "https://pub.dev"
     source: hosted
-    version: "0.15.1"
+    version: "0.16.0"
   gsettings:
     dependency: transitive
     description:
@@ -1261,10 +1261,10 @@ packages:
     dependency: "direct main"
     description:
       name: sqlite3
-      sha256: "752d9d746052359a2022f588bb979f2e7c4e0f9e4b6a1c3121f7626a1574974b"
+      sha256: "61c7930bebf32c552ac5808c91bf33802e66711c9216090d3b5579c9f862e80c"
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.4"
+    version: "3.4.0"
   stack_trace:
     dependency: transitive
     description:
