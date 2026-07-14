@@ -301,8 +301,10 @@ class BackgroundVoice {
     double vol =
         (volume / 64) *
         (channelVolume / 64) *
-        (sample.volume / 64) *
         (globalVolumeRef.globalVolume / 64);
+    if (globalVolumeRef.mod?.type == 'IT') {
+      vol *= (sample.volume / 64);
+    }
     vol *= globalVolumeRef.mixingVolume / 128;
     if (instrument != null) {
       vol *= (volumeEnvValue / 64) * (fadeoutVolume / 32768);
@@ -1552,10 +1554,10 @@ class WorkletChannel {
 
     sampleIndex += sampleSpeed;
     double vol =
-        (volume / 64) *
-        (channelVolume / 64) *
-        (smp.volume / 64) *
-        (worklet.globalVolume / 64);
+        (volume / 64) * (channelVolume / 64) * (worklet.globalVolume / 64);
+    if (worklet.mod?.type == 'IT') {
+      vol *= (smp.volume / 64);
+    }
     vol *= worklet.mixingVolume / 128;
     if (tremorOn) {
       final onTicks = math.max(1, tremorOnTicks);
