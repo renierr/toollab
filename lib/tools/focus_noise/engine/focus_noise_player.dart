@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
+import '../../../services/database_service.dart';
 import '../../../services/foreground_runtime_service.dart';
 import '../../../services/media_controls_service.dart';
 import '../../../services/power_wake_lock_service.dart';
@@ -142,7 +143,12 @@ class FocusNoisePlayer {
 
   Future<void> _ensureInit() async {
     if (!SoLoud.instance.isInitialized) {
-      await SoLoud.instance.init();
+      final lowLatencyVal = await DatabaseService.instance.getSetting(
+        '_app',
+        'low_latency_audio',
+      );
+      final lowLatency = lowLatencyVal != 'false';
+      await SoLoud.instance.init(lowLatency: lowLatency);
     }
   }
 

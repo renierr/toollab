@@ -176,6 +176,18 @@ abstract class AppLocalizations {
   /// **'Enable or disable system notifications'**
   String get settingsSystemNotificationsSubtitle;
 
+  /// No description provided for @settingsLowLatencyAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Latency Audio'**
+  String get settingsLowLatencyAudio;
+
+  /// No description provided for @settingsLowLatencyAudioSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allows faster audio response. Disable if screen recording has silent audio'**
+  String get settingsLowLatencyAudioSubtitle;
+
   /// No description provided for @settingsSortBy.
   ///
   /// In en, this message translates to:

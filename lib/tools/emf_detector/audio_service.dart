@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
+import '../../services/database_service.dart';
 
 class AudioService {
   AudioSource? _audioSource;
@@ -31,7 +32,12 @@ class AudioService {
     try {
       // 1. Initialize the SoLoud engine if it isn't already initialized
       if (!SoLoud.instance.isInitialized) {
-        await SoLoud.instance.init();
+        final lowLatencyVal = await DatabaseService.instance.getSetting(
+          '_app',
+          'low_latency_audio',
+        );
+        final lowLatency = lowLatencyVal != 'false';
+        await SoLoud.instance.init(lowLatency: lowLatency);
       }
 
       // Wave file properties: 16-bit PCM at 48kHz with a 200ms duration.

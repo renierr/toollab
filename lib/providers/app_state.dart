@@ -18,6 +18,7 @@ class AppState extends ChangeNotifier {
     _syncEnabled = _settingsService.getSyncEnabled();
     _systemNotificationsEnabled = _settingsService
         .getSystemNotificationsEnabled();
+    _lowLatencyAudio = _settingsService.getLowLatencyAudio();
     _syncServerUrl = _settingsService.getSyncServerUrl();
     _syncUserId = _settingsService.getSyncUserId();
     _syncLastSynced = _settingsService.getSyncLastSynced();
@@ -46,6 +47,7 @@ class AppState extends ChangeNotifier {
 
   bool _syncEnabled = false;
   bool _systemNotificationsEnabled = true;
+  bool _lowLatencyAudio = true;
   String _syncServerUrl = '';
   String _syncUserId = '';
   int _syncLastSynced = 0;
@@ -68,6 +70,7 @@ class AppState extends ChangeNotifier {
 
   bool get syncEnabled => _syncEnabled;
   bool get systemNotificationsEnabled => _systemNotificationsEnabled;
+  bool get lowLatencyAudio => _lowLatencyAudio;
   String get syncServerUrl => _syncServerUrl;
   String get syncUserId => _syncUserId;
   int get syncLastSynced => _syncLastSynced;
@@ -191,6 +194,12 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setLowLatencyAudio(bool value) async {
+    _lowLatencyAudio = value;
+    await _settingsService.setLowLatencyAudio(value);
+    notifyListeners();
+  }
+
   Future<void> setSortBy(String value) async {
     _sortBy = value;
     await _settingsService.setSortBy(value);
@@ -286,6 +295,7 @@ class AppState extends ChangeNotifier {
     _syncEnabled = _settingsService.getSyncEnabled();
     _systemNotificationsEnabled = _settingsService
         .getSystemNotificationsEnabled();
+    _lowLatencyAudio = _settingsService.getLowLatencyAudio();
     _syncServerUrl = _settingsService.getSyncServerUrl();
     _syncUserId = _settingsService.getSyncUserId();
     _syncLastSynced = _settingsService.getSyncLastSynced();

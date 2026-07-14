@@ -104,6 +104,14 @@ class AppearanceSettingsPage extends StatelessWidget {
                           .setSystemNotificationsEnabled(value),
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
+                    SwitchListTile(
+                      title: Text(l10n.settingsLowLatencyAudio),
+                      subtitle: Text(l10n.settingsLowLatencyAudioSubtitle),
+                      value: appState.lowLatencyAudio,
+                      onChanged: (value) =>
+                          context.read<AppState>().setLowLatencyAudio(value),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
                     ListTile(
                       title: Text(l10n.settingsSortBy),
                       trailing: DropdownButton<String>(

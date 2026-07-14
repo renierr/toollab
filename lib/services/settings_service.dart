@@ -14,6 +14,7 @@ class SettingsService {
   static const String _keySyncLastSynced = 'sync_last_synced';
   static const String _keySystemNotificationsEnabled =
       'system_notifications_enabled';
+  static const String _keyLowLatencyAudio = 'low_latency_audio';
 
   static Future<SettingsService> init() async {
     final allSettings = await DatabaseService.instance.getAllSettings(_toolId);
@@ -92,6 +93,21 @@ class SettingsService {
     await DatabaseService.instance.setSetting(
       _toolId,
       _keySystemNotificationsEnabled,
+      str,
+    );
+  }
+
+  bool getLowLatencyAudio() {
+    final value = _cache[_keyLowLatencyAudio];
+    return value != 'false';
+  }
+
+  Future<void> setLowLatencyAudio(bool value) async {
+    final str = value.toString();
+    _cache[_keyLowLatencyAudio] = str;
+    await DatabaseService.instance.setSetting(
+      _toolId,
+      _keyLowLatencyAudio,
       str,
     );
   }

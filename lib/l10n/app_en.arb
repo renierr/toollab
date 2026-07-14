@@ -16,6 +16,8 @@
   "settingsCompactViewSubtitle": "Smaller cards, more tools per row",
   "settingsSystemNotifications": "System Notifications",
   "settingsSystemNotificationsSubtitle": "Enable or disable system notifications",
+  "settingsLowLatencyAudio": "Low Latency Audio",
+  "settingsLowLatencyAudioSubtitle": "Allows faster audio response. Disable if screen recording has silent audio",
   "settingsSortBy": "Sort by",
   "settingsSortRecent": "Recent",
   "settingsSortDefaultOrder": "Default order",

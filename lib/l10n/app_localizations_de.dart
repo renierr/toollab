@@ -50,6 +50,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Systembenachrichtigungen aktivieren oder deaktivieren';
 
   @override
+  String get settingsLowLatencyAudio => 'Audio mit geringer Latenz';
+
+  @override
+  String get settingsLowLatencyAudioSubtitle =>
+      'Ermöglicht eine schnellere Audiowiedergabe. Deaktivieren, wenn die Bildschirmaufnahme stumm ist';
+
+  @override
   String get settingsSortBy => 'Sortieren nach';
 
   @override

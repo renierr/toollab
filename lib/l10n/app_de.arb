@@ -13,6 +13,8 @@
   "settingsCompactViewSubtitle": "Kleinere Karten, mehr Tools pro Zeile",
   "settingsSystemNotifications": "Systembenachrichtigungen",
   "settingsSystemNotificationsSubtitle": "Systembenachrichtigungen aktivieren oder deaktivieren",
+  "settingsLowLatencyAudio": "Audio mit geringer Latenz",
+  "settingsLowLatencyAudioSubtitle": "Ermöglicht eine schnellere Audiowiedergabe. Deaktivieren, wenn die Bildschirmaufnahme stumm ist",
   "settingsSortBy": "Sortieren nach",
   "settingsSortRecent": "Zuletzt verwendet",
   "settingsSortDefaultOrder": "Standardreihenfolge",

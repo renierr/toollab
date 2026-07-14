@@ -49,6 +49,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enable or disable system notifications';
 
   @override
+  String get settingsLowLatencyAudio => 'Low Latency Audio';
+
+  @override
+  String get settingsLowLatencyAudioSubtitle =>
+      'Allows faster audio response. Disable if screen recording has silent audio';
+
+  @override
   String get settingsSortBy => 'Sort by';
 
   @override
