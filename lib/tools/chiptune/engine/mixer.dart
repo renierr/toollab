@@ -89,6 +89,36 @@ double _tanh(double x) {
   return (e - 1) / (e + 1);
 }
 
+double _getSampleVal(int idx, WorkletInstrumentSample smp) {
+  if (smp.data.isEmpty) return 0.0;
+  if (smp.loopLength > 2) {
+    final loopEnd = smp.loopStart + smp.loopLength;
+    if (idx >= loopEnd) {
+      idx = smp.loopStart + ((idx - loopEnd) % smp.loopLength);
+    } else if (idx < smp.loopStart) {
+      idx = loopEnd - 1 - ((smp.loopStart - 1 - idx) % smp.loopLength);
+    }
+  } else {
+    if (idx < 0) idx = 0;
+    if (idx >= smp.length) return 0.0;
+  }
+  return (idx >= 0 && idx < smp.data.length) ? smp.data[idx] : 0.0;
+}
+
+double _interpolateCubic(
+  double s_1,
+  double s0,
+  double s1,
+  double s2,
+  double t,
+) {
+  final a = -0.5 * s_1 + 1.5 * s0 - 1.5 * s1 + 0.5 * s2;
+  final b = s_1 - 2.5 * s0 + 2.0 * s1 - 0.5 * s2;
+  final c = -0.5 * s_1 + 0.5 * s1;
+  final d = s0;
+  return a * t * t * t + b * t * t + c * t + d;
+}
+
 /// BackgroundVoice: lightweight voice for IT NNA (New Note Action).
 /// When a new note triggers on a channel with NNA != cut, the old playing
 /// state is moved here so it continues rendering (with fadeout/envelope).
@@ -113,6 +143,7 @@ class BackgroundVoice {
 
   double outL = 0;
   double outR = 0;
+  double lastMixedVolume = 0.0;
 
   BackgroundVoice(WorkletChannel ch)
     : sourceChannelIndex = ch.channelIndex,
@@ -131,7 +162,8 @@ class BackgroundVoice {
       volumeEnvValue = ch.volumeEnvValue,
       panningEnvValue = ch.panningEnvValue,
       playing = true,
-      globalVolumeRef = ch.worklet;
+      globalVolumeRef = ch.worklet,
+      lastMixedVolume = ch.lastMixedVolume;
 
   /// Apply NNA action: 1=continue, 2=noteOff (start release), 3=fade
   void applyNNA(int nna) {
@@ -253,31 +285,29 @@ class BackgroundVoice {
 
   double _readRawSampleValue() {
     final i0 = sampleIndex.floor();
-
-    // Keep legacy nearest-neighbor for non-IT formats.
-    if (globalVolumeRef.mod?.type != 'IT') {
-      return (i0 >= 0 && i0 < sample.data.length) ? sample.data[i0] : 0;
-    }
-
     final frac = sampleIndex - i0;
-    int i1 = i0 + 1;
-
-    if (sample.loopLength > 2) {
-      final loopEnd = sample.loopStart + sample.loopLength;
-      if (i1 >= loopEnd) i1 = sample.loopStart;
-    } else if (i1 >= sample.length) {
-      i1 = sample.length - 1;
-    }
-
-    final s0 = (i0 >= 0 && i0 < sample.data.length) ? sample.data[i0] : 0.0;
-    final s1 = (i1 >= 0 && i1 < sample.data.length) ? sample.data[i1] : s0;
-    return s0 + (s1 - s0) * frac;
+    final s_1 = _getSampleVal(i0 - 1, sample);
+    final s0 = _getSampleVal(i0, sample);
+    final s1 = _getSampleVal(i0 + 1, sample);
+    final s2 = _getSampleVal(i0 + 2, sample);
+    return _interpolateCubic(s_1, s0, s1, s2, frac);
   }
 
   void nextSample() {
     if (!playing || sample.data.isEmpty) {
+      if (lastMixedVolume > 0.001) {
+        lastMixedVolume = math.max(0.0, lastMixedVolume - (1.0 / 64.0));
+        final raw = _readRawSampleValue();
+        sampleIndex += sampleSpeed;
+        double effectivePanning = panning;
+        final panTheta = (effectivePanning / 255) * (math.pi / 2);
+        outL = raw * lastMixedVolume * math.cos(panTheta);
+        outR = raw * lastMixedVolume * math.sin(panTheta);
+        return;
+      }
       outL = 0;
       outR = 0;
+      lastMixedVolume = 0.0;
       return;
     }
 
@@ -294,7 +324,6 @@ class BackgroundVoice {
       return;
     }
 
-    // IT interpolation softens high-rate retrigs and looped tails.
     final raw = _readRawSampleValue();
     sampleIndex += sampleSpeed;
 
@@ -302,12 +331,19 @@ class BackgroundVoice {
         (volume / 64) *
         (channelVolume / 64) *
         (globalVolumeRef.globalVolume / 64);
-    if (globalVolumeRef.mod?.type == 'IT') {
-      vol *= (sample.volume / 64);
-    }
     vol *= globalVolumeRef.mixingVolume / 128;
     if (instrument != null) {
       vol *= (volumeEnvValue / 64) * (fadeoutVolume / 32768);
+    }
+
+    if (lastMixedVolume != vol) {
+      final diff = vol - lastMixedVolume;
+      const double step = 1.0 / 64.0;
+      if (diff.abs() < step) {
+        lastMixedVolume = vol;
+      } else {
+        lastMixedVolume += diff.sign * step;
+      }
     }
 
     double effectivePanning = panning;
@@ -323,8 +359,8 @@ class BackgroundVoice {
     }
 
     final panTheta = (effectivePanning / 255) * (math.pi / 2);
-    outL = raw * vol * math.cos(panTheta);
-    outR = raw * vol * math.sin(panTheta);
+    outL = raw * lastMixedVolume * math.cos(panTheta);
+    outR = raw * lastMixedVolume * math.sin(panTheta);
   }
 }
 
@@ -368,6 +404,7 @@ class WorkletChannel {
   int tremoloWaveform = 0;
 
   double slideSpeed = 0;
+  double lastMixedVolume = 0.0;
   double volSlideSpeed = 0;
   double channelVolSlide = 0;
   double tempoSlide = 0;
@@ -1110,6 +1147,11 @@ class WorkletChannel {
         final sub = (param >> 4) & 0x0f;
         final subParam = param & 0x0f;
         switch (sub) {
+          case 0x0:
+            if (worklet.mod!.type == 'MOD') {
+              worklet.amigaFilter = (subParam == 0);
+            }
+            break;
           case 0x1:
             if (isIT) {
               currentPeriod -= subParam / 64;
@@ -1511,8 +1553,17 @@ class WorkletChannel {
 
   void nextSample() {
     if (!playing || sample == null || sample!.data.isEmpty) {
+      if (lastMixedVolume > 0.001) {
+        lastMixedVolume = math.max(0.0, lastMixedVolume - (1.0 / 64.0));
+        final raw = 0.0;
+        final panTheta = (panning / 255) * (math.pi / 2);
+        outL = raw * lastMixedVolume * math.cos(panTheta);
+        outR = raw * lastMixedVolume * math.sin(panTheta);
+        return;
+      }
       outL = 0;
       outR = 0;
+      lastMixedVolume = 0.0;
       return;
     }
     final smp = sample!;
@@ -1529,21 +1580,14 @@ class WorkletChannel {
       return;
     }
     final i0 = sampleIndex.floor();
-    double raw = (i0 >= 0 && i0 < smp.data.length) ? smp.data[i0] : 0;
+    final frac = sampleIndex - i0;
 
-    if (worklet.mod!.type == 'IT') {
-      final frac = sampleIndex - i0;
-      int i1 = i0 + 1;
-      if (smp.loopLength > 2) {
-        final loopEnd = smp.loopStart + smp.loopLength;
-        if (i1 >= loopEnd) i1 = smp.loopStart;
-      } else if (i1 >= smp.length) {
-        i1 = smp.length - 1;
-      }
-      final s1 = (i1 >= 0 && i1 < smp.data.length) ? smp.data[i1] : raw;
-      // IT-only linear interpolation to improve sample character accuracy.
-      raw = raw + (s1 - raw) * frac;
-    }
+    final s_1 = _getSampleVal(i0 - 1, smp);
+    final s0 = _getSampleVal(i0, smp);
+    final s1 = _getSampleVal(i0 + 1, smp);
+    final s2 = _getSampleVal(i0 + 2, smp);
+
+    double raw = _interpolateCubic(s_1, s0, s1, s2, frac);
 
     if (worklet.mod!.type == 'IT' && filterCutoff < 127) {
       final normalized = filterCutoff / 127;
@@ -1555,9 +1599,6 @@ class WorkletChannel {
     sampleIndex += sampleSpeed;
     double vol =
         (volume / 64) * (channelVolume / 64) * (worklet.globalVolume / 64);
-    if (worklet.mod?.type == 'IT') {
-      vol *= (smp.volume / 64);
-    }
     vol *= worklet.mixingVolume / 128;
     if (tremorOn) {
       final onTicks = math.max(1, tremorOnTicks);
@@ -1574,8 +1615,16 @@ class WorkletChannel {
       vol *= (volumeEnvValue / 64) * (fadeoutVolume / 32768);
     }
 
-    // Equal Power Panning Law: L = Vol * cos(theta), R = Vol * sin(theta)
-    // theta = (panning/255) * (PI/2)
+    if (lastMixedVolume != vol) {
+      final diff = vol - lastMixedVolume;
+      const double step = 1.0 / 64.0;
+      if (diff.abs() < step) {
+        lastMixedVolume = vol;
+      } else {
+        lastMixedVolume += diff.sign * step;
+      }
+    }
+
     double effectivePanning = panning;
     if (worklet.mod!.type == 'IT' && instrument?.panningEnv != null) {
       final envPan = math.max(0.0, math.min(64.0, panningEnvValue));
@@ -1589,8 +1638,8 @@ class WorkletChannel {
     }
 
     final panTheta = (effectivePanning / 255) * (math.pi / 2);
-    outL = raw * vol * math.cos(panTheta);
-    outR = raw * vol * math.sin(panTheta);
+    outL = raw * lastMixedVolume * math.cos(panTheta);
+    outR = raw * lastMixedVolume * math.sin(panTheta);
   }
 
   void _applyRetrigVolumeOp() {
@@ -1671,6 +1720,38 @@ class ChiptuneMixer {
   bool isLooping = true;
   List<WorkletNote> currentRowNotes = [];
 
+  bool amigaFilter = false;
+  double _fLx1 = 0, _fLx2 = 0, _fLy1 = 0, _fLy2 = 0;
+  double _fRx1 = 0, _fRx2 = 0, _fRy1 = 0, _fRy2 = 0;
+
+  double _applyAmigaFilterL(double x) {
+    final y =
+        0.03913 * x +
+        0.07826 * _fLx1 +
+        0.03913 * _fLx2 -
+        (-1.43834) * _fLy1 -
+        0.59486 * _fLy2;
+    _fLx2 = _fLx1;
+    _fLx1 = x;
+    _fLy2 = _fLy1;
+    _fLy1 = y;
+    return y;
+  }
+
+  double _applyAmigaFilterR(double x) {
+    final y =
+        0.03913 * x +
+        0.07826 * _fRx1 +
+        0.03913 * _fRx2 -
+        (-1.43834) * _fRy1 -
+        0.59486 * _fRy2;
+    _fRx2 = _fRx1;
+    _fRx1 = x;
+    _fRy2 = _fRy1;
+    _fRy1 = y;
+    return y;
+  }
+
   // Callbacks replacing port.postMessage.
   void Function(
     int position,
@@ -1692,6 +1773,9 @@ class ChiptuneMixer {
     mixingVolume = mod.mixingVolume;
     setBpm(mod.defaultBpm != 0 ? mod.defaultBpm : 125);
     setTicksPerRow(mod.defaultSpeed != 0 ? mod.defaultSpeed : 6);
+    _fLx1 = _fLx2 = _fLy1 = _fLy2 = 0;
+    _fRx1 = _fRx2 = _fRy1 = _fRy2 = 0;
+    amigaFilter = false;
     channels = [];
     for (int i = 0; i < mod.channels; i++) {
       final ch = WorkletChannel(this, i);
@@ -1965,8 +2049,14 @@ class ChiptuneMixer {
         rOut += bgv.outR;
       }
 
-      out[2 * i] = _tanh(lOut * 0.42 * masterVolume);
-      out[2 * i + 1] = _tanh(rOut * 0.42 * masterVolume);
+      double finalL = lOut * 0.42 * masterVolume;
+      double finalR = rOut * 0.42 * masterVolume;
+      if (amigaFilter) {
+        finalL = _applyAmigaFilterL(finalL);
+        finalR = _applyAmigaFilterR(finalR);
+      }
+      out[2 * i] = _tanh(finalL);
+      out[2 * i + 1] = _tanh(finalR);
     }
   }
 }
