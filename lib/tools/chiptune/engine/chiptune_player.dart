@@ -82,6 +82,7 @@ class ChiptunePlayer {
   Duration _uiUpdateInterval = _uiUpdateIntervalForeground;
   Duration _elapsedUpdateInterval = _elapsedUpdateIntervalForeground;
   bool _ended = false;
+  bool _rendererEnded = false;
   bool _nearEndFired = false;
   double _volume = 0.7;
   bool _looping = false;
@@ -183,7 +184,7 @@ class ChiptunePlayer {
       }
     });
     _endedSubscription = _renderWorker.onEnded.listen((_) {
-      _ended = true;
+      _rendererEnded = true;
     });
   }
 
@@ -508,45 +509,59 @@ class ChiptunePlayer {
 
       _maybePushNotificationUpdate(now);
 
+      if (_rendererEnded) {
+        if (_stream != null) {
+          try {
+            SoLoud.instance.setDataIsEnded(_stream!);
+          } catch (_) {}
+        }
+        final handle = _handle;
+        if (handle == null || !SoLoud.instance.getIsValidVoiceHandle(handle)) {
+          _ended = true;
+        }
+      }
+
       if (_ended) {
         _onSongEnded();
         return;
       }
 
-      final int targetBytes = (sampleRate * _bufferAheadSeconds * 2 * 4)
-          .toInt(); // stereo f32
-      final int chunkBytes = _chunkFrames * 2 * Float32List.bytesPerElement;
-      final int maxIterations = ((targetBytes / chunkBytes).ceil() + 8)
-          .clamp(8, 96)
-          .toInt();
-      int guard = 0;
-      while (!_ended && guard < maxIterations) {
-        int buffered;
-        try {
-          buffered = SoLoud.instance.getBufferSize(stream);
-        } catch (_) {
-          buffered = targetBytes; // stop topping up if query fails
-        }
-        if (buffered >= targetBytes) break;
+      if (!_rendererEnded) {
+        final int targetBytes = (sampleRate * _bufferAheadSeconds * 2 * 4)
+            .toInt(); // stereo f32
+        final int chunkBytes = _chunkFrames * 2 * Float32List.bytesPerElement;
+        final int maxIterations = ((targetBytes / chunkBytes).ceil() + 8)
+            .clamp(8, 96)
+            .toInt();
+        int guard = 0;
+        while (!_ended && guard < maxIterations) {
+          int buffered;
+          try {
+            buffered = SoLoud.instance.getBufferSize(stream);
+          } catch (_) {
+            buffered = targetBytes; // stop topping up if query fails
+          }
+          if (buffered >= targetBytes) break;
 
-        final Float32List chunk = await _renderWorker.render(_chunkFrames);
-        if (chunk.isEmpty) break;
-        // The stream can be disposed/replaced (stop, seek, loadModule, play
-        // restart) while this render await is pending. Touching the old native
-        // source after that is a use-after-free that can hang the app, so bail
-        // if it is no longer the current stream.
-        if (!identical(_stream, stream)) break;
+          final Float32List chunk = await _renderWorker.render(_chunkFrames);
+          if (chunk.isEmpty) break;
+          // The stream can be disposed/replaced (stop, seek, loadModule, play
+          // restart) while this render await is pending. Touching the old native
+          // source after that is a use-after-free that can hang the app, so bail
+          // if it is no longer the current stream.
+          if (!identical(_stream, stream)) break;
 
-        try {
-          SoLoud.instance.addAudioDataStream(
-            stream,
-            chunk.buffer.asUint8List(),
-          );
-        } catch (e) {
-          debugPrint('$_logPrefix addAudioDataStream failed: $e');
-          break;
+          try {
+            SoLoud.instance.addAudioDataStream(
+              stream,
+              chunk.buffer.asUint8List(),
+            );
+          } catch (e) {
+            debugPrint('$_logPrefix addAudioDataStream failed: $e');
+            break;
+          }
+          guard++;
         }
-        guard++;
       }
     } finally {
       _feedInProgress = false;
@@ -679,6 +694,8 @@ class ChiptunePlayer {
     _feedTimer?.cancel();
     _feedTimer = null;
     _feedInProgress = false;
+    _ended = false;
+    _rendererEnded = false;
     _lastUiUpdateAt = null;
     _lastElapsedUpdateAt = null;
     _lastNotificationUpdateAt = null;

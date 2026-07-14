@@ -203,10 +203,11 @@ class WinAudioOutput implements AudioOutput {
       // Set lpData (offset 0)
       header.cast<ffi.Pointer<ffi.Void>>().value = data.cast();
       // Set dwBufferLength (offset 8)
-      header.cast<ffi.Uint8>().elementAt(8).cast<ffi.Uint32>().value =
+      // Set dwBufferLength (offset 8)
+      (header.cast<ffi.Uint8>() + 8).cast<ffi.Uint32>().value =
           bufferSizeInBytes;
       // Set dwFlags to WHDR_DONE (0x01) (offset 24)
-      header.cast<ffi.Uint8>().elementAt(24).cast<ffi.Uint32>().value = 0x01;
+      (header.cast<ffi.Uint8>() + 24).cast<ffi.Uint32>().value = 0x01;
 
       headers.add(header.cast());
       buffers.add(data);
@@ -219,7 +220,7 @@ class WinAudioOutput implements AudioOutput {
     final buffer = buffers[writeIndex];
 
     // Wait until buffer playing completes (WHDR_DONE flag is set)
-    final flagsPtr = header.cast<ffi.Uint8>().elementAt(24).cast<ffi.Uint32>();
+    final flagsPtr = (header.cast<ffi.Uint8>() + 24).cast<ffi.Uint32>();
     while ((flagsPtr.value & 0x01) == 0) {
       sleep(const Duration(milliseconds: 2));
     }
@@ -244,10 +245,7 @@ class WinAudioOutput implements AudioOutput {
     // Graceful cleanup: wait for active buffers to complete
     for (int i = 0; i < numBuffers; i++) {
       final header = headers[i];
-      final flagsPtr = header
-          .cast<ffi.Uint8>()
-          .elementAt(24)
-          .cast<ffi.Uint32>();
+      final flagsPtr = (header.cast<ffi.Uint8>() + 24).cast<ffi.Uint32>();
       while ((flagsPtr.value & 0x01) == 0) {
         sleep(const Duration(milliseconds: 5));
       }
@@ -365,16 +363,15 @@ void main(List<String> args) async {
     final wfx = calloc<ffi.Uint8>(18); // WAVEFORMATEX struct size
 
     wfx.cast<ffi.Uint16>().value = 1; // wFormatTag (PCM)
-    wfx.cast<ffi.Uint16>().elementAt(1).value = 2; // nChannels (2)
-    wfx.cast<ffi.Uint8>().elementAt(4).cast<ffi.Uint32>().value =
+    (wfx.cast<ffi.Uint16>() + 1).value = 2; // nChannels (2)
+    (wfx.cast<ffi.Uint8>() + 4).cast<ffi.Uint32>().value =
         sampleRate; // nSamplesPerSec
-    wfx.cast<ffi.Uint8>().elementAt(8).cast<ffi.Uint32>().value =
+    (wfx.cast<ffi.Uint8>() + 8).cast<ffi.Uint32>().value =
         sampleRate * 4; // nAvgBytesPerSec
-    wfx.cast<ffi.Uint8>().elementAt(12).cast<ffi.Uint16>().value =
-        4; // nBlockAlign
-    wfx.cast<ffi.Uint8>().elementAt(14).cast<ffi.Uint16>().value =
+    (wfx.cast<ffi.Uint8>() + 12).cast<ffi.Uint16>().value = 4; // nBlockAlign
+    (wfx.cast<ffi.Uint8>() + 14).cast<ffi.Uint16>().value =
         16; // wBitsPerSample
-    wfx.cast<ffi.Uint8>().elementAt(16).cast<ffi.Uint16>().value = 0; // cbSize
+    (wfx.cast<ffi.Uint8>() + 16).cast<ffi.Uint16>().value = 0; // cbSize
 
     // WAVE_MAPPER is 0xFFFFFFFF
     int err = waveOutOpen(
