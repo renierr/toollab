@@ -1,5 +1,9 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
+
+import 'engine/mixer.dart';
+import 'engine/module.dart';
 
 import 'package:file_selector/file_selector.dart'
     show XFile, XTypeGroup, openFiles, getDirectoryPath;
@@ -99,6 +103,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   bool _syncing = false;
   bool _backendAvailable = false;
   double _volume = 0.7;
+  double _stereoWidth = 1.0;
   bool _looping = false;
   bool _visualizerEnabled = true;
   bool _appInForeground = true;
@@ -177,6 +182,10 @@ class _ChiptunePageState extends State<ChiptunePage>
     final loop = await db.getSetting(ChiptuneArchive.toolId, 'looping');
     final vis = await db.getSetting(ChiptuneArchive.toolId, 'vis_id');
     final visOn = await db.getSetting(ChiptuneArchive.toolId, 'visualizer');
+    final widthStr = await db.getSetting(
+      ChiptuneArchive.toolId,
+      'stereo_width',
+    );
     final deviceIdStr = await db.getSetting(
       ChiptuneArchive.toolId,
       'output_device_id',
@@ -184,12 +193,14 @@ class _ChiptunePageState extends State<ChiptunePage>
     if (!mounted) return;
     setState(() {
       _volume = double.tryParse(vol ?? '') ?? 0.7;
+      _stereoWidth = double.tryParse(widthStr ?? '') ?? 1.0;
       _looping = loop == '1';
       _visualizerEnabled = visOn != '0';
       _currentVizId = vis ?? ChiptuneVizRegistry.defaultId;
       _outputDeviceId = int.tryParse(deviceIdStr ?? '');
     });
     _player.setVolume(_volume);
+    _player.setStereoWidth(_stereoWidth);
     _player.setLooping(_looping);
     _player.setInitialDeviceId(_outputDeviceId);
   }
@@ -362,6 +373,16 @@ class _ChiptunePageState extends State<ChiptunePage>
     DatabaseService.instance.setSetting(
       ChiptuneArchive.toolId,
       'volume',
+      v.toStringAsFixed(3),
+    );
+  }
+
+  void _setStereoWidth(double v) {
+    setState(() => _stereoWidth = v);
+    _player.setStereoWidth(v);
+    DatabaseService.instance.setSetting(
+      ChiptuneArchive.toolId,
+      'stereo_width',
       v.toStringAsFixed(3),
     );
   }
@@ -949,6 +970,7 @@ class _ChiptunePageState extends State<ChiptunePage>
         module: module!,
         looping: _looping,
         volume: _volume,
+        stereoWidth: _stereoWidth,
         visualizerEnabled: _visualizerEnabled,
         animateVisualizer: _appInForeground,
         currentVizId: _currentVizId,
@@ -965,6 +987,7 @@ class _ChiptunePageState extends State<ChiptunePage>
             : l10n.chipNextTrackTooltip,
         onLoopChanged: _setLooping,
         onVolumeChanged: _setVolume,
+        onStereoWidthChanged: _setStereoWidth,
         onSeek: _player.seek,
       );
     }
@@ -982,12 +1005,6 @@ class _ChiptunePageState extends State<ChiptunePage>
           modArchiveLabel: l10n.chipRandomSourceModArchive,
           serverLabel: l10n.chipRandomSourceServer,
         ),
-        if (hasMultipleDevices)
-          IconButton(
-            tooltip: l10n.chipSelectOutputDevice,
-            icon: const Icon(Icons.speaker_group_outlined),
-            onPressed: () => _showDeviceSelectionDialog(devices),
-          ),
         IconButton(
           tooltip: l10n.chipLoadFiles,
           icon: const Icon(Icons.folder_open),
@@ -999,18 +1016,179 @@ class _ChiptunePageState extends State<ChiptunePage>
             icon: const Icon(Icons.folder_special_outlined),
             onPressed: _pickFolder,
           ),
-        if (hasPlayable)
-          IconButton(
-            tooltip: _visualizerEnabled
-                ? l10n.chipHideVisualizer
-                : l10n.chipShowVisualizer,
-            icon: Icon(
-              _visualizerEnabled ? Icons.equalizer : Icons.equalizer_outlined,
-            ),
-            onPressed: () => _setVisualizerEnabled(!_visualizerEnabled),
+        if (hasPlayable || hasMultipleDevices)
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) {
+              return [
+                if (hasPlayable && !isNative)
+                  PopupMenuItem(
+                    value: 'export',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.download_outlined),
+                        const SizedBox(width: 8),
+                        Text(l10n.chipExportToWav),
+                      ],
+                    ),
+                  ),
+                if (hasPlayable)
+                  PopupMenuItem(
+                    value: 'visualizer',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _visualizerEnabled
+                              ? Icons.equalizer
+                              : Icons.equalizer_outlined,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _visualizerEnabled
+                              ? l10n.chipHideVisualizer
+                              : l10n.chipShowVisualizer,
+                        ),
+                      ],
+                    ),
+                  ),
+                if (hasMultipleDevices)
+                  PopupMenuItem(
+                    value: 'device',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.speaker_group_outlined),
+                        const SizedBox(width: 8),
+                        Text(l10n.chipSelectOutputDevice),
+                      ],
+                    ),
+                  ),
+              ];
+            },
+            onSelected: (value) {
+              switch (value) {
+                case 'export':
+                  _exportToWav();
+                  break;
+                case 'visualizer':
+                  _setVisualizerEnabled(!_visualizerEnabled);
+                  break;
+                case 'device':
+                  _showDeviceSelectionDialog(devices);
+                  break;
+              }
+            },
           ),
       ],
       child: content,
     );
   }
+
+  Future<void> _exportToWav() async {
+    final module = _player.module;
+    if (module == null) return;
+
+    final l10n = AppLocalizations.of(context);
+    final String cleanTitle = module.title.isNotEmpty
+        ? module.title.replaceAll(RegExp(r'[^\w\-\s]'), '').trim()
+        : 'track';
+    final suggestedName = '$cleanTitle.wav';
+
+    _showSnack(l10n.chipExportingToWav);
+
+    try {
+      const sampleRate = 44100;
+      final bytes = await Isolate.run(
+        () => _renderToWavIsolate(WavExportParams(module, sampleRate)),
+      );
+
+      if (!mounted) return;
+
+      final savedPath = await FileSaveHelper.saveFile(
+        context: context,
+        suggestedName: suggestedName,
+        bytes: bytes,
+      );
+
+      if (savedPath != null && mounted) {
+        _showSnack(l10n.chipExportSuccess);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnack(l10n.chipExportFailed(e.toString()));
+      }
+    }
+  }
+}
+
+class WavExportParams {
+  final ModuleFile module;
+  final int sampleRate;
+  const WavExportParams(this.module, this.sampleRate);
+}
+
+Uint8List _renderToWavIsolate(WavExportParams params) {
+  final worklet = serializeModuleForWorklet(params.module);
+  final mixer = ChiptuneMixer();
+  mixer.loadAndPlay(worklet, params.sampleRate, looping: false);
+
+  final List<Int16List> chunks = [];
+  int totalFrames = 0;
+  const int chunkFrames = 4096;
+  final Float32List fBuf = Float32List(chunkFrames * 2);
+
+  // Safeguard: max 20 minutes rendering to prevent infinite loops
+  final int maxFrames = params.sampleRate * 60 * 20;
+
+  while (mixer.playing && totalFrames < maxFrames) {
+    mixer.render(fBuf, chunkFrames);
+    final Int16List iBuf = Int16List(chunkFrames * 2);
+    for (int i = 0; i < chunkFrames * 2; i++) {
+      final double val = fBuf[i].clamp(-1.0, 1.0);
+      iBuf[i] = (val * (val >= 0 ? 32767.0 : 32768.0)).round();
+    }
+    chunks.add(iBuf);
+    totalFrames += chunkFrames;
+  }
+
+  final int numBytes = totalFrames * 2 * 2;
+  final Uint8List wavBytes = Uint8List(44 + numBytes);
+  final ByteData bd = ByteData.view(wavBytes.buffer);
+
+  bd.setUint8(0, 0x52); // R
+  bd.setUint8(1, 0x49); // I
+  bd.setUint8(2, 0x46); // F
+  bd.setUint8(3, 0x46); // F
+  bd.setUint32(4, 36 + numBytes, Endian.little);
+  bd.setUint8(8, 0x57); // W
+  bd.setUint8(9, 0x41); // A
+  bd.setUint8(10, 0x56); // V
+  bd.setUint8(11, 0x45); // E
+
+  bd.setUint8(12, 0x66); // f
+  bd.setUint8(13, 0x6d); // m
+  bd.setUint8(14, 0x74); // t
+  bd.setUint8(15, 0x20); // space
+  bd.setUint32(16, 16, Endian.little);
+  bd.setUint16(20, 1, Endian.little);
+  bd.setUint16(22, 2, Endian.little);
+  bd.setUint32(24, params.sampleRate, Endian.little);
+  bd.setUint32(28, params.sampleRate * 4, Endian.little);
+  bd.setUint16(32, 4, Endian.little);
+  bd.setUint16(34, 16, Endian.little);
+
+  bd.setUint8(36, 0x64); // d
+  bd.setUint8(37, 0x61); // a
+  bd.setUint8(38, 0x74); // t
+  bd.setUint8(39, 0x61); // a
+  bd.setUint32(40, numBytes, Endian.little);
+
+  int offset = 44;
+  for (final chunk in chunks) {
+    for (int i = 0; i < chunk.length; i++) {
+      bd.setInt16(offset, chunk[i], Endian.little);
+      offset += 2;
+    }
+  }
+
+  return wavBytes;
 }

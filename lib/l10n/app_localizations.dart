@@ -764,6 +764,36 @@ abstract class AppLocalizations {
   /// **'Audio file'**
   String get chipAudioFile;
 
+  /// No description provided for @chipStereoWidth.
+  ///
+  /// In en, this message translates to:
+  /// **'Stereo Width'**
+  String get chipStereoWidth;
+
+  /// No description provided for @chipExportToWav.
+  ///
+  /// In en, this message translates to:
+  /// **'Export to WAV'**
+  String get chipExportToWav;
+
+  /// No description provided for @chipExportingToWav.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting to WAV…'**
+  String get chipExportingToWav;
+
+  /// No description provided for @chipExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'WAV file exported successfully'**
+  String get chipExportSuccess;
+
+  /// No description provided for @chipExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'WAV export failed: {error}'**
+  String chipExportFailed(String error);
+
   /// No description provided for @coreNoToolsFoundToOpen.
   ///
   /// In en, this message translates to:

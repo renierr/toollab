@@ -85,6 +85,7 @@ class ChiptunePlayer {
   bool _rendererEnded = false;
   bool _nearEndFired = false;
   double _volume = 0.7;
+  double _stereoWidth = 1.0;
   bool _looping = false;
   int? _savedDeviceId;
 
@@ -285,6 +286,7 @@ class ChiptunePlayer {
       volume: _volume,
       chunkFrames: _chunkFrames,
     );
+    _renderWorker.setStereoWidth(_stereoWidth);
 
     _stream = SoLoud.instance.setBufferStream(
       sampleRate: sampleRate,
@@ -412,6 +414,13 @@ class ChiptunePlayer {
       if (_handle != null) SoLoud.instance.setVolume(_handle!, _volume);
     } else {
       _renderWorker.setVolume(_volume);
+    }
+  }
+
+  void setStereoWidth(double stereoWidth) {
+    _stereoWidth = stereoWidth.clamp(0.0, 1.0);
+    if (!_isNative) {
+      _renderWorker.setStereoWidth(_stereoWidth);
     }
   }
 

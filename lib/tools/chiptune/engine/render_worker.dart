@@ -87,6 +87,10 @@ class ChiptuneRenderWorker {
     _sendPort?.send({'cmd': 'setVolume', 'volume': volume});
   }
 
+  void setStereoWidth(double stereoWidth) {
+    _sendPort?.send({'cmd': 'setStereoWidth', 'stereoWidth': stereoWidth});
+  }
+
   void setSpeed(int speed) {
     _sendPort?.send({'cmd': 'setSpeed', 'speed': speed});
   }
@@ -264,6 +268,11 @@ void _renderWorkerEntry(SendPort initPort) {
         break;
       case 'setVolume':
         mixer.setMasterVolume((message['volume'] as num).toDouble());
+        break;
+      case 'setStereoWidth':
+        mixer.stereoWidth = (message['stereoWidth'] as num).toDouble();
+        pcmQueue.clear();
+        refillQueue();
         break;
       case 'setSpeed':
         mixer.setSpeed((message['speed'] as num).toInt());

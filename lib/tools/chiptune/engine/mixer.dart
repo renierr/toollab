@@ -1721,6 +1721,7 @@ class ChiptuneMixer {
   List<WorkletNote> currentRowNotes = [];
 
   bool amigaFilter = false;
+  double stereoWidth = 1.0;
   double _fLx1 = 0, _fLx2 = 0, _fLy1 = 0, _fLy2 = 0;
   double _fRx1 = 0, _fRx2 = 0, _fRy1 = 0, _fRy2 = 0;
 
@@ -2051,6 +2052,13 @@ class ChiptuneMixer {
 
       double finalL = lOut * 0.42 * masterVolume;
       double finalR = rOut * 0.42 * masterVolume;
+      if (stereoWidth != 1.0) {
+        final mid = (finalL + finalR) / 2.0;
+        final sideL = finalL - mid;
+        final sideR = finalR - mid;
+        finalL = mid + sideL * stereoWidth;
+        finalR = mid + sideR * stereoWidth;
+      }
       if (amigaFilter) {
         finalL = _applyAmigaFilterL(finalL);
         finalR = _applyAmigaFilterR(finalR);

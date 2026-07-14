@@ -368,6 +368,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipAudioFile => 'Audio file';
 
   @override
+  String get chipStereoWidth => 'Stereo Width';
+
+  @override
+  String get chipExportToWav => 'Export to WAV';
+
+  @override
+  String get chipExportingToWav => 'Exporting to WAV…';
+
+  @override
+  String get chipExportSuccess => 'WAV file exported successfully';
+
+  @override
+  String chipExportFailed(String error) {
+    return 'WAV export failed: $error';
+  }
+
+  @override
   String coreNoToolsFoundToOpen(String name) {
     return 'No tools found to open \"$name\"';
   }

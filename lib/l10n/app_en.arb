@@ -114,6 +114,18 @@
   "chipMetricSize": "Size",
   "chipMetricDuration": "Duration",
   "chipAudioFile": "Audio file",
+  "chipStereoWidth": "Stereo Width",
+  "chipExportToWav": "Export to WAV",
+  "chipExportingToWav": "Exporting to WAV…",
+  "chipExportSuccess": "WAV file exported successfully",
+  "chipExportFailed": "WAV export failed: {error}",
+  "@chipExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "coreNoToolsFoundToOpen": "No tools found to open \"{name}\"",
   "@coreNoToolsFoundToOpen": {
     "placeholders": {
