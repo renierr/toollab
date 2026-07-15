@@ -680,6 +680,102 @@ abstract class AppLocalizations {
   /// **'Select Output Device'**
   String get chipSelectOutputDevice;
 
+  /// No description provided for @chipTweaks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tweaks'**
+  String get chipTweaks;
+
+  /// No description provided for @chipInterpolation.
+  ///
+  /// In en, this message translates to:
+  /// **'Interpolation'**
+  String get chipInterpolation;
+
+  /// No description provided for @chipInterpolationSinc.
+  ///
+  /// In en, this message translates to:
+  /// **'Sinc (clearest)'**
+  String get chipInterpolationSinc;
+
+  /// No description provided for @chipInterpolationCubic.
+  ///
+  /// In en, this message translates to:
+  /// **'Cubic (smooth)'**
+  String get chipInterpolationCubic;
+
+  /// No description provided for @chipInterpolationLinear.
+  ///
+  /// In en, this message translates to:
+  /// **'Linear (bright)'**
+  String get chipInterpolationLinear;
+
+  /// No description provided for @chipInterpolationNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None (raw)'**
+  String get chipInterpolationNone;
+
+  /// No description provided for @chipPreAmp.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-amp'**
+  String get chipPreAmp;
+
+  /// No description provided for @chipAmigaFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Amiga filter'**
+  String get chipAmigaFilter;
+
+  /// No description provided for @chipAmigaFilterAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get chipAmigaFilterAuto;
+
+  /// No description provided for @chipAmigaFilterOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On'**
+  String get chipAmigaFilterOn;
+
+  /// No description provided for @chipAmigaFilterOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get chipAmigaFilterOff;
+
+  /// No description provided for @chipVolumeRamping.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume ramping'**
+  String get chipVolumeRamping;
+
+  /// No description provided for @chipRampOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get chipRampOff;
+
+  /// No description provided for @chipRampFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get chipRampFast;
+
+  /// No description provided for @chipRampSmooth.
+  ///
+  /// In en, this message translates to:
+  /// **'Smooth'**
+  String get chipRampSmooth;
+
+  /// No description provided for @chipStereoSeparation.
+  ///
+  /// In en, this message translates to:
+  /// **'Stereo separation'**
+  String get chipStereoSeparation;
+
   /// No description provided for @chipDefaultDevice.
   ///
   /// In en, this message translates to:

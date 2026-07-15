@@ -318,6 +318,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipSelectOutputDevice => 'Select Output Device';
 
   @override
+  String get chipTweaks => 'Tweaks';
+
+  @override
+  String get chipInterpolation => 'Interpolation';
+
+  @override
+  String get chipInterpolationSinc => 'Sinc (clearest)';
+
+  @override
+  String get chipInterpolationCubic => 'Cubic (smooth)';
+
+  @override
+  String get chipInterpolationLinear => 'Linear (bright)';
+
+  @override
+  String get chipInterpolationNone => 'None (raw)';
+
+  @override
+  String get chipPreAmp => 'Pre-amp';
+
+  @override
+  String get chipAmigaFilter => 'Amiga filter';
+
+  @override
+  String get chipAmigaFilterAuto => 'Auto';
+
+  @override
+  String get chipAmigaFilterOn => 'On';
+
+  @override
+  String get chipAmigaFilterOff => 'Off';
+
+  @override
+  String get chipVolumeRamping => 'Volume ramping';
+
+  @override
+  String get chipRampOff => 'Off';
+
+  @override
+  String get chipRampFast => 'Fast';
+
+  @override
+  String get chipRampSmooth => 'Smooth';
+
+  @override
+  String get chipStereoSeparation => 'Stereo separation';
+
+  @override
   String get chipDefaultDevice => 'Default Device';
 
   @override

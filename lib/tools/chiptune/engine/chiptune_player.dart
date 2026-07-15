@@ -7,6 +7,7 @@ import '../../../services/database_service.dart';
 import '../../../services/foreground_runtime_service.dart';
 import '../../../services/media_controls_service.dart';
 import '../../../services/power_wake_lock_service.dart';
+import 'mixer.dart';
 import 'module.dart';
 import 'render_worker.dart';
 import 'song_duration.dart';
@@ -86,6 +87,11 @@ class ChiptunePlayer {
   bool _nearEndFired = false;
   double _volume = 0.7;
   double _stereoWidth = 1.0;
+  ChiptuneInterpolation _interpolation = ChiptuneInterpolation.sinc;
+  double _preAmp = defaultPreAmp;
+  ChiptuneAmigaFilter _amigaFilter = ChiptuneAmigaFilter.auto;
+  double _rampStep = defaultRampStep;
+  double _modSeparation = defaultModSeparation;
   bool _looping = false;
   int? _savedDeviceId;
 
@@ -287,6 +293,11 @@ class ChiptunePlayer {
       chunkFrames: _chunkFrames,
     );
     _renderWorker.setStereoWidth(_stereoWidth);
+    _renderWorker.setInterpolation(_interpolation.index);
+    _renderWorker.setPreAmp(_preAmp);
+    _renderWorker.setAmigaFilter(_amigaFilter.index);
+    _renderWorker.setRampStep(_rampStep);
+    _renderWorker.setModSeparation(_modSeparation);
 
     _stream = SoLoud.instance.setBufferStream(
       sampleRate: sampleRate,
@@ -421,6 +432,41 @@ class ChiptunePlayer {
     _stereoWidth = stereoWidth.clamp(0.0, 1.0);
     if (!_isNative) {
       _renderWorker.setStereoWidth(_stereoWidth);
+    }
+  }
+
+  void setInterpolation(ChiptuneInterpolation mode) {
+    _interpolation = mode;
+    if (!_isNative) {
+      _renderWorker.setInterpolation(mode.index);
+    }
+  }
+
+  void setPreAmp(double value) {
+    _preAmp = value;
+    if (!_isNative) {
+      _renderWorker.setPreAmp(value);
+    }
+  }
+
+  void setAmigaFilter(ChiptuneAmigaFilter mode) {
+    _amigaFilter = mode;
+    if (!_isNative) {
+      _renderWorker.setAmigaFilter(mode.index);
+    }
+  }
+
+  void setRampStep(double value) {
+    _rampStep = value;
+    if (!_isNative) {
+      _renderWorker.setRampStep(value);
+    }
+  }
+
+  void setModSeparation(double value) {
+    _modSeparation = value;
+    if (!_isNative) {
+      _renderWorker.setModSeparation(value);
     }
   }
 

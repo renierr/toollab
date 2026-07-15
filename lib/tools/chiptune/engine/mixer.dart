@@ -80,15 +80,6 @@ const List<int> _sineTable = [
   24,
 ];
 
-/// `Math.tanh` does not exist in Dart. (e^{2x}-1)/(e^{2x}+1), with overflow
-/// guards.
-double _tanh(double x) {
-  if (x > 20) return 1.0;
-  if (x < -20) return -1.0;
-  final e = math.exp(2 * x);
-  return (e - 1) / (e + 1);
-}
-
 double _getSampleVal(int idx, WorkletInstrumentSample smp) {
   if (smp.data.isEmpty) return 0.0;
   if (smp.loopLength > 2) {
@@ -117,6 +108,106 @@ double _interpolateCubic(
   final c = -0.5 * s_1 + 0.5 * s1;
   final d = s0;
   return a * t * t * t + b * t * t + c * t + d;
+}
+
+enum ChiptuneInterpolation { none, linear, cubic, sinc }
+
+enum ChiptuneAmigaFilter { auto, on, off }
+
+const double defaultPreAmp = 0.55;
+const double defaultRampStep = 1.0 / 16.0;
+const double defaultModSeparation = 0.57;
+
+const int _sincWidth = 8;
+const int _sincPhases = 512;
+const double _sincBeta = 9.6377;
+Float32List? _sincTable;
+
+double _besselI0(double x) {
+  double sum = 1.0;
+  double term = 1.0;
+  final xx = (x * x) / 4.0;
+  for (int k = 1; k < 50; k++) {
+    term *= xx / (k * k);
+    sum += term;
+    if (term < 1e-12 * sum) break;
+  }
+  return sum;
+}
+
+Float32List _buildSincTable() {
+  final table = Float32List(_sincPhases * _sincWidth);
+  final denom = _besselI0(_sincBeta);
+  const half = _sincWidth ~/ 2;
+  for (int p = 0; p < _sincPhases; p++) {
+    final frac = p / _sincPhases;
+    double sum = 0.0;
+    for (int t = 0; t < _sincWidth; t++) {
+      final d = t - (half - 1) - frac;
+      double s;
+      if (d.abs() < 1e-9) {
+        s = 1.0;
+      } else {
+        final pd = math.pi * d;
+        s = math.sin(pd) / pd;
+      }
+      final n = d / half;
+      double w;
+      if (n.abs() >= 1.0) {
+        w = 0.0;
+      } else {
+        w = _besselI0(_sincBeta * math.sqrt(1.0 - n * n)) / denom;
+      }
+      final coef = s * w;
+      table[p * _sincWidth + t] = coef;
+      sum += coef;
+    }
+    if (sum != 0.0) {
+      for (int t = 0; t < _sincWidth; t++) {
+        table[p * _sincWidth + t] /= sum;
+      }
+    }
+  }
+  return table;
+}
+
+double _interpolateSinc(WorkletInstrumentSample smp, int i0, double frac) {
+  final table = _sincTable ??= _buildSincTable();
+  int phase = (frac * _sincPhases).floor();
+  if (phase < 0) phase = 0;
+  if (phase >= _sincPhases) phase = _sincPhases - 1;
+  final base = phase * _sincWidth;
+  const half = _sincWidth ~/ 2;
+  double acc = 0.0;
+  for (int t = 0; t < _sincWidth; t++) {
+    acc += _getSampleVal(i0 - (half - 1) + t, smp) * table[base + t];
+  }
+  return acc;
+}
+
+double _interpolateSample(
+  WorkletInstrumentSample smp,
+  double pos,
+  ChiptuneInterpolation mode,
+) {
+  final i0 = pos.floor();
+  final frac = pos - i0;
+  switch (mode) {
+    case ChiptuneInterpolation.none:
+      return _getSampleVal(i0, smp);
+    case ChiptuneInterpolation.linear:
+      final s0 = _getSampleVal(i0, smp);
+      final s1 = _getSampleVal(i0 + 1, smp);
+      return s0 + (s1 - s0) * frac;
+    case ChiptuneInterpolation.cubic:
+      final s_1 = _getSampleVal(i0 - 1, smp);
+      final s0 = _getSampleVal(i0, smp);
+      final s1 = _getSampleVal(i0 + 1, smp);
+      final s2 = _getSampleVal(i0 + 2, smp);
+      return _interpolateCubic(s_1, s0, s1, s2, frac);
+    case ChiptuneInterpolation.sinc:
+      return _interpolateSinc(smp, i0, frac);
+  }
 }
 
 /// BackgroundVoice: lightweight voice for IT NNA (New Note Action).
@@ -284,13 +375,11 @@ class BackgroundVoice {
   }
 
   double _readRawSampleValue() {
-    final i0 = sampleIndex.floor();
-    final frac = sampleIndex - i0;
-    final s_1 = _getSampleVal(i0 - 1, sample);
-    final s0 = _getSampleVal(i0, sample);
-    final s1 = _getSampleVal(i0 + 1, sample);
-    final s2 = _getSampleVal(i0 + 2, sample);
-    return _interpolateCubic(s_1, s0, s1, s2, frac);
+    return _interpolateSample(
+      sample,
+      sampleIndex,
+      globalVolumeRef.interpolation,
+    );
   }
 
   void nextSample() {
@@ -338,7 +427,7 @@ class BackgroundVoice {
 
     if (lastMixedVolume != vol) {
       final diff = vol - lastMixedVolume;
-      const double step = 1.0 / 64.0;
+      final double step = globalVolumeRef.rampStep;
       if (diff.abs() < step) {
         lastMixedVolume = vol;
       } else {
@@ -1579,15 +1668,7 @@ class WorkletChannel {
       outR = 0;
       return;
     }
-    final i0 = sampleIndex.floor();
-    final frac = sampleIndex - i0;
-
-    final s_1 = _getSampleVal(i0 - 1, smp);
-    final s0 = _getSampleVal(i0, smp);
-    final s1 = _getSampleVal(i0 + 1, smp);
-    final s2 = _getSampleVal(i0 + 2, smp);
-
-    double raw = _interpolateCubic(s_1, s0, s1, s2, frac);
+    double raw = _interpolateSample(smp, sampleIndex, worklet.interpolation);
 
     if (worklet.mod!.type == 'IT' && filterCutoff < 127) {
       final normalized = filterCutoff / 127;
@@ -1617,7 +1698,7 @@ class WorkletChannel {
 
     if (lastMixedVolume != vol) {
       final diff = vol - lastMixedVolume;
-      const double step = 1.0 / 64.0;
+      final double step = worklet.rampStep;
       if (diff.abs() < step) {
         lastMixedVolume = vol;
       } else {
@@ -1721,6 +1802,11 @@ class ChiptuneMixer {
   List<WorkletNote> currentRowNotes = [];
 
   bool amigaFilter = false;
+  ChiptuneAmigaFilter amigaFilterMode = ChiptuneAmigaFilter.auto;
+  ChiptuneInterpolation interpolation = ChiptuneInterpolation.sinc;
+  double preAmp = defaultPreAmp;
+  double rampStep = defaultRampStep;
+  double modSeparation = defaultModSeparation;
   double stereoWidth = 1.0;
   double _fLx1 = 0, _fLx2 = 0, _fLy1 = 0, _fLy2 = 0;
   double _fRx1 = 0, _fRx2 = 0, _fRy1 = 0, _fRy2 = 0;
@@ -1782,7 +1868,7 @@ class ChiptuneMixer {
       final ch = WorkletChannel(this, i);
       // Standard Amiga panning: LRRL (Channels 0, 3 Left-ish; 1, 2 Right-ish)
       if (mod.type == 'MOD') {
-        ch.panning = (i % 4 == 1 || i % 4 == 2) ? 200 : 56;
+        ch.panning = _modPanning(i, modSeparation);
       } else if (mod.channelPanning != null && i < mod.channelPanning!.length) {
         ch.panning = mod.channelPanning![i].toDouble();
       }
@@ -1847,6 +1933,22 @@ class ChiptuneMixer {
   /// 'setVolume' branch.
   void setMasterVolume(double v) {
     masterVolume = v;
+  }
+
+  double _modPanning(int index, double separation) {
+    final s = separation.clamp(0.0, 1.0);
+    final sign = (index % 4 == 1 || index % 4 == 2) ? 1 : -1;
+    final offset = 127.0 * s;
+    return (128 + sign * offset).clamp(0.0, 255.0);
+  }
+
+  void setModSeparation(double separation) {
+    modSeparation = separation.clamp(0.0, 1.0);
+    if (mod?.type == 'MOD') {
+      for (int i = 0; i < channels.length; i++) {
+        channels[i].panning = _modPanning(i, modSeparation);
+      }
+    }
   }
 
   /// 'setSpeed' branch.
@@ -2050,8 +2152,8 @@ class ChiptuneMixer {
         rOut += bgv.outR;
       }
 
-      double finalL = lOut * 0.42 * masterVolume;
-      double finalR = rOut * 0.42 * masterVolume;
+      double finalL = lOut * preAmp * masterVolume;
+      double finalR = rOut * preAmp * masterVolume;
       if (stereoWidth != 1.0) {
         final mid = (finalL + finalR) / 2.0;
         final sideL = finalL - mid;
@@ -2059,12 +2161,17 @@ class ChiptuneMixer {
         finalL = mid + sideL * stereoWidth;
         finalR = mid + sideR * stereoWidth;
       }
-      if (amigaFilter) {
+      final bool applyFilter = switch (amigaFilterMode) {
+        ChiptuneAmigaFilter.on => true,
+        ChiptuneAmigaFilter.off => false,
+        ChiptuneAmigaFilter.auto => amigaFilter,
+      };
+      if (applyFilter) {
         finalL = _applyAmigaFilterL(finalL);
         finalR = _applyAmigaFilterR(finalR);
       }
-      out[2 * i] = _tanh(finalL);
-      out[2 * i + 1] = _tanh(finalR);
+      out[2 * i] = finalL < -1.0 ? -1.0 : (finalL > 1.0 ? 1.0 : finalL);
+      out[2 * i + 1] = finalR < -1.0 ? -1.0 : (finalR > 1.0 ? 1.0 : finalR);
     }
   }
 }

@@ -32,6 +32,7 @@ import 'widgets/chiptune_audio_view.dart';
 import 'widgets/chiptune_empty_state.dart';
 import 'widgets/chiptune_player_view.dart';
 import 'widgets/chiptune_playlist_panel.dart';
+import 'widgets/chiptune_tweaks_dialog.dart';
 import 'widgets/chiptune_random_button.dart';
 import 'widgets/modarchive_fetch_dialog.dart';
 import 'widgets/visualizations/chiptune_viz_registry.dart';
@@ -104,6 +105,11 @@ class _ChiptunePageState extends State<ChiptunePage>
   bool _backendAvailable = false;
   double _volume = 0.7;
   double _stereoWidth = 1.0;
+  ChiptuneInterpolation _interpolation = ChiptuneInterpolation.sinc;
+  double _preAmp = defaultPreAmp;
+  ChiptuneAmigaFilter _amigaFilter = ChiptuneAmigaFilter.auto;
+  double _rampStep = defaultRampStep;
+  double _modSeparation = defaultModSeparation;
   bool _looping = false;
   bool _visualizerEnabled = true;
   bool _appInForeground = true;
@@ -186,14 +192,45 @@ class _ChiptunePageState extends State<ChiptunePage>
       ChiptuneArchive.toolId,
       'stereo_width',
     );
+    final interpStr = await db.getSetting(
+      ChiptuneArchive.toolId,
+      'interpolation',
+    );
+    final preAmpStr = await db.getSetting(ChiptuneArchive.toolId, 'preamp');
+    final amigaStr = await db.getSetting(
+      ChiptuneArchive.toolId,
+      'amiga_filter',
+    );
+    final rampStr = await db.getSetting(ChiptuneArchive.toolId, 'ramp_step');
+    final sepStr = await db.getSetting(
+      ChiptuneArchive.toolId,
+      'mod_separation',
+    );
     final deviceIdStr = await db.getSetting(
       ChiptuneArchive.toolId,
       'output_device_id',
     );
     if (!mounted) return;
+    final interpIdx = int.tryParse(interpStr ?? '');
+    final amigaIdx = int.tryParse(amigaStr ?? '');
     setState(() {
       _volume = double.tryParse(vol ?? '') ?? 0.7;
       _stereoWidth = double.tryParse(widthStr ?? '') ?? 1.0;
+      _interpolation =
+          (interpIdx != null &&
+              interpIdx >= 0 &&
+              interpIdx < ChiptuneInterpolation.values.length)
+          ? ChiptuneInterpolation.values[interpIdx]
+          : ChiptuneInterpolation.sinc;
+      _preAmp = double.tryParse(preAmpStr ?? '') ?? defaultPreAmp;
+      _amigaFilter =
+          (amigaIdx != null &&
+              amigaIdx >= 0 &&
+              amigaIdx < ChiptuneAmigaFilter.values.length)
+          ? ChiptuneAmigaFilter.values[amigaIdx]
+          : ChiptuneAmigaFilter.auto;
+      _rampStep = double.tryParse(rampStr ?? '') ?? defaultRampStep;
+      _modSeparation = double.tryParse(sepStr ?? '') ?? defaultModSeparation;
       _looping = loop == '1';
       _visualizerEnabled = visOn != '0';
       _currentVizId = vis ?? ChiptuneVizRegistry.defaultId;
@@ -201,6 +238,11 @@ class _ChiptunePageState extends State<ChiptunePage>
     });
     _player.setVolume(_volume);
     _player.setStereoWidth(_stereoWidth);
+    _player.setInterpolation(_interpolation);
+    _player.setPreAmp(_preAmp);
+    _player.setAmigaFilter(_amigaFilter);
+    _player.setRampStep(_rampStep);
+    _player.setModSeparation(_modSeparation);
     _player.setLooping(_looping);
     _player.setInitialDeviceId(_outputDeviceId);
   }
@@ -387,6 +429,56 @@ class _ChiptunePageState extends State<ChiptunePage>
     );
   }
 
+  void _setInterpolation(ChiptuneInterpolation mode) {
+    setState(() => _interpolation = mode);
+    _player.setInterpolation(mode);
+    DatabaseService.instance.setSetting(
+      ChiptuneArchive.toolId,
+      'interpolation',
+      mode.index.toString(),
+    );
+  }
+
+  void _setPreAmp(double v) {
+    setState(() => _preAmp = v);
+    _player.setPreAmp(v);
+    DatabaseService.instance.setSetting(
+      ChiptuneArchive.toolId,
+      'preamp',
+      v.toStringAsFixed(3),
+    );
+  }
+
+  void _setAmigaFilter(ChiptuneAmigaFilter mode) {
+    setState(() => _amigaFilter = mode);
+    _player.setAmigaFilter(mode);
+    DatabaseService.instance.setSetting(
+      ChiptuneArchive.toolId,
+      'amiga_filter',
+      mode.index.toString(),
+    );
+  }
+
+  void _setRampStep(double v) {
+    setState(() => _rampStep = v);
+    _player.setRampStep(v);
+    DatabaseService.instance.setSetting(
+      ChiptuneArchive.toolId,
+      'ramp_step',
+      v.toStringAsFixed(4),
+    );
+  }
+
+  void _setModSeparation(double v) {
+    setState(() => _modSeparation = v);
+    _player.setModSeparation(v);
+    DatabaseService.instance.setSetting(
+      ChiptuneArchive.toolId,
+      'mod_separation',
+      v.toStringAsFixed(3),
+    );
+  }
+
   void _setLooping(bool v) {
     setState(() => _looping = v);
     _player.setLooping(v);
@@ -488,6 +580,24 @@ class _ChiptunePageState extends State<ChiptunePage>
           },
         );
       },
+    );
+  }
+
+  void _showTweaksDialog() {
+    ChiptuneTweaksDialog.show(
+      context,
+      interpolation: _interpolation,
+      stereoWidth: _stereoWidth,
+      preAmp: _preAmp,
+      amigaFilter: _amigaFilter,
+      rampStep: _rampStep,
+      modSeparation: _modSeparation,
+      onInterpolationChanged: _setInterpolation,
+      onStereoWidthChanged: _setStereoWidth,
+      onPreAmpChanged: _setPreAmp,
+      onAmigaFilterChanged: _setAmigaFilter,
+      onRampStepChanged: _setRampStep,
+      onModSeparationChanged: _setModSeparation,
     );
   }
 
@@ -970,7 +1080,6 @@ class _ChiptunePageState extends State<ChiptunePage>
         module: module!,
         looping: _looping,
         volume: _volume,
-        stereoWidth: _stereoWidth,
         visualizerEnabled: _visualizerEnabled,
         animateVisualizer: _appInForeground,
         currentVizId: _currentVizId,
@@ -987,7 +1096,6 @@ class _ChiptunePageState extends State<ChiptunePage>
             : l10n.chipNextTrackTooltip,
         onLoopChanged: _setLooping,
         onVolumeChanged: _setVolume,
-        onStereoWidthChanged: _setStereoWidth,
         onSeek: _player.seek,
       );
     }
@@ -1051,6 +1159,17 @@ class _ChiptunePageState extends State<ChiptunePage>
                       ],
                     ),
                   ),
+                if (hasPlayable && !isNative)
+                  PopupMenuItem(
+                    value: 'tweaks',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.tune),
+                        const SizedBox(width: 8),
+                        Text(l10n.chipTweaks),
+                      ],
+                    ),
+                  ),
                 if (hasMultipleDevices)
                   PopupMenuItem(
                     value: 'device',
@@ -1071,6 +1190,9 @@ class _ChiptunePageState extends State<ChiptunePage>
                   break;
                 case 'visualizer':
                   _setVisualizerEnabled(!_visualizerEnabled);
+                  break;
+                case 'tweaks':
+                  _showTweaksDialog();
                   break;
                 case 'device':
                   _showDeviceSelectionDialog(devices);

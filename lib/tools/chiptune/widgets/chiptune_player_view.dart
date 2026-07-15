@@ -21,7 +21,6 @@ class ChiptunePlayerView extends StatelessWidget {
   final ModuleFile module;
   final bool looping;
   final double volume;
-  final double stereoWidth;
   final bool visualizerEnabled;
   final bool animateVisualizer;
   final String currentVizId;
@@ -42,7 +41,6 @@ class ChiptunePlayerView extends StatelessWidget {
   final String? nextTooltip;
   final ValueChanged<bool> onLoopChanged;
   final ValueChanged<double> onVolumeChanged;
-  final ValueChanged<double> onStereoWidthChanged;
   final void Function(int order, int row) onSeek;
 
   const ChiptunePlayerView({
@@ -51,7 +49,6 @@ class ChiptunePlayerView extends StatelessWidget {
     required this.module,
     required this.looping,
     required this.volume,
-    required this.stereoWidth,
     required this.visualizerEnabled,
     required this.animateVisualizer,
     required this.currentVizId,
@@ -66,7 +63,6 @@ class ChiptunePlayerView extends StatelessWidget {
     this.nextTooltip,
     required this.onLoopChanged,
     required this.onVolumeChanged,
-    required this.onStereoWidthChanged,
     required this.onSeek,
   });
 
@@ -134,43 +130,6 @@ class ChiptunePlayerView extends StatelessWidget {
             onLoopChanged: onLoopChanged,
             onVolumeChanged: onVolumeChanged,
           ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Icon(
-              Icons.hearing_outlined,
-              size: 18,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              AppLocalizations.of(context).chipStereoWidth,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Expanded(
-              child: Slider(
-                value: stereoWidth,
-                min: 0.0,
-                max: 1.0,
-                activeColor: ChiptuneColors.accent,
-                onChanged: onStereoWidthChanged,
-              ),
-            ),
-            SizedBox(
-              width: 48,
-              child: Text(
-                '${(stereoWidth * 100).round()}%',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-                textAlign: TextAlign.right,
-              ),
-            ),
-          ],
         ),
         const SizedBox(height: 12),
         ValueListenableBuilder(

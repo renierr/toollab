@@ -91,6 +91,26 @@ class ChiptuneRenderWorker {
     _sendPort?.send({'cmd': 'setStereoWidth', 'stereoWidth': stereoWidth});
   }
 
+  void setInterpolation(int mode) {
+    _sendPort?.send({'cmd': 'setInterpolation', 'mode': mode});
+  }
+
+  void setPreAmp(double value) {
+    _sendPort?.send({'cmd': 'setPreAmp', 'value': value});
+  }
+
+  void setAmigaFilter(int mode) {
+    _sendPort?.send({'cmd': 'setAmigaFilter', 'mode': mode});
+  }
+
+  void setRampStep(double value) {
+    _sendPort?.send({'cmd': 'setRampStep', 'value': value});
+  }
+
+  void setModSeparation(double value) {
+    _sendPort?.send({'cmd': 'setModSeparation', 'value': value});
+  }
+
   void setSpeed(int speed) {
     _sendPort?.send({'cmd': 'setSpeed', 'speed': speed});
   }
@@ -271,6 +291,33 @@ void _renderWorkerEntry(SendPort initPort) {
         break;
       case 'setStereoWidth':
         mixer.stereoWidth = (message['stereoWidth'] as num).toDouble();
+        pcmQueue.clear();
+        refillQueue();
+        break;
+      case 'setInterpolation':
+        mixer.interpolation =
+            ChiptuneInterpolation.values[(message['mode'] as num).toInt()];
+        pcmQueue.clear();
+        refillQueue();
+        break;
+      case 'setPreAmp':
+        mixer.preAmp = (message['value'] as num).toDouble();
+        pcmQueue.clear();
+        refillQueue();
+        break;
+      case 'setAmigaFilter':
+        mixer.amigaFilterMode =
+            ChiptuneAmigaFilter.values[(message['mode'] as num).toInt()];
+        pcmQueue.clear();
+        refillQueue();
+        break;
+      case 'setRampStep':
+        mixer.rampStep = (message['value'] as num).toDouble();
+        pcmQueue.clear();
+        refillQueue();
+        break;
+      case 'setModSeparation':
+        mixer.setModSeparation((message['value'] as num).toDouble());
         pcmQueue.clear();
         refillQueue();
         break;
