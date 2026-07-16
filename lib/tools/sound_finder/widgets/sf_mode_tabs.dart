@@ -17,17 +17,17 @@ class SfModeTabs extends StatelessWidget {
         ButtonSegment(
           value: SfMode.tracker,
           icon: const Icon(Icons.my_location_outlined),
-          label: Text(l10n.sfModeTracker),
+          tooltip: l10n.sfTitleFinder,
         ),
         ButtonSegment(
           value: SfMode.counter,
           icon: const Icon(Icons.graphic_eq_outlined),
-          label: Text(l10n.sfModeCounter),
+          tooltip: l10n.sfTitleCounter,
         ),
         ButtonSegment(
           value: SfMode.generator,
           icon: const Icon(Icons.tune_outlined),
-          label: Text(l10n.sfModeGenerator),
+          tooltip: l10n.sfTitleGenerator,
         ),
       ],
       selected: {state.mode},

@@ -4862,6 +4862,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Locate, mask and generate room sounds with the microphone';
 
   @override
+  String get sfTitleFinder => 'Finder';
+
+  @override
+  String get sfTitleCounter => 'Counter';
+
+  @override
+  String get sfTitleGenerator => 'Generator';
+
+  @override
   String get sfModeTracker => 'Locate';
 
   @override

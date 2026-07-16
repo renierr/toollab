@@ -4897,6 +4897,15 @@ class AppLocalizationsDe extends AppLocalizations {
       'Raumgeräusche mit dem Mikrofon orten, überdecken und erzeugen';
 
   @override
+  String get sfTitleFinder => 'Finder';
+
+  @override
+  String get sfTitleCounter => 'Gegen';
+
+  @override
+  String get sfTitleGenerator => 'Generator';
+
+  @override
   String get sfModeTracker => 'Orten';
 
   @override

@@ -5,10 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
-import 'package:tool_lab/widgets/collapsible_section.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
-import 'config.dart';
 import 'sound_finder_state.dart';
 import 'widgets/sf_clip_recorder.dart';
 import 'widgets/sf_counter_view.dart';
@@ -91,8 +90,44 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       SfMode.generator => const SfGeneratorView(),
     };
 
+    final String title = switch (mode) {
+      SfMode.tracker => l10n.sfTitleFinder,
+      SfMode.counter => l10n.sfTitleCounter,
+      SfMode.generator => l10n.sfTitleGenerator,
+    };
+
     return ToolLayout(
-      title: SoundFinderTool.config.localizedName(l10n),
+      title: title,
+      actions: [
+        if (mode != SfMode.generator && isMicRunning)
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.sfInputSettings,
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => ResponsiveAlertDialog(
+                  title: Text(l10n.sfInputSettings),
+                  content: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SfMicSelector(),
+                      SizedBox(height: 16),
+                      SfGainControl(),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.commonClose),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
       child: Column(
         children: [
           const Padding(
@@ -100,23 +135,9 @@ class _SoundFinderPageState extends State<SoundFinderPage>
             child: SfModeTabs(),
           ),
           if (mode != SfMode.generator && isMicRunning)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              child: CollapsibleSection(
-                icon: Icons.tune_outlined,
-                title: l10n.sfInputSettings,
-                initiallyExpanded: true,
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    SfMicSelector(),
-                    SizedBox(height: 8),
-                    SfGainControl(),
-                    SizedBox(height: 8),
-                    SfClipRecorder(),
-                  ],
-                ),
-              ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
+              child: SfClipRecorder(),
             ),
           Expanded(
             child: SingleChildScrollView(

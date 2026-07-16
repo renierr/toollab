@@ -8852,6 +8852,24 @@ abstract class AppLocalizations {
   /// **'Locate, mask and generate room sounds with the microphone'**
   String get toolDescSoundFinder;
 
+  /// No description provided for @sfTitleFinder.
+  ///
+  /// In en, this message translates to:
+  /// **'Finder'**
+  String get sfTitleFinder;
+
+  /// No description provided for @sfTitleCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter'**
+  String get sfTitleCounter;
+
+  /// No description provided for @sfTitleGenerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Generator'**
+  String get sfTitleGenerator;
+
   /// No description provided for @sfModeTracker.
   ///
   /// In en, this message translates to:
