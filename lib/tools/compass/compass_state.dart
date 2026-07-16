@@ -55,6 +55,19 @@ class CompassState extends ChangeNotifier {
   bool get useSimulation => _useSimulation;
   bool get isHardwareSupported => _isHardwareSupported;
 
+  /// Angle (degrees) between the device screen and the horizontal plane.
+  /// 0° = perfectly flat (screen up). Heading is most accurate near 0°.
+  double get tiltDegrees {
+    if (_useSimulation) return 0.0;
+    final double normA = math.sqrt(_ax * _ax + _ay * _ay + _az * _az);
+    if (normA == 0) return 0.0;
+    final double cosT = (_az / normA).clamp(-1.0, 1.0);
+    return math.acos(cosT) * 180 / math.pi;
+  }
+
+  /// True when the device is held flat enough for a reliable reading.
+  bool get isLevel => tiltDegrees <= 15.0;
+
   CompassInterferenceStatus get interferenceStatus {
     if (_useSimulation) return CompassInterferenceStatus.normal;
     // Ambient magnetic field is usually 30 to 60 uT.
@@ -153,35 +166,39 @@ class CompassState extends ChangeNotifier {
     // Calculate total magnetic field strength (magnitude)
     _magneticFieldStrength = math.sqrt(_mx * _mx + _my * _my + _mz * _mz);
 
-    // Normalize accelerometer vector
+    // Normalize accelerometer (gravity) vector
     final double normA = math.sqrt(_ax * _ax + _ay * _ay + _az * _az);
     if (normA == 0) return;
     final double axN = _ax / normA;
     final double ayN = _ay / normA;
     final double azN = _az / normA;
 
-    // Calculate Pitch (phi) and Roll (theta)
+    // Pitch/roll are used only for the visual parallax of the dial.
     final double pitch = math.atan2(ayN, azN);
     final double roll = math.atan2(
       -axN,
       ayN * math.sin(pitch) + azN * math.cos(pitch),
     );
-
-    // Smooth pitch/roll for parallax transitions
     _pitch = _pitch + (pitch - _pitch) * _alpha;
     _roll = _roll + (roll - _roll) * _alpha;
 
-    // Apply tilt-compensation to magnetometer vector
-    final double sinP = math.sin(pitch);
-    final double cosP = math.cos(pitch);
-    final double sinR = math.sin(roll);
-    final double cosR = math.cos(roll);
+    // Tilt-compensated heading via the rotation-matrix (cross-product) method,
+    // matching Android's SensorManager.getRotationMatrix + getOrientation.
+    // East  = M x G, then North.y = (G x East).y. Robust at any tilt and
+    // avoids the trigonometric error the previous inline formula contained.
+    double hx = _my * azN - _mz * ayN;
+    double hy = _mz * axN - _mx * azN;
+    double hz = _mx * ayN - _my * axN;
+    final double normH = math.sqrt(hx * hx + hy * hy + hz * hz);
+    // Degenerate when in free-fall or the field aligns with gravity.
+    if (normH < 0.1) return;
+    hx /= normH;
+    hy /= normH;
+    hz /= normH;
 
-    final double xh = _mx * cosR + _my * sinR * sinP + _mz * cosR * sinP;
-    final double yh = _my * cosP - _mz * sinP;
-
-    // Azimuth calculation
-    final double headingRad = math.atan2(-yh, xh);
+    // North component of the device y-axis: (G x East).y
+    final double northY = azN * hx - axN * hz;
+    final double headingRad = math.atan2(hy, northY);
 
     // Apply angular averaging to prevent wrap-around snapping at 0/360 boundary
     _smoothSin = _smoothSin + (math.sin(headingRad) - _smoothSin) * _alpha;

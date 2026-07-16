@@ -2702,6 +2702,28 @@
   "compassMagneticField": "Magnetic Field",
   "compassInterferenceNormal": "Normal",
   "compassInterferenceWarning": "Interference Detected",
-  "compassCalibrateTip": "Keep away from metal or magnets if heading feels inaccurate."
+  "compassCalibrateTip": "Keep away from metal or magnets if heading feels inaccurate.",
+  "compassInfoTooltip": "How to use",
+  "compassInfoTitle": "Using the Compass",
+  "compassInfoIntro": "The compass shows your heading — the direction the top edge of your device is pointing — from the built-in magnetometer and accelerometer.",
+  "compassStepLevelTitle": "1. Hold the device flat",
+  "compassStepLevelBody": "Keep the screen facing up and roughly level with the ground. The level indicator turns green when you are flat enough for an accurate reading. Reading it while tilted or held upright is unreliable.",
+  "compassStepCalibrateTitle": "2. Calibrate with a figure-8",
+  "compassStepCalibrateBody": "If the heading drifts, spins, or never settles, wave the device slowly through a figure-8 motion a few times. This recalibrates the magnetometer — the most common cause of a jumpy compass.",
+  "compassStepMetalTitle": "3. Stay clear of metal",
+  "compassStepMetalBody": "Magnets, speakers, laptops, phone cases, cars and steel furniture bend the magnetic field. The Magnetic Field panel warns you when interference is detected.",
+  "compassStepReadTitle": "4. Read the heading",
+  "compassStepReadBody": "The red needle stays pointing up; the dial rotates so N sits at magnetic north. The large number and letters (e.g. 214° SW) are your current heading.",
+  "compassSimNote": "On devices without magnetic sensors the compass runs in simulation — swipe horizontally on the dial to turn it.",
+  "compassLevelGood": "Level",
+  "compassLevelHoldFlat": "Hold flat",
+  "compassTiltLabel": "Tilt {deg}°",
+  "@compassTiltLabel": {
+    "placeholders": {
+      "deg": { "type": "String" }
+    }
+  },
+  "compassHoldFlatHint": "Hold the device flat and level for an accurate heading.",
+  "compassCalibrateHint": "Heading unstable? Wave the device in a figure-8 to recalibrate."
 }
 

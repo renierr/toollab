@@ -5140,4 +5140,65 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get compassCalibrateTip =>
       'Von Metall oder Magneten fernhalten, wenn der Kurs ungenau erscheint.';
+
+  @override
+  String get compassInfoTooltip => 'Bedienung';
+
+  @override
+  String get compassInfoTitle => 'Kompass verwenden';
+
+  @override
+  String get compassInfoIntro =>
+      'Der Kompass zeigt deinen Kurs — die Richtung, in die die Oberkante des Geräts zeigt — anhand von Magnetometer und Beschleunigungssensor.';
+
+  @override
+  String get compassStepLevelTitle => '1. Gerät flach halten';
+
+  @override
+  String get compassStepLevelBody =>
+      'Halte den Bildschirm nach oben und ungefähr waagerecht zum Boden. Die Wasserwaage wird grün, sobald du flach genug für eine genaue Anzeige hältst. Geneigt oder aufrecht gehalten ist die Anzeige unzuverlässig.';
+
+  @override
+  String get compassStepCalibrateTitle => '2. Mit einer Acht kalibrieren';
+
+  @override
+  String get compassStepCalibrateBody =>
+      'Wenn der Kurs driftet, springt oder sich nie einpendelt, bewege das Gerät langsam mehrmals in einer liegenden Acht. Das kalibriert das Magnetometer neu — die häufigste Ursache für einen zappelnden Kompass.';
+
+  @override
+  String get compassStepMetalTitle => '3. Abstand zu Metall halten';
+
+  @override
+  String get compassStepMetalBody =>
+      'Magnete, Lautsprecher, Laptops, Handyhüllen, Autos und Stahlmöbel verzerren das Magnetfeld. Das Magnetfeld-Panel warnt dich bei erkannten Störungen.';
+
+  @override
+  String get compassStepReadTitle => '4. Kurs ablesen';
+
+  @override
+  String get compassStepReadBody =>
+      'Die rote Nadel zeigt immer nach oben; die Skala dreht sich, sodass N zum magnetischen Norden zeigt. Die große Zahl und die Buchstaben (z. B. 214° SW) sind dein aktueller Kurs.';
+
+  @override
+  String get compassSimNote =>
+      'Auf Geräten ohne Magnetsensor läuft der Kompass in der Simulation — wische waagerecht über die Skala, um sie zu drehen.';
+
+  @override
+  String get compassLevelGood => 'Waagerecht';
+
+  @override
+  String get compassLevelHoldFlat => 'Flach halten';
+
+  @override
+  String compassTiltLabel(String deg) {
+    return 'Neigung $deg°';
+  }
+
+  @override
+  String get compassHoldFlatHint =>
+      'Halte das Gerät flach und waagerecht für einen genauen Kurs.';
+
+  @override
+  String get compassCalibrateHint =>
+      'Kurs instabil? Bewege das Gerät in einer Acht zum Neukalibrieren.';
 }

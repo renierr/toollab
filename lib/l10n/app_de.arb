@@ -1869,6 +1869,28 @@
   "compassMagneticField": "Magnetfeld",
   "compassInterferenceNormal": "Normal",
   "compassInterferenceWarning": "Störung Erkannt",
-  "compassCalibrateTip": "Von Metall oder Magneten fernhalten, wenn der Kurs ungenau erscheint."
+  "compassCalibrateTip": "Von Metall oder Magneten fernhalten, wenn der Kurs ungenau erscheint.",
+  "compassInfoTooltip": "Bedienung",
+  "compassInfoTitle": "Kompass verwenden",
+  "compassInfoIntro": "Der Kompass zeigt deinen Kurs — die Richtung, in die die Oberkante des Geräts zeigt — anhand von Magnetometer und Beschleunigungssensor.",
+  "compassStepLevelTitle": "1. Gerät flach halten",
+  "compassStepLevelBody": "Halte den Bildschirm nach oben und ungefähr waagerecht zum Boden. Die Wasserwaage wird grün, sobald du flach genug für eine genaue Anzeige hältst. Geneigt oder aufrecht gehalten ist die Anzeige unzuverlässig.",
+  "compassStepCalibrateTitle": "2. Mit einer Acht kalibrieren",
+  "compassStepCalibrateBody": "Wenn der Kurs driftet, springt oder sich nie einpendelt, bewege das Gerät langsam mehrmals in einer liegenden Acht. Das kalibriert das Magnetometer neu — die häufigste Ursache für einen zappelnden Kompass.",
+  "compassStepMetalTitle": "3. Abstand zu Metall halten",
+  "compassStepMetalBody": "Magnete, Lautsprecher, Laptops, Handyhüllen, Autos und Stahlmöbel verzerren das Magnetfeld. Das Magnetfeld-Panel warnt dich bei erkannten Störungen.",
+  "compassStepReadTitle": "4. Kurs ablesen",
+  "compassStepReadBody": "Die rote Nadel zeigt immer nach oben; die Skala dreht sich, sodass N zum magnetischen Norden zeigt. Die große Zahl und die Buchstaben (z. B. 214° SW) sind dein aktueller Kurs.",
+  "compassSimNote": "Auf Geräten ohne Magnetsensor läuft der Kompass in der Simulation — wische waagerecht über die Skala, um sie zu drehen.",
+  "compassLevelGood": "Waagerecht",
+  "compassLevelHoldFlat": "Flach halten",
+  "compassTiltLabel": "Neigung {deg}°",
+  "@compassTiltLabel": {
+    "placeholders": {
+      "deg": { "type": "String" }
+    }
+  },
+  "compassHoldFlatHint": "Halte das Gerät flach und waagerecht für einen genauen Kurs.",
+  "compassCalibrateHint": "Kurs instabil? Bewege das Gerät in einer Acht zum Neukalibrieren."
 }
 

@@ -9319,6 +9319,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep away from metal or magnets if heading feels inaccurate.'**
   String get compassCalibrateTip;
+
+  /// No description provided for @compassInfoTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'How to use'**
+  String get compassInfoTooltip;
+
+  /// No description provided for @compassInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Using the Compass'**
+  String get compassInfoTitle;
+
+  /// No description provided for @compassInfoIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The compass shows your heading — the direction the top edge of your device is pointing — from the built-in magnetometer and accelerometer.'**
+  String get compassInfoIntro;
+
+  /// No description provided for @compassStepLevelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Hold the device flat'**
+  String get compassStepLevelTitle;
+
+  /// No description provided for @compassStepLevelBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the screen facing up and roughly level with the ground. The level indicator turns green when you are flat enough for an accurate reading. Reading it while tilted or held upright is unreliable.'**
+  String get compassStepLevelBody;
+
+  /// No description provided for @compassStepCalibrateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Calibrate with a figure-8'**
+  String get compassStepCalibrateTitle;
+
+  /// No description provided for @compassStepCalibrateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If the heading drifts, spins, or never settles, wave the device slowly through a figure-8 motion a few times. This recalibrates the magnetometer — the most common cause of a jumpy compass.'**
+  String get compassStepCalibrateBody;
+
+  /// No description provided for @compassStepMetalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Stay clear of metal'**
+  String get compassStepMetalTitle;
+
+  /// No description provided for @compassStepMetalBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Magnets, speakers, laptops, phone cases, cars and steel furniture bend the magnetic field. The Magnetic Field panel warns you when interference is detected.'**
+  String get compassStepMetalBody;
+
+  /// No description provided for @compassStepReadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'4. Read the heading'**
+  String get compassStepReadTitle;
+
+  /// No description provided for @compassStepReadBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The red needle stays pointing up; the dial rotates so N sits at magnetic north. The large number and letters (e.g. 214° SW) are your current heading.'**
+  String get compassStepReadBody;
+
+  /// No description provided for @compassSimNote.
+  ///
+  /// In en, this message translates to:
+  /// **'On devices without magnetic sensors the compass runs in simulation — swipe horizontally on the dial to turn it.'**
+  String get compassSimNote;
+
+  /// No description provided for @compassLevelGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get compassLevelGood;
+
+  /// No description provided for @compassLevelHoldFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold flat'**
+  String get compassLevelHoldFlat;
+
+  /// No description provided for @compassTiltLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tilt {deg}°'**
+  String compassTiltLabel(String deg);
+
+  /// No description provided for @compassHoldFlatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the device flat and level for an accurate heading.'**
+  String get compassHoldFlatHint;
+
+  /// No description provided for @compassCalibrateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading unstable? Wave the device in a figure-8 to recalibrate.'**
+  String get compassCalibrateHint;
 }
 
 class _AppLocalizationsDelegate

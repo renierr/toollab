@@ -55,9 +55,13 @@ class InterferencePanel extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.compassCalibrateTip,
+            hasInterference
+                ? l10n.compassCalibrateHint
+                : l10n.compassCalibrateTip,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: hasInterference
+                  ? AppTheme.statusAmber
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],

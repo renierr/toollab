@@ -9,6 +9,8 @@ import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'config.dart';
 import 'compass_state.dart';
 import 'widgets/compass_dial.dart';
+import 'widgets/compass_info_dialog.dart';
+import 'widgets/compass_level_indicator.dart';
 import 'widgets/interference_panel.dart';
 
 class CompassPage extends StatelessWidget {
@@ -106,6 +108,11 @@ class CompassPage extends StatelessWidget {
               state.toggleSimulation(!state.useSimulation);
             },
           ),
+        IconButton(
+          icon: const Icon(Icons.info_outline),
+          tooltip: l10n.compassInfoTooltip,
+          onPressed: () => CompassInfoDialog.show(context),
+        ),
       ],
       child: ResponsiveOrientationLayout(
         portrait: SingleChildScrollView(
@@ -117,7 +124,9 @@ class CompassPage extends StatelessWidget {
               buildReadout(),
               const SizedBox(height: 8),
               buildDial(),
+              const CompassLevelIndicator(),
               if (state.useSimulation) ...[
+                const SizedBox(height: 8),
                 Text(
                   'Swipe horizontally on dial to turn',
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -125,8 +134,8 @@ class CompassPage extends StatelessWidget {
                     fontStyle: FontStyle.italic,
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
+              const SizedBox(height: 16),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
                 child: InterferencePanel(),
@@ -147,6 +156,8 @@ class CompassPage extends StatelessWidget {
                       buildReadout(),
                       const SizedBox(height: 8),
                       SizedBox(height: 250, child: buildDial()),
+                      const SizedBox(height: 8),
+                      const CompassLevelIndicator(),
                       if (state.useSimulation)
                         Text(
                           'Swipe horizontally on dial to turn',

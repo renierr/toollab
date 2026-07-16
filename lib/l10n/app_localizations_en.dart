@@ -5105,4 +5105,65 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get compassCalibrateTip =>
       'Keep away from metal or magnets if heading feels inaccurate.';
+
+  @override
+  String get compassInfoTooltip => 'How to use';
+
+  @override
+  String get compassInfoTitle => 'Using the Compass';
+
+  @override
+  String get compassInfoIntro =>
+      'The compass shows your heading — the direction the top edge of your device is pointing — from the built-in magnetometer and accelerometer.';
+
+  @override
+  String get compassStepLevelTitle => '1. Hold the device flat';
+
+  @override
+  String get compassStepLevelBody =>
+      'Keep the screen facing up and roughly level with the ground. The level indicator turns green when you are flat enough for an accurate reading. Reading it while tilted or held upright is unreliable.';
+
+  @override
+  String get compassStepCalibrateTitle => '2. Calibrate with a figure-8';
+
+  @override
+  String get compassStepCalibrateBody =>
+      'If the heading drifts, spins, or never settles, wave the device slowly through a figure-8 motion a few times. This recalibrates the magnetometer — the most common cause of a jumpy compass.';
+
+  @override
+  String get compassStepMetalTitle => '3. Stay clear of metal';
+
+  @override
+  String get compassStepMetalBody =>
+      'Magnets, speakers, laptops, phone cases, cars and steel furniture bend the magnetic field. The Magnetic Field panel warns you when interference is detected.';
+
+  @override
+  String get compassStepReadTitle => '4. Read the heading';
+
+  @override
+  String get compassStepReadBody =>
+      'The red needle stays pointing up; the dial rotates so N sits at magnetic north. The large number and letters (e.g. 214° SW) are your current heading.';
+
+  @override
+  String get compassSimNote =>
+      'On devices without magnetic sensors the compass runs in simulation — swipe horizontally on the dial to turn it.';
+
+  @override
+  String get compassLevelGood => 'Level';
+
+  @override
+  String get compassLevelHoldFlat => 'Hold flat';
+
+  @override
+  String compassTiltLabel(String deg) {
+    return 'Tilt $deg°';
+  }
+
+  @override
+  String get compassHoldFlatHint =>
+      'Hold the device flat and level for an accurate heading.';
+
+  @override
+  String get compassCalibrateHint =>
+      'Heading unstable? Wave the device in a figure-8 to recalibrate.';
 }
