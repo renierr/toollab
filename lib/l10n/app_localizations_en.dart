@@ -5000,10 +5000,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sfDopplerExplanation =>
-      'Record a passing tone (like a car horn or siren) to estimate its speed, frequency, and distance. Or generate a simulated run.';
+      'Record a passing tone (like a car horn or siren) to estimate its speed, frequency, and distance, or load a previously saved WAV audio clip.';
 
   @override
-  String get sfDopplerLoadDemo => 'Load Demo Clip';
+  String get sfDopplerLoadClip => 'Load WAV Clip';
 
   @override
   String get sfDopplerVelocity => 'Velocity';

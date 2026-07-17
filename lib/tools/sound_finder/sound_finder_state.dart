@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 
 import '../../helpers/temp_file_manager.dart';
+import '../../helpers/wav_decoder.dart';
 import '../../helpers/wav_pcm16_encoder.dart';
 import '../../services/database_service.dart';
 import 'audio/doppler_analyzer.dart';
@@ -247,43 +248,33 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Generates a synthetic Doppler shift audio clip for testing and demonstration.
-  void loadDemoClip() {
-    final int sampleRate = MicAnalyzer.sampleRate;
-    final int length = sampleRate * 5; // 5 seconds
-    final Float32List samples = Float32List(length);
-
-    // Physical parameters for demo:
-    // f0 = 450 Hz
-    // v = 25 m/s (~90 km/h)
-    // c = 343.4 m/s
-    // d = 4.0 meters
-    // t0 = 2.5 seconds
-    const double f0 = 450.0;
-    const double v = 25.0;
-    const double c = 343.4;
-    const double d = 4.0;
-    const double t0 = 2.5;
-
-    double phase = 0.0;
-    for (int i = 0; i < length; i++) {
-      final double t = i / sampleRate;
-      final double distOffset = v * (t - t0);
-      final double cosTheta =
-          distOffset / math.sqrt(d * d + distOffset * distOffset);
-      final double freq = f0 / (1.0 - (v / c) * cosTheta);
-
-      phase += 2.0 * math.pi * freq / sampleRate;
-      final double distance = math.sqrt(d * d + distOffset * distOffset);
-      final double amp = 1.0 / (1.0 + 0.1 * distance * distance);
-      // Generate tone with a tiny bit of random noise for realism
-      final double noise = (math.Random().nextDouble() - 0.5) * 0.02;
-      samples[i] = (math.sin(phase) * amp * 0.5 + noise).clamp(-1.0, 1.0);
+  /// Loads a recorded/saved WAV file, decodes it, and sets it for Doppler analysis.
+  void loadWavClip(Uint8List wavBytes) {
+    final decoded = WavDecoder.decode(wavBytes);
+    if (decoded == null) {
+      _dopplerSamples = null;
+      _dopplerResult = null;
+      _tempWavPath = null;
+      notifyListeners();
+      return;
     }
 
-    _dopplerSamples = samples;
-    _dopplerResult = DopplerAnalyzer.analyze(samples, sampleRate);
-    notifyListeners();
+    _dopplerSamples = decoded.samples;
+    _dopplerResult = DopplerAnalyzer.analyze(
+      decoded.samples,
+      decoded.sampleRate,
+    );
+
+    // Save to temp folder so it can be re-saved/exported
+    TempFileManager.createFile('interim_sound_clip.wav', bytes: wavBytes)
+        .then((path) {
+          _tempWavPath = path;
+          notifyListeners();
+        })
+        .catchError((_) {
+          _tempWavPath = null;
+          notifyListeners();
+        });
   }
 
   /// Clears current Doppler recording/data.

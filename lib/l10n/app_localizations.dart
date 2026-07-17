@@ -9119,14 +9119,14 @@ abstract class AppLocalizations {
   /// No description provided for @sfDopplerExplanation.
   ///
   /// In en, this message translates to:
-  /// **'Record a passing tone (like a car horn or siren) to estimate its speed, frequency, and distance. Or generate a simulated run.'**
+  /// **'Record a passing tone (like a car horn or siren) to estimate its speed, frequency, and distance, or load a previously saved WAV audio clip.'**
   String get sfDopplerExplanation;
 
-  /// No description provided for @sfDopplerLoadDemo.
+  /// No description provided for @sfDopplerLoadClip.
   ///
   /// In en, this message translates to:
-  /// **'Load Demo Clip'**
-  String get sfDopplerLoadDemo;
+  /// **'Load WAV Clip'**
+  String get sfDopplerLoadClip;
 
   /// No description provided for @sfDopplerVelocity.
   ///

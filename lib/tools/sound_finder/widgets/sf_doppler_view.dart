@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:file_selector/file_selector.dart' show XTypeGroup, openFile;
 import 'package:tool_lab/widgets/collapsible_section.dart';
 
 import '../audio/doppler_analyzer.dart';
@@ -25,6 +26,29 @@ class _SfDopplerViewState extends State<SfDopplerView> {
   double _t0 = 2.5;
   double _distance = 5.0;
   double _temperature = 20.0;
+
+  Future<void> _loadWavFile(BuildContext context) async {
+    const XTypeGroup typeGroup = XTypeGroup(
+      label: 'WAV Audio',
+      extensions: ['wav'],
+      mimeTypes: ['audio/wav', 'audio/x-wav'],
+    );
+    try {
+      final file = await openFile(acceptedTypeGroups: const [typeGroup]);
+      if (file != null) {
+        final bytes = await file.readAsBytes();
+        if (context.mounted) {
+          context.read<SoundFinderState>().loadWavClip(bytes);
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,10 +115,9 @@ class _SfDopplerViewState extends State<SfDopplerView> {
                         runSpacing: 12,
                         children: [
                           FilledButton.icon(
-                            onPressed: () =>
-                                context.read<SoundFinderState>().loadDemoClip(),
-                            icon: const Icon(Icons.science_outlined),
-                            label: Text(l10n.sfDopplerLoadDemo),
+                            onPressed: () => _loadWavFile(context),
+                            icon: const Icon(Icons.audio_file_outlined),
+                            label: Text(l10n.sfDopplerLoadClip),
                           ),
                           if (state.micStatus != MicStatus.running)
                             OutlinedButton.icon(

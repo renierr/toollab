@@ -5035,10 +5035,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sfDopplerExplanation =>
-      'Nimm ein vorbeifahrendes Geräusch (wie eine Autohupe oder Sirene) auf, um Geschwindigkeit, Frequenz und Abstand zu schätzen. Oder erstelle einen simulierten Durchlauf.';
+      'Nimm ein vorbeifahrendes Geräusch (wie eine Autohupe oder Sirene) auf, um Geschwindigkeit, Frequenz und Abstand zu schätzen, oder lade einen zuvor gespeicherten WAV-Audioclip.';
 
   @override
-  String get sfDopplerLoadDemo => 'Demo-Clip laden';
+  String get sfDopplerLoadClip => 'WAV-Clip laden';
 
   @override
   String get sfDopplerVelocity => 'Geschwindigkeit';
