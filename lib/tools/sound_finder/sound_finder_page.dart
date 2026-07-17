@@ -16,6 +16,7 @@ import 'widgets/sf_generator_view.dart';
 import 'widgets/sf_mic_selector.dart';
 import 'widgets/sf_mode_tabs.dart';
 import 'widgets/sf_tracker_view.dart';
+import 'widgets/sf_doppler_view.dart';
 
 class SoundFinderPage extends StatefulWidget {
   const SoundFinderPage({super.key});
@@ -88,12 +89,14 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       SfMode.tracker => const SfTrackerView(),
       SfMode.counter => const SfCounterView(),
       SfMode.generator => const SfGeneratorView(),
+      SfMode.doppler => const SfDopplerView(),
     };
 
     final String title = switch (mode) {
       SfMode.tracker => l10n.sfTitleFinder,
       SfMode.counter => l10n.sfTitleCounter,
       SfMode.generator => l10n.sfTitleGenerator,
+      SfMode.doppler => l10n.sfTitleDoppler,
     };
 
     return ToolLayout(

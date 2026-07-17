@@ -9098,6 +9098,96 @@ abstract class AppLocalizations {
   /// **'Pick a frequency and waveform to generate a pure test tone.'**
   String get sfGeneratorHint;
 
+  /// No description provided for @sfTitleDoppler.
+  ///
+  /// In en, this message translates to:
+  /// **'Doppler'**
+  String get sfTitleDoppler;
+
+  /// No description provided for @sfModeDoppler.
+  ///
+  /// In en, this message translates to:
+  /// **'Doppler'**
+  String get sfModeDoppler;
+
+  /// No description provided for @sfDopplerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Doppler Effect Analysis'**
+  String get sfDopplerTitle;
+
+  /// No description provided for @sfDopplerExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a passing tone (like a car horn or siren) to estimate its speed, frequency, and distance. Or generate a simulated run.'**
+  String get sfDopplerExplanation;
+
+  /// No description provided for @sfDopplerLoadDemo.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Demo Clip'**
+  String get sfDopplerLoadDemo;
+
+  /// No description provided for @sfDopplerVelocity.
+  ///
+  /// In en, this message translates to:
+  /// **'Velocity'**
+  String get sfDopplerVelocity;
+
+  /// No description provided for @sfDopplerDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Closest Distance'**
+  String get sfDopplerDistance;
+
+  /// No description provided for @sfDopplerSourceFreq.
+  ///
+  /// In en, this message translates to:
+  /// **'Source Frequency'**
+  String get sfDopplerSourceFreq;
+
+  /// No description provided for @sfDopplerInflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Inflection Time'**
+  String get sfDopplerInflection;
+
+  /// No description provided for @sfDopplerTemp.
+  ///
+  /// In en, this message translates to:
+  /// **'Air Temperature'**
+  String get sfDopplerTemp;
+
+  /// No description provided for @sfDopplerSpeedOfSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed of Sound'**
+  String get sfDopplerSpeedOfSound;
+
+  /// No description provided for @sfDopplerParameters.
+  ///
+  /// In en, this message translates to:
+  /// **'Model Parameters'**
+  String get sfDopplerParameters;
+
+  /// No description provided for @sfDopplerStatusNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No audio clip recorded yet. Start recording above or load a demo.'**
+  String get sfDopplerStatusNoData;
+
+  /// No description provided for @sfDopplerStatusAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing audio clip...'**
+  String get sfDopplerStatusAnalyzing;
+
+  /// No description provided for @sfDopplerStatusSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis complete. Adjust markers to align the theoretical model (white line) with the recorded peak frequencies (purple dots).'**
+  String get sfDopplerStatusSuccess;
+
   /// No description provided for @sfWaveSine.
   ///
   /// In en, this message translates to:

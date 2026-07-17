@@ -5025,6 +5025,54 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wähle Frequenz und Wellenform, um einen reinen Testton zu erzeugen.';
 
   @override
+  String get sfTitleDoppler => 'Doppler';
+
+  @override
+  String get sfModeDoppler => 'Doppler-Analyse';
+
+  @override
+  String get sfDopplerTitle => 'Doppler-Effekt-Analyse';
+
+  @override
+  String get sfDopplerExplanation =>
+      'Nimm ein vorbeifahrendes Geräusch (wie eine Autohupe oder Sirene) auf, um Geschwindigkeit, Frequenz und Abstand zu schätzen. Oder erstelle einen simulierten Durchlauf.';
+
+  @override
+  String get sfDopplerLoadDemo => 'Demo-Clip laden';
+
+  @override
+  String get sfDopplerVelocity => 'Geschwindigkeit';
+
+  @override
+  String get sfDopplerDistance => 'Kürzester Abstand';
+
+  @override
+  String get sfDopplerSourceFreq => 'Quellfrequenz';
+
+  @override
+  String get sfDopplerInflection => 'Wendepunkt (Zeit)';
+
+  @override
+  String get sfDopplerTemp => 'Lufttemperatur';
+
+  @override
+  String get sfDopplerSpeedOfSound => 'Schallgeschwindigkeit';
+
+  @override
+  String get sfDopplerParameters => 'Modell-Parameter';
+
+  @override
+  String get sfDopplerStatusNoData =>
+      'Noch kein Audioclip aufgenommen. Starte die Aufnahme oben oder lade eine Demo.';
+
+  @override
+  String get sfDopplerStatusAnalyzing => 'Analysiere Audioclip...';
+
+  @override
+  String get sfDopplerStatusSuccess =>
+      'Analyse abgeschlossen. Passe die Schieberegler an, um das theoretische Modell (weiße Linie) mit den gemessenen Frequenzen (lila Punkte) in Deckung zu bringen.';
+
+  @override
   String get sfWaveSine => 'Sinus';
 
   @override

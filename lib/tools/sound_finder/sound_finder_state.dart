@@ -6,11 +6,12 @@ import 'package:record/record.dart';
 
 import '../../helpers/wav_pcm16_encoder.dart';
 import '../../services/database_service.dart';
+import 'audio/doppler_analyzer.dart';
 import 'audio/mic_analyzer.dart';
 import 'audio/tone_generator.dart';
 import 'config.dart';
 
-enum SfMode { tracker, counter, generator }
+enum SfMode { tracker, counter, generator, doppler }
 
 enum MicStatus { idle, running, denied, unavailable }
 
@@ -71,6 +72,10 @@ class SoundFinderState extends ChangeNotifier {
   double _counterPhaseDeg = 180;
   double _counterNoise = 0;
 
+  // Doppler analysis data.
+  Float32List? _dopplerSamples;
+  DopplerResult? _dopplerResult;
+
   bool _tonePlaying = false;
   SfMode? _toneOwner;
 
@@ -112,6 +117,9 @@ class SoundFinderState extends ChangeNotifier {
   double get counterVol => _counterVol;
   double get counterPhaseDeg => _counterPhaseDeg;
   double get counterNoise => _counterNoise;
+
+  Float32List? get dopplerSamples => _dopplerSamples;
+  DopplerResult? get dopplerResult => _dopplerResult;
 
   bool get tonePlaying => _tonePlaying;
   SfMode? get toneOwner => _toneOwner;
@@ -212,13 +220,65 @@ class SoundFinderState extends ChangeNotifier {
   Uint8List? stopRecordingToWav() {
     final Float32List samples = _mic.stopRecording();
     notifyListeners();
-    if (samples.isEmpty) return null;
+    if (samples.isEmpty) {
+      _dopplerSamples = null;
+      _dopplerResult = null;
+      return null;
+    }
+    _dopplerSamples = samples;
+    _dopplerResult = DopplerAnalyzer.analyze(samples, MicAnalyzer.sampleRate);
     return WavPcm16Encoder.encode(
       samples,
       frames: samples.length,
       sampleRate: MicAnalyzer.sampleRate,
       channels: 1,
     );
+  }
+
+  /// Generates a synthetic Doppler shift audio clip for testing and demonstration.
+  void loadDemoClip() {
+    final int sampleRate = MicAnalyzer.sampleRate;
+    final int length = sampleRate * 5; // 5 seconds
+    final Float32List samples = Float32List(length);
+
+    // Physical parameters for demo:
+    // f0 = 450 Hz
+    // v = 25 m/s (~90 km/h)
+    // c = 343.4 m/s
+    // d = 4.0 meters
+    // t0 = 2.5 seconds
+    const double f0 = 450.0;
+    const double v = 25.0;
+    const double c = 343.4;
+    const double d = 4.0;
+    const double t0 = 2.5;
+
+    double phase = 0.0;
+    for (int i = 0; i < length; i++) {
+      final double t = i / sampleRate;
+      final double distOffset = v * (t - t0);
+      final double cosTheta =
+          distOffset / math.sqrt(d * d + distOffset * distOffset);
+      final double freq = f0 / (1.0 - (v / c) * cosTheta);
+
+      phase += 2.0 * math.pi * freq / sampleRate;
+      final double distance = math.sqrt(d * d + distOffset * distOffset);
+      final double amp = 1.0 / (1.0 + 0.1 * distance * distance);
+      // Generate tone with a tiny bit of random noise for realism
+      final double noise = (math.Random().nextDouble() - 0.5) * 0.02;
+      samples[i] = (math.sin(phase) * amp * 0.5 + noise).clamp(-1.0, 1.0);
+    }
+
+    _dopplerSamples = samples;
+    _dopplerResult = DopplerAnalyzer.analyze(samples, sampleRate);
+    notifyListeners();
+  }
+
+  /// Clears current Doppler recording/data.
+  void clearDopplerData() {
+    _dopplerSamples = null;
+    _dopplerResult = null;
+    notifyListeners();
   }
 
   Future<void> selectInputDevice(InputDevice? device) async {

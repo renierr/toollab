@@ -4990,6 +4990,54 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick a frequency and waveform to generate a pure test tone.';
 
   @override
+  String get sfTitleDoppler => 'Doppler';
+
+  @override
+  String get sfModeDoppler => 'Doppler';
+
+  @override
+  String get sfDopplerTitle => 'Doppler Effect Analysis';
+
+  @override
+  String get sfDopplerExplanation =>
+      'Record a passing tone (like a car horn or siren) to estimate its speed, frequency, and distance. Or generate a simulated run.';
+
+  @override
+  String get sfDopplerLoadDemo => 'Load Demo Clip';
+
+  @override
+  String get sfDopplerVelocity => 'Velocity';
+
+  @override
+  String get sfDopplerDistance => 'Closest Distance';
+
+  @override
+  String get sfDopplerSourceFreq => 'Source Frequency';
+
+  @override
+  String get sfDopplerInflection => 'Inflection Time';
+
+  @override
+  String get sfDopplerTemp => 'Air Temperature';
+
+  @override
+  String get sfDopplerSpeedOfSound => 'Speed of Sound';
+
+  @override
+  String get sfDopplerParameters => 'Model Parameters';
+
+  @override
+  String get sfDopplerStatusNoData =>
+      'No audio clip recorded yet. Start recording above or load a demo.';
+
+  @override
+  String get sfDopplerStatusAnalyzing => 'Analyzing audio clip...';
+
+  @override
+  String get sfDopplerStatusSuccess =>
+      'Analysis complete. Adjust markers to align the theoretical model (white line) with the recorded peak frequencies (purple dots).';
+
+  @override
   String get sfWaveSine => 'Sine';
 
   @override
