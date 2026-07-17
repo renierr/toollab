@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import '../history.dart';
 
-class CalculatorDisplay extends StatelessWidget {
+class CalculatorDisplay extends StatefulWidget {
   final String expression;
   final TextEditingController controller;
   final bool flashResult;
@@ -21,12 +22,54 @@ class CalculatorDisplay extends StatelessWidget {
   });
 
   @override
+  State<CalculatorDisplay> createState() => _CalculatorDisplayState();
+}
+
+class _CalculatorDisplayState extends State<CalculatorDisplay>
+    with DisposeCleanup<CalculatorDisplay> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    widget.controller.addListener(_scrollToEnd);
+    onDispose(() {
+      widget.controller.removeListener(_scrollToEnd);
+      _scrollController.dispose();
+    });
+  }
+
+  @override
+  void didUpdateWidget(CalculatorDisplay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_scrollToEnd);
+      widget.controller.addListener(_scrollToEnd);
+    }
+  }
+
+  void _scrollToEnd() {
+    if (_scrollController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final resultAreaH = isShort ? 30.0 : 60.0;
-    final gap = isShort ? 0.0 : 4.0;
-    final showHistory = !isShort && historyItems.isNotEmpty;
+    final resultAreaH = widget.isShort ? 30.0 : 60.0;
+    final gap = widget.isShort ? 0.0 : 4.0;
+    final showHistory = !widget.isShort && widget.historyItems.isNotEmpty;
 
     return Container(
       decoration: BoxDecoration(
@@ -34,10 +77,10 @@ class CalculatorDisplay extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
       padding: EdgeInsets.fromLTRB(
-        isShort ? 16.0 : 20.0,
-        isShort ? 2.0 : 8.0,
+        widget.isShort ? 16.0 : 20.0,
+        widget.isShort ? 2.0 : 8.0,
         20.0,
-        isShort ? 2.0 : 4.0,
+        widget.isShort ? 2.0 : 4.0,
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -58,15 +101,17 @@ class CalculatorDisplay extends StatelessWidget {
                   children: [
                     if (showHistory && historyAreaH > 20.0)
                       Padding(
-                        padding: EdgeInsets.only(left: fullscreen ? 44.0 : 0.0),
+                        padding: EdgeInsets.only(
+                          left: widget.fullscreen ? 44.0 : 0.0,
+                        ),
                         child: SizedBox(
                           height: historyAreaH,
                           child: ListView.builder(
                             reverse: true,
                             padding: EdgeInsets.zero,
-                            itemCount: historyItems.length,
+                            itemCount: widget.historyItems.length,
                             itemBuilder: (_, i) {
-                              final item = historyItems[i];
+                              final item = widget.historyItems[i];
                               return Padding(
                                 padding: EdgeInsets.only(
                                   bottom: i == 0 ? gap : 0,
@@ -87,14 +132,14 @@ class CalculatorDisplay extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (!isShort && expression.isNotEmpty)
+                    if (!widget.isShort && widget.expression.isNotEmpty)
                       Padding(
                         padding: EdgeInsets.only(
                           bottom: gap,
-                          left: fullscreen ? 44.0 : 0.0,
+                          left: widget.fullscreen ? 44.0 : 0.0,
                         ),
                         child: Text(
-                          expression,
+                          widget.expression,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurface.withAlpha(150),
                             fontFamily: 'monospace',
@@ -109,14 +154,16 @@ class CalculatorDisplay extends StatelessWidget {
                       child: Align(
                         alignment: Alignment.bottomRight,
                         child: ListenableBuilder(
-                          listenable: controller,
+                          listenable: widget.controller,
                           builder: (context, child) {
-                            final text = controller.text;
-                            final baseStyle = isShort
+                            final text = widget.controller.text;
+                            final baseStyle = widget.isShort
                                 ? theme.textTheme.headlineMedium
                                 : theme.textTheme.displaySmall;
 
-                            final double maxFontSize = isShort ? 24.0 : 36.0;
+                            final double maxFontSize = widget.isShort
+                                ? 24.0
+                                : 36.0;
                             double fontSize = maxFontSize;
                             const double charWidthFactor = 0.55;
                             if (text.isNotEmpty) {
@@ -133,7 +180,7 @@ class CalculatorDisplay extends StatelessWidget {
                               fontWeight: FontWeight.w300,
                               fontFamily: 'monospace',
                               fontSize: fontSize,
-                              color: flashResult
+                              color: widget.flashResult
                                   ? theme.colorScheme.primary
                                   : theme.colorScheme.onSurface,
                             );
@@ -146,7 +193,8 @@ class CalculatorDisplay extends StatelessWidget {
                             return Stack(
                               children: [
                                 TextField(
-                                  controller: controller,
+                                  controller: widget.controller,
+                                  scrollController: _scrollController,
                                   readOnly: true,
                                   showCursor: true,
                                   style: displayStyle,
