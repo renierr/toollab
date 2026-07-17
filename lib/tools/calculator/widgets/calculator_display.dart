@@ -34,7 +34,7 @@ class CalculatorDisplay extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
       padding: EdgeInsets.fromLTRB(
-        fullscreen ? 64.0 : (isShort ? 16.0 : 20.0),
+        isShort ? 16.0 : 20.0,
         isShort ? 2.0 : 8.0,
         20.0,
         isShort ? 2.0 : 4.0,
@@ -57,37 +57,42 @@ class CalculatorDisplay extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     if (showHistory && historyAreaH > 20.0)
-                      SizedBox(
-                        height: historyAreaH,
-                        child: ListView.builder(
-                          reverse: true,
-                          padding: EdgeInsets.zero,
-                          itemCount: historyItems.length,
-                          itemBuilder: (_, i) {
-                            final item = historyItems[i];
-                            return Padding(
-                              padding: EdgeInsets.only(
-                                bottom: i == 0 ? gap : 0,
-                              ),
-                              child: Text(
-                                '${item.expression} = ${item.result}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withAlpha(
-                                    120,
-                                  ),
-                                  fontFamily: 'monospace',
+                      Padding(
+                        padding: EdgeInsets.only(left: fullscreen ? 44.0 : 0.0),
+                        child: SizedBox(
+                          height: historyAreaH,
+                          child: ListView.builder(
+                            reverse: true,
+                            padding: EdgeInsets.zero,
+                            itemCount: historyItems.length,
+                            itemBuilder: (_, i) {
+                              final item = historyItems[i];
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: i == 0 ? gap : 0,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.right,
-                              ),
-                            );
-                          },
+                                child: Text(
+                                  '${item.expression} = ${item.result}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withAlpha(120),
+                                    fontFamily: 'monospace',
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ),
                     if (!isShort && expression.isNotEmpty)
                       Padding(
-                        padding: EdgeInsets.only(bottom: gap),
+                        padding: EdgeInsets.only(
+                          bottom: gap,
+                          left: fullscreen ? 44.0 : 0.0,
+                        ),
                         child: Text(
                           expression,
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -113,8 +118,8 @@ class CalculatorDisplay extends StatelessWidget {
 
                             final double maxFontSize = isShort ? 24.0 : 36.0;
                             double fontSize = maxFontSize;
+                            const double charWidthFactor = 0.55;
                             if (text.isNotEmpty) {
-                              const double charWidthFactor = 0.62;
                               final double calculatedSize =
                                   constraints.maxWidth /
                                   (text.length * charWidthFactor);
@@ -133,21 +138,56 @@ class CalculatorDisplay extends StatelessWidget {
                                   : theme.colorScheme.onSurface,
                             );
 
-                            return TextField(
-                              controller: controller,
-                              readOnly: true,
-                              showCursor: true,
-                              style: displayStyle,
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              cursorColor: theme.colorScheme.primary,
-                              maxLines: 1,
-                              textAlign: TextAlign.right,
-                              scrollPhysics: const BouncingScrollPhysics(),
-                              enableInteractiveSelection: true,
+                            final bool isOverflowing =
+                                text.isNotEmpty &&
+                                text.length * fontSize * charWidthFactor >
+                                    constraints.maxWidth;
+
+                            return Stack(
+                              children: [
+                                TextField(
+                                  controller: controller,
+                                  readOnly: true,
+                                  showCursor: true,
+                                  style: displayStyle,
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                  cursorColor: theme.colorScheme.primary,
+                                  maxLines: 1,
+                                  textAlign: TextAlign.right,
+                                  scrollPhysics: const BouncingScrollPhysics(),
+                                  enableInteractiveSelection: true,
+                                ),
+                                if (isOverflowing)
+                                  Positioned(
+                                    left: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: 32,
+                                    child: IgnorePointer(
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.centerLeft,
+                                            end: Alignment.centerRight,
+                                            colors: [
+                                              theme
+                                                  .colorScheme
+                                                  .surfaceContainerLow,
+                                              theme
+                                                  .colorScheme
+                                                  .surfaceContainerLow
+                                                  .withValues(alpha: 0),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             );
                           },
                         ),
