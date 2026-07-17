@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/widgets/info_card.dart';
+import 'package:tool_lab/widgets/collapsible_section.dart';
 
 import '../audio/doppler_analyzer.dart';
 import '../sound_finder_state.dart';
@@ -48,45 +48,67 @@ class _SfDopplerViewState extends State<SfDopplerView> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          InfoCard(
-            icon: Icons.analytics_outlined,
-            title: l10n.sfDopplerTitle,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.sfDopplerExplanation,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.sfDopplerStatusNoData,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+          Card(
+            elevation: 0,
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.15),
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: CollapsibleSection(
+                icon: Icons.analytics_outlined,
+                iconColor: Theme.of(context).colorScheme.primary,
+                title: l10n.sfDopplerTitle,
+                initiallyExpanded: true,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.sfDopplerExplanation,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.sfDopplerStatusNoData,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: () =>
+                                context.read<SoundFinderState>().loadDemoClip(),
+                            icon: const Icon(Icons.science_outlined),
+                            label: Text(l10n.sfDopplerLoadDemo),
+                          ),
+                          if (state.micStatus != MicStatus.running)
+                            OutlinedButton.icon(
+                              onPressed: () =>
+                                  context.read<SoundFinderState>().ensureMic(),
+                              icon: const Icon(Icons.mic_outlined),
+                              label: Text(l10n.sfGrantPermission),
+                            ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    FilledButton.icon(
-                      onPressed: () =>
-                          context.read<SoundFinderState>().loadDemoClip(),
-                      icon: const Icon(Icons.science_outlined),
-                      label: Text(l10n.sfDopplerLoadDemo),
-                    ),
-                    if (state.micStatus != MicStatus.running)
-                      OutlinedButton.icon(
-                        onPressed: () =>
-                            context.read<SoundFinderState>().ensureMic(),
-                        icon: const Icon(Icons.mic_outlined),
-                        label: Text(l10n.sfGrantPermission),
-                      ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
           if (state.micStatus != MicStatus.running) ...[
@@ -102,27 +124,49 @@ class _SfDopplerViewState extends State<SfDopplerView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InfoCard(
-          icon: Icons.analytics_outlined,
-          title: l10n.sfDopplerTitle,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.sfDopplerStatusSuccess,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () =>
-                    context.read<SoundFinderState>().clearDopplerData(),
-                icon: const Icon(Icons.clear_all_outlined),
-                label: Text(l10n.commonClear),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
+        Card(
+          elevation: 0,
+          color: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.15),
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: CollapsibleSection(
+              icon: Icons.analytics_outlined,
+              iconColor: Theme.of(context).colorScheme.primary,
+              title: l10n.sfDopplerTitle,
+              initiallyExpanded: true,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.sfDopplerStatusSuccess,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          context.read<SoundFinderState>().clearDopplerData(),
+                      icon: const Icon(Icons.clear_all_outlined),
+                      label: Text(l10n.commonClear),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: 12),

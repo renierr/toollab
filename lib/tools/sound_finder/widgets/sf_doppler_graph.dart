@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import '../audio/doppler_analyzer.dart';
+import '../sound_finder_colors.dart';
 
 class SfDopplerGraph extends StatelessWidget {
   final List<DopplerPoint> points;
@@ -22,9 +25,27 @@ class SfDopplerGraph extends StatelessWidget {
     required this.temperature,
   });
 
+  void _showInfoDialog(BuildContext context, AppLocalizations l10n) {
+    showDialog(
+      context: context,
+      builder: (context) => ResponsiveAlertDialog(
+        title: Text(l10n.sfDopplerInfoTitle),
+        content: Text(l10n.sfDopplerInfoContent),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.commonClose),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+
     return Card(
       elevation: 0,
       color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.15),
@@ -34,27 +55,53 @@ class SfDopplerGraph extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Container(
-        height: 240,
+      child: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: CustomPaint(
-          size: Size.infinite,
-          painter: _DopplerPainter(
-            points: points,
-            duration: duration,
-            fApproach: fApproach,
-            fRecede: fRecede,
-            t0: t0,
-            distance: distance,
-            temperature: temperature,
-            pointColor: theme.colorScheme.primary,
-            curveColor: theme.colorScheme.secondary,
-            gridColor: theme.colorScheme.onSurfaceVariant.withValues(
-              alpha: 0.15,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  l10n.sfDopplerGraphTitle,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.info_outline, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  tooltip: l10n.sfDopplerInfoTitle,
+                  onPressed: () => _showInfoDialog(context, l10n),
+                ),
+              ],
             ),
-            textColor: theme.colorScheme.onSurfaceVariant,
-            inflectionColor: theme.colorScheme.error,
-          ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 200,
+              child: CustomPaint(
+                size: Size.infinite,
+                painter: _DopplerPainter(
+                  points: points,
+                  duration: duration,
+                  fApproach: fApproach,
+                  fRecede: fRecede,
+                  t0: t0,
+                  distance: distance,
+                  temperature: temperature,
+                  pointColor: SoundFinderColors.violet,
+                  curveColor: theme.colorScheme.primary,
+                  gridColor: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.15,
+                  ),
+                  textColor: theme.colorScheme.onSurfaceVariant,
+                  inflectionColor: theme.colorScheme.error,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

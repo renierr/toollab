@@ -5070,7 +5070,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sfDopplerStatusSuccess =>
-      'Analyse abgeschlossen. Passe die Schieberegler an, um das theoretische Modell (weiße Linie) mit den gemessenen Frequenzen (lila Punkte) in Deckung zu bringen.';
+      'Analyse abgeschlossen. Passe die Schieberegler an, um das theoretische Modell (durchgezogene Linie) mit den gemessenen Frequenzen (lila Punkte) in Deckung zu bringen.';
+
+  @override
+  String get sfDopplerGraphTitle => 'Frequenz über Zeit';
+
+  @override
+  String get sfDopplerInfoTitle => 'Doppler-Grafik verstehen';
+
+  @override
+  String get sfDopplerInfoContent =>
+      '• X-Achse (Horizontal): Zeit in Sekunden.\n• Y-Achse (Vertikal): Frequenz in Hertz (Hz).\n• Punkte: Erkannte Spitzenfrequenzen der Aufnahme.\n• Linie: Theoretische Kurve des Doppler-Modells.\n• Vertikale Linie (t₀): Zeitpunkt des geringsten Abstands.\n\nZiel: Passe die Parameter so an, dass die Linie mit den Punkten übereinstimmt.';
 
   @override
   String get sfWaveSine => 'Sinus';

@@ -5035,7 +5035,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sfDopplerStatusSuccess =>
-      'Analysis complete. Adjust markers to align the theoretical model (white line) with the recorded peak frequencies (purple dots).';
+      'Analysis complete. Adjust markers to align the theoretical model (solid line) with the recorded peak frequencies (purple dots).';
+
+  @override
+  String get sfDopplerGraphTitle => 'Frequency vs. Time';
+
+  @override
+  String get sfDopplerInfoTitle => 'Understanding the Doppler Graph';
+
+  @override
+  String get sfDopplerInfoContent =>
+      '• X-Axis (Horizontal): Time in seconds.\n• Y-Axis (Vertical): Frequency in Hertz (Hz).\n• Dots: Detected peak frequencies from the recorded clip.\n• Solid Line: Theoretical Doppler model curve.\n• Vertical Line (t₀): Time of closest approach.\n\nGoal: Adjust the parameters to align the solid line with the dots.';
 
   @override
   String get sfWaveSine => 'Sine';

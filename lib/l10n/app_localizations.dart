@@ -9185,8 +9185,26 @@ abstract class AppLocalizations {
   /// No description provided for @sfDopplerStatusSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Analysis complete. Adjust markers to align the theoretical model (white line) with the recorded peak frequencies (purple dots).'**
+  /// **'Analysis complete. Adjust markers to align the theoretical model (solid line) with the recorded peak frequencies (purple dots).'**
   String get sfDopplerStatusSuccess;
+
+  /// No description provided for @sfDopplerGraphTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency vs. Time'**
+  String get sfDopplerGraphTitle;
+
+  /// No description provided for @sfDopplerInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Understanding the Doppler Graph'**
+  String get sfDopplerInfoTitle;
+
+  /// No description provided for @sfDopplerInfoContent.
+  ///
+  /// In en, this message translates to:
+  /// **'• X-Axis (Horizontal): Time in seconds.\n• Y-Axis (Vertical): Frequency in Hertz (Hz).\n• Dots: Detected peak frequencies from the recorded clip.\n• Solid Line: Theoretical Doppler model curve.\n• Vertical Line (t₀): Time of closest approach.\n\nGoal: Adjust the parameters to align the solid line with the dots.'**
+  String get sfDopplerInfoContent;
 
   /// No description provided for @sfWaveSine.
   ///
