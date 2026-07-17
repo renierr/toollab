@@ -5068,6 +5068,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfInputSettings => 'Input settings';
 
   @override
+  String get sfSaveClipButton => 'Save clip';
+
+  @override
   String get sfSpectrumSettings => 'Spectrum settings';
 
   @override

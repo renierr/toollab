@@ -9248,6 +9248,12 @@ abstract class AppLocalizations {
   /// **'Input settings'**
   String get sfInputSettings;
 
+  /// No description provided for @sfSaveClipButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save clip'**
+  String get sfSaveClipButton;
+
   /// No description provided for @sfSpectrumSettings.
   ///
   /// In en, this message translates to:

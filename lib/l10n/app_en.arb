@@ -2677,6 +2677,7 @@
   "sfRefreshMics": "Rescan microphones",
   "sfMicGain": "Mic gain",
   "sfInputSettings": "Input settings",
+  "sfSaveClipButton": "Save clip",
   "sfSpectrumSettings": "Spectrum settings",
   "sfRecordClip": "Record clip",
   "sfStopAndSave": "Stop & save",

@@ -5103,6 +5103,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfInputSettings => 'Eingangseinstellungen';
 
   @override
+  String get sfSaveClipButton => 'Clip speichern';
+
+  @override
   String get sfSpectrumSettings => 'Spektrum-Einstellungen';
 
   @override

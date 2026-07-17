@@ -1844,6 +1844,7 @@
   "sfRefreshMics": "Mikrofone neu suchen",
   "sfMicGain": "Mikrofonverstärkung",
   "sfInputSettings": "Eingangseinstellungen",
+  "sfSaveClipButton": "Clip speichern",
   "sfSpectrumSettings": "Spektrum-Einstellungen",
   "sfRecordClip": "Clip aufnehmen",
   "sfStopAndSave": "Stopp & speichern",

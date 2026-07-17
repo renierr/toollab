@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import '../sound_finder_state.dart';
 
-/// Captures a raw (gained) mic clip and exports it as a WAV via the shared file
-/// save flow. Shown alongside the live-analysis modes.
+/// Captures a raw (gained) mic clip and saves it temporarily.
+/// Provides a save button to export the clip as a WAV when not recording.
 class SfClipRecorder extends StatelessWidget {
   const SfClipRecorder({super.key});
 
@@ -18,26 +19,34 @@ class SfClipRecorder extends StatelessWidget {
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _stopAndSave(BuildContext context, AppLocalizations l10n) async {
-    final bytes = context.read<SoundFinderState>().stopRecordingToWav();
-    if (bytes == null || !context.mounted) return;
+  Future<void> _saveClip(BuildContext context, AppLocalizations l10n) async {
+    try {
+      final bytes = await TempFileManager.readFile('interim_sound_clip.wav');
+      if (!context.mounted) return;
 
-    final DateTime now = DateTime.now();
-    final String stamp =
-        '${now.year}${now.month.toString().padLeft(2, '0')}'
-        '${now.day.toString().padLeft(2, '0')}-'
-        '${now.hour.toString().padLeft(2, '0')}'
-        '${now.minute.toString().padLeft(2, '0')}'
-        '${now.second.toString().padLeft(2, '0')}';
+      final DateTime now = DateTime.now();
+      final String stamp =
+          '${now.year}${now.month.toString().padLeft(2, '0')}'
+          '${now.day.toString().padLeft(2, '0')}-'
+          '${now.hour.toString().padLeft(2, '0')}'
+          '${now.minute.toString().padLeft(2, '0')}'
+          '${now.second.toString().padLeft(2, '0')}';
 
-    await FileSaveHelper.saveFile(
-      context: context,
-      suggestedName: 'sound-clip-$stamp.wav',
-      bytes: bytes,
-      successMessageAndroid: l10n.sfClipSavedAndroid,
-      successMessageGeneralBuilder: (path) => l10n.sfClipSaved(path),
-      errorMessageBuilder: (_) => l10n.sfClipSaveError,
-    );
+      await FileSaveHelper.saveFile(
+        context: context,
+        suggestedName: 'sound-clip-$stamp.wav',
+        bytes: bytes,
+        successMessageAndroid: l10n.sfClipSavedAndroid,
+        successMessageGeneralBuilder: (path) => l10n.sfClipSaved(path),
+        errorMessageBuilder: (_) => l10n.sfClipSaveError,
+      );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.sfClipSaveError)));
+      }
+    }
   }
 
   @override
@@ -53,13 +62,27 @@ class SfClipRecorder extends StatelessWidget {
     if (!recording) {
       return Align(
         alignment: Alignment.centerLeft,
-        child: OutlinedButton.icon(
-          onPressed: () => context.read<SoundFinderState>().startRecording(),
-          icon: const Icon(
-            Icons.fiber_manual_record,
-            color: AppTheme.statusRed,
-          ),
-          label: Text(l10n.sfRecordClip),
+        child: Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () =>
+                  context.read<SoundFinderState>().startRecording(),
+              icon: const Icon(
+                Icons.fiber_manual_record,
+                color: AppTheme.statusRed,
+              ),
+              label: Text(l10n.sfRecordClip),
+            ),
+            if (state.tempWavPath != null)
+              FilledButton.icon(
+                onPressed: () => _saveClip(context, l10n),
+                icon: const Icon(Icons.download_outlined),
+                label: Text(l10n.sfSaveClipButton),
+              ),
+          ],
         ),
       );
     }
@@ -70,9 +93,10 @@ class SfClipRecorder extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         FilledButton.icon(
-          onPressed: () => _stopAndSave(context, l10n),
+          onPressed: () =>
+              context.read<SoundFinderState>().stopRecordingAndSaveTemp(),
           icon: const Icon(Icons.stop),
-          label: Text(l10n.sfStopAndSave),
+          label: Text(l10n.sfStopRecording),
         ),
         Row(
           mainAxisSize: MainAxisSize.min,

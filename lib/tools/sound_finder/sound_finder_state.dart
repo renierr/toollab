@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 
+import '../../helpers/temp_file_manager.dart';
 import '../../helpers/wav_pcm16_encoder.dart';
 import '../../services/database_service.dart';
 import 'audio/doppler_analyzer.dart';
@@ -75,6 +76,7 @@ class SoundFinderState extends ChangeNotifier {
   // Doppler analysis data.
   Float32List? _dopplerSamples;
   DopplerResult? _dopplerResult;
+  String? _tempWavPath;
 
   bool _tonePlaying = false;
   SfMode? _toneOwner;
@@ -120,6 +122,7 @@ class SoundFinderState extends ChangeNotifier {
 
   Float32List? get dopplerSamples => _dopplerSamples;
   DopplerResult? get dopplerResult => _dopplerResult;
+  String? get tempWavPath => _tempWavPath;
 
   bool get tonePlaying => _tonePlaying;
   SfMode? get toneOwner => _toneOwner;
@@ -215,24 +218,33 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Stops the active recording and returns it as a 16-bit PCM WAV, or `null`
-  /// if nothing was captured.
-  Uint8List? stopRecordingToWav() {
+  /// Stops the active recording, runs analysis, and saves to a temp WAV file.
+  Future<void> stopRecordingAndSaveTemp() async {
     final Float32List samples = _mic.stopRecording();
-    notifyListeners();
     if (samples.isEmpty) {
       _dopplerSamples = null;
       _dopplerResult = null;
-      return null;
+      _tempWavPath = null;
+      notifyListeners();
+      return;
     }
     _dopplerSamples = samples;
     _dopplerResult = DopplerAnalyzer.analyze(samples, MicAnalyzer.sampleRate);
-    return WavPcm16Encoder.encode(
+    final wavBytes = WavPcm16Encoder.encode(
       samples,
       frames: samples.length,
       sampleRate: MicAnalyzer.sampleRate,
       channels: 1,
     );
+    if (wavBytes.isNotEmpty) {
+      _tempWavPath = await TempFileManager.createFile(
+        'interim_sound_clip.wav',
+        bytes: wavBytes,
+      );
+    } else {
+      _tempWavPath = null;
+    }
+    notifyListeners();
   }
 
   /// Generates a synthetic Doppler shift audio clip for testing and demonstration.
@@ -474,6 +486,12 @@ class SoundFinderState extends ChangeNotifier {
     _peakHoldDb = -90;
     _referenceDb = null;
     _suspended = false;
+    if (_tempWavPath != null) {
+      try {
+        await TempFileManager.deleteFile('interim_sound_clip.wav');
+      } catch (_) {}
+      _tempWavPath = null;
+    }
   }
 
   bool _suspended = false;
