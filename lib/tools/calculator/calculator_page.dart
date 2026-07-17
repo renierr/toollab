@@ -9,7 +9,6 @@ import 'history.dart';
 import 'widgets/calculator_display.dart';
 import 'widgets/calculator_grid.dart';
 import 'widgets/calculator_toolbar.dart';
-import 'widgets/calculator_sci_buttons.dart';
 import 'widgets/calculator_history_panel.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'config.dart';
@@ -234,14 +233,6 @@ class _CalculatorPageState extends State<CalculatorPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final sharedGrid = CalculatorGrid(
-      onInput: _onInput,
-      onClear: _onClear,
-      onBracket: _onBracket,
-      onNegate: _onNegate,
-      onEquals: _onEquals,
-    );
-
     final isDesktop =
         defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.linux;
@@ -254,146 +245,74 @@ class _CalculatorPageState extends State<CalculatorPage>
           constraints: const BoxConstraints(maxWidth: 600),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 500;
-              final isShort = constraints.maxHeight < 400;
+              final totalW = constraints.maxWidth;
+              final totalH = constraints.maxHeight;
+
+              final isShort = totalH < 400;
               final effectiveShowScientific = _showScientific ?? false;
 
-              final displayHeight = isShort ? 44.0 : 95.0;
+              final double displayMinH = isShort ? 44.0 : 95.0;
+              final double toolbarH = isShort ? 40.0 : 48.0;
+              const double paddingH = 12.0;
 
-              final display = CalculatorDisplay(
-                expression: _expression,
-                controller: _textController,
-                flashResult: _flashResult,
-                historyItems: _history.items,
-                isShort: isShort,
-                fullscreen: true,
+              final int cols = effectiveShowScientific ? 6 : 4;
+              const double gridHPad = 24.0;
+              const double gridGaps = 24.0;
+
+              final double gridW = totalW - 16.0;
+              final double idealButtonW = (gridW - gridHPad) / cols;
+
+              final double maxButtonH = effectiveShowScientific ? 70.0 : 80.0;
+              final double minButtonH = 48.0;
+
+              final double idealButtonH = idealButtonW.clamp(
+                minButtonH,
+                maxButtonH,
               );
+              final double idealGridH = idealButtonH * 5 + gridGaps;
 
-              final toolbar = CalculatorToolbar(
-                showScientific: effectiveShowScientific,
-                onToggleSci: () =>
-                    setState(() => _showScientific = !effectiveShowScientific),
-                onShowHistory: _showHistory,
-                onCopy: _onCopy,
-                onBackspace: _onBackspace,
-                isShort: isShort,
-              );
-
-              if (isWide) {
-                return Column(
-                  children: [
-                    SizedBox(height: displayHeight, child: display),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          if (effectiveShowScientific)
-                            SizedBox(
-                              width: 80,
-                              child: CalculatorSciColumn(onInput: _onInput),
-                            ),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                CalculatorToolbar(
-                                  showScientific: effectiveShowScientific,
-                                  onToggleSci: () => setState(
-                                    () => _showScientific =
-                                        !effectiveShowScientific,
-                                  ),
-                                  onShowHistory: _showHistory,
-                                  onCopy: _onCopy,
-                                  onBackspace: _onBackspace,
-                                  isShort: isShort,
-                                ),
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      8,
-                                      4,
-                                      8,
-                                      8,
-                                    ),
-                                    child: sharedGrid,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }
-
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  final totalH = constraints.maxHeight;
-                  final toolH = 44.0;
-                  final minDisplayH = displayHeight;
-                  final padV = 12.0;
-                  final gridW = constraints.maxWidth - 16;
-                  const hPad = 24.0;
-                  const gaps = 24.0;
-                  final idealGridH = 5 * (gridW - hPad) / 4 + gaps;
-                  final remaining = totalH - toolH - padV;
-                  final fits = idealGridH + minDisplayH <= remaining;
-
-                  if (isShort || !fits) {
-                    return Column(
-                      children: [
-                        SizedBox(height: minDisplayH, child: display),
-                        toolbar,
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                            child: effectiveShowScientific
-                                ? Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 80,
-                                        child: CalculatorSciColumn(
-                                          onInput: _onInput,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(child: sharedGrid),
-                                    ],
-                                  )
-                                : sharedGrid,
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-
-                  return Column(
-                    children: [
-                      Expanded(child: display),
-                      toolbar,
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                        child: SizedBox(
-                          height: idealGridH,
-                          child: effectiveShowScientific
-                              ? Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 80,
-                                      child: CalculatorSciColumn(
-                                        onInput: _onInput,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(child: sharedGrid),
-                                  ],
-                                )
-                              : sharedGrid,
-                        ),
-                      ),
-                    ],
+              final double maxRemaining =
+                  (totalH - displayMinH - toolbarH - paddingH).clamp(
+                    0.0,
+                    double.infinity,
                   );
-                },
+              final double gridH = idealGridH.clamp(0.0, maxRemaining);
+
+              return Column(
+                children: [
+                  Expanded(
+                    child: CalculatorDisplay(
+                      expression: _expression,
+                      controller: _textController,
+                      flashResult: _flashResult,
+                      historyItems: _history.items,
+                      isShort: isShort,
+                      fullscreen: true,
+                    ),
+                  ),
+                  CalculatorToolbar(
+                    showScientific: effectiveShowScientific,
+                    onToggleSci: () => setState(
+                      () => _showScientific = !effectiveShowScientific,
+                    ),
+                    onShowHistory: _showHistory,
+                    onCopy: _onCopy,
+                    onBackspace: _onBackspace,
+                    isShort: isShort,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                    child: CalculatorGrid(
+                      onInput: _onInput,
+                      onClear: _onClear,
+                      onBracket: _onBracket,
+                      onNegate: _onNegate,
+                      onEquals: _onEquals,
+                      showScientific: effectiveShowScientific,
+                      height: gridH,
+                    ),
+                  ),
+                ],
               );
             },
           ),

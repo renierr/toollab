@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 enum _ButtonVariant { number, operator, clear, neutral, equals }
 
 class CalculatorGrid extends StatelessWidget {
-  static const _rows = [
+  static const _mainRows = [
     ['AC', '()', '%', '÷'],
     ['7', '8', '9', '×'],
     ['4', '5', '6', '−'],
@@ -11,11 +11,21 @@ class CalculatorGrid extends StatelessWidget {
     ['±', '0', '.', '='],
   ];
 
+  static const _sciRows = [
+    ['sin', 'cos'],
+    ['tan', '√'],
+    ['log', 'ln'],
+    ['π', 'e'],
+    ['^', '|x|'],
+  ];
+
   final void Function(String) onInput;
   final VoidCallback onClear;
   final VoidCallback onBracket;
   final VoidCallback onNegate;
   final VoidCallback onEquals;
+  final bool showScientific;
+  final double height;
 
   const CalculatorGrid({
     super.key,
@@ -24,54 +34,55 @@ class CalculatorGrid extends StatelessWidget {
     required this.onBracket,
     required this.onNegate,
     required this.onEquals,
+    required this.showScientific,
+    required this.height,
   });
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const hPad = 24.0;
-        const gaps = 24.0;
-        final idealW = (constraints.maxWidth - hPad) / 4;
-        final maxH = constraints.maxHeight;
-        final rowH = maxH.isFinite && idealW * 5 + gaps > maxH
-            ? (maxH - gaps) / 5
-            : idealW;
+    const gaps = 24.0;
+    final rowH = (height - gaps) / 5;
 
-        return SizedBox(
-          height: rowH * 5 + gaps,
-          child: Column(
+    final rows = List.generate(5, (i) {
+      if (showScientific) {
+        return [..._sciRows[i], ..._mainRows[i]];
+      } else {
+        return _mainRows[i];
+      }
+    });
+
+    return SizedBox(
+      height: height,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(rows.length, (i) {
+          final row = rows[i];
+          final isLast = i == rows.length - 1;
+          return Column(
             mainAxisSize: MainAxisSize.min,
-            children: List.generate(_rows.length, (i) {
-              final row = _rows[i];
-              final isLast = i == _rows.length - 1;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    height: rowH,
-                    child: Row(
-                      children: row.map((label) {
-                        return Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 3),
-                            child: _CalcButton(
-                              label: label,
-                              variant: _variantForLabel(label),
-                              onTap: () => _onTapForLabel(label),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  if (!isLast) const SizedBox(height: 6),
-                ],
-              );
-            }),
-          ),
-        );
-      },
+            children: [
+              SizedBox(
+                height: rowH,
+                child: Row(
+                  children: row.map((label) {
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: _CalcButton(
+                          label: label,
+                          variant: _variantForLabel(label),
+                          onTap: () => _onTapForLabel(label),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              if (!isLast) const SizedBox(height: 6),
+            ],
+          );
+        }),
+      ),
     );
   }
 
@@ -80,6 +91,16 @@ class CalculatorGrid extends StatelessWidget {
     '()' || '%' || '±' => _ButtonVariant.neutral,
     '÷' || '×' || '−' || '+' => _ButtonVariant.operator,
     '=' => _ButtonVariant.equals,
+    'sin' ||
+    'cos' ||
+    'tan' ||
+    '√' ||
+    'log' ||
+    'ln' ||
+    'π' ||
+    'e' ||
+    '^' ||
+    '|x|' => _ButtonVariant.neutral,
     _ => _ButtonVariant.number,
   };
 
@@ -103,6 +124,26 @@ class CalculatorGrid extends StatelessWidget {
         onEquals();
       case '±':
         onNegate();
+      case 'sin':
+        onInput('sin(');
+      case 'cos':
+        onInput('cos(');
+      case 'tan':
+        onInput('tan(');
+      case '√':
+        onInput('sqrt(');
+      case 'log':
+        onInput('log(');
+      case 'ln':
+        onInput('ln(');
+      case 'π':
+        onInput('PI');
+      case 'e':
+        onInput('E');
+      case '^':
+        onInput('^');
+      case '|x|':
+        onInput('abs(');
       default:
         onInput(label);
     }
