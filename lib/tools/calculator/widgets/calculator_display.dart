@@ -23,18 +23,6 @@ class CalculatorDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final baseStyle = isShort
-        ? theme.textTheme.headlineMedium
-        : theme.textTheme.displaySmall;
-
-    final displayStyle = baseStyle?.copyWith(
-      fontWeight: FontWeight.w300,
-      fontFamily: 'monospace',
-      fontSize: isShort ? 24.0 : null,
-      color: flashResult
-          ? theme.colorScheme.primary
-          : theme.colorScheme.onSurface,
-    );
 
     final resultAreaH = isShort ? 30.0 : 60.0;
     final gap = isShort ? 0.0 : 4.0;
@@ -115,21 +103,53 @@ class CalculatorDisplay extends StatelessWidget {
                       height: resultAreaH,
                       child: Align(
                         alignment: Alignment.bottomRight,
-                        child: TextField(
-                          controller: controller,
-                          readOnly: true,
-                          showCursor: true,
-                          style: displayStyle,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                          cursorColor: theme.colorScheme.primary,
-                          maxLines: 1,
-                          textAlign: TextAlign.right,
-                          scrollPhysics: const BouncingScrollPhysics(),
-                          enableInteractiveSelection: true,
+                        child: ListenableBuilder(
+                          listenable: controller,
+                          builder: (context, child) {
+                            final text = controller.text;
+                            final baseStyle = isShort
+                                ? theme.textTheme.headlineMedium
+                                : theme.textTheme.displaySmall;
+
+                            final double maxFontSize = isShort ? 24.0 : 36.0;
+                            double fontSize = maxFontSize;
+                            if (text.isNotEmpty) {
+                              const double charWidthFactor = 0.62;
+                              final double calculatedSize =
+                                  constraints.maxWidth /
+                                  (text.length * charWidthFactor);
+                              fontSize = calculatedSize.clamp(
+                                16.0,
+                                maxFontSize,
+                              );
+                            }
+
+                            final displayStyle = baseStyle?.copyWith(
+                              fontWeight: FontWeight.w300,
+                              fontFamily: 'monospace',
+                              fontSize: fontSize,
+                              color: flashResult
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface,
+                            );
+
+                            return TextField(
+                              controller: controller,
+                              readOnly: true,
+                              showCursor: true,
+                              style: displayStyle,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              cursorColor: theme.colorScheme.primary,
+                              maxLines: 1,
+                              textAlign: TextAlign.right,
+                              scrollPhysics: const BouncingScrollPhysics(),
+                              enableInteractiveSelection: true,
+                            );
+                          },
                         ),
                       ),
                     ),
