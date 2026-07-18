@@ -38,7 +38,11 @@ class _CalculatorPageState extends State<CalculatorPage>
   @override
   void initState() {
     super.initState();
-    _history.load();
+    _history.load().then((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
     if (widget.sharedData?.text != null) {
       _core.setInput(widget.sharedData!.text!);
     }
