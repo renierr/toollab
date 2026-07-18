@@ -54,6 +54,40 @@ class MarkdownTextEditingController extends TextEditingController {
 
       TextSpan? lineSpan;
 
+      final refDefMatch = RegExp(
+        r'^(\[[^\]]+\]:\s*)(data:image/[^;]+;base64,)(.*)$',
+      ).firstMatch(line);
+      if (refDefMatch != null) {
+        final prefix = refDefMatch.group(1)!;
+        final mime = refDefMatch.group(2)!;
+        final base64Data = refDefMatch.group(3)!;
+        final previewData = base64Data.length > 30
+            ? '${base64Data.substring(0, 30)}...'
+            : base64Data;
+        lineSpan = TextSpan(
+          children: [
+            TextSpan(
+              text: prefix,
+              style: baseTextStyle.copyWith(color: accentColor),
+            ),
+            TextSpan(
+              text: mime,
+              style: baseTextStyle.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              ),
+            ),
+            TextSpan(
+              text: previewData,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              ),
+            ),
+          ],
+        );
+      }
+
       final headerMatch = RegExp(r'^(#{1,6})\s+(.*)$').firstMatch(line);
       if (headerMatch != null) {
         final level = headerMatch.group(1)!.length;

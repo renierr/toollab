@@ -185,7 +185,52 @@ class _MarkdownViewState extends State<MarkdownView>
       selectable: false,
       styleSheet: styleSheet,
       imageDirectory: null,
-      imageBuilder: null,
+      imageBuilder: (uri, title, alt) {
+        double? width;
+        double? height;
+        if (alt != null && alt.contains('|')) {
+          final parts = alt.split('|');
+          final sizePart = parts[1].trim().toLowerCase();
+
+          if (sizePart.contains('x')) {
+            final dimensions = sizePart.split('x');
+            width = double.tryParse(dimensions[0]);
+            height = double.tryParse(dimensions[1]);
+          } else {
+            width = double.tryParse(sizePart);
+          }
+        }
+
+        Widget imageWidget;
+        final uriStr = uri.toString();
+
+        if (uriStr.startsWith('data:image/')) {
+          try {
+            final commaIndex = uriStr.indexOf(',');
+            if (commaIndex != -1) {
+              final base64Data = uriStr.substring(commaIndex + 1);
+              final bytes = base64Decode(base64Data);
+              imageWidget = Image.memory(bytes, fit: BoxFit.contain);
+            } else {
+              imageWidget = const Icon(Icons.broken_image);
+            }
+          } catch (e) {
+            imageWidget = const Icon(Icons.broken_image);
+          }
+        } else {
+          imageWidget = Image.network(
+            uriStr,
+            fit: BoxFit.contain,
+            errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
+          );
+        }
+
+        if (width != null || height != null) {
+          return SizedBox(width: width, height: height, child: imageWidget);
+        }
+
+        return imageWidget;
+      },
       checkboxBuilder: (checked) =>
           MarkdownCheckbox(checked: checked, checkedColor: widget.accentColor),
       bulletBuilder: null,

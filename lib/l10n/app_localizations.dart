@@ -3650,6 +3650,48 @@ abstract class AppLocalizations {
   /// **'Preview (without markdown syntax)'**
   String get notesModePreviewTooltip;
 
+  /// No description provided for @notesToolbarImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert Image'**
+  String get notesToolbarImage;
+
+  /// No description provided for @notesImageSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert Image'**
+  String get notesImageSourceTitle;
+
+  /// No description provided for @notesImageSourceGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from Gallery'**
+  String get notesImageSourceGallery;
+
+  /// No description provided for @notesImageSourceCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get notesImageSourceCamera;
+
+  /// No description provided for @notesImageSourceClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste from Clipboard'**
+  String get notesImageSourceClipboard;
+
+  /// No description provided for @notesImageSourceClipboardEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No image in clipboard'**
+  String get notesImageSourceClipboardEmpty;
+
+  /// No description provided for @notesImageProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing image...'**
+  String get notesImageProcessing;
+
   /// No description provided for @notesToolbarBold.
   ///
   /// In en, this message translates to:

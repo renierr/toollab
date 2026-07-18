@@ -1990,6 +1990,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesModePreviewTooltip => 'Preview (without markdown syntax)';
 
   @override
+  String get notesToolbarImage => 'Insert Image';
+
+  @override
+  String get notesImageSourceTitle => 'Insert Image';
+
+  @override
+  String get notesImageSourceGallery => 'Choose from Gallery';
+
+  @override
+  String get notesImageSourceCamera => 'Take Photo';
+
+  @override
+  String get notesImageSourceClipboard => 'Paste from Clipboard';
+
+  @override
+  String get notesImageSourceClipboardEmpty => 'No image in clipboard';
+
+  @override
+  String get notesImageProcessing => 'Processing image...';
+
+  @override
   String get notesToolbarBold => 'Bold';
 
   @override

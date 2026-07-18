@@ -2011,6 +2011,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesModePreviewTooltip => 'Vorschau (ohne Markdown-Syntax)';
 
   @override
+  String get notesToolbarImage => 'Bild einfügen';
+
+  @override
+  String get notesImageSourceTitle => 'Bild einfügen';
+
+  @override
+  String get notesImageSourceGallery => 'Aus Galerie auswählen';
+
+  @override
+  String get notesImageSourceCamera => 'Foto aufnehmen';
+
+  @override
+  String get notesImageSourceClipboard => 'Aus Zwischenablage einfügen';
+
+  @override
+  String get notesImageSourceClipboardEmpty =>
+      'Kein Bild in der Zwischenablage';
+
+  @override
+  String get notesImageProcessing => 'Bild wird verarbeitet...';
+
+  @override
   String get notesToolbarBold => 'Fett';
 
   @override
