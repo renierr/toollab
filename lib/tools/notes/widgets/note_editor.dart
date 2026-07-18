@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
@@ -16,6 +14,7 @@ import 'package:tool_lab/tools/notes/widgets/tag_input.dart';
 import 'package:tool_lab/tools/notes/widgets/markdown_text_editing_controller.dart';
 import 'package:tool_lab/tools/notes/widgets/note_editor_toolbar.dart';
 import 'package:tool_lab/tools/notes/widgets/note_editor_text_field.dart';
+import 'package:tool_lab/tools/notes/note_image_helper.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 
 enum NoteEditMode { live, source, preview }
@@ -120,44 +119,16 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     );
 
     try {
-      final decoded = img.decodeImage(imageBytes);
-      if (decoded == null) {
-        throw Exception('Failed to decode image.');
-      }
-
-      const maxDim = 800;
-      img.Image processed = decoded;
-
-      if (decoded.width > maxDim || decoded.height > maxDim) {
-        double ratio = decoded.width / decoded.height;
-        int newWidth, newHeight;
-        if (decoded.width > decoded.height) {
-          newWidth = maxDim;
-          newHeight = (maxDim / ratio).round();
-        } else {
-          newHeight = maxDim;
-          newWidth = (maxDim * ratio).round();
-        }
-        processed = img.copyResize(decoded, width: newWidth, height: newHeight);
-      }
-
-      final compressedBytes = img.encodeJpg(processed, quality: 80);
-      final base64Str = base64Encode(compressedBytes);
-
       final text = _controller.text;
-      final matches = RegExp(r'\[img_ref_(\d+)\]').allMatches(text);
-      int maxIndex = 0;
-      for (final match in matches) {
-        final index = int.tryParse(match.group(1) ?? '0') ?? 0;
-        if (index > maxIndex) {
-          maxIndex = index;
-        }
-      }
-      final refLabel = 'img_ref_${maxIndex + 1}';
+      final result = await NoteImageHelper.processImage(
+        imageBytes: imageBytes,
+        name: name,
+        currentContent: text,
+      );
 
-      final sanitizedName = name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
-      final inlineTag = '![$sanitizedName|300][$refLabel]';
-      final refDefinition = '[$refLabel]: data:image/jpeg;base64,$base64Str';
+      if (result == null) {
+        throw Exception('Failed to process image.');
+      }
 
       final selection = _controller.selection;
       final start = selection.start;
@@ -169,17 +140,17 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
       if (start >= 0 && end >= 0) {
         final textBefore = text.substring(0, start);
         final textAfter = text.substring(end);
-        updatedText = '$textBefore$inlineTag$textAfter';
-        newCursorPos = start + inlineTag.length;
+        updatedText = '$textBefore${result.inlineTag}$textAfter';
+        newCursorPos = start + result.inlineTag.length;
       } else {
-        updatedText = '$text$inlineTag';
+        updatedText = '$text${result.inlineTag}';
         newCursorPos = updatedText.length;
       }
 
       if (updatedText.endsWith('\n')) {
-        updatedText = '$updatedText$refDefinition\n';
+        updatedText = '$updatedText${result.refDefinition}\n';
       } else {
-        updatedText = '$updatedText\n$refDefinition\n';
+        updatedText = '$updatedText\n${result.refDefinition}\n';
       }
 
       _controller.isProgrammaticUpdate = true;
