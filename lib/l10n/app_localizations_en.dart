@@ -5154,6 +5154,42 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get sfTitleMorse => 'Morse Code';
+
+  @override
+  String get sfMorseGenTab => 'Generate';
+
+  @override
+  String get sfMorseAnalTab => 'Analyze';
+
+  @override
+  String get sfMorseWpm => 'Morse Speed';
+
+  @override
+  String get sfMorsePlayMode => 'Signal Mode';
+
+  @override
+  String get sfMorsePlayBoth => 'Sound & Flash';
+
+  @override
+  String get sfMorsePlaySound => 'Sound only';
+
+  @override
+  String get sfMorsePlayFlash => 'Flash only';
+
+  @override
+  String get sfMorsePlaceholder => 'Message to encode...';
+
+  @override
+  String get sfMorseDecodedOutput => 'Decoded Text';
+
+  @override
+  String get sfMorseLiveListening => 'Listening...';
+
+  @override
+  String get sfMorseExportSuccess => 'Morse audio exported successfully';
+
+  @override
   String get toolNameCompass => 'Compass';
 
   @override

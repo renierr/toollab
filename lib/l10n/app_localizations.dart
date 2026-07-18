@@ -9410,6 +9410,78 @@ abstract class AppLocalizations {
   /// **'≈ {hz} Hz per bin'**
   String sfBinWidth(String hz);
 
+  /// No description provided for @sfTitleMorse.
+  ///
+  /// In en, this message translates to:
+  /// **'Morse Code'**
+  String get sfTitleMorse;
+
+  /// No description provided for @sfMorseGenTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get sfMorseGenTab;
+
+  /// No description provided for @sfMorseAnalTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze'**
+  String get sfMorseAnalTab;
+
+  /// No description provided for @sfMorseWpm.
+  ///
+  /// In en, this message translates to:
+  /// **'Morse Speed'**
+  String get sfMorseWpm;
+
+  /// No description provided for @sfMorsePlayMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal Mode'**
+  String get sfMorsePlayMode;
+
+  /// No description provided for @sfMorsePlayBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound & Flash'**
+  String get sfMorsePlayBoth;
+
+  /// No description provided for @sfMorsePlaySound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound only'**
+  String get sfMorsePlaySound;
+
+  /// No description provided for @sfMorsePlayFlash.
+  ///
+  /// In en, this message translates to:
+  /// **'Flash only'**
+  String get sfMorsePlayFlash;
+
+  /// No description provided for @sfMorsePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Message to encode...'**
+  String get sfMorsePlaceholder;
+
+  /// No description provided for @sfMorseDecodedOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoded Text'**
+  String get sfMorseDecodedOutput;
+
+  /// No description provided for @sfMorseLiveListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening...'**
+  String get sfMorseLiveListening;
+
+  /// No description provided for @sfMorseExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Morse audio exported successfully'**
+  String get sfMorseExportSuccess;
+
   /// No description provided for @toolNameCompass.
   ///
   /// In en, this message translates to:

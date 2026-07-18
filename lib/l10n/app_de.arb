@@ -1885,6 +1885,18 @@
       }
     }
   },
+  "sfTitleMorse": "Morsecode",
+  "sfMorseGenTab": "Senden",
+  "sfMorseAnalTab": "Empfangen",
+  "sfMorseWpm": "Geschwindigkeit",
+  "sfMorsePlayMode": "Signalmodus",
+  "sfMorsePlayBoth": "Ton & Licht",
+  "sfMorsePlaySound": "Nur Ton",
+  "sfMorsePlayFlash": "Nur Licht",
+  "sfMorsePlaceholder": "Nachricht zum Codieren...",
+  "sfMorseDecodedOutput": "Decodierter Text",
+  "sfMorseLiveListening": "Empfange...",
+  "sfMorseExportSuccess": "Morse-Audio erfolgreich exportiert",
   "toolNameCompass": "Kompass",
   "toolDescCompass": "Kompensierter Richtungskompass mit Magnetfeld-Status",
   "compassHeading": "Kurs",

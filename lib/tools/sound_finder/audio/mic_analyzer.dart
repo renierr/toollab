@@ -166,6 +166,10 @@ class MicAnalyzer {
       StreamController<MicAnalysis>.broadcast();
   Stream<MicAnalysis> get stream => _controller.stream;
 
+  final StreamController<Float32List> _pcmController =
+      StreamController<Float32List>.broadcast();
+  Stream<Float32List> get pcmStream => _pcmController.stream;
+
   bool _running = false;
   bool get isRunning => _running;
 
@@ -221,7 +225,10 @@ class MicAnalyzer {
       count * 2,
     );
     final double g = gain;
-    final Float32List? rec = _recording ? Float32List(count) : null;
+    final bool pcmListeners = _pcmController.hasListener;
+    final Float32List? rec = (_recording || pcmListeners)
+        ? Float32List(count)
+        : null;
     for (int i = 0; i < count; i++) {
       final double sample = view.getInt16(i * 2, Endian.little) / 32768.0;
       final double v = g == 1.0 ? sample : (sample * g).clamp(-1.0, 1.0);
@@ -235,7 +242,10 @@ class MicAnalyzer {
         _filled = _fftSize - _hop;
       }
     }
-    if (rec != null) _appendRecording(rec);
+    if (rec != null) {
+      if (_recording) _appendRecording(rec);
+      if (pcmListeners) _pcmController.add(rec);
+    }
   }
 
   void _analyze() {
@@ -304,5 +314,6 @@ class MicAnalyzer {
       await _recorder.dispose();
     } catch (_) {}
     await _controller.close();
+    await _pcmController.close();
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:record/record.dart';
 
 import '../../helpers/temp_file_manager.dart';
@@ -12,8 +13,11 @@ import 'audio/doppler_analyzer.dart';
 import 'audio/mic_analyzer.dart';
 import 'audio/tone_generator.dart';
 import 'config.dart';
+import 'morse/morse_audio_renderer.dart';
+import 'morse/morse_converter.dart';
+import 'morse/morse_decoder.dart';
 
-enum SfMode { tracker, counter, generator, doppler }
+enum SfMode { tracker, counter, generator, doppler, morse }
 
 enum MicStatus { idle, running, denied, unavailable }
 
@@ -82,6 +86,33 @@ class SoundFinderState extends ChangeNotifier {
   bool _tonePlaying = false;
   SfMode? _toneOwner;
 
+  // Morse fields.
+  double _morseWpm = 20;
+  double _morseFreq = 600;
+  double _morseVolume = 0.5;
+  String _morsePlayMode = 'both'; // 'both', 'sound', 'flash'
+  String _morseInputText = 'HELLO WORLD';
+  String _morseDecodedText = '';
+  bool _morsePlaying = false;
+  int _morsePlayingTokenIndex = -1;
+  bool _morseFlashActive = false;
+  int _morsePlaybackSessionId = 0;
+  SoundHandle? _morseHandle;
+  AudioSource? _morseSource;
+
+  // Live listening / decoding.
+  bool _morseListening = false;
+  StreamSubscription<Float32List>? _morsePcmSub;
+  final List<Float32List> _morseChunks = [];
+  Timer? _morseDecodeTimer;
+  bool _morseIsDecodingLive = false;
+
+  // Morse settings keys
+  static const String _kMorseWpm = 'morse_wpm';
+  static const String _kMorseFreq = 'morse_freq';
+  static const String _kMorsePlayMode = 'morse_play_mode';
+  static const String _kMorseVolume = 'morse_volume';
+
   SoundFinderState() {
     _micSub = _mic.stream.listen(_onAnalysis);
     _tone.onExternalStop = _onToneExternalStop;
@@ -131,6 +162,18 @@ class SoundFinderState extends ChangeNotifier {
   bool get generatorPlaying => _tonePlaying && _toneOwner == SfMode.generator;
   bool get counterPlaying => _tonePlaying && _toneOwner == SfMode.counter;
 
+  double get morseWpm => _morseWpm;
+  double get morseFreq => _morseFreq;
+  double get morseVolume => _morseVolume;
+  String get morsePlayMode => _morsePlayMode;
+  String get morseInputText => _morseInputText;
+  String get morseDecodedText => _morseDecodedText;
+  bool get morsePlaying => _morsePlaying;
+  int get morsePlayingTokenIndex => _morsePlayingTokenIndex;
+  bool get morseFlashActive => _morseFlashActive;
+  bool get morseListening => _morseListening;
+  bool get morseIsDecodingLive => _morseIsDecodingLive;
+
   /// Loudness normalized to 0..1 over a -70..0 dBFS range for the meter.
   double get levelNorm => ((_smoothDb + 70) / 70).clamp(0.0, 1.0);
 
@@ -157,9 +200,11 @@ class SoundFinderState extends ChangeNotifier {
     _mode = mode;
     // Stop any tone when switching context to avoid surprise playback.
     if (_tonePlaying) await _stopTone();
+    if (_morsePlaying) await stopMorsePlayback();
+    if (_morseListening) await stopMorseListening();
     notifyListeners();
 
-    if (mode == SfMode.generator) {
+    if (mode == SfMode.generator || mode == SfMode.morse) {
       await _stopMic();
     } else {
       await ensureMic();
@@ -474,6 +519,8 @@ class SoundFinderState extends ChangeNotifier {
   /// off again in the tool.
   Future<void> onPageLeave() async {
     await _stopMic();
+    await stopMorsePlayback();
+    await stopMorseListening();
     _peakHoldDb = -90;
     _referenceDb = null;
     _suspended = false;
@@ -517,9 +564,285 @@ class SoundFinderState extends ChangeNotifier {
     _tone.notificationText = text;
   }
 
+  // --- Morse Actions ---
+
+  void setMorseWpm(double val) {
+    _morseWpm = val.clamp(10, 45);
+    _save(_kMorseWpm, _morseWpm.toStringAsFixed(0));
+    notifyListeners();
+  }
+
+  void setMorseFreq(double val) {
+    _morseFreq = val.clamp(400, 1000);
+    _save(_kMorseFreq, _morseFreq.toStringAsFixed(0));
+    notifyListeners();
+  }
+
+  void setMorseVolume(double val) {
+    _morseVolume = val.clamp(0.0, 1.0);
+    _save(_kMorseVolume, _morseVolume.toStringAsFixed(2));
+    if (_morsePlaying && _morseHandle != null) {
+      SoLoud.instance.setVolume(_morseHandle!, _morseVolume);
+    }
+    notifyListeners();
+  }
+
+  void setMorsePlayMode(String val) {
+    _morsePlayMode = val;
+    _save(_kMorsePlayMode, val);
+    notifyListeners();
+  }
+
+  void setMorseInputText(String val) {
+    _morseInputText = val;
+    notifyListeners();
+  }
+
+  Future<void> startMorsePlayback() async {
+    if (_morsePlaying) return;
+    _morsePlaying = true;
+    _morsePlayingTokenIndex = -1;
+    _morseFlashActive = false;
+    notifyListeners();
+
+    final int sessionId = ++_morsePlaybackSessionId;
+    final tokens = MorseConverter.tokenize(_morseInputText);
+    if (tokens.isEmpty) {
+      _morsePlaying = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      if (!SoLoud.instance.isInitialized) {
+        await SoLoud.instance.init();
+      }
+
+      final bool playSound =
+          _morsePlayMode == 'both' || _morsePlayMode == 'sound';
+      final bool playFlash =
+          _morsePlayMode == 'both' || _morsePlayMode == 'flash';
+
+      if (playSound) {
+        final wavBytes = await MorseAudioRenderer.render(
+          tokens: tokens,
+          wpm: _morseWpm,
+          frequency: _morseFreq,
+        );
+
+        if (sessionId != _morsePlaybackSessionId) return;
+
+        final AudioSource source = await SoLoud.instance.loadMem(
+          'sf_morse_$sessionId.wav',
+          wavBytes,
+        );
+        _morseSource = source;
+
+        final SoundHandle handle = SoLoud.instance.play(
+          source,
+          volume: _morseVolume,
+        );
+        _morseHandle = handle;
+      }
+
+      final double unitSec = 1.2 / _morseWpm;
+      final int unitMs = (unitSec * 1000).round();
+
+      for (int i = 0; i < tokens.length; i++) {
+        if (sessionId != _morsePlaybackSessionId) return;
+
+        _morsePlayingTokenIndex = i;
+        notifyListeners();
+
+        final token = tokens[i];
+        if (token.isWordGap) {
+          await Future.delayed(Duration(milliseconds: 7 * unitMs));
+        } else if (token.isCharGap) {
+          await Future.delayed(Duration(milliseconds: 3 * unitMs));
+        } else {
+          final code = token.morse;
+          for (int j = 0; j < code.length; j++) {
+            if (sessionId != _morsePlaybackSessionId) return;
+
+            final sym = code[j];
+            final int durUnits = sym == '-' ? 3 : 1;
+
+            if (playFlash) {
+              _morseFlashActive = true;
+              notifyListeners();
+            }
+
+            await Future.delayed(Duration(milliseconds: durUnits * unitMs));
+
+            if (playFlash) {
+              _morseFlashActive = false;
+              notifyListeners();
+            }
+
+            if (j < code.length - 1) {
+              await Future.delayed(Duration(milliseconds: 1 * unitMs));
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[SoundFinderState] Morse playback failed: $e');
+    } finally {
+      if (sessionId == _morsePlaybackSessionId) {
+        await stopMorsePlayback();
+      }
+    }
+  }
+
+  Future<void> stopMorsePlayback() async {
+    _morsePlaybackSessionId++;
+    _morsePlaying = false;
+    _morsePlayingTokenIndex = -1;
+    _morseFlashActive = false;
+
+    final handle = _morseHandle;
+    final source = _morseSource;
+    _morseHandle = null;
+    _morseSource = null;
+
+    if (handle != null) {
+      await SoLoud.instance.stop(handle);
+    }
+    if (source != null) {
+      SoLoud.instance.disposeSource(source);
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> startMorseListening() async {
+    if (_morseListening) return;
+
+    final hasPerm = await _mic.hasPermission();
+    if (!hasPerm) {
+      _micStatus = MicStatus.denied;
+      notifyListeners();
+      return;
+    }
+
+    final startRes = await _mic.start();
+    if (startRes != MicStartResult.ok) {
+      _micStatus = startRes == MicStartResult.denied
+          ? MicStatus.denied
+          : MicStatus.unavailable;
+      notifyListeners();
+      return;
+    }
+
+    _micStatus = MicStatus.running;
+    _morseListening = true;
+    _morseDecodedText = '';
+    _morseChunks.clear();
+    _morseFlashActive = false;
+    notifyListeners();
+
+    _morsePcmSub = _mic.pcmStream.listen((chunk) {
+      double sumSq = 0;
+      for (int i = 0; i < chunk.length; i++) {
+        sumSq += chunk[i] * chunk[i];
+      }
+      final double rms = math.sqrt(sumSq / chunk.length);
+
+      final bool active = rms > 0.008;
+      if (active != _morseFlashActive) {
+        _morseFlashActive = active;
+        notifyListeners();
+      }
+
+      const int maxSamples = MicAnalyzer.sampleRate * 60;
+      int currentSamples = _morseChunks.fold(
+        0,
+        (sum, element) => sum + element.length,
+      );
+      if (currentSamples + chunk.length <= maxSamples) {
+        _morseChunks.add(chunk);
+      } else {
+        if (_morseChunks.isNotEmpty) {
+          _morseChunks.removeAt(0);
+        }
+        _morseChunks.add(chunk);
+      }
+    });
+
+    _morseDecodeTimer = Timer.periodic(const Duration(seconds: 2), (
+      timer,
+    ) async {
+      if (_morseChunks.isEmpty || _morseIsDecodingLive) return;
+
+      _morseIsDecodingLive = true;
+      notifyListeners();
+
+      try {
+        int totalLength = _morseChunks.fold(
+          0,
+          (sum, element) => sum + element.length,
+        );
+        final Float32List combined = Float32List(totalLength);
+        int offset = 0;
+        for (final chunk in _morseChunks) {
+          combined.setRange(offset, offset + chunk.length, chunk);
+          offset += chunk.length;
+        }
+
+        final decoded = await MorseDecoder.decode(
+          samples: combined,
+          sampleRate: MicAnalyzer.sampleRate,
+        );
+
+        if (_morseListening) {
+          _morseDecodedText = decoded;
+        }
+      } catch (e) {
+        debugPrint('[SoundFinderState] Live decode error: $e');
+      } finally {
+        _morseIsDecodingLive = false;
+        notifyListeners();
+      }
+    });
+  }
+
+  Future<void> stopMorseListening() async {
+    if (!_morseListening) return;
+    _morseListening = false;
+    _morseFlashActive = false;
+    _morseIsDecodingLive = false;
+
+    await _morsePcmSub?.cancel();
+    _morsePcmSub = null;
+
+    _morseDecodeTimer?.cancel();
+    _morseDecodeTimer = null;
+
+    _morseChunks.clear();
+
+    await _stopMic();
+    notifyListeners();
+  }
+
+  void clearMorseDecodedText() {
+    _morseDecodedText = '';
+    _morseChunks.clear();
+    notifyListeners();
+  }
+
   Future<void> _restore() async {
     final db = DatabaseService.instance;
     final genFreq = await db.getSetting(_toolId, _kGenFreq);
+    final morseWpm = await db.getSetting(_toolId, _kMorseWpm);
+    final morseFreq = await db.getSetting(_toolId, _kMorseFreq);
+    final morsePlayMode = await db.getSetting(_toolId, _kMorsePlayMode);
+    final morseVolume = await db.getSetting(_toolId, _kMorseVolume);
+
+    _morseWpm = double.tryParse(morseWpm ?? '')?.clamp(10.0, 45.0) ?? 20.0;
+    _morseFreq =
+        double.tryParse(morseFreq ?? '')?.clamp(400.0, 1000.0) ?? 600.0;
+    _morsePlayMode = morsePlayMode ?? 'both';
+    _morseVolume = double.tryParse(morseVolume ?? '')?.clamp(0.0, 1.0) ?? 0.5;
     final genWave = await db.getSetting(_toolId, _kGenWave);
     final genVol = await db.getSetting(_toolId, _kGenVol);
     final ctrWave = await db.getSetting(_toolId, _kCtrWave);
@@ -571,6 +894,8 @@ class SoundFinderState extends ChangeNotifier {
   @override
   void dispose() {
     _micSub?.cancel();
+    _morsePcmSub?.cancel();
+    _morseDecodeTimer?.cancel();
     _mic.dispose();
     _tone.dispose();
     super.dispose();

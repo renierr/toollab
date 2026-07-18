@@ -2718,6 +2718,18 @@
       }
     }
   },
+  "sfTitleMorse": "Morse Code",
+  "sfMorseGenTab": "Generate",
+  "sfMorseAnalTab": "Analyze",
+  "sfMorseWpm": "Morse Speed",
+  "sfMorsePlayMode": "Signal Mode",
+  "sfMorsePlayBoth": "Sound & Flash",
+  "sfMorsePlaySound": "Sound only",
+  "sfMorsePlayFlash": "Flash only",
+  "sfMorsePlaceholder": "Message to encode...",
+  "sfMorseDecodedOutput": "Decoded Text",
+  "sfMorseLiveListening": "Listening...",
+  "sfMorseExportSuccess": "Morse audio exported successfully",
   "toolNameCompass": "Compass",
   "toolDescCompass": "Tilt-compensated heading dial with magnetic status",
   "compassHeading": "Heading",
