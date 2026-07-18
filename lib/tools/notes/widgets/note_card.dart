@@ -9,6 +9,7 @@ import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/tools/notes/widgets/note_card_tags.dart';
 
 class NoteCard extends StatelessWidget {
   final Map<String, dynamic> note;
@@ -85,53 +86,6 @@ class NoteCard extends StatelessWidget {
       title: _getTitle(
         content,
         untitledFallback: AppLocalizations.of(context).notesUntitledNote,
-      ),
-    );
-  }
-
-  Widget _buildTags(BuildContext context) {
-    final tags = (note['tags'] as List<dynamic>?)?.cast<String>() ?? [];
-    if (tags.isEmpty) return const SizedBox.shrink();
-
-    const maxVisible = 3;
-    final visible = tags.take(maxVisible).toList();
-    final remaining = tags.length - maxVisible;
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width - 40,
-      ),
-      child: Wrap(
-        spacing: 4,
-        runSpacing: 4,
-        children: [
-          ...visible.map(
-            (tag) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppTheme.accentTeal.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                tag,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppTheme.accentTeal.withValues(alpha: 0.85),
-                ),
-              ),
-            ),
-          ),
-          if (remaining > 0)
-            Text(
-              '+$remaining',
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.4),
-              ),
-            ),
-        ],
       ),
     );
   }
@@ -301,7 +255,10 @@ class NoteCard extends StatelessWidget {
                       ),
                     ),
                   const SizedBox(height: 8),
-                  _buildTags(context),
+                  NoteCardTags(
+                    tags:
+                        (note['tags'] as List<dynamic>?)?.cast<String>() ?? [],
+                  ),
                   if (isConstrained) const Spacer(),
                   const SizedBox(height: 4),
                   Row(

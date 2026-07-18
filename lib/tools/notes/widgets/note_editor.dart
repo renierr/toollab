@@ -14,6 +14,8 @@ import 'package:tool_lab/widgets/zoomable_area.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/tools/notes/widgets/tag_input.dart';
 import 'package:tool_lab/tools/notes/widgets/markdown_text_editing_controller.dart';
+import 'package:tool_lab/tools/notes/widgets/note_editor_toolbar.dart';
+import 'package:tool_lab/tools/notes/widgets/note_editor_text_field.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 
 enum NoteEditMode { live, source, preview }
@@ -317,104 +319,6 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     _focusNode.requestFocus();
   }
 
-  Widget _buildToolbar(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final items = [
-      (
-        Icons.format_bold,
-        l10n.notesToolbarBold,
-        () => _insertText('**', suffix: '**'),
-      ),
-      (
-        Icons.format_italic,
-        l10n.notesToolbarItalic,
-        () => _insertText('*', suffix: '*'),
-      ),
-      (
-        Icons.format_strikethrough,
-        l10n.notesToolbarStrikethrough,
-        () => _insertText('~~', suffix: '~~'),
-      ),
-      (Icons.looks_one, l10n.notesToolbarH1, () => _insertText('# ')),
-      (Icons.looks_two, l10n.notesToolbarH2, () => _insertText('## ')),
-      (Icons.looks_3, l10n.notesToolbarH3, () => _insertText('### ')),
-      (
-        Icons.format_list_bulleted,
-        l10n.notesToolbarList,
-        () => _insertText('- '),
-      ),
-      (
-        Icons.check_box_outlined,
-        l10n.notesToolbarTodo,
-        () => _insertText('- [ ] '),
-      ),
-      (
-        Icons.link,
-        l10n.notesToolbarLink,
-        () => _insertText('[', suffix: '](url)'),
-      ),
-      (Icons.code, l10n.notesToolbarCode, () => _insertText('`', suffix: '`')),
-      (
-        Icons.integration_instructions,
-        l10n.notesToolbarCodeBlock,
-        () => _insertText('\n```\n', suffix: '\n```\n'),
-      ),
-      (
-        Icons.add_photo_alternate_outlined,
-        l10n.notesToolbarImage,
-        () => _showImageSourceDialog(),
-      ),
-    ];
-
-    return Container(
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      width: double.infinity,
-      child: Wrap(
-        spacing: 4,
-        runSpacing: 4,
-        children: items.map((item) {
-          return Tooltip(
-            message: item.$2,
-            child: IconButton(
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              padding: EdgeInsets.zero,
-              icon: Icon(item.$1, size: 20),
-              onPressed: item.$3,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildTextField(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: theme.colorScheme.surface,
-      child: TextField(
-        controller: _controller,
-        focusNode: _focusNode,
-        maxLines: null,
-        keyboardType: TextInputType.multiline,
-        style: TextStyle(
-          fontFamily: _editMode == NoteEditMode.source ? 'monospace' : null,
-          fontSize: 14,
-          height: 1.5,
-          color: theme.colorScheme.onSurface,
-        ),
-        decoration: InputDecoration(
-          hintText: l10n.notesEditorHint,
-          border: InputBorder.none,
-        ),
-      ),
-    );
-  }
-
   Future<bool> _showDiscardDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmActionDialog.show(
@@ -601,7 +505,20 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
         body: Column(
           children: [
             if (_editMode != NoteEditMode.preview) ...[
-              _buildToolbar(context),
+              NoteEditorToolbar(
+                onBold: () => _insertText('**', suffix: '**'),
+                onItalic: () => _insertText('*', suffix: '*'),
+                onStrikethrough: () => _insertText('~~', suffix: '~~'),
+                onH1: () => _insertText('# '),
+                onH2: () => _insertText('## '),
+                onH3: () => _insertText('### '),
+                onList: () => _insertText('- '),
+                onTodo: () => _insertText('- [ ] '),
+                onLink: () => _insertText('[', suffix: '](url)'),
+                onCode: () => _insertText('`', suffix: '`'),
+                onCodeBlock: () => _insertText('\n```\n', suffix: '\n```\n'),
+                onImage: () => _showImageSourceDialog(),
+              ),
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
                 color: theme.colorScheme.surfaceContainerHighest.withValues(
@@ -636,7 +553,11 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                             ),
                           ),
                     )
-                  : _buildTextField(context),
+                  : NoteEditorTextField(
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      isMonospace: _editMode == NoteEditMode.source,
+                    ),
             ),
           ],
         ),
