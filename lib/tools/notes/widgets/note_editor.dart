@@ -155,7 +155,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
 
       final sanitizedName = name.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
       final inlineTag = '![$sanitizedName|300][$refLabel]';
-      final refDefinition = '\n[$refLabel]: data:image/jpeg;base64,$base64Str';
+      final refDefinition = '[$refLabel]: data:image/jpeg;base64,$base64Str';
 
       final selection = _controller.selection;
       final start = selection.start;
@@ -175,9 +175,9 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
       }
 
       if (updatedText.endsWith('\n')) {
-        updatedText = '$updatedText\n$refDefinition\n';
+        updatedText = '$updatedText$refDefinition\n';
       } else {
-        updatedText = '$updatedText\n\n$refDefinition\n';
+        updatedText = '$updatedText\n$refDefinition\n';
       }
 
       _controller.isProgrammaticUpdate = true;
