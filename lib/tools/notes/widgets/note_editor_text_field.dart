@@ -18,22 +18,24 @@ class NoteEditorTextField extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
       color: theme.colorScheme.surface,
       child: TextField(
         controller: controller,
         focusNode: focusNode,
         maxLines: null,
         keyboardType: TextInputType.multiline,
+        clipBehavior: Clip.none,
         style: TextStyle(
           fontFamily: isMonospace ? 'monospace' : null,
-          fontSize: 14,
+          fontSize: 16,
           height: 1.5,
           color: theme.colorScheme.onSurface,
         ),
         decoration: InputDecoration(
           hintText: l10n.notesEditorHint,
           border: InputBorder.none,
+          contentPadding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
         ),
       ),
     );

@@ -200,13 +200,35 @@ class MarkdownSpanBuilder {
     ThemeData theme,
   ) {
     final fadedColor = theme.colorScheme.onSurface.withValues(alpha: 0.25);
-    final double sizeMultiplier = 1.0 + (7 - level) * 0.15;
-    final headerStyle = baseStyle.copyWith(
-      fontSize: baseStyle.fontSize != null
-          ? baseStyle.fontSize! * sizeMultiplier
-          : 14.0 * sizeMultiplier,
-      fontWeight: FontWeight.bold,
-    );
+
+    TextStyle headerStyle;
+    switch (level) {
+      case 1:
+        headerStyle =
+            theme.textTheme.headlineMedium?.copyWith(color: accentColor) ??
+            baseStyle;
+        break;
+      case 2:
+        headerStyle = theme.textTheme.headlineSmall ?? baseStyle;
+        break;
+      case 3:
+        headerStyle = theme.textTheme.titleLarge ?? baseStyle;
+        break;
+      case 4:
+        headerStyle = theme.textTheme.titleMedium ?? baseStyle;
+        break;
+      case 5:
+        headerStyle = theme.textTheme.titleSmall ?? baseStyle;
+        break;
+      case 6:
+      default:
+        headerStyle = theme.textTheme.bodyLarge ?? baseStyle;
+        break;
+    }
+
+    headerStyle = baseStyle
+        .merge(headerStyle)
+        .copyWith(fontWeight: FontWeight.bold, height: 1.2);
 
     return TextSpan(
       children: [

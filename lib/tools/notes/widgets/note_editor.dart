@@ -303,6 +303,36 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     return confirmed ?? false;
   }
 
+  String _getTitle(String content) {
+    final lines = content.split('\n');
+    for (final line in lines) {
+      final trimmed = line.trim();
+      if (trimmed.startsWith('# ')) {
+        return trimmed.substring(2).trim();
+      } else if (trimmed.isNotEmpty) {
+        if (trimmed.startsWith('## ') || trimmed.startsWith('### ')) {
+          return trimmed.replaceAll(RegExp(r'^#+\s+'), '').trim();
+        }
+        return trimmed;
+      }
+    }
+    return 'Untitled';
+  }
+
+  String _getPureContent(String content) {
+    final lines = content.split('\n');
+    int titleIdx = -1;
+    for (int i = 0; i < lines.length; i++) {
+      if (lines[i].trim().isNotEmpty) {
+        titleIdx = i;
+        break;
+      }
+    }
+    if (titleIdx == -1) return '';
+    final remainingLines = lines.skip(titleIdx + 1).toList();
+    return remainingLines.join('\n').trim();
+  }
+
   int _findRefSectionStart(String txt) {
     final match = RegExp(r'\[img_ref_\d+\]: data:image/').firstMatch(txt);
     return match?.start ?? -1;
@@ -579,26 +609,57 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                 child: _editMode == NoteEditMode.preview
                     ? ZoomableArea(
                         accentColor: AppTheme.accentTeal,
-                        builder: (context, scale, physics) =>
-                            SingleChildScrollView(
-                              physics: physics,
-                              child: Container(
-                                color: theme.colorScheme.surface,
-                                padding: const EdgeInsets.all(16),
-                                width: double.infinity,
-                                child: MarkdownView(
-                                  data: _controller.text,
-                                  selectable: true,
-                                  accentColor: AppTheme.accentTeal,
-                                  scale: scale,
-                                ),
+                        builder: (context, scale, physics) {
+                          final content = _controller.text;
+                          final title = _getTitle(content);
+                          final body = _getPureContent(content);
+                          return SingleChildScrollView(
+                            physics: physics,
+                            child: Container(
+                              color: theme.colorScheme.surface,
+                              padding: const EdgeInsets.all(24),
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: theme.textTheme.headlineMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.accentTeal,
+                                        ),
+                                  ),
+                                  const Divider(height: 32),
+                                  if (body.isEmpty)
+                                    Text(
+                                      l10n.widgetMarkdownNoContent,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontStyle: FontStyle.italic,
+                                            color: theme.colorScheme.onSurface
+                                                .withValues(alpha: 0.4),
+                                          ),
+                                    )
+                                  else
+                                    MarkdownView(
+                                      data: body,
+                                      selectable: true,
+                                      accentColor: AppTheme.accentTeal,
+                                      scale: scale,
+                                    ),
+                                ],
                               ),
                             ),
+                          );
+                        },
                       )
-                    : NoteEditorTextField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        isMonospace: _editMode == NoteEditMode.source,
+                    : ClipRect(
+                        child: NoteEditorTextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          isMonospace: _editMode == NoteEditMode.source,
+                        ),
                       ),
               ),
             ],
