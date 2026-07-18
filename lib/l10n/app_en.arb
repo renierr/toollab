@@ -1077,6 +1077,7 @@
   "notesImageSourceClipboard": "Paste from Clipboard",
   "notesImageSourceClipboardEmpty": "No image in clipboard",
   "notesImageProcessing": "Processing image...",
+  "notesAttachmentReadOnly": "Attachment data section is read-only",
   "notesToolbarBold": "Bold",
   "notesToolbarItalic": "Italic",
   "notesToolbarStrikethrough": "Strikethrough",

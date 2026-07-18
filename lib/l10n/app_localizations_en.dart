@@ -2011,6 +2011,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesImageProcessing => 'Processing image...';
 
   @override
+  String get notesAttachmentReadOnly => 'Attachment data section is read-only';
+
+  @override
   String get notesToolbarBold => 'Bold';
 
   @override

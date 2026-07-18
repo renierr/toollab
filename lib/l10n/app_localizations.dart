@@ -3692,6 +3692,12 @@ abstract class AppLocalizations {
   /// **'Processing image...'**
   String get notesImageProcessing;
 
+  /// No description provided for @notesAttachmentReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment data section is read-only'**
+  String get notesAttachmentReadOnly;
+
   /// No description provided for @notesToolbarBold.
   ///
   /// In en, this message translates to:

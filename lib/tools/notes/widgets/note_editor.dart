@@ -180,10 +180,12 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
         updatedText = '$updatedText\n\n$refDefinition\n';
       }
 
+      _controller.isProgrammaticUpdate = true;
       _controller.value = TextEditingValue(
         text: updatedText,
         selection: TextSelection.collapsed(offset: newCursorPos),
       );
+      _controller.isProgrammaticUpdate = false;
     } catch (e) {
       debugPrint('[NoteEditor] Failed to process image: $e');
       if (mounted) {

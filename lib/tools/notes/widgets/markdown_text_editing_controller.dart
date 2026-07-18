@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class MarkdownTextEditingController extends TextEditingController {
   final BuildContext context;
   bool showRawSource;
   final Color accentColor;
+  bool isProgrammaticUpdate = false;
 
   MarkdownTextEditingController({
     required this.context,
@@ -12,6 +14,58 @@ class MarkdownTextEditingController extends TextEditingController {
     this.showRawSource = false,
     this.accentColor = AppTheme.accentTeal,
   });
+
+  int _findRefSectionStart(String txt) {
+    final match = RegExp(r'\[img_ref_\d+\]: data:image/').firstMatch(txt);
+    return match?.start ?? -1;
+  }
+
+  void _showReadOnlyWarning() {
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.notesAttachmentReadOnly),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  set value(TextEditingValue newValue) {
+    if (isProgrammaticUpdate || showRawSource) {
+      super.value = newValue;
+      return;
+    }
+
+    final oldText = text;
+    final oldRefStart = _findRefSectionStart(oldText);
+
+    if (oldRefStart == -1) {
+      super.value = newValue;
+      return;
+    }
+
+    final oldRefText = oldText.substring(oldRefStart);
+    final newText = newValue.text;
+
+    if (!newText.endsWith(oldRefText)) {
+      if (newText.isEmpty) {
+        super.value = newValue;
+        return;
+      }
+      _showReadOnlyWarning();
+      return;
+    }
+
+    final newRefStart = newText.length - oldRefText.length;
+    if (newRefStart > 0 && newText[newRefStart - 1] != '\n') {
+      _showReadOnlyWarning();
+      return;
+    }
+
+    super.value = newValue;
+  }
 
   @override
   TextSpan buildTextSpan({
@@ -34,6 +88,7 @@ class MarkdownTextEditingController extends TextEditingController {
     final lines = text.split('\n');
     final spans = <TextSpan>[];
     bool inCodeBlock = false;
+    bool firstRefSeen = false;
 
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i];
@@ -64,24 +119,42 @@ class MarkdownTextEditingController extends TextEditingController {
         final previewData = base64Data.length > 30
             ? '${base64Data.substring(0, 30)}...'
             : base64Data;
+
+        final isFirst = !firstRefSeen;
+        if (isFirst) firstRefSeen = true;
+
+        final refBgColor = theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.15,
+        );
+        final lineStyle = baseTextStyle.copyWith(
+          backgroundColor: refBgColor,
+          decoration: isFirst ? TextDecoration.overline : null,
+          decorationColor: isFirst ? theme.colorScheme.outlineVariant : null,
+          decorationThickness: isFirst ? 2.0 : null,
+        );
+
         lineSpan = TextSpan(
+          style: lineStyle,
           children: [
             TextSpan(
               text: prefix,
-              style: baseTextStyle.copyWith(color: accentColor),
+              style: lineStyle.copyWith(
+                color: accentColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             TextSpan(
               text: mime,
-              style: baseTextStyle.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              style: lineStyle.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
               ),
             ),
             TextSpan(
               text: previewData,
-              style: TextStyle(
+              style: lineStyle.copyWith(
                 fontFamily: 'monospace',
                 fontSize: 12,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.25),
               ),
             ),
           ],
