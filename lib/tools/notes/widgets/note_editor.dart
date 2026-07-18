@@ -4,9 +4,13 @@ import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
+import 'package:tool_lab/widgets/markdown_view.dart';
+import 'package:tool_lab/widgets/zoomable_area.dart';
 import 'package:tool_lab/tools/notes/widgets/tag_input.dart';
 import 'package:tool_lab/tools/notes/widgets/markdown_text_editing_controller.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+
+enum NoteEditMode { live, source, preview }
 
 class NoteEditor extends StatefulWidget {
   final int? id;
@@ -74,7 +78,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     return KeyEventResult.handled;
   }
 
-  bool _showRawSource = false;
+  NoteEditMode _editMode = NoteEditMode.live;
 
   @override
   void initState() {
@@ -83,7 +87,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
       context: context,
       text: widget.initialContent,
       accentColor: AppTheme.accentTeal,
-      showRawSource: _showRawSource,
+      showRawSource: _editMode == NoteEditMode.source,
     );
     onDispose(_controller.dispose);
     _focusNode = FocusNode(onKeyEvent: _handleEnter);
@@ -200,7 +204,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
         maxLines: null,
         keyboardType: TextInputType.multiline,
         style: TextStyle(
-          fontFamily: _showRawSource ? 'monospace' : null,
+          fontFamily: _editMode == NoteEditMode.source ? 'monospace' : null,
           fontSize: 14,
           height: 1.5,
           color: theme.colorScheme.onSurface,
@@ -276,20 +280,46 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
             },
           ),
           actions: [
-            IconButton(
-              icon: Icon(
-                _showRawSource ? Icons.remove_red_eye_outlined : Icons.code,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: SegmentedButton<NoteEditMode>(
+                showSelectedIcon: false,
+                style: SegmentedButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                  selectedBackgroundColor: AppTheme.accentTeal.withValues(
+                    alpha: 0.2,
+                  ),
+                  selectedForegroundColor: AppTheme.accentTeal,
+                ),
+                segments: [
+                  ButtonSegment(
+                    value: NoteEditMode.live,
+                    icon: const Icon(Icons.edit_note, size: 20),
+                    tooltip: l10n.notesModeLiveTooltip,
+                  ),
+                  ButtonSegment(
+                    value: NoteEditMode.source,
+                    icon: const Icon(Icons.code, size: 20),
+                    tooltip: l10n.notesModeSourceTooltip,
+                  ),
+                  ButtonSegment(
+                    value: NoteEditMode.preview,
+                    icon: const Icon(Icons.visibility, size: 20),
+                    tooltip: l10n.notesModePreviewTooltip,
+                  ),
+                ],
+                selected: {_editMode},
+                onSelectionChanged: (newSelection) {
+                  setState(() {
+                    _editMode = newSelection.first;
+                    _controller.showRawSource =
+                        _editMode == NoteEditMode.source;
+                  });
+                },
               ),
-              tooltip: _showRawSource
-                  ? l10n.notesToggleLiveMode
-                  : l10n.notesToggleSourceMode,
-              onPressed: () {
-                setState(() {
-                  _showRawSource = !_showRawSource;
-                  _controller.showRawSource = _showRawSource;
-                });
-              },
             ),
+            const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.picture_as_pdf_outlined),
               tooltip: l10n.notesExportPdf,
@@ -315,21 +345,44 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
         ),
         body: Column(
           children: [
-            _buildToolbar(context),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.3,
+            if (_editMode != NoteEditMode.preview) ...[
+              _buildToolbar(context),
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
+                child: TagInput(
+                  tags: _tags,
+                  onTagsChanged: (tags) {
+                    setState(() => _tags = tags);
+                  },
+                  suggestions: widget.allTags,
+                ),
               ),
-              child: TagInput(
-                tags: _tags,
-                onTagsChanged: (tags) {
-                  setState(() => _tags = tags);
-                },
-                suggestions: widget.allTags,
-              ),
+            ],
+            Expanded(
+              child: _editMode == NoteEditMode.preview
+                  ? ZoomableArea(
+                      accentColor: AppTheme.accentTeal,
+                      builder: (context, scale, physics) =>
+                          SingleChildScrollView(
+                            physics: physics,
+                            child: Container(
+                              color: theme.colorScheme.surface,
+                              padding: const EdgeInsets.all(16),
+                              width: double.infinity,
+                              child: MarkdownView(
+                                data: _controller.text,
+                                selectable: true,
+                                accentColor: AppTheme.accentTeal,
+                                scale: scale,
+                              ),
+                            ),
+                          ),
+                    )
+                  : _buildTextField(context),
             ),
-            Expanded(child: _buildTextField(context)),
           ],
         ),
       ),

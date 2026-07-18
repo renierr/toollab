@@ -1981,6 +1981,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesToggleLiveMode => 'Show Styled Preview';
 
   @override
+  String get notesModeLiveTooltip => 'Live Editor (with markdown syntax)';
+
+  @override
+  String get notesModeSourceTooltip => 'Markdown Source (raw text)';
+
+  @override
+  String get notesModePreviewTooltip => 'Preview (without markdown syntax)';
+
+  @override
   String get notesToolbarBold => 'Bold';
 
   @override

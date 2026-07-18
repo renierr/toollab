@@ -2002,6 +2002,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesToggleLiveMode => 'Formatierte Vorschau anzeigen';
 
   @override
+  String get notesModeLiveTooltip => 'Live-Editor (mit Markdown-Syntax)';
+
+  @override
+  String get notesModeSourceTooltip => 'Markdown-Quelltext (Rohdaten)';
+
+  @override
+  String get notesModePreviewTooltip => 'Vorschau (ohne Markdown-Syntax)';
+
+  @override
   String get notesToolbarBold => 'Fett';
 
   @override

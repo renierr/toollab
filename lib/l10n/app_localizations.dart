@@ -3632,6 +3632,24 @@ abstract class AppLocalizations {
   /// **'Show Styled Preview'**
   String get notesToggleLiveMode;
 
+  /// No description provided for @notesModeLiveTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Editor (with markdown syntax)'**
+  String get notesModeLiveTooltip;
+
+  /// No description provided for @notesModeSourceTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Markdown Source (raw text)'**
+  String get notesModeSourceTooltip;
+
+  /// No description provided for @notesModePreviewTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview (without markdown syntax)'**
+  String get notesModePreviewTooltip;
+
   /// No description provided for @notesToolbarBold.
   ///
   /// In en, this message translates to:
