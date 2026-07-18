@@ -8840,17 +8840,17 @@ abstract class AppLocalizations {
   /// **'Export Workouts'**
   String get exportHistory;
 
-  /// No description provided for @toolNameSoundFinder.
+  /// No description provided for @toolNameAudioLab.
   ///
   /// In en, this message translates to:
-  /// **'Sound Finder'**
-  String get toolNameSoundFinder;
+  /// **'Audio Lab'**
+  String get toolNameAudioLab;
 
-  /// No description provided for @toolDescSoundFinder.
+  /// No description provided for @toolDescAudioLab.
   ///
   /// In en, this message translates to:
-  /// **'Locate, mask and generate room sounds with the microphone'**
-  String get toolDescSoundFinder;
+  /// **'Locate, mask, analyze, and generate audio signals'**
+  String get toolDescAudioLab;
 
   /// No description provided for @sfTitleFinder.
   ///

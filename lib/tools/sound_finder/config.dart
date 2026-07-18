@@ -11,14 +11,14 @@ class SoundFinderTool {
 
   static ToolModel get config => ToolModel(
     id: 'sound-finder',
-    name: 'Sound Finder',
-    description: 'Locate, mask and generate room sounds with the microphone',
+    name: 'Audio Lab',
+    description: 'Locate, mask, analyze, and generate audio signals',
     icon: Icons.hearing_outlined,
     route: '/sound-finder',
     accentColor: AppTheme.accentPurple,
     sectionId: 'sensors',
-    nameL10n: (l10n) => l10n.toolNameSoundFinder,
-    descriptionL10n: (l10n) => l10n.toolDescSoundFinder,
+    nameL10n: (l10n) => l10n.toolNameAudioLab,
+    descriptionL10n: (l10n) => l10n.toolDescAudioLab,
     stateProviders: () => [
       ChangeNotifierProvider<SoundFinderState>(
         create: (_) => SoundFinderState(),

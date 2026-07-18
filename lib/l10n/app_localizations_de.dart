@@ -4890,11 +4890,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get exportHistory => 'Workouts exportieren';
 
   @override
-  String get toolNameSoundFinder => 'Sound Finder';
+  String get toolNameAudioLab => 'Audio Lab';
 
   @override
-  String get toolDescSoundFinder =>
-      'Raumgeräusche mit dem Mikrofon orten, überdecken und erzeugen';
+  String get toolDescAudioLab =>
+      'Audio-Signale lokalisieren, maskieren, analysieren und generieren';
 
   @override
   String get sfTitleFinder => 'Finder';
