@@ -245,6 +245,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
   }
 
   NoteEditMode _editMode = NoteEditMode.live;
+  bool _optionsExpanded = true;
 
   @override
   void initState() {
@@ -392,145 +393,216 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.id == null
-                ? l10n.notesCreateNoteTitle
-                : l10n.notesEditNoteTitle,
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () async {
-              if (hasChanges) {
-                final shouldDiscard = await _showDiscardDialog(context);
-                if (shouldDiscard) {
-                  widget.onCancel();
-                }
-              } else {
-                widget.onCancel();
-              }
-            },
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: SegmentedButton<NoteEditMode>(
-                showSelectedIcon: false,
-                style: SegmentedButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  selectedBackgroundColor: AppTheme.accentTeal.withValues(
-                    alpha: 0.2,
-                  ),
-                  selectedForegroundColor: AppTheme.accentTeal,
-                ),
-                segments: [
-                  ButtonSegment(
-                    value: NoteEditMode.live,
-                    icon: const Icon(Icons.edit_note, size: 20),
-                    tooltip: l10n.notesModeLiveTooltip,
-                  ),
-                  ButtonSegment(
-                    value: NoteEditMode.source,
-                    icon: const Icon(Icons.code, size: 20),
-                    tooltip: l10n.notesModeSourceTooltip,
-                  ),
-                  ButtonSegment(
-                    value: NoteEditMode.preview,
-                    icon: const Icon(Icons.visibility, size: 20),
-                    tooltip: l10n.notesModePreviewTooltip,
-                  ),
-                ],
-                selected: {_editMode},
-                onSelectionChanged: (newSelection) {
-                  setState(() {
-                    _editMode = newSelection.first;
-                    _controller.showRawSource =
-                        _editMode == NoteEditMode.source;
-                  });
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf_outlined),
-              tooltip: l10n.notesExportPdf,
-              onPressed: _controller.text.trim().isEmpty
-                  ? null
-                  : () => _exportPdf(context),
-            ),
-            TextButton(
-              onPressed: _controller.text.trim().isEmpty ? null : _saveNote,
-              child: Text(
-                l10n.commonSave,
-                style: TextStyle(
-                  color: _controller.text.trim().isEmpty
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
-                      : AppTheme.accentTeal,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            if (_editMode != NoteEditMode.preview) ...[
-              NoteEditorToolbar(
-                onBold: () => _insertText('**', suffix: '**'),
-                onItalic: () => _insertText('*', suffix: '*'),
-                onStrikethrough: () => _insertText('~~', suffix: '~~'),
-                onH1: () => _insertText('# '),
-                onH2: () => _insertText('## '),
-                onH3: () => _insertText('### '),
-                onList: () => _insertText('- '),
-                onTodo: () => _insertText('- [ ] '),
-                onLink: () => _insertText('[', suffix: '](url)'),
-                onCode: () => _insertText('`', suffix: '`'),
-                onCodeBlock: () => _insertText('\n```\n', suffix: '\n```\n'),
-                onImage: () => _showImageSourceDialog(),
-              ),
+        appBar: null,
+        body: SafeArea(
+          child: Column(
+            children: [
               Container(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                color: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.3,
-                ),
-                child: TagInput(
-                  tags: _tags,
-                  onTagsChanged: (tags) {
-                    setState(() => _tags = tags);
-                  },
-                  suggestions: widget.allTags,
-                ),
-              ),
-            ],
-            Expanded(
-              child: _editMode == NoteEditMode.preview
-                  ? ZoomableArea(
-                      accentColor: AppTheme.accentTeal,
-                      builder: (context, scale, physics) =>
-                          SingleChildScrollView(
-                            physics: physics,
-                            child: Container(
-                              color: theme.colorScheme.surface,
-                              padding: const EdgeInsets.all(16),
-                              width: double.infinity,
-                              child: MarkdownView(
-                                data: _controller.text,
-                                selectable: true,
-                                accentColor: AppTheme.accentTeal,
-                                scale: scale,
+                color: theme.colorScheme.surface,
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _optionsExpanded = !_optionsExpanded;
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0,
+                          vertical: 6.0,
+                        ),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () async {
+                                if (hasChanges) {
+                                  final shouldDiscard =
+                                      await _showDiscardDialog(context);
+                                  if (shouldDiscard) {
+                                    widget.onCancel();
+                                  }
+                                } else {
+                                  widget.onCancel();
+                                }
+                              },
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                widget.id == null
+                                    ? l10n.notesCreateNoteTitle
+                                    : l10n.notesEditNoteTitle,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          ),
-                    )
-                  : NoteEditorTextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      isMonospace: _editMode == NoteEditMode.source,
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: Icon(
+                                Icons.save,
+                                color: _controller.text.trim().isEmpty
+                                    ? theme.colorScheme.onSurface.withValues(
+                                        alpha: 0.3,
+                                      )
+                                    : AppTheme.accentTeal,
+                              ),
+                              tooltip: l10n.commonSave,
+                              onPressed: _controller.text.trim().isEmpty
+                                  ? null
+                                  : _saveNote,
+                            ),
+                            const SizedBox(width: 4),
+                            AnimatedRotation(
+                              turns: _optionsExpanded ? 0.0 : -0.25,
+                              duration: const Duration(milliseconds: 200),
+                              child: const Icon(Icons.expand_more),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                        ),
+                      ),
                     ),
-            ),
-          ],
+                    const Divider(height: 1),
+                    AnimatedCrossFade(
+                      firstChild: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: Wrap(
+                              spacing: 8.0,
+                              runSpacing: 6.0,
+                              alignment: WrapAlignment.start,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                SegmentedButton<NoteEditMode>(
+                                  showSelectedIcon: false,
+                                  style: SegmentedButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    visualDensity: VisualDensity.compact,
+                                    selectedBackgroundColor: AppTheme.accentTeal
+                                        .withValues(alpha: 0.2),
+                                    selectedForegroundColor:
+                                        AppTheme.accentTeal,
+                                  ),
+                                  segments: [
+                                    ButtonSegment(
+                                      value: NoteEditMode.live,
+                                      icon: const Icon(
+                                        Icons.edit_note,
+                                        size: 20,
+                                      ),
+                                      tooltip: l10n.notesModeLiveTooltip,
+                                    ),
+                                    ButtonSegment(
+                                      value: NoteEditMode.source,
+                                      icon: const Icon(Icons.code, size: 20),
+                                      tooltip: l10n.notesModeSourceTooltip,
+                                    ),
+                                    ButtonSegment(
+                                      value: NoteEditMode.preview,
+                                      icon: const Icon(
+                                        Icons.visibility,
+                                        size: 20,
+                                      ),
+                                      tooltip: l10n.notesModePreviewTooltip,
+                                    ),
+                                  ],
+                                  selected: {_editMode},
+                                  onSelectionChanged: (newSelection) {
+                                    setState(() {
+                                      _editMode = newSelection.first;
+                                      _controller.showRawSource =
+                                          _editMode == NoteEditMode.source;
+                                    });
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.picture_as_pdf_outlined,
+                                  ),
+                                  tooltip: l10n.notesExportPdf,
+                                  onPressed: _controller.text.trim().isEmpty
+                                      ? null
+                                      : () => _exportPdf(context),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_editMode != NoteEditMode.preview) ...[
+                            NoteEditorToolbar(
+                              onBold: () => _insertText('**', suffix: '**'),
+                              onItalic: () => _insertText('*', suffix: '*'),
+                              onStrikethrough: () =>
+                                  _insertText('~~', suffix: '~~'),
+                              onH1: () => _insertText('# '),
+                              onH2: () => _insertText('## '),
+                              onH3: () => _insertText('### '),
+                              onList: () => _insertText('- '),
+                              onTodo: () => _insertText('- [ ] '),
+                              onLink: () => _insertText('[', suffix: '](url)'),
+                              onCode: () => _insertText('`', suffix: '`'),
+                              onCodeBlock: () =>
+                                  _insertText('\n```\n', suffix: '\n```\n'),
+                              onImage: () => _showImageSourceDialog(),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                              color: theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.3),
+                              child: TagInput(
+                                tags: _tags,
+                                onTagsChanged: (tags) {
+                                  setState(() => _tags = tags);
+                                },
+                                suggestions: widget.allTags,
+                              ),
+                            ),
+                          ],
+                          const Divider(height: 1),
+                        ],
+                      ),
+                      secondChild: const SizedBox(width: double.infinity),
+                      crossFadeState: _optionsExpanded
+                          ? CrossFadeState.showFirst
+                          : CrossFadeState.showSecond,
+                      duration: const Duration(milliseconds: 200),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _editMode == NoteEditMode.preview
+                    ? ZoomableArea(
+                        accentColor: AppTheme.accentTeal,
+                        builder: (context, scale, physics) =>
+                            SingleChildScrollView(
+                              physics: physics,
+                              child: Container(
+                                color: theme.colorScheme.surface,
+                                padding: const EdgeInsets.all(16),
+                                width: double.infinity,
+                                child: MarkdownView(
+                                  data: _controller.text,
+                                  selectable: true,
+                                  accentColor: AppTheme.accentTeal,
+                                  scale: scale,
+                                ),
+                              ),
+                            ),
+                      )
+                    : NoteEditorTextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        isMonospace: _editMode == NoteEditMode.source,
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

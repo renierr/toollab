@@ -1063,6 +1063,8 @@
   "notesExportPdf": "Export PDF",
   "notesCreateNoteTitle": "Create Note",
   "notesEditNoteTitle": "Edit Note",
+  "notesEditorToolbarTitle": "Formatting Tools",
+  "notesEditorTagsTitle": "Tags",
   "notesTabWrite": "Write",
   "notesTabPreview": "Preview",
   "notesToggleSourceMode": "Show Markdown Source",

@@ -1969,6 +1969,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesEditNoteTitle => 'Edit Note';
 
   @override
+  String get notesEditorToolbarTitle => 'Formatting Tools';
+
+  @override
+  String get notesEditorTagsTitle => 'Tags';
+
+  @override
   String get notesTabWrite => 'Write';
 
   @override

@@ -651,6 +651,8 @@
   "notesExportPdf": "Als PDF exportieren",
   "notesCreateNoteTitle": "Notiz erstellen",
   "notesEditNoteTitle": "Notiz bearbeiten",
+  "notesEditorToolbarTitle": "Formatierungswerkzeuge",
+  "notesEditorTagsTitle": "Tags",
   "notesTabWrite": "Schreiben",
   "notesTabPreview": "Vorschau",
   "notesToggleSourceMode": "Markdown-Quelltext anzeigen",

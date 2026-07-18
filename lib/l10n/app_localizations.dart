@@ -3608,6 +3608,18 @@ abstract class AppLocalizations {
   /// **'Edit Note'**
   String get notesEditNoteTitle;
 
+  /// No description provided for @notesEditorToolbarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Formatting Tools'**
+  String get notesEditorToolbarTitle;
+
+  /// No description provided for @notesEditorTagsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get notesEditorTagsTitle;
+
   /// No description provided for @notesTabWrite.
   ///
   /// In en, this message translates to:

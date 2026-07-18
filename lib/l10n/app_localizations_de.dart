@@ -1990,6 +1990,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesEditNoteTitle => 'Notiz bearbeiten';
 
   @override
+  String get notesEditorToolbarTitle => 'Formatierungswerkzeuge';
+
+  @override
+  String get notesEditorTagsTitle => 'Tags';
+
+  @override
   String get notesTabWrite => 'Schreiben';
 
   @override
