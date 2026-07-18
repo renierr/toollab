@@ -4,9 +4,9 @@ import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
-import 'package:tool_lab/widgets/markdown_view.dart';
-import 'package:tool_lab/widgets/zoomable_area.dart';
 import 'package:tool_lab/tools/notes/widgets/tag_input.dart';
+import 'package:tool_lab/tools/notes/widgets/markdown_text_editing_controller.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 
 class NoteEditor extends StatefulWidget {
   final int? id;
@@ -30,11 +30,9 @@ class NoteEditor extends StatefulWidget {
   State<NoteEditor> createState() => _NoteEditorState();
 }
 
-class _NoteEditorState extends State<NoteEditor>
-    with SingleTickerProviderStateMixin {
-  late final TextEditingController _controller;
+class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
+  late final MarkdownTextEditingController _controller;
   late final FocusNode _focusNode;
-  TabController? _tabController;
   late List<String> _tags;
 
   static final _listPrefix = RegExp(
@@ -76,24 +74,24 @@ class _NoteEditorState extends State<NoteEditor>
     return KeyEventResult.handled;
   }
 
+  bool _showRawSource = false;
+
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialContent);
+    _controller = MarkdownTextEditingController(
+      context: context,
+      text: widget.initialContent,
+      accentColor: AppTheme.accentTeal,
+      showRawSource: _showRawSource,
+    );
+    onDispose(_controller.dispose);
     _focusNode = FocusNode(onKeyEvent: _handleEnter);
-    _tabController = TabController(length: 2, vsync: this);
+    onDispose(_focusNode.dispose);
     _tags = List.from(widget.initialTags);
     _controller.addListener(() {
       setState(() {});
     });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
-    _tabController?.dispose();
-    super.dispose();
   }
 
   void _insertText(String prefix, {String suffix = ''}) {
@@ -201,46 +199,16 @@ class _NoteEditorState extends State<NoteEditor>
         focusNode: _focusNode,
         maxLines: null,
         keyboardType: TextInputType.multiline,
-        style: const TextStyle(
-          fontFamily: 'monospace',
+        style: TextStyle(
+          fontFamily: _showRawSource ? 'monospace' : null,
           fontSize: 14,
           height: 1.5,
+          color: theme.colorScheme.onSurface,
         ),
         decoration: InputDecoration(
           hintText: l10n.notesEditorHint,
           border: InputBorder.none,
         ),
-      ),
-    );
-  }
-
-  Widget _buildPreview(BuildContext context, double scale) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    if (_controller.text.trim().isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32.0),
-          child: Text(
-            l10n.notesEditorNoPreview,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      color: theme.colorScheme.surface,
-      padding: const EdgeInsets.all(16),
-      child: MarkdownView(
-        data: _controller.text,
-        selectable: true,
-        accentColor: AppTheme.accentTeal,
-        scale: scale,
       ),
     );
   }
@@ -271,8 +239,6 @@ class _NoteEditorState extends State<NoteEditor>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final width = MediaQuery.of(context).size.width;
-    final isWide = width >= 800;
     final hasChanges = _controller.text != widget.initialContent;
 
     return PopScope(
@@ -311,6 +277,20 @@ class _NoteEditorState extends State<NoteEditor>
           ),
           actions: [
             IconButton(
+              icon: Icon(
+                _showRawSource ? Icons.remove_red_eye_outlined : Icons.code,
+              ),
+              tooltip: _showRawSource
+                  ? l10n.notesToggleLiveMode
+                  : l10n.notesToggleSourceMode,
+              onPressed: () {
+                setState(() {
+                  _showRawSource = !_showRawSource;
+                  _controller.showRawSource = _showRawSource;
+                });
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.picture_as_pdf_outlined),
               tooltip: l10n.notesExportPdf,
               onPressed: _controller.text.trim().isEmpty
@@ -332,18 +312,6 @@ class _NoteEditorState extends State<NoteEditor>
               ),
             ),
           ],
-          bottom: isWide
-              ? null
-              : TabBar(
-                  controller: _tabController,
-                  indicatorColor: AppTheme.accentTeal,
-                  labelColor: AppTheme.accentTeal,
-                  unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-                  tabs: [
-                    Tab(text: l10n.notesTabWrite),
-                    Tab(text: l10n.notesTabPreview),
-                  ],
-                ),
         ),
         body: Column(
           children: [
@@ -361,50 +329,7 @@ class _NoteEditorState extends State<NoteEditor>
                 suggestions: widget.allTags,
               ),
             ),
-            Expanded(
-              child: isWide
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border(
-                                right: BorderSide(
-                                  color: theme.colorScheme.outlineVariant,
-                                ),
-                              ),
-                            ),
-                            child: _buildTextField(context),
-                          ),
-                        ),
-                        Expanded(
-                          child: ZoomableArea(
-                            accentColor: AppTheme.accentTeal,
-                            builder: (context, scale, physics) =>
-                                SingleChildScrollView(
-                                  physics: physics,
-                                  child: _buildPreview(context, scale),
-                                ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildTextField(context),
-                        ZoomableArea(
-                          accentColor: AppTheme.accentTeal,
-                          builder: (context, scale, physics) =>
-                              SingleChildScrollView(
-                                physics: physics,
-                                child: _buildPreview(context, scale),
-                              ),
-                        ),
-                      ],
-                    ),
-            ),
+            Expanded(child: _buildTextField(context)),
           ],
         ),
       ),

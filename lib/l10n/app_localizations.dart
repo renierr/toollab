@@ -3620,6 +3620,18 @@ abstract class AppLocalizations {
   /// **'Preview'**
   String get notesTabPreview;
 
+  /// No description provided for @notesToggleSourceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Markdown Source'**
+  String get notesToggleSourceMode;
+
+  /// No description provided for @notesToggleLiveMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Styled Preview'**
+  String get notesToggleLiveMode;
+
   /// No description provided for @notesToolbarBold.
   ///
   /// In en, this message translates to:

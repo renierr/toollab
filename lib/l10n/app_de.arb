@@ -653,6 +653,8 @@
   "notesEditNoteTitle": "Notiz bearbeiten",
   "notesTabWrite": "Schreiben",
   "notesTabPreview": "Vorschau",
+  "notesToggleSourceMode": "Markdown-Quelltext anzeigen",
+  "notesToggleLiveMode": "Formatierte Vorschau anzeigen",
   "notesToolbarBold": "Fett",
   "notesToolbarItalic": "Kursiv",
   "notesToolbarStrikethrough": "Durchgestrichen",

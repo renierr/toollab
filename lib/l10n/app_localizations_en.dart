@@ -1975,6 +1975,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notesTabPreview => 'Preview';
 
   @override
+  String get notesToggleSourceMode => 'Show Markdown Source';
+
+  @override
+  String get notesToggleLiveMode => 'Show Styled Preview';
+
+  @override
   String get notesToolbarBold => 'Bold';
 
   @override

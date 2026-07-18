@@ -1065,6 +1065,8 @@
   "notesEditNoteTitle": "Edit Note",
   "notesTabWrite": "Write",
   "notesTabPreview": "Preview",
+  "notesToggleSourceMode": "Show Markdown Source",
+  "notesToggleLiveMode": "Show Styled Preview",
   "notesToolbarBold": "Bold",
   "notesToolbarItalic": "Italic",
   "notesToolbarStrikethrough": "Strikethrough",

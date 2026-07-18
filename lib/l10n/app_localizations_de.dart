@@ -1996,6 +1996,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesTabPreview => 'Vorschau';
 
   @override
+  String get notesToggleSourceMode => 'Markdown-Quelltext anzeigen';
+
+  @override
+  String get notesToggleLiveMode => 'Formatierte Vorschau anzeigen';
+
+  @override
   String get notesToolbarBold => 'Fett';
 
   @override
