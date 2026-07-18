@@ -427,6 +427,65 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     return confirmed ?? false;
   }
 
+  int _findRefSectionStart(String txt) {
+    final match = RegExp(r'\[img_ref_\d+\]: data:image/').firstMatch(txt);
+    return match?.start ?? -1;
+  }
+
+  String _cleanStaleImageReferences(String text) {
+    final refStart = _findRefSectionStart(text);
+    if (refStart == -1) return text;
+
+    final body = text.substring(0, refStart);
+    final refSection = text.substring(refStart);
+
+    final refMatches = RegExp(r'\[(img_ref_\d+)\]').allMatches(body);
+    final referencedLabels = <String>{};
+    for (final match in refMatches) {
+      final label = match.group(1);
+      if (label != null) {
+        referencedLabels.add(label);
+      }
+    }
+
+    final refLines = refSection.split('\n');
+    final cleanedRefLines = <String>[];
+    for (final line in refLines) {
+      final refDefMatch = RegExp(
+        r'^\[(img_ref_\d+)\]:\s*data:image/',
+      ).firstMatch(line);
+      if (refDefMatch != null) {
+        final label = refDefMatch.group(1);
+        if (label != null && !referencedLabels.contains(label)) {
+          continue;
+        }
+      }
+      cleanedRefLines.add(line);
+    }
+
+    final cleanedRefSection = cleanedRefLines.join('\n').trim();
+    final cleanedBody = body.trimRight();
+
+    if (cleanedRefSection.isEmpty) {
+      return '$cleanedBody\n';
+    }
+
+    return '$cleanedBody\n\n$cleanedRefSection\n';
+  }
+
+  void _saveNote() {
+    final originalText = _controller.text;
+    final cleanedText = _cleanStaleImageReferences(originalText);
+
+    if (cleanedText != originalText) {
+      _controller.isProgrammaticUpdate = true;
+      _controller.text = cleanedText;
+      _controller.isProgrammaticUpdate = false;
+    }
+
+    widget.onSave(cleanedText, _tags);
+  }
+
   Future<void> _exportPdf(BuildContext context) async {
     final content = _controller.text;
     if (content.trim().isEmpty) return;
@@ -526,9 +585,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                   : () => _exportPdf(context),
             ),
             TextButton(
-              onPressed: _controller.text.trim().isEmpty
-                  ? null
-                  : () => widget.onSave(_controller.text, _tags),
+              onPressed: _controller.text.trim().isEmpty ? null : _saveNote,
               child: Text(
                 l10n.commonSave,
                 style: TextStyle(
