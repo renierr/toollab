@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 class MarkdownToPdfConverter {
+  static PdfPageFormat _pageFormat = PdfPageFormat.a4;
   static pw.Font? _bodyFont;
   static pw.Font? _boldFont;
   static pw.Font? _italicFont;
@@ -29,6 +31,7 @@ class MarkdownToPdfConverter {
     String? title,
     PdfPageFormat pageFormat = PdfPageFormat.a4,
   }) async {
+    _pageFormat = pageFormat;
     await _ensureFonts();
 
     final doc = pw.Document();
@@ -441,11 +444,11 @@ class MarkdownToPdfConverter {
     );
   }
 
-  static List<pw.TextSpan> _buildInlineSpans(List<md.Node> nodes) {
+  static List<pw.InlineSpan> _buildInlineSpans(List<md.Node> nodes) {
     return nodes.map(_buildInlineSpan).toList();
   }
 
-  static pw.TextSpan _buildInlineSpan(md.Node node) {
+  static pw.InlineSpan _buildInlineSpan(md.Node node) {
     if (node is md.Text) {
       return pw.TextSpan(text: _clean(node.text), style: _fallbackStyle());
     }
@@ -488,7 +491,61 @@ class MarkdownToPdfConverter {
           ],
         );
       case 'img':
+        final src = node.attributes['src'];
         final alt = node.attributes['alt'] ?? '';
+        if (src != null) {
+          try {
+            Uint8List? imageBytes;
+            if (src.startsWith('data:image/')) {
+              final commaIndex = src.indexOf(',');
+              if (commaIndex != -1) {
+                final base64Data = src.substring(commaIndex + 1);
+                imageBytes = base64Decode(base64Data);
+              }
+            }
+            if (imageBytes != null) {
+              final pdfImage = pw.MemoryImage(imageBytes);
+
+              double? width;
+              double? height;
+              if (alt.contains('|')) {
+                final parts = alt.split('|');
+                final sizePart = parts[1].trim().toLowerCase();
+                if (sizePart.contains('x')) {
+                  final dimensions = sizePart.split('x');
+                  width = double.tryParse(dimensions[0]);
+                  height = double.tryParse(dimensions[1]);
+                } else {
+                  width = double.tryParse(sizePart);
+                }
+              }
+
+              final double maxPrintWidth = _pageFormat.width - 128;
+              final double maxPrintHeight = _pageFormat.height - 112;
+
+              return pw.WidgetSpan(
+                child: pw.Container(
+                  alignment: pw.Alignment.centerLeft,
+                  margin: const pw.EdgeInsets.symmetric(vertical: 8),
+                  child: pw.ConstrainedBox(
+                    constraints: pw.BoxConstraints(
+                      maxWidth: maxPrintWidth,
+                      maxHeight: maxPrintHeight * 0.7,
+                    ),
+                    child: pw.Image(
+                      pdfImage,
+                      width: width,
+                      height: height,
+                      fit: pw.BoxFit.contain,
+                    ),
+                  ),
+                ),
+              );
+            }
+          } catch (e) {
+            // fallback to text placeholder
+          }
+        }
         return pw.TextSpan(
           text: alt.isNotEmpty ? '[Image: ${_clean(alt)}]' : '[Image]',
           style: pw.TextStyle(
