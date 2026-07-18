@@ -36,10 +36,7 @@ class _SfMorseGeneratorState extends State<SfMorseGenerator> {
     super.dispose();
   }
 
-  Future<void> _exportWav(
-    SoundFinderState state,
-    AppLocalizations l10n,
-  ) async {
+  Future<void> _exportWav(SoundFinderState state, AppLocalizations l10n) async {
     try {
       final tokens = MorseConverter.tokenize(state.morseInputText);
       if (tokens.isEmpty) return;

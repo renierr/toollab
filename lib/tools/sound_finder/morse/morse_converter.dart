@@ -118,12 +118,23 @@ class MorseConverter {
 
   /// Converts Morse code string back to plain text.
   static String morseToText(String morse) {
-    final List<String> words = morse.split(RegExp(r'\s*//\s*|\s*/\s*/\s*'));
+    final List<String> words;
+    if (morse.contains('//')) {
+      words = morse.split(RegExp(r'\s*//\s*'));
+    } else {
+      words = morse.split(RegExp(r'\s*/\s*'));
+    }
+
     final List<String> decodedWords = [];
 
     for (final String word in words) {
       if (word.trim().isEmpty) continue;
-      final List<String> chars = word.trim().split(RegExp(r'\s+'));
+      final List<String> chars = word
+          .trim()
+          .split(RegExp(r'\s+'))
+          .where((c) => c != '/')
+          .toList();
+
       final String decodedWord = chars
           .map((c) => reverseMorseMap[c] ?? '?')
           .join('');
