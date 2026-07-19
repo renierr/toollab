@@ -240,3 +240,29 @@ Avoid writing presentation logic or dropzones from scratch. Use existing widgets
 12. **Tool ID References**: Never hardcode tool ID strings (e.g. `'fast-drop'`, `'notes'`) outside of `config.dart`. Reference them via `MyTool.config.id` everywhere else — pages, sync delegates, DB helpers, archive classes. This keeps IDs in a single source of truth and prevents drift.
 13. **Android Process Isolation**: To run a tool in its own OS process/task on Android (enabling crash-free split-screen/multi-window usage alongside the main app), set `androidProcessIsolated: true` in `config.dart`, define a subclass in `MainActivity.kt` (e.g., `class MyToolActivity : MainActivity()`), register it in `AndroidManifest.xml` with its own `process` and `taskAffinity`, and add it to `ShortcutHelper.kt`'s `isolatedTools` list.
 
+---
+
+## 7. Standalone & Drawer App Icon Guidelines
+
+When adding a new tool, a custom transparent launcher/drawer icon must be created and registered:
+
+### 7.1. Generate the Transparent Icon
+* Standalone builds and Android drawer aliases expect a clean, high-resolution (`512x512`), transparent-background PNG icon saved under `assets/logo/standalone/<tool-id>.png` (using the kebab-case tool ID, e.g. `sound-finder.png`).
+* The icon should render the tool's configured accent color and corresponding `MaterialIcons` glyph.
+
+### 7.2. Copy to Android Mipmap Directories
+Copy the generated PNG file to all Android density mipmap folders under `android/app/src/main/res/` using the snake-case tool name:
+* `mipmap-mdpi/ic_launcher_<tool_id_in_snake_case>.png`
+* `mipmap-hdpi/ic_launcher_<tool_id_in_snake_case>.png`
+* `mipmap-xhdpi/ic_launcher_<tool_id_in_snake_case>.png`
+* `mipmap-xxhdpi/ic_launcher_<tool_id_in_snake_case>.png`
+* `mipmap-xxxhdpi/ic_launcher_<tool_id_in_snake_case>.png`
+
+### 7.3. Configure Manifest & Shortcuts
+1. **AndroidManifest.xml**: Locate the tool's `<activity-alias>` and update `android:icon` to reference the newly copied mipmap:
+   ```xml
+   android:icon="@mipmap/ic_launcher_my_new_tool"
+   ```
+2. **ShortcutHelper.kt**: Pinned home screen shortcuts automatically resolve the icon dynamically by looking up `"ic_launcher_" + toolId.replace("-", "_")` in the mipmap resources. By following this snake-case naming scheme, shortcuts will automatically use the custom icon.
+
+

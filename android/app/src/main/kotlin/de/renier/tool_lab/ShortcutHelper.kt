@@ -32,10 +32,18 @@ object ShortcutHelper {
                     putExtra("route", "/$toolId")
                 }
 
+                val resourceName = "ic_launcher_" + toolId.replace("-", "_")
+                val resId = context.resources.getIdentifier(resourceName, "mipmap", context.packageName)
+                val icon = if (resId != 0) {
+                    Icon.createWithResource(context, resId)
+                } else {
+                    Icon.createWithResource(context, R.mipmap.ic_launcher)
+                }
+
                 val shortcut = ShortcutInfo.Builder(context, toolId)
                     .setShortLabel(toolName)
                     .setLongLabel(toolName)
-                    .setIcon(Icon.createWithResource(context, R.mipmap.ic_launcher))
+                    .setIcon(icon)
                     .setIntent(intent)
                     .build()
 

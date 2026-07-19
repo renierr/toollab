@@ -127,7 +127,7 @@
             android:name="de.renier.tool_lab.CompassAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Compass"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_compass"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -205,7 +205,7 @@
             android:name="de.renier.tool_lab.GroceryListAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Grocery List"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_grocery_list"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -231,7 +231,7 @@
             android:name="de.renier.tool_lab.ImageViewerAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Image Viewer"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_image_viewer"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -244,7 +244,7 @@
             android:name="de.renier.tool_lab.FastDropAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Fast Drop"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_fast_drop"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -257,7 +257,7 @@
             android:name="de.renier.tool_lab.ImagesToPdfAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Images to PDF"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_images_to_pdf"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -270,7 +270,7 @@
             android:name="de.renier.tool_lab.ChiptuneAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Chiptune Player"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_chiptune"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -283,7 +283,7 @@
             android:name="de.renier.tool_lab.FocusNoiseAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Focus Noise"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_focus_noise"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -296,7 +296,7 @@
             android:name="de.renier.tool_lab.SignaturesAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Signature Creator"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_signatures"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -309,7 +309,7 @@
             android:name="de.renier.tool_lab.QrCodeAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="QR Code"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_qr_code"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -322,7 +322,7 @@
             android:name="de.renier.tool_lab.GpsLocationStoreAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="GPS Location Store"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_gps_location_store"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -335,7 +335,7 @@
             android:name="de.renier.tool_lab.ChatAiAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="AI Chat"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_chat_ai"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -348,7 +348,7 @@
             android:name="de.renier.tool_lab.HexEditorAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Hex Editor"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_hex_editor"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -361,7 +361,7 @@
             android:name="de.renier.tool_lab.FileConverterAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="File Converter"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_file_converter"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -374,7 +374,7 @@
             android:name="de.renier.tool_lab.UnitConverterAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Unit Converter"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_unit_converter"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -387,7 +387,7 @@
             android:name="de.renier.tool_lab.DocumentScannerAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Document Scanner"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_document_scanner"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -400,7 +400,7 @@
             android:name="de.renier.tool_lab.SketchBoardAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Sketch Board"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_sketch_board"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -413,7 +413,7 @@
             android:name="de.renier.tool_lab.CodeHighlightAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Code Highlight"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_code_highlight"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -426,7 +426,7 @@
             android:name="de.renier.tool_lab.StringTransformerAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="String Transformer"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_string_transformer"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -439,7 +439,7 @@
             android:name="de.renier.tool_lab.SoundFinderAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Sound Finder"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_sound_finder"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
