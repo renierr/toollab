@@ -320,7 +320,7 @@ class ToolRegistry {
 
   /// Swaps launcher icons if a custom PNG exists under assets/logo/standalone/.
   Future<void> _patchLauncherIcons() async {
-    final customIconFile = File('assets/logo/standalone/${tool.folderName}.png');
+    final customIconFile = File('assets/logo/standalone/${tool.id}.png');
     if (!await customIconFile.exists()) return;
 
     print('Applying custom launcher icons for standalone tool...');
