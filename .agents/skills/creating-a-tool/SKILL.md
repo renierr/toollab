@@ -250,6 +250,34 @@ When adding a new tool, a custom transparent launcher/drawer icon must be create
 * Standalone builds and Android drawer aliases expect a clean, high-resolution (`512x512`), transparent-background PNG icon saved under `assets/logo/standalone/<tool-id>.png` (using the kebab-case tool ID, e.g. `sound-finder.png`).
 * The icon should render the tool's configured accent color and corresponding `MaterialIcons` glyph.
 
+> [!TIP]
+> **Generating Icons Programmatically from MaterialIcons Font**:
+> You can easily render a new high-quality transparent PNG icon using a simple headless Dart unit test. Load the font dynamically from the local Flutter SDK cache and paint the glyph onto a centered canvas:
+> ```dart
+> final flutterRoot = Platform.environment['FLUTTER_ROOT'];
+> final fontPath = p.join(flutterRoot, 'bin', 'cache', 'artifacts', 'material_fonts', 'materialicons-regular.otf');
+> final fontLoader = FontLoader('MaterialIcons');
+> fontLoader.addFont(Future.value(ByteData.sublistView(await File(fontPath).readAsBytes())));
+> await fontLoader.load();
+> 
+> final recorder = ui.PictureRecorder();
+> final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 512, 512));
+> final textPainter = TextPainter(
+>   text: TextSpan(
+>     text: String.fromCharCode(toolIconCodePoint),
+>     style: TextStyle(fontSize: 420.0, fontFamily: 'MaterialIcons', color: accentColor),
+>   ),
+>   textDirection: TextDirection.ltr,
+> );
+> textPainter.layout();
+> textPainter.paint(canvas, Offset((512 - textPainter.width) / 2, (512 - textPainter.height) / 2));
+> 
+> final img = await recorder.endRecording().toImage(512, 512);
+> final pngBytes = (await img.toByteData(format: ui.ImageByteFormat.png))!.buffer.asUint8List();
+> await File('assets/logo/standalone/my-new-tool.png').writeAsBytes(pngBytes);
+> ```
+> Put this code in a standard `test('description', () async { ... })` block (not `testWidgets`) so that async file and image tasks run on the real event loop without hanging, and run the generator using `flutter test <path_to_test_file>`.
+
 ### 7.2. Copy to Android Mipmap Directories
 Copy the generated PNG file to all Android density mipmap folders under `android/app/src/main/res/` using the snake-case tool name:
 * `mipmap-mdpi/ic_launcher_<tool_id_in_snake_case>.png`
