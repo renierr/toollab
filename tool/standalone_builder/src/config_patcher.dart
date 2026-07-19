@@ -42,6 +42,14 @@ class ConfigPatcher {
           'android:icon="@mipmap/ic_launcher"': 'android:icon="$androidIconValue"',
         },
       );
+
+      await _patchFile(
+        originalFile: File('android/app/build.gradle.kts'),
+        backupName: 'build.gradle.kts',
+        replacements: {
+          'applicationId = "de.renier.tool_lab"': 'applicationId = "de.renier.tool_lab.${tool.folderName}"',
+        },
+      );
     } else if (platform == 'windows') {
       await _patchFile(
         originalFile: File('windows/CMakeLists.txt'),
