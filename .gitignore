@@ -63,3 +63,6 @@ app.*.map.json
 /ios/
 /macos/
 .claude/
+
+# Standalone Builder
+/lib/main_standalone.dart
