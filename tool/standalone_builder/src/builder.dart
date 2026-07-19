@@ -203,14 +203,10 @@ class StandaloneBuilder {
   }
 
   String _generateEntryPoint() {
-    const rhttpImport = "import 'package:rhttp/rhttp.dart';";
-    const rhttpInit = "await Rhttp.init();";
-
     return '''// GENERATED FILE - DO NOT MODIFY OR COMMIT
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-$rhttpImport
 import 'package:go_router/go_router.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/providers/app_state.dart';
@@ -224,7 +220,6 @@ import 'package:tool_lab/tools/${tool.folderName}/config.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  $rhttpInit
   await TempFileManager.init();
   SharingService.startupArgs = args;
   await DatabaseService.instance.database;

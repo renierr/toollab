@@ -1,7 +1,7 @@
 name: tool_lab
 description: "A multi-tool utility app with device sensors, calculator, and more."
 publish_to: "none"
-version: 1.6.1+36
+version: 1.6.2+37
 
 environment:
   sdk: ^3.12.1
@@ -35,7 +35,6 @@ dependencies:
   desktop_drop: ^0.7.1
   flutter_markdown_plus: ^1.0.7
   url_launcher: ^6.3.0
-  rhttp: ^0.18.0
   package_info_plus: ^10.1.0
   pdf: ^3.12.0
   markdown: ^7.3.1

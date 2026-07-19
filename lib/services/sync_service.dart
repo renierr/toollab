@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:rhttp/rhttp.dart';
 
 /// Interface for individual tool databases/stores to integrate with the sync engine.
 abstract class SyncDelegate {
@@ -27,7 +26,7 @@ class SyncService {
   static http.Client? _sharedClient;
 
   static Future<http.Client> get _client async {
-    _sharedClient ??= await RhttpCompatibleClient.create();
+    _sharedClient ??= http.Client();
     return _sharedClient!;
   }
 
