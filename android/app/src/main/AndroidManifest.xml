@@ -450,7 +450,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="de.renier.tool_lab.fileprovider;de.renier.tool_lab.provider"
+            android:authorities="${applicationId}.fileprovider;${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

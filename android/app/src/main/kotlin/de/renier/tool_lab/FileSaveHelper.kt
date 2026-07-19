@@ -158,7 +158,7 @@ object FileSaveHelper {
             val file = File(path)
             FileProvider.getUriForFile(
                 context,
-                "de.renier.tool_lab.fileprovider",
+                "${context.packageName}.fileprovider",
                 file
             )
         }
