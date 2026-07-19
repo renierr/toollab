@@ -225,6 +225,9 @@ class ConfigPatcher {
           'flutter_localizations',
           'intl',
           'cupertino_icons',
+          'sqflite',
+          'sqlite3',
+          'sqlite3_flutter_libs',
         };
         
         if (corePackages.contains(pkgName) || usedPackages.contains(pkgName)) {
