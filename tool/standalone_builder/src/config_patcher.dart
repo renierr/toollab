@@ -26,21 +26,20 @@ class ConfigPatcher {
     // Patch global tool registry to isolate dependencies
     await _patchToolRegistry();
 
+    // Patch launcher icons if custom icon is available
+    await _patchLauncherIcons();
+
     if (platform.startsWith('android')) {
-      await _patchFile(
-        originalFile: File('android/app/build.gradle.kts'),
-        backupName: 'android_build.gradle.kts',
-        replacements: {
-          'applicationId = "de.renier.tool_lab"':
-              'applicationId = "de.renier.tool_lab.${tool.folderName}"',
-        },
-      );
+      final iconName = 'ic_launcher_${tool.folderName}';
+      final hasCustomIcon = await File('android/app/src/main/res/mipmap-anydpi-v26/$iconName.xml').exists();
+      final androidIconValue = hasCustomIcon ? '@mipmap/$iconName' : '@mipmap/ic_launcher';
 
       await _patchFile(
         originalFile: File('android/app/src/main/AndroidManifest.xml'),
         backupName: 'AndroidManifest.xml',
         replacements: {
           'android:label="ToolLab"': 'android:label="${tool.displayName}"',
+          'android:icon="@mipmap/ic_launcher"': 'android:icon="$androidIconValue"',
         },
       );
     } else if (platform == 'windows') {
@@ -317,5 +316,54 @@ class ToolRegistry {
 ''';
 
     await registryFile.writeAsString(singleRegistryContent);
+  }
+
+  /// Swaps launcher icons if a custom PNG exists under assets/logo/standalone/.
+  Future<void> _patchLauncherIcons() async {
+    final customIconFile = File('assets/logo/standalone/${tool.folderName}.png');
+    if (!await customIconFile.exists()) return;
+
+    print('Applying custom launcher icons for standalone tool...');
+
+    // 1. Patch main logo inside the app
+    final logoFile = File('assets/logo/logo.png');
+    if (await logoFile.exists()) {
+      await _backupAndReplaceFile(logoFile, customIconFile);
+    }
+
+    // 2. Patch Android launcher icons
+    final resDir = Directory('android/app/src/main/res');
+    if (await resDir.exists()) {
+      final densities = ['hdpi', 'mdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
+      for (final density in densities) {
+        final destIcon = File(p.join(resDir.path, 'mipmap-$density', 'ic_launcher.png'));
+        if (await destIcon.exists()) {
+          await _backupAndReplaceFile(destIcon, customIconFile);
+        }
+      }
+
+      // Temporarily delete XML adaptive launcher icon so Android falls back to our raster PNG launcher icon
+      final adaptiveIcon = File(p.join(resDir.path, 'mipmap-anydpi-v26', 'ic_launcher.xml'));
+      if (await adaptiveIcon.exists()) {
+        final backupFile = File(p.join(_backupDir.path, 'ic_launcher.xml'));
+        final pathMappingFile = File('${backupFile.path}.path');
+        await adaptiveIcon.copy(backupFile.path);
+        await pathMappingFile.writeAsString(adaptiveIcon.path);
+
+        await adaptiveIcon.delete();
+      }
+    }
+  }
+
+  Future<void> _backupAndReplaceFile(File targetFile, File replacementFile) async {
+    // Generate unique backup filename using file path hashing or sanitization
+    final safeName = targetFile.path.replaceAll(RegExp(r'[/\\]'), '_');
+    final backupFile = File(p.join(_backupDir.path, safeName));
+    final pathMappingFile = File('${backupFile.path}.path');
+
+    await targetFile.copy(backupFile.path);
+    await pathMappingFile.writeAsString(targetFile.path);
+
+    await replacementFile.copy(targetFile.path);
   }
 }
