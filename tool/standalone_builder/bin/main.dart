@@ -75,7 +75,10 @@ void main(List<String> args) async {
   // 2. Parse arguments or run interactive menu
   if (args.isEmpty) {
     // Run interactive menu in clack-style
-    final toolOptions = tools.map((t) => '${t.displayName} (${t.id})').toList();
+    final toolOptions = [
+      '[Restore Backups / Revert Workspace Changes]',
+      ...tools.map((t) => '${t.displayName} (${t.id})')
+    ];
     final toolIdx = await TerminalMenu.select(
       prompt: 'Select a tool to build standalone',
       options: toolOptions,
@@ -85,7 +88,19 @@ void main(List<String> args) async {
       print('Build cancelled.');
       exit(0);
     }
-    selectedTool = tools[toolIdx];
+
+    if (toolIdx == 0) {
+      print('Restoring backed up configuration files...');
+      await ConfigPatcher.restoreGlobal();
+      final mainFile = File('lib/main_standalone.dart');
+      if (await mainFile.exists()) {
+        await mainFile.delete();
+      }
+      print('Workspace cleaned successfully.');
+      exit(0);
+    }
+
+    selectedTool = tools[toolIdx - 1];
 
     // Platform selection menu
     final platformOptions = ['Android (APK/AAB)', 'Windows (Desktop)', 'Linux (Desktop)'];
@@ -160,6 +175,12 @@ void main(List<String> args) async {
   // 3. Perform the build
   final builder = StandaloneBuilder(tool: selectedTool, platform: selectedPlatform);
   final success = await builder.build();
+
+  // Ensure terminal settings are fully restored before exiting the process
+  try {
+    stdin.lineMode = true;
+    stdin.echoMode = true;
+  } catch (_) {}
   
   if (success) {
     exit(0);

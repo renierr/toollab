@@ -11,8 +11,8 @@ class TerminalMenu {
   }) async {
     if (options.isEmpty) return null;
 
-    final bool originalLineMode;
-    final bool originalEchoMode;
+    bool originalLineMode = true;
+    bool originalEchoMode = true;
     bool supportsRawTerminal = true;
 
     try {
@@ -22,6 +22,12 @@ class TerminalMenu {
       stdin.echoMode = false;
     } catch (_) {
       supportsRawTerminal = false;
+      try {
+        stdin.lineMode = originalLineMode;
+      } catch (_) {}
+      try {
+        stdin.echoMode = originalEchoMode;
+      } catch (_) {}
       return _selectFallback(prompt, options);
     }
 

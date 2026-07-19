@@ -13,8 +13,9 @@ graph TD
     A[Start: dart run tool/build_standalone.dart] --> B{Arguments provided?}
     
     B -- No --> C[Scan lib/tools/ and show interactive list]
-    C --> D[User selects Tool]
-    D --> E[User selects Platform: Android, Windows, Linux]
+    C --> D[User selects Option]
+    D -- Revert Chosen --> D_REVERT[Restore original configuration files and exit]
+    D -- Tool Chosen --> E[User selects Platform: Android, Windows, Linux]
     E -- Android chosen --> E2[User selects Android Flavor: APK, split, arm64, AAB]
     
     B -- Yes --> F[Parse tool-id and target platform/flavor from args]
@@ -50,11 +51,12 @@ graph TD
 
 ---
 
-## Safety Features (Git Protection)
+## Safety & Workspace Recovery
 
 To prevent accidental changes from leaking into git commits (or in case the builder is aborted prematurely):
 *   **Git Ignored Entry Point**: `/lib/main_standalone.dart` is added to the project `.gitignore` so it is never tracked.
 *   **Disk-Based Backups**: Original configurations are copied to `.agents/temp/standalone_backup/` before editing.
+*   **Interactive Menu Option**: The very first selection option in the interactive builder tool menu is `[Restore Backups / Revert Workspace Changes]` for easy one-click manual cleanup.
 *   **Automatic Restore Prompt**: If you re-run the builder after an aborted compile, it detects the pending backups and offers to restore the codebase automatically.
 *   **OS-level Signal Catching**: Listens to Ctrl+C at the OS level (via `ProcessSignal.sigint`) to restore files and reset terminal settings immediately.
 *   **Manual Recovery**: You can manually revert the repository back to normal at any time by running:
