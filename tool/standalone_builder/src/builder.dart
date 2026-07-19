@@ -203,9 +203,8 @@ class StandaloneBuilder {
   }
 
   String _generateEntryPoint() {
-    final usesRhttp = _checkToolUsesRhttp();
-    final rhttpImport = usesRhttp ? "import 'package:rhttp/rhttp.dart';" : "";
-    final rhttpInit = usesRhttp ? "await Rhttp.init();" : "";
+    const rhttpImport = "import 'package:rhttp/rhttp.dart';";
+    const rhttpInit = "await Rhttp.init();";
 
     return '''// GENERATED FILE - DO NOT MODIFY OR COMMIT
 import 'dart:ui';
@@ -297,23 +296,6 @@ class AppScrollBehavior extends MaterialScrollBehavior {
 ''';
   }
 
-  bool _checkToolUsesRhttp() {
-    final dir = Directory('lib/tools/${tool.folderName}');
-    if (!dir.existsSync()) return false;
-    
-    final files = dir.listSync(recursive: true);
-    for (final file in files) {
-      if (file is File && file.path.endsWith('.dart')) {
-        try {
-          final content = file.readAsStringSync();
-          if (content.contains('package:rhttp/')) {
-            return true;
-          }
-        } catch (_) {}
-      }
-    }
-    return false;
-  }
 
   ScanResult _findUsedPackages(String entryPoint) {
     final visited = <String>{};
