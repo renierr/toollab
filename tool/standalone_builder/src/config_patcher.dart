@@ -147,6 +147,18 @@ class ConfigPatcher {
       if (result.exitCode != 0) {
         print('Warning: flutter pub get failed: ${result.stderr}');
       }
+
+      // Restore the original pubspec.lock verbatim after pub get
+      // (pub get may have resolved slightly different versions)
+      final lockBackup = File(p.join(backupDirName, 'pubspec.lock'));
+      if (await lockBackup.exists()) {
+        final lockPathMapping = File('${lockBackup.path}.path');
+        if (await lockPathMapping.exists()) {
+          final lockTarget = File(await lockPathMapping.readAsString());
+          await lockBackup.copy(lockTarget.path);
+          print('  Restored: pubspec.lock');
+        }
+      }
     }
 
     // Delete backup directory
@@ -176,6 +188,15 @@ class ConfigPatcher {
     final pathMappingFile = File('${backupFile.path}.path');
     await backupFile.writeAsString(originalContent);
     await pathMappingFile.writeAsString(pubspecFile.path);
+
+    // Back up pubspec.lock so it can be restored verbatim
+    final lockFile = File('pubspec.lock');
+    if (await lockFile.exists()) {
+      final lockBackup = File(p.join(_backupDir.path, 'pubspec.lock'));
+      final lockPathMapping = File('${lockBackup.path}.path');
+      await lockFile.copy(lockBackup.path);
+      await lockPathMapping.writeAsString(lockFile.path);
+    }
 
     // Patch content
     final lines = originalContent.split('\n');
