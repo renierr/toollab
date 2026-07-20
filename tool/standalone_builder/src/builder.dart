@@ -18,6 +18,9 @@ class StandaloneBuilder {
     final patcher = ConfigPatcher(tool: tool, platform: platform);
 
     try {
+      print('[0/3] Clearing build cache...');
+      await _cleanBuildDir();
+
       print(
         '\n[1/3] Generating temporary entry point (lib/main_standalone.dart)...',
       );
@@ -40,7 +43,6 @@ class StandaloneBuilder {
           () => patcher.generateAndroidManifest(usedPackages),
         );
       }
-
 
       await patcher.patchPubspec(usedPackages, usedAssets);
 
@@ -177,7 +179,20 @@ class StandaloneBuilder {
       }
       // 2. Restore patched configurations
       await ConfigPatcher.restoreGlobal();
+      // 3. Clear build cache again so the main app compiles freshly
+      await _cleanBuildDir();
       print('Cleanup complete.');
+    }
+  }
+
+  Future<void> _cleanBuildDir() async {
+    final buildDir = Directory('build');
+    if (await buildDir.exists()) {
+      try {
+        await buildDir.delete(recursive: true);
+      } catch (e) {
+        print('Warning: Failed to clear build directory: $e');
+      }
     }
   }
 
