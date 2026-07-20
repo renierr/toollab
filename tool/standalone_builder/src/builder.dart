@@ -41,10 +41,6 @@ class StandaloneBuilder {
         );
       }
 
-      await Tui.task(
-        'Cleaning build cache (removing unused native plugins)',
-        () => Process.run('flutter', ['clean'], runInShell: true),
-      );
 
       await patcher.patchPubspec(usedPackages, usedAssets);
 
