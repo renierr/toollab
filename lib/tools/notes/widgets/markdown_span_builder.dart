@@ -24,132 +24,147 @@ class MarkdownSpanBuilder {
       final line = lines[i];
       final isLastLine = i == lines.length - 1;
 
-      if (line.trimLeft().startsWith('```')) {
-        inCodeBlock = !inCodeBlock;
-        spans.add(_styleCodeBlockLine(line, baseTextStyle, theme));
-        if (!isLastLine) spans.add(TextSpan(text: '\n', style: baseTextStyle));
-        continue;
-      }
-
-      if (inCodeBlock) {
-        spans.add(_styleCodeLine(line, baseTextStyle, theme));
-        if (!isLastLine) spans.add(TextSpan(text: '\n', style: baseTextStyle));
-        continue;
+      // Extract trailing spaces to prevent cursor layout issues on styled spans
+      final trailingMatch = RegExp(r'([ \t]+)$').firstMatch(line);
+      final String trailingSpaces;
+      final String styledPart;
+      if (trailingMatch != null) {
+        trailingSpaces = trailingMatch.group(1)!;
+        styledPart = line.substring(0, line.length - trailingSpaces.length);
+      } else {
+        trailingSpaces = '';
+        styledPart = line;
       }
 
       TextSpan? lineSpan;
 
-      final refDefMatch = RegExp(
-        r'^(\[[^\]]+\]:\s*)(data:image/[^;]+;base64,)(.*)$',
-      ).firstMatch(line);
-      if (refDefMatch != null) {
-        final prefix = refDefMatch.group(1)!;
-        final mime = refDefMatch.group(2)!;
-        final base64Data = refDefMatch.group(3)!;
-        final previewData = base64Data.length > 30
-            ? '${base64Data.substring(0, 30)}...'
-            : base64Data;
+      if (styledPart.trimLeft().startsWith('```')) {
+        inCodeBlock = !inCodeBlock;
+        lineSpan = _styleCodeBlockLine(styledPart, baseTextStyle, theme);
+      } else if (inCodeBlock) {
+        lineSpan = _styleCodeLine(styledPart, baseTextStyle, theme);
+      } else {
+        final refDefMatch = RegExp(
+          r'^(\[[^\]]+\]:\s*)(data:image/[^;]+;base64,)(.*)$',
+        ).firstMatch(styledPart);
+        if (refDefMatch != null) {
+          final prefix = refDefMatch.group(1)!;
+          final mime = refDefMatch.group(2)!;
+          final base64Data = refDefMatch.group(3)!;
+          final previewData = base64Data.length > 30
+              ? '${base64Data.substring(0, 30)}...'
+              : base64Data;
 
-        final isFirst = !firstRefSeen;
-        if (isFirst) firstRefSeen = true;
+          final isFirst = !firstRefSeen;
+          if (isFirst) firstRefSeen = true;
 
-        final refBgColor = theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.15,
-        );
-        final lineStyle = baseTextStyle.copyWith(
-          backgroundColor: refBgColor,
-          decoration: isFirst ? TextDecoration.overline : null,
-          decorationColor: isFirst ? theme.colorScheme.outlineVariant : null,
-          decorationThickness: isFirst ? 2.0 : null,
-        );
+          final refBgColor = theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.15,
+          );
+          final lineStyle = baseTextStyle.copyWith(
+            backgroundColor: refBgColor,
+            decoration: isFirst ? TextDecoration.overline : null,
+            decorationColor: isFirst ? theme.colorScheme.outlineVariant : null,
+            decorationThickness: isFirst ? 2.0 : null,
+          );
 
-        lineSpan = TextSpan(
-          style: lineStyle,
-          children: [
-            TextSpan(
-              text: prefix,
-              style: lineStyle.copyWith(
-                color: accentColor,
-                fontWeight: FontWeight.bold,
+          lineSpan = TextSpan(
+            style: lineStyle,
+            children: [
+              TextSpan(
+                text: prefix,
+                style: lineStyle.copyWith(
+                  color: accentColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            TextSpan(
-              text: mime,
-              style: lineStyle.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+              TextSpan(
+                text: mime,
+                style: lineStyle.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+                ),
               ),
-            ),
-            TextSpan(
-              text: previewData,
-              style: lineStyle.copyWith(
-                fontFamily: 'monospace',
-                fontSize: 12,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.25),
+              TextSpan(
+                text: previewData,
+                style: lineStyle.copyWith(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.25),
+                ),
               ),
-            ),
-          ],
+            ],
+          );
+        }
+
+        final headerMatch = RegExp(r'^(#{1,6})\s+(.*)$').firstMatch(styledPart);
+        if (headerMatch != null) {
+          final level = headerMatch.group(1)!.length;
+          final content = headerMatch.group(2)!;
+          lineSpan = _buildHeaderLine(
+            styledPart,
+            headerMatch.group(1)!,
+            content,
+            level,
+            baseTextStyle,
+            theme,
+          );
+        }
+
+        if (styledPart.startsWith('> ')) {
+          final content = styledPart.substring(2);
+          lineSpan = _buildBlockquoteLine(styledPart, content, baseTextStyle, theme);
+        }
+
+        final bulletMatch = RegExp(
+          r'^(\s*)([-*+]\s+\[([ xX])\]\s+|[-*+]\s+)(.*)$',
+        ).firstMatch(styledPart);
+        if (bulletMatch != null) {
+          final prefix = bulletMatch.group(1) ?? '';
+          final marker = bulletMatch.group(2) ?? '';
+          final checkboxVal = bulletMatch.group(3);
+          final content = bulletMatch.group(4) ?? '';
+          lineSpan = _buildListLine(
+            styledPart,
+            prefix,
+            marker,
+            checkboxVal,
+            content,
+            baseTextStyle,
+            theme,
+          );
+        }
+
+        final orderedMatch = RegExp(r'^(\s*)(\d+\.\s+)(.*)$').firstMatch(styledPart);
+        if (orderedMatch != null) {
+          final prefix = orderedMatch.group(1) ?? '';
+          final marker = orderedMatch.group(2) ?? '';
+          final content = orderedMatch.group(3) ?? '';
+          lineSpan = _buildListLine(
+            styledPart,
+            prefix,
+            marker,
+            null,
+            content,
+            baseTextStyle,
+            theme,
+          );
+        }
+
+        lineSpan ??= TextSpan(
+          children: _parseInlineStyles(styledPart, baseTextStyle, theme),
         );
       }
 
-      final headerMatch = RegExp(r'^(#{1,6})\s+(.*)$').firstMatch(line);
-      if (headerMatch != null) {
-        final level = headerMatch.group(1)!.length;
-        final content = headerMatch.group(2)!;
-        lineSpan = _buildHeaderLine(
-          line,
-          headerMatch.group(1)!,
-          content,
-          level,
-          baseTextStyle,
-          theme,
-        );
-      }
+      final finalSpan = trailingSpaces.isNotEmpty
+          ? TextSpan(
+              children: [
+                lineSpan,
+                TextSpan(text: trailingSpaces, style: baseTextStyle),
+              ],
+            )
+          : lineSpan;
 
-      if (line.startsWith('> ')) {
-        final content = line.substring(2);
-        lineSpan = _buildBlockquoteLine(line, content, baseTextStyle, theme);
-      }
-
-      final bulletMatch = RegExp(
-        r'^(\s*)([-*+]\s+\[([ xX])\]\s+|[-*+]\s+)(.*)$',
-      ).firstMatch(line);
-      if (bulletMatch != null) {
-        final prefix = bulletMatch.group(1) ?? '';
-        final marker = bulletMatch.group(2) ?? '';
-        final checkboxVal = bulletMatch.group(3);
-        final content = bulletMatch.group(4) ?? '';
-        lineSpan = _buildListLine(
-          line,
-          prefix,
-          marker,
-          checkboxVal,
-          content,
-          baseTextStyle,
-          theme,
-        );
-      }
-
-      final orderedMatch = RegExp(r'^(\s*)(\d+\.\s+)(.*)$').firstMatch(line);
-      if (orderedMatch != null) {
-        final prefix = orderedMatch.group(1) ?? '';
-        final marker = orderedMatch.group(2) ?? '';
-        final content = orderedMatch.group(3) ?? '';
-        lineSpan = _buildListLine(
-          line,
-          prefix,
-          marker,
-          null,
-          content,
-          baseTextStyle,
-          theme,
-        );
-      }
-
-      lineSpan ??= TextSpan(
-        children: _parseInlineStyles(line, baseTextStyle, theme),
-      );
-
-      spans.add(lineSpan);
+      spans.add(finalSpan);
       if (!isLastLine) {
         spans.add(TextSpan(text: '\n', style: baseTextStyle));
       }
@@ -170,9 +185,7 @@ class MarkdownSpanBuilder {
         fontFamily: 'monospace',
         fontSize: 14,
         color: fadedColor,
-        backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.3,
-        ),
+        backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
       ),
     );
   }
@@ -184,9 +197,7 @@ class MarkdownSpanBuilder {
         fontFamily: 'monospace',
         fontSize: 14,
         color: theme.colorScheme.onSurface,
-        backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.2,
-        ),
+        backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
       ),
     );
   }
@@ -329,9 +340,7 @@ class MarkdownSpanBuilder {
       fontFamily: 'monospace',
       fontSize: (baseStyle.fontSize ?? 14) * 0.9,
       color: theme.colorScheme.onSurface,
-      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
-        alpha: 0.25,
-      ),
+      backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.22),
     );
 
     List<_Segment> segments = [_Segment(lineText, baseStyle, isLocked: false)];
