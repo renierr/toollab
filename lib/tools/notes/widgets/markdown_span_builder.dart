@@ -179,15 +179,16 @@ class MarkdownSpanBuilder {
     TextStyle baseStyle,
     ThemeData theme,
   ) {
-    final fadedColor = theme.colorScheme.onSurface.withValues(alpha: 0.35);
+    final fadedColor = theme.colorScheme.onSurface.withValues(alpha: 0.5);
     return TextSpan(
       text: line,
       style: TextStyle(
         fontFamily: 'monospace',
         fontFamilyFallback: const ['Courier', 'Consolas'],
         fontSize: 14,
+        fontWeight: FontWeight.bold,
         color: fadedColor,
-        backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+        backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.18),
       ),
     );
   }
@@ -199,8 +200,8 @@ class MarkdownSpanBuilder {
         fontFamily: 'monospace',
         fontFamilyFallback: const ['Courier', 'Consolas'],
         fontSize: 14,
-        color: theme.colorScheme.onSurface,
-        backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.85),
+        backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.08),
       ),
     );
   }
