@@ -4,27 +4,28 @@ import 'dart:io';
 import '../src/tools_scanner.dart';
 import '../src/config_patcher.dart';
 import '../src/builder.dart';
-import '../src/menu.dart';
+import '../src/tui/tui.dart';
 
 void main(List<String> args) async {
   // Catch Ctrl+C at the OS level to ensure we restore the repository configuration and terminal echo
   ProcessSignal.sigint.watch().listen((signal) async {
     print('\n\nBuild interrupted by user. Cleaning up...');
-    
+
     // Restore patched files
     await ConfigPatcher.restoreGlobal();
     final mainFile = File('lib/main_standalone.dart');
     if (await mainFile.exists()) {
       await mainFile.delete();
     }
-    
-    // Restore terminal cursor and echo
-    stdout.write('\x1B[?25h');
+
+    // Restore terminal: clear any open menu block, show cursor, re-enable
+    // line/echo mode.
+    stdout.write('\x1B[J\x1B[?25h');
     try {
       stdin.lineMode = true;
       stdin.echoMode = true;
     } catch (_) {}
-    
+
     print('Cleanup complete. Exiting.');
     exit(0);
   });
@@ -49,7 +50,9 @@ void main(List<String> args) async {
 
   // Check for existing backup safety issue
   if (await ConfigPatcher.hasBackup()) {
-    print('\x1B[33m⚠️ Warning: Pending configuration backups detected on disk.\x1B[0m');
+    print(
+      '\x1B[33m⚠️ Warning: Pending configuration backups detected on disk.\x1B[0m',
+    );
     print('This usually means a previous build was interrupted prematurely.');
     print('');
     final restoreChoice = await TerminalMenu.select(
@@ -76,16 +79,18 @@ void main(List<String> args) async {
   if (args.isEmpty) {
     // Run interactive menu in clack-style
     final toolOptions = [
-      '[Restore Backups / Revert Workspace Changes]',
-      ...tools.map((t) => '${t.displayName} (${t.id})')
+      '↩ Restore Backups / Revert Workspace Changes',
+      ...tools.map((t) => '${t.displayName} (${t.id})'),
+      '✕ Exit',
     ];
+    final exitIndex = toolOptions.length - 1;
     final toolIdx = await TerminalMenu.select(
       prompt: 'Select a tool to build standalone',
       options: toolOptions,
     );
 
-    if (toolIdx == null) {
-      print('Build cancelled.');
+    if (toolIdx == null || toolIdx == exitIndex) {
+      print('Exiting.');
       exit(0);
     }
 
@@ -103,7 +108,11 @@ void main(List<String> args) async {
     selectedTool = tools[toolIdx - 1];
 
     // Platform selection menu
-    final platformOptions = ['Android (APK/AAB)', 'Windows (Desktop)', 'Linux (Desktop)'];
+    final platformOptions = [
+      'Android (APK/AAB)',
+      'Windows (Desktop)',
+      'Linux (Desktop)',
+    ];
     final platformIdx = await TerminalMenu.select(
       prompt: 'Select target platform',
       options: platformOptions,
@@ -113,9 +122,9 @@ void main(List<String> args) async {
       print('Build cancelled.');
       exit(0);
     }
-    
+
     final mainPlatform = ['android', 'windows', 'linux'][platformIdx];
-    
+
     if (mainPlatform == 'android') {
       final flavorOptions = [
         'Universal APK (Single file for all devices)',
@@ -131,7 +140,12 @@ void main(List<String> args) async {
         print('Build cancelled.');
         exit(0);
       }
-      selectedPlatform = ['android-apk', 'android-split', 'android-arm64', 'android-bundle'][flavorIdx];
+      selectedPlatform = [
+        'android-apk',
+        'android-split',
+        'android-arm64',
+        'android-bundle',
+      ][flavorIdx];
     } else {
       selectedPlatform = mainPlatform;
     }
@@ -152,13 +166,20 @@ void main(List<String> args) async {
     if (args.length > 1) {
       final argPlatform = args[1].toLowerCase();
       final validPlatforms = [
-        'android', 'android-apk', 'android-split', 'android-arm64', 'android-bundle',
-        'windows', 'linux'
+        'android',
+        'android-apk',
+        'android-split',
+        'android-arm64',
+        'android-bundle',
+        'windows',
+        'linux',
       ];
       if (validPlatforms.contains(argPlatform)) {
         selectedPlatform = argPlatform;
       } else {
-        print('Warning: Unknown platform "$argPlatform". Defaulting to "android".');
+        print(
+          'Warning: Unknown platform "$argPlatform". Defaulting to "android".',
+        );
       }
     }
   }
@@ -173,7 +194,10 @@ void main(List<String> args) async {
   print('==================================================\n');
 
   // 3. Perform the build
-  final builder = StandaloneBuilder(tool: selectedTool, platform: selectedPlatform);
+  final builder = StandaloneBuilder(
+    tool: selectedTool,
+    platform: selectedPlatform,
+  );
   final success = await builder.build();
 
   // Ensure terminal settings are fully restored before exiting the process
@@ -181,7 +205,7 @@ void main(List<String> args) async {
     stdin.lineMode = true;
     stdin.echoMode = true;
   } catch (_) {}
-  
+
   if (success) {
     exit(0);
   } else {

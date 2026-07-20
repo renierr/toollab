@@ -112,6 +112,11 @@ tool/standalone_builder/
   src/
     builder.dart        # Coordinates main standalone compilation & cleanup
     config_patcher.dart # Platform-specific search-and-replace patching logic
-    menu.dart           # Reusable Terminal selection UI with fallback mode
     tools_scanner.dart  # Automatic discovery of tool configs under lib/tools/
+    tui/                # Self-contained terminal UI (no third-party deps)
+      ansi.dart         # ANSI color / cursor escape codes
+      keys.dart         # Raw-mode handling + key decoding
+      output.dart       # Styled status helpers (Tui.info/success/task/…)
+      select_menu.dart  # Scrolling single-select menu + paged numeric fallback
+      tui.dart          # Barrel export
 ```

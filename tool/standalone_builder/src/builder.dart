@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'tools_scanner.dart';
 import 'config_patcher.dart';
+import 'tui/tui.dart' show Tui;
 
 class StandaloneBuilder {
   final ToolInfo tool;
@@ -34,12 +35,16 @@ class StandaloneBuilder {
       print('Used assets: ${usedAssets.join(', ')}');
 
       if (platform.startsWith('android')) {
-        print('Generating pruned standalone AndroidManifest...');
-        await patcher.generateAndroidManifest(usedPackages);
+        await Tui.task(
+          'Generating pruned standalone AndroidManifest',
+          () => patcher.generateAndroidManifest(usedPackages),
+        );
       }
 
-      print('Cleaning build cache to remove unused native plugins...');
-      await Process.run('flutter', ['clean'], runInShell: true);
+      await Tui.task(
+        'Cleaning build cache (removing unused native plugins)',
+        () => Process.run('flutter', ['clean'], runInShell: true),
+      );
 
       await patcher.patchPubspec(usedPackages, usedAssets);
 
@@ -156,17 +161,17 @@ class StandaloneBuilder {
           }
         }
 
-        print('\n==================================================');
-        print('BUILD SUCCESSFUL!');
-        print('Saved standalone build to: $finalPath');
-        print('==================================================');
+        stdout.write('\n');
+        Tui.success('BUILD SUCCESSFUL!');
+        Tui.info('Saved standalone build to: $finalPath');
         return true;
       } else {
-        print('\nBuild failed with exit code $exitCode');
+        stdout.write('\n');
+        Tui.error('Build failed with exit code $exitCode');
         return false;
       }
     } catch (e) {
-      print('An error occurred during compilation: $e');
+      Tui.error('An error occurred during compilation: $e');
       return false;
     } finally {
       print('\nCleaning up configuration files...');
