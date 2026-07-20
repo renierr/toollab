@@ -183,7 +183,7 @@ class MarkdownSpanBuilder {
       style: TextStyle(
         fontFamily: 'monospace',
         fontSize: 14,
-        color: accentColor,
+        color: theme.colorScheme.onSurface,
         backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
           alpha: 0.2,
         ),
@@ -328,7 +328,7 @@ class MarkdownSpanBuilder {
     final codeStyle = TextStyle(
       fontFamily: 'monospace',
       fontSize: (baseStyle.fontSize ?? 14) * 0.9,
-      color: accentColor,
+      color: theme.colorScheme.onSurface,
       backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
         alpha: 0.25,
       ),

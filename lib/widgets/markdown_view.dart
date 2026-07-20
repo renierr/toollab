@@ -161,7 +161,7 @@ class _MarkdownViewState extends State<MarkdownView>
       code: TextStyle(
         fontFamily: 'monospace',
         fontSize: 14,
-        color: widget.accentColor,
+        color: theme.colorScheme.onSurface,
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
       ),
       codeblockPadding: const EdgeInsets.symmetric(

@@ -25,7 +25,9 @@ class FastDropService {
 
   static Future<List<FastDropItem>> fetchDrops(String baseUrl) async {
     final url = '${_sanitizeUrl(baseUrl)}/api/drop';
-    final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+    final response = await http
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       if (data['success'] == true) {
@@ -71,12 +73,15 @@ class FastDropService {
 
     try {
       final request = await httpClient.postUrl(Uri.parse(url));
-      
+
       // Set headers
       request.headers.add('X-Filename', Uri.encodeComponent(filename));
       request.headers.add('X-Retention', retention);
       request.headers.add('X-Source', source);
-      request.headers.add('Content-Type', mimeType.isEmpty ? 'application/octet-stream' : mimeType);
+      request.headers.add(
+        'Content-Type',
+        mimeType.isEmpty ? 'application/octet-stream' : mimeType,
+      );
       request.contentLength = total;
 
       int sent = 0;
@@ -184,7 +189,7 @@ class FastDropService {
   }) async {
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id';
     final httpClient = HttpClient();
-    
+
     try {
       if (isCancelled != null && isCancelled()) {
         throw Exception('Download cancelled by user');
@@ -243,7 +248,10 @@ class FastDropService {
         await for (final chunk in response) {
           bytesBuilder.add(chunk);
         }
-        final errorBody = utf8.decode(bytesBuilder.takeBytes(), allowMalformed: true);
+        final errorBody = utf8.decode(
+          bytesBuilder.takeBytes(),
+          allowMalformed: true,
+        );
         final parsedError = _parseError(errorBody);
         throw Exception(
           parsedError ?? 'Failed to download drop: ${response.statusCode}',
