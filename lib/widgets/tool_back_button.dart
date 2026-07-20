@@ -39,7 +39,7 @@ class ToolBackButton extends StatelessWidget {
       if (isStandaloneMode) {
         final l10n = AppLocalizations.of(context);
         return IconButton(
-          icon: const Icon(Icons.settings_outlined),
+          icon: const Icon(Icons.tune_outlined),
           color: color,
           iconSize: iconSize,
           visualDensity: visualDensity,
