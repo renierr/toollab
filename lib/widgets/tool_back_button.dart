@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tool_lab/core/app_mode.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 /// A premium, reusable back/home button for tools that automatically adapts
@@ -33,6 +34,22 @@ class ToolBackButton extends StatelessWidget {
     final isRoot = GoRouterState.of(context).matchedLocation == '/';
 
     if (!canPop && isRoot) {
+      // Standalone single-tool build has no overview to return to; repurpose
+      // the otherwise-empty slot as a settings entry point.
+      if (isStandaloneMode) {
+        final l10n = AppLocalizations.of(context);
+        return IconButton(
+          icon: const Icon(Icons.settings_outlined),
+          color: color,
+          iconSize: iconSize,
+          visualDensity: visualDensity,
+          padding: padding,
+          constraints: constraints,
+          style: style,
+          tooltip: l10n.coreSettingsDialogTitle,
+          onPressed: () => context.push('/standalone-settings'),
+        );
+      }
       return const SizedBox.shrink();
     }
 

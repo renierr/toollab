@@ -82,7 +82,8 @@ class TerminalMenu {
             if (nextByte2 == 65) {
               // Up Arrow
               clear();
-              selectedIndex = (selectedIndex - 1 + options.length) % options.length;
+              selectedIndex =
+                  (selectedIndex - 1 + options.length) % options.length;
               render();
             } else if (nextByte2 == 66) {
               // Down Arrow
@@ -99,7 +100,9 @@ class TerminalMenu {
 
       // Clear menu and print final selection
       clear();
-      stdout.write('\x1B[32m✔\x1B[0m $prompt: \x1B[36m${options[selectedIndex]}\x1B[0m\n');
+      stdout.write(
+        '\x1B[32m✔\x1B[0m $prompt: \x1B[36m${options[selectedIndex]}\x1B[0m\n',
+      );
 
       return selectedIndex;
     } finally {
@@ -124,17 +127,23 @@ class TerminalMenu {
       if (input == null) return null; // EOF / Cancel
 
       final val = input.trim();
-      if (val.toLowerCase() == 'q' || val.toLowerCase() == 'exit' || val.toLowerCase() == 'quit') {
+      if (val.toLowerCase() == 'q' ||
+          val.toLowerCase() == 'exit' ||
+          val.toLowerCase() == 'quit') {
         return null;
       }
 
       final index = int.tryParse(val);
       if (index != null && index >= 1 && index <= options.length) {
         final selectedIndex = index - 1;
-        stdout.write('\x1B[32m✔\x1B[0m $prompt: \x1B[36m${options[selectedIndex]}\x1B[0m\n');
+        stdout.write(
+          '\x1B[32m✔\x1B[0m $prompt: \x1B[36m${options[selectedIndex]}\x1B[0m\n',
+        );
         return selectedIndex;
       }
-      print('Invalid selection. Please enter a number between 1 and ${options.length} (or type "q" to quit).');
+      print(
+        'Invalid selection. Please enter a number between 1 and ${options.length} (or type "q" to quit).',
+      );
     }
   }
 }

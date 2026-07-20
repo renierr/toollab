@@ -17,7 +17,9 @@ class StandaloneBuilder {
     final patcher = ConfigPatcher(tool: tool, platform: platform);
 
     try {
-      print('\n[1/3] Generating temporary entry point (lib/main_standalone.dart)...');
+      print(
+        '\n[1/3] Generating temporary entry point (lib/main_standalone.dart)...',
+      );
       await _mainStandaloneFile.writeAsString(_generateEntryPoint());
 
       print('[2/3] Patching configuration files...');
@@ -27,9 +29,14 @@ class StandaloneBuilder {
       final scanResult = _findUsedPackages(_mainStandaloneFile.path);
       final usedPackages = scanResult.packages;
       final usedAssets = _findUsedAssets(scanResult.visitedFiles);
-      
+
       print('Used packages: ${usedPackages.join(', ')}');
       print('Used assets: ${usedAssets.join(', ')}');
+
+      if (platform.startsWith('android')) {
+        print('Generating pruned standalone AndroidManifest...');
+        await patcher.generateAndroidManifest(usedPackages);
+      }
 
       print('Cleaning build cache to remove unused native plugins...');
       await Process.run('flutter', ['clean'], runInShell: true);
@@ -45,14 +52,18 @@ class StandaloneBuilder {
         ..._getExtraBuildArgs(),
       ];
 
-      final process = await Process.start('flutter', buildArgs, runInShell: true);
-      
+      final process = await Process.start(
+        'flutter',
+        buildArgs,
+        runInShell: true,
+      );
+
       // Pipe process stdout and stderr directly to console
       final stdoutStream = process.stdout.listen((data) => stdout.add(data));
       final stderrStream = process.stderr.listen((data) => stderr.add(data));
 
       final exitCode = await process.exitCode;
-      
+
       // Wait for streams to flush
       await stdoutStream.cancel();
       await stderrStream.cancel();
@@ -68,7 +79,9 @@ class StandaloneBuilder {
         String finalPath = '';
         if (platform.startsWith('android')) {
           if (platform == 'android' || platform == 'android-apk') {
-            final srcFile = File('build/app/outputs/flutter-apk/app-release.apk');
+            final srcFile = File(
+              'build/app/outputs/flutter-apk/app-release.apk',
+            );
             final destFile = File('dist/${tool.id}$versionSuffix-release.apk');
             if (await srcFile.exists()) {
               await srcFile.copy(destFile.path);
@@ -80,10 +93,16 @@ class StandaloneBuilder {
             if (await srcDir.exists()) {
               await for (final file in srcDir.list()) {
                 final name = p.basename(file.path);
-                if (file is File && name.startsWith('app-') && name.endsWith('-release.apk')) {
+                if (file is File &&
+                    name.startsWith('app-') &&
+                    name.endsWith('-release.apk')) {
                   if (name == 'app-release.apk') continue;
-                  final target = name.replaceFirst('app-', '').replaceFirst('-release.apk', '');
-                  final destFile = File('dist/${tool.id}$versionSuffix-$target-release.apk');
+                  final target = name
+                      .replaceFirst('app-', '')
+                      .replaceFirst('-release.apk', '');
+                  final destFile = File(
+                    'dist/${tool.id}$versionSuffix-$target-release.apk',
+                  );
                   await file.copy(destFile.path);
                   copiedPaths.add(destFile.path);
                 }
@@ -91,14 +110,20 @@ class StandaloneBuilder {
             }
             finalPath = copiedPaths.join(', ');
           } else if (platform == 'android-arm64') {
-            final srcFile = File('build/app/outputs/flutter-apk/app-arm64-v8a-release.apk');
-            final destFile = File('dist/${tool.id}$versionSuffix-arm64-v8a-release.apk');
+            final srcFile = File(
+              'build/app/outputs/flutter-apk/app-arm64-v8a-release.apk',
+            );
+            final destFile = File(
+              'dist/${tool.id}$versionSuffix-arm64-v8a-release.apk',
+            );
             if (await srcFile.exists()) {
               await srcFile.copy(destFile.path);
               finalPath = destFile.path;
             }
           } else if (platform == 'android-bundle') {
-            final srcFile = File('build/app/outputs/bundle/release/app-release.aab');
+            final srcFile = File(
+              'build/app/outputs/bundle/release/app-release.aab',
+            );
             final destFile = File('dist/${tool.id}$versionSuffix-release.aab');
             if (await srcFile.exists()) {
               await srcFile.copy(destFile.path);
@@ -107,7 +132,9 @@ class StandaloneBuilder {
           }
         } else if (platform == 'windows') {
           final srcDir = Directory('build/windows/x64/runner/Release');
-          final destDir = Directory('dist/${tool.folderName}$versionSuffix-windows');
+          final destDir = Directory(
+            'dist/${tool.folderName}$versionSuffix-windows',
+          );
           if (await srcDir.exists()) {
             if (await destDir.exists()) {
               await destDir.delete(recursive: true);
@@ -117,7 +144,9 @@ class StandaloneBuilder {
           }
         } else if (platform == 'linux') {
           final srcDir = Directory('build/linux/x64/release/bundle');
-          final destDir = Directory('dist/${tool.folderName}$versionSuffix-linux');
+          final destDir = Directory(
+            'dist/${tool.folderName}$versionSuffix-linux',
+          );
           if (await srcDir.exists()) {
             if (await destDir.exists()) {
               await destDir.delete(recursive: true);
@@ -194,7 +223,9 @@ class StandaloneBuilder {
     await destination.create(recursive: true);
     await for (final entity in source.list(recursive: false)) {
       if (entity is Directory) {
-        final newDirectory = Directory(p.join(destination.path, p.basename(entity.path)));
+        final newDirectory = Directory(
+          p.join(destination.path, p.basename(entity.path)),
+        );
         await _copyDirectory(entity, newDirectory);
       } else if (entity is File) {
         await entity.copy(p.join(destination.path, p.basename(entity.path)));
@@ -204,10 +235,12 @@ class StandaloneBuilder {
 
   String _generateEntryPoint() {
     return '''// GENERATED FILE - DO NOT MODIFY OR COMMIT
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:tool_lab/core/app_mode.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
@@ -216,10 +249,16 @@ import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/pages/standalone_settings_page.dart';
+import 'package:tool_lab/pages/appearance_settings_page.dart';
+import 'package:tool_lab/pages/maintenance_page.dart';
+import 'package:tool_lab/pages/sync_settings_page.dart';
+import 'package:tool_lab/pages/about_page.dart';
 import 'package:tool_lab/tools/${tool.folderName}/config.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  isStandaloneMode = true;
   await TempFileManager.init();
   SharingService.startupArgs = args;
   await DatabaseService.instance.database;
@@ -245,6 +284,26 @@ final _router = GoRouter(
       path: '/',
       builder: (context, state) => ${tool.className}.config.createPage(state.extra as SharedData?),
     ),
+    GoRoute(
+      path: '/standalone-settings',
+      builder: (context, state) => const StandaloneSettingsPage(),
+    ),
+    GoRoute(
+      path: '/appearance-settings',
+      builder: (context, state) => const AppearanceSettingsPage(),
+    ),
+    GoRoute(
+      path: '/maintenance',
+      builder: (context, state) => const MaintenancePage(),
+    ),
+    GoRoute(
+      path: '/sync-settings',
+      builder: (context, state) => const SyncSettingsPage(),
+    ),
+    GoRoute(
+      path: '/about',
+      builder: (context, state) => const AboutPage(),
+    ),
   ],
   errorBuilder: (context, state) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -256,8 +315,57 @@ final _router = GoRouter(
   },
 );
 
-class StandaloneAppWrapper extends StatelessWidget {
+class StandaloneAppWrapper extends StatefulWidget {
   const StandaloneAppWrapper({super.key});
+
+  @override
+  State<StandaloneAppWrapper> createState() => _StandaloneAppWrapperState();
+}
+
+class _StandaloneAppWrapperState extends State<StandaloneAppWrapper>
+    with WidgetsBindingObserver {
+  StreamSubscription<SharedData>? _sharingSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initSharing();
+  }
+
+  Future<void> _initSharing() async {
+    await _checkPending();
+    _sharingSubscription =
+        SharingService.instance.onSharedData.listen((data) {
+      if (mounted && !data.isEmpty) _openWithData(data);
+    });
+  }
+
+  Future<void> _checkPending() async {
+    final initial = await SharingService.instance.getInitialSharedData();
+    if (initial != null && !initial.isEmpty) _openWithData(initial);
+  }
+
+  Future<void> _openWithData(SharedData data) async {
+    await SharingService.instance.clearSharedData();
+    if (mounted) _router.go('/', extra: data);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPending();
+    } else if (state == AppLifecycleState.detached) {
+      TempFileManager.cleanSession();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _sharingSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -291,29 +399,33 @@ class AppScrollBehavior extends MaterialScrollBehavior {
 ''';
   }
 
-
   ScanResult _findUsedPackages(String entryPoint) {
     final visited = <String>{};
     final packages = <String>{};
-    
+
     void visit(String filePath) {
       if (visited.contains(filePath)) return;
       visited.add(filePath);
-      
+
       final file = File(filePath);
       if (!file.existsSync()) return;
-      
+
       try {
         final content = file.readAsStringSync();
-        final imports = RegExp(r"import\s+['\x22]([^'\x22]+)['\x22]").allMatches(content);
-        
+        final imports = RegExp(
+          r"import\s+['\x22]([^'\x22]+)['\x22]",
+        ).allMatches(content);
+
         for (final match in imports) {
           final importPath = match.group(1)!;
           if (importPath.startsWith('package:')) {
             final parts = importPath.substring(8).split('/');
             final pkg = parts[0];
             if (pkg == 'tool_lab') {
-              final localPath = importPath.replaceFirst('package:tool_lab/', 'lib/');
+              final localPath = importPath.replaceFirst(
+                'package:tool_lab/',
+                'lib/',
+              );
               visit(localPath);
             } else if (pkg != 'flutter') {
               packages.add(pkg);
@@ -326,7 +438,7 @@ class AppScrollBehavior extends MaterialScrollBehavior {
         }
       } catch (_) {}
     }
-    
+
     visit(entryPoint);
     return ScanResult(packages, visited);
   }
@@ -339,11 +451,11 @@ class AppScrollBehavior extends MaterialScrollBehavior {
       'assets/grammars/': 'assets/grammars/',
       'assets/logo/': 'assets/logo/',
     };
-    
+
     for (final filePath in visitedFiles) {
       final file = File(filePath);
       if (!file.existsSync()) continue;
-      
+
       try {
         final content = file.readAsStringSync();
         for (final pattern in assetPatterns.keys) {
@@ -353,7 +465,7 @@ class AppScrollBehavior extends MaterialScrollBehavior {
         }
       } catch (_) {}
     }
-    
+
     return usedAssets;
   }
 }
