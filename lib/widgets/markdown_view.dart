@@ -160,6 +160,7 @@ class _MarkdownViewState extends State<MarkdownView>
       p: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
       code: TextStyle(
         fontFamily: 'monospace',
+        fontFamilyFallback: const ['Courier', 'Consolas'],
         fontSize: 14,
         color: theme.colorScheme.onSurface,
         backgroundColor: theme.colorScheme.surfaceContainerHighest,

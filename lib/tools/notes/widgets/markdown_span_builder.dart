@@ -88,6 +88,7 @@ class MarkdownSpanBuilder {
                 text: previewData,
                 style: lineStyle.copyWith(
                   fontFamily: 'monospace',
+                  fontFamilyFallback: const ['Courier', 'Consolas'],
                   fontSize: 12,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.25),
                 ),
@@ -183,6 +184,7 @@ class MarkdownSpanBuilder {
       text: line,
       style: TextStyle(
         fontFamily: 'monospace',
+        fontFamilyFallback: const ['Courier', 'Consolas'],
         fontSize: 14,
         color: fadedColor,
         backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
@@ -195,6 +197,7 @@ class MarkdownSpanBuilder {
       text: line,
       style: TextStyle(
         fontFamily: 'monospace',
+        fontFamilyFallback: const ['Courier', 'Consolas'],
         fontSize: 14,
         color: theme.colorScheme.onSurface,
         backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
@@ -338,6 +341,7 @@ class MarkdownSpanBuilder {
     final fadedColor = theme.colorScheme.onSurface.withValues(alpha: 0.35);
     final codeStyle = TextStyle(
       fontFamily: 'monospace',
+      fontFamilyFallback: const ['Courier', 'Consolas'],
       fontSize: (baseStyle.fontSize ?? 14) * 0.9,
       color: theme.colorScheme.onSurface,
       backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.22),

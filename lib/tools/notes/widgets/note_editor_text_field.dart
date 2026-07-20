@@ -28,6 +28,7 @@ class NoteEditorTextField extends StatelessWidget {
         clipBehavior: Clip.none,
         style: TextStyle(
           fontFamily: isMonospace ? 'monospace' : null,
+          fontFamilyFallback: isMonospace ? const ['Courier', 'Consolas'] : null,
           fontSize: 16,
           height: 1.5,
           color: theme.colorScheme.onSurface,
