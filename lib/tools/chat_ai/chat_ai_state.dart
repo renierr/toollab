@@ -85,6 +85,53 @@ class ChatAiState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Max characters of document context fed into a one-shot [askAboutDocument]
+  /// call. Gemini Nano has a small context window, so longer text is truncated.
+  static const int maxDocumentContextChars = 4000;
+
+  /// Session-less one-shot question about a block of document text. Unlike
+  /// [sendMessage] this does not touch chat sessions/history/DB — it is meant
+  /// for embedding AI Q&A inside other tools (e.g. the PDF text extractor).
+  Future<String> askAboutDocument({
+    required String documentText,
+    required String question,
+  }) async {
+    final truncated = documentText.length > maxDocumentContextChars
+        ? '${documentText.substring(0, maxDocumentContextChars)}... [Truncated]'
+        : documentText;
+    final promptText =
+        (StringBuffer()
+              ..writeln(activeSystemPrompt)
+              ..writeln()
+              ..writeln(
+                'The user provided the following document text. Answer the '
+                'question based only on this text.',
+              )
+              ..writeln('----- DOCUMENT START -----')
+              ..writeln(truncated)
+              ..writeln('----- DOCUMENT END -----')
+              ..writeln()
+              ..writeln('Question: $question'))
+            .toString();
+
+    if (Platform.isAndroid &&
+        _featureStatus == FeatureStatus.available &&
+        _prompt != null) {
+      final response = await _prompt!.runInference(promptText);
+      return response.trim();
+    }
+
+    // Fallback for non-Android platforms or when the model is not ready.
+    await Future.delayed(const Duration(seconds: 1));
+    if (!Platform.isAndroid) {
+      return 'This is a simulated AI response. On-device Gemini Nano is only '
+          'supported on Android. On a supported device, your question would be '
+          'answered locally using the document text as context.';
+    }
+    return 'This is a simulated AI response. Please ensure the Gemini Nano '
+        'model is fully downloaded and available on your Android device.';
+  }
+
   ChatAiState() {
     init();
   }

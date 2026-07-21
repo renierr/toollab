@@ -1476,6 +1476,42 @@
   "pdfNavModeOrganizePages": "Organize Pages",
   "pdfNavModeFlattenPdf": "Flatten PDF",
   "pdfNavModeExtractImages": "Extract Images",
+  "pdfNavModeExtractText": "Extract Text",
+  "pdfExtractTextTitle": "Extract Text: {fileName}",
+  "@pdfExtractTextTitle": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfExtractTextProgress": "Extracting text… {current}/{total}",
+  "@pdfExtractTextProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfExtractTextEmpty": "No extractable text found in this PDF. It may be scanned or image-only.",
+  "pdfExtractTextFailed": "Failed to extract text: {error}",
+  "@pdfExtractTextFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfExtractTextCopy": "Copy",
+  "pdfExtractTextCopied": "Text copied to clipboard",
+  "pdfExtractTextSave": "Save as .txt",
+  "pdfExtractTextAskHint": "Ask a question about this text…",
+  "pdfExtractTextAskSend": "Ask",
+  "pdfExtractTextThinking": "Thinking…",
+  "pdfExtractTextTruncatedNote": "Note: only the first part of the text is sent to the on-device AI.",
    "pdfNavModeMetadata": "Metadata",
   "pdfNavModeRedact": "Redact PDF",
   "pdfNavCloseSearch": "Close Search",

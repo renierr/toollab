@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/selectable_text_view.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 
 class ExtractedTextDialog extends StatelessWidget {
@@ -64,53 +65,11 @@ class ExtractedTextDialog extends StatelessWidget {
       ),
       content: SizedBox(
         width: 500,
-        child: hasText
-            ? Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.45,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.15,
-                  ),
-                ),
-                padding: const EdgeInsets.all(12.0),
-                child: SingleChildScrollView(
-                  child: SelectableText(
-                    trimmedText,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ),
-              )
-            : Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.text_snippet_outlined,
-                        size: 48,
-                        color: theme.colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        l10n.imgViewExtractTextNoText,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+        child: SelectableTextView(
+          text: trimmedText,
+          emptyMessage: l10n.imgViewExtractTextNoText,
+          maxHeight: MediaQuery.of(context).size.height * 0.45,
+        ),
       ),
       actions: [
         if (hasText)

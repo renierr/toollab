@@ -830,6 +830,42 @@
   "pdfNavModeOrganizePages": "Seiten anordnen",
   "pdfNavModeFlattenPdf": "PDF reduzieren",
   "pdfNavModeExtractImages": "Bilder extrahieren",
+  "pdfNavModeExtractText": "Text extrahieren",
+  "pdfExtractTextTitle": "Text extrahieren: {fileName}",
+  "@pdfExtractTextTitle": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfExtractTextProgress": "Text wird extrahiert … {current}/{total}",
+  "@pdfExtractTextProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfExtractTextEmpty": "Kein extrahierbarer Text in diesem PDF gefunden. Es ist möglicherweise gescannt oder enthält nur Bilder.",
+  "pdfExtractTextFailed": "Text konnte nicht extrahiert werden: {error}",
+  "@pdfExtractTextFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfExtractTextCopy": "Kopieren",
+  "pdfExtractTextCopied": "Text in die Zwischenablage kopiert",
+  "pdfExtractTextSave": "Als .txt speichern",
+  "pdfExtractTextAskHint": "Stelle eine Frage zu diesem Text …",
+  "pdfExtractTextAskSend": "Fragen",
+  "pdfExtractTextThinking": "Denkt nach …",
+  "pdfExtractTextTruncatedNote": "Hinweis: Nur der erste Teil des Textes wird an die On-Device-KI gesendet.",
    "pdfNavModeMetadata": "Metadaten",
   "pdfNavModeRedact": "PDF schwärzen",
   "pdfNavCloseSearch": "Suche schließen",

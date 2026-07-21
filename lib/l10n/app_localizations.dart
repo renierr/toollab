@@ -4496,6 +4496,78 @@ abstract class AppLocalizations {
   /// **'Extract Images'**
   String get pdfNavModeExtractImages;
 
+  /// No description provided for @pdfNavModeExtractText.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract Text'**
+  String get pdfNavModeExtractText;
+
+  /// No description provided for @pdfExtractTextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract Text: {fileName}'**
+  String pdfExtractTextTitle(String fileName);
+
+  /// No description provided for @pdfExtractTextProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracting text… {current}/{total}'**
+  String pdfExtractTextProgress(int current, int total);
+
+  /// No description provided for @pdfExtractTextEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No extractable text found in this PDF. It may be scanned or image-only.'**
+  String get pdfExtractTextEmpty;
+
+  /// No description provided for @pdfExtractTextFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to extract text: {error}'**
+  String pdfExtractTextFailed(String error);
+
+  /// No description provided for @pdfExtractTextCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get pdfExtractTextCopy;
+
+  /// No description provided for @pdfExtractTextCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Text copied to clipboard'**
+  String get pdfExtractTextCopied;
+
+  /// No description provided for @pdfExtractTextSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as .txt'**
+  String get pdfExtractTextSave;
+
+  /// No description provided for @pdfExtractTextAskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a question about this text…'**
+  String get pdfExtractTextAskHint;
+
+  /// No description provided for @pdfExtractTextAskSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask'**
+  String get pdfExtractTextAskSend;
+
+  /// No description provided for @pdfExtractTextThinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking…'**
+  String get pdfExtractTextThinking;
+
+  /// No description provided for @pdfExtractTextTruncatedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: only the first part of the text is sent to the on-device AI.'**
+  String get pdfExtractTextTruncatedNote;
+
   /// No description provided for @pdfNavModeMetadata.
   ///
   /// In en, this message translates to:

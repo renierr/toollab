@@ -2494,6 +2494,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfNavModeExtractImages => 'Extract Images';
 
   @override
+  String get pdfNavModeExtractText => 'Extract Text';
+
+  @override
+  String pdfExtractTextTitle(String fileName) {
+    return 'Extract Text: $fileName';
+  }
+
+  @override
+  String pdfExtractTextProgress(int current, int total) {
+    return 'Extracting text… $current/$total';
+  }
+
+  @override
+  String get pdfExtractTextEmpty =>
+      'No extractable text found in this PDF. It may be scanned or image-only.';
+
+  @override
+  String pdfExtractTextFailed(String error) {
+    return 'Failed to extract text: $error';
+  }
+
+  @override
+  String get pdfExtractTextCopy => 'Copy';
+
+  @override
+  String get pdfExtractTextCopied => 'Text copied to clipboard';
+
+  @override
+  String get pdfExtractTextSave => 'Save as .txt';
+
+  @override
+  String get pdfExtractTextAskHint => 'Ask a question about this text…';
+
+  @override
+  String get pdfExtractTextAskSend => 'Ask';
+
+  @override
+  String get pdfExtractTextThinking => 'Thinking…';
+
+  @override
+  String get pdfExtractTextTruncatedNote =>
+      'Note: only the first part of the text is sent to the on-device AI.';
+
+  @override
   String get pdfNavModeMetadata => 'Metadata';
 
   @override

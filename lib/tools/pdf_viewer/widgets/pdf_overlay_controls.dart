@@ -112,6 +112,8 @@ class PdfOverlayControls extends StatelessWidget {
                   ? Icons.photo_library_outlined
                   : currentMode == PdfViewerMode.extractImages
                   ? Icons.collections_outlined
+                  : currentMode == PdfViewerMode.extractText
+                  ? Icons.text_snippet_outlined
                   : currentMode == PdfViewerMode.metadata
                   ? Icons.info_outline
                   : currentMode == PdfViewerMode.redact
@@ -175,6 +177,17 @@ class PdfOverlayControls extends StatelessWidget {
                         const Icon(Icons.collections_outlined),
                         const SizedBox(width: 8),
                         Text(menuL10n.pdfNavModeExtractImages),
+                      ],
+                    ),
+                  ),
+                if (currentMode != PdfViewerMode.extractText)
+                  PopupMenuItem(
+                    value: PdfViewerMode.extractText,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.text_snippet_outlined),
+                        const SizedBox(width: 8),
+                        Text(menuL10n.pdfNavModeExtractText),
                       ],
                     ),
                   ),

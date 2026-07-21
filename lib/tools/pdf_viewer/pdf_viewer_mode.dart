@@ -4,6 +4,7 @@ enum PdfViewerMode {
   organize,
   flatten,
   extractImages,
+  extractText,
   metadata,
   redact,
 }

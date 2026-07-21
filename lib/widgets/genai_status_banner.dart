@@ -5,11 +5,15 @@ import 'package:google_mlkit_genai_prompt/src/prompt.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
-class ChatStatusBanner extends StatelessWidget {
+/// Shared on-device GenAI (Gemini Nano) model-status banner.
+///
+/// Shows model availability and a download/prepare action. Used by any tool
+/// that exposes the on-device AI (chat_ai, pdf_viewer extract-text).
+class GenAiStatusBanner extends StatelessWidget {
   final FeatureStatus status;
   final VoidCallback onDownload;
 
-  const ChatStatusBanner({
+  const GenAiStatusBanner({
     super.key,
     required this.status,
     required this.onDownload,

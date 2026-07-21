@@ -13,7 +13,7 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 import 'chat_ai_state.dart';
 import 'widgets/chat_message_bubble.dart';
 import 'widgets/chat_session_drawer.dart';
-import 'widgets/chat_status_banner.dart';
+import 'package:tool_lab/widgets/genai_status_banner.dart';
 import 'widgets/chat_suggestions.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/chat_thinking_bubble.dart';
@@ -238,7 +238,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
       ],
       child: Column(
         children: [
-          ChatStatusBanner(
+          GenAiStatusBanner(
             status: state.featureStatus,
             onDownload: state.downloadModel,
           ),

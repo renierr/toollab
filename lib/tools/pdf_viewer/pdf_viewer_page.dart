@@ -19,6 +19,7 @@ import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_mode.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_organize_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_flatten_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_images_panel.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_extract_text_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_metadata_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_sign_panel.dart';
 import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_redact_panel.dart';
@@ -342,6 +343,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
     setState(() => _mode = PdfViewerMode.view);
   }
 
+  void _onExtractTextCancel() {
+    setState(() => _mode = PdfViewerMode.view);
+  }
+
   void _onMetadataComplete(String pdfPath, String name) {
     _resetViewerState();
     setState(() {
@@ -453,6 +458,20 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         child: PdfExtractImagesPanel(
           session: _operationSession,
           onCancel: _onExtractImagesCancel,
+        ),
+      );
+    }
+
+    if (_mode == PdfViewerMode.extractText) {
+      return ToolLayout(
+        title: PdfViewerTool.config.localizedName(l10n),
+        fullscreen: true,
+        showFloatingBackButton: false,
+        scaffoldKey: _scaffoldKey,
+        backgroundColor: theme.colorScheme.surface,
+        child: PdfExtractTextPanel(
+          session: _operationSession,
+          onCancel: _onExtractTextCancel,
         ),
       );
     }
