@@ -58,9 +58,8 @@ class MarkdownSpanBuilder {
           final isFirst = !firstRefSeen;
           if (isFirst) firstRefSeen = true;
 
-          final refBgColor = theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.15,
-          );
+          final refBgColor = theme.colorScheme.surfaceContainerHighest
+              .withValues(alpha: 0.15);
           final lineStyle = baseTextStyle.copyWith(
             backgroundColor: refBgColor,
             decoration: isFirst ? TextDecoration.overline : null,
@@ -113,7 +112,12 @@ class MarkdownSpanBuilder {
 
         if (styledPart.startsWith('> ')) {
           final content = styledPart.substring(2);
-          lineSpan = _buildBlockquoteLine(styledPart, content, baseTextStyle, theme);
+          lineSpan = _buildBlockquoteLine(
+            styledPart,
+            content,
+            baseTextStyle,
+            theme,
+          );
         }
 
         final bulletMatch = RegExp(
@@ -135,7 +139,9 @@ class MarkdownSpanBuilder {
           );
         }
 
-        final orderedMatch = RegExp(r'^(\s*)(\d+\.\s+)(.*)$').firstMatch(styledPart);
+        final orderedMatch = RegExp(
+          r'^(\s*)(\d+\.\s+)(.*)$',
+        ).firstMatch(styledPart);
         if (orderedMatch != null) {
           final prefix = orderedMatch.group(1) ?? '';
           final marker = orderedMatch.group(2) ?? '';
