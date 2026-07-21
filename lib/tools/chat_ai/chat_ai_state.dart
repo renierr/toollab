@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 // ignore: implementation_imports
 import 'package:google_mlkit_genai_prompt/src/prompt.dart';
+import 'package:tool_lab/helpers/text_analysis_helper.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'chat_ai_db_helper.dart';
 import 'config.dart';
@@ -41,6 +42,14 @@ class ChatAiState extends ChangeNotifier {
   String? get attachedFileName => _attachedFileName;
   String? get attachedFileContent => _attachedFileContent;
   String? get modelError => _modelError;
+
+  /// True only when real on-device generative inference is usable. The single
+  /// source of truth for the Android + Gemini-Nano gating condition; when
+  /// false the tools fall back to offline extractive text analysis.
+  bool get isGenerativeAvailable =>
+      Platform.isAndroid &&
+      _featureStatus == FeatureStatus.available &&
+      _prompt != null;
 
   void clearModelError() {
     _modelError = null;
@@ -96,40 +105,33 @@ class ChatAiState extends ChangeNotifier {
     required String documentText,
     required String question,
   }) async {
-    final truncated = documentText.length > maxDocumentContextChars
-        ? '${documentText.substring(0, maxDocumentContextChars)}... [Truncated]'
-        : documentText;
-    final promptText =
-        (StringBuffer()
-              ..writeln(activeSystemPrompt)
-              ..writeln()
-              ..writeln(
-                'The user provided the following document text. Answer the '
-                'question based only on this text.',
-              )
-              ..writeln('----- DOCUMENT START -----')
-              ..writeln(truncated)
-              ..writeln('----- DOCUMENT END -----')
-              ..writeln()
-              ..writeln('Question: $question'))
-            .toString();
-
-    if (Platform.isAndroid &&
-        _featureStatus == FeatureStatus.available &&
-        _prompt != null) {
+    if (isGenerativeAvailable) {
+      final truncated = documentText.length > maxDocumentContextChars
+          ? '${documentText.substring(0, maxDocumentContextChars)}... [Truncated]'
+          : documentText;
+      final promptText =
+          (StringBuffer()
+                ..writeln(activeSystemPrompt)
+                ..writeln()
+                ..writeln(
+                  'The user provided the following document text. Answer the '
+                  'question based only on this text.',
+                )
+                ..writeln('----- DOCUMENT START -----')
+                ..writeln(truncated)
+                ..writeln('----- DOCUMENT END -----')
+                ..writeln()
+                ..writeln('Question: $question'))
+              .toString();
       final response = await _prompt!.runInference(promptText);
       return response.trim();
     }
 
-    // Fallback for non-Android platforms or when the model is not ready.
-    await Future.delayed(const Duration(seconds: 1));
-    if (!Platform.isAndroid) {
-      return 'This is a simulated AI response. On-device Gemini Nano is only '
-          'supported on Android. On a supported device, your question would be '
-          'answered locally using the document text as context.';
-    }
-    return 'This is a simulated AI response. Please ensure the Gemini Nano '
-        'model is fully downloaded and available on your Android device.';
+    // Offline fallback (no on-device LLM): extractive passage answer.
+    final extractive = TextAnalysisHelper.answer(documentText, question);
+    return extractive.isNotEmpty
+        ? extractive
+        : 'No relevant passages found for your question in the extracted text.';
   }
 
   ChatAiState() {
@@ -324,9 +326,7 @@ class ChatAiState extends ChangeNotifier {
       _isGenerating = true;
       notifyListeners();
 
-      if (Platform.isAndroid &&
-          _featureStatus == FeatureStatus.available &&
-          _prompt != null) {
+      if (isGenerativeAvailable) {
         final promptText = _buildPromptText();
         final response = await _prompt!.runInference(
           promptText,
@@ -338,21 +338,24 @@ class ChatAiState extends ChangeNotifier {
           response.trim(),
         );
       } else {
-        // Fallback for non-Android platforms or if model is not ready
+        // Offline fallback (no on-device LLM). With an attached document we can
+        // still give a real extractive answer; otherwise explain the situation.
         await Future.delayed(const Duration(seconds: 1));
-        String response = 'This is a simulated AI response. ';
-        if (imageToSend != null) {
-          response +=
-              '\n\n[Simulated Image Analysis]: The model detected a multimodal input image (bytes size: ${imageToSend.length}). On supported Android devices, this image is processed locally on-device by Gemini Nano.';
-        } else if (fileNameToSend != null) {
-          response +=
-              '\n\n[Simulated Document Analysis]: The model detected an attached file "$fileNameToSend". On supported Android devices, the file content is processed locally along with your prompt.';
+        final String response;
+        if (fileContentToSend != null) {
+          final extractive = TextAnalysisHelper.answer(fileContentToSend, text);
+          response = extractive.isNotEmpty
+              ? extractive
+              : 'No relevant passages found in the attached document "$fileNameToSend" for your question.';
+        } else if (imageToSend != null) {
+          response =
+              'On-device image analysis (Gemini Nano) is only available on supported Android devices. Attach a text or PDF document to use offline text analysis on this platform.';
         } else if (!Platform.isAndroid) {
-          response +=
-              'On-device Gemini Nano is only supported on Android. For other platforms, please use a cloud model or simulate.';
+          response =
+              'On-device AI is only available on supported Android devices. Attach a text or PDF document and ask about it to use offline text analysis instead.';
         } else {
-          response +=
-              'Please ensure the Gemini Nano model is fully downloaded and available on your Android device.';
+          response =
+              'The Gemini Nano model is not ready yet. Please ensure it is fully downloaded and available on your device.';
         }
         await ChatAiDbHelper.instance.insertMessage(
           sessionId,

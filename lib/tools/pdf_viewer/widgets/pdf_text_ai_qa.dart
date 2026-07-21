@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/helpers/text_analysis_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/chat_ai/chat_ai_state.dart';
 import 'package:tool_lab/widgets/genai_status_banner.dart';
 
-/// Inline on-device AI Q&A over an extracted block of text. Reuses the shared
-/// [ChatAiState] engine (Gemini Nano) without touching its chat sessions.
+enum _ResultKind { ask, summary, keywords }
+
+/// Inline text-intelligence section over an extracted block of text. Uses the
+/// on-device LLM ([ChatAiState]) when available, and always offers offline
+/// extractive tools (summary, keywords, passage answers) via
+/// [TextAnalysisHelper] so it works on every platform.
 class PdfTextAiQa extends StatefulWidget {
   final String documentText;
 
@@ -18,9 +23,13 @@ class PdfTextAiQa extends StatefulWidget {
 
 class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
   final TextEditingController _questionController = TextEditingController();
-  bool _isAsking = false;
-  String? _answer;
+  bool _isBusy = false;
+  String? _result;
+  _ResultKind? _resultKind;
+  bool _resultFromAi = false;
   String? _error;
+
+  bool get _hasText => widget.documentText.trim().isNotEmpty;
 
   @override
   void initState() {
@@ -30,12 +39,14 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
 
   Future<void> _ask() async {
     final question = _questionController.text.trim();
-    if (question.isEmpty || _isAsking) return;
+    if (question.isEmpty || _isBusy || !_hasText) return;
 
     final state = context.read<ChatAiState>();
+    final generative = state.isGenerativeAvailable;
     setState(() {
-      _isAsking = true;
-      _answer = null;
+      _isBusy = true;
+      _result = null;
+      _resultKind = null;
       _error = null;
     });
     try {
@@ -44,13 +55,43 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
         question: question,
       );
       if (!mounted) return;
-      setState(() => _answer = answer);
+      setState(() {
+        _result = answer;
+        _resultKind = _ResultKind.ask;
+        _resultFromAi = generative;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString());
     } finally {
-      if (mounted) setState(() => _isAsking = false);
+      if (mounted) setState(() => _isBusy = false);
     }
+  }
+
+  void _summarize() {
+    if (_isBusy || !_hasText) return;
+    final l10n = AppLocalizations.of(context);
+    final summary = TextAnalysisHelper.summarize(widget.documentText);
+    setState(() {
+      _error = null;
+      _resultKind = _ResultKind.summary;
+      _resultFromAi = false;
+      _result = summary.isNotEmpty ? summary : l10n.pdfExtractTextEmpty;
+    });
+  }
+
+  void _keywords() {
+    if (_isBusy || !_hasText) return;
+    final l10n = AppLocalizations.of(context);
+    final keywords = TextAnalysisHelper.extractKeywords(widget.documentText);
+    setState(() {
+      _error = null;
+      _resultKind = _ResultKind.keywords;
+      _resultFromAi = false;
+      _result = keywords.isNotEmpty
+          ? keywords.join(', ')
+          : l10n.pdfExtractTextEmpty;
+    });
   }
 
   @override
@@ -59,11 +100,30 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<ChatAiState>();
     final isTruncated =
+        state.isGenerativeAvailable &&
         widget.documentText.length > ChatAiState.maxDocumentContextChars;
 
-    final Widget answerArea;
-    if (_isAsking) {
-      answerArea = Row(
+    String? resultLabel;
+    switch (_resultKind) {
+      case _ResultKind.ask:
+        resultLabel = _resultFromAi
+            ? l10n.textToolsSourceAi
+            : l10n.textToolsSourceOffline;
+        break;
+      case _ResultKind.summary:
+        resultLabel = l10n.textToolsSummaryTitle;
+        break;
+      case _ResultKind.keywords:
+        resultLabel = l10n.textToolsKeywordsTitle;
+        break;
+      case null:
+        resultLabel = null;
+        break;
+    }
+
+    final Widget resultArea;
+    if (_isBusy) {
+      resultArea = Row(
         children: [
           const SizedBox(
             width: 18,
@@ -75,29 +135,49 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
         ],
       );
     } else if (_error != null) {
-      answerArea = Text(
+      resultArea = Text(
         _error!,
         style: theme.textTheme.bodyMedium?.copyWith(
           color: theme.colorScheme.error,
         ),
       );
-    } else if (_answer == null) {
-      answerArea = const SizedBox.shrink();
+    } else if (_result == null) {
+      resultArea = const SizedBox.shrink();
     } else {
-      answerArea = Container(
-        width: double.infinity,
-        constraints: const BoxConstraints(maxHeight: 220),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+      resultArea = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (resultLabel != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6.0),
+              child: Text(
+                resultLabel,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxHeight: 220),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+              ),
+              borderRadius: BorderRadius.circular(12),
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.15),
+            ),
+            padding: const EdgeInsets.all(12.0),
+            child: SingleChildScrollView(
+              child: SelectableText(
+                _result!,
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
           ),
-          borderRadius: BorderRadius.circular(12),
-          color: theme.colorScheme.primaryContainer.withValues(alpha: 0.15),
-        ),
-        padding: const EdgeInsets.all(12.0),
-        child: SingleChildScrollView(
-          child: SelectableText(_answer!, style: theme.textTheme.bodyMedium),
-        ),
+        ],
       );
     }
 
@@ -123,6 +203,7 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
                       controller: _questionController,
                       minLines: 1,
                       maxLines: 3,
+                      enabled: _hasText,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _ask(),
                       decoration: InputDecoration(
@@ -134,9 +215,26 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
                   ),
                   const SizedBox(width: 8),
                   FilledButton.icon(
-                    onPressed: _isAsking ? null : _ask,
+                    onPressed: (_isBusy || !_hasText) ? null : _ask,
                     icon: const Icon(Icons.send, size: 18),
                     label: Text(l10n.pdfExtractTextAskSend),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: (_isBusy || !_hasText) ? null : _summarize,
+                    icon: const Icon(Icons.subject, size: 18),
+                    label: Text(l10n.textToolsSummarize),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: (_isBusy || !_hasText) ? null : _keywords,
+                    icon: const Icon(Icons.label_outline, size: 18),
+                    label: Text(l10n.textToolsKeywords),
                   ),
                 ],
               ),
@@ -151,7 +249,7 @@ class _PdfTextAiQaState extends State<PdfTextAiQa> with DisposeCleanup {
                   ),
                 ),
               const SizedBox(height: 12),
-              answerArea,
+              resultArea,
             ],
           ),
         ),

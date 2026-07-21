@@ -2563,6 +2563,29 @@ class AppLocalizationsDe extends AppLocalizations {
       'Hinweis: Nur der erste Teil des Textes wird an die On-Device-KI gesendet.';
 
   @override
+  String get textToolsSummarize => 'Zusammenfassen';
+
+  @override
+  String get textToolsKeywords => 'Schlüsselwörter';
+
+  @override
+  String get textToolsSourceAi => 'KI-Antwort';
+
+  @override
+  String get textToolsSourceOffline =>
+      'Offline-Ergebnis – am besten passende Textstellen';
+
+  @override
+  String get textToolsSummaryTitle => 'Zusammenfassung (offline)';
+
+  @override
+  String get textToolsKeywordsTitle => 'Schlüsselwörter (offline)';
+
+  @override
+  String get genaiOfflineAnalysisActive =>
+      'On-Device-KI nicht verfügbar – Offline-Textanalyse ist aktiv.';
+
+  @override
   String get pdfNavModeMetadata => 'Metadaten';
 
   @override

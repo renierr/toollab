@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 // ignore: implementation_imports
 import 'package:google_mlkit_genai_prompt/src/prompt.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/theme/theme.dart';
 
 /// Shared on-device GenAI (Gemini Nano) model-status banner.
 ///
@@ -26,18 +25,15 @@ class GenAiStatusBanner extends StatelessWidget {
 
     if (!Platform.isAndroid) {
       return Container(
-        color: AppTheme.statusAmber.withValues(alpha: 0.15),
+        color: theme.colorScheme.surfaceContainer,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: Row(
           children: [
-            const Icon(
-              Icons.warning_amber_rounded,
-              color: AppTheme.statusAmber,
-            ),
+            Icon(Icons.info_outline, color: theme.colorScheme.primary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                l10n.chatAiUnsupportedPlatform,
+                l10n.genaiOfflineAnalysisActive,
                 style: theme.textTheme.bodySmall,
               ),
             ),
@@ -123,7 +119,7 @@ class GenAiStatusBanner extends StatelessWidget {
       case FeatureStatus.downloadable:
         return l10n.chatAiModelNotDownloaded;
       case FeatureStatus.unavailable:
-        return 'AICore / Gemini Nano unavailable (Simulated Chat)';
+        return l10n.genaiOfflineAnalysisActive;
     }
   }
 }

@@ -4568,6 +4568,48 @@ abstract class AppLocalizations {
   /// **'Note: only the first part of the text is sent to the on-device AI.'**
   String get pdfExtractTextTruncatedNote;
 
+  /// No description provided for @textToolsSummarize.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarize'**
+  String get textToolsSummarize;
+
+  /// No description provided for @textToolsKeywords.
+  ///
+  /// In en, this message translates to:
+  /// **'Keywords'**
+  String get textToolsKeywords;
+
+  /// No description provided for @textToolsSourceAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI answer'**
+  String get textToolsSourceAi;
+
+  /// No description provided for @textToolsSourceOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline result — best-matching passages'**
+  String get textToolsSourceOffline;
+
+  /// No description provided for @textToolsSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary (offline)'**
+  String get textToolsSummaryTitle;
+
+  /// No description provided for @textToolsKeywordsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keywords (offline)'**
+  String get textToolsKeywordsTitle;
+
+  /// No description provided for @genaiOfflineAnalysisActive.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device AI unavailable — offline text analysis is active.'**
+  String get genaiOfflineAnalysisActive;
+
   /// No description provided for @pdfNavModeMetadata.
   ///
   /// In en, this message translates to:

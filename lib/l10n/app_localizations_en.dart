@@ -2538,6 +2538,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'Note: only the first part of the text is sent to the on-device AI.';
 
   @override
+  String get textToolsSummarize => 'Summarize';
+
+  @override
+  String get textToolsKeywords => 'Keywords';
+
+  @override
+  String get textToolsSourceAi => 'AI answer';
+
+  @override
+  String get textToolsSourceOffline =>
+      'Offline result — best-matching passages';
+
+  @override
+  String get textToolsSummaryTitle => 'Summary (offline)';
+
+  @override
+  String get textToolsKeywordsTitle => 'Keywords (offline)';
+
+  @override
+  String get genaiOfflineAnalysisActive =>
+      'On-device AI unavailable — offline text analysis is active.';
+
+  @override
   String get pdfNavModeMetadata => 'Metadata';
 
   @override
