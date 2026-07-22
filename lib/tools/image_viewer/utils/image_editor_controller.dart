@@ -15,6 +15,7 @@ import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
 import 'package:google_mlkit_subject_segmentation/google_mlkit_subject_segmentation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:tool_lab/tools/image_viewer/utils/windows_ocr.dart';
 
 class ImageEditorController extends ChangeNotifier {
   img.Image? _decodedImage;
@@ -880,8 +881,10 @@ class ImageEditorController extends ChangeNotifier {
     if (_uiImage == null) {
       throw Exception("No image loaded.");
     }
-    if (!Platform.isAndroid) {
-      throw UnsupportedError("Text extraction is only supported on Android.");
+    if (!Platform.isAndroid && !Platform.isWindows) {
+      throw UnsupportedError(
+        "Text extraction is not supported on this platform.",
+      );
     }
 
     _isProcessing = true;
@@ -893,10 +896,15 @@ class ImageEditorController extends ChangeNotifier {
         throw Exception("Decoded image is null.");
       }
 
-      // Convert current decoded image to PNG bytes to pass to ML Kit.
+      // Convert current decoded image to PNG bytes for the OCR engine.
       final pngBytes = await compute(encodePngTask, _decodedImage!);
 
-      // Write PNG bytes to a temp file
+      // Windows: built-in WinRT OCR (Windows.Media.Ocr) via a runner channel.
+      if (Platform.isWindows) {
+        return await WindowsOcr.recognizeText(pngBytes);
+      }
+
+      // Android: ML Kit on-device text recognition, fed from a temp file.
       final tempFilePath = await _scope.createFile(
         'ocr_input.png',
         bytes: pngBytes,

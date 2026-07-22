@@ -531,7 +531,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                   },
                   tooltip: l10n.imgViewCopyToClipboard,
                 ),
-                if (Platform.isAndroid)
+                if (Platform.isAndroid || Platform.isWindows)
                   IconButton(
                     icon: const Icon(Icons.text_fields),
                     onPressed: () async {

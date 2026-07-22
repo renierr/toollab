@@ -10,6 +10,7 @@ add_executable(${BINARY_NAME} WIN32
   "flutter_window.cpp"
   "main.cpp"
   "media_controls_handler.cpp"
+  "ocr_handler.cpp"
   "utils.cpp"
   "win32_window.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
@@ -20,6 +21,11 @@ add_executable(${BINARY_NAME} WIN32
 # Apply the standard set of build settings. This can be removed for applications
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})
+
+# C++/WinRT coroutines (co_await in ocr_handler.cpp) require C++20; the standard
+# settings only enable C++17. Scoped to the runner target — plugins are built
+# as separate targets and keep their own settings.
+target_compile_features(${BINARY_NAME} PRIVATE cxx_std_20)
 
 # Add preprocessor definitions for the build version.
 target_compile_definitions(${BINARY_NAME} PRIVATE "FLUTTER_VERSION=\"${FLUTTER_VERSION}\"")

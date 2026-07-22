@@ -1,5 +1,6 @@
 #include "flutter_window.h"
 #include "media_controls_handler.h"
+#include "ocr_handler.h"
 
 #include <optional>
 #include <vector>
@@ -165,6 +166,9 @@ bool FlutterWindow::OnCreate() {
   // Register System Media Transport Controls (SMTC) handler.
   auto* messenger = flutter_controller_->engine()->messenger();
   RegisterMediaControlsHandler(messenger);
+
+  // Register built-in Windows OCR (Windows.Media.Ocr) handler.
+  RegisterOcrHandler(messenger);
 
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
