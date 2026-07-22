@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   file_selector_windows
   flutter_classic_bluetooth
+  flutter_onnxruntime
   geolocator_windows
   pasteboard
   record_windows

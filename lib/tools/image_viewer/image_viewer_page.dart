@@ -377,7 +377,10 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                 },
                 isRedactMode: _controller.isRedactMode,
                 isWideScreen: isWideScreen,
-                onSegmentSubject: Platform.isAndroid
+                onSegmentSubject:
+                    (Platform.isAndroid ||
+                        Platform.isWindows ||
+                        Platform.isLinux)
                     ? () async {
                         final l10n = AppLocalizations.of(context);
                         if (!isWideScreen) {

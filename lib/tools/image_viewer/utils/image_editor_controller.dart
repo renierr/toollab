@@ -15,6 +15,7 @@ import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_metadata_extractor.dart';
 import 'package:google_mlkit_subject_segmentation/google_mlkit_subject_segmentation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:tool_lab/tools/image_viewer/utils/onnx_background_remover.dart';
 import 'package:tool_lab/tools/image_viewer/utils/windows_ocr.dart';
 
 class ImageEditorController extends ChangeNotifier {
@@ -46,6 +47,9 @@ class ImageEditorController extends ChangeNotifier {
   Future<img.Image>? _decodingFuture;
   Future<void>? _backgroundSync;
   int _loadSessionCounter = 0;
+
+  // Lazily created ONNX background remover; holds a native session until closed.
+  U2NetBackgroundRemover? _bgRemover;
 
   // Sibling browsing — only populated when the image was opened from a real
   // filesystem path (desktop). Paste/gallery/camera sources leave this empty.
@@ -102,6 +106,8 @@ class ImageEditorController extends ChangeNotifier {
     heightController.dispose();
     _uiImage?.dispose();
     _uiImage = null;
+    _bgRemover?.dispose();
+    _bgRemover = null;
     _scope.cleanTracked();
     super.dispose();
   }
@@ -444,9 +450,9 @@ class ImageEditorController extends ChangeNotifier {
 
   Future<void> segmentSubject() async {
     if (_uiImage == null) return;
-    if (!Platform.isAndroid) {
+    if (!Platform.isAndroid && !Platform.isWindows && !Platform.isLinux) {
       throw UnsupportedError(
-        "Subject segmentation is only supported on Android.",
+        "Background removal is not supported on this platform.",
       );
     }
 
@@ -459,56 +465,23 @@ class ImageEditorController extends ChangeNotifier {
         throw Exception("Decoded image is null.");
       }
 
-      // Convert current decoded image to PNG bytes to pass to ML Kit.
+      // Snapshot the pre-edit image for history.
       final beforePng = await compute(encodePngTask, _decodedImage!);
 
-      // Write PNG bytes to a temp file
-      final tempFilePath = await _scope.createFile(
-        'segment_input.png',
-        bytes: beforePng,
-      );
-
-      // Run ML Kit Subject Segmenter
-      final options = SubjectSegmenterOptions(
-        enableForegroundBitmap: true,
-        enableForegroundConfidenceMask: false,
-        enableMultipleSubjects: SubjectResultOptions(
-          enableConfidenceMask: false,
-          enableSubjectBitmap: false,
-        ),
-      );
-
-      SubjectSegmentationResult? result;
-      for (var attempt = 0; attempt < 2; attempt++) {
-        final segmenter = SubjectSegmenter(options: options);
+      // Android prefers ML Kit; when its model is unavailable, fall back to the
+      // bundled on-device ONNX model (which is the only path on Windows/Linux).
+      Uint8List segmentedBytes;
+      if (Platform.isAndroid) {
         try {
-          final inputImage = InputImage.fromFilePath(tempFilePath);
-          result = await segmenter.processImage(inputImage);
-          await segmenter.close();
-          break;
+          segmentedBytes = await _segmentWithMlKit(beforePng);
         } catch (e) {
-          await segmenter.close();
-          if (e is PlatformException &&
-              (e.message?.contains("Waiting for") ?? false) &&
-              attempt == 0) {
-            // Wait 2.5 seconds and retry once while Google Play Services finishes downloading the model.
-            await Future<void>.delayed(const Duration(milliseconds: 2500));
-            continue;
-          }
-          rethrow;
+          debugPrint(
+            "ML Kit segmentation unavailable, falling back to ONNX: $e",
+          );
+          segmentedBytes = await _segmentWithOnnx();
         }
-      }
-
-      // Clean up the temp file
-      try {
-        await _scope.deleteFile('segment_input.png');
-      } catch (_) {}
-
-      final segmentedBytes = result?.foregroundBitmap;
-      if (segmentedBytes == null) {
-        throw Exception(
-          "Failed to segment subject: no foreground bitmap returned.",
-        );
+      } else {
+        segmentedBytes = await _segmentWithOnnx();
       }
 
       // Decode the output image
@@ -538,6 +511,62 @@ class ImageEditorController extends ChangeNotifier {
       _isProcessing = false;
       notifyListeners();
     }
+  }
+
+  /// ML Kit Subject Segmenter (Android). Returns the foreground bitmap as PNG
+  /// bytes, retrying once while Google Play Services downloads the model.
+  Future<Uint8List> _segmentWithMlKit(Uint8List beforePng) async {
+    final tempFilePath = await _scope.createFile(
+      'segment_input.png',
+      bytes: beforePng,
+    );
+
+    final options = SubjectSegmenterOptions(
+      enableForegroundBitmap: true,
+      enableForegroundConfidenceMask: false,
+      enableMultipleSubjects: SubjectResultOptions(
+        enableConfidenceMask: false,
+        enableSubjectBitmap: false,
+      ),
+    );
+
+    SubjectSegmentationResult? result;
+    for (var attempt = 0; attempt < 2; attempt++) {
+      final segmenter = SubjectSegmenter(options: options);
+      try {
+        final inputImage = InputImage.fromFilePath(tempFilePath);
+        result = await segmenter.processImage(inputImage);
+        await segmenter.close();
+        break;
+      } catch (e) {
+        await segmenter.close();
+        if (e is PlatformException &&
+            (e.message?.contains("Waiting for") ?? false) &&
+            attempt == 0) {
+          await Future<void>.delayed(const Duration(milliseconds: 2500));
+          continue;
+        }
+        rethrow;
+      }
+    }
+
+    try {
+      await _scope.deleteFile('segment_input.png');
+    } catch (_) {}
+
+    final segmentedBytes = result?.foregroundBitmap;
+    if (segmentedBytes == null) {
+      throw Exception(
+        "Failed to segment subject: no foreground bitmap returned.",
+      );
+    }
+    return segmentedBytes;
+  }
+
+  /// On-device ONNX (u2netp) background removal. Returns an RGBA cutout as PNG.
+  Future<Uint8List> _segmentWithOnnx() async {
+    _bgRemover ??= U2NetBackgroundRemover();
+    return _bgRemover!.removeBackground(_decodedImage!);
   }
 
   Future<void> cropImage(int x, int y, int w, int h) async {
