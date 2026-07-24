@@ -85,16 +85,20 @@ class FastDropService {
       request.contentLength = total;
 
       int sent = 0;
-      final fileStream = file.openRead();
-
-      await for (final chunk in fileStream) {
+      final fileStream = file.openRead().map((chunk) {
         if (isCancelled != null && isCancelled()) {
-          request.abort();
           throw Exception('Upload cancelled by user');
         }
-        request.add(chunk);
         sent += chunk.length;
         onProgress?.call(sent, total);
+        return chunk;
+      });
+
+      try {
+        await request.addStream(fileStream);
+      } catch (e) {
+        request.abort();
+        rethrow;
       }
 
       final response = await request.close().timeout(timeout);
