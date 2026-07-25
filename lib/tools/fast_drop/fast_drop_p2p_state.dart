@@ -20,6 +20,7 @@ class FastDropP2pState extends ChangeNotifier {
 
   StreamSubscription<List<P2pPeer>>? _peersSub;
   StreamSubscription<(String, P2pHandshakeRequest)>? _incomingSub;
+  StreamSubscription<String>? _advertisingErrorSub;
 
   P2pRole _role = P2pRole.none;
   List<P2pPeer> _peers = [];
@@ -83,6 +84,12 @@ class FastDropP2pState extends ChangeNotifier {
         _incomingRequest = event;
         notifyListeners();
       });
+      await _advertisingErrorSub?.cancel();
+      _advertisingErrorSub = _discovery.onAdvertisingError.listen((message) {
+        _error = message;
+        _status = P2pStatus.failed;
+        notifyListeners();
+      });
       await _discovery.startAdvertisingAsReceiver(deviceName);
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
@@ -95,6 +102,8 @@ class FastDropP2pState extends ChangeNotifier {
     await _discovery.stopAdvertising();
     await _incomingSub?.cancel();
     _incomingSub = null;
+    await _advertisingErrorSub?.cancel();
+    _advertisingErrorSub = null;
     _incomingRequest = null;
     if (_role == P2pRole.receiving) {
       _role = P2pRole.none;
@@ -331,6 +340,7 @@ class FastDropP2pState extends ChangeNotifier {
   void dispose() {
     _peersSub?.cancel();
     _incomingSub?.cancel();
+    _advertisingErrorSub?.cancel();
     _discovery.stopScan();
     _discovery.stopAdvertising();
     _discovery.dispose();

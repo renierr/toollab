@@ -493,6 +493,56 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     }
   }
 
+  Future<void> _onPasteClipboardToSend() async {
+    final p2p = context.read<FastDropP2pState>();
+    final l10n = AppLocalizations.of(context);
+    try {
+      final text = await ClipboardHelper.getText();
+      if (text != null && text.trim().isNotEmpty) {
+        final bytes = utf8.encode(text);
+        final filename =
+            'pasted-text-${DateTime.now().millisecondsSinceEpoch}.txt';
+        final path = await _scope.createFile(filename, bytes: bytes);
+        p2p.setPendingSendFile(
+          path: path,
+          name: filename,
+          size: bytes.length,
+          mimeType: 'text/plain',
+        );
+        await p2p.startScanningForPeers();
+        return;
+      }
+
+      final imageBytes = await ClipboardHelper.getImagePng();
+      if (imageBytes != null && imageBytes.isNotEmpty) {
+        final filename =
+            'pasted-image-${DateTime.now().millisecondsSinceEpoch}.png';
+        final path = await _scope.createFile(filename, bytes: imageBytes);
+        p2p.setPendingSendFile(
+          path: path,
+          name: filename,
+          size: imageBytes.length,
+          mimeType: 'image/png',
+        );
+        await p2p.startScanningForPeers();
+        return;
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.fastDropClipboardEmpty)));
+      }
+    } catch (e) {
+      if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
+      }
+    }
+  }
+
   void _onCancelSendSelection() {
     final p2p = context.read<FastDropP2pState>();
     p2p.clearPendingSendFile();
@@ -674,6 +724,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                 ? FastDropP2pView(
                     p2pState: p2pState,
                     onFilesPickedToSend: _onFilePickedToSend,
+                    onPasteClipboardToSend: _onPasteClipboardToSend,
                     onSelectPeer: _onSelectPeer,
                     onCancelSendSelection: _onCancelSendSelection,
                     onToggleReceiving: _onToggleReceiving,

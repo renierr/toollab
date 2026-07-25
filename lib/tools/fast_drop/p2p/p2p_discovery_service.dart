@@ -32,6 +32,9 @@ class P2pDiscoveryService {
 
   Completer<Uint8List>? _pendingResponse;
   StreamSubscription<Uint8List>? _handshakeResponseSub;
+  StreamSubscription<BlePeripheralAdvertisingStateChanged>?
+  _advertisingStateSub;
+  final _advertisingErrorController = StreamController<String>.broadcast();
   final P2pChunkReassembler _requestReassembler = P2pChunkReassembler();
   final P2pChunkReassembler _responseReassembler = P2pChunkReassembler();
 
@@ -40,6 +43,10 @@ class P2pDiscoveryService {
   int _centralChunkSize = P2pProtocol.defaultSafeChunkSize;
 
   Stream<List<P2pPeer>> get peersStream => _peersController.stream;
+
+  /// Emits a human-readable message whenever advertising (as a receiver)
+  /// fails or stops unexpectedly after having started successfully.
+  Stream<String> get onAdvertisingError => _advertisingErrorController.stream;
 
   /// Emits `(bleDeviceId, request)` whenever a sender writes a handshake
   /// request while we're advertising as a receiver.
@@ -64,6 +71,7 @@ class P2pDiscoveryService {
     // attempt before becoming a peripheral.
     await stopScan();
     _requestReassembler.clear();
+    debugPrint('[P2pDiscovery] advertising as receiver "$deviceName"');
 
     await requestPermissions();
 
@@ -108,25 +116,32 @@ class P2pDiscoveryService {
       ),
     );
 
-    try {
-      await UniversalBlePeripheral.startAdvertising(
-        services: [P2pProtocol.serviceUuid],
-        localName: deviceName,
-      );
-    } catch (e) {
-      // Some platforms (e.g. Windows' GattServiceProvider) reject a
-      // localName in the advertisement — retry without it.
-      debugPrint(
-        '[P2pDiscovery] advertising with localName failed, retrying '
-        'without it: $e',
-      );
-      await UniversalBlePeripheral.startAdvertising(
-        services: [P2pProtocol.serviceUuid],
-      );
-    }
+    // Skip the local name in the advertisement entirely: combined with the
+    // 128-bit service UUID it can overflow the legacy 31-byte advertisement
+    // payload on some Android devices, silently dropping the service UUID
+    // (and with it, all discoverability) without throwing. The device name
+    // is exchanged via the handshake JSON instead, once connected.
+    await UniversalBlePeripheral.startAdvertising(
+      services: [P2pProtocol.serviceUuid],
+    );
+
+    await _advertisingStateSub?.cancel();
+    _advertisingStateSub = UniversalBlePeripheral.advertisingStateStream.listen(
+      (event) {
+        debugPrint(
+          '[P2pDiscovery] advertising state: ${event.state} '
+          '${event.error ?? ''}',
+        );
+        if (event.state == PeripheralAdvertisingState.error) {
+          _advertisingErrorController.add(event.error ?? 'Advertising failed');
+        }
+      },
+    );
   }
 
   Future<void> stopAdvertising() async {
+    await _advertisingStateSub?.cancel();
+    _advertisingStateSub = null;
     try {
       await UniversalBlePeripheral.stopAdvertising();
     } catch (_) {}
@@ -334,7 +349,9 @@ class P2pDiscoveryService {
 
   Future<void> dispose() async {
     await _scanSub?.cancel();
+    await _advertisingStateSub?.cancel();
     await _peersController.close();
     await _incomingRequestController.close();
+    await _advertisingErrorController.close();
   }
 }

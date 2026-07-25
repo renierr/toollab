@@ -19,6 +19,7 @@ import 'fast_drop_progress_indicator.dart';
 class FastDropP2pView extends StatelessWidget {
   final FastDropP2pState p2pState;
   final ValueChanged<List<XFile>> onFilesPickedToSend;
+  final VoidCallback onPasteClipboardToSend;
   final ValueChanged<P2pPeer> onSelectPeer;
   final VoidCallback onCancelSendSelection;
   final VoidCallback onToggleReceiving;
@@ -30,6 +31,7 @@ class FastDropP2pView extends StatelessWidget {
     super.key,
     required this.p2pState,
     required this.onFilesPickedToSend,
+    required this.onPasteClipboardToSend,
     required this.onSelectPeer,
     required this.onCancelSendSelection,
     required this.onToggleReceiving,
@@ -126,8 +128,9 @@ class FastDropP2pView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            if (!p2pState.hasPendingSendFile)
+            if (!p2pState.hasPendingSendFile) ...[
               FileDropZone(
+                onFileSelected: (file) => onFilesPickedToSend([file]),
                 onFilesSelected: onFilesPickedToSend,
                 allowedExtensions: FastDropTool.config.fileExtensions,
                 typeLabel: l10n.fastDropAllFiles,
@@ -137,8 +140,32 @@ class FastDropP2pView extends StatelessWidget {
                 subtitle: l10n.fastDropOrClickToBrowse,
                 compact: true,
                 multiple: false,
-              )
-            else
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: onPasteClipboardToSend,
+                    icon: const Icon(Icons.paste_outlined),
+                    label: Text(l10n.fastDropPasteClipboard),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.accentTeal,
+                      side: const BorderSide(color: AppTheme.accentTeal),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ] else
               FastDropP2pSendIntentCard(
                 fileName: p2pState.pendingSendFileName ?? '',
                 fileSize: p2pState.pendingSendFileSize ?? 0,
