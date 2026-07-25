@@ -252,8 +252,9 @@ class P2pDiscoveryService {
     final services = device.services.map((s) => s.toLowerCase()).toList();
     if (!services.contains(P2pProtocol.serviceUuid.toLowerCase())) return;
     final peer = P2pPeer(
-      bleDeviceId: device.deviceId,
+      id: device.deviceId,
       name: (device.name?.isNotEmpty ?? false) ? device.name! : 'Nearby device',
+      transport: P2pPeerTransport.ble,
       rssi: device.rssi ?? 0,
     );
     _peers[peer.bleDeviceId] = peer;

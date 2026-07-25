@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
 
 import 'p2p_discovery_service.dart';
+import 'p2p_lan_service.dart';
 import 'p2p_models.dart';
 import 'p2p_protocol.dart';
 
@@ -90,7 +91,7 @@ class P2pTransferService {
     try {
       _serverSocket = await ServerSocket.bind(
         InternetAddress.anyIPv4,
-        P2pProtocol.lanPort,
+        P2pProtocol.bleLanFallbackPort,
         shared: true,
       );
       _serverSub = _serverSocket!.listen((client) {
@@ -173,6 +174,40 @@ class P2pTransferService {
     await _closeServer();
   }
 
+  /// Copies a LAN socket already authenticated by the direct LAN handshake.
+  Future<String> receiveLanFile({
+    required P2pLanConnection connection,
+    required String outputPath,
+    required int expectedSize,
+    required P2pProgressCallback onProgress,
+    required bool Function() isCancelled,
+  }) async {
+    final sink = File(outputPath).openWrite();
+    var received = 0;
+    try {
+      await for (final data in connection.bytes) {
+        if (isCancelled()) throw Exception('Transfer cancelled');
+        final remaining = expectedSize - received;
+        if (remaining <= 0) break;
+        final chunk = data.length > remaining
+            ? data.sublist(0, remaining)
+            : data;
+        sink.add(chunk);
+        received += chunk.length;
+        onProgress(received, expectedSize, P2pTransportKind.lan);
+        if (received == expectedSize) break;
+      }
+      if (received != expectedSize) {
+        throw Exception('Connection closed before transfer completed');
+      }
+      await sink.flush();
+      return outputPath;
+    } finally {
+      await sink.close();
+      await connection.close();
+    }
+  }
+
   // ---------------------------------------------------------------------
   // Sender side
   // ---------------------------------------------------------------------
@@ -211,6 +246,20 @@ class P2pTransferService {
     );
     return P2pTransportKind.ble;
   }
+
+  Future<void> sendLanFile({
+    required P2pLanConnection connection,
+    required String filePath,
+    required int fileSize,
+    required P2pProgressCallback onProgress,
+    required bool Function() isCancelled,
+  }) => _sendOverLan(
+    socket: connection.socket,
+    filePath: filePath,
+    fileSize: fileSize,
+    onProgress: onProgress,
+    isCancelled: isCancelled,
+  );
 
   Future<Socket?> _tryConnectLan(List<String> ips, int port) async {
     if (ips.isEmpty) return null;

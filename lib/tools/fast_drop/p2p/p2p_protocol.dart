@@ -31,7 +31,14 @@ class P2pProtocol {
   static const String ackCharUuid = '7a51c1b3-6e9e-4e6a-8f9a-9e2b5b2b6a11';
 
   /// TCP port the LAN transfer server listens on.
-  static const int lanPort = 53211;
+  static const int lanDiscoveryPort = 53210;
+
+  /// TCP port for direct LAN handshakes and file streams.
+  static const int lanPort = 53212;
+
+  /// Legacy raw TCP fallback negotiated through a BLE handshake. Kept
+  /// separate from [lanPort], whose connections always begin with JSON.
+  static const int bleLanFallbackPort = 53211;
 
   /// Size of each BLE fallback chunk payload, comfortably under common
   /// negotiated MTUs (247 requested, 23 default) so it works even if MTU

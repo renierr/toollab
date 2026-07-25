@@ -65,7 +65,11 @@ class FastDropPeerList extends StatelessWidget {
               color: AppTheme.accentTeal,
             ),
             title: Text(peer.name),
-            subtitle: Text(l10n.fastDropP2pSignalStrength(peer.rssi)),
+            subtitle: Text(
+              peer.transport == P2pPeerTransport.lan
+                  ? l10n.fastDropP2pLocalNetwork
+                  : l10n.fastDropP2pSignalStrength(peer.rssi),
+            ),
             trailing: FilledButton.tonal(
               onPressed: () => onSelect(peer),
               child: Text(l10n.fastDropP2pSend),

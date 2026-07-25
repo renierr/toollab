@@ -1044,6 +1044,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get fastDropP2pLocalNetwork => 'Local network';
+
+  @override
   String get fastDropP2pSend => 'Send';
 
   @override

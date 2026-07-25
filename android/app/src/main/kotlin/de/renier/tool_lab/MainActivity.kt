@@ -2,6 +2,7 @@ package de.renier.tool_lab
 
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
@@ -13,8 +14,10 @@ open class MainActivity : FlutterActivity() {
     private val SHORTCUTS_CHANNEL = "de.renier.tool_lab/shortcuts"
     private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
+    private val MULTICAST_CHANNEL = "de.renier.tool_lab/multicast"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
+    private var multicastLock: WifiManager.MulticastLock? = null
     private var launchRoute: String? = null
 
     companion object {
@@ -69,6 +72,8 @@ open class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         channel = null
+        multicastLock?.release()
+        multicastLock = null
         gpsInfoHelper?.stopGpsInfoUpdates()
         super.onDestroy()
     }
@@ -94,6 +99,25 @@ open class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         val messenger = flutterEngine.dartExecutor.binaryMessenger
+
+        MethodChannel(messenger, MULTICAST_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "setEnabled" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: false
+                    if (enabled) {
+                        val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
+                        multicastLock ??= wifiManager.createMulticastLock("tool_lab_fast_drop").apply {
+                            setReferenceCounted(false)
+                        }
+                        multicastLock?.takeIf { !it.isHeld }?.acquire()
+                    } else {
+                        multicastLock?.takeIf { it.isHeld }?.release()
+                    }
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
 
         // Register custom helpers
         SharingHelper.registerChannel(messenger)

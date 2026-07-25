@@ -534,6 +534,7 @@
       }
     }
   },
+  "fastDropP2pLocalNetwork": "Local network",
   "fastDropP2pSend": "Send",
   "fastDropP2pTransferringLan": "Sending over Wi-Fi",
   "fastDropP2pTransferringBle": "Sending over Bluetooth",

@@ -1934,6 +1934,12 @@ abstract class AppLocalizations {
   /// **'Signal: {rssi} dBm'**
   String fastDropP2pSignalStrength(int rssi);
 
+  /// No description provided for @fastDropP2pLocalNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Local network'**
+  String get fastDropP2pLocalNetwork;
+
   /// No description provided for @fastDropP2pSend.
   ///
   /// In en, this message translates to:

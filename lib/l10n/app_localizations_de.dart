@@ -1053,6 +1053,9 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get fastDropP2pLocalNetwork => 'Lokales Netzwerk';
+
+  @override
   String get fastDropP2pSend => 'Senden';
 
   @override

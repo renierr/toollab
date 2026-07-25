@@ -1,6 +1,9 @@
 /// Transport used to move file bytes between peers.
 enum P2pTransportKind { lan, ble }
 
+/// Discovery channel through which a peer was found.
+enum P2pPeerTransport { lan, ble }
+
 /// High level state of the nearby-transfer flow.
 enum P2pStatus {
   idle,
@@ -16,16 +19,28 @@ enum P2pStatus {
 /// A device discovered via BLE advertising the Fast Drop nearby-share
 /// service UUID.
 class P2pPeer {
-  final String bleDeviceId;
+  final String id;
   final String name;
   final int rssi;
+  final P2pPeerTransport transport;
+  final String? lanAddress;
 
-  const P2pPeer({required this.bleDeviceId, required this.name, this.rssi = 0});
+  const P2pPeer({
+    required this.id,
+    required this.name,
+    required this.transport,
+    this.rssi = 0,
+    this.lanAddress,
+  });
 
-  P2pPeer copyWith({String? name, int? rssi}) => P2pPeer(
-    bleDeviceId: bleDeviceId,
+  String get bleDeviceId => id;
+
+  P2pPeer copyWith({String? name, int? rssi, String? lanAddress}) => P2pPeer(
+    id: id,
     name: name ?? this.name,
     rssi: rssi ?? this.rssi,
+    transport: transport,
+    lanAddress: lanAddress ?? this.lanAddress,
   );
 }
 

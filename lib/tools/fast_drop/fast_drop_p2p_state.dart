@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import 'p2p/p2p_discovery_service.dart';
+import 'p2p/p2p_lan_service.dart';
 import 'p2p/p2p_models.dart';
 import 'p2p/p2p_protocol.dart';
 import 'p2p/p2p_transfer_service.dart';
@@ -16,11 +17,14 @@ enum P2pRole { none, sending, receiving }
 /// requests and transfer progress to the UI.
 class FastDropP2pState extends ChangeNotifier {
   final P2pDiscoveryService _discovery = P2pDiscoveryService();
+  final P2pLanService _lan = P2pLanService();
   final P2pTransferService _transfer = P2pTransferService();
 
   StreamSubscription<List<P2pPeer>>? _peersSub;
   StreamSubscription<(String, P2pHandshakeRequest)>? _incomingSub;
   StreamSubscription<String>? _advertisingErrorSub;
+  StreamSubscription<List<P2pPeer>>? _lanPeersSub;
+  StreamSubscription<P2pLanIncomingRequest>? _lanIncomingSub;
 
   P2pRole _role = P2pRole.none;
   List<P2pPeer> _peers = [];
@@ -32,7 +36,7 @@ class FastDropP2pState extends ChangeNotifier {
   int _lastProgressNotifyMs = 0;
 
   /// Pending accept/reject prompt while advertising as a receiver.
-  (String bleDeviceId, P2pHandshakeRequest request)? _incomingRequest;
+  (P2pPeer peer, P2pHandshakeRequest request)? _incomingRequest;
 
   final List<P2pReceivedFile> _receivedFiles = [];
 
@@ -47,7 +51,7 @@ class FastDropP2pState extends ChangeNotifier {
   P2pTransportKind? get activeTransport => _activeTransport;
   (int current, int total)? get progress => _progress;
   String? get error => _error;
-  (String bleDeviceId, P2pHandshakeRequest request)? get incomingRequest =>
+  (P2pPeer peer, P2pHandshakeRequest request)? get incomingRequest =>
       _incomingRequest;
   List<P2pReceivedFile> get receivedFiles => List.unmodifiable(_receivedFiles);
   bool get isBusy =>
@@ -78,6 +82,18 @@ class FastDropP2pState extends ChangeNotifier {
     try {
       await _incomingSub?.cancel();
       _incomingSub = _discovery.onIncomingRequest.listen((event) {
+        _incomingRequest = (
+          P2pPeer(
+            id: event.$1,
+            name: event.$2.senderName,
+            transport: P2pPeerTransport.ble,
+          ),
+          event.$2,
+        );
+        notifyListeners();
+      });
+      await _lanIncomingSub?.cancel();
+      _lanIncomingSub = _lan.incomingRequests.listen((event) {
         _incomingRequest = event;
         notifyListeners();
       });
@@ -87,7 +103,14 @@ class FastDropP2pState extends ChangeNotifier {
         _status = P2pStatus.failed;
         notifyListeners();
       });
-      await _discovery.startAdvertisingAsReceiver(deviceName);
+      await _lan.startReceiving(deviceName);
+      if (!Platform.isLinux) {
+        try {
+          await _discovery.startAdvertisingAsReceiver(deviceName);
+        } catch (e) {
+          debugPrint('[FastDropP2p] BLE receiving unavailable: $e');
+        }
+      }
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
       _status = P2pStatus.failed;
@@ -97,10 +120,13 @@ class FastDropP2pState extends ChangeNotifier {
 
   Future<void> stopReceiving() async {
     await _discovery.stopAdvertising();
+    await _lan.stopReceiving();
     await _incomingSub?.cancel();
     _incomingSub = null;
     await _advertisingErrorSub?.cancel();
     _advertisingErrorSub = null;
+    await _lanIncomingSub?.cancel();
+    _lanIncomingSub = null;
     _incomingRequest = null;
     if (_role == P2pRole.receiving) {
       _role = P2pRole.none;
@@ -117,35 +143,27 @@ class FastDropP2pState extends ChangeNotifier {
   }) async {
     final incoming = _incomingRequest;
     if (incoming == null) return;
-    final (bleDeviceId, request) = incoming;
+    final (peer, request) = incoming;
     _incomingRequest = null;
     _status = P2pStatus.handshaking;
     _cancelRequested = false;
     notifyListeners();
 
     try {
-      final localIps = await P2pTransferService.localIpAddresses();
       _status = P2pStatus.transferring;
       _activeTransport = null;
       _progress = (0, request.fileSize);
       notifyListeners();
 
-      final savedPath = await _transfer.receiveFile(
-        discovery: _discovery,
-        outputPath: outputPath,
-        expectedSize: request.fileSize,
-        onProgress: _onProgress,
-        isCancelled: () => _cancelRequested,
-        onReady: () => _discovery.respondToRequest(
-          bleDeviceId,
-          P2pHandshakeResponse(
-            accepted: true,
-            receiverName: Platform.localHostname,
-            candidateIps: localIps,
-            lanPort: P2pProtocol.lanPort,
-          ),
-        ),
-      );
+      final savedPath = peer.transport == P2pPeerTransport.lan
+          ? await _transfer.receiveLanFile(
+              connection: await _lan.acceptIncomingRequest(peer),
+              outputPath: outputPath,
+              expectedSize: request.fileSize,
+              onProgress: _onProgress,
+              isCancelled: () => _cancelRequested,
+            )
+          : await _receiveBleFile(peer, request, outputPath);
 
       _receivedFiles.insert(
         0,
@@ -173,17 +191,21 @@ class FastDropP2pState extends ChangeNotifier {
   Future<void> rejectIncomingRequest() async {
     final incoming = _incomingRequest;
     if (incoming == null) return;
-    final (bleDeviceId, _) = incoming;
+    final (peer, _) = incoming;
     _incomingRequest = null;
     notifyListeners();
     try {
-      await _discovery.respondToRequest(
-        bleDeviceId,
-        P2pHandshakeResponse(
-          accepted: false,
-          receiverName: Platform.localHostname,
-        ),
-      );
+      if (peer.transport == P2pPeerTransport.lan) {
+        await _lan.rejectIncomingRequest(peer);
+      } else {
+        await _discovery.respondToRequest(
+          peer.bleDeviceId,
+          P2pHandshakeResponse(
+            accepted: false,
+            receiverName: Platform.localHostname,
+          ),
+        );
+      }
     } catch (_) {}
   }
 
@@ -229,10 +251,22 @@ class FastDropP2pState extends ChangeNotifier {
     try {
       await _peersSub?.cancel();
       _peersSub = _discovery.peersStream.listen((peers) {
-        _peers = peers;
+        _setPeers(peers, P2pPeerTransport.ble);
         notifyListeners();
       });
-      await _discovery.startScan();
+      await _lanPeersSub?.cancel();
+      _lanPeersSub = _lan.peersStream.listen((peers) {
+        _setPeers(peers, P2pPeerTransport.lan);
+        notifyListeners();
+      });
+      await _lan.startScanning();
+      if (!Platform.isLinux) {
+        try {
+          await _discovery.startScan();
+        } catch (e) {
+          debugPrint('[FastDropP2p] BLE scanning unavailable: $e');
+        }
+      }
     } catch (e) {
       _error = e.toString().replaceAll('Exception: ', '');
       _status = P2pStatus.failed;
@@ -242,8 +276,11 @@ class FastDropP2pState extends ChangeNotifier {
 
   Future<void> stopScanningForPeers() async {
     await _discovery.stopScan();
+    await _lan.stopScanning();
     await _peersSub?.cancel();
     _peersSub = null;
+    await _lanPeersSub?.cancel();
+    _lanPeersSub = null;
     if (_role == P2pRole.sending && _status == P2pStatus.scanning) {
       _status = P2pStatus.idle;
     }
@@ -266,17 +303,36 @@ class FastDropP2pState extends ChangeNotifier {
 
     try {
       await _discovery.stopScan();
+      await _lan.stopScanning();
       final localIps = await P2pTransferService.localIpAddresses();
+      final request = P2pHandshakeRequest(
+        senderName: senderName,
+        candidateIps: localIps,
+        lanPort: P2pProtocol.bleLanFallbackPort,
+        fileName: name,
+        fileSize: size,
+        mimeType: mimeType,
+      );
+      if (peer.transport == P2pPeerTransport.lan) {
+        final connection = await _lan.sendHandshake(peer, request);
+        _status = P2pStatus.transferring;
+        _progress = (0, size);
+        notifyListeners();
+        await _transfer.sendLanFile(
+          connection: connection,
+          filePath: path,
+          fileSize: size,
+          onProgress: _onProgress,
+          isCancelled: () => _cancelRequested,
+        );
+        _activeTransport = P2pTransportKind.lan;
+        _status = P2pStatus.completed;
+        clearPendingSendFile();
+        return;
+      }
       final response = await _discovery.sendHandshake(
         bleDeviceId: peer.bleDeviceId,
-        request: P2pHandshakeRequest(
-          senderName: senderName,
-          candidateIps: localIps,
-          lanPort: P2pProtocol.lanPort,
-          fileName: name,
-          fileSize: size,
-          mimeType: mimeType,
-        ),
+        request: request,
       );
 
       if (!response.accepted) {
@@ -310,7 +366,9 @@ class FastDropP2pState extends ChangeNotifier {
     } finally {
       _progress = null;
       notifyListeners();
-      await _discovery.disconnect(peer.bleDeviceId);
+      if (peer.transport == P2pPeerTransport.ble) {
+        await _discovery.disconnect(peer.bleDeviceId);
+      }
     }
   }
 
@@ -327,6 +385,34 @@ class FastDropP2pState extends ChangeNotifier {
       _lastProgressNotifyMs = now;
       notifyListeners();
     }
+  }
+
+  Future<String> _receiveBleFile(
+    P2pPeer peer,
+    P2pHandshakeRequest request,
+    String outputPath,
+  ) async {
+    final localIps = await P2pTransferService.localIpAddresses();
+    return _transfer.receiveFile(
+      discovery: _discovery,
+      outputPath: outputPath,
+      expectedSize: request.fileSize,
+      onProgress: _onProgress,
+      isCancelled: () => _cancelRequested,
+      onReady: () => _discovery.respondToRequest(
+        peer.bleDeviceId,
+        P2pHandshakeResponse(
+          accepted: true,
+          receiverName: Platform.localHostname,
+          candidateIps: localIps,
+          lanPort: P2pProtocol.bleLanFallbackPort,
+        ),
+      ),
+    );
+  }
+
+  void _setPeers(List<P2pPeer> peers, P2pPeerTransport transport) {
+    _peers = [..._peers.where((peer) => peer.transport != transport), ...peers];
   }
 
   /// Removes a received file from the in-memory list. The caller (page) is
@@ -357,9 +443,12 @@ class FastDropP2pState extends ChangeNotifier {
     _peersSub?.cancel();
     _incomingSub?.cancel();
     _advertisingErrorSub?.cancel();
+    _lanPeersSub?.cancel();
+    _lanIncomingSub?.cancel();
     _discovery.stopScan();
     _discovery.stopAdvertising();
     _discovery.dispose();
+    _lan.dispose();
     _transfer.cancelReceive();
     super.dispose();
   }
