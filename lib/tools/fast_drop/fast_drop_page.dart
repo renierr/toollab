@@ -470,18 +470,27 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     if (files.isEmpty) return;
     final file = files.first;
     final p2p = context.read<FastDropP2pState>();
-    String mimeType = file.mimeType ?? 'application/octet-stream';
-    if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
-      mimeType = MimeTypeHelper.getMimeType(file.name);
+    try {
+      String mimeType = file.mimeType ?? 'application/octet-stream';
+      if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
+        mimeType = MimeTypeHelper.getMimeType(file.name);
+      }
+      final size = await file.length();
+      p2p.setPendingSendFile(
+        path: file.path,
+        name: file.name,
+        size: size,
+        mimeType: mimeType,
+      );
+      await p2p.startScanningForPeers();
+    } catch (e) {
+      if (mounted) {
+        final msg = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
+      }
     }
-    final size = await file.length();
-    p2p.setPendingSendFile(
-      path: file.path,
-      name: file.name,
-      size: size,
-      mimeType: mimeType,
-    );
-    await p2p.startScanningForPeers();
   }
 
   void _onCancelSendSelection() {

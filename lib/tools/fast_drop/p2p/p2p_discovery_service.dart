@@ -16,10 +16,13 @@ import 'p2p_protocol.dart';
 /// - Sender: scans for advertising peers (central role), connects to one and
 ///   writes a handshake request, then awaits the response via
 ///   [sendHandshake].
+///
+/// Handshake messages are almost always bigger than the default (and
+/// sometimes even the negotiated) GATT payload size, so both directions use
+/// [P2pProtocol.chunkWithLengthPrefix] / [P2pChunkReassembler] rather than
+/// relying on the platform to perform an automatic GATT "long write".
 class P2pDiscoveryService {
   StreamSubscription<BleDevice>? _scanSub;
-  StreamSubscription<BlePeripheralCharacteristicSubscriptionChanged>?
-  _subscriptionSub;
   final Map<String, P2pPeer> _peers = {};
   final _peersController = StreamController<List<P2pPeer>>.broadcast();
   final _incomingRequestController =
@@ -29,6 +32,12 @@ class P2pDiscoveryService {
 
   Completer<Uint8List>? _pendingResponse;
   StreamSubscription<Uint8List>? _handshakeResponseSub;
+  final P2pChunkReassembler _requestReassembler = P2pChunkReassembler();
+  final P2pChunkReassembler _responseReassembler = P2pChunkReassembler();
+
+  /// Safe per-write payload size for the central (sender) role, updated
+  /// once an MTU has been negotiated with the connected peripheral.
+  int _centralChunkSize = P2pProtocol.defaultSafeChunkSize;
 
   Stream<List<P2pPeer>> get peersStream => _peersController.stream;
 
@@ -50,6 +59,12 @@ class P2pDiscoveryService {
   // ---------------------------------------------------------------------
 
   Future<void> startAdvertisingAsReceiver(String deviceName) async {
+    // Central and peripheral roles don't reliably coexist on every BLE
+    // stack — make sure we're not still scanning from a previous "send"
+    // attempt before becoming a peripheral.
+    await stopScan();
+    _requestReassembler.clear();
+
     await requestPermissions();
 
     UniversalBlePeripheral.setWriteRequestHandlers((
@@ -61,7 +76,7 @@ class P2pDiscoveryService {
       if (characteristicId.toLowerCase() ==
               P2pProtocol.handshakeCharUuid.toLowerCase() &&
           value != null) {
-        _handleHandshakeWrite(deviceId, value);
+        _handleHandshakeWriteChunk(deviceId, value);
       }
       return PeripheralWriteRequestResult();
     });
@@ -117,30 +132,52 @@ class P2pDiscoveryService {
     } catch (_) {}
   }
 
-  void _handleHandshakeWrite(String deviceId, Uint8List value) {
+  void _handleHandshakeWriteChunk(String deviceId, Uint8List chunk) {
     try {
-      final json = jsonDecode(utf8.decode(value)) as Map<String, dynamic>;
+      final complete = _requestReassembler.feed(deviceId, chunk);
+      if (complete == null) return;
+      final json = jsonDecode(utf8.decode(complete)) as Map<String, dynamic>;
       final request = P2pHandshakeRequest.fromJson(json);
       _incomingRequestController.add((deviceId, request));
     } catch (e) {
       debugPrint('[P2pDiscovery] failed to parse handshake request: $e');
+      _requestReassembler.reset(deviceId);
     }
   }
 
   /// Sends the receiver's decision back to the sender over the handshake
-  /// characteristic (peripheral notify).
+  /// characteristic (peripheral notify), chunked to fit the link's actual
+  /// notify payload limit.
   Future<void> respondToRequest(
     String bleDeviceId,
     P2pHandshakeResponse response,
   ) async {
-    await UniversalBlePeripheral.updateCharacteristicValue(
-      characteristicId: P2pProtocol.handshakeCharUuid,
-      value: Uint8List.fromList(utf8.encode(response.encode())),
-      deviceId: bleDeviceId,
+    final payload = Uint8List.fromList(utf8.encode(response.encode()));
+    int chunkSize = P2pProtocol.defaultSafeChunkSize;
+    try {
+      final maxLen = await UniversalBlePeripheral.getMaximumNotifyLength(
+        bleDeviceId,
+      );
+      if (maxLen != null && maxLen > 8) chunkSize = maxLen;
+    } catch (_) {}
+
+    final chunks = P2pProtocol.chunkWithLengthPrefix(
+      payload,
+      chunkSize: chunkSize,
     );
+    for (final chunk in chunks) {
+      await UniversalBlePeripheral.updateCharacteristicValue(
+        characteristicId: P2pProtocol.handshakeCharUuid,
+        value: chunk,
+        deviceId: bleDeviceId,
+      );
+    }
   }
 
   /// Chunk data written by a connected central (BLE fallback receive path).
+  /// File-data chunks don't need length-prefix framing — only cumulative
+  /// byte count matters, which the caller tracks against the known file
+  /// size from the handshake manifest.
   void setDataWriteHandler(
     void Function(String deviceId, Uint8List chunk) onChunk,
   ) {
@@ -152,7 +189,7 @@ class P2pDiscoveryService {
     ) {
       final id = characteristicId.toLowerCase();
       if (id == P2pProtocol.handshakeCharUuid.toLowerCase() && value != null) {
-        _handleHandshakeWrite(deviceId, value);
+        _handleHandshakeWriteChunk(deviceId, value);
       } else if (id == P2pProtocol.dataCharUuid.toLowerCase() &&
           value != null) {
         onChunk(deviceId, value);
@@ -177,10 +214,16 @@ class P2pDiscoveryService {
   // ---------------------------------------------------------------------
 
   Future<void> startScan() async {
+    // See startAdvertisingAsReceiver — avoid overlapping central+peripheral.
+    await stopAdvertising();
+
     await requestPermissions();
     _peers.clear();
-    _scanSub?.cancel();
-    _scanSub = UniversalBle.scanStream.listen(_onScanResult);
+    await _scanSub?.cancel();
+    _scanSub = UniversalBle.scanStream.listen(
+      _onScanResult,
+      onError: (e) => debugPrint('[P2pDiscovery] scan error: $e'),
+    );
     await UniversalBle.startScan();
   }
 
@@ -204,6 +247,11 @@ class P2pDiscoveryService {
     _peersController.add(_peers.values.toList());
   }
 
+  /// Safe per-write payload size for the currently connected central link,
+  /// established during [sendHandshake]. Reused by the BLE-fallback file
+  /// transfer so it doesn't exceed the negotiated MTU either.
+  int get negotiatedChunkSize => _centralChunkSize;
+
   /// Connects to [bleDeviceId], writes the handshake request and waits for
   /// the receiver's response (or times out).
   Future<P2pHandshakeResponse> sendHandshake({
@@ -218,7 +266,18 @@ class P2pDiscoveryService {
       orElse: () => throw Exception('Peer does not expose Fast Drop service'),
     );
 
+    _centralChunkSize = P2pProtocol.defaultSafeChunkSize;
+    try {
+      final mtu = await UniversalBle.requestMtu(bleDeviceId, 247);
+      if (mtu > 3) {
+        _centralChunkSize = mtu - 3;
+      }
+    } catch (e) {
+      debugPrint('[P2pDiscovery] MTU request failed, using default: $e');
+    }
+
     _pendingResponse = Completer<Uint8List>();
+    _responseReassembler.reset(bleDeviceId);
 
     await _handshakeResponseSub?.cancel();
     _handshakeResponseSub =
@@ -226,8 +285,11 @@ class P2pDiscoveryService {
           bleDeviceId,
           P2pProtocol.handshakeCharUuid,
         ).listen((value) {
-          if (_pendingResponse != null && !_pendingResponse!.isCompleted) {
-            _pendingResponse!.complete(value);
+          final complete = _responseReassembler.feed(bleDeviceId, value);
+          if (complete != null &&
+              _pendingResponse != null &&
+              !_pendingResponse!.isCompleted) {
+            _pendingResponse!.complete(complete);
           }
         });
 
@@ -237,13 +299,21 @@ class P2pDiscoveryService {
         service.uuid,
         P2pProtocol.handshakeCharUuid,
       );
-      await UniversalBle.write(
-        bleDeviceId,
-        service.uuid,
-        P2pProtocol.handshakeCharUuid,
-        Uint8List.fromList(utf8.encode(request.encode())),
-        withoutResponse: false,
+
+      final payload = Uint8List.fromList(utf8.encode(request.encode()));
+      final chunks = P2pProtocol.chunkWithLengthPrefix(
+        payload,
+        chunkSize: _centralChunkSize,
       );
+      for (final chunk in chunks) {
+        await UniversalBle.write(
+          bleDeviceId,
+          service.uuid,
+          P2pProtocol.handshakeCharUuid,
+          chunk,
+          withoutResponse: false,
+        );
+      }
 
       final raw = await _pendingResponse!.future.timeout(timeout);
       final json = jsonDecode(utf8.decode(raw)) as Map<String, dynamic>;
@@ -252,6 +322,7 @@ class P2pDiscoveryService {
       await _handshakeResponseSub?.cancel();
       _handshakeResponseSub = null;
       _pendingResponse = null;
+      _responseReassembler.reset(bleDeviceId);
     }
   }
 
@@ -263,7 +334,6 @@ class P2pDiscoveryService {
 
   Future<void> dispose() async {
     await _scanSub?.cancel();
-    await _subscriptionSub?.cancel();
     await _peersController.close();
     await _incomingRequestController.close();
   }

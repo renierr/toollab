@@ -152,6 +152,7 @@ class P2pTransferService {
   /// Tries the fastest available path to move [filePath] to the peer:
   /// direct LAN socket first, BLE GATT chunking as fallback.
   Future<P2pTransportKind> sendFile({
+    required P2pDiscoveryService discovery,
     required String bleDeviceId,
     required List<String> receiverIps,
     required int receiverPort,
@@ -174,6 +175,7 @@ class P2pTransferService {
 
     await _sendOverBle(
       bleDeviceId: bleDeviceId,
+      chunkSize: discovery.negotiatedChunkSize,
       filePath: filePath,
       fileSize: fileSize,
       onProgress: onProgress,
@@ -244,6 +246,7 @@ class P2pTransferService {
 
   Future<void> _sendOverBle({
     required String bleDeviceId,
+    required int chunkSize,
     required String filePath,
     required int fileSize,
     required P2pProgressCallback onProgress,
@@ -255,6 +258,7 @@ class P2pTransferService {
       orElse: () => throw Exception('Peer service not found'),
     );
 
+    final safeChunkSize = chunkSize < 8 ? 8 : chunkSize;
     int sent = 0;
     final raf = await File(filePath).open();
     try {
@@ -263,9 +267,7 @@ class P2pTransferService {
           throw Exception('Transfer cancelled');
         }
         final remaining = fileSize - sent;
-        final chunkLen = remaining < P2pProtocol.bleChunkSize
-            ? remaining
-            : P2pProtocol.bleChunkSize;
+        final chunkLen = remaining < safeChunkSize ? remaining : safeChunkSize;
         final chunk = await raf.read(chunkLen);
         await UniversalBle.write(
           bleDeviceId,

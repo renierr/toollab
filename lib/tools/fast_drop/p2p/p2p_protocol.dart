@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 /// Wire protocol constants and message (de)serialization for Fast Drop's
 /// nearby (BLE + LAN) peer-to-peer transfer feature.
@@ -37,11 +38,90 @@ class P2pProtocol {
   /// negotiation fails.
   static const int bleChunkSize = 180;
 
+  /// Conservative default GATT write/notify payload size assumed before any
+  /// MTU negotiation has taken place (default ATT MTU is 23 bytes, minus a
+  /// 3-byte ATT header). Writes/notifications larger than the negotiated
+  /// (or this default) size are split using [chunkWithLengthPrefix] so they
+  /// survive even on stacks that don't support automatic GATT long writes.
+  static const int defaultSafeChunkSize = 20;
+
   /// How long to try connecting to each candidate LAN IP.
   static const Duration lanConnectAttemptTimeout = Duration(seconds: 2);
 
   /// Overall budget before giving up on LAN and falling back to BLE.
   static const Duration lanConnectOverallTimeout = Duration(seconds: 5);
+
+  /// Splits [payload] into a sequence of GATT write-sized chunks, prefixing
+  /// the very first chunk with a 4-byte big-endian total length so the
+  /// receiver knows when the logical message is complete. Needed because a
+  /// single handshake JSON message is almost always bigger than the default
+  /// (and sometimes even the negotiated) ATT payload size, and not every
+  /// platform performs an automatic GATT "long write" for oversized writes.
+  static List<Uint8List> chunkWithLengthPrefix(
+    Uint8List payload, {
+    required int chunkSize,
+  }) {
+    final safeChunkSize = chunkSize < 8 ? 8 : chunkSize;
+    final header = ByteData(4)..setUint32(0, payload.length, Endian.big);
+    final withHeader = Uint8List(4 + payload.length)
+      ..setRange(0, 4, header.buffer.asUint8List())
+      ..setRange(4, 4 + payload.length, payload);
+
+    final chunks = <Uint8List>[];
+    for (var offset = 0; offset < withHeader.length; offset += safeChunkSize) {
+      final end = (offset + safeChunkSize < withHeader.length)
+          ? offset + safeChunkSize
+          : withHeader.length;
+      chunks.add(withHeader.sublist(offset, end));
+    }
+    return chunks;
+  }
+}
+
+/// Reassembles a length-prefixed chunked message (see
+/// [P2pProtocol.chunkWithLengthPrefix]) as chunks arrive, one accumulator
+/// per remote device id.
+class P2pChunkReassembler {
+  final Map<String, _PendingMessage> _pending = {};
+
+  /// Feeds a raw chunk from [deviceId]. Returns the fully reassembled
+  /// message once the declared length has been reached, otherwise null.
+  Uint8List? feed(String deviceId, Uint8List chunk) {
+    var pending = _pending[deviceId];
+    var data = chunk;
+
+    if (pending == null) {
+      if (chunk.length < 4) return null;
+      final totalLength = ByteData.sublistView(
+        chunk,
+        0,
+        4,
+      ).getUint32(0, Endian.big);
+      pending = _PendingMessage(totalLength);
+      _pending[deviceId] = pending;
+      data = chunk.sublist(4);
+    }
+
+    pending.buffer.addAll(data);
+    if (pending.buffer.length >= pending.totalLength) {
+      final complete = Uint8List.fromList(
+        pending.buffer.sublist(0, pending.totalLength),
+      );
+      _pending.remove(deviceId);
+      return complete;
+    }
+    return null;
+  }
+
+  void reset(String deviceId) => _pending.remove(deviceId);
+
+  void clear() => _pending.clear();
+}
+
+class _PendingMessage {
+  final int totalLength;
+  final List<int> buffer = [];
+  _PendingMessage(this.totalLength);
 }
 
 /// Handshake message sent by the initiating (sending) device once BLE

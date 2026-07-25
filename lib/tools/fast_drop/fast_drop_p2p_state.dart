@@ -69,6 +69,9 @@ class FastDropP2pState extends ChangeNotifier {
   // ---------------------------------------------------------------------
 
   Future<void> startReceiving(String deviceName) async {
+    if (_role == P2pRole.sending) {
+      await stopScanningForPeers();
+    }
     _role = P2pRole.receiving;
     _status = P2pStatus.advertising;
     _error = null;
@@ -205,6 +208,9 @@ class FastDropP2pState extends ChangeNotifier {
   int? get pendingSendFileSize => _pendingSendFileSize;
 
   Future<void> startScanningForPeers() async {
+    if (_role == P2pRole.receiving) {
+      await stopReceiving();
+    }
     _role = P2pRole.sending;
     _status = P2pStatus.scanning;
     _error = null;
@@ -276,6 +282,7 @@ class FastDropP2pState extends ChangeNotifier {
       notifyListeners();
 
       _activeTransport = await _transfer.sendFile(
+        discovery: _discovery,
         bleDeviceId: peer.bleDeviceId,
         receiverIps: response.candidateIps,
         receiverPort: response.lanPort,
