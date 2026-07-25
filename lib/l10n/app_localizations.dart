@@ -9252,6 +9252,48 @@ abstract class AppLocalizations {
   /// **'Last 7 days'**
   String get treadmillHistoryLastSevenDays;
 
+  /// No description provided for @treadmillHistoryDistanceLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance in the last 7 days'**
+  String get treadmillHistoryDistanceLastSevenDays;
+
+  /// No description provided for @treadmillHistoryDistanceChartSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily distance with a seven-day trend'**
+  String get treadmillHistoryDistanceChartSubtitle;
+
+  /// No description provided for @treadmillHistoryTotalDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Total distance'**
+  String get treadmillHistoryTotalDistance;
+
+  /// No description provided for @treadmillHistoryTotalDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Total duration'**
+  String get treadmillHistoryTotalDuration;
+
+  /// No description provided for @treadmillHistoryTotalCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Total calories'**
+  String get treadmillHistoryTotalCalories;
+
+  /// No description provided for @treadmillHistoryAverageSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Average speed'**
+  String get treadmillHistoryAverageSpeed;
+
+  /// No description provided for @treadmillHistoryWorkoutCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total workouts'**
+  String get treadmillHistoryWorkoutCount;
+
   /// No description provided for @treadmillHistoryPersonalBests.
   ///
   /// In en, this message translates to:
@@ -9281,6 +9323,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Avg HR'**
   String get treadmillHistoryAverageHr;
+
+  /// No description provided for @treadmillHistoryHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate'**
+  String get treadmillHistoryHeartRate;
+
+  /// No description provided for @treadmillHistoryHeartRateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All-time workout intensity, with a last 7-day trend below'**
+  String get treadmillHistoryHeartRateSubtitle;
+
+  /// No description provided for @treadmillHistoryRestingAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout average'**
+  String get treadmillHistoryRestingAverage;
+
+  /// No description provided for @treadmillHistoryPeakHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest peak'**
+  String get treadmillHistoryPeakHeartRate;
 
   /// No description provided for @treadmillHistoryImportNoNewWorkouts.
   ///

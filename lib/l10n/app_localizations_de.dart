@@ -5124,6 +5124,29 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillHistoryLastSevenDays => 'Letzte 7 Tage';
 
   @override
+  String get treadmillHistoryDistanceLastSevenDays =>
+      'Distanz in den letzten 7 Tagen';
+
+  @override
+  String get treadmillHistoryDistanceChartSubtitle =>
+      'Tagesdistanz mit einem Sieben-Tage-Trend';
+
+  @override
+  String get treadmillHistoryTotalDistance => 'Gesamtdistanz';
+
+  @override
+  String get treadmillHistoryTotalDuration => 'Gesamtdauer';
+
+  @override
+  String get treadmillHistoryTotalCalories => 'Kalorien insgesamt';
+
+  @override
+  String get treadmillHistoryAverageSpeed => 'Durchschnittsgeschwindigkeit';
+
+  @override
+  String get treadmillHistoryWorkoutCount => 'Workouts insgesamt';
+
+  @override
   String get treadmillHistoryPersonalBests => 'Persönliche Bestleistungen';
 
   @override
@@ -5137,6 +5160,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get treadmillHistoryAverageHr => 'Durchschn. HF';
+
+  @override
+  String get treadmillHistoryHeartRate => 'Herzfrequenz';
+
+  @override
+  String get treadmillHistoryHeartRateSubtitle =>
+      'Trainingsintensität aller Zeiten mit einem Sieben-Tage-Trend darunter';
+
+  @override
+  String get treadmillHistoryRestingAverage => 'Workout-Durchschnitt';
+
+  @override
+  String get treadmillHistoryPeakHeartRate => 'Höchster Wert';
 
   @override
   String get treadmillHistoryImportNoNewWorkouts =>
