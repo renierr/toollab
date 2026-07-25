@@ -1002,6 +1002,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Waiting for a nearby device to send a file...';
 
   @override
+  String get fastDropP2pAbortSend => 'Cancel send';
+
+  @override
+  String get fastDropP2pWaitingForReceiver =>
+      'Waiting for a nearby device to start receiving...';
+
+  @override
+  String get fastDropP2pPeersFoundPickOne =>
+      'Device found — pick it below to send';
+
+  @override
+  String fastDropP2pEstimateWifi(String duration) {
+    return 'Wi-Fi: $duration';
+  }
+
+  @override
+  String fastDropP2pEstimateBluetooth(String duration) {
+    return 'Bluetooth: $duration';
+  }
+
+  @override
   String get fastDropP2pSendSectionTitle => 'SEND A FILE';
 
   @override

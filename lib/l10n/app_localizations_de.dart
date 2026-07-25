@@ -1011,6 +1011,27 @@ class AppLocalizationsDe extends AppLocalizations {
       'Warte auf ein Gerät in der Nähe, das eine Datei sendet...';
 
   @override
+  String get fastDropP2pAbortSend => 'Senden abbrechen';
+
+  @override
+  String get fastDropP2pWaitingForReceiver =>
+      'Warte auf ein Gerät in der Nähe, das den Empfang startet...';
+
+  @override
+  String get fastDropP2pPeersFoundPickOne =>
+      'Gerät gefunden — zum Senden unten auswählen';
+
+  @override
+  String fastDropP2pEstimateWifi(String duration) {
+    return 'WLAN: $duration';
+  }
+
+  @override
+  String fastDropP2pEstimateBluetooth(String duration) {
+    return 'Bluetooth: $duration';
+  }
+
+  @override
   String get fastDropP2pSendSectionTitle => 'DATEI SENDEN';
 
   @override

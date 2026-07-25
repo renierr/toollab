@@ -502,6 +502,25 @@
   "fastDropP2pStartReceiving": "Start Receiving",
   "fastDropP2pStopReceiving": "Stop Receiving",
   "fastDropP2pWaitingForSender": "Waiting for a nearby device to send a file...",
+  "fastDropP2pAbortSend": "Cancel send",
+  "fastDropP2pWaitingForReceiver": "Waiting for a nearby device to start receiving...",
+  "fastDropP2pPeersFoundPickOne": "Device found — pick it below to send",
+  "fastDropP2pEstimateWifi": "Wi-Fi: {duration}",
+  "@fastDropP2pEstimateWifi": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "fastDropP2pEstimateBluetooth": "Bluetooth: {duration}",
+  "@fastDropP2pEstimateBluetooth": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "fastDropP2pSendSectionTitle": "SEND A FILE",
   "fastDropP2pReceivedSectionTitle": "RECEIVED FILES",
   "fastDropP2pPickFileToSend": "Pick a file to send",

@@ -1868,6 +1868,36 @@ abstract class AppLocalizations {
   /// **'Waiting for a nearby device to send a file...'**
   String get fastDropP2pWaitingForSender;
 
+  /// No description provided for @fastDropP2pAbortSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel send'**
+  String get fastDropP2pAbortSend;
+
+  /// No description provided for @fastDropP2pWaitingForReceiver.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a nearby device to start receiving...'**
+  String get fastDropP2pWaitingForReceiver;
+
+  /// No description provided for @fastDropP2pPeersFoundPickOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Device found — pick it below to send'**
+  String get fastDropP2pPeersFoundPickOne;
+
+  /// No description provided for @fastDropP2pEstimateWifi.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi: {duration}'**
+  String fastDropP2pEstimateWifi(String duration);
+
+  /// No description provided for @fastDropP2pEstimateBluetooth.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth: {duration}'**
+  String fastDropP2pEstimateBluetooth(String duration);
+
   /// No description provided for @fastDropP2pSendSectionTitle.
   ///
   /// In en, this message translates to:

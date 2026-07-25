@@ -8,6 +8,7 @@ import '../config.dart';
 import '../fast_drop_p2p_state.dart';
 import '../p2p/p2p_models.dart';
 import 'fast_drop_p2p_received_list.dart';
+import 'fast_drop_p2p_send_intent_card.dart';
 import 'fast_drop_p2p_speed_banner.dart';
 import 'fast_drop_peer_list.dart';
 import 'fast_drop_progress_indicator.dart';
@@ -138,18 +139,13 @@ class FastDropP2pView extends StatelessWidget {
                 multiple: false,
               )
             else
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.insert_drive_file_outlined),
-                  title: Text(p2pState.pendingSendFileName ?? ''),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close),
-                    tooltip: l10n.commonCancel,
-                    onPressed: onCancelSendSelection,
-                  ),
-                ),
+              FastDropP2pSendIntentCard(
+                fileName: p2pState.pendingSendFileName ?? '',
+                fileSize: p2pState.pendingSendFileSize ?? 0,
+                hasPeers: p2pState.peers.isNotEmpty,
+                onAbort: onCancelSendSelection,
               ),
-            if (p2pState.hasPendingSendFile) ...[
+            if (p2pState.hasPendingSendFile && p2pState.peers.isNotEmpty) ...[
               const SizedBox(height: 12),
               FastDropPeerList(
                 peers: p2pState.peers,

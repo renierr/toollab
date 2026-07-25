@@ -295,6 +295,25 @@
   "fastDropP2pStartReceiving": "Empfang starten",
   "fastDropP2pStopReceiving": "Empfang stoppen",
   "fastDropP2pWaitingForSender": "Warte auf ein Gerät in der Nähe, das eine Datei sendet...",
+  "fastDropP2pAbortSend": "Senden abbrechen",
+  "fastDropP2pWaitingForReceiver": "Warte auf ein Gerät in der Nähe, das den Empfang startet...",
+  "fastDropP2pPeersFoundPickOne": "Gerät gefunden — zum Senden unten auswählen",
+  "fastDropP2pEstimateWifi": "WLAN: {duration}",
+  "@fastDropP2pEstimateWifi": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "fastDropP2pEstimateBluetooth": "Bluetooth: {duration}",
+  "@fastDropP2pEstimateBluetooth": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
   "fastDropP2pSendSectionTitle": "DATEI SENDEN",
   "fastDropP2pReceivedSectionTitle": "EMPFANGENE DATEIEN",
   "fastDropP2pPickFileToSend": "Datei zum Senden auswählen",
