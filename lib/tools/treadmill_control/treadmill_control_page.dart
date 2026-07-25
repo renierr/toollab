@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:universal_ble/universal_ble.dart';
 import 'treadmill_control_state.dart';
@@ -6,7 +7,6 @@ import 'treadmill_control_colors.dart';
 import 'widgets/device_connection_sheet.dart';
 import 'widgets/workout_metrics_grid.dart';
 import 'widgets/workout_controls_panel.dart';
-import 'widgets/session_history_list.dart';
 import '../../core/tool_page_state.dart';
 import '../../widgets/tool_layout.dart';
 import '../../widgets/responsive_orientation_layout.dart';
@@ -64,8 +64,13 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
       ),
       IconButton(
         icon: const Icon(Icons.bluetooth),
-        tooltip: 'Connect Devices',
+        tooltip: l10n.treadmillConnectDevices,
         onPressed: _showConnectionSheet,
+      ),
+      IconButton(
+        icon: const Icon(Icons.insights_outlined),
+        tooltip: l10n.historyTitle,
+        onPressed: () => context.push('/treadmill-control/history'),
       ),
     ];
 
@@ -105,8 +110,6 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
               WorkoutControlsPanel(isLandscape: false),
               const SizedBox(height: 24),
               connectionBadges,
-              const SizedBox(height: 16),
-              const SessionHistoryList(),
             ],
           ),
         ),
@@ -134,8 +137,6 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
                     WorkoutMetricsGrid(isLandscape: true),
                     const SizedBox(height: 24),
                     connectionBadges,
-                    const SizedBox(height: 16),
-                    const SessionHistoryList(),
                   ],
                 ),
               ),

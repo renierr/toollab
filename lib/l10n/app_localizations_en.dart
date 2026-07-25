@@ -5065,6 +5065,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportHistory => 'Export Workouts';
 
   @override
+  String get treadmillConnectDevices => 'Connect devices';
+
+  @override
+  String get treadmillHistoryDashboard => 'Dashboard';
+
+  @override
+  String get treadmillHistoryWorkouts => 'Workouts';
+
+  @override
+  String get treadmillHistoryEmpty => 'No workouts saved yet';
+
+  @override
+  String get treadmillHistoryOverview => 'Your running story';
+
+  @override
+  String get treadmillHistoryOverviewSubtitle =>
+      'Every recorded workout, in one place.';
+
+  @override
+  String get treadmillHistoryLastSevenDays => 'Last 7 days';
+
+  @override
+  String get treadmillHistoryPersonalBests => 'Personal bests';
+
+  @override
+  String get treadmillHistoryLongestRun => 'Longest run';
+
+  @override
+  String get treadmillHistoryTopSpeed => 'Top speed';
+
+  @override
+  String get treadmillHistoryAverage => 'Average';
+
+  @override
+  String get treadmillHistoryAverageHr => 'Avg HR';
+
+  @override
   String get toolNameAudioLab => 'Audio Lab';
 
   @override

@@ -4,11 +4,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_selector/file_selector.dart' as fs;
+import 'package:intl/intl.dart';
 import '../treadmill_control_state.dart';
 import '../treadmill_session.dart';
 import '../treadmill_control_colors.dart';
+import 'session_history_list_item.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../helpers/file_save_helper.dart';
+import '../../../../widgets/collapsible_section.dart';
 
 class SessionHistoryList extends StatelessWidget {
   const SessionHistoryList({super.key});
@@ -18,8 +21,8 @@ class SessionHistoryList extends StatelessWidget {
     final state = context.watch<TreadmillControlState>();
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ListView(
+      padding: const EdgeInsets.all(16),
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -30,7 +33,7 @@ class SessionHistoryList extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Row(
+            Wrap(
               children: [
                 IconButton(
                   icon: const Icon(Icons.download),
@@ -46,12 +49,13 @@ class SessionHistoryList extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 12),
         if (state.pastSessions.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Center(
               child: Text(
-                'No workouts saved yet',
+                l10n.treadmillHistoryEmpty,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -59,44 +63,59 @@ class SessionHistoryList extends StatelessWidget {
             ),
           )
         else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: state.pastSessions.length,
-            itemBuilder: (context, idx) {
-              final session = state.pastSessions[idx];
-              final date = DateTime.fromMillisecondsSinceEpoch(
-                session.startTime,
-              );
-              final dateStr =
-                  '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '
-                  '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-
-              final mins = session.elapsedTime ~/ 60;
-              final secs = session.elapsedTime % 60;
-              final timeStr = '${mins}m ${secs}s';
-
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: ListTile(
-                  title: Text(
-                    dateStr,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    '${session.distance.toStringAsFixed(2)} km | $timeStr | Avg HR: ${session.avgHeartRate.round()} bpm',
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () => _confirmDelete(context, state, session),
-                  ),
-                  onTap: () => _viewSessionDetails(context, session),
-                ),
-              );
-            },
+          ..._groups(context, state).map(
+            (group) => CollapsibleSection(
+              icon: Icons.calendar_month_outlined,
+              title: group.title,
+              initiallyExpanded: group.isRecent,
+              child: Column(
+                children: group.sessions
+                    .map(
+                      (session) => SessionHistoryListItem(
+                        session: session,
+                        onDelete: () => _confirmDelete(context, state, session),
+                        onTap: () => _viewSessionDetails(context, session),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
           ),
       ],
     );
+  }
+
+  List<_SessionGroup> _groups(
+    BuildContext context,
+    TreadmillControlState state,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final now = DateTime.now();
+    final cutoff = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 6));
+    final recent = <TreadmillSession>[];
+    final grouped = <String, List<TreadmillSession>>{};
+    for (final session in state.pastSessions) {
+      final date = DateTime.fromMillisecondsSinceEpoch(session.startTime);
+      if (!date.isBefore(cutoff)) {
+        recent.add(session);
+      } else {
+        final key = DateFormat.yMMMM(
+          Localizations.localeOf(context).toString(),
+        ).format(date);
+        grouped.putIfAbsent(key, () => []).add(session);
+      }
+    }
+    return [
+      if (recent.isNotEmpty)
+        _SessionGroup(l10n.treadmillHistoryLastSevenDays, recent, true),
+      ...grouped.entries.map(
+        (entry) => _SessionGroup(entry.key, entry.value, false),
+      ),
+    ];
   }
 
   void _confirmDelete(
@@ -341,6 +360,14 @@ class SessionHistoryList extends StatelessWidget {
       ],
     );
   }
+}
+
+class _SessionGroup {
+  final String title;
+  final List<TreadmillSession> sessions;
+  final bool isRecent;
+
+  const _SessionGroup(this.title, this.sessions, this.isRecent);
 }
 
 class _ChartPainter extends CustomPainter {

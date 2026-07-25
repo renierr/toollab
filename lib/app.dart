@@ -20,6 +20,7 @@ import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
 import 'package:tool_lab/tools/gps_location_store/gps_info_page.dart';
+import 'package:tool_lab/tools/treadmill_control/treadmill_history_page.dart';
 
 final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -61,6 +62,11 @@ final _router = GoRouter(
       path: '/gps-location-store/gps-info',
       name: 'gps-info',
       builder: (_, _) => const GpsInfoPage(),
+    ),
+    GoRoute(
+      path: '/treadmill-control/history',
+      name: 'treadmill-history',
+      builder: (_, _) => const TreadmillHistoryPage(),
     ),
     ...ToolRegistry.all.map(
       (tool) => GoRoute(

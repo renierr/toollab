@@ -9210,6 +9210,78 @@ abstract class AppLocalizations {
   /// **'Export Workouts'**
   String get exportHistory;
 
+  /// No description provided for @treadmillConnectDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect devices'**
+  String get treadmillConnectDevices;
+
+  /// No description provided for @treadmillHistoryDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get treadmillHistoryDashboard;
+
+  /// No description provided for @treadmillHistoryWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get treadmillHistoryWorkouts;
+
+  /// No description provided for @treadmillHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts saved yet'**
+  String get treadmillHistoryEmpty;
+
+  /// No description provided for @treadmillHistoryOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your running story'**
+  String get treadmillHistoryOverview;
+
+  /// No description provided for @treadmillHistoryOverviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every recorded workout, in one place.'**
+  String get treadmillHistoryOverviewSubtitle;
+
+  /// No description provided for @treadmillHistoryLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get treadmillHistoryLastSevenDays;
+
+  /// No description provided for @treadmillHistoryPersonalBests.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal bests'**
+  String get treadmillHistoryPersonalBests;
+
+  /// No description provided for @treadmillHistoryLongestRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest run'**
+  String get treadmillHistoryLongestRun;
+
+  /// No description provided for @treadmillHistoryTopSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Top speed'**
+  String get treadmillHistoryTopSpeed;
+
+  /// No description provided for @treadmillHistoryAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get treadmillHistoryAverage;
+
+  /// No description provided for @treadmillHistoryAverageHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg HR'**
+  String get treadmillHistoryAverageHr;
+
   /// No description provided for @toolNameAudioLab.
   ///
   /// In en, this message translates to:

@@ -2728,6 +2728,18 @@
   "workoutStop": "Stop",
   "importHistory": "Import Workouts",
   "exportHistory": "Export Workouts",
+  "treadmillConnectDevices": "Connect devices",
+  "treadmillHistoryDashboard": "Dashboard",
+  "treadmillHistoryWorkouts": "Workouts",
+  "treadmillHistoryEmpty": "No workouts saved yet",
+  "treadmillHistoryOverview": "Your running story",
+  "treadmillHistoryOverviewSubtitle": "Every recorded workout, in one place.",
+  "treadmillHistoryLastSevenDays": "Last 7 days",
+  "treadmillHistoryPersonalBests": "Personal bests",
+  "treadmillHistoryLongestRun": "Longest run",
+  "treadmillHistoryTopSpeed": "Top speed",
+  "treadmillHistoryAverage": "Average",
+  "treadmillHistoryAverageHr": "Avg HR",
   "toolNameAudioLab": "Audio Lab",
   "toolDescAudioLab": "Locate, mask, analyze, and generate audio signals",
   "sfTitleFinder": "Finder",
@@ -2879,4 +2891,3 @@
   "compassHoldFlatHint": "Hold the device flat and level for an accurate heading.",
   "compassCalibrateHint": "Heading unstable? Wave the device in a figure-8 to recalibrate."
 }
-
