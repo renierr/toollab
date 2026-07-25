@@ -387,6 +387,13 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
         sessions.length;
     final longest = sessions.reduce((a, b) => a.distance >= b.distance ? a : b);
     final fastest = sessions.reduce((a, b) => a.maxSpeed >= b.maxSpeed ? a : b);
+    final longestDuration = sessions.reduce(
+      (a, b) => a.elapsedTime >= b.elapsedTime ? a : b,
+    );
+    final highestCalories = sessions.reduce(
+      (a, b) => a.calories >= b.calories ? a : b,
+    );
+    final highestSteps = sessions.reduce((a, b) => a.steps >= b.steps ? a : b);
     final heartRateSessions = sessions
         .where((session) => session.avgHeartRate > 0)
         .toList();
@@ -530,6 +537,56 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
               subtitle:
                   '${l10n.treadmillHistoryAverage}: ${fastest.avgSpeed.toStringAsFixed(1)} km/h',
             ),
+            const SizedBox(height: 8),
+            _BestCard(
+              icon: Icons.timer_outlined,
+              label: l10n.treadmillHistoryLongestDuration,
+              value: _duration(longestDuration.elapsedTime),
+              subtitle:
+                  DateFormat.yMMMd(
+                    Localizations.localeOf(context).toString(),
+                  ).format(
+                    DateTime.fromMillisecondsSinceEpoch(
+                      longestDuration.startTime,
+                    ),
+                  ),
+            ),
+            const SizedBox(height: 8),
+            _BestCard(
+              icon: Icons.local_fire_department_outlined,
+              label: l10n.treadmillHistoryMostCalories,
+              value: '${highestCalories.calories} kcal',
+              subtitle:
+                  DateFormat.yMMMd(
+                    Localizations.localeOf(context).toString(),
+                  ).format(
+                    DateTime.fromMillisecondsSinceEpoch(
+                      highestCalories.startTime,
+                    ),
+                  ),
+            ),
+            const SizedBox(height: 8),
+            _BestCard(
+              icon: Icons.directions_walk_outlined,
+              label: l10n.treadmillHistoryMostSteps,
+              value: '${highestSteps.steps}',
+              subtitle:
+                  DateFormat.yMMMd(
+                    Localizations.localeOf(context).toString(),
+                  ).format(
+                    DateTime.fromMillisecondsSinceEpoch(highestSteps.startTime),
+                  ),
+            ),
+            if (heartRateSessions.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _BestCard(
+                icon: Icons.favorite_rounded,
+                label: l10n.treadmillHistoryPeakHeartRate,
+                value:
+                    '${heartRateSessions.map((session) => session.maxHeartRate).reduce(max).round()} bpm',
+                subtitle: l10n.treadmillHistoryAllTime,
+              ),
+            ],
           ],
         ),
       ),

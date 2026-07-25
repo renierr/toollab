@@ -5192,6 +5192,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Durchschnittliche Herzfrequenz der letzten 7 Tage';
 
   @override
+  String get treadmillHistoryAllTime => 'Alle Zeiten';
+
+  @override
   String get treadmillHistoryPersonalBests => 'Persönliche Bestleistungen';
 
   @override

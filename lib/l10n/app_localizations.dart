@@ -9378,6 +9378,12 @@ abstract class AppLocalizations {
   /// **'Average heart rate in the last 7 days'**
   String get treadmillHistoryHeartRateLastSevenDays;
 
+  /// No description provided for @treadmillHistoryAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get treadmillHistoryAllTime;
+
   /// No description provided for @treadmillHistoryPersonalBests.
   ///
   /// In en, this message translates to:

@@ -5155,6 +5155,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Average heart rate in the last 7 days';
 
   @override
+  String get treadmillHistoryAllTime => 'All time';
+
+  @override
   String get treadmillHistoryPersonalBests => 'Personal bests';
 
   @override
