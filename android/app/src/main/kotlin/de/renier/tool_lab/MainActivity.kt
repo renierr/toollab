@@ -106,8 +106,10 @@ open class MainActivity : FlutterActivity() {
                     val enabled = call.argument<Boolean>("enabled") ?: false
                     if (enabled) {
                         val wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
-                        multicastLock ??= wifiManager.createMulticastLock("tool_lab_fast_drop").apply {
-                            setReferenceCounted(false)
+                        if (multicastLock == null) {
+                            multicastLock = wifiManager.createMulticastLock("tool_lab_fast_drop").apply {
+                                setReferenceCounted(false)
+                            }
                         }
                         multicastLock?.takeIf { !it.isHeld }?.acquire()
                     } else {
