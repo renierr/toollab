@@ -63,6 +63,12 @@ class P2pTransferService {
     final completer = Completer<String>();
     P2pTransportKind? activeTransport;
 
+    void checkCancelled() {
+      if (isCancelled()) {
+        throw Exception('Transfer cancelled');
+      }
+    }
+
     Future<void> finishIfDone() async {
       if (received >= expectedSize && !completer.isCompleted) {
         await sink.flush();
@@ -80,14 +86,12 @@ class P2pTransferService {
       );
       _serverSub = _serverSocket!.listen((client) {
         if (activeTransport != null) {
-          // Already receiving over another transport; reject extra
-          // connections.
           client.destroy();
           return;
         }
         activeTransport = P2pTransportKind.lan;
         client.listen(
-          (data) async {
+          (data) {
             if (isCancelled()) {
               client.destroy();
               return;
@@ -95,13 +99,21 @@ class P2pTransferService {
             sink.add(data);
             received += data.length;
             onProgress(received, expectedSize, P2pTransportKind.lan);
-            await finishIfDone();
+            unawaited(finishIfDone());
           },
           onError: (e) {
             if (!completer.isCompleted) completer.completeError(e);
           },
-          onDone: () async {
-            await finishIfDone();
+          onDone: () {
+            unawaited(
+              finishIfDone().then((_) {
+                if (!completer.isCompleted) {
+                  completer.completeError(
+                    Exception('Connection closed before transfer completed'),
+                  );
+                }
+              }),
+            );
           },
         );
       });
@@ -121,17 +133,10 @@ class P2pTransferService {
       await finishIfDone();
     });
 
-    while (!completer.isCompleted) {
-      if (isCancelled()) {
-        await sink.flush();
-        await sink.close();
-        throw Exception('Transfer cancelled');
-      }
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-
+    checkCancelled();
+    await completer.future;
     await _closeServer();
-    return completer.future;
+    return outputPath;
   }
 
   Future<void> _closeServer() async {
@@ -275,6 +280,9 @@ class P2pTransferService {
           P2pProtocol.dataCharUuid,
           Uint8List.fromList(chunk),
           withoutResponse: false,
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => throw Exception('BLE write timed out'),
         );
         sent += chunk.length;
         onProgress(sent, fileSize, P2pTransportKind.ble);

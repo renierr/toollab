@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -579,13 +580,19 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     _incomingDialogOpen = false;
     if (!mounted) return;
     if (accept == true) {
-      final outputPath = await _scope.createFile(
-        'p2p_received_${DateTime.now().millisecondsSinceEpoch}_${request.fileName}',
-      );
-      await p2p.acceptIncomingRequest(outputPath);
+      final baseName =
+          'p2p_received_${DateTime.now().millisecondsSinceEpoch}_${request.fileName}';
+      final outputPath = await _scope.createFile(baseName);
+      await p2p.acceptIncomingRequest(outputPath, tempFileBaseName: baseName);
     } else {
       await p2p.rejectIncomingRequest();
     }
+  }
+
+  void _onDismissReceived(P2pReceivedFile file) {
+    final p2p = context.read<FastDropP2pState>();
+    p2p.dismissReceivedFile(file.id);
+    unawaited(_scope.deleteFile(file.tempFileBaseName));
   }
 
   Future<void> _onOpenReceived(P2pReceivedFile file) async {
@@ -730,6 +737,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                     onToggleReceiving: _onToggleReceiving,
                     onOpenReceived: _onOpenReceived,
                     onSaveReceived: _onSaveReceived,
+                    onDismissReceived: _onDismissReceived,
                     onCancelTransfer: () => p2pState.cancelTransfer(),
                   )
                 : !isConfigured

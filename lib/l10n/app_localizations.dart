@@ -1986,6 +1986,12 @@ abstract class AppLocalizations {
   /// **'Decline'**
   String get fastDropP2pDecline;
 
+  /// No description provided for @fastDropP2pDismissFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get fastDropP2pDismissFile;
+
   /// No description provided for @focusAutoStopTimer.
   ///
   /// In en, this message translates to:

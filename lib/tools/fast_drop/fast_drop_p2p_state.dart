@@ -54,16 +54,13 @@ class FastDropP2pState extends ChangeNotifier {
       _status == P2pStatus.advertising ||
       _status == P2pStatus.scanning ||
       _status == P2pStatus.handshaking ||
-      _status == P2pStatus.connectingLan ||
       _status == P2pStatus.transferring;
 
   /// True only while an actual transfer is in flight (handshake through
   /// completion) — used to disable the receive/scan toggles without
   /// blocking the user from stopping advertising/scanning itself.
   bool get isTransferActive =>
-      _status == P2pStatus.handshaking ||
-      _status == P2pStatus.connectingLan ||
-      _status == P2pStatus.transferring;
+      _status == P2pStatus.handshaking || _status == P2pStatus.transferring;
 
   // ---------------------------------------------------------------------
   // Receiver flow
@@ -114,7 +111,10 @@ class FastDropP2pState extends ChangeNotifier {
 
   /// Accepts an incoming send request, chooses an output file name, and
   /// runs the transfer (LAN first, BLE fallback).
-  Future<void> acceptIncomingRequest(String outputPath) async {
+  Future<void> acceptIncomingRequest(
+    String outputPath, {
+    required String tempFileBaseName,
+  }) async {
     final incoming = _incomingRequest;
     if (incoming == null) return;
     final (bleDeviceId, request) = incoming;
@@ -156,6 +156,7 @@ class FastDropP2pState extends ChangeNotifier {
           size: request.fileSize,
           mimeType: request.mimeType,
           tempFileName: savedPath,
+          tempFileBaseName: tempFileBaseName,
           receivedAt: DateTime.now().millisecondsSinceEpoch,
         ),
       );
@@ -306,6 +307,7 @@ class FastDropP2pState extends ChangeNotifier {
     } catch (e) {
       _status = _cancelRequested ? P2pStatus.cancelled : P2pStatus.failed;
       _error = e.toString().replaceAll('Exception: ', '');
+      _role = P2pRole.none;
     } finally {
       _progress = null;
       notifyListeners();
@@ -315,6 +317,7 @@ class FastDropP2pState extends ChangeNotifier {
 
   void cancelTransfer() {
     _cancelRequested = true;
+    notifyListeners();
   }
 
   void _onProgress(int current, int total, P2pTransportKind transport) {
@@ -325,6 +328,20 @@ class FastDropP2pState extends ChangeNotifier {
       _lastProgressNotifyMs = now;
       notifyListeners();
     }
+  }
+
+  /// Removes a received file from the in-memory list. The caller (page) is
+  /// responsible for deleting the backing temp file via its TempFileScope.
+  void dismissReceivedFile(String id) {
+    _receivedFiles.removeWhere((f) => f.id == id);
+    notifyListeners();
+  }
+
+  /// Removes all received files from the in-memory list. The caller (page)
+  /// is responsible for deleting the backing temp files via its TempFileScope.
+  void clearAllReceivedFiles() {
+    _receivedFiles.clear();
+    notifyListeners();
   }
 
   void resetToIdle() {

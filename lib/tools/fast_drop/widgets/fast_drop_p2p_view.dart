@@ -25,6 +25,7 @@ class FastDropP2pView extends StatelessWidget {
   final VoidCallback onToggleReceiving;
   final ValueChanged<P2pReceivedFile> onOpenReceived;
   final ValueChanged<P2pReceivedFile> onSaveReceived;
+  final ValueChanged<P2pReceivedFile>? onDismissReceived;
   final VoidCallback onCancelTransfer;
 
   const FastDropP2pView({
@@ -37,6 +38,7 @@ class FastDropP2pView extends StatelessWidget {
     required this.onToggleReceiving,
     required this.onOpenReceived,
     required this.onSaveReceived,
+    this.onDismissReceived,
     required this.onCancelTransfer,
   });
 
@@ -196,6 +198,7 @@ class FastDropP2pView extends StatelessWidget {
               files: p2pState.receivedFiles,
               onOpen: onOpenReceived,
               onSave: onSaveReceived,
+              onDismiss: onDismissReceived,
             ),
           ],
         ],

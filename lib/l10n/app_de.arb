@@ -348,6 +348,7 @@
   },
   "fastDropP2pAccept": "Annehmen",
   "fastDropP2pDecline": "Ablehnen",
+  "fastDropP2pDismissFile": "Verwerfen",
   "focusAutoStopTimer": "Auto-Stopp-Timer",
   "focusStartPlaybackToEnableTimer": "Wiedergabe starten, um Timer zu aktivieren",
   "focusCustomMinutes": "Benutzerdefiniert: {minutes} Min.",

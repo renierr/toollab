@@ -1075,6 +1075,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fastDropP2pDecline => 'Decline';
 
   @override
+  String get fastDropP2pDismissFile => 'Dismiss';
+
+  @override
   String get focusAutoStopTimer => 'Auto-stop Timer';
 
   @override

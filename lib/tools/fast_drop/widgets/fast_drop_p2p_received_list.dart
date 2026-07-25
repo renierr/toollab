@@ -10,12 +10,14 @@ class FastDropP2pReceivedList extends StatelessWidget {
   final List<P2pReceivedFile> files;
   final void Function(P2pReceivedFile file) onOpen;
   final void Function(P2pReceivedFile file) onSave;
+  final void Function(P2pReceivedFile file)? onDismiss;
 
   const FastDropP2pReceivedList({
     super.key,
     required this.files,
     required this.onOpen,
     required this.onSave,
+    this.onDismiss,
   });
 
   static String _formatBytes(int bytes) {
@@ -48,6 +50,12 @@ class FastDropP2pReceivedList extends StatelessWidget {
             trailing: Wrap(
               spacing: 4,
               children: [
+                if (onDismiss != null)
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    tooltip: l10n.fastDropP2pDismissFile,
+                    onPressed: () => onDismiss!(file),
+                  ),
                 IconButton(
                   icon: const Icon(Icons.open_in_new),
                   tooltip: l10n.fastDropOpenFile,

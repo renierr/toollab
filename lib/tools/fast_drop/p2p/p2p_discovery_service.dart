@@ -37,6 +37,7 @@ class P2pDiscoveryService {
   final _advertisingErrorController = StreamController<String>.broadcast();
   final P2pChunkReassembler _requestReassembler = P2pChunkReassembler();
   final P2pChunkReassembler _responseReassembler = P2pChunkReassembler();
+  void Function(String deviceId, Uint8List chunk)? _dataWriteHandler;
 
   /// Safe per-write payload size for the central (sender) role, updated
   /// once an MTU has been negotiated with the connected peripheral.
@@ -81,10 +82,12 @@ class P2pDiscoveryService {
       offset,
       value,
     ) {
-      if (characteristicId.toLowerCase() ==
-              P2pProtocol.handshakeCharUuid.toLowerCase() &&
-          value != null) {
+      if (value == null) return PeripheralWriteRequestResult();
+      final id = characteristicId.toLowerCase();
+      if (id == P2pProtocol.handshakeCharUuid.toLowerCase()) {
         _handleHandshakeWriteChunk(deviceId, value);
+      } else if (id == P2pProtocol.dataCharUuid.toLowerCase()) {
+        _dataWriteHandler?.call(deviceId, value);
       }
       return PeripheralWriteRequestResult();
     });
@@ -189,28 +192,14 @@ class P2pDiscoveryService {
     }
   }
 
-  /// Chunk data written by a connected central (BLE fallback receive path).
-  /// File-data chunks don't need length-prefix framing — only cumulative
-  /// byte count matters, which the caller tracks against the known file
-  /// size from the handshake manifest.
+  /// Registers a callback for chunked file data arriving over the BLE
+  /// data characteristic (fallback path when no LAN is available).
+  /// The GATT write handler is already installed during
+  /// [startAdvertisingAsReceiver] — this merely stores the callback.
   void setDataWriteHandler(
     void Function(String deviceId, Uint8List chunk) onChunk,
   ) {
-    UniversalBlePeripheral.setWriteRequestHandlers((
-      deviceId,
-      characteristicId,
-      offset,
-      value,
-    ) {
-      final id = characteristicId.toLowerCase();
-      if (id == P2pProtocol.handshakeCharUuid.toLowerCase() && value != null) {
-        _handleHandshakeWriteChunk(deviceId, value);
-      } else if (id == P2pProtocol.dataCharUuid.toLowerCase() &&
-          value != null) {
-        onChunk(deviceId, value);
-      }
-      return PeripheralWriteRequestResult();
-    });
+    _dataWriteHandler = onChunk;
   }
 
   Future<void> sendAck(String bleDeviceId, int chunksReceived) async {

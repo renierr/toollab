@@ -7,7 +7,6 @@ enum P2pStatus {
   advertising,
   scanning,
   handshaking,
-  connectingLan,
   transferring,
   completed,
   failed,
@@ -63,6 +62,7 @@ class P2pReceivedFile {
   final int size;
   final String mimeType;
   final String tempFileName;
+  final String tempFileBaseName;
   final int receivedAt;
 
   const P2pReceivedFile({
@@ -71,6 +71,7 @@ class P2pReceivedFile {
     required this.size,
     required this.mimeType,
     required this.tempFileName,
+    required this.tempFileBaseName,
     required this.receivedAt,
   });
 }

@@ -555,6 +555,7 @@
   },
   "fastDropP2pAccept": "Accept",
   "fastDropP2pDecline": "Decline",
+  "fastDropP2pDismissFile": "Dismiss",
   "focusAutoStopTimer": "Auto-stop Timer",
   "focusStartPlaybackToEnableTimer": "Start playback to enable timer",
   "focusCustomMinutes": "Custom: {minutes} min",
