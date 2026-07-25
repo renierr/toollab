@@ -1826,6 +1826,130 @@ abstract class AppLocalizations {
   /// **'Paste Clipboard'**
   String get fastDropPasteClipboard;
 
+  /// No description provided for @fastDropOpenFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get fastDropOpenFile;
+
+  /// No description provided for @fastDropDownloadFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get fastDropDownloadFile;
+
+  /// No description provided for @fastDropModeCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud'**
+  String get fastDropModeCloud;
+
+  /// No description provided for @fastDropModeNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby'**
+  String get fastDropModeNearby;
+
+  /// No description provided for @fastDropP2pStartReceiving.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Receiving'**
+  String get fastDropP2pStartReceiving;
+
+  /// No description provided for @fastDropP2pStopReceiving.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Receiving'**
+  String get fastDropP2pStopReceiving;
+
+  /// No description provided for @fastDropP2pSendSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SEND A FILE'**
+  String get fastDropP2pSendSectionTitle;
+
+  /// No description provided for @fastDropP2pReceivedSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'RECEIVED FILES'**
+  String get fastDropP2pReceivedSectionTitle;
+
+  /// No description provided for @fastDropP2pPickFileToSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a file to send'**
+  String get fastDropP2pPickFileToSend;
+
+  /// No description provided for @fastDropP2pScanningForPeers.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching for nearby devices...'**
+  String get fastDropP2pScanningForPeers;
+
+  /// No description provided for @fastDropP2pNoPeersFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No nearby devices found yet. Make sure the other device tapped \"Start Receiving\".'**
+  String get fastDropP2pNoPeersFound;
+
+  /// No description provided for @fastDropP2pSignalStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal: {rssi} dBm'**
+  String fastDropP2pSignalStrength(int rssi);
+
+  /// No description provided for @fastDropP2pSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get fastDropP2pSend;
+
+  /// No description provided for @fastDropP2pTransferringLan.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending over Wi-Fi'**
+  String get fastDropP2pTransferringLan;
+
+  /// No description provided for @fastDropP2pTransferringBle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending over Bluetooth'**
+  String get fastDropP2pTransferringBle;
+
+  /// No description provided for @fastDropP2pBleFallbackWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'No shared network found — transferring over Bluetooth, which is much slower. Connect both devices to the same Wi-Fi network for faster transfers.'**
+  String get fastDropP2pBleFallbackWarning;
+
+  /// No description provided for @fastDropP2pIncomingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming File'**
+  String get fastDropP2pIncomingTitle;
+
+  /// No description provided for @fastDropP2pIncomingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{sender} wants to send you \"{filename}\" ({size}). Accept the transfer?'**
+  String fastDropP2pIncomingMessage(
+    String sender,
+    String filename,
+    String size,
+  );
+
+  /// No description provided for @fastDropP2pAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get fastDropP2pAccept;
+
+  /// No description provided for @fastDropP2pDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get fastDropP2pDecline;
+
   /// No description provided for @focusAutoStopTimer.
   ///
   /// In en, this message translates to:

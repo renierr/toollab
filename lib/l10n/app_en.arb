@@ -495,6 +495,46 @@
   "fastDropDropFilesHere": "Drop files here",
   "fastDropOrClickToBrowse": "or click to browse",
   "fastDropPasteClipboard": "Paste Clipboard",
+  "fastDropOpenFile": "Open",
+  "fastDropDownloadFile": "Save",
+  "fastDropModeCloud": "Cloud",
+  "fastDropModeNearby": "Nearby",
+  "fastDropP2pStartReceiving": "Start Receiving",
+  "fastDropP2pStopReceiving": "Stop Receiving",
+  "fastDropP2pSendSectionTitle": "SEND A FILE",
+  "fastDropP2pReceivedSectionTitle": "RECEIVED FILES",
+  "fastDropP2pPickFileToSend": "Pick a file to send",
+  "fastDropP2pScanningForPeers": "Searching for nearby devices...",
+  "fastDropP2pNoPeersFound": "No nearby devices found yet. Make sure the other device tapped \"Start Receiving\".",
+  "fastDropP2pSignalStrength": "Signal: {rssi} dBm",
+  "@fastDropP2pSignalStrength": {
+    "placeholders": {
+      "rssi": {
+        "type": "int"
+      }
+    }
+  },
+  "fastDropP2pSend": "Send",
+  "fastDropP2pTransferringLan": "Sending over Wi-Fi",
+  "fastDropP2pTransferringBle": "Sending over Bluetooth",
+  "fastDropP2pBleFallbackWarning": "No shared network found — transferring over Bluetooth, which is much slower. Connect both devices to the same Wi-Fi network for faster transfers.",
+  "fastDropP2pIncomingTitle": "Incoming File",
+  "fastDropP2pIncomingMessage": "{sender} wants to send you \"{filename}\" ({size}). Accept the transfer?",
+  "@fastDropP2pIncomingMessage": {
+    "placeholders": {
+      "sender": {
+        "type": "String"
+      },
+      "filename": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "fastDropP2pAccept": "Accept",
+  "fastDropP2pDecline": "Decline",
   "focusAutoStopTimer": "Auto-stop Timer",
   "focusStartPlaybackToEnableTimer": "Start playback to enable timer",
   "focusCustomMinutes": "Custom: {minutes} min",

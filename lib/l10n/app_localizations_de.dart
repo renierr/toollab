@@ -989,6 +989,76 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropPasteClipboard => 'Zwischenablage einfügen';
 
   @override
+  String get fastDropOpenFile => 'Öffnen';
+
+  @override
+  String get fastDropDownloadFile => 'Speichern';
+
+  @override
+  String get fastDropModeCloud => 'Cloud';
+
+  @override
+  String get fastDropModeNearby => 'In der Nähe';
+
+  @override
+  String get fastDropP2pStartReceiving => 'Empfang starten';
+
+  @override
+  String get fastDropP2pStopReceiving => 'Empfang stoppen';
+
+  @override
+  String get fastDropP2pSendSectionTitle => 'DATEI SENDEN';
+
+  @override
+  String get fastDropP2pReceivedSectionTitle => 'EMPFANGENE DATEIEN';
+
+  @override
+  String get fastDropP2pPickFileToSend => 'Datei zum Senden auswählen';
+
+  @override
+  String get fastDropP2pScanningForPeers => 'Suche nach Geräten in der Nähe...';
+
+  @override
+  String get fastDropP2pNoPeersFound =>
+      'Noch keine Geräte gefunden. Stelle sicher, dass das andere Gerät auf \"Empfang starten\" getippt hat.';
+
+  @override
+  String fastDropP2pSignalStrength(int rssi) {
+    return 'Signal: $rssi dBm';
+  }
+
+  @override
+  String get fastDropP2pSend => 'Senden';
+
+  @override
+  String get fastDropP2pTransferringLan => 'Übertragung über WLAN';
+
+  @override
+  String get fastDropP2pTransferringBle => 'Übertragung über Bluetooth';
+
+  @override
+  String get fastDropP2pBleFallbackWarning =>
+      'Kein gemeinsames Netzwerk gefunden — Übertragung über Bluetooth, was deutlich langsamer ist. Verbinde beide Geräte mit demselben WLAN für schnellere Übertragungen.';
+
+  @override
+  String get fastDropP2pIncomingTitle => 'Eingehende Datei';
+
+  @override
+  String fastDropP2pIncomingMessage(
+    String sender,
+    String filename,
+    String size,
+  ) {
+    return '$sender möchte dir \"$filename\" ($size) senden. Übertragung annehmen?';
+  }
+
+  @override
+  String get fastDropP2pAccept => 'Annehmen';
+
+  @override
+  String get fastDropP2pDecline => 'Ablehnen';
+
+  @override
   String get focusAutoStopTimer => 'Auto-Stopp-Timer';
 
   @override

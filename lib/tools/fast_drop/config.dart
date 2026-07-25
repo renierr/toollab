@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'fast_drop_p2p_state.dart';
 import 'fast_drop_page.dart';
 import 'fast_drop_state.dart';
 
@@ -25,6 +26,9 @@ class FastDropTool {
     createPage: (sd) => FastDropPage(sharedData: sd),
     stateProviders: () => [
       ChangeNotifierProvider<FastDropState>(create: (_) => FastDropState()),
+      ChangeNotifierProvider<FastDropP2pState>(
+        create: (_) => FastDropP2pState(),
+      ),
     ],
   );
 }

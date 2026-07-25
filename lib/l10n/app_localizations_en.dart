@@ -980,6 +980,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fastDropPasteClipboard => 'Paste Clipboard';
 
   @override
+  String get fastDropOpenFile => 'Open';
+
+  @override
+  String get fastDropDownloadFile => 'Save';
+
+  @override
+  String get fastDropModeCloud => 'Cloud';
+
+  @override
+  String get fastDropModeNearby => 'Nearby';
+
+  @override
+  String get fastDropP2pStartReceiving => 'Start Receiving';
+
+  @override
+  String get fastDropP2pStopReceiving => 'Stop Receiving';
+
+  @override
+  String get fastDropP2pSendSectionTitle => 'SEND A FILE';
+
+  @override
+  String get fastDropP2pReceivedSectionTitle => 'RECEIVED FILES';
+
+  @override
+  String get fastDropP2pPickFileToSend => 'Pick a file to send';
+
+  @override
+  String get fastDropP2pScanningForPeers => 'Searching for nearby devices...';
+
+  @override
+  String get fastDropP2pNoPeersFound =>
+      'No nearby devices found yet. Make sure the other device tapped \"Start Receiving\".';
+
+  @override
+  String fastDropP2pSignalStrength(int rssi) {
+    return 'Signal: $rssi dBm';
+  }
+
+  @override
+  String get fastDropP2pSend => 'Send';
+
+  @override
+  String get fastDropP2pTransferringLan => 'Sending over Wi-Fi';
+
+  @override
+  String get fastDropP2pTransferringBle => 'Sending over Bluetooth';
+
+  @override
+  String get fastDropP2pBleFallbackWarning =>
+      'No shared network found — transferring over Bluetooth, which is much slower. Connect both devices to the same Wi-Fi network for faster transfers.';
+
+  @override
+  String get fastDropP2pIncomingTitle => 'Incoming File';
+
+  @override
+  String fastDropP2pIncomingMessage(
+    String sender,
+    String filename,
+    String size,
+  ) {
+    return '$sender wants to send you \"$filename\" ($size). Accept the transfer?';
+  }
+
+  @override
+  String get fastDropP2pAccept => 'Accept';
+
+  @override
+  String get fastDropP2pDecline => 'Decline';
+
+  @override
   String get focusAutoStopTimer => 'Auto-stop Timer';
 
   @override

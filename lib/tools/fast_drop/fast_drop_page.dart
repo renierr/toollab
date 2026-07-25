@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:provider/provider.dart';
@@ -13,6 +14,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/tools/fast_drop/fast_drop_p2p_state.dart';
 import 'package:tool_lab/tools/fast_drop/fast_drop_state.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
@@ -21,6 +23,10 @@ import 'package:tool_lab/widgets/tool_back_button.dart';
 
 import 'config.dart';
 import 'fast_drop_model.dart';
+import 'p2p/p2p_models.dart';
+import 'widgets/fast_drop_incoming_request_dialog.dart';
+import 'widgets/fast_drop_mode_toggle.dart';
+import 'widgets/fast_drop_p2p_view.dart';
 import 'widgets/fast_drop_preview_dialog.dart';
 import 'widgets/fast_drop_upload_panel.dart';
 import 'widgets/fast_drop_status_banner.dart';
@@ -45,11 +51,26 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   String _retention = '24';
   List<SharedFile> _pendingSharedFiles = [];
   bool _isUploadingPending = false;
+  FastDropMode _mode = FastDropMode.cloud;
+  bool _incomingDialogOpen = false;
+
+  String get _localDeviceName {
+    try {
+      return Platform.localHostname;
+    } catch (_) {
+      return 'ToolLab device';
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     onDispose(() => _scope.cleanTracked());
+    onDispose(() {
+      final p2p = context.read<FastDropP2pState>();
+      p2p.stopReceiving();
+      p2p.stopScanningForPeers();
+    });
 
     if (widget.sharedData != null) {
       _pendingSharedFiles = List<SharedFile>.from(widget.sharedData!.files);
@@ -441,15 +462,105 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     );
   }
 
+  // ---------------------------------------------------------------------
+  // Nearby (BLE/LAN) P2P mode
+  // ---------------------------------------------------------------------
+
+  Future<void> _onFilePickedToSend(List<XFile> files) async {
+    if (files.isEmpty) return;
+    final file = files.first;
+    final p2p = context.read<FastDropP2pState>();
+    String mimeType = file.mimeType ?? 'application/octet-stream';
+    if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
+      mimeType = MimeTypeHelper.getMimeType(file.name);
+    }
+    final size = await file.length();
+    p2p.setPendingSendFile(
+      path: file.path,
+      name: file.name,
+      size: size,
+      mimeType: mimeType,
+    );
+    await p2p.startScanningForPeers();
+  }
+
+  void _onCancelSendSelection() {
+    final p2p = context.read<FastDropP2pState>();
+    p2p.clearPendingSendFile();
+    p2p.stopScanningForPeers();
+  }
+
+  Future<void> _onSelectPeer(P2pPeer peer) async {
+    final p2p = context.read<FastDropP2pState>();
+    await p2p.sendToPeer(peer, _localDeviceName);
+  }
+
+  Future<void> _onToggleReceiving() async {
+    final p2p = context.read<FastDropP2pState>();
+    if (p2p.role == P2pRole.receiving) {
+      await p2p.stopReceiving();
+    } else {
+      await p2p.startReceiving(_localDeviceName);
+    }
+  }
+
+  Future<void> _maybeShowIncomingRequestDialog(FastDropP2pState p2p) async {
+    final incoming = p2p.incomingRequest;
+    if (incoming == null || _incomingDialogOpen) return;
+    _incomingDialogOpen = true;
+    final (_, request) = incoming;
+    final accept = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => FastDropIncomingRequestDialog(
+        senderName: request.senderName,
+        request: request,
+      ),
+    );
+    _incomingDialogOpen = false;
+    if (!mounted) return;
+    if (accept == true) {
+      final outputPath = await _scope.createFile(
+        'p2p_received_${DateTime.now().millisecondsSinceEpoch}_${request.fileName}',
+      );
+      await p2p.acceptIncomingRequest(outputPath);
+    } else {
+      await p2p.rejectIncomingRequest();
+    }
+  }
+
+  Future<void> _onOpenReceived(P2pReceivedFile file) async {
+    if (!mounted) return;
+    await FileSaveHelper.showOpenChooser(
+      context: context,
+      path: file.tempFileName,
+      mimeType: file.mimeType,
+    );
+  }
+
+  Future<void> _onSaveReceived(P2pReceivedFile file) async {
+    if (!mounted) return;
+    await FileSaveHelper.saveFileFromPath(
+      context: context,
+      suggestedName: file.filename,
+      sourcePath: file.tempFileName,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final appState = context.watch<AppState>();
     final fastDropState = context.watch<FastDropState>();
+    final p2pState = context.watch<FastDropP2pState>();
     final theme = Theme.of(context);
     final isConfigured = appState.syncServerUrl.isNotEmpty;
     final isActionsEnabled =
         appState.syncEnabled && fastDropState.isServerAvailable;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _maybeShowIncomingRequestDialog(p2pState);
+    });
 
     return ToolLayout(
       title: FastDropTool.config.localizedName(l10n),
@@ -516,6 +627,15 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: FastDropModeToggle(
+              mode: _mode,
+              cloudLabel: l10n.fastDropModeCloud,
+              nearbyLabel: l10n.fastDropModeNearby,
+              onChanged: (mode) => setState(() => _mode = mode),
+            ),
+          ),
           const Divider(height: 1),
           if (fastDropState.isUploadingFastDrop &&
               fastDropState.fastDropUploadProgress != null)
@@ -540,7 +660,18 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             onRetry: () => fastDropState.loadFastDrops(),
           ),
           Expanded(
-            child: !isConfigured
+            child: _mode == FastDropMode.nearby
+                ? FastDropP2pView(
+                    p2pState: p2pState,
+                    onFilesPickedToSend: _onFilePickedToSend,
+                    onSelectPeer: _onSelectPeer,
+                    onCancelSendSelection: _onCancelSendSelection,
+                    onToggleReceiving: _onToggleReceiving,
+                    onOpenReceived: _onOpenReceived,
+                    onSaveReceived: _onSaveReceived,
+                    onCancelTransfer: () => p2pState.cancelTransfer(),
+                  )
+                : !isConfigured
                 ? const FastDropNotConfigured()
                 : ResponsiveOrientationLayout(
                     portrait: SingleChildScrollView(

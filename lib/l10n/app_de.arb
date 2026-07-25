@@ -288,6 +288,46 @@
   "fastDropDropFilesHere": "Dateien hier ablegen",
   "fastDropOrClickToBrowse": "oder tippen, um zu durchsuchen",
   "fastDropPasteClipboard": "Zwischenablage einfügen",
+  "fastDropOpenFile": "Öffnen",
+  "fastDropDownloadFile": "Speichern",
+  "fastDropModeCloud": "Cloud",
+  "fastDropModeNearby": "In der Nähe",
+  "fastDropP2pStartReceiving": "Empfang starten",
+  "fastDropP2pStopReceiving": "Empfang stoppen",
+  "fastDropP2pSendSectionTitle": "DATEI SENDEN",
+  "fastDropP2pReceivedSectionTitle": "EMPFANGENE DATEIEN",
+  "fastDropP2pPickFileToSend": "Datei zum Senden auswählen",
+  "fastDropP2pScanningForPeers": "Suche nach Geräten in der Nähe...",
+  "fastDropP2pNoPeersFound": "Noch keine Geräte gefunden. Stelle sicher, dass das andere Gerät auf \"Empfang starten\" getippt hat.",
+  "fastDropP2pSignalStrength": "Signal: {rssi} dBm",
+  "@fastDropP2pSignalStrength": {
+    "placeholders": {
+      "rssi": {
+        "type": "int"
+      }
+    }
+  },
+  "fastDropP2pSend": "Senden",
+  "fastDropP2pTransferringLan": "Übertragung über WLAN",
+  "fastDropP2pTransferringBle": "Übertragung über Bluetooth",
+  "fastDropP2pBleFallbackWarning": "Kein gemeinsames Netzwerk gefunden — Übertragung über Bluetooth, was deutlich langsamer ist. Verbinde beide Geräte mit demselben WLAN für schnellere Übertragungen.",
+  "fastDropP2pIncomingTitle": "Eingehende Datei",
+  "fastDropP2pIncomingMessage": "{sender} möchte dir \"{filename}\" ({size}) senden. Übertragung annehmen?",
+  "@fastDropP2pIncomingMessage": {
+    "placeholders": {
+      "sender": {
+        "type": "String"
+      },
+      "filename": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "fastDropP2pAccept": "Annehmen",
+  "fastDropP2pDecline": "Ablehnen",
   "focusAutoStopTimer": "Auto-Stopp-Timer",
   "focusStartPlaybackToEnableTimer": "Wiedergabe starten, um Timer zu aktivieren",
   "focusCustomMinutes": "Benutzerdefiniert: {minutes} Min.",
