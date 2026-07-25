@@ -954,9 +954,12 @@ class TreadmillControlState extends ChangeNotifier {
     await loadSessions();
   }
 
-  Future<void> importSessions(List<TreadmillSession> sessions) async {
-    await TreadmillControlDb.instance.importSessions(sessions);
+  Future<int> importSessions(List<TreadmillSession> sessions) async {
+    final importedCount = await TreadmillControlDb.instance.importSessions(
+      sessions,
+    );
     await loadSessions();
+    return importedCount;
   }
 
   void _parseFeatures(Uint8List value) {

@@ -2740,6 +2740,13 @@
   "treadmillHistoryTopSpeed": "Top speed",
   "treadmillHistoryAverage": "Average",
   "treadmillHistoryAverageHr": "Avg HR",
+  "treadmillHistoryImportNoNewWorkouts": "All workouts from this backup are already saved",
+  "treadmillHistoryImportSuccess": "Successfully imported {count} workouts",
+  "@treadmillHistoryImportSuccess": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "toolNameAudioLab": "Audio Lab",
   "toolDescAudioLab": "Locate, mask, analyze, and generate audio signals",
   "sfTitleFinder": "Finder",

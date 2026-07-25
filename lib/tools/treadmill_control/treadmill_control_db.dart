@@ -142,15 +142,26 @@ class TreadmillControlDb {
     );
   }
 
-  Future<void> importSessions(List<TreadmillSession> sessions) async {
+  Future<int> importSessions(List<TreadmillSession> sessions) async {
     final db = await _getDb();
-    await db.transaction((txn) async {
+    return db.transaction((txn) async {
+      var importedCount = 0;
       for (final session in sessions) {
-        final existing = await getSessionByUid(session.uid);
-        if (existing == null) {
-          await txn.insert(tableName, session.toMap());
+        if (session.uid.isEmpty) continue;
+        final existing = await txn.query(
+          tableName,
+          columns: ['id'],
+          where: 'uid = ?',
+          whereArgs: [session.uid],
+          limit: 1,
+        );
+        if (existing.isEmpty) {
+          final values = session.toMap()..remove('id');
+          await txn.insert(tableName, values);
+          importedCount++;
         }
       }
+      return importedCount;
     });
   }
 }

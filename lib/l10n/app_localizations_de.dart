@@ -5139,6 +5139,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillHistoryAverageHr => 'Durchschn. HF';
 
   @override
+  String get treadmillHistoryImportNoNewWorkouts =>
+      'Alle Workouts aus diesem Backup sind bereits gespeichert';
+
+  @override
+  String treadmillHistoryImportSuccess(int count) {
+    return '$count Workouts erfolgreich importiert';
+  }
+
+  @override
   String get toolNameAudioLab => 'Audio Lab';
 
   @override

@@ -9282,6 +9282,18 @@ abstract class AppLocalizations {
   /// **'Avg HR'**
   String get treadmillHistoryAverageHr;
 
+  /// No description provided for @treadmillHistoryImportNoNewWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'All workouts from this backup are already saved'**
+  String get treadmillHistoryImportNoNewWorkouts;
+
+  /// No description provided for @treadmillHistoryImportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully imported {count} workouts'**
+  String treadmillHistoryImportSuccess(int count);
+
   /// No description provided for @toolNameAudioLab.
   ///
   /// In en, this message translates to:

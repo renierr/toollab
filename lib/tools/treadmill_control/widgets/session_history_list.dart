@@ -183,6 +183,7 @@ class SessionHistoryList extends StatelessWidget {
     BuildContext context,
     TreadmillControlState state,
   ) async {
+    final l10n = AppLocalizations.of(context);
     try {
       const typeGroup = fs.XTypeGroup(
         label: 'JSON Backup',
@@ -198,13 +199,14 @@ class SessionHistoryList extends StatelessWidget {
           .toList();
 
       if (imported.isNotEmpty) {
-        await state.importSessions(imported);
-        await state.loadSessions();
+        final importedCount = await state.importSessions(imported);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Successfully imported ${imported.length} workouts',
+                importedCount == 0
+                    ? l10n.treadmillHistoryImportNoNewWorkouts
+                    : l10n.treadmillHistoryImportSuccess(importedCount),
               ),
             ),
           );
