@@ -294,6 +294,7 @@
   "fastDropModeNearby": "In der Nähe",
   "fastDropP2pStartReceiving": "Empfang starten",
   "fastDropP2pStopReceiving": "Empfang stoppen",
+  "fastDropP2pWaitingForSender": "Warte auf ein Gerät in der Nähe, das eine Datei sendet...",
   "fastDropP2pSendSectionTitle": "DATEI SENDEN",
   "fastDropP2pReceivedSectionTitle": "EMPFANGENE DATEIEN",
   "fastDropP2pPickFileToSend": "Datei zum Senden auswählen",

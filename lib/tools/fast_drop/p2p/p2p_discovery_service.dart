@@ -93,10 +93,22 @@ class P2pDiscoveryService {
       ),
     );
 
-    await UniversalBlePeripheral.startAdvertising(
-      services: [P2pProtocol.serviceUuid],
-      localName: deviceName,
-    );
+    try {
+      await UniversalBlePeripheral.startAdvertising(
+        services: [P2pProtocol.serviceUuid],
+        localName: deviceName,
+      );
+    } catch (e) {
+      // Some platforms (e.g. Windows' GattServiceProvider) reject a
+      // localName in the advertisement — retry without it.
+      debugPrint(
+        '[P2pDiscovery] advertising with localName failed, retrying '
+        'without it: $e',
+      );
+      await UniversalBlePeripheral.startAdvertising(
+        services: [P2pProtocol.serviceUuid],
+      );
+    }
   }
 
   Future<void> stopAdvertising() async {

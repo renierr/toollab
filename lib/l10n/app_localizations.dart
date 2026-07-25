@@ -1862,6 +1862,12 @@ abstract class AppLocalizations {
   /// **'Stop Receiving'**
   String get fastDropP2pStopReceiving;
 
+  /// No description provided for @fastDropP2pWaitingForSender.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a nearby device to send a file...'**
+  String get fastDropP2pWaitingForSender;
+
   /// No description provided for @fastDropP2pSendSectionTitle.
   ///
   /// In en, this message translates to:

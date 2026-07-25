@@ -56,6 +56,14 @@ class FastDropP2pState extends ChangeNotifier {
       _status == P2pStatus.connectingLan ||
       _status == P2pStatus.transferring;
 
+  /// True only while an actual transfer is in flight (handshake through
+  /// completion) — used to disable the receive/scan toggles without
+  /// blocking the user from stopping advertising/scanning itself.
+  bool get isTransferActive =>
+      _status == P2pStatus.handshaking ||
+      _status == P2pStatus.connectingLan ||
+      _status == P2pStatus.transferring;
+
   // ---------------------------------------------------------------------
   // Receiver flow
   // ---------------------------------------------------------------------

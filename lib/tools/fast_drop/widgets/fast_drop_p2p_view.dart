@@ -75,7 +75,9 @@ class FastDropP2pView extends StatelessWidget {
             children: [
               Expanded(
                 child: FilledButton.tonalIcon(
-                  onPressed: p2pState.isBusy ? null : onToggleReceiving,
+                  onPressed: p2pState.isTransferActive
+                      ? null
+                      : onToggleReceiving,
                   icon: Icon(
                     isReceiving
                         ? Icons.bluetooth_disabled
@@ -90,6 +92,26 @@ class FastDropP2pView extends StatelessWidget {
               ),
             ],
           ),
+          if (isReceiving && p2pState.progress == null) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.fastDropP2pWaitingForSender,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           const Divider(height: 1),
           const SizedBox(height: 16),

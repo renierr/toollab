@@ -501,6 +501,7 @@
   "fastDropModeNearby": "Nearby",
   "fastDropP2pStartReceiving": "Start Receiving",
   "fastDropP2pStopReceiving": "Stop Receiving",
+  "fastDropP2pWaitingForSender": "Waiting for a nearby device to send a file...",
   "fastDropP2pSendSectionTitle": "SEND A FILE",
   "fastDropP2pReceivedSectionTitle": "RECEIVED FILES",
   "fastDropP2pPickFileToSend": "Pick a file to send",

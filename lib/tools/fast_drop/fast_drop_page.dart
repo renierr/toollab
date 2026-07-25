@@ -66,8 +66,8 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   void initState() {
     super.initState();
     onDispose(() => _scope.cleanTracked());
+    final p2p = context.read<FastDropP2pState>();
     onDispose(() {
-      final p2p = context.read<FastDropP2pState>();
       p2p.stopReceiving();
       p2p.stopScanningForPeers();
     });
@@ -655,10 +655,11 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
               onCancel: () =>
                   context.read<FastDropState>().cancelDownloadFastDrop(),
             ),
-          FastDropStatusBanner(
-            appState: fastDropState,
-            onRetry: () => fastDropState.loadFastDrops(),
-          ),
+          if (_mode == FastDropMode.cloud)
+            FastDropStatusBanner(
+              appState: fastDropState,
+              onRetry: () => fastDropState.loadFastDrops(),
+            ),
           Expanded(
             child: _mode == FastDropMode.nearby
                 ? FastDropP2pView(

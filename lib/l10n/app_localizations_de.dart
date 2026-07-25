@@ -1007,6 +1007,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropP2pStopReceiving => 'Empfang stoppen';
 
   @override
+  String get fastDropP2pWaitingForSender =>
+      'Warte auf ein Gerät in der Nähe, das eine Datei sendet...';
+
+  @override
   String get fastDropP2pSendSectionTitle => 'DATEI SENDEN';
 
   @override
