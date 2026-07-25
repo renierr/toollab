@@ -9318,6 +9318,42 @@ abstract class AppLocalizations {
   /// **'Could not create dashboard screenshot'**
   String get treadmillHistoryScreenshotFailed;
 
+  /// No description provided for @treadmillHistoryGenerateReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate PDF report'**
+  String get treadmillHistoryGenerateReport;
+
+  /// No description provided for @treadmillHistoryReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Treadmill Workout Report'**
+  String get treadmillHistoryReportTitle;
+
+  /// No description provided for @treadmillHistoryReportGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated'**
+  String get treadmillHistoryReportGenerated;
+
+  /// No description provided for @treadmillHistoryReportDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get treadmillHistoryReportDate;
+
+  /// No description provided for @treadmillHistoryReportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not generate workout report'**
+  String get treadmillHistoryReportFailed;
+
+  /// No description provided for @treadmillHistoryTotalWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Total workouts'**
+  String get treadmillHistoryTotalWorkouts;
+
   /// No description provided for @treadmillHistoryPersonalBests.
   ///
   /// In en, this message translates to:

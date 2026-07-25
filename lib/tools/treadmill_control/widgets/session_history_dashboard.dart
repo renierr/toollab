@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:provider/provider.dart';
 import '../../../core/tool_page_state.dart';
 import '../../../helpers/file_save_helper.dart';
@@ -26,6 +28,7 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
   final GlobalKey _screenshotKey = GlobalKey();
   late final TempFileScope _tempScope;
   bool _isCapturing = false;
+  bool _isGeneratingReport = false;
 
   @override
   void initState() {
@@ -78,6 +81,181 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
       }
     } finally {
       if (mounted) setState(() => _isCapturing = false);
+    }
+  }
+
+  Future<void> _generatePdfReport(List<TreadmillSession> sessions) async {
+    if (_isGeneratingReport) return;
+    setState(() => _isGeneratingReport = true);
+    final l10n = AppLocalizations.of(context);
+    try {
+      final now = DateTime.now();
+      final totalDistance = sessions.fold<double>(
+        0,
+        (sum, session) => sum + session.distance,
+      );
+      final totalDuration = sessions.fold<int>(
+        0,
+        (sum, session) => sum + session.elapsedTime,
+      );
+      final totalCalories = sessions.fold<int>(
+        0,
+        (sum, session) => sum + session.calories,
+      );
+      final averageSpeed =
+          sessions.fold<double>(0, (sum, session) => sum + session.avgSpeed) /
+          sessions.length;
+      final longest = sessions.reduce(
+        (a, b) => a.distance >= b.distance ? a : b,
+      );
+      final fastest = sessions.reduce(
+        (a, b) => a.maxSpeed >= b.maxSpeed ? a : b,
+      );
+      final heartRateSessions = sessions
+          .where((session) => session.avgHeartRate > 0)
+          .toList();
+      final averageHeartRate = heartRateSessions.isEmpty
+          ? null
+          : heartRateSessions.fold<double>(
+                  0,
+                  (sum, session) => sum + session.avgHeartRate,
+                ) /
+                heartRateSessions.length;
+      final peakHeartRate = heartRateSessions.isEmpty
+          ? null
+          : heartRateSessions.fold<double>(
+              0,
+              (peak, session) => max(peak, session.maxHeartRate),
+            );
+      final weekStart = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(const Duration(days: 6));
+      final weekRows = List.generate(7, (index) {
+        final day = weekStart.add(Duration(days: index));
+        final distance = sessions
+            .where((session) {
+              final date = DateTime.fromMillisecondsSinceEpoch(
+                session.startTime,
+              );
+              return date.year == day.year &&
+                  date.month == day.month &&
+                  date.day == day.day;
+            })
+            .fold<double>(0, (sum, session) => sum + session.distance);
+        return [
+          DateFormat.yMMMd(
+            Localizations.localeOf(context).toString(),
+          ).format(day),
+          '${distance.toStringAsFixed(2)} km',
+        ];
+      });
+      final document = pw.Document();
+      document.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          build: (context) => [
+            pw.Text(
+              l10n.treadmillHistoryReportTitle,
+              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 4),
+            pw.Text(
+              '${l10n.treadmillHistoryReportGenerated}: ${DateFormat.yMMMd(Localizations.localeOf(this.context).toString()).add_Hm().format(now)}',
+            ),
+            pw.SizedBox(height: 20),
+            pw.Text(
+              l10n.treadmillHistoryOverview,
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 8),
+            pw.TableHelper.fromTextArray(
+              data: [
+                [l10n.treadmillHistoryTotalWorkouts, '${sessions.length}'],
+                [
+                  l10n.treadmillHistoryTotalDistance,
+                  '${totalDistance.toStringAsFixed(2)} km',
+                ],
+                [l10n.treadmillHistoryTotalDuration, _duration(totalDuration)],
+                [l10n.treadmillHistoryTotalCalories, '$totalCalories kcal'],
+                [
+                  l10n.treadmillHistoryAverageSpeed,
+                  '${averageSpeed.toStringAsFixed(1)} km/h',
+                ],
+              ],
+              headerStyle: const pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 20),
+            pw.Text(
+              l10n.treadmillHistoryPersonalBests,
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 8),
+            pw.TableHelper.fromTextArray(
+              data: [
+                [
+                  l10n.treadmillHistoryLongestRun,
+                  '${longest.distance.toStringAsFixed(2)} km',
+                ],
+                [
+                  l10n.treadmillHistoryTopSpeed,
+                  '${fastest.maxSpeed.toStringAsFixed(1)} km/h',
+                ],
+              ],
+            ),
+            if (averageHeartRate != null) ...[
+              pw.SizedBox(height: 20),
+              pw.Text(
+                l10n.treadmillHistoryHeartRate,
+                style: pw.TextStyle(
+                  fontSize: 16,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 8),
+              pw.TableHelper.fromTextArray(
+                data: [
+                  [
+                    l10n.treadmillHistoryRestingAverage,
+                    '${averageHeartRate.round()} bpm',
+                  ],
+                  [
+                    l10n.treadmillHistoryPeakHeartRate,
+                    '${peakHeartRate!.round()} bpm',
+                  ],
+                ],
+              ),
+            ],
+            pw.SizedBox(height: 20),
+            pw.Text(
+              l10n.treadmillHistoryDistanceLastSevenDays,
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 8),
+            pw.TableHelper.fromTextArray(
+              headers: [l10n.treadmillHistoryReportDate, l10n.distance],
+              data: weekRows,
+            ),
+          ],
+        ),
+      );
+      final bytes = await document.save();
+      if (!mounted) return;
+      await FileSaveHelper.saveFile(
+        context: context,
+        suggestedName:
+            'treadmill_report_${DateFormat('yyyyMMdd_HHmm').format(now)}.pdf',
+        bytes: bytes,
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.treadmillHistoryReportFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isGeneratingReport = false);
     }
   }
 
@@ -160,6 +338,19 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
                       child: Text(l10n.treadmillHistoryShareScreenshot),
                     ),
                   ],
+                ),
+                IconButton(
+                  tooltip: l10n.treadmillHistoryGenerateReport,
+                  onPressed: _isGeneratingReport
+                      ? null
+                      : () => _generatePdfReport(sessions),
+                  icon: _isGeneratingReport
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.picture_as_pdf_outlined),
                 ),
               ],
             ),

@@ -5123,6 +5123,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not create dashboard screenshot';
 
   @override
+  String get treadmillHistoryGenerateReport => 'Generate PDF report';
+
+  @override
+  String get treadmillHistoryReportTitle => 'Treadmill Workout Report';
+
+  @override
+  String get treadmillHistoryReportGenerated => 'Generated';
+
+  @override
+  String get treadmillHistoryReportDate => 'Date';
+
+  @override
+  String get treadmillHistoryReportFailed =>
+      'Could not generate workout report';
+
+  @override
+  String get treadmillHistoryTotalWorkouts => 'Total workouts';
+
+  @override
   String get treadmillHistoryPersonalBests => 'Personal bests';
 
   @override
