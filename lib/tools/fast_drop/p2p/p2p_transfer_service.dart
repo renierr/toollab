@@ -56,12 +56,20 @@ class P2pTransferService {
     required int expectedSize,
     required P2pProgressCallback onProgress,
     required bool Function() isCancelled,
+    required Future<void> Function() onReady,
   }) async {
     final file = File(outputPath);
     final sink = file.openWrite();
     int received = 0;
     final completer = Completer<String>();
     P2pTransportKind? activeTransport;
+    bool isFinishing = false;
+
+    void fail(Object error, [StackTrace? stackTrace]) {
+      if (!completer.isCompleted) {
+        completer.completeError(error, stackTrace);
+      }
+    }
 
     void checkCancelled() {
       if (isCancelled()) {
@@ -70,7 +78,8 @@ class P2pTransferService {
     }
 
     Future<void> finishIfDone() async {
-      if (received >= expectedSize && !completer.isCompleted) {
+      if (received >= expectedSize && !completer.isCompleted && !isFinishing) {
+        isFinishing = true;
         await sink.flush();
         await sink.close();
         completer.complete(outputPath);
@@ -92,27 +101,30 @@ class P2pTransferService {
         activeTransport = P2pTransportKind.lan;
         client.listen(
           (data) {
-            if (isCancelled()) {
-              client.destroy();
-              return;
+            try {
+              if (isCancelled()) {
+                client.destroy();
+                fail(Exception('Transfer cancelled'));
+                return;
+              }
+              sink.add(data);
+              received += data.length;
+              onProgress(received, expectedSize, P2pTransportKind.lan);
+              unawaited(finishIfDone().then<void>((_) {}, onError: fail));
+            } catch (e, stackTrace) {
+              fail(e, stackTrace);
             }
-            sink.add(data);
-            received += data.length;
-            onProgress(received, expectedSize, P2pTransportKind.lan);
-            unawaited(finishIfDone());
           },
-          onError: (e) {
-            if (!completer.isCompleted) completer.completeError(e);
-          },
+          onError: fail,
           onDone: () {
             unawaited(
-              finishIfDone().then((_) {
-                if (!completer.isCompleted) {
-                  completer.completeError(
+              finishIfDone().then<void>((_) {
+                if (!completer.isCompleted && !isFinishing) {
+                  fail(
                     Exception('Connection closed before transfer completed'),
                   );
                 }
-              }),
+              }, onError: fail),
             );
           },
         );
@@ -123,20 +135,31 @@ class P2pTransferService {
 
     // BLE fallback path.
     discovery.setDataWriteHandler((deviceId, chunk) async {
-      if (activeTransport == P2pTransportKind.lan) return;
-      activeTransport = P2pTransportKind.ble;
-      if (isCancelled()) return;
-      sink.add(chunk);
-      received += chunk.length;
-      onProgress(received, expectedSize, P2pTransportKind.ble);
-      unawaited(discovery.sendAck(deviceId, received));
-      await finishIfDone();
+      try {
+        if (activeTransport == P2pTransportKind.lan) return;
+        activeTransport = P2pTransportKind.ble;
+        if (isCancelled()) {
+          fail(Exception('Transfer cancelled'));
+          return;
+        }
+        sink.add(chunk);
+        received += chunk.length;
+        onProgress(received, expectedSize, P2pTransportKind.ble);
+        unawaited(discovery.sendAck(deviceId, received));
+        await finishIfDone();
+      } catch (e, stackTrace) {
+        fail(e, stackTrace);
+      }
     });
 
     checkCancelled();
-    await completer.future;
-    await _closeServer();
-    return outputPath;
+    await onReady();
+    try {
+      await completer.future;
+      return outputPath;
+    } finally {
+      await _closeServer();
+    }
   }
 
   Future<void> _closeServer() async {

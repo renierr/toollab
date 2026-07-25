@@ -125,16 +125,6 @@ class FastDropP2pState extends ChangeNotifier {
 
     try {
       final localIps = await P2pTransferService.localIpAddresses();
-      await _discovery.respondToRequest(
-        bleDeviceId,
-        P2pHandshakeResponse(
-          accepted: true,
-          receiverName: Platform.localHostname,
-          candidateIps: localIps,
-          lanPort: P2pProtocol.lanPort,
-        ),
-      );
-
       _status = P2pStatus.transferring;
       _activeTransport = null;
       _progress = (0, request.fileSize);
@@ -146,6 +136,15 @@ class FastDropP2pState extends ChangeNotifier {
         expectedSize: request.fileSize,
         onProgress: _onProgress,
         isCancelled: () => _cancelRequested,
+        onReady: () => _discovery.respondToRequest(
+          bleDeviceId,
+          P2pHandshakeResponse(
+            accepted: true,
+            receiverName: Platform.localHostname,
+            candidateIps: localIps,
+            lanPort: P2pProtocol.lanPort,
+          ),
+        ),
       );
 
       _receivedFiles.insert(

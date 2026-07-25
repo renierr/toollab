@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
@@ -170,6 +171,12 @@ class P2pDiscoveryService {
     String bleDeviceId,
     P2pHandshakeResponse response,
   ) async {
+    if (Platform.isWindows) {
+      // GattServiceProvider cannot query subscriptions reliably while a
+      // client is connecting. Give the sender time to enable notifications.
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+
     final payload = Uint8List.fromList(utf8.encode(response.encode()));
     int chunkSize = P2pProtocol.defaultSafeChunkSize;
     try {
@@ -187,7 +194,9 @@ class P2pDiscoveryService {
       await UniversalBlePeripheral.updateCharacteristicValue(
         characteristicId: P2pProtocol.handshakeCharUuid,
         value: chunk,
-        deviceId: bleDeviceId,
+        // Windows GattServiceProvider only supports broadcast notifications.
+        // The response payload is scoped by the sender's pending handshake.
+        deviceId: Platform.isWindows ? null : bleDeviceId,
       );
     }
   }
