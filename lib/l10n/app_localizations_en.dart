@@ -5142,6 +5142,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get treadmillHistoryTotalWorkouts => 'Total workouts';
 
   @override
+  String get treadmillHistoryLongestDuration => 'Longest duration';
+
+  @override
+  String get treadmillHistoryMostCalories => 'Most calories';
+
+  @override
+  String get treadmillHistoryMostSteps => 'Most steps';
+
+  @override
+  String get treadmillHistoryHeartRateLastSevenDays =>
+      'Average heart rate in the last 7 days';
+
+  @override
   String get treadmillHistoryPersonalBests => 'Personal bests';
 
   @override

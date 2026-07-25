@@ -9354,6 +9354,30 @@ abstract class AppLocalizations {
   /// **'Total workouts'**
   String get treadmillHistoryTotalWorkouts;
 
+  /// No description provided for @treadmillHistoryLongestDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest duration'**
+  String get treadmillHistoryLongestDuration;
+
+  /// No description provided for @treadmillHistoryMostCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Most calories'**
+  String get treadmillHistoryMostCalories;
+
+  /// No description provided for @treadmillHistoryMostSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Most steps'**
+  String get treadmillHistoryMostSteps;
+
+  /// No description provided for @treadmillHistoryHeartRateLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Average heart rate in the last 7 days'**
+  String get treadmillHistoryHeartRateLastSevenDays;
+
   /// No description provided for @treadmillHistoryPersonalBests.
   ///
   /// In en, this message translates to:

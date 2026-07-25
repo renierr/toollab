@@ -111,6 +111,15 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
       final fastest = sessions.reduce(
         (a, b) => a.maxSpeed >= b.maxSpeed ? a : b,
       );
+      final longestDuration = sessions.reduce(
+        (a, b) => a.elapsedTime >= b.elapsedTime ? a : b,
+      );
+      final highestCalories = sessions.reduce(
+        (a, b) => a.calories >= b.calories ? a : b,
+      );
+      final highestSteps = sessions.reduce(
+        (a, b) => a.steps >= b.steps ? a : b,
+      );
       final heartRateSessions = sessions
           .where((session) => session.avgHeartRate > 0)
           .toList();
@@ -132,24 +141,29 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
         now.month,
         now.day,
       ).subtract(const Duration(days: 6));
-      final weekRows = List.generate(7, (index) {
+      final weekData = List.generate(7, (index) {
         final day = weekStart.add(Duration(days: index));
-        final distance = sessions
-            .where((session) {
-              final date = DateTime.fromMillisecondsSinceEpoch(
-                session.startTime,
-              );
-              return date.year == day.year &&
-                  date.month == day.month &&
-                  date.day == day.day;
-            })
-            .fold<double>(0, (sum, session) => sum + session.distance);
-        return [
-          DateFormat.yMMMd(
-            Localizations.localeOf(context).toString(),
-          ).format(day),
-          '${distance.toStringAsFixed(2)} km',
-        ];
+        final daySessions = sessions.where((session) {
+          final date = DateTime.fromMillisecondsSinceEpoch(session.startTime);
+          return date.year == day.year &&
+              date.month == day.month &&
+              date.day == day.day;
+        }).toList();
+        final distance = daySessions.fold<double>(
+          0,
+          (sum, session) => sum + session.distance,
+        );
+        final withHeartRate = daySessions
+            .where((session) => session.avgHeartRate > 0)
+            .toList();
+        final averageHeartRate = withHeartRate.isEmpty
+            ? null
+            : withHeartRate.fold<double>(
+                    0,
+                    (sum, session) => sum + session.avgHeartRate,
+                  ) /
+                  withHeartRate.length;
+        return (day: day, distance: distance, heartRate: averageHeartRate);
       });
       final document = pw.Document();
       document.addPage(
@@ -202,6 +216,20 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
                   l10n.treadmillHistoryTopSpeed,
                   '${fastest.maxSpeed.toStringAsFixed(1)} km/h',
                 ],
+                [
+                  l10n.treadmillHistoryLongestDuration,
+                  _duration(longestDuration.elapsedTime),
+                ],
+                [
+                  l10n.treadmillHistoryMostCalories,
+                  '${highestCalories.calories} kcal',
+                ],
+                [l10n.treadmillHistoryMostSteps, '${highestSteps.steps}'],
+                if (peakHeartRate != null)
+                  [
+                    l10n.treadmillHistoryPeakHeartRate,
+                    '${peakHeartRate.round()} bpm',
+                  ],
               ],
             ),
             if (averageHeartRate != null) ...[
@@ -233,10 +261,71 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
               style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 8),
+            _PdfBarChart(
+              labels: weekData
+                  .map(
+                    (item) => DateFormat.E(
+                      Localizations.localeOf(this.context).toString(),
+                    ).format(item.day),
+                  )
+                  .toList(),
+              values: weekData.map((item) => item.distance).toList(),
+              color: PdfColors.cyan700,
+              unit: 'km',
+            ),
+            pw.SizedBox(height: 12),
             pw.TableHelper.fromTextArray(
               headers: [l10n.treadmillHistoryReportDate, l10n.distance],
-              data: weekRows,
+              data: weekData
+                  .map(
+                    (item) => [
+                      DateFormat.yMMMd(
+                        Localizations.localeOf(this.context).toString(),
+                      ).format(item.day),
+                      '${item.distance.toStringAsFixed(2)} km',
+                    ],
+                  )
+                  .toList(),
             ),
+            if (weekData.any((item) => item.heartRate != null)) ...[
+              pw.SizedBox(height: 20),
+              pw.Text(
+                l10n.treadmillHistoryHeartRateLastSevenDays,
+                style: pw.TextStyle(
+                  fontSize: 16,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 8),
+              _PdfBarChart(
+                labels: weekData
+                    .map(
+                      (item) => DateFormat.E(
+                        Localizations.localeOf(this.context).toString(),
+                      ).format(item.day),
+                    )
+                    .toList(),
+                values: weekData.map((item) => item.heartRate ?? 0).toList(),
+                color: PdfColors.red600,
+                unit: 'bpm',
+              ),
+              pw.SizedBox(height: 12),
+              pw.TableHelper.fromTextArray(
+                headers: [l10n.treadmillHistoryReportDate, l10n.hrLabel],
+                data: weekData
+                    .map(
+                      (item) => [
+                        DateFormat.yMMMd(
+                          Localizations.localeOf(this.context).toString(),
+                        ).format(item.day),
+                        item.heartRate == null
+                            ? '—'
+                            : '${item.heartRate!.round()} bpm',
+                      ],
+                    )
+                    .toList(),
+              ),
+            ],
           ],
         ),
       );
@@ -442,6 +531,63 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
                   '${l10n.treadmillHistoryAverage}: ${fastest.avgSpeed.toStringAsFixed(1)} km/h',
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PdfBarChart extends pw.StatelessWidget {
+  final List<String> labels;
+  final List<double> values;
+  final PdfColor color;
+  final String unit;
+
+  _PdfBarChart({
+    required this.labels,
+    required this.values,
+    required this.color,
+    required this.unit,
+  });
+
+  @override
+  pw.Widget build(pw.Context context) {
+    final maxValue = max(1.0, values.reduce(max));
+    return pw.SizedBox(
+      height: 150,
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.end,
+        children: List.generate(
+          values.length,
+          (index) => pw.Expanded(
+            child: pw.Padding(
+              padding: const pw.EdgeInsets.symmetric(horizontal: 3),
+              child: pw.Column(
+                mainAxisAlignment: pw.MainAxisAlignment.end,
+                children: [
+                  pw.Text(
+                    '${values[index].toStringAsFixed(unit == 'bpm' ? 0 : 1)} $unit',
+                    style: const pw.TextStyle(fontSize: 8),
+                  ),
+                  pw.SizedBox(height: 3),
+                  pw.Container(
+                    height: max(3, 100 * values[index] / maxValue),
+                    decoration: pw.BoxDecoration(
+                      color: color,
+                      borderRadius: const pw.BorderRadius.vertical(
+                        top: pw.Radius.circular(3),
+                      ),
+                    ),
+                  ),
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    labels[index],
+                    style: const pw.TextStyle(fontSize: 8),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
