@@ -9294,6 +9294,30 @@ abstract class AppLocalizations {
   /// **'Total workouts'**
   String get treadmillHistoryWorkoutCount;
 
+  /// No description provided for @treadmillHistoryScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard screenshot'**
+  String get treadmillHistoryScreenshot;
+
+  /// No description provided for @treadmillHistorySaveScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Save screenshot'**
+  String get treadmillHistorySaveScreenshot;
+
+  /// No description provided for @treadmillHistoryShareScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Share screenshot'**
+  String get treadmillHistoryShareScreenshot;
+
+  /// No description provided for @treadmillHistoryScreenshotFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create dashboard screenshot'**
+  String get treadmillHistoryScreenshotFailed;
+
   /// No description provided for @treadmillHistoryPersonalBests.
   ///
   /// In en, this message translates to:

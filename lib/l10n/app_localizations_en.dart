@@ -5110,6 +5110,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get treadmillHistoryWorkoutCount => 'Total workouts';
 
   @override
+  String get treadmillHistoryScreenshot => 'Dashboard screenshot';
+
+  @override
+  String get treadmillHistorySaveScreenshot => 'Save screenshot';
+
+  @override
+  String get treadmillHistoryShareScreenshot => 'Share screenshot';
+
+  @override
+  String get treadmillHistoryScreenshotFailed =>
+      'Could not create dashboard screenshot';
+
+  @override
   String get treadmillHistoryPersonalBests => 'Personal bests';
 
   @override

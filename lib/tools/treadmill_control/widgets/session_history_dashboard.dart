@@ -1,15 +1,85 @@
 import 'dart:math';
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/tool_page_state.dart';
+import '../../../helpers/file_save_helper.dart';
+import '../../../helpers/temp_file_manager.dart';
 import '../treadmill_control_colors.dart';
 import '../treadmill_control_state.dart';
 import '../treadmill_session.dart';
 import '../../../l10n/app_localizations.dart';
 
-class SessionHistoryDashboard extends StatelessWidget {
+class SessionHistoryDashboard extends StatefulWidget {
   const SessionHistoryDashboard({super.key});
+
+  @override
+  State<SessionHistoryDashboard> createState() =>
+      _SessionHistoryDashboardState();
+}
+
+class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
+    with DisposeCleanup {
+  final GlobalKey _screenshotKey = GlobalKey();
+  late final TempFileScope _tempScope;
+  bool _isCapturing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tempScope = TempFileManager.createScope();
+    onDispose(() => _tempScope.cleanTracked());
+  }
+
+  Future<Uint8List?> _captureDashboard() async {
+    final boundary =
+        _screenshotKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final image = await boundary.toImage(
+      pixelRatio: MediaQuery.devicePixelRatioOf(context),
+    );
+    try {
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      return data?.buffer.asUint8List();
+    } finally {
+      image.dispose();
+    }
+  }
+
+  Future<void> _handleScreenshot(bool share) async {
+    if (_isCapturing) return;
+    setState(() => _isCapturing = true);
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final bytes = await _captureDashboard();
+      if (bytes == null || !mounted) return;
+      final filename =
+          'treadmill_dashboard_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.png';
+      if (share) {
+        final path = await _tempScope.createFile(filename, bytes: bytes);
+        await FileSaveHelper.shareFile(path, 'image/png');
+      } else {
+        await FileSaveHelper.saveFile(
+          context: context,
+          suggestedName: filename,
+          bytes: bytes,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.treadmillHistoryScreenshotFailed)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isCapturing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,97 +124,135 @@ class SessionHistoryDashboard extends StatelessWidget {
         .where((session) => session.avgHeartRate > 0)
         .toList();
 
-    return ListView(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          l10n.treadmillHistoryOverview,
-          style: theme.textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          l10n.treadmillHistoryOverviewSubtitle,
-          style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-        ),
-        const SizedBox(height: 16),
-        _MetricGrid(
+      child: RepaintBoundary(
+        key: _screenshotKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Metric(
-              label: l10n.treadmillHistoryTotalDistance,
-              value: '${totalDistance.toStringAsFixed(1)} km',
-              icon: Icons.route_outlined,
-              color: TreadmillColors.cyanMetric,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.treadmillHistoryOverview,
+                    style: theme.textTheme.headlineSmall,
+                  ),
+                ),
+                PopupMenuButton<bool>(
+                  tooltip: l10n.treadmillHistoryScreenshot,
+                  enabled: !_isCapturing,
+                  icon: _isCapturing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.screenshot_outlined),
+                  onSelected: _handleScreenshot,
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: false,
+                      child: Text(l10n.treadmillHistorySaveScreenshot),
+                    ),
+                    PopupMenuItem(
+                      value: true,
+                      child: Text(l10n.treadmillHistoryShareScreenshot),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            _Metric(
-              label: l10n.treadmillHistoryTotalDuration,
-              value: _duration(totalDuration),
-              icon: Icons.timer_outlined,
-              color: TreadmillColors.greenMetric,
+            const SizedBox(height: 4),
+            Text(
+              l10n.treadmillHistoryOverviewSubtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+              ),
             ),
-            _Metric(
-              label: l10n.treadmillHistoryTotalCalories,
-              value: '$totalCalories kcal',
-              icon: Icons.local_fire_department_outlined,
-              color: TreadmillColors.amberMetric,
+            const SizedBox(height: 16),
+            _MetricGrid(
+              children: [
+                _Metric(
+                  label: l10n.treadmillHistoryTotalDistance,
+                  value: '${totalDistance.toStringAsFixed(1)} km',
+                  icon: Icons.route_outlined,
+                  color: TreadmillColors.cyanMetric,
+                ),
+                _Metric(
+                  label: l10n.treadmillHistoryTotalDuration,
+                  value: _duration(totalDuration),
+                  icon: Icons.timer_outlined,
+                  color: TreadmillColors.greenMetric,
+                ),
+                _Metric(
+                  label: l10n.treadmillHistoryTotalCalories,
+                  value: '$totalCalories kcal',
+                  icon: Icons.local_fire_department_outlined,
+                  color: TreadmillColors.amberMetric,
+                ),
+                _Metric(
+                  label: l10n.treadmillHistoryAverageSpeed,
+                  value: '${avgSpeed.toStringAsFixed(1)} km/h',
+                  icon: Icons.speed_outlined,
+                  color: TreadmillColors.redMetric,
+                ),
+                _Metric(
+                  label: l10n.treadmillHistoryWorkoutCount,
+                  value: '${sessions.length}',
+                  icon: Icons.directions_run_outlined,
+                  color: TreadmillColors.greenMetric,
+                ),
+              ],
             ),
-            _Metric(
-              label: l10n.treadmillHistoryAverageSpeed,
-              value: '${avgSpeed.toStringAsFixed(1)} km/h',
-              icon: Icons.speed_outlined,
-              color: TreadmillColors.redMetric,
+            const SizedBox(height: 24),
+            Text(
+              l10n.treadmillHistoryDistanceLastSevenDays,
+              style: theme.textTheme.titleLarge,
             ),
-            _Metric(
-              label: l10n.treadmillHistoryWorkoutCount,
-              value: '${sessions.length}',
-              icon: Icons.directions_run_outlined,
-              color: TreadmillColors.greenMetric,
+            const SizedBox(height: 4),
+            Text(
+              l10n.treadmillHistoryDistanceChartSubtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.hintColor,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _WeeklyChart(sessions: weekSessions),
+            if (heartRateSessions.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text(
+                l10n.treadmillHistoryHeartRate,
+                style: theme.textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              _HeartRateCard(sessions: heartRateSessions),
+            ],
+            const SizedBox(height: 24),
+            Text(
+              l10n.treadmillHistoryPersonalBests,
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            _BestCard(
+              icon: Icons.workspace_premium_outlined,
+              label: l10n.treadmillHistoryLongestRun,
+              value: '${longest.distance.toStringAsFixed(2)} km',
+              subtitle: DateFormat.yMMMd(
+                Localizations.localeOf(context).toString(),
+              ).format(DateTime.fromMillisecondsSinceEpoch(longest.startTime)),
+            ),
+            const SizedBox(height: 8),
+            _BestCard(
+              icon: Icons.bolt_outlined,
+              label: l10n.treadmillHistoryTopSpeed,
+              value: '${fastest.maxSpeed.toStringAsFixed(1)} km/h',
+              subtitle:
+                  '${l10n.treadmillHistoryAverage}: ${fastest.avgSpeed.toStringAsFixed(1)} km/h',
             ),
           ],
         ),
-        const SizedBox(height: 24),
-        Text(
-          l10n.treadmillHistoryDistanceLastSevenDays,
-          style: theme.textTheme.titleLarge,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          l10n.treadmillHistoryDistanceChartSubtitle,
-          style: theme.textTheme.bodyMedium?.copyWith(color: theme.hintColor),
-        ),
-        const SizedBox(height: 12),
-        _WeeklyChart(sessions: weekSessions),
-        if (heartRateSessions.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Text(
-            l10n.treadmillHistoryHeartRate,
-            style: theme.textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-          _HeartRateCard(sessions: heartRateSessions),
-        ],
-        const SizedBox(height: 24),
-        Text(
-          l10n.treadmillHistoryPersonalBests,
-          style: theme.textTheme.titleLarge,
-        ),
-        const SizedBox(height: 12),
-        _BestCard(
-          icon: Icons.workspace_premium_outlined,
-          label: l10n.treadmillHistoryLongestRun,
-          value: '${longest.distance.toStringAsFixed(2)} km',
-          subtitle: DateFormat.yMMMd(
-            Localizations.localeOf(context).toString(),
-          ).format(DateTime.fromMillisecondsSinceEpoch(longest.startTime)),
-        ),
-        const SizedBox(height: 8),
-        _BestCard(
-          icon: Icons.bolt_outlined,
-          label: l10n.treadmillHistoryTopSpeed,
-          value: '${fastest.maxSpeed.toStringAsFixed(1)} km/h',
-          subtitle:
-              '${l10n.treadmillHistoryAverage}: ${fastest.avgSpeed.toStringAsFixed(1)} km/h',
-        ),
-      ],
+      ),
     );
   }
 }
