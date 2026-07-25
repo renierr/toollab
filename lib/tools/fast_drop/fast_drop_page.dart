@@ -580,13 +580,29 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     _incomingDialogOpen = false;
     if (!mounted) return;
     if (accept == true) {
-      final baseName =
-          'p2p_received_${DateTime.now().millisecondsSinceEpoch}_${request.fileName}';
-      final outputPath = await _scope.createFile(baseName);
-      await p2p.acceptIncomingRequest(outputPath, tempFileBaseName: baseName);
+      try {
+        final baseName =
+            'p2p_received_${DateTime.now().millisecondsSinceEpoch}_${_safeTempFileName(request.fileName)}';
+        final outputPath = await _scope.createFile(baseName);
+        await p2p.acceptIncomingRequest(outputPath, tempFileBaseName: baseName);
+      } catch (e) {
+        if (mounted) {
+          final message = e.toString().replaceAll('Exception: ', '');
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
+        }
+      }
     } else {
       await p2p.rejectIncomingRequest();
     }
+  }
+
+  String _safeTempFileName(String filename) {
+    final safeName = filename
+        .replaceAll(RegExp(r'[<>:"/\\|?*\x00-\x1F]'), '_')
+        .trim();
+    return safeName.isEmpty ? 'file' : safeName;
   }
 
   void _onDismissReceived(P2pReceivedFile file) {
