@@ -8,13 +8,14 @@ import android.hardware.SensorManager
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.opengl.EGL14
+import android.opengl.EGLConfig
 import android.opengl.GLES10
+import android.os.Build
 import android.os.Environment
 import android.os.SystemClock
 import android.os.StatFs
 import android.view.WindowManager
 import io.flutter.plugin.common.BinaryMessenger
-import javax.microedition.khronos.egl.EGLConfig
 import io.flutter.plugin.common.MethodChannel
 
 object DeviceInfoHelper {
