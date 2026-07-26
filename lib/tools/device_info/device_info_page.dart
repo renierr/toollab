@@ -293,16 +293,22 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       debugPrint('[DeviceInfo] Failed to read app info: $e');
     }
 
+    final display = await SystemSpecsService.getDisplayInfo();
     if (mounted) {
       final mediaQuery = MediaQuery.of(context);
+      final l10n = AppLocalizations.of(context);
       _displayInfo = {
-        'Screen Size':
+        if (display['width'] != null && display['height'] != null)
+          l10n.miscDeviceInfoWindowsDisplayResolution:
+              '${display['width']} x ${display['height']} px',
+        l10n.miscDeviceInfoAppViewSize:
             '${mediaQuery.size.width.round()} x ${mediaQuery.size.height.round()} pt',
-        'Physical Pixels':
+        l10n.miscDeviceInfoAppViewPixels:
             '${(mediaQuery.size.width * mediaQuery.devicePixelRatio).round()} x ${(mediaQuery.size.height * mediaQuery.devicePixelRatio).round()} px',
-        'Device Pixel Ratio':
+        l10n.miscDeviceInfoDisplayScale:
             'x${mediaQuery.devicePixelRatio.toStringAsFixed(2)}',
-        'Orientation': mediaQuery.orientation.name.toUpperCase(),
+        l10n.miscDeviceInfoOrientation: mediaQuery.orientation.name
+            .toUpperCase(),
       };
 
       final now = DateTime.now();

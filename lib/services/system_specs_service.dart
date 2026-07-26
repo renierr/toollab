@@ -70,6 +70,22 @@ class SystemSpecsService {
     return {'free': 0, 'total': 0};
   }
 
+  static Future<Map<String, int>> getDisplayInfo() async {
+    if (!Platform.isWindows) return {};
+
+    try {
+      final Map<dynamic, dynamic>? res = await _channel
+          .invokeMethod<Map<dynamic, dynamic>>('getDisplayInfo');
+      if (res != null) {
+        return {
+          'width': res['width'] as int? ?? 0,
+          'height': res['height'] as int? ?? 0,
+        };
+      }
+    } catch (_) {}
+    return {};
+  }
+
   static Future<Map<String, bool>> getSensorInfo() async {
     if (Platform.isAndroid || Platform.isWindows) {
       try {

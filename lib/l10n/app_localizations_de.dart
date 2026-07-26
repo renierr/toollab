@@ -1654,6 +1654,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get miscDeviceInfoDisplayDetails => 'Anzeige-Details';
 
   @override
+  String get miscDeviceInfoWindowsDisplayResolution =>
+      'Aktuelle Anzeigeauflösung';
+
+  @override
+  String get miscDeviceInfoAppViewSize => 'App-Ansichtsgröße';
+
+  @override
+  String get miscDeviceInfoAppViewPixels => 'App-Ansichtspixel';
+
+  @override
+  String get miscDeviceInfoDisplayScale => 'Anzeigeskalierung';
+
+  @override
+  String get miscDeviceInfoOrientation => 'Ausrichtung';
+
+  @override
   String get miscDeviceInfoGeneralSettings => 'Allgemeine Einstellungen';
 
   @override

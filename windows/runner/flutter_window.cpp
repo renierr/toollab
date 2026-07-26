@@ -134,7 +134,7 @@ bool FlutterWindow::OnCreate() {
       &flutter::StandardMethodCodec::GetInstance());
 
   device_info_channel->SetMethodCallHandler(
-      [](const flutter::MethodCall<flutter::EncodableValue>& call,
+      [this](const flutter::MethodCall<flutter::EncodableValue>& call,
          std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
         if (call.method_name().compare("getStorageInfo") == 0) {
           ULARGE_INTEGER freeBytesAvailableToCaller;
@@ -158,6 +158,24 @@ bool FlutterWindow::OnCreate() {
             {flutter::EncodableValue("light"), flutter::EncodableValue(false)}
           };
           result->Success(flutter::EncodableValue(sensor_map));
+        } else if (call.method_name().compare("getDisplayInfo") == 0) {
+          DEVMODEW display_mode = {};
+          display_mode.dmSize = sizeof(display_mode);
+          MONITORINFOEXW monitor_info = {};
+          monitor_info.cbSize = sizeof(monitor_info);
+          const HMONITOR monitor = MonitorFromWindow(
+              GetHandle(), MONITOR_DEFAULTTONEAREST);
+          if (GetMonitorInfoW(monitor, &monitor_info) &&
+              EnumDisplaySettingsW(monitor_info.szDevice, ENUM_CURRENT_SETTINGS,
+                                   &display_mode)) {
+            flutter::EncodableMap display_map = {
+              {flutter::EncodableValue("width"), flutter::EncodableValue(static_cast<int>(display_mode.dmPelsWidth))},
+              {flutter::EncodableValue("height"), flutter::EncodableValue(static_cast<int>(display_mode.dmPelsHeight))}
+            };
+            result->Success(flutter::EncodableValue(display_map));
+          } else {
+            result->Error("DISPLAY_ERROR", "Failed to query the Windows display mode");
+          }
         } else {
           result->NotImplemented();
         }

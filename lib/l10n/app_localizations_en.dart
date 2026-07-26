@@ -1640,6 +1640,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get miscDeviceInfoDisplayDetails => 'Display Details';
 
   @override
+  String get miscDeviceInfoWindowsDisplayResolution =>
+      'Current Display Resolution';
+
+  @override
+  String get miscDeviceInfoAppViewSize => 'App View Size';
+
+  @override
+  String get miscDeviceInfoAppViewPixels => 'App View Pixels';
+
+  @override
+  String get miscDeviceInfoDisplayScale => 'Display Scale';
+
+  @override
+  String get miscDeviceInfoOrientation => 'Orientation';
+
+  @override
   String get miscDeviceInfoGeneralSettings => 'General Settings';
 
   @override

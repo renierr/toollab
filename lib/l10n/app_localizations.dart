@@ -3030,6 +3030,36 @@ abstract class AppLocalizations {
   /// **'Display Details'**
   String get miscDeviceInfoDisplayDetails;
 
+  /// No description provided for @miscDeviceInfoWindowsDisplayResolution.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Display Resolution'**
+  String get miscDeviceInfoWindowsDisplayResolution;
+
+  /// No description provided for @miscDeviceInfoAppViewSize.
+  ///
+  /// In en, this message translates to:
+  /// **'App View Size'**
+  String get miscDeviceInfoAppViewSize;
+
+  /// No description provided for @miscDeviceInfoAppViewPixels.
+  ///
+  /// In en, this message translates to:
+  /// **'App View Pixels'**
+  String get miscDeviceInfoAppViewPixels;
+
+  /// No description provided for @miscDeviceInfoDisplayScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Scale'**
+  String get miscDeviceInfoDisplayScale;
+
+  /// No description provided for @miscDeviceInfoOrientation.
+  ///
+  /// In en, this message translates to:
+  /// **'Orientation'**
+  String get miscDeviceInfoOrientation;
+
   /// No description provided for @miscDeviceInfoGeneralSettings.
   ///
   /// In en, this message translates to:
