@@ -3078,6 +3078,18 @@ abstract class AppLocalizations {
   /// **'CPU Architecture'**
   String get miscDeviceInfoCpuArchitecture;
 
+  /// No description provided for @miscDeviceInfoGpuModel.
+  ///
+  /// In en, this message translates to:
+  /// **'GPU Model'**
+  String get miscDeviceInfoGpuModel;
+
+  /// No description provided for @miscDeviceInfoGpuVram.
+  ///
+  /// In en, this message translates to:
+  /// **'GPU VRAM'**
+  String get miscDeviceInfoGpuVram;
+
   /// No description provided for @miscDeviceInfoSystemUptime.
   ///
   /// In en, this message translates to:
@@ -3113,6 +3125,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'free'**
   String get miscDeviceInfoFree;
+
+  /// No description provided for @miscDeviceInfoWifiSsid.
+  ///
+  /// In en, this message translates to:
+  /// **'Wi-Fi SSID'**
+  String get miscDeviceInfoWifiSsid;
+
+  /// No description provided for @miscDeviceInfoWifiSignal.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal'**
+  String get miscDeviceInfoWifiSignal;
+
+  /// No description provided for @miscDeviceInfoWifiLinkSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Speed'**
+  String get miscDeviceInfoWifiLinkSpeed;
+
+  /// No description provided for @miscDeviceInfoWifiFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get miscDeviceInfoWifiFrequency;
 
   /// No description provided for @miscDeviceInfoGeneralSettings.
   ///

@@ -9,6 +9,7 @@
 #include <batclass.h>
 #include <winioctl.h>
 #include <winreg.h>
+#include <dxgi.h>
 
 #include <flutter/binary_messenger.h>
 #include <flutter/method_channel.h>
@@ -222,10 +223,36 @@ bool FlutterWindow::OnCreate() {
           } else if (system_info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
             architecture = "x86";
           }
+          std::string gpuModel;
+          int64_t gpuVramBytes = 0;
+          IDXGIFactory* pFactory = nullptr;
+          if (SUCCEEDED(CreateDXGIFactory(__uuidof(IDXGIFactory),
+                                          reinterpret_cast<void**>(&pFactory)))) {
+            IDXGIAdapter* pAdapter = nullptr;
+            if (SUCCEEDED(pFactory->EnumAdapters(0, &pAdapter))) {
+              DXGI_ADAPTER_DESC desc;
+              if (SUCCEEDED(pAdapter->GetDesc(&desc))) {
+                const int size = WideCharToMultiByte(
+                    CP_UTF8, 0, desc.Description, -1, nullptr, 0, nullptr,
+                    nullptr);
+                if (size > 0) {
+                  std::vector<char> buffer(size);
+                  WideCharToMultiByte(CP_UTF8, 0, desc.Description, -1,
+                                      buffer.data(), size, nullptr, nullptr);
+                  gpuModel = buffer.data();
+                }
+                gpuVramBytes = static_cast<int64_t>(desc.DedicatedVideoMemory);
+              }
+              pAdapter->Release();
+            }
+            pFactory->Release();
+          }
           flutter::EncodableMap diagnostics_map = {
             {flutter::EncodableValue("cpuModel"), flutter::EncodableValue(GetProcessorNameWin32())},
             {flutter::EncodableValue("cpuArchitecture"), flutter::EncodableValue(architecture)},
-            {flutter::EncodableValue("uptimeSeconds"), flutter::EncodableValue(static_cast<int64_t>(GetTickCount64() / 1000))}
+            {flutter::EncodableValue("uptimeSeconds"), flutter::EncodableValue(static_cast<int64_t>(GetTickCount64() / 1000))},
+            {flutter::EncodableValue("gpuModel"), flutter::EncodableValue(gpuModel)},
+            {flutter::EncodableValue("gpuVramBytes"), flutter::EncodableValue(gpuVramBytes)}
           };
           result->Success(flutter::EncodableValue(diagnostics_map));
         } else {

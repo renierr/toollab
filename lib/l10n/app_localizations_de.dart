@@ -1679,6 +1679,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get miscDeviceInfoCpuArchitecture => 'CPU-Architektur';
 
   @override
+  String get miscDeviceInfoGpuModel => 'GPU-Modell';
+
+  @override
+  String get miscDeviceInfoGpuVram => 'GPU-VRAM';
+
+  @override
   String get miscDeviceInfoSystemUptime => 'Systemlaufzeit';
 
   @override
@@ -1702,6 +1708,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get miscDeviceInfoFree => 'frei';
+
+  @override
+  String get miscDeviceInfoWifiSsid => 'WLAN-SSID';
+
+  @override
+  String get miscDeviceInfoWifiSignal => 'Signal';
+
+  @override
+  String get miscDeviceInfoWifiLinkSpeed => 'Verbindungsrate';
+
+  @override
+  String get miscDeviceInfoWifiFrequency => 'Frequenz';
 
   @override
   String get miscDeviceInfoGeneralSettings => 'Allgemeine Einstellungen';

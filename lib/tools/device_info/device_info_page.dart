@@ -274,6 +274,29 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       debugPrint('[DeviceInfo] Failed to read network: $e');
     }
 
+    // Fetch Wi-Fi Info
+    try {
+      final wifi = await SystemSpecsService.getWifiInfo();
+      if (wifi['ssid'] case final String ssid when ssid.isNotEmpty) {
+        _networkInfo[l10n.miscDeviceInfoWifiSsid] = ssid;
+      }
+      if (wifi['signalPercent'] case final int signal when signal > 0) {
+        _networkInfo[l10n.miscDeviceInfoWifiSignal] = '$signal%';
+      } else if (wifi['rssi'] case final int rssi when rssi < 0) {
+        _networkInfo[l10n.miscDeviceInfoWifiSignal] = '$rssi dBm';
+      }
+      if (wifi['linkSpeed'] case final int speed when speed > 0) {
+        _networkInfo[l10n.miscDeviceInfoWifiLinkSpeed] = '$speed Mbps';
+      }
+      if (wifi['frequency'] case final int freq when freq > 0) {
+        _networkInfo[l10n.miscDeviceInfoWifiFrequency] = freq > 2000
+            ? '${(freq / 1000).toStringAsFixed(2)} GHz'
+            : 'Ch $freq';
+      }
+    } catch (e) {
+      debugPrint('[DeviceInfo] Failed to read wifi: $e');
+    }
+
     // Fetch Sensors Info
     try {
       final sensors = await SystemSpecsService.getSensorInfo();
@@ -325,6 +348,14 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       if (diagnostics['cpuArchitecture'] case final String architecture
           when architecture.isNotEmpty) {
         _hardwareInfo[l10n.miscDeviceInfoCpuArchitecture] = architecture;
+      }
+      if (diagnostics['gpuModel'] case final String gpuModel
+          when gpuModel.isNotEmpty) {
+        _hardwareInfo[l10n.miscDeviceInfoGpuModel] = gpuModel;
+      }
+      if (diagnostics['gpuVramBytes'] case final int vram when vram > 0) {
+        _hardwareInfo[l10n.miscDeviceInfoGpuVram] =
+            '${(vram / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
       }
       _displayInfo = {
         if (display['width'] != null && display['height'] != null)
