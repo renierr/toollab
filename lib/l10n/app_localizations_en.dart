@@ -1656,6 +1656,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get miscDeviceInfoOrientation => 'Orientation';
 
   @override
+  String get miscDeviceInfoRefreshRate => 'Refresh Rate';
+
+  @override
+  String get miscDeviceInfoCpuModel => 'CPU Model';
+
+  @override
+  String get miscDeviceInfoCpuArchitecture => 'CPU Architecture';
+
+  @override
+  String get miscDeviceInfoSystemUptime => 'System Uptime';
+
+  @override
+  String get miscDeviceInfoWindowsUptime => 'Uptime Since Last Full Restart';
+
+  @override
+  String miscDeviceInfoUptimeDays(int days, int hours) {
+    return '${days}d ${hours}h';
+  }
+
+  @override
+  String miscDeviceInfoUptimeHours(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String miscDeviceInfoStorageVolume(Object name) {
+    return 'Storage: $name';
+  }
+
+  @override
+  String get miscDeviceInfoFree => 'free';
+
+  @override
   String get miscDeviceInfoGeneralSettings => 'General Settings';
 
   @override

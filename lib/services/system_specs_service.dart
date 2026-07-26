@@ -24,6 +24,51 @@ class SystemSpecsService {
     return {'free': 0, 'total': 0};
   }
 
+  static Future<List<Map<String, dynamic>>> getStorageVolumes() async {
+    if (Platform.isLinux) return _getLinuxStorageVolumes();
+    if (!Platform.isAndroid && !Platform.isWindows) return [];
+
+    try {
+      final List<dynamic>? res = await _channel.invokeMethod<List<dynamic>>(
+        'getStorageVolumes',
+      );
+      return res
+              ?.whereType<Map<dynamic, dynamic>>()
+              .map((volume) => volume.cast<String, dynamic>())
+              .toList() ??
+          [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> _getLinuxStorageVolumes() async {
+    try {
+      final result = await Process.run('df', [
+        '-B1',
+        '--output=target,size,avail',
+      ]);
+      if (result.exitCode != 0) return [];
+      return result.stdout
+          .toString()
+          .split('\n')
+          .skip(1)
+          .map((line) => line.trim().split(RegExp(r'\s+')))
+          .where((parts) => parts.length == 3)
+          .map(
+            (parts) => {
+              'name': parts[0],
+              'total': int.tryParse(parts[1]) ?? 0,
+              'free': int.tryParse(parts[2]) ?? 0,
+            },
+          )
+          .where((volume) => (volume['total'] as int) > 0)
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   static Future<Map<String, int>> _getLinuxStorageInfo() async {
     try {
       final res = await Process.run('df', ['-B1', '/']);
@@ -80,10 +125,49 @@ class SystemSpecsService {
         return {
           'width': res['width'] as int? ?? 0,
           'height': res['height'] as int? ?? 0,
+          'refreshRate': res['refreshRate'] as int? ?? 0,
         };
       }
     } catch (_) {}
     return {};
+  }
+
+  static Future<Map<String, dynamic>> getSystemDiagnostics() async {
+    if (Platform.isLinux) return _getLinuxSystemDiagnostics();
+    if (!Platform.isAndroid && !Platform.isWindows) return {};
+
+    try {
+      final Map<dynamic, dynamic>? res = await _channel
+          .invokeMethod<Map<dynamic, dynamic>>('getSystemDiagnostics');
+      return res?.cast<String, dynamic>() ?? {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  static Future<Map<String, dynamic>> _getLinuxSystemDiagnostics() async {
+    try {
+      final cpuInfo = await File('/proc/cpuinfo').readAsLines();
+      final modelLine = cpuInfo.firstWhere(
+        (line) => line.startsWith('model name') || line.startsWith('Hardware'),
+        orElse: () => '',
+      );
+      final uptimeSeconds = double.tryParse(
+        (await File('/proc/uptime').readAsString()).split(' ').first,
+      );
+      final architecture = (await Process.run('uname', [
+        '-m',
+      ])).stdout.toString().trim();
+      return {
+        'cpuModel': modelLine.contains(':')
+            ? modelLine.split(':').last.trim()
+            : '',
+        'cpuArchitecture': architecture,
+        'uptimeSeconds': uptimeSeconds?.floor() ?? 0,
+      };
+    } catch (_) {
+      return {};
+    }
   }
 
   static Future<Map<String, bool>> getSensorInfo() async {

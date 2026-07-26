@@ -32,6 +32,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
   final Battery _battery = Battery();
 
   bool _loading = true;
+  bool _hasLoaded = false;
   int? _batteryLevel;
   BatteryState? _batteryState;
   BatteryDetails? _batteryDetails;
@@ -55,10 +56,18 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_hasLoaded) return;
+    _hasLoaded = true;
     _loadAllInfo();
   }
 
   Future<void> _loadAllInfo() async {
+    final l10n = AppLocalizations.of(context);
     try {
       _batteryLevel = await _battery.batteryLevel;
       _batteryState = await _battery.batteryState;
@@ -191,6 +200,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
     // Fetch Storage and RAM
     try {
       final storage = await SystemSpecsService.getStorageInfo();
+      final volumes = await SystemSpecsService.getStorageVolumes();
       final totalStorageGb = storage['total']! / (1024 * 1024 * 1024);
       final freeStorageGb = storage['free']! / (1024 * 1024 * 1024);
       final usedStorageGb = totalStorageGb - freeStorageGb;
@@ -214,6 +224,15 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
         _storageInfo['Total RAM'] = '${totalMemoryGb.toStringAsFixed(2)} GB';
         _storageInfo['Available RAM'] = '${freeMemoryGb.toStringAsFixed(2)} GB';
         _storageInfo['Used RAM'] = '${usedMemoryGb.toStringAsFixed(2)} GB';
+      }
+      for (final volume in volumes) {
+        final total = volume['total'] as int? ?? 0;
+        final free = volume['free'] as int? ?? 0;
+        final name = volume['name'] as String?;
+        if (name != null && total > 0) {
+          _storageInfo[l10n.miscDeviceInfoStorageVolume(name)] =
+              '${(free / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB / ${(total / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB ${l10n.miscDeviceInfoFree}';
+        }
       }
     } catch (e) {
       debugPrint('[DeviceInfo] Failed to read storage/memory: $e');
@@ -293,10 +312,20 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       debugPrint('[DeviceInfo] Failed to read app info: $e');
     }
 
-    final display = await SystemSpecsService.getDisplayInfo();
+    final (display, diagnostics) = await (
+      SystemSpecsService.getDisplayInfo(),
+      SystemSpecsService.getSystemDiagnostics(),
+    ).wait;
     if (mounted) {
       final mediaQuery = MediaQuery.of(context);
-      final l10n = AppLocalizations.of(context);
+      if (diagnostics['cpuModel'] case final String cpuModel
+          when cpuModel.isNotEmpty) {
+        _hardwareInfo[l10n.miscDeviceInfoCpuModel] = cpuModel;
+      }
+      if (diagnostics['cpuArchitecture'] case final String architecture
+          when architecture.isNotEmpty) {
+        _hardwareInfo[l10n.miscDeviceInfoCpuArchitecture] = architecture;
+      }
       _displayInfo = {
         if (display['width'] != null && display['height'] != null)
           l10n.miscDeviceInfoWindowsDisplayResolution:
@@ -307,6 +336,9 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
             '${(mediaQuery.size.width * mediaQuery.devicePixelRatio).round()} x ${(mediaQuery.size.height * mediaQuery.devicePixelRatio).round()} px',
         l10n.miscDeviceInfoDisplayScale:
             'x${mediaQuery.devicePixelRatio.toStringAsFixed(2)}',
+        if (display['refreshRate'] case final int refreshRate
+            when refreshRate > 0)
+          l10n.miscDeviceInfoRefreshRate: '$refreshRate Hz',
         l10n.miscDeviceInfoOrientation: mediaQuery.orientation.name
             .toUpperCase(),
       };
@@ -318,10 +350,32 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
         'System Locale': Platform.localeName,
         'Time Zone': '${now.timeZoneName} (UTC $offsetSign$offsetHours)',
         'Dart Version': Platform.version.split(' ').first,
+        if (diagnostics['uptimeSeconds'] case final int uptimeSeconds
+            when uptimeSeconds > 0)
+          (defaultTargetPlatform == TargetPlatform.windows
+              ? l10n.miscDeviceInfoWindowsUptime
+              : l10n.miscDeviceInfoSystemUptime): _formatUptime(
+            l10n,
+            uptimeSeconds,
+          ),
       };
 
       setState(() => _loading = false);
     }
+  }
+
+  String _formatUptime(AppLocalizations l10n, int seconds) {
+    final duration = Duration(seconds: seconds);
+    if (duration.inDays > 0) {
+      return l10n.miscDeviceInfoUptimeDays(
+        duration.inDays,
+        duration.inHours.remainder(24),
+      );
+    }
+    return l10n.miscDeviceInfoUptimeHours(
+      duration.inHours,
+      duration.inMinutes.remainder(60),
+    );
   }
 
   @override

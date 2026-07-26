@@ -3060,6 +3060,60 @@ abstract class AppLocalizations {
   /// **'Orientation'**
   String get miscDeviceInfoOrientation;
 
+  /// No description provided for @miscDeviceInfoRefreshRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Rate'**
+  String get miscDeviceInfoRefreshRate;
+
+  /// No description provided for @miscDeviceInfoCpuModel.
+  ///
+  /// In en, this message translates to:
+  /// **'CPU Model'**
+  String get miscDeviceInfoCpuModel;
+
+  /// No description provided for @miscDeviceInfoCpuArchitecture.
+  ///
+  /// In en, this message translates to:
+  /// **'CPU Architecture'**
+  String get miscDeviceInfoCpuArchitecture;
+
+  /// No description provided for @miscDeviceInfoSystemUptime.
+  ///
+  /// In en, this message translates to:
+  /// **'System Uptime'**
+  String get miscDeviceInfoSystemUptime;
+
+  /// No description provided for @miscDeviceInfoWindowsUptime.
+  ///
+  /// In en, this message translates to:
+  /// **'Uptime Since Last Full Restart'**
+  String get miscDeviceInfoWindowsUptime;
+
+  /// No description provided for @miscDeviceInfoUptimeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d {hours}h'**
+  String miscDeviceInfoUptimeDays(int days, int hours);
+
+  /// No description provided for @miscDeviceInfoUptimeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m'**
+  String miscDeviceInfoUptimeHours(int hours, int minutes);
+
+  /// No description provided for @miscDeviceInfoStorageVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage: {name}'**
+  String miscDeviceInfoStorageVolume(Object name);
+
+  /// No description provided for @miscDeviceInfoFree.
+  ///
+  /// In en, this message translates to:
+  /// **'free'**
+  String get miscDeviceInfoFree;
+
   /// No description provided for @miscDeviceInfoGeneralSettings.
   ///
   /// In en, this message translates to:

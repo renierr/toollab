@@ -7,7 +7,9 @@ import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.os.BatteryManager
 import android.os.Environment
+import android.os.SystemClock
 import android.os.StatFs
+import android.view.WindowManager
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
@@ -70,6 +72,23 @@ object DeviceInfoHelper {
                             result.error("STORAGE_ERROR", e.message, null)
                         }
                     }
+                    "getStorageVolumes" -> {
+                        try {
+                            val volumes = context.getExternalFilesDirs(null)
+                                .filterNotNull()
+                                .mapIndexed { index, directory ->
+                                    val stat = StatFs(directory.path)
+                                    mapOf(
+                                        "name" to if (index == 0) "App storage" else "Storage ${index + 1}",
+                                        "free" to (stat.availableBlocksLong * stat.blockSizeLong),
+                                        "total" to (stat.blockCountLong * stat.blockSizeLong)
+                                    )
+                                }
+                            result.success(volumes)
+                        } catch (e: Exception) {
+                            result.error("STORAGE_ERROR", e.message, null)
+                        }
+                    }
                     "getSensorInfo" -> {
                         try {
                             val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -83,6 +102,20 @@ object DeviceInfoHelper {
                             result.success(sensors)
                         } catch (e: Exception) {
                             result.error("SENSOR_ERROR", e.message, null)
+                        }
+                    }
+                    "getSystemDiagnostics" -> {
+                        try {
+                            val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                            val refreshRate = windowManager.defaultDisplay.refreshRate
+                            result.success(mapOf(
+                                "cpuModel" to Build.HARDWARE,
+                                "cpuArchitecture" to Build.SUPPORTED_ABIS.joinToString(", "),
+                                "uptimeSeconds" to (SystemClock.elapsedRealtime() / 1000),
+                                "refreshRate" to refreshRate
+                            ))
+                        } catch (e: Exception) {
+                            result.error("DIAGNOSTICS_ERROR", e.message, null)
                         }
                     }
                     else -> {

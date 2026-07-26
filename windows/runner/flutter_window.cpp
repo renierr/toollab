@@ -8,6 +8,7 @@
 #include <setupapi.h>
 #include <batclass.h>
 #include <winioctl.h>
+#include <winreg.h>
 
 #include <flutter/binary_messenger.h>
 #include <flutter/method_channel.h>
@@ -87,6 +88,18 @@ flutter::EncodableMap GetBatteryDetailsWin32() {
     return result;
 }
 
+std::string GetProcessorNameWin32() {
+  char name[256] = {};
+  DWORD name_size = sizeof(name);
+  if (RegGetValueA(HKEY_LOCAL_MACHINE,
+                   "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+                   "ProcessorNameString", RRF_RT_REG_SZ, nullptr, name,
+                   &name_size) == ERROR_SUCCESS) {
+    return name;
+  }
+  return "";
+}
+
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
 
@@ -149,6 +162,27 @@ bool FlutterWindow::OnCreate() {
           } else {
             result->Error("STORAGE_ERROR", "Failed to query storage info via GetDiskFreeSpaceExW");
           }
+        } else if (call.method_name().compare("getStorageVolumes") == 0) {
+          const DWORD drives = GetLogicalDrives();
+          flutter::EncodableList volumes;
+          for (wchar_t letter = L'A'; letter <= L'Z'; ++letter) {
+            const DWORD drive_mask = 1 << (letter - L'A');
+            if ((drives & drive_mask) == 0) continue;
+
+            const std::wstring path = std::wstring(1, letter) + L":\\";
+            ULARGE_INTEGER free_bytes;
+            ULARGE_INTEGER total_bytes;
+            if (GetDiskFreeSpaceExW(path.c_str(), &free_bytes, &total_bytes,
+                                    nullptr)) {
+              flutter::EncodableMap volume = {
+                {flutter::EncodableValue("name"), flutter::EncodableValue(std::string(1, static_cast<char>(letter)) + ":")},
+                {flutter::EncodableValue("free"), flutter::EncodableValue(static_cast<int64_t>(free_bytes.QuadPart))},
+                {flutter::EncodableValue("total"), flutter::EncodableValue(static_cast<int64_t>(total_bytes.QuadPart))}
+              };
+              volumes.emplace_back(volume);
+            }
+          }
+          result->Success(flutter::EncodableValue(volumes));
         } else if (call.method_name().compare("getSensorInfo") == 0) {
           flutter::EncodableMap sensor_map = {
             {flutter::EncodableValue("accelerometer"), flutter::EncodableValue(false)},
@@ -170,12 +204,30 @@ bool FlutterWindow::OnCreate() {
                                    &display_mode)) {
             flutter::EncodableMap display_map = {
               {flutter::EncodableValue("width"), flutter::EncodableValue(static_cast<int>(display_mode.dmPelsWidth))},
-              {flutter::EncodableValue("height"), flutter::EncodableValue(static_cast<int>(display_mode.dmPelsHeight))}
+              {flutter::EncodableValue("height"), flutter::EncodableValue(static_cast<int>(display_mode.dmPelsHeight))},
+              {flutter::EncodableValue("refreshRate"), flutter::EncodableValue(static_cast<int>(display_mode.dmDisplayFrequency))}
             };
             result->Success(flutter::EncodableValue(display_map));
           } else {
             result->Error("DISPLAY_ERROR", "Failed to query the Windows display mode");
           }
+        } else if (call.method_name().compare("getSystemDiagnostics") == 0) {
+          SYSTEM_INFO system_info = {};
+          GetNativeSystemInfo(&system_info);
+          const char* architecture = "Unknown";
+          if (system_info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
+            architecture = "x64";
+          } else if (system_info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_ARM64) {
+            architecture = "ARM64";
+          } else if (system_info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
+            architecture = "x86";
+          }
+          flutter::EncodableMap diagnostics_map = {
+            {flutter::EncodableValue("cpuModel"), flutter::EncodableValue(GetProcessorNameWin32())},
+            {flutter::EncodableValue("cpuArchitecture"), flutter::EncodableValue(architecture)},
+            {flutter::EncodableValue("uptimeSeconds"), flutter::EncodableValue(static_cast<int64_t>(GetTickCount64() / 1000))}
+          };
+          result->Success(flutter::EncodableValue(diagnostics_map));
         } else {
           result->NotImplemented();
         }
