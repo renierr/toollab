@@ -9336,6 +9336,30 @@ abstract class AppLocalizations {
   /// **'Export Workouts'**
   String get exportHistory;
 
+  /// No description provided for @treadmillHistorySync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get treadmillHistorySync;
+
+  /// No description provided for @treadmillHistorySyncDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync is not enabled. Turn it on in Settings.'**
+  String get treadmillHistorySyncDisabled;
+
+  /// No description provided for @treadmillHistorySyncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced: {pushed} pushed, {pulled} pulled'**
+  String treadmillHistorySyncSuccess(int pushed, int pulled);
+
+  /// No description provided for @treadmillHistorySyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed: {error}'**
+  String treadmillHistorySyncFailed(String error);
+
   /// No description provided for @treadmillConnectDevices.
   ///
   /// In en, this message translates to:

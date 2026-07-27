@@ -4,11 +4,14 @@ import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
+import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/sync_service.dart';
 import 'treadmill_control_db.dart';
 import 'treadmill_session.dart';
 import 'treadmill_models.dart';
 import 'treadmill_protocol.dart';
 import 'treadmill_gatt_resolver.dart';
+import 'treadmill_sync_delegate.dart';
 
 export 'treadmill_models.dart';
 
@@ -66,6 +69,9 @@ class TreadmillControlState extends ChangeNotifier {
   List<TreadmillSession> pastSessions = [];
   TreadmillSession? activeSession;
 
+  // Backend sync
+  bool isSyncing = false;
+
   // Private Subscriptions & Helpers
   StreamSubscription<BleDevice>? _scanSubscription;
   Timer? _workoutTimer;
@@ -109,6 +115,48 @@ class TreadmillControlState extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('[TreadmillControl] Load sessions failed: $e');
+    }
+  }
+
+  void _backgroundSync() {
+    syncNow().catchError((e) {
+      debugPrint('[TreadmillControl] Background sync failed: $e');
+      return null;
+    });
+  }
+
+  /// Runs a two-way sync of the workout history with the backend. Returns the
+  /// pulled/pushed/deleted counts, `null` if sync is disabled/unconfigured or
+  /// already running. Throws on network/backend failures so a manual trigger
+  /// can surface the error.
+  Future<Map<String, int>?> syncNow() async {
+    if (isSyncing) return null;
+    final syncEnabled = await DatabaseService.instance.getSetting(
+      '_app',
+      'sync_enabled',
+    );
+    if (syncEnabled != 'true') return null;
+    final serverUrl = await DatabaseService.instance.getSetting(
+      '_app',
+      'sync_server_url',
+    );
+    if (serverUrl == null || serverUrl.isEmpty) return null;
+    final userId =
+        await DatabaseService.instance.getSetting('_app', 'sync_user_id') ?? '';
+
+    isSyncing = true;
+    notifyListeners();
+    try {
+      final result = await SyncService.sync(
+        baseUrl: serverUrl,
+        userId: userId,
+        delegate: TreadmillSyncDelegate(),
+      );
+      await loadSessions();
+      return result;
+    } finally {
+      isSyncing = false;
+      notifyListeners();
     }
   }
 
@@ -762,6 +810,7 @@ class TreadmillControlState extends ChangeNotifier {
 
       await TreadmillControlDb.instance.saveSession(session);
       await loadSessions();
+      _backgroundSync();
     }
 
     workoutStatus = WorkoutStatus.inactive;
@@ -952,6 +1001,7 @@ class TreadmillControlState extends ChangeNotifier {
   Future<void> deleteSession(int id) async {
     await TreadmillControlDb.instance.softDeleteSession(id);
     await loadSessions();
+    _backgroundSync();
   }
 
   Future<int> importSessions(List<TreadmillSession> sessions) async {
@@ -959,6 +1009,7 @@ class TreadmillControlState extends ChangeNotifier {
       sessions,
     );
     await loadSessions();
+    _backgroundSync();
     return importedCount;
   }
 

@@ -142,6 +142,34 @@ class TreadmillControlDb {
     );
   }
 
+  /// Get all sync records (including deleted ones).
+  Future<List<Map<String, dynamic>>> getSyncRecords() async {
+    final db = await _getDb();
+    return await db.query(tableName, columns: ['uid', 'updated_at', 'deleted']);
+  }
+
+  /// Sync pull upsert handler.
+  Future<void> savePulledSession(TreadmillSession session) async {
+    final db = await _getDb();
+    if (session.deleted) {
+      await hardDeleteSession(session.uid);
+      return;
+    }
+
+    final existing = await getSessionByUid(session.uid);
+    final values = session.copyWith(synced: true).toMap()..remove('id');
+    if (existing != null) {
+      await db.update(
+        tableName,
+        values,
+        where: 'uid = ?',
+        whereArgs: [session.uid],
+      );
+    } else {
+      await db.insert(tableName, values);
+    }
+  }
+
   Future<int> importSessions(List<TreadmillSession> sessions) async {
     final db = await _getDb();
     return db.transaction((txn) async {

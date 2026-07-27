@@ -2752,6 +2752,21 @@
   "workoutStop": "Stop",
   "importHistory": "Import Workouts",
   "exportHistory": "Export Workouts",
+  "treadmillHistorySync": "Sync now",
+  "treadmillHistorySyncDisabled": "Sync is not enabled. Turn it on in Settings.",
+  "treadmillHistorySyncSuccess": "Synced: {pushed} pushed, {pulled} pulled",
+  "@treadmillHistorySyncSuccess": {
+    "placeholders": {
+      "pushed": { "type": "int" },
+      "pulled": { "type": "int" }
+    }
+  },
+  "treadmillHistorySyncFailed": "Sync failed: {error}",
+  "@treadmillHistorySyncFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
   "treadmillConnectDevices": "Connect devices",
   "treadmillHistoryDashboard": "Dashboard",
   "treadmillHistoryWorkouts": "Workouts",

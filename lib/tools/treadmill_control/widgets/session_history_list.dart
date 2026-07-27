@@ -36,6 +36,19 @@ class SessionHistoryList extends StatelessWidget {
             Wrap(
               children: [
                 IconButton(
+                  icon: state.isSyncing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.sync),
+                  tooltip: l10n.treadmillHistorySync,
+                  onPressed: state.isSyncing
+                      ? null
+                      : () => _syncNow(context, state),
+                ),
+                IconButton(
                   icon: const Icon(Icons.download),
                   tooltip: l10n.importHistory,
                   onPressed: () => _importBackup(context, state),
@@ -146,6 +159,37 @@ class SessionHistoryList extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _syncNow(
+    BuildContext context,
+    TreadmillControlState state,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final result = await state.syncNow();
+      if (result == null) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.treadmillHistorySyncDisabled)),
+        );
+        return;
+      }
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.treadmillHistorySyncSuccess(
+              result['pushed'] ?? 0,
+              result['pulled'] ?? 0,
+            ),
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.treadmillHistorySyncFailed('$e'))),
+      );
+    }
   }
 
   Future<void> _exportBackup(

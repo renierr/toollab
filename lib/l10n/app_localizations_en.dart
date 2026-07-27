@@ -5135,6 +5135,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportHistory => 'Export Workouts';
 
   @override
+  String get treadmillHistorySync => 'Sync now';
+
+  @override
+  String get treadmillHistorySyncDisabled =>
+      'Sync is not enabled. Turn it on in Settings.';
+
+  @override
+  String treadmillHistorySyncSuccess(int pushed, int pulled) {
+    return 'Synced: $pushed pushed, $pulled pulled';
+  }
+
+  @override
+  String treadmillHistorySyncFailed(String error) {
+    return 'Sync failed: $error';
+  }
+
+  @override
   String get treadmillConnectDevices => 'Connect devices';
 
   @override
