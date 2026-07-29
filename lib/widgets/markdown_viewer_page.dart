@@ -6,9 +6,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/helpers/frontmatter_helper.dart';
 import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/frontmatter_card.dart';
 import 'package:tool_lab/widgets/markdown_loading_skeleton.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
 import 'package:tool_lab/widgets/zoomable_area.dart';
@@ -29,6 +31,9 @@ class MarkdownViewerConfig {
   final bool selectable;
   final int? updatedAt;
 
+  /// Renders a metadata card for YAML frontmatter when the document has one.
+  final bool showFrontmatter;
+
   const MarkdownViewerConfig({
     this.accentColor = AppTheme.accentBlue,
     this.title = 'Markdown Viewer',
@@ -44,6 +49,7 @@ class MarkdownViewerConfig {
     this.exportMimeType = 'text/markdown',
     this.selectable = true,
     this.updatedAt,
+    this.showFrontmatter = true,
   });
 }
 
@@ -63,13 +69,31 @@ class MarkdownViewerPage extends StatefulWidget {
 
 class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
   bool _showBody = false;
+  late FrontmatterResult _frontmatter;
 
   @override
   void initState() {
     super.initState();
+    _frontmatter = FrontmatterHelper.parse(widget.content);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) setState(() => _showBody = true);
     });
+  }
+
+  @override
+  void didUpdateWidget(MarkdownViewerPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.content != oldWidget.content) {
+      _frontmatter = FrontmatterHelper.parse(widget.content);
+    }
+  }
+
+  /// Title from the frontmatter `title` key, else derived from the markdown.
+  String? get _frontmatterTitle {
+    final raw = _frontmatter.fields['title'];
+    if (raw == null || raw is Map || raw is List) return null;
+    final title = FrontmatterHelper.formatValue(raw).trim();
+    return title.isEmpty ? null : title;
   }
 
   String _getTitle(String content) {
@@ -100,6 +124,20 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
     if (titleIdx == -1) return '';
     final remainingLines = lines.skip(titleIdx + 1).toList();
     return remainingLines.join('\n').trim();
+  }
+
+  String get _resolvedTitle =>
+      _frontmatterTitle ?? _getTitle(_frontmatter.body);
+
+  /// Markdown shown below the header. When the title comes from the
+  /// frontmatter, the body is only stripped if its first heading repeats it.
+  String get _resolvedBody {
+    final markdown = _frontmatter.body;
+    final fmTitle = _frontmatterTitle;
+    if (fmTitle == null) return _getPureContent(markdown);
+    return _getTitle(markdown) == fmTitle
+        ? _getPureContent(markdown)
+        : markdown.trim();
   }
 
   String _formatDate(int timestamp) => FormatHelper.epoch(timestamp);
@@ -140,9 +178,9 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
         '${(widget.config.exportSuggestedName ?? 'document').replaceAll(RegExp(r'\.md$'), '')}.pdf';
     await PdfExportHelper.exportMarkdown(
       context: context,
-      markdown: widget.content,
+      markdown: _frontmatter.body,
       suggestedName: fileName,
-      title: _getTitle(widget.content),
+      title: _resolvedTitle,
     );
   }
 
@@ -150,9 +188,8 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final content = widget.content;
-    final title = _getTitle(content);
-    final body = _getPureContent(content);
+    final title = _resolvedTitle;
+    final body = _resolvedBody;
     final updatedAt = widget.config.updatedAt ?? 0;
     final config = widget.config;
 
@@ -232,6 +269,12 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                     ),
                   ],
                   const Divider(height: 32),
+                  if (config.showFrontmatter &&
+                      (_frontmatter.isValid || _frontmatter.error != null))
+                    FrontmatterCard(
+                      frontmatter: _frontmatter,
+                      accentColor: config.accentColor,
+                    ),
                   if (body.isEmpty)
                     Text(
                       l10n.widgetMarkdownNoContent,

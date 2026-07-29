@@ -1058,6 +1058,15 @@
   "widgetMarkdownExportPdf": "PDF exportieren",
   "widgetMarkdownUpdated": "Aktualisiert: {date}",
   "widgetMarkdownNoContent": "Kein weiterer Inhalt",
+  "widgetMarkdownFrontmatter": "Frontmatter",
+  "widgetMarkdownFrontmatterInvalid": "Ungültiges Frontmatter-YAML: {error}",
+  "@widgetMarkdownFrontmatterInvalid": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "widgetToolChooserOpenFile": "Datei öffnen",
   "widgetToolChooserChooseTool": "Tool zum Öffnen wählen:",
   "widgetToolChooserAlwaysUseTool": "Dieses Tool immer für diesen Dateityp verwenden",

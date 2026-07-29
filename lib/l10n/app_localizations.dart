@@ -5334,6 +5334,18 @@ abstract class AppLocalizations {
   /// **'No additional content'**
   String get widgetMarkdownNoContent;
 
+  /// No description provided for @widgetMarkdownFrontmatter.
+  ///
+  /// In en, this message translates to:
+  /// **'Frontmatter'**
+  String get widgetMarkdownFrontmatter;
+
+  /// No description provided for @widgetMarkdownFrontmatterInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid frontmatter YAML: {error}'**
+  String widgetMarkdownFrontmatterInvalid(String error);
+
   /// No description provided for @widgetToolChooserOpenFile.
   ///
   /// In en, this message translates to:

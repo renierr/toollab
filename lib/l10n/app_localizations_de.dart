@@ -3017,6 +3017,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get widgetMarkdownNoContent => 'Kein weiterer Inhalt';
 
   @override
+  String get widgetMarkdownFrontmatter => 'Frontmatter';
+
+  @override
+  String widgetMarkdownFrontmatterInvalid(String error) {
+    return 'Ungültiges Frontmatter-YAML: $error';
+  }
+
+  @override
   String get widgetToolChooserOpenFile => 'Datei öffnen';
 
   @override

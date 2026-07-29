@@ -1791,6 +1791,15 @@
     }
   },
   "widgetMarkdownNoContent": "No additional content",
+  "widgetMarkdownFrontmatter": "Frontmatter",
+  "widgetMarkdownFrontmatterInvalid": "Invalid frontmatter YAML: {error}",
+  "@widgetMarkdownFrontmatterInvalid": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "widgetToolChooserOpenFile": "Open File",
   "widgetToolChooserChooseTool": "Choose a tool to open:",
   "widgetToolChooserAlwaysUseTool": "Always use this tool for this file type",
