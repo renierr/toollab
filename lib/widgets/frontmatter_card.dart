@@ -157,20 +157,30 @@ class _FrontmatterEntry extends StatelessWidget {
         ],
       );
     } else {
-      content = Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(flex: 2, child: label),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 3,
-            child: _PlainValue(
-              text: FrontmatterHelper.formatValue(value),
-              align: TextAlign.end,
-            ),
-          ),
-        ],
-      );
+      final text = FrontmatterHelper.formatValue(value);
+      // Right-aligned reads fine for short values, but a wrapped paragraph with
+      // a ragged left edge does not — those get their own left-aligned block.
+      final isLong = text.length > 60 || text.contains('\n');
+      content = isLong
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                label,
+                const SizedBox(height: 4),
+                _PlainValue(text: text),
+              ],
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 2, child: label),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 3,
+                  child: _PlainValue(text: text, align: TextAlign.end),
+                ),
+              ],
+            );
     }
 
     return Padding(
