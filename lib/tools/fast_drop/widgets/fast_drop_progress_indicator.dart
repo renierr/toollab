@@ -6,6 +6,7 @@ class FastDropProgressIndicator extends StatelessWidget {
   final String label;
   final int sent;
   final int total;
+  final DateTime? startedAt;
   final VoidCallback onCancel;
 
   const FastDropProgressIndicator({
@@ -13,6 +14,7 @@ class FastDropProgressIndicator extends StatelessWidget {
     required this.label,
     required this.sent,
     required this.total,
+    this.startedAt,
     required this.onCancel,
   });
 
@@ -30,6 +32,12 @@ class FastDropProgressIndicator extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final progress = total > 0 ? sent / total : null;
+    final elapsed = startedAt == null
+        ? null
+        : DateTime.now().difference(startedAt!);
+    final rate = elapsed == null || elapsed.inMilliseconds == 0
+        ? null
+        : sent * 1000 / elapsed.inMilliseconds;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -50,9 +58,18 @@ class FastDropProgressIndicator extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      total > 0
-                          ? '${_formatBytes(sent)} / ${_formatBytes(total)}'
-                          : _formatBytes(sent),
+                      l10n.fastDropProgressDetails(
+                        _formatBytes(sent),
+                        total > 0 ? _formatBytes(total) : '?',
+                        rate == null
+                            ? '-'
+                            : (rate / (1024 * 1024)).toStringAsFixed(1),
+                        elapsed == null
+                            ? '0'
+                            : (elapsed.inMilliseconds / 1000).toStringAsFixed(
+                                1,
+                              ),
+                      ),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.6,

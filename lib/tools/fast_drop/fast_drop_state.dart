@@ -1,11 +1,11 @@
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'fast_drop_model.dart';
 import 'fast_drop_service.dart';
 
 class FastDropState extends ChangeNotifier {
+  static const bool _reportTransferProgress = true;
   List<FastDropItem> _fastDrops = [];
   bool _isLoadingFastDrops = false;
   bool _isUploadingFastDrop = false;
@@ -18,6 +18,8 @@ class FastDropState extends ChangeNotifier {
   bool _isServerAvailable = true;
   int _lastUploadProgressNotifyMs = 0;
   int _lastDownloadProgressNotifyMs = 0;
+  DateTime? _transferStartedAt;
+  final ValueNotifier<int> _transferProgressRevision = ValueNotifier(0);
   String _syncServerUrl = '';
 
   List<FastDropItem> get fastDrops => _fastDrops;
@@ -29,6 +31,9 @@ class FastDropState extends ChangeNotifier {
       _fastDropDownloadProgress;
   String? get fastDropError => _fastDropError;
   bool get isServerAvailable => _isServerAvailable;
+  DateTime? get transferStartedAt => _transferStartedAt;
+  ValueListenable<int> get transferProgressRevision =>
+      _transferProgressRevision;
 
   Future<String> _loadServerUrl() async {
     _syncServerUrl =
@@ -124,6 +129,8 @@ class FastDropState extends ChangeNotifier {
     _isUploadingFastDrop = true;
     _fastDropUploadProgress = null;
     _lastUploadProgressNotifyMs = 0;
+    _transferStartedAt = DateTime.now();
+    _transferProgressRevision.value++;
     notifyListeners();
 
     try {
@@ -134,16 +141,18 @@ class FastDropState extends ChangeNotifier {
         retention: retention,
         source: source,
         mimeType: mimeType,
-        onProgress: (sent, total) {
-          _fastDropUploadProgress = (sent, total);
-          if (_shouldNotifyTransferProgress(
-            current: sent,
-            total: total,
-            isUpload: true,
-          )) {
-            notifyListeners();
-          }
-        },
+        onProgress: _reportTransferProgress
+            ? (sent, total) {
+                _fastDropUploadProgress = (sent, total);
+                if (_shouldNotifyTransferProgress(
+                  current: sent,
+                  total: total,
+                  isUpload: true,
+                )) {
+                  _transferProgressRevision.value++;
+                }
+              }
+            : null,
         isCancelled: () => _cancelUploadRequested,
       );
       await loadFastDrops();
@@ -151,6 +160,8 @@ class FastDropState extends ChangeNotifier {
       _cancelUploadRequested = false;
       _isUploadingFastDrop = false;
       _fastDropUploadProgress = null;
+      _transferStartedAt = null;
+      _transferProgressRevision.value++;
       notifyListeners();
     }
   }
@@ -230,29 +241,35 @@ class FastDropState extends ChangeNotifier {
     _isDownloadingFastDrop = true;
     _fastDropDownloadProgress = null;
     _lastDownloadProgressNotifyMs = 0;
+    _transferStartedAt = DateTime.now();
+    _transferProgressRevision.value++;
     notifyListeners();
 
     try {
       return await FastDropService.downloadDrop(
         baseUrl: _syncServerUrl,
         id: id,
-        onProgress: (received, total) {
-          final effectiveTotal = total > 0 ? total : (size ?? -1);
-          _fastDropDownloadProgress = (received, effectiveTotal);
-          if (_shouldNotifyTransferProgress(
-            current: received,
-            total: effectiveTotal,
-            isUpload: false,
-          )) {
-            notifyListeners();
-          }
-        },
+        onProgress: _reportTransferProgress
+            ? (received, total) {
+                final effectiveTotal = total > 0 ? total : (size ?? -1);
+                _fastDropDownloadProgress = (received, effectiveTotal);
+                if (_shouldNotifyTransferProgress(
+                  current: received,
+                  total: effectiveTotal,
+                  isUpload: false,
+                )) {
+                  _transferProgressRevision.value++;
+                }
+              }
+            : null,
         isCancelled: () => _cancelDownloadRequested,
       );
     } finally {
       _cancelDownloadRequested = false;
       _isDownloadingFastDrop = false;
       _fastDropDownloadProgress = null;
+      _transferStartedAt = null;
+      _transferProgressRevision.value++;
       notifyListeners();
     }
   }
@@ -288,6 +305,8 @@ class FastDropState extends ChangeNotifier {
     _isDownloadingFastDrop = true;
     _fastDropDownloadProgress = null;
     _lastDownloadProgressNotifyMs = 0;
+    _transferStartedAt = DateTime.now();
+    _transferProgressRevision.value++;
     notifyListeners();
 
     try {
@@ -295,23 +314,27 @@ class FastDropState extends ChangeNotifier {
         baseUrl: _syncServerUrl,
         id: id,
         outputPath: outputPath,
-        onProgress: (received, total) {
-          final effectiveTotal = total > 0 ? total : (size ?? -1);
-          _fastDropDownloadProgress = (received, effectiveTotal);
-          if (_shouldNotifyTransferProgress(
-            current: received,
-            total: effectiveTotal,
-            isUpload: false,
-          )) {
-            notifyListeners();
-          }
-        },
+        onProgress: _reportTransferProgress
+            ? (received, total) {
+                final effectiveTotal = total > 0 ? total : (size ?? -1);
+                _fastDropDownloadProgress = (received, effectiveTotal);
+                if (_shouldNotifyTransferProgress(
+                  current: received,
+                  total: effectiveTotal,
+                  isUpload: false,
+                )) {
+                  _transferProgressRevision.value++;
+                }
+              }
+            : null,
         isCancelled: () => _cancelDownloadRequested,
       );
     } finally {
       _cancelDownloadRequested = false;
       _isDownloadingFastDrop = false;
       _fastDropDownloadProgress = null;
+      _transferStartedAt = null;
+      _transferProgressRevision.value++;
       notifyListeners();
     }
   }
@@ -343,5 +366,11 @@ class FastDropState extends ChangeNotifier {
       return true;
     }
     return false;
+  }
+
+  @override
+  void dispose() {
+    _transferProgressRevision.dispose();
+    super.dispose();
   }
 }

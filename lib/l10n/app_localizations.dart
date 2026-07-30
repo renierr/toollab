@@ -1616,6 +1616,17 @@ abstract class AppLocalizations {
   /// **'Uploading'**
   String get fastDropProgressUploading;
 
+  /// No description provided for @fastDropProgressDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'{transferred} / {total} ({speed} MB/s, {seconds}s)'**
+  String fastDropProgressDetails(
+    String transferred,
+    String total,
+    String speed,
+    String seconds,
+  );
+
   /// No description provided for @fastDropProgressDownloading.
   ///
   /// In en, this message translates to:

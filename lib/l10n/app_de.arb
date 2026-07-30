@@ -253,6 +253,7 @@
   "fastDropStatusNotConfigured": "Nicht konfiguriert",
   "fastDropRefreshList": "Liste aktualisieren",
   "fastDropProgressUploading": "Wird hochgeladen",
+  "fastDropProgressDetails": "{transferred} / {total} ({speed} MB/s, {seconds}s)",
   "fastDropProgressDownloading": "Wird heruntergeladen",
   "fastDropSectionTitle": "ABGELEGTE DATEIEN",
   "fastDropEditRetentionTitle": "Aufbewahrungsdauer bearbeiten",

@@ -870,6 +870,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropProgressUploading => 'Wird hochgeladen';
 
   @override
+  String fastDropProgressDetails(
+    String transferred,
+    String total,
+    String speed,
+    String seconds,
+  ) {
+    return '$transferred / $total ($speed MB/s, ${seconds}s)';
+  }
+
+  @override
   String get fastDropProgressDownloading => 'Wird heruntergeladen';
 
   @override

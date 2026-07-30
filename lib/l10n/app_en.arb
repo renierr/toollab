@@ -432,6 +432,15 @@
   "fastDropStatusNotConfigured": "Not Configured",
   "fastDropRefreshList": "Refresh List",
   "fastDropProgressUploading": "Uploading",
+  "fastDropProgressDetails": "{transferred} / {total} ({speed} MB/s, {seconds}s)",
+  "@fastDropProgressDetails": {
+    "placeholders": {
+      "transferred": {"type": "String"},
+      "total": {"type": "String"},
+      "speed": {"type": "String"},
+      "seconds": {"type": "String"}
+    }
+  },
   "fastDropProgressDownloading": "Downloading",
   "fastDropSectionTitle": "DROPPED FILES",
   "fastDropEditRetentionTitle": "Edit Retention Period",
