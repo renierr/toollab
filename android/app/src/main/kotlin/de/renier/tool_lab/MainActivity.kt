@@ -110,6 +110,7 @@ open class MainActivity : FlutterActivity() {
                 name = cursor.getString(0) ?: name
             }
         }
+        name = normalizeDuplicateSuffix(name)
         val safeName = name.replace(Regex("[\\\\/:*?\"<>|]"), "_")
         val directory = File(cacheDir, "fast_drop/${UUID.randomUUID()}").apply { mkdirs() }
         val output = File(directory, safeName)
@@ -123,6 +124,12 @@ open class MainActivity : FlutterActivity() {
             "name" to name,
             "mimeType" to (contentResolver.getType(uri) ?: "application/octet-stream"),
         )
+    }
+
+    private fun normalizeDuplicateSuffix(name: String): String {
+        val match = Regex("^(.+)(\\.[^./]+) \\((\\d+)\\)$").matchEntire(name)
+            ?: return name
+        return "${match.groupValues[1]} (${match.groupValues[3]})${match.groupValues[2]}"
     }
 
     override fun onDestroy() {
