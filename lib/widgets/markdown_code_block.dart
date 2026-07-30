@@ -28,6 +28,7 @@ class MarkdownCodeBlock extends StatefulWidget {
 
 class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
   final ScrollController _scrollController = ScrollController();
+  bool _expanded = true;
 
   @override
   void dispose() {
@@ -83,24 +84,33 @@ class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _CodeBlockHeader(code: code, label: label),
-        Scrollbar(
-          controller: _scrollController,
-          child: SingleChildScrollView(
+        _CodeBlockHeader(
+          code: code,
+          label: label,
+          lineCount: '\n'.allMatches(code).length + 1,
+          expanded: _expanded,
+          onToggle: () => setState(() => _expanded = !_expanded),
+        ),
+        // Built conditionally rather than cross-faded so a collapsed block
+        // costs no layout — the point of collapsing a long listing.
+        if (_expanded)
+          Scrollbar(
             controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 12.0,
-            ),
-            child: Text.rich(
-              TextSpan(children: spans),
-              style: codeStyle,
-              softWrap: false,
-              textScaler: TextScaler.linear(widget.scale),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 12.0,
+              ),
+              child: Text.rich(
+                TextSpan(children: spans),
+                style: codeStyle,
+                softWrap: false,
+                textScaler: TextScaler.linear(widget.scale),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -109,32 +119,56 @@ class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
 class _CodeBlockHeader extends StatelessWidget {
   final String code;
   final String? label;
+  final int lineCount;
+  final bool expanded;
+  final VoidCallback onToggle;
 
-  const _CodeBlockHeader({required this.code, this.label});
+  const _CodeBlockHeader({
+    required this.code,
+    required this.lineCount,
+    required this.expanded,
+    required this.onToggle,
+    this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final labelStyle = theme.textTheme.labelSmall?.copyWith(
+      fontFamily: 'monospace',
+      color: theme.colorScheme.onSurfaceVariant,
+    );
 
     return Container(
       padding: const EdgeInsets.only(left: 16.0, right: 4.0),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         border: Border(
-          bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+          bottom: expanded
+              ? BorderSide(color: theme.colorScheme.outlineVariant)
+              : BorderSide.none,
         ),
       ),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label ?? '',
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontFamily: 'monospace',
-                color: theme.colorScheme.onSurfaceVariant,
+            // Tapping empty header space toggles; the buttons keep their own taps.
+            child: InkWell(
+              onTap: onToggle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  expanded
+                      ? (label ?? '')
+                      : [
+                          ?label,
+                          l10n.widgetMarkdownCodeLines(lineCount),
+                        ].join(' · '),
+                  style: labelStyle,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ),
           IconButton(
@@ -151,6 +185,18 @@ class _CodeBlockHeader extends StatelessWidget {
                 ),
               );
             },
+          ),
+          IconButton(
+            icon: AnimatedRotation(
+              turns: expanded ? 0.0 : -0.25,
+              duration: const Duration(milliseconds: 200),
+              child: const Icon(Icons.expand_more, size: 18),
+            ),
+            visualDensity: VisualDensity.compact,
+            tooltip: expanded
+                ? l10n.widgetMarkdownCodeCollapse
+                : l10n.widgetMarkdownCodeExpand,
+            onPressed: onToggle,
           ),
         ],
       ),

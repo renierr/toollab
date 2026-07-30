@@ -1077,6 +1077,16 @@
       }
     }
   },
+  "widgetMarkdownCodeCollapse": "Code einklappen",
+  "widgetMarkdownCodeExpand": "Code ausklappen",
+  "widgetMarkdownCodeLines": "{count, plural, =1{1 Zeile} other{{count} Zeilen}}",
+  "@widgetMarkdownCodeLines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "widgetToolChooserOpenFile": "Datei öffnen",
   "widgetToolChooserChooseTool": "Tool zum Öffnen wählen:",
   "widgetToolChooserAlwaysUseTool": "Dieses Tool immer für diesen Dateityp verwenden",

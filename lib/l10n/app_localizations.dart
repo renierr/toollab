@@ -5364,6 +5364,24 @@ abstract class AppLocalizations {
   /// **'{language} · auto'**
   String widgetMarkdownCodeLanguageAuto(String language);
 
+  /// No description provided for @widgetMarkdownCodeCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse code'**
+  String get widgetMarkdownCodeCollapse;
+
+  /// No description provided for @widgetMarkdownCodeExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand code'**
+  String get widgetMarkdownCodeExpand;
+
+  /// No description provided for @widgetMarkdownCodeLines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 line} other{{count} lines}}'**
+  String widgetMarkdownCodeLines(int count);
+
   /// No description provided for @widgetToolChooserOpenFile.
   ///
   /// In en, this message translates to:

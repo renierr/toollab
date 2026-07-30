@@ -125,7 +125,34 @@ void main() {
     expect(find.textContaining("print('hi')"), findsOneWidget);
   });
 
-  testWidgets('Test Case 6: Inline code is not turned into a code block', (
+  testWidgets('Test Case 6: Code block collapses and expands again', (
+    WidgetTester tester,
+  ) async {
+    const data = '''
+```dart
+void main() {
+  print('hi');
+}
+```
+''';
+    await tester.pumpWidget(_wrap(data));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("print('hi')"), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.expand_more));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("print('hi')"), findsNothing);
+    expect(find.text('dart · 3 lines'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.expand_more));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("print('hi')"), findsOneWidget);
+  });
+
+  testWidgets('Test Case 7: Inline code is not turned into a code block', (
     WidgetTester tester,
   ) async {
     const data = 'Use the `flutter test` command.';

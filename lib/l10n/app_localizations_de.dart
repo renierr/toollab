@@ -3036,6 +3036,23 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get widgetMarkdownCodeCollapse => 'Code einklappen';
+
+  @override
+  String get widgetMarkdownCodeExpand => 'Code ausklappen';
+
+  @override
+  String widgetMarkdownCodeLines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Zeilen',
+      one: '1 Zeile',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get widgetToolChooserOpenFile => 'Datei öffnen';
 
   @override
