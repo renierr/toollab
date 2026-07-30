@@ -265,17 +265,17 @@ class FastDropService {
       final total = response.contentLength;
       int received = 0;
 
-      await for (final chunk in response) {
+      final stream = response.map((chunk) {
         if (isCancelled != null && isCancelled()) {
           request.abort();
           throw Exception('Download cancelled by user');
         }
-        sink.add(chunk);
         received += chunk.length;
         onProgress?.call(received, total);
-      }
+        return chunk;
+      });
 
-      await sink.flush();
+      await sink.addStream(stream);
       await sink.close();
       return outputPath;
     } catch (e) {

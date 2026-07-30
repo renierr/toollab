@@ -33,8 +33,8 @@ import 'widgets/fast_drop_upload_panel.dart';
 import 'widgets/fast_drop_status_banner.dart';
 import 'widgets/fast_drop_pending_card.dart';
 import 'widgets/fast_drop_list.dart';
+import 'widgets/fast_drop_transfer_progress.dart';
 import 'widgets/fast_drop_not_configured.dart';
-import 'widgets/fast_drop_progress_indicator.dart';
 import 'widgets/fast_drop_edit_description_dialog.dart';
 import 'widgets/fast_drop_edit_retention_dialog.dart';
 
@@ -633,12 +633,20 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final appState = context.watch<AppState>();
-    final fastDropState = context.watch<FastDropState>();
+    final fastDropState = context.read<FastDropState>();
+    final (isLoadingFastDrops, isServerAvailable, _, _) = context
+        .select<FastDropState, (bool, bool, String?, List<FastDropItem>)>(
+          (state) => (
+            state.isLoadingFastDrops,
+            state.isServerAvailable,
+            state.fastDropError,
+            state.fastDrops,
+          ),
+        );
     final p2pState = context.watch<FastDropP2pState>();
     final theme = Theme.of(context);
     final isConfigured = appState.syncServerUrl.isNotEmpty;
-    final isActionsEnabled =
-        appState.syncEnabled && fastDropState.isServerAvailable;
+    final isActionsEnabled = appState.syncEnabled && isServerAvailable;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _maybeShowIncomingRequestDialog(p2pState);
@@ -670,7 +678,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                       Text(
                         isConfigured
                             ? (appState.syncEnabled
-                                  ? (fastDropState.isServerAvailable
+                                  ? (isServerAvailable
                                         ? l10n.fastDropStatusOnline
                                         : l10n.fastDropStatusOffline)
                                   : l10n.fastDropStatusSyncDisabled)
@@ -678,7 +686,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: isConfigured
                               ? (appState.syncEnabled
-                                    ? (fastDropState.isServerAvailable
+                                    ? (isServerAvailable
                                           ? AppTheme.statusGreen
                                           : AppTheme.statusRed)
                                     : AppTheme.statusAmber)
@@ -693,7 +701,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                 ),
                 if (isConfigured && appState.syncEnabled)
                   IconButton(
-                    icon: fastDropState.isLoadingFastDrops
+                    icon: isLoadingFastDrops
                         ? const SizedBox(
                             width: 18,
                             height: 18,
@@ -719,24 +727,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             ),
           ),
           const Divider(height: 1),
-          if (fastDropState.isUploadingFastDrop &&
-              fastDropState.fastDropUploadProgress != null)
-            FastDropProgressIndicator(
-              label: l10n.fastDropProgressUploading,
-              sent: fastDropState.fastDropUploadProgress!.$1,
-              total: fastDropState.fastDropUploadProgress!.$2,
-              onCancel: () =>
-                  context.read<FastDropState>().cancelUploadFastDrop(),
-            ),
-          if (fastDropState.isDownloadingFastDrop &&
-              fastDropState.fastDropDownloadProgress != null)
-            FastDropProgressIndicator(
-              label: l10n.fastDropProgressDownloading,
-              sent: fastDropState.fastDropDownloadProgress!.$1,
-              total: fastDropState.fastDropDownloadProgress!.$2,
-              onCancel: () =>
-                  context.read<FastDropState>().cancelDownloadFastDrop(),
-            ),
+          const FastDropTransferProgress(),
           if (_mode == FastDropMode.cloud)
             FastDropStatusBanner(
               appState: fastDropState,
