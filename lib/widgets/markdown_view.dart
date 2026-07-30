@@ -3,8 +3,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:tool_lab/helpers/syntax/language_detector.dart';
+import 'package:tool_lab/helpers/syntax/language_registry.dart';
+import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart' as syntax;
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/markdown_checkbox.dart';
+import 'package:tool_lab/widgets/markdown_code_block_builder.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MarkdownView extends StatefulWidget {
@@ -138,6 +142,60 @@ class _MarkdownViewState extends State<MarkdownView>
     return newLines.join('\n');
   }
 
+  static final RegExp _fencePattern = RegExp(r'^\s{0,3}(```+|~~~+)\s*(.*)$');
+
+  /// Collects the grammar of every fenced block: from the info string, or from
+  /// heuristic detection for bare fences.
+  Set<String> _fenceLanguages(String markdown) {
+    final languages = <String>{};
+    final lines = const LineSplitter().convert(markdown);
+    String? openFence;
+    String? info;
+    final body = StringBuffer();
+
+    void closeFence() {
+      final language =
+          LanguageRegistry.resolveAlias(info) ??
+          LanguageDetector.detect(body.toString());
+      if (language != null) languages.add(language);
+      openFence = null;
+      info = null;
+      body.clear();
+    }
+
+    for (final line in lines) {
+      final match = _fencePattern.firstMatch(line);
+      if (openFence == null) {
+        if (match != null) {
+          openFence = match.group(1);
+          info = match.group(2)?.trim();
+        }
+        continue;
+      }
+      if (match != null &&
+          match.group(1)![0] == openFence![0] &&
+          match.group(1)!.length >= openFence!.length &&
+          (match.group(2)?.trim().isEmpty ?? true)) {
+        closeFence();
+        continue;
+      }
+      body.writeln(line);
+    }
+    if (openFence != null) closeFence();
+    return languages;
+  }
+
+  /// Grammars must be cached before the synchronous build, otherwise code
+  /// blocks would render unhighlighted.
+  Future<void> _preloadGrammars() async {
+    final languages = _fenceLanguages(widget.data);
+    if (languages.every(syntax.SyntaxHighlighter.isCached)) return;
+
+    await syntax.SyntaxHighlighter.preload(languages);
+    if (!mounted) return;
+    setState(_parseMarkdown);
+  }
+
   void _parseMarkdown() {
     _disposeRecognizers();
 
@@ -235,7 +293,7 @@ class _MarkdownViewState extends State<MarkdownView>
       checkboxBuilder: (checked) =>
           MarkdownCheckbox(checked: checked, checkedColor: widget.accentColor),
       bulletBuilder: null,
-      builders: const {},
+      builders: {'pre': MarkdownCodeBlockBuilder(scale: widget.scale)},
       paddingBuilders: const {},
       fitContent: true,
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.baseline,
@@ -247,6 +305,7 @@ class _MarkdownViewState extends State<MarkdownView>
   @override
   void didChangeDependencies() {
     _parseMarkdown();
+    _preloadGrammars();
     super.didChangeDependencies();
   }
 
@@ -257,6 +316,9 @@ class _MarkdownViewState extends State<MarkdownView>
         widget.scale != oldWidget.scale ||
         widget.accentColor != oldWidget.accentColor) {
       _parseMarkdown();
+      if (widget.data != oldWidget.data) {
+        _preloadGrammars();
+      }
     }
   }
 

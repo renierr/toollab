@@ -3025,6 +3025,17 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get widgetMarkdownCodeCopy => 'Code kopieren';
+
+  @override
+  String get widgetMarkdownCodeCopied => 'Code kopiert';
+
+  @override
+  String widgetMarkdownCodeLanguageAuto(String language) {
+    return '$language · auto';
+  }
+
+  @override
   String get widgetToolChooserOpenFile => 'Datei öffnen';
 
   @override

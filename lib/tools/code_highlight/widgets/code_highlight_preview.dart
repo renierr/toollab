@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../code_highlight_engine.dart';
+import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart';
 
 class CodeHighlightPreview extends StatelessWidget {
   final String code;
@@ -21,38 +21,8 @@ class CodeHighlightPreview extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF0F141F) : const Color(0xFFF5F7FA);
 
-    final List<TextSpan> children = [];
-    int lastOffset = 0;
-
-    for (int i = 0; i < tokens.length; i += 3) {
-      final start = tokens[i];
-      final length = tokens[i + 1];
-      final scopeId = tokens[i + 2];
-
-      if (start > code.length) break;
-      final end = (start + length).clamp(0, code.length);
-
-      if (start > lastOffset) {
-        children.add(TextSpan(text: code.substring(lastOffset, start)));
-      }
-
-      final tokenText = code.substring(start, end);
-      if (scopeId < scopes.length) {
-        final scope = scopes[scopeId];
-        final tokenStyle = TextMateEngine.getScopeStyle(scope, theme);
-        children.add(TextSpan(text: tokenText, style: tokenStyle));
-      } else {
-        children.add(TextSpan(text: tokenText));
-      }
-      lastOffset = end;
-    }
-
-    if (lastOffset < code.length) {
-      children.add(TextSpan(text: code.substring(lastOffset)));
-    }
-
     final codeTextSpan = TextSpan(
-      children: children,
+      children: SyntaxHighlighter.buildSpans(code, tokens, scopes, theme),
       style: TextStyle(
         color: theme.colorScheme.onSurface,
         fontFamily: 'monospace',

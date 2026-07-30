@@ -5346,6 +5346,24 @@ abstract class AppLocalizations {
   /// **'Invalid frontmatter YAML: {error}'**
   String widgetMarkdownFrontmatterInvalid(String error);
 
+  /// No description provided for @widgetMarkdownCodeCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy code'**
+  String get widgetMarkdownCodeCopy;
+
+  /// No description provided for @widgetMarkdownCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied'**
+  String get widgetMarkdownCodeCopied;
+
+  /// No description provided for @widgetMarkdownCodeLanguageAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'{language} · auto'**
+  String widgetMarkdownCodeLanguageAuto(String language);
+
   /// No description provided for @widgetToolChooserOpenFile.
   ///
   /// In en, this message translates to:

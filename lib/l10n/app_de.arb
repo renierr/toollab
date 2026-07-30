@@ -1067,6 +1067,16 @@
       }
     }
   },
+  "widgetMarkdownCodeCopy": "Code kopieren",
+  "widgetMarkdownCodeCopied": "Code kopiert",
+  "widgetMarkdownCodeLanguageAuto": "{language} · auto",
+  "@widgetMarkdownCodeLanguageAuto": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
   "widgetToolChooserOpenFile": "Datei öffnen",
   "widgetToolChooserChooseTool": "Tool zum Öffnen wählen:",
   "widgetToolChooserAlwaysUseTool": "Dieses Tool immer für diesen Dateityp verwenden",

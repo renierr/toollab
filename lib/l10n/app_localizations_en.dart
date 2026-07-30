@@ -2998,6 +2998,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get widgetMarkdownCodeCopy => 'Copy code';
+
+  @override
+  String get widgetMarkdownCodeCopied => 'Code copied';
+
+  @override
+  String widgetMarkdownCodeLanguageAuto(String language) {
+    return '$language · auto';
+  }
+
+  @override
   String get widgetToolChooserOpenFile => 'Open File';
 
   @override

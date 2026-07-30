@@ -1800,6 +1800,16 @@
       }
     }
   },
+  "widgetMarkdownCodeCopy": "Copy code",
+  "widgetMarkdownCodeCopied": "Code copied",
+  "widgetMarkdownCodeLanguageAuto": "{language} · auto",
+  "@widgetMarkdownCodeLanguageAuto": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
   "widgetToolChooserOpenFile": "Open File",
   "widgetToolChooserChooseTool": "Choose a tool to open:",
   "widgetToolChooserAlwaysUseTool": "Always use this tool for this file type",

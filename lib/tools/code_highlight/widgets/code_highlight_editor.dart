@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart';
 import '../code_highlight_state.dart';
-import '../code_highlight_engine.dart';
 
 class SyntaxHighlightEditingController extends TextEditingController {
   SyntaxHighlightEditingController({super.text});
@@ -32,38 +32,8 @@ class SyntaxHighlightEditingController extends TextEditingController {
       );
     }
 
-    final List<TextSpan> children = [];
-    int lastOffset = 0;
-
-    for (int i = 0; i < tokens.length; i += 3) {
-      final start = tokens[i];
-      final length = tokens[i + 1];
-      final scopeId = tokens[i + 2];
-
-      if (start > text.length) break;
-      final end = (start + length).clamp(0, text.length);
-
-      if (start > lastOffset) {
-        children.add(TextSpan(text: text.substring(lastOffset, start)));
-      }
-
-      final tokenText = text.substring(start, end);
-      if (scopeId < scopes.length) {
-        final scope = scopes[scopeId];
-        final tokenStyle = TextMateEngine.getScopeStyle(scope, theme);
-        children.add(TextSpan(text: tokenText, style: tokenStyle));
-      } else {
-        children.add(TextSpan(text: tokenText));
-      }
-      lastOffset = end;
-    }
-
-    if (lastOffset < text.length) {
-      children.add(TextSpan(text: text.substring(lastOffset)));
-    }
-
     return TextSpan(
-      children: children,
+      children: SyntaxHighlighter.buildSpans(text, tokens, scopes, theme),
       style: TextStyle(
         color: theme.colorScheme.onSurface,
         fontFamily: 'monospace',

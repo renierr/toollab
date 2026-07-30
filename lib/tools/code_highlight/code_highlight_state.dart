@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'code_highlight_engine.dart';
+import 'package:tool_lab/helpers/syntax/language_registry.dart';
+import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart';
+import 'package:tool_lab/helpers/syntax/textmate_engine.dart';
 
 class CodeHighlightState extends ChangeNotifier {
   bool get initialized => true;
@@ -17,26 +17,7 @@ class CodeHighlightState extends ChangeNotifier {
   String? _fileName;
   String? get fileName => _fileName;
 
-  final List<String> supportedLanguages = [
-    'dart',
-    'javascript',
-    'typescript',
-    'python',
-    'json',
-    'yaml',
-    'sql',
-    'html',
-    'css',
-    'rust',
-    'go',
-    'java',
-    'kotlin',
-    'bash',
-    'markdown',
-  ];
-
-  // Grammar cache to avoid reading files repeatedly
-  final Map<String, Map<String, dynamic>> _grammarCache = {};
+  final List<String> supportedLanguages = LanguageRegistry.supportedLanguages;
 
   // Highlighted scopes and token triplets [offset, length, scopeId]
   List<String> _cachedScopes = [];
@@ -55,21 +36,6 @@ class CodeHighlightState extends ChangeNotifier {
     rehighlight();
   }
 
-  Future<Map<String, dynamic>> _loadGrammar(String language) async {
-    if (language == 'plain') {
-      return {'patterns': []};
-    }
-    if (_grammarCache.containsKey(language)) {
-      return _grammarCache[language]!;
-    }
-    final jsonStr = await rootBundle.loadString(
-      'assets/grammars/$language.json',
-    );
-    final map = jsonDecode(jsonStr) as Map<String, dynamic>;
-    _grammarCache[language] = map;
-    return map;
-  }
-
   Future<void> rehighlight() async {
     final currentCode = _code;
     final currentLang = _language;
@@ -85,7 +51,7 @@ class CodeHighlightState extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final grammarJson = await _loadGrammar(currentLang);
+      final grammarJson = await SyntaxHighlighter.loadGrammar(currentLang);
 
       final result = await Isolate.run(() {
         return TextMateEngine.tokenize(currentCode, grammarJson);
@@ -139,29 +105,8 @@ class CodeHighlightState extends ChangeNotifier {
     }
   }
 
-  String detectLanguage(String fileNameOrExtension) {
-    final parts = fileNameOrExtension.split('.');
-    if (parts.length < 2) return 'plain';
-    final ext = parts.last.toLowerCase();
-    return switch (ext) {
-      'dart' => 'dart',
-      'js' || 'mjs' || 'cjs' => 'javascript',
-      'ts' || 'mts' || 'cts' => 'typescript',
-      'py' || 'pyw' => 'python',
-      'json' => 'json',
-      'yaml' || 'yml' => 'yaml',
-      'sql' => 'sql',
-      'html' || 'htm' => 'html',
-      'css' => 'css',
-      'rs' => 'rust',
-      'go' => 'go',
-      'java' => 'java',
-      'kt' || 'kts' => 'kotlin',
-      'sh' || 'bash' => 'bash',
-      'md' || 'markdown' => 'markdown',
-      _ => 'plain',
-    };
-  }
+  String detectLanguage(String fileNameOrExtension) =>
+      LanguageRegistry.fromFileName(fileNameOrExtension);
 
   @override
   void dispose() {
