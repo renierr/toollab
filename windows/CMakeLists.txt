@@ -53,8 +53,9 @@ add_subdirectory(${FLUTTER_MANAGED_DIR})
 add_subdirectory("runner")
 
 
-# Skip compiling Opus/Ogg C libs for flutter_soloud (only need MP3/WAV).
-set(ENV{NO_XIPH_LIBS} 1)
+# flutter_soloud's NO_XIPH_LIBS path does not compile since 4.1.x
+# (soloud_wavstream.cpp uses MBOggDecoder unguarded), so link the prebuilt
+# Opus/Ogg/FLAC libs the plugin ships instead of skipping them.
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
