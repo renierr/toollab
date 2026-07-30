@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -18,6 +20,7 @@ class FileDropZone extends StatefulWidget {
   final List<Widget>? extraButtons;
   final bool compact;
   final bool multiple;
+  final bool useAndroidStreamingPicker;
 
   const FileDropZone({
     super.key,
@@ -35,6 +38,7 @@ class FileDropZone extends StatefulWidget {
     this.extraButtons,
     this.compact = false,
     this.multiple = false,
+    this.useAndroidStreamingPicker = false,
   }) : assert(
          onFileSelected != null || onFilesSelected != null,
          'Either onFileSelected or onFilesSelected must be provided',
@@ -45,6 +49,9 @@ class FileDropZone extends StatefulWidget {
 }
 
 class _FileDropZoneState extends State<FileDropZone> {
+  static const _filePickerChannel = MethodChannel(
+    'de.renier.tool_lab/file_picker',
+  );
   bool _dragging = false;
 
   Future<void> _pickFile() async {
@@ -59,6 +66,31 @@ class _FileDropZoneState extends State<FileDropZone> {
             : null,
         mimeTypes: widget.allowedMimeTypes,
       );
+      if (Platform.isAndroid && widget.useAndroidStreamingPicker) {
+        final result = await _filePickerChannel
+            .invokeMethod<List<dynamic>>('pickFiles', {
+              'multiple': widget.multiple,
+              'mimeTypes': widget.allowedMimeTypes ?? const <String>[],
+            });
+        final files = (result ?? const <dynamic>[])
+            .map((entry) => Map<String, dynamic>.from(entry as Map))
+            .map(
+              (entry) => XFile(
+                entry['path']! as String,
+                name: entry['name']! as String,
+                mimeType: entry['mimeType']! as String,
+              ),
+            )
+            .toList();
+        if (files.isNotEmpty && mounted) {
+          if (widget.onFilesSelected != null) {
+            widget.onFilesSelected!(files);
+          } else {
+            widget.onFileSelected?.call(files.first);
+          }
+        }
+        return;
+      }
       if (widget.multiple) {
         final files = await openFiles(
           acceptedTypeGroups: hasFilters ? [typeGroup] : const <XTypeGroup>[],

@@ -5,24 +5,31 @@ import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.OpenableColumns
 import androidx.core.app.ActivityCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
+import java.io.FileOutputStream
+import java.util.UUID
 
 open class MainActivity : FlutterActivity() {
     private val SHORTCUTS_CHANNEL = "de.renier.tool_lab/shortcuts"
     private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
+    private val FILE_PICKER_CHANNEL = "de.renier.tool_lab/file_picker"
     private val MULTICAST_CHANNEL = "de.renier.tool_lab/multicast"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
     private var multicastLock: WifiManager.MulticastLock? = null
     private var launchRoute: String? = null
+    private var filePickerResult: MethodChannel.Result? = null
 
     companion object {
         var channel: MethodChannel? = null
 
+        private const val FILE_PICKER_REQUEST_CODE = 7412
         private const val ALIAS_PREFIX = "de.renier.tool_lab."
         private const val ALIAS_SUFFIX = "Alias"
 
@@ -70,6 +77,54 @@ open class MainActivity : FlutterActivity() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != FILE_PICKER_REQUEST_CODE) return
+
+        val result = filePickerResult ?: return
+        filePickerResult = null
+        if (resultCode != RESULT_OK || data == null) {
+            result.success(emptyList<Map<String, String>>())
+            return
+        }
+
+        val uris = buildList {
+            data.clipData?.let { clip ->
+                for (index in 0 until clip.itemCount) add(clip.getItemAt(index).uri)
+            } ?: data.data?.let(::add)
+        }
+        Thread {
+            try {
+                val files = uris.map { uri -> copyPickedFileToCache(uri) }
+                runOnUiThread { result.success(files) }
+            } catch (e: Exception) {
+                runOnUiThread { result.error("PICK_ERROR", e.message, null) }
+            }
+        }.start()
+    }
+
+    private fun copyPickedFileToCache(uri: android.net.Uri): Map<String, String> {
+        var name = "file"
+        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                name = cursor.getString(0) ?: name
+            }
+        }
+        val safeName = name.replace(Regex("[\\\\/:*?\"<>|]"), "_")
+        val directory = File(cacheDir, "fast_drop/${UUID.randomUUID()}").apply { mkdirs() }
+        val output = File(directory, safeName)
+        contentResolver.openInputStream(uri)?.use { input ->
+            FileOutputStream(output).use { outputStream ->
+                input.copyTo(outputStream, bufferSize = 64 * 1024)
+            }
+        } ?: throw IllegalStateException("Unable to open selected file")
+        return mapOf(
+            "path" to output.path,
+            "name" to name,
+            "mimeType" to (contentResolver.getType(uri) ?: "application/octet-stream"),
+        )
+    }
+
     override fun onDestroy() {
         channel = null
         multicastLock?.release()
@@ -99,6 +154,32 @@ open class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         val messenger = flutterEngine.dartExecutor.binaryMessenger
+
+        MethodChannel(messenger, FILE_PICKER_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "pickFiles" -> {
+                    if (filePickerResult != null) {
+                        result.error("PICK_IN_PROGRESS", "A file picker is already open", null)
+                        return@setMethodCallHandler
+                    }
+                    filePickerResult = result
+                    val allowMultiple = call.argument<Boolean>("multiple") ?: false
+                    val mimeTypes = call.argument<List<String>>("mimeTypes") ?: emptyList()
+                    startActivityForResult(
+                        Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "*/*"
+                            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, allowMultiple)
+                            if (mimeTypes.isNotEmpty()) {
+                                putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes.toTypedArray())
+                            }
+                        },
+                        FILE_PICKER_REQUEST_CODE,
+                    )
+                }
+                else -> result.notImplemented()
+            }
+        }
 
         MethodChannel(messenger, MULTICAST_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {

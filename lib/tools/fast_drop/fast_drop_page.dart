@@ -211,13 +211,20 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         if (mimeType == 'application/octet-stream' || mimeType.isEmpty) {
           mimeType = MimeTypeHelper.getMimeType(file.name);
         }
-        await fastDropState.uploadFastDrop(
-          filename: file.name,
-          filePath: file.path,
-          retention: _retention,
-          source: 'file',
-          mimeType: mimeType,
-        );
+        try {
+          await fastDropState.uploadFastDrop(
+            filename: file.name,
+            filePath: file.path,
+            retention: _retention,
+            source: 'file',
+            mimeType: mimeType,
+          );
+        } finally {
+          if (Platform.isAndroid) {
+            final fileCopy = File(file.path);
+            if (await fileCopy.exists()) await fileCopy.delete();
+          }
+        }
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

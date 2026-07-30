@@ -56,6 +56,7 @@ class FastDropUploadPanel extends StatelessWidget {
                 subtitle: l10n.fastDropOrClickToBrowse,
                 compact: useCompact,
                 multiple: true,
+                useAndroidStreamingPicker: true,
               ),
             ),
           ),

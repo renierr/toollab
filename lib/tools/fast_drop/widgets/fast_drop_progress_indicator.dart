@@ -41,68 +41,59 @@ class FastDropProgressIndicator extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      label,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.fastDropProgressDetails(
-                        _formatBytes(sent),
-                        total > 0 ? _formatBytes(total) : '?',
-                        rate == null
-                            ? '-'
-                            : (rate / (1024 * 1024)).toStringAsFixed(1),
-                        elapsed == null
-                            ? '0'
-                            : (elapsed.inMilliseconds / 1000).toStringAsFixed(
-                                1,
-                              ),
-                      ),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                      ),
-                    ),
-                  ],
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    color: AppTheme.accentTeal,
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                    minHeight: 6,
+              ),
+              Text(
+                l10n.fastDropProgressDetails(
+                  _formatBytes(sent),
+                  total > 0 ? _formatBytes(total) : '?',
+                  rate == null
+                      ? '-'
+                      : (rate / (1024 * 1024)).toStringAsFixed(1),
+                  elapsed == null
+                      ? '0'
+                      : (elapsed.inMilliseconds / 1000).toStringAsFixed(1),
+                ),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  tooltip: l10n.commonCancel,
+                  onPressed: onCancel,
+                  style: IconButton.styleFrom(
+                    foregroundColor: AppTheme.statusRed,
+                    padding: EdgeInsets.zero,
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 32,
-            height: 32,
-            child: IconButton(
-              icon: const Icon(Icons.close, size: 18),
-              tooltip: l10n.commonCancel,
-              onPressed: onCancel,
-              style: IconButton.styleFrom(
-                foregroundColor: AppTheme.statusRed,
-                padding: EdgeInsets.zero,
               ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              color: AppTheme.accentTeal,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              minHeight: 6,
             ),
           ),
         ],
