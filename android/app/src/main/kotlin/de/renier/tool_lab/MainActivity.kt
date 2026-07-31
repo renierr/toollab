@@ -25,6 +25,7 @@ open class MainActivity : FlutterActivity() {
     private var multicastLock: WifiManager.MulticastLock? = null
     private var launchRoute: String? = null
     private var filePickerResult: MethodChannel.Result? = null
+    private var filePickerTargetDir: String? = null
 
     companion object {
         var channel: MethodChannel? = null
@@ -93,9 +94,11 @@ open class MainActivity : FlutterActivity() {
                 for (index in 0 until clip.itemCount) add(clip.getItemAt(index).uri)
             } ?: data.data?.let(::add)
         }
+        val targetDir = filePickerTargetDir
+        filePickerTargetDir = null
         Thread {
             try {
-                val files = uris.map { uri -> copyPickedFileToCache(uri) }
+                val files = uris.map { uri -> copyPickedFileToCache(uri, targetDir) }
                 runOnUiThread { result.success(files) }
             } catch (e: Exception) {
                 runOnUiThread { result.error("PICK_ERROR", e.message, null) }
@@ -103,7 +106,9 @@ open class MainActivity : FlutterActivity() {
         }.start()
     }
 
-    private fun copyPickedFileToCache(uri: android.net.Uri): Map<String, String> {
+    // Writes into the Dart-side temp session dir when one is supplied, so the
+    // copy is covered by TempFileManager's tracked/session/orphan cleanup.
+    private fun copyPickedFileToCache(uri: android.net.Uri, targetDir: String?): Map<String, String> {
         var name = "file"
         contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
             if (cursor.moveToFirst()) {
@@ -112,8 +117,10 @@ open class MainActivity : FlutterActivity() {
         }
         name = normalizeDuplicateSuffix(name)
         val safeName = name.replace(Regex("[\\\\/:*?\"<>|]"), "_")
-        val directory = File(cacheDir, "fast_drop/${UUID.randomUUID()}").apply { mkdirs() }
-        val output = File(directory, safeName)
+        val directory = targetDir?.let { File(it) }
+            ?: File(cacheDir, "fast_drop/${UUID.randomUUID()}")
+        directory.mkdirs()
+        val output = uniqueFile(directory, safeName)
         contentResolver.openInputStream(uri)?.use { input ->
             FileOutputStream(output).use { outputStream ->
                 input.copyTo(outputStream, bufferSize = 64 * 1024)
@@ -122,8 +129,23 @@ open class MainActivity : FlutterActivity() {
         return mapOf(
             "path" to output.path,
             "name" to name,
+            "tempName" to output.name,
             "mimeType" to (contentResolver.getType(uri) ?: "application/octet-stream"),
         )
+    }
+
+    private fun uniqueFile(directory: File, safeName: String): File {
+        val candidate = File(directory, safeName)
+        if (!candidate.exists()) return candidate
+        val dot = safeName.lastIndexOf('.')
+        val base = if (dot > 0) safeName.substring(0, dot) else safeName
+        val extension = if (dot > 0) safeName.substring(dot) else ""
+        var counter = 1
+        while (true) {
+            val next = File(directory, "${base}_$counter$extension")
+            if (!next.exists()) return next
+            counter++
+        }
     }
 
     private fun normalizeDuplicateSuffix(name: String): String {
@@ -170,6 +192,7 @@ open class MainActivity : FlutterActivity() {
                         return@setMethodCallHandler
                     }
                     filePickerResult = result
+                    filePickerTargetDir = call.argument<String>("targetDir")
                     val allowMultiple = call.argument<Boolean>("multiple") ?: false
                     val mimeTypes = call.argument<List<String>>("mimeTypes") ?: emptyList()
                     startActivityForResult(

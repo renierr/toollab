@@ -46,6 +46,12 @@ class TempFileScope {
     return path;
   }
 
+  /// Registers a file already written into the session dir by native code
+  /// (e.g. the Android streaming picker) so it shares this scope's lifecycle.
+  void track(String name) {
+    if (!_tracked.contains(name)) _tracked.add(name);
+  }
+
   Future<Uint8List> readFile(String name) => _rawReadFile(name);
 
   Future<File> resolveFile(String name) => _rawResolveFile(name);

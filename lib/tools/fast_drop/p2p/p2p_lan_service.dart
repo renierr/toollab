@@ -15,7 +15,14 @@ typedef P2pLanIncomingRequest = (P2pPeer peer, P2pHandshakeRequest request);
 /// handshake line are buffered and exposed as the raw transfer stream.
 class P2pLanConnection {
   final Socket socket;
-  final StreamController<List<int>> _bytesController = StreamController();
+
+  /// Pausing the socket while the consumer is busy is what keeps received
+  /// bytes from piling up in this controller's queue when storage is slower
+  /// than the network.
+  late final StreamController<List<int>> _bytesController = StreamController(
+    onPause: () => _subscription.pause(),
+    onResume: () => _subscription.resume(),
+  );
   final List<int> _handshakeBuffer = [];
   late final StreamSubscription<List<int>> _subscription;
   Completer<String>? _lineCompleter;

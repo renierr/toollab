@@ -100,34 +100,29 @@ class P2pTransferService {
           return;
         }
         activeTransport = P2pTransportKind.lan;
-        client.listen(
-          (data) {
+        unawaited(
+          Future(() async {
             try {
-              if (isCancelled()) {
-                client.destroy();
-                fail(Exception('Transfer cancelled'));
-                return;
+              await sink.addStream(
+                _boundedChunks(
+                  source: client,
+                  expectedSize: expectedSize,
+                  transport: P2pTransportKind.lan,
+                  onProgress: onProgress,
+                  isCancelled: isCancelled,
+                  onReceived: (value) => received = value,
+                ),
+              );
+              await finishIfDone();
+              if (!completer.isCompleted && !isFinishing) {
+                fail(Exception('Connection closed before transfer completed'));
               }
-              sink.add(data);
-              received += data.length;
-              onProgress(received, expectedSize, P2pTransportKind.lan);
-              unawaited(finishIfDone().then<void>((_) {}, onError: fail));
             } catch (e, stackTrace) {
               fail(e, stackTrace);
+            } finally {
+              client.destroy();
             }
-          },
-          onError: fail,
-          onDone: () {
-            unawaited(
-              finishIfDone().then<void>((_) {
-                if (!completer.isCompleted && !isFinishing) {
-                  fail(
-                    Exception('Connection closed before transfer completed'),
-                  );
-                }
-              }, onError: fail),
-            );
-          },
+          }),
         );
       });
     } catch (e) {
@@ -174,6 +169,32 @@ class P2pTransferService {
     await _closeServer();
   }
 
+  /// Wraps [source] so it stops at [expectedSize], reports progress and
+  /// honours cancellation. Being an `async*` generator, a pause from the
+  /// consuming file sink propagates back to the socket — bytes are never
+  /// buffered in RAM waiting for slow storage.
+  static Stream<List<int>> _boundedChunks({
+    required Stream<List<int>> source,
+    required int expectedSize,
+    required P2pTransportKind transport,
+    required P2pProgressCallback onProgress,
+    required bool Function() isCancelled,
+    required void Function(int received) onReceived,
+  }) async* {
+    var received = 0;
+    await for (final data in source) {
+      if (isCancelled()) throw Exception('Transfer cancelled');
+      final remaining = expectedSize - received;
+      if (remaining <= 0) break;
+      final chunk = data.length > remaining ? data.sublist(0, remaining) : data;
+      received += chunk.length;
+      onReceived(received);
+      onProgress(received, expectedSize, transport);
+      yield chunk;
+      if (received >= expectedSize) break;
+    }
+  }
+
   /// Copies a LAN socket already authenticated by the direct LAN handshake.
   Future<String> receiveLanFile({
     required P2pLanConnection connection,
@@ -185,18 +206,16 @@ class P2pTransferService {
     final sink = File(outputPath).openWrite();
     var received = 0;
     try {
-      await for (final data in connection.bytes) {
-        if (isCancelled()) throw Exception('Transfer cancelled');
-        final remaining = expectedSize - received;
-        if (remaining <= 0) break;
-        final chunk = data.length > remaining
-            ? data.sublist(0, remaining)
-            : data;
-        sink.add(chunk);
-        received += chunk.length;
-        onProgress(received, expectedSize, P2pTransportKind.lan);
-        if (received == expectedSize) break;
-      }
+      await sink.addStream(
+        _boundedChunks(
+          source: connection.bytes,
+          expectedSize: expectedSize,
+          transport: P2pTransportKind.lan,
+          onProgress: onProgress,
+          isCancelled: isCancelled,
+          onReceived: (value) => received = value,
+        ),
+      );
       if (received != expectedSize) {
         throw Exception('Connection closed before transfer completed');
       }
@@ -305,17 +324,21 @@ class P2pTransferService {
     required bool Function() isCancelled,
   }) async {
     int sent = 0;
-    final stream = File(filePath).openRead();
     try {
-      await for (final chunk in stream) {
-        if (isCancelled()) {
-          throw Exception('Transfer cancelled');
-        }
-        socket.add(chunk);
-        await socket.flush();
-        sent += chunk.length;
-        onProgress(sent, fileSize, P2pTransportKind.lan);
-      }
+      // addStream keeps the socket's write buffer bounded (it pauses the file
+      // read when the socket is full) while still pipelining, unlike a
+      // flush-per-chunk loop which caps throughput at one chunk per RTT.
+      await socket.addStream(
+        File(filePath).openRead().map((chunk) {
+          if (isCancelled()) {
+            throw Exception('Transfer cancelled');
+          }
+          sent += chunk.length;
+          onProgress(sent, fileSize, P2pTransportKind.lan);
+          return chunk;
+        }),
+      );
+      await socket.flush();
     } finally {
       await socket.close();
     }

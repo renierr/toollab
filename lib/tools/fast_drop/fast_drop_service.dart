@@ -2,22 +2,50 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'fast_drop_model.dart';
 
 Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
   final messages = config['messages']! as SendPort;
   final control = ReceivePort();
-  var cancelled = false;
-  control.listen((_) => cancelled = true);
-  messages.send({'type': 'ready', 'port': control.sendPort});
-
   final client = HttpClient();
   final stopwatch = Stopwatch()..start();
   var lastProgressAt = Duration.zero;
+  var cancelled = false;
+  var stalled = false;
+
+  // Aborting a *stalled* transfer needs more than a flag the chunk callback
+  // checks — no further chunk ever arrives — so the connection is torn down.
+  void abort() => client.close(force: true);
+
+  control.listen((_) {
+    cancelled = true;
+    abort();
+  });
+  messages.send({'type': 'ready', 'port': control.sendPort});
+
+  var lastActivityAt = Duration.zero;
+  var watchdogArmed = false;
+  final stallTimeout = Duration(milliseconds: config['stallTimeoutMs']! as int);
+
+  // Only armed while body bytes are expected to flow. Waiting for response
+  // headers is not a stall — the server may legitimately think for a while
+  // before answering — that phase is bounded by responseTimeout instead.
+  void armWatchdog() {
+    lastActivityAt = stopwatch.elapsed;
+    watchdogArmed = true;
+  }
+
+  final stallWatchdog = Timer.periodic(const Duration(seconds: 1), (_) {
+    if (!watchdogArmed) return;
+    if (stopwatch.elapsed - lastActivityAt > stallTimeout) {
+      stalled = true;
+      abort();
+    }
+  });
 
   void reportProgress(int transferred, int total) {
+    lastActivityAt = stopwatch.elapsed;
     if (stopwatch.elapsed - lastProgressAt <
             const Duration(milliseconds: 120) &&
         transferred != total) {
@@ -32,8 +60,12 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
   }
 
   try {
-    final timeout = Duration(milliseconds: config['timeoutMs']! as int);
-    client.connectionTimeout = timeout;
+    client.connectionTimeout = Duration(
+      milliseconds: config['connectTimeoutMs']! as int,
+    );
+    final responseTimeout = Duration(
+      milliseconds: config['responseTimeoutMs']! as int,
+    );
     final url = Uri.parse(config['url']! as String);
 
     if (config['operation'] == 'upload') {
@@ -48,6 +80,7 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
       request.headers.set('Content-Type', config['mimeType']! as String);
       request.contentLength = total;
 
+      armWatchdog();
       await request.addStream(
         file.openRead().map((chunk) {
           if (cancelled) throw Exception('Upload cancelled by user');
@@ -56,7 +89,8 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
           return chunk;
         }),
       );
-      final response = await request.close().timeout(timeout);
+      watchdogArmed = false;
+      final response = await request.close().timeout(responseTimeout);
       final body = await response.transform(utf8.decoder).join();
       if (response.statusCode != 200) {
         final data = jsonDecode(body);
@@ -70,12 +104,13 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
       final sink = output.openWrite();
       try {
         final request = await client.getUrl(url);
-        final response = await request.close().timeout(timeout);
+        final response = await request.close().timeout(responseTimeout);
         if (response.statusCode != 200) {
           throw Exception('Failed to download drop: ${response.statusCode}');
         }
         final total = response.contentLength;
         var received = 0;
+        armWatchdog();
         await sink.addStream(
           response.map((chunk) {
             if (cancelled) throw Exception('Download cancelled by user');
@@ -84,6 +119,7 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
             return chunk;
           }),
         );
+        watchdogArmed = false;
         await sink.close();
       } catch (_) {
         await sink.close();
@@ -93,8 +129,17 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
     }
     messages.send({'type': 'complete'});
   } catch (error) {
-    messages.send({'type': 'error', 'message': error.toString()});
+    // Tearing the connection down to abort races with the chunk callback, so
+    // the raw socket error is discarded in favour of the actual cause.
+    final label = config['operation'] == 'upload' ? 'Upload' : 'Download';
+    final message = switch ((cancelled, stalled)) {
+      (true, _) => '$label cancelled by user',
+      (false, true) => '$label stalled: no data for ${stallTimeout.inSeconds}s',
+      _ => error.toString(),
+    };
+    messages.send({'type': 'error', 'message': message});
   } finally {
+    stallWatchdog.cancel();
     control.close();
     client.close(force: true);
   }
@@ -142,16 +187,21 @@ class FastDropService {
     }
   }
 
-  static Duration _adaptiveTimeout({
-    required int bytes,
-    int baseSeconds = 10,
-    int maxSeconds = 600,
-    double bytesPerSecond = 100 * 1024,
-  }) {
-    final estimatedSeconds = (bytes / bytesPerSecond).ceil();
-    final total = baseSeconds + estimatedSeconds;
-    return Duration(seconds: total.clamp(0, maxSeconds));
-  }
+  /// Transfers are bounded by inactivity, not by total duration: a slow but
+  /// progressing transfer of any size is allowed to finish, while a dead
+  /// connection is dropped quickly.
+  static const _connectTimeout = Duration(seconds: 15);
+  static const _stallTimeout = Duration(seconds: 30);
+
+  /// Headers may legitimately lag the last body byte while the server flushes
+  /// a large upload to disk, so the response gets its own, longer budget.
+  static const _responseTimeout = Duration(minutes: 5);
+
+  static Map<String, Object> _timeoutConfig() => {
+    'connectTimeoutMs': _connectTimeout.inMilliseconds,
+    'stallTimeoutMs': _stallTimeout.inMilliseconds,
+    'responseTimeoutMs': _responseTimeout.inMilliseconds,
+  };
 
   static String _sanitizeUrl(String baseUrl) {
     return baseUrl.endsWith('/')
@@ -192,17 +242,10 @@ class FastDropService {
     if (!await file.exists()) {
       throw Exception('File does not exist: $filePath');
     }
-    final total = await file.length();
 
     if (isCancelled != null && isCancelled()) {
       throw Exception('Upload cancelled by user');
     }
-
-    final timeout = _adaptiveTimeout(
-      bytes: total,
-      baseSeconds: 30,
-      bytesPerSecond: 100 * 1024,
-    );
 
     await _runTransfer(
       config: {
@@ -213,7 +256,7 @@ class FastDropService {
         'retention': retention,
         'source': source,
         'mimeType': mimeType.isEmpty ? 'application/octet-stream' : mimeType,
-        'timeoutMs': timeout.inMilliseconds,
+        ..._timeoutConfig(),
       },
       onProgress: onProgress,
       isCancelled: isCancelled,
@@ -290,47 +333,6 @@ class FastDropService {
     }
   }
 
-  static Future<Uint8List> downloadDrop({
-    required String baseUrl,
-    required String id,
-    void Function(int received, int total)? onProgress,
-    bool Function()? isCancelled,
-  }) async {
-    final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id';
-    final httpClient = HttpClient();
-
-    try {
-      if (isCancelled != null && isCancelled()) {
-        throw Exception('Download cancelled by user');
-      }
-
-      final request = await httpClient.getUrl(Uri.parse(url));
-      final response = await request.close();
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to download drop: ${response.statusCode}');
-      }
-
-      final total = response.contentLength;
-      final bytesBuilder = BytesBuilder(copy: false);
-      int received = 0;
-
-      await for (final chunk in response) {
-        if (isCancelled != null && isCancelled()) {
-          request.abort();
-          throw Exception('Download cancelled by user');
-        }
-        bytesBuilder.add(chunk);
-        received += chunk.length;
-        onProgress?.call(received, total);
-      }
-
-      return bytesBuilder.takeBytes();
-    } finally {
-      httpClient.close();
-    }
-  }
-
   static Future<String> downloadDropToFile({
     required String baseUrl,
     required String id,
@@ -344,7 +346,7 @@ class FastDropService {
         'operation': 'download',
         'url': url,
         'outputPath': outputPath,
-        'timeoutMs': const Duration(minutes: 10).inMilliseconds,
+        ..._timeoutConfig(),
       },
       onProgress: onProgress,
       isCancelled: isCancelled,

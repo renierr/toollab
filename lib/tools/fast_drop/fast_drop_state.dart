@@ -214,66 +214,6 @@ class FastDropState extends ChangeNotifier {
     }
   }
 
-  Future<Uint8List> downloadFastDrop(String id, {int? knownSize}) async {
-    await _loadServerUrl();
-    final syncEnabled = await _isSyncEnabled();
-    if (!syncEnabled) {
-      throw Exception('Cloud sync is disabled.');
-    }
-    if (_syncServerUrl.isEmpty) {
-      throw Exception('Sync Server URL is not configured');
-    }
-    if (!_isServerAvailable) {
-      throw Exception('Sync server is unreachable.');
-    }
-
-    int? size = knownSize;
-    if (size == null) {
-      for (final item in _fastDrops) {
-        if (item.id == id) {
-          size = item.size;
-          break;
-        }
-      }
-    }
-
-    _cancelDownloadRequested = false;
-    _isDownloadingFastDrop = true;
-    _fastDropDownloadProgress = null;
-    _lastDownloadProgressNotifyMs = 0;
-    _transferStartedAt = DateTime.now();
-    _transferProgressRevision.value++;
-    notifyListeners();
-
-    try {
-      return await FastDropService.downloadDrop(
-        baseUrl: _syncServerUrl,
-        id: id,
-        onProgress: _reportTransferProgress
-            ? (received, total) {
-                final effectiveTotal = total > 0 ? total : (size ?? -1);
-                _fastDropDownloadProgress = (received, effectiveTotal);
-                if (_shouldNotifyTransferProgress(
-                  current: received,
-                  total: effectiveTotal,
-                  isUpload: false,
-                )) {
-                  _transferProgressRevision.value++;
-                }
-              }
-            : null,
-        isCancelled: () => _cancelDownloadRequested,
-      );
-    } finally {
-      _cancelDownloadRequested = false;
-      _isDownloadingFastDrop = false;
-      _fastDropDownloadProgress = null;
-      _transferStartedAt = null;
-      _transferProgressRevision.value++;
-      notifyListeners();
-    }
-  }
-
   Future<String> downloadFastDropToFile({
     required String id,
     required String outputPath,

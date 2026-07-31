@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 class FileDropZone extends StatefulWidget {
@@ -22,6 +23,11 @@ class FileDropZone extends StatefulWidget {
   final bool multiple;
   final bool useAndroidStreamingPicker;
 
+  /// When the Android streaming picker is used, its cache copies are written
+  /// into this scope's temp session dir and tracked here, so the owning page
+  /// removes them on dispose.
+  final TempFileScope? tempScope;
+
   const FileDropZone({
     super.key,
     this.onFileSelected,
@@ -39,6 +45,7 @@ class FileDropZone extends StatefulWidget {
     this.compact = false,
     this.multiple = false,
     this.useAndroidStreamingPicker = false,
+    this.tempScope,
   }) : assert(
          onFileSelected != null || onFilesSelected != null,
          'Either onFileSelected or onFilesSelected must be provided',
@@ -67,13 +74,22 @@ class _FileDropZoneState extends State<FileDropZone> {
         mimeTypes: widget.allowedMimeTypes,
       );
       if (Platform.isAndroid && widget.useAndroidStreamingPicker) {
+        final scope = widget.tempScope;
         final result = await _filePickerChannel
             .invokeMethod<List<dynamic>>('pickFiles', {
               'multiple': widget.multiple,
               'mimeTypes': widget.allowedMimeTypes ?? const <String>[],
+              if (scope != null)
+                'targetDir': (await TempFileManager.sessionDir).path,
             });
-        final files = (result ?? const <dynamic>[])
+        final entries = (result ?? const <dynamic>[])
             .map((entry) => Map<String, dynamic>.from(entry as Map))
+            .toList();
+        for (final entry in entries) {
+          final tempName = entry['tempName'] as String?;
+          if (scope != null && tempName != null) scope.track(tempName);
+        }
+        final files = entries
             .map(
               (entry) => XFile(
                 entry['path']! as String,

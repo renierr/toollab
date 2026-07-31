@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
@@ -13,6 +14,7 @@ class FastDropUploadPanel extends StatelessWidget {
   final ValueChanged<List<XFile>> onFilesSelected;
   final VoidCallback onPasteClipboard;
   final bool isActionsEnabled;
+  final TempFileScope tempScope;
 
   const FastDropUploadPanel({
     super.key,
@@ -21,6 +23,7 @@ class FastDropUploadPanel extends StatelessWidget {
     required this.onFilesSelected,
     required this.onPasteClipboard,
     required this.isActionsEnabled,
+    required this.tempScope,
   });
 
   @override
@@ -57,6 +60,7 @@ class FastDropUploadPanel extends StatelessWidget {
                 compact: useCompact,
                 multiple: true,
                 useAndroidStreamingPicker: true,
+                tempScope: tempScope,
               ),
             ),
           ),

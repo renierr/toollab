@@ -220,9 +220,11 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             mimeType: mimeType,
           );
         } finally {
+          // The Android picker hands over a temp copy inside the scope's
+          // session dir; drop it as soon as the upload is done instead of
+          // waiting for dispose.
           if (Platform.isAndroid) {
-            final fileCopy = File(file.path);
-            if (await fileCopy.exists()) await fileCopy.delete();
+            await _scope.deleteFile(file.path.split('/').last);
           }
         }
       }
@@ -783,6 +785,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                               onFilesSelected: _onFilesSelected,
                               onPasteClipboard: _pasteFromClipboard,
                               isActionsEnabled: isActionsEnabled,
+                              tempScope: _scope,
                             ),
                             const SizedBox(height: 24),
                             const Divider(height: 1),
@@ -842,6 +845,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                                   onFilesSelected: _onFilesSelected,
                                   onPasteClipboard: _pasteFromClipboard,
                                   isActionsEnabled: isActionsEnabled,
+                                  tempScope: _scope,
                                 ),
                               ],
                             ),
