@@ -373,6 +373,7 @@ class FileManagerState extends ChangeNotifier {
     if (_clipboardIsCut && _error == null) {
       clearClipboard();
     }
+    if (_error == null) clearSelection();
   }
 
   Future<void> _pasteLocalToSmb() async {
@@ -501,7 +502,7 @@ class FileManagerState extends ChangeNotifier {
         }
         _reportNetworkProgress();
       }
-      _selectedPaths.clear();
+      clearSelection();
       await refresh();
     });
   }
@@ -563,7 +564,7 @@ class FileManagerState extends ChangeNotifier {
           break;
         }
       }
-      _selectedPaths.clear();
+      clearSelection();
       await refresh();
     } catch (error) {
       _error = error.toString().replaceFirst('Exception: ', '');

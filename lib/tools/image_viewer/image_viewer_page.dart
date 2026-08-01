@@ -22,6 +22,7 @@ import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_loading_overlay
 import 'package:tool_lab/tools/image_viewer/widgets/android_picker_buttons.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/extracted_text_dialog.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_controller.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 
 class ImageViewerPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -75,7 +76,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
         final bytes = await diskFile.readAsBytes();
         final size = await diskFile.length();
         await _controller.loadImage(bytes, file.name, size);
-        if (!Platform.isAndroid) unawaited(_controller.scanSiblings(file.path));
+        unawaited(_scanSiblingsIfAvailable(file.path));
       }
     } catch (e) {
       _showError('Failed to load image: $e');
@@ -87,12 +88,18 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       final bytes = await file.readAsBytes();
       final size = await file.length();
       await _controller.loadImage(bytes, file.name, size);
-      if (!Platform.isAndroid && file.path.isNotEmpty) {
-        unawaited(_controller.scanSiblings(file.path));
-      }
+      if (file.path.isNotEmpty) unawaited(_scanSiblingsIfAvailable(file.path));
     } catch (e) {
       _showError('Failed to read selected file: $e');
     }
+  }
+
+  Future<void> _scanSiblingsIfAvailable(String path) async {
+    if (Platform.isAndroid &&
+        !await FileManagerStorageAccess.hasAllFilesAccess()) {
+      return;
+    }
+    await _controller.scanSiblings(path);
   }
 
   Future<void> _pickFromGallery() async {
