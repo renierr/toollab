@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
@@ -9,6 +10,7 @@ class FileManagerLocations extends StatelessWidget {
   final ValueChanged<FileManagerConnection> onOpenConnection;
   final VoidCallback onAddConnection;
   final ValueChanged<FileManagerConnection> onRemoveConnection;
+  final VoidCallback onRequestStorageAccess;
 
   const FileManagerLocations({
     super.key,
@@ -17,6 +19,7 @@ class FileManagerLocations extends StatelessWidget {
     required this.onOpenConnection,
     required this.onAddConnection,
     required this.onRemoveConnection,
+    required this.onRequestStorageAccess,
   });
 
   @override
@@ -41,15 +44,26 @@ class FileManagerLocations extends StatelessWidget {
   }
 
   List<Widget> _wideItems(BuildContext context, AppLocalizations l10n) => [
+    if (state.requiresStorageAccess)
+      _LocationTile(
+        icon: Icons.folder_open_outlined,
+        label: l10n.fileManagerGrantFileAccess,
+        onTap: onRequestStorageAccess,
+      ),
     _LocationTile(
       icon: Icons.folder_outlined,
       label: l10n.fileManagerAppFiles,
       onTap: () => onOpenLocal(state.appFilesPath),
     ),
+    _LocationTile(
+      icon: Icons.download_outlined,
+      label: l10n.fileManagerDownloads,
+      onTap: () => onOpenLocal(state.downloadsPath),
+    ),
     ...state.favoritePaths.map(
       (path) => _LocationTile(
         icon: Icons.star_outline,
-        label: path,
+        label: _favoriteLabel(path),
         onTap: () => onOpenLocal(path),
       ),
     ),
@@ -74,15 +88,26 @@ class FileManagerLocations extends StatelessWidget {
   ];
 
   List<Widget> _narrowItems(BuildContext context, AppLocalizations l10n) => [
+    if (state.requiresStorageAccess)
+      _LocationChip(
+        icon: Icons.folder_open_outlined,
+        label: l10n.fileManagerGrantFileAccess,
+        onTap: onRequestStorageAccess,
+      ),
     _LocationChip(
       icon: Icons.folder_outlined,
       label: l10n.fileManagerAppFiles,
       onTap: () => onOpenLocal(state.appFilesPath),
     ),
+    _LocationChip(
+      icon: Icons.download_outlined,
+      label: l10n.fileManagerDownloads,
+      onTap: () => onOpenLocal(state.downloadsPath),
+    ),
     ...state.favoritePaths.map(
       (path) => _LocationChip(
         icon: Icons.star_outline,
-        label: path,
+        label: _favoriteLabel(path),
         onTap: () => onOpenLocal(path),
       ),
     ),
@@ -101,6 +126,24 @@ class FileManagerLocations extends StatelessWidget {
       ),
     ),
   ];
+
+  String _favoriteLabel(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    final name = p.basename(normalized);
+    const commonFolders = {
+      'downloads',
+      'documents',
+      'images',
+      'pictures',
+      'music',
+      'videos',
+      'movies',
+      'dcim',
+    };
+    if (commonFolders.contains(name.toLowerCase())) return name;
+    final parent = p.basename(p.dirname(normalized));
+    return parent.isEmpty || parent == '.' ? name : '$parent/$name';
+  }
 }
 
 class _LocationChip extends StatelessWidget {

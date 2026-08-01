@@ -102,9 +102,25 @@
               />
         </activity>
 
+        <activity
+            android:name="de.renier.tool_lab.FileManagerActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":file_manager"
+            android:taskAffinity="de.renier.tool_lab.file_manager"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+        </activity>
+
         <activity-alias
             android:name="de.renier.tool_lab.FileManagerAlias"
-            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:targetActivity="de.renier.tool_lab.FileManagerActivity"
             android:label="File Manager"
             android:icon="@mipmap/ic_launcher"
             android:enabled="false"

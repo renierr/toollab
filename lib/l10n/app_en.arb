@@ -3048,5 +3048,19 @@
   "fileManagerRemoveConnectionTitle": "Remove connection?",
   "fileManagerRemoveConnectionMessage": "Remove saved connection \"{name}\" and its stored password?",
   "@fileManagerRemoveConnectionMessage": { "placeholders": { "name": { "type": "String" } } },
-  "fileManagerClearClipboard": "Clear clipboard"
+  "fileManagerClearClipboard": "Clear clipboard",
+  "fileManagerOpenChooser": "Ask every time",
+  "fileManagerOpenImages": "Open images with",
+  "fileManagerOpenPdf": "Open PDFs with",
+  "fileManagerOpenAudio": "Open audio with",
+  "fileManagerOpenMarkdown": "Open Markdown with",
+  "fileManagerOpenWithSystem": "Open with system default",
+  "fileManagerDownloads": "Downloads",
+  "fileManagerGrantFileAccess": "Allow access to device files",
+  "fileManagerDetails": "Details",
+  "fileManagerDetailSize": "Size",
+  "fileManagerDetailModified": "Modified",
+  "fileManagerDetailType": "File type",
+  "fileManagerDetailPath": "Path",
+  "fileManagerFolder": "Folder"
 }

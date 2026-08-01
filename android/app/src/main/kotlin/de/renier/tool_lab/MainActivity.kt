@@ -425,3 +425,4 @@ open class MainActivity : FlutterActivity() {
 
 class CalculatorActivity : MainActivity()
 class PdfViewerActivity : MainActivity()
+class FileManagerActivity : MainActivity()

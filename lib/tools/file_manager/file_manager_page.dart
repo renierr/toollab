@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/shared_file.dart';
+import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dialog.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_details_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_settings_dialog.dart';
@@ -57,10 +62,27 @@ class _FileManagerPageState extends State<FileManagerPage>
     );
     if (!mounted || path == null) return;
     try {
+      final mimeType = MimeTypeHelper.getMimeType(entry.name);
+      final category = state.openCategoryForMime(mimeType);
+      final toolId = category == null ? null : state.openToolId(category);
+      final tool = toolId == null
+          ? null
+          : ToolRegistry.all
+                .where((candidate) => candidate.id == toolId)
+                .firstOrNull;
+      if (tool != null) {
+        context.push(
+          tool.route,
+          extra: SharedData.single(
+            SharedFile(path: path, name: entry.name, mimeType: mimeType),
+          ),
+        );
+        return;
+      }
       await FileSaveHelper.showOpenChooser(
         context: context,
         path: path,
-        mimeType: MimeTypeHelper.getMimeType(entry.name),
+        mimeType: mimeType,
       );
     } catch (error) {
       if (mounted) {
@@ -70,6 +92,49 @@ class _FileManagerPageState extends State<FileManagerPage>
           ),
         );
       }
+    }
+  }
+
+  Future<void> _openWithSystem(FileManagerEntry entry) async {
+    final path = await context.read<FileManagerState>().prepareForOpen(
+      entry,
+      await _tempScope.createFile('file_manager_${entry.name}'),
+    );
+    if (path != null) {
+      await FileSaveHelper.openFile(
+        path,
+        MimeTypeHelper.getMimeType(entry.name),
+      );
+    }
+  }
+
+  Future<void> _showDetails(FileManagerEntry entry) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) => FileManagerDetailsDialog(
+        entry: entry,
+        onOpen: () {
+          Navigator.pop(context);
+          _openEntry(entry);
+        },
+        onShare: () {
+          Navigator.pop(context);
+          _shareWithSystem(entry);
+        },
+      ),
+    );
+  }
+
+  Future<void> _shareWithSystem(FileManagerEntry entry) async {
+    final path = await context.read<FileManagerState>().prepareForOpen(
+      entry,
+      await _tempScope.createFile('file_manager_share_${entry.name}'),
+    );
+    if (path != null) {
+      await FileSaveHelper.shareFile(
+        path,
+        MimeTypeHelper.getMimeType(entry.name),
+      );
     }
   }
 
@@ -169,15 +234,33 @@ class _FileManagerPageState extends State<FileManagerPage>
 
   Future<void> _showSettings() async {
     final state = context.read<FileManagerState>();
-    final result = await showDialog<(FileManagerSortField, bool)>(
-      context: context,
-      builder: (_) => FileManagerSettingsDialog(
-        initialField: state.sortField,
-        initialAscending: state.sortAscending,
-      ),
-    );
+    final result =
+        await showDialog<
+          (FileManagerSortField, bool, Map<FileManagerOpenCategory, String?>)
+        >(
+          context: context,
+          builder: (_) => FileManagerSettingsDialog(
+            initialField: state.sortField,
+            initialAscending: state.sortAscending,
+            initialOpenToolIds: {
+              for (final category in FileManagerOpenCategory.values)
+                category: state.openToolId(category),
+            },
+            matchingTools: (category) =>
+                SharingService.instance.getMatchingTools(
+                  SharedFile(
+                    path: '',
+                    name: _exampleFileName(category),
+                    mimeType: _mimeTypeForCategory(category),
+                  ),
+                ),
+          ),
+        );
     if (result != null && mounted) {
       await state.updateSort(result.$1, result.$2);
+      for (final preference in result.$3.entries) {
+        await state.updateOpenTool(preference.key, preference.value);
+      }
     }
   }
 
@@ -219,93 +302,118 @@ class _FileManagerPageState extends State<FileManagerPage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<FileManagerState>();
-    return ToolLayout(
-      title: FileManagerTool.config.localizedName(l10n),
-      actions: [
-        IconButton(
-          tooltip: l10n.commonSettings,
-          onPressed: _showSettings,
-          icon: const Icon(Icons.tune_outlined),
-        ),
-        if (FileManagerStorageAccess.isAndroid)
+    return PopScope(
+      canPop: !state.canGoUp,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && state.canGoUp) state.goUp();
+      },
+      child: ToolLayout(
+        title: FileManagerTool.config.localizedName(l10n),
+        actions: [
           IconButton(
-            tooltip: l10n.fileManagerAllFilesAccess,
-            onPressed: _requestStorageAccess,
-            icon: const Icon(Icons.folder_open_outlined),
+            tooltip: l10n.commonSettings,
+            onPressed: _showSettings,
+            icon: const Icon(Icons.tune_outlined),
           ),
-        IconButton(
-          tooltip: l10n.fileManagerRefresh,
-          onPressed: state.isLoading ? null : state.refresh,
-          icon: const Icon(Icons.refresh),
-        ),
-        IconButton(
-          tooltip: l10n.fileManagerNewFolder,
-          onPressed: state.isLoading ? null : _createFolder,
-          icon: const Icon(Icons.create_new_folder_outlined),
-        ),
-        if (state.canPaste)
-          IconButton(
-            tooltip: l10n.fileManagerPaste,
-            onPressed:
-                state.isLoading ||
-                    state.isRemote &&
-                        state.connection?.protocol == FileManagerProtocol.ftp
-                ? null
-                : state.paste,
-            icon: Icon(
-              state.clipboardIsCut
-                  ? Icons.drive_file_move_outline
-                  : Icons.content_paste_outlined,
+          if (FileManagerStorageAccess.isAndroid)
+            IconButton(
+              tooltip: l10n.fileManagerAllFilesAccess,
+              onPressed: _requestStorageAccess,
+              icon: const Icon(Icons.folder_open_outlined),
             ),
-          ),
-        if (state.canPaste)
           IconButton(
-            tooltip: l10n.fileManagerClearClipboard,
-            onPressed: state.clearClipboard,
-            icon: const Icon(Icons.clear_all_outlined),
+            tooltip: l10n.fileManagerRefresh,
+            onPressed: state.isLoading ? null : state.refresh,
+            icon: const Icon(Icons.refresh),
           ),
-      ],
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final locations = FileManagerLocations(
-            state: state,
-            onOpenLocal: state.openLocal,
-            onOpenConnection: state.openConnection,
-            onAddConnection: _addConnection,
-            onRemoveConnection: _removeConnection,
-          );
-          final explorer = FileManagerExplorer(
-            state: state,
-            onOpen: _openEntry,
-            onRename: _rename,
-            onDelete: _delete,
-            onCopy: state.copy,
-            onCut: state.cut,
-            onGoUp: state.goUp,
-            onToggleFavorite: state.toggleFavorite,
-            onToggleSelection: state.toggleSelection,
-            onEnterSelectionMode: state.enterSelectionMode,
-            onSelectAll: state.selectAll,
-            onClearSelection: state.clearSelection,
-            onDeleteSelection: _confirmDelete,
-          );
-          if (constraints.maxWidth < 720) {
-            return Column(
+          IconButton(
+            tooltip: l10n.fileManagerNewFolder,
+            onPressed: state.isLoading ? null : _createFolder,
+            icon: const Icon(Icons.create_new_folder_outlined),
+          ),
+          if (state.canPaste)
+            IconButton(
+              tooltip: l10n.fileManagerPaste,
+              onPressed:
+                  state.isLoading ||
+                      state.isRemote &&
+                          state.connection?.protocol == FileManagerProtocol.ftp
+                  ? null
+                  : state.paste,
+              icon: Icon(
+                state.clipboardIsCut
+                    ? Icons.drive_file_move_outline
+                    : Icons.content_paste_outlined,
+              ),
+            ),
+          if (state.canPaste)
+            IconButton(
+              tooltip: l10n.fileManagerClearClipboard,
+              onPressed: state.clearClipboard,
+              icon: const Icon(Icons.clear_all_outlined),
+            ),
+        ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final locations = FileManagerLocations(
+              state: state,
+              onOpenLocal: state.openLocal,
+              onOpenConnection: state.openConnection,
+              onAddConnection: _addConnection,
+              onRemoveConnection: _removeConnection,
+              onRequestStorageAccess: _requestStorageAccess,
+            );
+            final explorer = FileManagerExplorer(
+              state: state,
+              onOpen: _openEntry,
+              onOpenWithSystem: _openWithSystem,
+              onDetails: _showDetails,
+              onRename: _rename,
+              onDelete: _delete,
+              onCopy: state.copy,
+              onCut: state.cut,
+              onGoUp: state.goUp,
+              onToggleFavorite: state.toggleFavorite,
+              onToggleSelection: state.toggleSelection,
+              onEnterSelectionMode: state.enterSelectionMode,
+              onSelectAll: state.selectAll,
+              onClearSelection: state.clearSelection,
+              onDeleteSelection: _confirmDelete,
+            );
+            if (constraints.maxWidth < 720) {
+              return Column(
+                children: [
+                  locations,
+                  Expanded(child: explorer),
+                ],
+              );
+            }
+            return Row(
               children: [
-                locations,
+                SizedBox(width: 280, child: locations),
+                const VerticalDivider(width: 1),
                 Expanded(child: explorer),
               ],
             );
-          }
-          return Row(
-            children: [
-              SizedBox(width: 280, child: locations),
-              const VerticalDivider(width: 1),
-              Expanded(child: explorer),
-            ],
-          );
-        },
+          },
+        ),
       ),
     );
   }
+
+  String _mimeTypeForCategory(FileManagerOpenCategory category) =>
+      switch (category) {
+        FileManagerOpenCategory.images => 'image/png',
+        FileManagerOpenCategory.pdf => 'application/pdf',
+        FileManagerOpenCategory.audio => 'audio/mpeg',
+        FileManagerOpenCategory.markdown => 'text/markdown',
+      };
+
+  String _exampleFileName(FileManagerOpenCategory category) =>
+      switch (category) {
+        FileManagerOpenCategory.images => 'image.png',
+        FileManagerOpenCategory.pdf => 'document.pdf',
+        FileManagerOpenCategory.audio => 'audio.mp3',
+        FileManagerOpenCategory.markdown => 'document.md',
+      };
 }

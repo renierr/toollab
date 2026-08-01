@@ -2207,5 +2207,19 @@
   "fileManagerRemoveConnectionTitle": "Verbindung entfernen?",
   "fileManagerRemoveConnectionMessage": "Gespeicherte Verbindung \"{name}\" und das gespeicherte Passwort entfernen?",
   "@fileManagerRemoveConnectionMessage": { "placeholders": { "name": { "type": "String" } } },
-  "fileManagerClearClipboard": "Zwischenablage leeren"
+  "fileManagerClearClipboard": "Zwischenablage leeren",
+  "fileManagerOpenChooser": "Jedes Mal fragen",
+  "fileManagerOpenImages": "Bilder öffnen mit",
+  "fileManagerOpenPdf": "PDFs öffnen mit",
+  "fileManagerOpenAudio": "Audio öffnen mit",
+  "fileManagerOpenMarkdown": "Markdown öffnen mit",
+  "fileManagerOpenWithSystem": "Mit Systemstandard öffnen",
+  "fileManagerDownloads": "Downloads",
+  "fileManagerGrantFileAccess": "Zugriff auf Gerätedateien erlauben",
+  "fileManagerDetails": "Details",
+  "fileManagerDetailSize": "Größe",
+  "fileManagerDetailModified": "Geändert",
+  "fileManagerDetailType": "Dateityp",
+  "fileManagerDetailPath": "Pfad",
+  "fileManagerFolder": "Ordner"
 }

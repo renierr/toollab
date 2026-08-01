@@ -18,6 +18,7 @@ class FileManagerTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameFileManager,
     descriptionL10n: (l10n) => l10n.toolDescFileManager,
+    androidProcessIsolated: true,
     stateProviders: () => [
       ChangeNotifierProvider<FileManagerState>(
         create: (_) => FileManagerState(),

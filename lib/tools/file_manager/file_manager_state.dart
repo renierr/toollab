@@ -22,11 +22,14 @@ enum FileManagerOperation { copy, move, delete }
 
 enum FileManagerSortField { name, modified, size }
 
+enum FileManagerOpenCategory { images, pdf, audio, markdown }
+
 class FileManagerState extends ChangeNotifier {
   static const _connectionsKey = 'connections';
   static const _favoritesKey = 'favorite_paths';
   static const _sortFieldKey = 'sort_field';
   static const _sortAscendingKey = 'sort_ascending';
+  static const _openToolPrefix = 'open_tool_';
   static const _secureStorage = FlutterSecureStorage();
 
   List<FileManagerEntry> _entries = [];
@@ -34,6 +37,8 @@ class FileManagerState extends ChangeNotifier {
   List<String> _favoritePaths = [];
   String _path = '';
   String _appFilesPath = '';
+  String _downloadsPath = '';
+  bool _hasAllFilesAccess = true;
   String? _error;
   bool _isLoading = false;
   FileManagerLocationType _locationType = FileManagerLocationType.local;
@@ -51,12 +56,17 @@ class FileManagerState extends ChangeNotifier {
   FileManagerOperation? _operation;
   FileManagerSortField _sortField = FileManagerSortField.name;
   bool _sortAscending = true;
+  final Map<FileManagerOpenCategory, String?> _openToolIds = {};
 
   List<FileManagerEntry> get entries => _entries;
   List<FileManagerConnection> get connections => _connections;
   List<String> get favoritePaths => _favoritePaths;
   String get path => _path;
   String get appFilesPath => _appFilesPath;
+  String get locationLabel => _displayPath(_path);
+  String get downloadsPath => _downloadsPath;
+  bool get requiresStorageAccess =>
+      FileManagerStorageAccess.isAndroid && !_hasAllFilesAccess;
   String? get error => _error;
   bool get isLoading => _isLoading;
   bool get isRemote => _locationType != FileManagerLocationType.local;
@@ -76,6 +86,37 @@ class FileManagerState extends ChangeNotifier {
   FileManagerOperation? get operation => _operation;
   FileManagerSortField get sortField => _sortField;
   bool get sortAscending => _sortAscending;
+  String? openToolId(FileManagerOpenCategory category) =>
+      _openToolIds[category];
+
+  String _displayPath(String path) {
+    if (isRemote) return path.isEmpty ? '/' : path;
+    final parts = path
+        .replaceAll('\\', '/')
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .toList();
+    const labels = {
+      'download': 'Downloads',
+      'downloads': 'Downloads',
+      'documents': 'Documents',
+      'images': 'Images',
+      'pictures': 'Images',
+      'music': 'Music',
+      'videos': 'Videos',
+      'movies': 'Videos',
+      'dcim': 'DCIM',
+    };
+    for (var index = 0; index < parts.length; index++) {
+      final label = labels[parts[index].toLowerCase()];
+      if (label != null) return [label, ...parts.skip(index + 1)].join('/');
+    }
+    return parts.isEmpty
+        ? '/'
+        : parts.length == 1
+        ? parts.first
+        : '${parts[parts.length - 2]}/${parts.last}';
+  }
 
   Future<void> initialize() async {
     final settings = await DatabaseService.instance.getAllSettings(
@@ -88,17 +129,35 @@ class FileManagerState extends ChangeNotifier {
       orElse: () => FileManagerSortField.name,
     );
     _sortAscending = settings[_sortAscendingKey] != 'false';
-    if (await FileManagerStorageAccess.hasAllFilesAccess()) {
+    for (final category in FileManagerOpenCategory.values) {
+      _openToolIds[category] = settings['$_openToolPrefix${category.name}'];
+    }
+    _hasAllFilesAccess = await FileManagerStorageAccess.hasAllFilesAccess();
+    if (_hasAllFilesAccess) {
       final sharedPath = await FileManagerStorageAccess.externalStoragePath();
       if (sharedPath != null) {
-        _appFilesPath = sharedPath;
-        await openLocal(sharedPath);
+        _appFilesPath = p.join(sharedPath, 'Documents');
+        _downloadsPath = p.join(sharedPath, 'Download');
+        await openLocal(_appFilesPath);
         return;
       }
     }
     final documents = await getApplicationDocumentsDirectory();
-    _appFilesPath = documents.path;
-    await openLocal(documents.path);
+    _appFilesPath = _userFolderPath('Documents') ?? documents.path;
+    _downloadsPath = _userFolderPath('Downloads') ?? documents.path;
+    await openLocal(_appFilesPath);
+  }
+
+  String? _userFolderPath(String folder) {
+    if (Platform.isWindows) {
+      final home = Platform.environment['USERPROFILE'];
+      return home == null ? null : p.join(home, folder);
+    }
+    if (Platform.isLinux) {
+      final home = Platform.environment['HOME'];
+      return home == null ? null : p.join(home, folder);
+    }
+    return null;
   }
 
   Future<void> openLocal(String directory) async {
@@ -621,6 +680,37 @@ class FileManagerState extends ChangeNotifier {
     );
     notifyListeners();
   }
+
+  Future<void> updateOpenTool(
+    FileManagerOpenCategory category,
+    String? toolId,
+  ) async {
+    _openToolIds[category] = toolId;
+    final key = '$_openToolPrefix${category.name}';
+    if (toolId == null) {
+      await DatabaseService.instance.deleteSetting(
+        FileManagerTool.config.id,
+        key,
+      );
+    } else {
+      await DatabaseService.instance.setSetting(
+        FileManagerTool.config.id,
+        key,
+        toolId,
+      );
+    }
+    notifyListeners();
+  }
+
+  FileManagerOpenCategory? openCategoryForMime(String mimeType) =>
+      switch (mimeType) {
+        _ when mimeType.startsWith('image/') => FileManagerOpenCategory.images,
+        'application/pdf' => FileManagerOpenCategory.pdf,
+        _ when mimeType.startsWith('audio/') => FileManagerOpenCategory.audio,
+        'text/markdown' ||
+        'text/x-markdown' => FileManagerOpenCategory.markdown,
+        _ => null,
+      };
 
   Future<void> saveConnection(
     FileManagerConnection profile,

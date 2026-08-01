@@ -10702,6 +10702,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear clipboard'**
   String get fileManagerClearClipboard;
+
+  /// No description provided for @fileManagerOpenChooser.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask every time'**
+  String get fileManagerOpenChooser;
+
+  /// No description provided for @fileManagerOpenImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Open images with'**
+  String get fileManagerOpenImages;
+
+  /// No description provided for @fileManagerOpenPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Open PDFs with'**
+  String get fileManagerOpenPdf;
+
+  /// No description provided for @fileManagerOpenAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Open audio with'**
+  String get fileManagerOpenAudio;
+
+  /// No description provided for @fileManagerOpenMarkdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Markdown with'**
+  String get fileManagerOpenMarkdown;
+
+  /// No description provided for @fileManagerOpenWithSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Open with system default'**
+  String get fileManagerOpenWithSystem;
+
+  /// No description provided for @fileManagerDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloads'**
+  String get fileManagerDownloads;
+
+  /// No description provided for @fileManagerGrantFileAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access to device files'**
+  String get fileManagerGrantFileAccess;
+
+  /// No description provided for @fileManagerDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get fileManagerDetails;
+
+  /// No description provided for @fileManagerDetailSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get fileManagerDetailSize;
+
+  /// No description provided for @fileManagerDetailModified.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified'**
+  String get fileManagerDetailModified;
+
+  /// No description provided for @fileManagerDetailType.
+  ///
+  /// In en, this message translates to:
+  /// **'File type'**
+  String get fileManagerDetailType;
+
+  /// No description provided for @fileManagerDetailPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get fileManagerDetailPath;
+
+  /// No description provided for @fileManagerFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder'**
+  String get fileManagerFolder;
 }
 
 class _AppLocalizationsDelegate

@@ -5888,4 +5888,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileManagerClearClipboard => 'Clear clipboard';
+
+  @override
+  String get fileManagerOpenChooser => 'Ask every time';
+
+  @override
+  String get fileManagerOpenImages => 'Open images with';
+
+  @override
+  String get fileManagerOpenPdf => 'Open PDFs with';
+
+  @override
+  String get fileManagerOpenAudio => 'Open audio with';
+
+  @override
+  String get fileManagerOpenMarkdown => 'Open Markdown with';
+
+  @override
+  String get fileManagerOpenWithSystem => 'Open with system default';
+
+  @override
+  String get fileManagerDownloads => 'Downloads';
+
+  @override
+  String get fileManagerGrantFileAccess => 'Allow access to device files';
+
+  @override
+  String get fileManagerDetails => 'Details';
+
+  @override
+  String get fileManagerDetailSize => 'Size';
+
+  @override
+  String get fileManagerDetailModified => 'Modified';
+
+  @override
+  String get fileManagerDetailType => 'File type';
+
+  @override
+  String get fileManagerDetailPath => 'Path';
+
+  @override
+  String get fileManagerFolder => 'Folder';
 }

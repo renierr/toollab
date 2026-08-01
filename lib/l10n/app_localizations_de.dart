@@ -5926,4 +5926,46 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileManagerClearClipboard => 'Zwischenablage leeren';
+
+  @override
+  String get fileManagerOpenChooser => 'Jedes Mal fragen';
+
+  @override
+  String get fileManagerOpenImages => 'Bilder öffnen mit';
+
+  @override
+  String get fileManagerOpenPdf => 'PDFs öffnen mit';
+
+  @override
+  String get fileManagerOpenAudio => 'Audio öffnen mit';
+
+  @override
+  String get fileManagerOpenMarkdown => 'Markdown öffnen mit';
+
+  @override
+  String get fileManagerOpenWithSystem => 'Mit Systemstandard öffnen';
+
+  @override
+  String get fileManagerDownloads => 'Downloads';
+
+  @override
+  String get fileManagerGrantFileAccess => 'Zugriff auf Gerätedateien erlauben';
+
+  @override
+  String get fileManagerDetails => 'Details';
+
+  @override
+  String get fileManagerDetailSize => 'Größe';
+
+  @override
+  String get fileManagerDetailModified => 'Geändert';
+
+  @override
+  String get fileManagerDetailType => 'Dateityp';
+
+  @override
+  String get fileManagerDetailPath => 'Pfad';
+
+  @override
+  String get fileManagerFolder => 'Ordner';
 }

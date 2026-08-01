@@ -8,6 +8,8 @@ import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 class FileManagerExplorer extends StatelessWidget {
   final FileManagerState state;
   final ValueChanged<FileManagerEntry> onOpen;
+  final ValueChanged<FileManagerEntry> onOpenWithSystem;
+  final ValueChanged<FileManagerEntry> onDetails;
   final ValueChanged<FileManagerEntry> onRename;
   final ValueChanged<FileManagerEntry> onDelete;
   final ValueChanged<FileManagerEntry> onCopy;
@@ -23,6 +25,8 @@ class FileManagerExplorer extends StatelessWidget {
     super.key,
     required this.state,
     required this.onOpen,
+    required this.onOpenWithSystem,
+    required this.onDetails,
     required this.onRename,
     required this.onDelete,
     required this.onCopy,
@@ -80,7 +84,7 @@ class FileManagerExplorer extends StatelessWidget {
                         ],
                       ),
                     Text(
-                      state.path.isEmpty ? '/' : state.path,
+                      state.locationLabel,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -173,6 +177,8 @@ class FileManagerExplorer extends StatelessWidget {
                   itemBuilder: (context, index) => _EntryTile(
                     entry: state.entries[index],
                     onOpen: onOpen,
+                    onOpenWithSystem: onOpenWithSystem,
+                    onDetails: onDetails,
                     onRename: onRename,
                     onDelete: onDelete,
                     onCopy: onCopy,
@@ -286,6 +292,8 @@ class _ClipboardHint extends StatelessWidget {
 class _EntryTile extends StatelessWidget {
   final FileManagerEntry entry;
   final ValueChanged<FileManagerEntry> onOpen;
+  final ValueChanged<FileManagerEntry> onOpenWithSystem;
+  final ValueChanged<FileManagerEntry> onDetails;
   final ValueChanged<FileManagerEntry> onRename;
   final ValueChanged<FileManagerEntry> onDelete;
   final ValueChanged<FileManagerEntry> onCopy;
@@ -297,6 +305,8 @@ class _EntryTile extends StatelessWidget {
   const _EntryTile({
     required this.entry,
     required this.onOpen,
+    required this.onOpenWithSystem,
+    required this.onDetails,
     required this.onRename,
     required this.onDelete,
     required this.onCopy,
@@ -310,7 +320,11 @@ class _EntryTile extends StatelessWidget {
   Widget build(BuildContext context) => ListTile(
     leading: Icon(_iconFor(entry), color: _colorFor(context, entry)),
     selected: selected,
-    title: Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+    title: Text(
+      entry.name,
+      maxLines: MediaQuery.sizeOf(context).width < 720 ? 2 : 1,
+      overflow: TextOverflow.ellipsis,
+    ),
     subtitle: Text(_metadata(entry)),
     trailing: selectionMode
         ? Checkbox(value: selected, onChanged: (_) => onToggleSelection(entry))
@@ -318,6 +332,10 @@ class _EntryTile extends StatelessWidget {
             onSelected: (value) {
               if (value == 'rename') {
                 onRename(entry);
+              } else if (value == 'details') {
+                onDetails(entry);
+              } else if (value == 'system') {
+                onOpenWithSystem(entry);
               } else if (value == 'copy') {
                 onCopy(entry);
               } else if (value == 'cut') {
@@ -327,6 +345,16 @@ class _EntryTile extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'details',
+                child: Text(AppLocalizations.of(context).fileManagerDetails),
+              ),
+              PopupMenuItem(
+                value: 'system',
+                child: Text(
+                  AppLocalizations.of(context).fileManagerOpenWithSystem,
+                ),
+              ),
               PopupMenuItem(
                 value: 'rename',
                 child: Text(AppLocalizations.of(context).commonRename),
