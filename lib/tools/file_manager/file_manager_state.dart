@@ -41,6 +41,8 @@ class FileManagerState extends ChangeNotifier {
   FTPConnect? _ftp;
   Smb2Pool? _smb;
   List<String> _clipboardPaths = [];
+  FileManagerLocationType? _clipboardLocationType;
+  FileManagerConnection? _clipboardConnection;
   bool _clipboardIsCut = false;
   final Set<String> _selectedPaths = {};
   bool _isSelectionMode = false;
@@ -318,6 +320,8 @@ class FileManagerState extends ChangeNotifier {
 
   void clearClipboard() {
     _clipboardPaths = [];
+    _clipboardLocationType = null;
+    _clipboardConnection = null;
     _clipboardIsCut = false;
     notifyListeners();
   }
@@ -327,6 +331,8 @@ class FileManagerState extends ChangeNotifier {
     _clipboardPaths = _selectedPaths.isEmpty
         ? [entry.path]
         : _selectedPaths.toList();
+    _clipboardLocationType = _locationType;
+    _clipboardConnection = _connection;
     _clipboardIsCut = false;
     notifyListeners();
   }
@@ -336,33 +342,88 @@ class FileManagerState extends ChangeNotifier {
     _clipboardPaths = _selectedPaths.isEmpty
         ? [entry.path]
         : _selectedPaths.toList();
+    _clipboardLocationType = _locationType;
+    _clipboardConnection = _connection;
     _clipboardIsCut = true;
     notifyListeners();
   }
 
   Future<void> paste() async {
     if (_clipboardPaths.isEmpty) return;
-    if (_locationType == FileManagerLocationType.local) {
+    if (_clipboardLocationType == FileManagerLocationType.local &&
+        _locationType == FileManagerLocationType.local) {
       await _runLocalOperation(
         _clipboardPaths,
         destination: _path,
         move: _clipboardIsCut,
       );
-    } else if (_locationType == FileManagerLocationType.smb) {
+    } else if (_clipboardLocationType == FileManagerLocationType.smb &&
+        _locationType == FileManagerLocationType.smb &&
+        _clipboardConnection?.id == _connection?.id) {
       await _pasteSmb();
+    } else if (_clipboardLocationType == FileManagerLocationType.local &&
+        _locationType == FileManagerLocationType.smb) {
+      await _pasteLocalToSmb();
+    } else if (_clipboardLocationType == FileManagerLocationType.smb &&
+        _locationType == FileManagerLocationType.local) {
+      await _pasteSmbToLocal();
     } else {
       return;
     }
     if (_clipboardIsCut && _error == null) {
-      _clipboardPaths = [];
-      _clipboardIsCut = false;
+      clearClipboard();
+    }
+  }
+
+  Future<void> _pasteLocalToSmb() async {
+    final smb = _smb;
+    if (smb == null) return;
+    await _runNetworkOperation(() async {
+      for (final source in _clipboardPaths) {
+        await _copyLocalEntityToSmb(
+          smb,
+          source,
+          _joinRemotePath(_path, p.basename(source)),
+        );
+        if (_clipboardIsCut) await _deleteLocalEntity(source);
+        _reportNetworkProgress();
+      }
+      await refresh();
+    });
+  }
+
+  Future<void> _pasteSmbToLocal() async {
+    final profile = _clipboardConnection;
+    if (profile == null) return;
+    final password = await _secureStorage.read(key: _passwordKey(profile.id));
+    final smb = await Smb2Pool.connect(
+      host: profile.host,
+      share: profile.share,
+      user: profile.username,
+      password: password ?? '',
+    );
+    try {
+      await _runNetworkOperation(() async {
+        for (final source in _clipboardPaths) {
+          await _copySmbEntityToLocal(
+            smb,
+            source,
+            p.join(_path, p.basename(source)),
+          );
+          if (_clipboardIsCut) await _deleteSmbEntity(smb, source);
+          _reportNetworkProgress();
+        }
+        await refresh();
+      });
+    } finally {
+      await smb.disconnect();
     }
   }
 
   Future<void> _pasteSmb() async {
     final smb = _smb;
     if (smb == null) return;
-    await _load(() async {
+    await _runNetworkOperation(() async {
       for (final source in _clipboardPaths) {
         final destination = _joinRemotePath(_path, p.basename(source));
         if (source == destination) continue;
@@ -371,9 +432,38 @@ class FileManagerState extends ChangeNotifier {
         } else {
           await _copySmbEntity(smb, source, destination);
         }
+        _reportNetworkProgress();
       }
       await refresh();
     });
+  }
+
+  Future<void> _runNetworkOperation(Future<void> Function() action) async {
+    _isLoading = true;
+    _error = null;
+    _operation = _clipboardIsCut
+        ? FileManagerOperation.move
+        : FileManagerOperation.copy;
+    _operationCompleted = 0;
+    _operationTotal = _clipboardPaths.length;
+    notifyListeners();
+    try {
+      await action();
+    } catch (error) {
+      _error = error.toString().replaceFirst('Exception: ', '');
+      debugPrint('[FileManagerState] $error');
+    } finally {
+      _isLoading = false;
+      _operation = null;
+      _operationCompleted = 0;
+      _operationTotal = 0;
+      notifyListeners();
+    }
+  }
+
+  void _reportNetworkProgress() {
+    _operationCompleted++;
+    notifyListeners();
   }
 
   Future<void> deleteSelected() async {
@@ -658,6 +748,69 @@ class FileManagerState extends ChangeNotifier {
       return;
     }
     await smb.writeFile(destination, await smb.readFile(source));
+  }
+
+  Future<void> _copyLocalEntityToSmb(
+    Smb2Pool smb,
+    String source,
+    String destination,
+  ) async {
+    final type = await FileSystemEntity.type(source, followLinks: false);
+    if (type == FileSystemEntityType.directory) {
+      await smb.mkdir(destination);
+      await for (final child in Directory(source).list(followLinks: false)) {
+        await _copyLocalEntityToSmb(
+          smb,
+          child.path,
+          _joinRemotePath(destination, p.basename(child.path)),
+        );
+      }
+      return;
+    }
+    await smb.writeFile(destination, await File(source).readAsBytes());
+  }
+
+  Future<void> _copySmbEntityToLocal(
+    Smb2Pool smb,
+    String source,
+    String destination,
+  ) async {
+    final stat = await smb.stat(source);
+    if (stat.isDirectory) {
+      await Directory(destination).create();
+      for (final entry in await smb.listDirectory(source)) {
+        if (entry.name == '.' || entry.name == '..') continue;
+        await _copySmbEntityToLocal(
+          smb,
+          _joinRemotePath(source, entry.name),
+          p.join(destination, entry.name),
+        );
+      }
+      return;
+    }
+    await File(destination).writeAsBytes(await smb.readFile(source));
+  }
+
+  Future<void> _deleteLocalEntity(String path) async {
+    final type = await FileSystemEntity.type(path, followLinks: false);
+    if (type == FileSystemEntityType.directory) {
+      await Directory(path).delete(recursive: true);
+    } else {
+      await File(path).delete();
+    }
+  }
+
+  Future<void> _deleteSmbEntity(Smb2Pool smb, String path) async {
+    final stat = await smb.stat(path);
+    if (stat.isDirectory) {
+      for (final entry in await smb.listDirectory(path)) {
+        if (entry.name == '.' || entry.name == '..') continue;
+        await _deleteSmbEntity(smb, _joinRemotePath(path, entry.name));
+      }
+      await smb.rmdir(path);
+    } else {
+      await smb.deleteFile(path);
+    }
   }
 
   Future<void> _persistConnections() => DatabaseService.instance.setSetting(

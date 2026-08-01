@@ -177,7 +177,8 @@ class FileManagerExplorer extends StatelessWidget {
                     onDelete: onDelete,
                     onCopy: onCopy,
                     onCut: onCut,
-                    showClipboardActions: !state.isRemote,
+                    showClipboardActions:
+                        state.connection?.protocol != FileManagerProtocol.ftp,
                     selectionMode: state.isSelectionMode,
                     selected: state.selectedPaths.contains(
                       state.entries[index].path,
