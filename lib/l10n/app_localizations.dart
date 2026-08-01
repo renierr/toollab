@@ -10786,6 +10786,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Folder'**
   String get fileManagerFolder;
+
+  /// No description provided for @fileManagerStartupFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Startup folder'**
+  String get fileManagerStartupFolder;
+
+  /// No description provided for @fileManagerCurrentFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Current folder'**
+  String get fileManagerCurrentFolder;
+
+  /// No description provided for @fileManagerSorting.
+  ///
+  /// In en, this message translates to:
+  /// **'Sorting'**
+  String get fileManagerSorting;
+
+  /// No description provided for @fileManagerOpenWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Open with'**
+  String get fileManagerOpenWith;
 }
 
 class _AppLocalizationsDelegate

@@ -29,6 +29,7 @@ class FileManagerState extends ChangeNotifier {
   static const _favoritesKey = 'favorite_paths';
   static const _sortFieldKey = 'sort_field';
   static const _sortAscendingKey = 'sort_ascending';
+  static const _startupPathKey = 'startup_path';
   static const _openToolPrefix = 'open_tool_';
   static const _secureStorage = FlutterSecureStorage();
 
@@ -38,6 +39,7 @@ class FileManagerState extends ChangeNotifier {
   String _path = '';
   String _appFilesPath = '';
   String _downloadsPath = '';
+  String? _startupPath;
   bool _hasAllFilesAccess = true;
   String? _error;
   bool _isLoading = false;
@@ -65,6 +67,7 @@ class FileManagerState extends ChangeNotifier {
   String get appFilesPath => _appFilesPath;
   String get locationLabel => _displayPath(_path);
   String get downloadsPath => _downloadsPath;
+  String? get startupPath => _startupPath;
   bool get requiresStorageAccess =>
       FileManagerStorageAccess.isAndroid && !_hasAllFilesAccess;
   String? get error => _error;
@@ -140,6 +143,7 @@ class FileManagerState extends ChangeNotifier {
       orElse: () => FileManagerSortField.name,
     );
     _sortAscending = settings[_sortAscendingKey] != 'false';
+    _startupPath = settings[_startupPathKey];
     for (final category in FileManagerOpenCategory.values) {
       _openToolIds[category] = settings['$_openToolPrefix${category.name}'];
     }
@@ -149,14 +153,14 @@ class FileManagerState extends ChangeNotifier {
       if (sharedPath != null) {
         _appFilesPath = p.join(sharedPath, 'Documents');
         _downloadsPath = p.join(sharedPath, 'Download');
-        await openLocal(_appFilesPath);
+        await openLocal(await _resolvedStartupPath());
         return;
       }
     }
     final documents = await getApplicationDocumentsDirectory();
     _appFilesPath = _userFolderPath('Documents') ?? documents.path;
     _downloadsPath = _userFolderPath('Downloads') ?? documents.path;
-    await openLocal(_appFilesPath);
+    await openLocal(await _resolvedStartupPath());
   }
 
   String? _userFolderPath(String folder) {
@@ -169,6 +173,14 @@ class FileManagerState extends ChangeNotifier {
       return home == null ? null : p.join(home, folder);
     }
     return null;
+  }
+
+  Future<String> _resolvedStartupPath() async {
+    final startupPath = _startupPath;
+    if (startupPath != null && await Directory(startupPath).exists()) {
+      return startupPath;
+    }
+    return _appFilesPath;
   }
 
   Future<void> openLocal(String directory) async {
@@ -690,6 +702,23 @@ class FileManagerState extends ChangeNotifier {
       _sortAscendingKey,
       ascending.toString(),
     );
+    notifyListeners();
+  }
+
+  Future<void> updateStartupPath(String? path) async {
+    _startupPath = path;
+    if (path == null) {
+      await DatabaseService.instance.deleteSetting(
+        FileManagerTool.config.id,
+        _startupPathKey,
+      );
+    } else {
+      await DatabaseService.instance.setSetting(
+        FileManagerTool.config.id,
+        _startupPathKey,
+        path,
+      );
+    }
     notifyListeners();
   }
 

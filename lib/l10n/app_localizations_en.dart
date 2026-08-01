@@ -5930,4 +5930,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileManagerFolder => 'Folder';
+
+  @override
+  String get fileManagerStartupFolder => 'Startup folder';
+
+  @override
+  String get fileManagerCurrentFolder => 'Current folder';
+
+  @override
+  String get fileManagerSorting => 'Sorting';
+
+  @override
+  String get fileManagerOpenWith => 'Open with';
 }

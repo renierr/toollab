@@ -3062,5 +3062,9 @@
   "fileManagerDetailModified": "Modified",
   "fileManagerDetailType": "File type",
   "fileManagerDetailPath": "Path",
-  "fileManagerFolder": "Folder"
+  "fileManagerFolder": "Folder",
+  "fileManagerStartupFolder": "Startup folder",
+  "fileManagerCurrentFolder": "Current folder",
+  "fileManagerSorting": "Sorting",
+  "fileManagerOpenWith": "Open with"
 }

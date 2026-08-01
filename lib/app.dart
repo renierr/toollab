@@ -21,6 +21,7 @@ import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
 import 'package:tool_lab/tools/gps_location_store/gps_info_page.dart';
 import 'package:tool_lab/tools/treadmill_control/treadmill_history_page.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_settings_page.dart';
 
 final _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -28,6 +29,11 @@ final _router = GoRouter(
   navigatorKey: _navigatorKey,
   initialLocation: '/',
   routes: [
+    GoRoute(
+      path: '/file-manager/settings',
+      name: 'file-manager-settings',
+      builder: (_, _) => const FileManagerSettingsPage(),
+    ),
     GoRoute(
       path: '/',
       name: 'overview',

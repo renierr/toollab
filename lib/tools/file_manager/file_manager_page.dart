@@ -8,7 +8,6 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
@@ -18,7 +17,6 @@ import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dial
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_details_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
-import 'package:tool_lab/tools/file_manager/widgets/file_manager_settings_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -234,35 +232,7 @@ class _FileManagerPageState extends State<FileManagerPage>
   }
 
   Future<void> _showSettings() async {
-    final state = context.read<FileManagerState>();
-    final result =
-        await showDialog<
-          (FileManagerSortField, bool, Map<FileManagerOpenCategory, String?>)
-        >(
-          context: context,
-          builder: (_) => FileManagerSettingsDialog(
-            initialField: state.sortField,
-            initialAscending: state.sortAscending,
-            initialOpenToolIds: {
-              for (final category in FileManagerOpenCategory.values)
-                category: state.openToolId(category),
-            },
-            matchingTools: (category) =>
-                SharingService.instance.getMatchingTools(
-                  SharedFile(
-                    path: '',
-                    name: _exampleFileName(category),
-                    mimeType: _mimeTypeForCategory(category),
-                  ),
-                ),
-          ),
-        );
-    if (result != null && mounted) {
-      await state.updateSort(result.$1, result.$2);
-      for (final preference in result.$3.entries) {
-        await state.updateOpenTool(preference.key, preference.value);
-      }
-    }
+    await context.push('${FileManagerTool.config.route}/settings');
   }
 
   @override
@@ -402,20 +372,4 @@ class _FileManagerPageState extends State<FileManagerPage>
       ),
     );
   }
-
-  String _mimeTypeForCategory(FileManagerOpenCategory category) =>
-      switch (category) {
-        FileManagerOpenCategory.images => 'image/png',
-        FileManagerOpenCategory.pdf => 'application/pdf',
-        FileManagerOpenCategory.audio => 'audio/mpeg',
-        FileManagerOpenCategory.markdown => 'text/markdown',
-      };
-
-  String _exampleFileName(FileManagerOpenCategory category) =>
-      switch (category) {
-        FileManagerOpenCategory.images => 'image.png',
-        FileManagerOpenCategory.pdf => 'document.pdf',
-        FileManagerOpenCategory.audio => 'audio.mp3',
-        FileManagerOpenCategory.markdown => 'document.md',
-      };
 }

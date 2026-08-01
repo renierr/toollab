@@ -2221,5 +2221,9 @@
   "fileManagerDetailModified": "Geändert",
   "fileManagerDetailType": "Dateityp",
   "fileManagerDetailPath": "Pfad",
-  "fileManagerFolder": "Ordner"
+  "fileManagerFolder": "Ordner",
+  "fileManagerStartupFolder": "Startordner",
+  "fileManagerCurrentFolder": "Aktueller Ordner",
+  "fileManagerSorting": "Sortierung",
+  "fileManagerOpenWith": "Öffnen mit"
 }
