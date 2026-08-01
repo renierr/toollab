@@ -279,10 +279,6 @@ class _ClipboardHint extends StatelessWidget {
           Expanded(
             child: Text(text, style: Theme.of(context).textTheme.bodySmall),
           ),
-          Text(
-            l10n.fileManagerClearClipboard,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
         ],
       ),
     );
