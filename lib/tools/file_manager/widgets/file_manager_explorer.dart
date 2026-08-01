@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 
@@ -14,6 +15,8 @@ class FileManagerExplorer extends StatelessWidget {
   final VoidCallback onGoUp;
   final VoidCallback onToggleFavorite;
   final ValueChanged<FileManagerEntry> onToggleSelection;
+  final VoidCallback onEnterSelectionMode;
+  final VoidCallback onSelectAll;
   final VoidCallback onClearSelection;
   final VoidCallback onDeleteSelection;
   const FileManagerExplorer({
@@ -27,6 +30,8 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onGoUp,
     required this.onToggleFavorite,
     required this.onToggleSelection,
+    required this.onEnterSelectionMode,
+    required this.onSelectAll,
     required this.onClearSelection,
     required this.onDeleteSelection,
   });
@@ -49,10 +54,37 @@ class FileManagerExplorer extends StatelessWidget {
                 icon: const Icon(Icons.arrow_upward),
               ),
               Expanded(
-                child: Text(
-                  state.path.isEmpty ? '/' : state.path,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (state.isRemote)
+                      Row(
+                        children: [
+                          Icon(
+                            state.connection?.protocol ==
+                                    FileManagerProtocol.ftp
+                                ? Icons.cloud_outlined
+                                : Icons.folder_shared_outlined,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              state.connection?.label ?? '',
+                              style: Theme.of(context).textTheme.labelSmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    Text(
+                      state.path.isEmpty ? '/' : state.path,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
               if (!state.isRemote)
@@ -65,10 +97,15 @@ class FileManagerExplorer extends StatelessWidget {
                         : Icons.star_outline,
                   ),
                 ),
+              IconButton(
+                tooltip: l10n.fileManagerSelect,
+                onPressed: onEnterSelectionMode,
+                icon: const Icon(Icons.checklist_outlined),
+              ),
             ],
           ),
         ),
-        if (state.hasSelection)
+        if (state.isSelectionMode)
           Material(
             color: Theme.of(context).colorScheme.secondaryContainer,
             child: Row(
@@ -84,33 +121,42 @@ class FileManagerExplorer extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  tooltip: l10n.fileManagerSelectAll,
+                  onPressed: onSelectAll,
+                  icon: const Icon(Icons.select_all),
+                ),
+                IconButton(
                   tooltip: l10n.commonCopy,
-                  onPressed: () => onCopy(
-                    state.entries.firstWhere(
-                      (entry) => state.selectedPaths.contains(entry.path),
-                    ),
-                  ),
+                  onPressed: state.hasSelection
+                      ? () => onCopy(
+                          state.entries.firstWhere(
+                            (entry) => state.selectedPaths.contains(entry.path),
+                          ),
+                        )
+                      : null,
                   icon: const Icon(Icons.copy_outlined),
                 ),
                 IconButton(
                   tooltip: l10n.fileManagerCut,
-                  onPressed: () => onCut(
-                    state.entries.firstWhere(
-                      (entry) => state.selectedPaths.contains(entry.path),
-                    ),
-                  ),
+                  onPressed: state.hasSelection
+                      ? () => onCut(
+                          state.entries.firstWhere(
+                            (entry) => state.selectedPaths.contains(entry.path),
+                          ),
+                        )
+                      : null,
                   icon: const Icon(Icons.drive_file_move_outline),
                 ),
                 IconButton(
                   tooltip: l10n.commonDelete,
-                  onPressed: onDeleteSelection,
+                  onPressed: state.hasSelection ? onDeleteSelection : null,
                   icon: const Icon(Icons.delete_outline),
                 ),
               ],
             ),
           ),
-        if (state.isOperating)
-          LinearProgressIndicator(value: state.operationProgress),
+        if (state.isOperating) _OperationProgress(state: state),
+        if (state.canPaste) _ClipboardHint(state: state),
         if (state.error != null)
           Padding(
             padding: const EdgeInsets.all(12),
@@ -132,6 +178,7 @@ class FileManagerExplorer extends StatelessWidget {
                     onCopy: onCopy,
                     onCut: onCut,
                     showClipboardActions: !state.isRemote,
+                    selectionMode: state.isSelectionMode,
                     selected: state.selectedPaths.contains(
                       state.entries[index].path,
                     ),
@@ -144,6 +191,97 @@ class FileManagerExplorer extends StatelessWidget {
   }
 }
 
+class _OperationProgress extends StatelessWidget {
+  final FileManagerState state;
+  const _OperationProgress({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final progress = state.operationProgress ?? 0;
+    final label = switch (state.operation) {
+      FileManagerOperation.copy => l10n.fileManagerCopying,
+      FileManagerOperation.move => l10n.fileManagerMoving,
+      FileManagerOperation.delete => l10n.fileManagerDeleting,
+      null => l10n.commonLoading,
+    };
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.sync),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              Text('${(progress * 100).round()}%'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(value: progress),
+          const SizedBox(height: 6),
+          Text(
+            l10n.fileManagerOperationProgress(
+              state.operationCompleted,
+              state.operationTotal,
+            ),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          Text(
+            l10n.fileManagerOperationBackground,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ClipboardHint extends StatelessWidget {
+  final FileManagerState state;
+  const _ClipboardHint({required this.state});
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final text = state.clipboardIsCut
+        ? l10n.fileManagerMoveBuffer(state.clipboardItemCount)
+        : l10n.fileManagerCopyBuffer(state.clipboardItemCount);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        children: [
+          Icon(
+            state.clipboardIsCut
+                ? Icons.drive_file_move_outline
+                : Icons.copy_outlined,
+            size: 16,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(text, style: Theme.of(context).textTheme.bodySmall),
+          ),
+          Text(
+            l10n.fileManagerClearClipboard,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EntryTile extends StatelessWidget {
   final FileManagerEntry entry;
   final ValueChanged<FileManagerEntry> onOpen;
@@ -152,6 +290,7 @@ class _EntryTile extends StatelessWidget {
   final ValueChanged<FileManagerEntry> onCopy;
   final ValueChanged<FileManagerEntry> onCut;
   final bool showClipboardActions;
+  final bool selectionMode;
   final bool selected;
   final ValueChanged<FileManagerEntry> onToggleSelection;
   const _EntryTile({
@@ -162,6 +301,7 @@ class _EntryTile extends StatelessWidget {
     required this.onCopy,
     required this.onCut,
     required this.showClipboardActions,
+    required this.selectionMode,
     required this.selected,
     required this.onToggleSelection,
   });
@@ -170,43 +310,43 @@ class _EntryTile extends StatelessWidget {
     leading: Icon(_iconFor(entry), color: _colorFor(context, entry)),
     selected: selected,
     title: Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-    subtitle: entry.isDirectory
-        ? null
-        : Text(entry.size == null ? '' : FormatHelper.fileSize(entry.size!)),
-    trailing: PopupMenuButton<String>(
-      onSelected: (value) {
-        if (value == 'rename') {
-          onRename(entry);
-        } else if (value == 'copy') {
-          onCopy(entry);
-        } else if (value == 'cut') {
-          onCut(entry);
-        } else {
-          onDelete(entry);
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'rename',
-          child: Text(AppLocalizations.of(context).commonRename),
-        ),
-        if (showClipboardActions)
-          PopupMenuItem(
-            value: 'copy',
-            child: Text(AppLocalizations.of(context).commonCopy),
+    subtitle: Text(_metadata(entry)),
+    trailing: selectionMode
+        ? Checkbox(value: selected, onChanged: (_) => onToggleSelection(entry))
+        : PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'rename') {
+                onRename(entry);
+              } else if (value == 'copy') {
+                onCopy(entry);
+              } else if (value == 'cut') {
+                onCut(entry);
+              } else {
+                onDelete(entry);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'rename',
+                child: Text(AppLocalizations.of(context).commonRename),
+              ),
+              if (showClipboardActions)
+                PopupMenuItem(
+                  value: 'copy',
+                  child: Text(AppLocalizations.of(context).commonCopy),
+                ),
+              if (showClipboardActions)
+                PopupMenuItem(
+                  value: 'cut',
+                  child: Text(AppLocalizations.of(context).fileManagerCut),
+                ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Text(AppLocalizations.of(context).commonDelete),
+              ),
+            ],
           ),
-        if (showClipboardActions)
-          PopupMenuItem(
-            value: 'cut',
-            child: Text(AppLocalizations.of(context).fileManagerCut),
-          ),
-        PopupMenuItem(
-          value: 'delete',
-          child: Text(AppLocalizations.of(context).commonDelete),
-        ),
-      ],
-    ),
-    onTap: () => onOpen(entry),
+    onTap: () => selectionMode ? onToggleSelection(entry) : onOpen(entry),
     onLongPress: () => onToggleSelection(entry),
   );
 
@@ -236,6 +376,17 @@ class _EntryTile extends StatelessWidget {
       'yaml' => Icons.code_outlined,
       _ => Icons.insert_drive_file_outlined,
     };
+  }
+
+  String _metadata(FileManagerEntry entry) {
+    final parts = <String>[];
+    if (!entry.isDirectory && entry.size != null) {
+      parts.add(FormatHelper.fileSize(entry.size!));
+    }
+    if (entry.modified != null) {
+      parts.add(FormatHelper.dateTime(entry.modified!));
+    }
+    return parts.join('  -  ');
   }
 
   Color _colorFor(BuildContext context, FileManagerEntry entry) {

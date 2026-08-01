@@ -5825,4 +5825,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String fileManagerSelected(int count) {
     return '$count selected';
   }
+
+  @override
+  String get fileManagerSelect => 'Select files';
+
+  @override
+  String get fileManagerSelectAll => 'Select all';
+
+  @override
+  String get fileManagerCopying => 'Copying files';
+
+  @override
+  String get fileManagerMoving => 'Moving files';
+
+  @override
+  String get fileManagerDeleting => 'Deleting files';
+
+  @override
+  String fileManagerOperationProgress(int completed, int total) {
+    return '$completed of $total files processed';
+  }
+
+  @override
+  String get fileManagerOperationBackground =>
+      'Continues while ToolLab is in the background';
+
+  @override
+  String fileManagerMoveBuffer(int count) {
+    return '$count item(s) ready to move';
+  }
+
+  @override
+  String fileManagerCopyBuffer(int count) {
+    return '$count item(s) ready to copy';
+  }
+
+  @override
+  String get fileManagerSettings => 'File Manager settings';
+
+  @override
+  String get fileManagerSortBy => 'Sort files by';
+
+  @override
+  String get fileManagerSortName => 'Name';
+
+  @override
+  String get fileManagerSortDate => 'Modified date';
+
+  @override
+  String get fileManagerSortSize => 'Size';
+
+  @override
+  String get fileManagerSortAscending => 'Ascending order';
+
+  @override
+  String get fileManagerRemoveConnectionTitle => 'Remove connection?';
+
+  @override
+  String fileManagerRemoveConnectionMessage(String name) {
+    return 'Remove saved connection \"$name\" and its stored password?';
+  }
+
+  @override
+  String get fileManagerClearClipboard => 'Clear clipboard';
 }

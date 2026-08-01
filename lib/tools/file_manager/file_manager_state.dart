@@ -18,15 +18,22 @@ import 'package:tool_lab/tools/file_manager/file_manager_operation_worker.dart';
 
 enum FileManagerLocationType { local, ftp, smb }
 
+enum FileManagerOperation { copy, move, delete }
+
+enum FileManagerSortField { name, modified, size }
+
 class FileManagerState extends ChangeNotifier {
   static const _connectionsKey = 'connections';
   static const _favoritesKey = 'favorite_paths';
+  static const _sortFieldKey = 'sort_field';
+  static const _sortAscendingKey = 'sort_ascending';
   static const _secureStorage = FlutterSecureStorage();
 
   List<FileManagerEntry> _entries = [];
   List<FileManagerConnection> _connections = [];
   List<String> _favoritePaths = [];
   String _path = '';
+  String _appFilesPath = '';
   String? _error;
   bool _isLoading = false;
   FileManagerLocationType _locationType = FileManagerLocationType.local;
@@ -36,13 +43,18 @@ class FileManagerState extends ChangeNotifier {
   List<String> _clipboardPaths = [];
   bool _clipboardIsCut = false;
   final Set<String> _selectedPaths = {};
+  bool _isSelectionMode = false;
   int _operationCompleted = 0;
   int _operationTotal = 0;
+  FileManagerOperation? _operation;
+  FileManagerSortField _sortField = FileManagerSortField.name;
+  bool _sortAscending = true;
 
   List<FileManagerEntry> get entries => _entries;
   List<FileManagerConnection> get connections => _connections;
   List<String> get favoritePaths => _favoritePaths;
   String get path => _path;
+  String get appFilesPath => _appFilesPath;
   String? get error => _error;
   bool get isLoading => _isLoading;
   bool get isRemote => _locationType != FileManagerLocationType.local;
@@ -50,11 +62,18 @@ class FileManagerState extends ChangeNotifier {
   FileManagerConnection? get connection => _connection;
   bool get canPaste => _clipboardPaths.isNotEmpty;
   bool get clipboardIsCut => _clipboardIsCut;
+  int get clipboardItemCount => _clipboardPaths.length;
   Set<String> get selectedPaths => Set.unmodifiable(_selectedPaths);
   bool get hasSelection => _selectedPaths.isNotEmpty;
+  bool get isSelectionMode => _isSelectionMode;
   bool get isOperating => _operationTotal > 0;
   double? get operationProgress =>
       _operationTotal == 0 ? null : _operationCompleted / _operationTotal;
+  int get operationCompleted => _operationCompleted;
+  int get operationTotal => _operationTotal;
+  FileManagerOperation? get operation => _operation;
+  FileManagerSortField get sortField => _sortField;
+  bool get sortAscending => _sortAscending;
 
   Future<void> initialize() async {
     final settings = await DatabaseService.instance.getAllSettings(
@@ -62,14 +81,21 @@ class FileManagerState extends ChangeNotifier {
     );
     _connections = _decodeConnections(settings[_connectionsKey]);
     _favoritePaths = _decodeStrings(settings[_favoritesKey]);
+    _sortField = FileManagerSortField.values.firstWhere(
+      (field) => field.name == settings[_sortFieldKey],
+      orElse: () => FileManagerSortField.name,
+    );
+    _sortAscending = settings[_sortAscendingKey] != 'false';
     if (await FileManagerStorageAccess.hasAllFilesAccess()) {
       final sharedPath = await FileManagerStorageAccess.externalStoragePath();
       if (sharedPath != null) {
+        _appFilesPath = sharedPath;
         await openLocal(sharedPath);
         return;
       }
     }
     final documents = await getApplicationDocumentsDirectory();
+    _appFilesPath = documents.path;
     await openLocal(documents.path);
   }
 
@@ -80,18 +106,7 @@ class FileManagerState extends ChangeNotifier {
     await _load(() async {
       final dir = Directory(directory);
       final entities = await dir.list(followLinks: false).toList();
-      _entries = await Future.wait(
-        entities.map((entity) async {
-          final stat = await entity.stat();
-          return FileManagerEntry(
-            name: p.basename(entity.path),
-            path: entity.path,
-            isDirectory: entity is Directory,
-            size: entity is File ? stat.size : null,
-            modified: stat.modified,
-          );
-        }),
-      );
+      _entries = await Future.wait(entities.map(_localEntryFromEntity));
       _entries.sort(_compareEntries);
       _path = dir.path;
     });
@@ -277,17 +292,38 @@ class FileManagerState extends ChangeNotifier {
   }
 
   void toggleSelection(FileManagerEntry entry) {
+    _isSelectionMode = true;
     if (!_selectedPaths.add(entry.path)) _selectedPaths.remove(entry.path);
+    notifyListeners();
+  }
+
+  void enterSelectionMode() {
+    _isSelectionMode = true;
+    notifyListeners();
+  }
+
+  void selectAll() {
+    _isSelectionMode = true;
+    _selectedPaths
+      ..clear()
+      ..addAll(_entries.map((entry) => entry.path));
     notifyListeners();
   }
 
   void clearSelection() {
     _selectedPaths.clear();
+    _isSelectionMode = false;
+    notifyListeners();
+  }
+
+  void clearClipboard() {
+    _clipboardPaths = [];
+    _clipboardIsCut = false;
     notifyListeners();
   }
 
   void copy(FileManagerEntry entry) {
-    if (_locationType != FileManagerLocationType.local) return;
+    if (_locationType == FileManagerLocationType.ftp) return;
     _clipboardPaths = _selectedPaths.isEmpty
         ? [entry.path]
         : _selectedPaths.toList();
@@ -296,7 +332,7 @@ class FileManagerState extends ChangeNotifier {
   }
 
   void cut(FileManagerEntry entry) {
-    if (_locationType != FileManagerLocationType.local) return;
+    if (_locationType == FileManagerLocationType.ftp) return;
     _clipboardPaths = _selectedPaths.isEmpty
         ? [entry.path]
         : _selectedPaths.toList();
@@ -305,19 +341,39 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> paste() async {
-    if (_clipboardPaths.isEmpty ||
-        _locationType != FileManagerLocationType.local) {
+    if (_clipboardPaths.isEmpty) return;
+    if (_locationType == FileManagerLocationType.local) {
+      await _runLocalOperation(
+        _clipboardPaths,
+        destination: _path,
+        move: _clipboardIsCut,
+      );
+    } else if (_locationType == FileManagerLocationType.smb) {
+      await _pasteSmb();
+    } else {
       return;
     }
-    await _runLocalOperation(
-      _clipboardPaths,
-      destination: _path,
-      move: _clipboardIsCut,
-    );
     if (_clipboardIsCut && _error == null) {
       _clipboardPaths = [];
       _clipboardIsCut = false;
     }
+  }
+
+  Future<void> _pasteSmb() async {
+    final smb = _smb;
+    if (smb == null) return;
+    await _load(() async {
+      for (final source in _clipboardPaths) {
+        final destination = _joinRemotePath(_path, p.basename(source));
+        if (source == destination) continue;
+        if (_clipboardIsCut) {
+          await smb.rename(source, destination);
+        } else {
+          await _copySmbEntity(smb, source, destination);
+        }
+      }
+      await refresh();
+    });
   }
 
   Future<void> deleteSelected() async {
@@ -360,6 +416,11 @@ class FileManagerState extends ChangeNotifier {
     _error = null;
     _operationCompleted = 0;
     _operationTotal = 1;
+    _operation = delete
+        ? FileManagerOperation.delete
+        : move
+        ? FileManagerOperation.move
+        : FileManagerOperation.copy;
     notifyListeners();
     final lease = await ForegroundRuntimeService.acquire(
       title: 'File Manager',
@@ -408,6 +469,7 @@ class FileManagerState extends ChangeNotifier {
       _isLoading = false;
       _operationCompleted = 0;
       _operationTotal = 0;
+      _operation = null;
       await lease.release();
       notifyListeners();
     }
@@ -435,6 +497,23 @@ class FileManagerState extends ChangeNotifier {
       FileManagerTool.config.id,
       _favoritesKey,
       jsonEncode(_favoritePaths),
+    );
+    notifyListeners();
+  }
+
+  Future<void> updateSort(FileManagerSortField field, bool ascending) async {
+    _sortField = field;
+    _sortAscending = ascending;
+    _entries.sort(_compareEntries);
+    await DatabaseService.instance.setSetting(
+      FileManagerTool.config.id,
+      _sortFieldKey,
+      field.name,
+    );
+    await DatabaseService.instance.setSetting(
+      FileManagerTool.config.id,
+      _sortAscendingKey,
+      ascending.toString(),
     );
     notifyListeners();
   }
@@ -525,12 +604,60 @@ class FileManagerState extends ChangeNotifier {
     }
   }
 
+  Future<FileManagerEntry> _localEntryFromEntity(
+    FileSystemEntity entity,
+  ) async {
+    final stat = await entity.stat();
+    var isDirectory = entity is Directory;
+    var entryPath = entity.path;
+    if (entity is Directory || entity is Link) {
+      try {
+        final resolvedPath = await entity.resolveSymbolicLinks();
+        if (await Directory(resolvedPath).exists()) {
+          isDirectory = true;
+          entryPath = resolvedPath;
+        }
+      } catch (_) {
+        // Some Windows compatibility junctions intentionally deny resolution.
+      }
+    }
+    return FileManagerEntry(
+      name: p.basename(entity.path),
+      path: entryPath,
+      isDirectory: isDirectory,
+      size: isDirectory ? null : stat.size,
+      modified: stat.modified,
+    );
+  }
+
   Future<void> _safeDisconnectFtp(FTPConnect ftp) async {
     try {
       await ftp.disconnect();
     } catch (error) {
       debugPrint('[FileManagerState] FTP disconnect failed: $error');
     }
+  }
+
+  Future<void> _copySmbEntity(
+    Smb2Pool smb,
+    String source,
+    String destination,
+  ) async {
+    final stat = await smb.stat(source);
+    if (stat.isDirectory) {
+      await smb.mkdir(destination);
+      final entries = await smb.listDirectory(source);
+      for (final entry in entries) {
+        if (entry.name == '.' || entry.name == '..') continue;
+        await _copySmbEntity(
+          smb,
+          _joinRemotePath(source, entry.name),
+          _joinRemotePath(destination, entry.name),
+        );
+      }
+      return;
+    }
+    await smb.writeFile(destination, await smb.readFile(source));
   }
 
   Future<void> _persistConnections() => DatabaseService.instance.setSetting(
@@ -564,7 +691,16 @@ class FileManagerState extends ChangeNotifier {
 
   int _compareEntries(FileManagerEntry a, FileManagerEntry b) {
     if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
-    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    final comparison = switch (_sortField) {
+      FileManagerSortField.name => a.name.toLowerCase().compareTo(
+        b.name.toLowerCase(),
+      ),
+      FileManagerSortField.modified => (a.modified ?? DateTime(0)).compareTo(
+        b.modified ?? DateTime(0),
+      ),
+      FileManagerSortField.size => (a.size ?? 0).compareTo(b.size ?? 0),
+    };
+    return _sortAscending ? comparison : -comparison;
   }
 
   String _joinRemotePath(String parent, String name) =>

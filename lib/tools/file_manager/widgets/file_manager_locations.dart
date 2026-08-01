@@ -44,7 +44,7 @@ class FileManagerLocations extends StatelessWidget {
     _LocationTile(
       icon: Icons.folder_outlined,
       label: l10n.fileManagerAppFiles,
-      onTap: () => onOpenLocal(state.path),
+      onTap: () => onOpenLocal(state.appFilesPath),
     ),
     ...state.favoritePaths.map(
       (path) => _LocationTile(
@@ -77,7 +77,7 @@ class FileManagerLocations extends StatelessWidget {
     _LocationChip(
       icon: Icons.folder_outlined,
       label: l10n.fileManagerAppFiles,
-      onTap: () => onOpenLocal(state.path),
+      onTap: () => onOpenLocal(state.appFilesPath),
     ),
     ...state.favoritePaths.map(
       (path) => _LocationChip(

@@ -10594,6 +10594,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} selected'**
   String fileManagerSelected(int count);
+
+  /// No description provided for @fileManagerSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select files'**
+  String get fileManagerSelect;
+
+  /// No description provided for @fileManagerSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get fileManagerSelectAll;
+
+  /// No description provided for @fileManagerCopying.
+  ///
+  /// In en, this message translates to:
+  /// **'Copying files'**
+  String get fileManagerCopying;
+
+  /// No description provided for @fileManagerMoving.
+  ///
+  /// In en, this message translates to:
+  /// **'Moving files'**
+  String get fileManagerMoving;
+
+  /// No description provided for @fileManagerDeleting.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting files'**
+  String get fileManagerDeleting;
+
+  /// No description provided for @fileManagerOperationProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} of {total} files processed'**
+  String fileManagerOperationProgress(int completed, int total);
+
+  /// No description provided for @fileManagerOperationBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Continues while ToolLab is in the background'**
+  String get fileManagerOperationBackground;
+
+  /// No description provided for @fileManagerMoveBuffer.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} item(s) ready to move'**
+  String fileManagerMoveBuffer(int count);
+
+  /// No description provided for @fileManagerCopyBuffer.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} item(s) ready to copy'**
+  String fileManagerCopyBuffer(int count);
+
+  /// No description provided for @fileManagerSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'File Manager settings'**
+  String get fileManagerSettings;
+
+  /// No description provided for @fileManagerSortBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort files by'**
+  String get fileManagerSortBy;
+
+  /// No description provided for @fileManagerSortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get fileManagerSortName;
+
+  /// No description provided for @fileManagerSortDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified date'**
+  String get fileManagerSortDate;
+
+  /// No description provided for @fileManagerSortSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get fileManagerSortSize;
+
+  /// No description provided for @fileManagerSortAscending.
+  ///
+  /// In en, this message translates to:
+  /// **'Ascending order'**
+  String get fileManagerSortAscending;
+
+  /// No description provided for @fileManagerRemoveConnectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove connection?'**
+  String get fileManagerRemoveConnectionTitle;
+
+  /// No description provided for @fileManagerRemoveConnectionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove saved connection \"{name}\" and its stored password?'**
+  String fileManagerRemoveConnectionMessage(String name);
+
+  /// No description provided for @fileManagerClearClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear clipboard'**
+  String get fileManagerClearClipboard;
 }
 
 class _AppLocalizationsDelegate

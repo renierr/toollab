@@ -13,6 +13,7 @@ import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_settings_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
@@ -26,6 +27,7 @@ class FileManagerPage extends StatefulWidget {
 class _FileManagerPageState extends State<FileManagerPage>
     with DisposeCleanup, WidgetsBindingObserver {
   late final TempFileScope _tempScope;
+  bool _awaitingStorageAccess = false;
 
   @override
   void initState() {
@@ -37,7 +39,9 @@ class _FileManagerPageState extends State<FileManagerPage>
       _tempScope.cleanTracked();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<FileManagerState>().initialize();
+      Future<void>.delayed(const Duration(milliseconds: 120), () {
+        if (mounted) context.read<FileManagerState>().initialize();
+      });
     });
   }
 
@@ -135,12 +139,52 @@ class _FileManagerPageState extends State<FileManagerPage>
   }
 
   Future<void> _requestStorageAccess() async {
+    _awaitingStorageAccess = true;
     await FileManagerStorageAccess.requestAllFilesAccess();
+  }
+
+  Future<void> _removeConnection(FileManagerConnection profile) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => ResponsiveAlertDialog(
+        title: Text(l10n.fileManagerRemoveConnectionTitle),
+        content: Text(l10n.fileManagerRemoveConnectionMessage(profile.label)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.commonRemove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      await context.read<FileManagerState>().removeConnection(profile);
+    }
+  }
+
+  Future<void> _showSettings() async {
+    final state = context.read<FileManagerState>();
+    final result = await showDialog<(FileManagerSortField, bool)>(
+      context: context,
+      builder: (_) => FileManagerSettingsDialog(
+        initialField: state.sortField,
+        initialAscending: state.sortAscending,
+      ),
+    );
+    if (result != null && mounted) {
+      await state.updateSort(result.$1, result.$2);
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && _awaitingStorageAccess) {
+      _awaitingStorageAccess = false;
       context.read<FileManagerState>().initialize();
     }
   }
@@ -178,6 +222,11 @@ class _FileManagerPageState extends State<FileManagerPage>
     return ToolLayout(
       title: FileManagerTool.config.localizedName(l10n),
       actions: [
+        IconButton(
+          tooltip: l10n.commonSettings,
+          onPressed: _showSettings,
+          icon: const Icon(Icons.tune_outlined),
+        ),
         if (FileManagerStorageAccess.isAndroid)
           IconButton(
             tooltip: l10n.fileManagerAllFilesAccess,
@@ -197,12 +246,23 @@ class _FileManagerPageState extends State<FileManagerPage>
         if (state.canPaste)
           IconButton(
             tooltip: l10n.fileManagerPaste,
-            onPressed: state.isLoading || state.isRemote ? null : state.paste,
+            onPressed:
+                state.isLoading ||
+                    state.isRemote &&
+                        state.connection?.protocol == FileManagerProtocol.ftp
+                ? null
+                : state.paste,
             icon: Icon(
               state.clipboardIsCut
                   ? Icons.drive_file_move_outline
                   : Icons.content_paste_outlined,
             ),
+          ),
+        if (state.canPaste)
+          IconButton(
+            tooltip: l10n.fileManagerClearClipboard,
+            onPressed: state.clearClipboard,
+            icon: const Icon(Icons.clear_all_outlined),
           ),
       ],
       child: LayoutBuilder(
@@ -212,7 +272,7 @@ class _FileManagerPageState extends State<FileManagerPage>
             onOpenLocal: state.openLocal,
             onOpenConnection: state.openConnection,
             onAddConnection: _addConnection,
-            onRemoveConnection: state.removeConnection,
+            onRemoveConnection: _removeConnection,
           );
           final explorer = FileManagerExplorer(
             state: state,
@@ -224,6 +284,8 @@ class _FileManagerPageState extends State<FileManagerPage>
             onGoUp: state.goUp,
             onToggleFavorite: state.toggleFavorite,
             onToggleSelection: state.toggleSelection,
+            onEnterSelectionMode: state.enterSelectionMode,
+            onSelectAll: state.selectAll,
             onClearSelection: state.clearSelection,
             onDeleteSelection: _confirmDelete,
           );

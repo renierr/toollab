@@ -5863,4 +5863,67 @@ class AppLocalizationsDe extends AppLocalizations {
   String fileManagerSelected(int count) {
     return '$count ausgewählt';
   }
+
+  @override
+  String get fileManagerSelect => 'Dateien auswählen';
+
+  @override
+  String get fileManagerSelectAll => 'Alle auswählen';
+
+  @override
+  String get fileManagerCopying => 'Dateien werden kopiert';
+
+  @override
+  String get fileManagerMoving => 'Dateien werden verschoben';
+
+  @override
+  String get fileManagerDeleting => 'Dateien werden gelöscht';
+
+  @override
+  String fileManagerOperationProgress(int completed, int total) {
+    return '$completed von $total Dateien verarbeitet';
+  }
+
+  @override
+  String get fileManagerOperationBackground =>
+      'Wird fortgesetzt, wenn ToolLab im Hintergrund ist';
+
+  @override
+  String fileManagerMoveBuffer(int count) {
+    return '$count Element(e) zum Verschieben bereit';
+  }
+
+  @override
+  String fileManagerCopyBuffer(int count) {
+    return '$count Element(e) zum Kopieren bereit';
+  }
+
+  @override
+  String get fileManagerSettings => 'Dateimanager-Einstellungen';
+
+  @override
+  String get fileManagerSortBy => 'Dateien sortieren nach';
+
+  @override
+  String get fileManagerSortName => 'Name';
+
+  @override
+  String get fileManagerSortDate => 'Änderungsdatum';
+
+  @override
+  String get fileManagerSortSize => 'Größe';
+
+  @override
+  String get fileManagerSortAscending => 'Aufsteigende Reihenfolge';
+
+  @override
+  String get fileManagerRemoveConnectionTitle => 'Verbindung entfernen?';
+
+  @override
+  String fileManagerRemoveConnectionMessage(String name) {
+    return 'Gespeicherte Verbindung \"$name\" und das gespeicherte Passwort entfernen?';
+  }
+
+  @override
+  String get fileManagerClearClipboard => 'Zwischenablage leeren';
 }
