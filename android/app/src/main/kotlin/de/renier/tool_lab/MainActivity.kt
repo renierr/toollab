@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.provider.OpenableColumns
 import androidx.core.app.ActivityCompat
 import io.flutter.embedding.android.FlutterActivity
@@ -20,6 +22,7 @@ open class MainActivity : FlutterActivity() {
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"
     private val FILE_PICKER_CHANNEL = "de.renier.tool_lab/file_picker"
     private val MULTICAST_CHANNEL = "de.renier.tool_lab/multicast"
+    private val STORAGE_ACCESS_CHANNEL = "de.renier.tool_lab/storage_access"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
     private var multicastLock: WifiManager.MulticastLock? = null
@@ -228,6 +231,24 @@ open class MainActivity : FlutterActivity() {
                     }
                     result.success(null)
                 }
+                else -> result.notImplemented()
+            }
+        }
+
+        MethodChannel(messenger, STORAGE_ACCESS_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "hasAllFilesAccess" -> result.success(
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager(),
+                )
+                "requestAllFilesAccess" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+                        startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                            data = android.net.Uri.parse("package:$packageName")
+                        })
+                    }
+                    result.success(null)
+                }
+                "externalStoragePath" -> result.success(Environment.getExternalStorageDirectory().absolutePath)
                 else -> result.notImplemented()
             }
         }

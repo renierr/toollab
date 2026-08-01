@@ -5783,4 +5783,68 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get compassCalibrateHint =>
       'Kurs instabil? Bewege das Gerät in einer Acht zum Neukalibrieren.';
+
+  @override
+  String get toolNameFileManager => 'Dateimanager';
+
+  @override
+  String get toolDescFileManager =>
+      'Lokale Dateien sowie FTP- und SMB-Netzwerkfreigaben durchsuchen';
+
+  @override
+  String get fileManagerAppFiles => 'App-Dateien';
+
+  @override
+  String get fileManagerConnections => 'Verbindungen';
+
+  @override
+  String get fileManagerAddConnection => 'Verbindung hinzufügen';
+
+  @override
+  String get fileManagerRefresh => 'Aktualisieren';
+
+  @override
+  String get fileManagerNewFolder => 'Neuer Ordner';
+
+  @override
+  String get fileManagerFavorite => 'Ordner favorisieren';
+
+  @override
+  String get fileManagerEmptyFolder => 'Dieser Ordner ist leer';
+
+  @override
+  String get fileManagerFtp => 'FTP';
+
+  @override
+  String get fileManagerSmb => 'SMB';
+
+  @override
+  String get fileManagerConnectionName => 'Verbindungsname';
+
+  @override
+  String get fileManagerHost => 'Host';
+
+  @override
+  String get fileManagerPort => 'Port';
+
+  @override
+  String get fileManagerShare => 'Freigabe';
+
+  @override
+  String get fileManagerUsername => 'Benutzername';
+
+  @override
+  String get fileManagerPassword => 'Passwort';
+
+  @override
+  String get fileManagerInitialPath => 'Startpfad';
+
+  @override
+  String get fileManagerAllFilesAccess => 'Zugriff auf alle Dateien erlauben';
+
+  @override
+  String get fileManagerCut => 'Ausschneiden';
+
+  @override
+  String get fileManagerPaste => 'Einfügen';
 }

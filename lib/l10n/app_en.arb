@@ -2999,5 +2999,26 @@
     }
   },
   "compassHoldFlatHint": "Hold the device flat and level for an accurate heading.",
-  "compassCalibrateHint": "Heading unstable? Wave the device in a figure-8 to recalibrate."
+  "compassCalibrateHint": "Heading unstable? Wave the device in a figure-8 to recalibrate.",
+  "toolNameFileManager": "File Manager",
+  "toolDescFileManager": "Browse local files and FTP or SMB network shares",
+  "fileManagerAppFiles": "App files",
+  "fileManagerConnections": "Connections",
+  "fileManagerAddConnection": "Add connection",
+  "fileManagerRefresh": "Refresh",
+  "fileManagerNewFolder": "New folder",
+  "fileManagerFavorite": "Favorite folder",
+  "fileManagerEmptyFolder": "This folder is empty",
+  "fileManagerFtp": "FTP",
+  "fileManagerSmb": "SMB",
+  "fileManagerConnectionName": "Connection name",
+  "fileManagerHost": "Host",
+  "fileManagerPort": "Port",
+  "fileManagerShare": "Share",
+  "fileManagerUsername": "Username",
+  "fileManagerPassword": "Password",
+  "fileManagerInitialPath": "Initial path",
+  "fileManagerAllFilesAccess": "Allow access to all files",
+  "fileManagerCut": "Cut",
+  "fileManagerPaste": "Paste"
 }

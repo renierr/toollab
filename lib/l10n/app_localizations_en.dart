@@ -5745,4 +5745,68 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get compassCalibrateHint =>
       'Heading unstable? Wave the device in a figure-8 to recalibrate.';
+
+  @override
+  String get toolNameFileManager => 'File Manager';
+
+  @override
+  String get toolDescFileManager =>
+      'Browse local files and FTP or SMB network shares';
+
+  @override
+  String get fileManagerAppFiles => 'App files';
+
+  @override
+  String get fileManagerConnections => 'Connections';
+
+  @override
+  String get fileManagerAddConnection => 'Add connection';
+
+  @override
+  String get fileManagerRefresh => 'Refresh';
+
+  @override
+  String get fileManagerNewFolder => 'New folder';
+
+  @override
+  String get fileManagerFavorite => 'Favorite folder';
+
+  @override
+  String get fileManagerEmptyFolder => 'This folder is empty';
+
+  @override
+  String get fileManagerFtp => 'FTP';
+
+  @override
+  String get fileManagerSmb => 'SMB';
+
+  @override
+  String get fileManagerConnectionName => 'Connection name';
+
+  @override
+  String get fileManagerHost => 'Host';
+
+  @override
+  String get fileManagerPort => 'Port';
+
+  @override
+  String get fileManagerShare => 'Share';
+
+  @override
+  String get fileManagerUsername => 'Username';
+
+  @override
+  String get fileManagerPassword => 'Password';
+
+  @override
+  String get fileManagerInitialPath => 'Initial path';
+
+  @override
+  String get fileManagerAllFilesAccess => 'Allow access to all files';
+
+  @override
+  String get fileManagerCut => 'Cut';
+
+  @override
+  String get fileManagerPaste => 'Paste';
 }

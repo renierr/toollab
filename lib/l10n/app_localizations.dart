@@ -10444,6 +10444,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Heading unstable? Wave the device in a figure-8 to recalibrate.'**
   String get compassCalibrateHint;
+
+  /// No description provided for @toolNameFileManager.
+  ///
+  /// In en, this message translates to:
+  /// **'File Manager'**
+  String get toolNameFileManager;
+
+  /// No description provided for @toolDescFileManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse local files and FTP or SMB network shares'**
+  String get toolDescFileManager;
+
+  /// No description provided for @fileManagerAppFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'App files'**
+  String get fileManagerAppFiles;
+
+  /// No description provided for @fileManagerConnections.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections'**
+  String get fileManagerConnections;
+
+  /// No description provided for @fileManagerAddConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Add connection'**
+  String get fileManagerAddConnection;
+
+  /// No description provided for @fileManagerRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get fileManagerRefresh;
+
+  /// No description provided for @fileManagerNewFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'New folder'**
+  String get fileManagerNewFolder;
+
+  /// No description provided for @fileManagerFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite folder'**
+  String get fileManagerFavorite;
+
+  /// No description provided for @fileManagerEmptyFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder is empty'**
+  String get fileManagerEmptyFolder;
+
+  /// No description provided for @fileManagerFtp.
+  ///
+  /// In en, this message translates to:
+  /// **'FTP'**
+  String get fileManagerFtp;
+
+  /// No description provided for @fileManagerSmb.
+  ///
+  /// In en, this message translates to:
+  /// **'SMB'**
+  String get fileManagerSmb;
+
+  /// No description provided for @fileManagerConnectionName.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection name'**
+  String get fileManagerConnectionName;
+
+  /// No description provided for @fileManagerHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Host'**
+  String get fileManagerHost;
+
+  /// No description provided for @fileManagerPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get fileManagerPort;
+
+  /// No description provided for @fileManagerShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get fileManagerShare;
+
+  /// No description provided for @fileManagerUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get fileManagerUsername;
+
+  /// No description provided for @fileManagerPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get fileManagerPassword;
+
+  /// No description provided for @fileManagerInitialPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial path'**
+  String get fileManagerInitialPath;
+
+  /// No description provided for @fileManagerAllFilesAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow access to all files'**
+  String get fileManagerAllFilesAccess;
+
+  /// No description provided for @fileManagerCut.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut'**
+  String get fileManagerCut;
+
+  /// No description provided for @fileManagerPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get fileManagerPaste;
 }
 
 class _AppLocalizationsDelegate

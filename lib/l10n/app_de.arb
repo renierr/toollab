@@ -2158,5 +2158,26 @@
     }
   },
   "compassHoldFlatHint": "Halte das Gerät flach und waagerecht für einen genauen Kurs.",
-  "compassCalibrateHint": "Kurs instabil? Bewege das Gerät in einer Acht zum Neukalibrieren."
+  "compassCalibrateHint": "Kurs instabil? Bewege das Gerät in einer Acht zum Neukalibrieren.",
+  "toolNameFileManager": "Dateimanager",
+  "toolDescFileManager": "Lokale Dateien sowie FTP- und SMB-Netzwerkfreigaben durchsuchen",
+  "fileManagerAppFiles": "App-Dateien",
+  "fileManagerConnections": "Verbindungen",
+  "fileManagerAddConnection": "Verbindung hinzufügen",
+  "fileManagerRefresh": "Aktualisieren",
+  "fileManagerNewFolder": "Neuer Ordner",
+  "fileManagerFavorite": "Ordner favorisieren",
+  "fileManagerEmptyFolder": "Dieser Ordner ist leer",
+  "fileManagerFtp": "FTP",
+  "fileManagerSmb": "SMB",
+  "fileManagerConnectionName": "Verbindungsname",
+  "fileManagerHost": "Host",
+  "fileManagerPort": "Port",
+  "fileManagerShare": "Freigabe",
+  "fileManagerUsername": "Benutzername",
+  "fileManagerPassword": "Passwort",
+  "fileManagerInitialPath": "Startpfad",
+  "fileManagerAllFilesAccess": "Zugriff auf alle Dateien erlauben",
+  "fileManagerCut": "Ausschneiden",
+  "fileManagerPaste": "Einfügen"
 }
