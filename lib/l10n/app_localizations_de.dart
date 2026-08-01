@@ -5983,4 +5983,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileManagerFoldersFirst => 'Ordner vor Dateien';
+
+  @override
+  String get fileManagerFileExistsTitle => 'Datei existiert bereits';
+
+  @override
+  String fileManagerFileExistsMessage(String names) {
+    return '$names existiert bereits in diesem Ordner.';
+  }
+
+  @override
+  String get fileManagerKeepBoth => 'Beide behalten';
+
+  @override
+  String get fileManagerOverwrite => 'Überschreiben';
 }

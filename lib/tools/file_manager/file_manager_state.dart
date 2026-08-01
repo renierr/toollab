@@ -20,6 +20,8 @@ enum FileManagerLocationType { local, ftp, smb }
 
 enum FileManagerOperation { copy, move, delete }
 
+enum FileManagerConflictResolution { overwrite, keepBoth }
+
 enum FileManagerSortField { name, modified, size }
 
 enum FileManagerOpenCategory { images, pdf, audio, markdown }
@@ -57,6 +59,7 @@ class FileManagerState extends ChangeNotifier {
   int _operationCompleted = 0;
   int _operationTotal = 0;
   FileManagerOperation? _operation;
+  final List<String> _operationErrors = [];
   FileManagerSortField _sortField = FileManagerSortField.name;
   bool _sortAscending = true;
   bool _foldersFirst = true;
@@ -435,7 +438,27 @@ class FileManagerState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> paste() async {
+  Future<List<String>> localPasteConflicts() async {
+    if (_clipboardLocationType != FileManagerLocationType.local ||
+        _locationType != FileManagerLocationType.local) {
+      return const [];
+    }
+    final conflicts = <String>[];
+    for (final source in _clipboardPaths) {
+      final destination = p.join(_path, p.basename(source));
+      if (!p.equals(source, destination) &&
+          await FileSystemEntity.type(destination) !=
+              FileSystemEntityType.notFound) {
+        conflicts.add(p.basename(source));
+      }
+    }
+    return conflicts;
+  }
+
+  Future<void> paste({
+    FileManagerConflictResolution resolution =
+        FileManagerConflictResolution.keepBoth,
+  }) async {
     if (_clipboardPaths.isEmpty) return;
     if (_clipboardLocationType == FileManagerLocationType.local &&
         _locationType == FileManagerLocationType.local) {
@@ -443,6 +466,7 @@ class FileManagerState extends ChangeNotifier {
         _clipboardPaths,
         destination: _path,
         move: _clipboardIsCut,
+        conflictResolution: resolution,
       );
     } else if (_clipboardLocationType == FileManagerLocationType.smb &&
         _locationType == FileManagerLocationType.smb &&
@@ -470,13 +494,18 @@ class FileManagerState extends ChangeNotifier {
       _clipboardIsCut ? FileManagerOperation.move : FileManagerOperation.copy,
       () async {
         for (final source in _clipboardPaths) {
-          await _copyLocalEntityToSmb(
-            smb,
-            source,
-            _joinRemotePath(_path, p.basename(source)),
-          );
-          if (_clipboardIsCut) await _deleteLocalEntity(source);
-          _reportNetworkProgress();
+          try {
+            await _copyLocalEntityToSmb(
+              smb,
+              source,
+              _joinRemotePath(_path, p.basename(source)),
+            );
+            if (_clipboardIsCut) await _deleteLocalEntity(source);
+          } catch (error) {
+            _recordOperationError(source, error);
+          } finally {
+            _reportNetworkProgress();
+          }
         }
         await refresh();
       },
@@ -498,13 +527,18 @@ class FileManagerState extends ChangeNotifier {
         _clipboardIsCut ? FileManagerOperation.move : FileManagerOperation.copy,
         () async {
           for (final source in _clipboardPaths) {
-            await _copySmbEntityToLocal(
-              smb,
-              source,
-              p.join(_path, p.basename(source)),
-            );
-            if (_clipboardIsCut) await _deleteSmbEntity(smb, source);
-            _reportNetworkProgress();
+            try {
+              await _copySmbEntityToLocal(
+                smb,
+                source,
+                p.join(_path, p.basename(source)),
+              );
+              if (_clipboardIsCut) await _deleteSmbEntity(smb, source);
+            } catch (error) {
+              _recordOperationError(source, error);
+            } finally {
+              _reportNetworkProgress();
+            }
           }
           await refresh();
         },
@@ -523,12 +557,17 @@ class FileManagerState extends ChangeNotifier {
         for (final source in _clipboardPaths) {
           final destination = _joinRemotePath(_path, p.basename(source));
           if (source == destination) continue;
-          if (_clipboardIsCut) {
-            await smb.rename(source, destination);
-          } else {
-            await _copySmbEntity(smb, source, destination);
+          try {
+            if (_clipboardIsCut) {
+              await smb.rename(source, destination);
+            } else {
+              await _copySmbEntity(smb, source, destination);
+            }
+          } catch (error) {
+            _recordOperationError(source, error);
+          } finally {
+            _reportNetworkProgress();
           }
-          _reportNetworkProgress();
         }
         await refresh();
       },
@@ -541,6 +580,7 @@ class FileManagerState extends ChangeNotifier {
   ) async {
     _isLoading = true;
     _error = null;
+    _operationErrors.clear();
     _operation = operation;
     _operationCompleted = 0;
     _operationTotal = operation == FileManagerOperation.delete
@@ -557,6 +597,7 @@ class FileManagerState extends ChangeNotifier {
       _operation = null;
       _operationCompleted = 0;
       _operationTotal = 0;
+      if (_operationErrors.isNotEmpty) _error = _operationErrors.join('\n');
       notifyListeners();
     }
   }
@@ -564,6 +605,12 @@ class FileManagerState extends ChangeNotifier {
   void _reportNetworkProgress() {
     _operationCompleted++;
     notifyListeners();
+  }
+
+  void _recordOperationError(String path, Object error) {
+    _operationErrors.add(
+      '${p.basename(path)}: ${error.toString().replaceFirst('Exception: ', '')}',
+    );
   }
 
   Future<void> deleteSelected() async {
@@ -576,18 +623,23 @@ class FileManagerState extends ChangeNotifier {
         .toList();
     await _runNetworkOperation(FileManagerOperation.delete, () async {
       for (final entry in selected) {
-        if (_locationType == FileManagerLocationType.ftp) {
-          if (entry.isDirectory) {
-            await _ftp!.deleteDirectory(entry.name);
+        try {
+          if (_locationType == FileManagerLocationType.ftp) {
+            if (entry.isDirectory) {
+              await _ftp!.deleteDirectory(entry.name);
+            } else {
+              await _ftp!.deleteFile(entry.name);
+            }
+          } else if (entry.isDirectory) {
+            await _smb!.rmdir(_joinRemotePath(_path, entry.name));
           } else {
-            await _ftp!.deleteFile(entry.name);
+            await _smb!.deleteFile(_joinRemotePath(_path, entry.name));
           }
-        } else if (entry.isDirectory) {
-          await _smb!.rmdir(_joinRemotePath(_path, entry.name));
-        } else {
-          await _smb!.deleteFile(_joinRemotePath(_path, entry.name));
+        } catch (error) {
+          _recordOperationError(entry.name, error);
+        } finally {
+          _reportNetworkProgress();
         }
-        _reportNetworkProgress();
       }
       clearSelection();
       await refresh();
@@ -599,6 +651,8 @@ class FileManagerState extends ChangeNotifier {
     String destination = '',
     bool move = false,
     bool delete = false,
+    FileManagerConflictResolution conflictResolution =
+        FileManagerConflictResolution.keepBoth,
   }) async {
     if (sources.isEmpty || _locationType != FileManagerLocationType.local) {
       return;
@@ -622,6 +676,7 @@ class FileManagerState extends ChangeNotifier {
           : 'Copying files',
     );
     final port = ReceivePort();
+    String? operationError;
     try {
       await Isolate.spawn(runFileManagerOperation, {
         'sendPort': port.sendPort,
@@ -629,6 +684,8 @@ class FileManagerState extends ChangeNotifier {
         'destination': destination,
         'move': move,
         'delete': delete,
+        'overwrite':
+            conflictResolution == FileManagerConflictResolution.overwrite,
       });
       await for (final message in port) {
         final data = message as Map<Object?, Object?>;
@@ -646,17 +703,20 @@ class FileManagerState extends ChangeNotifier {
                     : 'Copying'} $_operationCompleted of $_operationTotal files',
           );
         } else if (data['type'] == 'error') {
-          throw Exception(data['message']);
+          operationError = operationError == null
+              ? data['message']! as String
+              : '$operationError\n${data['message']! as String}';
         } else {
           break;
         }
       }
-      clearSelection();
-      await refresh();
+      if (operationError == null) clearSelection();
     } catch (error) {
-      _error = error.toString().replaceFirst('Exception: ', '');
+      operationError = error.toString().replaceFirst('Exception: ', '');
     } finally {
       port.close();
+      await refresh();
+      _error = operationError;
       _isLoading = false;
       _operationCompleted = 0;
       _operationTotal = 0;

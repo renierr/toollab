@@ -10816,6 +10816,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Folders before files'**
   String get fileManagerFoldersFirst;
+
+  /// No description provided for @fileManagerFileExistsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'File already exists'**
+  String get fileManagerFileExistsTitle;
+
+  /// No description provided for @fileManagerFileExistsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{names} already exists in this folder.'**
+  String fileManagerFileExistsMessage(String names);
+
+  /// No description provided for @fileManagerKeepBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep both'**
+  String get fileManagerKeepBoth;
+
+  /// No description provided for @fileManagerOverwrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite'**
+  String get fileManagerOverwrite;
 }
 
 class _AppLocalizationsDelegate

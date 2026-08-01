@@ -3067,5 +3067,10 @@
   "fileManagerCurrentFolder": "Current folder",
   "fileManagerSorting": "Sorting",
   "fileManagerOpenWith": "Open with",
-  "fileManagerFoldersFirst": "Folders before files"
+  "fileManagerFoldersFirst": "Folders before files",
+  "fileManagerFileExistsTitle": "File already exists",
+  "fileManagerFileExistsMessage": "{names} already exists in this folder.",
+  "@fileManagerFileExistsMessage": { "placeholders": { "names": { "type": "String" } } },
+  "fileManagerKeepBoth": "Keep both",
+  "fileManagerOverwrite": "Overwrite"
 }

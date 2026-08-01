@@ -125,9 +125,17 @@ class FileManagerExplorer extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  tooltip: l10n.fileManagerSelectAll,
-                  onPressed: onSelectAll,
-                  icon: const Icon(Icons.select_all),
+                  tooltip: state.selectedPaths.length == state.entries.length
+                      ? l10n.commonClear
+                      : l10n.fileManagerSelectAll,
+                  onPressed: state.selectedPaths.length == state.entries.length
+                      ? onClearSelection
+                      : onSelectAll,
+                  icon: Icon(
+                    state.selectedPaths.length == state.entries.length
+                        ? Icons.deselect
+                        : Icons.select_all,
+                  ),
                 ),
                 IconButton(
                   tooltip: l10n.commonCopy,

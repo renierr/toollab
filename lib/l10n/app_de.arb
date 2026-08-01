@@ -2226,5 +2226,10 @@
   "fileManagerCurrentFolder": "Aktueller Ordner",
   "fileManagerSorting": "Sortierung",
   "fileManagerOpenWith": "Öffnen mit",
-  "fileManagerFoldersFirst": "Ordner vor Dateien"
+  "fileManagerFoldersFirst": "Ordner vor Dateien",
+  "fileManagerFileExistsTitle": "Datei existiert bereits",
+  "fileManagerFileExistsMessage": "{names} existiert bereits in diesem Ordner.",
+  "@fileManagerFileExistsMessage": { "placeholders": { "names": { "type": "String" } } },
+  "fileManagerKeepBoth": "Beide behalten",
+  "fileManagerOverwrite": "Überschreiben"
 }

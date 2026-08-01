@@ -9,6 +9,7 @@ void runFileManagerOperation(Map<String, Object> input) async {
   final destination = input['destination']! as String;
   final move = input['move']! as bool;
   final delete = input['delete']! as bool;
+  final overwrite = input['overwrite']! as bool;
   try {
     final files = <File>[];
     for (final source in sources) {
@@ -18,39 +19,68 @@ void runFileManagerOperation(Map<String, Object> input) async {
     final total = delete ? sources.length : files.length;
     if (delete) {
       for (final source in sources) {
-        await (await _entityFor(source)).delete(recursive: true);
-        completed++;
-        sendPort.send({
-          'type': 'progress',
-          'completed': completed,
-          'total': total,
-        });
-      }
-    } else {
-      for (final source in sources) {
-        final target = p.join(destination, p.basename(source));
-        if (await FileSystemEntity.type(target) !=
-            FileSystemEntityType.notFound) {
-          throw FileSystemException(
-            'Destination already contains ${p.basename(source)}',
-          );
-        }
-        await _copyEntity(await _entityFor(source), target, () {
+        try {
+          await (await _entityFor(source)).delete(recursive: true);
           completed++;
           sendPort.send({
             'type': 'progress',
             'completed': completed,
             'total': total,
           });
-        });
-        if (move) {
-          await (await _entityFor(source)).delete(recursive: true);
+        } catch (error) {
+          sendPort.send({
+            'type': 'error',
+            'message': '${p.basename(source)}: $error',
+          });
+        }
+      }
+    } else {
+      for (final source in sources) {
+        try {
+          var target = p.join(destination, p.basename(source));
+          if (await FileSystemEntity.type(target) !=
+              FileSystemEntityType.notFound) {
+            if (overwrite) {
+              await (await _entityFor(target)).delete(recursive: true);
+            } else {
+              target = await _availableTarget(target);
+            }
+          }
+          await _copyEntity(await _entityFor(source), target, () {
+            completed++;
+            sendPort.send({
+              'type': 'progress',
+              'completed': completed,
+              'total': total,
+            });
+          });
+          if (move) {
+            await (await _entityFor(source)).delete(recursive: true);
+          }
+        } catch (error) {
+          sendPort.send({
+            'type': 'error',
+            'message': '${p.basename(source)}: $error',
+          });
         }
       }
     }
     sendPort.send({'type': 'complete'});
   } catch (error) {
     sendPort.send({'type': 'error', 'message': error.toString()});
+  }
+}
+
+Future<String> _availableTarget(String target) async {
+  final directory = p.dirname(target);
+  final extension = p.extension(target);
+  final name = p.basenameWithoutExtension(target);
+  for (var index = 1; ; index++) {
+    final candidate = p.join(directory, '$name ($index)$extension');
+    if (await FileSystemEntity.type(candidate) ==
+        FileSystemEntityType.notFound) {
+      return candidate;
+    }
   }
 }
 

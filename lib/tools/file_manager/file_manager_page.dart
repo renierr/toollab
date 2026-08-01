@@ -208,6 +208,45 @@ class _FileManagerPageState extends State<FileManagerPage>
     await FileManagerStorageAccess.requestAllFilesAccess();
   }
 
+  Future<void> _paste() async {
+    final state = context.read<FileManagerState>();
+    final conflicts = await state.localPasteConflicts();
+    if (!mounted || conflicts.isEmpty) {
+      await state.paste();
+      return;
+    }
+    final resolution = await showDialog<FileManagerConflictResolution>(
+      context: context,
+      builder: (context) => ResponsiveAlertDialog(
+        title: Text(AppLocalizations.of(context).fileManagerFileExistsTitle),
+        content: Text(
+          AppLocalizations.of(
+            context,
+          ).fileManagerFileExistsMessage(conflicts.join(', ')),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context).commonCancel),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context, FileManagerConflictResolution.keepBoth),
+            child: Text(AppLocalizations.of(context).fileManagerKeepBoth),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(context, FileManagerConflictResolution.overwrite),
+            child: Text(AppLocalizations.of(context).fileManagerOverwrite),
+          ),
+        ],
+      ),
+    );
+    if (resolution != null && mounted) {
+      await state.paste(resolution: resolution);
+    }
+  }
+
   Future<void> _removeConnection(FileManagerConnection profile) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
@@ -297,7 +336,7 @@ class _FileManagerPageState extends State<FileManagerPage>
                       state.isRemote &&
                           state.connection?.protocol == FileManagerProtocol.ftp
                   ? null
-                  : state.paste,
+                  : _paste,
               icon: Icon(
                 state.clipboardIsCut
                     ? Icons.drive_file_move_outline
