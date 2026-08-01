@@ -3,6 +3,7 @@ package de.renier.tool_lab
 import android.Manifest
 import android.app.PendingIntent
 import android.content.ContentValues
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -166,8 +168,25 @@ object FileSaveHelper {
 
     fun openFile(context: Context, uriString: String, mimeType: String) {
         val uri = getUriForPath(context, uriString)
-        val intent = Intent(Intent.ACTION_VIEW).apply {
+        if (mimeType == "application/vnd.android.package-archive" &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !context.packageManager.canRequestPackageInstalls()
+        ) {
+            context.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                data = Uri.parse("package:${context.packageName}")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+            return
+        }
+        val intent = Intent(
+            if (mimeType == "application/vnd.android.package-archive") {
+                Intent.ACTION_INSTALL_PACKAGE
+            } else {
+                Intent.ACTION_VIEW
+            },
+        ).apply {
             setDataAndType(uri, mimeType)
+            clipData = ClipData.newRawUri("package", uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }

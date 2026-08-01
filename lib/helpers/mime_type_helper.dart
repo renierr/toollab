@@ -139,6 +139,8 @@ class MimeTypeHelper {
         return 'application/vnd.ms-powerpoint';
       case 'pptx':
         return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+      case 'apk':
+        return 'application/vnd.android.package-archive';
       default:
         return 'application/octet-stream';
     }
