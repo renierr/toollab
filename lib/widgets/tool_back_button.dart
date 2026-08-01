@@ -12,6 +12,7 @@ class ToolBackButton extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final BoxConstraints? constraints;
   final ButtonStyle? style;
+  final bool exitTool;
 
   /// An optional callback to run (such as confirming edit discards) before executing navigation.
   /// If it returns false, navigation is aborted.
@@ -25,6 +26,7 @@ class ToolBackButton extends StatelessWidget {
     this.padding,
     this.constraints,
     this.style,
+    this.exitTool = false,
     this.onConfirm,
   });
 
@@ -69,6 +71,10 @@ class ToolBackButton extends StatelessWidget {
           if (!proceed) return;
         }
         if (context.mounted) {
+          if (exitTool) {
+            GoRouter.of(context).go('/');
+            return;
+          }
           final navigator = Navigator.of(context);
           if (navigator.canPop()) {
             navigator.maybePop();

@@ -70,7 +70,18 @@ class FileManagerState extends ChangeNotifier {
   String? get error => _error;
   bool get isLoading => _isLoading;
   bool get isRemote => _locationType != FileManagerLocationType.local;
-  bool get canGoUp => _path.isNotEmpty && _path != p.rootPrefix(_path);
+  bool get canGoUp {
+    if (_path.isEmpty || _path == p.rootPrefix(_path)) return false;
+    if (FileManagerStorageAccess.isAndroid &&
+        _hasAllFilesAccess &&
+        _appFilesPath.isNotEmpty) {
+      return !p.equals(_path, p.dirname(_appFilesPath));
+    }
+    return true;
+  }
+
+  bool get canNavigateBack => canGoUp;
+
   FileManagerConnection? get connection => _connection;
   bool get canPaste => _clipboardPaths.isNotEmpty;
   bool get clipboardIsCut => _clipboardIsCut;
@@ -259,6 +270,7 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> goUp() async {
+    if (!canGoUp) return;
     if (_locationType == FileManagerLocationType.local) {
       return openLocal(p.dirname(_path));
     }

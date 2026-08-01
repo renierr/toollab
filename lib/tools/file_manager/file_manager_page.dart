@@ -20,6 +20,7 @@ import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_settings_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 class FileManagerPage extends StatefulWidget {
@@ -303,19 +304,20 @@ class _FileManagerPageState extends State<FileManagerPage>
     final l10n = AppLocalizations.of(context);
     final state = context.watch<FileManagerState>();
     return PopScope(
-      canPop: !state.canGoUp,
+      canPop: !state.canNavigateBack,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && state.canGoUp) state.goUp();
+        if (!didPop && state.canNavigateBack) state.goUp();
       },
       child: ToolLayout(
         title: FileManagerTool.config.localizedName(l10n),
+        leading: const ToolBackButton(exitTool: true),
         actions: [
           IconButton(
             tooltip: l10n.commonSettings,
             onPressed: _showSettings,
             icon: const Icon(Icons.tune_outlined),
           ),
-          if (FileManagerStorageAccess.isAndroid)
+          if (state.requiresStorageAccess)
             IconButton(
               tooltip: l10n.fileManagerAllFilesAccess,
               onPressed: _requestStorageAccess,
