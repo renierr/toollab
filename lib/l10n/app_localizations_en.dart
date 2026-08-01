@@ -5754,7 +5754,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Browse local files and FTP or SMB network shares';
 
   @override
-  String get fileManagerAppFiles => 'App files';
+  String get fileManagerAppFiles => 'Default folder';
 
   @override
   String get fileManagerConnections => 'Connections';
@@ -5959,4 +5959,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileManagerOverwrite => 'Overwrite';
+
+  @override
+  String get fileManagerRecentLocations => 'Recent';
+
+  @override
+  String get fileManagerFolderItems => 'Items';
+
+  @override
+  String fileManagerFolderItemCount(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get fileManagerInstallApk => 'Install APK';
+
+  @override
+  String get fileManagerStorage => 'Storage';
+
+  @override
+  String get fileManagerDocuments => 'Documents';
 }

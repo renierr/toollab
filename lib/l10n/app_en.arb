@@ -3002,7 +3002,7 @@
   "compassCalibrateHint": "Heading unstable? Wave the device in a figure-8 to recalibrate.",
   "toolNameFileManager": "File Manager",
   "toolDescFileManager": "Browse local files and FTP or SMB network shares",
-  "fileManagerAppFiles": "App files",
+  "fileManagerAppFiles": "Default folder",
   "fileManagerConnections": "Connections",
   "fileManagerAddConnection": "Add connection",
   "fileManagerRefresh": "Refresh",
@@ -3072,5 +3072,12 @@
   "fileManagerFileExistsMessage": "{names} already exists in this folder.",
   "@fileManagerFileExistsMessage": { "placeholders": { "names": { "type": "String" } } },
   "fileManagerKeepBoth": "Keep both",
-  "fileManagerOverwrite": "Overwrite"
+  "fileManagerOverwrite": "Overwrite",
+  "fileManagerRecentLocations": "Recent",
+  "fileManagerFolderItems": "Items",
+  "fileManagerFolderItemCount": "{count} items",
+  "@fileManagerFolderItemCount": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerInstallApk": "Install APK",
+  "fileManagerStorage": "Storage",
+  "fileManagerDocuments": "Documents"
 }

@@ -109,10 +109,15 @@ class _FileManagerPageState extends State<FileManagerPage>
   }
 
   Future<void> _showDetails(FileManagerEntry entry) async {
+    final folderItemCount = await context
+        .read<FileManagerState>()
+        .folderItemCount(entry);
+    if (!mounted) return;
     await showDialog<void>(
       context: context,
       builder: (context) => FileManagerDetailsDialog(
         entry: entry,
+        folderItemCount: folderItemCount,
         onOpen: () {
           Navigator.pop(context);
           _openEntry(entry);
@@ -355,6 +360,7 @@ class _FileManagerPageState extends State<FileManagerPage>
             final locations = FileManagerLocations(
               state: state,
               onOpenLocal: state.openLocal,
+              onOpenPath: state.openPath,
               onOpenConnection: state.openConnection,
               onAddConnection: _addConnection,
               onRemoveConnection: _removeConnection,
@@ -370,6 +376,7 @@ class _FileManagerPageState extends State<FileManagerPage>
               onCopy: state.copy,
               onCut: state.cut,
               onGoUp: state.goUp,
+              onOpenPath: state.openPath,
               onToggleFavorite: state.toggleFavorite,
               onToggleSelection: state.toggleSelection,
               onEnterSelectionMode: state.enterSelectionMode,

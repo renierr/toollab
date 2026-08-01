@@ -29,6 +29,7 @@ enum FileManagerOpenCategory { images, pdf, audio, markdown }
 class FileManagerState extends ChangeNotifier {
   static const _connectionsKey = 'connections';
   static const _favoritesKey = 'favorite_paths';
+  static const _recentPathsKey = 'recent_paths';
   static const _sortFieldKey = 'sort_field';
   static const _sortAscendingKey = 'sort_ascending';
   static const _foldersFirstKey = 'folders_first';
@@ -39,6 +40,7 @@ class FileManagerState extends ChangeNotifier {
   List<FileManagerEntry> _entries = [];
   List<FileManagerConnection> _connections = [];
   List<String> _favoritePaths = [];
+  List<String> _recentPaths = [];
   String _path = '';
   String _appFilesPath = '';
   String _downloadsPath = '';
@@ -68,10 +70,15 @@ class FileManagerState extends ChangeNotifier {
   List<FileManagerEntry> get entries => _entries;
   List<FileManagerConnection> get connections => _connections;
   List<String> get favoritePaths => _favoritePaths;
+  List<String> get recentPaths => _recentPaths;
   String get path => _path;
   String get appFilesPath => _appFilesPath;
+  String get defaultFolderPath => _startupPath ?? _appFilesPath;
   String get locationLabel => _displayPath(_path);
   String get downloadsPath => _downloadsPath;
+  bool get usesSharedStorage =>
+      FileManagerStorageAccess.isAndroid && _hasAllFilesAccess;
+  String get sharedStoragePath => p.dirname(_appFilesPath);
   String? get startupPath => _startupPath;
   bool get requiresStorageAccess =>
       FileManagerStorageAccess.isAndroid && !_hasAllFilesAccess;
@@ -94,6 +101,7 @@ class FileManagerState extends ChangeNotifier {
   bool get canPaste => _clipboardPaths.isNotEmpty;
   bool get clipboardIsCut => _clipboardIsCut;
   int get clipboardItemCount => _clipboardPaths.length;
+  List<String> get clipboardPaths => List.unmodifiable(_clipboardPaths);
   Set<String> get selectedPaths => Set.unmodifiable(_selectedPaths);
   bool get hasSelection => _selectedPaths.isNotEmpty;
   bool get isSelectionMode => _isSelectionMode;
@@ -144,6 +152,7 @@ class FileManagerState extends ChangeNotifier {
     );
     _connections = _decodeConnections(settings[_connectionsKey]);
     _favoritePaths = _decodeStrings(settings[_favoritesKey]);
+    _recentPaths = _decodeStrings(settings[_recentPathsKey]);
     _sortField = FileManagerSortField.values.firstWhere(
       (field) => field.name == settings[_sortFieldKey],
       orElse: () => FileManagerSortField.name,
@@ -201,6 +210,47 @@ class FileManagerState extends ChangeNotifier {
       _entries.sort(_compareEntries);
       _path = dir.path;
     });
+    if (_error == null) await _recordRecentPath(directory);
+  }
+
+  Future<void> openPath(String path) async {
+    if (_locationType == FileManagerLocationType.local) {
+      return openLocal(path);
+    }
+    await _load(() async {
+      if (_locationType == FileManagerLocationType.ftp) {
+        final changed = await _ftp!.changeDirectory(path);
+        if (!changed) throw Exception('Folder could not be opened.');
+        _path = await _ftp!.currentDirectory();
+        await _loadFtpEntries();
+      } else {
+        _path = path;
+        await _loadSmbEntries();
+      }
+    });
+  }
+
+  Future<int?> folderItemCount(FileManagerEntry entry) async {
+    if (!entry.isDirectory || isRemote) return null;
+    try {
+      return await Directory(entry.path).list(followLinks: false).length;
+    } catch (error) {
+      debugPrint('[FileManagerState] Folder count failed: $error');
+      return null;
+    }
+  }
+
+  Future<void> _recordRecentPath(String path) async {
+    _recentPaths = [
+      path,
+      ..._recentPaths.where((item) => !p.equals(item, path)),
+    ].take(5).toList();
+    await DatabaseService.instance.setSetting(
+      FileManagerTool.config.id,
+      _recentPathsKey,
+      jsonEncode(_recentPaths),
+    );
+    notifyListeners();
   }
 
   Future<void> openConnection(FileManagerConnection profile) async {

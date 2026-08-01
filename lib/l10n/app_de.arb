@@ -2161,7 +2161,7 @@
   "compassCalibrateHint": "Kurs instabil? Bewege das Gerät in einer Acht zum Neukalibrieren.",
   "toolNameFileManager": "Dateimanager",
   "toolDescFileManager": "Lokale Dateien sowie FTP- und SMB-Netzwerkfreigaben durchsuchen",
-  "fileManagerAppFiles": "App-Dateien",
+  "fileManagerAppFiles": "Standardordner",
   "fileManagerConnections": "Verbindungen",
   "fileManagerAddConnection": "Verbindung hinzufügen",
   "fileManagerRefresh": "Aktualisieren",
@@ -2231,5 +2231,12 @@
   "fileManagerFileExistsMessage": "{names} existiert bereits in diesem Ordner.",
   "@fileManagerFileExistsMessage": { "placeholders": { "names": { "type": "String" } } },
   "fileManagerKeepBoth": "Beide behalten",
-  "fileManagerOverwrite": "Überschreiben"
+  "fileManagerOverwrite": "Überschreiben",
+  "fileManagerRecentLocations": "Zuletzt",
+  "fileManagerFolderItems": "Elemente",
+  "fileManagerFolderItemCount": "{count} Elemente",
+  "@fileManagerFolderItemCount": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerInstallApk": "APK installieren",
+  "fileManagerStorage": "Speicher",
+  "fileManagerDocuments": "Dokumente"
 }

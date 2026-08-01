@@ -4,6 +4,8 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_breadcrumbs.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_icon.dart';
 
 class FileManagerExplorer extends StatelessWidget {
   final FileManagerState state;
@@ -15,6 +17,7 @@ class FileManagerExplorer extends StatelessWidget {
   final ValueChanged<FileManagerEntry> onCopy;
   final ValueChanged<FileManagerEntry> onCut;
   final VoidCallback onGoUp;
+  final ValueChanged<String> onOpenPath;
   final VoidCallback onToggleFavorite;
   final ValueChanged<FileManagerEntry> onToggleSelection;
   final VoidCallback onEnterSelectionMode;
@@ -32,6 +35,7 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onCopy,
     required this.onCut,
     required this.onGoUp,
+    required this.onOpenPath,
     required this.onToggleFavorite,
     required this.onToggleSelection,
     required this.onEnterSelectionMode,
@@ -83,10 +87,9 @@ class FileManagerExplorer extends StatelessWidget {
                           ),
                         ],
                       ),
-                    Text(
-                      state.locationLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    FileManagerBreadcrumbs(
+                      state: state,
+                      onOpenPath: onOpenPath,
                     ),
                   ],
                 ),
@@ -198,6 +201,10 @@ class FileManagerExplorer extends StatelessWidget {
                       state.entries[index].path,
                     ),
                     onToggleSelection: onToggleSelection,
+                    isInClipboard: state.clipboardPaths.contains(
+                      state.entries[index].path,
+                    ),
+                    clipboardIsCut: state.clipboardIsCut,
                   ),
                 ),
         ),
@@ -306,6 +313,8 @@ class _EntryTile extends StatelessWidget {
   final bool selectionMode;
   final bool selected;
   final ValueChanged<FileManagerEntry> onToggleSelection;
+  final bool isInClipboard;
+  final bool clipboardIsCut;
   const _EntryTile({
     required this.entry,
     required this.onOpen,
@@ -319,22 +328,36 @@ class _EntryTile extends StatelessWidget {
     required this.selectionMode,
     required this.selected,
     required this.onToggleSelection,
+    required this.isInClipboard,
+    required this.clipboardIsCut,
   });
   @override
   Widget build(BuildContext context) => ListTile(
-    leading: Icon(_iconFor(entry), color: _colorFor(context, entry)),
+    leading: FileManagerEntryIcon(entry: entry),
     selected: selected,
     title: Text(
       entry.name,
       maxLines: MediaQuery.sizeOf(context).width < 720 ? 2 : 1,
       overflow: TextOverflow.ellipsis,
     ),
-    subtitle: Text(
-      _metadata(entry),
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-        fontSize: 11,
-      ),
+    subtitle: Row(
+      children: [
+        Expanded(
+          child: Text(
+            _metadata(entry),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 11,
+            ),
+          ),
+        ),
+        if (isInClipboard)
+          Icon(
+            clipboardIsCut ? Icons.content_cut : Icons.copy_outlined,
+            size: 14,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+      ],
     ),
     trailing: selectionMode
         ? Checkbox(value: selected, onChanged: (_) => onToggleSelection(entry))
@@ -345,6 +368,8 @@ class _EntryTile extends StatelessWidget {
               } else if (value == 'details') {
                 onDetails(entry);
               } else if (value == 'system') {
+                onOpenWithSystem(entry);
+              } else if (value == 'install') {
                 onOpenWithSystem(entry);
               } else if (value == 'copy') {
                 onCopy(entry);
@@ -359,6 +384,13 @@ class _EntryTile extends StatelessWidget {
                 value: 'details',
                 child: Text(AppLocalizations.of(context).fileManagerDetails),
               ),
+              if (_isApk(entry))
+                PopupMenuItem(
+                  value: 'install',
+                  child: Text(
+                    AppLocalizations.of(context).fileManagerInstallApk,
+                  ),
+                ),
               PopupMenuItem(
                 value: 'system',
                 child: Text(
@@ -389,34 +421,6 @@ class _EntryTile extends StatelessWidget {
     onLongPress: () => onToggleSelection(entry),
   );
 
-  IconData _iconFor(FileManagerEntry entry) {
-    if (entry.isDirectory) return Icons.folder_outlined;
-    final extension = entry.name.split('.').last.toLowerCase();
-    return switch (extension) {
-      'pdf' => Icons.picture_as_pdf_outlined,
-      'md' || 'markdown' || 'txt' => Icons.article_outlined,
-      'jpg' ||
-      'jpeg' ||
-      'png' ||
-      'gif' ||
-      'webp' ||
-      'bmp' ||
-      'svg' => Icons.image_outlined,
-      'mp3' || 'wav' || 'ogg' || 'flac' || 'm4a' => Icons.audio_file_outlined,
-      'mp4' || 'webm' || 'mov' || 'avi' => Icons.video_file_outlined,
-      'zip' || '7z' || 'rar' || 'tar' || 'gz' => Icons.folder_zip_outlined,
-      'dart' ||
-      'kt' ||
-      'java' ||
-      'js' ||
-      'ts' ||
-      'py' ||
-      'json' ||
-      'yaml' => Icons.code_outlined,
-      _ => Icons.insert_drive_file_outlined,
-    };
-  }
-
   String _metadata(FileManagerEntry entry) {
     final parts = <String>[];
     if (entry.modified != null) {
@@ -428,21 +432,6 @@ class _EntryTile extends StatelessWidget {
     return parts.join('  -  ');
   }
 
-  Color _colorFor(BuildContext context, FileManagerEntry entry) {
-    if (entry.isDirectory) return Theme.of(context).colorScheme.primary;
-    final extension = entry.name.split('.').last.toLowerCase();
-    if (extension == 'pdf') return Theme.of(context).colorScheme.error;
-    if ([
-      'jpg',
-      'jpeg',
-      'png',
-      'gif',
-      'webp',
-      'bmp',
-      'svg',
-    ].contains(extension)) {
-      return Theme.of(context).colorScheme.tertiary;
-    }
-    return Theme.of(context).colorScheme.onSurfaceVariant;
-  }
+  bool _isApk(FileManagerEntry entry) =>
+      !entry.isDirectory && entry.name.toLowerCase().endsWith('.apk');
 }

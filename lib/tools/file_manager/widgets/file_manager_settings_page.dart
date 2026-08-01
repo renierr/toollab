@@ -20,7 +20,7 @@ class FileManagerSettingsPage extends StatelessWidget {
             _SettingsSection(title: l10n.fileManagerStartupFolder),
             ListTile(
               leading: const Icon(Icons.folder_outlined),
-              title: Text(l10n.fileManagerAppFiles),
+              title: Text(l10n.fileManagerDocuments),
               subtitle: Text(state.appFilesPath),
               trailing: _StartupFolderIndicator(
                 selected: state.startupPath == null,

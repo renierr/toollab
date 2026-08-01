@@ -5792,7 +5792,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lokale Dateien sowie FTP- und SMB-Netzwerkfreigaben durchsuchen';
 
   @override
-  String get fileManagerAppFiles => 'App-Dateien';
+  String get fileManagerAppFiles => 'Standardordner';
 
   @override
   String get fileManagerConnections => 'Verbindungen';
@@ -5997,4 +5997,24 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileManagerOverwrite => 'Überschreiben';
+
+  @override
+  String get fileManagerRecentLocations => 'Zuletzt';
+
+  @override
+  String get fileManagerFolderItems => 'Elemente';
+
+  @override
+  String fileManagerFolderItemCount(int count) {
+    return '$count Elemente';
+  }
+
+  @override
+  String get fileManagerInstallApk => 'APK installieren';
+
+  @override
+  String get fileManagerStorage => 'Speicher';
+
+  @override
+  String get fileManagerDocuments => 'Dokumente';
 }

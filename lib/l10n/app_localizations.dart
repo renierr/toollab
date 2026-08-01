@@ -10460,7 +10460,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileManagerAppFiles.
   ///
   /// In en, this message translates to:
-  /// **'App files'**
+  /// **'Default folder'**
   String get fileManagerAppFiles;
 
   /// No description provided for @fileManagerConnections.
@@ -10840,6 +10840,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Overwrite'**
   String get fileManagerOverwrite;
+
+  /// No description provided for @fileManagerRecentLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get fileManagerRecentLocations;
+
+  /// No description provided for @fileManagerFolderItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get fileManagerFolderItems;
+
+  /// No description provided for @fileManagerFolderItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String fileManagerFolderItemCount(int count);
+
+  /// No description provided for @fileManagerInstallApk.
+  ///
+  /// In en, this message translates to:
+  /// **'Install APK'**
+  String get fileManagerInstallApk;
+
+  /// No description provided for @fileManagerStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get fileManagerStorage;
+
+  /// No description provided for @fileManagerDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get fileManagerDocuments;
 }
 
 class _AppLocalizationsDelegate
