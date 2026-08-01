@@ -122,7 +122,7 @@
             android:name="de.renier.tool_lab.FileManagerAlias"
             android:targetActivity="de.renier.tool_lab.FileManagerActivity"
             android:label="File Manager"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_file_manager"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
