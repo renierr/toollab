@@ -34,7 +34,7 @@ class FileManagerLocations extends StatelessWidget {
       ...state.recentPaths.where(
         (path) => path != state.appFilesPath && path != state.downloadsPath,
       ),
-    ];
+    ].take(7).toList();
     return Material(
       child: isNarrow
           ? SizedBox(
@@ -152,8 +152,10 @@ class FileManagerLocations extends StatelessWidget {
 
   String _favoriteLabel(String path) {
     final normalized = path.replaceAll('\\', '/');
-    final name = p.basename(normalized);
+    if (normalized.endsWith('/storage/emulated/0')) return 'Storage';
+    final name = p.posix.basename(normalized);
     const commonFolders = {
+      'download',
       'downloads',
       'documents',
       'images',
@@ -164,7 +166,7 @@ class FileManagerLocations extends StatelessWidget {
       'dcim',
     };
     if (commonFolders.contains(name.toLowerCase())) return name;
-    final parent = p.basename(p.dirname(normalized));
+    final parent = p.posix.basename(p.posix.dirname(normalized));
     return parent.isEmpty || parent == '.' ? name : '$parent/$name';
   }
 }
