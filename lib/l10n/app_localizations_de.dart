@@ -5847,4 +5847,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileManagerPaste => 'Einfügen';
+
+  @override
+  String get fileManagerDiscoverShares => 'Freigaben suchen';
+
+  @override
+  String get fileManagerDeleteTitle => 'Ausgewählte Dateien löschen?';
+
+  @override
+  String fileManagerDeleteMessage(int count) {
+    return '$count ausgewählte Elemente und alle Inhalte ausgewählter Ordner löschen? Dies kann nicht rückgängig gemacht werden.';
+  }
+
+  @override
+  String fileManagerSelected(int count) {
+    return '$count ausgewählt';
+  }
 }

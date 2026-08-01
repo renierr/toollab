@@ -52,11 +52,21 @@ class _FileManagerPageState extends State<FileManagerPage>
       await _tempScope.createFile('file_manager_${entry.name}'),
     );
     if (!mounted || path == null) return;
-    await FileSaveHelper.showOpenChooser(
-      context: context,
-      path: path,
-      mimeType: MimeTypeHelper.getMimeType(entry.name),
-    );
+    try {
+      await FileSaveHelper.showOpenChooser(
+        context: context,
+        path: path,
+        mimeType: MimeTypeHelper.getMimeType(entry.name),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString().replaceFirst('Exception: ', '')),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _createFolder() async {
@@ -78,10 +88,43 @@ class _FileManagerPageState extends State<FileManagerPage>
     }
   }
 
+  Future<void> _delete(FileManagerEntry entry) async {
+    final state = context.read<FileManagerState>();
+    if (!state.selectedPaths.contains(entry.path)) state.toggleSelection(entry);
+    await _confirmDelete();
+  }
+
+  Future<void> _confirmDelete() async {
+    final state = context.read<FileManagerState>();
+    final count = state.selectedPaths.length;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => ResponsiveAlertDialog(
+        title: Text(AppLocalizations.of(context).fileManagerDeleteTitle),
+        content: Text(
+          AppLocalizations.of(context).fileManagerDeleteMessage(count),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context).commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(AppLocalizations.of(context).commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) await state.deleteSelected();
+  }
+
   Future<void> _addConnection() async {
     final result = await showDialog<(FileManagerConnection, String)>(
       context: context,
-      builder: (_) => const FileManagerConnectionDialog(),
+      builder: (_) => FileManagerConnectionDialog(
+        onDiscoverSmbShares: context.read<FileManagerState>().discoverSmbShares,
+      ),
     );
     if (result != null && mounted) {
       await context.read<FileManagerState>().saveConnection(
@@ -175,11 +218,14 @@ class _FileManagerPageState extends State<FileManagerPage>
             state: state,
             onOpen: _openEntry,
             onRename: _rename,
-            onDelete: state.delete,
+            onDelete: _delete,
             onCopy: state.copy,
             onCut: state.cut,
             onGoUp: state.goUp,
             onToggleFavorite: state.toggleFavorite,
+            onToggleSelection: state.toggleSelection,
+            onClearSelection: state.clearSelection,
+            onDeleteSelection: _confirmDelete,
           );
           if (constraints.maxWidth < 720) {
             return Column(

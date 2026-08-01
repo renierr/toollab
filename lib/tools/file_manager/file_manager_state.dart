@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:dart_smb2/dart_smb2.dart';
 import 'package:flutter/foundation.dart';
@@ -8,10 +9,12 @@ import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_operation_worker.dart';
 
 enum FileManagerLocationType { local, ftp, smb }
 
@@ -30,8 +33,11 @@ class FileManagerState extends ChangeNotifier {
   FileManagerConnection? _connection;
   FTPConnect? _ftp;
   Smb2Pool? _smb;
-  String? _clipboardPath;
+  List<String> _clipboardPaths = [];
   bool _clipboardIsCut = false;
+  final Set<String> _selectedPaths = {};
+  int _operationCompleted = 0;
+  int _operationTotal = 0;
 
   List<FileManagerEntry> get entries => _entries;
   List<FileManagerConnection> get connections => _connections;
@@ -42,8 +48,13 @@ class FileManagerState extends ChangeNotifier {
   bool get isRemote => _locationType != FileManagerLocationType.local;
   bool get canGoUp => _path.isNotEmpty && _path != p.rootPrefix(_path);
   FileManagerConnection? get connection => _connection;
-  bool get canPaste => _clipboardPath != null;
+  bool get canPaste => _clipboardPaths.isNotEmpty;
   bool get clipboardIsCut => _clipboardIsCut;
+  Set<String> get selectedPaths => Set.unmodifiable(_selectedPaths);
+  bool get hasSelection => _selectedPaths.isNotEmpty;
+  bool get isOperating => _operationTotal > 0;
+  double? get operationProgress =>
+      _operationTotal == 0 ? null : _operationCompleted / _operationTotal;
 
   Future<void> initialize() async {
     final settings = await DatabaseService.instance.getAllSettings(
@@ -63,9 +74,9 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> openLocal(String directory) async {
-    await _disconnectRemote();
     _locationType = FileManagerLocationType.local;
     _connection = null;
+    await _disconnectRemote();
     await _load(() async {
       final dir = Directory(directory);
       final entities = await dir.list(followLinks: false).toList();
@@ -88,37 +99,70 @@ class FileManagerState extends ChangeNotifier {
 
   Future<void> openConnection(FileManagerConnection profile) async {
     await _disconnectRemote();
-    _connection = profile;
-    _locationType = profile.protocol == FileManagerProtocol.ftp
-        ? FileManagerLocationType.ftp
-        : FileManagerLocationType.smb;
     final password = await _secureStorage.read(key: _passwordKey(profile.id));
     await _load(() async {
       if (profile.protocol == FileManagerProtocol.ftp) {
-        _ftp = FTPConnect(
+        final ftp = FTPConnect(
           profile.host,
           port: profile.port,
           user: profile.username.isEmpty ? 'anonymous' : profile.username,
           pass: password ?? '',
         );
-        await _ftp!.connect();
-        if (profile.initialPath.isNotEmpty) {
-          await _ftp!.changeDirectory(profile.initialPath);
+        try {
+          await ftp.connect();
+          if (profile.initialPath.isNotEmpty) {
+            final changed = await ftp.changeDirectory(profile.initialPath);
+            if (!changed) {
+              throw Exception('FTP start folder could not be opened.');
+            }
+          }
+          _path = await ftp.currentDirectory();
+          _ftp = ftp;
+          _locationType = FileManagerLocationType.ftp;
+          _connection = profile;
+          await _loadFtpEntries();
+        } catch (_) {
+          await _safeDisconnectFtp(ftp);
+          rethrow;
         }
-        _path = await _ftp!.currentDirectory();
-        await _loadFtpEntries();
       } else {
         if (profile.share.isEmpty) throw Exception('An SMB share is required.');
-        _smb = await Smb2Pool.connect(
+        final smb = await Smb2Pool.connect(
           host: profile.host,
           share: profile.share,
           user: profile.username,
           password: password ?? '',
         );
-        _path = profile.initialPath;
-        await _loadSmbEntries();
+        try {
+          _path = profile.initialPath;
+          _smb = smb;
+          _locationType = FileManagerLocationType.smb;
+          _connection = profile;
+          await _loadSmbEntries();
+        } catch (_) {
+          _smb = null;
+          await smb.disconnect();
+          rethrow;
+        }
       }
     });
+  }
+
+  Future<List<String>> discoverSmbShares({
+    required String host,
+    required String username,
+    required String password,
+  }) async {
+    if (host.trim().isEmpty) throw Exception('Enter an SMB host first.');
+    final shares = await Smb2Pool.listSharesOn(
+      host: host.trim(),
+      user: username.trim().isEmpty ? null : username.trim(),
+      password: password,
+    );
+    return shares
+        .where((share) => share.isDisk)
+        .map((share) => share.name)
+        .toList();
   }
 
   Future<void> openEntry(FileManagerEntry entry) async {
@@ -162,10 +206,14 @@ class FileManagerState extends ChangeNotifier {
     await _load(() async {
       final target = File(tempPath);
       if (_locationType == FileManagerLocationType.ftp) {
-        final ok = await _ftp!.downloadFile(entry.name, target);
+        final ftp = _ftp;
+        if (ftp == null) throw Exception('FTP connection is no longer active.');
+        final ok = await ftp.downloadFile(entry.name, target);
         if (!ok) throw Exception('FTP download failed.');
       } else {
-        await _smb!.downloadToFile(_joinRemotePath(_path, entry.name), target);
+        final smb = _smb;
+        if (smb == null) throw Exception('SMB connection is no longer active.');
+        await smb.downloadToFile(_joinRemotePath(_path, entry.name), target);
       }
     });
     return _error == null ? tempPath : null;
@@ -228,54 +276,141 @@ class FileManagerState extends ChangeNotifier {
     });
   }
 
+  void toggleSelection(FileManagerEntry entry) {
+    if (!_selectedPaths.add(entry.path)) _selectedPaths.remove(entry.path);
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    _selectedPaths.clear();
+    notifyListeners();
+  }
+
   void copy(FileManagerEntry entry) {
     if (_locationType != FileManagerLocationType.local) return;
-    _clipboardPath = entry.path;
+    _clipboardPaths = _selectedPaths.isEmpty
+        ? [entry.path]
+        : _selectedPaths.toList();
     _clipboardIsCut = false;
     notifyListeners();
   }
 
   void cut(FileManagerEntry entry) {
     if (_locationType != FileManagerLocationType.local) return;
-    _clipboardPath = entry.path;
+    _clipboardPaths = _selectedPaths.isEmpty
+        ? [entry.path]
+        : _selectedPaths.toList();
     _clipboardIsCut = true;
     notifyListeners();
   }
 
   Future<void> paste() async {
-    final sourcePath = _clipboardPath;
-    if (sourcePath == null || _locationType != FileManagerLocationType.local) {
+    if (_clipboardPaths.isEmpty ||
+        _locationType != FileManagerLocationType.local) {
       return;
     }
+    await _runLocalOperation(
+      _clipboardPaths,
+      destination: _path,
+      move: _clipboardIsCut,
+    );
+    if (_clipboardIsCut && _error == null) {
+      _clipboardPaths = [];
+      _clipboardIsCut = false;
+    }
+  }
+
+  Future<void> deleteSelected() async {
+    if (_locationType == FileManagerLocationType.local) {
+      await _runLocalOperation(_selectedPaths.toList(), delete: true);
+      return;
+    }
+    final selected = _entries
+        .where((entry) => _selectedPaths.contains(entry.path))
+        .toList();
     await _load(() async {
-      final destination = p.join(_path, p.basename(sourcePath));
-      if (p.equals(sourcePath, destination)) return;
-      if (await FileSystemEntity.type(destination) !=
-          FileSystemEntityType.notFound) {
-        throw Exception('A file or folder with this name already exists.');
-      }
-      final sourceType = await FileSystemEntity.type(sourcePath);
-      if (sourceType == FileSystemEntityType.directory) {
-        if (_clipboardIsCut) {
-          await Directory(sourcePath).rename(destination);
+      for (final entry in selected) {
+        if (_locationType == FileManagerLocationType.ftp) {
+          if (entry.isDirectory) {
+            await _ftp!.deleteDirectory(entry.name);
+          } else {
+            await _ftp!.deleteFile(entry.name);
+          }
+        } else if (entry.isDirectory) {
+          await _smb!.rmdir(_joinRemotePath(_path, entry.name));
         } else {
-          await _copyDirectory(Directory(sourcePath), Directory(destination));
+          await _smb!.deleteFile(_joinRemotePath(_path, entry.name));
         }
-      } else if (sourceType == FileSystemEntityType.file) {
-        if (_clipboardIsCut) {
-          await File(sourcePath).rename(destination);
-        } else {
-          await File(sourcePath).copy(destination);
-        }
-      } else {
-        throw Exception('The selected item is no longer available.');
       }
-      if (_clipboardIsCut) {
-        _clipboardPath = null;
-        _clipboardIsCut = false;
-      }
+      _selectedPaths.clear();
       await refresh();
     });
+  }
+
+  Future<void> _runLocalOperation(
+    List<String> sources, {
+    String destination = '',
+    bool move = false,
+    bool delete = false,
+  }) async {
+    if (sources.isEmpty || _locationType != FileManagerLocationType.local) {
+      return;
+    }
+    _isLoading = true;
+    _error = null;
+    _operationCompleted = 0;
+    _operationTotal = 1;
+    notifyListeners();
+    final lease = await ForegroundRuntimeService.acquire(
+      title: 'File Manager',
+      text: delete
+          ? 'Deleting files'
+          : move
+          ? 'Moving files'
+          : 'Copying files',
+    );
+    final port = ReceivePort();
+    try {
+      await Isolate.spawn(runFileManagerOperation, {
+        'sendPort': port.sendPort,
+        'sources': sources,
+        'destination': destination,
+        'move': move,
+        'delete': delete,
+      });
+      await for (final message in port) {
+        final data = message as Map<Object?, Object?>;
+        if (data['type'] == 'progress') {
+          _operationCompleted = data['completed']! as int;
+          _operationTotal = data['total']! as int;
+          notifyListeners();
+          await lease.update(
+            title: 'File Manager',
+            text:
+                '${delete
+                    ? 'Deleting'
+                    : move
+                    ? 'Moving'
+                    : 'Copying'} $_operationCompleted of $_operationTotal files',
+          );
+        } else if (data['type'] == 'error') {
+          throw Exception(data['message']);
+        } else {
+          break;
+        }
+      }
+      _selectedPaths.clear();
+      await refresh();
+    } catch (error) {
+      _error = error.toString().replaceFirst('Exception: ', '');
+    } finally {
+      port.close();
+      _isLoading = false;
+      _operationCompleted = 0;
+      _operationTotal = 0;
+      await lease.release();
+      notifyListeners();
+    }
   }
 
   Future<void> refresh() async {
@@ -376,21 +511,25 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> _disconnectRemote() async {
-    await _ftp?.disconnect();
-    await _smb?.disconnect();
+    final ftp = _ftp;
+    final smb = _smb;
     _ftp = null;
     _smb = null;
+    if (ftp != null) await _safeDisconnectFtp(ftp);
+    if (smb != null) {
+      try {
+        await smb.disconnect();
+      } catch (error) {
+        debugPrint('[FileManagerState] SMB disconnect failed: $error');
+      }
+    }
   }
 
-  Future<void> _copyDirectory(Directory source, Directory destination) async {
-    await destination.create(recursive: true);
-    await for (final entity in source.list(followLinks: false)) {
-      final target = p.join(destination.path, p.basename(entity.path));
-      if (entity is Directory) {
-        await _copyDirectory(entity, Directory(target));
-      } else if (entity is File) {
-        await entity.copy(target);
-      }
+  Future<void> _safeDisconnectFtp(FTPConnect ftp) async {
+    try {
+      await ftp.disconnect();
+    } catch (error) {
+      debugPrint('[FileManagerState] FTP disconnect failed: $error');
     }
   }
 

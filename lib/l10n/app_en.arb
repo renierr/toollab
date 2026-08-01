@@ -3020,5 +3020,11 @@
   "fileManagerInitialPath": "Initial path",
   "fileManagerAllFilesAccess": "Allow access to all files",
   "fileManagerCut": "Cut",
-  "fileManagerPaste": "Paste"
+  "fileManagerPaste": "Paste",
+  "fileManagerDiscoverShares": "Discover shares",
+  "fileManagerDeleteTitle": "Delete selected files?",
+  "fileManagerDeleteMessage": "Delete {count} selected item(s), including all contents of selected folders? This cannot be undone.",
+  "@fileManagerDeleteMessage": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerSelected": "{count} selected",
+  "@fileManagerSelected": { "placeholders": { "count": { "type": "int" } } }
 }

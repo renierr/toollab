@@ -4,7 +4,17 @@ import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class FileManagerConnectionDialog extends StatefulWidget {
-  const FileManagerConnectionDialog({super.key});
+  final Future<List<String>> Function({
+    required String host,
+    required String username,
+    required String password,
+  })
+  onDiscoverSmbShares;
+
+  const FileManagerConnectionDialog({
+    super.key,
+    required this.onDiscoverSmbShares,
+  });
 
   @override
   State<FileManagerConnectionDialog> createState() =>
@@ -22,6 +32,8 @@ class _FileManagerConnectionDialogState
   final _password = TextEditingController();
   final _path = TextEditingController();
   FileManagerProtocol _protocol = FileManagerProtocol.ftp;
+  List<String> _shares = [];
+  bool _isDiscoveringShares = false;
 
   @override
   void dispose() {
@@ -81,12 +93,44 @@ class _FileManagerConnectionDialogState
               decoration: InputDecoration(labelText: l10n.fileManagerPort),
               validator: _required,
             ),
-            if (_protocol == FileManagerProtocol.smb)
-              TextFormField(
-                controller: _share,
-                decoration: InputDecoration(labelText: l10n.fileManagerShare),
-                validator: _required,
+            if (_protocol == FileManagerProtocol.smb) ...[
+              if (_shares.isEmpty)
+                TextFormField(
+                  controller: _share,
+                  decoration: InputDecoration(labelText: l10n.fileManagerShare),
+                  validator: _required,
+                )
+              else
+                DropdownButtonFormField<String>(
+                  initialValue: _shares.contains(_share.text)
+                      ? _share.text
+                      : null,
+                  decoration: InputDecoration(labelText: l10n.fileManagerShare),
+                  items: _shares
+                      .map(
+                        (share) =>
+                            DropdownMenuItem(value: share, child: Text(share)),
+                      )
+                      .toList(),
+                  onChanged: (value) =>
+                      setState(() => _share.text = value ?? ''),
+                  validator: _required,
+                ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _isDiscoveringShares ? null : _discoverShares,
+                  icon: _isDiscoveringShares
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.travel_explore_outlined),
+                  label: Text(l10n.fileManagerDiscoverShares),
+                ),
               ),
+            ],
             TextFormField(
               controller: _username,
               decoration: InputDecoration(labelText: l10n.fileManagerUsername),
@@ -117,6 +161,31 @@ class _FileManagerConnectionDialogState
 
   String? _required(String? value) =>
       value == null || value.trim().isEmpty ? '' : null;
+
+  Future<void> _discoverShares() async {
+    setState(() => _isDiscoveringShares = true);
+    try {
+      final shares = await widget.onDiscoverSmbShares(
+        host: _host.text,
+        username: _username.text,
+        password: _password.text,
+      );
+      if (!mounted) return;
+      setState(() {
+        _shares = shares;
+        if (shares.length == 1) _share.text = shares.first;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isDiscoveringShares = false);
+    }
+  }
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;

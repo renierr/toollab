@@ -5809,4 +5809,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileManagerPaste => 'Paste';
+
+  @override
+  String get fileManagerDiscoverShares => 'Discover shares';
+
+  @override
+  String get fileManagerDeleteTitle => 'Delete selected files?';
+
+  @override
+  String fileManagerDeleteMessage(int count) {
+    return 'Delete $count selected item(s), including all contents of selected folders? This cannot be undone.';
+  }
+
+  @override
+  String fileManagerSelected(int count) {
+    return '$count selected';
+  }
 }

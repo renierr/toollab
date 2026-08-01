@@ -136,7 +136,8 @@ class ToolLabForegroundService : Service() {
             this,
             NOTIFICATION_ID,
             notification,
-            android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
+            android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK or
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
         )
     }
 

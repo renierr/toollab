@@ -10570,6 +10570,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paste'**
   String get fileManagerPaste;
+
+  /// No description provided for @fileManagerDiscoverShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover shares'**
+  String get fileManagerDiscoverShares;
+
+  /// No description provided for @fileManagerDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected files?'**
+  String get fileManagerDeleteTitle;
+
+  /// No description provided for @fileManagerDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} selected item(s), including all contents of selected folders? This cannot be undone.'**
+  String fileManagerDeleteMessage(int count);
+
+  /// No description provided for @fileManagerSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String fileManagerSelected(int count);
 }
 
 class _AppLocalizationsDelegate

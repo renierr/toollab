@@ -2179,5 +2179,11 @@
   "fileManagerInitialPath": "Startpfad",
   "fileManagerAllFilesAccess": "Zugriff auf alle Dateien erlauben",
   "fileManagerCut": "Ausschneiden",
-  "fileManagerPaste": "Einfügen"
+  "fileManagerPaste": "Einfügen",
+  "fileManagerDiscoverShares": "Freigaben suchen",
+  "fileManagerDeleteTitle": "Ausgewählte Dateien löschen?",
+  "fileManagerDeleteMessage": "{count} ausgewählte Elemente und alle Inhalte ausgewählter Ordner löschen? Dies kann nicht rückgängig gemacht werden.",
+  "@fileManagerDeleteMessage": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerSelected": "{count} ausgewählt",
+  "@fileManagerSelected": { "placeholders": { "count": { "type": "int" } } }
 }
