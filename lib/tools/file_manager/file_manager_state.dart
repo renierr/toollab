@@ -378,18 +378,21 @@ class FileManagerState extends ChangeNotifier {
   Future<void> _pasteLocalToSmb() async {
     final smb = _smb;
     if (smb == null) return;
-    await _runNetworkOperation(() async {
-      for (final source in _clipboardPaths) {
-        await _copyLocalEntityToSmb(
-          smb,
-          source,
-          _joinRemotePath(_path, p.basename(source)),
-        );
-        if (_clipboardIsCut) await _deleteLocalEntity(source);
-        _reportNetworkProgress();
-      }
-      await refresh();
-    });
+    await _runNetworkOperation(
+      _clipboardIsCut ? FileManagerOperation.move : FileManagerOperation.copy,
+      () async {
+        for (final source in _clipboardPaths) {
+          await _copyLocalEntityToSmb(
+            smb,
+            source,
+            _joinRemotePath(_path, p.basename(source)),
+          );
+          if (_clipboardIsCut) await _deleteLocalEntity(source);
+          _reportNetworkProgress();
+        }
+        await refresh();
+      },
+    );
   }
 
   Future<void> _pasteSmbToLocal() async {
@@ -403,18 +406,21 @@ class FileManagerState extends ChangeNotifier {
       password: password ?? '',
     );
     try {
-      await _runNetworkOperation(() async {
-        for (final source in _clipboardPaths) {
-          await _copySmbEntityToLocal(
-            smb,
-            source,
-            p.join(_path, p.basename(source)),
-          );
-          if (_clipboardIsCut) await _deleteSmbEntity(smb, source);
-          _reportNetworkProgress();
-        }
-        await refresh();
-      });
+      await _runNetworkOperation(
+        _clipboardIsCut ? FileManagerOperation.move : FileManagerOperation.copy,
+        () async {
+          for (final source in _clipboardPaths) {
+            await _copySmbEntityToLocal(
+              smb,
+              source,
+              p.join(_path, p.basename(source)),
+            );
+            if (_clipboardIsCut) await _deleteSmbEntity(smb, source);
+            _reportNetworkProgress();
+          }
+          await refresh();
+        },
+      );
     } finally {
       await smb.disconnect();
     }
@@ -423,29 +429,35 @@ class FileManagerState extends ChangeNotifier {
   Future<void> _pasteSmb() async {
     final smb = _smb;
     if (smb == null) return;
-    await _runNetworkOperation(() async {
-      for (final source in _clipboardPaths) {
-        final destination = _joinRemotePath(_path, p.basename(source));
-        if (source == destination) continue;
-        if (_clipboardIsCut) {
-          await smb.rename(source, destination);
-        } else {
-          await _copySmbEntity(smb, source, destination);
+    await _runNetworkOperation(
+      _clipboardIsCut ? FileManagerOperation.move : FileManagerOperation.copy,
+      () async {
+        for (final source in _clipboardPaths) {
+          final destination = _joinRemotePath(_path, p.basename(source));
+          if (source == destination) continue;
+          if (_clipboardIsCut) {
+            await smb.rename(source, destination);
+          } else {
+            await _copySmbEntity(smb, source, destination);
+          }
+          _reportNetworkProgress();
         }
-        _reportNetworkProgress();
-      }
-      await refresh();
-    });
+        await refresh();
+      },
+    );
   }
 
-  Future<void> _runNetworkOperation(Future<void> Function() action) async {
+  Future<void> _runNetworkOperation(
+    FileManagerOperation operation,
+    Future<void> Function() action,
+  ) async {
     _isLoading = true;
     _error = null;
-    _operation = _clipboardIsCut
-        ? FileManagerOperation.move
-        : FileManagerOperation.copy;
+    _operation = operation;
     _operationCompleted = 0;
-    _operationTotal = _clipboardPaths.length;
+    _operationTotal = operation == FileManagerOperation.delete
+        ? _selectedPaths.length
+        : _clipboardPaths.length;
     notifyListeners();
     try {
       await action();
@@ -474,7 +486,7 @@ class FileManagerState extends ChangeNotifier {
     final selected = _entries
         .where((entry) => _selectedPaths.contains(entry.path))
         .toList();
-    await _load(() async {
+    await _runNetworkOperation(FileManagerOperation.delete, () async {
       for (final entry in selected) {
         if (_locationType == FileManagerLocationType.ftp) {
           if (entry.isDirectory) {
@@ -487,6 +499,7 @@ class FileManagerState extends ChangeNotifier {
         } else {
           await _smb!.deleteFile(_joinRemotePath(_path, entry.name));
         }
+        _reportNetworkProgress();
       }
       _selectedPaths.clear();
       await refresh();
