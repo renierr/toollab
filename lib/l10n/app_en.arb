@@ -3066,5 +3066,6 @@
   "fileManagerStartupFolder": "Startup folder",
   "fileManagerCurrentFolder": "Current folder",
   "fileManagerSorting": "Sorting",
-  "fileManagerOpenWith": "Open with"
+  "fileManagerOpenWith": "Open with",
+  "fileManagerFoldersFirst": "Folders before files"
 }

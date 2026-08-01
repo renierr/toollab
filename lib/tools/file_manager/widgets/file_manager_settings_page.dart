@@ -79,6 +79,11 @@ class FileManagerSettingsPage extends StatelessWidget {
               onChanged: (ascending) =>
                   state.updateSort(state.sortField, ascending),
             ),
+            SwitchListTile.adaptive(
+              title: Text(l10n.fileManagerFoldersFirst),
+              value: state.foldersFirst,
+              onChanged: state.updateFoldersFirst,
+            ),
             const Divider(height: 1),
             _SettingsSection(title: l10n.fileManagerOpenWith),
             ...FileManagerOpenCategory.values.map(

@@ -325,7 +325,13 @@ class _EntryTile extends StatelessWidget {
       maxLines: MediaQuery.sizeOf(context).width < 720 ? 2 : 1,
       overflow: TextOverflow.ellipsis,
     ),
-    subtitle: Text(_metadata(entry)),
+    subtitle: Text(
+      _metadata(entry),
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        fontSize: 11,
+      ),
+    ),
     trailing: selectionMode
         ? Checkbox(value: selected, onChanged: (_) => onToggleSelection(entry))
         : PopupMenuButton<String>(
@@ -409,11 +415,11 @@ class _EntryTile extends StatelessWidget {
 
   String _metadata(FileManagerEntry entry) {
     final parts = <String>[];
-    if (!entry.isDirectory && entry.size != null) {
-      parts.add(FormatHelper.fileSize(entry.size!));
-    }
     if (entry.modified != null) {
       parts.add(FormatHelper.dateTime(entry.modified!));
+    }
+    if (!entry.isDirectory && entry.size != null) {
+      parts.add(FormatHelper.fileSize(entry.size!));
     }
     return parts.join('  -  ');
   }

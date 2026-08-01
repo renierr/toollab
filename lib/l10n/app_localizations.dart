@@ -10810,6 +10810,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open with'**
   String get fileManagerOpenWith;
+
+  /// No description provided for @fileManagerFoldersFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders before files'**
+  String get fileManagerFoldersFirst;
 }
 
 class _AppLocalizationsDelegate

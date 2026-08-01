@@ -2225,5 +2225,6 @@
   "fileManagerStartupFolder": "Startordner",
   "fileManagerCurrentFolder": "Aktueller Ordner",
   "fileManagerSorting": "Sortierung",
-  "fileManagerOpenWith": "Öffnen mit"
+  "fileManagerOpenWith": "Öffnen mit",
+  "fileManagerFoldersFirst": "Ordner vor Dateien"
 }

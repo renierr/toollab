@@ -29,6 +29,7 @@ class FileManagerState extends ChangeNotifier {
   static const _favoritesKey = 'favorite_paths';
   static const _sortFieldKey = 'sort_field';
   static const _sortAscendingKey = 'sort_ascending';
+  static const _foldersFirstKey = 'folders_first';
   static const _startupPathKey = 'startup_path';
   static const _openToolPrefix = 'open_tool_';
   static const _secureStorage = FlutterSecureStorage();
@@ -58,6 +59,7 @@ class FileManagerState extends ChangeNotifier {
   FileManagerOperation? _operation;
   FileManagerSortField _sortField = FileManagerSortField.name;
   bool _sortAscending = true;
+  bool _foldersFirst = true;
   final Map<FileManagerOpenCategory, String?> _openToolIds = {};
 
   List<FileManagerEntry> get entries => _entries;
@@ -100,6 +102,7 @@ class FileManagerState extends ChangeNotifier {
   FileManagerOperation? get operation => _operation;
   FileManagerSortField get sortField => _sortField;
   bool get sortAscending => _sortAscending;
+  bool get foldersFirst => _foldersFirst;
   String? openToolId(FileManagerOpenCategory category) =>
       _openToolIds[category];
 
@@ -143,6 +146,7 @@ class FileManagerState extends ChangeNotifier {
       orElse: () => FileManagerSortField.name,
     );
     _sortAscending = settings[_sortAscendingKey] != 'false';
+    _foldersFirst = settings[_foldersFirstKey] != 'false';
     _startupPath = settings[_startupPathKey];
     for (final category in FileManagerOpenCategory.values) {
       _openToolIds[category] = settings['$_openToolPrefix${category.name}'];
@@ -705,6 +709,17 @@ class FileManagerState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateFoldersFirst(bool foldersFirst) async {
+    _foldersFirst = foldersFirst;
+    _entries.sort(_compareEntries);
+    await DatabaseService.instance.setSetting(
+      FileManagerTool.config.id,
+      _foldersFirstKey,
+      foldersFirst.toString(),
+    );
+    notifyListeners();
+  }
+
   Future<void> updateStartupPath(String? path) async {
     _startupPath = path;
     if (path == null) {
@@ -988,7 +1003,9 @@ class FileManagerState extends ChangeNotifier {
   }
 
   int _compareEntries(FileManagerEntry a, FileManagerEntry b) {
-    if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
+    if (_foldersFirst && a.isDirectory != b.isDirectory) {
+      return a.isDirectory ? -1 : 1;
+    }
     final comparison = switch (_sortField) {
       FileManagerSortField.name => a.name.toLowerCase().compareTo(
         b.name.toLowerCase(),

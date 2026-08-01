@@ -5942,4 +5942,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileManagerOpenWith => 'Open with';
+
+  @override
+  String get fileManagerFoldersFirst => 'Folders before files';
 }

@@ -17,6 +17,7 @@ import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dial
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_details_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_name_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -247,26 +248,11 @@ class _FileManagerPageState extends State<FileManagerPage>
     String title, {
     String initialValue = '',
   }) async {
-    final controller = TextEditingController(text: initialValue);
-    final result = await showDialog<String>(
+    return showDialog<String>(
       context: context,
-      builder: (context) => ResponsiveAlertDialog(
-        title: Text(title),
-        content: TextField(controller: controller, autofocus: true),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text(AppLocalizations.of(context).commonSave),
-          ),
-        ],
-      ),
+      builder: (_) =>
+          FileManagerNameDialog(title: title, initialValue: initialValue),
     );
-    controller.dispose();
-    return result == null || result.isEmpty ? null : result;
   }
 
   @override
