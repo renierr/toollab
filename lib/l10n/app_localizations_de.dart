@@ -39,19 +39,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsCompactView => 'Kompakte Ansicht';
 
   @override
-  String get settingsCompactViewSubtitle => 'Kleinere Karten, mehr Tools pro Zeile';
+  String get settingsCompactViewSubtitle =>
+      'Kleinere Karten, mehr Tools pro Zeile';
 
   @override
   String get settingsSystemNotifications => 'Systembenachrichtigungen';
 
   @override
-  String get settingsSystemNotificationsSubtitle => 'Systembenachrichtigungen aktivieren oder deaktivieren';
+  String get settingsSystemNotificationsSubtitle =>
+      'Systembenachrichtigungen aktivieren oder deaktivieren';
 
   @override
   String get settingsLowLatencyAudio => 'Audio mit geringer Latenz';
 
   @override
-  String get settingsLowLatencyAudioSubtitle => 'Ermöglicht eine schnellere Audiowiedergabe. Deaktivieren, wenn die Bildschirmaufnahme stumm ist';
+  String get settingsLowLatencyAudioSubtitle =>
+      'Ermöglicht eine schnellere Audiowiedergabe. Deaktivieren, wenn die Bildschirmaufnahme stumm ist';
 
   @override
   String get settingsSortBy => 'Sortieren nach';
@@ -187,7 +190,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipDeleteModuleTitle => 'Modul löschen';
 
   @override
-  String get chipDeleteModuleMessage => 'Dieses Modul aus dem Archiv entfernen?';
+  String get chipDeleteModuleMessage =>
+      'Dieses Modul aus dem Archiv entfernen?';
 
   @override
   String chipSyncedResult(Object pulled, Object pushed) {
@@ -247,13 +251,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipNotificationTitle => 'Chiptune-Wiedergabe aktiv';
 
   @override
-  String get chipNotificationText => 'ToolLab hält die Audiowiedergabe im Hintergrund aufrecht';
+  String get chipNotificationText =>
+      'ToolLab hält die Audiowiedergabe im Hintergrund aufrecht';
 
   @override
   String get treadmillNotificationTitle => 'Laufband-Training aktiv';
 
   @override
-  String get treadmillNotificationText => 'ToolLab zeichnet deine Sitzung weiter auf';
+  String get treadmillNotificationText =>
+      'ToolLab zeichnet deine Sitzung weiter auf';
 
   @override
   String get chipPauseTooltip => 'Pause';
@@ -305,10 +311,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipFolderTooltip => 'Ordner abspielen';
 
   @override
-  String get chipFolderEmpty => 'Keine abspielbaren Moduldateien in diesem Ordner';
+  String get chipFolderEmpty =>
+      'Keine abspielbaren Moduldateien in diesem Ordner';
 
   @override
-  String get chipPlaylistNoSupported => 'Keine unterstützten Moduldateien ausgewählt';
+  String get chipPlaylistNoSupported =>
+      'Keine unterstützten Moduldateien ausgewählt';
 
   @override
   String get chipSelectOutputDevice => 'Ausgabegerät auswählen';
@@ -373,7 +381,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipRandomTitle => 'Zufälliges Stück';
 
   @override
-  String get chipRandomFetching => 'Zufälliges Stück von The Mod Archive wird geladen…';
+  String get chipRandomFetching =>
+      'Zufälliges Stück von The Mod Archive wird geladen…';
 
   @override
   String chipRandomFetchFailed(Object error) {
@@ -387,7 +396,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chipRandomShuffleAgain => 'Neu mischen';
 
   @override
-  String get chipRandomCredits => 'Quelle: The Mod Archive — eine freie Sammlung von Tracker-Musik. Alle Rechte liegen bei den ursprünglichen Künstlern.';
+  String get chipRandomCredits =>
+      'Quelle: The Mod Archive — eine freie Sammlung von Tracker-Musik. Alle Rechte liegen bei den ursprünglichen Künstlern.';
 
   @override
   String chipRandomSourceLink(Object moduleId) {
@@ -440,13 +450,15 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get coreAboutDescription => 'ToolLab ist eine Sammlung von Dienstprogrammen für Ihr Gerät. Es umfasst Sensoren, Rechner, Geräteinformationen, NFC-Tag-Lesen/-Schreiben, PDF-Anzeige, Notizen und vieles mehr – alles in einer App.';
+  String get coreAboutDescription =>
+      'ToolLab ist eine Sammlung von Dienstprogrammen für Ihr Gerät. Es umfasst Sensoren, Rechner, Geräteinformationen, NFC-Tag-Lesen/-Schreiben, PDF-Anzeige, Notizen und vieles mehr – alles in einer App.';
 
   @override
   String get coreAboutDisclaimer => 'Haftungsausschluss';
 
   @override
-  String get coreAboutDisclaimerText => 'Diese App wird ohne jegliche Gewährleistung bereitgestellt. Der Entwickler haftet nicht für Schäden, Datenverluste oder Probleme, die aus der Nutzung dieser Software entstehen.';
+  String get coreAboutDisclaimerText =>
+      'Diese App wird ohne jegliche Gewährleistung bereitgestellt. Der Entwickler haftet nicht für Schäden, Datenverluste oder Probleme, die aus der Nutzung dieser Software entstehen.';
 
   @override
   String get coreAboutThirdPartyLicenses => 'Drittanbieter-Lizenzen';
@@ -455,7 +467,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreMaintenanceTitle => 'Wartungseinstellungen';
 
   @override
-  String get coreDatabaseExportedAndroid => 'Datenbank erfolgreich in den Downloads-Ordner exportiert.';
+  String get coreDatabaseExportedAndroid =>
+      'Datenbank erfolgreich in den Downloads-Ordner exportiert.';
 
   @override
   String coreDatabaseExportedGeneral(String path) {
@@ -468,7 +481,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get coreSettingsExportedAndroid => 'Einstellungen erfolgreich in den Downloads-Ordner exportiert.';
+  String get coreSettingsExportedAndroid =>
+      'Einstellungen erfolgreich in den Downloads-Ordner exportiert.';
 
   @override
   String coreSettingsExportedGeneral(String path) {
@@ -487,13 +501,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreDatabaseImportButton => 'Datenbank importieren (.db)';
 
   @override
-  String get coreDatabaseImportDescription => 'Stellt eine zuvor exportierte Datenbank wieder her. Dabei werden alle aktuellen Tool-Daten und Einstellungen unwiderruflich überschrieben.';
+  String get coreDatabaseImportDescription =>
+      'Stellt eine zuvor exportierte Datenbank wieder her. Dabei werden alle aktuellen Tool-Daten und Einstellungen unwiderruflich überschrieben.';
 
   @override
   String get coreDatabaseImportConfirmTitle => 'Datenbank importieren?';
 
   @override
-  String get coreDatabaseImportConfirmMessage => 'Dadurch werden alle aktuellen Daten und Einstellungen unwiderruflich durch den Inhalt des ausgewählten Backups überschrieben und die App wird neu geladen. Diese Aktion kann nicht rückgängig gemacht werden.';
+  String get coreDatabaseImportConfirmMessage =>
+      'Dadurch werden alle aktuellen Daten und Einstellungen unwiderruflich durch den Inhalt des ausgewählten Backups überschrieben und die App wird neu geladen. Diese Aktion kann nicht rückgängig gemacht werden.';
 
   @override
   String coreDatabaseImportInvalid(String error) {
@@ -501,7 +517,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get coreDatabaseImportSuccess => 'Datenbank erfolgreich importiert. Deine Daten und Einstellungen wurden wiederhergestellt.';
+  String get coreDatabaseImportSuccess =>
+      'Datenbank erfolgreich importiert. Deine Daten und Einstellungen wurden wiederhergestellt.';
 
   @override
   String coreDatabaseImportFailed(String error) {
@@ -529,10 +546,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreShortcutsDirectAccessTitle => 'Direktzugriff-Starter';
 
   @override
-  String get coreShortcutsDirectAccessSubtitle => 'Fügen Sie separate Home-Screen-Symbole oder App-Drawer-Einträge für Ihre Lieblingstools hinzu. Ein Tippen auf eine Verknüpfung öffnet die App direkt in diesem Tool.';
+  String get coreShortcutsDirectAccessSubtitle =>
+      'Fügen Sie separate Home-Screen-Symbole oder App-Drawer-Einträge für Ihre Lieblingstools hinzu. Ein Tippen auf eine Verknüpfung öffnet die App direkt in diesem Tool.';
 
   @override
-  String get coreShortcutsAndroidRequired => 'Android wird benötigt, um native Verknüpfungen anzuheften oder App-Drawer-Symbole zu verwalten. Änderungen werden lokal gespeichert, aber keine nativen Symbole werden verändert.';
+  String get coreShortcutsAndroidRequired =>
+      'Android wird benötigt, um native Verknüpfungen anzuheften oder App-Drawer-Symbole zu verwalten. Änderungen werden lokal gespeichert, aber keine nativen Symbole werden verändert.';
 
   @override
   String get coreShortcutsSelectTools => 'Tools zur Konfiguration auswählen';
@@ -556,10 +575,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreSyncTitle => 'Cloud-Synchronisierung';
 
   @override
-  String get coreSyncAcrossDevicesTitle => 'Daten geräteübergreifend synchronisieren';
+  String get coreSyncAcrossDevicesTitle =>
+      'Daten geräteübergreifend synchronisieren';
 
   @override
-  String get coreSyncAcrossDevicesSubtitle => 'Mit der Cloud-Synchronisierung können Sie Ihre Tool-Daten sichern und nahtlos mit einem zentralen Server abgleichen.';
+  String get coreSyncAcrossDevicesSubtitle =>
+      'Mit der Cloud-Synchronisierung können Sie Ihre Tool-Daten sichern und nahtlos mit einem zentralen Server abgleichen.';
 
   @override
   String get coreSyncEnableTitle => 'Synchronisierung aktivieren';
@@ -577,13 +598,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreSyncServerBaseUrl => 'Server-Basis-URL';
 
   @override
-  String get coreSyncServerUrlRequired => 'Server-URL ist erforderlich, wenn die Synchronisierung aktiviert ist';
+  String get coreSyncServerUrlRequired =>
+      'Server-URL ist erforderlich, wenn die Synchronisierung aktiviert ist';
 
   @override
   String get coreSyncUserId => 'Benutzer-ID (optional)';
 
   @override
-  String get coreSyncUserIdHint => 'Benutzername oder Benutzer-ID eingeben (optional)';
+  String get coreSyncUserIdHint =>
+      'Benutzername oder Benutzer-ID eingeben (optional)';
 
   @override
   String get coreSyncStatusTitle => 'Synchronisierungsstatus';
@@ -608,7 +631,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get coreSyncFailedNoUrl => 'Synchronisierung fehlgeschlagen. Server-URL ist leer.';
+  String get coreSyncFailedNoUrl =>
+      'Synchronisierung fehlgeschlagen. Server-URL ist leer.';
 
   @override
   String coreSyncFailed(String error) {
@@ -636,22 +660,28 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreSettingsDialogTitle => 'Übersichtseinstellungen';
 
   @override
-  String get coreSettingsDialogSyncSubtitle => 'Tool-Daten sichern und mit der Cloud synchronisieren';
+  String get coreSettingsDialogSyncSubtitle =>
+      'Tool-Daten sichern und mit der Cloud synchronisieren';
 
   @override
-  String get coreSettingsDialogMaintenanceSubtitle => 'Datenbank-Backups und Einstellungen als JSON herunterladen';
+  String get coreSettingsDialogMaintenanceSubtitle =>
+      'Datenbank-Backups und Einstellungen als JSON herunterladen';
 
   @override
-  String get coreSettingsDialogShortcutsSubtitle => 'Verknüpfungen anheften oder App-Drawer-Symbole verwalten';
+  String get coreSettingsDialogShortcutsSubtitle =>
+      'Verknüpfungen anheften oder App-Drawer-Symbole verwalten';
 
   @override
-  String get coreSettingsDialogOpenWithSubtitle => 'Standard-Toolzuordnungen für geteilte Dateien verwalten';
+  String get coreSettingsDialogOpenWithSubtitle =>
+      'Standard-Toolzuordnungen für geteilte Dateien verwalten';
 
   @override
-  String get coreSettingsDialogAppearanceSubtitle => 'Design, kompakte Ansicht, Benachrichtigungen, Sortierung';
+  String get coreSettingsDialogAppearanceSubtitle =>
+      'Design, kompakte Ansicht, Benachrichtigungen, Sortierung';
 
   @override
-  String get coreSettingsDialogAboutSubtitle => 'Version, Lizenzen und App-Informationen';
+  String get coreSettingsDialogAboutSubtitle =>
+      'Version, Lizenzen und App-Informationen';
 
   @override
   String get coreOpenWithDefaultsTitle => 'Standardmäßig öffnen mit';
@@ -660,13 +690,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreOpenWithResetTitle => 'Alle Standards zurücksetzen?';
 
   @override
-  String get coreOpenWithResetContent => 'Dadurch werden alle „Immer öffnen mit“-Zuordnungen gelöscht. Beim nächsten Öffnen einer geteilten Datei erscheint wieder der Auswahldialog.';
+  String get coreOpenWithResetContent =>
+      'Dadurch werden alle „Immer öffnen mit“-Zuordnungen gelöscht. Beim nächsten Öffnen einer geteilten Datei erscheint wieder der Auswahldialog.';
 
   @override
   String get coreOpenWithNoDefaults => 'Keine Standardzuordnungen festgelegt.';
 
   @override
-  String get coreOpenWithAssociationsLabel => 'Standard-Toolzuordnungen für geteilte Dateien:';
+  String get coreOpenWithAssociationsLabel =>
+      'Standard-Toolzuordnungen für geteilte Dateien:';
 
   @override
   String get coreOpenWithResetButton => 'Alle Standards zurücksetzen';
@@ -708,7 +740,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get emfHardwareSensor => 'HARDWARE-SENSOR';
 
   @override
-  String get emfOpenVirtualSensorToolbox => 'VIRTUELLES SENSOR-TOOLBOX ÖFFNEN (ENTWICKLER)';
+  String get emfOpenVirtualSensorToolbox =>
+      'VIRTUELLES SENSOR-TOOLBOX ÖFFNEN (ENTWICKLER)';
 
   @override
   String get emfDeveloperSimulationLab => '🛠️ ENTWICKLER-SIMULATIONSLABOR';
@@ -759,10 +792,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropPastingText => 'Text aus Zwischenablage wird eingefügt...';
 
   @override
-  String get fastDropPastingImage => 'Bild aus Zwischenablage wird eingefügt...';
+  String get fastDropPastingImage =>
+      'Bild aus Zwischenablage wird eingefügt...';
 
   @override
-  String get fastDropClipboardEmpty => 'Kein Text- oder Bildinhalt in der Zwischenablage gefunden';
+  String get fastDropClipboardEmpty =>
+      'Kein Text- oder Bildinhalt in der Zwischenablage gefunden';
 
   @override
   String get fastDropUploadedSuccessfully => 'Erfolgreich hochgeladen!';
@@ -778,7 +813,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get fastDropSharedFilesUploaded => 'Geteilte Dateien erfolgreich hochgeladen!';
+  String get fastDropSharedFilesUploaded =>
+      'Geteilte Dateien erfolgreich hochgeladen!';
 
   @override
   String get fastDropDeleteTitle => 'Drop löschen';
@@ -834,7 +870,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropProgressUploading => 'Wird hochgeladen';
 
   @override
-  String fastDropProgressDetails(String transferred, String total, String speed, String seconds) {
+  String fastDropProgressDetails(
+    String transferred,
+    String total,
+    String speed,
+    String seconds,
+  ) {
     return '$transferred / $total ($speed MB/s, ${seconds}s)';
   }
 
@@ -891,10 +932,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropNoDropsTitle => 'Noch keine Drops';
 
   @override
-  String get fastDropNoDropsSubtitle => 'Dateien hierher ziehen oder Inhalt aus der Zwischenablage einfügen, um ihn vorübergehend zu speichern.';
+  String get fastDropNoDropsSubtitle =>
+      'Dateien hierher ziehen oder Inhalt aus der Zwischenablage einfügen, um ihn vorübergehend zu speichern.';
 
   @override
-  String get fastDropDownloadingForPreview => 'Datei für Vorschau wird heruntergeladen...';
+  String get fastDropDownloadingForPreview =>
+      'Datei für Vorschau wird heruntergeladen...';
 
   @override
   String fastDropPreviewFailed(String error) {
@@ -907,7 +950,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get fastDropPreviewNotAvailable => 'Für diesen Dateityp ist keine Vorschau verfügbar.';
+  String get fastDropPreviewNotAvailable =>
+      'Für diesen Dateityp ist keine Vorschau verfügbar.';
 
   @override
   String get fastDropOpenWithApp => 'Mit App öffnen';
@@ -916,7 +960,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropNotConfiguredTitle => 'Sync-Server nicht konfiguriert';
 
   @override
-  String get fastDropNotConfiguredBody => 'Fast Drop benötigt eine Verbindung zum Backend-Server. Bitte konfigurieren Sie die Sync-Server-URL in den Einstellungen, um Dateien zu teilen.';
+  String get fastDropNotConfiguredBody =>
+      'Fast Drop benötigt eine Verbindung zum Backend-Server. Bitte konfigurieren Sie die Sync-Server-URL in den Einstellungen, um Dateien zu teilen.';
 
   @override
   String get fastDropConfigureServer => 'Server konfigurieren';
@@ -925,13 +970,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropSyncDisabledTitle => 'Cloud-Sync ist deaktiviert';
 
   @override
-  String get fastDropSyncDisabledBody => 'Fast Drop erfordert, dass Cloud-Sync in den Einstellungen aktiviert ist.';
+  String get fastDropSyncDisabledBody =>
+      'Fast Drop erfordert, dass Cloud-Sync in den Einstellungen aktiviert ist.';
 
   @override
   String get fastDropEnableButton => 'Aktivieren';
 
   @override
-  String get fastDropConfigureServerBody => 'Bitte zuerst die Server-URL in den Cloud-Einstellungen konfigurieren.';
+  String get fastDropConfigureServerBody =>
+      'Bitte zuerst die Server-URL in den Cloud-Einstellungen konfigurieren.';
 
   @override
   String get fastDropServerUnreachable => 'Sync-Server nicht erreichbar';
@@ -970,16 +1017,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropP2pStopReceiving => 'Empfang stoppen';
 
   @override
-  String get fastDropP2pWaitingForSender => 'Warte auf ein Gerät in der Nähe, das eine Datei sendet...';
+  String get fastDropP2pWaitingForSender =>
+      'Warte auf ein Gerät in der Nähe, das eine Datei sendet...';
 
   @override
   String get fastDropP2pAbortSend => 'Senden abbrechen';
 
   @override
-  String get fastDropP2pWaitingForReceiver => 'Warte auf ein Gerät in der Nähe, das den Empfang startet...';
+  String get fastDropP2pWaitingForReceiver =>
+      'Warte auf ein Gerät in der Nähe, das den Empfang startet...';
 
   @override
-  String get fastDropP2pPeersFoundPickOne => 'Gerät gefunden — zum Senden unten auswählen';
+  String get fastDropP2pPeersFoundPickOne =>
+      'Gerät gefunden — zum Senden unten auswählen';
 
   @override
   String fastDropP2pEstimateWifi(String duration) {
@@ -1004,7 +1054,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropP2pScanningForPeers => 'Suche nach Geräten in der Nähe...';
 
   @override
-  String get fastDropP2pNoPeersFound => 'Noch keine Geräte gefunden. Stelle sicher, dass das andere Gerät auf \"Empfang starten\" getippt hat.';
+  String get fastDropP2pNoPeersFound =>
+      'Noch keine Geräte gefunden. Stelle sicher, dass das andere Gerät auf \"Empfang starten\" getippt hat.';
 
   @override
   String fastDropP2pSignalStrength(int rssi) {
@@ -1024,13 +1075,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropP2pTransferringBle => 'Übertragung über Bluetooth';
 
   @override
-  String get fastDropP2pBleFallbackWarning => 'Kein gemeinsames Netzwerk gefunden — Übertragung über Bluetooth, was deutlich langsamer ist. Verbinde beide Geräte mit demselben WLAN für schnellere Übertragungen.';
+  String get fastDropP2pBleFallbackWarning =>
+      'Kein gemeinsames Netzwerk gefunden — Übertragung über Bluetooth, was deutlich langsamer ist. Verbinde beide Geräte mit demselben WLAN für schnellere Übertragungen.';
 
   @override
   String get fastDropP2pIncomingTitle => 'Eingehende Datei';
 
   @override
-  String fastDropP2pIncomingMessage(String sender, String filename, String size) {
+  String fastDropP2pIncomingMessage(
+    String sender,
+    String filename,
+    String size,
+  ) {
     return '$sender möchte dir \"$filename\" ($size) senden. Übertragung annehmen?';
   }
 
@@ -1047,7 +1103,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get focusAutoStopTimer => 'Auto-Stopp-Timer';
 
   @override
-  String get focusStartPlaybackToEnableTimer => 'Wiedergabe starten, um Timer zu aktivieren';
+  String get focusStartPlaybackToEnableTimer =>
+      'Wiedergabe starten, um Timer zu aktivieren';
 
   @override
   String focusCustomMinutes(int minutes) {
@@ -1085,7 +1142,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get focusNotificationTitle => 'Fokus-Geräusch aktiv';
 
   @override
-  String get focusNotificationText => 'ToolLab hält die Hintergrundgeräusche aktiv';
+  String get focusNotificationText =>
+      'ToolLab hält die Hintergrundgeräusche aktiv';
 
   @override
   String get focusNoTimerSet => 'Kein Timer gesetzt';
@@ -1109,7 +1167,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get img2pdfNoImageInClipboard => 'Kein Bild in der Zwischenablage gefunden';
+  String get img2pdfNoImageInClipboard =>
+      'Kein Bild in der Zwischenablage gefunden';
 
   @override
   String img2pdfFailedReadClipboard(String error) {
@@ -1141,7 +1200,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get img2pdfNoImagesYet => 'Noch keine Bilder hinzugefügt';
 
   @override
-  String get img2pdfNoImagesHint => 'Bilder hier ablegen oder „Weitere hinzufügen“ wählen';
+  String get img2pdfNoImagesHint =>
+      'Bilder hier ablegen oder „Weitere hinzufügen“ wählen';
 
   @override
   String img2pdfPageNumber(int page) {
@@ -1210,7 +1270,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get imgViewDiscardChangesTitle => 'Änderungen verwerfen?';
 
   @override
-  String get imgViewDiscardChangesMessage => 'Dieses Bild hat ungespeicherte Änderungen. Beim Verlassen werden sie verworfen.';
+  String get imgViewDiscardChangesMessage =>
+      'Dieses Bild hat ungespeicherte Änderungen. Beim Verlassen werden sie verworfen.';
 
   @override
   String get imgViewDiscard => 'Verwerfen';
@@ -1270,10 +1331,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get imgViewTransform => 'Transformieren';
 
   @override
-  String get imgViewCroppingActive => 'Zuschneiden aktiv. Steuerung auf dem Bild anpassen.';
+  String get imgViewCroppingActive =>
+      'Zuschneiden aktiv. Steuerung auf dem Bild anpassen.';
 
   @override
-  String get imgViewRedactingActive => 'Schwärzen aktiv. Steuerung auf dem Bild anpassen.';
+  String get imgViewRedactingActive =>
+      'Schwärzen aktiv. Steuerung auf dem Bild anpassen.';
 
   @override
   String get imgViewRotateLeft => '90° nach links drehen';
@@ -1318,7 +1381,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get imgViewPreserveExif => 'EXIF-Metadaten beibehalten';
 
   @override
-  String get imgViewPreserveExifSubtitle => 'GPS, Kamera-Tags und Datum beibehalten (nur JPEG)';
+  String get imgViewPreserveExifSubtitle =>
+      'GPS, Kamera-Tags und Datum beibehalten (nur JPEG)';
 
   @override
   String imgViewCompressionQuality(int quality) {
@@ -1375,7 +1439,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get imgViewRedactHint => 'Pfad über den zu schwärzenden Bereich zeichnen';
+  String get imgViewRedactHint =>
+      'Pfad über den zu schwärzenden Bereich zeichnen';
 
   @override
   String get imgViewApplyRedaction => 'Schwärzung anwenden';
@@ -1441,16 +1506,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get imgViewMetadataDialogTitle => 'Metadaten & EXIF-Informationen';
 
   @override
-  String get imgViewNoExifData => 'Keine EXIF-Metadaten in diesem Bild gefunden.';
+  String get imgViewNoExifData =>
+      'Keine EXIF-Metadaten in diesem Bild gefunden.';
 
   @override
   String get imgViewSegmentSubject => 'Motiv ausschneiden';
 
   @override
-  String get imgViewSegmentSubjectTooltip => 'Isoliert das Motiv mithilfe von ML vom Hintergrund';
+  String get imgViewSegmentSubjectTooltip =>
+      'Isoliert das Motiv mithilfe von ML vom Hintergrund';
 
   @override
-  String get imgViewSegmentSubjectUnsupported => 'Motiv-Segmentierung wird nur auf Android unterstützt';
+  String get imgViewSegmentSubjectUnsupported =>
+      'Motiv-Segmentierung wird nur auf Android unterstützt';
 
   @override
   String imgViewSegmentSubjectFailed(String error) {
@@ -1458,13 +1526,15 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get imgViewSegmentSubjectDownloading => 'Google Play Services lädt das benötigte Machine-Learning-Modell herunter. Bitte warte eine Minute und versuche es erneut.';
+  String get imgViewSegmentSubjectDownloading =>
+      'Google Play Services lädt das benötigte Machine-Learning-Modell herunter. Bitte warte eine Minute und versuche es erneut.';
 
   @override
   String get imgViewExtractText => 'Text extrahieren';
 
   @override
-  String get imgViewExtractTextTooltip => 'Text mithilfe von ML aus dem Bild extrahieren';
+  String get imgViewExtractTextTooltip =>
+      'Text mithilfe von ML aus dem Bild extrahieren';
 
   @override
   String get imgViewExtractTextTitle => 'Extrahierter Text';
@@ -1481,7 +1551,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get imgViewTextCopied => 'Text in die Zwischenablage kopiert';
 
   @override
-  String get levelSensorsUnavailable => 'Sensoren auf diesem Gerät nicht verfügbar.';
+  String get levelSensorsUnavailable =>
+      'Sensoren auf diesem Gerät nicht verfügbar.';
 
   @override
   String get levelCalibratedToZero => 'Oberfläche auf null kalibriert.';
@@ -1520,7 +1591,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get levelRulerCalibration => 'Lineal kalibrieren';
 
   @override
-  String get levelRulerCalibrationHint => 'Halte ein physisches Lineal an den Bildschirmrand. Passe die Skala an, bis die Markierungen genau übereinstimmen.';
+  String get levelRulerCalibrationHint =>
+      'Halte ein physisches Lineal an den Bildschirmrand. Passe die Skala an, bis die Markierungen genau übereinstimmen.';
 
   @override
   String get levelPitch => 'Neigung';
@@ -1592,7 +1664,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get miscDeviceInfoDisplayDetails => 'Anzeige-Details';
 
   @override
-  String get miscDeviceInfoWindowsDisplayResolution => 'Aktuelle Anzeigeauflösung';
+  String get miscDeviceInfoWindowsDisplayResolution =>
+      'Aktuelle Anzeigeauflösung';
 
   @override
   String get miscDeviceInfoAppViewSize => 'App-Ansichtsgröße';
@@ -1625,7 +1698,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get miscDeviceInfoSystemUptime => 'Systemlaufzeit';
 
   @override
-  String get miscDeviceInfoWindowsUptime => 'Laufzeit seit letztem vollständigen Neustart';
+  String get miscDeviceInfoWindowsUptime =>
+      'Laufzeit seit letztem vollständigen Neustart';
 
   @override
   String miscDeviceInfoUptimeDays(int days, int hours) {
@@ -1686,7 +1760,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get miscMarkdownOpenTitle => 'Markdown-Datei öffnen';
 
   @override
-  String get miscMarkdownDropSubtitle => 'Lege eine .md- oder .txt-Datei hier ab';
+  String get miscMarkdownDropSubtitle =>
+      'Lege eine .md- oder .txt-Datei hier ab';
 
   @override
   String get miscMarkdownTypeLabel => 'Markdown';
@@ -1728,7 +1803,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nfcUriTargetLink => 'URI-Ziellink';
 
   @override
-  String get nfcUriHelperText => 'Erkennt gängige Präfixe automatisch (https://, http://, mailto:, file://), um Tag-Speicher zu sparen.';
+  String get nfcUriHelperText =>
+      'Erkennt gängige Präfixe automatisch (https://, http://, mailto:, file://), um Tag-Speicher zu sparen.';
 
   @override
   String get nfcUriRequired => 'URI-Ziellink ist erforderlich';
@@ -1746,7 +1822,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nfcLanguageCode => 'Sprachcode';
 
   @override
-  String get nfcLanguageCodeHelper => 'Standardmäßiger BCP-47-Sprachbezeichner (z. B. en, fr, de, es).';
+  String get nfcLanguageCodeHelper =>
+      'Standardmäßiger BCP-47-Sprachbezeichner (z. B. en, fr, de, es).';
 
   @override
   String get nfcLanguageCodeRequired => 'Sprachcode ist erforderlich';
@@ -1755,16 +1832,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nfcMimeType => 'MIME-Typ';
 
   @override
-  String get nfcMimeTypeHelper => 'Offizieller Medientyp (z. B. application/json, text/vcard, image/png).';
+  String get nfcMimeTypeHelper =>
+      'Offizieller Medientyp (z. B. application/json, text/vcard, image/png).';
 
   @override
-  String get nfcMimeTypeRequired => 'Ein gültiger MIME-Typ (z. B. typ/subtyp) ist erforderlich';
+  String get nfcMimeTypeRequired =>
+      'Ein gültiger MIME-Typ (z. B. typ/subtyp) ist erforderlich';
 
   @override
   String get nfcMimePayloadData => 'MIME-Nutzlastdaten';
 
   @override
-  String get nfcMimePayloadHint => 'JSON, vCard oder benutzerdefinierte Rohdaten eingeben...';
+  String get nfcMimePayloadHint =>
+      'JSON, vCard oder benutzerdefinierte Rohdaten eingeben...';
 
   @override
   String get nfcPayloadRequired => 'Nutzlastdaten sind erforderlich';
@@ -1776,13 +1856,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nfcWriteTag => 'Tag schreiben';
 
   @override
-  String get nfcWriteTagHint => '\"Tag schreiben\" ist nur beim Scannen eines beschreibbaren Tags aktiv.';
+  String get nfcWriteTagHint =>
+      '\"Tag schreiben\" ist nur beim Scannen eines beschreibbaren Tags aktiv.';
 
   @override
   String get nfcHexInspectorTitle => 'NDEF-Hex-Inspektor';
 
   @override
-  String get nfcHexInspectorSubtitle => 'Rohe NDEF-Hex-Codes validieren, parsen oder erzeugen.';
+  String get nfcHexInspectorSubtitle =>
+      'Rohe NDEF-Hex-Codes validieren, parsen oder erzeugen.';
 
   @override
   String get nfcPasteHexData => 'NDEF-Hex-Daten einfügen';
@@ -1791,7 +1873,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nfcClearInput => 'Eingabe löschen';
 
   @override
-  String get nfcPasteHexToParsePrompt => 'Bitte NDEF-Hex-Daten zum Parsen einfügen.';
+  String get nfcPasteHexToParsePrompt =>
+      'Bitte NDEF-Hex-Daten zum Parsen einfügen.';
 
   @override
   String get nfcParseHex => 'Hex parsen';
@@ -1803,13 +1886,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nfcCopyGeneratedHex => 'Erzeugten Hex kopieren';
 
   @override
-  String get nfcHexCopied => 'Erzeugter NDEF-Hex in die Zwischenablage kopiert.';
+  String get nfcHexCopied =>
+      'Erzeugter NDEF-Hex in die Zwischenablage kopiert.';
 
   @override
   String get nfcNoRecordsFound => 'Keine Datensätze gefunden';
 
   @override
-  String get nfcNoRecordsSubtitle => 'NDEF-Nutzlast ist leer oder wurde noch nicht gescannt.';
+  String get nfcNoRecordsSubtitle =>
+      'NDEF-Nutzlast ist leer oder wurde noch nicht gescannt.';
 
   @override
   String nfcNdefRecords(int count) {
@@ -1829,7 +1914,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get nfcCopyPayloadHex => 'Nutzlast-Hex kopieren';
 
   @override
-  String get nfcPayloadHexCopied => 'Nutzlast-Hex in die Zwischenablage kopiert.';
+  String get nfcPayloadHexCopied =>
+      'Nutzlast-Hex in die Zwischenablage kopiert.';
 
   @override
   String get nfcRawPayloadHex => 'Rohe Nutzlast (Hex):';
@@ -1915,10 +2001,12 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get nfcNoActiveTag => 'Kein aktives Tag. Bitte zuerst ein Tag scannen.';
+  String get nfcNoActiveTag =>
+      'Kein aktives Tag. Bitte zuerst ein Tag scannen.';
 
   @override
-  String get nfcTagNotWritable => 'Tag ist nicht beschreibbar oder NDEF wird nicht unterstützt.';
+  String get nfcTagNotWritable =>
+      'Tag ist nicht beschreibbar oder NDEF wird nicht unterstützt.';
 
   @override
   String get nfcWritingToTag => 'Schreibe auf NFC-Tag...';
@@ -1948,7 +2036,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get nfcNoHardwareInfo => 'NFC-Hardware-Scanning wird nur auf Mobilgeräten unterstützt. Sie können dennoch NDEF-Hexadezimalkonfigurationen lokal einfügen, parsen, bearbeiten und erzeugen.';
+  String get nfcNoHardwareInfo =>
+      'NFC-Hardware-Scanning wird nur auf Mobilgeräten unterstützt. Sie können dennoch NDEF-Hexadezimalkonfigurationen lokal einfügen, parsen, bearbeiten und erzeugen.';
 
   @override
   String get nfcHexEmulator => 'Hex-Emulator';
@@ -2004,7 +2093,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get notesBackupImportedSuccessfully => 'Sicherung erfolgreich importiert';
+  String get notesBackupImportedSuccessfully =>
+      'Sicherung erfolgreich importiert';
 
   @override
   String notesImportFailed(String error) {
@@ -2017,7 +2107,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get notesSyncConfigureServerUrl => 'Bitte zuerst die Server-URL in den Cloud-Einstellungen konfigurieren';
+  String get notesSyncConfigureServerUrl =>
+      'Bitte zuerst die Server-URL in den Cloud-Einstellungen konfigurieren';
 
   @override
   String notesSyncFinished(int pulled, int pushed, int deleted) {
@@ -2025,7 +2116,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get notesSyncFailedEmpty => 'Synchronisierung fehlgeschlagen: URL oder Benutzer-ID fehlt';
+  String get notesSyncFailedEmpty =>
+      'Synchronisierung fehlgeschlagen: URL oder Benutzer-ID fehlt';
 
   @override
   String notesSyncFailed(String error) {
@@ -2048,7 +2140,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesExportJsonBackup => 'JSON-Sicherung exportieren';
 
   @override
-  String get notesEditorHint => 'Notizen hier schreiben... (Markdown wird unterstützt)';
+  String get notesEditorHint =>
+      'Notizen hier schreiben... (Markdown wird unterstützt)';
 
   @override
   String get notesEditorNoPreview => 'Noch keine Vorschau verfügbar';
@@ -2057,7 +2150,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesUnsavedChangesTitle => 'Nicht gespeicherte Änderungen';
 
   @override
-  String get notesUnsavedChangesMessage => 'Du hast nicht gespeicherte Änderungen. Wirklich verwerfen?';
+  String get notesUnsavedChangesMessage =>
+      'Du hast nicht gespeicherte Änderungen. Wirklich verwerfen?';
 
   @override
   String get notesKeepEditing => 'Weiter bearbeiten';
@@ -2117,13 +2211,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesImageSourceClipboard => 'Aus Zwischenablage einfügen';
 
   @override
-  String get notesImageSourceClipboardEmpty => 'Kein Bild in der Zwischenablage';
+  String get notesImageSourceClipboardEmpty =>
+      'Kein Bild in der Zwischenablage';
 
   @override
   String get notesImageProcessing => 'Bild wird verarbeitet...';
 
   @override
-  String get notesAttachmentReadOnly => 'Anhangsdatenbereich ist schreibgeschützt';
+  String get notesAttachmentReadOnly =>
+      'Anhangsdatenbereich ist schreibgeschützt';
 
   @override
   String get notesToolbarBold => 'Fett';
@@ -2170,7 +2266,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get notesDropZoneUnsupportedFile => 'Nur Markdown- (.md) oder Textdateien (.txt) werden unterstützt';
+  String get notesDropZoneUnsupportedFile =>
+      'Nur Markdown- (.md) oder Textdateien (.txt) werden unterstützt';
 
   @override
   String get notesDropZoneTitle => 'Markdown-Datei hier ablegen';
@@ -2211,7 +2308,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get pdfEditSignDragHint => 'Ziehen zum Positionieren · Größe/Drehung an den Griffen ändern';
+  String get pdfEditSignDragHint =>
+      'Ziehen zum Positionieren · Größe/Drehung an den Griffen ändern';
 
   @override
   String get pdfEditSignTapHint => 'Signatur oben antippen';
@@ -2236,7 +2334,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pdfEditFlattenHeadline => 'PDF auf Bilder reduzieren';
 
   @override
-  String get pdfEditFlattenDescription => 'Jede Seite wird als Bild gerendert und in ein neues PDF eingebettet. Der Inhalt kann dadurch nicht mehr ausgewählt oder extrahiert werden.';
+  String get pdfEditFlattenDescription =>
+      'Jede Seite wird als Bild gerendert und in ein neues PDF eingebettet. Der Inhalt kann dadurch nicht mehr ausgewählt oder extrahiert werden.';
 
   @override
   String pdfEditFlattenDpi(int dpi) {
@@ -2244,7 +2343,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get pdfEditFlattenDpiHint => 'Höherer DPI-Wert = größere Datei, aber bessere Qualität';
+  String get pdfEditFlattenDpiHint =>
+      'Höherer DPI-Wert = größere Datei, aber bessere Qualität';
 
   @override
   String pdfEditFlattenJpegQuality(int quality) {
@@ -2296,7 +2396,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get pdfEditRedactDrawHint => 'Zum Zeichnen eines Schwärzungsrechtecks ziehen';
+  String get pdfEditRedactDrawHint =>
+      'Zum Zeichnen eines Schwärzungsrechtecks ziehen';
 
   @override
   String get pdfEditRedactModeDraw => 'Zeichnen';
@@ -2322,7 +2423,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pdfEditRedactRedactSelected => 'Auswahl schwärzen';
 
   @override
-  String get pdfEditRedactSelectHint => 'Text im Dokument auswählen, dann auf \"Auswahl schwärzen\" tippen';
+  String get pdfEditRedactSelectHint =>
+      'Text im Dokument auswählen, dann auf \"Auswahl schwärzen\" tippen';
 
   @override
   String pdfEditMetaTitle2(String fileName) {
@@ -2446,7 +2548,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pdfEditMetaPermAssembly => 'Dokumentzusammenstellung';
 
   @override
-  String get pdfEditMetaRemovePassword => 'Passwort entfernen & Kopie speichern';
+  String get pdfEditMetaRemovePassword =>
+      'Passwort entfernen & Kopie speichern';
 
   @override
   String get pdfEditMetaDoneTitle => 'Sicherheitsschutz entfernt';
@@ -2480,7 +2583,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pdfEditExtractDownloadAllZip => 'Alle herunterladen (ZIP)';
 
   @override
-  String get pdfEditExtractEmpty => 'Keine eingebetteten Bilder in dieser PDF gefunden';
+  String get pdfEditExtractEmpty =>
+      'Keine eingebetteten Bilder in dieser PDF gefunden';
 
   @override
   String get pdfEditExtractScanning => 'PDF wird gescannt…';
@@ -2551,7 +2655,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get pdfNavOpenCanceled => 'PDF-Öffnen abgebrochen. Andere Datei auswählen oder erneut versuchen.';
+  String get pdfNavOpenCanceled =>
+      'PDF-Öffnen abgebrochen. Andere Datei auswählen oder erneut versuchen.';
 
   @override
   String get pdfNavTypeLabel => 'PDFs';
@@ -2606,7 +2711,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get pdfExtractTextEmpty => 'Kein extrahierbarer Text in diesem PDF gefunden. Es ist möglicherweise gescannt oder enthält nur Bilder.';
+  String get pdfExtractTextEmpty =>
+      'Kein extrahierbarer Text in diesem PDF gefunden. Es ist möglicherweise gescannt oder enthält nur Bilder.';
 
   @override
   String pdfExtractTextFailed(String error) {
@@ -2632,7 +2738,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pdfExtractTextThinking => 'Denkt nach …';
 
   @override
-  String get pdfExtractTextTruncatedNote => 'Hinweis: Nur der erste Teil des Textes wird an die On-Device-KI gesendet.';
+  String get pdfExtractTextTruncatedNote =>
+      'Hinweis: Nur der erste Teil des Textes wird an die On-Device-KI gesendet.';
 
   @override
   String get textToolsSummarize => 'Zusammenfassen';
@@ -2644,7 +2751,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get textToolsSourceAi => 'KI-Antwort';
 
   @override
-  String get textToolsSourceOffline => 'Offline-Ergebnis – am besten passende Textstellen';
+  String get textToolsSourceOffline =>
+      'Offline-Ergebnis – am besten passende Textstellen';
 
   @override
   String get textToolsSummaryTitle => 'Zusammenfassung (offline)';
@@ -2653,7 +2761,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get textToolsKeywordsTitle => 'Schlüsselwörter (offline)';
 
   @override
-  String get genaiOfflineAnalysisActive => 'On-Device-KI nicht verfügbar – Offline-Textanalyse ist aktiv.';
+  String get genaiOfflineAnalysisActive =>
+      'On-Device-KI nicht verfügbar – Offline-Textanalyse ist aktiv.';
 
   @override
   String get pdfNavModeMetadata => 'Metadaten';
@@ -2750,7 +2859,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get pdfNavOrganizeCannotDeleteLastPage => 'Die letzte Seite kann nicht gelöscht werden';
+  String get pdfNavOrganizeCannotDeleteLastPage =>
+      'Die letzte Seite kann nicht gelöscht werden';
 
   @override
   String get pdfNavOrganizeRemovePageTitle => 'Seite entfernen';
@@ -2823,7 +2933,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sigSavedToDownloads => 'Unterschrift in Downloads gespeichert';
 
   @override
-  String get sigCopiedToClipboard => 'Unterschrift in die Zwischenablage kopiert';
+  String get sigCopiedToClipboard =>
+      'Unterschrift in die Zwischenablage kopiert';
 
   @override
   String get sigSaved => 'Unterschrift gespeichert';
@@ -2958,19 +3069,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get widgetToolChooserChooseTool => 'Tool zum Öffnen wählen:';
 
   @override
-  String get widgetToolChooserAlwaysUseTool => 'Dieses Tool immer für diesen Dateityp verwenden';
+  String get widgetToolChooserAlwaysUseTool =>
+      'Dieses Tool immer für diesen Dateityp verwenden';
 
   @override
   String get widgetShortcutHomeTitle => 'Startbildschirm-Verknüpfung';
 
   @override
-  String get widgetShortcutHomeSubtitle => 'Verknüpfung zum Startbildschirm hinzufügen';
+  String get widgetShortcutHomeSubtitle =>
+      'Verknüpfung zum Startbildschirm hinzufügen';
 
   @override
   String get widgetShortcutDrawerTitle => 'App-Drawer-Symbol';
 
   @override
-  String get widgetShortcutDrawerSubtitle => 'Separates Symbol im App-Drawer anzeigen';
+  String get widgetShortcutDrawerSubtitle =>
+      'Separates Symbol im App-Drawer anzeigen';
 
   @override
   String get sectionTitleSensors => 'Sensoren';
@@ -2985,7 +3099,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameCalculator => 'Rechner';
 
   @override
-  String get toolDescCalculator => 'Einfache und wissenschaftliche Berechnungen';
+  String get toolDescCalculator =>
+      'Einfache und wissenschaftliche Berechnungen';
 
   @override
   String get toolNameBubbleLevel => 'Wasserwaage';
@@ -3009,7 +3124,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameNfcTagLab => 'NFC Tag Lab';
 
   @override
-  String get toolDescNfcTagLab => 'NFC-Ziele scannen, NDEF dekodieren, Signaturen klassifizieren und Tags beschreiben.';
+  String get toolDescNfcTagLab =>
+      'NFC-Ziele scannen, NDEF dekodieren, Signaturen klassifizieren und Tags beschreiben.';
 
   @override
   String get toolNamePdfViewer => 'PDF-Viewer';
@@ -3021,13 +3137,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameNotes => 'Notizen';
 
   @override
-  String get toolDescNotes => 'Einfaches Notiz-Tool mit Markdown-Unterstützung und Backend-Sync';
+  String get toolDescNotes =>
+      'Einfaches Notiz-Tool mit Markdown-Unterstützung und Backend-Sync';
 
   @override
   String get toolNameGroceryList => 'Einkaufsliste';
 
   @override
-  String get toolDescGroceryList => 'Erstelle Einkaufslisten mit Mengen, wiederverwendbaren Artikeln und Abhakkontrolle';
+  String get toolDescGroceryList =>
+      'Erstelle Einkaufslisten mit Mengen, wiederverwendbaren Artikeln und Abhakkontrolle';
 
   @override
   String get groceryNoItems => 'Keine Artikel in deiner Einkaufsliste';
@@ -3091,7 +3209,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get groceryAllBoughtMovedBack => 'Alle gekauften Artikel wieder zur Liste hinzugefügt.';
+  String get groceryAllBoughtMovedBack =>
+      'Alle gekauften Artikel wieder zur Liste hinzugefügt.';
 
   @override
   String get grocerySync => 'Synchronisieren';
@@ -3100,49 +3219,57 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameMarkdownViewer => 'Markdown-Viewer';
 
   @override
-  String get toolDescMarkdownViewer => 'Markdown-Dateien einfach im Vollbild ansehen';
+  String get toolDescMarkdownViewer =>
+      'Markdown-Dateien einfach im Vollbild ansehen';
 
   @override
   String get toolNameImageViewer => 'Bildbetrachter';
 
   @override
-  String get toolDescImageViewer => 'Bilder ansehen, zoomen, skalieren und Formate konvertieren';
+  String get toolDescImageViewer =>
+      'Bilder ansehen, zoomen, skalieren und Formate konvertieren';
 
   @override
   String get toolNameFastDrop => 'Fast Drop';
 
   @override
-  String get toolDescFastDrop => 'Dateien oder Zwischenablage schnell zur temporären Ablage und Freigabe auf den Server übertragen';
+  String get toolDescFastDrop =>
+      'Dateien oder Zwischenablage schnell zur temporären Ablage und Freigabe auf den Server übertragen';
 
   @override
   String get toolNameImagesToPdf => 'Bilder zu PDF';
 
   @override
-  String get toolDescImagesToPdf => 'Mehrere Bilder in ein einzelnes PDF-Dokument umwandeln';
+  String get toolDescImagesToPdf =>
+      'Mehrere Bilder in ein einzelnes PDF-Dokument umwandeln';
 
   @override
   String get toolNameChiptune => 'Chiptune-Player';
 
   @override
-  String get toolDescChiptune => 'MOD-, XM-, IT-Tracker-Module und WAV-, MP3-, OGG-Audio abspielen';
+  String get toolDescChiptune =>
+      'MOD-, XM-, IT-Tracker-Module und WAV-, MP3-, OGG-Audio abspielen';
 
   @override
   String get toolNameFocusNoise => 'Fokus-Rauschen & Atmung';
 
   @override
-  String get toolDescFocusNoise => 'Player für Umgebungsgeräusche mit geführten Atemübungen';
+  String get toolDescFocusNoise =>
+      'Player für Umgebungsgeräusche mit geführten Atemübungen';
 
   @override
   String get toolNameSignatures => 'Unterschriften-Ersteller';
 
   @override
-  String get toolDescSignatures => 'Unterschriften zeichnen und als transparentes PNG oder SVG exportieren';
+  String get toolDescSignatures =>
+      'Unterschriften zeichnen und als transparentes PNG oder SVG exportieren';
 
   @override
   String get toolNameQrCode => 'QR-Code';
 
   @override
-  String get toolDescQrCode => 'QR-Codes mit der Kamera oder einem Bild scannen und eigene erstellen';
+  String get toolDescQrCode =>
+      'QR-Codes mit der Kamera oder einem Bild scannen und eigene erstellen';
 
   @override
   String get qrTabScan => 'Scannen';
@@ -3268,10 +3395,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get qrPasskeySimTitle => 'Passkey-Simulator';
 
   @override
-  String get qrPasskeySimSuccess => 'Mock-Passkey hat die Anfrage erfolgreich signiert!';
+  String get qrPasskeySimSuccess =>
+      'Mock-Passkey hat die Anfrage erfolgreich signiert!';
 
   @override
-  String get qrPasskeySimPrompt => 'Bestätigen Sie Ihren Fingerabdruck oder PIN, um die Authentifizierung freizugeben.';
+  String get qrPasskeySimPrompt =>
+      'Bestätigen Sie Ihren Fingerabdruck oder PIN, um die Authentifizierung freizugeben.';
 
   @override
   String get qrPasskeySimUser => 'Benutzer: alice@example.com';
@@ -3358,7 +3487,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get qrFieldOrganization => 'Organisation';
 
   @override
-  String get qrCreatePlaceholder => 'Felder ausfüllen, um einen QR-Code zu erzeugen';
+  String get qrCreatePlaceholder =>
+      'Felder ausfüllen, um einen QR-Code zu erzeugen';
 
   @override
   String get qrEncodeFailed => 'Inhalt ist zu lang für einen QR-Code';
@@ -3392,13 +3522,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameDocumentScanner => 'Dokumentenscanner';
 
   @override
-  String get toolDescDocumentScanner => 'Dokumente per Kamera scannen, Zuschnitt/Verzerrung anpassen, Filter anwenden und als PDF zusammenstellen';
+  String get toolDescDocumentScanner =>
+      'Dokumente per Kamera scannen, Zuschnitt/Verzerrung anpassen, Filter anwenden und als PDF zusammenstellen';
 
   @override
   String get docScanNoPages => 'Noch keine gescannten Seiten';
 
   @override
-  String get docScanAddHint => 'Fügen Sie Seiten mit der Kamera oder Galerie hinzu';
+  String get docScanAddHint =>
+      'Fügen Sie Seiten mit der Kamera oder Galerie hinzu';
 
   @override
   String docScanPageTitle(int number) {
@@ -3453,7 +3585,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get docScanClearTitle => 'Alle Seiten löschen';
 
   @override
-  String get docScanClearMessage => 'Sind Sie sicher, dass Sie alle gescannten Seiten löschen möchten? Dies kann nicht rückgängig gemacht werden.';
+  String get docScanClearMessage =>
+      'Sind Sie sicher, dass Sie alle gescannten Seiten löschen möchten? Dies kann nicht rückgängig gemacht werden.';
 
   @override
   String get docScanClearConfirm => 'Alle löschen';
@@ -3522,13 +3655,15 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get docScanMlKitUnavailableFallback => 'Dokumentenscanner nicht verfügbar, Kamera wird stattdessen verwendet.';
+  String get docScanMlKitUnavailableFallback =>
+      'Dokumentenscanner nicht verfügbar, Kamera wird stattdessen verwendet.';
 
   @override
   String get toolNameGpsLocationStore => 'GPS-Standortspeicher';
 
   @override
-  String get toolDescGpsLocationStore => 'Aktuellen Standort mit Notizen und Kartenlinks erfassen und speichern';
+  String get toolDescGpsLocationStore =>
+      'Aktuellen Standort mit Notizen und Kartenlinks erfassen und speichern';
 
   @override
   String get gpsStoreLocateButton => 'Aktuellen Standort anzeigen';
@@ -3575,28 +3710,33 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gpsStoreDescriptionHint => 'Kurze Notiz hinzufügen (optional)';
 
   @override
-  String get gpsStoreIpFallbackNote => 'Genaues GPS war nicht verfügbar — dies ist eine ungefähre Position basierend auf deiner IP-Adresse.';
+  String get gpsStoreIpFallbackNote =>
+      'Genaues GPS war nicht verfügbar — dies ist eine ungefähre Position basierend auf deiner IP-Adresse.';
 
   @override
   String get gpsStoreLocationSaved => 'Standort gespeichert';
 
   @override
-  String get gpsStoreCaptureFailed => 'Standort konnte nicht ermittelt werden. Berechtigungen und Verbindung prüfen.';
+  String get gpsStoreCaptureFailed =>
+      'Standort konnte nicht ermittelt werden. Berechtigungen und Verbindung prüfen.';
 
   @override
   String get gpsStoreDeleteTitle => 'Standort löschen';
 
   @override
-  String get gpsStoreDeleteMessage => 'Dieser Standort wird dauerhaft entfernt.';
+  String get gpsStoreDeleteMessage =>
+      'Dieser Standort wird dauerhaft entfernt.';
 
   @override
   String get gpsStoreEmptyTitle => 'Noch keine Standorte';
 
   @override
-  String get gpsStoreEmptyMessage => 'Tippe auf \"Aktuellen Standort anzeigen\", um deine Position zu ermitteln und anschließend zu speichern.';
+  String get gpsStoreEmptyMessage =>
+      'Tippe auf \"Aktuellen Standort anzeigen\", um deine Position zu ermitteln und anschließend zu speichern.';
 
   @override
-  String get gpsStoreDistanceFromHere => 'Entfernung und Richtung von deiner aktuellen Position';
+  String get gpsStoreDistanceFromHere =>
+      'Entfernung und Richtung von deiner aktuellen Position';
 
   @override
   String get gpsStoreCompassN => 'N';
@@ -3698,7 +3838,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gpsInfoStatusScanning => 'Satellitensignale werden erfasst...';
 
   @override
-  String get gpsInfoStatusNotAvailable => 'Satellitenstatus auf dieser Plattform nicht unterstützt.';
+  String get gpsInfoStatusNotAvailable =>
+      'Satellitenstatus auf dieser Plattform nicht unterstützt.';
 
   @override
   String get gpsInfoSatelliteList => 'Satelliten-Details';
@@ -3736,10 +3877,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameChatAi => 'KI Chat';
 
   @override
-  String get toolDescChatAi => 'Chatten Sie mit dem geräteinternen KI-Modell Gemini Nano über ML Kit';
+  String get toolDescChatAi =>
+      'Chatten Sie mit dem geräteinternen KI-Modell Gemini Nano über ML Kit';
 
   @override
-  String get chatAiUnsupportedPlatform => 'On-Device AI Chat wird nur unter Android unterstützt. Desktop- und iOS-Plattformen werden von der ML Kit GenAI Prompt API nicht unterstützt.';
+  String get chatAiUnsupportedPlatform =>
+      'On-Device AI Chat wird nur unter Android unterstützt. Desktop- und iOS-Plattformen werden von der ML Kit GenAI Prompt API nicht unterstützt.';
 
   @override
   String get chatAiNewChat => 'Neuer Chat';
@@ -3750,13 +3893,15 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get chatAiModelLoading => 'Modell wird heruntergeladen... Dies kann eine Weile dauern.';
+  String get chatAiModelLoading =>
+      'Modell wird heruntergeladen... Dies kann eine Weile dauern.';
 
   @override
   String get chatAiModelReady => 'Modell bereit';
 
   @override
-  String get chatAiModelNotDownloaded => 'Modell nicht heruntergeladen. Tippen Sie auf Herunterladen, um zu starten.';
+  String get chatAiModelNotDownloaded =>
+      'Modell nicht heruntergeladen. Tippen Sie auf Herunterladen, um zu starten.';
 
   @override
   String get chatAiDownloadButton => 'Modell herunterladen';
@@ -3768,7 +3913,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatAiDeleteSession => 'Sitzung löschen';
 
   @override
-  String get chatAiDeleteSessionConfirm => 'Sind Sie sicher, dass Sie diese Chatsitzung und alle ihre Nachrichten löschen möchten?';
+  String get chatAiDeleteSessionConfirm =>
+      'Sind Sie sicher, dass Sie diese Chatsitzung und alle ihre Nachrichten löschen möchten?';
 
   @override
   String get chatAiAttachImage => 'Bild anfügen';
@@ -3786,7 +3932,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatAiClearHistory => 'Verlauf löschen';
 
   @override
-  String get chatAiClearHistoryConfirm => 'Sind Sie sicher, dass Sie alle Nachrichten in diesem Chat löschen möchten?';
+  String get chatAiClearHistoryConfirm =>
+      'Sind Sie sicher, dass Sie alle Nachrichten in diesem Chat löschen möchten?';
 
   @override
   String get chatAiThinking => 'Überlegt...';
@@ -3795,13 +3942,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chatAiSystemPromptTitle => 'System-Prompt';
 
   @override
-  String get chatAiSystemPromptDescription => 'Passen Sie die Anweisungen für das KI-Modell an. Leer lassen, um den Standard zu verwenden.';
+  String get chatAiSystemPromptDescription =>
+      'Passen Sie die Anweisungen für das KI-Modell an. Leer lassen, um den Standard zu verwenden.';
 
   @override
   String get toolNameHexEditor => 'Hex-Editor';
 
   @override
-  String get toolDescHexEditor => 'Dateien in Hexadezimal- und ASCII-Ansichten inspizieren und bearbeiten';
+  String get toolDescHexEditor =>
+      'Dateien in Hexadezimal- und ASCII-Ansichten inspizieren und bearbeiten';
 
   @override
   String get hexEditorTypeLabel => 'Jede Datei';
@@ -3915,7 +4064,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get hexEditorDiscardChangesTitle => 'Änderungen verwerfen?';
 
   @override
-  String get hexEditorDiscardChangesMessage => 'Möchten Sie Ihre Änderungen verwerfen?';
+  String get hexEditorDiscardChangesMessage =>
+      'Möchten Sie Ihre Änderungen verwerfen?';
 
   @override
   String get hexEditorKeepEditing => 'Weiter bearbeiten';
@@ -3927,7 +4077,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameFileConverter => 'Datei-Konverter';
 
   @override
-  String get toolDescFileConverter => 'Dokumente zwischen DOCX, PDF, HTML, Markdown und Text konvertieren';
+  String get toolDescFileConverter =>
+      'Dokumente zwischen DOCX, PDF, HTML, Markdown und Text konvertieren';
 
   @override
   String get fileConverterTypeLabel => 'Dokumente';
@@ -3936,7 +4087,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fileConverterOpenTitle => 'Dokument öffnen';
 
   @override
-  String get fileConverterDropSubtitle => 'DOCX-, PDF-, HTML-, Markdown- oder Textdatei hierher ziehen';
+  String get fileConverterDropSubtitle =>
+      'DOCX-, PDF-, HTML-, Markdown- oder Textdatei hierher ziehen';
 
   @override
   String get fileConverterConvertTo => 'Konvertieren zu';
@@ -3948,7 +4100,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fileConverterConverting => 'Konvertiere…';
 
   @override
-  String get fileConverterUnsupported => 'Dieser Dateityp kann nicht konvertiert werden';
+  String get fileConverterUnsupported =>
+      'Dieser Dateityp kann nicht konvertiert werden';
 
   @override
   String fileConverterError(String error) {
@@ -3974,7 +4127,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameSketchBoard => 'Skizzenbrett';
 
   @override
-  String get toolDescSketchBoard => 'Unendliche Zeichenfläche mit Freihand, Formen, Text und gespeicherten Zeichnungen';
+  String get toolDescSketchBoard =>
+      'Unendliche Zeichenfläche mit Freihand, Formen, Text und gespeicherten Zeichnungen';
 
   @override
   String get sketchTabDraw => 'Zeichnen';
@@ -4080,7 +4234,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sketchExportQuality => 'Qualität';
 
   @override
-  String get sketchExportLossless => 'PNG ist verlustfrei — keine Qualitätseinstellung.';
+  String get sketchExportLossless =>
+      'PNG ist verlustfrei — keine Qualitätseinstellung.';
 
   @override
   String get sketchExportResolution => 'Auflösung';
@@ -4095,7 +4250,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sketchDeleteTitle => 'Zeichnung löschen';
 
   @override
-  String get sketchDeleteContent => 'Die gespeicherte Zeichnung wird endgültig entfernt.';
+  String get sketchDeleteContent =>
+      'Die gespeicherte Zeichnung wird endgültig entfernt.';
 
   @override
   String get sketchClearTitle => 'Leinwand leeren';
@@ -4140,7 +4296,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sketchDiscardTitle => 'Änderungen verwerfen?';
 
   @override
-  String get sketchDiscardMessage => 'Es gibt ungespeicherte Änderungen. Verwerfen?';
+  String get sketchDiscardMessage =>
+      'Es gibt ungespeicherte Änderungen. Verwerfen?';
 
   @override
   String get sketchDiscard => 'Verwerfen';
@@ -4239,7 +4396,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameUnitConverter => 'Einheitenumrechner';
 
   @override
-  String get toolDescUnitConverter => 'Einheiten in vielen Kategorien umrechnen';
+  String get toolDescUnitConverter =>
+      'Einheiten in vielen Kategorien umrechnen';
 
   @override
   String get ucFrom => 'Von';
@@ -4670,7 +4828,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameCodeHighlight => 'Code Highlight & Edit';
 
   @override
-  String get toolDescCodeHighlight => 'Syntax-Hervorhebung und Bearbeitung von Code-Dateien';
+  String get toolDescCodeHighlight =>
+      'Syntax-Hervorhebung und Bearbeitung von Code-Dateien';
 
   @override
   String get codeHighlightPasteCode => 'Code einfügen';
@@ -4688,7 +4847,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get codeHighlightEditorTitle => 'Code-Editor';
 
   @override
-  String get codeHighlightEmptyText => 'Code einfügen oder eine Datei hierher ziehen, um zu beginnen';
+  String get codeHighlightEmptyText =>
+      'Code einfügen oder eine Datei hierher ziehen, um zu beginnen';
 
   @override
   String codeHighlightFailedToLoad(String error) {
@@ -4710,7 +4870,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get codeHighlightOpenTitle => 'Codedatei öffnen';
 
   @override
-  String get codeHighlightDropSubtitle => 'Datei hierher ziehen oder zum Auswählen klicken';
+  String get codeHighlightDropSubtitle =>
+      'Datei hierher ziehen oder zum Auswählen klicken';
 
   @override
   String get codeHighlightOpenInViewer => 'Im Code-Highlighter öffnen';
@@ -4764,7 +4925,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameBluetoothScanner => 'Bluetooth-Scanner';
 
   @override
-  String get toolDescBluetoothScanner => 'Scannen Sie nach nahegelegenen Bluetooth Low Energy Geräten und identifizieren Sie diese.';
+  String get toolDescBluetoothScanner =>
+      'Scannen Sie nach nahegelegenen Bluetooth Low Energy Geräten und identifizieren Sie diese.';
 
   @override
   String get bleStartScan => 'Scan starten';
@@ -4773,7 +4935,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get bleStopScan => 'Stop';
 
   @override
-  String get bleStartScanning => 'Starte Scan, um nahegelegene BLE-Geräte zu finden';
+  String get bleStartScanning =>
+      'Starte Scan, um nahegelegene BLE-Geräte zu finden';
 
   @override
   String get bleNoDevicesFound => 'Keine Geräte gefunden';
@@ -4931,7 +5094,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameStringTransformer => 'String-Transformer';
 
   @override
-  String get toolDescStringTransformer => 'Konvertieren Sie Text zwischen verschiedenen Formaten: camelCase, snake_case, kebab-case, PascalCase, URL-Slugs, Base64, Hex und dekodieren Sie Werbe-URLs.';
+  String get toolDescStringTransformer =>
+      'Konvertieren Sie Text zwischen verschiedenen Formaten: camelCase, snake_case, kebab-case, PascalCase, URL-Slugs, Base64, Hex und dekodieren Sie Werbe-URLs.';
 
   @override
   String get stringTransformerInputLabel => 'Eingabetext';
@@ -4981,10 +5145,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stringTransformerTypeAdUrlDecode => 'Werbe-URL dekodieren';
 
   @override
-  String get stringTransformerPlaceholderInput => 'Text hier eingeben oder einfügen...';
+  String get stringTransformerPlaceholderInput =>
+      'Text hier eingeben oder einfügen...';
 
   @override
-  String get stringTransformerPlaceholderOutput => 'Das Ergebnis wird hier angezeigt...';
+  String get stringTransformerPlaceholderOutput =>
+      'Das Ergebnis wird hier angezeigt...';
 
   @override
   String get stringTransformerCopied => 'In die Zwischenablage kopiert';
@@ -5000,13 +5166,15 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get stringTransformerNoEmbeddedUrl => 'Keine eingebettete URL erkannt.';
+  String get stringTransformerNoEmbeddedUrl =>
+      'Keine eingebettete URL erkannt.';
 
   @override
   String get toolNameTreadmillControl => 'Laufband-Steuerung';
 
   @override
-  String get toolDescTreadmillControl => 'Steuere dein Laufband und überwache deine Herzfrequenz über Bluetooth';
+  String get toolDescTreadmillControl =>
+      'Steuere dein Laufband und überwache deine Herzfrequenz über Bluetooth';
 
   @override
   String get speedLabel => 'Geschwindigkeit';
@@ -5054,7 +5222,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillHistorySync => 'Jetzt synchronisieren';
 
   @override
-  String get treadmillHistorySyncDisabled => 'Synchronisierung ist nicht aktiviert. Aktiviere sie in den Einstellungen.';
+  String get treadmillHistorySyncDisabled =>
+      'Synchronisierung ist nicht aktiviert. Aktiviere sie in den Einstellungen.';
 
   @override
   String treadmillHistorySyncSuccess(int pushed, int pulled) {
@@ -5082,16 +5251,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillHistoryOverview => 'Deine Laufgeschichte';
 
   @override
-  String get treadmillHistoryOverviewSubtitle => 'Alle aufgezeichneten Workouts an einem Ort.';
+  String get treadmillHistoryOverviewSubtitle =>
+      'Alle aufgezeichneten Workouts an einem Ort.';
 
   @override
   String get treadmillHistoryLastSevenDays => 'Letzte 7 Tage';
 
   @override
-  String get treadmillHistoryDistanceLastSevenDays => 'Distanz in den letzten 7 Tagen';
+  String get treadmillHistoryDistanceLastSevenDays =>
+      'Distanz in den letzten 7 Tagen';
 
   @override
-  String get treadmillHistoryDistanceChartSubtitle => 'Tagesdistanz mit einem Sieben-Tage-Trend';
+  String get treadmillHistoryDistanceChartSubtitle =>
+      'Tagesdistanz mit einem Sieben-Tage-Trend';
 
   @override
   String get treadmillHistoryTotalDistance => 'Gesamtdistanz';
@@ -5118,7 +5290,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillHistoryShareScreenshot => 'Screenshot teilen';
 
   @override
-  String get treadmillHistoryScreenshotFailed => 'Dashboard-Screenshot konnte nicht erstellt werden';
+  String get treadmillHistoryScreenshotFailed =>
+      'Dashboard-Screenshot konnte nicht erstellt werden';
 
   @override
   String get treadmillHistoryGenerateReport => 'PDF-Bericht erstellen';
@@ -5133,7 +5306,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillHistoryReportDate => 'Datum';
 
   @override
-  String get treadmillHistoryReportFailed => 'Trainingsbericht konnte nicht erstellt werden';
+  String get treadmillHistoryReportFailed =>
+      'Trainingsbericht konnte nicht erstellt werden';
 
   @override
   String get treadmillHistoryTotalWorkouts => 'Workouts insgesamt';
@@ -5148,7 +5322,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillHistoryMostSteps => 'Meiste Schritte';
 
   @override
-  String get treadmillHistoryHeartRateLastSevenDays => 'Durchschnittliche Herzfrequenz der letzten 7 Tage';
+  String get treadmillHistoryHeartRateLastSevenDays =>
+      'Durchschnittliche Herzfrequenz der letzten 7 Tage';
 
   @override
   String get treadmillHistoryAllTime => 'Alle Zeiten';
@@ -5172,7 +5347,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillHistoryHeartRate => 'Herzfrequenz';
 
   @override
-  String get treadmillHistoryHeartRateSubtitle => 'Trainingsintensität aller Zeiten mit einem Sieben-Tage-Trend darunter';
+  String get treadmillHistoryHeartRateSubtitle =>
+      'Trainingsintensität aller Zeiten mit einem Sieben-Tage-Trend darunter';
 
   @override
   String get treadmillHistoryRestingAverage => 'Workout-Durchschnitt';
@@ -5181,7 +5357,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillHistoryPeakHeartRate => 'Höchster Wert';
 
   @override
-  String get treadmillHistoryImportNoNewWorkouts => 'Alle Workouts aus diesem Backup sind bereits gespeichert';
+  String get treadmillHistoryImportNoNewWorkouts =>
+      'Alle Workouts aus diesem Backup sind bereits gespeichert';
 
   @override
   String treadmillHistoryImportSuccess(int count) {
@@ -5192,7 +5369,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameAudioLab => 'Audio Lab';
 
   @override
-  String get toolDescAudioLab => 'Audio-Signale lokalisieren, maskieren, analysieren und generieren';
+  String get toolDescAudioLab =>
+      'Audio-Signale lokalisieren, maskieren, analysieren und generieren';
 
   @override
   String get sfTitleFinder => 'Finder';
@@ -5225,13 +5403,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfMicDeniedTitle => 'Mikrofonberechtigung nötig';
 
   @override
-  String get sfMicDeniedBody => 'Erlaube den Mikrofonzugriff, um Raumgeräusche zu orten und zu analysieren.';
+  String get sfMicDeniedBody =>
+      'Erlaube den Mikrofonzugriff, um Raumgeräusche zu orten und zu analysieren.';
 
   @override
   String get sfMicUnavailableTitle => 'Mikrofonaufnahme nicht verfügbar';
 
   @override
-  String get sfMicUnavailableBody => 'Live-Mikrofonanalyse wird auf dieser Plattform nicht unterstützt. Der Frequenzgenerator funktioniert weiterhin.';
+  String get sfMicUnavailableBody =>
+      'Live-Mikrofonanalyse wird auf dieser Plattform nicht unterstützt. Der Frequenzgenerator funktioniert weiterhin.';
 
   @override
   String get sfGrantPermission => 'Zugriff erlauben';
@@ -5282,7 +5462,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfCounterTitle => 'Gegen-/Maskierton';
 
   @override
-  String get sfCounterDisclaimer => 'Ein Handylautsprecher kann Raumlärm nicht wirklich auslöschen. Dies spielt einen passenden Ton (optional phaseninvertiert) plus optionales Maskierrauschen, um das Geräusch weniger auffällig zu machen.';
+  String get sfCounterDisclaimer =>
+      'Ein Handylautsprecher kann Raumlärm nicht wirklich auslöschen. Dies spielt einen passenden Ton (optional phaseninvertiert) plus optionales Maskierrauschen, um das Geräusch weniger auffällig zu machen.';
 
   @override
   String get sfDetected => 'Erkannt';
@@ -5291,7 +5472,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfUseDetected => 'Übernehmen';
 
   @override
-  String get sfCounterMicOff => 'Mikrofonanalyse ist aus – stelle die Zielfrequenz unten manuell ein.';
+  String get sfCounterMicOff =>
+      'Mikrofonanalyse ist aus – stelle die Zielfrequenz unten manuell ein.';
 
   @override
   String get sfTargetFrequency => 'Zielfrequenz';
@@ -5315,7 +5497,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfGeneratorTitle => 'Frequenzgenerator';
 
   @override
-  String get sfGeneratorHint => 'Wähle Frequenz und Wellenform, um einen reinen Testton zu erzeugen.';
+  String get sfGeneratorHint =>
+      'Wähle Frequenz und Wellenform, um einen reinen Testton zu erzeugen.';
 
   @override
   String get sfTitleDoppler => 'Doppler';
@@ -5327,7 +5510,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfDopplerTitle => 'Doppler-Effekt-Analyse';
 
   @override
-  String get sfDopplerExplanation => 'Nimm ein vorbeifahrendes Geräusch (wie eine Autohupe oder Sirene) auf, um Geschwindigkeit, Frequenz und Abstand zu schätzen, oder lade einen zuvor gespeicherten WAV-Audioclip.';
+  String get sfDopplerExplanation =>
+      'Nimm ein vorbeifahrendes Geräusch (wie eine Autohupe oder Sirene) auf, um Geschwindigkeit, Frequenz und Abstand zu schätzen, oder lade einen zuvor gespeicherten WAV-Audioclip.';
 
   @override
   String get sfDopplerLoadClip => 'WAV-Clip laden';
@@ -5354,13 +5538,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfDopplerParameters => 'Modell-Parameter';
 
   @override
-  String get sfDopplerStatusNoData => 'Noch kein Audioclip aufgenommen. Starte die Aufnahme oben oder lade eine Demo.';
+  String get sfDopplerStatusNoData =>
+      'Noch kein Audioclip aufgenommen. Starte die Aufnahme oben oder lade eine Demo.';
 
   @override
   String get sfDopplerStatusAnalyzing => 'Analysiere Audioclip...';
 
   @override
-  String get sfDopplerStatusSuccess => 'Analyse abgeschlossen. Passe die Schieberegler an, um das theoretische Modell (durchgezogene Linie) mit den gemessenen Frequenzen (lila Punkte) in Deckung zu bringen.';
+  String get sfDopplerStatusSuccess =>
+      'Analyse abgeschlossen. Passe die Schieberegler an, um das theoretische Modell (durchgezogene Linie) mit den gemessenen Frequenzen (lila Punkte) in Deckung zu bringen.';
 
   @override
   String get sfDopplerGraphTitle => 'Frequenz über Zeit';
@@ -5369,7 +5555,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfDopplerInfoTitle => 'Doppler-Grafik verstehen';
 
   @override
-  String get sfDopplerInfoContent => '• X-Achse (Horizontal): Zeit in Sekunden.\n• Y-Achse (Vertikal): Frequenz in Hertz (Hz).\n• Punkte: Erkannte Spitzenfrequenzen der Aufnahme.\n• Linie: Theoretische Kurve des Doppler-Modells.\n• Vertikale Linie (t₀): Zeitpunkt des geringsten Abstands.\n\nZiel: Passe die Parameter so an, dass die Linie mit den Punkten übereinstimmt.';
+  String get sfDopplerInfoContent =>
+      '• X-Achse (Horizontal): Zeit in Sekunden.\n• Y-Achse (Vertikal): Frequenz in Hertz (Hz).\n• Punkte: Erkannte Spitzenfrequenzen der Aufnahme.\n• Linie: Theoretische Kurve des Doppler-Modells.\n• Vertikale Linie (t₀): Zeitpunkt des geringsten Abstands.\n\nZiel: Passe die Parameter so an, dass die Linie mit den Punkten übereinstimmt.';
 
   @override
   String get sfWaveSine => 'Sinus';
@@ -5517,7 +5704,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get toolNameCompass => 'Kompass';
 
   @override
-  String get toolDescCompass => 'Kompensierter Richtungskompass mit Magnetfeld-Status';
+  String get toolDescCompass =>
+      'Kompensierter Richtungskompass mit Magnetfeld-Status';
 
   @override
   String get compassHeading => 'Kurs';
@@ -5532,7 +5720,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get compassInterferenceWarning => 'Störung Erkannt';
 
   @override
-  String get compassCalibrateTip => 'Von Metall oder Magneten fernhalten, wenn der Kurs ungenau erscheint.';
+  String get compassCalibrateTip =>
+      'Von Metall oder Magneten fernhalten, wenn der Kurs ungenau erscheint.';
 
   @override
   String get compassInfoTooltip => 'Bedienung';
@@ -5541,34 +5730,40 @@ class AppLocalizationsDe extends AppLocalizations {
   String get compassInfoTitle => 'Kompass verwenden';
 
   @override
-  String get compassInfoIntro => 'Der Kompass zeigt deinen Kurs — die Richtung, in die die Oberkante des Geräts zeigt — anhand von Magnetometer und Beschleunigungssensor.';
+  String get compassInfoIntro =>
+      'Der Kompass zeigt deinen Kurs — die Richtung, in die die Oberkante des Geräts zeigt — anhand von Magnetometer und Beschleunigungssensor.';
 
   @override
   String get compassStepLevelTitle => '1. Gerät flach halten';
 
   @override
-  String get compassStepLevelBody => 'Halte den Bildschirm nach oben und ungefähr waagerecht zum Boden. Die Wasserwaage wird grün, sobald du flach genug für eine genaue Anzeige hältst. Geneigt oder aufrecht gehalten ist die Anzeige unzuverlässig.';
+  String get compassStepLevelBody =>
+      'Halte den Bildschirm nach oben und ungefähr waagerecht zum Boden. Die Wasserwaage wird grün, sobald du flach genug für eine genaue Anzeige hältst. Geneigt oder aufrecht gehalten ist die Anzeige unzuverlässig.';
 
   @override
   String get compassStepCalibrateTitle => '2. Mit einer Acht kalibrieren';
 
   @override
-  String get compassStepCalibrateBody => 'Wenn der Kurs driftet, springt oder sich nie einpendelt, bewege das Gerät langsam mehrmals in einer liegenden Acht. Das kalibriert das Magnetometer neu — die häufigste Ursache für einen zappelnden Kompass.';
+  String get compassStepCalibrateBody =>
+      'Wenn der Kurs driftet, springt oder sich nie einpendelt, bewege das Gerät langsam mehrmals in einer liegenden Acht. Das kalibriert das Magnetometer neu — die häufigste Ursache für einen zappelnden Kompass.';
 
   @override
   String get compassStepMetalTitle => '3. Abstand zu Metall halten';
 
   @override
-  String get compassStepMetalBody => 'Magnete, Lautsprecher, Laptops, Handyhüllen, Autos und Stahlmöbel verzerren das Magnetfeld. Das Magnetfeld-Panel warnt dich bei erkannten Störungen.';
+  String get compassStepMetalBody =>
+      'Magnete, Lautsprecher, Laptops, Handyhüllen, Autos und Stahlmöbel verzerren das Magnetfeld. Das Magnetfeld-Panel warnt dich bei erkannten Störungen.';
 
   @override
   String get compassStepReadTitle => '4. Kurs ablesen';
 
   @override
-  String get compassStepReadBody => 'Die rote Nadel zeigt immer nach oben; die Skala dreht sich, sodass N zum magnetischen Norden zeigt. Die große Zahl und die Buchstaben (z. B. 214° SW) sind dein aktueller Kurs.';
+  String get compassStepReadBody =>
+      'Die rote Nadel zeigt immer nach oben; die Skala dreht sich, sodass N zum magnetischen Norden zeigt. Die große Zahl und die Buchstaben (z. B. 214° SW) sind dein aktueller Kurs.';
 
   @override
-  String get compassSimNote => 'Auf Geräten ohne Magnetsensor läuft der Kompass in der Simulation — wische waagerecht über die Skala, um sie zu drehen.';
+  String get compassSimNote =>
+      'Auf Geräten ohne Magnetsensor läuft der Kompass in der Simulation — wische waagerecht über die Skala, um sie zu drehen.';
 
   @override
   String get compassLevelGood => 'Waagerecht';
@@ -5582,16 +5777,19 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get compassHoldFlatHint => 'Halte das Gerät flach und waagerecht für einen genauen Kurs.';
+  String get compassHoldFlatHint =>
+      'Halte das Gerät flach und waagerecht für einen genauen Kurs.';
 
   @override
-  String get compassCalibrateHint => 'Kurs instabil? Bewege das Gerät in einer Acht zum Neukalibrieren.';
+  String get compassCalibrateHint =>
+      'Kurs instabil? Bewege das Gerät in einer Acht zum Neukalibrieren.';
 
   @override
   String get toolNameFileManager => 'Dateimanager';
 
   @override
-  String get toolDescFileManager => 'Lokale Dateien sowie FTP- und SMB-Netzwerkfreigaben durchsuchen';
+  String get toolDescFileManager =>
+      'Lokale Dateien sowie FTP- und SMB-Netzwerkfreigaben durchsuchen';
 
   @override
   String get fileManagerAppFiles => 'Standardordner';
@@ -5687,7 +5885,8 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get fileManagerOperationBackground => 'Wird fortgesetzt, wenn ToolLab im Hintergrund ist';
+  String get fileManagerOperationBackground =>
+      'Wird fortgesetzt, wenn ToolLab im Hintergrund ist';
 
   @override
   String fileManagerMoveBuffer(int count) {
@@ -5829,7 +6028,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fileManagerExtracting => 'Archiv wird entpackt';
 
   @override
-  String get fileManagerArchiveConflictTitle => 'Archivdateien existieren bereits';
+  String get fileManagerArchiveConflictTitle =>
+      'Archivdateien existieren bereits';
 
   @override
   String fileManagerArchiveConflictMessage(int count) {
