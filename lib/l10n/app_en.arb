@@ -1144,6 +1144,16 @@
     }
   },
   "notesSearchHint": "Search notes...",
+  "notesEmptyTitle": "No Notes Found",
+  "notesEmptyDescription": "Create a new note or drag and drop a Markdown (.md) file to import.",
+  "notesArchiveEntryCount": "{count, plural, =1{1 note} other{{count} notes}}",
+  "@notesArchiveEntryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "notesSyncWithCloud": "Sync with Cloud",
   "notesImportMarkdownFile": "Import Markdown file",
   "notesImportJsonBackup": "Import JSON Backup",

@@ -724,6 +724,16 @@
   "notesSyncFailedEmpty": "Synchronisierung fehlgeschlagen: URL oder Benutzer-ID fehlt",
   "notesSyncFailed": "Synchronisierung fehlgeschlagen: {error}",
   "notesSearchHint": "Notizen suchen...",
+  "notesEmptyTitle": "Keine Notizen gefunden",
+  "notesEmptyDescription": "Erstelle eine neue Notiz oder ziehe eine Markdown-Datei (.md) zum Import hierher.",
+  "notesArchiveEntryCount": "{count, plural, =1{1 Notiz} other{{count} Notizen}}",
+  "@notesArchiveEntryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "notesSyncWithCloud": "Mit Cloud synchronisieren",
   "notesImportMarkdownFile": "Markdown-Datei importieren",
   "notesImportJsonBackup": "JSON-Sicherung importieren",

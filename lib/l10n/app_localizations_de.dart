@@ -2128,6 +2128,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesSearchHint => 'Notizen suchen...';
 
   @override
+  String get notesEmptyTitle => 'Keine Notizen gefunden';
+
+  @override
+  String get notesEmptyDescription =>
+      'Erstelle eine neue Notiz oder ziehe eine Markdown-Datei (.md) zum Import hierher.';
+
+  @override
+  String notesArchiveEntryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Notizen',
+      one: '1 Notiz',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get notesSyncWithCloud => 'Mit Cloud synchronisieren';
 
   @override

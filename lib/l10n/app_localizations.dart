@@ -3833,6 +3833,24 @@ abstract class AppLocalizations {
   /// **'Search notes...'**
   String get notesSearchHint;
 
+  /// No description provided for @notesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Notes Found'**
+  String get notesEmptyTitle;
+
+  /// No description provided for @notesEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new note or drag and drop a Markdown (.md) file to import.'**
+  String get notesEmptyDescription;
+
+  /// No description provided for @notesArchiveEntryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 note} other{{count} notes}}'**
+  String notesArchiveEntryCount(int count);
+
   /// No description provided for @notesSyncWithCloud.
   ///
   /// In en, this message translates to:
