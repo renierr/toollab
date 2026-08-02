@@ -10667,6 +10667,24 @@ abstract class AppLocalizations {
   /// **'{count} item(s) ready to copy'**
   String fileManagerCopyBuffer(int count);
 
+  /// No description provided for @fileManagerDropActionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add dropped files'**
+  String get fileManagerDropActionTitle;
+
+  /// No description provided for @fileManagerDropActionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose whether to copy or move the dropped files.'**
+  String get fileManagerDropActionMessage;
+
+  /// No description provided for @fileManagerMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get fileManagerMove;
+
   /// No description provided for @fileManagerSettings.
   ///
   /// In en, this message translates to:

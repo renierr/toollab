@@ -5917,6 +5917,16 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get fileManagerDropActionTitle => 'Abgelegte Dateien hinzufuegen';
+
+  @override
+  String get fileManagerDropActionMessage =>
+      'Waehle, ob die abgelegten Dateien kopiert oder verschoben werden sollen.';
+
+  @override
+  String get fileManagerMove => 'Verschieben';
+
+  @override
   String get fileManagerSettings => 'Dateimanager-Einstellungen';
 
   @override

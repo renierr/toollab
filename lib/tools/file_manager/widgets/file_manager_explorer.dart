@@ -6,6 +6,7 @@ import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_breadcrumbs.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_icon.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_file_drop_zone.dart';
 
 class FileManagerExplorer extends StatelessWidget {
   final FileManagerState state;
@@ -27,6 +28,8 @@ class FileManagerExplorer extends StatelessWidget {
   final VoidCallback onDeleteSelection;
   final VoidCallback onCreateZip;
   final ValueChanged<FileManagerEntry> onExtract;
+  final Future<void> Function(List<String> paths, bool chooseAction)
+  onDropFiles;
   final ScrollController scrollController;
   const FileManagerExplorer({
     super.key,
@@ -49,6 +52,7 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onDeleteSelection,
     required this.onCreateZip,
     required this.onExtract,
+    required this.onDropFiles,
     required this.scrollController,
   });
 
@@ -206,36 +210,40 @@ class FileManagerExplorer extends StatelessWidget {
             ),
           ),
         Expanded(
-          child: state.entries.isEmpty
-              ? Center(child: Text(l10n.fileManagerEmptyFolder))
-              : ListView.builder(
-                  controller: scrollController,
-                  itemCount: state.entries.length,
-                  itemBuilder: (context, index) => _EntryTile(
-                    entry: state.entries[index],
-                    onOpen: onOpen,
-                    onOpenWithSystem: onOpenWithSystem,
-                    onShare: onShare,
-                    onDetails: onDetails,
-                    onRename: onRename,
-                    onDelete: onDelete,
-                    onCopy: onCopy,
-                    onCut: onCut,
-                    onExtract: onExtract,
-                    showClipboardActions:
-                        state.connection?.protocol != FileManagerProtocol.ftp,
-                    selectionMode: state.isSelectionMode,
-                    selected: state.selectedPaths.contains(
-                      state.entries[index].path,
+          child: FileManagerFileDropZone(
+            enabled: !state.isOperating && !state.isRemote && !state.isReadOnly,
+            onDrop: onDropFiles,
+            child: state.entries.isEmpty
+                ? Center(child: Text(l10n.fileManagerEmptyFolder))
+                : ListView.builder(
+                    controller: scrollController,
+                    itemCount: state.entries.length,
+                    itemBuilder: (context, index) => _EntryTile(
+                      entry: state.entries[index],
+                      onOpen: onOpen,
+                      onOpenWithSystem: onOpenWithSystem,
+                      onShare: onShare,
+                      onDetails: onDetails,
+                      onRename: onRename,
+                      onDelete: onDelete,
+                      onCopy: onCopy,
+                      onCut: onCut,
+                      onExtract: onExtract,
+                      showClipboardActions:
+                          state.connection?.protocol != FileManagerProtocol.ftp,
+                      selectionMode: state.isSelectionMode,
+                      selected: state.selectedPaths.contains(
+                        state.entries[index].path,
+                      ),
+                      onToggleSelection: onToggleSelection,
+                      isInClipboard: state.clipboardPaths.contains(
+                        state.entries[index].path,
+                      ),
+                      clipboardIsCut: state.clipboardIsCut,
+                      readOnly: state.isReadOnly,
                     ),
-                    onToggleSelection: onToggleSelection,
-                    isInClipboard: state.clipboardPaths.contains(
-                      state.entries[index].path,
-                    ),
-                    clipboardIsCut: state.clipboardIsCut,
-                    readOnly: state.isReadOnly,
                   ),
-                ),
+          ),
         ),
       ],
     );

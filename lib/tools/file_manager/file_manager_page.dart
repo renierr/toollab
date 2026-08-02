@@ -17,6 +17,7 @@ import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_archive_conflict_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_details_dialog.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_drop_action_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_name_dialog.dart';
@@ -341,6 +342,22 @@ class _FileManagerPageState extends State<FileManagerPage>
     }
   }
 
+  Future<void> _dropFiles(List<String> paths, bool chooseAction) async {
+    var move = false;
+    if (chooseAction) {
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (_) => const FileManagerDropActionDialog(),
+      );
+      if (result == null || !mounted) return;
+      move = result;
+    }
+    await context.read<FileManagerState>().importDroppedFiles(
+      paths,
+      move: move,
+    );
+  }
+
   Future<void> _removeConnection(FileManagerConnection profile) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
@@ -482,6 +499,7 @@ class _FileManagerPageState extends State<FileManagerPage>
               onDeleteSelection: _confirmDelete,
               onCreateZip: _createZip,
               onExtract: _extractArchive,
+              onDropFiles: _dropFiles,
               scrollController: _scrollController,
             );
             if (constraints.maxWidth < 720) {

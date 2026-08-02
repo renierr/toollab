@@ -5879,6 +5879,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get fileManagerDropActionTitle => 'Add dropped files';
+
+  @override
+  String get fileManagerDropActionMessage =>
+      'Choose whether to copy or move the dropped files.';
+
+  @override
+  String get fileManagerMove => 'Move';
+
+  @override
   String get fileManagerSettings => 'File Manager settings';
 
   @override

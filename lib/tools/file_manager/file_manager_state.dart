@@ -646,6 +646,26 @@ class FileManagerState extends ChangeNotifier {
     if (_error == null) clearSelection();
   }
 
+  Future<void> importDroppedFiles(
+    List<String> paths, {
+    required bool move,
+  }) async {
+    if (isReadOnly || _locationType != FileManagerLocationType.local) return;
+    final destination = p.normalize(_path);
+    final sources = paths
+        .map(p.normalize)
+        .where(
+          (source) =>
+              !move ||
+              (!p.equals(p.dirname(source), destination) &&
+                  !p.equals(source, destination)),
+        )
+        .where((source) => !p.isWithin(source, destination))
+        .toSet()
+        .toList();
+    await _runLocalOperation(sources, destination: destination, move: move);
+  }
+
   Future<void> _pasteArchiveEntries() async {
     await _runArchiveOperation(FileManagerOperation.copy, () async {
       for (final entry in _archiveClipboardEntries) {
