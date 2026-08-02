@@ -215,31 +215,21 @@ class _ImageViewerDisplayState extends State<ImageViewerDisplay> {
             // Sibling navigation: prev/next arrows + position indicator
             if (widget.showSiblingNav) ...[
               Positioned(
-                left: 12,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: _SiblingNavButton(
-                    icon: Icons.chevron_left,
-                    tooltip: l10n.imgViewPreviousImage,
-                    onPressed: widget.hasPrevSibling
-                        ? widget.onPrevImage
-                        : null,
-                  ),
+                left: 16,
+                bottom: 76,
+                child: _SiblingNavButton(
+                  icon: Icons.chevron_left,
+                  tooltip: l10n.imgViewPreviousImage,
+                  onPressed: widget.hasPrevSibling ? widget.onPrevImage : null,
                 ),
               ),
               Positioned(
-                right: 12,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: _SiblingNavButton(
-                    icon: Icons.chevron_right,
-                    tooltip: l10n.imgViewNextImage,
-                    onPressed: widget.hasNextSibling
-                        ? widget.onNextImage
-                        : null,
-                  ),
+                right: 16,
+                bottom: 76,
+                child: _SiblingNavButton(
+                  icon: Icons.chevron_right,
+                  tooltip: l10n.imgViewNextImage,
+                  onPressed: widget.hasNextSibling ? widget.onNextImage : null,
                 ),
               ),
               if (widget.siblingLabel != null)
