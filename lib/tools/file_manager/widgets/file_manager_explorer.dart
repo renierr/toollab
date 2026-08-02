@@ -25,6 +25,8 @@ class FileManagerExplorer extends StatelessWidget {
   final VoidCallback onSelectAll;
   final VoidCallback onClearSelection;
   final VoidCallback onDeleteSelection;
+  final VoidCallback onCreateZip;
+  final ValueChanged<FileManagerEntry> onExtract;
   final ScrollController scrollController;
   const FileManagerExplorer({
     super.key,
@@ -45,6 +47,8 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onSelectAll,
     required this.onClearSelection,
     required this.onDeleteSelection,
+    required this.onCreateZip,
+    required this.onExtract,
     required this.scrollController,
   });
 
@@ -108,9 +112,15 @@ class FileManagerExplorer extends StatelessWidget {
                         : Icons.star_outline,
                   ),
                 ),
+              if (state.hasSelection && !state.isRemote)
+                IconButton(
+                  tooltip: l10n.fileManagerCompressZip,
+                  onPressed: onCreateZip,
+                  icon: const Icon(Icons.folder_zip_outlined),
+                ),
               IconButton(
                 tooltip: l10n.fileManagerSelect,
-                onPressed: onEnterSelectionMode,
+                onPressed: state.isOperating ? null : onEnterSelectionMode,
                 icon: const Icon(Icons.checklist_outlined),
               ),
             ],
@@ -123,7 +133,7 @@ class FileManagerExplorer extends StatelessWidget {
               children: [
                 IconButton(
                   tooltip: l10n.commonClose,
-                  onPressed: onClearSelection,
+                  onPressed: state.isOperating ? null : onClearSelection,
                   icon: const Icon(Icons.close),
                 ),
                 Expanded(
@@ -136,7 +146,11 @@ class FileManagerExplorer extends StatelessWidget {
                       ? l10n.commonClear
                       : l10n.fileManagerSelectAll,
                   onPressed: state.selectedPaths.length == state.entries.length
-                      ? onClearSelection
+                      ? state.isOperating
+                            ? null
+                            : onClearSelection
+                      : state.isOperating
+                      ? null
                       : onSelectAll,
                   icon: Icon(
                     state.selectedPaths.length == state.entries.length
@@ -146,7 +160,7 @@ class FileManagerExplorer extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: l10n.commonCopy,
-                  onPressed: state.hasSelection
+                  onPressed: state.hasSelection && !state.isOperating
                       ? () => onCopy(
                           state.entries.firstWhere(
                             (entry) => state.selectedPaths.contains(entry.path),
@@ -157,7 +171,7 @@ class FileManagerExplorer extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: l10n.fileManagerCut,
-                  onPressed: state.hasSelection
+                  onPressed: state.hasSelection && !state.isOperating
                       ? () => onCut(
                           state.entries.firstWhere(
                             (entry) => state.selectedPaths.contains(entry.path),
@@ -168,7 +182,9 @@ class FileManagerExplorer extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: l10n.commonDelete,
-                  onPressed: state.hasSelection ? onDeleteSelection : null,
+                  onPressed: state.hasSelection && !state.isOperating
+                      ? onDeleteSelection
+                      : null,
                   icon: const Icon(Icons.delete_outline),
                 ),
               ],
@@ -200,6 +216,7 @@ class FileManagerExplorer extends StatelessWidget {
                     onDelete: onDelete,
                     onCopy: onCopy,
                     onCut: onCut,
+                    onExtract: onExtract,
                     showClipboardActions:
                         state.connection?.protocol != FileManagerProtocol.ftp,
                     selectionMode: state.isSelectionMode,
@@ -231,6 +248,8 @@ class _OperationProgress extends StatelessWidget {
       FileManagerOperation.copy => l10n.fileManagerCopying,
       FileManagerOperation.move => l10n.fileManagerMoving,
       FileManagerOperation.delete => l10n.fileManagerDeleting,
+      FileManagerOperation.compress => l10n.fileManagerCompressing,
+      FileManagerOperation.extract => l10n.fileManagerExtracting,
       null => l10n.commonLoading,
     };
     return Container(
@@ -261,14 +280,12 @@ class _OperationProgress extends StatelessWidget {
           LinearProgressIndicator(value: progress),
           const SizedBox(height: 6),
           Text(
-            l10n.fileManagerOperationProgress(
-              state.operationCompleted,
-              state.operationTotal,
-            ),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          Text(
-            l10n.fileManagerOperationBackground,
+            state.operationTotal == 0
+                ? l10n.commonLoading
+                : l10n.fileManagerOperationProgress(
+                    state.operationCompleted,
+                    state.operationTotal,
+                  ),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -316,6 +333,7 @@ class _EntryTile extends StatelessWidget {
   final ValueChanged<FileManagerEntry> onDelete;
   final ValueChanged<FileManagerEntry> onCopy;
   final ValueChanged<FileManagerEntry> onCut;
+  final ValueChanged<FileManagerEntry> onExtract;
   final bool showClipboardActions;
   final bool selectionMode;
   final bool selected;
@@ -332,6 +350,7 @@ class _EntryTile extends StatelessWidget {
     required this.onDelete,
     required this.onCopy,
     required this.onCut,
+    required this.onExtract,
     required this.showClipboardActions,
     required this.selectionMode,
     required this.selected,
@@ -381,6 +400,8 @@ class _EntryTile extends StatelessWidget {
                 onOpenWithSystem(entry);
               } else if (value == 'share') {
                 onShare(entry);
+              } else if (value == 'extract') {
+                onExtract(entry);
               } else if (value == 'copy') {
                 onCopy(entry);
               } else if (value == 'cut') {
@@ -403,6 +424,14 @@ class _EntryTile extends StatelessWidget {
                   child: _MenuAction(
                     icon: Icons.install_mobile_outlined,
                     label: AppLocalizations.of(context).fileManagerInstallApk,
+                  ),
+                ),
+              if (entry.name.toLowerCase().endsWith('.zip'))
+                PopupMenuItem(
+                  value: 'extract',
+                  child: _MenuAction(
+                    icon: Icons.unarchive_outlined,
+                    label: AppLocalizations.of(context).fileManagerExtract,
                   ),
                 ),
               PopupMenuItem(

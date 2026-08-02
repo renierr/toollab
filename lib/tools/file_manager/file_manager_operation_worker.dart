@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as p;
 
 void runFileManagerOperation(Map<String, Object> input) async {
@@ -67,6 +68,36 @@ void runFileManagerOperation(Map<String, Object> input) async {
     }
     sendPort.send({'type': 'complete'});
   } catch (error) {
+    sendPort.send({'type': 'error', 'message': error.toString()});
+  }
+}
+
+void runZipOperation(Map<String, Object> input) async {
+  final sendPort = input['sendPort']! as SendPort;
+  final sources = (input['sources']! as List<Object>).cast<String>();
+  final destination = input['destination']! as String;
+  final encoder = ZipFileEncoder();
+  try {
+    encoder.create(destination);
+    final files = <File>[];
+    for (final source in sources) {
+      await _collectFiles(await _entityFor(source), files);
+    }
+    sendPort.send({'type': 'prepared', 'total': files.length});
+    for (var index = 0; index < files.length; index++) {
+      await encoder.addFile(files[index]);
+      sendPort.send({
+        'type': 'progress',
+        'completed': index + 1,
+        'total': files.length,
+      });
+    }
+    await encoder.close();
+    sendPort.send({'type': 'complete'});
+  } catch (error) {
+    try {
+      await encoder.close();
+    } catch (_) {}
     sendPort.send({'type': 'error', 'message': error.toString()});
   }
 }

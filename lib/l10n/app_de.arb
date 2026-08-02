@@ -2238,5 +2238,16 @@
   "@fileManagerFolderItemCount": { "placeholders": { "count": { "type": "int" } } },
   "fileManagerInstallApk": "APK installieren",
   "fileManagerStorage": "Speicher",
+  "fileManagerCompressZip": "Als ZIP komprimieren",
+  "fileManagerCompressing": "ZIP-Archiv wird erstellt",
+  "fileManagerExtract": "Entpacken",
+  "fileManagerExtracting": "Archiv wird entpackt",
+  "fileManagerArchiveConflictTitle": "Archivdateien existieren bereits",
+  "fileManagerArchiveConflictMessage": "{count} entpackte Dateien existieren bereits.",
+  "@fileManagerArchiveConflictMessage": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerArchiveConflictMore": "und {count} weitere",
+  "@fileManagerArchiveConflictMore": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerSkip": "Überspringen",
+  "fileManagerApplyToAll": "Auf alle Konflikte anwenden",
   "fileManagerDocuments": "Dokumente"
 }

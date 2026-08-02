@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:archive/archive_io.dart';
 import 'package:dart_smb2/dart_smb2.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -11,14 +12,16 @@ import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
+import 'package:tool_lab/tools/file_manager/archives/archive_handler.dart';
+import 'package:tool_lab/tools/file_manager/archives/zip_archive_handler.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
-import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_operation_worker.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 
 enum FileManagerLocationType { local, ftp, smb }
 
-enum FileManagerOperation { copy, move, delete }
+enum FileManagerOperation { copy, move, delete, compress, extract }
 
 enum FileManagerConflictResolution { overwrite, keepBoth }
 
@@ -66,6 +69,7 @@ class FileManagerState extends ChangeNotifier {
   bool _sortAscending = true;
   bool _foldersFirst = true;
   final Map<FileManagerOpenCategory, String?> _openToolIds = {};
+  static const List<ArchiveHandler> _archiveHandlers = [ZipArchiveHandler()];
 
   List<FileManagerEntry> get entries => _entries;
   List<FileManagerConnection> get connections => _connections;
@@ -105,7 +109,7 @@ class FileManagerState extends ChangeNotifier {
   Set<String> get selectedPaths => Set.unmodifiable(_selectedPaths);
   bool get hasSelection => _selectedPaths.isNotEmpty;
   bool get isSelectionMode => _isSelectionMode;
-  bool get isOperating => _operationTotal > 0;
+  bool get isOperating => _operation != null;
   double? get operationProgress =>
       _operationTotal == 0 ? null : _operationCompleted / _operationTotal;
   int get operationCompleted => _operationCompleted;
@@ -694,6 +698,119 @@ class FileManagerState extends ChangeNotifier {
       clearSelection();
       await refresh();
     });
+  }
+
+  bool canExtract(FileManagerEntry entry) =>
+      !isRemote &&
+      _archiveHandlers.any((handler) => handler.supports(entry.path));
+
+  Future<List<String>> archiveConflicts(FileManagerEntry entry) async {
+    final handler = _archiveHandlers.firstWhere(
+      (candidate) => candidate.supports(entry.path),
+    );
+    if (handler is! ZipArchiveHandler) return const [];
+    final destination = p.join(_path, p.basenameWithoutExtension(entry.name));
+    final archive = ZipDecoder().decodeStream(InputFileStream(entry.path));
+    return archive
+        .where((item) => item.isFile)
+        .map((item) => p.join(destination, item.name))
+        .where((path) => File(path).existsSync())
+        .toList();
+  }
+
+  Future<void> extractArchive(
+    FileManagerEntry entry,
+    Future<ArchiveConflictResolution> Function(String path) onConflict,
+  ) async {
+    if (!canExtract(entry)) return;
+    final handler = _archiveHandlers.firstWhere(
+      (candidate) => candidate.supports(entry.path),
+    );
+    await _runArchiveOperation(FileManagerOperation.extract, () {
+      return handler.extract(
+        archivePath: entry.path,
+        destinationPath: p.join(_path, p.basenameWithoutExtension(entry.name)),
+        onConflict: onConflict,
+      );
+    });
+  }
+
+  Future<void> createZip(String name) async {
+    if (isRemote || _selectedPaths.isEmpty) return;
+    final sources = _selectedPaths.toList();
+    final destination = p.join(
+      _path,
+      name.endsWith('.zip') ? name : '$name.zip',
+    );
+    await _runZipOperation(sources, uniqueArchivePath(destination));
+  }
+
+  Future<void> _runZipOperation(
+    List<String> sources,
+    String destination,
+  ) async {
+    _isLoading = true;
+    _error = null;
+    _operation = FileManagerOperation.compress;
+    _operationCompleted = 0;
+    _operationTotal = 0;
+    clearSelection();
+    notifyListeners();
+    final port = ReceivePort();
+    try {
+      await Isolate.spawn(runZipOperation, {
+        'sendPort': port.sendPort,
+        'sources': sources,
+        'destination': destination,
+      });
+      await for (final message in port) {
+        final data = message as Map<Object?, Object?>;
+        if (data['type'] == 'progress') {
+          _operationCompleted = data['completed']! as int;
+          _operationTotal = data['total']! as int;
+          notifyListeners();
+        } else if (data['type'] == 'prepared') {
+          _operationTotal = data['total']! as int;
+          notifyListeners();
+        } else if (data['type'] == 'error') {
+          _error = data['message']! as String;
+        } else {
+          break;
+        }
+      }
+    } catch (error) {
+      _error = error.toString().replaceFirst('Exception: ', '');
+    } finally {
+      port.close();
+      await refresh();
+      _isLoading = false;
+      _operation = null;
+      _operationCompleted = 0;
+      _operationTotal = 0;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _runArchiveOperation(
+    FileManagerOperation operation,
+    Future<void> Function() action,
+  ) async {
+    _isLoading = true;
+    _error = null;
+    _operation = operation;
+    notifyListeners();
+    try {
+      await action();
+      clearSelection();
+    } catch (error) {
+      _error = error.toString().replaceFirst('Exception: ', '');
+      debugPrint('[FileManagerState] Archive operation failed: $error');
+    } finally {
+      await refresh();
+      _isLoading = false;
+      _operation = null;
+      notifyListeners();
+    }
   }
 
   Future<void> _runLocalOperation(

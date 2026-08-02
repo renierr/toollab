@@ -10,10 +10,12 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
+import 'package:tool_lab/tools/file_manager/archives/archive_handler.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dialog.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_archive_conflict_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_details_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
@@ -190,6 +192,52 @@ class _FileManagerPageState extends State<FileManagerPage>
     );
     if (name != null && mounted) {
       await context.read<FileManagerState>().createFolder(name);
+    }
+  }
+
+  Future<void> _createZip() async {
+    final name = await _showNameDialog(
+      AppLocalizations.of(context).fileManagerCompressZip,
+      initialValue: 'archive.zip',
+    );
+    if (name != null && mounted) {
+      await context.read<FileManagerState>().createZip(name);
+    }
+  }
+
+  Future<void> _extractArchive(FileManagerEntry entry) async {
+    final state = context.read<FileManagerState>();
+    final conflicts = await state.archiveConflicts(entry);
+    if (!mounted) return;
+    final conflictResult = conflicts.isEmpty
+        ? (true, ArchiveConflictResolution.keepBoth)
+        : await showDialog<(bool, ArchiveConflictResolution)>(
+            context: context,
+            builder: (_) =>
+                FileManagerArchiveConflictDialog(conflictPaths: conflicts),
+          );
+    if (conflictResult != null && mounted) {
+      var firstConflict = true;
+      var applyToAll = conflictResult.$1;
+      var resolution = conflictResult.$2;
+      await state.extractArchive(entry, (path) async {
+        if (applyToAll || firstConflict) {
+          firstConflict = false;
+          return resolution;
+        }
+        if (!mounted) return ArchiveConflictResolution.skip;
+        final result = await showDialog<(bool, ArchiveConflictResolution)>(
+          context: context,
+          builder: (_) => FileManagerArchiveConflictDialog(
+            conflictPaths: [path],
+            initialApplyToAll: applyToAll,
+          ),
+        );
+        if (result == null) return ArchiveConflictResolution.skip;
+        applyToAll = result.$1;
+        resolution = result.$2;
+        return resolution;
+      });
     }
   }
 
@@ -429,6 +477,8 @@ class _FileManagerPageState extends State<FileManagerPage>
               onSelectAll: state.selectAll,
               onClearSelection: state.clearSelection,
               onDeleteSelection: _confirmDelete,
+              onCreateZip: _createZip,
+              onExtract: _extractArchive,
               scrollController: _scrollController,
             );
             if (constraints.maxWidth < 720) {

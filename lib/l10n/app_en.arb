@@ -3079,5 +3079,16 @@
   "@fileManagerFolderItemCount": { "placeholders": { "count": { "type": "int" } } },
   "fileManagerInstallApk": "Install APK",
   "fileManagerStorage": "Storage",
+  "fileManagerCompressZip": "Compress to ZIP",
+  "fileManagerCompressing": "Creating ZIP archive",
+  "fileManagerExtract": "Extract",
+  "fileManagerExtracting": "Extracting archive",
+  "fileManagerArchiveConflictTitle": "Archive files already exist",
+  "fileManagerArchiveConflictMessage": "{count} extracted files already exist.",
+  "@fileManagerArchiveConflictMessage": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerArchiveConflictMore": "and {count} more",
+  "@fileManagerArchiveConflictMore": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerSkip": "Skip",
+  "fileManagerApplyToAll": "Apply to all conflicts",
   "fileManagerDocuments": "Documents"
 }

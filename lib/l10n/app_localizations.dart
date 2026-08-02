@@ -10871,6 +10871,60 @@ abstract class AppLocalizations {
   /// **'Storage'**
   String get fileManagerStorage;
 
+  /// No description provided for @fileManagerCompressZip.
+  ///
+  /// In en, this message translates to:
+  /// **'Compress to ZIP'**
+  String get fileManagerCompressZip;
+
+  /// No description provided for @fileManagerCompressing.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating ZIP archive'**
+  String get fileManagerCompressing;
+
+  /// No description provided for @fileManagerExtract.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract'**
+  String get fileManagerExtract;
+
+  /// No description provided for @fileManagerExtracting.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracting archive'**
+  String get fileManagerExtracting;
+
+  /// No description provided for @fileManagerArchiveConflictTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive files already exist'**
+  String get fileManagerArchiveConflictTitle;
+
+  /// No description provided for @fileManagerArchiveConflictMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} extracted files already exist.'**
+  String fileManagerArchiveConflictMessage(int count);
+
+  /// No description provided for @fileManagerArchiveConflictMore.
+  ///
+  /// In en, this message translates to:
+  /// **'and {count} more'**
+  String fileManagerArchiveConflictMore(int count);
+
+  /// No description provided for @fileManagerSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get fileManagerSkip;
+
+  /// No description provided for @fileManagerApplyToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to all conflicts'**
+  String get fileManagerApplyToAll;
+
   /// No description provided for @fileManagerDocuments.
   ///
   /// In en, this message translates to:

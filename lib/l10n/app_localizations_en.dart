@@ -5978,5 +5978,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileManagerStorage => 'Storage';
 
   @override
+  String get fileManagerCompressZip => 'Compress to ZIP';
+
+  @override
+  String get fileManagerCompressing => 'Creating ZIP archive';
+
+  @override
+  String get fileManagerExtract => 'Extract';
+
+  @override
+  String get fileManagerExtracting => 'Extracting archive';
+
+  @override
+  String get fileManagerArchiveConflictTitle => 'Archive files already exist';
+
+  @override
+  String fileManagerArchiveConflictMessage(int count) {
+    return '$count extracted files already exist.';
+  }
+
+  @override
+  String fileManagerArchiveConflictMore(int count) {
+    return 'and $count more';
+  }
+
+  @override
+  String get fileManagerSkip => 'Skip';
+
+  @override
+  String get fileManagerApplyToAll => 'Apply to all conflicts';
+
+  @override
   String get fileManagerDocuments => 'Documents';
 }
