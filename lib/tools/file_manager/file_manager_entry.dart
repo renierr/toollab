@@ -4,6 +4,8 @@ class FileManagerEntry {
   final bool isDirectory;
   final int? size;
   final DateTime? modified;
+  final String? archivePath;
+  final String? archiveEntryPath;
 
   const FileManagerEntry({
     required this.name,
@@ -11,5 +13,9 @@ class FileManagerEntry {
     required this.isDirectory,
     this.size,
     this.modified,
+    this.archivePath,
+    this.archiveEntryPath,
   });
+
+  bool get isArchiveEntry => archivePath != null && archiveEntryPath != null;
 }

@@ -102,7 +102,7 @@ class FileManagerExplorer extends StatelessWidget {
                   ],
                 ),
               ),
-              if (!state.isRemote)
+              if (!state.isRemote && !state.isReadOnly)
                 IconButton(
                   tooltip: l10n.fileManagerFavorite,
                   onPressed: onToggleFavorite,
@@ -112,7 +112,7 @@ class FileManagerExplorer extends StatelessWidget {
                         : Icons.star_outline,
                   ),
                 ),
-              if (state.hasSelection && !state.isRemote)
+              if (state.hasSelection && !state.isRemote && !state.isReadOnly)
                 IconButton(
                   tooltip: l10n.fileManagerCompressZip,
                   onPressed: onCreateZip,
@@ -141,23 +141,25 @@ class FileManagerExplorer extends StatelessWidget {
                     l10n.fileManagerSelected(state.selectedPaths.length),
                   ),
                 ),
-                IconButton(
-                  tooltip: state.selectedPaths.length == state.entries.length
-                      ? l10n.commonClear
-                      : l10n.fileManagerSelectAll,
-                  onPressed: state.selectedPaths.length == state.entries.length
-                      ? state.isOperating
-                            ? null
-                            : onClearSelection
-                      : state.isOperating
-                      ? null
-                      : onSelectAll,
-                  icon: Icon(
-                    state.selectedPaths.length == state.entries.length
-                        ? Icons.deselect
-                        : Icons.select_all,
+                if (!state.isReadOnly)
+                  IconButton(
+                    tooltip: state.selectedPaths.length == state.entries.length
+                        ? l10n.commonClear
+                        : l10n.fileManagerSelectAll,
+                    onPressed:
+                        state.selectedPaths.length == state.entries.length
+                        ? state.isOperating
+                              ? null
+                              : onClearSelection
+                        : state.isOperating
+                        ? null
+                        : onSelectAll,
+                    icon: Icon(
+                      state.selectedPaths.length == state.entries.length
+                          ? Icons.deselect
+                          : Icons.select_all,
+                    ),
                   ),
-                ),
                 IconButton(
                   tooltip: l10n.commonCopy,
                   onPressed: state.hasSelection && !state.isOperating
@@ -169,24 +171,27 @@ class FileManagerExplorer extends StatelessWidget {
                       : null,
                   icon: const Icon(Icons.copy_outlined),
                 ),
-                IconButton(
-                  tooltip: l10n.fileManagerCut,
-                  onPressed: state.hasSelection && !state.isOperating
-                      ? () => onCut(
-                          state.entries.firstWhere(
-                            (entry) => state.selectedPaths.contains(entry.path),
-                          ),
-                        )
-                      : null,
-                  icon: const Icon(Icons.drive_file_move_outline),
-                ),
-                IconButton(
-                  tooltip: l10n.commonDelete,
-                  onPressed: state.hasSelection && !state.isOperating
-                      ? onDeleteSelection
-                      : null,
-                  icon: const Icon(Icons.delete_outline),
-                ),
+                if (!state.isReadOnly)
+                  IconButton(
+                    tooltip: l10n.fileManagerCut,
+                    onPressed: state.hasSelection && !state.isOperating
+                        ? () => onCut(
+                            state.entries.firstWhere(
+                              (entry) =>
+                                  state.selectedPaths.contains(entry.path),
+                            ),
+                          )
+                        : null,
+                    icon: const Icon(Icons.drive_file_move_outline),
+                  ),
+                if (!state.isReadOnly)
+                  IconButton(
+                    tooltip: l10n.commonDelete,
+                    onPressed: state.hasSelection && !state.isOperating
+                        ? onDeleteSelection
+                        : null,
+                    icon: const Icon(Icons.delete_outline),
+                  ),
               ],
             ),
           ),
@@ -228,6 +233,7 @@ class FileManagerExplorer extends StatelessWidget {
                       state.entries[index].path,
                     ),
                     clipboardIsCut: state.clipboardIsCut,
+                    readOnly: state.isReadOnly,
                   ),
                 ),
         ),
@@ -340,6 +346,7 @@ class _EntryTile extends StatelessWidget {
   final ValueChanged<FileManagerEntry> onToggleSelection;
   final bool isInClipboard;
   final bool clipboardIsCut;
+  final bool readOnly;
   const _EntryTile({
     required this.entry,
     required this.onOpen,
@@ -357,6 +364,7 @@ class _EntryTile extends StatelessWidget {
     required this.onToggleSelection,
     required this.isInClipboard,
     required this.clipboardIsCut,
+    required this.readOnly,
   });
   @override
   Widget build(BuildContext context) => ListTile(
@@ -418,7 +426,7 @@ class _EntryTile extends StatelessWidget {
                   label: AppLocalizations.of(context).fileManagerDetails,
                 ),
               ),
-              if (_isApk(entry))
+              if (!readOnly && _isApk(entry))
                 PopupMenuItem(
                   value: 'install',
                   child: _MenuAction(
@@ -426,7 +434,7 @@ class _EntryTile extends StatelessWidget {
                     label: AppLocalizations.of(context).fileManagerInstallApk,
                   ),
                 ),
-              if (entry.name.toLowerCase().endsWith('.zip'))
+              if (!readOnly && entry.name.toLowerCase().endsWith('.zip'))
                 PopupMenuItem(
                   value: 'extract',
                   child: _MenuAction(
@@ -448,13 +456,14 @@ class _EntryTile extends StatelessWidget {
                   label: AppLocalizations.of(context).commonShare,
                 ),
               ),
-              PopupMenuItem(
-                value: 'rename',
-                child: _MenuAction(
-                  icon: Icons.drive_file_rename_outline,
-                  label: AppLocalizations.of(context).commonRename,
+              if (!readOnly)
+                PopupMenuItem(
+                  value: 'rename',
+                  child: _MenuAction(
+                    icon: Icons.drive_file_rename_outline,
+                    label: AppLocalizations.of(context).commonRename,
+                  ),
                 ),
-              ),
               if (showClipboardActions)
                 PopupMenuItem(
                   value: 'copy',
@@ -463,7 +472,7 @@ class _EntryTile extends StatelessWidget {
                     label: AppLocalizations.of(context).commonCopy,
                   ),
                 ),
-              if (showClipboardActions)
+              if (showClipboardActions && !readOnly)
                 PopupMenuItem(
                   value: 'cut',
                   child: _MenuAction(
@@ -471,13 +480,14 @@ class _EntryTile extends StatelessWidget {
                     label: AppLocalizations.of(context).fileManagerCut,
                   ),
                 ),
-              PopupMenuItem(
-                value: 'delete',
-                child: _MenuAction(
-                  icon: Icons.delete_outline,
-                  label: AppLocalizations.of(context).commonDelete,
+              if (!readOnly)
+                PopupMenuItem(
+                  value: 'delete',
+                  child: _MenuAction(
+                    icon: Icons.delete_outline,
+                    label: AppLocalizations.of(context).commonDelete,
+                  ),
                 ),
-              ),
             ],
           ),
     onTap: () => selectionMode ? onToggleSelection(entry) : onOpen(entry),

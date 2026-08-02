@@ -59,7 +59,7 @@ class _FileManagerPageState extends State<FileManagerPage>
 
   Future<void> _openEntry(FileManagerEntry entry) async {
     final state = context.read<FileManagerState>();
-    if (entry.isDirectory) {
+    if (entry.isDirectory || state.canBrowseArchive(entry)) {
       _saveScrollOffset(state.path);
       await state.openEntry(entry);
       return;
@@ -423,7 +423,9 @@ class _FileManagerPageState extends State<FileManagerPage>
           ),
           IconButton(
             tooltip: l10n.fileManagerNewFolder,
-            onPressed: state.isLoading ? null : _createFolder,
+            onPressed: state.isLoading || state.isReadOnly
+                ? null
+                : _createFolder,
             icon: const Icon(Icons.create_new_folder_outlined),
           ),
           if (state.canPaste)
@@ -431,6 +433,7 @@ class _FileManagerPageState extends State<FileManagerPage>
               tooltip: l10n.fileManagerPaste,
               onPressed:
                   state.isLoading ||
+                      state.isReadOnly ||
                       state.isRemote &&
                           state.connection?.protocol == FileManagerProtocol.ftp
                   ? null

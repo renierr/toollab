@@ -11,6 +11,76 @@ class ZipArchiveHandler implements ArchiveHandler {
   bool supports(String path) => path.toLowerCase().endsWith('.zip');
 
   @override
+  Future<List<ArchiveEntry>> listEntries({
+    required String archivePath,
+    required String directoryPath,
+  }) async {
+    final input = InputFileStream(archivePath);
+    try {
+      final archive = ZipDecoder().decodeStream(input);
+      final directory = directoryPath.isEmpty
+          ? ''
+          : '${p.posix.normalize(directoryPath)}/';
+      final entries = <String, ArchiveEntry>{};
+      for (final file in archive) {
+        final entryPath = p.posix.normalize(file.name).replaceFirst('./', '');
+        if (entryPath.isEmpty || !entryPath.startsWith(directory)) continue;
+        final remaining = entryPath.substring(directory.length);
+        final firstSegment = remaining.split('/').first;
+        if (firstSegment.isEmpty) continue;
+        final childPath = '$directory$firstSegment';
+        final isDirectory = remaining.contains('/') || !file.isFile;
+        entries.putIfAbsent(
+          childPath,
+          () => ArchiveEntry(
+            name: firstSegment,
+            path: childPath,
+            isDirectory: isDirectory,
+            size: isDirectory ? null : file.size,
+          ),
+        );
+      }
+      return entries.values.toList();
+    } finally {
+      input.close();
+    }
+  }
+
+  @override
+  Future<void> extractEntry({
+    required String archivePath,
+    required String entryPath,
+    required String destinationPath,
+  }) async {
+    final input = InputFileStream(archivePath);
+    try {
+      final archive = ZipDecoder().decodeStream(input);
+      final normalizedEntry = p.posix.normalize(entryPath);
+      final prefix = '$normalizedEntry/';
+      for (final file in archive) {
+        final path = p.posix.normalize(file.name).replaceFirst('./', '');
+        if (path != normalizedEntry && !path.startsWith(prefix)) continue;
+        final relative = path == normalizedEntry
+            ? p.basename(normalizedEntry)
+            : p.posix.join(
+                p.basename(normalizedEntry),
+                path.substring(prefix.length),
+              );
+        final outputPath = p.join(destinationPath, relative);
+        if (file.isFile) {
+          final output = File(outputPath);
+          await output.parent.create(recursive: true);
+          await output.writeAsBytes(file.content as List<int>);
+        } else {
+          await Directory(outputPath).create(recursive: true);
+        }
+      }
+    } finally {
+      input.close();
+    }
+  }
+
+  @override
   Future<void> create({
     required List<String> sourcePaths,
     required String destinationPath,

@@ -45,6 +45,8 @@ class FileManagerState extends ChangeNotifier {
   List<String> _favoritePaths = [];
   List<String> _recentPaths = [];
   String _path = '';
+  String? _archivePath;
+  String _archiveDirectory = '';
   String _appFilesPath = '';
   String _downloadsPath = '';
   String? _startupPath;
@@ -56,6 +58,7 @@ class FileManagerState extends ChangeNotifier {
   FTPConnect? _ftp;
   Smb2Pool? _smb;
   List<String> _clipboardPaths = [];
+  List<FileManagerEntry> _archiveClipboardEntries = [];
   FileManagerLocationType? _clipboardLocationType;
   FileManagerConnection? _clipboardConnection;
   bool _clipboardIsCut = false;
@@ -75,10 +78,14 @@ class FileManagerState extends ChangeNotifier {
   List<FileManagerConnection> get connections => _connections;
   List<String> get favoritePaths => _favoritePaths;
   List<String> get recentPaths => _recentPaths;
-  String get path => _path;
+  String get path =>
+      isArchiveBrowsing ? '${_archivePath!}::$_archiveDirectory' : _path;
+  String get archivePath => _archivePath ?? '';
+  String get archiveDirectory => _archiveDirectory;
   String get appFilesPath => _appFilesPath;
   String get defaultFolderPath => _startupPath ?? _appFilesPath;
-  String get locationLabel => _displayPath(_path);
+  String get locationLabel =>
+      isArchiveBrowsing ? p.basename(_archivePath!) : _displayPath(_path);
   String get downloadsPath => _downloadsPath;
   bool get usesSharedStorage =>
       FileManagerStorageAccess.isAndroid && _hasAllFilesAccess;
@@ -89,7 +96,10 @@ class FileManagerState extends ChangeNotifier {
   String? get error => _error;
   bool get isLoading => _isLoading;
   bool get isRemote => _locationType != FileManagerLocationType.local;
+  bool get isArchiveBrowsing => _archivePath != null;
+  bool get isReadOnly => isArchiveBrowsing;
   bool get canGoUp {
+    if (isArchiveBrowsing) return true;
     if (_path.isEmpty || _path == p.rootPrefix(_path)) return false;
     if (FileManagerStorageAccess.isAndroid &&
         _hasAllFilesAccess &&
@@ -102,9 +112,12 @@ class FileManagerState extends ChangeNotifier {
   bool get canNavigateBack => canGoUp;
 
   FileManagerConnection? get connection => _connection;
-  bool get canPaste => _clipboardPaths.isNotEmpty;
+  bool get canPaste =>
+      _clipboardPaths.isNotEmpty || _archiveClipboardEntries.isNotEmpty;
   bool get clipboardIsCut => _clipboardIsCut;
-  int get clipboardItemCount => _clipboardPaths.length;
+  int get clipboardItemCount => _archiveClipboardEntries.isNotEmpty
+      ? _archiveClipboardEntries.length
+      : _clipboardPaths.length;
   List<String> get clipboardPaths => List.unmodifiable(_clipboardPaths);
   Set<String> get selectedPaths => Set.unmodifiable(_selectedPaths);
   bool get hasSelection => _selectedPaths.isNotEmpty;
@@ -204,6 +217,8 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> openLocal(String directory) async {
+    _archivePath = null;
+    _archiveDirectory = '';
     _locationType = FileManagerLocationType.local;
     _connection = null;
     await _disconnectRemote();
@@ -218,6 +233,7 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> openPath(String path) async {
+    if (isArchiveBrowsing) return _openArchiveDirectory(path);
     if (_locationType == FileManagerLocationType.local) {
       return openLocal(path);
     }
@@ -234,8 +250,56 @@ class FileManagerState extends ChangeNotifier {
     });
   }
 
+  Future<void> _openArchive(String archivePath) async {
+    _archivePath = archivePath;
+    _archiveDirectory = '';
+    await _loadArchiveEntries();
+  }
+
+  Future<void> _openArchiveDirectory(String directoryPath) async {
+    _archiveDirectory = directoryPath == '.' ? '' : directoryPath;
+    await _loadArchiveEntries();
+  }
+
+  Future<void> _loadArchiveEntries() async {
+    final archivePath = _archivePath;
+    if (archivePath == null) return;
+    await _load(() async {
+      final handler = _archiveHandlers.firstWhere(
+        (candidate) => candidate.supports(archivePath),
+      );
+      _entries =
+          (await handler.listEntries(
+                archivePath: archivePath,
+                directoryPath: _archiveDirectory,
+              ))
+              .map(
+                (entry) => FileManagerEntry(
+                  name: entry.name,
+                  path: '$archivePath::${entry.path}',
+                  isDirectory: entry.isDirectory,
+                  size: entry.size,
+                  modified: entry.modified,
+                  archivePath: archivePath,
+                  archiveEntryPath: entry.path,
+                ),
+              )
+              .toList()
+            ..sort(_compareEntries);
+    });
+  }
+
   Future<int?> folderItemCount(FileManagerEntry entry) async {
     if (!entry.isDirectory || isRemote) return null;
+    if (entry.isArchiveEntry) {
+      final handler = _archiveHandlers.firstWhere(
+        (candidate) => candidate.supports(entry.archivePath!),
+      );
+      return (await handler.listEntries(
+        archivePath: entry.archivePath!,
+        directoryPath: entry.archiveEntryPath!,
+      )).length;
+    }
     try {
       return await Directory(entry.path).list(followLinks: false).length;
     } catch (error) {
@@ -326,6 +390,12 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> openEntry(FileManagerEntry entry) async {
+    if (entry.isArchiveEntry) {
+      return _openArchiveDirectory(entry.archiveEntryPath!);
+    }
+    if (_locationType == FileManagerLocationType.local && canExtract(entry)) {
+      return _openArchive(entry.path);
+    }
     if (!entry.isDirectory) return;
     if (_locationType == FileManagerLocationType.local) {
       return openLocal(entry.path);
@@ -344,6 +414,10 @@ class FileManagerState extends ChangeNotifier {
 
   Future<void> goUp() async {
     if (!canGoUp) return;
+    if (isArchiveBrowsing) {
+      if (_archiveDirectory.isEmpty) return openLocal(p.dirname(_archivePath!));
+      return _openArchiveDirectory(p.posix.dirname(_archiveDirectory));
+    }
     if (_locationType == FileManagerLocationType.local) {
       return openLocal(p.dirname(_path));
     }
@@ -363,6 +437,21 @@ class FileManagerState extends ChangeNotifier {
     FileManagerEntry entry,
     String tempPath,
   ) async {
+    if (entry.isArchiveEntry) {
+      final handler = _archiveHandlers.firstWhere(
+        (candidate) => candidate.supports(entry.archivePath!),
+      );
+      await handler.extractEntry(
+        archivePath: entry.archivePath!,
+        entryPath: entry.archiveEntryPath!,
+        destinationPath: p.dirname(tempPath),
+      );
+      final extractedPath = p.join(p.dirname(tempPath), entry.name);
+      if (!await File(extractedPath).exists()) {
+        throw Exception('Archive entry could not be extracted.');
+      }
+      return extractedPath;
+    }
     if (_locationType == FileManagerLocationType.local) return entry.path;
     await _load(() async {
       final target = File(tempPath);
@@ -464,6 +553,7 @@ class FileManagerState extends ChangeNotifier {
 
   void clearClipboard() {
     _clipboardPaths = [];
+    _archiveClipboardEntries = [];
     _clipboardLocationType = null;
     _clipboardConnection = null;
     _clipboardIsCut = false;
@@ -472,6 +562,17 @@ class FileManagerState extends ChangeNotifier {
 
   void copy(FileManagerEntry entry) {
     if (_locationType == FileManagerLocationType.ftp) return;
+    if (entry.isArchiveEntry) {
+      _archiveClipboardEntries = _selectedPaths.isEmpty
+          ? [entry]
+          : _entries
+                .where((item) => _selectedPaths.contains(item.path))
+                .toList();
+      _clipboardPaths = [];
+      _clipboardIsCut = false;
+      notifyListeners();
+      return;
+    }
     _clipboardPaths = _selectedPaths.isEmpty
         ? [entry.path]
         : _selectedPaths.toList();
@@ -513,7 +614,11 @@ class FileManagerState extends ChangeNotifier {
     FileManagerConflictResolution resolution =
         FileManagerConflictResolution.keepBoth,
   }) async {
-    if (_clipboardPaths.isEmpty) return;
+    if (isArchiveBrowsing || !canPaste) return;
+    if (_archiveClipboardEntries.isNotEmpty) {
+      await _pasteArchiveEntries();
+      return;
+    }
     if (_clipboardLocationType == FileManagerLocationType.local &&
         _locationType == FileManagerLocationType.local) {
       await _runLocalOperation(
@@ -539,6 +644,22 @@ class FileManagerState extends ChangeNotifier {
       clearClipboard();
     }
     if (_error == null) clearSelection();
+  }
+
+  Future<void> _pasteArchiveEntries() async {
+    await _runArchiveOperation(FileManagerOperation.copy, () async {
+      for (final entry in _archiveClipboardEntries) {
+        final handler = _archiveHandlers.firstWhere(
+          (candidate) => candidate.supports(entry.archivePath!),
+        );
+        await handler.extractEntry(
+          archivePath: entry.archivePath!,
+          entryPath: entry.archiveEntryPath!,
+          destinationPath: _path,
+        );
+      }
+      clearClipboard();
+    });
   }
 
   Future<void> _pasteLocalToSmb() async {
@@ -703,6 +824,8 @@ class FileManagerState extends ChangeNotifier {
   bool canExtract(FileManagerEntry entry) =>
       !isRemote &&
       _archiveHandlers.any((handler) => handler.supports(entry.path));
+
+  bool canBrowseArchive(FileManagerEntry entry) => canExtract(entry);
 
   Future<List<String>> archiveConflicts(FileManagerEntry entry) async {
     final handler = _archiveHandlers.firstWhere(
@@ -894,6 +1017,7 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
+    if (isArchiveBrowsing) return _loadArchiveEntries();
     if (_locationType == FileManagerLocationType.local) return openLocal(_path);
     await _load(() async {
       if (_locationType == FileManagerLocationType.ftp) {

@@ -5,6 +5,17 @@ enum ArchiveConflictResolution { overwrite, keepBoth, skip }
 abstract interface class ArchiveHandler {
   bool supports(String path);
 
+  Future<List<ArchiveEntry>> listEntries({
+    required String archivePath,
+    required String directoryPath,
+  });
+
+  Future<void> extractEntry({
+    required String archivePath,
+    required String entryPath,
+    required String destinationPath,
+  });
+
   Future<void> extract({
     required String archivePath,
     required String destinationPath,
@@ -14,6 +25,22 @@ abstract interface class ArchiveHandler {
   Future<void> create({
     required List<String> sourcePaths,
     required String destinationPath,
+  });
+}
+
+class ArchiveEntry {
+  final String name;
+  final String path;
+  final bool isDirectory;
+  final int? size;
+  final DateTime? modified;
+
+  const ArchiveEntry({
+    required this.name,
+    required this.path,
+    required this.isDirectory,
+    this.size,
+    this.modified,
   });
 }
 

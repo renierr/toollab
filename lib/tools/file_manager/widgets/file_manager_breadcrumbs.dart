@@ -16,6 +16,33 @@ class FileManagerBreadcrumbs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (state.isArchiveBrowsing) {
+      final archiveName = p.basename(state.archivePath);
+      final parts = state.archiveDirectory
+          .split('/')
+          .where((part) => part.isNotEmpty)
+          .toList();
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(parts.length + 1, (index) {
+            final isArchive = index == 0;
+            final target = isArchive ? '' : parts.take(index).join('/');
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (index > 0) const Icon(Icons.chevron_right, size: 16),
+                TextButton(
+                  onPressed: () => onOpenPath(target),
+                  child: Text(isArchive ? archiveName : parts[index - 1]),
+                ),
+              ],
+            );
+          }),
+        ),
+      );
+    }
     final separator = state.path.contains('\\') ? '\\' : '/';
     var path = state.path;
     final root = state.sharedStoragePath;
