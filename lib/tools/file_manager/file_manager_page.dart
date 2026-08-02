@@ -32,16 +32,21 @@ class FileManagerPage extends StatefulWidget {
 class _FileManagerPageState extends State<FileManagerPage>
     with DisposeCleanup, WidgetsBindingObserver {
   late final TempFileScope _tempScope;
+  late final ScrollController _scrollController;
+  final Map<String, double> _scrollOffsets = {};
   bool _awaitingStorageAccess = false;
+  String? _lastPath;
 
   @override
   void initState() {
     super.initState();
     _tempScope = TempFileManager.createScope();
+    _scrollController = ScrollController();
     WidgetsBinding.instance.addObserver(this);
     onDispose(() {
       WidgetsBinding.instance.removeObserver(this);
       _tempScope.cleanTracked();
+      _scrollController.dispose();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future<void>.delayed(const Duration(milliseconds: 120), () {
@@ -53,6 +58,7 @@ class _FileManagerPageState extends State<FileManagerPage>
   Future<void> _openEntry(FileManagerEntry entry) async {
     final state = context.read<FileManagerState>();
     if (entry.isDirectory) {
+      _saveScrollOffset(state.path);
       await state.openEntry(entry);
       return;
     }
@@ -93,6 +99,41 @@ class _FileManagerPageState extends State<FileManagerPage>
         );
       }
     }
+  }
+
+  void _saveScrollOffset(String path) {
+    if (_scrollController.hasClients) {
+      _scrollOffsets[path] = _scrollController.offset;
+    }
+  }
+
+  void _restoreScrollOffset(String path) {
+    final offset = _scrollOffsets[path];
+    if (offset == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.jumpTo(
+        offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      );
+    });
+  }
+
+  Future<void> _openLocal(String path) async {
+    final state = context.read<FileManagerState>();
+    _saveScrollOffset(state.path);
+    await state.openLocal(path);
+  }
+
+  Future<void> _openPath(String path) async {
+    final state = context.read<FileManagerState>();
+    _saveScrollOffset(state.path);
+    await state.openPath(path);
+  }
+
+  Future<void> _goUp() async {
+    final state = context.read<FileManagerState>();
+    _saveScrollOffset(state.path);
+    await state.goUp();
   }
 
   Future<void> _openWithSystem(FileManagerEntry entry) async {
@@ -303,10 +344,14 @@ class _FileManagerPageState extends State<FileManagerPage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<FileManagerState>();
+    if (_lastPath != state.path) {
+      _lastPath = state.path;
+      _restoreScrollOffset(state.path);
+    }
     return PopScope(
       canPop: !state.canNavigateBack,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && state.canNavigateBack) state.goUp();
+        if (!didPop && state.canNavigateBack) _goUp();
       },
       child: ToolLayout(
         title: FileManagerTool.config.localizedName(l10n),
@@ -359,8 +404,8 @@ class _FileManagerPageState extends State<FileManagerPage>
           builder: (context, constraints) {
             final locations = FileManagerLocations(
               state: state,
-              onOpenLocal: state.openLocal,
-              onOpenPath: state.openPath,
+              onOpenLocal: _openLocal,
+              onOpenPath: _openPath,
               onOpenConnection: state.openConnection,
               onAddConnection: _addConnection,
               onRemoveConnection: _removeConnection,
@@ -370,19 +415,21 @@ class _FileManagerPageState extends State<FileManagerPage>
               state: state,
               onOpen: _openEntry,
               onOpenWithSystem: _openWithSystem,
+              onShare: _shareWithSystem,
               onDetails: _showDetails,
               onRename: _rename,
               onDelete: _delete,
               onCopy: state.copy,
               onCut: state.cut,
-              onGoUp: state.goUp,
-              onOpenPath: state.openPath,
+              onGoUp: _goUp,
+              onOpenPath: _openPath,
               onToggleFavorite: state.toggleFavorite,
               onToggleSelection: state.toggleSelection,
               onEnterSelectionMode: state.enterSelectionMode,
               onSelectAll: state.selectAll,
               onClearSelection: state.clearSelection,
               onDeleteSelection: _confirmDelete,
+              scrollController: _scrollController,
             );
             if (constraints.maxWidth < 720) {
               return Column(

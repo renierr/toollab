@@ -11,6 +11,7 @@ class FileManagerExplorer extends StatelessWidget {
   final FileManagerState state;
   final ValueChanged<FileManagerEntry> onOpen;
   final ValueChanged<FileManagerEntry> onOpenWithSystem;
+  final ValueChanged<FileManagerEntry> onShare;
   final ValueChanged<FileManagerEntry> onDetails;
   final ValueChanged<FileManagerEntry> onRename;
   final ValueChanged<FileManagerEntry> onDelete;
@@ -24,11 +25,13 @@ class FileManagerExplorer extends StatelessWidget {
   final VoidCallback onSelectAll;
   final VoidCallback onClearSelection;
   final VoidCallback onDeleteSelection;
+  final ScrollController scrollController;
   const FileManagerExplorer({
     super.key,
     required this.state,
     required this.onOpen,
     required this.onOpenWithSystem,
+    required this.onShare,
     required this.onDetails,
     required this.onRename,
     required this.onDelete,
@@ -42,6 +45,7 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onSelectAll,
     required this.onClearSelection,
     required this.onDeleteSelection,
+    required this.scrollController,
   });
 
   @override
@@ -184,11 +188,13 @@ class FileManagerExplorer extends StatelessWidget {
           child: state.entries.isEmpty
               ? Center(child: Text(l10n.fileManagerEmptyFolder))
               : ListView.builder(
+                  controller: scrollController,
                   itemCount: state.entries.length,
                   itemBuilder: (context, index) => _EntryTile(
                     entry: state.entries[index],
                     onOpen: onOpen,
                     onOpenWithSystem: onOpenWithSystem,
+                    onShare: onShare,
                     onDetails: onDetails,
                     onRename: onRename,
                     onDelete: onDelete,
@@ -304,6 +310,7 @@ class _EntryTile extends StatelessWidget {
   final FileManagerEntry entry;
   final ValueChanged<FileManagerEntry> onOpen;
   final ValueChanged<FileManagerEntry> onOpenWithSystem;
+  final ValueChanged<FileManagerEntry> onShare;
   final ValueChanged<FileManagerEntry> onDetails;
   final ValueChanged<FileManagerEntry> onRename;
   final ValueChanged<FileManagerEntry> onDelete;
@@ -319,6 +326,7 @@ class _EntryTile extends StatelessWidget {
     required this.entry,
     required this.onOpen,
     required this.onOpenWithSystem,
+    required this.onShare,
     required this.onDetails,
     required this.onRename,
     required this.onDelete,
@@ -371,6 +379,8 @@ class _EntryTile extends StatelessWidget {
                 onOpenWithSystem(entry);
               } else if (value == 'install') {
                 onOpenWithSystem(entry);
+              } else if (value == 'share') {
+                onShare(entry);
               } else if (value == 'copy') {
                 onCopy(entry);
               } else if (value == 'cut') {
@@ -382,38 +392,62 @@ class _EntryTile extends StatelessWidget {
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'details',
-                child: Text(AppLocalizations.of(context).fileManagerDetails),
+                child: _MenuAction(
+                  icon: Icons.info_outline,
+                  label: AppLocalizations.of(context).fileManagerDetails,
+                ),
               ),
               if (_isApk(entry))
                 PopupMenuItem(
                   value: 'install',
-                  child: Text(
-                    AppLocalizations.of(context).fileManagerInstallApk,
+                  child: _MenuAction(
+                    icon: Icons.install_mobile_outlined,
+                    label: AppLocalizations.of(context).fileManagerInstallApk,
                   ),
                 ),
               PopupMenuItem(
                 value: 'system',
-                child: Text(
-                  AppLocalizations.of(context).fileManagerOpenWithSystem,
+                child: _MenuAction(
+                  icon: Icons.open_in_new,
+                  label: AppLocalizations.of(context).fileManagerOpenWithSystem,
+                ),
+              ),
+              PopupMenuItem(
+                value: 'share',
+                child: _MenuAction(
+                  icon: Icons.share_outlined,
+                  label: AppLocalizations.of(context).commonShare,
                 ),
               ),
               PopupMenuItem(
                 value: 'rename',
-                child: Text(AppLocalizations.of(context).commonRename),
+                child: _MenuAction(
+                  icon: Icons.drive_file_rename_outline,
+                  label: AppLocalizations.of(context).commonRename,
+                ),
               ),
               if (showClipboardActions)
                 PopupMenuItem(
                   value: 'copy',
-                  child: Text(AppLocalizations.of(context).commonCopy),
+                  child: _MenuAction(
+                    icon: Icons.copy_outlined,
+                    label: AppLocalizations.of(context).commonCopy,
+                  ),
                 ),
               if (showClipboardActions)
                 PopupMenuItem(
                   value: 'cut',
-                  child: Text(AppLocalizations.of(context).fileManagerCut),
+                  child: _MenuAction(
+                    icon: Icons.content_cut,
+                    label: AppLocalizations.of(context).fileManagerCut,
+                  ),
                 ),
               PopupMenuItem(
                 value: 'delete',
-                child: Text(AppLocalizations.of(context).commonDelete),
+                child: _MenuAction(
+                  icon: Icons.delete_outline,
+                  label: AppLocalizations.of(context).commonDelete,
+                ),
               ),
             ],
           ),
@@ -434,4 +468,16 @@ class _EntryTile extends StatelessWidget {
 
   bool _isApk(FileManagerEntry entry) =>
       !entry.isDirectory && entry.name.toLowerCase().endsWith('.apk');
+}
+
+class _MenuAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _MenuAction({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [Icon(icon, size: 20), const SizedBox(width: 12), Text(label)],
+  );
 }
