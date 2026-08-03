@@ -222,13 +222,35 @@ class FileManagerState extends ChangeNotifier {
     _locationType = FileManagerLocationType.local;
     _connection = null;
     await _disconnectRemote();
-    await _load(() async {
-      final dir = Directory(directory);
-      final entities = await dir.list(followLinks: false).toList();
-      _entries = await Future.wait(entities.map(_localEntryFromEntity));
+    _isLoading = true;
+    _error = null;
+    _entries = [];
+    _path = directory;
+    notifyListeners();
+    try {
+      final batch = <FileManagerEntry>[];
+      await for (final entity in Directory(
+        directory,
+      ).list(followLinks: false)) {
+        // Publish batches so a large directory becomes usable before scanning ends.
+        batch.add(_localEntryFromEntity(entity));
+        if (batch.length == 200) {
+          _entries.addAll(batch);
+          batch.clear();
+          notifyListeners();
+        }
+      }
+      if (batch.isNotEmpty) {
+        _entries.addAll(batch);
+      }
       _entries.sort(_compareEntries);
-      _path = dir.path;
-    });
+    } catch (error) {
+      _error = error.toString().replaceFirst('Exception: ', '');
+      debugPrint('[FileManagerState] $error');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
     if (_error == null) await _recordRecentPath(directory);
   }
 
@@ -1225,29 +1247,11 @@ class FileManagerState extends ChangeNotifier {
     }
   }
 
-  Future<FileManagerEntry> _localEntryFromEntity(
-    FileSystemEntity entity,
-  ) async {
-    final stat = await entity.stat();
-    var isDirectory = entity is Directory;
-    var entryPath = entity.path;
-    if (entity is Directory || entity is Link) {
-      try {
-        final resolvedPath = await entity.resolveSymbolicLinks();
-        if (await Directory(resolvedPath).exists()) {
-          isDirectory = true;
-          entryPath = resolvedPath;
-        }
-      } catch (_) {
-        // Some Windows compatibility junctions intentionally deny resolution.
-      }
-    }
+  FileManagerEntry _localEntryFromEntity(FileSystemEntity entity) {
     return FileManagerEntry(
       name: p.basename(entity.path),
-      path: entryPath,
-      isDirectory: isDirectory,
-      size: isDirectory ? null : stat.size,
-      modified: stat.modified,
+      path: entity.path,
+      isDirectory: entity is Directory,
     );
   }
 

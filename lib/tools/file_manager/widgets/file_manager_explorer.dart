@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -241,6 +243,7 @@ class FileManagerExplorer extends StatelessWidget {
                       ),
                       clipboardIsCut: state.clipboardIsCut,
                       readOnly: state.isReadOnly,
+                      showImagePreviews: !state.isRemote,
                     ),
                   ),
           ),
@@ -355,6 +358,7 @@ class _EntryTile extends StatelessWidget {
   final bool isInClipboard;
   final bool clipboardIsCut;
   final bool readOnly;
+  final bool showImagePreviews;
   const _EntryTile({
     required this.entry,
     required this.onOpen,
@@ -373,10 +377,21 @@ class _EntryTile extends StatelessWidget {
     required this.isInClipboard,
     required this.clipboardIsCut,
     required this.readOnly,
+    required this.showImagePreviews,
   });
   @override
   Widget build(BuildContext context) => ListTile(
-    leading: FileManagerEntryIcon(entry: entry),
+    minLeadingWidth: 48,
+    leading: SizedBox(
+      width: 48,
+      height: 48,
+      child: Center(
+        child: FileManagerEntryIcon(
+          entry: entry,
+          showPreview: showImagePreviews,
+        ),
+      ),
+    ),
     selected: selected,
     title: Text(
       entry.name,
@@ -385,15 +400,7 @@ class _EntryTile extends StatelessWidget {
     ),
     subtitle: Row(
       children: [
-        Expanded(
-          child: Text(
-            _metadata(entry),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 11,
-            ),
-          ),
-        ),
+        Expanded(child: _EntryMetadata(entry: entry)),
         if (isInClipboard)
           Icon(
             clipboardIsCut ? Icons.content_cut : Icons.copy_outlined,
@@ -502,19 +509,65 @@ class _EntryTile extends StatelessWidget {
     onLongPress: () => onToggleSelection(entry),
   );
 
-  String _metadata(FileManagerEntry entry) {
-    final parts = <String>[];
-    if (entry.modified != null) {
-      parts.add(FormatHelper.dateTime(entry.modified!));
-    }
-    if (!entry.isDirectory && entry.size != null) {
-      parts.add(FormatHelper.fileSize(entry.size!));
-    }
-    return parts.join('  -  ');
-  }
-
   bool _isApk(FileManagerEntry entry) =>
       !entry.isDirectory && entry.name.toLowerCase().endsWith('.apk');
+}
+
+class _EntryMetadata extends StatefulWidget {
+  final FileManagerEntry entry;
+
+  const _EntryMetadata({required this.entry});
+
+  @override
+  State<_EntryMetadata> createState() => _EntryMetadataState();
+}
+
+class _EntryMetadataState extends State<_EntryMetadata> {
+  Future<FileStat>? _stat;
+
+  @override
+  void initState() {
+    super.initState();
+    _stat = _loadStat();
+  }
+
+  @override
+  void didUpdateWidget(covariant _EntryMetadata oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.entry.path != widget.entry.path) {
+      _stat = _loadStat();
+    }
+  }
+
+  Future<FileStat>? _loadStat() {
+    if (widget.entry.isArchiveEntry || widget.entry.modified != null) {
+      return null;
+    }
+    return FileStat.stat(widget.entry.path);
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<FileStat>(
+    future: _stat,
+    builder: (context, snapshot) {
+      final stat = snapshot.data;
+      final modified = widget.entry.modified ?? stat?.modified;
+      final size =
+          widget.entry.size ?? (widget.entry.isDirectory ? null : stat?.size);
+      final parts = <String>[];
+      if (modified != null) parts.add(FormatHelper.dateTime(modified));
+      if (size != null) parts.add(FormatHelper.fileSize(size));
+      return Text(
+        parts.join('  -  '),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontSize: 11,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    },
+  );
 }
 
 class _MenuAction extends StatelessWidget {

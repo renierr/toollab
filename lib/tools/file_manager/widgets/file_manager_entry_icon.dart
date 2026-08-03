@@ -1,15 +1,51 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 
 class FileManagerEntryIcon extends StatelessWidget {
   final FileManagerEntry entry;
   final double size;
+  final bool showPreview;
 
-  const FileManagerEntryIcon({super.key, required this.entry, this.size = 24});
+  const FileManagerEntryIcon({
+    super.key,
+    required this.entry,
+    this.size = 48,
+    this.showPreview = true,
+  });
 
   @override
-  Widget build(BuildContext context) =>
+  Widget build(BuildContext context) {
+    if (showPreview && isImage(entry)) {
+      final cacheSize = (size * MediaQuery.devicePixelRatioOf(context)).round();
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: Image.file(
+          File(entry.path),
+          width: size,
+          height: size,
+          cacheWidth: cacheSize,
+          cacheHeight: cacheSize,
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.low,
+          errorBuilder: (_, _, _) => _fallbackIcon(context),
+        ),
+      );
+    }
+    return _fallbackIcon(context);
+  }
+
+  Widget _fallbackIcon(BuildContext context) =>
       Icon(iconFor(entry), size: size, color: colorFor(context, entry));
+
+  static bool isImage(FileManagerEntry entry) {
+    if (entry.isDirectory || entry.isArchiveEntry) return false;
+    return switch (entry.name.split('.').last.toLowerCase()) {
+      'jpg' || 'jpeg' || 'png' || 'gif' || 'webp' || 'bmp' => true,
+      _ => false,
+    };
+  }
 
   static IconData iconFor(FileManagerEntry entry) {
     if (entry.isDirectory) return Icons.folder;
