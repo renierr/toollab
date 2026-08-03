@@ -153,7 +153,7 @@ object FileSaveHelper {
         }
     }
 
-    private fun getUriForPath(context: Context, path: String): Uri {
+    fun getUriForPath(context: Context, path: String): Uri {
         return if (path.startsWith("content://")) {
             Uri.parse(path)
         } else {

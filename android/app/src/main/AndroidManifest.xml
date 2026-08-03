@@ -104,6 +104,13 @@
         </activity>
 
         <activity
+            android:name=".NativeMediaPlayerActivity"
+            android:exported="false"
+            android:theme="@style/NativeMediaPlayerTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:screenOrientation="unspecified" />
+
+        <activity
             android:name="de.renier.tool_lab.FileManagerActivity"
             android:exported="false"
             android:launchMode="singleTask"

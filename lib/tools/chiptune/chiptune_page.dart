@@ -12,6 +12,8 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/mime_type_helper.dart';
+import 'package:tool_lab/helpers/native_media_player.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -70,6 +72,22 @@ class _ChiptunePageState extends State<ChiptunePage>
 
   static String _extensionOf(String name) =>
       name.contains('.') ? name.split('.').last : '';
+
+  static bool _isAudioName(String name) {
+    const audioExtensions = [
+      'aac',
+      'aiff',
+      'alac',
+      'amr',
+      'm4a',
+      'mka',
+      'opus',
+      'wma',
+    ];
+    final lower = name.toLowerCase();
+    return _isNativeAudioName(name) ||
+        audioExtensions.any((extension) => lower.endsWith('.$extension'));
+  }
 
   final ChiptunePlayer _player = ChiptunePlayer();
   final ModArchiveService _modArchive = ModArchiveService();
@@ -358,6 +376,20 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _playPlaylistIndex(int index) async {
     if (index < 0 || index >= _playlist.length) return;
     final file = _playlist[index];
+    if (!_isNativeAudioName(file.name) &&
+        _isAudioName(file.name) &&
+        NativeMediaPlayer.isSupported) {
+      await NativeMediaPlayer.open(
+        path: file.path,
+        mimeType: MimeTypeHelper.getMimeType(file.name),
+      );
+      if (mounted) {
+        _showSnack(
+          AppLocalizations.of(context).chipUnsupportedAudioOpenedInternally,
+        );
+      }
+      return;
+    }
     bool loaded = false;
     try {
       final bytes = await file.readAsBytes();
@@ -385,6 +417,22 @@ class _ChiptunePageState extends State<ChiptunePage>
       setState(() => _openingSharedFile = true);
     }
     try {
+      if (!_isNativeAudioName(file.name) &&
+          _isAudioName(file.name) &&
+          NativeMediaPlayer.isSupported) {
+        await NativeMediaPlayer.open(
+          path: file.path,
+          mimeType: file.mimeType == 'application/octet-stream'
+              ? MimeTypeHelper.getMimeType(file.name)
+              : file.mimeType,
+        );
+        if (mounted) {
+          _showSnack(
+            AppLocalizations.of(context).chipUnsupportedAudioOpenedInternally,
+          );
+        }
+        return;
+      }
       final bytes = await File(file.path).readAsBytes();
       await _loadBytes(bytes, file.name);
       await _player.play();

@@ -398,6 +398,12 @@ abstract class AppLocalizations {
   /// **'Failed to open shared file: {error}'**
   String chipFailedToOpenSharedFile(Object error);
 
+  /// No description provided for @chipUnsupportedAudioOpenedInternally.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened with the internal audio player'**
+  String get chipUnsupportedAudioOpenedInternally;
+
   /// No description provided for @chipHideVisualizer.
   ///
   /// In en, this message translates to:
@@ -5738,7 +5744,7 @@ abstract class AppLocalizations {
   /// No description provided for @toolDescChiptune.
   ///
   /// In en, this message translates to:
-  /// **'Play MOD, XM, IT tracker modules and WAV, MP3, OGG audio'**
+  /// **'Play tracker modules and audio files'**
   String get toolDescChiptune;
 
   /// No description provided for @toolNameFocusNoise.
@@ -10762,6 +10768,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open audio with'**
   String get fileManagerOpenAudio;
+
+  /// No description provided for @fileManagerOpenVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Open video with'**
+  String get fileManagerOpenVideo;
+
+  /// No description provided for @fileManagerOpenInternalPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal player'**
+  String get fileManagerOpenInternalPlayer;
 
   /// No description provided for @fileManagerOpenMarkdown.
   ///

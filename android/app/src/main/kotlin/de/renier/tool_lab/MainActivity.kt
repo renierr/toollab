@@ -23,6 +23,7 @@ open class MainActivity : FlutterActivity() {
     private val FILE_PICKER_CHANNEL = "de.renier.tool_lab/file_picker"
     private val MULTICAST_CHANNEL = "de.renier.tool_lab/multicast"
     private val STORAGE_ACCESS_CHANNEL = "de.renier.tool_lab/storage_access"
+    private val NATIVE_MEDIA_PLAYER_CHANNEL = "de.renier.tool_lab/native_media_player"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
     private var multicastLock: WifiManager.MulticastLock? = null
@@ -249,6 +250,30 @@ open class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
                 "externalStoragePath" -> result.success(Environment.getExternalStorageDirectory().absolutePath)
+                else -> result.notImplemented()
+            }
+        }
+
+        MethodChannel(messenger, NATIVE_MEDIA_PLAYER_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "open" -> {
+                    val path = call.argument<String>("path")
+                    val mimeType = call.argument<String>("mimeType")
+                    if (path == null || mimeType == null) {
+                        result.error("INVALID_ARGS", "path and mimeType required", null)
+                        return@setMethodCallHandler
+                    }
+                    try {
+                        val uri = FileSaveHelper.getUriForPath(this, path)
+                        startActivity(Intent(this, NativeMediaPlayerActivity::class.java).apply {
+                            setDataAndType(uri, mimeType)
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        })
+                        result.success(null)
+                    } catch (e: Exception) {
+                        result.error("MEDIA_PLAYER_ERROR", e.message, null)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }

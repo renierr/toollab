@@ -95,6 +95,17 @@ class MimeTypeHelper {
         return 'audio/ogg';
       case 'm4a':
         return 'audio/mp4';
+      case 'aac':
+        return 'audio/aac';
+      case 'aiff':
+      case 'aif':
+        return 'audio/aiff';
+      case 'amr':
+        return 'audio/amr';
+      case 'opus':
+        return 'audio/opus';
+      case 'wma':
+        return 'audio/x-ms-wma';
       case 'flac':
         return 'audio/flac';
       // Tracker modules
@@ -115,6 +126,10 @@ class MimeTypeHelper {
         return 'video/quicktime';
       case 'avi':
         return 'video/x-msvideo';
+      case 'mkv':
+        return 'video/x-matroska';
+      case '3gp':
+        return 'video/3gpp';
       // Archives
       case 'zip':
         return 'application/zip';

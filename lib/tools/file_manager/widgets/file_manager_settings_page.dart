@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
+import 'package:tool_lab/helpers/native_media_player.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
@@ -96,6 +97,13 @@ class FileManagerSettingsPage extends StatelessWidget {
                       value: null,
                       child: Text(l10n.fileManagerOpenChooser),
                     ),
+                    if (NativeMediaPlayer.isSupported &&
+                        (category == FileManagerOpenCategory.audio ||
+                            category == FileManagerOpenCategory.video))
+                      DropdownMenuItem(
+                        value: NativeMediaPlayer.preferenceId,
+                        child: Text(l10n.fileManagerOpenInternalPlayer),
+                      ),
                     ...SharingService.instance
                         .getMatchingTools(_exampleFile(category))
                         .map(
@@ -121,12 +129,14 @@ class FileManagerSettingsPage extends StatelessWidget {
       FileManagerOpenCategory.images => 'image.png',
       FileManagerOpenCategory.pdf => 'document.pdf',
       FileManagerOpenCategory.audio => 'audio.mp3',
+      FileManagerOpenCategory.video => 'video.mp4',
       FileManagerOpenCategory.markdown => 'document.md',
     },
     mimeType: switch (category) {
       FileManagerOpenCategory.images => 'image/png',
       FileManagerOpenCategory.pdf => 'application/pdf',
       FileManagerOpenCategory.audio => 'audio/mpeg',
+      FileManagerOpenCategory.video => 'video/mp4',
       FileManagerOpenCategory.markdown => 'text/markdown',
     },
   );
@@ -138,6 +148,7 @@ class FileManagerSettingsPage extends StatelessWidget {
     FileManagerOpenCategory.images => l10n.fileManagerOpenImages,
     FileManagerOpenCategory.pdf => l10n.fileManagerOpenPdf,
     FileManagerOpenCategory.audio => l10n.fileManagerOpenAudio,
+    FileManagerOpenCategory.video => l10n.fileManagerOpenVideo,
     FileManagerOpenCategory.markdown => l10n.fileManagerOpenMarkdown,
   };
 }

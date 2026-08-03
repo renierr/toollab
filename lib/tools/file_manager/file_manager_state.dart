@@ -27,7 +27,7 @@ enum FileManagerConflictResolution { overwrite, keepBoth }
 
 enum FileManagerSortField { name, modified, size }
 
-enum FileManagerOpenCategory { images, pdf, audio, markdown }
+enum FileManagerOpenCategory { images, pdf, audio, video, markdown }
 
 class FileManagerState extends ChangeNotifier {
   static const _connectionsKey = 'connections';
@@ -1204,6 +1204,7 @@ class FileManagerState extends ChangeNotifier {
         _ when mimeType.startsWith('image/') => FileManagerOpenCategory.images,
         'application/pdf' => FileManagerOpenCategory.pdf,
         _ when mimeType.startsWith('audio/') => FileManagerOpenCategory.audio,
+        _ when mimeType.startsWith('video/') => FileManagerOpenCategory.video,
         'text/markdown' ||
         'text/x-markdown' => FileManagerOpenCategory.markdown,
         _ => null,

@@ -6,6 +6,7 @@ import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
+import 'package:tool_lab/helpers/native_media_player.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
@@ -74,6 +75,10 @@ class _FileManagerPageState extends State<FileManagerPage>
       final mimeType = MimeTypeHelper.getMimeType(entry.name);
       final category = state.openCategoryForMime(mimeType);
       final toolId = category == null ? null : state.openToolId(category);
+      if (toolId == NativeMediaPlayer.preferenceId) {
+        await NativeMediaPlayer.open(path: path, mimeType: mimeType);
+        return;
+      }
       final tool = toolId == null
           ? null
           : ToolRegistry.all

@@ -165,6 +165,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get chipUnsupportedAudioOpenedInternally =>
+      'Opened with the internal audio player';
+
+  @override
   String get chipHideVisualizer => 'Hide visualizer';
 
   @override
@@ -3237,8 +3241,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolNameChiptune => 'Chiptune Player';
 
   @override
-  String get toolDescChiptune =>
-      'Play MOD, XM, IT tracker modules and WAV, MP3, OGG audio';
+  String get toolDescChiptune => 'Play tracker modules and audio files';
 
   @override
   String get toolNameFocusNoise => 'Focus Noise & Breathing';
@@ -5928,6 +5931,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileManagerOpenAudio => 'Open audio with';
+
+  @override
+  String get fileManagerOpenVideo => 'Open video with';
+
+  @override
+  String get fileManagerOpenInternalPlayer => 'Internal player';
 
   @override
   String get fileManagerOpenMarkdown => 'Open Markdown with';
