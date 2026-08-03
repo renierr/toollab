@@ -233,7 +233,7 @@ class FileManagerState extends ChangeNotifier {
         directory,
       ).list(followLinks: false)) {
         // Publish batches so a large directory becomes usable before scanning ends.
-        batch.add(_localEntryFromEntity(entity));
+        batch.add(await _localEntryFromEntity(entity));
         if (batch.length == 200) {
           _entries.addAll(batch);
           batch.clear();
@@ -1247,11 +1247,26 @@ class FileManagerState extends ChangeNotifier {
     }
   }
 
-  FileManagerEntry _localEntryFromEntity(FileSystemEntity entity) {
+  Future<FileManagerEntry> _localEntryFromEntity(
+    FileSystemEntity entity,
+  ) async {
+    var isDirectory = entity is Directory;
+    var entryPath = entity.path;
+    if (entity is Link) {
+      try {
+        final resolvedPath = await entity.resolveSymbolicLinks();
+        if (await Directory(resolvedPath).exists()) {
+          isDirectory = true;
+          entryPath = resolvedPath;
+        }
+      } catch (_) {
+        // Some Windows compatibility junctions intentionally deny resolution.
+      }
+    }
     return FileManagerEntry(
       name: p.basename(entity.path),
-      path: entity.path,
-      isDirectory: entity is Directory,
+      path: entryPath,
+      isDirectory: isDirectory,
     );
   }
 
