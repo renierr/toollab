@@ -9,7 +9,9 @@ import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_breadcrumbs.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_icon.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_file_name.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_file_drop_zone.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 
 class FileManagerExplorer extends StatelessWidget {
   final FileManagerState state;
@@ -216,39 +218,46 @@ class FileManagerExplorer extends StatelessWidget {
           child: FileManagerFileDropZone(
             enabled: !state.isOperating && !state.isRemote && !state.isReadOnly,
             onDrop: onDropFiles,
-            child: state.entries.isEmpty
-                ? Center(child: Text(l10n.fileManagerEmptyFolder))
-                : ListView.builder(
-                    controller: scrollController,
-                    itemExtent: 72,
-                    itemCount: state.entries.length,
-                    itemBuilder: (context, index) => _EntryTile(
-                      entry: state.entries[index],
-                      onOpen: onOpen,
-                      onOpenWithSystem: onOpenWithSystem,
-                      onShare: onShare,
-                      onDetails: onDetails,
-                      onRename: onRename,
-                      onDelete: onDelete,
-                      onCopy: onCopy,
-                      onCut: onCut,
-                      onExtract: onExtract,
-                      showClipboardActions:
-                          state.connection?.protocol != FileManagerProtocol.ftp,
-                      selectionMode: state.isSelectionMode,
-                      selected: state.selectedPaths.contains(
-                        state.entries[index].path,
+            child: LayoutBuilder(
+              builder: (context, constraints) => state.entries.isEmpty
+                  ? Center(child: Text(l10n.fileManagerEmptyFolder))
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemExtent:
+                          constraints.maxWidth <
+                              ResponsiveLayout.mobileBreakpoint
+                          ? 88
+                          : 72,
+                      itemCount: state.entries.length,
+                      itemBuilder: (context, index) => _EntryTile(
+                        entry: state.entries[index],
+                        onOpen: onOpen,
+                        onOpenWithSystem: onOpenWithSystem,
+                        onShare: onShare,
+                        onDetails: onDetails,
+                        onRename: onRename,
+                        onDelete: onDelete,
+                        onCopy: onCopy,
+                        onCut: onCut,
+                        onExtract: onExtract,
+                        showClipboardActions:
+                            state.connection?.protocol !=
+                            FileManagerProtocol.ftp,
+                        selectionMode: state.isSelectionMode,
+                        selected: state.selectedPaths.contains(
+                          state.entries[index].path,
+                        ),
+                        onToggleSelection: onToggleSelection,
+                        isInClipboard: state.clipboardPaths.contains(
+                          state.entries[index].path,
+                        ),
+                        clipboardIsCut: state.clipboardIsCut,
+                        readOnly: state.isReadOnly,
+                        showImagePreviews: !state.isRemote,
+                        metadata: state.metadataFor(state.entries[index]),
                       ),
-                      onToggleSelection: onToggleSelection,
-                      isInClipboard: state.clipboardPaths.contains(
-                        state.entries[index].path,
-                      ),
-                      clipboardIsCut: state.clipboardIsCut,
-                      readOnly: state.isReadOnly,
-                      showImagePreviews: !state.isRemote,
-                      metadata: state.metadataFor(state.entries[index]),
                     ),
-                  ),
+            ),
           ),
         ),
       ],
@@ -385,132 +394,152 @@ class _EntryTile extends StatelessWidget {
     required this.metadata,
   });
   @override
-  Widget build(BuildContext context) => ListTile(
-    minLeadingWidth: 48,
-    leading: SizedBox(
-      width: 48,
-      height: 48,
-      child: Center(
-        child: FileManagerEntryIcon(
-          entry: entry,
-          showPreview: showImagePreviews,
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => _buildTile(
+        context,
+        constraints.maxWidth < ResponsiveLayout.mobileBreakpoint,
+      ),
+    );
+  }
+
+  Widget _buildTile(BuildContext context, bool isCompact) {
+    final iconSize = isCompact ? 40.0 : 48.0;
+    return ListTile(
+      contentPadding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),
+      minLeadingWidth: iconSize,
+      leading: SizedBox(
+        width: iconSize,
+        height: iconSize,
+        child: Center(
+          child: FileManagerEntryIcon(
+            entry: entry,
+            showPreview: showImagePreviews,
+          ),
         ),
       ),
-    ),
-    selected: selected,
-    title: Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-    subtitle: Row(
-      children: [
-        Expanded(
-          child: _EntryMetadata(entry: entry, metadata: metadata),
-        ),
-        if (isInClipboard)
-          Icon(
-            clipboardIsCut ? Icons.content_cut : Icons.copy_outlined,
-            size: 14,
-            color: Theme.of(context).colorScheme.primary,
+      selected: selected,
+      title: isCompact
+          ? FileManagerFileName(name: entry.name)
+          : Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Row(
+        children: [
+          Expanded(
+            child: _EntryMetadata(entry: entry, metadata: metadata),
           ),
-      ],
-    ),
-    trailing: selectionMode
-        ? Checkbox(value: selected, onChanged: (_) => onToggleSelection(entry))
-        : PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'rename') {
-                onRename(entry);
-              } else if (value == 'details') {
-                onDetails(entry);
-              } else if (value == 'system') {
-                onOpenWithSystem(entry);
-              } else if (value == 'install') {
-                onOpenWithSystem(entry);
-              } else if (value == 'share') {
-                onShare(entry);
-              } else if (value == 'extract') {
-                onExtract(entry);
-              } else if (value == 'copy') {
-                onCopy(entry);
-              } else if (value == 'cut') {
-                onCut(entry);
-              } else {
-                onDelete(entry);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'details',
-                child: _MenuAction(
-                  icon: Icons.info_outline,
-                  label: AppLocalizations.of(context).fileManagerDetails,
-                ),
-              ),
-              if (!readOnly && _isApk(entry))
+          if (isInClipboard)
+            Icon(
+              clipboardIsCut ? Icons.content_cut : Icons.copy_outlined,
+              size: 14,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+        ],
+      ),
+      trailing: selectionMode
+          ? Checkbox(
+              value: selected,
+              onChanged: (_) => onToggleSelection(entry),
+            )
+          : PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'rename') {
+                  onRename(entry);
+                } else if (value == 'details') {
+                  onDetails(entry);
+                } else if (value == 'system') {
+                  onOpenWithSystem(entry);
+                } else if (value == 'install') {
+                  onOpenWithSystem(entry);
+                } else if (value == 'share') {
+                  onShare(entry);
+                } else if (value == 'extract') {
+                  onExtract(entry);
+                } else if (value == 'copy') {
+                  onCopy(entry);
+                } else if (value == 'cut') {
+                  onCut(entry);
+                } else {
+                  onDelete(entry);
+                }
+              },
+              itemBuilder: (context) => [
                 PopupMenuItem(
-                  value: 'install',
+                  value: 'details',
                   child: _MenuAction(
-                    icon: Icons.install_mobile_outlined,
-                    label: AppLocalizations.of(context).fileManagerInstallApk,
+                    icon: Icons.info_outline,
+                    label: AppLocalizations.of(context).fileManagerDetails,
                   ),
                 ),
-              if (!readOnly && entry.name.toLowerCase().endsWith('.zip'))
+                if (!readOnly && _isApk(entry))
+                  PopupMenuItem(
+                    value: 'install',
+                    child: _MenuAction(
+                      icon: Icons.install_mobile_outlined,
+                      label: AppLocalizations.of(context).fileManagerInstallApk,
+                    ),
+                  ),
+                if (!readOnly && entry.name.toLowerCase().endsWith('.zip'))
+                  PopupMenuItem(
+                    value: 'extract',
+                    child: _MenuAction(
+                      icon: Icons.unarchive_outlined,
+                      label: AppLocalizations.of(context).fileManagerExtract,
+                    ),
+                  ),
                 PopupMenuItem(
-                  value: 'extract',
+                  value: 'system',
                   child: _MenuAction(
-                    icon: Icons.unarchive_outlined,
-                    label: AppLocalizations.of(context).fileManagerExtract,
+                    icon: Icons.open_in_new,
+                    label: AppLocalizations.of(
+                      context,
+                    ).fileManagerOpenWithSystem,
                   ),
                 ),
-              PopupMenuItem(
-                value: 'system',
-                child: _MenuAction(
-                  icon: Icons.open_in_new,
-                  label: AppLocalizations.of(context).fileManagerOpenWithSystem,
-                ),
-              ),
-              PopupMenuItem(
-                value: 'share',
-                child: _MenuAction(
-                  icon: Icons.share_outlined,
-                  label: AppLocalizations.of(context).commonShare,
-                ),
-              ),
-              if (!readOnly)
                 PopupMenuItem(
-                  value: 'rename',
+                  value: 'share',
                   child: _MenuAction(
-                    icon: Icons.drive_file_rename_outline,
-                    label: AppLocalizations.of(context).commonRename,
+                    icon: Icons.share_outlined,
+                    label: AppLocalizations.of(context).commonShare,
                   ),
                 ),
-              if (showClipboardActions)
-                PopupMenuItem(
-                  value: 'copy',
-                  child: _MenuAction(
-                    icon: Icons.copy_outlined,
-                    label: AppLocalizations.of(context).commonCopy,
+                if (!readOnly)
+                  PopupMenuItem(
+                    value: 'rename',
+                    child: _MenuAction(
+                      icon: Icons.drive_file_rename_outline,
+                      label: AppLocalizations.of(context).commonRename,
+                    ),
                   ),
-                ),
-              if (showClipboardActions && !readOnly)
-                PopupMenuItem(
-                  value: 'cut',
-                  child: _MenuAction(
-                    icon: Icons.content_cut,
-                    label: AppLocalizations.of(context).fileManagerCut,
+                if (showClipboardActions)
+                  PopupMenuItem(
+                    value: 'copy',
+                    child: _MenuAction(
+                      icon: Icons.copy_outlined,
+                      label: AppLocalizations.of(context).commonCopy,
+                    ),
                   ),
-                ),
-              if (!readOnly)
-                PopupMenuItem(
-                  value: 'delete',
-                  child: _MenuAction(
-                    icon: Icons.delete_outline,
-                    label: AppLocalizations.of(context).commonDelete,
+                if (showClipboardActions && !readOnly)
+                  PopupMenuItem(
+                    value: 'cut',
+                    child: _MenuAction(
+                      icon: Icons.content_cut,
+                      label: AppLocalizations.of(context).fileManagerCut,
+                    ),
                   ),
-                ),
-            ],
-          ),
-    onTap: () => selectionMode ? onToggleSelection(entry) : onOpen(entry),
-    onLongPress: () => onToggleSelection(entry),
-  );
+                if (!readOnly)
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: _MenuAction(
+                      icon: Icons.delete_outline,
+                      label: AppLocalizations.of(context).commonDelete,
+                    ),
+                  ),
+              ],
+            ),
+      onTap: () => selectionMode ? onToggleSelection(entry) : onOpen(entry),
+      onLongPress: () => onToggleSelection(entry),
+    );
+  }
 
   bool _isApk(FileManagerEntry entry) =>
       !entry.isDirectory && entry.name.toLowerCase().endsWith('.apk');

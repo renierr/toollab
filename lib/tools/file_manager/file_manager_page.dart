@@ -157,6 +157,19 @@ class _FileManagerPageState extends State<FileManagerPage>
     }
   }
 
+  Future<void> _openWithChooser(FileManagerEntry entry) async {
+    final path = await context.read<FileManagerState>().prepareForOpen(
+      entry,
+      await _tempScope.createFile('file_manager_${entry.name}'),
+    );
+    if (!mounted || path == null) return;
+    await FileSaveHelper.showOpenChooser(
+      context: context,
+      path: path,
+      mimeType: MimeTypeHelper.getMimeType(entry.name),
+    );
+  }
+
   Future<void> _showDetails(FileManagerEntry entry) async {
     final folderItemCount = await context
         .read<FileManagerState>()
@@ -169,7 +182,7 @@ class _FileManagerPageState extends State<FileManagerPage>
         folderItemCount: folderItemCount,
         onOpen: () {
           Navigator.pop(context);
-          _openEntry(entry);
+          _openWithChooser(entry);
         },
         onShare: () {
           Navigator.pop(context);
