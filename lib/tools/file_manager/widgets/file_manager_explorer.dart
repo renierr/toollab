@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -219,6 +220,7 @@ class FileManagerExplorer extends StatelessWidget {
                 ? Center(child: Text(l10n.fileManagerEmptyFolder))
                 : ListView.builder(
                     controller: scrollController,
+                    itemExtent: 72,
                     itemCount: state.entries.length,
                     itemBuilder: (context, index) => _EntryTile(
                       entry: state.entries[index],
@@ -244,6 +246,7 @@ class FileManagerExplorer extends StatelessWidget {
                       clipboardIsCut: state.clipboardIsCut,
                       readOnly: state.isReadOnly,
                       showImagePreviews: !state.isRemote,
+                      metadata: state.metadataFor(state.entries[index]),
                     ),
                   ),
           ),
@@ -359,6 +362,7 @@ class _EntryTile extends StatelessWidget {
   final bool clipboardIsCut;
   final bool readOnly;
   final bool showImagePreviews;
+  final ValueListenable<FileStat?> metadata;
   const _EntryTile({
     required this.entry,
     required this.onOpen,
@@ -378,6 +382,7 @@ class _EntryTile extends StatelessWidget {
     required this.clipboardIsCut,
     required this.readOnly,
     required this.showImagePreviews,
+    required this.metadata,
   });
   @override
   Widget build(BuildContext context) => ListTile(
@@ -393,14 +398,12 @@ class _EntryTile extends StatelessWidget {
       ),
     ),
     selected: selected,
-    title: Text(
-      entry.name,
-      maxLines: MediaQuery.sizeOf(context).width < 720 ? 2 : 1,
-      overflow: TextOverflow.ellipsis,
-    ),
+    title: Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis),
     subtitle: Row(
       children: [
-        Expanded(child: _EntryMetadata(entry: entry)),
+        Expanded(
+          child: _EntryMetadata(entry: entry, metadata: metadata),
+        ),
         if (isInClipboard)
           Icon(
             clipboardIsCut ? Icons.content_cut : Icons.copy_outlined,
@@ -515,42 +518,19 @@ class _EntryTile extends StatelessWidget {
 
 class _EntryMetadata extends StatefulWidget {
   final FileManagerEntry entry;
+  final ValueListenable<FileStat?> metadata;
 
-  const _EntryMetadata({required this.entry});
+  const _EntryMetadata({required this.entry, required this.metadata});
 
   @override
   State<_EntryMetadata> createState() => _EntryMetadataState();
 }
 
 class _EntryMetadataState extends State<_EntryMetadata> {
-  Future<FileStat>? _stat;
-
   @override
-  void initState() {
-    super.initState();
-    _stat = _loadStat();
-  }
-
-  @override
-  void didUpdateWidget(covariant _EntryMetadata oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.entry.path != widget.entry.path) {
-      _stat = _loadStat();
-    }
-  }
-
-  Future<FileStat>? _loadStat() {
-    if (widget.entry.isArchiveEntry || widget.entry.modified != null) {
-      return null;
-    }
-    return FileStat.stat(widget.entry.path);
-  }
-
-  @override
-  Widget build(BuildContext context) => FutureBuilder<FileStat>(
-    future: _stat,
-    builder: (context, snapshot) {
-      final stat = snapshot.data;
+  Widget build(BuildContext context) => ValueListenableBuilder<FileStat?>(
+    valueListenable: widget.metadata,
+    builder: (context, stat, _) {
       final modified = widget.entry.modified ?? stat?.modified;
       final size =
           widget.entry.size ?? (widget.entry.isDirectory ? null : stat?.size);

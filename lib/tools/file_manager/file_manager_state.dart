@@ -72,6 +72,13 @@ class FileManagerState extends ChangeNotifier {
   bool _sortAscending = true;
   bool _foldersFirst = true;
   final Map<FileManagerOpenCategory, String?> _openToolIds = {};
+  final Map<String, ValueNotifier<FileStat?>> _metadata = {};
+  final ValueNotifier<FileStat?> _emptyMetadata = ValueNotifier<FileStat?>(
+    null,
+  );
+  final List<FileManagerEntry> _metadataQueue = [];
+  final Set<String> _queuedMetadataPaths = {};
+  int _activeMetadataLoads = 0;
   static const List<ArchiveHandler> _archiveHandlers = [ZipArchiveHandler()];
 
   List<FileManagerEntry> get entries => _entries;
@@ -133,6 +140,46 @@ class FileManagerState extends ChangeNotifier {
   bool get foldersFirst => _foldersFirst;
   String? openToolId(FileManagerOpenCategory category) =>
       _openToolIds[category];
+
+  ValueListenable<FileStat?> metadataFor(FileManagerEntry entry) {
+    if (entry.modified != null || entry.isArchiveEntry || isRemote) {
+      return _emptyMetadata;
+    }
+    final notifier = _metadata.putIfAbsent(
+      entry.path,
+      () => ValueNotifier<FileStat?>(null),
+    );
+    if (!_queuedMetadataPaths.contains(entry.path) && notifier.value == null) {
+      _queuedMetadataPaths.add(entry.path);
+      _metadataQueue.add(entry);
+      _startMetadataLoads();
+    }
+    return notifier;
+  }
+
+  void _startMetadataLoads() {
+    while (_activeMetadataLoads < 2 && _metadataQueue.isNotEmpty) {
+      final entry = _metadataQueue.removeAt(0);
+      _activeMetadataLoads++;
+      FileStat.stat(entry.path)
+          .then((stat) => _metadata[entry.path]?.value = stat)
+          .catchError((_) => null)
+          .whenComplete(() {
+            _activeMetadataLoads--;
+            _startMetadataLoads();
+          });
+    }
+  }
+
+  void _clearEntryLoaders() {
+    for (final notifier in _metadata.values) {
+      notifier.dispose();
+    }
+    _metadata.clear();
+    _metadataQueue.clear();
+    _queuedMetadataPaths.clear();
+    _activeMetadataLoads = 0;
+  }
 
   String _displayPath(String path) {
     if (isRemote) return path.isEmpty ? '/' : path;
@@ -224,6 +271,7 @@ class FileManagerState extends ChangeNotifier {
     await _disconnectRemote();
     _isLoading = true;
     _error = null;
+    _clearEntryLoaders();
     _entries = [];
     _path = directory;
     notifyListeners();
@@ -1230,6 +1278,13 @@ class FileManagerState extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _clearEntryLoaders();
+    _emptyMetadata.dispose();
+    super.dispose();
   }
 
   Future<void> _disconnectRemote() async {
