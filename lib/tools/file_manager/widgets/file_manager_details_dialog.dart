@@ -3,11 +3,14 @@ import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_details_preview.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_icon.dart';
 import 'package:tool_lab/widgets/data_row.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class FileManagerDetailsDialog extends StatelessWidget {
+  static const double _dialogWidth = 360;
+
   final FileManagerEntry entry;
   final VoidCallback onOpen;
   final VoidCallback onShare;
@@ -30,11 +33,14 @@ class FileManagerDetailsDialog extends StatelessWidget {
     return ResponsiveAlertDialog(
       title: Text(l10n.fileManagerDetails),
       content: SizedBox(
-        width: 360,
+        width: _dialogWidth,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FileManagerEntryIcon(entry: entry, size: 42),
+            if (FileManagerEntryIcon.isImage(entry))
+              FileManagerDetailsPreview(entry: entry, width: _dialogWidth)
+            else
+              FileManagerEntryIcon(entry: entry, size: 42),
             const SizedBox(height: 12),
             SelectableText(
               entry.name,

@@ -10919,6 +10919,12 @@ abstract class AppLocalizations {
   /// **'Items'**
   String get fileManagerFolderItems;
 
+  /// No description provided for @fileManagerFolderFileCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} files'**
+  String fileManagerFolderFileCount(int count);
+
   /// No description provided for @fileManagerFolderItemCount.
   ///
   /// In en, this message translates to:
@@ -10973,11 +10979,11 @@ abstract class AppLocalizations {
   /// **'{count} extracted files already exist.'**
   String fileManagerArchiveConflictMessage(int count);
 
-  /// No description provided for @fileManagerArchiveConflictMore.
+  /// No description provided for @fileManagerMoreEntries.
   ///
   /// In en, this message translates to:
   /// **'and {count} more'**
-  String fileManagerArchiveConflictMore(int count);
+  String fileManagerMoreEntries(int count);
 
   /// No description provided for @fileManagerSkip.
   ///

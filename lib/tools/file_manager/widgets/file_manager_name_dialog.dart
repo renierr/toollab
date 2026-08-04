@@ -27,21 +27,29 @@ class _FileManagerNameDialogState extends State<FileManagerNameDialog> {
     super.dispose();
   }
 
+  void _submit() {
+    final name = _controller.text.trim();
+    if (name.isEmpty) return;
+    Navigator.pop(context, name);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return ResponsiveAlertDialog(
       title: Text(widget.title),
-      content: TextField(controller: _controller, autofocus: true),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(l10n.commonCancel),
         ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _controller.text.trim()),
-          child: Text(l10n.commonSave),
-        ),
+        FilledButton(onPressed: _submit, child: Text(l10n.commonSave)),
       ],
     );
   }

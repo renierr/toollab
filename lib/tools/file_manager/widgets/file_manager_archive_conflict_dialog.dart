@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/archives/archive_handler.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_name_list.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class FileManagerArchiveConflictDialog extends StatefulWidget {
@@ -35,13 +36,9 @@ class _FileManagerArchiveConflictDialogState
             l10n.fileManagerArchiveConflictMessage(widget.conflictPaths.length),
           ),
           const SizedBox(height: 8),
-          ...widget.conflictPaths.take(3).map((path) => Text(p.basename(path))),
-          if (widget.conflictPaths.length > 3)
-            Text(
-              l10n.fileManagerArchiveConflictMore(
-                widget.conflictPaths.length - 3,
-              ),
-            ),
+          FileManagerEntryNameList(
+            labels: widget.conflictPaths.map(p.basename).toList(),
+          ),
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.fileManagerApplyToAll),

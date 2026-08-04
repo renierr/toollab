@@ -17,7 +17,9 @@ import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_archive_conflict_dialog.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_delete_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_details_dialog.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_name_list.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_drop_action_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
@@ -317,24 +319,25 @@ class _FileManagerPageState extends State<FileManagerPage>
 
   Future<void> _confirmDelete() async {
     final state = context.read<FileManagerState>();
-    final count = state.selectedPaths.length;
+    final selected = state.entries
+        .where((entry) => state.selectedPaths.contains(entry.path))
+        .toList();
+    if (selected.isEmpty) return;
+    // Only the folders the dialog actually lists get counted.
+    final folderFileCounts = <String, int>{};
+    for (final entry
+        in selected
+            .take(FileManagerEntryNameList.limit)
+            .where((entry) => entry.isDirectory)) {
+      final count = await state.folderFileCount(entry);
+      if (count != null) folderFileCounts[entry.path] = count;
+    }
+    if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => ResponsiveAlertDialog(
-        title: Text(AppLocalizations.of(context).fileManagerDeleteTitle),
-        content: Text(
-          AppLocalizations.of(context).fileManagerDeleteMessage(count),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(AppLocalizations.of(context).commonDelete),
-          ),
-        ],
+      builder: (_) => FileManagerDeleteDialog(
+        entries: selected,
+        folderFileCounts: folderFileCounts,
       ),
     );
     if (confirmed == true && mounted) await state.deleteSelected();

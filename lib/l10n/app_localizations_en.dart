@@ -6012,6 +6012,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileManagerFolderItems => 'Items';
 
   @override
+  String fileManagerFolderFileCount(int count) {
+    return '$count files';
+  }
+
+  @override
   String fileManagerFolderItemCount(int count) {
     return '$count items';
   }
@@ -6043,7 +6048,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String fileManagerArchiveConflictMore(int count) {
+  String fileManagerMoreEntries(int count) {
     return 'and $count more';
   }
 

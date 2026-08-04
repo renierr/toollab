@@ -470,6 +470,21 @@ class FileManagerState extends ChangeNotifier {
     }
   }
 
+  /// Recursive file count shown in the delete confirmation. Local folders only —
+  /// walking a remote or archive tree would stall the dialog.
+  Future<int?> folderFileCount(FileManagerEntry entry) async {
+    if (!entry.isDirectory || isRemote || entry.isArchiveEntry) return null;
+    try {
+      return await Directory(entry.path)
+          .list(recursive: true, followLinks: false)
+          .where((child) => child is! Directory)
+          .length;
+    } catch (error) {
+      debugPrint('[FileManagerState] Folder file count failed: $error');
+      return null;
+    }
+  }
+
   Future<void> _recordRecentPath(String path) async {
     _recentPaths = [
       path,
@@ -632,16 +647,24 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> createFolder(String name) async {
+    String? created;
     await _load(() async {
       if (_locationType == FileManagerLocationType.local) {
         await Directory(p.join(_path, name)).create();
+        created = p.join(_path, name);
       } else if (_locationType == FileManagerLocationType.ftp) {
         await _ftp!.makeDirectory(name);
+        // FTP navigates relative to the current directory.
+        created = name;
       } else {
         await _smb!.mkdir(_joinRemotePath(_path, name));
+        created = _joinRemotePath(_path, name);
       }
-      await refresh();
     });
+    final target = created;
+    // Drop the user straight into the folder they just made.
+    if (_error == null && target != null) return openPath(target);
+    await refresh();
   }
 
   Future<void> rename(FileManagerEntry entry, String name) async {
