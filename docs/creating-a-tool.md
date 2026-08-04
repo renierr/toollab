@@ -259,6 +259,20 @@ class ToolRegistry {
 }
 ```
 
+### Step 4: Create the Android Launcher Icon
+Create a transparent `512x512` PNG at
+`assets/logo/standalone/<tool-id>.png`. Existing icons are generated from the
+tool's Material icon glyph and use its configured accent color.
+
+Regenerate all Android tool icons after adding or replacing a source PNG:
+```bash
+dart run tool/sync_launcher_icons.dart
+```
+
+The script creates legacy PNG fallbacks and Android 8+ adaptive-icon resources.
+The latter prevents Pixel Launcher from applying legacy-icon normalization that
+makes drawer icons look smaller.
+
 ### Step 5: Verify & Clean
 Before committing, always run:
 ```bash
@@ -324,4 +338,3 @@ To allow a tool (such as `calculator` or `pdf-viewer`) to run in parallel with t
 
 4. **Register in Kotlin shortcut helper**:
    In [ShortcutHelper.kt](file:///C:/dev/flutter/toolkit/android/app/src/main/kotlin/de/renier/tool_lab/ShortcutHelper.kt), add the tool ID to the `isolatedTools` set inside `toolIdToActivityClassName()`.
-
