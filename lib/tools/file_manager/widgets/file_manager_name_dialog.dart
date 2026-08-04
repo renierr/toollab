@@ -17,9 +17,22 @@ class FileManagerNameDialog extends StatefulWidget {
 }
 
 class _FileManagerNameDialogState extends State<FileManagerNameDialog> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.initialValue,
-  );
+  late final TextEditingController _controller =
+      TextEditingController.fromValue(
+        TextEditingValue(
+          text: widget.initialValue,
+          // Caret before the extension, so renaming extends the name instead of
+          // the suffix.
+          selection: TextSelection.collapsed(offset: _nameEnd),
+        ),
+      );
+
+  /// Offset of the extension dot, or the end of the text when there is none. A
+  /// leading dot is part of the name (dotfiles), not an extension.
+  int get _nameEnd {
+    final dot = widget.initialValue.lastIndexOf('.');
+    return dot > 0 ? dot : widget.initialValue.length;
+  }
 
   @override
   void dispose() {
