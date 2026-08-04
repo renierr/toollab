@@ -1,7 +1,7 @@
 name: tool_lab
 description: "A multi-tool utility app with device sensors, calculator, and more."
 publish_to: "none"
-version: 1.6.7+42
+version: 1.6.8+43
 
 environment:
   sdk: ^3.12.1
@@ -17,6 +17,7 @@ dependencies:
   provider: ^6.1.2
   go_router: ^17.3.0
   http: ^1.6.0
+  rhttp: ^0.18.0
   file_selector: ^1.1.0
   share_plus: ^13.1.0
   sensors_plus: ^7.0.0

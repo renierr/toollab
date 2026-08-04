@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:tool_lab/services/app_http_client.dart';
 
 /// Raised when a random tune cannot be fetched or parsed from The Mod Archive.
 class ModArchiveException implements Exception {
@@ -67,7 +68,7 @@ class ModArchiveService {
   ///
   /// Throws [ModArchiveException] on any network or parse failure.
   Future<ModArchiveTune> fetchRandom() async {
-    final client = http.Client();
+    final client = await AppHttpClient.client;
     try {
       final html = await _getRandomPage(client);
       final match = _downloadRe.firstMatch(html);
@@ -94,8 +95,6 @@ class ModArchiveService {
       rethrow;
     } catch (e) {
       throw ModArchiveException('Failed to fetch random tune: $e');
-    } finally {
-      client.close();
     }
   }
 

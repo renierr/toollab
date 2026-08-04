@@ -2,21 +2,25 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
-import 'package:http/http.dart' as http;
+import 'package:rhttp/rhttp.dart' as rhttp;
+import 'package:tool_lab/services/app_http_client.dart';
 import 'fast_drop_model.dart';
 
 Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
   final messages = config['messages']! as SendPort;
   final control = ReceivePort();
-  final client = HttpClient();
+  final client = await AppHttpClient.createStreamingClient();
   final stopwatch = Stopwatch()..start();
   var lastProgressAt = Duration.zero;
   var cancelled = false;
   var stalled = false;
 
-  // Aborting a *stalled* transfer needs more than a flag the chunk callback
-  // checks — no further chunk ever arrives — so the connection is torn down.
-  void abort() => client.close(force: true);
+  rhttp.CancelToken? cancellation;
+
+  void abort() {
+    cancellation?.cancel();
+    client.dispose(cancelRunningRequests: true);
+  }
 
   control.listen((_) {
     cancelled = true;
@@ -60,9 +64,6 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
   }
 
   try {
-    client.connectionTimeout = Duration(
-      milliseconds: config['connectTimeoutMs']! as int,
-    );
     final responseTimeout = Duration(
       milliseconds: config['responseTimeoutMs']! as int,
     );
@@ -71,29 +72,25 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
     if (config['operation'] == 'upload') {
       final file = File(config['filePath']! as String);
       final total = await file.length();
-      var sent = 0;
-      final request = await client.postUrl(url);
-      request.bufferOutput = false;
-      request.headers.set('X-Filename', config['filename']! as String);
-      request.headers.set('X-Retention', config['retention']! as String);
-      request.headers.set('X-Source', config['source']! as String);
-      request.headers.set('Content-Type', config['mimeType']! as String);
-      request.contentLength = total;
-
+      cancellation = rhttp.CancelToken();
       armWatchdog();
-      await request.addStream(
-        file.openRead().map((chunk) {
-          if (cancelled) throw Exception('Upload cancelled by user');
-          sent += chunk.length;
-          reportProgress(sent, total);
-          return chunk;
-        }),
-      );
+      final response = await client
+          .post(
+            url.toString(),
+            headers: rhttp.HttpHeaders.rawMap({
+              'X-Filename': config['filename']! as String,
+              'X-Retention': config['retention']! as String,
+              'X-Source': config['source']! as String,
+              'Content-Type': config['mimeType']! as String,
+            }),
+            body: rhttp.HttpBody.stream(file.openRead(), length: total),
+            cancelToken: cancellation,
+            onSendProgress: reportProgress,
+          )
+          .timeout(responseTimeout);
       watchdogArmed = false;
-      final response = await request.close().timeout(responseTimeout);
-      final body = await response.transform(utf8.decoder).join();
       if (response.statusCode != 200) {
-        final data = jsonDecode(body);
+        final data = jsonDecode(response.body);
         throw Exception(
           data['error'] ?? 'Failed to upload drop: ${response.statusCode}',
         );
@@ -103,22 +100,19 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
       await output.parent.create(recursive: true);
       final sink = output.openWrite();
       try {
-        final request = await client.getUrl(url);
-        final response = await request.close().timeout(responseTimeout);
+        cancellation = rhttp.CancelToken();
+        final response = await client
+            .getStream(
+              url.toString(),
+              cancelToken: cancellation,
+              onReceiveProgress: reportProgress,
+            )
+            .timeout(responseTimeout);
         if (response.statusCode != 200) {
           throw Exception('Failed to download drop: ${response.statusCode}');
         }
-        final total = response.contentLength;
-        var received = 0;
         armWatchdog();
-        await sink.addStream(
-          response.map((chunk) {
-            if (cancelled) throw Exception('Download cancelled by user');
-            received += chunk.length;
-            reportProgress(received, total);
-            return chunk;
-          }),
-        );
+        await sink.addStream(response.body);
         watchdogArmed = false;
         await sink.close();
       } catch (_) {
@@ -141,7 +135,7 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
   } finally {
     stallWatchdog.cancel();
     control.close();
-    client.close(force: true);
+    client.dispose(cancelRunningRequests: true);
   }
 }
 
@@ -211,7 +205,8 @@ class FastDropService {
 
   static Future<List<FastDropItem>> fetchDrops(String baseUrl) async {
     final url = '${_sanitizeUrl(baseUrl)}/api/drop';
-    final response = await http
+    final client = await AppHttpClient.client;
+    final response = await client
         .get(Uri.parse(url))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode == 200) {
@@ -265,7 +260,8 @@ class FastDropService {
 
   static Future<void> deleteDrop(String baseUrl, String id) async {
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id';
-    final response = await http
+    final client = await AppHttpClient.client;
+    final response = await client
         .delete(Uri.parse(url))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {
@@ -282,7 +278,8 @@ class FastDropService {
     String description,
   ) async {
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id/description';
-    final response = await http
+    final client = await AppHttpClient.client;
+    final response = await client
         .patch(
           Uri.parse(url),
           headers: {'Content-Type': 'application/json'},
@@ -304,7 +301,8 @@ class FastDropService {
     String retention,
   ) async {
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id/retention';
-    final response = await http
+    final client = await AppHttpClient.client;
+    final response = await client
         .patch(
           Uri.parse(url),
           headers: {'Content-Type': 'application/json'},
@@ -322,7 +320,8 @@ class FastDropService {
 
   static Future<void> keepDrop(String baseUrl, String id) async {
     final url = '${_sanitizeUrl(baseUrl)}/api/drop/$id/keep';
-    final response = await http
+    final client = await AppHttpClient.client;
+    final response = await client
         .patch(Uri.parse(url))
         .timeout(const Duration(seconds: 10));
     if (response.statusCode != 200) {

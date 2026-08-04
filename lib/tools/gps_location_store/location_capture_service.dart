@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
+import 'package:tool_lab/services/app_http_client.dart';
 
 import 'location_source.dart';
 
@@ -85,7 +85,8 @@ class LocationCaptureService {
 
   static Future<LocationFix?> _tryIp() async {
     try {
-      final response = await http
+      final client = await AppHttpClient.client;
+      final response = await client
           .get(Uri.parse(_ipEndpoint))
           .timeout(const Duration(seconds: 10));
       if (response.statusCode != 200) return null;

@@ -108,6 +108,39 @@ lib/tools/<name>/
 
 ## How to Build & Run
 
+### Prerequisites
+
+ToolLab includes native Rust, C/C++, and Kotlin/Java dependencies. Install the
+toolchains for every platform you build.
+
+```bash
+# rhttp: Rust networking client.
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup default stable
+
+# Linux: Rust target plus Flutter desktop/SoLoud C/C++ build dependencies.
+rustup target add x86_64-unknown-linux-gnu
+sudo apt install build-essential cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+```
+
+Android builds require Android Studio, JDK 17, Android SDK command-line tools,
+and the NDK version configured by `flutter.ndkVersion`. Install the NDK through
+Android Studio's SDK Manager.
+
+Windows builds require Visual Studio 2022 with the **Desktop development with
+C++** workload, CMake, and the Rust MSVC toolchain:
+
+```powershell
+rustup toolchain install stable-x86_64-pc-windows-msvc
+rustup target add x86_64-pc-windows-msvc
+```
+
+`flutter_soloud`, rhttp, ONNX Runtime, PDFium, and ML Kit include native
+libraries. Flutter/Gradle/CMake downloads or compiles the required platform
+artifacts automatically. Avoid `flutter clean` unless necessary: it removes
+native build artifacts and makes the next rhttp build slower.
+
 ### Run the App
 ```bash
 flutter run -d windows    # Windows Desktop

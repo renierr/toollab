@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:http/http.dart' as http;
+import 'package:tool_lab/services/app_http_client.dart';
 
 /// Raised when a module cannot be fetched from the user's own backend
 /// collection (browser-toolkit `/api/chiptune`).
@@ -39,7 +39,7 @@ class ChiptuneCollectionService {
     if (base.isEmpty) {
       throw const ChiptuneCollectionException('No server configured');
     }
-    final client = http.Client();
+    final client = await AppHttpClient.client;
     try {
       final res = await client.get(Uri.parse('$base/api/chiptune/random'));
       if (res.statusCode != 200) {
@@ -77,8 +77,6 @@ class ChiptuneCollectionService {
       rethrow;
     } catch (e) {
       throw ChiptuneCollectionException('Failed to fetch from collection: $e');
-    } finally {
-      client.close();
     }
   }
 }
