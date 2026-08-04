@@ -34,6 +34,7 @@ class FileManagerExplorer extends StatelessWidget {
   final VoidCallback onDeleteSelection;
   final VoidCallback onCreateZip;
   final ValueChanged<FileManagerEntry> onExtract;
+  final AsyncCallback onRefresh;
   final Future<void> Function(List<String> paths, bool chooseAction)
   onDropFiles;
   final ScrollController scrollController;
@@ -59,6 +60,7 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onDeleteSelection,
     required this.onCreateZip,
     required this.onExtract,
+    required this.onRefresh,
     required this.onDropFiles,
     required this.scrollController,
   });
@@ -231,45 +233,60 @@ class FileManagerExplorer extends StatelessWidget {
           child: FileManagerFileDropZone(
             enabled: !state.isOperating && !state.isRemote && !state.isReadOnly,
             onDrop: onDropFiles,
-            child: LayoutBuilder(
-              builder: (context, constraints) => state.entries.isEmpty
-                  ? Center(child: Text(l10n.fileManagerEmptyFolder))
-                  : ListView.builder(
-                      controller: scrollController,
-                      itemExtent:
-                          constraints.maxWidth <
-                              ResponsiveLayout.mobileBreakpoint
-                          ? 88
-                          : 72,
-                      itemCount: state.entries.length,
-                      itemBuilder: (context, index) => _EntryTile(
-                        entry: state.entries[index],
-                        onOpen: onOpen,
-                        onOpenWithSystem: onOpenWithSystem,
-                        onShare: onShare,
-                        onDetails: onDetails,
-                        onRename: onRename,
-                        onDelete: onDelete,
-                        onCopy: onCopy,
-                        onCut: onCut,
-                        onExtract: onExtract,
-                        showClipboardActions:
-                            state.connection?.protocol !=
-                            FileManagerProtocol.ftp,
-                        selectionMode: state.isSelectionMode,
-                        selected: state.selectedPaths.contains(
-                          state.entries[index].path,
+            child: RefreshIndicator(
+              onRefresh: onRefresh,
+              child: LayoutBuilder(
+                builder: (context, constraints) => state.entries.isEmpty
+                    ? ListView(
+                        controller: scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: constraints.maxHeight,
+                            child: Center(
+                              child: Text(l10n.fileManagerEmptyFolder),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemExtent:
+                            constraints.maxWidth <
+                                ResponsiveLayout.mobileBreakpoint
+                            ? 88
+                            : 72,
+                        itemCount: state.entries.length,
+                        itemBuilder: (context, index) => _EntryTile(
+                          entry: state.entries[index],
+                          onOpen: onOpen,
+                          onOpenWithSystem: onOpenWithSystem,
+                          onShare: onShare,
+                          onDetails: onDetails,
+                          onRename: onRename,
+                          onDelete: onDelete,
+                          onCopy: onCopy,
+                          onCut: onCut,
+                          onExtract: onExtract,
+                          showClipboardActions:
+                              state.connection?.protocol !=
+                              FileManagerProtocol.ftp,
+                          selectionMode: state.isSelectionMode,
+                          selected: state.selectedPaths.contains(
+                            state.entries[index].path,
+                          ),
+                          onToggleSelection: onToggleSelection,
+                          isInClipboard: state.clipboardPaths.contains(
+                            state.entries[index].path,
+                          ),
+                          clipboardIsCut: state.clipboardIsCut,
+                          readOnly: state.isReadOnly,
+                          showImagePreviews: !state.isRemote,
+                          metadata: state.metadataFor(state.entries[index]),
                         ),
-                        onToggleSelection: onToggleSelection,
-                        isInClipboard: state.clipboardPaths.contains(
-                          state.entries[index].path,
-                        ),
-                        clipboardIsCut: state.clipboardIsCut,
-                        readOnly: state.isReadOnly,
-                        showImagePreviews: !state.isRemote,
-                        metadata: state.metadataFor(state.entries[index]),
                       ),
-                    ),
+              ),
             ),
           ),
         ),

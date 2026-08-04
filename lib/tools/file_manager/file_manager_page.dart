@@ -575,6 +575,7 @@ class _FileManagerPageState extends State<FileManagerPage>
                 onDeleteSelection: _confirmDelete,
                 onCreateZip: _createZip,
                 onExtract: _extractArchive,
+                onRefresh: state.refresh,
                 onDropFiles: _dropFiles,
                 scrollController: _scrollController,
               ),

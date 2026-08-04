@@ -37,7 +37,7 @@ class FileManagerEntryIcon extends StatelessWidget {
   }
 
   Widget _fallbackIcon(BuildContext context) =>
-      Icon(iconFor(entry), size: size, color: colorFor(context, entry));
+      Icon(iconFor(entry), size: size * 0.85, color: colorFor(context, entry));
 
   static bool isImage(FileManagerEntry entry) {
     if (entry.isDirectory || entry.isArchiveEntry || entry.isBrokenLink) {
