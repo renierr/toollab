@@ -410,6 +410,12 @@ abstract class AppLocalizations {
   /// **'This audio format cannot be played on this device'**
   String get chipUnsupportedAudioFormat;
 
+  /// No description provided for @chipAudioPlaybackFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio playback failed: {error}'**
+  String chipAudioPlaybackFailed(Object error);
+
   /// No description provided for @chipHideVisualizer.
   ///
   /// In en, this message translates to:

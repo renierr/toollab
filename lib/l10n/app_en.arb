@@ -55,6 +55,12 @@
   "chipFailedToOpenSharedFile": "Failed to open shared file: {error}",
   "chipUnsupportedAudioOpenedInternally": "Opened with the internal audio player",
   "chipUnsupportedAudioFormat": "This audio format cannot be played on this device",
+  "chipAudioPlaybackFailed": "Audio playback failed: {error}",
+  "@chipAudioPlaybackFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "chipHideVisualizer": "Hide visualizer",
   "chipShowVisualizer": "Show visualizer",
   "chipLoadFiles": "Load files",

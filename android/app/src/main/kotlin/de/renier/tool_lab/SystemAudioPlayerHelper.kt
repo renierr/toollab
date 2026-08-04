@@ -3,19 +3,23 @@ package de.renier.tool_lab
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
-import android.media.AudioAttributes
-import android.media.MediaPlayer
 import android.media.audiofx.Visualizer
 import android.os.Handler
 import android.os.Looper
 import androidx.core.app.ActivityCompat
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * MediaPlayer-backed playback controlled from Dart, so ToolLab's own player UI can
+ * ExoPlayer-backed playback controlled from Dart, so ToolLab's own player UI can
  * handle every format the Android system codecs decode (aac, m4a, opus, wma, ...)
  * instead of handing the file off to a separate full-screen player activity.
  *
@@ -33,7 +37,7 @@ class SystemAudioPlayerHelper(private val activity: Activity) :
     }
 
     private val handler = Handler(Looper.getMainLooper())
-    private var player: MediaPlayer? = null
+    private var player: ExoPlayer? = null
     private var visualizer: Visualizer? = null
     private var events: EventChannel.EventSink? = null
     private var ticking = false
@@ -65,21 +69,24 @@ class SystemAudioPlayerHelper(private val activity: Activity) :
         when (call.method) {
             "load" -> load(call, result)
             "play" -> {
-                player?.start()
+                val active = player
+                if (active == null) {
+                    result.error("NOT_LOADED", "No audio source is loaded", null)
+                    return
+                }
+                active.play()
                 startTicking()
                 result.success(null)
             }
             "pause" -> {
-                player?.takeIf { it.isPlaying }?.pause()
+                player?.pause()
                 stopTicking()
                 result.success(null)
             }
             "stop" -> {
-                // Pause + rewind instead of MediaPlayer.stop(), which would need a
-                // fresh prepare() before the next play().
                 player?.let {
-                    if (it.isPlaying) it.pause()
-                    it.seekTo(0)
+                    it.pause()
+                    it.seekTo(0L)
                 }
                 stopTicking()
                 emit(completed = false)
@@ -87,16 +94,20 @@ class SystemAudioPlayerHelper(private val activity: Activity) :
             }
             "seek" -> {
                 val positionMs = (call.argument<Number>("positionMs") ?: 0).toInt()
-                player?.seekTo(positionMs)
+                player?.seekTo(positionMs.toLong())
                 result.success(null)
             }
             "setVolume" -> {
                 val volume = (call.argument<Number>("volume") ?: 1.0).toFloat()
-                player?.setVolume(volume, volume)
+                player?.volume = volume
                 result.success(null)
             }
             "setLooping" -> {
-                player?.isLooping = call.argument<Boolean>("looping") ?: false
+                player?.repeatMode = if (call.argument<Boolean>("looping") == true) {
+                    Player.REPEAT_MODE_ONE
+                } else {
+                    Player.REPEAT_MODE_OFF
+                }
                 result.success(null)
             }
             "release" -> {
@@ -120,39 +131,63 @@ class SystemAudioPlayerHelper(private val activity: Activity) :
 
     private fun load(call: MethodCall, result: MethodChannel.Result) {
         val path = call.argument<String>("path")
+        val mimeType = call.argument<String>("mimeType")
         if (path == null) {
             result.error("INVALID_ARGS", "path required", null)
             return
         }
         releasePlayer()
         try {
-            val created = MediaPlayer().apply {
+            val created = ExoPlayer.Builder(activity).build()
+            created.apply {
                 setAudioAttributes(
                     AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(C.USAGE_MEDIA)
+                        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                        .build(),
+                    true,
+                )
+                val sourceUri = android.net.Uri.parse(path).takeIf { it.scheme != null }
+                    ?: android.net.Uri.fromFile(java.io.File(path))
+                setMediaItem(
+                    MediaItem.Builder()
+                        .setUri(sourceUri)
+                        .setMimeType(mimeType)
                         .build(),
                 )
-                setDataSource(path)
-                setOnCompletionListener {
-                    stopTicking()
-                    emit(completed = true)
-                }
-                setOnErrorListener { _, _, _ ->
-                    stopTicking()
-                    emit(completed = true)
-                    true
-                }
-                prepare()
             }
             player = created
-            val visualizerReady = attachVisualizer(created.audioSessionId)
-            result.success(
-                mapOf(
-                    "durationMs" to created.duration.coerceAtLeast(0),
-                    "visualizer" to visualizerReady,
-                ),
-            )
+            created.addListener(object : Player.Listener {
+                var settled = false
+
+                override fun onPlaybackStateChanged(state: Int) {
+                    if (state == Player.STATE_READY && !settled) {
+                        settled = true
+                        val visualizerReady = attachVisualizer(created.audioSessionId)
+                        result.success(
+                            mapOf(
+                                "durationMs" to created.duration.coerceAtLeast(0),
+                                "visualizer" to visualizerReady,
+                            ),
+                        )
+                    } else if (state == Player.STATE_ENDED) {
+                        stopTicking()
+                        emit(completed = true)
+                    }
+                }
+
+                override fun onPlayerError(error: PlaybackException) {
+                    stopTicking()
+                    if (!settled) {
+                        settled = true
+                        releasePlayer()
+                        result.error("LOAD_ERROR", error.message, error.errorCodeName)
+                    } else {
+                        emit(error = "${error.errorCodeName}: ${error.message}")
+                    }
+                }
+            })
+            created.prepare()
         } catch (e: Exception) {
             releasePlayer()
             result.error("LOAD_ERROR", e.message, null)
@@ -195,18 +230,19 @@ class SystemAudioPlayerHelper(private val activity: Activity) :
         handler.removeCallbacks(tick)
     }
 
-    private fun emit(completed: Boolean) {
+    private fun emit(completed: Boolean = false, error: String? = null) {
         val sink = events ?: return
         val active = player ?: return
         val position = try {
             active.currentPosition
-        } catch (e: IllegalStateException) {
+        } catch (e: Exception) {
             0
         }
         val payload = mutableMapOf<String, Any?>(
             "positionMs" to position,
             "completed" to completed,
         )
+        if (error != null) payload["error"] = error
         val effect = visualizer
         if (effect != null && !completed) {
             waveBuffer?.let { if (effect.getWaveForm(it) == Visualizer.SUCCESS) payload["wave"] = it }
@@ -228,14 +264,7 @@ class SystemAudioPlayerHelper(private val activity: Activity) :
         visualizer = null
         waveBuffer = null
         fftBuffer = null
-        player?.let {
-            try {
-                it.reset()
-            } catch (e: Exception) {
-                // Reset can throw on an already-invalid player; release still applies.
-            }
-            it.release()
-        }
+        player?.release()
         player = null
     }
 }

@@ -174,6 +174,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Dieses Audioformat kann auf diesem Gerät nicht abgespielt werden';
 
   @override
+  String chipAudioPlaybackFailed(Object error) {
+    return 'Audiowiedergabe fehlgeschlagen: $error';
+  }
+
+  @override
   String get chipHideVisualizer => 'Visualisierung ausblenden';
 
   @override

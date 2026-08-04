@@ -13,12 +13,10 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
-import 'package:tool_lab/helpers/native_media_player.dart';
 import 'package:tool_lab/helpers/system_audio_player.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
-import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -156,6 +154,11 @@ class _ChiptunePageState extends State<ChiptunePage>
     _player.onEnded = _onPlaybackEnded;
     _player.onNext = _onPlaybackNext;
     _player.onNearEnd = _onNearEnd;
+    _player.onPlaybackError = (error) {
+      if (mounted) {
+        _showSnack(AppLocalizations.of(context).chipAudioPlaybackFailed(error));
+      }
+    };
     // Hold the wakelock + foreground service across a song-end when another
     // track will auto-follow, so the (possibly background) fetch is not killed.
     _player.shouldKeepPlaybackAlive = () =>
@@ -177,16 +180,6 @@ class _ChiptunePageState extends State<ChiptunePage>
       await _loadArchive();
       await _maybeAutoSync();
     });
-
-    final sub = SharingService.instance.onSharedFile.listen((file) {
-      final lower = file.name.toLowerCase();
-      if (ChiptuneTool.config.fileExtensions.any(
-        (e) => lower.endsWith('.$e'),
-      )) {
-        _loadSharedFile(file);
-      }
-    });
-    onDispose(sub.cancel);
   }
 
   @override
@@ -335,7 +328,7 @@ class _ChiptunePageState extends State<ChiptunePage>
       _capturePermissionAsked = true;
       await SystemAudioPlayer.instance.requestCapturePermission();
     }
-    if (!await _player.loadSystemAudio(path)) return false;
+    if (!await _player.loadSystemAudio(path, fileName)) return false;
     _player.notificationTitle = fileName;
     _player.notificationText = ChiptunePlayer.formatTime(
       Duration.zero,
@@ -358,16 +351,11 @@ class _ChiptunePageState extends State<ChiptunePage>
     return true;
   }
 
-  /// Last resort for a format Android's own codecs cannot decode either: hand the
-  /// file to ToolLab's separate full-screen player activity (Android) or to the
-  /// system's default audio app (desktop, which has no in-app decoder for these).
+  /// Last resort for a format the in-app decoders cannot handle: hand the file to
+  /// the device's media app, which may provide proprietary codecs such as Dolby.
   Future<bool> _openExternally(String path, String mimeType) async {
     try {
-      if (NativeMediaPlayer.isSupported) {
-        await NativeMediaPlayer.open(path: path, mimeType: mimeType);
-      } else {
-        await FileSaveHelper.openFile(path, mimeType);
-      }
+      await FileSaveHelper.openFile(path, mimeType);
     } catch (_) {
       return false;
     }
@@ -406,7 +394,10 @@ class _ChiptunePageState extends State<ChiptunePage>
       acceptedTypeGroups: [
         XTypeGroup(
           label: l10n.chipEmptyTypeLabel,
-          extensions: ChiptuneTool.config.fileExtensions,
+          extensions: Platform.isAndroid
+              ? null
+              : ChiptuneTool.config.fileExtensions,
+          mimeTypes: Platform.isAndroid ? const ['audio/*'] : null,
         ),
       ],
     );

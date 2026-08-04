@@ -26,11 +26,13 @@ class SystemAudioSpectrum {
 class SystemAudioEvent {
   final Duration position;
   final bool completed;
+  final String? error;
   final SystemAudioSpectrum? spectrum;
 
   const SystemAudioEvent({
     required this.position,
     required this.completed,
+    this.error,
     this.spectrum,
   });
 }
@@ -75,11 +77,12 @@ class SystemAudioPlayer {
 
   /// Prepares [path] for playback. Returns its duration, or `null` when the
   /// system codecs cannot open the file (callers should fall back).
-  Future<Duration?> load(String path) async {
+  Future<Duration?> load(String path, String mimeType) async {
     if (!isSupported) return null;
     try {
       final result = await _channel.invokeMapMethod<String, Object?>('load', {
         'path': path,
+        'mimeType': mimeType,
       });
       if (result == null) return null;
       _hasSpectrum = result['visualizer'] == true;
@@ -92,7 +95,19 @@ class SystemAudioPlayer {
     }
   }
 
-  Future<void> play() => _invoke('play');
+  /// Starts playback and reports whether Android accepted the prepared source.
+  /// Unlike non-critical controls, callers must know when this fails so they do
+  /// not show a playing state with no audible output.
+  Future<bool> play() async {
+    if (!isSupported) return false;
+    try {
+      await _channel.invokeMethod<void>('play');
+      return true;
+    } catch (e) {
+      debugPrint('$_logPrefix play failed: $e');
+      return false;
+    }
+  }
 
   Future<void> pause() => _invoke('pause');
 
@@ -149,6 +164,7 @@ class SystemAudioPlayer {
     return SystemAudioEvent(
       position: Duration(milliseconds: positionMs),
       completed: completed,
+      error: raw['error'] as String?,
       spectrum: _decodeSpectrum(
         raw['wave'] as Uint8List?,
         raw['fft'] as Uint8List?,

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../../helpers/system_audio_player.dart';
+import '../../../helpers/mime_type_helper.dart';
 import '../../../services/database_service.dart';
 import '../../../services/foreground_runtime_service.dart';
 import '../../../services/media_controls_service.dart';
@@ -133,6 +134,10 @@ class ChiptunePlayer {
   /// Fired once per song, [_prefetchLead] before its end; re-armed when a fresh
   /// song starts. Lets the page prefetch the next track for a gapless jump.
   VoidCallback? onNearEnd;
+
+  /// Reports a system-codec failure that happens after Android initially accepts
+  /// playback, such as an unsupported M4A audio stream.
+  ValueChanged<String>? onPlaybackError;
 
   /// Set by the page. Returns true when a song reaching its end will auto-advance
   /// to another track (random mode, or a following archived module). In that case
@@ -271,12 +276,15 @@ class ChiptunePlayer {
   /// Prepares [path] for playback through Android's system codecs. Returns
   /// `false` when they cannot open the file, leaving no source loaded so callers
   /// can fall back to another handler.
-  Future<bool> loadSystemAudio(String path) async {
+  Future<bool> loadSystemAudio(String path, String fileName) async {
     _stopInternal();
     state.value = ChiptunePlaybackState.stopped;
     _disposeNativeSource();
     _releaseSystemSource();
-    final duration = await SystemAudioPlayer.instance.load(path);
+    final duration = await SystemAudioPlayer.instance.load(
+      path,
+      MimeTypeHelper.getMimeType(fileName),
+    );
     if (duration == null) return false;
     _module = null;
     _worklet = null;
@@ -306,6 +314,17 @@ class ChiptunePlayer {
     final spectrum = event.spectrum;
     if (spectrum != null && _uiUpdatesEnabled) {
       systemSpectrum.value = spectrum;
+    }
+
+    final error = event.error;
+    if (error != null) {
+      _feedTimer?.cancel();
+      _feedTimer = null;
+      state.value = ChiptunePlaybackState.stopped;
+      _releasePlaybackRuntimeLocks();
+      unawaited(MediaControlsService.instance.clear());
+      onPlaybackError?.call(error);
+      return;
     }
 
     if (event.completed) {
@@ -440,7 +459,12 @@ class ChiptunePlayer {
     }
     await system.setVolume(_volume);
     await system.setLooping(_looping);
-    await system.play();
+    if (!await system.play()) {
+      _releasePlaybackRuntimeLocks();
+      state.value = ChiptunePlaybackState.stopped;
+      onPlaybackError?.call('Android could not start audio playback');
+      return;
+    }
     state.value = ChiptunePlaybackState.playing;
     if (resuming) _updateNotificationForResume();
     _updateMediaControls(
