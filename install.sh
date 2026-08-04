@@ -64,7 +64,7 @@ Icon=$icon_path
 Terminal=false
 Type=Application
 Categories=Utility;
-MimeType=application/pdf;text/plain;text/markdown;image/png;image/jpeg;image/webp;image/bmp;image/gif;audio/x-mod;audio/x-xm;audio/x-it;audio/x-s3m;audio/wav;audio/mpeg;audio/ogg;audio/flac;
+MimeType=application/pdf;text/plain;text/markdown;image/png;image/jpeg;image/webp;image/bmp;image/gif;audio/x-mod;audio/x-xm;audio/x-it;audio/x-s3m;audio/wav;audio/mpeg;audio/ogg;audio/flac;audio/aac;audio/mp4;audio/opus;audio/x-ms-wma;audio/aiff;audio/amr;audio/x-matroska;
 StartupWMClass=tool_lab
 EOF
   echo_ok "Desktop file created: $DESKTOP"
@@ -97,6 +97,13 @@ register_file_associations() {
     "audio/mpeg"
     "audio/ogg"
     "audio/flac"
+    "audio/aac"
+    "audio/mp4"
+    "audio/opus"
+    "audio/x-ms-wma"
+    "audio/aiff"
+    "audio/amr"
+    "audio/x-matroska"
   )
 
   for mime in "${mime_types[@]}"; do
@@ -136,6 +143,13 @@ uninstall_all() {
     "audio/mpeg"
     "audio/ogg"
     "audio/flac"
+    "audio/aac"
+    "audio/mp4"
+    "audio/opus"
+    "audio/x-ms-wma"
+    "audio/aiff"
+    "audio/amr"
+    "audio/x-matroska"
   )
   for mime in "${mime_types[@]}"; do
     xdg-mime default "" "$mime" 2>/dev/null || true

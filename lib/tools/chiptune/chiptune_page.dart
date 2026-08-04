@@ -14,6 +14,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/helpers/native_media_player.dart';
+import 'package:tool_lab/helpers/system_audio_player.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -77,6 +78,7 @@ class _ChiptunePageState extends State<ChiptunePage>
     const audioExtensions = [
       'aac',
       'aiff',
+      'aif',
       'alac',
       'amr',
       'm4a',
@@ -137,6 +139,11 @@ class _ChiptunePageState extends State<ChiptunePage>
   /// True while an externally-opened/shared file is being read + decoded, so the
   /// view shows a spinner instead of briefly flashing the empty upload zone.
   bool _openingSharedFile = false;
+
+  /// The Android output-capture permission is asked for at most once per visit —
+  /// it only enables the visualizer during system-codec playback, so a denial
+  /// must not re-prompt on every track.
+  bool _capturePermissionAsked = false;
 
   @override
   void initState() {
@@ -318,6 +325,60 @@ class _ChiptunePageState extends State<ChiptunePage>
     }
   }
 
+  /// Loads a file no bundled decoder handles (aac, m4a, opus, wma, ...) through
+  /// Android's system codecs, keeping ToolLab's own player UI. Returns `false`
+  /// when system playback is unavailable or the codecs reject the file, so
+  /// callers can fall back to the external player.
+  Future<bool> _loadSystemAudio(String path, String fileName) async {
+    if (!SystemAudioPlayer.isSupported) return false;
+    if (_visualizerEnabled && !_capturePermissionAsked) {
+      _capturePermissionAsked = true;
+      await SystemAudioPlayer.instance.requestCapturePermission();
+    }
+    if (!await _player.loadSystemAudio(path)) return false;
+    _player.notificationTitle = fileName;
+    _player.notificationText = ChiptunePlayer.formatTime(
+      Duration.zero,
+      _player.totalDuration,
+    );
+    if (!mounted) return true;
+    setState(() {
+      _currentBytes = null;
+      _currentFileName = fileName;
+      _currentFormat = _extensionOf(fileName).toUpperCase();
+      _currentArchiveId = null;
+      _playlistIndex = -1;
+      _randomMode = false;
+      _serverRandomMode = false;
+      _currentTune = null;
+      _currentServerTune = null;
+      _prefetch = null;
+      _serverPrefetch = null;
+    });
+    return true;
+  }
+
+  /// Last resort for a format Android's own codecs cannot decode either: hand the
+  /// file to ToolLab's separate full-screen player activity (Android) or to the
+  /// system's default audio app (desktop, which has no in-app decoder for these).
+  Future<bool> _openExternally(String path, String mimeType) async {
+    try {
+      if (NativeMediaPlayer.isSupported) {
+        await NativeMediaPlayer.open(path: path, mimeType: mimeType);
+      } else {
+        await FileSaveHelper.openFile(path, mimeType);
+      }
+    } catch (_) {
+      return false;
+    }
+    if (mounted) {
+      _showSnack(
+        AppLocalizations.of(context).chipUnsupportedAudioOpenedInternally,
+      );
+    }
+    return true;
+  }
+
   /// Single load entry point: one or many files become the playlist and play
   /// from the first supported entry. A single selection is just a length-1
   /// playlist (no queue panel).
@@ -376,26 +437,23 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _playPlaylistIndex(int index) async {
     if (index < 0 || index >= _playlist.length) return;
     final file = _playlist[index];
-    if (!_isNativeAudioName(file.name) &&
-        _isAudioName(file.name) &&
-        NativeMediaPlayer.isSupported) {
-      await NativeMediaPlayer.open(
-        path: file.path,
-        mimeType: MimeTypeHelper.getMimeType(file.name),
-      );
-      if (mounted) {
-        _showSnack(
-          AppLocalizations.of(context).chipUnsupportedAudioOpenedInternally,
-        );
-      }
-      return;
-    }
     bool loaded = false;
-    try {
-      final bytes = await file.readAsBytes();
-      loaded = await _loadBytes(bytes, file.name, notifyOnError: false);
-    } catch (_) {
-      loaded = false;
+    if (!_isNativeAudioName(file.name) && _isAudioName(file.name)) {
+      loaded = await _loadSystemAudio(file.path, file.name);
+      if (!loaded &&
+          await _openExternally(
+            file.path,
+            MimeTypeHelper.getMimeType(file.name),
+          )) {
+        return;
+      }
+    } else {
+      try {
+        final bytes = await file.readAsBytes();
+        loaded = await _loadBytes(bytes, file.name, notifyOnError: false);
+      } catch (_) {
+        loaded = false;
+      }
     }
     if (!mounted) return;
     if (loaded) {
@@ -417,19 +475,17 @@ class _ChiptunePageState extends State<ChiptunePage>
       setState(() => _openingSharedFile = true);
     }
     try {
-      if (!_isNativeAudioName(file.name) &&
-          _isAudioName(file.name) &&
-          NativeMediaPlayer.isSupported) {
-        await NativeMediaPlayer.open(
-          path: file.path,
-          mimeType: file.mimeType == 'application/octet-stream'
-              ? MimeTypeHelper.getMimeType(file.name)
-              : file.mimeType,
-        );
+      if (!_isNativeAudioName(file.name) && _isAudioName(file.name)) {
+        if (await _loadSystemAudio(file.path, file.name)) {
+          await _player.play();
+          return;
+        }
+        final mimeType = file.mimeType == 'application/octet-stream'
+            ? MimeTypeHelper.getMimeType(file.name)
+            : file.mimeType;
+        if (await _openExternally(file.path, mimeType)) return;
         if (mounted) {
-          _showSnack(
-            AppLocalizations.of(context).chipUnsupportedAudioOpenedInternally,
-          );
+          _showSnack(AppLocalizations.of(context).chipUnsupportedAudioFormat);
         }
         return;
       }
@@ -1080,7 +1136,7 @@ class _ChiptunePageState extends State<ChiptunePage>
     final l10n = AppLocalizations.of(context);
     final module = _player.module;
     final hasPlayable = _player.hasAudio;
-    final isNative = _player.isNative;
+    final isPlainAudio = _player.isPlainAudio;
     final hasServer = context.watch<AppState>().syncServerUrl.trim().isNotEmpty;
 
     List<PlaybackDevice> devices = [];
@@ -1101,7 +1157,7 @@ class _ChiptunePageState extends State<ChiptunePage>
             ? _buildArchivePanel()
             : null,
       );
-    } else if (isNative) {
+    } else if (isPlainAudio) {
       content = ChiptuneAudioView(
         player: _player,
         fileName: _currentFileName,
@@ -1177,7 +1233,7 @@ class _ChiptunePageState extends State<ChiptunePage>
             icon: const Icon(Icons.more_vert),
             itemBuilder: (context) {
               return [
-                if (hasPlayable && !isNative)
+                if (hasPlayable && !isPlainAudio)
                   PopupMenuItem(
                     value: 'export',
                     child: Row(
@@ -1207,7 +1263,7 @@ class _ChiptunePageState extends State<ChiptunePage>
                       ],
                     ),
                   ),
-                if (hasPlayable && !isNative)
+                if (hasPlayable && !isPlainAudio)
                   PopupMenuItem(
                     value: 'tweaks',
                     child: Row(

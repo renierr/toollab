@@ -54,6 +54,7 @@
   "chipFailedToParseModule": "Failed to parse module: {error}",
   "chipFailedToOpenSharedFile": "Failed to open shared file: {error}",
   "chipUnsupportedAudioOpenedInternally": "Opened with the internal audio player",
+  "chipUnsupportedAudioFormat": "This audio format cannot be played on this device",
   "chipHideVisualizer": "Hide visualizer",
   "chipShowVisualizer": "Show visualizer",
   "chipLoadFiles": "Load files",

@@ -94,7 +94,10 @@ class MimeTypeHelper {
       case 'ogg':
         return 'audio/ogg';
       case 'm4a':
+      case 'alac':
         return 'audio/mp4';
+      case 'mka':
+        return 'audio/x-matroska';
       case 'aac':
         return 'audio/aac';
       case 'aiff':

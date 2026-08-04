@@ -26,6 +26,7 @@ open class MainActivity : FlutterActivity() {
     private val NATIVE_MEDIA_PLAYER_CHANNEL = "de.renier.tool_lab/native_media_player"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
+    private var systemAudioPlayerHelper: SystemAudioPlayerHelper? = null
     private var multicastLock: WifiManager.MulticastLock? = null
     private var launchRoute: String? = null
     private var filePickerResult: MethodChannel.Result? = null
@@ -160,6 +161,8 @@ open class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         channel = null
+        systemAudioPlayerHelper?.releasePlayer()
+        systemAudioPlayerHelper = null
         multicastLock?.release()
         multicastLock = null
         gpsInfoHelper?.stopGpsInfoUpdates()
@@ -277,6 +280,10 @@ open class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        val systemAudio = SystemAudioPlayerHelper(this)
+        systemAudioPlayerHelper = systemAudio
+        systemAudio.register(messenger)
 
         // Register custom helpers
         SharingHelper.registerChannel(messenger)

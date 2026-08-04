@@ -169,6 +169,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Opened with the internal audio player';
 
   @override
+  String get chipUnsupportedAudioFormat =>
+      'This audio format cannot be played on this device';
+
+  @override
   String get chipHideVisualizer => 'Hide visualizer';
 
   @override

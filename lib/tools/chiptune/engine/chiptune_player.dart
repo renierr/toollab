@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 
+import '../../../helpers/system_audio_player.dart';
 import '../../../services/database_service.dart';
 import '../../../services/foreground_runtime_service.dart';
 import '../../../services/media_controls_service.dart';
@@ -60,6 +61,13 @@ class ChiptunePlayer {
   // software mixer + PCM feed loop used for tracker modules.
   AudioSource? _nativeSource;
   bool _isNative = false;
+  // A file played by Android's own codecs through [SystemAudioPlayer]. Used for
+  // formats neither the module parser nor SoLoud handles (aac, m4a, opus, ...).
+  // Position, end-of-stream and visualizer data arrive as pushed events, so this
+  // path needs neither the mixer feed loop nor a position poll.
+  bool _isSystem = false;
+  String? _systemPath;
+  StreamSubscription<SystemAudioEvent>? _systemSubscription;
   SoundHandle? _handle;
   Timer? _feedTimer;
   bool _feedInProgress = false;
@@ -110,6 +118,12 @@ class ChiptunePlayer {
   final ValueNotifier<List<bool>> channelActivity = ValueNotifier(const []);
   final ValueNotifier<Duration> elapsed = ValueNotifier(Duration.zero);
 
+  /// Waveform/spectrum captured from the Android output mix during system
+  /// playback. Null on every other path (those read SoLoud's own audio data).
+  final ValueNotifier<SystemAudioSpectrum?> systemSpectrum = ValueNotifier(
+    null,
+  );
+
   /// Fired once when a non-looping song reaches its end.
   VoidCallback? onEnded;
 
@@ -136,8 +150,15 @@ class ChiptunePlayer {
   /// tracker module.
   bool get isNative => _isNative;
 
-  /// True when anything playable is loaded (module or native audio).
-  bool get hasAudio => hasModule || _nativeSource != null;
+  /// True when the loaded source plays through Android's system codecs.
+  bool get isSystem => _isSystem;
+
+  /// True for any plain audio file (SoLoud-decoded or system-decoded) — i.e. the
+  /// tracker-specific UI (patterns, channels, samples, tweaks) does not apply.
+  bool get isPlainAudio => _isNative || _isSystem;
+
+  /// True when anything playable is loaded (module, native or system audio).
+  bool get hasAudio => hasModule || _nativeSource != null || _isSystem;
 
   /// Estimated full play duration of the loaded module (zero if none / unknown).
   Duration get totalDuration => _totalDuration;
@@ -217,6 +238,7 @@ class ChiptunePlayer {
     // the tool appears frozen.
     state.value = ChiptunePlaybackState.stopped;
     _disposeNativeSource();
+    _releaseSystemSource();
     _isNative = false;
     _module = mod;
     _worklet = serializeModuleForWorklet(mod);
@@ -234,6 +256,7 @@ class ChiptunePlayer {
     state.value = ChiptunePlaybackState.stopped;
     await _ensureInit();
     _disposeNativeSource();
+    _releaseSystemSource();
     _module = null;
     _worklet = null;
     _isNative = true;
@@ -243,6 +266,82 @@ class ChiptunePlayer {
     channelActivity.value = const [];
     position.value = const SongPosition(0, 0);
     elapsed.value = Duration.zero;
+  }
+
+  /// Prepares [path] for playback through Android's system codecs. Returns
+  /// `false` when they cannot open the file, leaving no source loaded so callers
+  /// can fall back to another handler.
+  Future<bool> loadSystemAudio(String path) async {
+    _stopInternal();
+    state.value = ChiptunePlaybackState.stopped;
+    _disposeNativeSource();
+    _releaseSystemSource();
+    final duration = await SystemAudioPlayer.instance.load(path);
+    if (duration == null) return false;
+    _module = null;
+    _worklet = null;
+    _isNative = false;
+    _isSystem = true;
+    _systemPath = path;
+    _totalDuration = duration;
+    _elapsedBase = Duration.zero;
+    channelActivity.value = const [];
+    position.value = const SongPosition(0, 0);
+    elapsed.value = Duration.zero;
+    systemSpectrum.value = null;
+    _listenToSystemEvents();
+    return true;
+  }
+
+  void _listenToSystemEvents() {
+    _systemSubscription ??= SystemAudioPlayer.instance.events.listen(
+      _onSystemEvent,
+      onError: (Object e) => debugPrint('$_logPrefix system audio event: $e'),
+    );
+  }
+
+  void _onSystemEvent(SystemAudioEvent event) {
+    if (!_isSystem) return;
+
+    final spectrum = event.spectrum;
+    if (spectrum != null && _uiUpdatesEnabled) {
+      systemSpectrum.value = spectrum;
+    }
+
+    if (event.completed) {
+      if (_looping) return;
+      _ended = true;
+      _onSongEnded();
+      return;
+    }
+
+    final DateTime now = DateTime.now();
+    if (_uiUpdatesEnabled) {
+      final DateTime? last = _lastElapsedUpdateAt;
+      if (last == null || now.difference(last) >= _elapsedUpdateInterval) {
+        _lastElapsedUpdateAt = now;
+        elapsed.value = event.position;
+      }
+    }
+
+    if (!_nearEndFired &&
+        !_looping &&
+        onNearEnd != null &&
+        _totalDuration > Duration.zero &&
+        event.position >= _totalDuration - _prefetchLead) {
+      _nearEndFired = true;
+      onNearEnd!.call();
+    }
+
+    _maybePushNotificationUpdate(now);
+  }
+
+  void _releaseSystemSource() {
+    if (!_isSystem && _systemPath == null) return;
+    _isSystem = false;
+    _systemPath = null;
+    systemSpectrum.value = null;
+    unawaited(SystemAudioPlayer.instance.release());
   }
 
   void _disposeNativeSource() {
@@ -255,6 +354,11 @@ class ChiptunePlayer {
 
   Future<void> play() async {
     if (!hasAudio) return;
+
+    if (_isSystem) {
+      await _playSystem();
+      return;
+    }
 
     if (state.value == ChiptunePlaybackState.paused && _handle != null) {
       await _acquirePlaybackRuntimeLocks();
@@ -321,6 +425,32 @@ class ChiptunePlayer {
     );
   }
 
+  /// Starts (or resumes) system-codec playback. Nothing is rendered locally, so
+  /// this only arms the runtime locks, notification and media controls — the
+  /// native player pushes position/end events on its own.
+  Future<void> _playSystem() async {
+    final resuming = state.value == ChiptunePlaybackState.paused;
+    await _acquirePlaybackRuntimeLocks();
+    final system = SystemAudioPlayer.instance;
+    if (!resuming) {
+      _elapsedBase = Duration.zero;
+      _ended = false;
+      _nearEndFired = false;
+      _lastElapsedUpdateAt = null;
+    }
+    await system.setVolume(_volume);
+    await system.setLooping(_looping);
+    await system.play();
+    state.value = ChiptunePlaybackState.playing;
+    if (resuming) _updateNotificationForResume();
+    _updateMediaControls(
+      notificationTitle,
+      MediaPlaybackStatus.playing,
+      duration: _totalDuration > Duration.zero ? _totalDuration : null,
+      hasNext: onNext != null,
+    );
+  }
+
   Future<void> _playNative() async {
     final source = _nativeSource;
     if (source == null) return;
@@ -346,7 +476,15 @@ class ChiptunePlayer {
   }
 
   void pause() {
-    if (state.value != ChiptunePlaybackState.playing || _handle == null) return;
+    if (state.value != ChiptunePlaybackState.playing) return;
+    if (_isSystem) {
+      unawaited(SystemAudioPlayer.instance.pause());
+      _updateNotificationForPause();
+      state.value = ChiptunePlaybackState.paused;
+      _updateMediaControls(notificationTitle, MediaPlaybackStatus.paused);
+      return;
+    }
+    if (_handle == null) return;
     SoLoud.instance.setPause(_handle!, true);
     _feedTimer?.cancel();
     _feedTimer = null;
@@ -404,12 +542,16 @@ class ChiptunePlayer {
   /// Seeks native audio to an absolute position (no-op for tracker modules,
   /// which seek by order/row via [seek]).
   void seekTo(Duration pos) {
-    if (!_isNative || _nativeSource == null) return;
+    if (!_isSystem && (!_isNative || _nativeSource == null)) return;
     Duration target = pos < Duration.zero ? Duration.zero : pos;
     if (_totalDuration > Duration.zero && target > _totalDuration) {
       target = _totalDuration;
     }
-    if (_handle != null) SoLoud.instance.seek(_handle!, target);
+    if (_isSystem) {
+      unawaited(SystemAudioPlayer.instance.seek(target));
+    } else if (_handle != null) {
+      SoLoud.instance.seek(_handle!, target);
+    }
     _elapsedBase = target;
     elapsed.value = target;
     // Re-arm the near-end prefetch when seeking back before the lead point.
@@ -421,7 +563,9 @@ class ChiptunePlayer {
 
   void setVolume(double volume) {
     _volume = volume.clamp(0.0, 1.0);
-    if (_isNative) {
+    if (_isSystem) {
+      unawaited(SystemAudioPlayer.instance.setVolume(_volume));
+    } else if (_isNative) {
       if (_handle != null) SoLoud.instance.setVolume(_handle!, _volume);
     } else {
       _renderWorker.setVolume(_volume);
@@ -430,54 +574,56 @@ class ChiptunePlayer {
 
   void setStereoWidth(double stereoWidth) {
     _stereoWidth = stereoWidth.clamp(0.0, 1.0);
-    if (!_isNative) {
+    if (!isPlainAudio) {
       _renderWorker.setStereoWidth(_stereoWidth);
     }
   }
 
   void setInterpolation(ChiptuneInterpolation mode) {
     _interpolation = mode;
-    if (!_isNative) {
+    if (!isPlainAudio) {
       _renderWorker.setInterpolation(mode.index);
     }
   }
 
   void setPreAmp(double value) {
     _preAmp = value;
-    if (!_isNative) {
+    if (!isPlainAudio) {
       _renderWorker.setPreAmp(value);
     }
   }
 
   void setAmigaFilter(ChiptuneAmigaFilter mode) {
     _amigaFilter = mode;
-    if (!_isNative) {
+    if (!isPlainAudio) {
       _renderWorker.setAmigaFilter(mode.index);
     }
   }
 
   void setRampStep(double value) {
     _rampStep = value;
-    if (!_isNative) {
+    if (!isPlainAudio) {
       _renderWorker.setRampStep(value);
     }
   }
 
   void setModSeparation(double value) {
     _modSeparation = value;
-    if (!_isNative) {
+    if (!isPlainAudio) {
       _renderWorker.setModSeparation(value);
     }
   }
 
   void setSpeed(int speed) {
-    if (_isNative) return;
+    if (isPlainAudio) return;
     _renderWorker.setSpeed(speed);
   }
 
   void setLooping(bool looping) {
     _looping = looping;
-    if (_isNative) {
+    if (_isSystem) {
+      unawaited(SystemAudioPlayer.instance.setLooping(looping));
+    } else if (_isNative) {
       if (_handle != null) SoLoud.instance.setLooping(_handle!, looping);
     } else {
       _renderWorker.setLooping(looping);
@@ -754,6 +900,12 @@ class ChiptunePlayer {
     _lastUiUpdateAt = null;
     _lastElapsedUpdateAt = null;
     _lastNotificationUpdateAt = null;
+    if (_isSystem) {
+      // Pause + rewind; the source stays prepared so a following play() restarts
+      // it without another load.
+      unawaited(SystemAudioPlayer.instance.stop());
+      systemSpectrum.value = null;
+    }
     unawaited(_renderWorker.stop());
     final handle = _handle;
     if (handle != null) {
@@ -904,7 +1056,10 @@ class ChiptunePlayer {
   void dispose() {
     _stopInternal();
     _disposeNativeSource();
+    _releaseSystemSource();
     _releasePlaybackRuntimeLocks();
+    _systemSubscription?.cancel();
+    _systemSubscription = null;
     _rowSubscription?.cancel();
     _endedSubscription?.cancel();
     _mediaButtonSub?.cancel();
@@ -914,5 +1069,6 @@ class ChiptunePlayer {
     position.dispose();
     channelActivity.dispose();
     elapsed.dispose();
+    systemSpectrum.dispose();
   }
 }

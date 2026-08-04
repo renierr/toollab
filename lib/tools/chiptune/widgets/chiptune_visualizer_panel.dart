@@ -89,6 +89,21 @@ class _ChiptuneVisualizerPanelState extends State<ChiptuneVisualizerPanel>
         : (elapsed - _lastElapsed).inMicroseconds / 1000000.0;
     _lastElapsed = elapsed;
 
+    // System-codec playback has no SoLoud source; its waveform/spectrum is
+    // captured natively and pushed onto the player instead.
+    if (widget.player.isSystem) {
+      final spectrum = widget.player.systemSpectrum.value;
+      if (spectrum == null) return;
+      _latestData = VizData(
+        freq: spectrum.freq,
+        wave: spectrum.wave,
+        bass: spectrum.bass,
+        deltaTime: dt,
+      );
+      if (mounted) setState(() {});
+      return;
+    }
+
     _ensureAudioData();
     final ad = _audioData;
     if (ad == null) return;

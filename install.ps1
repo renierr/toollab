@@ -42,6 +42,14 @@ $FileTypes = @(
   @{ Extension = '.mp3';     ProgId = "$AppName.mp3";     Description = 'MP3 Audio';         MimeType = 'audio/mpeg' }
   @{ Extension = '.ogg';     ProgId = "$AppName.ogg";     Description = 'OGG Audio';         MimeType = 'audio/ogg' }
   @{ Extension = '.flac';    ProgId = "$AppName.flac";    Description = 'FLAC Audio';        MimeType = 'audio/flac' }
+  @{ Extension = '.aac';     ProgId = "$AppName.aac";     Description = 'AAC Audio';         MimeType = 'audio/aac' }
+  @{ Extension = '.m4a';     ProgId = "$AppName.m4a";     Description = 'MPEG-4 Audio';      MimeType = 'audio/mp4' }
+  @{ Extension = '.alac';    ProgId = "$AppName.alac";    Description = 'ALAC Audio';        MimeType = 'audio/mp4' }
+  @{ Extension = '.opus';    ProgId = "$AppName.opus";    Description = 'Opus Audio';        MimeType = 'audio/opus' }
+  @{ Extension = '.wma';     ProgId = "$AppName.wma";     Description = 'Windows Media Audio'; MimeType = 'audio/x-ms-wma' }
+  @{ Extension = '.aiff';    ProgId = "$AppName.aiff";    Description = 'AIFF Audio';        MimeType = 'audio/aiff' }
+  @{ Extension = '.amr';     ProgId = "$AppName.amr";     Description = 'AMR Audio';         MimeType = 'audio/amr' }
+  @{ Extension = '.mka';     ProgId = "$AppName.mka";     Description = 'Matroska Audio';    MimeType = 'audio/x-matroska' }
 )
 
 function Write-Info  { Write-Host "INFO: $($args[0])" -ForegroundColor Cyan }

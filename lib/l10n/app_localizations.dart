@@ -404,6 +404,12 @@ abstract class AppLocalizations {
   /// **'Opened with the internal audio player'**
   String get chipUnsupportedAudioOpenedInternally;
 
+  /// No description provided for @chipUnsupportedAudioFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'This audio format cannot be played on this device'**
+  String get chipUnsupportedAudioFormat;
+
   /// No description provided for @chipHideVisualizer.
   ///
   /// In en, this message translates to:
