@@ -717,6 +717,16 @@ class FileManagerState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Targets a single entry for a bulk operation without arming selection mode,
+  /// so a row menu action does not turn the whole list into a picker.
+  void selectForAction(FileManagerEntry entry) {
+    _selectedPaths
+      ..clear()
+      ..add(entry.path);
+    _isSelectionMode = false;
+    notifyListeners();
+  }
+
   void enterSelectionMode() {
     _isSelectionMode = true;
     notifyListeners();

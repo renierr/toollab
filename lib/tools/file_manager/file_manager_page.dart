@@ -313,16 +313,22 @@ class _FileManagerPageState extends State<FileManagerPage>
 
   Future<void> _delete(FileManagerEntry entry) async {
     final state = context.read<FileManagerState>();
-    if (!state.selectedPaths.contains(entry.path)) state.toggleSelection(entry);
-    await _confirmDelete();
+    if (state.selectedPaths.contains(entry.path)) {
+      await _confirmDelete();
+      return;
+    }
+    // The row menu deletes through the same bulk path, but must not leave the
+    // list in selection mode when the confirmation is dismissed.
+    state.selectForAction(entry);
+    if (!await _confirmDelete()) state.clearSelection();
   }
 
-  Future<void> _confirmDelete() async {
+  Future<bool> _confirmDelete() async {
     final state = context.read<FileManagerState>();
     final selected = state.entries
         .where((entry) => state.selectedPaths.contains(entry.path))
         .toList();
-    if (selected.isEmpty) return;
+    if (selected.isEmpty) return false;
     // Only the folders the dialog actually lists get counted.
     final folderFileCounts = <String, int>{};
     for (final entry
@@ -332,7 +338,7 @@ class _FileManagerPageState extends State<FileManagerPage>
       final count = await state.folderFileCount(entry);
       if (count != null) folderFileCounts[entry.path] = count;
     }
-    if (!mounted) return;
+    if (!mounted) return false;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => FileManagerDeleteDialog(
@@ -340,7 +346,9 @@ class _FileManagerPageState extends State<FileManagerPage>
         folderFileCounts: folderFileCounts,
       ),
     );
-    if (confirmed == true && mounted) await state.deleteSelected();
+    if (confirmed != true || !mounted) return false;
+    await state.deleteSelected();
+    return true;
   }
 
   Future<void> _addConnection() async {
