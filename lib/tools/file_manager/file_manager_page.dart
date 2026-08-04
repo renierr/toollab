@@ -49,10 +49,12 @@ class _FileManagerPageState extends State<FileManagerPage>
     _tempScope = TempFileManager.createScope();
     _scrollController = ScrollController();
     WidgetsBinding.instance.addObserver(this);
+    final state = context.read<FileManagerState>();
     onDispose(() {
       WidgetsBinding.instance.removeObserver(this);
       _tempScope.cleanTracked();
       _scrollController.dispose();
+      state.releaseOnExit();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future<void>.delayed(const Duration(milliseconds: 120), () {

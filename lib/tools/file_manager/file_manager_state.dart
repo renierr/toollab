@@ -82,6 +82,7 @@ class FileManagerState extends ChangeNotifier {
   final Set<String> _queuedMetadataPaths = {};
   int _activeMetadataLoads = 0;
   int _metadataScan = 0;
+  int _listing = 0;
   bool _isScanningMetadata = false;
   static const List<ArchiveHandler> _archiveHandlers = [ZipArchiveHandler()];
 
@@ -333,12 +334,15 @@ class FileManagerState extends ChangeNotifier {
     _clearEntryLoaders();
     _entries = [];
     _path = directory;
+    final listing = ++_listing;
     notifyListeners();
     try {
       final batch = <FileManagerEntry>[];
       await for (final entity in Directory(
         directory,
       ).list(followLinks: false)) {
+        // A newer listing (or the tool closing) owns the entries now.
+        if (listing != _listing) return;
         // Publish batches so a large directory becomes usable before scanning ends.
         batch.add(await _localEntryFromEntity(entity));
         if (batch.length == 200) {
@@ -355,10 +359,12 @@ class FileManagerState extends ChangeNotifier {
       _error = error.toString().replaceFirst('Exception: ', '');
       debugPrint('[FileManagerState] $error');
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (listing == _listing) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
-    if (_error != null) return;
+    if (_error != null || listing != _listing) return;
     await _recordRecentPath(directory);
     await _scanLocalMetadata(directory);
   }
@@ -1203,6 +1209,33 @@ class FileManagerState extends ChangeNotifier {
     _sortOverridePath = path;
     _entries.sort(_compareEntries);
     notifyListeners();
+  }
+
+  /// Drops the folder-local sort so re-entering the tool starts from the
+  /// persisted setting. Silent — the listeners are going away.
+  void clearSortOverride() {
+    _sortOverride = null;
+    _sortOverridePath = null;
+  }
+
+  /// Frees everything tied to the open folder when the tool page goes away. The
+  /// state itself is app-scoped, so without this a remote session stays open and
+  /// a large listing stays resident for the rest of the app run. Silent, since
+  /// the listeners are being torn down; `initialize()` rebuilds all of it.
+  Future<void> releaseOnExit() async {
+    clearSortOverride();
+    _clearEntryLoaders();
+    _listing++;
+    _isLoading = false;
+    _entries = [];
+    _selectedPaths.clear();
+    _isSelectionMode = false;
+    _archivePath = null;
+    _archiveDirectory = '';
+    _locationType = FileManagerLocationType.local;
+    _connection = null;
+    _error = null;
+    await _disconnectRemote();
   }
 
   Future<void> updateSort(FileManagerSortField field, bool ascending) async {
