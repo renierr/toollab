@@ -9,6 +9,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
@@ -1366,6 +1367,7 @@ class FileManagerState extends ChangeNotifier {
 
   FileManagerOpenCategory? openCategoryForMime(String mimeType) =>
       switch (mimeType) {
+        _ when MimeTypeHelper.isUndecodableImage(mimeType) => null,
         _ when mimeType.startsWith('image/') => FileManagerOpenCategory.images,
         'application/pdf' => FileManagerOpenCategory.pdf,
         _ when mimeType.startsWith('audio/') => FileManagerOpenCategory.audio,

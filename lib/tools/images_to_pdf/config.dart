@@ -17,7 +17,7 @@ class ImagesToPdfTool {
     sectionId: 'utilities',
     nameL10n: (l10n) => l10n.toolNameImagesToPdf,
     descriptionL10n: (l10n) => l10n.toolDescImagesToPdf,
-    fileExtensions: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'],
+    fileExtensions: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'],
     createPage: (_) => const ImagesToPdfPage(),
   );
 }

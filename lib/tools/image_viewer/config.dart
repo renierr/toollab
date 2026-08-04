@@ -4,6 +4,27 @@ import 'package:tool_lab/theme/theme.dart';
 
 import 'image_viewer_page.dart';
 
+/// Displayable extensions; AVIF/HEIC only decode on Android.
+const List<String> imageViewerExtensions = [
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'bmp',
+  'webp',
+  'tif',
+  'tiff',
+  'ico',
+  'tga',
+  'ppm',
+  'pgm',
+  'pbm',
+  'pnm',
+  'avif',
+  'heic',
+  'heif',
+];
+
 class ImageViewerTool {
   ImageViewerTool._();
 
@@ -18,7 +39,7 @@ class ImageViewerTool {
     nameL10n: (l10n) => l10n.toolNameImageViewer,
     descriptionL10n: (l10n) => l10n.toolDescImageViewer,
     shareTarget: ShareTargetConfig(accept: ['image/*']),
-    fileExtensions: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'],
+    fileExtensions: imageViewerExtensions,
     createPage: (sd) => ImageViewerPage(sharedFile: sd?.firstFile),
   );
 }

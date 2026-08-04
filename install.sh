@@ -64,7 +64,7 @@ Icon=$icon_path
 Terminal=false
 Type=Application
 Categories=Utility;
-MimeType=application/pdf;text/plain;text/markdown;image/png;image/jpeg;image/webp;image/bmp;image/gif;audio/x-mod;audio/x-xm;audio/x-it;audio/x-s3m;audio/wav;audio/mpeg;audio/ogg;audio/flac;audio/aac;audio/mp4;audio/opus;audio/x-ms-wma;audio/aiff;audio/amr;audio/x-matroska;
+MimeType=application/pdf;text/plain;text/markdown;image/png;image/jpeg;image/webp;image/bmp;image/gif;image/tiff;image/x-icon;image/x-tga;image/x-portable-pixmap;image/x-portable-graymap;image/x-portable-bitmap;image/x-portable-anymap;audio/x-mod;audio/x-xm;audio/x-it;audio/x-s3m;audio/wav;audio/mpeg;audio/ogg;audio/flac;audio/aac;audio/mp4;audio/opus;audio/x-ms-wma;audio/aiff;audio/amr;audio/x-matroska;
 StartupWMClass=tool_lab
 EOF
   echo_ok "Desktop file created: $DESKTOP"
@@ -89,6 +89,13 @@ register_file_associations() {
     "image/webp"
     "image/bmp"
     "image/gif"
+    "image/tiff"
+    "image/x-icon"
+    "image/x-tga"
+    "image/x-portable-pixmap"
+    "image/x-portable-graymap"
+    "image/x-portable-bitmap"
+    "image/x-portable-anymap"
     "audio/x-mod"
     "audio/x-xm"
     "audio/x-it"
@@ -135,6 +142,13 @@ uninstall_all() {
     "image/webp"
     "image/bmp"
     "image/gif"
+    "image/tiff"
+    "image/x-icon"
+    "image/x-tga"
+    "image/x-portable-pixmap"
+    "image/x-portable-graymap"
+    "image/x-portable-bitmap"
+    "image/x-portable-anymap"
     "audio/x-mod"
     "audio/x-xm"
     "audio/x-it"

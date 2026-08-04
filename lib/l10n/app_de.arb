@@ -466,10 +466,21 @@
   "imgViewRedo": "Wiederholen",
   "imgViewCopyToClipboard": "In Zwischenablage kopieren",
   "imgViewDropZoneTitle": "Bild hier ablegen",
-  "imgViewDropZoneSubtitle": "Unterstützt PNG, JPEG, WebP, BMP, GIF",
+  "imgViewDropZoneSubtitle": "Unterstützt PNG, JPEG, WebP, BMP, GIF, TIFF, ICO",
   "imgViewTypeLabel": "Bilder",
   "imgViewBrowseFiles": "Dateien durchsuchen",
   "imgViewPasteFromClipboard": "Aus Zwischenablage einfügen",
+  "imgViewUnsupportedTitle": "Format kann nicht angezeigt werden",
+  "imgViewUnsupportedMessage": "„{name}“ verwendet ein Bildformat, das der Betrachter nicht dekodieren kann. Öffne es stattdessen mit einer System-App.",
+  "@imgViewUnsupportedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "imgViewOpenExternally": "Mit System-App öffnen",
+  "imgViewChooseAnother": "Anderes Bild wählen",
   "imgViewOriginalFileDetails": "Originaldatei-Details",
   "imgViewMoreInformation": "Weitere Informationen",
   "imgViewTransform": "Transformieren",

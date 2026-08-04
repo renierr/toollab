@@ -69,6 +69,13 @@ img.Image decodeAndBakeOrientationTask(Uint8List bytes) {
   return img.bakeOrientation(decoded);
 }
 
+/// Fallback for formats Skia rejects but the `image` package reads (TIFF, ICO, PSD).
+Uint8List? transcodeToPngTask(Uint8List bytes) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) return null;
+  return Uint8List.fromList(img.encodePng(decoded));
+}
+
 img.Image decodeImageTask(Uint8List bytes) {
   final decoded = img.decodeImage(bytes);
   if (decoded == null) {

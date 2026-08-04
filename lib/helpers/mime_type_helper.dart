@@ -86,6 +86,23 @@ class MimeTypeHelper {
       case 'tif':
       case 'tiff':
         return 'image/tiff';
+      case 'tga':
+      case 'targa':
+        return 'image/x-tga';
+      case 'ppm':
+        return 'image/x-portable-pixmap';
+      case 'pgm':
+        return 'image/x-portable-graymap';
+      case 'pbm':
+        return 'image/x-portable-bitmap';
+      case 'pnm':
+        return 'image/x-portable-anymap';
+      case 'avif':
+        return 'image/avif';
+      case 'heic':
+        return 'image/heic';
+      case 'heif':
+        return 'image/heif';
       // Audio
       case 'mp3':
         return 'audio/mpeg';
@@ -163,6 +180,16 @@ class MimeTypeHelper {
         return 'application/octet-stream';
     }
   }
+
+  /// Image formats no bundled decoder handles — callers route them to the system app.
+  static const Set<String> _undecodableImageTypes = {
+    'image/svg+xml',
+    'image/svg',
+    'image/jxl',
+  };
+
+  static bool isUndecodableImage(String mimeType) =>
+      _undecodableImageTypes.contains(mimeType.toLowerCase());
 
   /// Identifies a mime type by inspecting leading file signature bytes.
   ///
@@ -253,9 +280,24 @@ class MimeTypeHelper {
       return 'audio/x-mod';
     }
 
-    // Video (ISO base media: 'ftyp' box at offset 4)
+    // ISO base media ('ftyp' box at offset 4) — the brand tells image from video
     if (_matchesAscii(bytes, 4, 'ftyp')) {
       if (_matchesAscii(bytes, 8, 'qt')) return 'video/quicktime';
+      if (_matchesAscii(bytes, 8, 'avif') || _matchesAscii(bytes, 8, 'avis')) {
+        return 'image/avif';
+      }
+      if (_matchesAscii(bytes, 8, 'heic') ||
+          _matchesAscii(bytes, 8, 'heix') ||
+          _matchesAscii(bytes, 8, 'heim') ||
+          _matchesAscii(bytes, 8, 'heis')) {
+        return 'image/heic';
+      }
+      if (_matchesAscii(bytes, 8, 'mif1') ||
+          _matchesAscii(bytes, 8, 'msf1') ||
+          _matchesAscii(bytes, 8, 'hevc') ||
+          _matchesAscii(bytes, 8, 'hevx')) {
+        return 'image/heif';
+      }
       return 'video/mp4';
     }
     // Matroska / WebM (EBML header)

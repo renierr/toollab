@@ -709,10 +709,21 @@
   "imgViewRedo": "Redo",
   "imgViewCopyToClipboard": "Copy to clipboard",
   "imgViewDropZoneTitle": "Drop an image here",
-  "imgViewDropZoneSubtitle": "Supports PNG, JPEG, WebP, BMP, GIF",
+  "imgViewDropZoneSubtitle": "Supports PNG, JPEG, WebP, BMP, GIF, TIFF, ICO",
   "imgViewTypeLabel": "Images",
   "imgViewBrowseFiles": "Browse Files",
   "imgViewPasteFromClipboard": "Paste from Clipboard",
+  "imgViewUnsupportedTitle": "Format cannot be displayed",
+  "imgViewUnsupportedMessage": "\"{name}\" uses an image format the viewer cannot decode. Open it with a system app instead.",
+  "@imgViewUnsupportedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "imgViewOpenExternally": "Open with system app",
+  "imgViewChooseAnother": "Choose another image",
   "imgViewOriginalFileDetails": "Original File Details",
   "imgViewMoreInformation": "More Information",
   "imgViewTransform": "Transform",

@@ -34,6 +34,14 @@ $FileTypes = @(
   @{ Extension = '.webp';     ProgId = "$AppName.webp";     Description = 'WebP Image';        MimeType = 'image/webp' }
   @{ Extension = '.bmp';      ProgId = "$AppName.bmp";      Description = 'BMP Image';         MimeType = 'image/bmp' }
   @{ Extension = '.gif';      ProgId = "$AppName.gif";      Description = 'GIF Image';         MimeType = 'image/gif' }
+  @{ Extension = '.tif';      ProgId = "$AppName.tif";      Description = 'TIFF Image';        MimeType = 'image/tiff' }
+  @{ Extension = '.tiff';     ProgId = "$AppName.tiff";     Description = 'TIFF Image';        MimeType = 'image/tiff' }
+  @{ Extension = '.ico';      ProgId = "$AppName.ico";      Description = 'Icon Image';        MimeType = 'image/x-icon' }
+  @{ Extension = '.tga';      ProgId = "$AppName.tga";      Description = 'Targa Image';       MimeType = 'image/x-tga' }
+  @{ Extension = '.ppm';      ProgId = "$AppName.ppm";      Description = 'Portable Pixmap';   MimeType = 'image/x-portable-pixmap' }
+  @{ Extension = '.pgm';      ProgId = "$AppName.pgm";      Description = 'Portable Graymap';  MimeType = 'image/x-portable-graymap' }
+  @{ Extension = '.pbm';      ProgId = "$AppName.pbm";      Description = 'Portable Bitmap';   MimeType = 'image/x-portable-bitmap' }
+  @{ Extension = '.pnm';      ProgId = "$AppName.pnm";      Description = 'Portable Anymap';   MimeType = 'image/x-portable-anymap' }
   @{ Extension = '.mod';     ProgId = "$AppName.mod";     Description = 'Tracker Module';    MimeType = 'audio/x-mod' }
   @{ Extension = '.xm';      ProgId = "$AppName.xm";      Description = 'Tracker Module';    MimeType = 'audio/x-xm' }
   @{ Extension = '.it';      ProgId = "$AppName.it";      Description = 'Tracker Module';    MimeType = 'audio/x-it' }

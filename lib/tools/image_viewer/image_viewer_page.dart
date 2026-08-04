@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
+import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -21,6 +23,7 @@ import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_redact_panel.da
 import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_loading_overlay.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/android_picker_buttons.dart';
 import 'package:tool_lab/tools/image_viewer/widgets/extracted_text_dialog.dart';
+import 'package:tool_lab/tools/image_viewer/widgets/image_viewer_unsupported_format.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_controller.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 
@@ -41,6 +44,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   bool _isEditorOpen = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  SharedFile? _unsupportedFile;
+
   @override
   void initState() {
     super.initState();
@@ -56,13 +61,9 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
 
     final sharingSub = SharingService.instance.onSharedFile.listen((file) {
       final mime = file.mimeType.toLowerCase();
+      final name = file.name.toLowerCase();
       if (mime.startsWith('image/') ||
-          file.name.endsWith('.png') ||
-          file.name.endsWith('.jpg') ||
-          file.name.endsWith('.jpeg') ||
-          file.name.endsWith('.webp') ||
-          file.name.endsWith('.bmp') ||
-          file.name.endsWith('.gif')) {
+          imageViewerExtensions.any((ext) => name.endsWith('.$ext'))) {
         _loadSharedFile(file);
       }
     });
@@ -76,8 +77,11 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
         final bytes = await diskFile.readAsBytes();
         final size = await diskFile.length();
         await _controller.loadImage(bytes, file.name, size);
+        if (mounted) setState(() => _unsupportedFile = null);
         unawaited(_scanSiblingsIfAvailable(file.path));
       }
+    } on UnsupportedImageFormatException {
+      _showUnsupported(file);
     } catch (e) {
       _showError('Failed to load image: $e');
     }
@@ -88,10 +92,24 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       final bytes = await file.readAsBytes();
       final size = await file.length();
       await _controller.loadImage(bytes, file.name, size);
+      if (mounted) setState(() => _unsupportedFile = null);
       if (file.path.isNotEmpty) unawaited(_scanSiblingsIfAvailable(file.path));
+    } on UnsupportedImageFormatException {
+      _showUnsupported(
+        SharedFile(
+          path: file.path,
+          name: file.name,
+          mimeType: MimeTypeHelper.getMimeType(file.name),
+        ),
+      );
     } catch (e) {
       _showError('Failed to read selected file: $e');
     }
+  }
+
+  void _showUnsupported(SharedFile file) {
+    if (!mounted) return;
+    setState(() => _unsupportedFile = file);
   }
 
   Future<void> _scanSiblingsIfAvailable(String path) async {
@@ -413,7 +431,19 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
             : const SizedBox.shrink();
 
         Widget mainContent;
-        if (_controller.uiImage == null) {
+        if (_controller.uiImage == null && _unsupportedFile != null) {
+          final file = _unsupportedFile!;
+          mainContent = ImageViewerUnsupportedFormat(
+            fileName: file.name,
+            onOpenExternally: file.path.isEmpty
+                ? null
+                : () => FileSaveHelper.openFile(file.path, file.mimeType),
+            onShare: file.path.isEmpty
+                ? null
+                : () => FileSaveHelper.shareFile(file.path, file.mimeType),
+            onChooseAnother: () => setState(() => _unsupportedFile = null),
+          );
+        } else if (_controller.uiImage == null) {
           mainContent = Padding(
             padding: const EdgeInsets.all(16.0),
             child: FileDropZone(

@@ -9,6 +9,7 @@ import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:flutter/services.dart' show PlatformException;
+import 'package:tool_lab/tools/image_viewer/config.dart';
 import 'package:tool_lab/tools/image_viewer/utils/edit_history.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_canvas_ops.dart';
 import 'package:tool_lab/tools/image_viewer/utils/image_editor_tasks.dart';
@@ -17,6 +18,16 @@ import 'package:google_mlkit_subject_segmentation/google_mlkit_subject_segmentat
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:tool_lab/tools/image_viewer/utils/onnx_background_remover.dart';
 import 'package:tool_lab/tools/image_viewer/utils/windows_ocr.dart';
+
+/// No bundled decoder handles the data (SVG, exotic codecs).
+class UnsupportedImageFormatException implements Exception {
+  final String fileName;
+
+  const UnsupportedImageFormatException(this.fileName);
+
+  @override
+  String toString() => 'UnsupportedImageFormatException: $fileName';
+}
 
 class ImageEditorController extends ChangeNotifier {
   img.Image? _decodedImage;
@@ -53,14 +64,9 @@ class ImageEditorController extends ChangeNotifier {
 
   // Sibling browsing — only populated when the image was opened from a real
   // filesystem path (desktop). Paste/gallery/camera sources leave this empty.
-  static const Set<String> _siblingExtensions = {
-    '.png',
-    '.jpg',
-    '.jpeg',
-    '.gif',
-    '.bmp',
-    '.webp',
-  };
+  static final Set<String> _siblingExtensions = imageViewerExtensions
+      .map((ext) => '.$ext')
+      .toSet();
   List<String> _siblings = const [];
   int _siblingIndex = -1;
 
@@ -158,7 +164,18 @@ class ImageEditorController extends ChangeNotifier {
     final currentSession = _loadSessionCounter;
 
     try {
-      final codec = await ui.instantiateImageCodec(bytes);
+      var data = bytes;
+      ui.Codec codec;
+      try {
+        codec = await ui.instantiateImageCodec(data);
+      } catch (_) {
+        final transcoded = await compute(transcodeToPngTask, data);
+        if (transcoded == null) {
+          throw UnsupportedImageFormatException(name);
+        }
+        data = transcoded;
+        codec = await ui.instantiateImageCodec(data);
+      }
       final animated = codec.frameCount > 1;
       final frame = await codec.getNextFrame();
 
@@ -170,7 +187,8 @@ class ImageEditorController extends ChangeNotifier {
       _uiImage?.dispose();
       _uiImage = frame.image;
       _isAnimated = animated;
-      _rawBytes = bytes;
+      // Transcoded sources keep the PNG bytes so later re-decodes stay valid.
+      _rawBytes = data;
 
       _fileName = name;
       _fileSizeBytes = sizeBytes;

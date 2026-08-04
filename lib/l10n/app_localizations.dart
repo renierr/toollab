@@ -2390,7 +2390,7 @@ abstract class AppLocalizations {
   /// No description provided for @imgViewDropZoneSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Supports PNG, JPEG, WebP, BMP, GIF'**
+  /// **'Supports PNG, JPEG, WebP, BMP, GIF, TIFF, ICO'**
   String get imgViewDropZoneSubtitle;
 
   /// No description provided for @imgViewTypeLabel.
@@ -2410,6 +2410,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paste from Clipboard'**
   String get imgViewPasteFromClipboard;
+
+  /// No description provided for @imgViewUnsupportedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Format cannot be displayed'**
+  String get imgViewUnsupportedTitle;
+
+  /// No description provided for @imgViewUnsupportedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" uses an image format the viewer cannot decode. Open it with a system app instead.'**
+  String imgViewUnsupportedMessage(String name);
+
+  /// No description provided for @imgViewOpenExternally.
+  ///
+  /// In en, this message translates to:
+  /// **'Open with system app'**
+  String get imgViewOpenExternally;
+
+  /// No description provided for @imgViewChooseAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another image'**
+  String get imgViewChooseAnother;
 
   /// No description provided for @imgViewOriginalFileDetails.
   ///

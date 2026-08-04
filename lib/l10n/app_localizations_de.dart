@@ -1318,7 +1318,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get imgViewDropZoneTitle => 'Bild hier ablegen';
 
   @override
-  String get imgViewDropZoneSubtitle => 'Unterstützt PNG, JPEG, WebP, BMP, GIF';
+  String get imgViewDropZoneSubtitle =>
+      'Unterstützt PNG, JPEG, WebP, BMP, GIF, TIFF, ICO';
 
   @override
   String get imgViewTypeLabel => 'Bilder';
@@ -1328,6 +1329,20 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get imgViewPasteFromClipboard => 'Aus Zwischenablage einfügen';
+
+  @override
+  String get imgViewUnsupportedTitle => 'Format kann nicht angezeigt werden';
+
+  @override
+  String imgViewUnsupportedMessage(String name) {
+    return '„$name“ verwendet ein Bildformat, das der Betrachter nicht dekodieren kann. Öffne es stattdessen mit einer System-App.';
+  }
+
+  @override
+  String get imgViewOpenExternally => 'Mit System-App öffnen';
+
+  @override
+  String get imgViewChooseAnother => 'Anderes Bild wählen';
 
   @override
   String get imgViewOriginalFileDetails => 'Originaldatei-Details';
