@@ -108,6 +108,10 @@ class FileManagerState extends ChangeNotifier {
   String? get error => _error;
   bool get isLoading => _isLoading;
   bool get isScanningMetadata => _isScanningMetadata;
+
+  /// Bumped every time a local listing is (re)loaded, so the page can tell a
+  /// refresh of the same folder apart from a plain rebuild.
+  int get listingGeneration => _listing;
   bool get isRemote => _locationType != FileManagerLocationType.local;
   bool get isArchiveBrowsing => _archivePath != null;
   bool get isReadOnly => isArchiveBrowsing;

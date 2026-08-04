@@ -37,9 +37,11 @@ class _FileManagerPageState extends State<FileManagerPage>
     with DisposeCleanup, WidgetsBindingObserver {
   late final TempFileScope _tempScope;
   late final ScrollController _scrollController;
+  late final FileManagerState _state;
   final Map<String, double> _scrollOffsets = {};
   bool _awaitingStorageAccess = false;
   String? _lastPath;
+  int? _lastListing;
   double? _pendingScrollOffset;
   bool _restoreScheduled = false;
 
@@ -47,14 +49,15 @@ class _FileManagerPageState extends State<FileManagerPage>
   void initState() {
     super.initState();
     _tempScope = TempFileManager.createScope();
-    _scrollController = ScrollController();
+    _scrollController = ScrollController()..addListener(_trackScrollOffset);
     WidgetsBinding.instance.addObserver(this);
-    final state = context.read<FileManagerState>();
+    _state = context.read<FileManagerState>();
     onDispose(() {
       WidgetsBinding.instance.removeObserver(this);
       _tempScope.cleanTracked();
+      _scrollController.removeListener(_trackScrollOffset);
       _scrollController.dispose();
-      state.releaseOnExit();
+      _state.releaseOnExit();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future<void>.delayed(const Duration(milliseconds: 120), () {
@@ -127,6 +130,18 @@ class _FileManagerPageState extends State<FileManagerPage>
       _scrollOffsets.remove(_scrollOffsets.keys.first);
     }
     _scrollOffsets[path] = _scrollController.offset;
+  }
+
+  /// Records the position continuously, so a reload of the same folder (delete,
+  /// rename, paste, manual refresh) can restore it too. Skipped while a listing
+  /// is being replaced or a restore is pending, since both drive the offset to
+  /// values the user never chose.
+  void _trackScrollOffset() {
+    final path = _lastPath;
+    if (path == null || _pendingScrollOffset != null || _state.isLoading) {
+      return;
+    }
+    _saveScrollOffset(path);
   }
 
   /// The listing streams in batches and gets re-sorted once metadata arrives, so a
@@ -451,8 +466,9 @@ class _FileManagerPageState extends State<FileManagerPage>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<FileManagerState>();
-    if (_lastPath != state.path) {
+    if (_lastPath != state.path || _lastListing != state.listingGeneration) {
       _lastPath = state.path;
+      _lastListing = state.listingGeneration;
       _pendingScrollOffset = _scrollOffsets[state.path];
     }
     if (_pendingScrollOffset != null) _scheduleScrollRestore(state);
