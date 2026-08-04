@@ -40,6 +40,8 @@ class _FileManagerPageState extends State<FileManagerPage>
   final Map<String, double> _scrollOffsets = {};
   bool _awaitingStorageAccess = false;
   String? _lastPath;
+  double? _pendingScrollOffset;
+  bool _restoreScheduled = false;
 
   @override
   void initState() {
@@ -110,19 +112,31 @@ class _FileManagerPageState extends State<FileManagerPage>
   }
 
   void _saveScrollOffset(String path) {
-    if (_scrollController.hasClients) {
-      _scrollOffsets[path] = _scrollController.offset;
+    if (!_scrollController.hasClients) return;
+    if (_scrollOffsets.length > 30) {
+      _scrollOffsets.remove(_scrollOffsets.keys.first);
     }
+    _scrollOffsets[path] = _scrollController.offset;
   }
 
-  void _restoreScrollOffset(String path) {
-    final offset = _scrollOffsets[path];
-    if (offset == null) return;
+  /// The listing streams in batches and gets re-sorted once metadata arrives, so a
+  /// single post-frame jump would land on a list that is still too short. Retry
+  /// until the extent can honour the offset or the folder is fully loaded.
+  void _scheduleScrollRestore(FileManagerState state) {
+    if (_restoreScheduled) return;
+    _restoreScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      _scrollController.jumpTo(
-        offset.clamp(0.0, _scrollController.position.maxScrollExtent),
-      );
+      _restoreScheduled = false;
+      final offset = _pendingScrollOffset;
+      if (offset == null || !mounted || !_scrollController.hasClients) return;
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      if (_scrollController.offset != offset.clamp(0.0, maxExtent)) {
+        _scrollController.jumpTo(offset.clamp(0.0, maxExtent));
+      }
+      if (maxExtent >= offset ||
+          (!state.isLoading && !state.isScanningMetadata)) {
+        _pendingScrollOffset = null;
+      }
     });
   }
 
@@ -429,8 +443,9 @@ class _FileManagerPageState extends State<FileManagerPage>
     final state = context.watch<FileManagerState>();
     if (_lastPath != state.path) {
       _lastPath = state.path;
-      _restoreScrollOffset(state.path);
+      _pendingScrollOffset = _scrollOffsets[state.path];
     }
+    if (_pendingScrollOffset != null) _scheduleScrollRestore(state);
     return PopScope(
       canPop: !state.canNavigateBack,
       onPopInvokedWithResult: (didPop, _) {
@@ -497,28 +512,34 @@ class _FileManagerPageState extends State<FileManagerPage>
               onRemoveConnection: _removeConnection,
               onRequestStorageAccess: _requestStorageAccess,
             );
-            final explorer = FileManagerExplorer(
-              state: state,
-              onOpen: _openEntry,
-              onOpenWithSystem: _openWithSystem,
-              onShare: _shareWithSystem,
-              onDetails: _showDetails,
-              onRename: _rename,
-              onDelete: _delete,
-              onCopy: state.copy,
-              onCut: state.cut,
-              onGoUp: _goUp,
-              onOpenPath: _openPath,
-              onToggleFavorite: state.toggleFavorite,
-              onToggleSelection: state.toggleSelection,
-              onEnterSelectionMode: state.enterSelectionMode,
-              onSelectAll: state.selectAll,
-              onClearSelection: state.clearSelection,
-              onDeleteSelection: _confirmDelete,
-              onCreateZip: _createZip,
-              onExtract: _extractArchive,
-              onDropFiles: _dropFiles,
-              scrollController: _scrollController,
+            final explorer = NotificationListener<UserScrollNotification>(
+              onNotification: (_) {
+                _pendingScrollOffset = null;
+                return false;
+              },
+              child: FileManagerExplorer(
+                state: state,
+                onOpen: _openEntry,
+                onOpenWithSystem: _openWithSystem,
+                onShare: _shareWithSystem,
+                onDetails: _showDetails,
+                onRename: _rename,
+                onDelete: _delete,
+                onCopy: state.copy,
+                onCut: state.cut,
+                onGoUp: _goUp,
+                onOpenPath: _openPath,
+                onToggleFavorite: state.toggleFavorite,
+                onToggleSelection: state.toggleSelection,
+                onEnterSelectionMode: state.enterSelectionMode,
+                onSelectAll: state.selectAll,
+                onClearSelection: state.clearSelection,
+                onDeleteSelection: _confirmDelete,
+                onCreateZip: _createZip,
+                onExtract: _extractArchive,
+                onDropFiles: _dropFiles,
+                scrollController: _scrollController,
+              ),
             );
             if (constraints.maxWidth < 720) {
               return Column(

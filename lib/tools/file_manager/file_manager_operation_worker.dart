@@ -4,6 +4,26 @@ import 'dart:isolate';
 import 'package:archive/archive_io.dart';
 import 'package:path/path.dart' as p;
 
+/// Stats a whole listing inside an isolate. Each result is `[size, modifiedMillis]`
+/// or `null` when the entry vanished.
+Future<List<List<int>?>> statLocalPaths(List<String> paths) async {
+  const chunkSize = 64;
+  final results = List<List<int>?>.filled(paths.length, null);
+  for (var start = 0; start < paths.length; start += chunkSize) {
+    final end = start + chunkSize < paths.length
+        ? start + chunkSize
+        : paths.length;
+    await Future.wait([
+      for (var index = start; index < end; index++)
+        FileStat.stat(paths[index]).then((stat) {
+          if (stat.type == FileSystemEntityType.notFound) return;
+          results[index] = [stat.size, stat.modified.millisecondsSinceEpoch];
+        }),
+    ]);
+  }
+  return results;
+}
+
 void runFileManagerOperation(Map<String, Object> input) async {
   final sendPort = input['sendPort']! as SendPort;
   final sources = (input['sources']! as List<Object>).cast<String>();

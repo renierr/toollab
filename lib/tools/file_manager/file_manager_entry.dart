@@ -18,4 +18,15 @@ class FileManagerEntry {
   });
 
   bool get isArchiveEntry => archivePath != null && archiveEntryPath != null;
+
+  FileManagerEntry copyWith({int? size, DateTime? modified}) =>
+      FileManagerEntry(
+        name: name,
+        path: path,
+        isDirectory: isDirectory,
+        size: size ?? this.size,
+        modified: modified ?? this.modified,
+        archivePath: archivePath,
+        archiveEntryPath: archiveEntryPath,
+      );
 }

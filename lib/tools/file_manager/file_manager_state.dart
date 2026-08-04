@@ -79,6 +79,8 @@ class FileManagerState extends ChangeNotifier {
   final List<FileManagerEntry> _metadataQueue = [];
   final Set<String> _queuedMetadataPaths = {};
   int _activeMetadataLoads = 0;
+  int _metadataScan = 0;
+  bool _isScanningMetadata = false;
   static const List<ArchiveHandler> _archiveHandlers = [ZipArchiveHandler()];
 
   List<FileManagerEntry> get entries => _entries;
@@ -102,6 +104,7 @@ class FileManagerState extends ChangeNotifier {
       FileManagerStorageAccess.isAndroid && !_hasAllFilesAccess;
   String? get error => _error;
   bool get isLoading => _isLoading;
+  bool get isScanningMetadata => _isScanningMetadata;
   bool get isRemote => _locationType != FileManagerLocationType.local;
   bool get isArchiveBrowsing => _archivePath != null;
   bool get isReadOnly => isArchiveBrowsing;
@@ -179,6 +182,46 @@ class FileManagerState extends ChangeNotifier {
     _metadataQueue.clear();
     _queuedMetadataPaths.clear();
     _activeMetadataLoads = 0;
+    _metadataScan++;
+    _isScanningMetadata = false;
+  }
+
+  /// Fills size/modified for the whole listing off the UI isolate so sorting by
+  /// modified or size works without stalling the initial name-only render.
+  Future<void> _scanLocalMetadata(String directory) async {
+    if (_entries.isEmpty) return;
+    final scan = ++_metadataScan;
+    final paths = _entries.map((entry) => entry.path).toList();
+    _isScanningMetadata = true;
+    notifyListeners();
+    List<List<int>?> stats;
+    try {
+      stats = await Isolate.run(() => statLocalPaths(paths));
+    } catch (error) {
+      debugPrint('[FileManagerState] Metadata scan failed: $error');
+      if (scan == _metadataScan) {
+        _isScanningMetadata = false;
+        notifyListeners();
+      }
+      return;
+    }
+    if (scan != _metadataScan || _path != directory) return;
+    for (
+      var index = 0;
+      index < paths.length && index < _entries.length;
+      index++
+    ) {
+      final stat = stats[index];
+      final entry = _entries[index];
+      if (stat == null || entry.path != paths[index]) continue;
+      _entries[index] = entry.copyWith(
+        size: entry.isDirectory ? null : stat[0],
+        modified: DateTime.fromMillisecondsSinceEpoch(stat[1]),
+      );
+    }
+    _entries.sort(_compareEntries);
+    _isScanningMetadata = false;
+    notifyListeners();
   }
 
   String _displayPath(String path) {
@@ -299,7 +342,9 @@ class FileManagerState extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
-    if (_error == null) await _recordRecentPath(directory);
+    if (_error != null) return;
+    await _recordRecentPath(directory);
+    await _scanLocalMetadata(directory);
   }
 
   Future<void> openPath(String path) async {
@@ -1461,7 +1506,9 @@ class FileManagerState extends ChangeNotifier {
       ),
       FileManagerSortField.size => (a.size ?? 0).compareTo(b.size ?? 0),
     };
-    return _sortAscending ? comparison : -comparison;
+    if (comparison != 0) return _sortAscending ? comparison : -comparison;
+    // Keeps the order stable (and alphabetical) while metadata is still missing.
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
   }
 
   String _joinRemotePath(String parent, String name) =>
