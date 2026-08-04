@@ -611,14 +611,17 @@ class FileManagerState extends ChangeNotifier {
     });
   }
 
+  /// [tempPathBuilder] is only invoked for sources that need a local copy, so
+  /// opening a local file touches no temp storage at all.
   Future<String?> prepareForOpen(
     FileManagerEntry entry,
-    String tempPath,
+    Future<String> Function() tempPathBuilder,
   ) async {
     if (entry.isArchiveEntry) {
       final handler = _archiveHandlers.firstWhere(
         (candidate) => candidate.supports(entry.archivePath!),
       );
+      final tempPath = await tempPathBuilder();
       await handler.extractEntry(
         archivePath: entry.archivePath!,
         entryPath: entry.archiveEntryPath!,
@@ -631,6 +634,7 @@ class FileManagerState extends ChangeNotifier {
       return extractedPath;
     }
     if (_locationType == FileManagerLocationType.local) return entry.path;
+    final tempPath = await tempPathBuilder();
     await _load(() async {
       final target = File(tempPath);
       if (_locationType == FileManagerLocationType.ftp) {

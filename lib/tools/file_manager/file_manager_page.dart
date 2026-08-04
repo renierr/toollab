@@ -85,7 +85,7 @@ class _FileManagerPageState extends State<FileManagerPage>
     }
     final path = await state.prepareForOpen(
       entry,
-      await _tempScope.createFile('file_manager_${entry.name}'),
+      () => _tempScope.createFile('file_manager_${entry.name}'),
     );
     if (!mounted || path == null) return;
     try {
@@ -188,7 +188,7 @@ class _FileManagerPageState extends State<FileManagerPage>
   Future<void> _openWithSystem(FileManagerEntry entry) async {
     final path = await context.read<FileManagerState>().prepareForOpen(
       entry,
-      await _tempScope.createFile('file_manager_${entry.name}'),
+      () => _tempScope.createFile('file_manager_${entry.name}'),
     );
     if (path != null) {
       await FileSaveHelper.openFile(
@@ -201,7 +201,7 @@ class _FileManagerPageState extends State<FileManagerPage>
   Future<void> _openWithChooser(FileManagerEntry entry) async {
     final path = await context.read<FileManagerState>().prepareForOpen(
       entry,
-      await _tempScope.createFile('file_manager_${entry.name}'),
+      () => _tempScope.createFile('file_manager_${entry.name}'),
     );
     if (!mounted || path == null) return;
     await FileSaveHelper.showOpenChooser(
@@ -236,7 +236,7 @@ class _FileManagerPageState extends State<FileManagerPage>
   Future<void> _shareWithSystem(FileManagerEntry entry) async {
     final path = await context.read<FileManagerState>().prepareForOpen(
       entry,
-      await _tempScope.createFile('file_manager_share_${entry.name}'),
+      () => _tempScope.createFile('file_manager_share_${entry.name}'),
     );
     if (path != null) {
       await FileSaveHelper.shareFile(

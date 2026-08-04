@@ -46,6 +46,9 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
 
   SharedFile? _unsupportedFile;
 
+  // Keeps the drop zone from flashing while an incoming file is still decoding.
+  bool _isLoadingIncoming = false;
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +59,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
     });
 
     if (widget.sharedFile != null) {
+      _isLoadingIncoming = true;
       _loadSharedFile(widget.sharedFile!);
     }
 
@@ -64,6 +68,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       final name = file.name.toLowerCase();
       if (mime.startsWith('image/') ||
           imageViewerExtensions.any((ext) => name.endsWith('.$ext'))) {
+        setState(() => _isLoadingIncoming = true);
         _loadSharedFile(file);
       }
     });
@@ -84,6 +89,10 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
       _showUnsupported(file);
     } catch (e) {
       _showError('Failed to load image: $e');
+    } finally {
+      if (mounted && _isLoadingIncoming) {
+        setState(() => _isLoadingIncoming = false);
+      }
     }
   }
 
@@ -443,6 +452,8 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                 : () => FileSaveHelper.shareFile(file.path, file.mimeType),
             onChooseAnother: () => setState(() => _unsupportedFile = null),
           );
+        } else if (_controller.uiImage == null && _isLoadingIncoming) {
+          mainContent = const Center(child: CircularProgressIndicator());
         } else if (_controller.uiImage == null) {
           mainContent = Padding(
             padding: const EdgeInsets.all(16.0),
