@@ -530,6 +530,7 @@ class _FileManagerPageState extends State<FileManagerPage>
                 onGoUp: _goUp,
                 onOpenPath: _openPath,
                 onToggleFavorite: state.toggleFavorite,
+                onToggleSortField: state.toggleSortField,
                 onToggleSelection: state.toggleSelection,
                 onEnterSelectionMode: state.enterSelectionMode,
                 onSelectAll: state.selectAll,

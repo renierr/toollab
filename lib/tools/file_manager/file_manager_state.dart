@@ -69,6 +69,8 @@ class FileManagerState extends ChangeNotifier {
   FileManagerOperation? _operation;
   final List<String> _operationErrors = [];
   FileManagerSortField _sortField = FileManagerSortField.name;
+  FileManagerSortField? _sortOverride;
+  String? _sortOverridePath;
   bool _sortAscending = true;
   bool _foldersFirst = true;
   final Map<FileManagerOpenCategory, String?> _openToolIds = {};
@@ -139,6 +141,20 @@ class FileManagerState extends ChangeNotifier {
   int get operationTotal => _operationTotal;
   FileManagerOperation? get operation => _operation;
   FileManagerSortField get sortField => _sortField;
+
+  /// The folder-local sort chosen via the explorer toggle, or null once the
+  /// folder changed.
+  FileManagerSortField? get _activeOverride {
+    final override = _sortOverride;
+    return override != null && _sortOverridePath == path ? override : null;
+  }
+
+  FileManagerSortField get activeSortField => _activeOverride ?? _sortField;
+
+  /// A toggled name sort is always A-Z, regardless of the persisted direction.
+  bool get activeSortAscending =>
+      _activeOverride == FileManagerSortField.name ? true : _sortAscending;
+
   bool get sortAscending => _sortAscending;
   bool get foldersFirst => _foldersFirst;
   String? openToolId(FileManagerOpenCategory category) =>
@@ -1178,7 +1194,20 @@ class FileManagerState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Flips the current folder between name and modified-date order without
+  /// touching the persisted sort setting.
+  void toggleSortField() {
+    _sortOverride = activeSortField == FileManagerSortField.modified
+        ? FileManagerSortField.name
+        : FileManagerSortField.modified;
+    _sortOverridePath = path;
+    _entries.sort(_compareEntries);
+    notifyListeners();
+  }
+
   Future<void> updateSort(FileManagerSortField field, bool ascending) async {
+    _sortOverride = null;
+    _sortOverridePath = null;
     _sortField = field;
     _sortAscending = ascending;
     _entries.sort(_compareEntries);
@@ -1497,7 +1526,7 @@ class FileManagerState extends ChangeNotifier {
     if (_foldersFirst && a.isDirectory != b.isDirectory) {
       return a.isDirectory ? -1 : 1;
     }
-    final comparison = switch (_sortField) {
+    final comparison = switch (activeSortField) {
       FileManagerSortField.name => a.name.toLowerCase().compareTo(
         b.name.toLowerCase(),
       ),
@@ -1506,7 +1535,7 @@ class FileManagerState extends ChangeNotifier {
       ),
       FileManagerSortField.size => (a.size ?? 0).compareTo(b.size ?? 0),
     };
-    if (comparison != 0) return _sortAscending ? comparison : -comparison;
+    if (comparison != 0) return activeSortAscending ? comparison : -comparison;
     // Keeps the order stable (and alphabetical) while metadata is still missing.
     return a.name.toLowerCase().compareTo(b.name.toLowerCase());
   }

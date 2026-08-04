@@ -26,6 +26,7 @@ class FileManagerExplorer extends StatelessWidget {
   final VoidCallback onGoUp;
   final ValueChanged<String> onOpenPath;
   final VoidCallback onToggleFavorite;
+  final VoidCallback onToggleSortField;
   final ValueChanged<FileManagerEntry> onToggleSelection;
   final VoidCallback onEnterSelectionMode;
   final VoidCallback onSelectAll;
@@ -50,6 +51,7 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onGoUp,
     required this.onOpenPath,
     required this.onToggleFavorite,
+    required this.onToggleSortField,
     required this.onToggleSelection,
     required this.onEnterSelectionMode,
     required this.onSelectAll,
@@ -109,6 +111,17 @@ class FileManagerExplorer extends StatelessWidget {
                       onOpenPath: onOpenPath,
                     ),
                   ],
+                ),
+              ),
+              IconButton(
+                tooltip:
+                    '${l10n.fileManagerSortBy}: '
+                    '${state.activeSortField == FileManagerSortField.modified ? l10n.fileManagerSortDate : l10n.fileManagerSortName}',
+                onPressed: onToggleSortField,
+                icon: Icon(
+                  state.activeSortField == FileManagerSortField.modified
+                      ? Icons.schedule_outlined
+                      : Icons.sort_by_alpha,
                 ),
               ),
               if (!state.isRemote && !state.isReadOnly)
