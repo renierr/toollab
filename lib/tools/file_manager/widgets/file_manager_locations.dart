@@ -68,6 +68,16 @@ class FileManagerLocations extends StatelessWidget {
       label: l10n.fileManagerAppFiles,
       onTap: () => onOpenLocal(state.defaultFolderPath),
     ),
+    if (state.drives.isNotEmpty) ...[
+      const Divider(),
+      ...state.drives.map(
+        (drive) => _LocationTile(
+          icon: Icons.storage_outlined,
+          label: drive,
+          onTap: () => onOpenLocal(drive),
+        ),
+      ),
+    ],
     if (recentPaths.isNotEmpty) ...[
       const Divider(),
       _RecentLocationsTile(
@@ -119,6 +129,13 @@ class FileManagerLocations extends StatelessWidget {
       icon: Icons.folder_outlined,
       label: l10n.fileManagerAppFiles,
       onTap: () => onOpenLocal(state.defaultFolderPath),
+    ),
+    ...state.drives.map(
+      (drive) => _LocationChip(
+        icon: Icons.storage_outlined,
+        label: drive,
+        onTap: () => onOpenLocal(drive),
+      ),
     ),
     if (recentPaths.isNotEmpty)
       _RecentLocationsChip(

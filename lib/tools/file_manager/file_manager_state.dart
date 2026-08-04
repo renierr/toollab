@@ -44,6 +44,7 @@ class FileManagerState extends ChangeNotifier {
   List<FileManagerConnection> _connections = [];
   List<String> _favoritePaths = [];
   List<String> _recentPaths = [];
+  List<String> _drives = [];
   String _path = '';
   String? _archivePath;
   String _archiveDirectory = '';
@@ -90,6 +91,9 @@ class FileManagerState extends ChangeNotifier {
   List<FileManagerConnection> get connections => _connections;
   List<String> get favoritePaths => _favoritePaths;
   List<String> get recentPaths => _recentPaths;
+
+  /// Windows drive roots (`C:\`, `D:\`, …); empty on every other platform.
+  List<String> get drives => _drives;
   String get path =>
       isArchiveBrowsing ? '${_archivePath!}::$_archiveDirectory' : _path;
   String get archivePath => _archivePath ?? '';
@@ -291,6 +295,7 @@ class FileManagerState extends ChangeNotifier {
     for (final category in FileManagerOpenCategory.values) {
       _openToolIds[category] = settings['$_openToolPrefix${category.name}'];
     }
+    await _loadDrives();
     _hasAllFilesAccess = await FileManagerStorageAccess.hasAllFilesAccess();
     if (_hasAllFilesAccess) {
       final sharedPath = await FileManagerStorageAccess.externalStoragePath();
@@ -305,6 +310,22 @@ class FileManagerState extends ChangeNotifier {
     _appFilesPath = _userFolderPath('Documents') ?? documents.path;
     _downloadsPath = _userFolderPath('Downloads') ?? documents.path;
     await openLocal(await _resolvedStartupPath());
+  }
+
+  /// Probes the drive letters so fixed, removable and mapped network drives all
+  /// show up. Starts at C: because polling A:/B: can stall on legacy hardware.
+  Future<void> _loadDrives() async {
+    if (!Platform.isWindows) return;
+    final roots = <String>[];
+    for (var code = 'C'.codeUnitAt(0); code <= 'Z'.codeUnitAt(0); code++) {
+      final root = '${String.fromCharCode(code)}:\\';
+      try {
+        if (await Directory(root).exists()) roots.add(root);
+      } catch (_) {
+        // An unreadable drive (no medium, offline share) is simply not listed.
+      }
+    }
+    _drives = roots;
   }
 
   String? _userFolderPath(String folder) {
