@@ -5837,13 +5837,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lokale Dateien sowie FTP- und SMB-Netzwerkfreigaben durchsuchen';
 
   @override
-  String get fileManagerAppFiles => 'Standardordner';
+  String get fileManagerAppFiles => 'Home';
 
   @override
   String get fileManagerConnections => 'Verbindungen';
 
   @override
-  String get fileManagerAddConnection => 'Verbindung hinzufügen';
+  String get fileManagerAddConnection => 'Verbindungen';
 
   @override
   String get fileManagerRefresh => 'Aktualisieren';

@@ -3033,7 +3033,7 @@
   "toolDescFileManager": "Browse local files and FTP or SMB network shares",
   "fileManagerAppFiles": "Default folder",
   "fileManagerConnections": "Connections",
-  "fileManagerAddConnection": "Add connection",
+  "fileManagerAddConnection": "Connections",
   "fileManagerRefresh": "Refresh",
   "fileManagerNewFolder": "New folder",
   "fileManagerFavorite": "Favorite folder",

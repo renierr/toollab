@@ -5805,7 +5805,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileManagerConnections => 'Connections';
 
   @override
-  String get fileManagerAddConnection => 'Add connection';
+  String get fileManagerAddConnection => 'Connections';
 
   @override
   String get fileManagerRefresh => 'Refresh';

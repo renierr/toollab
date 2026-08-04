@@ -131,7 +131,12 @@ class FileManagerState extends ChangeNotifier {
     return true;
   }
 
-  bool get canNavigateBack => canGoUp;
+  bool get canNavigateBack =>
+      !isArchiveBrowsing &&
+          _locationType == FileManagerLocationType.local &&
+          p.equals(_path, defaultFolderPath)
+      ? false
+      : canGoUp;
 
   FileManagerConnection? get connection => _connection;
   bool get canPaste =>

@@ -10532,7 +10532,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileManagerAddConnection.
   ///
   /// In en, this message translates to:
-  /// **'Add connection'**
+  /// **'Connections'**
   String get fileManagerAddConnection;
 
   /// No description provided for @fileManagerRefresh.
