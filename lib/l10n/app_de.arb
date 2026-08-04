@@ -2179,6 +2179,7 @@
   "fileManagerNewFolder": "Neuer Ordner",
   "fileManagerFavorite": "Ordner favorisieren",
   "fileManagerEmptyFolder": "Dieser Ordner ist leer",
+  "fileManagerBrokenLink": "Ungültige Verknüpfung - das Ziel existiert nicht mehr",
   "fileManagerFtp": "FTP",
   "fileManagerSmb": "SMB",
   "fileManagerConnectionName": "Verbindungsname",

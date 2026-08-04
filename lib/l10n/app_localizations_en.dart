@@ -5796,6 +5796,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileManagerEmptyFolder => 'This folder is empty';
 
   @override
+  String get fileManagerBrokenLink =>
+      'Broken link - the target no longer exists';
+
+  @override
   String get fileManagerFtp => 'FTP';
 
   @override

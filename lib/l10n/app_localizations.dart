@@ -10523,6 +10523,12 @@ abstract class AppLocalizations {
   /// **'This folder is empty'**
   String get fileManagerEmptyFolder;
 
+  /// No description provided for @fileManagerBrokenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken link - the target no longer exists'**
+  String get fileManagerBrokenLink;
+
   /// No description provided for @fileManagerFtp.
   ///
   /// In en, this message translates to:

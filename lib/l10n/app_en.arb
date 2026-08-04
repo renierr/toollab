@@ -3020,6 +3020,7 @@
   "fileManagerNewFolder": "New folder",
   "fileManagerFavorite": "Favorite folder",
   "fileManagerEmptyFolder": "This folder is empty",
+  "fileManagerBrokenLink": "Broken link - the target no longer exists",
   "fileManagerFtp": "FTP",
   "fileManagerSmb": "SMB",
   "fileManagerConnectionName": "Connection name",

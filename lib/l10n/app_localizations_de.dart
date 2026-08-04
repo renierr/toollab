@@ -5834,6 +5834,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fileManagerEmptyFolder => 'Dieser Ordner ist leer';
 
   @override
+  String get fileManagerBrokenLink =>
+      'Ungültige Verknüpfung - das Ziel existiert nicht mehr';
+
+  @override
   String get fileManagerFtp => 'FTP';
 
   @override

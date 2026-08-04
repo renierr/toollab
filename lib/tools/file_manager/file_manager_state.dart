@@ -1415,21 +1415,28 @@ class FileManagerState extends ChangeNotifier {
   ) async {
     var isDirectory = entity is Directory;
     var entryPath = entity.path;
+    var isBrokenLink = false;
     if (entity is Link) {
-      try {
-        final resolvedPath = await entity.resolveSymbolicLinks();
-        if (await Directory(resolvedPath).exists()) {
-          isDirectory = true;
-          entryPath = resolvedPath;
+      // Windows junctions (profile compatibility folders, OneDrive redirects)
+      // list as links. Let the OS follow the link rather than trusting
+      // resolveSymbolicLinks, which an ACL may deny even when traversal works.
+      final targetType = await FileSystemEntity.type(entity.path);
+      isDirectory = targetType == FileSystemEntityType.directory;
+      isBrokenLink = targetType == FileSystemEntityType.notFound;
+      if (isDirectory) {
+        try {
+          final resolvedPath = await entity.resolveSymbolicLinks();
+          if (await Directory(resolvedPath).exists()) entryPath = resolvedPath;
+        } catch (_) {
+          // Traversing the junction path itself still works.
         }
-      } catch (_) {
-        // Some Windows compatibility junctions intentionally deny resolution.
       }
     }
     return FileManagerEntry(
       name: p.basename(entity.path),
       path: entryPath,
       isDirectory: isDirectory,
+      isBrokenLink: isBrokenLink,
     );
   }
 

@@ -40,7 +40,9 @@ class FileManagerEntryIcon extends StatelessWidget {
       Icon(iconFor(entry), size: size, color: colorFor(context, entry));
 
   static bool isImage(FileManagerEntry entry) {
-    if (entry.isDirectory || entry.isArchiveEntry) return false;
+    if (entry.isDirectory || entry.isArchiveEntry || entry.isBrokenLink) {
+      return false;
+    }
     return switch (entry.name.split('.').last.toLowerCase()) {
       'jpg' || 'jpeg' || 'png' || 'gif' || 'webp' || 'bmp' => true,
       _ => false,
@@ -48,6 +50,7 @@ class FileManagerEntryIcon extends StatelessWidget {
   }
 
   static IconData iconFor(FileManagerEntry entry) {
+    if (entry.isBrokenLink) return Icons.link_off;
     if (entry.isDirectory) return Icons.folder;
     final extension = entry.name.split('.').last.toLowerCase();
     return switch (extension) {
@@ -92,6 +95,7 @@ class FileManagerEntryIcon extends StatelessWidget {
 
   static Color colorFor(BuildContext context, FileManagerEntry entry) {
     final colors = Theme.of(context).colorScheme;
+    if (entry.isBrokenLink) return colors.error;
     if (entry.isDirectory) return colors.primary;
     final extension = entry.name.split('.').last.toLowerCase();
     return switch (extension) {

@@ -7,6 +7,10 @@ class FileManagerEntry {
   final String? archivePath;
   final String? archiveEntryPath;
 
+  /// A symlink or Windows junction whose target no longer exists, so it can
+  /// neither be followed nor read.
+  final bool isBrokenLink;
+
   const FileManagerEntry({
     required this.name,
     required this.path,
@@ -15,6 +19,7 @@ class FileManagerEntry {
     this.modified,
     this.archivePath,
     this.archiveEntryPath,
+    this.isBrokenLink = false,
   });
 
   bool get isArchiveEntry => archivePath != null && archiveEntryPath != null;
@@ -28,5 +33,6 @@ class FileManagerEntry {
         modified: modified ?? this.modified,
         archivePath: archivePath,
         archiveEntryPath: archiveEntryPath,
+        isBrokenLink: isBrokenLink,
       );
 }

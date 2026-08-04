@@ -65,6 +65,14 @@ class _FileManagerPageState extends State<FileManagerPage>
 
   Future<void> _openEntry(FileManagerEntry entry) async {
     final state = context.read<FileManagerState>();
+    if (entry.isBrokenLink) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).fileManagerBrokenLink),
+        ),
+      );
+      return;
+    }
     if (entry.isDirectory || state.canBrowseArchive(entry)) {
       _saveScrollOffset(state.path);
       await state.openEntry(entry);
