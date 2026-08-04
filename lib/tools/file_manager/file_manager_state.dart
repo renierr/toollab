@@ -132,11 +132,9 @@ class FileManagerState extends ChangeNotifier {
   }
 
   bool get canNavigateBack =>
-      !isArchiveBrowsing &&
-          _locationType == FileManagerLocationType.local &&
-          p.equals(_path, defaultFolderPath)
-      ? false
-      : canGoUp;
+      isArchiveBrowsing ||
+      _locationType != FileManagerLocationType.local ||
+      !p.equals(_path, defaultFolderPath);
 
   FileManagerConnection? get connection => _connection;
   bool get canPaste =>
@@ -596,7 +594,10 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> goUp() async {
-    if (!canGoUp) return;
+    if (!canGoUp) {
+      if (canNavigateBack) await openLocal(defaultFolderPath);
+      return;
+    }
     if (isArchiveBrowsing) {
       if (_archiveDirectory.isEmpty) return openLocal(p.dirname(_archivePath!));
       return _openArchiveDirectory(p.posix.dirname(_archiveDirectory));
