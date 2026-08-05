@@ -5376,6 +5376,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get treadmillDetailsTitle => 'Workout Details';
 
   @override
+  String get treadmillScreenshotCopy => 'Copy to clipboard';
+
+  @override
+  String get treadmillScreenshotCopied => 'Screenshot copied to clipboard';
+
+  @override
+  String get treadmillScreenshotCopyFailed =>
+      'Could not copy screenshot to clipboard';
+
+  @override
+  String get treadmillDetailsScreenshot => 'Workout screenshot';
+
+  @override
+  String get treadmillDetailsScreenshotFailed =>
+      'Could not create workout screenshot';
+
+  @override
   String get treadmillDetailsDuration => 'Duration';
 
   @override

@@ -8,6 +8,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:provider/provider.dart';
 import '../../../core/tool_page_state.dart';
+import '../../../helpers/clipboard_helper.dart';
 import '../../../helpers/file_save_helper.dart';
 import '../../../helpers/temp_file_manager.dart';
 import '../treadmill_control_colors.dart';
@@ -54,7 +55,7 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
     }
   }
 
-  Future<void> _handleScreenshot(bool share) async {
+  Future<void> _handleScreenshot(_ScreenshotAction action) async {
     if (_isCapturing) return;
     setState(() => _isCapturing = true);
     final l10n = AppLocalizations.of(context);
@@ -64,7 +65,19 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
       if (bytes == null || !mounted) return;
       final filename =
           'treadmill_dashboard_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.png';
-      if (share) {
+      if (action == _ScreenshotAction.copy) {
+        final copied = await ClipboardHelper.copyImageBytes(bytes);
+        if (!mounted) return;
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              copied
+                  ? l10n.treadmillScreenshotCopied
+                  : l10n.treadmillScreenshotCopyFailed,
+            ),
+          ),
+        );
+      } else if (action == _ScreenshotAction.share) {
         final path = await _tempScope.createFile(filename, bytes: bytes);
         await FileSaveHelper.shareFile(path, 'image/png');
       } else {
@@ -414,7 +427,7 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
                     style: theme.textTheme.headlineSmall,
                   ),
                 ),
-                PopupMenuButton<bool>(
+                PopupMenuButton<_ScreenshotAction>(
                   tooltip: l10n.treadmillHistoryScreenshot,
                   enabled: !_isCapturing,
                   icon: _isCapturing
@@ -427,11 +440,15 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
                   onSelected: _handleScreenshot,
                   itemBuilder: (context) => [
                     PopupMenuItem(
-                      value: false,
+                      value: _ScreenshotAction.save,
                       child: Text(l10n.treadmillHistorySaveScreenshot),
                     ),
                     PopupMenuItem(
-                      value: true,
+                      value: _ScreenshotAction.copy,
+                      child: Text(l10n.treadmillScreenshotCopy),
+                    ),
+                    PopupMenuItem(
+                      value: _ScreenshotAction.share,
                       child: Text(l10n.treadmillHistoryShareScreenshot),
                     ),
                   ],
@@ -594,6 +611,8 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
     );
   }
 }
+
+enum _ScreenshotAction { save, copy, share }
 
 class _PdfBarChart extends pw.StatelessWidget {
   final List<String> labels;

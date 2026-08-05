@@ -2039,6 +2039,11 @@
     }
   },
   "treadmillDetailsTitle": "Trainingsdetails",
+  "treadmillScreenshotCopy": "In Zwischenablage kopieren",
+  "treadmillScreenshotCopied": "Screenshot wurde in die Zwischenablage kopiert",
+  "treadmillScreenshotCopyFailed": "Screenshot konnte nicht in die Zwischenablage kopiert werden",
+  "treadmillDetailsScreenshot": "Trainings-Screenshot",
+  "treadmillDetailsScreenshotFailed": "Trainings-Screenshot konnte nicht erstellt werden",
   "treadmillDetailsDuration": "Dauer",
   "treadmillDetailsPaceUnit": "min/km",
   "treadmillDetailsAvgSpeed": "Ø Geschwindigkeit",

@@ -2880,6 +2880,11 @@
     }
   },
   "treadmillDetailsTitle": "Workout Details",
+  "treadmillScreenshotCopy": "Copy to clipboard",
+  "treadmillScreenshotCopied": "Screenshot copied to clipboard",
+  "treadmillScreenshotCopyFailed": "Could not copy screenshot to clipboard",
+  "treadmillDetailsScreenshot": "Workout screenshot",
+  "treadmillDetailsScreenshotFailed": "Could not create workout screenshot",
   "treadmillDetailsDuration": "Duration",
   "treadmillDetailsPaceUnit": "min/km",
   "treadmillDetailsAvgSpeed": "Avg speed",

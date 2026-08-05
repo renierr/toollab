@@ -9725,6 +9725,36 @@ abstract class AppLocalizations {
   /// **'Workout Details'**
   String get treadmillDetailsTitle;
 
+  /// No description provided for @treadmillScreenshotCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy to clipboard'**
+  String get treadmillScreenshotCopy;
+
+  /// No description provided for @treadmillScreenshotCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot copied to clipboard'**
+  String get treadmillScreenshotCopied;
+
+  /// No description provided for @treadmillScreenshotCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy screenshot to clipboard'**
+  String get treadmillScreenshotCopyFailed;
+
+  /// No description provided for @treadmillDetailsScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout screenshot'**
+  String get treadmillDetailsScreenshot;
+
+  /// No description provided for @treadmillDetailsScreenshotFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create workout screenshot'**
+  String get treadmillDetailsScreenshotFailed;
+
   /// No description provided for @treadmillDetailsDuration.
   ///
   /// In en, this message translates to:

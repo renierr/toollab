@@ -5413,6 +5413,24 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillDetailsTitle => 'Trainingsdetails';
 
   @override
+  String get treadmillScreenshotCopy => 'In Zwischenablage kopieren';
+
+  @override
+  String get treadmillScreenshotCopied =>
+      'Screenshot wurde in die Zwischenablage kopiert';
+
+  @override
+  String get treadmillScreenshotCopyFailed =>
+      'Screenshot konnte nicht in die Zwischenablage kopiert werden';
+
+  @override
+  String get treadmillDetailsScreenshot => 'Trainings-Screenshot';
+
+  @override
+  String get treadmillDetailsScreenshotFailed =>
+      'Trainings-Screenshot konnte nicht erstellt werden';
+
+  @override
   String get treadmillDetailsDuration => 'Dauer';
 
   @override
