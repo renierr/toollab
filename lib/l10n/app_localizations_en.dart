@@ -3043,6 +3043,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get widgetMarkdownNoContent => 'No additional content';
 
   @override
+  String get widgetMarkdownImageEnlarge => 'Tap to enlarge';
+
+  @override
   String get widgetMarkdownFrontmatter => 'Frontmatter';
 
   @override

@@ -6,7 +6,9 @@ import 'package:markdown/markdown.dart' as md;
 import 'package:tool_lab/helpers/syntax/language_detector.dart';
 import 'package:tool_lab/helpers/syntax/language_registry.dart';
 import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart' as syntax;
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/image_preview_dialog.dart';
 import 'package:tool_lab/widgets/markdown_checkbox.dart';
 import 'package:tool_lab/widgets/markdown_code_block_builder.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -212,6 +214,7 @@ class _MarkdownViewState extends State<MarkdownView>
     _preprocessAST(astNodes);
 
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     final styleSheet = MarkdownStyleSheet.fromTheme(theme).copyWith(
       textScaler: TextScaler.linear(widget.scale),
@@ -247,6 +250,7 @@ class _MarkdownViewState extends State<MarkdownView>
       imageBuilder: (uri, title, alt) {
         double? width;
         double? height;
+        final caption = alt?.split('|').first.trim();
         if (alt != null && alt.contains('|')) {
           final parts = alt.split('|');
           final sizePart = parts[1].trim().toLowerCase();
@@ -260,35 +264,56 @@ class _MarkdownViewState extends State<MarkdownView>
           }
         }
 
-        Widget imageWidget;
         final uriStr = uri.toString();
+        ImageProvider? provider;
 
         if (uriStr.startsWith('data:image/')) {
           try {
             final commaIndex = uriStr.indexOf(',');
             if (commaIndex != -1) {
-              final base64Data = uriStr.substring(commaIndex + 1);
-              final bytes = base64Decode(base64Data);
-              imageWidget = Image.memory(bytes, fit: BoxFit.contain);
-            } else {
-              imageWidget = const Icon(Icons.broken_image);
+              provider = MemoryImage(
+                base64Decode(uriStr.substring(commaIndex + 1)),
+              );
             }
           } catch (e) {
-            imageWidget = const Icon(Icons.broken_image);
+            provider = null;
           }
         } else {
-          imageWidget = Image.network(
-            uriStr,
-            fit: BoxFit.contain,
-            errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
+          provider = NetworkImage(uriStr);
+        }
+
+        if (provider == null) return const Icon(Icons.broken_image);
+
+        // Rendered images are downscaled to the requested size, so offer the
+        // full resolution in a zoomable dialog.
+        Widget imageWidget = MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => ImagePreviewDialog.show(
+              context: context,
+              image: provider!,
+              label: caption,
+            ),
+            child: Image(
+              image: provider,
+              fit: BoxFit.contain,
+              errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
+            ),
+          ),
+        );
+
+        if (width != null || height != null) {
+          imageWidget = SizedBox(
+            width: width,
+            height: height,
+            child: imageWidget,
           );
         }
 
-        if (width != null || height != null) {
-          return SizedBox(width: width, height: height, child: imageWidget);
-        }
-
-        return imageWidget;
+        return Tooltip(
+          message: l10n.widgetMarkdownImageEnlarge,
+          child: imageWidget,
+        );
       },
       checkboxBuilder: (checked) =>
           MarkdownCheckbox(checked: checked, checkedColor: widget.accentColor),

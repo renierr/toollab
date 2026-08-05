@@ -1087,6 +1087,7 @@
   "widgetMarkdownExportPdf": "PDF exportieren",
   "widgetMarkdownUpdated": "Aktualisiert: {date}",
   "widgetMarkdownNoContent": "Kein weiterer Inhalt",
+  "widgetMarkdownImageEnlarge": "Zum Vergrößern tippen",
   "widgetMarkdownFrontmatter": "Frontmatter",
   "widgetMarkdownFrontmatterInvalid": "Ungültiges Frontmatter-YAML: {error}",
   "@widgetMarkdownFrontmatterInvalid": {

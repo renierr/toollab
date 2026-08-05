@@ -5399,6 +5399,12 @@ abstract class AppLocalizations {
   /// **'No additional content'**
   String get widgetMarkdownNoContent;
 
+  /// No description provided for @widgetMarkdownImageEnlarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to enlarge'**
+  String get widgetMarkdownImageEnlarge;
+
   /// No description provided for @widgetMarkdownFrontmatter.
   ///
   /// In en, this message translates to:

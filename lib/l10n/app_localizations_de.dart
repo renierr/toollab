@@ -3069,6 +3069,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get widgetMarkdownNoContent => 'Kein weiterer Inhalt';
 
   @override
+  String get widgetMarkdownImageEnlarge => 'Zum Vergrößern tippen';
+
+  @override
   String get widgetMarkdownFrontmatter => 'Frontmatter';
 
   @override
