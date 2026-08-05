@@ -782,7 +782,6 @@
   "notesImageSourceClipboard": "Aus Zwischenablage einfügen",
   "notesImageSourceClipboardEmpty": "Kein Bild in der Zwischenablage",
   "notesImageProcessing": "Bild wird verarbeitet...",
-  "notesAttachmentReadOnly": "Anhangsdatenbereich ist schreibgeschützt",
   "notesToolbarBold": "Fett",
   "notesToolbarItalic": "Kursiv",
   "notesToolbarStrikethrough": "Durchgestrichen",

@@ -45,10 +45,13 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
   late final MarkdownTextEditingController _controller;
   late final FocusNode _focusNode;
   late List<String> _tags;
+  late String _initialBody;
 
-  static final _listPrefix = RegExp(
-    r'^(\s*)([-*+]\s\[[ x]\]\s|[-*+]\s|\d+[.)]\s)',
-  );
+  /// Image data URIs are kept out of the editable buffer entirely — a base64
+  /// blob in the text field breaks caret/selection mapping on Android.
+  final Map<String, String> _imageRefs = {};
+
+  static final _refDefinition = RegExp(r'^\[(img_ref_\d+)\]:\s*data:image/');
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
@@ -62,38 +65,6 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
       return KeyEventResult.handled;
     }
 
-    if (event.logicalKey == LogicalKeyboardKey.enter) {
-      final text = _controller.text;
-      final sel = _controller.selection;
-      final cursorPos = sel.start;
-      if (cursorPos >= 0) {
-        final lineStart = text.lastIndexOf('\n', cursorPos - 1) + 1;
-        final currentLine = text.substring(lineStart, cursorPos);
-        final match = _listPrefix.firstMatch(currentLine);
-        if (match != null) {
-          final prefix = match.group(0)!;
-          final rest = currentLine.substring(prefix.length);
-          final before = text.substring(0, cursorPos);
-          final after = text.substring(sel.end);
-
-          if (rest.trim().isEmpty) {
-            final beforeLine = text.substring(0, lineStart);
-            _controller.value = TextEditingValue(
-              text: '$beforeLine\n$after',
-              selection: TextSelection.collapsed(offset: beforeLine.length + 1),
-            );
-          } else {
-            _controller.value = TextEditingValue(
-              text: '$before\n$prefix$after',
-              selection: TextSelection.collapsed(
-                offset: cursorPos + 1 + prefix.length,
-              ),
-            );
-          }
-          return KeyEventResult.handled;
-        }
-      }
-    }
     return KeyEventResult.ignored;
   }
 
@@ -120,45 +91,38 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
 
     try {
       final text = _controller.text;
+      // Stored labels count too, so a deleted inline tag cannot reuse its index.
       final result = await NoteImageHelper.processImage(
         imageBytes: imageBytes,
         name: name,
-        currentContent: text,
+        currentContent: '$text\n${_imageRefs.keys.map((l) => '[$l]').join()}',
       );
 
       if (result == null) {
         throw Exception('Failed to process image.');
       }
 
+      _imageRefs[result.refLabel] = result.refDefinition;
+
       final selection = _controller.selection;
       final start = selection.start;
       final end = selection.end;
 
-      String updatedText;
-      int newCursorPos;
+      final String updatedText;
+      final int newCursorPos;
 
       if (start >= 0 && end >= 0) {
-        final textBefore = text.substring(0, start);
-        final textAfter = text.substring(end);
-        updatedText = '$textBefore${result.inlineTag}$textAfter';
+        updatedText = text.replaceRange(start, end, result.inlineTag);
         newCursorPos = start + result.inlineTag.length;
       } else {
         updatedText = '$text${result.inlineTag}';
         newCursorPos = updatedText.length;
       }
 
-      if (updatedText.endsWith('\n')) {
-        updatedText = '$updatedText${result.refDefinition}\n';
-      } else {
-        updatedText = '$updatedText\n${result.refDefinition}\n';
-      }
-
-      _controller.isProgrammaticUpdate = true;
       _controller.value = TextEditingValue(
         text: updatedText,
         selection: TextSelection.collapsed(offset: newCursorPos),
       );
-      _controller.isProgrammaticUpdate = false;
     } catch (e) {
       debugPrint('[NoteEditor] Failed to process image: $e');
       if (mounted) {
@@ -247,12 +211,39 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
   NoteEditMode _editMode = NoteEditMode.live;
   bool _optionsExpanded = true;
 
+  String _extractBody(String content) {
+    final kept = <String>[];
+    for (final line in content.split('\n')) {
+      final match = _refDefinition.firstMatch(line);
+      if (match != null) {
+        _imageRefs[match.group(1)!] = line;
+        continue;
+      }
+      kept.add(line);
+    }
+    return kept.join('\n').trimRight();
+  }
+
+  /// Body plus the reference definitions still referenced by it (drops stale).
+  String _composeContent() {
+    final body = _controller.text.trimRight();
+    final used = RegExp(
+      r'\[(img_ref_\d+)\]',
+    ).allMatches(body).map((m) => m.group(1)!).toSet();
+    final refs = _imageRefs.entries
+        .where((e) => used.contains(e.key))
+        .map((e) => e.value)
+        .toList();
+    if (refs.isEmpty) return body;
+    return '$body\n\n${refs.join('\n')}\n';
+  }
+
   @override
   void initState() {
     super.initState();
+    _initialBody = _extractBody(widget.initialContent);
     _controller = MarkdownTextEditingController(
-      context: context,
-      text: widget.initialContent,
+      text: _initialBody,
       accentColor: AppTheme.accentTeal,
       showRawSource: _editMode == NoteEditMode.source,
     );
@@ -333,67 +324,12 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     return remainingLines.join('\n').trim();
   }
 
-  int _findRefSectionStart(String txt) {
-    final match = RegExp(r'\[img_ref_\d+\]: data:image/').firstMatch(txt);
-    return match?.start ?? -1;
-  }
-
-  String _cleanStaleImageReferences(String text) {
-    final refStart = _findRefSectionStart(text);
-    if (refStart == -1) return text;
-
-    final body = text.substring(0, refStart);
-    final refSection = text.substring(refStart);
-
-    final refMatches = RegExp(r'\[(img_ref_\d+)\]').allMatches(body);
-    final referencedLabels = <String>{};
-    for (final match in refMatches) {
-      final label = match.group(1);
-      if (label != null) {
-        referencedLabels.add(label);
-      }
-    }
-
-    final refLines = refSection.split('\n');
-    final cleanedRefLines = <String>[];
-    for (final line in refLines) {
-      final refDefMatch = RegExp(
-        r'^\[(img_ref_\d+)\]:\s*data:image/',
-      ).firstMatch(line);
-      if (refDefMatch != null) {
-        final label = refDefMatch.group(1);
-        if (label != null && !referencedLabels.contains(label)) {
-          continue;
-        }
-      }
-      cleanedRefLines.add(line);
-    }
-
-    final cleanedRefSection = cleanedRefLines.join('\n').trim();
-    final cleanedBody = body.trimRight();
-
-    if (cleanedRefSection.isEmpty) {
-      return '$cleanedBody\n';
-    }
-
-    return '$cleanedBody\n\n$cleanedRefSection\n';
-  }
-
   void _saveNote() {
-    final originalText = _controller.text;
-    final cleanedText = _cleanStaleImageReferences(originalText);
-
-    if (cleanedText != originalText) {
-      _controller.isProgrammaticUpdate = true;
-      _controller.text = cleanedText;
-      _controller.isProgrammaticUpdate = false;
-    }
-
-    widget.onSave(cleanedText, _tags);
+    widget.onSave(_composeContent(), _tags);
   }
 
   Future<void> _exportPdf(BuildContext context) async {
-    final content = _controller.text;
+    final content = _composeContent();
     if (content.trim().isEmpty) return;
     await PdfExportHelper.exportMarkdown(
       context: context,
@@ -406,7 +342,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final hasChanges = _controller.text != widget.initialContent;
+    final hasChanges = _controller.text != _initialBody;
 
     return PopScope(
       canPop: false,
@@ -610,7 +546,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                     ? ZoomableArea(
                         accentColor: AppTheme.accentTeal,
                         builder: (context, scale, physics) {
-                          final content = _controller.text;
+                          final content = _composeContent();
                           final title = _getTitle(content);
                           final body = _getPureContent(content);
                           return SingleChildScrollView(

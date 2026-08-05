@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/notes/widgets/markdown_span_builder.dart';
 
 class MarkdownTextEditingController extends TextEditingController {
-  final BuildContext context;
   bool showRawSource;
   final Color accentColor;
-  bool isProgrammaticUpdate = false;
   late final MarkdownSpanBuilder _spanBuilder;
+  bool _rewriting = false;
+
+  static final _listPrefix = RegExp(
+    r'^(\s*)([-*+]\s\[[ x]\]\s|[-*+]\s|\d+[.)]\s)',
+  );
 
   MarkdownTextEditingController({
-    required this.context,
     super.text,
     this.showRawSource = false,
     this.accentColor = AppTheme.accentTeal,
@@ -19,56 +20,52 @@ class MarkdownTextEditingController extends TextEditingController {
     _spanBuilder = MarkdownSpanBuilder(accentColor: accentColor);
   }
 
-  int _findRefSectionStart(String txt) {
-    final match = RegExp(r'\[img_ref_\d+\]: data:image/').firstMatch(txt);
-    return match?.start ?? -1;
-  }
-
-  void _showReadOnlyWarning() {
-    final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.notesAttachmentReadOnly),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
+  // List continuation runs off the incoming value, not a key event: Android's
+  // soft Enter is inserted by the engine and never reaches the key handler.
   @override
   set value(TextEditingValue newValue) {
-    if (isProgrammaticUpdate || showRawSource) {
+    if (_rewriting) {
       super.value = newValue;
       return;
     }
+    _rewriting = true;
+    super.value = _continueList(value, newValue) ?? newValue;
+    _rewriting = false;
+  }
 
-    final oldText = text;
-    final oldRefStart = _findRefSectionStart(oldText);
+  TextEditingValue? _continueList(TextEditingValue old, TextEditingValue next) {
+    final selection = next.selection;
+    if (!selection.isCollapsed) return null;
 
-    if (oldRefStart == -1) {
-      super.value = newValue;
-      return;
+    final cursor = selection.baseOffset;
+    final text = next.text;
+    if (cursor < 2 || text.length != old.text.length + 1) return null;
+    if (text[cursor - 1] != '\n') return null;
+    if (text.substring(0, cursor - 1) + text.substring(cursor) != old.text) {
+      return null;
     }
 
-    final oldRefText = oldText.substring(oldRefStart);
-    final newText = newValue.text;
+    final newlinePos = cursor - 1;
+    final lineStart = text.lastIndexOf('\n', newlinePos - 1) + 1;
+    final match = _listPrefix.firstMatch(text.substring(lineStart, newlinePos));
+    if (match == null) return null;
 
-    if (!newText.endsWith(oldRefText)) {
-      if (newText.isEmpty) {
-        super.value = newValue;
-        return;
-      }
-      _showReadOnlyWarning();
-      return;
+    final prefix = match.group(0)!;
+    final rest = text.substring(lineStart + prefix.length, newlinePos);
+    final after = text.substring(cursor);
+
+    if (rest.trim().isEmpty) {
+      final before = text.substring(0, lineStart);
+      return TextEditingValue(
+        text: '$before\n$after',
+        selection: TextSelection.collapsed(offset: before.length + 1),
+      );
     }
 
-    final newRefStart = newText.length - oldRefText.length;
-    if (newRefStart > 0 && newText[newRefStart - 1] != '\n') {
-      _showReadOnlyWarning();
-      return;
-    }
-
-    super.value = newValue;
+    return TextEditingValue(
+      text: '${text.substring(0, cursor)}$prefix$after',
+      selection: TextSelection.collapsed(offset: cursor + prefix.length),
+    );
   }
 
   @override

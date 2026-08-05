@@ -18,7 +18,6 @@ class MarkdownSpanBuilder {
     final lines = text.split('\n');
     final spans = <TextSpan>[];
     bool inCodeBlock = false;
-    bool firstRefSeen = false;
 
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i];
@@ -44,67 +43,18 @@ class MarkdownSpanBuilder {
       } else if (inCodeBlock) {
         lineSpan = _styleCodeLine(styledPart, baseTextStyle, theme);
       } else {
-        final refDefMatch = RegExp(
-          r'^(\[[^\]]+\]:\s*)(data:image/[^;]+;base64,)(.*)$',
+        final headerMatch = RegExp(
+          r'^(#{1,6})(\s+)(.*)$',
         ).firstMatch(styledPart);
-        if (refDefMatch != null) {
-          final prefix = refDefMatch.group(1)!;
-          final mime = refDefMatch.group(2)!;
-          final base64Data = refDefMatch.group(3)!;
-          final previewData = base64Data.length > 30
-              ? '${base64Data.substring(0, 30)}...'
-              : base64Data;
-
-          final isFirst = !firstRefSeen;
-          if (isFirst) firstRefSeen = true;
-
-          final refBgColor = theme.colorScheme.surfaceContainerHighest
-              .withValues(alpha: 0.15);
-          final lineStyle = baseTextStyle.copyWith(
-            backgroundColor: refBgColor,
-            decoration: isFirst ? TextDecoration.overline : null,
-            decorationColor: isFirst ? theme.colorScheme.outlineVariant : null,
-            decorationThickness: isFirst ? 2.0 : null,
-          );
-
-          lineSpan = TextSpan(
-            style: lineStyle,
-            children: [
-              TextSpan(
-                text: prefix,
-                style: lineStyle.copyWith(
-                  color: accentColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextSpan(
-                text: mime,
-                style: lineStyle.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
-                ),
-              ),
-              TextSpan(
-                text: previewData,
-                style: lineStyle.copyWith(
-                  fontFamily: 'monospace',
-                  fontFamilyFallback: const ['Courier', 'Consolas'],
-                  fontSize: 12,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.25),
-                ),
-              ),
-            ],
-          );
-        }
-
-        final headerMatch = RegExp(r'^(#{1,6})\s+(.*)$').firstMatch(styledPart);
         if (headerMatch != null) {
-          final level = headerMatch.group(1)!.length;
-          final content = headerMatch.group(2)!;
+          final hashes = headerMatch.group(1)!;
+          final gap = headerMatch.group(2)!;
+          final content = headerMatch.group(3)!;
           lineSpan = _buildHeaderLine(
-            styledPart,
-            headerMatch.group(1)!,
+            hashes,
+            gap,
             content,
-            level,
+            hashes.length,
             baseTextStyle,
             theme,
           );
@@ -129,7 +79,6 @@ class MarkdownSpanBuilder {
           final checkboxVal = bulletMatch.group(3);
           final content = bulletMatch.group(4) ?? '';
           lineSpan = _buildListLine(
-            styledPart,
             prefix,
             marker,
             checkboxVal,
@@ -147,7 +96,6 @@ class MarkdownSpanBuilder {
           final marker = orderedMatch.group(2) ?? '';
           final content = orderedMatch.group(3) ?? '';
           lineSpan = _buildListLine(
-            styledPart,
             prefix,
             marker,
             null,
@@ -213,8 +161,8 @@ class MarkdownSpanBuilder {
   }
 
   TextSpan _buildHeaderLine(
-    String fullLine,
     String hashPrefix,
+    String gap,
     String content,
     int level,
     TextStyle baseStyle,
@@ -254,7 +202,7 @@ class MarkdownSpanBuilder {
     return TextSpan(
       children: [
         TextSpan(
-          text: '$hashPrefix ',
+          text: '$hashPrefix$gap',
           style: headerStyle.copyWith(color: fadedColor),
         ),
         ..._parseInlineStyles(content, headerStyle, theme),
@@ -284,8 +232,9 @@ class MarkdownSpanBuilder {
     );
   }
 
+  static final _checkboxMarker = RegExp(r'^([-*+])(\s+)(\[)([ xX])(\])(\s+)$');
+
   TextSpan _buildListLine(
-    String fullLine,
     String indent,
     String marker,
     String? checkboxVal,
@@ -303,30 +252,38 @@ class MarkdownSpanBuilder {
       children.add(TextSpan(text: indent, style: baseStyle));
     }
 
-    if (checkboxVal != null) {
-      final isChecked = checkboxVal.toLowerCase() == 'x';
+    final checkboxParts = checkboxVal == null
+        ? null
+        : _checkboxMarker.firstMatch(marker);
+
+    if (checkboxParts != null) {
+      final isChecked = checkboxVal!.toLowerCase() == 'x';
       final bracketColor = theme.colorScheme.onSurface.withValues(alpha: 0.35);
       final checkColor = isChecked
           ? AppTheme.statusGreen
           : theme.colorScheme.onSurface.withValues(alpha: 0.35);
 
-      final bulletChar = marker[0];
-      children.add(TextSpan(text: '$bulletChar ', style: markerStyle));
       children.add(
         TextSpan(
-          text: '[',
+          text: '${checkboxParts.group(1)}${checkboxParts.group(2)}',
+          style: markerStyle,
+        ),
+      );
+      children.add(
+        TextSpan(
+          text: checkboxParts.group(3),
           style: TextStyle(color: bracketColor),
         ),
       );
       children.add(
         TextSpan(
-          text: isChecked ? 'x' : ' ',
+          text: checkboxParts.group(4),
           style: TextStyle(color: checkColor, fontWeight: FontWeight.bold),
         ),
       );
       children.add(
         TextSpan(
-          text: '] ',
+          text: '${checkboxParts.group(5)}${checkboxParts.group(6)}',
           style: TextStyle(color: bracketColor),
         ),
       );

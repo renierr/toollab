@@ -2264,10 +2264,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get notesImageProcessing => 'Bild wird verarbeitet...';
 
   @override
-  String get notesAttachmentReadOnly =>
-      'Anhangsdatenbereich ist schreibgeschützt';
-
-  @override
   String get notesToolbarBold => 'Fett';
 
   @override
