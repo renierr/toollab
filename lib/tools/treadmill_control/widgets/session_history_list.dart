@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,8 +6,8 @@ import 'package:file_selector/file_selector.dart' as fs;
 import 'package:intl/intl.dart';
 import '../treadmill_control_state.dart';
 import '../treadmill_session.dart';
-import '../treadmill_control_colors.dart';
 import 'session_history_list_item.dart';
+import 'workout_details_sheet.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../helpers/file_save_helper.dart';
 import '../../../../widgets/collapsible_section.dart';
@@ -266,145 +265,7 @@ class SessionHistoryList extends StatelessWidget {
   }
 
   void _viewSessionDetails(BuildContext context, TreadmillSession session) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        maxChildSize: 0.95,
-        minChildSize: 0.5,
-        builder: (context, controller) {
-          final theme = Theme.of(context);
-          final isDark = theme.brightness == Brightness.dark;
-
-          final int mins = session.elapsedTime ~/ 60;
-          final int secs = session.elapsedTime % 60;
-
-          return Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-            ),
-            child: ListView(
-              controller: controller,
-              padding: const EdgeInsets.all(16),
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.outline,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Workout Details',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Table(
-                  children: [
-                    _buildRow(
-                      'Distance',
-                      '${session.distance.toStringAsFixed(2)} km',
-                    ),
-                    _buildRow('Duration', '${mins}m ${secs}s'),
-                    _buildRow('Calories', '${session.calories} kcal'),
-                    _buildRow(
-                      'Avg Speed',
-                      '${session.avgSpeed.toStringAsFixed(1)} km/h',
-                    ),
-                    _buildRow(
-                      'Max Speed',
-                      '${session.maxSpeed.toStringAsFixed(1)} km/h',
-                    ),
-                    _buildRow(
-                      'Avg Heart Rate',
-                      '${session.avgHeartRate.round()} bpm',
-                    ),
-                    _buildRow(
-                      'Max Heart Rate',
-                      '${session.maxHeartRate.round()} bpm',
-                    ),
-                    _buildRow('Steps', '${session.steps}'),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Workout Graph',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (session.dataPoints.isEmpty)
-                  const SizedBox(
-                    height: 120,
-                    child: Center(child: Text('No graph data available')),
-                  )
-                else
-                  Container(
-                    height: 150,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.02)
-                          : Colors.black.withValues(alpha: 0.02),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                      ),
-                    ),
-                    child: CustomPaint(
-                      painter: _ChartPainter(
-                        points: session.dataPoints,
-                        isDark: isDark,
-                      ),
-                      child: Container(),
-                    ),
-                  ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Close'),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  TableRow _buildRow(String label, String value) {
-    return TableRow(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text(
-            value,
-            textAlign: TextAlign.end,
-            style: const TextStyle(fontFamily: 'monospace'),
-          ),
-        ),
-      ],
-    );
+    WorkoutDetailsSheet.show(context, session);
   }
 }
 
@@ -414,98 +275,4 @@ class _SessionGroup {
   final bool isRecent;
 
   const _SessionGroup(this.title, this.sessions, this.isRecent);
-}
-
-class _ChartPainter extends CustomPainter {
-  final List<WorkoutDataPoint> points;
-  final bool isDark;
-
-  _ChartPainter({required this.points, required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.isEmpty) return;
-
-    final paintSpeed = Paint()
-      ..color = TreadmillColors.cyanMetric
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    final paintHr = Paint()
-      ..color = TreadmillColors.redMetric
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    final paintGrid = Paint()
-      ..color = isDark
-          ? Colors.white.withValues(alpha: 0.05)
-          : Colors.black.withValues(alpha: 0.05)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-
-    for (int i = 1; i < 4; i++) {
-      final y = size.height * (i / 4);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paintGrid);
-    }
-
-    double maxSpeed = 12.0;
-    double maxHr = 180.0;
-    double minHr = 60.0;
-
-    for (final p in points) {
-      if (p.speed > maxSpeed) {
-        maxSpeed = p.speed;
-      }
-      if (p.heartRate > maxHr) {
-        maxHr = p.heartRate.toDouble();
-      }
-      if (p.heartRate > 0 && p.heartRate < minHr) {
-        minHr = p.heartRate.toDouble();
-      }
-    }
-
-    final double hrRange = max(40.0, maxHr - minHr);
-
-    final speedPoints = <Offset>[];
-    final hrPoints = <Offset>[];
-
-    final double dx = points.length > 1
-        ? size.width / (points.length - 1)
-        : size.width;
-
-    for (int i = 0; i < points.length; i++) {
-      final p = points[i];
-      final x = i * dx;
-
-      final ySpeed = size.height - (p.speed / maxSpeed) * size.height;
-      speedPoints.add(Offset(x, ySpeed));
-
-      if (p.heartRate > 0) {
-        final yHr =
-            size.height - ((p.heartRate - minHr) / hrRange) * size.height;
-        hrPoints.add(Offset(x, yHr));
-      }
-    }
-
-    if (speedPoints.length > 1) {
-      final path = Path()..moveTo(speedPoints[0].dx, speedPoints[0].dy);
-      for (int i = 1; i < speedPoints.length; i++) {
-        path.lineTo(speedPoints[i].dx, speedPoints[i].dy);
-      }
-      canvas.drawPath(path, paintSpeed);
-    }
-
-    if (hrPoints.length > 1) {
-      final path = Path()..moveTo(hrPoints[0].dx, hrPoints[0].dy);
-      for (int i = 1; i < hrPoints.length; i++) {
-        path.lineTo(hrPoints[i].dx, hrPoints[i].dy);
-      }
-      canvas.drawPath(path, paintHr);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ChartPainter oldDelegate) {
-    return oldDelegate.points != points || oldDelegate.isDark != isDark;
-  }
 }

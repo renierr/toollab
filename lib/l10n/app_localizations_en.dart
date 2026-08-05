@@ -5373,6 +5373,88 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get treadmillDetailsTitle => 'Workout Details';
+
+  @override
+  String get treadmillDetailsDuration => 'Duration';
+
+  @override
+  String get treadmillDetailsPaceUnit => 'min/km';
+
+  @override
+  String get treadmillDetailsAvgSpeed => 'Avg speed';
+
+  @override
+  String get treadmillDetailsMaxSpeed => 'Max speed';
+
+  @override
+  String get treadmillDetailsAvgHr => 'Avg heart rate';
+
+  @override
+  String get treadmillDetailsMaxHr => 'Max heart rate';
+
+  @override
+  String get treadmillDetailsMinHr => 'Min heart rate';
+
+  @override
+  String get treadmillDetailsCalories => 'Calories';
+
+  @override
+  String get treadmillDetailsSteps => 'Steps';
+
+  @override
+  String get treadmillDetailsAvgIncline => 'Avg incline';
+
+  @override
+  String get treadmillDetailsMaxIncline => 'Max incline';
+
+  @override
+  String get treadmillDetailsSpeed => 'Speed';
+
+  @override
+  String get treadmillDetailsChart => 'Speed & heart rate';
+
+  @override
+  String get treadmillDetailsIncline => 'Incline';
+
+  @override
+  String get treadmillDetailsZones => 'Heart rate zones';
+
+  @override
+  String get treadmillDetailsZone1 => 'Recovery';
+
+  @override
+  String get treadmillDetailsZone2 => 'Easy';
+
+  @override
+  String get treadmillDetailsZone3 => 'Aerobic';
+
+  @override
+  String get treadmillDetailsZone4 => 'Threshold';
+
+  @override
+  String get treadmillDetailsZone5 => 'Maximum';
+
+  @override
+  String get treadmillDetailsSplits => 'Kilometer splits';
+
+  @override
+  String get treadmillDetailsSplitKm => 'Km';
+
+  @override
+  String get treadmillDetailsSplitTime => 'Time';
+
+  @override
+  String get treadmillDetailsSplitPace => 'Pace';
+
+  @override
+  String get treadmillDetailsSplitHr => 'HR';
+
+  @override
+  String get treadmillDetailsNoSamples =>
+      'No detailed samples were recorded for this workout';
+
+  @override
   String get toolNameAudioLab => 'Audio Lab';
 
   @override

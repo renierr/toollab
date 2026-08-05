@@ -5410,6 +5410,88 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get treadmillDetailsTitle => 'Trainingsdetails';
+
+  @override
+  String get treadmillDetailsDuration => 'Dauer';
+
+  @override
+  String get treadmillDetailsPaceUnit => 'min/km';
+
+  @override
+  String get treadmillDetailsAvgSpeed => 'Ø Geschwindigkeit';
+
+  @override
+  String get treadmillDetailsMaxSpeed => 'Max. Geschwindigkeit';
+
+  @override
+  String get treadmillDetailsAvgHr => 'Ø Herzfrequenz';
+
+  @override
+  String get treadmillDetailsMaxHr => 'Max. Herzfrequenz';
+
+  @override
+  String get treadmillDetailsMinHr => 'Min. Herzfrequenz';
+
+  @override
+  String get treadmillDetailsCalories => 'Kalorien';
+
+  @override
+  String get treadmillDetailsSteps => 'Schritte';
+
+  @override
+  String get treadmillDetailsAvgIncline => 'Ø Steigung';
+
+  @override
+  String get treadmillDetailsMaxIncline => 'Max. Steigung';
+
+  @override
+  String get treadmillDetailsSpeed => 'Geschwindigkeit';
+
+  @override
+  String get treadmillDetailsChart => 'Geschwindigkeit & Herzfrequenz';
+
+  @override
+  String get treadmillDetailsIncline => 'Steigung';
+
+  @override
+  String get treadmillDetailsZones => 'Herzfrequenzzonen';
+
+  @override
+  String get treadmillDetailsZone1 => 'Erholung';
+
+  @override
+  String get treadmillDetailsZone2 => 'Leicht';
+
+  @override
+  String get treadmillDetailsZone3 => 'Aerob';
+
+  @override
+  String get treadmillDetailsZone4 => 'Schwelle';
+
+  @override
+  String get treadmillDetailsZone5 => 'Maximum';
+
+  @override
+  String get treadmillDetailsSplits => 'Kilometer-Splits';
+
+  @override
+  String get treadmillDetailsSplitKm => 'km';
+
+  @override
+  String get treadmillDetailsSplitTime => 'Zeit';
+
+  @override
+  String get treadmillDetailsSplitPace => 'Pace';
+
+  @override
+  String get treadmillDetailsSplitHr => 'HF';
+
+  @override
+  String get treadmillDetailsNoSamples =>
+      'Für dieses Training wurden keine Detaildaten aufgezeichnet';
+
+  @override
   String get toolNameAudioLab => 'Audio Lab';
 
   @override

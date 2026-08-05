@@ -9719,6 +9719,168 @@ abstract class AppLocalizations {
   /// **'Successfully imported {count} workouts'**
   String treadmillHistoryImportSuccess(int count);
 
+  /// No description provided for @treadmillDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Details'**
+  String get treadmillDetailsTitle;
+
+  /// No description provided for @treadmillDetailsDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get treadmillDetailsDuration;
+
+  /// No description provided for @treadmillDetailsPaceUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'min/km'**
+  String get treadmillDetailsPaceUnit;
+
+  /// No description provided for @treadmillDetailsAvgSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg speed'**
+  String get treadmillDetailsAvgSpeed;
+
+  /// No description provided for @treadmillDetailsMaxSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Max speed'**
+  String get treadmillDetailsMaxSpeed;
+
+  /// No description provided for @treadmillDetailsAvgHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg heart rate'**
+  String get treadmillDetailsAvgHr;
+
+  /// No description provided for @treadmillDetailsMaxHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Max heart rate'**
+  String get treadmillDetailsMaxHr;
+
+  /// No description provided for @treadmillDetailsMinHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Min heart rate'**
+  String get treadmillDetailsMinHr;
+
+  /// No description provided for @treadmillDetailsCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get treadmillDetailsCalories;
+
+  /// No description provided for @treadmillDetailsSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get treadmillDetailsSteps;
+
+  /// No description provided for @treadmillDetailsAvgIncline.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg incline'**
+  String get treadmillDetailsAvgIncline;
+
+  /// No description provided for @treadmillDetailsMaxIncline.
+  ///
+  /// In en, this message translates to:
+  /// **'Max incline'**
+  String get treadmillDetailsMaxIncline;
+
+  /// No description provided for @treadmillDetailsSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get treadmillDetailsSpeed;
+
+  /// No description provided for @treadmillDetailsChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed & heart rate'**
+  String get treadmillDetailsChart;
+
+  /// No description provided for @treadmillDetailsIncline.
+  ///
+  /// In en, this message translates to:
+  /// **'Incline'**
+  String get treadmillDetailsIncline;
+
+  /// No description provided for @treadmillDetailsZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate zones'**
+  String get treadmillDetailsZones;
+
+  /// No description provided for @treadmillDetailsZone1.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery'**
+  String get treadmillDetailsZone1;
+
+  /// No description provided for @treadmillDetailsZone2.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get treadmillDetailsZone2;
+
+  /// No description provided for @treadmillDetailsZone3.
+  ///
+  /// In en, this message translates to:
+  /// **'Aerobic'**
+  String get treadmillDetailsZone3;
+
+  /// No description provided for @treadmillDetailsZone4.
+  ///
+  /// In en, this message translates to:
+  /// **'Threshold'**
+  String get treadmillDetailsZone4;
+
+  /// No description provided for @treadmillDetailsZone5.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum'**
+  String get treadmillDetailsZone5;
+
+  /// No description provided for @treadmillDetailsSplits.
+  ///
+  /// In en, this message translates to:
+  /// **'Kilometer splits'**
+  String get treadmillDetailsSplits;
+
+  /// No description provided for @treadmillDetailsSplitKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Km'**
+  String get treadmillDetailsSplitKm;
+
+  /// No description provided for @treadmillDetailsSplitTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get treadmillDetailsSplitTime;
+
+  /// No description provided for @treadmillDetailsSplitPace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace'**
+  String get treadmillDetailsSplitPace;
+
+  /// No description provided for @treadmillDetailsSplitHr.
+  ///
+  /// In en, this message translates to:
+  /// **'HR'**
+  String get treadmillDetailsSplitHr;
+
+  /// No description provided for @treadmillDetailsNoSamples.
+  ///
+  /// In en, this message translates to:
+  /// **'No detailed samples were recorded for this workout'**
+  String get treadmillDetailsNoSamples;
+
   /// No description provided for @toolNameAudioLab.
   ///
   /// In en, this message translates to:

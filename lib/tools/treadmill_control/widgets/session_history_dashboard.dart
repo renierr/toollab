@@ -14,6 +14,7 @@ import '../treadmill_control_colors.dart';
 import '../treadmill_control_state.dart';
 import '../treadmill_session.dart';
 import '../../../l10n/app_localizations.dart';
+import 'treadmill_metric_tile.dart';
 
 class SessionHistoryDashboard extends StatefulWidget {
   const SessionHistoryDashboard({super.key});
@@ -458,33 +459,33 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
               ),
             ),
             const SizedBox(height: 16),
-            _MetricGrid(
+            TreadmillMetricGrid(
               children: [
-                _Metric(
+                TreadmillMetricTile(
                   label: l10n.treadmillHistoryTotalDistance,
                   value: '${totalDistance.toStringAsFixed(1)} km',
                   icon: Icons.route_outlined,
                   color: TreadmillColors.cyanMetric,
                 ),
-                _Metric(
+                TreadmillMetricTile(
                   label: l10n.treadmillHistoryTotalDuration,
                   value: _duration(totalDuration),
                   icon: Icons.timer_outlined,
                   color: TreadmillColors.greenMetric,
                 ),
-                _Metric(
+                TreadmillMetricTile(
                   label: l10n.treadmillHistoryTotalCalories,
                   value: '$totalCalories kcal',
                   icon: Icons.local_fire_department_outlined,
                   color: TreadmillColors.amberMetric,
                 ),
-                _Metric(
+                TreadmillMetricTile(
                   label: l10n.treadmillHistoryAverageSpeed,
                   value: '${avgSpeed.toStringAsFixed(1)} km/h',
                   icon: Icons.speed_outlined,
                   color: TreadmillColors.redMetric,
                 ),
-                _Metric(
+                TreadmillMetricTile(
                   label: l10n.treadmillHistoryWorkoutCount,
                   value: '${sessions.length}',
                   icon: Icons.directions_run_outlined,
@@ -653,69 +654,6 @@ class _PdfBarChart extends pw.StatelessWidget {
 
 String _duration(int seconds) =>
     '${seconds ~/ 3600}h ${(seconds % 3600) ~/ 60}m';
-
-class _MetricGrid extends StatelessWidget {
-  final List<_Metric> children;
-  const _MetricGrid({required this.children});
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) => Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: children
-          .map(
-            (child) => SizedBox(
-              width: constraints.maxWidth < 500
-                  ? (constraints.maxWidth - 12) / 2
-                  : (constraints.maxWidth - 36) / 4,
-              child: child,
-            ),
-          )
-          .toList(),
-    ),
-  );
-}
-
-class _Metric extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  const _Metric({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _BestCard extends StatelessWidget {
   final IconData icon;
