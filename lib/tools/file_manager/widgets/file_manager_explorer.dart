@@ -284,6 +284,7 @@ class FileManagerExplorer extends StatelessWidget {
                           readOnly: state.isReadOnly,
                           showImagePreviews: !state.isRemote,
                           metadata: state.metadataFor(state.entries[index]),
+                          childCount: state.childCountFor(state.entries[index]),
                         ),
                       ),
               ),
@@ -402,6 +403,7 @@ class _EntryTile extends StatelessWidget {
   final bool readOnly;
   final bool showImagePreviews;
   final ValueListenable<FileStat?> metadata;
+  final ValueListenable<int?> childCount;
   const _EntryTile({
     required this.entry,
     required this.onOpen,
@@ -422,6 +424,7 @@ class _EntryTile extends StatelessWidget {
     required this.readOnly,
     required this.showImagePreviews,
     required this.metadata,
+    required this.childCount,
   });
   @override
   Widget build(BuildContext context) {
@@ -455,7 +458,11 @@ class _EntryTile extends StatelessWidget {
       subtitle: Row(
         children: [
           Expanded(
-            child: _EntryMetadata(entry: entry, metadata: metadata),
+            child: _EntryMetadata(
+              entry: entry,
+              metadata: metadata,
+              childCount: childCount,
+            ),
           ),
           if (isInClipboard)
             Icon(
@@ -575,37 +582,42 @@ class _EntryTile extends StatelessWidget {
       !entry.isDirectory && entry.name.toLowerCase().endsWith('.apk');
 }
 
-class _EntryMetadata extends StatefulWidget {
+class _EntryMetadata extends StatelessWidget {
   final FileManagerEntry entry;
   final ValueListenable<FileStat?> metadata;
+  final ValueListenable<int?> childCount;
 
-  const _EntryMetadata({required this.entry, required this.metadata});
+  const _EntryMetadata({
+    required this.entry,
+    required this.metadata,
+    required this.childCount,
+  });
 
-  @override
-  State<_EntryMetadata> createState() => _EntryMetadataState();
-}
-
-class _EntryMetadataState extends State<_EntryMetadata> {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<FileStat?>(
-    valueListenable: widget.metadata,
-    builder: (context, stat, _) {
-      final modified = widget.entry.modified ?? stat?.modified;
-      final size =
-          widget.entry.size ?? (widget.entry.isDirectory ? null : stat?.size);
-      final parts = <String>[];
-      if (modified != null) parts.add(FormatHelper.dateTime(modified));
-      if (size != null) parts.add(FormatHelper.fileSize(size));
-      return Text(
-        parts.join('  -  '),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          fontSize: 11,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
-    },
+    valueListenable: metadata,
+    builder: (context, stat, _) => ValueListenableBuilder<int?>(
+      valueListenable: childCount,
+      builder: (context, count, _) {
+        final modified = entry.modified ?? stat?.modified;
+        final size = entry.size ?? (entry.isDirectory ? null : stat?.size);
+        final parts = <String>[];
+        if (modified != null) parts.add(FormatHelper.dateTime(modified));
+        if (size != null) parts.add(FormatHelper.fileSize(size));
+        if (count != null) {
+          parts.add(AppLocalizations.of(context).fileManagerItemCount(count));
+        }
+        return Text(
+          parts.join('  -  '),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 11,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        );
+      },
+    ),
   );
 }
 

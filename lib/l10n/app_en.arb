@@ -3123,6 +3123,8 @@
   "fileManagerArchiveConflictTitle": "Archive files already exist",
   "fileManagerArchiveConflictMessage": "{count} extracted files already exist.",
   "@fileManagerArchiveConflictMessage": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerItemCount": "{count, plural, =1{1 item} other{{count} items}}",
+  "@fileManagerItemCount": { "placeholders": { "count": { "type": "int" } } },
   "fileManagerMoreEntries": "and {count} more",
   "@fileManagerMoreEntries": { "placeholders": { "count": { "type": "int" } } },
   "fileManagerSkip": "Skip",

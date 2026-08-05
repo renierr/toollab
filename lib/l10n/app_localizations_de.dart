@@ -6106,6 +6106,17 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String fileManagerItemCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Einträge',
+      one: '1 Eintrag',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String fileManagerMoreEntries(int count) {
     return 'und $count weitere';
   }

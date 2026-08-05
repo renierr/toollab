@@ -83,6 +83,11 @@ class FileManagerState extends ChangeNotifier {
   final List<FileManagerEntry> _metadataQueue = [];
   final Set<String> _queuedMetadataPaths = {};
   int _activeMetadataLoads = 0;
+  final Map<String, ValueNotifier<int?>> _childCounts = {};
+  final ValueNotifier<int?> _emptyChildCount = ValueNotifier<int?>(null);
+  final List<String> _childCountQueue = [];
+  final Set<String> _queuedChildCountPaths = {};
+  int _activeChildCountLoads = 0;
   int _metadataScan = 0;
   int _listing = 0;
   bool _isScanningMetadata = false;
@@ -203,10 +208,65 @@ class FileManagerState extends ChangeNotifier {
     }
   }
 
+  /// Lazily counts a folder's direct children, one visible row at a time so a
+  /// deep tree never stalls the listing.
+  ValueListenable<int?> childCountFor(FileManagerEntry entry) {
+    if (!entry.isDirectory ||
+        entry.isBrokenLink ||
+        entry.isArchiveEntry ||
+        isRemote) {
+      return _emptyChildCount;
+    }
+    final notifier = _childCounts.putIfAbsent(
+      entry.path,
+      () => ValueNotifier<int?>(null),
+    );
+    if (!_queuedChildCountPaths.contains(entry.path) &&
+        notifier.value == null) {
+      _queuedChildCountPaths.add(entry.path);
+      _childCountQueue.add(entry.path);
+      _startChildCountLoads();
+    }
+    return notifier;
+  }
+
+  void _startChildCountLoads() {
+    while (_activeChildCountLoads < 2 && _childCountQueue.isNotEmpty) {
+      final path = _childCountQueue.removeAt(0);
+      _activeChildCountLoads++;
+      _countChildren(path)
+          .then((count) => _childCounts[path]?.value = count)
+          .catchError((_) => null)
+          .whenComplete(() {
+            _activeChildCountLoads--;
+            _startChildCountLoads();
+          });
+    }
+  }
+
+  Future<int?> _countChildren(String path) async {
+    try {
+      var count = 0;
+      await for (final _ in Directory(path).list(followLinks: false)) {
+        count++;
+      }
+      return count;
+    } catch (error) {
+      return null;
+    }
+  }
+
   void _clearEntryLoaders() {
     for (final notifier in _metadata.values) {
       notifier.dispose();
     }
+    for (final notifier in _childCounts.values) {
+      notifier.dispose();
+    }
+    _childCounts.clear();
+    _childCountQueue.clear();
+    _queuedChildCountPaths.clear();
+    _activeChildCountLoads = 0;
     _metadata.clear();
     _metadataQueue.clear();
     _queuedMetadataPaths.clear();
@@ -1462,6 +1522,7 @@ class FileManagerState extends ChangeNotifier {
   void dispose() {
     _clearEntryLoaders();
     _emptyMetadata.dispose();
+    _emptyChildCount.dispose();
     super.dispose();
   }
 

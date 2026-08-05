@@ -11009,6 +11009,12 @@ abstract class AppLocalizations {
   /// **'{count} extracted files already exist.'**
   String fileManagerArchiveConflictMessage(int count);
 
+  /// No description provided for @fileManagerItemCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item} other{{count} items}}'**
+  String fileManagerItemCount(int count);
+
   /// No description provided for @fileManagerMoreEntries.
   ///
   /// In en, this message translates to:

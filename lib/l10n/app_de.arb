@@ -2282,6 +2282,8 @@
   "fileManagerArchiveConflictTitle": "Archivdateien existieren bereits",
   "fileManagerArchiveConflictMessage": "{count} entpackte Dateien existieren bereits.",
   "@fileManagerArchiveConflictMessage": { "placeholders": { "count": { "type": "int" } } },
+  "fileManagerItemCount": "{count, plural, =1{1 Eintrag} other{{count} Einträge}}",
+  "@fileManagerItemCount": { "placeholders": { "count": { "type": "int" } } },
   "fileManagerMoreEntries": "und {count} weitere",
   "@fileManagerMoreEntries": { "placeholders": { "count": { "type": "int" } } },
   "fileManagerSkip": "Überspringen",
