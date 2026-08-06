@@ -26,6 +26,34 @@ echo_ok()   { echo -e "${WRITE_OK}OK:${NC}   $1"; }
 echo_warn() { echo -e "${WRITE_WARN}WARN:${NC} $1"; }
 echo_err()  { echo -e "${WRITE_ERR}ERR:${NC}  $1"; }
 
+# MSYS2/Cygwin/Git Bash: this installer lays out a Linux install under $HOME,
+# which there is the MSYS home, not the Windows profile. Hand over to the
+# Windows installer instead of writing a useless tree.
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+    PS_SCRIPT="$SCRIPT_DIR/install.ps1"
+    if [ ! -f "$PS_SCRIPT" ]; then
+      echo_err "Windows detected, but install.ps1 is missing next to this script."
+      exit 1
+    fi
+    PS_EXE=$(command -v pwsh.exe || command -v powershell.exe || true)
+    if [ -z "$PS_EXE" ]; then
+      echo_err "Windows detected. Run install.bat instead (PowerShell not on PATH)."
+      exit 1
+    fi
+    if command -v cygpath >/dev/null 2>&1; then
+      PS_SCRIPT=$(cygpath -w "$PS_SCRIPT")
+    fi
+    declare -a PS_ARGS=()
+    if [ "${1:-}" = "--uninstall" ] || [ "${1:-}" = "-u" ]; then
+      PS_ARGS+=("-Uninstall")
+    fi
+    echo_warn "Windows detected — running install.ps1 instead of the Linux installer."
+    exec "$PS_EXE" -NoProfile -ExecutionPolicy Bypass -File "$PS_SCRIPT" "${PS_ARGS[@]}"
+    ;;
+esac
+
 stop_app() {
   local pid
   pid=$(pgrep -x "$EXE_NAME" 2>/dev/null || true)
