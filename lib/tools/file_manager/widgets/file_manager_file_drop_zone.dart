@@ -24,9 +24,11 @@ class _FileManagerFileDropZoneState extends State<FileManagerFileDropZone> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled) return widget.child;
     final theme = Theme.of(context);
+    // Never swap the subtree on enable/disable — that recreates the child's
+    // scroll position and drops the list scroll offset mid-operation.
     return DropTarget(
+      enable: widget.enabled,
       onDragEntered: (_) => setState(() => _dragging = true),
       onDragExited: (_) => setState(() => _dragging = false),
       onDragDone: (details) async {
@@ -42,7 +44,9 @@ class _FileManagerFileDropZoneState extends State<FileManagerFileDropZone> {
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
           border: Border.all(
-            color: _dragging ? theme.colorScheme.primary : Colors.transparent,
+            color: _dragging && widget.enabled
+                ? theme.colorScheme.primary
+                : Colors.transparent,
             width: 2,
           ),
         ),
