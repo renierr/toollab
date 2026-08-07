@@ -3334,6 +3334,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get qrScannerEngineMlKit => 'ML Kit';
 
   @override
+  String get qrCameraZoom => 'Zoom';
+
+  @override
+  String get qrCameraTorch => 'Taschenlampe';
+
+  @override
   String get qrImagesLabel => 'Bilder';
 
   @override

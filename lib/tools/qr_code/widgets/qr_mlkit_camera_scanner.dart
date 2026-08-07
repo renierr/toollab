@@ -6,7 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
+import 'camera_zoom_overlay.dart';
 import 'qr_scan_line_overlay.dart';
 import 'yuv_to_jpeg.dart';
 
@@ -41,6 +43,7 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
   bool _isCameraInitialized = false;
   bool _isProcessing = false;
   bool _handled = false;
+  bool _torchOn = false;
 
   static const Map<DeviceOrientation, int> _orientations = {
     DeviceOrientation.portraitUp: 0,
@@ -65,22 +68,29 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
         orElse: () => cameras.first,
       );
 
-      final controller = CameraController(
+      // Higher stream resolution keeps small/distant codes resolvable; fall
+      // back a step when the device rejects the preset.
+      CameraController controller = _createController(
         camera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-        imageFormatGroup: Platform.isAndroid
-            ? ImageFormatGroup.nv21
-            : ImageFormatGroup.bgra8888,
+        ResolutionPreset.veryHigh,
       );
-
       _controller = controller;
       onDispose(() {
         _controller?.dispose();
       });
 
-      await controller.initialize();
+      try {
+        await controller.initialize();
+      } catch (e) {
+        debugPrint('[QrMlKitCameraScanner] veryHigh failed, using high: $e');
+        await controller.dispose();
+        controller = _createController(camera, ResolutionPreset.high);
+        _controller = controller;
+        await controller.initialize();
+      }
       if (!mounted) return;
+
+      await _applyContinuousFocus(controller);
 
       _barcodeScanner = BarcodeScanner(formats: [BarcodeFormat.all]);
       onDispose(() {
@@ -96,6 +106,52 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
       });
     } catch (e) {
       debugPrint('[QrMlKitCameraScanner] Init failed: $e');
+    }
+  }
+
+  CameraController _createController(
+    CameraDescription camera,
+    ResolutionPreset preset,
+  ) {
+    return CameraController(
+      camera,
+      preset,
+      enableAudio: false,
+      imageFormatGroup: Platform.isAndroid
+          ? ImageFormatGroup.nv21
+          : ImageFormatGroup.bgra8888,
+    );
+  }
+
+  Future<void> _applyContinuousFocus(CameraController controller) async {
+    try {
+      await controller.setFocusMode(FocusMode.auto);
+      await controller.setExposureMode(ExposureMode.auto);
+    } catch (e) {
+      debugPrint('[QrMlKitCameraScanner] Focus setup failed: $e');
+    }
+  }
+
+  Future<void> _focusAt(Offset relative) async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    try {
+      await controller.setFocusPoint(relative);
+      await controller.setExposurePoint(relative);
+    } catch (e) {
+      debugPrint('[QrMlKitCameraScanner] Focus point failed: $e');
+    }
+  }
+
+  Future<void> _toggleTorch() async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    final next = !_torchOn;
+    try {
+      await controller.setFlashMode(next ? FlashMode.torch : FlashMode.off);
+      if (mounted) setState(() => _torchOn = next);
+    } catch (e) {
+      debugPrint('[QrMlKitCameraScanner] Torch toggle failed: $e');
     }
   }
 
@@ -196,30 +252,47 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
 
   @override
   Widget build(BuildContext context) {
-    if (!_isCameraInitialized || _controller == null) {
+    final controller = _controller;
+    if (!_isCameraInitialized || controller == null) {
       return const Center(child: CircularProgressIndicator());
     }
+    final l10n = AppLocalizations.of(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = constraints.biggest;
-        final deviceRatio = size.width / size.height;
+        final landscape = constraints.maxWidth > constraints.maxHeight;
+        final cameraRatio = controller.value.aspectRatio;
+        final previewRatio = landscape ? cameraRatio : 1 / cameraRatio;
 
-        final cameraRatio = _controller!.value.aspectRatio;
-        // Compensate ratio based on orientation
-        final double scale = 1 / (cameraRatio * deviceRatio);
-
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            ClipRect(
-              child: Transform.scale(
-                scale: scale < 1 ? 1 / scale : scale,
-                child: Center(child: CameraPreview(_controller!)),
+        return CameraZoomOverlay(
+          controller: controller,
+          accentColor: widget.accentColor,
+          onTapFocus: _focusAt,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ClipRect(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: previewRatio * 1000,
+                    height: 1000,
+                    child: CameraPreview(controller),
+                  ),
+                ),
               ),
-            ),
-            QrScanLineOverlay(accentColor: widget.accentColor),
-          ],
+              QrScanLineOverlay(accentColor: widget.accentColor),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: IconButton.filledTonal(
+                  tooltip: l10n.qrCameraTorch,
+                  onPressed: _toggleTorch,
+                  icon: Icon(_torchOn ? Icons.flash_on : Icons.flash_off),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

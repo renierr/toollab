@@ -1225,6 +1225,8 @@
   "qrModeImage": "Bild",
   "qrScannerEngineZxing": "ZXing",
   "qrScannerEngineMlKit": "ML Kit",
+  "qrCameraZoom": "Zoom",
+  "qrCameraTorch": "Taschenlampe",
   "qrImagesLabel": "Bilder",
   "qrScanDropTitle": "QR-Code aus einem Bild scannen",
   "qrScanDropSubtitle": "Bild hierher ziehen oder eines auswählen",

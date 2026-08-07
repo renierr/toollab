@@ -5855,6 +5855,18 @@ abstract class AppLocalizations {
   /// **'ML Kit'**
   String get qrScannerEngineMlKit;
 
+  /// No description provided for @qrCameraZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom'**
+  String get qrCameraZoom;
+
+  /// No description provided for @qrCameraTorch.
+  ///
+  /// In en, this message translates to:
+  /// **'Flashlight'**
+  String get qrCameraTorch;
+
   /// No description provided for @qrImagesLabel.
   ///
   /// In en, this message translates to:

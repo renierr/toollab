@@ -1966,6 +1966,8 @@
   "qrModeImage": "Image",
   "qrScannerEngineZxing": "ZXing",
   "qrScannerEngineMlKit": "ML Kit",
+  "qrCameraZoom": "Zoom",
+  "qrCameraTorch": "Flashlight",
   "qrImagesLabel": "Images",
   "qrScanDropTitle": "Scan a QR code from an image",
   "qrScanDropSubtitle": "Drop an image here, or browse to pick one",
