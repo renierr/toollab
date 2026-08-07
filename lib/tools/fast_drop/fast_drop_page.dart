@@ -54,6 +54,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   bool _isUploadingPending = false;
   FastDropMode _mode = FastDropMode.cloud;
   bool _incomingDialogOpen = false;
+  String? _pendingSendTempName;
 
   String get _localDeviceName {
     try {
@@ -486,6 +487,12 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         mimeType = MimeTypeHelper.getMimeType(file.name);
       }
       final size = await file.length();
+      // Android hands over a temp copy inside the scope's session dir; drop it
+      // once the send finished or was aborted. Desktop paths are the user's
+      // own files and must never be deleted.
+      _pendingSendTempName = Platform.isAndroid
+          ? file.path.split('/').last
+          : null;
       p2p.setPendingSendFile(
         path: file.path,
         name: file.name,
@@ -513,6 +520,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         final filename =
             'pasted-text-${DateTime.now().millisecondsSinceEpoch}.txt';
         final path = await _scope.createFile(filename, bytes: bytes);
+        _pendingSendTempName = filename;
         p2p.setPendingSendFile(
           path: path,
           name: filename,
@@ -528,6 +536,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
         final filename =
             'pasted-image-${DateTime.now().millisecondsSinceEpoch}.png';
         final path = await _scope.createFile(filename, bytes: imageBytes);
+        _pendingSendTempName = filename;
         p2p.setPendingSendFile(
           path: path,
           name: filename,
@@ -557,11 +566,22 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     final p2p = context.read<FastDropP2pState>();
     p2p.clearPendingSendFile();
     p2p.stopScanningForPeers();
+    unawaited(_cleanupPendingSendTemp());
   }
 
   Future<void> _onSelectPeer(P2pPeer peer) async {
     final p2p = context.read<FastDropP2pState>();
     await p2p.sendToPeer(peer, _localDeviceName);
+    // A failed send keeps the pending file for a retry — only clean up once
+    // the state cleared it.
+    if (!p2p.hasPendingSendFile) await _cleanupPendingSendTemp();
+  }
+
+  Future<void> _cleanupPendingSendTemp() async {
+    final name = _pendingSendTempName;
+    if (name == null) return;
+    _pendingSendTempName = null;
+    await _scope.deleteFile(name);
   }
 
   Future<void> _onToggleReceiving() async {
@@ -746,6 +766,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             child: _mode == FastDropMode.nearby
                 ? FastDropP2pView(
                     p2pState: p2pState,
+                    tempScope: _scope,
                     onFilesPickedToSend: _onFilePickedToSend,
                     onPasteClipboardToSend: _onPasteClipboardToSend,
                     onSelectPeer: _onSelectPeer,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
@@ -27,10 +28,12 @@ class FastDropP2pView extends StatelessWidget {
   final ValueChanged<P2pReceivedFile> onSaveReceived;
   final ValueChanged<P2pReceivedFile>? onDismissReceived;
   final VoidCallback onCancelTransfer;
+  final TempFileScope tempScope;
 
   const FastDropP2pView({
     super.key,
     required this.p2pState,
+    required this.tempScope,
     required this.onFilesPickedToSend,
     required this.onPasteClipboardToSend,
     required this.onSelectPeer,
@@ -142,6 +145,8 @@ class FastDropP2pView extends StatelessWidget {
                 subtitle: l10n.fastDropOrClickToBrowse,
                 compact: true,
                 multiple: false,
+                useAndroidStreamingPicker: true,
+                tempScope: tempScope,
               ),
               const SizedBox(height: 12),
               Wrap(
