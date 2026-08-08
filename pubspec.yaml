@@ -68,6 +68,7 @@ dependencies:
   dart_smb2: ^0.1.1
   flutter_secure_storage: ^10.3.1
   health_connector: ^3.9.4
+  health_connector_core: ^3.9.2
 
 dev_dependencies:
   flutter_test:

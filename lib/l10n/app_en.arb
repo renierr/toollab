@@ -3214,6 +3214,7 @@
   "healthDashboardAnySource": "Any source",
   "healthDashboardNap": "Nap",
   "healthDashboardNaps": "Naps",
+  "healthDashboardAllData": "All Health Data",
   "healthDashboardSleepDetails": "Sleep details",
   "healthDashboardSleepDuration": "Duration",
   "healthDashboardSleepStart": "Start",

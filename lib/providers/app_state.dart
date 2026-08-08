@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/tools/treadmill_control/treadmill_health_connect_publisher.dart';
+import 'package:tool_lab/tools/treadmill_control/treadmill_sync_delegate.dart';
 import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
@@ -259,6 +261,9 @@ class AppState extends ChangeNotifier {
         pulledTotal += results['pulled'] ?? 0;
         pushedTotal += results['pushed'] ?? 0;
         deletedTotal += results['deleted'] ?? 0;
+      }
+      if (delegates.any((delegate) => delegate is TreadmillSyncDelegate)) {
+        await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
       }
 
       _syncLastSynced = DateTime.now().millisecondsSinceEpoch;

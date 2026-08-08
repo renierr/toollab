@@ -6400,6 +6400,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardNaps => 'Nickerchen';
 
   @override
+  String get healthDashboardAllData => 'Alle Gesundheitsdaten';
+
+  @override
   String get healthDashboardSleepDetails => 'Schlafdetails';
 
   @override

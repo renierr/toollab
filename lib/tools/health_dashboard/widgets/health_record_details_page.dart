@@ -6,6 +6,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../health_record.dart';
 import 'health_source_badge.dart';
 import 'health_sleep_details_page.dart';
+import 'health_treadmill_details_page.dart';
 
 class HealthRecordDetailsPage extends StatelessWidget {
   final HealthRecord record;
@@ -16,6 +17,9 @@ class HealthRecordDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     if (record.type == 'sleep.session') {
       return HealthSleepDetailsPage(record: record);
+    }
+    if (record.type == 'workout.treadmill') {
+      return HealthTreadmillDetailsPage(record: record);
     }
     final l10n = AppLocalizations.of(context);
     final start = DateTime.fromMillisecondsSinceEpoch(record.startTime);

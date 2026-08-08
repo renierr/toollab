@@ -13,6 +13,7 @@ import 'health_metric_details_page.dart';
 import 'health_record_details_page.dart';
 import 'health_sleep_details_page.dart';
 import 'health_dashboard_trends.dart';
+import 'health_all_data_page.dart';
 import 'health_workouts_page.dart';
 
 class HealthDashboardContent extends StatelessWidget {
@@ -57,6 +58,19 @@ class HealthDashboardContent extends StatelessWidget {
                   unit: 'km',
                   color: AppTheme.accentTeal,
                   sum: true,
+                  workoutMetric: true,
+                ),
+              ),
+              HealthMetricCard(
+                icon: Icons.health_and_safety_outlined,
+                color: AppTheme.accentPurple,
+                label: l10n.healthDashboardAllData,
+                value:
+                    '${state.records.where((record) => record.type.startsWith('health.')).length}',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HealthAllDataPage(),
+                  ),
                 ),
               ),
               HealthMetricCard(
@@ -72,6 +86,7 @@ class HealthDashboardContent extends StatelessWidget {
                   unit: 'calories',
                   color: AppTheme.accentAmber,
                   sum: true,
+                  workoutMetric: true,
                 ),
               ),
               HealthMetricCard(
@@ -87,6 +102,7 @@ class HealthDashboardContent extends StatelessWidget {
                   unit: 'min',
                   color: AppTheme.accentBlue,
                   sum: true,
+                  workoutMetric: true,
                 ),
               ),
               HealthMetricCard(
@@ -259,6 +275,7 @@ class HealthDashboardContent extends StatelessWidget {
     required String unit,
     required Color color,
     bool sum = false,
+    bool workoutMetric = false,
   }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -269,6 +286,7 @@ class HealthDashboardContent extends StatelessWidget {
           unit: unit,
           color: color,
           sum: sum,
+          workoutMetric: workoutMetric,
         ),
       ),
     );

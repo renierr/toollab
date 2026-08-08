@@ -20,7 +20,7 @@ class TreadmillControlDb {
     );
     try {
       await _cachedDb!.migrate(
-        currentVersion: 1,
+        currentVersion: 2,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -44,6 +44,12 @@ class TreadmillControlDb {
                 created_at INTEGER NOT NULL
               )
             ''');
+          }
+          if (oldVersion < 2) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(tableName)} '
+              'ADD COLUMN health_connect_published_at INTEGER NOT NULL DEFAULT 0',
+            );
           }
         },
       );
@@ -139,6 +145,28 @@ class TreadmillControlDb {
       {'synced': 1},
       where: 'uid = ?',
       whereArgs: [uid],
+    );
+  }
+
+  Future<List<TreadmillSession>> getHealthConnectPendingSessions() async {
+    final db = await _getDb();
+    final rows = await db.query(
+      tableName,
+      where:
+          'deleted = 0 AND end_time IS NOT NULL '
+          'AND health_connect_published_at < updated_at',
+      orderBy: 'start_time ASC',
+    );
+    return rows.map(TreadmillSession.fromMap).toList();
+  }
+
+  Future<void> markHealthConnectPublished(TreadmillSession session) async {
+    final db = await _getDb();
+    await db.update(
+      tableName,
+      {'health_connect_published_at': session.updatedAt},
+      where: 'uid = ?',
+      whereArgs: [session.uid],
     );
   }
 

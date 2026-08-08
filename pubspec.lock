@@ -677,7 +677,7 @@ packages:
     source: hosted
     version: "3.9.4"
   health_connector_core:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: health_connector_core
       sha256: "8a2aa99574dcd8868447af7ab16dc9a26caba48a194e8141e6f6e54f7848f82d"

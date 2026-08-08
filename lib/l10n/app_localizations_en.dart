@@ -6359,6 +6359,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthDashboardNaps => 'Naps';
 
   @override
+  String get healthDashboardAllData => 'All Health Data';
+
+  @override
   String get healthDashboardSleepDetails => 'Sleep details';
 
   @override

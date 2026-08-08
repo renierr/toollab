@@ -25,10 +25,17 @@ class HealthSourceBadge extends StatelessWidget {
   }
 }
 
-enum HealthSourceApp { amazfit, huaweiHealth, googleFit, healthConnect }
+enum HealthSourceApp {
+  treadmill,
+  amazfit,
+  huaweiHealth,
+  googleFit,
+  healthConnect,
+}
 
 HealthSourceApp healthSourceFromPackage(String? packageName) =>
     switch (packageName) {
+      'ToolLab Treadmill' => HealthSourceApp.treadmill,
       'com.huami.watch.hmwatchmanager' => HealthSourceApp.amazfit,
       'com.huawei.health' => HealthSourceApp.huaweiHealth,
       'com.huawei.health.beta' => HealthSourceApp.huaweiHealth,
@@ -38,6 +45,7 @@ HealthSourceApp healthSourceFromPackage(String? packageName) =>
 
 extension HealthSourceAppDetails on HealthSourceApp {
   IconData get icon => switch (this) {
+    HealthSourceApp.treadmill => Icons.directions_run_rounded,
     HealthSourceApp.amazfit => Icons.watch_outlined,
     HealthSourceApp.huaweiHealth => Icons.watch_outlined,
     HealthSourceApp.googleFit => Icons.fitness_center_outlined,
@@ -45,6 +53,7 @@ extension HealthSourceAppDetails on HealthSourceApp {
   };
 
   String label(AppLocalizations l10n) => switch (this) {
+    HealthSourceApp.treadmill => l10n.toolNameTreadmillControl,
     HealthSourceApp.amazfit => l10n.healthDashboardAmazfit,
     HealthSourceApp.huaweiHealth => l10n.healthDashboardHuaweiHealth,
     HealthSourceApp.googleFit => l10n.healthDashboardGoogleFit,

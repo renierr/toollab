@@ -7,6 +7,7 @@ import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'treadmill_control_db.dart';
+import 'treadmill_health_connect_publisher.dart';
 import 'treadmill_session.dart';
 import 'treadmill_models.dart';
 import 'treadmill_protocol.dart';
@@ -152,6 +153,7 @@ class TreadmillControlState extends ChangeNotifier {
         userId: userId,
         delegate: TreadmillSyncDelegate(),
       );
+      await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
       await loadSessions();
       return result;
     } finally {

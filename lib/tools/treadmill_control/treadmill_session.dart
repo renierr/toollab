@@ -60,6 +60,7 @@ class TreadmillSession {
   final bool deleted;
   final int updatedAt;
   final int createdAt;
+  final int healthConnectPublishedAt;
 
   TreadmillSession({
     this.id,
@@ -79,6 +80,7 @@ class TreadmillSession {
     required this.deleted,
     required this.updatedAt,
     required this.createdAt,
+    this.healthConnectPublishedAt = 0,
   });
 
   /// Builds a completed session from the sampled data points, computing
@@ -145,6 +147,7 @@ class TreadmillSession {
     bool? deleted,
     int? updatedAt,
     int? createdAt,
+    int? healthConnectPublishedAt,
   }) => TreadmillSession(
     id: id ?? this.id,
     uid: uid ?? this.uid,
@@ -163,6 +166,8 @@ class TreadmillSession {
     deleted: deleted ?? this.deleted,
     updatedAt: updatedAt ?? this.updatedAt,
     createdAt: createdAt ?? this.createdAt,
+    healthConnectPublishedAt:
+        healthConnectPublishedAt ?? this.healthConnectPublishedAt,
   );
 
   Map<String, dynamic> toMap() => {
@@ -183,6 +188,7 @@ class TreadmillSession {
     'deleted': deleted ? 1 : 0,
     'updated_at': updatedAt,
     'created_at': createdAt,
+    'health_connect_published_at': healthConnectPublishedAt,
   };
 
   factory TreadmillSession.fromMap(Map<String, dynamic> map) {
@@ -214,6 +220,7 @@ class TreadmillSession {
       deleted: (map['deleted'] as int? ?? 0) == 1,
       updatedAt: map['updated_at'] as int? ?? 0,
       createdAt: map['created_at'] as int? ?? 0,
+      healthConnectPublishedAt: map['health_connect_published_at'] as int? ?? 0,
     );
   }
 }

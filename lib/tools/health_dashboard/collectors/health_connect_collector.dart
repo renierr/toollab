@@ -1,6 +1,11 @@
 import 'dart:io';
 
 import 'package:health_connector/health_connector.dart' as hc;
+// ignore: implementation_imports
+import 'package:health_connector_core/src/models/health_data_types/health_data_type_capabilities/readable_health_data_type.dart'
+    as core;
+// ignore: implementation_imports
+import 'package:health_connector_core/src/utils/health_record_data_type_extension.dart';
 
 import '../health_record.dart';
 import 'health_data_collector.dart';
@@ -15,15 +20,9 @@ class HealthConnectCollector implements HealthDataCollector {
     if (!Platform.isAndroid) return;
     final connector = await hc.HealthConnector.create();
     await connector.requestPermissions([
-      hc.HealthDataType.steps.readPermission,
-      hc.HealthDataType.weight.readPermission,
-      hc.HealthDataType.heartRateSeries.readPermission,
-      hc.HealthDataType.restingHeartRate.readPermission,
-      hc.HealthDataType.sleepSession.readPermission,
-      hc.HealthDataType.exerciseSession.readPermission,
-      hc.HealthDataType.distance.readPermission,
-      hc.HealthDataType.activeEnergyBurned.readPermission,
-      hc.HealthDataType.speedSeries.readPermission,
+      for (final type in hc.HealthDataType.healthConnectDataTypes)
+        if (type is core.ReadableHealthDataType)
+          (type as core.ReadableHealthDataType).readPermission,
       hc.HealthPlatformFeature.readHealthDataHistory.permission,
     ]);
   }
@@ -35,6 +34,10 @@ class HealthConnectCollector implements HealthDataCollector {
     final end = DateTime.now();
     final importStart = start ?? _initialImportStart;
     final records = <HealthRecord>[];
+
+    // Persist every readable record so data that has no dedicated dashboard yet
+    // remains available in All Health Data. Rich converters below replace these.
+    records.addAll(await _allRecords(connector, importStart, end));
 
     final steps = await connector.readRecords(
       hc.HealthDataType.steps.readInTimeRange(
@@ -112,6 +115,48 @@ class HealthConnectCollector implements HealthDataCollector {
       ),
     );
     return records;
+  }
+
+  Future<List<HealthRecord>> _allRecords(
+    hc.HealthConnector connector,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final records = <HealthRecord>[];
+    for (final type in hc.HealthDataType.healthConnectDataTypes) {
+      if (type is! core.ReadableInTimeRangeHealthDataType) continue;
+      try {
+        final readable = type as core.ReadableInTimeRangeHealthDataType;
+        final response = await connector.readRecords(
+          readable.readInTimeRange(startTime: start, endTime: end),
+        );
+        records.addAll(response.records.map(_genericRecord));
+      } catch (_) {
+        // Health Connect can reject unavailable or unsupported data types.
+      }
+    }
+    return records;
+  }
+
+  HealthRecord _genericRecord(hc.HealthRecord record) {
+    final (startTime, endTime) = switch (record) {
+      hc.InstantHealthRecord(:final time) => (time, time),
+      hc.IntervalHealthRecord(:final startTime, :final endTime) => (
+        startTime,
+        endTime,
+      ),
+    };
+    return _record(
+      record: record,
+      type: 'health.${record.dataType.id}',
+      startTime: startTime,
+      endTime: endTime,
+      value: {
+        'dataType': record.dataType.id,
+        'category': record.category.name,
+        'recordType': record.runtimeType.toString(),
+      },
+    );
   }
 
   HealthRecord _steps(hc.StepsRecord record) => _record(
@@ -291,7 +336,11 @@ class HealthConnectCollector implements HealthDataCollector {
       type: type,
       startTime: startTime.millisecondsSinceEpoch,
       endTime: endTime.millisecondsSinceEpoch,
-      value: value,
+      value: {
+        ...value,
+        if (record.metadata.clientRecordId != null)
+          'clientRecordId': record.metadata.clientRecordId,
+      },
       sourceName: sourceName,
       aggregateIncluded: true,
       createdAt: updatedAt,

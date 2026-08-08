@@ -2373,6 +2373,7 @@
   "healthDashboardAnySource": "Beliebige Quelle",
   "healthDashboardNap": "Nickerchen",
   "healthDashboardNaps": "Nickerchen",
+  "healthDashboardAllData": "Alle Gesundheitsdaten",
   "healthDashboardSleepDetails": "Schlafdetails",
   "healthDashboardSleepDuration": "Dauer",
   "healthDashboardSleepStart": "Beginn",

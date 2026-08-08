@@ -6,6 +6,7 @@ import 'package:tool_lab/services/database_service.dart';
 
 import 'collectors/health_connect_collector.dart';
 import 'collectors/treadmill_collector.dart';
+import '../treadmill_control/treadmill_health_connect_publisher.dart';
 import 'config.dart';
 import 'health_database.dart';
 import 'health_record.dart';
@@ -197,6 +198,38 @@ class HealthDashboardState extends ChangeNotifier {
       [...treadmillWorkouts, ...healthConnectWorkouts]
         ..sort((a, b) => b.startTime.compareTo(a.startTime));
 
+  List<HealthRecord> get effectiveWorkouts => [
+    ...treadmillWorkouts,
+    ...healthConnectWorkouts.where(
+      (record) => !treadmillWorkouts.any(
+        (local) => _isPublishedTreadmillCopy(local, record),
+      ),
+    ),
+  ];
+
+  List<HealthRecord> workoutRecordsOnDay(DateTime day) {
+    final treadmill = treadmillWorkouts
+        .where((record) => _isOnDay(record, day))
+        .toList();
+    final healthConnect = healthConnectWorkouts
+        .where((record) => _isOnDay(record, day))
+        .where(
+          (record) => !treadmill.any(
+            (local) => _isPublishedTreadmillCopy(local, record),
+          ),
+        )
+        .toList();
+    return [...treadmill, ...healthConnect]
+      ..sort((a, b) => b.startTime.compareTo(a.startTime));
+  }
+
+  bool _isPublishedTreadmillCopy(
+    HealthRecord treadmill,
+    HealthRecord healthConnect,
+  ) =>
+      healthConnect.value['clientRecordId'] ==
+      '$treadmillHealthConnectClientIdPrefix${treadmill.sourceRecordId}:exercise';
+
   List<HealthRecord> recordsOfType(String type, {bool preferredOnly = false}) {
     final typed = records.where((record) => record.type == type).toList();
     final source = preferredSource(type);
@@ -266,14 +299,27 @@ class HealthDashboardState extends ChangeNotifier {
     return values.reduce((a, b) => a + b) / values.length;
   });
 
+  List<double?> workoutMetricValues(String key) =>
+      List<double?>.generate(7, (index) {
+        final values = workoutRecordsOnDay(_dayAt(index))
+            .map((record) => _metricValue(record, key))
+            .whereType<double>()
+            .toList();
+        if (values.isEmpty) return null;
+        return values.reduce((a, b) => a + b);
+      });
+
   double? _metricValue(HealthRecord record, String key) {
     if (record.type == 'sleep.session' && key == 'durationMinutes') {
       return Duration(
         milliseconds: record.endTime - record.startTime,
       ).inMinutes.toDouble();
     }
-    if (record.type == 'workout.treadmill' && key == 'durationMinutes') {
-      return ((record.value['durationSeconds'] as num?)?.toDouble() ?? 0) / 60;
+    if (key == 'durationMinutes' && record.type.startsWith('workout.')) {
+      final milliseconds = record.endTime - record.startTime;
+      return record.type == 'workout.treadmill'
+          ? ((record.value['durationSeconds'] as num?)?.toDouble() ?? 0) / 60
+          : milliseconds / Duration.millisecondsPerMinute;
     }
     return (record.value[key] as num?)?.toDouble();
   }
@@ -313,23 +359,14 @@ class HealthDashboardState extends ChangeNotifier {
     return null;
   }
 
-  List<double> get weeklyDistanceKm => List<double>.generate(7, (index) {
-    final day = _dayAt(index);
-    return treadmillWorkouts
-        .where((workout) => _isOnDay(workout, day))
-        .fold(
-          0,
-          (sum, workout) =>
-              sum + ((workout.value['distanceKm'] as num?)?.toDouble() ?? 0),
-        );
-  });
+  List<double> get weeklyDistanceKm =>
+      workoutMetricValues('distanceKm').map((value) => value ?? 0).toList();
 
   List<double?> get weeklyHeartRate => List<double?>.generate(7, (index) {
     final day = _dayAt(index);
     final values = <double>[
-      for (final workout in treadmillWorkouts)
-        if (_isOnDay(workout, day) &&
-            ((workout.value['averageHeartRate'] as num?) ?? 0) > 0)
+      for (final workout in workoutRecordsOnDay(day))
+        if (((workout.value['averageHeartRate'] as num?) ?? 0) > 0)
           (workout.value['averageHeartRate'] as num).toDouble(),
       for (final record in recordsOnDay('heart.rate', day))
         if (record.type == 'heart.rate' &&
@@ -384,19 +421,23 @@ class HealthDashboardState extends ChangeNotifier {
         date.day == day.day;
   }
 
-  double get totalDistanceKm => treadmillWorkouts.fold(
+  double get totalDistanceKm => effectiveWorkouts.fold(
     0,
     (sum, record) => sum + ((record.value['distanceKm'] as num?) ?? 0),
   );
 
-  int get totalCalories => treadmillWorkouts.fold(
+  int get totalCalories => effectiveWorkouts.fold(
     0,
     (sum, record) => sum + ((record.value['calories'] as num?) ?? 0).round(),
   );
 
-  int get totalDurationSeconds => treadmillWorkouts.fold(
+  int get totalDurationSeconds => effectiveWorkouts.fold(
     0,
     (sum, record) =>
-        sum + ((record.value['durationSeconds'] as num?) ?? 0).round(),
+        sum +
+        (record.type == 'workout.treadmill'
+            ? ((record.value['durationSeconds'] as num?) ?? 0).round()
+            : (record.endTime - record.startTime) ~/
+                  Duration.millisecondsPerSecond),
   );
 }

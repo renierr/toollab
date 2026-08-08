@@ -11537,6 +11537,12 @@ abstract class AppLocalizations {
   /// **'Naps'**
   String get healthDashboardNaps;
 
+  /// No description provided for @healthDashboardAllData.
+  ///
+  /// In en, this message translates to:
+  /// **'All Health Data'**
+  String get healthDashboardAllData;
+
   /// No description provided for @healthDashboardSleepDetails.
   ///
   /// In en, this message translates to:

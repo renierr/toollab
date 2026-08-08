@@ -15,6 +15,7 @@ class HealthMetricDetailsPage extends StatelessWidget {
   final String unit;
   final Color color;
   final bool sum;
+  final bool workoutMetric;
 
   const HealthMetricDetailsPage({
     super.key,
@@ -24,12 +25,13 @@ class HealthMetricDetailsPage extends StatelessWidget {
     required this.unit,
     required this.color,
     this.sum = false,
+    this.workoutMetric = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<HealthDashboardState>();
-    final records = state.recordsOfType(type);
+    final records = workoutMetric ? state.workouts : state.recordsOfType(type);
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(title)),
@@ -49,7 +51,9 @@ class HealthMetricDetailsPage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: HealthWorkoutTrendChart(
-                values: state.weeklyMetricValues(type, valueKey, sum: sum),
+                values: workoutMetric
+                    ? state.workoutMetricValues(valueKey)
+                    : state.weeklyMetricValues(type, valueKey, sum: sum),
                 unit: unit,
                 color: color,
                 style: unit == 'kg' || unit == 'bpm' || unit == 'calories'
@@ -83,7 +87,9 @@ class HealthMetricDetailsPage extends StatelessWidget {
     int index,
   ) {
     final day = state.trendDayAt(index);
-    final records = state.recordsOnDay(type, day);
+    final records = workoutMetric
+        ? state.workoutRecordsOnDay(day)
+        : state.recordsOnDay(type, day);
     if (records.isEmpty) return;
     state.selectDay(day);
     final record = records.reduce(
