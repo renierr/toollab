@@ -9,16 +9,34 @@ import '../health_record.dart';
 import 'health_record_details_page.dart';
 import 'health_day_navigation.dart';
 
-class HealthWorkoutsPage extends StatelessWidget {
+class HealthWorkoutsPage extends StatefulWidget {
   const HealthWorkoutsPage({super.key});
+
+  @override
+  State<HealthWorkoutsPage> createState() => _HealthWorkoutsPageState();
+}
+
+class _HealthWorkoutsPageState extends State<HealthWorkoutsPage> {
+  List<HealthRecord> _workouts = const [];
+  DateTime? _loadedDay;
+
+  Future<void> _load(HealthDashboardState state) async {
+    final day = state.selectedDay;
+    if (_loadedDay == day) return;
+    final workouts = await state.workoutRecordsForDay(day);
+    if (!mounted) return;
+    setState(() {
+      _loadedDay = day;
+      _workouts = workouts;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<HealthDashboardState>();
-    final workouts = state.workouts
-        .where((workout) => _isOnDay(workout, state.selectedDay))
-        .toList();
+    _load(state);
+    final workouts = _workouts;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.healthDashboardWorkouts)),
       body: ListView(
@@ -84,12 +102,5 @@ class HealthWorkoutsPage extends StatelessWidget {
       milliseconds: workout.endTime - workout.startTime,
     );
     return '${duration.inHours}h ${duration.inMinutes.remainder(60)}m';
-  }
-
-  bool _isOnDay(HealthRecord record, DateTime day) {
-    final date = DateTime.fromMillisecondsSinceEpoch(record.startTime);
-    return date.year == day.year &&
-        date.month == day.month &&
-        date.day == day.day;
   }
 }

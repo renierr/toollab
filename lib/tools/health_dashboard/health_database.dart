@@ -108,6 +108,19 @@ class HealthDatabase {
     return rows.map(HealthRecord.fromMap).toList();
   }
 
+  Future<List<HealthRecord>> recordsOnDay(DateTime day) async {
+    final start = DateTime(day.year, day.month, day.day);
+    final end = start.add(const Duration(days: 1));
+    final db = await _db();
+    final rows = await db.query(
+      _table,
+      where: 'deleted = 0 AND start_time >= ? AND start_time < ?',
+      whereArgs: [start.millisecondsSinceEpoch, end.millisecondsSinceEpoch],
+      orderBy: 'start_time DESC',
+    );
+    return rows.map(HealthRecord.fromMap).toList();
+  }
+
   Future<Map<String, num>> allTimeWorkoutSummary() async {
     final db = await _db();
     final rows = await db.rawQuery('''

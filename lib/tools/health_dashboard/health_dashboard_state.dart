@@ -283,6 +283,26 @@ class HealthDashboardState extends ChangeNotifier {
       ..sort((a, b) => b.startTime.compareTo(a.startTime));
   }
 
+  Future<List<HealthRecord>> workoutRecordsForDay(DateTime day) async {
+    final dayRecords = await HealthDatabase.instance.recordsOnDay(day);
+    final treadmill = dayRecords
+        .where(
+          (record) =>
+              showTreadmillWorkouts && record.type == 'workout.treadmill',
+        )
+        .toList();
+    final healthConnect = dayRecords
+        .where((record) => record.type == 'workout.healthConnect')
+        .where(
+          (record) => !treadmill.any(
+            (local) => _isPublishedTreadmillCopy(local, record),
+          ),
+        )
+        .toList();
+    return [...treadmill, ...healthConnect]
+      ..sort((a, b) => b.startTime.compareTo(a.startTime));
+  }
+
   bool _isPublishedTreadmillCopy(
     HealthRecord treadmill,
     HealthRecord healthConnect,
