@@ -6501,4 +6501,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthDashboardImportBackupFailed =>
       'Could not import health database';
+
+  @override
+  String get healthDashboardSevenDayTotal => '7-Day Total';
+
+  @override
+  String get healthDashboardSevenDayAvg => '7-Day Avg';
+
+  @override
+  String get healthDashboardSevenDayMin => '7-Day Min';
+
+  @override
+  String get healthDashboardSevenDayMax => '7-Day Max';
+
+  @override
+  String get healthDashboardSpeed => 'Speed';
+
+  @override
+  String get healthDashboardCount => 'Count';
+
+  @override
+  String get healthDashboardBloodPressure => 'Blood Pressure';
+
+  @override
+  String get healthDashboardPercentage => 'Percentage';
+
+  @override
+  String get healthDashboardFloors => 'Floors';
+
+  @override
+  String get healthDashboardDuration => 'Duration';
 }

@@ -2422,5 +2422,15 @@
   "healthDashboardImportBackupWarning": "Bestehende Gesundheitsdaten werden nie ersetzt. Es werden nur noch nicht vorhandene Daten importiert.",
   "healthDashboardImportBackupSuccess": "{count} neue Gesundheitsdaten importiert",
   "@healthDashboardImportBackupSuccess": { "placeholders": { "count": { "type": "int" } } },
-  "healthDashboardImportBackupFailed": "Gesundheitsdatenbank konnte nicht importiert werden"
+  "healthDashboardImportBackupFailed": "Gesundheitsdatenbank konnte nicht importiert werden",
+  "healthDashboardSevenDayTotal": "7-Tage Summe",
+  "healthDashboardSevenDayAvg": "7-Tage Schnitt",
+  "healthDashboardSevenDayMin": "7-Tage Min",
+  "healthDashboardSevenDayMax": "7-Tage Max",
+  "healthDashboardSpeed": "Geschwindigkeit",
+  "healthDashboardCount": "Anzahl",
+  "healthDashboardBloodPressure": "Blutdruck",
+  "healthDashboardPercentage": "Prozentsatz",
+  "healthDashboardFloors": "Stockwerke",
+  "healthDashboardDuration": "Dauer"
 }

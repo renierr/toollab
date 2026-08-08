@@ -2,11 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 import '../health_record.dart';
-import 'health_source_badge.dart';
+import 'health_record_header_card.dart';
+import 'health_record_stats_card.dart';
 import 'health_sleep_details_page.dart';
 import 'health_treadmill_details_page.dart';
+import 'health_workout_trend_chart.dart';
 
 class HealthRecordDetailsPage extends StatelessWidget {
   final HealthRecord record;
@@ -24,61 +27,110 @@ class HealthRecordDetailsPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final start = DateTime.fromMillisecondsSinceEpoch(record.startTime);
     final end = DateTime.fromMillisecondsSinceEpoch(record.endTime);
+    final titleStr =
+        (record.value['title'] as String?) ??
+        (record.value['exerciseType'] as String?) ??
+        (record.value['dataType'] as String?) ??
+        record.type;
+
+    final heartSamples = _extractSamples(
+      record.value['heartRateSamples'] ?? record.value['samples'],
+    );
+    final speedSamples = _extractSamples(record.value['speedSamples']);
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.healthDashboardDetails)),
+      appBar: AppBar(title: Text(titleStr)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _RecordField(
-            label: l10n.healthDashboardDate,
-            value: MaterialLocalizations.of(context).formatFullDate(start),
+          HealthRecordHeaderCard(
+            start: start,
+            end: end,
+            sourceName: record.sourceName,
           ),
-          _RecordField(
-            label: l10n.healthDashboardTime,
-            value:
-                '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(start))} - ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(end))}',
-          ),
-          if (record.sourceName != null)
-            _RecordWidgetField(
-              label: l10n.healthDashboardSource,
-              child: HealthSourceBadge(packageName: record.sourceName),
+          const SizedBox(height: 12),
+          HealthRecordStatsCard(record: record),
+          if (heartSamples.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              l10n.healthDashboardHeartRate,
+              style: Theme.of(context).textTheme.titleMedium,
             ),
-          _RecordField(
-            label: l10n.healthDashboardData,
-            value: const JsonEncoder.withIndent('  ').convert(record.value),
-            selectable: true,
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: HealthWorkoutTrendChart(
+                  values: heartSamples
+                      .map((s) => s['value'] as double?)
+                      .toList(),
+                  unit: 'bpm',
+                  color: AppTheme.accentRed,
+                  style: HealthTrendChartStyle.line,
+                ),
+              ),
+            ),
+          ],
+          if (speedSamples.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              l10n.healthDashboardSpeed,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: HealthWorkoutTrendChart(
+                  values: speedSamples
+                      .map((s) => s['value'] as double?)
+                      .toList(),
+                  unit: 'km/h',
+                  color: AppTheme.accentTeal,
+                  style: HealthTrendChartStyle.line,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          Card(
+            child: ExpansionTile(
+              title: Text(l10n.healthDashboardData),
+              subtitle: Text(record.type),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: SelectableText(
+                      const JsonEncoder.withIndent('  ').convert(record.value),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-class _RecordField extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool selectable;
-
-  const _RecordField({
-    required this.label,
-    required this.value,
-    this.selectable = false,
-  });
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-    title: Text(label),
-    subtitle: selectable ? SelectableText(value) : Text(value),
-  );
-}
-
-class _RecordWidgetField extends StatelessWidget {
-  final String label;
-  final Widget child;
-
-  const _RecordWidgetField({required this.label, required this.child});
-
-  @override
-  Widget build(BuildContext context) =>
-      ListTile(title: Text(label), subtitle: child);
+  List<Map<String, dynamic>> _extractSamples(dynamic raw) {
+    if (raw is! List) return const [];
+    final list = <Map<String, dynamic>>[];
+    for (final item in raw) {
+      if (item is Map) {
+        final val =
+            (item['value'] ?? item['bpm'] ?? item['speed'] ?? item['rate'])
+                as num?;
+        if (val != null) {
+          list.add({'time': item['time'], 'value': val.toDouble()});
+        }
+      }
+    }
+    return list;
+  }
 }

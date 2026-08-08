@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_dashboard_state.dart';
-import 'health_metric_history.dart';
 import 'health_day_navigation.dart';
+import 'health_metric_history.dart';
+import 'health_metric_summary_section.dart';
 import 'health_record_details_page.dart';
 import 'health_workout_trend_chart.dart';
 
@@ -41,6 +42,16 @@ class HealthMetricDetailsPage extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: HealthDayNavigation(),
           ),
+          HealthMetricSummarySection(
+            title: title,
+            type: type,
+            valueKey: valueKey,
+            unit: unit,
+            color: color,
+            sum: sum,
+            workoutMetric: workoutMetric,
+          ),
+          const SizedBox(height: 16),
           Text(
             l10n.healthDashboardLastSevenDays,
             style: Theme.of(context).textTheme.titleLarge,
@@ -86,6 +97,7 @@ class HealthMetricDetailsPage extends StatelessWidget {
     int index,
   ) {
     final day = state.trendDayAt(index);
+    state.selectDay(day);
     final record = state.metricRecordOnDay(
       type: type,
       key: valueKey,
@@ -93,7 +105,6 @@ class HealthMetricDetailsPage extends StatelessWidget {
       workoutMetric: workoutMetric,
     );
     if (record == null) return;
-    state.selectDay(day);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => HealthRecordDetailsPage(record: record),

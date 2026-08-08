@@ -370,7 +370,7 @@ class HealthDashboardState extends ChangeNotifier {
   }) => List<double?>.generate(7, (index) {
     final values = recordsOnDay(type, _dayAt(index))
         .where((record) => type != 'sleep.session' || !isNap(record))
-        .map((record) => _metricValue(record, key))
+        .map((record) => metricValue(record, key))
         .whereType<double>()
         .toList();
     if (values.isEmpty) return null;
@@ -382,7 +382,7 @@ class HealthDashboardState extends ChangeNotifier {
   List<double?> workoutMetricValues(String key) =>
       List<double?>.generate(7, (index) {
         final values = workoutRecordsOnDay(_dayAt(index))
-            .map((record) => _metricValue(record, key))
+            .map((record) => metricValue(record, key))
             .whereType<double>()
             .toList();
         if (values.isEmpty) return null;
@@ -397,7 +397,7 @@ class HealthDashboardState extends ChangeNotifier {
   }) {
     final candidates =
         (workoutMetric ? workoutRecordsOnDay(day) : recordsOnDay(type, day))
-            .where((record) => (_metricValue(record, key) ?? 0) > 0)
+            .where((record) => (metricValue(record, key) ?? 0) > 0)
             .toList();
     if (candidates.isEmpty) return null;
     candidates.sort((first, second) {
@@ -406,8 +406,8 @@ class HealthDashboardState extends ChangeNotifier {
       if (firstIsTreadmill != secondIsTreadmill) {
         return firstIsTreadmill ? -1 : 1;
       }
-      final valueOrder = (_metricValue(second, key) ?? 0).compareTo(
-        _metricValue(first, key) ?? 0,
+      final valueOrder = (metricValue(second, key) ?? 0).compareTo(
+        metricValue(first, key) ?? 0,
       );
       return valueOrder != 0
           ? valueOrder
@@ -416,7 +416,7 @@ class HealthDashboardState extends ChangeNotifier {
     return candidates.first;
   }
 
-  double? _metricValue(HealthRecord record, String key) {
+  double? metricValue(HealthRecord record, String key) {
     if (record.type == 'sleep.session' && key == 'durationMinutes') {
       return Duration(
         milliseconds: record.endTime - record.startTime,

@@ -3263,5 +3263,15 @@
   "healthDashboardImportBackupWarning": "Existing health records are never replaced. Only records that are not already present will be imported.",
   "healthDashboardImportBackupSuccess": "Imported {count} new health records",
   "@healthDashboardImportBackupSuccess": { "placeholders": { "count": { "type": "int" } } },
-  "healthDashboardImportBackupFailed": "Could not import health database"
+  "healthDashboardImportBackupFailed": "Could not import health database",
+  "healthDashboardSevenDayTotal": "7-Day Total",
+  "healthDashboardSevenDayAvg": "7-Day Avg",
+  "healthDashboardSevenDayMin": "7-Day Min",
+  "healthDashboardSevenDayMax": "7-Day Max",
+  "healthDashboardSpeed": "Speed",
+  "healthDashboardCount": "Count",
+  "healthDashboardBloodPressure": "Blood Pressure",
+  "healthDashboardPercentage": "Percentage",
+  "healthDashboardFloors": "Floors",
+  "healthDashboardDuration": "Duration"
 }

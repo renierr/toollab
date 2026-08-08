@@ -11794,6 +11794,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not import health database'**
   String get healthDashboardImportBackupFailed;
+
+  /// No description provided for @healthDashboardSevenDayTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'7-Day Total'**
+  String get healthDashboardSevenDayTotal;
+
+  /// No description provided for @healthDashboardSevenDayAvg.
+  ///
+  /// In en, this message translates to:
+  /// **'7-Day Avg'**
+  String get healthDashboardSevenDayAvg;
+
+  /// No description provided for @healthDashboardSevenDayMin.
+  ///
+  /// In en, this message translates to:
+  /// **'7-Day Min'**
+  String get healthDashboardSevenDayMin;
+
+  /// No description provided for @healthDashboardSevenDayMax.
+  ///
+  /// In en, this message translates to:
+  /// **'7-Day Max'**
+  String get healthDashboardSevenDayMax;
+
+  /// No description provided for @healthDashboardSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get healthDashboardSpeed;
+
+  /// No description provided for @healthDashboardCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Count'**
+  String get healthDashboardCount;
+
+  /// No description provided for @healthDashboardBloodPressure.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Pressure'**
+  String get healthDashboardBloodPressure;
+
+  /// No description provided for @healthDashboardPercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage'**
+  String get healthDashboardPercentage;
+
+  /// No description provided for @healthDashboardFloors.
+  ///
+  /// In en, this message translates to:
+  /// **'Floors'**
+  String get healthDashboardFloors;
+
+  /// No description provided for @healthDashboardDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get healthDashboardDuration;
 }
 
 class _AppLocalizationsDelegate

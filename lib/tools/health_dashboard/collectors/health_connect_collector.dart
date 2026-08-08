@@ -38,91 +38,121 @@ class HealthConnectCollector implements HealthDataCollector {
     // remains available in All Health Data. Rich converters below replace these.
     records.addAll(await _allRecords(connector, importStart, end));
 
-    final steps = await connector.readRecords(
-      hc.HealthDataType.steps.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
+    final steps = await _safeReadRecords<hc.StepsRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.steps.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
       ),
     );
-    records.addAll(steps.records.map(_steps));
+    records.addAll(steps.map(_steps));
 
-    final weights = await connector.readRecords(
-      hc.HealthDataType.weight.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
+    final weights = await _safeReadRecords<hc.WeightRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.weight.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
       ),
     );
-    records.addAll(weights.records.map(_weight));
+    records.addAll(weights.map(_weight));
 
-    final heartRates = await connector.readRecords(
-      hc.HealthDataType.heartRateSeries.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
+    final heartRates = await _safeReadRecords<hc.HeartRateSeriesRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.heartRateSeries.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
       ),
     );
-    final instantHeartRates = await connector.readRecords(
-      hc.HealthDataType.heartRate.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
-      ),
-    );
-    records.addAll(heartRates.records.map(_heartRate));
-    records.addAll(instantHeartRates.records.map(_instantHeartRate));
+    records.addAll(heartRates.map(_heartRate));
 
-    final restingRates = await connector.readRecords(
-      hc.HealthDataType.restingHeartRate.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
+    final instantHeartRates = await _safeReadRecords<hc.HeartRateRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.heartRate.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
       ),
     );
-    records.addAll(restingRates.records.map(_restingHeartRate));
+    records.addAll(instantHeartRates.map(_instantHeartRate));
 
-    final sleep = await connector.readRecords(
-      hc.HealthDataType.sleepSession.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
+    final restingRates = await _safeReadRecords<hc.RestingHeartRateRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.restingHeartRate.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
       ),
     );
-    records.addAll(sleep.records.map(_sleep));
+    records.addAll(restingRates.map(_restingHeartRate));
 
-    final workouts = await connector.readRecords(
-      hc.HealthDataType.exerciseSession.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
+    final sleep = await _safeReadRecords<hc.SleepSessionRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.sleepSession.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
       ),
     );
-    final distances = await connector.readRecords(
-      hc.HealthDataType.distance.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
+    records.addAll(sleep.map(_sleep));
+
+    final workouts = await _safeReadRecords<hc.ExerciseSessionRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.exerciseSession.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
       ),
     );
-    final activeEnergy = await connector.readRecords(
-      hc.HealthDataType.activeEnergyBurned.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
+    final distances = await _safeReadRecords<hc.DistanceRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.distance.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
       ),
     );
-    final speeds = await connector.readRecords(
-      hc.HealthDataType.speedSeries.readInTimeRange(
-        startTime: importStart,
-        endTime: end,
+    final activeEnergy = await _safeReadRecords<hc.ActiveEnergyBurnedRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.activeEnergyBurned.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
+      ),
+    );
+    final speeds = await _safeReadRecords<hc.SpeedSeriesRecord>(
+      () => connector.readRecords(
+        hc.HealthDataType.speedSeries.readInTimeRange(
+          startTime: importStart,
+          endTime: end,
+        ),
       ),
     );
     final usedMetricIds = <String>{};
     records.addAll(
-      workouts.records.map(
+      workouts.map(
         (workout) => _workout(
           workout,
-          heartRates.records,
-          distances.records,
-          activeEnergy.records,
-          speeds.records,
+          heartRates,
+          distances,
+          activeEnergy,
+          speeds,
           usedMetricIds,
         ),
       ),
     );
     return records;
+  }
+
+  Future<List<T>> _safeReadRecords<T>(Future<dynamic> Function() call) async {
+    try {
+      final response = await call();
+      return (response.records as List).cast<T>();
+    } catch (_) {
+      return <T>[];
+    }
   }
 
   Future<List<HealthRecord>> _allRecords(

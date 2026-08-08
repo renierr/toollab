@@ -6543,4 +6543,34 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthDashboardImportBackupFailed =>
       'Gesundheitsdatenbank konnte nicht importiert werden';
+
+  @override
+  String get healthDashboardSevenDayTotal => '7-Tage Summe';
+
+  @override
+  String get healthDashboardSevenDayAvg => '7-Tage Schnitt';
+
+  @override
+  String get healthDashboardSevenDayMin => '7-Tage Min';
+
+  @override
+  String get healthDashboardSevenDayMax => '7-Tage Max';
+
+  @override
+  String get healthDashboardSpeed => 'Geschwindigkeit';
+
+  @override
+  String get healthDashboardCount => 'Anzahl';
+
+  @override
+  String get healthDashboardBloodPressure => 'Blutdruck';
+
+  @override
+  String get healthDashboardPercentage => 'Prozentsatz';
+
+  @override
+  String get healthDashboardFloors => 'Stockwerke';
+
+  @override
+  String get healthDashboardDuration => 'Dauer';
 }
