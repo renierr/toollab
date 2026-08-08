@@ -51,7 +51,7 @@ class _HealthAllDataPageState extends State<HealthAllDataPage> {
 
   Future<void> _loadMore() async {
     if (_isFetchingMore || !_hasMore) return;
-    _isFetchingMore = true;
+    setState(() => _isFetchingMore = true);
     try {
       final page = await HealthDatabase.instance.recordsPage(
         offset: _records.length,
@@ -65,7 +65,7 @@ class _HealthAllDataPageState extends State<HealthAllDataPage> {
     } catch (e) {
       debugPrint('[HealthAllDataPage] Load error: $e');
     } finally {
-      _isFetchingMore = false;
+      if (mounted) setState(() => _isFetchingMore = false);
     }
   }
 
@@ -114,11 +114,11 @@ class _HealthAllDataPageState extends State<HealthAllDataPage> {
           : ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              itemCount: monthGroups.length + (_hasMore ? 1 : 0),
+              itemCount: monthGroups.length + (_isFetchingMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == monthGroups.length) {
                   return const Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: EdgeInsets.symmetric(vertical: 20),
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
