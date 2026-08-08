@@ -422,6 +422,15 @@ class HealthDatabase {
       return;
     }
     final existing = HealthRecord.fromMap(rows.first);
+    if (record.updatedAt <= existing.updatedAt &&
+        record.type == existing.type &&
+        record.startTime == existing.startTime &&
+        record.endTime == existing.endTime &&
+        jsonEncode(record.value) == jsonEncode(existing.value) &&
+        record.sourceName == existing.sourceName &&
+        record.deviceId == existing.deviceId) {
+      return;
+    }
     final updated = record.copyWith(
       updatedAt: max(record.updatedAt, existing.updatedAt + 1),
       synced: false,
