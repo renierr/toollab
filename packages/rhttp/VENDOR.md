@@ -11,5 +11,9 @@ parsing the extension suffix.
 level before passing it to Cargo. The rhttp Dart and Rust networking code is
 otherwise unchanged.
 
+`rust/src/api/init.rs` also includes upstream commit `2770724`, which initializes
+Android's process-global native TLS context once when multiple Flutter engines
+attach.
+
 Remove this vendor copy and restore the hosted dependency once upstream rhttp
 supports Android SDK extension version strings.
