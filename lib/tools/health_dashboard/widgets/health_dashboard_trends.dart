@@ -5,7 +5,6 @@ import 'package:tool_lab/theme/theme.dart';
 
 import '../health_dashboard_state.dart';
 import 'health_workout_trend_chart.dart';
-import 'health_day_navigation.dart';
 
 class HealthDashboardTrends extends StatelessWidget {
   const HealthDashboardTrends({super.key});
@@ -23,10 +22,6 @@ class HealthDashboardTrends extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 28),
-        const Align(
-          alignment: Alignment.centerRight,
-          child: HealthDayNavigation(),
-        ),
         if (hasDistance || hasPulse)
           _DistancePulseTrend(
             distance: state.weeklyDistanceKm,

@@ -6218,6 +6218,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthDashboardDistance => 'Distance';
 
   @override
+  String get healthDashboardDistanceAllTime => 'Distance · all time';
+
+  @override
+  String get healthDashboardCaloriesAllTime => 'Calories · all time';
+
+  @override
+  String get healthDashboardActiveTimeAllTime => 'Active time · all time';
+
+  @override
+  String get healthDashboardStepsAllTime => 'Steps · all time';
+
+  @override
+  String get healthDashboardWorkoutsAllTime => 'Workouts · all time';
+
+  @override
+  String get healthDashboardDistanceLastSevenDays => 'Distance · last 7 days';
+
+  @override
+  String get healthDashboardCaloriesLastSevenDays => 'Calories · last 7 days';
+
+  @override
+  String get healthDashboardActiveTimeLastSevenDays =>
+      'Active time · last 7 days';
+
+  @override
+  String get healthDashboardStepsLastSevenDays => 'Steps · last 7 days';
+
+  @override
+  String get healthDashboardLatestRestingHeartRate =>
+      'Latest resting heart rate';
+
+  @override
   String get healthDashboardCalories => 'Calories';
 
   @override
@@ -6258,6 +6290,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthDashboardConnectHealthConnect =>
       'Connect and import Health Connect';
+
+  @override
+  String get healthDashboardImportHealthConnect => 'Import Health Connect now';
+
+  @override
+  String get healthDashboardRepairHealthConnect =>
+      'Repair Health Connect cache';
+
+  @override
+  String get healthDashboardRepairHealthConnectSubtitle =>
+      'Re-import all available Health Connect history and update cached records.';
 
   @override
   String get healthDashboardHealthConnect => 'Health Connect';

@@ -6257,6 +6257,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardDistance => 'Distanz';
 
   @override
+  String get healthDashboardDistanceAllTime => 'Distanz · Gesamt';
+
+  @override
+  String get healthDashboardCaloriesAllTime => 'Kalorien · Gesamt';
+
+  @override
+  String get healthDashboardActiveTimeAllTime => 'Aktive Zeit · Gesamt';
+
+  @override
+  String get healthDashboardStepsAllTime => 'Schritte · Gesamt';
+
+  @override
+  String get healthDashboardWorkoutsAllTime => 'Workouts · Gesamt';
+
+  @override
+  String get healthDashboardDistanceLastSevenDays => 'Distanz · letzte 7 Tage';
+
+  @override
+  String get healthDashboardCaloriesLastSevenDays => 'Kalorien · letzte 7 Tage';
+
+  @override
+  String get healthDashboardActiveTimeLastSevenDays =>
+      'Aktive Zeit · letzte 7 Tage';
+
+  @override
+  String get healthDashboardStepsLastSevenDays => 'Schritte · letzte 7 Tage';
+
+  @override
+  String get healthDashboardLatestRestingHeartRate => 'Letzter Ruhepuls';
+
+  @override
   String get healthDashboardCalories => 'Kalorien';
 
   @override
@@ -6297,6 +6328,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthDashboardConnectHealthConnect =>
       'Health Connect verbinden und importieren';
+
+  @override
+  String get healthDashboardImportHealthConnect =>
+      'Health Connect jetzt importieren';
+
+  @override
+  String get healthDashboardRepairHealthConnect =>
+      'Health-Connect-Zwischenspeicher reparieren';
+
+  @override
+  String get healthDashboardRepairHealthConnectSubtitle =>
+      'Importiert den gesamten verfuegbaren Health-Connect-Verlauf erneut und aktualisiert gespeicherte Daten.';
 
   @override
   String get healthDashboardHealthConnect => 'Health Connect';

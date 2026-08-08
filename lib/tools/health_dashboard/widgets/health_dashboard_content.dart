@@ -3,16 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
-import '../../treadmill_control/treadmill_control_db.dart';
-import '../../treadmill_control/widgets/workout_details_sheet.dart';
-
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
 import 'health_metric_card.dart';
 import 'health_metric_details_page.dart';
-import 'health_record_details_page.dart';
 import 'health_sleep_details_page.dart';
 import 'health_dashboard_trends.dart';
+import 'health_day_navigation.dart';
 import 'health_all_data_page.dart';
 import 'health_workouts_page.dart';
 
@@ -48,7 +45,7 @@ class HealthDashboardContent extends StatelessWidget {
               HealthMetricCard(
                 icon: Icons.directions_run_rounded,
                 color: AppTheme.accentTeal,
-                label: l10n.healthDashboardDistance,
+                label: l10n.healthDashboardDistanceAllTime,
                 value: '${state.totalDistanceKm.toStringAsFixed(1)} km',
                 onTap: () => _openMetric(
                   context,
@@ -62,21 +59,9 @@ class HealthDashboardContent extends StatelessWidget {
                 ),
               ),
               HealthMetricCard(
-                icon: Icons.health_and_safety_outlined,
-                color: AppTheme.accentPurple,
-                label: l10n.healthDashboardAllData,
-                value:
-                    '${state.records.where((record) => record.type.startsWith('health.')).length}',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const HealthAllDataPage(),
-                  ),
-                ),
-              ),
-              HealthMetricCard(
                 icon: Icons.local_fire_department_rounded,
                 color: AppTheme.accentAmber,
-                label: l10n.healthDashboardCalories,
+                label: l10n.healthDashboardCaloriesAllTime,
                 value: '${state.totalCalories}',
                 onTap: () => _openMetric(
                   context,
@@ -92,7 +77,7 @@ class HealthDashboardContent extends StatelessWidget {
               HealthMetricCard(
                 icon: Icons.timer_outlined,
                 color: AppTheme.accentBlue,
-                label: l10n.healthDashboardActiveTime,
+                label: l10n.healthDashboardActiveTimeAllTime,
                 value: _duration(state.totalDurationSeconds),
                 onTap: () => _openMetric(
                   context,
@@ -106,9 +91,24 @@ class HealthDashboardContent extends StatelessWidget {
                 ),
               ),
               HealthMetricCard(
+                icon: Icons.directions_walk_rounded,
+                color: AppTheme.accentGreen,
+                label: l10n.healthDashboardStepsAllTime,
+                value: '${state.totalSteps}',
+                onTap: () => _openMetric(
+                  context,
+                  title: l10n.healthDashboardStepsToday,
+                  type: 'activity.steps',
+                  valueKey: 'count',
+                  unit: 'steps',
+                  color: AppTheme.accentGreen,
+                  sum: true,
+                ),
+              ),
+              HealthMetricCard(
                 icon: Icons.monitor_heart_outlined,
                 color: AppTheme.accentRed,
-                label: l10n.healthDashboardWorkouts,
+                label: l10n.healthDashboardWorkoutsAllTime,
                 value: '${state.workouts.length}',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -116,20 +116,27 @@ class HealthDashboardContent extends StatelessWidget {
                   ),
                 ),
               ),
-              if (state.todaySteps > 0)
+              if (state.latestSleepMinutes != null)
                 HealthMetricCard(
-                  icon: Icons.directions_walk_rounded,
-                  color: AppTheme.accentGreen,
-                  label: l10n.healthDashboardStepsToday,
-                  value: '${state.todaySteps}',
+                  icon: Icons.bedtime_outlined,
+                  color: AppTheme.accentBlue,
+                  label: l10n.healthDashboardLastSleep,
+                  value: _duration(state.latestSleepMinutes! * 60),
+                  onTap: () => _openSleepDetails(context, state),
+                ),
+              if (state.latestRestingHeartRate != null)
+                HealthMetricCard(
+                  icon: Icons.favorite_outline_rounded,
+                  color: AppTheme.accentRed,
+                  label: l10n.healthDashboardLatestRestingHeartRate,
+                  value: '${state.latestRestingHeartRate!.round()} bpm',
                   onTap: () => _openMetric(
                     context,
-                    title: l10n.healthDashboardStepsToday,
-                    type: 'activity.steps',
-                    valueKey: 'count',
-                    unit: 'steps',
-                    color: AppTheme.accentGreen,
-                    sum: true,
+                    title: l10n.healthDashboardRestingHeartRate,
+                    type: 'heart.resting',
+                    valueKey: 'bpm',
+                    unit: 'bpm',
+                    color: AppTheme.accentRed,
                   ),
                 ),
               if (state.latestWeightKg != null)
@@ -147,114 +154,82 @@ class HealthDashboardContent extends StatelessWidget {
                     color: AppTheme.accentPurple,
                   ),
                 ),
-              if (state.latestRestingHeartRate != null)
+              if (state.todaySteps > 0)
                 HealthMetricCard(
-                  icon: Icons.favorite_outline_rounded,
-                  color: AppTheme.accentRed,
-                  label: l10n.healthDashboardRestingHeartRate,
-                  value: '${state.latestRestingHeartRate!.round()} bpm',
+                  icon: Icons.directions_walk_rounded,
+                  color: AppTheme.accentGreen,
+                  label: l10n.healthDashboardStepsToday,
+                  value: '${state.todaySteps}',
                   onTap: () => _openMetric(
                     context,
-                    title: l10n.healthDashboardRestingHeartRate,
-                    type: 'heart.resting',
-                    valueKey: 'bpm',
-                    unit: 'bpm',
-                    color: AppTheme.accentRed,
+                    title: l10n.healthDashboardStepsToday,
+                    type: 'activity.steps',
+                    valueKey: 'count',
+                    unit: 'steps',
+                    color: AppTheme.accentGreen,
+                    sum: true,
                   ),
-                ),
-              if (state.latestSleepMinutes != null)
-                HealthMetricCard(
-                  icon: Icons.bedtime_outlined,
-                  color: AppTheme.accentBlue,
-                  label: l10n.healthDashboardLastSleep,
-                  value: _duration(state.latestSleepMinutes! * 60),
-                  onTap: () => _openSleepDetails(context, state),
                 ),
             ],
           ),
-          const HealthDashboardTrends(),
           const SizedBox(height: 28),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  l10n.healthDashboardRecentActivity,
+                  l10n.healthDashboardLastSevenDays,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              TextButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const HealthWorkoutsPage(),
-                  ),
-                ),
-                child: Text(l10n.healthDashboardWorkouts),
+              const HealthDayNavigation(),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              HealthMetricCard(
+                icon: Icons.directions_run_rounded,
+                color: AppTheme.accentTeal,
+                label: l10n.healthDashboardDistanceLastSevenDays,
+                value: '${state.selectedWeekDistanceKm.toStringAsFixed(1)} km',
+              ),
+              HealthMetricCard(
+                icon: Icons.local_fire_department_rounded,
+                color: AppTheme.accentAmber,
+                label: l10n.healthDashboardCaloriesLastSevenDays,
+                value: '${state.selectedWeekCalories}',
+              ),
+              HealthMetricCard(
+                icon: Icons.timer_outlined,
+                color: AppTheme.accentBlue,
+                label: l10n.healthDashboardActiveTimeLastSevenDays,
+                value: _duration(state.selectedWeekDurationSeconds),
+              ),
+              HealthMetricCard(
+                icon: Icons.directions_walk_rounded,
+                color: AppTheme.accentGreen,
+                label: l10n.healthDashboardStepsLastSevenDays,
+                value: '${state.selectedWeekSteps}',
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          if (state.workouts.isEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text(l10n.healthDashboardNoData),
-              ),
-            )
-          else
-            ...state.workouts
-                .take(8)
-                .map(
-                  (record) => Card(
-                    child: ListTile(
-                      onTap: () async {
-                        if (record.type == 'workout.treadmill') {
-                          final session = await TreadmillControlDb.instance
-                              .getSessionByUid(record.sourceRecordId);
-                          if (session != null && context.mounted) {
-                            await WorkoutDetailsSheet.show(context, session);
-                          }
-                        } else {
-                          await Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  HealthRecordDetailsPage(record: record),
-                            ),
-                          );
-                        }
-                      },
-                      leading: const Icon(Icons.directions_run_rounded),
-                      title: Text(
-                        record.type == 'workout.treadmill'
-                            ? l10n.healthDashboardTreadmillRun
-                            : (record.value['title'] as String?) ??
-                                  record.value['exerciseType'] as String? ??
-                                  l10n.healthDashboardHealthConnectWorkout,
-                      ),
-                      subtitle: Text(
-                        record.type == 'workout.treadmill'
-                            ? '${(record.value['distanceKm'] as num).toStringAsFixed(2)} km'
-                            : _duration(
-                                (record.endTime - record.startTime) ~/ 1000,
-                              ),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _duration(
-                              record.type == 'workout.treadmill'
-                                  ? (record.value['durationSeconds'] as num)
-                                        .round()
-                                  : (record.endTime - record.startTime) ~/ 1000,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.chevron_right_rounded),
-                        ],
-                      ),
-                    ),
-                  ),
+          const HealthDashboardTrends(),
+          if (state.allHealthData.isNotEmpty) ...[
+            const SizedBox(height: 28),
+            HealthMetricCard(
+              icon: Icons.health_and_safety_outlined,
+              color: AppTheme.accentPurple,
+              label: l10n.healthDashboardAllData,
+              value: '${state.allHealthData.length}',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const HealthAllDataPage(),
                 ),
+              ),
+            ),
+          ],
         ],
       ),
     );

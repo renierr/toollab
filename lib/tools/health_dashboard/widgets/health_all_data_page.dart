@@ -13,11 +13,7 @@ class HealthAllDataPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final records = context
-        .watch<HealthDashboardState>()
-        .records
-        .where((record) => record.type.startsWith('health.'))
-        .toList();
+    final records = context.watch<HealthDashboardState>().allHealthData;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.healthDashboardAllData)),
       body: records.isEmpty

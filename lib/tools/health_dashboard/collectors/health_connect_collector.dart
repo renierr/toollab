@@ -11,8 +11,6 @@ import '../health_record.dart';
 import 'health_data_collector.dart';
 
 class HealthConnectCollector implements HealthDataCollector {
-  static final _initialImportStart = DateTime.utc(1970);
-
   @override
   HealthSource get source => HealthSource.healthConnect;
 
@@ -32,7 +30,8 @@ class HealthConnectCollector implements HealthDataCollector {
     if (!Platform.isAndroid) return [];
     final connector = await hc.HealthConnector.create();
     final end = DateTime.now();
-    final importStart = start ?? _initialImportStart;
+    final importStart =
+        start ?? DateTime.now().subtract(const Duration(days: 90));
     final records = <HealthRecord>[];
 
     // Persist every readable record so data that has no dedicated dashboard yet
@@ -311,11 +310,21 @@ class HealthConnectCollector implements HealthDataCollector {
   bool _matches(
     hc.IntervalHealthRecord session,
     hc.IntervalHealthRecord record,
-  ) =>
-      record.startTime.compareTo(session.startTime) >= 0 &&
-      record.endTime.compareTo(session.endTime) <= 0 &&
-      record.metadata.dataOrigin?.packageName ==
-          session.metadata.dataOrigin?.packageName;
+  ) {
+    final overlap =
+        (record.endTime.isBefore(session.endTime)
+                ? record.endTime
+                : session.endTime)
+            .difference(
+              record.startTime.isAfter(session.startTime)
+                  ? record.startTime
+                  : session.startTime,
+            );
+    final shorter = record.endTime.difference(record.startTime);
+    return !overlap.isNegative &&
+        shorter.inMilliseconds > 0 &&
+        overlap.inMilliseconds / shorter.inMilliseconds >= 0.8;
+  }
 
   HealthRecord _record({
     required hc.HealthRecord record,

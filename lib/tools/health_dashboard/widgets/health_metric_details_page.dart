@@ -87,15 +87,14 @@ class HealthMetricDetailsPage extends StatelessWidget {
     int index,
   ) {
     final day = state.trendDayAt(index);
-    final records = workoutMetric
-        ? state.workoutRecordsOnDay(day)
-        : state.recordsOnDay(type, day);
-    if (records.isEmpty) return;
-    state.selectDay(day);
-    final record = records.reduce(
-      (latest, candidate) =>
-          candidate.endTime > latest.endTime ? candidate : latest,
+    final record = state.metricRecordOnDay(
+      type: type,
+      key: valueKey,
+      day: day,
+      workoutMetric: workoutMetric,
     );
+    if (record == null) return;
+    state.selectDay(day);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => HealthRecordDetailsPage(record: record),

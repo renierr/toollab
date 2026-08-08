@@ -15,6 +15,7 @@ import 'health_sync_delegate.dart';
 class HealthDashboardState extends ChangeNotifier {
   static const _showTreadmillWorkoutsKey = 'show_treadmill_workouts';
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
+  static const _healthConnectLastSyncKey = 'health_connect_last_sync';
   static const _sourcePreferencePrefix = 'source_preference_';
 
   final _treadmillCollector = TreadmillCollector();
@@ -101,13 +102,55 @@ class HealthDashboardState extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      for (final record in await _healthConnectCollector.collect()) {
+      final lastSync = await DatabaseService.instance.getSetting(
+        HealthDashboardTool.config.id,
+        _healthConnectLastSyncKey,
+      );
+      final start = lastSync == null
+          ? DateTime.now().subtract(const Duration(days: 90))
+          : DateTime.fromMillisecondsSinceEpoch(
+              int.parse(lastSync),
+            ).subtract(const Duration(days: 1));
+      for (final record in await _healthConnectCollector.collect(
+        start: start,
+      )) {
         await HealthDatabase.instance.upsertCollected(record);
       }
+      await DatabaseService.instance.setSetting(
+        HealthDashboardTool.config.id,
+        _healthConnectLastSyncKey,
+        DateTime.now().millisecondsSinceEpoch.toString(),
+      );
       records = await HealthDatabase.instance.activeRecords();
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Health Connect sync failed: $e');
+    } finally {
+      isCollecting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> repairHealthConnectCache() async {
+    if (isCollecting) return;
+    isCollecting = true;
+    error = null;
+    notifyListeners();
+    try {
+      for (final record in await _healthConnectCollector.collect(
+        start: DateTime.utc(1970),
+      )) {
+        await HealthDatabase.instance.upsertCollected(record);
+      }
+      await DatabaseService.instance.setSetting(
+        HealthDashboardTool.config.id,
+        _healthConnectLastSyncKey,
+        DateTime.now().millisecondsSinceEpoch.toString(),
+      );
+      records = await HealthDatabase.instance.activeRecords();
+    } catch (e) {
+      error = e.toString();
+      debugPrint('[HealthDashboard] Health Connect repair failed: $e');
     } finally {
       isCollecting = false;
       notifyListeners();
@@ -193,6 +236,9 @@ class HealthDashboardState extends ChangeNotifier {
   List<HealthRecord> get healthConnectWorkouts => records
       .where((record) => record.type == 'workout.healthConnect')
       .toList();
+
+  List<HealthRecord> get allHealthData =>
+      records.where((record) => record.type.startsWith('health.')).toList();
 
   List<HealthRecord> get workouts =>
       [...treadmillWorkouts, ...healthConnectWorkouts]
@@ -309,6 +355,33 @@ class HealthDashboardState extends ChangeNotifier {
         return values.reduce((a, b) => a + b);
       });
 
+  HealthRecord? metricRecordOnDay({
+    required String type,
+    required String key,
+    required DateTime day,
+    required bool workoutMetric,
+  }) {
+    final candidates =
+        (workoutMetric ? workoutRecordsOnDay(day) : recordsOnDay(type, day))
+            .where((record) => (_metricValue(record, key) ?? 0) > 0)
+            .toList();
+    if (candidates.isEmpty) return null;
+    candidates.sort((first, second) {
+      final firstIsTreadmill = first.type == 'workout.treadmill';
+      final secondIsTreadmill = second.type == 'workout.treadmill';
+      if (firstIsTreadmill != secondIsTreadmill) {
+        return firstIsTreadmill ? -1 : 1;
+      }
+      final valueOrder = (_metricValue(second, key) ?? 0).compareTo(
+        _metricValue(first, key) ?? 0,
+      );
+      return valueOrder != 0
+          ? valueOrder
+          : second.endTime.compareTo(first.endTime);
+    });
+    return candidates.first;
+  }
+
   double? _metricValue(HealthRecord record, String key) {
     if (record.type == 'sleep.session' && key == 'durationMinutes') {
       return Duration(
@@ -361,6 +434,29 @@ class HealthDashboardState extends ChangeNotifier {
 
   List<double> get weeklyDistanceKm =>
       workoutMetricValues('distanceKm').map((value) => value ?? 0).toList();
+
+  double get selectedWeekDistanceKm =>
+      weeklyDistanceKm.fold(0, (a, b) => a + b);
+
+  int get selectedWeekCalories => workoutMetricValues(
+    'calories',
+  ).whereType<double>().fold(0, (sum, value) => sum + value.round());
+
+  int get totalSteps => recordsOfType('activity.steps').fold(
+    0,
+    (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
+  );
+
+  int get selectedWeekSteps => List<int>.generate(7, (index) {
+    return recordsOnDay('activity.steps', _dayAt(index)).fold(
+      0,
+      (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
+    );
+  }).fold(0, (sum, value) => sum + value);
+
+  int get selectedWeekDurationSeconds => workoutMetricValues(
+    'durationMinutes',
+  ).whereType<double>().fold(0, (sum, value) => sum + (value * 60).round());
 
   List<double?> get weeklyHeartRate => List<double?>.generate(7, (index) {
     final day = _dayAt(index);

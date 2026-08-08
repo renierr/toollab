@@ -43,7 +43,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
           _SettingsSection(title: l10n.healthDashboardHealthConnect),
           ListTile(
             leading: const Icon(Icons.health_and_safety_outlined),
-            title: Text(l10n.healthDashboardConnectHealthConnect),
+            title: Text(l10n.healthDashboardImportHealthConnect),
             subtitle: Text(l10n.healthDashboardConnectHealthConnectSubtitle),
             trailing: healthState.isCollecting
                 ? const SizedBox(
@@ -64,6 +64,16 @@ class HealthDashboardSettingsPage extends StatelessWidget {
             subtitle: Text(l10n.healthDashboardAutoHealthConnectSyncSubtitle),
             value: healthState.autoHealthConnectSync,
             onChanged: healthState.setAutoHealthConnectSync,
+          ),
+          ListTile(
+            leading: const Icon(Icons.refresh_rounded),
+            title: Text(l10n.healthDashboardRepairHealthConnect),
+            subtitle: Text(l10n.healthDashboardRepairHealthConnectSubtitle),
+            onTap: healthState.isCollecting
+                ? null
+                : () => context
+                      .read<HealthDashboardState>()
+                      .repairHealthConnectCache(),
           ),
           const Divider(height: 1),
           _SettingsSection(title: l10n.healthDashboardBackup),
@@ -108,8 +118,12 @@ class HealthDashboardSettingsPage extends StatelessWidget {
   Future<void> _sync(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final healthState = context.read<HealthDashboardState>();
+    final appState = context.read<AppState>();
     try {
-      final result = await context.read<AppState>().syncWithBackend([
+      await healthState.collect();
+      await healthState.syncHealthConnect();
+      final result = await appState.syncWithBackend([
         HealthDashboardSyncDelegate(),
       ]);
       if (!context.mounted || result == null) return;

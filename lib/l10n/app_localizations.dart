@@ -11279,6 +11279,66 @@ abstract class AppLocalizations {
   /// **'Distance'**
   String get healthDashboardDistance;
 
+  /// No description provided for @healthDashboardDistanceAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance · all time'**
+  String get healthDashboardDistanceAllTime;
+
+  /// No description provided for @healthDashboardCaloriesAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories · all time'**
+  String get healthDashboardCaloriesAllTime;
+
+  /// No description provided for @healthDashboardActiveTimeAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Active time · all time'**
+  String get healthDashboardActiveTimeAllTime;
+
+  /// No description provided for @healthDashboardStepsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps · all time'**
+  String get healthDashboardStepsAllTime;
+
+  /// No description provided for @healthDashboardWorkoutsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts · all time'**
+  String get healthDashboardWorkoutsAllTime;
+
+  /// No description provided for @healthDashboardDistanceLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance · last 7 days'**
+  String get healthDashboardDistanceLastSevenDays;
+
+  /// No description provided for @healthDashboardCaloriesLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories · last 7 days'**
+  String get healthDashboardCaloriesLastSevenDays;
+
+  /// No description provided for @healthDashboardActiveTimeLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Active time · last 7 days'**
+  String get healthDashboardActiveTimeLastSevenDays;
+
+  /// No description provided for @healthDashboardStepsLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps · last 7 days'**
+  String get healthDashboardStepsLastSevenDays;
+
+  /// No description provided for @healthDashboardLatestRestingHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest resting heart rate'**
+  String get healthDashboardLatestRestingHeartRate;
+
   /// No description provided for @healthDashboardCalories.
   ///
   /// In en, this message translates to:
@@ -11356,6 +11416,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connect and import Health Connect'**
   String get healthDashboardConnectHealthConnect;
+
+  /// No description provided for @healthDashboardImportHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Health Connect now'**
+  String get healthDashboardImportHealthConnect;
+
+  /// No description provided for @healthDashboardRepairHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair Health Connect cache'**
+  String get healthDashboardRepairHealthConnect;
+
+  /// No description provided for @healthDashboardRepairHealthConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-import all available Health Connect history and update cached records.'**
+  String get healthDashboardRepairHealthConnectSubtitle;
 
   /// No description provided for @healthDashboardHealthConnect.
   ///

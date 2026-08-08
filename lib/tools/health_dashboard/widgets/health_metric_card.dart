@@ -18,21 +18,26 @@ class HealthMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    width: 180,
+    width: 156,
     child: Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, color: color),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(value, style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 4),
-              Text(label, style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
         ),
