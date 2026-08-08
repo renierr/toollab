@@ -198,31 +198,53 @@ class HealthConnectCollector implements HealthDataCollector {
     );
   }
 
-  Map<String, dynamic> _genericValues(hc.HealthRecord record) =>
-      switch (record) {
-        hc.FloorsClimbedRecord(:final count) => {'floors': count.value},
-        hc.ExerciseTimeRecord(:final exerciseTime) => {
-          'minutes': exerciseTime.inMinutes,
-        },
-        hc.MoveTimeRecord(:final moveTime) => {'minutes': moveTime.inMinutes},
-        hc.StandTimeRecord(:final standTime) => {
-          'minutes': standTime.inMinutes,
-        },
-        hc.BloodPressureRecord(:final systolic, :final diastolic) => {
-          'systolicMmhg': systolic.inMillimetersOfMercury,
-          'diastolicMmhg': diastolic.inMillimetersOfMercury,
-        },
-        hc.OxygenSaturationRecord(:final saturation) => {
-          'percent': saturation.asWhole,
-        },
-        hc.BodyFatPercentageRecord(:final percentage) => {
-          'percent': percentage.asWhole,
-        },
-        hc.BodyMassIndexRecord(:final bmi) => {'bmi': bmi.value},
-        hc.HeightRecord(:final height) => {'centimeters': height.inCentimeters},
-        hc.HydrationRecord(:final volume) => {'liters': volume.inLiters},
-        _ => const {},
-      };
+  Map<String, dynamic> _genericValues(
+    hc.HealthRecord record,
+  ) => switch (record) {
+    hc.DistanceRecord(:final distance) => {'distanceKm': distance.inKilometers},
+    hc.ActiveEnergyBurnedRecord(:final energy) => {
+      'calories': energy.inKilocalories,
+    },
+    hc.FloorsClimbedRecord(:final count) => {'floors': count.value},
+    hc.ExerciseTimeRecord(:final exerciseTime) => {
+      'minutes': exerciseTime.inMinutes,
+    },
+    hc.MoveTimeRecord(:final moveTime) => {'minutes': moveTime.inMinutes},
+    hc.StandTimeRecord(:final standTime) => {'minutes': standTime.inMinutes},
+    hc.BloodPressureRecord(:final systolic, :final diastolic) => {
+      'systolicMmhg': systolic.inMillimetersOfMercury,
+      'diastolicMmhg': diastolic.inMillimetersOfMercury,
+    },
+    hc.OxygenSaturationRecord(:final saturation) => {
+      'percent': saturation.asWhole,
+    },
+    hc.BodyFatPercentageRecord(:final percentage) => {
+      'percent': percentage.asWhole,
+    },
+    hc.BodyMassIndexRecord(:final bmi) => {'bmi': bmi.value},
+    hc.HeightRecord(:final height) => {'centimeters': height.inCentimeters},
+    hc.HydrationRecord(:final volume) => {'liters': volume.inLiters},
+    hc.RespiratoryRateRecord(:final rate) => {
+      'respiratoryRate': rate.inPerMinute,
+    },
+    hc.SpeedSeriesRecord(:final samples) => {
+      'averageSpeedKmh': samples.isEmpty
+          ? 0.0
+          : samples
+                    .map((s) => s.speed.inKilometersPerHour)
+                    .reduce((a, b) => a + b) /
+                samples.length,
+      'samples': samples
+          .map(
+            (s) => {
+              'time': s.time.millisecondsSinceEpoch,
+              'speed': s.speed.inKilometersPerHour,
+            },
+          )
+          .toList(),
+    },
+    _ => const {},
+  };
 
   HealthRecord _steps(hc.StepsRecord record) => _record(
     record: record,

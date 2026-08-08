@@ -6,6 +6,7 @@ import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
+import 'config.dart';
 import 'treadmill_control_db.dart';
 import 'treadmill_health_connect_publisher.dart';
 import 'treadmill_session.dart';
@@ -17,6 +18,8 @@ import 'treadmill_sync_delegate.dart';
 export 'treadmill_models.dart';
 
 class TreadmillControlState extends ChangeNotifier {
+  static const _syncToHealthConnectKey = 'sync_to_health_connect';
+
   // Scanning & Connection Status
   bool isScanning = false;
   final List<DiscoveredBleDevice> discoveredTreadmills = [];
@@ -30,6 +33,9 @@ class TreadmillControlState extends ChangeNotifier {
   String? hrmDeviceId;
   String? hrmName;
   BleConnectionState hrmConnection = BleConnectionState.disconnected;
+
+  // Settings
+  bool syncToHealthConnect = false;
 
   // Support flags determined on connection
   bool speedControlSupported = false;
@@ -108,6 +114,39 @@ class TreadmillControlState extends ChangeNotifier {
     UniversalBle.onConnectionChange = _onConnectionChange;
     UniversalBle.onValueChange = _onValueChange;
     loadSessions();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final val = await DatabaseService.instance.getSetting(
+        TreadmillControlTool.config.id,
+        _syncToHealthConnectKey,
+      );
+      syncToHealthConnect = val == 'true';
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[TreadmillControl] Load settings failed: $e');
+    }
+  }
+
+  Future<void> setSyncToHealthConnect(bool value) async {
+    syncToHealthConnect = value;
+    notifyListeners();
+    try {
+      await DatabaseService.instance.setSetting(
+        TreadmillControlTool.config.id,
+        _syncToHealthConnectKey,
+        value ? 'true' : 'false',
+      );
+      if (value) {
+        await TreadmillHealthConnectPublisher.instance.publishPendingSessions(
+          forcePermissionRequest: true,
+        );
+      }
+    } catch (e) {
+      debugPrint('[TreadmillControl] Update Health Connect setting failed: $e');
+    }
   }
 
   Future<void> loadSessions() async {
@@ -120,6 +159,12 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   void _backgroundSync() {
+    TreadmillHealthConnectPublisher.instance
+        .publishPendingSessions()
+        .catchError((e) {
+          debugPrint('[TreadmillControl] Health Connect publish error: $e');
+          return null;
+        });
     syncNow().catchError((e) {
       debugPrint('[TreadmillControl] Background sync failed: $e');
       return null;
@@ -131,6 +176,9 @@ class TreadmillControlState extends ChangeNotifier {
   /// already running. Throws on network/backend failures so a manual trigger
   /// can surface the error.
   Future<Map<String, int>?> syncNow() async {
+    // Health Connect OS sync runs independently of backend cloud sync
+    await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
+
     if (isSyncing) return null;
     final syncEnabled = await DatabaseService.instance.getSetting(
       '_app',
@@ -153,7 +201,6 @@ class TreadmillControlState extends ChangeNotifier {
         userId: userId,
         delegate: TreadmillSyncDelegate(),
       );
-      await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
       await loadSessions();
       return result;
     } finally {

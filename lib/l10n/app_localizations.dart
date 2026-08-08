@@ -11429,6 +11429,12 @@ abstract class AppLocalizations {
   /// **'Manage Health Connect'**
   String get healthDashboardManageHealthConnect;
 
+  /// No description provided for @healthDashboardManageHealthConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Android permissions or Health Connect system settings.'**
+  String get healthDashboardManageHealthConnectSubtitle;
+
   /// No description provided for @healthDashboardHealthConnectImported.
   ///
   /// In en, this message translates to:
@@ -11468,13 +11474,13 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardHealthConnect.
   ///
   /// In en, this message translates to:
-  /// **'Health Connect'**
+  /// **'Import all Health Connect data'**
   String get healthDashboardHealthConnect;
 
   /// No description provided for @healthDashboardConnectHealthConnectSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Requests access and imports all available history on the first sync.'**
+  /// **'Requests access and imports all available historical data from Health Connect.'**
   String get healthDashboardConnectHealthConnectSubtitle;
 
   /// No description provided for @healthDashboardAutoHealthConnectSync.
@@ -11854,6 +11860,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Duration'**
   String get healthDashboardDuration;
+
+  /// No description provided for @treadmillSyncToHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync workouts to Health Connect'**
+  String get treadmillSyncToHealthConnect;
+
+  /// No description provided for @treadmillSyncToHealthConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write treadmill run sessions to Health Connect when finished.'**
+  String get treadmillSyncToHealthConnectSubtitle;
+
+  /// No description provided for @healthDashboardCloudBackendSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Backend Sync'**
+  String get healthDashboardCloudBackendSync;
+
+  /// No description provided for @healthDashboardExportJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Health Connect JSON'**
+  String get healthDashboardExportJson;
+
+  /// No description provided for @healthDashboardExportJsonSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export raw Health Connect records as a JSON file for analysis.'**
+  String get healthDashboardExportJsonSubtitle;
 }
 
 class _AppLocalizationsDelegate

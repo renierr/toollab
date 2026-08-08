@@ -6,11 +6,16 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../health_dashboard_state.dart';
+import '../health_database.dart';
 
 class HealthBackupActions {
   static const _typeGroup = XTypeGroup(
     label: 'Health Dashboard SQLite backup',
     extensions: ['db'],
+  );
+  static const _jsonTypeGroup = XTypeGroup(
+    label: 'Health Connect JSON export',
+    extensions: ['json'],
   );
 
   static Future<void> export(BuildContext context) async {
@@ -21,6 +26,17 @@ class HealthBackupActions {
       suggestedName: 'health_dashboard_backup.db',
       sourcePath: path,
       acceptedTypeGroups: const [_typeGroup],
+    );
+  }
+
+  static Future<void> exportJson(BuildContext context) async {
+    final path = await HealthDatabase.instance.exportHealthConnectJson();
+    if (!context.mounted) return;
+    await FileSaveHelper.saveFileFromPath(
+      context: context,
+      suggestedName: 'health_connect_export.json',
+      sourcePath: path,
+      acceptedTypeGroups: const [_jsonTypeGroup],
     );
   }
 

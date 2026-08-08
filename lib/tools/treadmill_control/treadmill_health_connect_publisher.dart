@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:health_connector/health_connector.dart' as hc;
+import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
 import 'treadmill_control_db.dart';
@@ -15,13 +17,21 @@ class TreadmillHealthConnectPublisher {
   static final instance = TreadmillHealthConnectPublisher._();
   bool _isPublishing = false;
 
-  Future<void> publishPendingSessions() async {
+  Future<void> publishPendingSessions({
+    bool forcePermissionRequest = false,
+  }) async {
     if (!Platform.isAndroid || _isPublishing) return;
+    final enabled = await DatabaseService.instance.getSetting(
+      TreadmillControlTool.config.id,
+      'sync_to_health_connect',
+    );
+    if (enabled != 'true' && !forcePermissionRequest) return;
+
     _isPublishing = true;
     try {
       final sessions = await TreadmillControlDb.instance
           .getHealthConnectPendingSessions();
-      if (sessions.isEmpty) return;
+      if (sessions.isEmpty && !forcePermissionRequest) return;
       final connector = await hc.HealthConnector.create();
       await connector.requestPermissions([
         hc.HealthDataType.exerciseSession.writePermission,
@@ -35,6 +45,8 @@ class TreadmillHealthConnectPublisher {
         await connector.writeRecords(_recordsFor(session));
         await TreadmillControlDb.instance.markHealthConnectPublished(session);
       }
+    } catch (e) {
+      debugPrint('[TreadmillControl] Publish to Health Connect failed: $e');
     } finally {
       _isPublishing = false;
     }

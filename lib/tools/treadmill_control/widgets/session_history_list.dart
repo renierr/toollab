@@ -168,22 +168,27 @@ class SessionHistoryList extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final result = await state.syncNow();
-      if (result == null) {
+      if (!context.mounted) return;
+      if (result != null) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.treadmillHistorySyncSuccess(
+                result['pushed'] ?? 0,
+                result['pulled'] ?? 0,
+              ),
+            ),
+          ),
+        );
+      } else if (state.syncToHealthConnect) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.healthDashboardHealthConnectImported)),
+        );
+      } else {
         messenger.showSnackBar(
           SnackBar(content: Text(l10n.treadmillHistorySyncDisabled)),
         );
-        return;
       }
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.treadmillHistorySyncSuccess(
-              result['pushed'] ?? 0,
-              result['pulled'] ?? 0,
-            ),
-          ),
-        ),
-      );
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.treadmillHistorySyncFailed('$e'))),

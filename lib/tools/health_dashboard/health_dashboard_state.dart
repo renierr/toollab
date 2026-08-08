@@ -39,44 +39,50 @@ class HealthDashboardState extends ChangeNotifier {
     load();
   }
 
-  Future<void> load() async {
-    isLoading = true;
+  Future<void> load({bool showLoading = true}) async {
+    if (showLoading && records.isEmpty) {
+      isLoading = true;
+      notifyListeners();
+    }
     error = null;
-    notifyListeners();
     try {
-      records = await HealthDatabase.instance.activeRecordsSince(
-        DateTime.now().subtract(_dashboardWindow),
-      );
-      final summary = await HealthDatabase.instance.allTimeWorkoutSummary();
-      allTimeDistanceKm = summary['distance']!.toDouble();
-      allTimeCalories = summary['calories']!.round();
-      allTimeDurationSeconds = summary['duration']!.round();
-      allTimeWorkouts = summary['workouts']!.toInt();
-      allTimeSteps = await HealthDatabase.instance.allTimeSteps();
-      showTreadmillWorkouts =
-          await DatabaseService.instance.getSetting(
-            HealthDashboardTool.config.id,
-            _showTreadmillWorkoutsKey,
-          ) !=
-          'false';
-      autoHealthConnectSync =
-          await DatabaseService.instance.getSetting(
-            HealthDashboardTool.config.id,
-            _autoHealthConnectSyncKey,
-          ) ==
-          'true';
-      for (final type in _sourcePreferenceTypes) {
-        sourcePreferences[type] = await DatabaseService.instance.getSetting(
-          HealthDashboardTool.config.id,
-          '$_sourcePreferencePrefix$type',
-        );
-      }
+      await _reloadRecords();
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Load failed: $e');
     } finally {
       isLoading = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> _reloadRecords() async {
+    records = await HealthDatabase.instance.activeRecordsSince(
+      DateTime.now().subtract(_dashboardWindow),
+    );
+    final summary = await HealthDatabase.instance.allTimeWorkoutSummary();
+    allTimeDistanceKm = summary['distance']!.toDouble();
+    allTimeCalories = summary['calories']!.round();
+    allTimeDurationSeconds = summary['duration']!.round();
+    allTimeWorkouts = summary['workouts']!.toInt();
+    allTimeSteps = await HealthDatabase.instance.allTimeSteps();
+    showTreadmillWorkouts =
+        await DatabaseService.instance.getSetting(
+          HealthDashboardTool.config.id,
+          _showTreadmillWorkoutsKey,
+        ) !=
+        'false';
+    autoHealthConnectSync =
+        await DatabaseService.instance.getSetting(
+          HealthDashboardTool.config.id,
+          _autoHealthConnectSyncKey,
+        ) ==
+        'true';
+    for (final type in _sourcePreferenceTypes) {
+      sourcePreferences[type] = await DatabaseService.instance.getSetting(
+        HealthDashboardTool.config.id,
+        '$_sourcePreferencePrefix$type',
+      );
     }
   }
 
@@ -89,7 +95,7 @@ class HealthDashboardState extends ChangeNotifier {
       for (final record in await _treadmillCollector.collect()) {
         await HealthDatabase.instance.upsertCollected(record);
       }
-      await load();
+      await _reloadRecords();
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Collection failed: $e');
@@ -102,7 +108,7 @@ class HealthDashboardState extends ChangeNotifier {
   Future<void> connectHealthConnect() async {
     try {
       await _healthConnectCollector.requestAccess();
-      await syncHealthConnect();
+      await syncHealthConnect(forceFullHistory: true);
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Health Connect access failed: $e');
@@ -110,18 +116,20 @@ class HealthDashboardState extends ChangeNotifier {
     }
   }
 
-  Future<void> syncHealthConnect() async {
+  Future<void> syncHealthConnect({bool forceFullHistory = false}) async {
     if (isCollecting) return;
     isCollecting = true;
     error = null;
     notifyListeners();
     try {
-      final lastSync = await DatabaseService.instance.getSetting(
-        HealthDashboardTool.config.id,
-        _healthConnectLastSyncKey,
-      );
+      final lastSync = forceFullHistory
+          ? null
+          : await DatabaseService.instance.getSetting(
+              HealthDashboardTool.config.id,
+              _healthConnectLastSyncKey,
+            );
       final start = lastSync == null
-          ? DateTime.now().subtract(const Duration(days: 90))
+          ? DateTime.utc(1970)
           : DateTime.fromMillisecondsSinceEpoch(
               int.parse(lastSync),
             ).subtract(const Duration(days: 1));
@@ -135,7 +143,7 @@ class HealthDashboardState extends ChangeNotifier {
         _healthConnectLastSyncKey,
         DateTime.now().millisecondsSinceEpoch.toString(),
       );
-      await load();
+      await _reloadRecords();
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Health Connect sync failed: $e');
@@ -151,6 +159,7 @@ class HealthDashboardState extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
+      await HealthDatabase.instance.purgeHealthConnectCache();
       for (final record in await _healthConnectCollector.collect(
         start: DateTime.utc(1970),
       )) {
@@ -161,7 +170,7 @@ class HealthDashboardState extends ChangeNotifier {
         _healthConnectLastSyncKey,
         DateTime.now().millisecondsSinceEpoch.toString(),
       );
-      await load();
+      await _reloadRecords();
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Health Connect repair failed: $e');
@@ -172,16 +181,47 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   Future<void> refreshOnOpen(AppState appState) async {
-    await collect();
-    if (autoHealthConnectSync) {
-      await syncHealthConnect();
-    }
-    if (!appState.syncEnabled || appState.isSyncing) return;
+    if (isCollecting) return;
+    isCollecting = true;
+    notifyListeners();
     try {
-      await appState.syncWithBackend([HealthDashboardSyncDelegate()]);
-      await load();
+      for (final record in await _treadmillCollector.collect()) {
+        await HealthDatabase.instance.upsertCollected(record);
+      }
+      if (autoHealthConnectSync) {
+        final lastSync = await DatabaseService.instance.getSetting(
+          HealthDashboardTool.config.id,
+          _healthConnectLastSyncKey,
+        );
+        final start = lastSync == null
+            ? DateTime.now().subtract(const Duration(days: 90))
+            : DateTime.fromMillisecondsSinceEpoch(
+                int.parse(lastSync),
+              ).subtract(const Duration(days: 1));
+        for (final record in await _healthConnectCollector.collect(
+          start: start,
+        )) {
+          await HealthDatabase.instance.upsertCollected(record);
+        }
+        await DatabaseService.instance.setSetting(
+          HealthDashboardTool.config.id,
+          _healthConnectLastSyncKey,
+          DateTime.now().millisecondsSinceEpoch.toString(),
+        );
+      }
+      if (appState.syncEnabled && !appState.isSyncing) {
+        try {
+          await appState.syncWithBackend([HealthDashboardSyncDelegate()]);
+        } catch (e) {
+          debugPrint('[HealthDashboard] Open sync failed: $e');
+        }
+      }
+      await _reloadRecords();
     } catch (e) {
       debugPrint('[HealthDashboard] Open sync failed: $e');
+    } finally {
+      isCollecting = false;
+      notifyListeners();
     }
   }
 
@@ -248,7 +288,7 @@ class HealthDashboardState extends ChangeNotifier {
       : const [];
 
   List<HealthRecord> get healthConnectWorkouts => records
-      .where((record) => record.type == 'workout.healthConnect')
+      .where((record) => record.type == 'workout.health_connect')
       .toList();
 
   List<HealthRecord> get allHealthData =>
@@ -292,7 +332,7 @@ class HealthDashboardState extends ChangeNotifier {
         )
         .toList();
     final healthConnect = dayRecords
-        .where((record) => record.type == 'workout.healthConnect')
+        .where((record) => record.type == 'workout.health_connect')
         .where(
           (record) => !treadmill.any(
             (local) => _isPublishedTreadmillCopy(local, record),
@@ -306,9 +346,33 @@ class HealthDashboardState extends ChangeNotifier {
   bool _isPublishedTreadmillCopy(
     HealthRecord treadmill,
     HealthRecord healthConnect,
-  ) =>
-      healthConnect.value['clientRecordId'] ==
-      '$treadmillHealthConnectClientIdPrefix${treadmill.sourceRecordId}:exercise';
+  ) {
+    final clientRecordId = healthConnect.value['clientRecordId'] as String?;
+    if (clientRecordId != null &&
+        clientRecordId ==
+            '$treadmillHealthConnectClientIdPrefix${treadmill.sourceRecordId}:exercise') {
+      return true;
+    }
+    final startDiff = (treadmill.startTime - healthConnect.startTime).abs();
+    final endDiff = (treadmill.endTime - healthConnect.endTime).abs();
+    if (startDiff < 120000 && endDiff < 120000) {
+      return true;
+    }
+    final overlapStart = max(treadmill.startTime, healthConnect.startTime);
+    final overlapEnd = min(treadmill.endTime, healthConnect.endTime);
+    final overlapMs = overlapEnd - overlapStart;
+    if (overlapMs > 0) {
+      final treadmillDuration = max(1, treadmill.endTime - treadmill.startTime);
+      final hcDuration = max(
+        1,
+        healthConnect.endTime - healthConnect.startTime,
+      );
+      if (overlapMs / min(treadmillDuration, hcDuration) > 0.8) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   List<HealthRecord> recordsOfType(String type, {bool preferredOnly = false}) {
     final typed = records.where((record) => record.type == type).toList();
@@ -437,7 +501,9 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   int get todaySteps {
-    return recordsOnDay('activity.steps', DateTime.now()).fold(
+    final dayRecords = recordsOnDay('activity.steps', DateTime.now());
+    final deduplicated = _deduplicateIntervals(dayRecords, 'count');
+    return deduplicated.fold(
       0,
       (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
     );
@@ -446,6 +512,18 @@ class HealthDashboardState extends ChangeNotifier {
   double? get latestWeightKg => _latestNumeric('body.weight', 'kilograms');
 
   double? get latestRestingHeartRate => _latestNumeric('heart.resting', 'bpm');
+
+  double? get latestHrv =>
+      _latestNumeric('health.heart_rate_variability_rmssd', 'rmssdMs');
+
+  double? get latestSpO2 =>
+      _latestNumeric('health.oxygen_saturation', 'percent');
+
+  double? get latestRespiratoryRate =>
+      _latestNumeric('health.respiratory_rate', 'respiratoryRate');
+
+  double? get latestBodyFat =>
+      _latestNumeric('health.body_fat_percentage', 'percent');
 
   int? get latestSleepMinutes {
     for (final record in recordsOfType('sleep.session', preferredOnly: true)) {
@@ -476,17 +554,62 @@ class HealthDashboardState extends ChangeNotifier {
     'calories',
   ).whereType<double>().fold(0, (sum, value) => sum + value.round());
 
-  int get totalSteps => recordsOfType('activity.steps').fold(
-    0,
-    (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
-  );
+  int get totalSteps {
+    final allSteps = recordsOfType('activity.steps');
+    final deduplicated = _deduplicateIntervals(allSteps, 'count');
+    return deduplicated.fold(
+      0,
+      (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
+    );
+  }
 
   int get selectedWeekSteps => List<int>.generate(7, (index) {
-    return recordsOnDay('activity.steps', _dayAt(index)).fold(
+    final dayRecords = recordsOnDay('activity.steps', _dayAt(index));
+    final deduplicated = _deduplicateIntervals(dayRecords, 'count');
+    return deduplicated.fold(
       0,
       (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
     );
   }).fold(0, (sum, value) => sum + value);
+
+  List<HealthRecord> _deduplicateIntervals(
+    List<HealthRecord> input,
+    String valueKey,
+  ) {
+    if (input.length <= 1) return input;
+    final sorted = List<HealthRecord>.from(input)
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+    final result = <HealthRecord>[];
+
+    for (final record in sorted) {
+      if (result.isEmpty) {
+        result.add(record);
+        continue;
+      }
+      final last = result.last;
+      final overlapStart = max(last.startTime, record.startTime);
+      final overlapEnd = min(last.endTime, record.endTime);
+      final overlapMs = overlapEnd - overlapStart;
+
+      if (overlapMs > 0) {
+        final lastDuration = max(1, last.endTime - last.startTime);
+        final recDuration = max(1, record.endTime - record.startTime);
+        final overlapRatio = overlapMs / min(lastDuration, recDuration);
+
+        if (overlapRatio > 0.5) {
+          final lastVal = (metricValue(last, valueKey) ?? 0);
+          final recVal = (metricValue(record, valueKey) ?? 0);
+          if (record.sourceName?.contains('tool_lab') == true ||
+              recVal > lastVal) {
+            result[result.length - 1] = record;
+          }
+          continue;
+        }
+      }
+      result.add(record);
+    }
+    return result;
+  }
 
   int get selectedWeekDurationSeconds => workoutMetricValues(
     'durationMinutes',

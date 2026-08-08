@@ -5,6 +5,7 @@ import 'package:universal_ble/universal_ble.dart';
 import 'treadmill_control_state.dart';
 import 'treadmill_control_colors.dart';
 import 'widgets/device_connection_sheet.dart';
+import 'widgets/treadmill_settings_sheet.dart';
 import 'widgets/workout_metrics_grid.dart';
 import 'widgets/workout_controls_panel.dart';
 import '../../core/tool_page_state.dart';
@@ -71,6 +72,15 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
         icon: const Icon(Icons.insights_outlined),
         tooltip: l10n.historyTitle,
         onPressed: () => context.push('/treadmill-control/history'),
+      ),
+      IconButton(
+        icon: const Icon(Icons.settings_outlined),
+        tooltip: l10n.healthDashboardSettings,
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          builder: (_) => const TreadmillSettingsSheet(),
+        ),
       ),
     ];
 

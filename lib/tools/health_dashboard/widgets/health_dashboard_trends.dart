@@ -17,7 +17,37 @@ class HealthDashboardTrends extends StatelessWidget {
     final hasWeight = state
         .weeklyMetricValues('body.weight', 'kilograms')
         .any((value) => value != null);
-    if (!hasDistance && !hasPulse && !hasWeight) return const SizedBox.shrink();
+    final hrvValues = state.weeklyMetricValues(
+      'health.heart_rate_variability_rmssd',
+      'rmssdMs',
+    );
+    final hasHrv = hrvValues.any((value) => value != null);
+    final spO2Values = state.weeklyMetricValues(
+      'health.oxygen_saturation',
+      'percent',
+    );
+    final hasSpO2 = spO2Values.any((value) => value != null);
+    final respValues = state.weeklyMetricValues(
+      'health.respiratory_rate',
+      'respiratoryRate',
+    );
+    final hasResp = respValues.any((value) => value != null);
+    final bodyFatValues = state.weeklyMetricValues(
+      'health.body_fat_percentage',
+      'percent',
+    );
+    final hasBodyFat = bodyFatValues.any((value) => value != null);
+
+    if (!hasDistance &&
+        !hasPulse &&
+        !hasWeight &&
+        !hasHrv &&
+        !hasSpO2 &&
+        !hasResp &&
+        !hasBodyFat) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -29,8 +59,48 @@ class HealthDashboardTrends extends StatelessWidget {
             endDate: state.trendWeekEnd,
           ),
         if (hasWeight)
-          _WeightTrend(
+          _MetricTrendChart(
+            title: AppLocalizations.of(context).healthDashboardWeightTrend,
             values: state.weeklyMetricValues('body.weight', 'kilograms'),
+            unit: 'kg',
+            color: AppTheme.accentPurple,
+            style: HealthTrendChartStyle.line,
+            endDate: state.trendWeekEnd,
+          ),
+        if (hasHrv)
+          _MetricTrendChart(
+            title: 'HRV (RMSSD) 7-Day Trend',
+            values: hrvValues,
+            unit: 'ms',
+            color: AppTheme.accentPurple,
+            style: HealthTrendChartStyle.line,
+            endDate: state.trendWeekEnd,
+          ),
+        if (hasSpO2)
+          _MetricTrendChart(
+            title: 'Oxygen Saturation (SpO2) 7-Day Trend',
+            values: spO2Values,
+            unit: '%',
+            color: AppTheme.accentBlue,
+            style: HealthTrendChartStyle.line,
+            endDate: state.trendWeekEnd,
+          ),
+        if (hasResp)
+          _MetricTrendChart(
+            title: 'Respiratory Rate 7-Day Trend',
+            values: respValues,
+            unit: 'rpm',
+            color: AppTheme.accentTeal,
+            style: HealthTrendChartStyle.line,
+            endDate: state.trendWeekEnd,
+          ),
+        if (hasBodyFat)
+          _MetricTrendChart(
+            title: 'Body Fat 7-Day Trend',
+            values: bodyFatValues,
+            unit: '%',
+            color: AppTheme.accentAmber,
+            style: HealthTrendChartStyle.line,
             endDate: state.trendWeekEnd,
           ),
       ],
@@ -79,30 +149,38 @@ class _DistancePulseTrend extends StatelessWidget {
   );
 }
 
-class _WeightTrend extends StatelessWidget {
+class _MetricTrendChart extends StatelessWidget {
+  final String title;
   final List<double?> values;
+  final String unit;
+  final Color color;
+  final HealthTrendChartStyle style;
   final DateTime endDate;
 
-  const _WeightTrend({required this.values, required this.endDate});
+  const _MetricTrendChart({
+    required this.title,
+    required this.values,
+    required this.unit,
+    required this.color,
+    required this.style,
+    required this.endDate,
+  });
 
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const SizedBox(height: 24),
-      Text(
-        AppLocalizations.of(context).healthDashboardWeightTrend,
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
+      Text(title, style: Theme.of(context).textTheme.titleMedium),
       const SizedBox(height: 8),
       Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: HealthWorkoutTrendChart(
             values: values,
-            unit: 'kg',
-            color: AppTheme.accentPurple,
-            style: HealthTrendChartStyle.line,
+            unit: unit,
+            color: color,
+            style: style,
             endDate: endDate,
           ),
         ),

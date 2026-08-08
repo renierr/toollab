@@ -154,6 +154,67 @@ class HealthDashboardContent extends StatelessWidget {
                     color: AppTheme.accentPurple,
                   ),
                 ),
+              if (state.latestHrv != null)
+                HealthMetricCard(
+                  icon: Icons.monitor_heart_rounded,
+                  color: AppTheme.accentPurple,
+                  label: 'HRV (RMSSD)',
+                  value: '${state.latestHrv!.toStringAsFixed(1)} ms',
+                  onTap: () => _openMetric(
+                    context,
+                    title: 'HRV',
+                    type: 'health.heart_rate_variability_rmssd',
+                    valueKey: 'rmssdMs',
+                    unit: 'ms',
+                    color: AppTheme.accentPurple,
+                  ),
+                ),
+              if (state.latestSpO2 != null)
+                HealthMetricCard(
+                  icon: Icons.percent_rounded,
+                  color: AppTheme.accentBlue,
+                  label: 'Oxygen Saturation',
+                  value: '${state.latestSpO2!.toStringAsFixed(1)} %',
+                  onTap: () => _openMetric(
+                    context,
+                    title: 'Oxygen Saturation',
+                    type: 'health.oxygen_saturation',
+                    valueKey: 'percent',
+                    unit: '%',
+                    color: AppTheme.accentBlue,
+                  ),
+                ),
+              if (state.latestRespiratoryRate != null)
+                HealthMetricCard(
+                  icon: Icons.air_rounded,
+                  color: AppTheme.accentTeal,
+                  label: 'Respiratory Rate',
+                  value:
+                      '${state.latestRespiratoryRate!.toStringAsFixed(1)} rpm',
+                  onTap: () => _openMetric(
+                    context,
+                    title: 'Respiratory Rate',
+                    type: 'health.respiratory_rate',
+                    valueKey: 'respiratoryRate',
+                    unit: 'rpm',
+                    color: AppTheme.accentTeal,
+                  ),
+                ),
+              if (state.latestBodyFat != null)
+                HealthMetricCard(
+                  icon: Icons.pie_chart_outline_rounded,
+                  color: AppTheme.accentAmber,
+                  label: 'Body Fat',
+                  value: '${state.latestBodyFat!.toStringAsFixed(1)} %',
+                  onTap: () => _openMetric(
+                    context,
+                    title: 'Body Fat',
+                    type: 'health.body_fat_percentage',
+                    valueKey: 'percent',
+                    unit: '%',
+                    color: AppTheme.accentAmber,
+                  ),
+                ),
               if (state.todaySteps > 0)
                 HealthMetricCard(
                   icon: Icons.directions_walk_rounded,

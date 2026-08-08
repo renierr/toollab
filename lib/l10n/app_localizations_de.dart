@@ -6337,6 +6337,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardManageHealthConnect => 'Health Connect verwalten';
 
   @override
+  String get healthDashboardManageHealthConnectSubtitle =>
+      'Android-Berechtigungen oder Health-Connect-Systemeinstellungen öffnen.';
+
+  @override
   String get healthDashboardHealthConnectImported =>
       'Health-Connect-Daten importiert';
 
@@ -6360,11 +6364,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Importiert den gesamten verfuegbaren Health-Connect-Verlauf erneut und aktualisiert gespeicherte Daten.';
 
   @override
-  String get healthDashboardHealthConnect => 'Health Connect';
+  String get healthDashboardHealthConnect =>
+      'Alle Health Connect Daten importieren';
 
   @override
   String get healthDashboardConnectHealthConnectSubtitle =>
-      'Fordert Zugriff an und importiert beim ersten Abgleich den gesamten verfuegbaren Verlauf.';
+      'Fordert Zugriff an und importiert alle verfuegbaren historischen Daten aus Health Connect.';
 
   @override
   String get healthDashboardAutoHealthConnectSync =>
@@ -6573,4 +6578,23 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardDuration => 'Dauer';
+
+  @override
+  String get treadmillSyncToHealthConnect =>
+      'Workouts mit Health Connect synchronisieren';
+
+  @override
+  String get treadmillSyncToHealthConnectSubtitle =>
+      'Laufband-Workouts nach Abschluss in Health Connect eintragen.';
+
+  @override
+  String get healthDashboardCloudBackendSync =>
+      'Cloud-Backend-Synchronisierung';
+
+  @override
+  String get healthDashboardExportJson => 'Health-Connect-JSON exportieren';
+
+  @override
+  String get healthDashboardExportJsonSubtitle =>
+      'Gesammelte Health-Connect-Einträge als JSON-Datei zur Analyse exportieren.';
 }

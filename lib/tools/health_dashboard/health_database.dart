@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:sqflite/sqflite.dart';
@@ -277,5 +279,34 @@ class HealthDatabase {
     } finally {
       await backup.close();
     }
+  }
+
+  Future<void> purgeHealthConnectCache() async {
+    final db = await _db();
+    await db.delete(_table, where: "source = 'healthConnect'");
+  }
+
+  Future<String> exportHealthConnectJson() async {
+    final db = await _db();
+    final rows = await db.query(
+      _table,
+      where: "source = 'healthConnect' AND deleted = 0",
+      orderBy: 'start_time DESC',
+    );
+    final records = rows.map((row) {
+      final map = Map<String, dynamic>.from(row);
+      try {
+        map['value_json'] = jsonDecode(row['value_json'] as String);
+      } catch (_) {}
+      return map;
+    }).toList();
+
+    final path = await TempFileManager.createFile(
+      'health_connect_export_${DateTime.now().millisecondsSinceEpoch}.json',
+    );
+    await File(
+      path,
+    ).writeAsString(const JsonEncoder.withIndent('  ').convert(records));
+    return path;
   }
 }

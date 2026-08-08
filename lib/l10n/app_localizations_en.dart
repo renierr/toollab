@@ -6298,6 +6298,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthDashboardManageHealthConnect => 'Manage Health Connect';
 
   @override
+  String get healthDashboardManageHealthConnectSubtitle =>
+      'Open Android permissions or Health Connect system settings.';
+
+  @override
   String get healthDashboardHealthConnectImported =>
       'Health Connect data imported';
 
@@ -6320,11 +6324,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Re-import all available Health Connect history and update cached records.';
 
   @override
-  String get healthDashboardHealthConnect => 'Health Connect';
+  String get healthDashboardHealthConnect => 'Import all Health Connect data';
 
   @override
   String get healthDashboardConnectHealthConnectSubtitle =>
-      'Requests access and imports all available history on the first sync.';
+      'Requests access and imports all available historical data from Health Connect.';
 
   @override
   String get healthDashboardAutoHealthConnectSync =>
@@ -6531,4 +6535,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardDuration => 'Duration';
+
+  @override
+  String get treadmillSyncToHealthConnect => 'Sync workouts to Health Connect';
+
+  @override
+  String get treadmillSyncToHealthConnectSubtitle =>
+      'Write treadmill run sessions to Health Connect when finished.';
+
+  @override
+  String get healthDashboardCloudBackendSync => 'Cloud Backend Sync';
+
+  @override
+  String get healthDashboardExportJson => 'Export Health Connect JSON';
+
+  @override
+  String get healthDashboardExportJsonSubtitle =>
+      'Export raw Health Connect records as a JSON file for analysis.';
 }

@@ -132,6 +132,56 @@ class HealthRecordStatsCard extends StatelessWidget {
         ),
       );
     }
+    if (val['rmssdMs'] case final num rmssd) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.monitor_heart_rounded,
+          color: AppTheme.accentPurple,
+          label: 'HRV',
+          value: '${rmssd.toStringAsFixed(1)} ms',
+        ),
+      );
+    }
+    if (val['vo2Max'] case final num vo2) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.fitness_center_rounded,
+          color: AppTheme.accentGreen,
+          label: 'VO2 Max',
+          value: '${vo2.toStringAsFixed(1)} mL/kg/min',
+        ),
+      );
+    }
+    if (val['respiratoryRate'] case final num resp) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.air_rounded,
+          color: AppTheme.accentBlue,
+          label: 'Respiratory Rate',
+          value: '${resp.toStringAsFixed(1)} rpm',
+        ),
+      );
+    }
+    if (val['bloodGlucoseMgl'] case final num glucose) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.bloodtype_outlined,
+          color: AppTheme.accentRed,
+          label: 'Blood Glucose',
+          value: '${glucose.round()} mg/dL',
+        ),
+      );
+    }
+    if (val['bmr'] case final num bmrVal) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.local_fire_department_outlined,
+          color: AppTheme.accentAmber,
+          label: 'BMR',
+          value: '${bmrVal.round()} kcal/day',
+        ),
+      );
+    }
 
     if (items.isEmpty) return const SizedBox.shrink();
 

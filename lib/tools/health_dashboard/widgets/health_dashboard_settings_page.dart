@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../health_dashboard_state.dart';
 import '../health_connect_settings.dart';
@@ -45,7 +47,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.health_and_safety_outlined),
             title: Text(l10n.healthDashboardManageHealthConnect),
-            subtitle: Text(l10n.healthDashboardConnectHealthConnectSubtitle),
+            subtitle: Text(l10n.healthDashboardManageHealthConnectSubtitle),
             trailing: healthState.isCollecting
                 ? const SizedBox(
                     width: 20,
@@ -89,13 +91,19 @@ class HealthDashboardSettingsPage extends StatelessWidget {
             onTap: () => HealthBackupActions.export(context),
           ),
           ListTile(
+            leading: const Icon(Icons.data_object_rounded),
+            title: Text(l10n.healthDashboardExportJson),
+            subtitle: Text(l10n.healthDashboardExportJsonSubtitle),
+            onTap: () => HealthBackupActions.exportJson(context),
+          ),
+          ListTile(
             leading: const Icon(Icons.download_outlined),
             title: Text(l10n.healthDashboardImportBackup),
             subtitle: Text(l10n.healthDashboardImportBackupSubtitle),
             onTap: () => HealthBackupActions.import(context),
           ),
           const Divider(height: 1),
-          _SettingsSection(title: l10n.healthDashboardSync),
+          _SettingsSection(title: l10n.healthDashboardCloudBackendSync),
           ListTile(
             leading: const Icon(Icons.cloud_sync_outlined),
             title: Text(l10n.healthDashboardSyncNow),
@@ -123,9 +131,17 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     final healthState = context.read<HealthDashboardState>();
     final appState = context.read<AppState>();
+
+    try {
+      await healthState.collect();
+      await healthState.syncHealthConnect();
+    } catch (e) {
+      debugPrint('[HealthDashboard] Health Connect sync failed: $e');
+    }
+
     if (!appState.syncEnabled) {
       messenger.showSnackBar(
-        SnackBar(content: Text(l10n.healthDashboardSyncDisabled)),
+        SnackBar(content: Text(l10n.healthDashboardHealthConnectImported)),
       );
       return;
     }
@@ -209,6 +225,30 @@ class HealthDashboardSettingsPage extends StatelessWidget {
   }
 
   Future<void> _repairHealthConnect(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => ResponsiveAlertDialog(
+        title: Text(l10n.healthDashboardRepairHealthConnect),
+        content: Text(l10n.healthDashboardRepairHealthConnectSubtitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentRed,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
     final healthState = context.read<HealthDashboardState>();
     final messenger = ScaffoldMessenger.of(context);
     await healthState.repairHealthConnectCache();
@@ -222,9 +262,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
       SnackBar(
         content: Text(
           healthState.error == null
-              ? AppLocalizations.of(
-                  context,
-                ).healthDashboardHealthConnectRepaired
+              ? l10n.healthDashboardHealthConnectRepaired
               : 'Repair failed: ${healthState.error}',
         ),
       ),
