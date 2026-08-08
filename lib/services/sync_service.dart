@@ -9,6 +9,19 @@ abstract class SyncDelegate {
 
   Future<List<Map<String, dynamic>>> getLocalSyncRecords();
 
+  Future<List<Map<String, dynamic>>> getLocalSyncRecordsByIds(
+    List<String> ids,
+  ) async => (await getLocalSyncRecords())
+      .where((record) => ids.contains(record['id']))
+      .toList();
+
+  Future<List<Map<String, dynamic>>> getLocalPendingSyncRecords() async =>
+      getLocalSyncRecords();
+
+  Future<String?> getSyncCursor(String syncId) async => null;
+
+  Future<void> saveSyncCursor(String syncId, String cursor) async {}
+
   Future<Map<String, dynamic>?> getLocalRecordData(String id);
 
   Future<void> savePulledRecord({
@@ -105,7 +118,14 @@ class SyncService {
     const httpTimeout = Duration(seconds: 10);
 
     final metadataUri = Uri.parse('$sanitizedUrl/api/sync/$toolId/metadata');
-    final metadataResponse = await client.get(metadataUri).timeout(httpTimeout);
+    final cursor = await delegate.getSyncCursor(toolId);
+    final metadataResponse = await client
+        .get(
+          cursor == null
+              ? metadataUri
+              : metadataUri.replace(queryParameters: {'cursor': cursor}),
+        )
+        .timeout(httpTimeout);
     if (metadataResponse.statusCode != 200) {
       throw Exception(
         'Failed to fetch metadata from server: ${metadataResponse.statusCode}',
@@ -118,6 +138,8 @@ class SyncService {
     }
 
     final List<dynamic> serverMetaList = metadataJson['records'] ?? [];
+    final bool fullMetadata = metadataJson['full'] as bool? ?? true;
+    final String? nextCursor = metadataJson['cursor'] as String?;
 
     final Map<String, _ServerMeta> serverMetaMap = {};
     for (final item in serverMetaList) {
@@ -129,10 +151,14 @@ class SyncService {
       );
     }
 
-    final List<Map<String, dynamic>> localMetaList = await delegate
-        .getLocalSyncRecords();
+    final List<Map<String, dynamic>> localMetaList = fullMetadata
+        ? await delegate.getLocalSyncRecords()
+        : await delegate.getLocalSyncRecordsByIds(serverMetaMap.keys.toList());
+    final pendingMetaList = fullMetadata
+        ? const <Map<String, dynamic>>[]
+        : await delegate.getLocalPendingSyncRecords();
     final Map<String, _LocalMeta> localMetaMap = {
-      for (final item in localMetaList)
+      for (final item in [...localMetaList, ...pendingMetaList])
         item['id'] as String: _LocalMeta(
           id: item['id'] as String,
           updatedAt: item['updatedAt'] as int? ?? 0,
@@ -161,7 +187,16 @@ class SyncService {
       }
     }
 
-    for (final lMeta in localMetaMap.values) {
+    final pushCandidates = fullMetadata
+        ? localMetaMap.values
+        : pendingMetaList.map(
+            (item) => _LocalMeta(
+              id: item['id'] as String,
+              updatedAt: item['updatedAt'] as int? ?? 0,
+              deleted: item['deleted'] as bool? ?? false,
+            ),
+          );
+    for (final lMeta in pushCandidates) {
       final sMeta = serverMetaMap[lMeta.id];
 
       if (lMeta.deleted) {
@@ -186,6 +221,7 @@ class SyncService {
     }
 
     if (toPullIds.isEmpty && toPush.isEmpty) {
+      if (nextCursor != null) await delegate.saveSyncCursor(toolId, nextCursor);
       return {
         'pulled': pulledCount,
         'pushed': pushedCount,
@@ -276,6 +312,7 @@ class SyncService {
       }
     }
 
+    if (nextCursor != null) await delegate.saveSyncCursor(toolId, nextCursor);
     return {
       'pulled': pulledCount,
       'pushed': pushedCount,

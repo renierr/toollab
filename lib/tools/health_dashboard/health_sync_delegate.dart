@@ -1,10 +1,12 @@
 import 'package:tool_lab/services/sync_service.dart';
+import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
 import 'health_database.dart';
 import 'health_record.dart';
 
 class HealthDashboardSyncDelegate implements SyncDelegate {
+  static const _cursorPrefix = 'sync_cursor_';
   @override
   String get toolId => HealthDashboardTool.config.id;
 
@@ -45,6 +47,40 @@ class HealthDashboardSyncDelegate implements SyncDelegate {
         )
         .toList();
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> getLocalSyncRecordsByIds(
+    List<String> ids,
+  ) async =>
+      _toSyncMetadata(await HealthDatabase.instance.syncRecordsByIds(ids));
+
+  @override
+  Future<List<Map<String, dynamic>>> getLocalPendingSyncRecords() async =>
+      _toSyncMetadata(await HealthDatabase.instance.pendingSyncRecords());
+
+  @override
+  Future<String?> getSyncCursor(String syncId) => DatabaseService.instance
+      .getSetting(HealthDashboardTool.config.id, '$_cursorPrefix$syncId');
+
+  @override
+  Future<void> saveSyncCursor(String syncId, String cursor) =>
+      DatabaseService.instance.setSetting(
+        HealthDashboardTool.config.id,
+        '$_cursorPrefix$syncId',
+        cursor,
+      );
+
+  List<Map<String, dynamic>> _toSyncMetadata(
+    List<Map<String, dynamic>> records,
+  ) => records
+      .map(
+        (record) => {
+          'id': record['id'],
+          'updatedAt': record['updated_at'],
+          'deleted': (record['deleted'] as int) == 1,
+        },
+      )
+      .toList();
 
   @override
   Future<void> savePulledRecord({

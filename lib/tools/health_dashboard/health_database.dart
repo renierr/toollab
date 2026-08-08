@@ -382,6 +382,27 @@ class HealthDatabase {
     return db.query(_table, columns: ['id', 'updated_at', 'deleted']);
   }
 
+  Future<List<Map<String, dynamic>>> syncRecordsByIds(List<String> ids) async {
+    if (ids.isEmpty) return const [];
+    final db = await _db();
+    final placeholders = List.filled(ids.length, '?').join(', ');
+    return db.query(
+      _table,
+      columns: ['id', 'updated_at', 'deleted'],
+      where: 'id IN ($placeholders)',
+      whereArgs: ids,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> pendingSyncRecords() async {
+    final db = await _db();
+    return db.query(
+      _table,
+      columns: ['id', 'updated_at', 'deleted'],
+      where: 'synced = 0',
+    );
+  }
+
   Future<HealthRecord?> record(String id) async {
     final db = await _db();
     final rows = await db.query(_table, where: 'id = ?', whereArgs: [id]);
