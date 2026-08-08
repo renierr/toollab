@@ -129,6 +129,8 @@ class _HealthAllDataPageState extends State<HealthAllDataPage> {
                     title: group.key,
                     records: group.value,
                     initiallyExpanded: index == 0,
+                    hasMoreDatabasePages: _hasMore,
+                    onLoadMoreDatabasePages: _loadMore,
                   ),
                 );
               },
@@ -141,11 +143,15 @@ class _MonthGroupSection extends StatefulWidget {
   final String title;
   final List<HealthRecord> records;
   final bool initiallyExpanded;
+  final bool hasMoreDatabasePages;
+  final VoidCallback onLoadMoreDatabasePages;
 
   const _MonthGroupSection({
     required this.title,
     required this.records,
     required this.initiallyExpanded,
+    required this.hasMoreDatabasePages,
+    required this.onLoadMoreDatabasePages,
   });
 
   @override
@@ -155,10 +161,20 @@ class _MonthGroupSection extends StatefulWidget {
 class _MonthGroupSectionState extends State<_MonthGroupSection> {
   var _visibleCount = 50;
 
+  void _showMore() {
+    setState(() {
+      _visibleCount += 100;
+    });
+    if (_visibleCount >= widget.records.length && widget.hasMoreDatabasePages) {
+      widget.onLoadMoreDatabasePages();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final visibleRecords = widget.records.take(_visibleCount).toList();
-    final remaining = widget.records.length - visibleRecords.length;
+    final remainingInGroup = widget.records.length - visibleRecords.length;
+    final showButton = remainingInGroup > 0 || widget.hasMoreDatabasePages;
 
     return CollapsibleSection(
       icon: Icons.calendar_month_outlined,
@@ -169,17 +185,17 @@ class _MonthGroupSectionState extends State<_MonthGroupSection> {
         child: Column(
           children: [
             ...visibleRecords.map((record) => HealthDataTile(record: record)),
-            if (remaining > 0)
+            if (showButton)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _visibleCount += 100;
-                    });
-                  },
+                  onPressed: _showMore,
                   icon: const Icon(Icons.add_rounded),
-                  label: Text('Show 100 more ($remaining remaining)'),
+                  label: Text(
+                    remainingInGroup > 0
+                        ? 'Show 100 more ($remainingInGroup remaining)'
+                        : 'Load more records...',
+                  ),
                 ),
               ),
           ],
