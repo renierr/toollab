@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "de.renier.tool_lab"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     compileSdkExtension = 19
     ndkVersion = flutter.ndkVersion
 
