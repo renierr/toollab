@@ -6,7 +6,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../health_database.dart';
 import '../health_record.dart';
 
-class HealthMetricDayChart extends StatelessWidget {
+class HealthMetricDaySection extends StatelessWidget {
   final String type;
   final String valueKey;
   final String unit;
@@ -14,7 +14,7 @@ class HealthMetricDayChart extends StatelessWidget {
   final DateTime day;
   final bool sum;
 
-  const HealthMetricDayChart({
+  const HealthMetricDaySection({
     super.key,
     required this.type,
     required this.valueKey,
@@ -30,10 +30,7 @@ class HealthMetricDayChart extends StatelessWidget {
     future: HealthDatabase.instance.recordsForDay(type: type, day: day),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
-        return const SizedBox(
-          height: 180,
-          child: Center(child: CircularProgressIndicator()),
-        );
+        return const SizedBox.shrink();
       }
       final readings = <_Reading>[];
       for (final record in snapshot.data ?? const <HealthRecord>[]) {
@@ -41,28 +38,39 @@ class HealthMetricDayChart extends StatelessWidget {
         if (value == null) continue;
         readings.add(_Reading(time: record.startTime, value: value));
       }
-      if (readings.isEmpty) {
-        return SizedBox(
-          height: 120,
-          child: Center(
-            child: Text(AppLocalizations.of(context).healthDashboardNoData),
-          ),
-        );
+      if (readings.length < 2) {
+        return const SizedBox.shrink();
       }
-      return SizedBox(
-        height: 190,
-        child: CustomPaint(
-          painter: _MetricDayPainter(
-            readings: readings,
-            color: color,
-            unit: unit,
-            sum: sum,
-            gridColor: Theme.of(
-              context,
-            ).colorScheme.outline.withValues(alpha: 0.2),
-            labelColor: Theme.of(context).hintColor,
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 24),
+          Text(
+            AppLocalizations.of(context).healthDashboardSelectedDay,
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-        ),
+          const SizedBox(height: 8),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                height: 190,
+                child: CustomPaint(
+                  painter: _MetricDayPainter(
+                    readings: readings,
+                    color: color,
+                    unit: unit,
+                    sum: sum,
+                    gridColor: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.2),
+                    labelColor: Theme.of(context).hintColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     },
   );
@@ -113,22 +121,19 @@ class _MetricDayPainter extends CustomPainter {
         right: true,
       );
     }
-    final path = Path();
+    final points = <Offset>[];
     for (var index = 0; index < readings.length; index++) {
       final reading = readings[index];
       final date = DateTime.fromMillisecondsSinceEpoch(reading.time);
       final x = plot.left + plot.width * (date.hour * 60 + date.minute) / 1440;
       final y =
           plot.bottom - (reading.value - lower) / (upper - lower) * plot.height;
-      if (index == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-      canvas.drawCircle(Offset(x, y), 3.5, Paint()..color = color);
+      final point = Offset(x, y);
+      points.add(point);
+      canvas.drawCircle(point, 3.5, Paint()..color = color);
     }
     canvas.drawPath(
-      path,
+      _smoothPath(points),
       Paint()
         ..color = color
         ..style = PaintingStyle.stroke
@@ -145,6 +150,24 @@ class _MetricDayPainter extends CustomPainter {
       );
     }
     _label(canvas, unit, Offset(plot.left, 0));
+  }
+
+  Path _smoothPath(List<Offset> points) {
+    final path = Path()..moveTo(points.first.dx, points.first.dy);
+    for (var index = 1; index < points.length; index++) {
+      final previous = points[index - 1];
+      final point = points[index];
+      final controlX = (previous.dx + point.dx) / 2;
+      path.cubicTo(
+        controlX,
+        previous.dy,
+        controlX,
+        point.dy,
+        point.dx,
+        point.dy,
+      );
+    }
+    return path;
   }
 
   void _label(

@@ -18,6 +18,7 @@ class HealthDashboardState extends ChangeNotifier {
   static const _showTreadmillWorkoutsKey = 'show_treadmill_workouts';
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
   static const _healthConnectLastSyncKey = 'health_connect_last_sync';
+  static const _healthConnectAutoSyncInterval = Duration(minutes: 30);
   static const _sourcePreferencePrefix = 'source_preference_';
   final _treadmillCollector = TreadmillCollector();
   final _healthConnectCollector = HealthConnectCollector();
@@ -289,21 +290,26 @@ class HealthDashboardState extends ChangeNotifier {
           HealthDashboardTool.config.id,
           _healthConnectLastSyncKey,
         );
-        final start = lastSync == null
-            ? DateTime.now().subtract(const Duration(days: 7))
-            : DateTime.fromMillisecondsSinceEpoch(
-                int.parse(lastSync),
-              ).subtract(const Duration(days: 1));
-        for (final record in await _healthConnectCollector.collect(
-          start: start,
-        )) {
-          await HealthDatabase.instance.upsertCollected(record);
+        final lastSyncTime = lastSync == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(int.parse(lastSync));
+        if (lastSyncTime == null ||
+            DateTime.now().difference(lastSyncTime) >=
+                _healthConnectAutoSyncInterval) {
+          final start = lastSyncTime == null
+              ? DateTime.now().subtract(const Duration(days: 7))
+              : lastSyncTime.subtract(const Duration(days: 1));
+          for (final record in await _healthConnectCollector.collect(
+            start: start,
+          )) {
+            await HealthDatabase.instance.upsertCollected(record);
+          }
+          await DatabaseService.instance.setSetting(
+            HealthDashboardTool.config.id,
+            _healthConnectLastSyncKey,
+            DateTime.now().millisecondsSinceEpoch.toString(),
+          );
         }
-        await DatabaseService.instance.setSetting(
-          HealthDashboardTool.config.id,
-          _healthConnectLastSyncKey,
-          DateTime.now().millisecondsSinceEpoch.toString(),
-        );
       }
       if (appState.syncEnabled && !appState.isSyncing) {
         try {

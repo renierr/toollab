@@ -52,32 +52,21 @@ class HealthMetricDetailsPage extends StatelessWidget {
             sum: sum,
             workoutMetric: workoutMetric,
           ),
-          if (!workoutMetric) ...[
-            const SizedBox(height: 16),
-            Text(
-              l10n.healthDashboardSelectedDay,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: HealthMetricDayChart(
-                  type: type,
-                  valueKey: valueKey,
-                  unit: unit,
-                  color: color,
-                  day: state.selectedDay,
-                  sum: sum,
-                ),
-              ),
-            ),
-          ],
           const SizedBox(height: 16),
           Text(
             l10n.healthDashboardLastSevenDays,
             style: Theme.of(context).textTheme.titleLarge,
           ),
+          if (!workoutMetric) ...[
+            HealthMetricDaySection(
+              type: type,
+              valueKey: valueKey,
+              unit: unit,
+              color: color,
+              day: state.selectedDay,
+              sum: sum,
+            ),
+          ],
           const SizedBox(height: 8),
           Card(
             child: Padding(

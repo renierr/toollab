@@ -57,12 +57,21 @@ class HealthMetricSummarySection extends StatelessWidget {
               ? weeklyValues.reduce((a, b) => a + b)
               : weeklyValues.reduce((a, b) => a + b) / weeklyValues.length);
 
-    final double? minVal = weeklyValues.isEmpty
+    final rangeValues = [
+      for (var index = 0; index < 7; index++)
+        for (final record
+            in workoutMetric
+                ? state.workoutRecordsOnDay(state.trendDayAt(index))
+                : state.recordsOnDay(type, state.trendDayAt(index)))
+          ...<double?>[state.metricValue(record, valueKey)].whereType<double>(),
+    ];
+
+    final double? minVal = rangeValues.isEmpty
         ? null
-        : weeklyValues.reduce(math.min);
-    final double? maxVal = weeklyValues.isEmpty
+        : rangeValues.reduce(math.min);
+    final double? maxVal = rangeValues.isEmpty
         ? null
-        : weeklyValues.reduce(math.max);
+        : rangeValues.reduce(math.max);
 
     String format(double? val) {
       if (val == null) return '--';
