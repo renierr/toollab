@@ -6349,4 +6349,28 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthDashboardSyncFailed =>
       'Synchronisierung der Gesundheitsdaten fehlgeschlagen';
+
+  @override
+  String get healthDashboardHealthConnectWorkout => 'Health-Connect-Workout';
+
+  @override
+  String get healthDashboardLastSevenDays => 'Letzte 7 Tage';
+
+  @override
+  String get healthDashboardHistory => 'Verlauf';
+
+  @override
+  String get healthDashboardDetails => 'Details';
+
+  @override
+  String get healthDashboardDate => 'Datum';
+
+  @override
+  String get healthDashboardTime => 'Zeit';
+
+  @override
+  String get healthDashboardSource => 'Quelle';
+
+  @override
+  String get healthDashboardData => 'Daten';
 }

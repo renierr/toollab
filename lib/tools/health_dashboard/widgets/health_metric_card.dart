@@ -5,6 +5,7 @@ class HealthMetricCard extends StatelessWidget {
   final Color color;
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   const HealthMetricCard({
     super.key,
@@ -12,23 +13,28 @@ class HealthMetricCard extends StatelessWidget {
     required this.color,
     required this.label,
     required this.value,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) => SizedBox(
     width: 180,
     child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 16),
-            Text(value, style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 4),
-            Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          ],
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: color),
+              const SizedBox(height: 16),
+              Text(value, style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 4),
+              Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            ],
+          ),
         ),
       ),
     ),

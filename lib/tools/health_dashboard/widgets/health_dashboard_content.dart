@@ -8,6 +8,8 @@ import '../../treadmill_control/widgets/workout_details_sheet.dart';
 
 import '../health_dashboard_state.dart';
 import 'health_metric_card.dart';
+import 'health_metric_details_page.dart';
+import 'health_record_details_page.dart';
 import 'health_workouts_page.dart';
 import 'health_workout_trend_chart.dart';
 
@@ -45,24 +47,56 @@ class HealthDashboardContent extends StatelessWidget {
                 color: AppTheme.accentTeal,
                 label: l10n.healthDashboardDistance,
                 value: '${state.totalDistanceKm.toStringAsFixed(1)} km',
+                onTap: () => _openMetric(
+                  context,
+                  title: l10n.healthDashboardDistance,
+                  type: 'workout.treadmill',
+                  valueKey: 'distanceKm',
+                  unit: 'km',
+                  color: AppTheme.accentTeal,
+                  sum: true,
+                ),
               ),
               HealthMetricCard(
                 icon: Icons.local_fire_department_rounded,
                 color: AppTheme.accentAmber,
                 label: l10n.healthDashboardCalories,
                 value: '${state.totalCalories}',
+                onTap: () => _openMetric(
+                  context,
+                  title: l10n.healthDashboardCalories,
+                  type: 'workout.treadmill',
+                  valueKey: 'calories',
+                  unit: 'calories',
+                  color: AppTheme.accentAmber,
+                  sum: true,
+                ),
               ),
               HealthMetricCard(
                 icon: Icons.timer_outlined,
                 color: AppTheme.accentBlue,
                 label: l10n.healthDashboardActiveTime,
                 value: _duration(state.totalDurationSeconds),
+                onTap: () => _openMetric(
+                  context,
+                  title: l10n.healthDashboardActiveTime,
+                  type: 'workout.treadmill',
+                  valueKey: 'durationMinutes',
+                  unit: 'min',
+                  color: AppTheme.accentBlue,
+                  sum: true,
+                ),
               ),
               HealthMetricCard(
                 icon: Icons.monitor_heart_outlined,
                 color: AppTheme.accentRed,
                 label: l10n.healthDashboardWorkouts,
-                value: '${state.treadmillWorkouts.length}',
+                value: '${state.workouts.length}',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HealthWorkoutsPage(),
+                  ),
+                ),
               ),
               if (state.todaySteps > 0)
                 HealthMetricCard(
@@ -70,6 +104,15 @@ class HealthDashboardContent extends StatelessWidget {
                   color: AppTheme.accentGreen,
                   label: l10n.healthDashboardStepsToday,
                   value: '${state.todaySteps}',
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardStepsToday,
+                    type: 'activity.steps',
+                    valueKey: 'count',
+                    unit: 'steps',
+                    color: AppTheme.accentGreen,
+                    sum: true,
+                  ),
                 ),
               if (state.latestWeightKg != null)
                 HealthMetricCard(
@@ -77,6 +120,14 @@ class HealthDashboardContent extends StatelessWidget {
                   color: AppTheme.accentPurple,
                   label: l10n.healthDashboardWeight,
                   value: '${state.latestWeightKg!.toStringAsFixed(1)} kg',
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardWeight,
+                    type: 'body.weight',
+                    valueKey: 'kilograms',
+                    unit: 'kg',
+                    color: AppTheme.accentPurple,
+                  ),
                 ),
               if (state.latestRestingHeartRate != null)
                 HealthMetricCard(
@@ -84,6 +135,14 @@ class HealthDashboardContent extends StatelessWidget {
                   color: AppTheme.accentRed,
                   label: l10n.healthDashboardRestingHeartRate,
                   value: '${state.latestRestingHeartRate!.round()} bpm',
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardRestingHeartRate,
+                    type: 'heart.resting',
+                    valueKey: 'bpm',
+                    unit: 'bpm',
+                    color: AppTheme.accentRed,
+                  ),
                 ),
               if (state.latestSleepMinutes != null)
                 HealthMetricCard(
@@ -91,6 +150,14 @@ class HealthDashboardContent extends StatelessWidget {
                   color: AppTheme.accentBlue,
                   label: l10n.healthDashboardLastSleep,
                   value: _duration(state.latestSleepMinutes! * 60),
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardLastSleep,
+                    type: 'sleep.session',
+                    valueKey: 'durationMinutes',
+                    unit: 'min',
+                    color: AppTheme.accentBlue,
+                  ),
                 ),
             ],
           ),
@@ -150,7 +217,7 @@ class HealthDashboardContent extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          if (state.treadmillWorkouts.isEmpty)
+          if (state.workouts.isEmpty)
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -158,29 +225,51 @@ class HealthDashboardContent extends StatelessWidget {
               ),
             )
           else
-            ...state.treadmillWorkouts
+            ...state.workouts
                 .take(8)
                 .map(
                   (record) => Card(
                     child: ListTile(
                       onTap: () async {
-                        final session = await TreadmillControlDb.instance
-                            .getSessionByUid(record.sourceRecordId);
-                        if (session != null && context.mounted) {
-                          await WorkoutDetailsSheet.show(context, session);
+                        if (record.type == 'workout.treadmill') {
+                          final session = await TreadmillControlDb.instance
+                              .getSessionByUid(record.sourceRecordId);
+                          if (session != null && context.mounted) {
+                            await WorkoutDetailsSheet.show(context, session);
+                          }
+                        } else {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  HealthRecordDetailsPage(record: record),
+                            ),
+                          );
                         }
                       },
                       leading: const Icon(Icons.directions_run_rounded),
-                      title: Text(l10n.healthDashboardTreadmillRun),
+                      title: Text(
+                        record.type == 'workout.treadmill'
+                            ? l10n.healthDashboardTreadmillRun
+                            : (record.value['title'] as String?) ??
+                                  record.value['exerciseType'] as String? ??
+                                  l10n.healthDashboardHealthConnectWorkout,
+                      ),
                       subtitle: Text(
-                        '${(record.value['distanceKm'] as num).toStringAsFixed(2)} km',
+                        record.type == 'workout.treadmill'
+                            ? '${(record.value['distanceKm'] as num).toStringAsFixed(2)} km'
+                            : _duration(
+                                (record.endTime - record.startTime) ~/ 1000,
+                              ),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             _duration(
-                              (record.value['durationSeconds'] as num).round(),
+                              record.type == 'workout.treadmill'
+                                  ? (record.value['durationSeconds'] as num)
+                                        .round()
+                                  : (record.endTime - record.startTime) ~/ 1000,
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -200,5 +289,28 @@ class HealthDashboardContent extends StatelessWidget {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     return hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
+  }
+
+  void _openMetric(
+    BuildContext context, {
+    required String title,
+    required String type,
+    required String valueKey,
+    required String unit,
+    required Color color,
+    bool sum = false,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => HealthMetricDetailsPage(
+          title: title,
+          type: type,
+          valueKey: valueKey,
+          unit: unit,
+          color: color,
+          sum: sum,
+        ),
+      ),
+    );
   }
 }

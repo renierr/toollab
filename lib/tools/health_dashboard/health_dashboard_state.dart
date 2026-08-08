@@ -142,6 +142,44 @@ class HealthDashboardState extends ChangeNotifier {
       ? records.where((record) => record.type == 'workout.treadmill').toList()
       : const [];
 
+  List<HealthRecord> get healthConnectWorkouts => records
+      .where((record) => record.type == 'workout.healthConnect')
+      .toList();
+
+  List<HealthRecord> get workouts =>
+      [...treadmillWorkouts, ...healthConnectWorkouts]
+        ..sort((a, b) => b.startTime.compareTo(a.startTime));
+
+  List<HealthRecord> recordsOfType(String type) =>
+      records.where((record) => record.type == type).toList();
+
+  List<double?> weeklyMetricValues(
+    String type,
+    String key, {
+    bool sum = false,
+  }) => List<double?>.generate(7, (index) {
+    final values = recordsOfType(type)
+        .where((record) => _isOnDay(record, _dayAt(index)))
+        .map((record) => _metricValue(record, key))
+        .whereType<double>()
+        .toList();
+    if (values.isEmpty) return null;
+    if (sum) return values.reduce((a, b) => a + b);
+    return values.reduce((a, b) => a + b) / values.length;
+  });
+
+  double? _metricValue(HealthRecord record, String key) {
+    if (record.type == 'sleep.session' && key == 'durationMinutes') {
+      return Duration(
+        milliseconds: record.endTime - record.startTime,
+      ).inMinutes.toDouble();
+    }
+    if (record.type == 'workout.treadmill' && key == 'durationMinutes') {
+      return ((record.value['durationSeconds'] as num?)?.toDouble() ?? 0) / 60;
+    }
+    return (record.value[key] as num?)?.toDouble();
+  }
+
   int get todaySteps {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;

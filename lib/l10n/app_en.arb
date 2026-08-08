@@ -3197,5 +3197,13 @@
   "healthDashboardSyncDisabled": "Enable backend sync in Settings first.",
   "healthDashboardSyncSuccess": "Synced: {pushed} pushed, {pulled} pulled",
   "@healthDashboardSyncSuccess": { "placeholders": { "pushed": { "type": "int" }, "pulled": { "type": "int" } } },
-  "healthDashboardSyncFailed": "Health data sync failed"
+  "healthDashboardSyncFailed": "Health data sync failed",
+  "healthDashboardHealthConnectWorkout": "Health Connect workout",
+  "healthDashboardLastSevenDays": "Last 7 days",
+  "healthDashboardHistory": "History",
+  "healthDashboardDetails": "Details",
+  "healthDashboardDate": "Date",
+  "healthDashboardTime": "Time",
+  "healthDashboardSource": "Source",
+  "healthDashboardData": "Data"
 }

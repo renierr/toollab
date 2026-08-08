@@ -6308,4 +6308,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardSyncFailed => 'Health data sync failed';
+
+  @override
+  String get healthDashboardHealthConnectWorkout => 'Health Connect workout';
+
+  @override
+  String get healthDashboardLastSevenDays => 'Last 7 days';
+
+  @override
+  String get healthDashboardHistory => 'History';
+
+  @override
+  String get healthDashboardDetails => 'Details';
+
+  @override
+  String get healthDashboardDate => 'Date';
+
+  @override
+  String get healthDashboardTime => 'Time';
+
+  @override
+  String get healthDashboardSource => 'Source';
+
+  @override
+  String get healthDashboardData => 'Data';
 }

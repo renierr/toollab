@@ -11440,6 +11440,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health data sync failed'**
   String get healthDashboardSyncFailed;
+
+  /// No description provided for @healthDashboardHealthConnectWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect workout'**
+  String get healthDashboardHealthConnectWorkout;
+
+  /// No description provided for @healthDashboardLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get healthDashboardLastSevenDays;
+
+  /// No description provided for @healthDashboardHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get healthDashboardHistory;
+
+  /// No description provided for @healthDashboardDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get healthDashboardDetails;
+
+  /// No description provided for @healthDashboardDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get healthDashboardDate;
+
+  /// No description provided for @healthDashboardTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get healthDashboardTime;
+
+  /// No description provided for @healthDashboardSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get healthDashboardSource;
+
+  /// No description provided for @healthDashboardData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get healthDashboardData;
 }
 
 class _AppLocalizationsDelegate

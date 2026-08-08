@@ -50,7 +50,11 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final maxValue = max(
-      unit == 'km' ? 1.0 : 60.0,
+      unit == 'km'
+          ? 1.0
+          : unit == 'bpm'
+          ? 60.0
+          : 1.0,
       values.whereType<double>().fold(0.0, max),
     );
     final plot = Rect.fromLTWH(34, 14, size.width - 42, size.height - 44);
@@ -93,9 +97,15 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     }
   }
 
-  String _formatValue(double value) => unit == 'km'
-      ? '${value.toStringAsFixed(value >= 10 ? 0 : 1)} km'
-      : '${value.round()} bpm';
+  String _formatValue(double value) => switch (unit) {
+    'km' => '${value.toStringAsFixed(value >= 10 ? 0 : 1)} km',
+    'kg' => '${value.toStringAsFixed(1)} kg',
+    'bpm' => '${value.round()} bpm',
+    'steps' => value.round().toString(),
+    'min' => '${value.round()} min',
+    'calories' => value.round().toString(),
+    _ => value.round().toString(),
+  };
 
   void _label(
     Canvas canvas,

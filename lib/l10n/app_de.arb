@@ -2356,5 +2356,13 @@
   "healthDashboardSyncDisabled": "Backend-Synchronisierung zuerst in Einstellungen aktivieren.",
   "healthDashboardSyncSuccess": "Synchronisiert: {pushed} hochgeladen, {pulled} geladen",
   "@healthDashboardSyncSuccess": { "placeholders": { "pushed": { "type": "int" }, "pulled": { "type": "int" } } },
-  "healthDashboardSyncFailed": "Synchronisierung der Gesundheitsdaten fehlgeschlagen"
+  "healthDashboardSyncFailed": "Synchronisierung der Gesundheitsdaten fehlgeschlagen",
+  "healthDashboardHealthConnectWorkout": "Health-Connect-Workout",
+  "healthDashboardLastSevenDays": "Letzte 7 Tage",
+  "healthDashboardHistory": "Verlauf",
+  "healthDashboardDetails": "Details",
+  "healthDashboardDate": "Datum",
+  "healthDashboardTime": "Zeit",
+  "healthDashboardSource": "Quelle",
+  "healthDashboardData": "Daten"
 }
