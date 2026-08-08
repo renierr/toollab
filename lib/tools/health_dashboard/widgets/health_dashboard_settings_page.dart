@@ -6,6 +6,7 @@ import 'package:tool_lab/providers/app_state.dart';
 import '../health_dashboard_state.dart';
 import '../health_sync_delegate.dart';
 import 'health_source_preferences_page.dart';
+import 'health_backup_actions.dart';
 
 class HealthDashboardSettingsPage extends StatelessWidget {
   const HealthDashboardSettingsPage({super.key});
@@ -63,6 +64,20 @@ class HealthDashboardSettingsPage extends StatelessWidget {
             subtitle: Text(l10n.healthDashboardAutoHealthConnectSyncSubtitle),
             value: healthState.autoHealthConnectSync,
             onChanged: healthState.setAutoHealthConnectSync,
+          ),
+          const Divider(height: 1),
+          _SettingsSection(title: l10n.healthDashboardBackup),
+          ListTile(
+            leading: const Icon(Icons.upload_outlined),
+            title: Text(l10n.healthDashboardExportBackup),
+            subtitle: Text(l10n.healthDashboardExportBackupSubtitle),
+            onTap: () => HealthBackupActions.export(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.download_outlined),
+            title: Text(l10n.healthDashboardImportBackup),
+            subtitle: Text(l10n.healthDashboardImportBackupSubtitle),
+            onTap: () => HealthBackupActions.import(context),
           ),
           const Divider(height: 1),
           _SettingsSection(title: l10n.healthDashboardSync),

@@ -21,6 +21,9 @@ class HealthConnectCollector implements HealthDataCollector {
       hc.HealthDataType.restingHeartRate.readPermission,
       hc.HealthDataType.sleepSession.readPermission,
       hc.HealthDataType.exerciseSession.readPermission,
+      hc.HealthDataType.distance.readPermission,
+      hc.HealthDataType.activeEnergyBurned.readPermission,
+      hc.HealthDataType.speedSeries.readPermission,
       hc.HealthPlatformFeature.readHealthDataHistory.permission,
     ]);
   }
@@ -79,7 +82,35 @@ class HealthConnectCollector implements HealthDataCollector {
         endTime: end,
       ),
     );
-    records.addAll(workouts.records.map(_workout));
+    final distances = await connector.readRecords(
+      hc.HealthDataType.distance.readInTimeRange(
+        startTime: importStart,
+        endTime: end,
+      ),
+    );
+    final activeEnergy = await connector.readRecords(
+      hc.HealthDataType.activeEnergyBurned.readInTimeRange(
+        startTime: importStart,
+        endTime: end,
+      ),
+    );
+    final speeds = await connector.readRecords(
+      hc.HealthDataType.speedSeries.readInTimeRange(
+        startTime: importStart,
+        endTime: end,
+      ),
+    );
+    records.addAll(
+      workouts.records.map(
+        (workout) => _workout(
+          workout,
+          heartRates.records,
+          distances.records,
+          activeEnergy.records,
+          speeds.records,
+        ),
+      ),
+    );
     return records;
   }
 
@@ -146,13 +177,100 @@ class HealthConnectCollector implements HealthDataCollector {
     },
   );
 
-  HealthRecord _workout(hc.ExerciseSessionRecord record) => _record(
-    record: record,
-    type: 'workout.healthConnect',
-    startTime: record.startTime,
-    endTime: record.endTime,
-    value: {'exerciseType': record.exerciseType.name, 'title': record.title},
-  );
+  HealthRecord _workout(
+    hc.ExerciseSessionRecord record,
+    List<hc.HeartRateSeriesRecord> heartRates,
+    List<hc.DistanceRecord> distances,
+    List<hc.ActiveEnergyBurnedRecord> activeEnergy,
+    List<hc.SpeedSeriesRecord> speeds,
+  ) {
+    final matchingHeartRates = heartRates.where(
+      (item) => _matches(record, item),
+    );
+    final matchingDistances = distances.where((item) => _matches(record, item));
+    final matchingEnergy = activeEnergy.where((item) => _matches(record, item));
+    final matchingSpeeds = speeds.where((item) => _matches(record, item));
+    final heartSamples = matchingHeartRates
+        .expand((item) => item.samples)
+        .map(
+          (sample) => {
+            'time': sample.time.millisecondsSinceEpoch,
+            'value': sample.rate.inPerMinute,
+          },
+        )
+        .toList();
+    final speedSamples = matchingSpeeds
+        .expand((item) => item.samples)
+        .map(
+          (sample) => {
+            'time': sample.time.millisecondsSinceEpoch,
+            'value': sample.speed.inKilometersPerHour,
+          },
+        )
+        .toList();
+    final laps = record.lapEvents
+        .map(
+          (lap) => {
+            'startTime': lap.startTime.millisecondsSinceEpoch,
+            'endTime': lap.endTime.millisecondsSinceEpoch,
+            'distanceKm': lap.distance?.inKilometers,
+          },
+        )
+        .toList();
+    return _record(
+      record: record,
+      type: 'workout.healthConnect',
+      startTime: record.startTime,
+      endTime: record.endTime,
+      value: {
+        'exerciseType': record.exerciseType.name,
+        'title': record.title,
+        'notes': record.notes,
+        'distanceKm': matchingDistances.fold<double>(
+          0,
+          (sum, item) => sum + item.distance.inKilometers,
+        ),
+        'calories': matchingEnergy.fold<double>(
+          0,
+          (sum, item) => sum + item.energy.inKilocalories,
+        ),
+        'averageHeartRate': heartSamples.isEmpty
+            ? null
+            : heartSamples
+                      .map((sample) => sample['value'] as num)
+                      .reduce((a, b) => a + b) /
+                  heartSamples.length,
+        'maximumHeartRate': heartSamples.isEmpty
+            ? null
+            : heartSamples
+                  .map((sample) => sample['value'] as num)
+                  .reduce((a, b) => a > b ? a : b),
+        'averageSpeedKmh': speedSamples.isEmpty
+            ? null
+            : speedSamples
+                      .map((sample) => sample['value'] as num)
+                      .reduce((a, b) => a + b) /
+                  speedSamples.length,
+        'maximumSpeedKmh': speedSamples.isEmpty
+            ? null
+            : speedSamples
+                  .map((sample) => sample['value'] as num)
+                  .reduce((a, b) => a > b ? a : b),
+        'heartRateSamples': heartSamples,
+        'speedSamples': speedSamples,
+        'laps': laps,
+      },
+    );
+  }
+
+  bool _matches(
+    hc.IntervalHealthRecord session,
+    hc.IntervalHealthRecord record,
+  ) =>
+      record.startTime.compareTo(session.startTime) >= 0 &&
+      record.endTime.compareTo(session.endTime) <= 0 &&
+      record.metadata.dataOrigin?.packageName ==
+          session.metadata.dataOrigin?.packageName;
 
   HealthRecord _record({
     required hc.HealthRecord record,

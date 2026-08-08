@@ -11536,6 +11536,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Naps'**
   String get healthDashboardNaps;
+
+  /// No description provided for @healthDashboardSleepDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep details'**
+  String get healthDashboardSleepDetails;
+
+  /// No description provided for @healthDashboardSleepDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get healthDashboardSleepDuration;
+
+  /// No description provided for @healthDashboardSleepStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get healthDashboardSleepStart;
+
+  /// No description provided for @healthDashboardSleepEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get healthDashboardSleepEnd;
+
+  /// No description provided for @healthDashboardSleepStages.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep stages'**
+  String get healthDashboardSleepStages;
+
+  /// No description provided for @healthDashboardTrends.
+  ///
+  /// In en, this message translates to:
+  /// **'Trends'**
+  String get healthDashboardTrends;
+
+  /// No description provided for @healthDashboardWeightTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight · last 7 days'**
+  String get healthDashboardWeightTrend;
+
+  /// No description provided for @healthDashboardPreviousDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous day'**
+  String get healthDashboardPreviousDay;
+
+  /// No description provided for @healthDashboardNextDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Next day'**
+  String get healthDashboardNextDay;
+
+  /// No description provided for @healthDashboardSleepAwake.
+  ///
+  /// In en, this message translates to:
+  /// **'Awake'**
+  String get healthDashboardSleepAwake;
+
+  /// No description provided for @healthDashboardSleepRem.
+  ///
+  /// In en, this message translates to:
+  /// **'REM'**
+  String get healthDashboardSleepRem;
+
+  /// No description provided for @healthDashboardSleepLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get healthDashboardSleepLight;
+
+  /// No description provided for @healthDashboardSleepDeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep'**
+  String get healthDashboardSleepDeep;
+
+  /// No description provided for @healthDashboardHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate'**
+  String get healthDashboardHeartRate;
+
+  /// No description provided for @healthDashboardNoSleepHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'No heart-rate samples during this sleep session'**
+  String get healthDashboardNoSleepHeartRate;
+
+  /// No description provided for @healthDashboardBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Data backup'**
+  String get healthDashboardBackup;
+
+  /// No description provided for @healthDashboardExportBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Export health database'**
+  String get healthDashboardExportBackup;
+
+  /// No description provided for @healthDashboardExportBackupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Health Dashboard records as a SQLite database.'**
+  String get healthDashboardExportBackupSubtitle;
+
+  /// No description provided for @healthDashboardImportBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Import health database'**
+  String get healthDashboardImportBackup;
+
+  /// No description provided for @healthDashboardImportBackupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge records from a Health Dashboard SQLite backup.'**
+  String get healthDashboardImportBackupSubtitle;
+
+  /// No description provided for @healthDashboardImportBackupWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing health records are never replaced. Only records that are not already present will be imported.'**
+  String get healthDashboardImportBackupWarning;
+
+  /// No description provided for @healthDashboardImportBackupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} new health records'**
+  String healthDashboardImportBackupSuccess(int count);
+
+  /// No description provided for @healthDashboardImportBackupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import health database'**
+  String get healthDashboardImportBackupFailed;
 }
 
 class _AppLocalizationsDelegate

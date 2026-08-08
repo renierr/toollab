@@ -6398,4 +6398,80 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardNaps => 'Nickerchen';
+
+  @override
+  String get healthDashboardSleepDetails => 'Schlafdetails';
+
+  @override
+  String get healthDashboardSleepDuration => 'Dauer';
+
+  @override
+  String get healthDashboardSleepStart => 'Beginn';
+
+  @override
+  String get healthDashboardSleepEnd => 'Ende';
+
+  @override
+  String get healthDashboardSleepStages => 'Schlafphasen';
+
+  @override
+  String get healthDashboardTrends => 'Trends';
+
+  @override
+  String get healthDashboardWeightTrend => 'Gewicht · letzte 7 Tage';
+
+  @override
+  String get healthDashboardPreviousDay => 'Vorheriger Tag';
+
+  @override
+  String get healthDashboardNextDay => 'Naechster Tag';
+
+  @override
+  String get healthDashboardSleepAwake => 'Wach';
+
+  @override
+  String get healthDashboardSleepRem => 'REM';
+
+  @override
+  String get healthDashboardSleepLight => 'Leicht';
+
+  @override
+  String get healthDashboardSleepDeep => 'Tief';
+
+  @override
+  String get healthDashboardHeartRate => 'Herzfrequenz';
+
+  @override
+  String get healthDashboardNoSleepHeartRate =>
+      'Keine Herzfrequenzwerte waehrend dieser Schlafphase';
+
+  @override
+  String get healthDashboardBackup => 'Datensicherung';
+
+  @override
+  String get healthDashboardExportBackup => 'Gesundheitsdatenbank exportieren';
+
+  @override
+  String get healthDashboardExportBackupSubtitle =>
+      'Health-Dashboard-Daten als SQLite-Datenbank speichern.';
+
+  @override
+  String get healthDashboardImportBackup => 'Gesundheitsdatenbank importieren';
+
+  @override
+  String get healthDashboardImportBackupSubtitle =>
+      'Daten aus einer Health-Dashboard-SQLite-Sicherung zusammenfuehren.';
+
+  @override
+  String get healthDashboardImportBackupWarning =>
+      'Bestehende Gesundheitsdaten werden nie ersetzt. Es werden nur noch nicht vorhandene Daten importiert.';
+
+  @override
+  String healthDashboardImportBackupSuccess(int count) {
+    return '$count neue Gesundheitsdaten importiert';
+  }
+
+  @override
+  String get healthDashboardImportBackupFailed =>
+      'Gesundheitsdatenbank konnte nicht importiert werden';
 }

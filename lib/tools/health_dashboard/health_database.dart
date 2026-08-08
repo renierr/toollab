@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:sqflite/sqflite.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
@@ -10,6 +12,7 @@ class HealthDatabase {
 
   static final HealthDatabase instance = HealthDatabase._();
   static const _table = 'records';
+  static const _backupTable = 'health_records';
   ToolDatabase? _database;
 
   Future<ToolDatabase> _db() async {
@@ -110,6 +113,73 @@ class HealthDatabase {
       await db.delete(_table, where: 'id = ?', whereArgs: [id]);
     } else {
       await db.update(_table, {'synced': 1}, where: 'id = ?', whereArgs: [id]);
+    }
+  }
+
+  Future<String> exportBackup() async {
+    final records = await activeRecords();
+    final path = await TempFileManager.createFile('health_dashboard_backup.db');
+    final backup = await openDatabase(path);
+    try {
+      await backup.execute('''
+        CREATE TABLE $_backupTable (
+          id TEXT PRIMARY KEY,
+          source TEXT NOT NULL,
+          source_record_id TEXT NOT NULL,
+          type TEXT NOT NULL,
+          start_time INTEGER NOT NULL,
+          end_time INTEGER NOT NULL,
+          value_json TEXT NOT NULL,
+          source_name TEXT,
+          duplicate_of TEXT,
+          aggregate_included INTEGER NOT NULL,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          deleted INTEGER NOT NULL,
+          synced INTEGER NOT NULL,
+          UNIQUE(source, source_record_id)
+        )
+      ''');
+      final batch = backup.batch();
+      for (final record in records) {
+        batch.insert(_backupTable, record.toMap());
+      }
+      await batch.commit(noResult: true);
+    } finally {
+      await backup.close();
+    }
+    return path;
+  }
+
+  Future<int> importBackup(String path) async {
+    final backup = await openDatabase(path, readOnly: true);
+    try {
+      final tables = await backup.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        [_backupTable],
+      );
+      if (tables.isEmpty) {
+        throw const FormatException('Not a Health Dashboard backup.');
+      }
+      final rows = await backup.query(_backupTable);
+      final db = await _db();
+      var imported = 0;
+      await db.transaction((txn) async {
+        for (final row in rows) {
+          final existing = await txn.query(
+            _table,
+            where: 'id = ? OR (source = ? AND source_record_id = ?)',
+            whereArgs: [row['id'], row['source'], row['source_record_id']],
+            limit: 1,
+          );
+          if (existing.isNotEmpty) continue;
+          await txn.insert(_table, row);
+          imported++;
+        }
+      });
+      return imported;
+    } finally {
+      await backup.close();
     }
   }
 }

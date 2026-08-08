@@ -23,6 +23,7 @@ class HealthDashboardState extends ChangeNotifier {
   bool isCollecting = false;
   bool showTreadmillWorkouts = true;
   bool autoHealthConnectSync = false;
+  int trendDayOffset = 0;
   final Map<String, String?> sourcePreferences = {};
   String? error;
 
@@ -176,6 +177,14 @@ class HealthDashboardState extends ChangeNotifier {
     );
   }
 
+  Future<String> exportBackup() => HealthDatabase.instance.exportBackup();
+
+  Future<int> importBackup(String path) async {
+    final imported = await HealthDatabase.instance.importBackup(path);
+    await load();
+    return imported;
+  }
+
   List<HealthRecord> get treadmillWorkouts => showTreadmillWorkouts
       ? records.where((record) => record.type == 'workout.treadmill').toList()
       : const [];
@@ -197,6 +206,25 @@ class HealthDashboardState extends ChangeNotifier {
         .toList();
     return preferred.isEmpty ? typed : preferred;
   }
+
+  void previousTrendDay() {
+    trendDayOffset--;
+    notifyListeners();
+  }
+
+  void nextTrendDay() {
+    if (trendDayOffset == 0) return;
+    trendDayOffset++;
+    notifyListeners();
+  }
+
+  void resetTrendDate() {
+    if (trendDayOffset == 0) return;
+    trendDayOffset = 0;
+    notifyListeners();
+  }
+
+  DateTime get trendWeekEnd => _dayAt(6);
 
   List<double?> weeklyMetricValues(
     String type,
@@ -297,13 +325,32 @@ class HealthDashboardState extends ChangeNotifier {
     return values.reduce((a, b) => a + b) / values.length;
   });
 
+  List<Map<String, dynamic>> heartRateSamplesDuring(HealthRecord session) =>
+      recordsOfType('heart.rate')
+          .where(
+            (record) =>
+                record.startTime < session.endTime &&
+                record.endTime > session.startTime,
+          )
+          .expand(
+            (record) => (record.value['samples'] as List? ?? const []).map(
+              (sample) => Map<String, dynamic>.from(sample as Map),
+            ),
+          )
+          .where(
+            (sample) =>
+                ((sample['time'] as num?)?.toInt() ?? 0) >= session.startTime &&
+                ((sample['time'] as num?)?.toInt() ?? 0) <= session.endTime,
+          )
+          .toList();
+
   DateTime _dayAt(int index) {
     final now = DateTime.now();
     return DateTime(
       now.year,
       now.month,
       now.day,
-    ).subtract(Duration(days: 6 - index));
+    ).add(Duration(days: trendDayOffset - 6 + index));
   }
 
   bool _isOnDay(HealthRecord record, DateTime day) {

@@ -10,8 +10,8 @@ import '../health_dashboard_state.dart';
 import 'health_metric_card.dart';
 import 'health_metric_details_page.dart';
 import 'health_record_details_page.dart';
+import 'health_dashboard_trends.dart';
 import 'health_workouts_page.dart';
-import 'health_workout_trend_chart.dart';
 
 class HealthDashboardContent extends StatelessWidget {
   const HealthDashboardContent({super.key});
@@ -161,43 +161,7 @@ class HealthDashboardContent extends StatelessWidget {
                 ),
             ],
           ),
-          if (state.treadmillWorkouts.isNotEmpty) ...[
-            const SizedBox(height: 28),
-            Text(
-              l10n.healthDashboardWorkoutTrend,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: HealthWorkoutTrendChart(
-                  values: state.weeklyDistanceKm,
-                  unit: 'km',
-                  color: AppTheme.accentTeal,
-                ),
-              ),
-            ),
-          ],
-          if (state.weeklyHeartRate.any((value) => value != null)) ...[
-            const SizedBox(height: 28),
-            Text(
-              l10n.healthDashboardHeartRateTrend,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: HealthWorkoutTrendChart(
-                  values: state.weeklyHeartRate,
-                  unit: 'bpm',
-                  color: AppTheme.accentRed,
-                  style: HealthTrendChartStyle.line,
-                ),
-              ),
-            ),
-          ],
+          const HealthDashboardTrends(),
           const SizedBox(height: 28),
           Row(
             children: [
