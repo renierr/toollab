@@ -1,13 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'health_dashboard_state.dart';
 import 'widgets/health_dashboard_content.dart';
+import 'widgets/health_dashboard_settings_page.dart';
 
-class HealthDashboardPage extends StatelessWidget {
+class HealthDashboardPage extends StatefulWidget {
   const HealthDashboardPage({super.key});
+
+  @override
+  State<HealthDashboardPage> createState() => _HealthDashboardPageState();
+}
+
+class _HealthDashboardPageState extends State<HealthDashboardPage>
+    with DisposeCleanup {
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.microtask(() async {
+      if (!mounted) return;
+      final healthState = context.read<HealthDashboardState>();
+      final appState = context.read<AppState>();
+      await healthState.refreshOnOpen(appState);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +48,15 @@ class HealthDashboardPage extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.sync_rounded),
+        ),
+        IconButton(
+          tooltip: l10n.healthDashboardSettings,
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const HealthDashboardSettingsPage(),
+            ),
+          ),
+          icon: const Icon(Icons.settings_outlined),
         ),
       ],
       child: const HealthDashboardContent(),

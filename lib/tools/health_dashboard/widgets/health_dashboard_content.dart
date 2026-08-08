@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import '../../treadmill_control/treadmill_control_db.dart';
+import '../../treadmill_control/widgets/workout_details_sheet.dart';
+
 import '../health_dashboard_state.dart';
 import 'health_metric_card.dart';
 
@@ -90,15 +93,29 @@ class HealthDashboardContent extends StatelessWidget {
                 .map(
                   (record) => Card(
                     child: ListTile(
+                      onTap: () async {
+                        final session = await TreadmillControlDb.instance
+                            .getSessionByUid(record.sourceRecordId);
+                        if (session != null && context.mounted) {
+                          await WorkoutDetailsSheet.show(context, session);
+                        }
+                      },
                       leading: const Icon(Icons.directions_run_rounded),
                       title: Text(l10n.healthDashboardTreadmillRun),
                       subtitle: Text(
                         '${(record.value['distanceKm'] as num).toStringAsFixed(2)} km',
                       ),
-                      trailing: Text(
-                        _duration(
-                          (record.value['durationSeconds'] as num).round(),
-                        ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _duration(
+                              (record.value['durationSeconds'] as num).round(),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.chevron_right_rounded),
+                        ],
                       ),
                     ),
                   ),

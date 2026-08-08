@@ -3176,5 +3176,16 @@
   "healthDashboardRecentActivity": "Recent activity",
   "healthDashboardNoData": "No health data yet. Sync a treadmill workout or connect Health Connect on Android.",
   "healthDashboardTreadmillRun": "Treadmill run",
-  "healthDashboardConnectHealthConnect": "Connect Health Connect"
+  "healthDashboardConnectHealthConnect": "Connect Health Connect",
+  "healthDashboardSettings": "Health dashboard settings",
+  "healthDashboardDataToShow": "Data to show",
+  "healthDashboardShowTreadmill": "Treadmill workouts",
+  "healthDashboardShowTreadmillSubtitle": "Include local treadmill runs in dashboard totals and activity.",
+  "healthDashboardSync": "Sync",
+  "healthDashboardSyncNow": "Sync now",
+  "healthDashboardSyncEnabled": "Sync health records with your configured backend.",
+  "healthDashboardSyncDisabled": "Enable backend sync in Settings first.",
+  "healthDashboardSyncSuccess": "Synced: {pushed} pushed, {pulled} pulled",
+  "@healthDashboardSyncSuccess": { "placeholders": { "pushed": { "type": "int" }, "pulled": { "type": "int" } } },
+  "healthDashboardSyncFailed": "Health data sync failed"
 }

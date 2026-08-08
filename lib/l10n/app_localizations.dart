@@ -11320,6 +11320,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connect Health Connect'**
   String get healthDashboardConnectHealthConnect;
+
+  /// No description provided for @healthDashboardSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Health dashboard settings'**
+  String get healthDashboardSettings;
+
+  /// No description provided for @healthDashboardDataToShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Data to show'**
+  String get healthDashboardDataToShow;
+
+  /// No description provided for @healthDashboardShowTreadmill.
+  ///
+  /// In en, this message translates to:
+  /// **'Treadmill workouts'**
+  String get healthDashboardShowTreadmill;
+
+  /// No description provided for @healthDashboardShowTreadmillSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Include local treadmill runs in dashboard totals and activity.'**
+  String get healthDashboardShowTreadmillSubtitle;
+
+  /// No description provided for @healthDashboardSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get healthDashboardSync;
+
+  /// No description provided for @healthDashboardSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get healthDashboardSyncNow;
+
+  /// No description provided for @healthDashboardSyncEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync health records with your configured backend.'**
+  String get healthDashboardSyncEnabled;
+
+  /// No description provided for @healthDashboardSyncDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable backend sync in Settings first.'**
+  String get healthDashboardSyncDisabled;
+
+  /// No description provided for @healthDashboardSyncSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced: {pushed} pushed, {pulled} pulled'**
+  String healthDashboardSyncSuccess(int pushed, int pulled);
+
+  /// No description provided for @healthDashboardSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Health data sync failed'**
+  String get healthDashboardSyncFailed;
 }
 
 class _AppLocalizationsDelegate

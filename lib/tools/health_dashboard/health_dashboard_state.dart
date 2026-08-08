@@ -1,12 +1,18 @@
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/services/database_service.dart';
 
 import 'collectors/health_data_collector.dart';
 import 'collectors/health_connect_collector.dart';
 import 'collectors/treadmill_collector.dart';
+import 'config.dart';
 import 'health_database.dart';
 import 'health_record.dart';
+import 'health_sync_delegate.dart';
 
 class HealthDashboardState extends ChangeNotifier {
+  static const _showTreadmillWorkoutsKey = 'show_treadmill_workouts';
+
   final List<HealthDataCollector> _collectors = [
     TreadmillCollector(),
     HealthConnectCollector(),
@@ -14,6 +20,7 @@ class HealthDashboardState extends ChangeNotifier {
   List<HealthRecord> records = [];
   bool isLoading = true;
   bool isCollecting = false;
+  bool showTreadmillWorkouts = true;
   String? error;
 
   HealthDashboardState() {
@@ -26,6 +33,12 @@ class HealthDashboardState extends ChangeNotifier {
     notifyListeners();
     try {
       records = await HealthDatabase.instance.activeRecords();
+      showTreadmillWorkouts =
+          await DatabaseService.instance.getSetting(
+            HealthDashboardTool.config.id,
+            _showTreadmillWorkoutsKey,
+          ) !=
+          'false';
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Load failed: $e');
@@ -67,8 +80,31 @@ class HealthDashboardState extends ChangeNotifier {
     }
   }
 
-  List<HealthRecord> get treadmillWorkouts =>
-      records.where((record) => record.type == 'workout.treadmill').toList();
+  Future<void> refreshOnOpen(AppState appState) async {
+    await collect();
+    if (!appState.syncEnabled || appState.isSyncing) return;
+    try {
+      await appState.syncWithBackend([HealthDashboardSyncDelegate()]);
+      await load();
+    } catch (e) {
+      debugPrint('[HealthDashboard] Open sync failed: $e');
+    }
+  }
+
+  Future<void> setShowTreadmillWorkouts(bool value) async {
+    if (showTreadmillWorkouts == value) return;
+    showTreadmillWorkouts = value;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      HealthDashboardTool.config.id,
+      _showTreadmillWorkoutsKey,
+      value.toString(),
+    );
+  }
+
+  List<HealthRecord> get treadmillWorkouts => showTreadmillWorkouts
+      ? records.where((record) => record.type == 'workout.treadmill').toList()
+      : const [];
 
   double get totalDistanceKm => treadmillWorkouts.fold(
     0,

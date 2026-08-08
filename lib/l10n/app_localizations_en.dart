@@ -6238,4 +6238,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardConnectHealthConnect => 'Connect Health Connect';
+
+  @override
+  String get healthDashboardSettings => 'Health dashboard settings';
+
+  @override
+  String get healthDashboardDataToShow => 'Data to show';
+
+  @override
+  String get healthDashboardShowTreadmill => 'Treadmill workouts';
+
+  @override
+  String get healthDashboardShowTreadmillSubtitle =>
+      'Include local treadmill runs in dashboard totals and activity.';
+
+  @override
+  String get healthDashboardSync => 'Sync';
+
+  @override
+  String get healthDashboardSyncNow => 'Sync now';
+
+  @override
+  String get healthDashboardSyncEnabled =>
+      'Sync health records with your configured backend.';
+
+  @override
+  String get healthDashboardSyncDisabled =>
+      'Enable backend sync in Settings first.';
+
+  @override
+  String healthDashboardSyncSuccess(int pushed, int pulled) {
+    return 'Synced: $pushed pushed, $pulled pulled';
+  }
+
+  @override
+  String get healthDashboardSyncFailed => 'Health data sync failed';
 }
