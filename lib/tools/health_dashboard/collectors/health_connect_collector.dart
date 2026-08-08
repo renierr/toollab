@@ -6,7 +6,7 @@ import '../health_record.dart';
 import 'health_data_collector.dart';
 
 class HealthConnectCollector implements HealthDataCollector {
-  static const _lookback = Duration(days: 90);
+  static final _initialImportStart = DateTime.utc(1970);
 
   @override
   HealthSource get source => HealthSource.healthConnect;
@@ -26,26 +26,32 @@ class HealthConnectCollector implements HealthDataCollector {
   }
 
   @override
-  Future<List<HealthRecord>> collect() async {
+  Future<List<HealthRecord>> collect({DateTime? start}) async {
     if (!Platform.isAndroid) return [];
     final connector = await hc.HealthConnector.create();
     final end = DateTime.now();
-    final start = end.subtract(_lookback);
+    final importStart = start ?? _initialImportStart;
     final records = <HealthRecord>[];
 
     final steps = await connector.readRecords(
-      hc.HealthDataType.steps.readInTimeRange(startTime: start, endTime: end),
+      hc.HealthDataType.steps.readInTimeRange(
+        startTime: importStart,
+        endTime: end,
+      ),
     );
     records.addAll(steps.records.map(_steps));
 
     final weights = await connector.readRecords(
-      hc.HealthDataType.weight.readInTimeRange(startTime: start, endTime: end),
+      hc.HealthDataType.weight.readInTimeRange(
+        startTime: importStart,
+        endTime: end,
+      ),
     );
     records.addAll(weights.records.map(_weight));
 
     final heartRates = await connector.readRecords(
       hc.HealthDataType.heartRateSeries.readInTimeRange(
-        startTime: start,
+        startTime: importStart,
         endTime: end,
       ),
     );
@@ -53,7 +59,7 @@ class HealthConnectCollector implements HealthDataCollector {
 
     final restingRates = await connector.readRecords(
       hc.HealthDataType.restingHeartRate.readInTimeRange(
-        startTime: start,
+        startTime: importStart,
         endTime: end,
       ),
     );
@@ -61,7 +67,7 @@ class HealthConnectCollector implements HealthDataCollector {
 
     final sleep = await connector.readRecords(
       hc.HealthDataType.sleepSession.readInTimeRange(
-        startTime: start,
+        startTime: importStart,
         endTime: end,
       ),
     );
@@ -69,7 +75,7 @@ class HealthConnectCollector implements HealthDataCollector {
 
     final workouts = await connector.readRecords(
       hc.HealthDataType.exerciseSession.readInTimeRange(
-        startTime: start,
+        startTime: importStart,
         endTime: end,
       ),
     );

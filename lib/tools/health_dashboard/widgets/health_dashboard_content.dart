@@ -8,6 +8,8 @@ import '../../treadmill_control/widgets/workout_details_sheet.dart';
 
 import '../health_dashboard_state.dart';
 import 'health_metric_card.dart';
+import 'health_workouts_page.dart';
+import 'health_workout_trend_chart.dart';
 
 class HealthDashboardContent extends StatelessWidget {
   const HealthDashboardContent({super.key});
@@ -32,16 +34,6 @@ class HealthDashboardContent extends StatelessWidget {
           Text(
             l10n.healthDashboardSubtitle,
             style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            onPressed: state.isCollecting
-                ? null
-                : () => context
-                      .read<HealthDashboardState>()
-                      .connectHealthConnect(),
-            icon: const Icon(Icons.health_and_safety_outlined),
-            label: Text(l10n.healthDashboardConnectHealthConnect),
           ),
           const SizedBox(height: 20),
           Wrap(
@@ -72,12 +64,70 @@ class HealthDashboardContent extends StatelessWidget {
                 label: l10n.healthDashboardWorkouts,
                 value: '${state.treadmillWorkouts.length}',
               ),
+              if (state.todaySteps > 0)
+                HealthMetricCard(
+                  icon: Icons.directions_walk_rounded,
+                  color: AppTheme.accentGreen,
+                  label: l10n.healthDashboardStepsToday,
+                  value: '${state.todaySteps}',
+                ),
+              if (state.latestWeightKg != null)
+                HealthMetricCard(
+                  icon: Icons.monitor_weight_outlined,
+                  color: AppTheme.accentPurple,
+                  label: l10n.healthDashboardWeight,
+                  value: '${state.latestWeightKg!.toStringAsFixed(1)} kg',
+                ),
+              if (state.latestRestingHeartRate != null)
+                HealthMetricCard(
+                  icon: Icons.favorite_outline_rounded,
+                  color: AppTheme.accentRed,
+                  label: l10n.healthDashboardRestingHeartRate,
+                  value: '${state.latestRestingHeartRate!.round()} bpm',
+                ),
+              if (state.latestSleepMinutes != null)
+                HealthMetricCard(
+                  icon: Icons.bedtime_outlined,
+                  color: AppTheme.accentBlue,
+                  label: l10n.healthDashboardLastSleep,
+                  value: _duration(state.latestSleepMinutes! * 60),
+                ),
             ],
           ),
+          if (state.treadmillWorkouts.isNotEmpty) ...[
+            const SizedBox(height: 28),
+            Text(
+              l10n.healthDashboardWorkoutTrend,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: HealthWorkoutTrendChart(
+                  workouts: state.treadmillWorkouts,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 28),
-          Text(
-            l10n.healthDashboardRecentActivity,
-            style: Theme.of(context).textTheme.titleLarge,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.healthDashboardRecentActivity,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HealthWorkoutsPage(),
+                  ),
+                ),
+                child: Text(l10n.healthDashboardWorkouts),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
           if (state.treadmillWorkouts.isEmpty)

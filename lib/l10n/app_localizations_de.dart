@@ -6266,6 +6266,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardWorkouts => 'Workouts';
 
   @override
+  String get healthDashboardStepsToday => 'Schritte heute';
+
+  @override
+  String get healthDashboardWeight => 'Letztes Gewicht';
+
+  @override
+  String get healthDashboardRestingHeartRate => 'Ruhepuls';
+
+  @override
+  String get healthDashboardLastSleep => 'Letzter Schlaf';
+
+  @override
+  String get healthDashboardWorkoutTrend => 'Distanz · letzte 7 Tage';
+
+  @override
   String get healthDashboardRecentActivity => 'Letzte Aktivitaeten';
 
   @override
@@ -6276,7 +6291,23 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardTreadmillRun => 'Laufbandlauf';
 
   @override
-  String get healthDashboardConnectHealthConnect => 'Health Connect verbinden';
+  String get healthDashboardConnectHealthConnect =>
+      'Health Connect verbinden und importieren';
+
+  @override
+  String get healthDashboardHealthConnect => 'Health Connect';
+
+  @override
+  String get healthDashboardConnectHealthConnectSubtitle =>
+      'Fordert Zugriff an und importiert beim ersten Abgleich den gesamten verfuegbaren Verlauf.';
+
+  @override
+  String get healthDashboardAutoHealthConnectSync =>
+      'Health Connect beim Oeffnen synchronisieren';
+
+  @override
+  String get healthDashboardAutoHealthConnectSyncSubtitle =>
+      'Health-Connect-Daten bei jedem Oeffnen des Dashboards importieren.';
 
   @override
   String get healthDashboardSettings =>

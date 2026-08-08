@@ -11297,6 +11297,36 @@ abstract class AppLocalizations {
   /// **'Workouts'**
   String get healthDashboardWorkouts;
 
+  /// No description provided for @healthDashboardStepsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps today'**
+  String get healthDashboardStepsToday;
+
+  /// No description provided for @healthDashboardWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest weight'**
+  String get healthDashboardWeight;
+
+  /// No description provided for @healthDashboardRestingHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting heart rate'**
+  String get healthDashboardRestingHeartRate;
+
+  /// No description provided for @healthDashboardLastSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest sleep'**
+  String get healthDashboardLastSleep;
+
+  /// No description provided for @healthDashboardWorkoutTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance · last 7 days'**
+  String get healthDashboardWorkoutTrend;
+
   /// No description provided for @healthDashboardRecentActivity.
   ///
   /// In en, this message translates to:
@@ -11318,8 +11348,32 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardConnectHealthConnect.
   ///
   /// In en, this message translates to:
-  /// **'Connect Health Connect'**
+  /// **'Connect and import Health Connect'**
   String get healthDashboardConnectHealthConnect;
+
+  /// No description provided for @healthDashboardHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get healthDashboardHealthConnect;
+
+  /// No description provided for @healthDashboardConnectHealthConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests access and imports all available history on the first sync.'**
+  String get healthDashboardConnectHealthConnectSubtitle;
+
+  /// No description provided for @healthDashboardAutoHealthConnectSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Health Connect on open'**
+  String get healthDashboardAutoHealthConnectSync;
+
+  /// No description provided for @healthDashboardAutoHealthConnectSyncSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Health Connect data whenever the dashboard opens.'**
+  String get healthDashboardAutoHealthConnectSyncSubtitle;
 
   /// No description provided for @healthDashboardSettings.
   ///

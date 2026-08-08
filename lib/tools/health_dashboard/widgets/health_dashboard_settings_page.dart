@@ -27,6 +27,32 @@ class HealthDashboardSettingsPage extends StatelessWidget {
             onChanged: healthState.setShowTreadmillWorkouts,
           ),
           const Divider(height: 1),
+          _SettingsSection(title: l10n.healthDashboardHealthConnect),
+          ListTile(
+            leading: const Icon(Icons.health_and_safety_outlined),
+            title: Text(l10n.healthDashboardConnectHealthConnect),
+            subtitle: Text(l10n.healthDashboardConnectHealthConnectSubtitle),
+            trailing: healthState.isCollecting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.chevron_right_rounded),
+            onTap: healthState.isCollecting
+                ? null
+                : () => context
+                      .read<HealthDashboardState>()
+                      .connectHealthConnect(),
+          ),
+          SwitchListTile.adaptive(
+            secondary: const Icon(Icons.autorenew_rounded),
+            title: Text(l10n.healthDashboardAutoHealthConnectSync),
+            subtitle: Text(l10n.healthDashboardAutoHealthConnectSyncSubtitle),
+            value: healthState.autoHealthConnectSync,
+            onChanged: healthState.setAutoHealthConnectSync,
+          ),
+          const Divider(height: 1),
           _SettingsSection(title: l10n.healthDashboardSync),
           ListTile(
             leading: const Icon(Icons.cloud_sync_outlined),
