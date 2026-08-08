@@ -225,6 +225,12 @@ class DatabaseService {
     return await file.readAsBytes();
   }
 
+  Future<int> getDatabaseSize() async {
+    final db = await database;
+    final file = File(db.path);
+    return await file.exists() ? await file.length() : 0;
+  }
+
   /// Tables a valid ToolLab backup database must contain.
   static const Set<String> _requiredTables = {
     _tableFavorites,

@@ -25,6 +25,7 @@ class HealthDashboardState extends ChangeNotifier {
   bool isLoading = true;
   bool isCollecting = false;
   bool isImportingBackup = false;
+  bool isExportingBackup = false;
   bool showTreadmillWorkouts = true;
   bool autoHealthConnectSync = false;
   int trendDayOffset = 0;
@@ -42,6 +43,8 @@ class HealthDashboardState extends ChangeNotifier {
   int collectedRecordCount = 0;
   int backupImportProcessedCount = 0;
   int backupImportTotalCount = 0;
+  int backupExportProcessedCount = 0;
+  int backupExportTotalCount = 0;
 
   void _onCollectionProgress(String status, int count) {
     collectionStatus = status;
@@ -368,7 +371,28 @@ class HealthDashboardState extends ChangeNotifier {
     );
   }
 
-  Future<String> exportBackup() => HealthDatabase.instance.exportBackup();
+  Future<String> exportBackup() async {
+    if (isExportingBackup) throw StateError('Health backup export is running.');
+    isExportingBackup = true;
+    backupExportProcessedCount = 0;
+    backupExportTotalCount = 0;
+    notifyListeners();
+    WakeLockLease? lease;
+    try {
+      lease = await PowerWakeLockService.acquireFull();
+      return await HealthDatabase.instance.exportBackup(
+        onProgress: (processed, total) {
+          backupExportProcessedCount = processed;
+          backupExportTotalCount = total;
+          notifyListeners();
+        },
+      );
+    } finally {
+      await lease?.release();
+      isExportingBackup = false;
+      notifyListeners();
+    }
+  }
 
   Future<int> importBackup(String path) async {
     if (isImportingBackup) return 0;

@@ -59,6 +59,17 @@ class HealthDatabase {
     return _deviceId!;
   }
 
+  Future<void> resetAfterDatabaseImport() async {
+    _database = null;
+    _databaseFuture = null;
+    _deviceId = _generateUuid();
+    await DatabaseService.instance.setSetting(
+      HealthDashboardTool.config.id,
+      _deviceIdKey,
+      _deviceId!,
+    );
+  }
+
   static String _generateUuid() {
     final rng = Random.secure();
     final bytes = List<int>.generate(16, (_) => rng.nextInt(256));
@@ -286,6 +297,26 @@ class HealthDatabase {
     return rows.map(HealthRecord.fromMap).toList();
   }
 
+  Future<List<HealthRecord>> recordsForDay({
+    required String type,
+    required DateTime day,
+  }) async {
+    final start = DateTime(day.year, day.month, day.day);
+    final end = start.add(const Duration(days: 1));
+    final db = await _db();
+    final rows = await db.query(
+      _table,
+      where: 'deleted = 0 AND type = ? AND start_time >= ? AND start_time < ?',
+      whereArgs: [
+        type,
+        start.millisecondsSinceEpoch,
+        end.millisecondsSinceEpoch,
+      ],
+      orderBy: 'start_time ASC',
+    );
+    return compute(_parseRecords, rows);
+  }
+
   Future<Map<String, num>> allTimeWorkoutSummary() async {
     final db = await _db();
     final rows = await db.rawQuery('''
@@ -464,8 +495,11 @@ class HealthDatabase {
     }
   }
 
-  Future<String> exportBackup() async {
+  Future<String> exportBackup({
+    void Function(int processed, int total)? onProgress,
+  }) async {
     final records = await activeRecords();
+    onProgress?.call(0, records.length);
     final path = await TempFileManager.createFile('health_dashboard_backup.db');
     final backup = await openDatabase(path);
     try {
@@ -489,8 +523,13 @@ class HealthDatabase {
         )
       ''');
       final batch = backup.batch();
+      var processed = 0;
       for (final record in records) {
         batch.insert(_backupTable, record.toMap());
+        processed++;
+        if (processed % 100 == 0 || processed == records.length) {
+          onProgress?.call(processed, records.length);
+        }
       }
       await batch.commit(noResult: true);
     } finally {

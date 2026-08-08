@@ -535,6 +535,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String coreDatabaseSize(String size) {
+    return 'Current database size: $size';
+  }
+
+  @override
+  String get coreDatabaseSizeLoading => 'Current database size: Loading...';
+
+  @override
   String get coreTempFilesTitle => 'Temp Files';
 
   @override
@@ -6487,6 +6495,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Save Health Dashboard records as a SQLite database.';
 
   @override
+  String get healthDashboardExportBackupWarning =>
+      'Exporting a large health database can take a while. Keep the screen open until it is finished.';
+
+  @override
+  String get healthDashboardExportBackupProgressTitle =>
+      'Exporting health database';
+
+  @override
+  String get healthDashboardExportBackupProgressStatus => 'Preparing backup...';
+
+  @override
+  String healthDashboardExportBackupProgressCount(int processed, int total) {
+    return 'Writing $processed of $total records';
+  }
+
+  @override
+  String get healthDashboardExportBackupProgressHint =>
+      'Keep the screen open while the backup is created.';
+
+  @override
   String get healthDashboardImportBackup => 'Import health database';
 
   @override
@@ -6505,6 +6533,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthDashboardImportBackupFailed =>
       'Could not import health database';
+
+  @override
+  String get healthDashboardSelectedDay => 'Selected day';
 
   @override
   String get healthDashboardImportBackupProgressTitle =>

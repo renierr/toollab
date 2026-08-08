@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 class ExportBackupsCard extends StatelessWidget {
@@ -43,6 +46,20 @@ class ExportBackupsCard extends StatelessWidget {
               'Save your SQLite database and application settings directly to your device local files.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            FutureBuilder<int>(
+              future: DatabaseService.instance.getDatabaseSize(),
+              builder: (context, snapshot) => Text(
+                snapshot.hasData
+                    ? AppLocalizations.of(
+                        context,
+                      ).coreDatabaseSize(FormatHelper.fileSize(snapshot.data!))
+                    : AppLocalizations.of(context).coreDatabaseSizeLoading,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 20),

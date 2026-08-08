@@ -8,6 +8,7 @@ import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import '../health_dashboard_state.dart';
 import '../health_database.dart';
 import 'health_import_progress_dialog.dart';
+import 'health_export_progress_dialog.dart';
 
 class HealthBackupActions {
   static const _typeGroup = XTypeGroup(
@@ -20,6 +21,26 @@ class HealthBackupActions {
   );
 
   static Future<void> export(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => ResponsiveAlertDialog(
+        title: Text(l10n.healthDashboardExportBackup),
+        content: Text(l10n.healthDashboardExportBackupWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.commonExport),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    HealthExportProgressDialog.show(context);
     final path = await context.read<HealthDashboardState>().exportBackup();
     if (!context.mounted) return;
     await FileSaveHelper.saveFileFromPath(

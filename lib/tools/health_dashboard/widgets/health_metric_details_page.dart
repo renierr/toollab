@@ -6,6 +6,7 @@ import '../health_dashboard_state.dart';
 import 'health_day_navigation.dart';
 import 'health_metric_history.dart';
 import 'health_metric_summary_section.dart';
+import 'health_metric_day_chart.dart';
 import 'health_record_details_page.dart';
 import 'health_workout_trend_chart.dart';
 
@@ -51,6 +52,27 @@ class HealthMetricDetailsPage extends StatelessWidget {
             sum: sum,
             workoutMetric: workoutMetric,
           ),
+          if (!workoutMetric) ...[
+            const SizedBox(height: 16),
+            Text(
+              l10n.healthDashboardSelectedDay,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: HealthMetricDayChart(
+                  type: type,
+                  valueKey: valueKey,
+                  unit: unit,
+                  color: color,
+                  day: state.selectedDay,
+                  sum: sum,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           Text(
             l10n.healthDashboardLastSevenDays,

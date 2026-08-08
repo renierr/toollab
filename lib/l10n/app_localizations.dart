@@ -1040,6 +1040,18 @@ abstract class AppLocalizations {
   /// **'Database import failed: {error}'**
   String coreDatabaseImportFailed(String error);
 
+  /// No description provided for @coreDatabaseSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Current database size: {size}'**
+  String coreDatabaseSize(String size);
+
+  /// No description provided for @coreDatabaseSizeLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Current database size: Loading...'**
+  String get coreDatabaseSizeLoading;
+
   /// No description provided for @coreTempFilesTitle.
   ///
   /// In en, this message translates to:
@@ -11771,6 +11783,36 @@ abstract class AppLocalizations {
   /// **'Save Health Dashboard records as a SQLite database.'**
   String get healthDashboardExportBackupSubtitle;
 
+  /// No description provided for @healthDashboardExportBackupWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting a large health database can take a while. Keep the screen open until it is finished.'**
+  String get healthDashboardExportBackupWarning;
+
+  /// No description provided for @healthDashboardExportBackupProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting health database'**
+  String get healthDashboardExportBackupProgressTitle;
+
+  /// No description provided for @healthDashboardExportBackupProgressStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing backup...'**
+  String get healthDashboardExportBackupProgressStatus;
+
+  /// No description provided for @healthDashboardExportBackupProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing {processed} of {total} records'**
+  String healthDashboardExportBackupProgressCount(int processed, int total);
+
+  /// No description provided for @healthDashboardExportBackupProgressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the screen open while the backup is created.'**
+  String get healthDashboardExportBackupProgressHint;
+
   /// No description provided for @healthDashboardImportBackup.
   ///
   /// In en, this message translates to:
@@ -11800,6 +11842,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not import health database'**
   String get healthDashboardImportBackupFailed;
+
+  /// No description provided for @healthDashboardSelectedDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected day'**
+  String get healthDashboardSelectedDay;
 
   /// No description provided for @healthDashboardImportBackupProgressTitle.
   ///
