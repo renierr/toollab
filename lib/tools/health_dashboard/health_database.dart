@@ -54,7 +54,7 @@ class HealthDatabase {
       HealthDashboardTool.config.id,
     );
     await _database!.migrate(
-      currentVersion: 2,
+      currentVersion: 3,
       onMigrate: (txn, oldVersion, newVersion) async {
         if (oldVersion < 1) {
           await txn.execute('''
@@ -90,6 +90,13 @@ class HealthDatabase {
           );
           debugPrint('[HealthDatabase] Backfilled device_id=$devId on existing healthConnect records');
         }
+        if (oldVersion < 3) {
+          final t = txn.nameTable(_table);
+          await txn.execute('CREATE INDEX IF NOT EXISTS idx_deleted_start ON $t (deleted, start_time)');
+          await txn.execute('CREATE INDEX IF NOT EXISTS idx_deleted_end ON $t (deleted, end_time)');
+          await txn.execute('CREATE INDEX IF NOT EXISTS idx_source_device ON $t (source, device_id)');
+          await txn.execute('CREATE INDEX IF NOT EXISTS idx_deleted_type ON $t (deleted, type)');
+        }
       },
     );
     return _database!;
@@ -113,8 +120,11 @@ class HealthDatabase {
       whereArgs: [start.millisecondsSinceEpoch],
       orderBy: 'start_time DESC',
     );
-    return rows.map(HealthRecord.fromMap).toList();
+    return compute(_parseRecords, rows);
   }
+
+  static List<HealthRecord> _parseRecords(List<Map<String, dynamic>> rows) =>
+      rows.map(HealthRecord.fromMap).toList();
 
   Future<List<HealthRecord>> recentRecords({int limit = 200}) async {
     final db = await _db();
