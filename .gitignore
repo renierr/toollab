@@ -56,6 +56,10 @@ app.*.map.json
 # Vendored rhttp Rust build cache
 /packages/rhttp/rust/target/
 
+# Vendored rhttp development-only sources
+/packages/rhttp/example/
+/packages/rhttp/test/
+
 # Generated version file
 /lib/version.g.dart
 
