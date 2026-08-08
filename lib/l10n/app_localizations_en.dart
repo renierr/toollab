@@ -6332,4 +6332,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardData => 'Data';
+
+  @override
+  String get healthDashboardHuaweiHealth => 'Huawei Health';
+
+  @override
+  String get healthDashboardAmazfit => 'Amazfit / Zepp';
+
+  @override
+  String get healthDashboardGoogleFit => 'Google Fit';
+
+  @override
+  String get healthDashboardSourcePreferences => 'Preferred data sources';
+
+  @override
+  String get healthDashboardSourcePreferencesSubtitle =>
+      'Use a preferred app for each metric when records overlap.';
+
+  @override
+  String get healthDashboardAnySource => 'Any source';
+
+  @override
+  String get healthDashboardNap => 'Nap';
+
+  @override
+  String get healthDashboardNaps => 'Naps';
 }

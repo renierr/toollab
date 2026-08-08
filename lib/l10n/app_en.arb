@@ -3205,5 +3205,13 @@
   "healthDashboardDate": "Date",
   "healthDashboardTime": "Time",
   "healthDashboardSource": "Source",
-  "healthDashboardData": "Data"
+  "healthDashboardData": "Data",
+  "healthDashboardHuaweiHealth": "Huawei Health",
+  "healthDashboardAmazfit": "Amazfit / Zepp",
+  "healthDashboardGoogleFit": "Google Fit",
+  "healthDashboardSourcePreferences": "Preferred data sources",
+  "healthDashboardSourcePreferencesSubtitle": "Use a preferred app for each metric when records overlap.",
+  "healthDashboardAnySource": "Any source",
+  "healthDashboardNap": "Nap",
+  "healthDashboardNaps": "Naps"
 }

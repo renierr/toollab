@@ -58,7 +58,12 @@ class HealthMetricDetailsPage extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
-          HealthMetricHistory(records: records, valueKey: valueKey, unit: unit),
+          HealthMetricHistory(
+            records: records,
+            valueKey: valueKey,
+            unit: unit,
+            isNap: state.isNap,
+          ),
         ],
       ),
     );

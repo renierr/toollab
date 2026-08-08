@@ -157,10 +157,13 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     'kg' => '${value.toStringAsFixed(1)} kg',
     'bpm' => '${value.round()} bpm',
     'steps' => value.round().toString(),
-    'min' => '${value.round()} min',
+    'min' => _duration(value.round()),
     'calories' => value.round().toString(),
     _ => value.round().toString(),
   };
+
+  String _duration(int minutes) =>
+      '${minutes ~/ 60}h ${minutes.remainder(60)}m';
 
   void _label(
     Canvas canvas,

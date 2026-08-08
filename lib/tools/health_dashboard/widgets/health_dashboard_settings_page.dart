@@ -5,6 +5,7 @@ import 'package:tool_lab/providers/app_state.dart';
 
 import '../health_dashboard_state.dart';
 import '../health_sync_delegate.dart';
+import 'health_source_preferences_page.dart';
 
 class HealthDashboardSettingsPage extends StatelessWidget {
   const HealthDashboardSettingsPage({super.key});
@@ -25,6 +26,17 @@ class HealthDashboardSettingsPage extends StatelessWidget {
             subtitle: Text(l10n.healthDashboardShowTreadmillSubtitle),
             value: healthState.showTreadmillWorkouts,
             onChanged: healthState.setShowTreadmillWorkouts,
+          ),
+          ListTile(
+            leading: const Icon(Icons.account_tree_outlined),
+            title: Text(l10n.healthDashboardSourcePreferences),
+            subtitle: Text(l10n.healthDashboardSourcePreferencesSubtitle),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const HealthSourcePreferencesPage(),
+              ),
+            ),
           ),
           const Divider(height: 1),
           _SettingsSection(title: l10n.healthDashboardHealthConnect),

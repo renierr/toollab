@@ -5,17 +5,20 @@ import 'package:tool_lab/widgets/collapsible_section.dart';
 
 import '../health_record.dart';
 import 'health_record_details_page.dart';
+import 'health_source_badge.dart';
 
 class HealthMetricHistory extends StatelessWidget {
   final List<HealthRecord> records;
   final String valueKey;
   final String unit;
+  final bool Function(HealthRecord record) isNap;
 
   const HealthMetricHistory({
     super.key,
     required this.records,
     required this.valueKey,
     required this.unit,
+    required this.isNap,
   });
 
   @override
@@ -42,6 +45,7 @@ class HealthMetricHistory extends StatelessWidget {
                         record: record,
                         valueKey: valueKey,
                         unit: unit,
+                        isNap: isNap(record),
                       ),
                     )
                     .toList(),
@@ -56,7 +60,16 @@ class HealthMetricHistory extends StatelessWidget {
     final cutoff = DateTime.now().subtract(const Duration(days: 6));
     final recent = <HealthRecord>[];
     final monthly = <String, List<HealthRecord>>{};
+    final naps = <HealthRecord>[];
+    final nightlyRecords = <HealthRecord>[];
     for (final record in records) {
+      if (record.type == 'sleep.session' && isNap(record)) {
+        naps.add(record);
+      } else {
+        nightlyRecords.add(record);
+      }
+    }
+    for (final record in nightlyRecords) {
       final date = DateTime.fromMillisecondsSinceEpoch(record.startTime);
       if (!date.isBefore(cutoff)) {
         recent.add(record);
@@ -77,6 +90,12 @@ class HealthMetricHistory extends StatelessWidget {
       ...monthly.entries.map(
         (entry) => _HealthRecordGroup(entry.key, entry.value, false),
       ),
+      if (naps.isNotEmpty)
+        _HealthRecordGroup(
+          AppLocalizations.of(context).healthDashboardNaps,
+          naps,
+          false,
+        ),
     ];
   }
 }
@@ -93,11 +112,13 @@ class _HealthRecordTile extends StatelessWidget {
   final HealthRecord record;
   final String valueKey;
   final String unit;
+  final bool isNap;
 
   const _HealthRecordTile({
     required this.record,
     required this.valueKey,
     required this.unit,
+    required this.isNap,
   });
 
   @override
@@ -110,12 +131,15 @@ class _HealthRecordTile extends StatelessWidget {
         : (record.value[valueKey] as num?)?.toDouble();
     return Card(
       child: ListTile(
-        leading: const Icon(Icons.history_rounded),
-        title: Text(MaterialLocalizations.of(context).formatMediumDate(date)),
-        subtitle: Text(
-          record.sourceName ??
-              AppLocalizations.of(context).healthDashboardHealthConnect,
+        leading: Icon(
+          isNap ? Icons.nightlight_outlined : Icons.history_rounded,
         ),
+        title: Text(
+          isNap
+              ? '${MaterialLocalizations.of(context).formatMediumDate(date)} · ${AppLocalizations.of(context).healthDashboardNap}'
+              : MaterialLocalizations.of(context).formatMediumDate(date),
+        ),
+        subtitle: HealthSourceBadge(packageName: record.sourceName),
         trailing: Text(value == null ? '-' : _format(value)),
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute<void>(
@@ -130,8 +154,14 @@ class _HealthRecordTile extends StatelessWidget {
     'kg' => '${value.toStringAsFixed(1)} kg',
     'bpm' => '${value.round()} bpm',
     'steps' => value.round().toString(),
-    'min' => '${value.round()} min',
+    'min' =>
+      record.type == 'sleep.session'
+          ? _sleepDuration(value.round())
+          : '${value.round()} min',
     'calories' => value.round().toString(),
     _ => value.toStringAsFixed(1),
   };
+
+  String _sleepDuration(int minutes) =>
+      '${minutes ~/ 60}h ${minutes.remainder(60)}m';
 }

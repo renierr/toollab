@@ -2364,5 +2364,13 @@
   "healthDashboardDate": "Datum",
   "healthDashboardTime": "Zeit",
   "healthDashboardSource": "Quelle",
-  "healthDashboardData": "Daten"
+  "healthDashboardData": "Daten",
+  "healthDashboardHuaweiHealth": "Huawei Health",
+  "healthDashboardAmazfit": "Amazfit / Zepp",
+  "healthDashboardGoogleFit": "Google Fit",
+  "healthDashboardSourcePreferences": "Bevorzugte Datenquellen",
+  "healthDashboardSourcePreferencesSubtitle": "Bei ueberlappenden Daten eine bevorzugte App je Messwert verwenden.",
+  "healthDashboardAnySource": "Beliebige Quelle",
+  "healthDashboardNap": "Nickerchen",
+  "healthDashboardNaps": "Nickerchen"
 }

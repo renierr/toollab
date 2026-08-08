@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_record.dart';
+import 'health_source_badge.dart';
 
 class HealthRecordDetailsPage extends StatelessWidget {
   final HealthRecord record;
@@ -30,9 +31,9 @@ class HealthRecordDetailsPage extends StatelessWidget {
                 '${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(start))} - ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(end))}',
           ),
           if (record.sourceName != null)
-            _RecordField(
+            _RecordWidgetField(
               label: l10n.healthDashboardSource,
-              value: record.sourceName!,
+              child: HealthSourceBadge(packageName: record.sourceName),
             ),
           _RecordField(
             label: l10n.healthDashboardData,
@@ -61,4 +62,15 @@ class _RecordField extends StatelessWidget {
     title: Text(label),
     subtitle: selectable ? SelectableText(value) : Text(value),
   );
+}
+
+class _RecordWidgetField extends StatelessWidget {
+  final String label;
+  final Widget child;
+
+  const _RecordWidgetField({required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) =>
+      ListTile(title: Text(label), subtitle: child);
 }

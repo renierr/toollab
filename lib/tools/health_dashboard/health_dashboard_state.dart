@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -12,6 +14,7 @@ import 'health_sync_delegate.dart';
 class HealthDashboardState extends ChangeNotifier {
   static const _showTreadmillWorkoutsKey = 'show_treadmill_workouts';
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
+  static const _sourcePreferencePrefix = 'source_preference_';
 
   final _treadmillCollector = TreadmillCollector();
   final _healthConnectCollector = HealthConnectCollector();
@@ -20,6 +23,7 @@ class HealthDashboardState extends ChangeNotifier {
   bool isCollecting = false;
   bool showTreadmillWorkouts = true;
   bool autoHealthConnectSync = false;
+  final Map<String, String?> sourcePreferences = {};
   String? error;
 
   HealthDashboardState() {
@@ -44,6 +48,12 @@ class HealthDashboardState extends ChangeNotifier {
             _autoHealthConnectSyncKey,
           ) ==
           'true';
+      for (final type in _sourcePreferenceTypes) {
+        sourcePreferences[type] = await DatabaseService.instance.getSetting(
+          HealthDashboardTool.config.id,
+          '$_sourcePreferencePrefix$type',
+        );
+      }
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Load failed: $e');
@@ -138,6 +148,34 @@ class HealthDashboardState extends ChangeNotifier {
     );
   }
 
+  static const _sourcePreferenceTypes = [
+    'activity.steps',
+    'body.weight',
+    'heart.resting',
+    'heart.rate',
+    'sleep.session',
+  ];
+
+  String? preferredSource(String type) => sourcePreferences[type];
+
+  List<String> availableSources(String type) =>
+      recordsOfType(type)
+          .map((record) => record.sourceName)
+          .whereType<String>()
+          .toSet()
+          .toList()
+        ..sort();
+
+  Future<void> setPreferredSource(String type, String? source) async {
+    sourcePreferences[type] = source;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      HealthDashboardTool.config.id,
+      '$_sourcePreferencePrefix$type',
+      source ?? '',
+    );
+  }
+
   List<HealthRecord> get treadmillWorkouts => showTreadmillWorkouts
       ? records.where((record) => record.type == 'workout.treadmill').toList()
       : const [];
@@ -150,20 +188,29 @@ class HealthDashboardState extends ChangeNotifier {
       [...treadmillWorkouts, ...healthConnectWorkouts]
         ..sort((a, b) => b.startTime.compareTo(a.startTime));
 
-  List<HealthRecord> recordsOfType(String type) =>
-      records.where((record) => record.type == type).toList();
+  List<HealthRecord> recordsOfType(String type, {bool preferredOnly = false}) {
+    final typed = records.where((record) => record.type == type).toList();
+    final source = preferredSource(type);
+    if (!preferredOnly || source == null || source.isEmpty) return typed;
+    final preferred = typed
+        .where((record) => record.sourceName == source)
+        .toList();
+    return preferred.isEmpty ? typed : preferred;
+  }
 
   List<double?> weeklyMetricValues(
     String type,
     String key, {
     bool sum = false,
   }) => List<double?>.generate(7, (index) {
-    final values = recordsOfType(type)
+    final values = recordsOfType(type, preferredOnly: true)
+        .where((record) => type != 'sleep.session' || !isNap(record))
         .where((record) => _isOnDay(record, _dayAt(index)))
         .map((record) => _metricValue(record, key))
         .whereType<double>()
         .toList();
     if (values.isEmpty) return null;
+    if (type == 'sleep.session') return values.reduce(max);
     if (sum) return values.reduce((a, b) => a + b);
     return values.reduce((a, b) => a + b) / values.length;
   });
@@ -180,10 +227,15 @@ class HealthDashboardState extends ChangeNotifier {
     return (record.value[key] as num?)?.toDouble();
   }
 
+  bool isNap(HealthRecord record) {
+    final title = (record.value['title'] as String?)?.toLowerCase() ?? '';
+    return title.contains('nickerchen') || title.contains('nap');
+  }
+
   int get todaySteps {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
-    return records
+    return recordsOfType('activity.steps', preferredOnly: true)
         .where(
           (record) =>
               record.type == 'activity.steps' && record.startTime >= today,
@@ -199,18 +251,17 @@ class HealthDashboardState extends ChangeNotifier {
   double? get latestRestingHeartRate => _latestNumeric('heart.resting', 'bpm');
 
   int? get latestSleepMinutes {
-    for (final record in records) {
-      if (record.type == 'sleep.session') {
-        return Duration(
-          milliseconds: record.endTime - record.startTime,
-        ).inMinutes;
-      }
+    for (final record in recordsOfType('sleep.session', preferredOnly: true)) {
+      if (isNap(record)) continue;
+      return Duration(
+        milliseconds: record.endTime - record.startTime,
+      ).inMinutes;
     }
     return null;
   }
 
   double? _latestNumeric(String type, String key) {
-    for (final record in records) {
+    for (final record in recordsOfType(type, preferredOnly: true)) {
       if (record.type == type && record.value[key] is num) {
         return (record.value[key] as num).toDouble();
       }
@@ -236,7 +287,7 @@ class HealthDashboardState extends ChangeNotifier {
         if (_isOnDay(workout, day) &&
             ((workout.value['averageHeartRate'] as num?) ?? 0) > 0)
           (workout.value['averageHeartRate'] as num).toDouble(),
-      for (final record in records)
+      for (final record in recordsOfType('heart.rate', preferredOnly: true))
         if (record.type == 'heart.rate' &&
             _isOnDay(record, day) &&
             ((record.value['averageBpm'] as num?) ?? 0) > 0)

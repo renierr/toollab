@@ -11488,6 +11488,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Data'**
   String get healthDashboardData;
+
+  /// No description provided for @healthDashboardHuaweiHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Huawei Health'**
+  String get healthDashboardHuaweiHealth;
+
+  /// No description provided for @healthDashboardAmazfit.
+  ///
+  /// In en, this message translates to:
+  /// **'Amazfit / Zepp'**
+  String get healthDashboardAmazfit;
+
+  /// No description provided for @healthDashboardGoogleFit.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Fit'**
+  String get healthDashboardGoogleFit;
+
+  /// No description provided for @healthDashboardSourcePreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred data sources'**
+  String get healthDashboardSourcePreferences;
+
+  /// No description provided for @healthDashboardSourcePreferencesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a preferred app for each metric when records overlap.'**
+  String get healthDashboardSourcePreferencesSubtitle;
+
+  /// No description provided for @healthDashboardAnySource.
+  ///
+  /// In en, this message translates to:
+  /// **'Any source'**
+  String get healthDashboardAnySource;
+
+  /// No description provided for @healthDashboardNap.
+  ///
+  /// In en, this message translates to:
+  /// **'Nap'**
+  String get healthDashboardNap;
+
+  /// No description provided for @healthDashboardNaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Naps'**
+  String get healthDashboardNaps;
 }
 
 class _AppLocalizationsDelegate
