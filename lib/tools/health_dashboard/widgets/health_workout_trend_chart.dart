@@ -1,14 +1,18 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:tool_lab/theme/theme.dart';
-
-import '../health_record.dart';
 
 class HealthWorkoutTrendChart extends StatelessWidget {
-  final List<HealthRecord> workouts;
+  final List<double?> values;
+  final String unit;
+  final Color color;
 
-  const HealthWorkoutTrendChart({super.key, required this.workouts});
+  const HealthWorkoutTrendChart({
+    super.key,
+    required this.values,
+    required this.unit,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -16,8 +20,9 @@ class HealthWorkoutTrendChart extends StatelessWidget {
     child: CustomPaint(
       size: Size.infinite,
       painter: _HealthWorkoutTrendPainter(
-        workouts: workouts,
-        lineColor: AppTheme.accentTeal,
+        values: values,
+        unit: unit,
+        lineColor: color,
         gridColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         labelColor: Theme.of(context).hintColor,
       ),
@@ -26,13 +31,15 @@ class HealthWorkoutTrendChart extends StatelessWidget {
 }
 
 class _HealthWorkoutTrendPainter extends CustomPainter {
-  final List<HealthRecord> workouts;
+  final List<double?> values;
+  final String unit;
   final Color lineColor;
   final Color gridColor;
   final Color labelColor;
 
   const _HealthWorkoutTrendPainter({
-    required this.workouts,
+    required this.values,
+    required this.unit,
     required this.lineColor,
     required this.gridColor,
     required this.labelColor,
@@ -42,22 +49,11 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final values = List<double>.generate(7, (index) {
-      final day = today.subtract(Duration(days: 6 - index));
-      return workouts
-          .where((workout) {
-            final date = DateTime.fromMillisecondsSinceEpoch(workout.startTime);
-            return date.year == day.year &&
-                date.month == day.month &&
-                date.day == day.day;
-          })
-          .fold(0.0, (sum, workout) {
-            return sum +
-                ((workout.value['distanceKm'] as num?)?.toDouble() ?? 0);
-          });
-    });
-    final maxValue = max(1.0, values.reduce(max));
-    final plot = Rect.fromLTWH(8, 8, size.width - 16, size.height - 30);
+    final maxValue = max(
+      unit == 'km' ? 1.0 : 60.0,
+      values.whereType<double>().fold(0.0, max),
+    );
+    final plot = Rect.fromLTWH(34, 14, size.width - 42, size.height - 44);
     final barWidth = plot.width / values.length * 0.56;
     final gridPaint = Paint()
       ..color = gridColor
@@ -65,15 +61,30 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     for (var index = 0; index < 3; index++) {
       final y = plot.top + plot.height * index / 2;
       canvas.drawLine(Offset(plot.left, y), Offset(plot.right, y), gridPaint);
+      _label(
+        canvas,
+        _formatValue(maxValue * (2 - index) / 2),
+        Offset(plot.left - 5, y - 6),
+        alignRight: true,
+      );
     }
     for (var index = 0; index < values.length; index++) {
-      final height = values[index] / maxValue * plot.height;
+      final value = values[index];
+      final height = (value ?? 0) / maxValue * plot.height;
       final x = plot.left + plot.width * (index + 0.5) / values.length;
       final bar = RRect.fromRectAndRadius(
         Rect.fromLTWH(x - barWidth / 2, plot.bottom - height, barWidth, height),
         const Radius.circular(5),
       );
       canvas.drawRRect(bar, Paint()..color = lineColor);
+      if (value != null && value > 0) {
+        _label(
+          canvas,
+          _formatValue(value),
+          Offset(x, plot.bottom - height - 16),
+          centered: true,
+        );
+      }
       _label(
         canvas,
         '${today.subtract(Duration(days: 6 - index)).day}',
@@ -82,7 +93,17 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     }
   }
 
-  void _label(Canvas canvas, String text, Offset center) {
+  String _formatValue(double value) => unit == 'km'
+      ? '${value.toStringAsFixed(value >= 10 ? 0 : 1)} km'
+      : '${value.round()} bpm';
+
+  void _label(
+    Canvas canvas,
+    String text,
+    Offset anchor, {
+    bool centered = false,
+    bool alignRight = false,
+  }) {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
@@ -90,12 +111,18 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    painter.paint(canvas, Offset(center.dx - painter.width / 2, center.dy));
+    final x = alignRight
+        ? anchor.dx - painter.width
+        : centered
+        ? anchor.dx - painter.width / 2
+        : anchor.dx;
+    painter.paint(canvas, Offset(x, anchor.dy));
   }
 
   @override
   bool shouldRepaint(_HealthWorkoutTrendPainter oldDelegate) =>
-      oldDelegate.workouts != workouts ||
+      oldDelegate.values != values ||
+      oldDelegate.unit != unit ||
       oldDelegate.lineColor != lineColor ||
       oldDelegate.gridColor != gridColor ||
       oldDelegate.labelColor != labelColor;

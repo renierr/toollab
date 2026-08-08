@@ -6242,6 +6242,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthDashboardWorkoutTrend => 'Distance · last 7 days';
 
   @override
+  String get healthDashboardHeartRateTrend =>
+      'Average heart rate · last 7 days';
+
+  @override
   String get healthDashboardRecentActivity => 'Recent activity';
 
   @override

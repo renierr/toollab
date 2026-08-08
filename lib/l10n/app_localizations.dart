@@ -11327,6 +11327,12 @@ abstract class AppLocalizations {
   /// **'Distance · last 7 days'**
   String get healthDashboardWorkoutTrend;
 
+  /// No description provided for @healthDashboardHeartRateTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Average heart rate · last 7 days'**
+  String get healthDashboardHeartRateTrend;
+
   /// No description provided for @healthDashboardRecentActivity.
   ///
   /// In en, this message translates to:

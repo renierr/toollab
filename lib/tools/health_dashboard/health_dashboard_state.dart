@@ -180,6 +180,50 @@ class HealthDashboardState extends ChangeNotifier {
     return null;
   }
 
+  List<double> get weeklyDistanceKm => List<double>.generate(7, (index) {
+    final day = _dayAt(index);
+    return treadmillWorkouts
+        .where((workout) => _isOnDay(workout, day))
+        .fold(
+          0,
+          (sum, workout) =>
+              sum + ((workout.value['distanceKm'] as num?)?.toDouble() ?? 0),
+        );
+  });
+
+  List<double?> get weeklyHeartRate => List<double?>.generate(7, (index) {
+    final day = _dayAt(index);
+    final values = <double>[
+      for (final workout in treadmillWorkouts)
+        if (_isOnDay(workout, day) &&
+            ((workout.value['averageHeartRate'] as num?) ?? 0) > 0)
+          (workout.value['averageHeartRate'] as num).toDouble(),
+      for (final record in records)
+        if (record.type == 'heart.rate' &&
+            _isOnDay(record, day) &&
+            ((record.value['averageBpm'] as num?) ?? 0) > 0)
+          (record.value['averageBpm'] as num).toDouble(),
+    ];
+    if (values.isEmpty) return null;
+    return values.reduce((a, b) => a + b) / values.length;
+  });
+
+  DateTime _dayAt(int index) {
+    final now = DateTime.now();
+    return DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: 6 - index));
+  }
+
+  bool _isOnDay(HealthRecord record, DateTime day) {
+    final date = DateTime.fromMillisecondsSinceEpoch(record.startTime);
+    return date.year == day.year &&
+        date.month == day.month &&
+        date.day == day.day;
+  }
+
   double get totalDistanceKm => treadmillWorkouts.fold(
     0,
     (sum, record) => sum + ((record.value['distanceKm'] as num?) ?? 0),

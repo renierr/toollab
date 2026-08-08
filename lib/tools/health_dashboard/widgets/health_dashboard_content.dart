@@ -105,7 +105,27 @@ class HealthDashboardContent extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: HealthWorkoutTrendChart(
-                  workouts: state.treadmillWorkouts,
+                  values: state.weeklyDistanceKm,
+                  unit: 'km',
+                  color: AppTheme.accentTeal,
+                ),
+              ),
+            ),
+          ],
+          if (state.weeklyHeartRate.any((value) => value != null)) ...[
+            const SizedBox(height: 28),
+            Text(
+              l10n.healthDashboardHeartRateTrend,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: HealthWorkoutTrendChart(
+                  values: state.weeklyHeartRate,
+                  unit: 'bpm',
+                  color: AppTheme.accentRed,
                 ),
               ),
             ),

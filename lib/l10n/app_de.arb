@@ -2337,6 +2337,7 @@
   "healthDashboardRestingHeartRate": "Ruhepuls",
   "healthDashboardLastSleep": "Letzter Schlaf",
   "healthDashboardWorkoutTrend": "Distanz · letzte 7 Tage",
+  "healthDashboardHeartRateTrend": "Durchschnittlicher Puls · letzte 7 Tage",
   "healthDashboardRecentActivity": "Letzte Aktivitaeten",
   "healthDashboardNoData": "Noch keine Gesundheitsdaten. Synchronisiere ein Laufband-Workout oder verbinde Health Connect auf Android.",
   "healthDashboardTreadmillRun": "Laufbandlauf",

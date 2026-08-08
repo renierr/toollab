@@ -3178,6 +3178,7 @@
   "healthDashboardRestingHeartRate": "Resting heart rate",
   "healthDashboardLastSleep": "Latest sleep",
   "healthDashboardWorkoutTrend": "Distance · last 7 days",
+  "healthDashboardHeartRateTrend": "Average heart rate · last 7 days",
   "healthDashboardRecentActivity": "Recent activity",
   "healthDashboardNoData": "No health data yet. Sync a treadmill workout or connect Health Connect on Android.",
   "healthDashboardTreadmillRun": "Treadmill run",
