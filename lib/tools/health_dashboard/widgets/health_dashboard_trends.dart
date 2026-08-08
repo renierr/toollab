@@ -69,6 +69,8 @@ class _DistancePulseTrend extends StatelessWidget {
             overlayValues: pulse,
             overlayUnit: 'bpm',
             overlayColor: AppTheme.accentRed,
+            label: AppLocalizations.of(context).healthDashboardDistance,
+            overlayLabel: AppLocalizations.of(context).healthDashboardHeartRate,
             endDate: endDate,
           ),
         ),

@@ -5,7 +5,7 @@ import 'package:intl/intl.dart' show DateFormat;
 
 enum HealthTrendChartStyle { bars, line }
 
-class HealthWorkoutTrendChart extends StatelessWidget {
+class HealthWorkoutTrendChart extends StatefulWidget {
   final List<double?> values;
   final String unit;
   final Color color;
@@ -15,6 +15,8 @@ class HealthWorkoutTrendChart extends StatelessWidget {
   final Color? overlayColor;
   final DateTime? endDate;
   final ValueChanged<int>? onDayTap;
+  final String? label;
+  final String? overlayLabel;
 
   const HealthWorkoutTrendChart({
     super.key,
@@ -27,45 +29,138 @@ class HealthWorkoutTrendChart extends StatelessWidget {
     this.overlayColor,
     this.endDate,
     this.onDayTap,
+    this.label,
+    this.overlayLabel,
   });
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 170,
-    child: LayoutBuilder(
-      builder: (context, constraints) => GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTapUp: onDayTap == null
-            ? null
-            : (details) {
-                final plotWidth =
-                    constraints.maxWidth - (overlayValues == null ? 42 : 76);
-                final ratio = ((details.localPosition.dx - 34) / plotWidth)
-                    .clamp(0.0, 0.999999);
-                onDayTap!((ratio * values.length).floor());
+  State<HealthWorkoutTrendChart> createState() =>
+      _HealthWorkoutTrendChartState();
+}
+
+class _HealthWorkoutTrendChartState extends State<HealthWorkoutTrendChart> {
+  bool _showPrimary = true;
+  bool _showOverlay = true;
+  int? _selectedIndex;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (widget.overlayValues != null)
+        _Legend(
+          primaryLabel: widget.label ?? widget.unit,
+          primaryColor: widget.color,
+          primaryVisible: _showPrimary,
+          overlayLabel: widget.overlayLabel ?? widget.overlayUnit ?? '',
+          overlayColor: widget.overlayColor ?? Colors.red,
+          overlayVisible: _showOverlay,
+          onPrimaryTap: () => setState(() => _showPrimary = !_showPrimary),
+          onOverlayTap: () => setState(() => _showOverlay = !_showOverlay),
+        ),
+      SizedBox(
+        height: 170,
+        child: LayoutBuilder(
+          builder: (context, constraints) => MouseRegion(
+            onHover: (event) =>
+                _updateSelection(event.localPosition, constraints.maxWidth),
+            onExit: (_) => setState(() => _selectedIndex = null),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (details) =>
+                  _updateSelection(details.localPosition, constraints.maxWidth),
+              onHorizontalDragUpdate: (details) =>
+                  _updateSelection(details.localPosition, constraints.maxWidth),
+              onTapUp: (details) {
+                final index = _indexAt(
+                  details.localPosition,
+                  constraints.maxWidth,
+                );
+                if (index != null) widget.onDayTap?.call(index);
+                setState(() => _selectedIndex = null);
               },
-        child: CustomPaint(
-          key: ValueKey(endDate),
-          size: Size.infinite,
-          painter: _HealthWorkoutTrendPainter(
-            values: values,
-            unit: unit,
-            lineColor: color,
-            style: style,
-            overlayValues: overlayValues,
-            overlayUnit: overlayUnit,
-            overlayColor: overlayColor,
-            endDate: endDate,
-            locale: Localizations.localeOf(context).toString(),
-            gridColor: Theme.of(
-              context,
-            ).colorScheme.outline.withValues(alpha: 0.2),
-            labelColor: Theme.of(context).hintColor,
+              onHorizontalDragEnd: (_) => setState(() => _selectedIndex = null),
+              onTapCancel: () => setState(() => _selectedIndex = null),
+              child: Stack(
+                children: [
+                  CustomPaint(
+                    key: ValueKey(widget.endDate),
+                    size: Size.infinite,
+                    painter: _HealthWorkoutTrendPainter(
+                      values: widget.values,
+                      unit: widget.unit,
+                      lineColor: widget.color,
+                      style: widget.style,
+                      overlayValues: _showOverlay ? widget.overlayValues : null,
+                      overlayUnit: widget.overlayUnit,
+                      overlayColor: widget.overlayColor,
+                      endDate: widget.endDate,
+                      compact: constraints.maxWidth < 420,
+                      showPrimary: _showPrimary,
+                      selectedIndex: _selectedIndex,
+                      locale: Localizations.localeOf(context).toString(),
+                      gridColor: Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.2),
+                      labelColor: Theme.of(context).hintColor,
+                    ),
+                  ),
+                  if (_selectedIndex != null)
+                    Positioned(
+                      left: _tooltipLeft(constraints.maxWidth),
+                      top: 0,
+                      child: _Tooltip(
+                        index: _selectedIndex!,
+                        values: widget.values,
+                        unit: widget.unit,
+                        color: widget.color,
+                        overlayValues: _showOverlay
+                            ? widget.overlayValues
+                            : null,
+                        overlayUnit: widget.overlayUnit,
+                        overlayColor: widget.overlayColor,
+                        endDate: widget.endDate,
+                        locale: Localizations.localeOf(context).toString(),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
-    ),
+    ],
   );
+
+  void _updateSelection(Offset position, double width) {
+    final index = _indexAt(position, width);
+    if (index == _selectedIndex) return;
+    setState(() => _selectedIndex = index);
+  }
+
+  int? _indexAt(Offset position, double width) {
+    final rightPadding = _showOverlay && widget.overlayValues != null
+        ? 76.0
+        : 42.0;
+    final plotWidth = width - 34 - rightPadding;
+    if (position.dx < 34 || position.dx > 34 + plotWidth || position.dy > 132) {
+      return null;
+    }
+    return (((position.dx - 34) / plotWidth) * widget.values.length)
+        .clamp(0.0, widget.values.length - 1.0)
+        .floor();
+  }
+
+  double _tooltipLeft(double width) {
+    const tooltipWidth = 112.0;
+    final rightPadding = _showOverlay && widget.overlayValues != null
+        ? 76.0
+        : 42.0;
+    final plotWidth = width - 34 - rightPadding;
+    final marker =
+        34 + plotWidth * (_selectedIndex! + 0.5) / widget.values.length;
+    return (marker - tooltipWidth / 2).clamp(0.0, width - tooltipWidth);
+  }
 }
 
 class _HealthWorkoutTrendPainter extends CustomPainter {
@@ -80,6 +175,9 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
   final String locale;
   final Color gridColor;
   final Color labelColor;
+  final bool compact;
+  final bool showPrimary;
+  final int? selectedIndex;
 
   const _HealthWorkoutTrendPainter({
     required this.values,
@@ -93,6 +191,9 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     required this.locale,
     required this.gridColor,
     required this.labelColor,
+    required this.compact,
+    required this.showPrimary,
+    this.selectedIndex,
   });
 
   @override
@@ -122,7 +223,18 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       size.width - (overlayValues == null ? 42 : 76),
       size.height - 52,
     );
+    _label(canvas, unit, Offset(plot.left, 0));
     final barWidth = plot.width / values.length * 0.56;
+    if (selectedIndex != null) {
+      final x = plot.left + plot.width * (selectedIndex! + 0.5) / values.length;
+      canvas.drawLine(
+        Offset(x, plot.top),
+        Offset(x, plot.bottom),
+        Paint()
+          ..color = labelColor
+          ..strokeWidth = 1,
+      );
+    }
     final gridPaint = Paint()
       ..color = gridColor
       ..strokeWidth = 1;
@@ -131,7 +243,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       canvas.drawLine(Offset(plot.left, y), Offset(plot.right, y), gridPaint);
       _label(
         canvas,
-        _formatValue(minValue + (maxValue - minValue) * (2 - index) / 2),
+        _formatAxisValue(minValue + (maxValue - minValue) * (2 - index) / 2),
         Offset(plot.left - 5, y - 6),
         alignRight: true,
       );
@@ -145,7 +257,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
           (maxValue - minValue) *
           plot.height;
       final x = plot.left + plot.width * (index + 0.5) / values.length;
-      if (style == HealthTrendChartStyle.bars) {
+      if (showPrimary && style == HealthTrendChartStyle.bars) {
         final bar = RRect.fromRectAndRadius(
           Rect.fromLTWH(
             x - barWidth / 2,
@@ -156,13 +268,16 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
           const Radius.circular(5),
         );
         canvas.drawRRect(bar, Paint()..color = lineColor);
-      } else if (value != null) {
+      } else if (showPrimary && value != null) {
         segment.add(Offset(x, plot.bottom - height));
       } else if (segment.isNotEmpty) {
         segments.add(segment);
         segment = <Offset>[];
       }
-      if (value != null && value > 0) {
+      if (showPrimary &&
+          value != null &&
+          value > 0 &&
+          (!compact || index.isEven)) {
         _label(
           canvas,
           _formatValue(value),
@@ -172,7 +287,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       }
       _label(
         canvas,
-        _dateLabel(today.subtract(Duration(days: 6 - index))),
+        _dateLabel(today.subtract(Duration(days: 6 - index)), compact),
         Offset(x, plot.bottom + 4),
         centered: true,
       );
@@ -202,10 +317,15 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     final padding = math.max((maximum - min).abs() * 0.15, 1.0).toDouble();
     final lower = min - padding;
     final upper = maximum + padding;
-    _label(canvas, _formatOverlay(upper), Offset(plot.right + 5, plot.top - 6));
+    _label(canvas, overlayUnit ?? '', Offset(plot.right, 0), alignRight: true);
     _label(
       canvas,
-      _formatOverlay(lower),
+      _formatOverlayAxis(upper),
+      Offset(plot.right + 5, plot.top - 6),
+    );
+    _label(
+      canvas,
+      _formatOverlayAxis(lower),
       Offset(plot.right + 5, plot.bottom - 6),
     );
     final segments = <List<Offset>>[];
@@ -220,7 +340,14 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       final x = plot.left + plot.width * (index + 0.5) / values.length;
       final y = plot.bottom - (value - lower) / (upper - lower) * plot.height;
       segment.add(Offset(x, y));
-      _label(canvas, _formatOverlay(value), Offset(x, y - 16), centered: true);
+      if (!compact || index.isOdd) {
+        _label(
+          canvas,
+          _formatOverlay(value),
+          Offset(x, y - 16),
+          centered: true,
+        );
+      }
     }
     if (segment.isNotEmpty) segments.add(segment);
     final paint = Paint()
@@ -258,8 +385,9 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     return path;
   }
 
-  String _dateLabel(DateTime date) =>
-      '${DateFormat.E(locale).format(date)}\n${date.day} ${DateFormat.MMM(locale).format(date)}';
+  String _dateLabel(DateTime date, bool compact) => compact
+      ? '${DateFormat.E(locale).format(date)} ${date.day}'
+      : '${DateFormat.E(locale).format(date)}\n${date.day} ${DateFormat.MMM(locale).format(date)}';
 
   String _formatValue(double value) => switch (unit) {
     'km' => '${value.toStringAsFixed(value >= 10 ? 0 : 1)} km',
@@ -271,11 +399,19 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     _ => value.round().toString(),
   };
 
+  String _formatAxisValue(double value) => switch (unit) {
+    'km' => value.toStringAsFixed(value >= 10 ? 0 : 1),
+    'kg' => value.toStringAsFixed(1),
+    _ => value.round().toString(),
+  };
+
   String _duration(int minutes) =>
       '${minutes ~/ 60}h ${minutes.remainder(60)}m';
 
   String _formatOverlay(double value) =>
       overlayUnit == 'bpm' ? '${value.round()} bpm' : '${value.round()}';
+
+  String _formatOverlayAxis(double value) => value.round().toString();
 
   void _label(
     Canvas canvas,
@@ -311,5 +447,149 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       oldDelegate.endDate != endDate ||
       oldDelegate.locale != locale ||
       oldDelegate.gridColor != gridColor ||
-      oldDelegate.labelColor != labelColor;
+      oldDelegate.labelColor != labelColor ||
+      oldDelegate.selectedIndex != selectedIndex;
+}
+
+class _Legend extends StatelessWidget {
+  final String primaryLabel, overlayLabel;
+  final Color primaryColor, overlayColor;
+  final bool primaryVisible, overlayVisible;
+  final VoidCallback onPrimaryTap, onOverlayTap;
+  const _Legend({
+    required this.primaryLabel,
+    required this.primaryColor,
+    required this.primaryVisible,
+    required this.overlayLabel,
+    required this.overlayColor,
+    required this.overlayVisible,
+    required this.onPrimaryTap,
+    required this.onOverlayTap,
+  });
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 12,
+    children: [
+      _LegendItem(
+        label: primaryLabel,
+        color: primaryColor,
+        selected: primaryVisible,
+        onTap: onPrimaryTap,
+      ),
+      _LegendItem(
+        label: overlayLabel,
+        color: overlayColor,
+        selected: overlayVisible,
+        onTap: onOverlayTap,
+      ),
+    ],
+  );
+}
+
+class _LegendItem extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+  const _LegendItem({
+    required this.label,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    child: Opacity(
+      opacity: selected ? 1 : .45,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 5),
+          Text(label, style: Theme.of(context).textTheme.labelMedium),
+        ],
+      ),
+    ),
+  );
+}
+
+class _Tooltip extends StatelessWidget {
+  final int index;
+  final List<double?> values;
+  final String unit;
+  final Color color;
+  final List<double?>? overlayValues;
+  final String? overlayUnit;
+  final Color? overlayColor;
+  final DateTime? endDate;
+  final String locale;
+  const _Tooltip({
+    required this.index,
+    required this.values,
+    required this.unit,
+    required this.color,
+    this.overlayValues,
+    this.overlayUnit,
+    this.overlayColor,
+    this.endDate,
+    required this.locale,
+  });
+  String _value(double? value, String unit) => value == null
+      ? 'No data'
+      : unit == 'km'
+      ? '${value.toStringAsFixed(1)} km'
+      : unit == 'bpm'
+      ? '${value.round()} bpm'
+      : value.round().toString();
+  @override
+  Widget build(BuildContext context) {
+    final date = (endDate ?? DateTime.now()).subtract(
+      Duration(days: 6 - index),
+    );
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Material(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                DateFormat.yMMMd(locale).format(date),
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+              _row(context, color, _value(values[index], unit)),
+              if (overlayValues != null)
+                _row(
+                  context,
+                  overlayColor ?? Colors.red,
+                  _value(overlayValues![index], overlayUnit ?? ''),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _row(BuildContext context, Color color, String value) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      const SizedBox(width: 5),
+      Text(value),
+    ],
+  );
 }
