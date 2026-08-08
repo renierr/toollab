@@ -6298,6 +6298,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthDashboardManageHealthConnect => 'Manage Health Connect';
 
   @override
+  String get healthDashboardHealthConnectImported =>
+      'Health Connect data imported';
+
+  @override
+  String get healthDashboardHealthConnectRepaired =>
+      'Health Connect cache repaired';
+
+  @override
+  String get healthDashboardSyncInProgress => 'Sync already in progress';
+
+  @override
+  String get healthDashboardSyncNoChanges => 'No health data changes to sync';
+
+  @override
   String get healthDashboardRepairHealthConnect =>
       'Repair Health Connect cache';
 

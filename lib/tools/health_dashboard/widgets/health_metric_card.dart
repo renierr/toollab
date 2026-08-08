@@ -18,7 +18,7 @@ class HealthMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    width: 156,
+    width: 148,
     child: Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(

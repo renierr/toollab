@@ -196,10 +196,13 @@ open class MainActivity : FlutterFragmentActivity() {
             when (call.method) {
                 "openSettings" -> {
                     try {
-                        startActivity(Intent("androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS").apply {
-                            putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
-                        })
-                        result.success(null)
+                        val intent = Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS")
+                        if (intent.resolveActivity(packageManager) == null) {
+                            result.error("HEALTH_CONNECT_UNAVAILABLE", "Health Connect is not available", null)
+                        } else {
+                            startActivity(intent)
+                            result.success(null)
+                        }
                     } catch (error: Exception) {
                         result.error("HEALTH_CONNECT_SETTINGS", error.message, null)
                     }

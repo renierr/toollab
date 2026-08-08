@@ -39,8 +39,8 @@ class HealthDashboardContent extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               HealthMetricCard(
                 icon: Icons.directions_run_rounded,
@@ -186,8 +186,8 @@ class HealthDashboardContent extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Wrap(
-            spacing: 12,
-            runSpacing: 12,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               HealthMetricCard(
                 icon: Icons.directions_run_rounded,

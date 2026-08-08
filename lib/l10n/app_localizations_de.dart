@@ -6337,6 +6337,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardManageHealthConnect => 'Health Connect verwalten';
 
   @override
+  String get healthDashboardHealthConnectImported =>
+      'Health-Connect-Daten importiert';
+
+  @override
+  String get healthDashboardHealthConnectRepaired =>
+      'Health-Connect-Zwischenspeicher repariert';
+
+  @override
+  String get healthDashboardSyncInProgress => 'Synchronisierung läuft bereits';
+
+  @override
+  String get healthDashboardSyncNoChanges =>
+      'Keine Gesundheitsdatenänderungen zum Synchronisieren';
+
+  @override
   String get healthDashboardRepairHealthConnect =>
       'Health-Connect-Zwischenspeicher reparieren';
 

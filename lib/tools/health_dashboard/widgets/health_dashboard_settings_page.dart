@@ -53,7 +53,9 @@ class HealthDashboardSettingsPage extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.chevron_right_rounded),
-            onTap: healthState.isCollecting ? null : HealthConnectSettings.open,
+            onTap: healthState.isCollecting
+                ? null
+                : () => _openHealthConnectSettings(context),
           ),
           ListTile(
             leading: const Icon(Icons.download_rounded),
@@ -61,9 +63,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
             subtitle: Text(l10n.healthDashboardConnectHealthConnectSubtitle),
             onTap: healthState.isCollecting
                 ? null
-                : () => context
-                      .read<HealthDashboardState>()
-                      .connectHealthConnect(),
+                : () => _importHealthConnect(context),
           ),
           SwitchListTile.adaptive(
             secondary: const Icon(Icons.autorenew_rounded),
@@ -78,9 +78,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
             subtitle: Text(l10n.healthDashboardRepairHealthConnectSubtitle),
             onTap: healthState.isCollecting
                 ? null
-                : () => context
-                      .read<HealthDashboardState>()
-                      .repairHealthConnectCache(),
+                : () => _repairHealthConnect(context),
           ),
           const Divider(height: 1),
           _SettingsSection(title: l10n.healthDashboardBackup),
@@ -113,9 +111,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.chevron_right_rounded),
-            onTap: !appState.syncEnabled || appState.isSyncing
-                ? null
-                : () => _sync(context),
+            onTap: () => _sync(context),
           ),
         ],
       ),
@@ -127,13 +123,31 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     final healthState = context.read<HealthDashboardState>();
     final appState = context.read<AppState>();
+    if (!appState.syncEnabled) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.healthDashboardSyncDisabled)),
+      );
+      return;
+    }
+    if (appState.isSyncing) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.healthDashboardSyncInProgress)),
+      );
+      return;
+    }
     try {
       await healthState.collect();
       await healthState.syncHealthConnect();
       final result = await appState.syncWithBackend([
         HealthDashboardSyncDelegate(),
       ]);
-      if (!context.mounted || result == null) return;
+      if (!context.mounted) return;
+      if (result == null) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.healthDashboardSyncNoChanges)),
+        );
+        return;
+      }
       await context.read<HealthDashboardState>().load();
       if (!context.mounted) return;
       messenger.showSnackBar(
@@ -153,6 +167,59 @@ class HealthDashboardSettingsPage extends StatelessWidget {
         );
       }
     }
+  }
+
+  Future<void> _openHealthConnectSettings(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await HealthConnectSettings.open();
+    } catch (_) {
+      if (context.mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).healthDashboardSyncFailed,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _importHealthConnect(BuildContext context) async {
+    final healthState = context.read<HealthDashboardState>();
+    final messenger = ScaffoldMessenger.of(context);
+    await healthState.connectHealthConnect();
+    if (!context.mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          healthState.error == null
+              ? AppLocalizations.of(
+                  context,
+                ).healthDashboardHealthConnectImported
+              : healthState.error!,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _repairHealthConnect(BuildContext context) async {
+    final healthState = context.read<HealthDashboardState>();
+    final messenger = ScaffoldMessenger.of(context);
+    await healthState.repairHealthConnectCache();
+    if (!context.mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          healthState.error == null
+              ? AppLocalizations.of(
+                  context,
+                ).healthDashboardHealthConnectRepaired
+              : healthState.error!,
+        ),
+      ),
+    );
   }
 }
 

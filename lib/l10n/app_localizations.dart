@@ -11429,6 +11429,30 @@ abstract class AppLocalizations {
   /// **'Manage Health Connect'**
   String get healthDashboardManageHealthConnect;
 
+  /// No description provided for @healthDashboardHealthConnectImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect data imported'**
+  String get healthDashboardHealthConnectImported;
+
+  /// No description provided for @healthDashboardHealthConnectRepaired.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect cache repaired'**
+  String get healthDashboardHealthConnectRepaired;
+
+  /// No description provided for @healthDashboardSyncInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync already in progress'**
+  String get healthDashboardSyncInProgress;
+
+  /// No description provided for @healthDashboardSyncNoChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'No health data changes to sync'**
+  String get healthDashboardSyncNoChanges;
+
   /// No description provided for @healthDashboardRepairHealthConnect.
   ///
   /// In en, this message translates to:
