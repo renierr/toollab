@@ -7,6 +7,7 @@ import '../../treadmill_control/widgets/workout_details_sheet.dart';
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
 import 'health_record_details_page.dart';
+import 'health_day_navigation.dart';
 
 class HealthWorkoutsPage extends StatelessWidget {
   const HealthWorkoutsPage({super.key});
@@ -14,19 +15,31 @@ class HealthWorkoutsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final workouts = context.watch<HealthDashboardState>().workouts;
+    final state = context.watch<HealthDashboardState>();
+    final workouts = state.workouts
+        .where((workout) => _isOnDay(workout, state.selectedDay))
+        .toList();
     return Scaffold(
       appBar: AppBar(title: Text(l10n.healthDashboardWorkouts)),
-      body: workouts.isEmpty
-          ? Center(child: Text(l10n.healthDashboardNoData))
-          : ListView.builder(
-              itemCount: workouts.length,
-              itemBuilder: (context, index) {
-                final workout = workouts[index];
-                final date = DateTime.fromMillisecondsSinceEpoch(
-                  workout.startTime,
-                );
-                return ListTile(
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Align(
+            alignment: Alignment.centerRight,
+            child: HealthDayNavigation(),
+          ),
+          if (workouts.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Center(child: Text(l10n.healthDashboardNoData)),
+            )
+          else
+            ...workouts.map((workout) {
+              final date = DateTime.fromMillisecondsSinceEpoch(
+                workout.startTime,
+              );
+              return Card(
+                child: ListTile(
                   leading: const Icon(Icons.directions_run_rounded),
                   title: Text(
                     workout.type == 'workout.treadmill'
@@ -56,9 +69,11 @@ class HealthWorkoutsPage extends StatelessWidget {
                       );
                     }
                   },
-                );
-              },
-            ),
+                ),
+              );
+            }),
+        ],
+      ),
     );
   }
 
@@ -69,5 +84,12 @@ class HealthWorkoutsPage extends StatelessWidget {
       milliseconds: workout.endTime - workout.startTime,
     );
     return '${duration.inHours}h ${duration.inMinutes.remainder(60)}m';
+  }
+
+  bool _isOnDay(HealthRecord record, DateTime day) {
+    final date = DateTime.fromMillisecondsSinceEpoch(record.startTime);
+    return date.year == day.year &&
+        date.month == day.month &&
+        date.day == day.day;
   }
 }

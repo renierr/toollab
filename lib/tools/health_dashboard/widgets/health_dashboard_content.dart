@@ -7,9 +7,11 @@ import '../../treadmill_control/treadmill_control_db.dart';
 import '../../treadmill_control/widgets/workout_details_sheet.dart';
 
 import '../health_dashboard_state.dart';
+import '../health_record.dart';
 import 'health_metric_card.dart';
 import 'health_metric_details_page.dart';
 import 'health_record_details_page.dart';
+import 'health_sleep_details_page.dart';
 import 'health_dashboard_trends.dart';
 import 'health_workouts_page.dart';
 
@@ -150,14 +152,7 @@ class HealthDashboardContent extends StatelessWidget {
                   color: AppTheme.accentBlue,
                   label: l10n.healthDashboardLastSleep,
                   value: _duration(state.latestSleepMinutes! * 60),
-                  onTap: () => _openMetric(
-                    context,
-                    title: l10n.healthDashboardLastSleep,
-                    type: 'sleep.session',
-                    valueKey: 'durationMinutes',
-                    unit: 'min',
-                    color: AppTheme.accentBlue,
-                  ),
+                  onTap: () => _openSleepDetails(context, state),
                 ),
             ],
           ),
@@ -275,6 +270,25 @@ class HealthDashboardContent extends StatelessWidget {
           color: color,
           sum: sum,
         ),
+      ),
+    );
+  }
+
+  void _openSleepDetails(BuildContext context, HealthDashboardState state) {
+    final record = state
+        .recordsOfType('sleep.session', preferredOnly: true)
+        .where((record) => !state.isNap(record))
+        .fold<HealthRecord?>(null, (latest, candidate) {
+          if (latest == null || candidate.endTime > latest.endTime) {
+            return candidate;
+          }
+          return latest;
+        });
+    if (record == null) return;
+    state.selectDay(DateTime.fromMillisecondsSinceEpoch(record.endTime));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => HealthSleepDetailsPage(record: record),
       ),
     );
   }

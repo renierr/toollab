@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/collapsible_section.dart';
 
 import '../health_record.dart';
+import '../health_dashboard_state.dart';
 import 'health_record_details_page.dart';
 import 'health_source_badge.dart';
 
@@ -123,7 +125,9 @@ class _HealthRecordTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = DateTime.fromMillisecondsSinceEpoch(record.startTime);
+    final date = DateTime.fromMillisecondsSinceEpoch(
+      record.type == 'sleep.session' ? record.endTime : record.startTime,
+    );
     final value = record.type == 'sleep.session'
         ? Duration(
             milliseconds: record.endTime - record.startTime,
@@ -141,11 +145,15 @@ class _HealthRecordTile extends StatelessWidget {
         ),
         subtitle: HealthSourceBadge(packageName: record.sourceName),
         trailing: Text(value == null ? '-' : _format(value)),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => HealthRecordDetailsPage(record: record),
-          ),
-        ),
+        onTap: () {
+          final selected = DateTime(date.year, date.month, date.day);
+          context.read<HealthDashboardState>().selectDay(selected);
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => HealthRecordDetailsPage(record: record),
+            ),
+          );
+        },
       ),
     );
   }

@@ -11561,6 +11561,12 @@ abstract class AppLocalizations {
   /// **'End'**
   String get healthDashboardSleepEnd;
 
+  /// No description provided for @healthDashboardSleepStageDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} ({count} times)'**
+  String healthDashboardSleepStageDuration(Object duration, Object count);
+
   /// No description provided for @healthDashboardSleepStages.
   ///
   /// In en, this message translates to:

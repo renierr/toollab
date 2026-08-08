@@ -3218,6 +3218,13 @@
   "healthDashboardSleepDuration": "Duration",
   "healthDashboardSleepStart": "Start",
   "healthDashboardSleepEnd": "End",
+  "healthDashboardSleepStageDuration": "{duration} ({count} times)",
+  "@healthDashboardSleepStageDuration": {
+    "placeholders": {
+      "duration": {},
+      "count": {}
+    }
+  },
   "healthDashboardSleepStages": "Sleep stages",
   "healthDashboardTrends": "Trends",
   "healthDashboardWeightTrend": "Weight · last 7 days",

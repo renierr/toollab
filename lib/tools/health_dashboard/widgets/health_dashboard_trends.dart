@@ -5,6 +5,7 @@ import 'package:tool_lab/theme/theme.dart';
 
 import '../health_dashboard_state.dart';
 import 'health_workout_trend_chart.dart';
+import 'health_day_navigation.dart';
 
 class HealthDashboardTrends extends StatelessWidget {
   const HealthDashboardTrends({super.key});
@@ -22,7 +23,10 @@ class HealthDashboardTrends extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 28),
-        _WeekNavigation(endDate: state.trendWeekEnd),
+        const Align(
+          alignment: Alignment.centerRight,
+          child: HealthDayNavigation(),
+        ),
         if (hasDistance || hasPulse)
           _DistancePulseTrend(
             distance: state.weeklyDistanceKm,
@@ -34,49 +38,6 @@ class HealthDashboardTrends extends StatelessWidget {
             values: state.weeklyMetricValues('body.weight', 'kilograms'),
             endDate: state.trendWeekEnd,
           ),
-      ],
-    );
-  }
-}
-
-class _WeekNavigation extends StatelessWidget {
-  final DateTime endDate;
-
-  const _WeekNavigation({required this.endDate});
-
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<HealthDashboardState>();
-    final l10n = AppLocalizations.of(context);
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            l10n.healthDashboardTrends,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-        ),
-        IconButton(
-          tooltip: l10n.healthDashboardPreviousDay,
-          onPressed: () =>
-              context.read<HealthDashboardState>().previousTrendDay(),
-          icon: const Icon(Icons.chevron_left_rounded),
-        ),
-        TextButton(
-          onPressed: state.trendDayOffset == 0
-              ? null
-              : () => context.read<HealthDashboardState>().resetTrendDate(),
-          child: Text(
-            MaterialLocalizations.of(context).formatMediumDate(endDate),
-          ),
-        ),
-        IconButton(
-          tooltip: l10n.healthDashboardNextDay,
-          onPressed: state.trendDayOffset == 0
-              ? null
-              : () => context.read<HealthDashboardState>().nextTrendDay(),
-          icon: const Icon(Icons.chevron_right_rounded),
-        ),
       ],
     );
   }

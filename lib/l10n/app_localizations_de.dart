@@ -6388,7 +6388,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardSourcePreferencesSubtitle =>
-      'Bei ueberlappenden Daten eine bevorzugte App je Messwert verwenden.';
+      'Bei überlappenden Daten eine bevorzugte App je Messwert verwenden.';
 
   @override
   String get healthDashboardAnySource => 'Beliebige Quelle';
@@ -6412,6 +6412,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardSleepEnd => 'Ende';
 
   @override
+  String healthDashboardSleepStageDuration(Object duration, Object count) {
+    return '$duration ($count Mal)';
+  }
+
+  @override
   String get healthDashboardSleepStages => 'Schlafphasen';
 
   @override
@@ -6424,7 +6429,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardPreviousDay => 'Vorheriger Tag';
 
   @override
-  String get healthDashboardNextDay => 'Naechster Tag';
+  String get healthDashboardNextDay => 'Nächster Tag';
 
   @override
   String get healthDashboardSleepAwake => 'Wach';
@@ -6443,7 +6448,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardNoSleepHeartRate =>
-      'Keine Herzfrequenzwerte waehrend dieser Schlafphase';
+      'Keine Herzfrequenzwerte während dieser Schlafphase';
 
   @override
   String get healthDashboardBackup => 'Datensicherung';
@@ -6460,7 +6465,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardImportBackupSubtitle =>
-      'Daten aus einer Health-Dashboard-SQLite-Sicherung zusammenfuehren.';
+      'Daten aus einer Health-Dashboard-SQLite-Sicherung zusammenführen.';
 
   @override
   String get healthDashboardImportBackupWarning =>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 class HealthSleepStageTimeline extends StatefulWidget {
   final List<Map<String, dynamic>> stages;
@@ -58,6 +59,7 @@ class _HealthSleepStageTimelineState extends State<HealthSleepStageTimeline> {
                     child: _TimelineTooltip(
                       time: _markerTime(width),
                       heartRate: _nearestHeartRate(width),
+                      stage: _stageAtMarker(width),
                     ),
                   ),
               ],
@@ -92,27 +94,83 @@ class _HealthSleepStageTimelineState extends State<HealthSleepStageTimeline> {
     });
     return (sample['bpm'] as num?)?.round();
   }
+
+  String? _stageAtMarker(double width) {
+    final ratio = (_markerX! / width).clamp(0.0, 1.0);
+    final timestamp =
+        widget.startTime +
+        ((widget.endTime - widget.startTime) * ratio).round();
+    for (final stage in widget.stages) {
+      final start = (stage['startTime'] as num?)?.toInt() ?? widget.startTime;
+      final end = (stage['endTime'] as num?)?.toInt() ?? start;
+      if (timestamp >= start && timestamp <= end) {
+        return stage['type'] as String?;
+      }
+    }
+    return null;
+  }
 }
 
 class _TimelineTooltip extends StatelessWidget {
   final String time;
   final int? heartRate;
+  final String? stage;
 
-  const _TimelineTooltip({required this.time, required this.heartRate});
+  const _TimelineTooltip({
+    required this.time,
+    required this.heartRate,
+    required this.stage,
+  });
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-    borderRadius: BorderRadius.circular(6),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      child: Text(
-        heartRate == null ? time : '$time · $heartRate bpm',
-        style: Theme.of(context).textTheme.labelSmall,
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final stageLabel = switch (stage) {
+      'awake' => l10n.healthDashboardSleepAwake,
+      'rem' => l10n.healthDashboardSleepRem,
+      'light' => l10n.healthDashboardSleepLight,
+      'deep' => l10n.healthDashboardSleepDeep,
+      _ => null,
+    };
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              heartRate == null ? time : '$time · $heartRate bpm',
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            if (stageLabel != null) ...[
+              const SizedBox(width: 5),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: _stageColor(stage!),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 3),
+              Text(stageLabel, style: Theme.of(context).textTheme.labelSmall),
+            ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
+
+Color _stageColor(String type) => switch (type) {
+  'awake' => Colors.amber,
+  'rem' => Colors.purple,
+  'light' => Colors.lightBlue,
+  'deep' => Colors.indigo,
+  _ => Colors.blueGrey,
+};
 
 class _SleepStageTimelinePainter extends CustomPainter {
   final List<Map<String, dynamic>> stages;
@@ -204,19 +262,28 @@ class _SleepStageTimelinePainter extends CustomPainter {
     final maxBpm = values.reduce((a, b) => a > b ? a : b);
     final range = (maxBpm - minBpm).clamp(5, double.infinity);
     final path = Path();
-    var hasPoint = false;
+    Offset? previous;
     for (final sample in heartRateSamples) {
       final time = (sample['time'] as num?)?.toInt();
       final bpm = (sample['bpm'] as num?)?.toDouble();
       if (time == null || bpm == null) continue;
       final x = ((time - startTime) / duration).clamp(0.0, 1.0) * size.width;
       final y = 38 - ((bpm - minBpm) / range).clamp(0.0, 1.0) * 30;
-      if (hasPoint) {
-        path.lineTo(x, y);
+      final point = Offset(x, y);
+      if (previous == null) {
+        path.moveTo(point.dx, point.dy);
       } else {
-        path.moveTo(x, y);
-        hasPoint = true;
+        final controlX = (previous.dx + point.dx) / 2;
+        path.cubicTo(
+          controlX,
+          previous.dy,
+          controlX,
+          point.dy,
+          point.dx,
+          point.dy,
+        );
       }
+      previous = point;
     }
     canvas.drawPath(
       path,
@@ -228,13 +295,7 @@ class _SleepStageTimelinePainter extends CustomPainter {
     );
   }
 
-  Color _color(String type) => switch (type) {
-    'awake' => Colors.amber,
-    'rem' => Colors.purple,
-    'light' => Colors.lightBlue,
-    'deep' => Colors.indigo,
-    _ => Colors.blueGrey,
-  };
+  Color _color(String type) => _stageColor(type);
 
   String _time(int timestamp) {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp);

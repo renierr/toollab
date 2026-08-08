@@ -4,6 +4,8 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_dashboard_state.dart';
 import 'health_metric_history.dart';
+import 'health_day_navigation.dart';
+import 'health_record_details_page.dart';
 import 'health_workout_trend_chart.dart';
 
 class HealthMetricDetailsPage extends StatelessWidget {
@@ -34,6 +36,10 @@ class HealthMetricDetailsPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const Align(
+            alignment: Alignment.centerRight,
+            child: HealthDayNavigation(),
+          ),
           Text(
             l10n.healthDashboardLastSevenDays,
             style: Theme.of(context).textTheme.titleLarge,
@@ -49,6 +55,8 @@ class HealthMetricDetailsPage extends StatelessWidget {
                 style: unit == 'kg' || unit == 'bpm' || unit == 'calories'
                     ? HealthTrendChartStyle.line
                     : HealthTrendChartStyle.bars,
+                endDate: state.trendWeekEnd,
+                onDayTap: (index) => _openDayRecord(context, state, index),
               ),
             ),
           ),
@@ -65,6 +73,26 @@ class HealthMetricDetailsPage extends StatelessWidget {
             isNap: state.isNap,
           ),
         ],
+      ),
+    );
+  }
+
+  void _openDayRecord(
+    BuildContext context,
+    HealthDashboardState state,
+    int index,
+  ) {
+    final day = state.trendDayAt(index);
+    final records = state.recordsOnDay(type, day);
+    if (records.isEmpty) return;
+    state.selectDay(day);
+    final record = records.reduce(
+      (latest, candidate) =>
+          candidate.endTime > latest.endTime ? candidate : latest,
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => HealthRecordDetailsPage(record: record),
       ),
     );
   }

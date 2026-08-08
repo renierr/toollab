@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show DateFormat;
 
 enum HealthTrendChartStyle { bars, line }
 
@@ -13,6 +14,7 @@ class HealthWorkoutTrendChart extends StatelessWidget {
   final String? overlayUnit;
   final Color? overlayColor;
   final DateTime? endDate;
+  final ValueChanged<int>? onDayTap;
 
   const HealthWorkoutTrendChart({
     super.key,
@@ -24,24 +26,43 @@ class HealthWorkoutTrendChart extends StatelessWidget {
     this.overlayUnit,
     this.overlayColor,
     this.endDate,
+    this.onDayTap,
   });
 
   @override
   Widget build(BuildContext context) => SizedBox(
     height: 170,
-    child: CustomPaint(
-      size: Size.infinite,
-      painter: _HealthWorkoutTrendPainter(
-        values: values,
-        unit: unit,
-        lineColor: color,
-        style: style,
-        overlayValues: overlayValues,
-        overlayUnit: overlayUnit,
-        overlayColor: overlayColor,
-        endDate: endDate,
-        gridColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        labelColor: Theme.of(context).hintColor,
+    child: LayoutBuilder(
+      builder: (context, constraints) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: onDayTap == null
+            ? null
+            : (details) {
+                final plotWidth =
+                    constraints.maxWidth - (overlayValues == null ? 42 : 76);
+                final ratio = ((details.localPosition.dx - 34) / plotWidth)
+                    .clamp(0.0, 0.999999);
+                onDayTap!((ratio * values.length).floor());
+              },
+        child: CustomPaint(
+          key: ValueKey(endDate),
+          size: Size.infinite,
+          painter: _HealthWorkoutTrendPainter(
+            values: values,
+            unit: unit,
+            lineColor: color,
+            style: style,
+            overlayValues: overlayValues,
+            overlayUnit: overlayUnit,
+            overlayColor: overlayColor,
+            endDate: endDate,
+            locale: Localizations.localeOf(context).toString(),
+            gridColor: Theme.of(
+              context,
+            ).colorScheme.outline.withValues(alpha: 0.2),
+            labelColor: Theme.of(context).hintColor,
+          ),
+        ),
       ),
     ),
   );
@@ -56,6 +77,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
   final String? overlayUnit;
   final Color? overlayColor;
   final DateTime? endDate;
+  final String locale;
   final Color gridColor;
   final Color labelColor;
 
@@ -68,6 +90,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     this.overlayUnit,
     this.overlayColor,
     this.endDate,
+    required this.locale,
     required this.gridColor,
     required this.labelColor,
   });
@@ -97,7 +120,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       34,
       14,
       size.width - (overlayValues == null ? 42 : 76),
-      size.height - 44,
+      size.height - 52,
     );
     final barWidth = plot.width / values.length * 0.56;
     final gridPaint = Paint()
@@ -149,8 +172,9 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       }
       _label(
         canvas,
-        '${today.subtract(Duration(days: 6 - index)).day}',
-        Offset(x, plot.bottom + 6),
+        _dateLabel(today.subtract(Duration(days: 6 - index))),
+        Offset(x, plot.bottom + 4),
+        centered: true,
       );
     }
     if (segment.isNotEmpty) segments.add(segment);
@@ -161,18 +185,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
         ..strokeWidth = 3
         ..strokeCap = StrokeCap.round;
       for (final points in segments) {
-        final path = Path()..moveTo(points.first.dx, points.first.dy);
-        for (var index = 1; index < points.length; index++) {
-          final previous = points[index - 1];
-          final point = points[index];
-          path.quadraticBezierTo(
-            previous.dx + (point.dx - previous.dx) / 2,
-            previous.dy,
-            point.dx,
-            point.dy,
-          );
-        }
-        canvas.drawPath(path, paint);
+        canvas.drawPath(_smoothPath(points), paint);
         for (final point in points) {
           canvas.drawCircle(point, 4, Paint()..color = lineColor);
         }
@@ -195,32 +208,58 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       _formatOverlay(lower),
       Offset(plot.right + 5, plot.bottom - 6),
     );
-    final path = Path();
-    var started = false;
+    final segments = <List<Offset>>[];
+    var segment = <Offset>[];
     for (var index = 0; index < values.length; index++) {
       final value = values[index];
       if (value == null) {
-        started = false;
+        if (segment.isNotEmpty) segments.add(segment);
+        segment = <Offset>[];
         continue;
       }
       final x = plot.left + plot.width * (index + 0.5) / values.length;
       final y = plot.bottom - (value - lower) / (upper - lower) * plot.height;
-      if (started) {
-        path.lineTo(x, y);
-      } else {
-        path.moveTo(x, y);
-        started = true;
+      segment.add(Offset(x, y));
+      _label(canvas, _formatOverlay(value), Offset(x, y - 16), centered: true);
+    }
+    if (segment.isNotEmpty) segments.add(segment);
+    final paint = Paint()
+      ..color = overlayColor ?? Colors.red
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    for (final points in segments) {
+      canvas.drawPath(_smoothPath(points), paint);
+      for (final point in points) {
+        canvas.drawCircle(
+          point,
+          4,
+          Paint()..color = overlayColor ?? Colors.red,
+        );
       }
     }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = overlayColor ?? Colors.red
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round,
-    );
   }
+
+  Path _smoothPath(List<Offset> points) {
+    final path = Path()..moveTo(points.first.dx, points.first.dy);
+    for (var index = 1; index < points.length; index++) {
+      final previous = points[index - 1];
+      final point = points[index];
+      final controlX = (previous.dx + point.dx) / 2;
+      path.cubicTo(
+        controlX,
+        previous.dy,
+        controlX,
+        point.dy,
+        point.dx,
+        point.dy,
+      );
+    }
+    return path;
+  }
+
+  String _dateLabel(DateTime date) =>
+      '${DateFormat.E(locale).format(date)}\n${date.day} ${DateFormat.MMM(locale).format(date)}';
 
   String _formatValue(double value) => switch (unit) {
     'km' => '${value.toStringAsFixed(value >= 10 ? 0 : 1)} km',
@@ -270,6 +309,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       oldDelegate.overlayUnit != overlayUnit ||
       oldDelegate.overlayColor != overlayColor ||
       oldDelegate.endDate != endDate ||
+      oldDelegate.locale != locale ||
       oldDelegate.gridColor != gridColor ||
       oldDelegate.labelColor != labelColor;
 }

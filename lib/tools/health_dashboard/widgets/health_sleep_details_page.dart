@@ -6,6 +6,7 @@ import '../health_record.dart';
 import '../health_dashboard_state.dart';
 import 'health_sleep_stage_timeline.dart';
 import 'health_source_badge.dart';
+import 'health_day_navigation.dart';
 
 class HealthSleepDetailsPage extends StatelessWidget {
   final HealthRecord record;
@@ -15,22 +16,58 @@ class HealthSleepDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final start = DateTime.fromMillisecondsSinceEpoch(record.startTime);
-    final end = DateTime.fromMillisecondsSinceEpoch(record.endTime);
-    final duration = Duration(milliseconds: record.endTime - record.startTime);
+    final state = context.watch<HealthDashboardState>();
+    final session = state
+        .recordsOnDay('sleep.session', state.selectedDay)
+        .where((candidate) => !state.isNap(candidate))
+        .fold<HealthRecord?>(null, (latest, candidate) {
+          if (latest == null || candidate.endTime > latest.endTime) {
+            return candidate;
+          }
+          return latest;
+        });
+    if (session == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.healthDashboardSleepDetails)),
+        body: ListView(
+          padding: const EdgeInsets.all(16),
+          children: const [
+            Align(
+              alignment: Alignment.centerRight,
+              child: HealthDayNavigation(),
+            ),
+            SizedBox(height: 24),
+            Center(child: _NoSleepData()),
+          ],
+        ),
+      );
+    }
+    final start = DateTime.fromMillisecondsSinceEpoch(session.startTime);
+    final end = DateTime.fromMillisecondsSinceEpoch(session.endTime);
+    final duration = Duration(
+      milliseconds: session.endTime - session.startTime,
+    );
     final stages = List<Map<String, dynamic>>.from(
-      (record.value['stages'] as List? ?? const []).map(
+      (session.value['stages'] as List? ?? const []).map(
         (stage) => Map<String, dynamic>.from(stage as Map),
       ),
     );
-    final heartRateSamples = context
-        .watch<HealthDashboardState>()
-        .heartRateSamplesDuring(record);
+    final stageDurations = _stageDurations(stages);
+    final stageOccurrences = _stageOccurrences(stages);
+    final heartRateSamples = state.heartRateSamplesDuring(session);
+    final naps = state
+        .recordsOnDay('sleep.session', state.selectedDay)
+        .where(state.isNap)
+        .toList();
     return Scaffold(
       appBar: AppBar(title: Text(l10n.healthDashboardSleepDetails)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const Align(
+            alignment: Alignment.centerRight,
+            child: HealthDayNavigation(),
+          ),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -55,12 +92,48 @@ class HealthSleepDetailsPage extends StatelessWidget {
                       context,
                     ).formatTimeOfDay(TimeOfDay.fromDateTime(end)),
                   ),
+                  if (stageDurations['awake'] case final duration?)
+                    _SleepValue(
+                      label: l10n.healthDashboardSleepAwake,
+                      value: l10n.healthDashboardSleepStageDuration(
+                        _formatDuration(duration),
+                        stageOccurrences['awake'] ?? 0,
+                      ),
+                      color: Colors.amber,
+                    ),
+                  if (stageDurations['rem'] case final duration?)
+                    _SleepValue(
+                      label: l10n.healthDashboardSleepRem,
+                      value: l10n.healthDashboardSleepStageDuration(
+                        _formatDuration(duration),
+                        stageOccurrences['rem'] ?? 0,
+                      ),
+                      color: Colors.purple,
+                    ),
+                  if (stageDurations['light'] case final duration?)
+                    _SleepValue(
+                      label: l10n.healthDashboardSleepLight,
+                      value: l10n.healthDashboardSleepStageDuration(
+                        _formatDuration(duration),
+                        stageOccurrences['light'] ?? 0,
+                      ),
+                      color: Colors.lightBlue,
+                    ),
+                  if (stageDurations['deep'] case final duration?)
+                    _SleepValue(
+                      label: l10n.healthDashboardSleepDeep,
+                      value: l10n.healthDashboardSleepStageDuration(
+                        _formatDuration(duration),
+                        stageOccurrences['deep'] ?? 0,
+                      ),
+                      color: Colors.indigo,
+                    ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          HealthSourceBadge(packageName: record.sourceName),
+          HealthSourceBadge(packageName: session.sourceName),
           const SizedBox(height: 24),
           if (stages.isNotEmpty) ...[
             Text(
@@ -76,9 +149,23 @@ class HealthSleepDetailsPage extends StatelessWidget {
                 child: HealthSleepStageTimeline(
                   stages: stages,
                   heartRateSamples: heartRateSamples,
-                  startTime: record.startTime,
-                  endTime: record.endTime,
+                  startTime: session.startTime,
+                  endTime: session.endTime,
                 ),
+              ),
+            ),
+          ],
+          if (naps.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Text(
+              l10n.healthDashboardNaps,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            ...naps.map(
+              (nap) => _NapDetails(
+                record: nap,
+                heartRateSamples: state.heartRateSamplesDuring(nap),
               ),
             ),
           ],
@@ -87,6 +174,88 @@ class HealthSleepDetailsPage extends StatelessWidget {
     );
   }
 }
+
+class _NoSleepData extends StatelessWidget {
+  const _NoSleepData();
+
+  @override
+  Widget build(BuildContext context) =>
+      Text(AppLocalizations.of(context).healthDashboardNoData);
+}
+
+class _NapDetails extends StatelessWidget {
+  final HealthRecord record;
+  final List<Map<String, dynamic>> heartRateSamples;
+
+  const _NapDetails({required this.record, required this.heartRateSamples});
+
+  @override
+  Widget build(BuildContext context) {
+    final start = DateTime.fromMillisecondsSinceEpoch(record.startTime);
+    final end = DateTime.fromMillisecondsSinceEpoch(record.endTime);
+    final stages = List<Map<String, dynamic>>.from(
+      (record.value['stages'] as List? ?? const []).map(
+        (stage) => Map<String, dynamic>.from(stage as Map),
+      ),
+    );
+    final duration = Duration(milliseconds: record.endTime - record.startTime);
+    final time = MaterialLocalizations.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${_formatDuration(duration)} · ${time.formatTimeOfDay(TimeOfDay.fromDateTime(start))} - ${time.formatTimeOfDay(TimeOfDay.fromDateTime(end))}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            if (stages.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              HealthSleepStageTimeline(
+                stages: stages,
+                heartRateSamples: heartRateSamples,
+                startTime: record.startTime,
+                endTime: record.endTime,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Map<String, Duration> _stageDurations(List<Map<String, dynamic>> stages) {
+  final durations = <String, Duration>{};
+  for (final stage in stages) {
+    final type = stage['type'] as String?;
+    final start = (stage['startTime'] as num?)?.toInt();
+    final end = (stage['endTime'] as num?)?.toInt();
+    if (type == null || start == null || end == null || end <= start) continue;
+    durations.update(
+      type,
+      (duration) => duration + Duration(milliseconds: end - start),
+      ifAbsent: () => Duration(milliseconds: end - start),
+    );
+  }
+  return durations;
+}
+
+Map<String, int> _stageOccurrences(List<Map<String, dynamic>> stages) {
+  final occurrences = <String, int>{};
+  for (final stage in stages) {
+    final type = stage['type'] as String?;
+    final start = (stage['startTime'] as num?)?.toInt();
+    final end = (stage['endTime'] as num?)?.toInt();
+    if (type == null || start == null || end == null || end <= start) continue;
+    occurrences.update(type, (count) => count + 1, ifAbsent: () => 1);
+  }
+  return occurrences;
+}
+
+String _formatDuration(Duration duration) =>
+    '${duration.inHours}h ${duration.inMinutes.remainder(60)}m';
 
 class _SleepLegend extends StatelessWidget {
   final bool hasHeartRate;
@@ -145,8 +314,9 @@ class _LegendItem extends StatelessWidget {
 class _SleepValue extends StatelessWidget {
   final String label;
   final String value;
+  final Color? color;
 
-  const _SleepValue({required this.label, required this.value});
+  const _SleepValue({required this.label, required this.value, this.color});
 
   @override
   Widget build(BuildContext context) => Column(
@@ -154,7 +324,20 @@ class _SleepValue extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     children: [
       Text(value, style: Theme.of(context).textTheme.titleLarge),
-      Text(label, style: Theme.of(context).textTheme.bodySmall),
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (color != null) ...[
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 4),
+          ],
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
     ],
   );
 }

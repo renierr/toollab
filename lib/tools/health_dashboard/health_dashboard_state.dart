@@ -207,6 +207,30 @@ class HealthDashboardState extends ChangeNotifier {
     return preferred.isEmpty ? typed : preferred;
   }
 
+  DateTime get selectedDay => _dayAt(6);
+
+  DateTime trendDayAt(int index) => _dayAt(index);
+
+  List<HealthRecord> recordsOnDay(String type, DateTime day) {
+    final typed = recordsOfType(type).where((record) => _isOnDay(record, day));
+    final source = preferredSource(type);
+    if (source == null || source.isEmpty) return typed.toList();
+    final preferred = typed
+        .where((record) => record.sourceName == source)
+        .toList();
+    return preferred.isEmpty ? typed.toList() : preferred;
+  }
+
+  void selectDay(DateTime day) {
+    final today = DateTime.now();
+    trendDayOffset = DateTime(
+      day.year,
+      day.month,
+      day.day,
+    ).difference(DateTime(today.year, today.month, today.day)).inDays;
+    notifyListeners();
+  }
+
   void previousTrendDay() {
     trendDayOffset--;
     notifyListeners();
@@ -231,9 +255,8 @@ class HealthDashboardState extends ChangeNotifier {
     String key, {
     bool sum = false,
   }) => List<double?>.generate(7, (index) {
-    final values = recordsOfType(type, preferredOnly: true)
+    final values = recordsOnDay(type, _dayAt(index))
         .where((record) => type != 'sleep.session' || !isNap(record))
-        .where((record) => _isOnDay(record, _dayAt(index)))
         .map((record) => _metricValue(record, key))
         .whereType<double>()
         .toList();
@@ -261,17 +284,10 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   int get todaySteps {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
-    return recordsOfType('activity.steps', preferredOnly: true)
-        .where(
-          (record) =>
-              record.type == 'activity.steps' && record.startTime >= today,
-        )
-        .fold(
-          0,
-          (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
-        );
+    return recordsOnDay('activity.steps', DateTime.now()).fold(
+      0,
+      (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
+    );
   }
 
   double? get latestWeightKg => _latestNumeric('body.weight', 'kilograms');
@@ -315,7 +331,7 @@ class HealthDashboardState extends ChangeNotifier {
         if (_isOnDay(workout, day) &&
             ((workout.value['averageHeartRate'] as num?) ?? 0) > 0)
           (workout.value['averageHeartRate'] as num).toDouble(),
-      for (final record in recordsOfType('heart.rate', preferredOnly: true))
+      for (final record in recordsOnDay('heart.rate', day))
         if (record.type == 'heart.rate' &&
             _isOnDay(record, day) &&
             ((record.value['averageBpm'] as num?) ?? 0) > 0)
@@ -325,24 +341,29 @@ class HealthDashboardState extends ChangeNotifier {
     return values.reduce((a, b) => a + b) / values.length;
   });
 
-  List<Map<String, dynamic>> heartRateSamplesDuring(HealthRecord session) =>
-      recordsOfType('heart.rate')
-          .where(
-            (record) =>
-                record.startTime < session.endTime &&
-                record.endTime > session.startTime,
-          )
-          .expand(
-            (record) => (record.value['samples'] as List? ?? const []).map(
-              (sample) => Map<String, dynamic>.from(sample as Map),
-            ),
-          )
-          .where(
-            (sample) =>
-                ((sample['time'] as num?)?.toInt() ?? 0) >= session.startTime &&
-                ((sample['time'] as num?)?.toInt() ?? 0) <= session.endTime,
-          )
-          .toList();
+  List<Map<String, dynamic>> heartRateSamplesDuring(HealthRecord session) {
+    final overlapping = recordsOfType('heart.rate').where(
+      (record) =>
+          record.startTime < session.endTime &&
+          record.endTime > session.startTime,
+    );
+    final source = preferredSource('heart.rate');
+    final preferred = source == null || source.isEmpty
+        ? const <HealthRecord>[]
+        : overlapping.where((record) => record.sourceName == source).toList();
+    return (preferred.isEmpty ? overlapping : preferred)
+        .expand(
+          (record) => (record.value['samples'] as List? ?? const []).map(
+            (sample) => Map<String, dynamic>.from(sample as Map),
+          ),
+        )
+        .where(
+          (sample) =>
+              ((sample['time'] as num?)?.toInt() ?? 0) >= session.startTime &&
+              ((sample['time'] as num?)?.toInt() ?? 0) <= session.endTime,
+        )
+        .toList();
+  }
 
   DateTime _dayAt(int index) {
     final now = DateTime.now();
@@ -354,7 +375,10 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   bool _isOnDay(HealthRecord record, DateTime day) {
-    final date = DateTime.fromMillisecondsSinceEpoch(record.startTime);
+    final timestamp = record.type == 'sleep.session'
+        ? record.endTime
+        : record.startTime;
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
     return date.year == day.year &&
         date.month == day.month &&
         date.day == day.day;
