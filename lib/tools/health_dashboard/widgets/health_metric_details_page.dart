@@ -3,9 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_dashboard_state.dart';
-import '../health_record.dart';
+import 'health_metric_history.dart';
 import 'health_workout_trend_chart.dart';
-import 'health_record_details_page.dart';
 
 class HealthMetricDetailsPage extends StatelessWidget {
   final String title;
@@ -47,6 +46,9 @@ class HealthMetricDetailsPage extends StatelessWidget {
                 values: state.weeklyMetricValues(type, valueKey, sum: sum),
                 unit: unit,
                 color: color,
+                style: unit == 'kg' || unit == 'bpm' || unit == 'calories'
+                    ? HealthTrendChartStyle.line
+                    : HealthTrendChartStyle.bars,
               ),
             ),
           ),
@@ -56,70 +58,9 @@ class HealthMetricDetailsPage extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
-          if (records.isEmpty)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text(l10n.healthDashboardNoData),
-              ),
-            )
-          else
-            ...records.map(
-              (record) => _HealthRecordTile(
-                record: record,
-                valueKey: valueKey,
-                unit: unit,
-              ),
-            ),
+          HealthMetricHistory(records: records, valueKey: valueKey, unit: unit),
         ],
       ),
     );
   }
-}
-
-class _HealthRecordTile extends StatelessWidget {
-  final HealthRecord record;
-  final String valueKey;
-  final String unit;
-
-  const _HealthRecordTile({
-    required this.record,
-    required this.valueKey,
-    required this.unit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final date = DateTime.fromMillisecondsSinceEpoch(record.startTime);
-    final value = record.type == 'sleep.session'
-        ? Duration(
-            milliseconds: record.endTime - record.startTime,
-          ).inMinutes.toDouble()
-        : (record.value[valueKey] as num?)?.toDouble();
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.history_rounded),
-        title: Text(MaterialLocalizations.of(context).formatMediumDate(date)),
-        subtitle: Text(
-          record.sourceName ??
-              AppLocalizations.of(context).healthDashboardHealthConnect,
-        ),
-        trailing: Text(value == null ? '-' : _format(value)),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => HealthRecordDetailsPage(record: record),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _format(double value) => switch (unit) {
-    'kg' => '${value.toStringAsFixed(1)} kg',
-    'bpm' => '${value.round()} bpm',
-    'steps' => value.round().toString(),
-    'min' => '${value.round()} min',
-    'calories' => value.round().toString(),
-    _ => value.toStringAsFixed(1),
-  };
 }

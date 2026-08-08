@@ -193,6 +193,7 @@ class HealthDashboardContent extends StatelessWidget {
                   values: state.weeklyHeartRate,
                   unit: 'bpm',
                   color: AppTheme.accentRed,
+                  style: HealthTrendChartStyle.line,
                 ),
               ),
             ),
