@@ -66,7 +66,12 @@ class HealthMetricDetailsPage extends StatelessWidget {
                     : state.weeklyMetricValues(type, valueKey, sum: sum),
                 unit: unit,
                 color: color,
-                style: unit == 'kg' || unit == 'bpm' || unit == 'calories'
+                style:
+                    unit == 'kg' ||
+                        unit == '%' ||
+                        unit == 'ms' ||
+                        unit == 'bpm' ||
+                        unit == 'rpm'
                     ? HealthTrendChartStyle.line
                     : HealthTrendChartStyle.bars,
                 endDate: state.trendWeekEnd,

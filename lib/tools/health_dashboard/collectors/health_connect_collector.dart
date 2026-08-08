@@ -39,94 +39,114 @@ class HealthConnectCollector implements HealthDataCollector {
     records.addAll(await _allRecords(connector, importStart, end));
 
     final steps = await _safeReadRecords<hc.StepsRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.steps.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
     records.addAll(steps.map(_steps));
 
     final weights = await _safeReadRecords<hc.WeightRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.weight.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
     records.addAll(weights.map(_weight));
 
     final heartRates = await _safeReadRecords<hc.HeartRateSeriesRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.heartRateSeries.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
     records.addAll(heartRates.map(_heartRate));
 
     final instantHeartRates = await _safeReadRecords<hc.HeartRateRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.heartRate.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
     records.addAll(instantHeartRates.map(_instantHeartRate));
 
     final restingRates = await _safeReadRecords<hc.RestingHeartRateRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.restingHeartRate.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
     records.addAll(restingRates.map(_restingHeartRate));
 
     final sleep = await _safeReadRecords<hc.SleepSessionRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.sleepSession.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
     records.addAll(sleep.map(_sleep));
 
     final workouts = await _safeReadRecords<hc.ExerciseSessionRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.exerciseSession.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
     final distances = await _safeReadRecords<hc.DistanceRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.distance.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
     final activeEnergy = await _safeReadRecords<hc.ActiveEnergyBurnedRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.activeEnergyBurned.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
     final speeds = await _safeReadRecords<hc.SpeedSeriesRecord>(
-      () => connector.readRecords(
+      (token) => connector.readRecords(
         hc.HealthDataType.speedSeries.readInTimeRange(
           startTime: importStart,
           endTime: end,
+          pageSize: 5000,
+          pageToken: token,
         ),
       ),
     );
@@ -146,12 +166,23 @@ class HealthConnectCollector implements HealthDataCollector {
     return records;
   }
 
-  Future<List<T>> _safeReadRecords<T>(Future<dynamic> Function() call) async {
+  Future<List<T>> _safeReadRecords<T>(
+    Future<dynamic> Function(String? pageToken) call,
+  ) async {
+    final records = <T>[];
     try {
-      final response = await call();
-      return (response.records as List).cast<T>();
+      String? pageToken;
+      do {
+        final dynamic response = await call(pageToken);
+        final list = (response.records as List).cast<T>();
+        records.addAll(list);
+        pageToken =
+            (response as dynamic).pageToken as String? ??
+            (response as dynamic).nextPageToken as String?;
+      } while (pageToken != null && pageToken.isNotEmpty);
+      return records;
     } catch (_) {
-      return <T>[];
+      return records;
     }
   }
 
@@ -165,10 +196,25 @@ class HealthConnectCollector implements HealthDataCollector {
       if (type is! core.ReadableInTimeRangeHealthDataType) continue;
       try {
         final readable = type as core.ReadableInTimeRangeHealthDataType;
-        final response = await connector.readRecords(
-          readable.readInTimeRange(startTime: start, endTime: end),
-        );
-        records.addAll(response.records.map(_genericRecord));
+        String? pageToken;
+        do {
+          final dynamic response = await connector.readRecords(
+            readable.readInTimeRange(
+              startTime: start,
+              endTime: end,
+              pageSize: 5000,
+              pageToken: pageToken,
+            ),
+          );
+          records.addAll(
+            (response.records as List).map(
+              (r) => _genericRecord(r as hc.HealthRecord),
+            ),
+          );
+          pageToken =
+              (response as dynamic).pageToken as String? ??
+              (response as dynamic).nextPageToken as String?;
+        } while (pageToken != null && pageToken.isNotEmpty);
       } catch (_) {
         // Health Connect can reject unavailable or unsupported data types.
       }

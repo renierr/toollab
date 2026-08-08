@@ -173,7 +173,7 @@ class HealthDashboardContent extends StatelessWidget {
                 HealthMetricCard(
                   icon: Icons.percent_rounded,
                   color: AppTheme.accentBlue,
-                  label: 'Oxygen Saturation',
+                  label: 'Latest Oxygen Saturation',
                   value: '${state.latestSpO2!.toStringAsFixed(1)} %',
                   onTap: () => _openMetric(
                     context,
@@ -188,7 +188,7 @@ class HealthDashboardContent extends StatelessWidget {
                 HealthMetricCard(
                   icon: Icons.air_rounded,
                   color: AppTheme.accentTeal,
-                  label: 'Respiratory Rate',
+                  label: 'Latest Respiratory Rate',
                   value:
                       '${state.latestRespiratoryRate!.toStringAsFixed(1)} rpm',
                   onTap: () => _openMetric(
@@ -204,7 +204,7 @@ class HealthDashboardContent extends StatelessWidget {
                 HealthMetricCard(
                   icon: Icons.pie_chart_outline_rounded,
                   color: AppTheme.accentAmber,
-                  label: 'Body Fat',
+                  label: 'Latest Body Fat',
                   value: '${state.latestBodyFat!.toStringAsFixed(1)} %',
                   onTap: () => _openMetric(
                     context,

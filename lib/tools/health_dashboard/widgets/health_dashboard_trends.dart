@@ -14,9 +14,8 @@ class HealthDashboardTrends extends StatelessWidget {
     final state = context.watch<HealthDashboardState>();
     final hasDistance = state.weeklyDistanceKm.any((value) => value > 0);
     final hasPulse = state.weeklyHeartRate.any((value) => value != null);
-    final hasWeight = state
-        .weeklyMetricValues('body.weight', 'kilograms')
-        .any((value) => value != null);
+    final weightValues = state.weeklyMetricValues('body.weight', 'kilograms');
+    final hasWeight = weightValues.any((value) => value != null);
     final hrvValues = state.weeklyMetricValues(
       'health.heart_rate_variability_rmssd',
       'rmssdMs',
@@ -58,13 +57,10 @@ class HealthDashboardTrends extends StatelessWidget {
             pulse: state.weeklyHeartRate,
             endDate: state.trendWeekEnd,
           ),
-        if (hasWeight)
-          _MetricTrendChart(
-            title: AppLocalizations.of(context).healthDashboardWeightTrend,
-            values: state.weeklyMetricValues('body.weight', 'kilograms'),
-            unit: 'kg',
-            color: AppTheme.accentPurple,
-            style: HealthTrendChartStyle.line,
+        if (hasWeight || hasBodyFat)
+          _WeightBodyFatTrend(
+            weight: weightValues,
+            bodyFat: bodyFatValues,
             endDate: state.trendWeekEnd,
           ),
         if (hasHrv)
@@ -94,18 +90,51 @@ class HealthDashboardTrends extends StatelessWidget {
             style: HealthTrendChartStyle.line,
             endDate: state.trendWeekEnd,
           ),
-        if (hasBodyFat)
-          _MetricTrendChart(
-            title: 'Body Fat 7-Day Trend',
-            values: bodyFatValues,
-            unit: '%',
-            color: AppTheme.accentAmber,
-            style: HealthTrendChartStyle.line,
-            endDate: state.trendWeekEnd,
-          ),
       ],
     );
   }
+}
+
+class _WeightBodyFatTrend extends StatelessWidget {
+  final List<double?> weight;
+  final List<double?> bodyFat;
+  final DateTime endDate;
+
+  const _WeightBodyFatTrend({
+    required this.weight,
+    required this.bodyFat,
+    required this.endDate,
+  });
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 24),
+      Text(
+        'Weight & Body Fat Trend · Last 7 Days',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: 8),
+      Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: HealthWorkoutTrendChart(
+            values: weight,
+            unit: 'kg',
+            color: AppTheme.accentPurple,
+            style: HealthTrendChartStyle.line,
+            overlayValues: bodyFat,
+            overlayUnit: '%',
+            overlayColor: AppTheme.accentAmber,
+            label: AppLocalizations.of(context).healthDashboardWeight,
+            overlayLabel: 'Body Fat',
+            endDate: endDate,
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 class _DistancePulseTrend extends StatelessWidget {
