@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
@@ -52,7 +52,7 @@ class SketchBoardDbHelper {
         },
       );
     } catch (e) {
-      debugPrint('[SketchBoardDbHelper] Migration failed: $e');
+      errorLog('[SketchBoardDbHelper] Migration failed: $e');
     }
     return _cachedDb!;
   }
@@ -91,7 +91,7 @@ class SketchBoardDbHelper {
           )
           .toList();
     } catch (e) {
-      debugPrint('[SketchBoardDbHelper] Failed to decode elements: $e');
+      errorLog('[SketchBoardDbHelper] Failed to decode elements: $e');
       return [];
     }
   }

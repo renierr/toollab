@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -204,7 +205,7 @@ class ImageEditorController extends ChangeNotifier {
 
       _extractExif(bytes, currentSession);
     } catch (e) {
-      debugPrint("Failed to load image: $e");
+      errorLog("Failed to load image: $e");
       rethrow;
     }
   }
@@ -248,7 +249,7 @@ class ImageEditorController extends ChangeNotifier {
         (p) => File(p).absolute.path.toLowerCase() == target,
       );
     } catch (e) {
-      debugPrint('Failed to scan sibling images: $e');
+      errorLog('Failed to scan sibling images: $e');
       _siblings = const [];
       _siblingIndex = -1;
     }
@@ -270,7 +271,7 @@ class ImageEditorController extends ChangeNotifier {
       _siblingIndex = index;
       notifyListeners();
     } catch (e) {
-      debugPrint('Failed to load sibling image: $e');
+      errorLog('Failed to load sibling image: $e');
       rethrow;
     }
   }
@@ -286,7 +287,7 @@ class ImageEditorController extends ChangeNotifier {
           notifyListeners();
         })
         .catchError((e) {
-          debugPrint("Failed to extract metadata in background: $e");
+          errorLog("Failed to extract metadata in background: $e");
         });
   }
 
@@ -392,7 +393,7 @@ class ImageEditorController extends ChangeNotifier {
       final prevImage = await _history.undo(_decodedImage!);
       if (prevImage != null) await _applyHistoryImage(prevImage);
     } catch (e) {
-      debugPrint("Undo failed: $e");
+      errorLog("Undo failed: $e");
       rethrow;
     } finally {
       _isProcessing = false;
@@ -409,7 +410,7 @@ class ImageEditorController extends ChangeNotifier {
       final nextImage = await _history.redo(_decodedImage!);
       if (nextImage != null) await _applyHistoryImage(nextImage);
     } catch (e) {
-      debugPrint("Redo failed: $e");
+      errorLog("Redo failed: $e");
       rethrow;
     } finally {
       _isProcessing = false;
@@ -493,9 +494,7 @@ class ImageEditorController extends ChangeNotifier {
         try {
           segmentedBytes = await _segmentWithMlKit(beforePng);
         } catch (e) {
-          debugPrint(
-            "ML Kit segmentation unavailable, falling back to ONNX: $e",
-          );
+          errorLog("ML Kit segmentation unavailable, falling back to ONNX: $e");
           segmentedBytes = await _segmentWithOnnx();
         }
       } else {
@@ -523,7 +522,7 @@ class ImageEditorController extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      debugPrint("Subject segmentation failed: $e");
+      errorLog("Subject segmentation failed: $e");
       rethrow;
     } finally {
       _isProcessing = false;
@@ -756,7 +755,7 @@ class ImageEditorController extends ChangeNotifier {
     try {
       await _ensureFullySynced();
     } catch (e) {
-      debugPrint("Failed to sync/decode image: $e");
+      errorLog("Failed to sync/decode image: $e");
     } finally {
       _isProcessing = false;
       notifyListeners();
@@ -973,7 +972,7 @@ class ImageEditorController extends ChangeNotifier {
 
       return extractedText;
     } catch (e) {
-      debugPrint("Text extraction failed: $e");
+      errorLog("Text extraction failed: $e");
       rethrow;
     } finally {
       _isProcessing = false;

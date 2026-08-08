@@ -1,6 +1,6 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 
-import 'package:flutter/foundation.dart';
 import 'package:health_connector/health_connector.dart' as hc;
 import 'package:tool_lab/services/database_service.dart';
 
@@ -46,7 +46,7 @@ class TreadmillHealthConnectPublisher {
         await TreadmillControlDb.instance.markHealthConnectPublished(session);
       }
     } catch (e) {
-      debugPrint('[TreadmillControl] Publish to Health Connect failed: $e');
+      errorLog('[TreadmillControl] Publish to Health Connect failed: $e');
     } finally {
       _isPublishing = false;
     }

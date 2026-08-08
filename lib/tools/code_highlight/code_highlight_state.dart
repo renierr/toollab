@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/syntax/language_registry.dart';
@@ -62,7 +63,7 @@ class CodeHighlightState extends ChangeNotifier {
         _cachedTokens = result.tokens;
       }
     } catch (e) {
-      debugPrint('Highlight error for $currentLang: $e');
+      errorLog('Highlight error for $currentLang: $e');
     } finally {
       _isHighlighting = false;
       notifyListeners();

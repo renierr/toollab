@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
@@ -122,7 +123,7 @@ class TempFileManager {
         }
       }
     } catch (e) {
-      debugPrint('TempFileManager: orphan cleanup error: $e');
+      errorLog('TempFileManager: orphan cleanup error: $e');
     }
   }
 

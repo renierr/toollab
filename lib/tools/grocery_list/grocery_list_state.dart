@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'grocery_item.dart';
@@ -22,7 +23,7 @@ class GroceryListState extends ChangeNotifier {
       final historyRows = await GroceryListDbHelper.instance.getHistory();
       _history = historyRows.map((r) => r['name'] as String).toList();
     } catch (e) {
-      debugPrint('[GroceryListState] Failed to load grocery list items: $e');
+      errorLog('[GroceryListState] Failed to load grocery list items: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -82,7 +83,7 @@ class GroceryListState extends ChangeNotifier {
 
   void _backgroundSync() {
     _doBackgroundSync().catchError((e) {
-      debugPrint('[GroceryListState] Background sync failed: $e');
+      errorLog('[GroceryListState] Background sync failed: $e');
     });
   }
 

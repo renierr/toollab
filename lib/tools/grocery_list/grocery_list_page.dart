@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart';
@@ -48,7 +49,7 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
               }
             })
             .catchError((e) {
-              debugPrint('[GroceryListPage] Auto-sync on open failed: $e');
+              errorLog('[GroceryListPage] Auto-sync on open failed: $e');
             });
       }
     });

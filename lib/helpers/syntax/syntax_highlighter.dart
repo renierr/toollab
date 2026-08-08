@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,7 +42,7 @@ class SyntaxHighlighter {
       try {
         await loadGrammar(language);
       } catch (e) {
-        debugPrint('SyntaxHighlighter: no grammar for $language ($e)');
+        errorLog('SyntaxHighlighter: no grammar for $language ($e)');
       }
     }
   }
@@ -57,7 +58,7 @@ class SyntaxHighlighter {
     try {
       return TextMateEngine.tokenize(code, grammar);
     } catch (e) {
-      debugPrint('SyntaxHighlighter: tokenize failed for $language ($e)');
+      errorLog('SyntaxHighlighter: tokenize failed for $language ($e)');
       return null;
     }
   }

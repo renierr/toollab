@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -58,7 +59,7 @@ class _SignaturesPageState extends State<SignaturesPage>
               }
             })
             .catchError((e) {
-              debugPrint('[SignaturesPage] Auto-sync on open failed: $e');
+              errorLog('[SignaturesPage] Auto-sync on open failed: $e');
             });
       }
     });

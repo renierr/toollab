@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -35,7 +36,7 @@ class P2pTransferService {
           .map((a) => a.address)
           .toList();
     } catch (e) {
-      debugPrint('[P2pTransfer] failed to list local IPs: $e');
+      errorLog('[P2pTransfer] failed to list local IPs: $e');
       return [];
     }
   }
@@ -126,7 +127,7 @@ class P2pTransferService {
         );
       });
     } catch (e) {
-      debugPrint('[P2pTransfer] LAN server bind failed, BLE-only: $e');
+      errorLog('[P2pTransfer] LAN server bind failed, BLE-only: $e');
     }
 
     // BLE fallback path.

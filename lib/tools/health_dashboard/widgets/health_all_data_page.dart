@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:intl/intl.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/collapsible_section.dart';
@@ -63,7 +64,7 @@ class _HealthAllDataPageState extends State<HealthAllDataPage> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('[HealthAllDataPage] Load error: $e');
+      errorLog('[HealthAllDataPage] Load error: $e');
     } finally {
       if (mounted) setState(() => _isFetchingMore = false);
     }

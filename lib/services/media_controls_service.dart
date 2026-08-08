@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
@@ -154,7 +155,7 @@ class MediaControlsWindowsImpl extends MediaControlsService {
               .toList(),
       });
     } catch (e) {
-      debugPrint('[$_logPrefix] updateMetadata failed: $e');
+      errorLog('[$_logPrefix] updateMetadata failed: $e');
     }
   }
 
@@ -164,7 +165,7 @@ class MediaControlsWindowsImpl extends MediaControlsService {
     try {
       await _channel.invokeMethod<void>('updatePlaybackStatus', status.name);
     } catch (e) {
-      debugPrint('[$_logPrefix] updatePlaybackStatus failed: $e');
+      errorLog('[$_logPrefix] updatePlaybackStatus failed: $e');
     }
   }
 
@@ -177,7 +178,7 @@ class MediaControlsWindowsImpl extends MediaControlsService {
         position.inMilliseconds,
       );
     } catch (e) {
-      debugPrint('[$_logPrefix] updatePosition failed: $e');
+      errorLog('[$_logPrefix] updatePosition failed: $e');
     }
   }
 
@@ -187,7 +188,7 @@ class MediaControlsWindowsImpl extends MediaControlsService {
     try {
       await _channel.invokeMethod<void>('clear');
     } catch (e) {
-      debugPrint('[$_logPrefix] clear failed: $e');
+      errorLog('[$_logPrefix] clear failed: $e');
     }
   }
 
@@ -235,7 +236,7 @@ class MediaControlsLinuxImpl extends MediaControlsService {
         flags: {DBusRequestNameFlag.replaceExisting},
       );
     } catch (e) {
-      debugPrint('[$_logPrefix] D-Bus initialization failed: $e');
+      errorLog('[$_logPrefix] D-Bus initialization failed: $e');
     }
   }
 
@@ -245,7 +246,7 @@ class MediaControlsLinuxImpl extends MediaControlsService {
     try {
       _mprisObject!.updateMetadata(metadata);
     } catch (e) {
-      debugPrint('[$_logPrefix] updateMetadata failed: $e');
+      errorLog('[$_logPrefix] updateMetadata failed: $e');
     }
   }
 
@@ -255,7 +256,7 @@ class MediaControlsLinuxImpl extends MediaControlsService {
     try {
       _mprisObject!.updatePlaybackStatus(status);
     } catch (e) {
-      debugPrint('[$_logPrefix] updatePlaybackStatus failed: $e');
+      errorLog('[$_logPrefix] updatePlaybackStatus failed: $e');
     }
   }
 
@@ -265,7 +266,7 @@ class MediaControlsLinuxImpl extends MediaControlsService {
     try {
       _mprisObject!.updatePosition(position);
     } catch (e) {
-      debugPrint('[$_logPrefix] updatePosition failed: $e');
+      errorLog('[$_logPrefix] updatePosition failed: $e');
     }
   }
 
@@ -275,7 +276,7 @@ class MediaControlsLinuxImpl extends MediaControlsService {
     try {
       _mprisObject!.clear();
     } catch (e) {
-      debugPrint('[$_logPrefix] clear failed: $e');
+      errorLog('[$_logPrefix] clear failed: $e');
     }
   }
 

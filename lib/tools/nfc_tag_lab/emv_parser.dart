@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/foundation.dart';
 import 'package:nfc_manager/nfc_manager_android.dart';
 
@@ -203,7 +204,7 @@ class EmvParser {
           }
         }
       } catch (e) {
-        debugPrint('[NfcTagLab] PPSE selection failed: $e');
+        errorLog('[NfcTagLab] PPSE selection failed: $e');
       }
 
       if (candidateAids.isEmpty) {
@@ -310,11 +311,11 @@ class EmvParser {
             }
           }
         } catch (e) {
-          debugPrint('[NfcTagLab] AID $aidHex select failed: $e');
+          errorLog('[NfcTagLab] AID $aidHex select failed: $e');
         }
       }
     } catch (e) {
-      debugPrint('[NfcTagLab] EMV read error: $e');
+      errorLog('[NfcTagLab] EMV read error: $e');
     }
     return null;
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -108,7 +109,7 @@ class FastDropP2pState extends ChangeNotifier {
         try {
           await _discovery.startAdvertisingAsReceiver(deviceName);
         } catch (e) {
-          debugPrint('[FastDropP2p] BLE receiving unavailable: $e');
+          errorLog('[FastDropP2p] BLE receiving unavailable: $e');
         }
       }
     } catch (e) {
@@ -264,7 +265,7 @@ class FastDropP2pState extends ChangeNotifier {
         try {
           await _discovery.startScan();
         } catch (e) {
-          debugPrint('[FastDropP2p] BLE scanning unavailable: $e');
+          errorLog('[FastDropP2p] BLE scanning unavailable: $e');
         }
       }
     } catch (e) {

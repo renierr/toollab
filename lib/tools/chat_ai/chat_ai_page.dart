@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_selector/file_selector.dart' show XTypeGroup, openFile;
@@ -84,7 +85,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
         });
       }
     } catch (e) {
-      debugPrint('[ChatAiPage] Failed to load shared file: $e');
+      errorLog('[ChatAiPage] Failed to load shared file: $e');
     }
   }
 
@@ -112,7 +113,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
         state.selectImage(bytes);
       }
     } catch (e) {
-      debugPrint('[ChatAiPage] Error picking image: $e');
+      errorLog('[ChatAiPage] Error picking image: $e');
     }
   }
 
@@ -156,7 +157,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
         state.selectFile(file.name, text);
       }
     } catch (e) {
-      debugPrint('[ChatAiPage] Error picking or parsing file: $e');
+      errorLog('[ChatAiPage] Error picking or parsing file: $e');
       _showError('Failed to parse file: $e');
     }
   }

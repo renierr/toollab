@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -686,7 +687,7 @@ class SoundFinderState extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('[SoundFinderState] Morse playback failed: $e');
+      errorLog('[SoundFinderState] Morse playback failed: $e');
     } finally {
       if (sessionId == _morsePlaybackSessionId) {
         await stopMorsePlayback();
@@ -798,7 +799,7 @@ class SoundFinderState extends ChangeNotifier {
           _morseDecodedText = decoded;
         }
       } catch (e) {
-        debugPrint('[SoundFinderState] Live decode error: $e');
+        errorLog('[SoundFinderState] Live decode error: $e');
       } finally {
         _morseIsDecodingLive = false;
         notifyListeners();

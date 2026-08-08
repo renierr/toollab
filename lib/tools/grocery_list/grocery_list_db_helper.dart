@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'config.dart';
 import 'grocery_item.dart';
@@ -48,7 +48,7 @@ class GroceryListDbHelper {
         },
       );
     } catch (e) {
-      debugPrint('[GroceryListDbHelper] Migration failed, using fallback: $e');
+      errorLog('[GroceryListDbHelper] Migration failed, using fallback: $e');
     }
     return _cachedDb!;
   }

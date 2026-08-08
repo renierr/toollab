@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -273,7 +274,7 @@ class HexEditorState extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('[HexEditorState] Failed to load page $pageIndex: $e');
+      errorLog('[HexEditorState] Failed to load page $pageIndex: $e');
     } finally {
       _pendingPages.remove(pageIndex);
       notifyListeners();
@@ -433,7 +434,7 @@ class HexEditorState extends ChangeNotifier {
         _stringsResults.add(StringResult(total - carry.length, s));
       }
     } catch (e) {
-      debugPrint('[HexEditorState] Error scanning for strings: $e');
+      errorLog('[HexEditorState] Error scanning for strings: $e');
     } finally {
       _isScanningStrings = false;
       notifyListeners();
@@ -473,7 +474,7 @@ class HexEditorState extends ChangeNotifier {
         );
       }
     } catch (e) {
-      debugPrint('[HexEditorState] Export failed: $e');
+      errorLog('[HexEditorState] Export failed: $e');
       if (context.mounted) {
         final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
@@ -120,7 +121,7 @@ class AudioService {
       }
 
       final byteData = Uint8List.fromList(wavBytes);
-      debugPrint(
+      errorLog(
         '[AudioService] Geiger-click WAV successfully synthesized in-memory. Bytes: ${byteData.length}',
       );
 
@@ -130,11 +131,11 @@ class AudioService {
         byteData,
       );
       _initialized = true;
-      debugPrint(
+      errorLog(
         '[AudioService] SoLoud successfully loaded WAV from memory: $_audioSource',
       );
     } catch (e) {
-      debugPrint('[AudioService] Failed to initialize SoLoud sound file: $e');
+      errorLog('[AudioService] Failed to initialize SoLoud sound file: $e');
     }
   }
 
@@ -144,7 +145,7 @@ class AudioService {
     try {
       SoLoud.instance.play(_audioSource!);
     } catch (e) {
-      debugPrint('[AudioService] Error playing click sound: $e');
+      errorLog('[AudioService] Error playing click sound: $e');
     }
   }
 

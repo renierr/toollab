@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
@@ -129,7 +130,7 @@ class CompassState extends ChangeNotifier {
               _computeHeading();
             },
             onError: (err) {
-              debugPrint('[CompassState] Accelerometer error: $err');
+              errorLog('[CompassState] Accelerometer error: $err');
             },
           );
 
@@ -144,12 +145,12 @@ class CompassState extends ChangeNotifier {
               _computeHeading();
             },
             onError: (err) {
-              debugPrint('[CompassState] Magnetometer error: $err');
+              errorLog('[CompassState] Magnetometer error: $err');
               toggleSimulation(true);
             },
           );
     } catch (e) {
-      debugPrint('[CompassState] Sensor init failed: $e');
+      errorLog('[CompassState] Sensor init failed: $e');
       _isHardwareSupported = false;
       _useSimulation = true;
     }

@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/core/tool_registry.dart';
@@ -63,7 +63,7 @@ class SharingService {
             );
           }
         } catch (e) {
-          debugPrint('[SharingService] Failed to check startup file: $e');
+          errorLog('[SharingService] Failed to check startup file: $e');
         }
       }
       if (files.isNotEmpty) {
@@ -87,9 +87,7 @@ class SharingService {
         return SharedData.single(SharedFile.fromMap(map));
       }
     } catch (e) {
-      debugPrint(
-        '[SharingService] Failed to get shared files from channel: $e',
-      );
+      errorLog('[SharingService] Failed to get shared files from channel: $e');
     }
 
     return null;
@@ -105,7 +103,7 @@ class SharingService {
     try {
       await _channel.invokeMethod('clearSharedFiles');
     } catch (e) {
-      debugPrint('[SharingService] Failed to clear shared files: $e');
+      errorLog('[SharingService] Failed to clear shared files: $e');
     }
   }
 
@@ -155,7 +153,7 @@ class SharingService {
         'default_tool_$mimeType',
       );
     } catch (e) {
-      debugPrint('[SharingService] Failed to get default tool: $e');
+      errorLog('[SharingService] Failed to get default tool: $e');
       return null;
     }
   }
@@ -168,7 +166,7 @@ class SharingService {
         toolId,
       );
     } catch (e) {
-      debugPrint('[SharingService] Failed to set default tool: $e');
+      errorLog('[SharingService] Failed to set default tool: $e');
     }
   }
 
@@ -183,7 +181,7 @@ class SharingService {
             entry.key.substring('default_tool_'.length): entry.value,
       };
     } catch (e) {
-      debugPrint('[SharingService] Failed to get default tools: $e');
+      errorLog('[SharingService] Failed to get default tools: $e');
       return {};
     }
   }
@@ -192,7 +190,7 @@ class SharingService {
     try {
       await DatabaseService.instance.deleteAllSettings('sharing_service');
     } catch (e) {
-      debugPrint('[SharingService] Failed to clear default tools: $e');
+      errorLog('[SharingService] Failed to clear default tools: $e');
     }
   }
 }

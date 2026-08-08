@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -251,7 +252,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         );
       }
     } catch (e) {
-      debugPrint('[PdfViewerPage] Share failed: $e');
+      errorLog('[PdfViewerPage] Share failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -273,7 +274,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         sourcePath: _filePath!,
       );
     } catch (e) {
-      debugPrint('[PdfViewerPage] Download failed: $e');
+      errorLog('[PdfViewerPage] Download failed: $e');
     }
   }
 
@@ -289,7 +290,7 @@ class _PdfViewerPageState extends State<PdfViewerPage> with DisposeCleanup {
         _isLoadingOutline = false;
       });
     } catch (e) {
-      debugPrint('[PdfViewerPage] Failed to load outline: $e');
+      errorLog('[PdfViewerPage] Failed to load outline: $e');
       setState(() {
         _isLoadingOutline = false;
       });

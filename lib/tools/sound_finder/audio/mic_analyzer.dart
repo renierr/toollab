@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -157,7 +158,7 @@ class MicAnalyzer {
     try {
       return await _recorder.listInputDevices();
     } catch (e) {
-      debugPrint('[MicAnalyzer] listInputDevices failed: $e');
+      errorLog('[MicAnalyzer] listInputDevices failed: $e');
       return const [];
     }
   }
@@ -188,7 +189,7 @@ class MicAnalyzer {
     try {
       granted = await _recorder.hasPermission();
     } catch (e) {
-      debugPrint('[MicAnalyzer] permission check failed: $e');
+      errorLog('[MicAnalyzer] permission check failed: $e');
       return MicStartResult.unavailable;
     }
     if (!granted) return MicStartResult.denied;
@@ -208,12 +209,12 @@ class MicAnalyzer {
       _filled = 0;
       _sub = stream.listen(
         _onData,
-        onError: (Object e) => debugPrint('[MicAnalyzer] stream error: $e'),
+        onError: (Object e) => errorLog('[MicAnalyzer] stream error: $e'),
       );
       _running = true;
       return MicStartResult.ok;
     } catch (e) {
-      debugPrint('[MicAnalyzer] start failed: $e');
+      errorLog('[MicAnalyzer] start failed: $e');
       return MicStartResult.unavailable;
     }
   }

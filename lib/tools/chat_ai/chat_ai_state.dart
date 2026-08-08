@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -160,7 +161,7 @@ class ChatAiState extends ChangeNotifier {
         _featureStatus = FeatureStatus.unavailable;
       }
     } catch (e) {
-      debugPrint('[ChatAiState] Initialization failed: $e');
+      errorLog('[ChatAiState] Initialization failed: $e');
     } finally {
       _isInitializing = false;
       notifyListeners();
@@ -172,7 +173,7 @@ class ChatAiState extends ChangeNotifier {
       try {
         _featureStatus = await _prompt!.checkFeatureStatus();
       } catch (e) {
-        debugPrint('[ChatAiState] Check feature status failed: $e');
+        errorLog('[ChatAiState] Check feature status failed: $e');
         _modelError = e.toString();
         _featureStatus = FeatureStatus.unavailable;
       }
@@ -203,7 +204,7 @@ class ChatAiState extends ChangeNotifier {
       await updateFeatureStatus();
       _startStatusPolling();
     } catch (e) {
-      debugPrint('[ChatAiState] Model download trigger failed: $e');
+      errorLog('[ChatAiState] Model download trigger failed: $e');
       _modelError = e.toString();
       notifyListeners();
     }
@@ -235,7 +236,7 @@ class ChatAiState extends ChangeNotifier {
       }
       notifyListeners();
     } catch (e) {
-      debugPrint('[ChatAiState] Load sessions failed: $e');
+      errorLog('[ChatAiState] Load sessions failed: $e');
     }
   }
 
@@ -244,7 +245,7 @@ class ChatAiState extends ChangeNotifier {
     try {
       _messages = await ChatAiDbHelper.instance.getMessages(sessionId);
     } catch (e) {
-      debugPrint('[ChatAiState] Load messages failed: $e');
+      errorLog('[ChatAiState] Load messages failed: $e');
       _messages = [];
     }
     notifyListeners();
@@ -259,7 +260,7 @@ class ChatAiState extends ChangeNotifier {
       await loadSessions();
       await selectSession(newId);
     } catch (e) {
-      debugPrint('[ChatAiState] Create session failed: $e');
+      errorLog('[ChatAiState] Create session failed: $e');
     }
   }
 
@@ -271,7 +272,7 @@ class ChatAiState extends ChangeNotifier {
       }
       await loadSessions();
     } catch (e) {
-      debugPrint('[ChatAiState] Delete session failed: $e');
+      errorLog('[ChatAiState] Delete session failed: $e');
     }
   }
 
@@ -364,7 +365,7 @@ class ChatAiState extends ChangeNotifier {
         );
       }
     } catch (e) {
-      debugPrint('[ChatAiState] Send message failed: $e');
+      errorLog('[ChatAiState] Send message failed: $e');
       await ChatAiDbHelper.instance.insertMessage(
         sessionId,
         'model',
@@ -412,7 +413,7 @@ class ChatAiState extends ChangeNotifier {
       _messages = [];
       notifyListeners();
     } catch (e) {
-      debugPrint('[ChatAiState] Clear session history failed: $e');
+      errorLog('[ChatAiState] Clear session history failed: $e');
     }
   }
 

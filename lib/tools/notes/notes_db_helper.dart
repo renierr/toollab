@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/notes/config.dart';
 
@@ -46,7 +46,7 @@ class NotesDbHelper {
         },
       );
     } catch (e) {
-      debugPrint('[NotesDbHelper] Migration failed, using fallback: $e');
+      errorLog('[NotesDbHelper] Migration failed, using fallback: $e');
     }
     return _cachedDb!;
   }
@@ -92,7 +92,7 @@ class NotesDbHelper {
         note['tags'] = tagsMap[note['id'] as int] ?? <String>[];
       }
     } catch (e) {
-      debugPrint('[NotesDbHelper] Failed to load tags: $e');
+      errorLog('[NotesDbHelper] Failed to load tags: $e');
     }
     return notes;
   }

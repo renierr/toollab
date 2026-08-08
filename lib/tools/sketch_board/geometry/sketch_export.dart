@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -24,7 +25,7 @@ Future<ui.Image?> decodeImageData(String data) async {
     final frame = await codec.getNextFrame();
     return frame.image;
   } catch (e) {
-    debugPrint('[SketchExport] image decode failed: $e');
+    errorLog('[SketchExport] image decode failed: $e');
     return null;
   }
 }

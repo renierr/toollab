@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:image/image.dart' as img;
 
 class ImageMetadata {
@@ -80,7 +81,7 @@ ImageMetadata extractMetadataTask(Uint8List bytes) {
       thumbnailBytes: thumbnailBytes,
     );
   } catch (e) {
-    debugPrint("Failed to extract metadata: $e");
+    errorLog("Failed to extract metadata: $e");
     return ImageMetadata(exifTags: {});
   }
 }
@@ -184,7 +185,7 @@ double? _parseGpsCoordinate(dynamic value, String? ref) {
       return decimal;
     }
   } catch (e) {
-    debugPrint("Failed to parse GPS coordinate: $e");
+    errorLog("Failed to parse GPS coordinate: $e");
   }
   return null;
 }

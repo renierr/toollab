@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io' show Platform;
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -141,7 +142,7 @@ class SensorService {
           }
         },
         onError: (error) {
-          debugPrint(
+          errorLog(
             '[SensorService] Magnetometer error: $error. Falling back to simulation.',
           );
           setSimulationMode(true);
@@ -149,7 +150,7 @@ class SensorService {
         cancelOnError: false,
       );
     } catch (e) {
-      debugPrint(
+      errorLog(
         '[SensorService] Magnetometer exception: $e. Falling back to simulation.',
       );
       setSimulationMode(true);

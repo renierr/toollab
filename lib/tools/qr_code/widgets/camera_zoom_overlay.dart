@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
@@ -60,7 +61,7 @@ class _CameraZoomOverlayState extends State<CameraZoomOverlay> {
         _ready = max > min;
       });
     } catch (e) {
-      debugPrint('[CameraZoomOverlay] Zoom limits unavailable: $e');
+      errorLog('[CameraZoomOverlay] Zoom limits unavailable: $e');
     }
   }
 
@@ -72,7 +73,7 @@ class _CameraZoomOverlayState extends State<CameraZoomOverlay> {
     try {
       await controller.setZoomLevel(clamped);
     } catch (e) {
-      debugPrint('[CameraZoomOverlay] setZoomLevel failed: $e');
+      errorLog('[CameraZoomOverlay] setZoomLevel failed: $e');
     }
   }
 

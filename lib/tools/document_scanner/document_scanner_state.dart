@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Offset;
 import 'package:image/image.dart' as img;
@@ -149,7 +150,7 @@ class DocumentScannerState extends ChangeNotifier {
 
       _pages.add(page);
     } catch (e) {
-      debugPrint('[DocumentScannerState] Failed to add page: $e');
+      errorLog('[DocumentScannerState] Failed to add page: $e');
       rethrow;
     } finally {
       _setProcessing(false);
@@ -198,7 +199,7 @@ class DocumentScannerState extends ChangeNotifier {
         height: processedImage.height.toDouble(),
       );
     } catch (e) {
-      debugPrint('[DocumentScannerState] Failed to update crop: $e');
+      errorLog('[DocumentScannerState] Failed to update crop: $e');
       rethrow;
     } finally {
       _setProcessing(false);
@@ -247,7 +248,7 @@ class DocumentScannerState extends ChangeNotifier {
         height: processedImage.height.toDouble(),
       );
     } catch (e) {
-      debugPrint('[DocumentScannerState] Failed to update filter: $e');
+      errorLog('[DocumentScannerState] Failed to update filter: $e');
       rethrow;
     } finally {
       _setProcessing(false);
@@ -298,7 +299,7 @@ class DocumentScannerState extends ChangeNotifier {
         height: processedImage.height.toDouble(),
       );
     } catch (e) {
-      debugPrint('[DocumentScannerState] Failed to rotate page: $e');
+      errorLog('[DocumentScannerState] Failed to rotate page: $e');
       rethrow;
     } finally {
       _setProcessing(false);
@@ -315,7 +316,7 @@ class DocumentScannerState extends ChangeNotifier {
       await _tempScope.deleteFile(page.originalFileName);
       await _tempScope.deleteFile(page.processedFileName);
     } catch (e) {
-      debugPrint(
+      errorLog(
         '[DocumentScannerState] Warning: Failed to delete page files: $e',
       );
     }

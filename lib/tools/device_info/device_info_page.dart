@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io' show Platform, NetworkInterface, InternetAddressType;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -99,7 +100,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       });
       onDispose(() => timer.cancel());
     } catch (e) {
-      debugPrint('[DeviceInfo] Failed to read battery: $e');
+      errorLog('[DeviceInfo] Failed to read battery: $e');
     }
 
     try {
@@ -193,7 +194,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
         _hardwareInfo = {'Cores': '${Platform.numberOfProcessors}'};
       }
     } catch (e) {
-      debugPrint('[DeviceInfo] Failed to read device info: $e');
+      errorLog('[DeviceInfo] Failed to read device info: $e');
       _systemInfo = {'Error': e.toString()};
     }
 
@@ -235,7 +236,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
         }
       }
     } catch (e) {
-      debugPrint('[DeviceInfo] Failed to read storage/memory: $e');
+      errorLog('[DeviceInfo] Failed to read storage/memory: $e');
     }
 
     // Fetch Network Info
@@ -271,7 +272,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       }
       _networkInfo = network;
     } catch (e) {
-      debugPrint('[DeviceInfo] Failed to read network: $e');
+      errorLog('[DeviceInfo] Failed to read network: $e');
     }
 
     // Fetch Wi-Fi Info
@@ -294,7 +295,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
             : 'Ch $freq';
       }
     } catch (e) {
-      debugPrint('[DeviceInfo] Failed to read wifi: $e');
+      errorLog('[DeviceInfo] Failed to read wifi: $e');
     }
 
     // Fetch Sensors Info
@@ -319,7 +320,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
         'NFC': nfcStatus,
       };
     } catch (e) {
-      debugPrint('[DeviceInfo] Failed to read sensors: $e');
+      errorLog('[DeviceInfo] Failed to read sensors: $e');
     }
 
     // Fetch App Info
@@ -332,7 +333,7 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
         'Build Number': packageInfo.buildNumber,
       };
     } catch (e) {
-      debugPrint('[DeviceInfo] Failed to read app info: $e');
+      errorLog('[DeviceInfo] Failed to read app info: $e');
     }
 
     final (display, diagnostics) = await (

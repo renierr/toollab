@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
@@ -137,7 +138,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
       await healthState.collect();
       await healthState.syncHealthConnect();
     } catch (e) {
-      debugPrint('[HealthDashboard] Health Connect sync failed: $e');
+      errorLog('[HealthDashboard] Health Connect sync failed: $e');
     }
 
     if (!appState.syncEnabled) {
@@ -191,7 +192,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     try {
       await HealthConnectSettings.open();
     } catch (e, stackTrace) {
-      debugPrint(
+      errorLog(
         '[HealthDashboard] Failed to open Health Connect settings: $e\n$stackTrace',
       );
       if (context.mounted) {
@@ -212,7 +213,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     await healthState.connectHealthConnect();
     if (!context.mounted) return;
     if (healthState.error != null) {
-      debugPrint(
+      errorLog(
         '[HealthDashboard] Health Connect import error: ${healthState.error}',
       );
     }
@@ -263,7 +264,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     await healthState.repairHealthConnectCache();
     if (!context.mounted) return;
     if (healthState.error != null) {
-      debugPrint(
+      errorLog(
         '[HealthDashboard] Health Connect repair error: ${healthState.error}',
       );
     }

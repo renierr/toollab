@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/chiptune/config.dart';
 
@@ -85,7 +85,7 @@ class ChiptuneArchive {
         },
       );
     } catch (e) {
-      debugPrint('[ChiptuneArchive] Migration failed: $e');
+      errorLog('[ChiptuneArchive] Migration failed: $e');
     }
     return _cachedDb!;
   }

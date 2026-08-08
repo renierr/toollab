@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:http/http.dart' as http;
 import 'app_http_client.dart';
 
@@ -42,7 +42,7 @@ class SyncService {
       }
       return false;
     } catch (e) {
-      debugPrint('$_logPrefix Backend check failed: $e');
+      errorLog('$_logPrefix Backend check failed: $e');
       return false;
     }
   }
@@ -79,6 +79,7 @@ class SyncService {
     required String baseUrl,
     required String userId,
     required SyncDelegate delegate,
+    bool backendAlreadyChecked = false,
   }) async {
     final String sanitizedUrl = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
@@ -92,9 +93,11 @@ class SyncService {
     int pushedCount = 0;
     int deletedCount = 0;
 
-    final available = await isBackendAvailable(sanitizedUrl);
-    if (!available) {
-      throw Exception('Backend server unreachable');
+    if (!backendAlreadyChecked) {
+      final available = await isBackendAvailable(sanitizedUrl);
+      if (!available) {
+        throw Exception('Backend server unreachable');
+      }
     }
 
     final client = await _client;

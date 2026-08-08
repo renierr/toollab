@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_selector/file_selector.dart';
@@ -93,7 +94,7 @@ class FileSaveHelper {
                 'mimeType': mimeType,
               });
             } catch (e) {
-              debugPrint("Failed to show native system notification: $e");
+              errorLog("Failed to show native system notification: $e");
             }
           }
 
@@ -105,7 +106,7 @@ class FileSaveHelper {
               bytes: bytes,
             );
           } catch (e) {
-            debugPrint("Failed to create temporary file for sharing: $e");
+            errorLog("Failed to create temporary file for sharing: $e");
           }
 
           // Show in-app success dialog
@@ -226,7 +227,7 @@ class FileSaveHelper {
                 'mimeType': mimeType,
               });
             } catch (e) {
-              debugPrint('Failed to show native system notification: $e');
+              errorLog('Failed to show native system notification: $e');
             }
           }
 
@@ -294,7 +295,7 @@ class FileSaveHelper {
         await Process.run('xdg-open', [path]);
       }
     } catch (e) {
-      debugPrint("Error opening file: $e");
+      errorLog("Error opening file: $e");
     }
   }
 
@@ -305,7 +306,7 @@ class FileSaveHelper {
         ShareParams(files: [XFile(path, mimeType: mimeType)]),
       );
     } catch (e) {
-      debugPrint("Error sharing file: $e");
+      errorLog("Error sharing file: $e");
     }
   }
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -59,7 +60,7 @@ class P2pDiscoveryService {
     try {
       await UniversalBle.requestPermissions(withAndroidFineLocation: false);
     } catch (e) {
-      debugPrint('[P2pDiscovery] permission request failed: $e');
+      errorLog('[P2pDiscovery] permission request failed: $e');
     }
   }
 
@@ -73,7 +74,7 @@ class P2pDiscoveryService {
     // attempt before becoming a peripheral.
     await stopScan();
     _requestReassembler.clear();
-    debugPrint('[P2pDiscovery] advertising as receiver "$deviceName"');
+    errorLog('[P2pDiscovery] advertising as receiver "$deviceName"');
 
     await requestPermissions();
 
@@ -132,7 +133,7 @@ class P2pDiscoveryService {
     await _advertisingStateSub?.cancel();
     _advertisingStateSub = UniversalBlePeripheral.advertisingStateStream.listen(
       (event) {
-        debugPrint(
+        errorLog(
           '[P2pDiscovery] advertising state: ${event.state} '
           '${event.error ?? ''}',
         );
@@ -159,7 +160,7 @@ class P2pDiscoveryService {
       final request = P2pHandshakeRequest.fromJson(json);
       _incomingRequestController.add((deviceId, request));
     } catch (e) {
-      debugPrint('[P2pDiscovery] failed to parse handshake request: $e');
+      errorLog('[P2pDiscovery] failed to parse handshake request: $e');
       _requestReassembler.reset(deviceId);
     }
   }
@@ -235,7 +236,7 @@ class P2pDiscoveryService {
     await _scanSub?.cancel();
     _scanSub = UniversalBle.scanStream.listen(
       _onScanResult,
-      onError: (e) => debugPrint('[P2pDiscovery] scan error: $e'),
+      onError: (e) => errorLog('[P2pDiscovery] scan error: $e'),
     );
     await UniversalBle.startScan();
   }
@@ -287,7 +288,7 @@ class P2pDiscoveryService {
         _centralChunkSize = mtu - 3;
       }
     } catch (e) {
-      debugPrint('[P2pDiscovery] MTU request failed, using default: $e');
+      errorLog('[P2pDiscovery] MTU request failed, using default: $e');
     }
 
     _pendingResponse = Completer<Uint8List>();

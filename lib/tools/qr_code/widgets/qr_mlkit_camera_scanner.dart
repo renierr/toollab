@@ -1,6 +1,6 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
@@ -82,7 +82,7 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
       try {
         await controller.initialize();
       } catch (e) {
-        debugPrint('[QrMlKitCameraScanner] veryHigh failed, using high: $e');
+        errorLog('[QrMlKitCameraScanner] veryHigh failed, using high: $e');
         await controller.dispose();
         controller = _createController(camera, ResolutionPreset.high);
         _controller = controller;
@@ -105,7 +105,7 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
         _isCameraInitialized = true;
       });
     } catch (e) {
-      debugPrint('[QrMlKitCameraScanner] Init failed: $e');
+      errorLog('[QrMlKitCameraScanner] Init failed: $e');
     }
   }
 
@@ -128,7 +128,7 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
       await controller.setFocusMode(FocusMode.auto);
       await controller.setExposureMode(ExposureMode.auto);
     } catch (e) {
-      debugPrint('[QrMlKitCameraScanner] Focus setup failed: $e');
+      errorLog('[QrMlKitCameraScanner] Focus setup failed: $e');
     }
   }
 
@@ -139,7 +139,7 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
       await controller.setFocusPoint(relative);
       await controller.setExposurePoint(relative);
     } catch (e) {
-      debugPrint('[QrMlKitCameraScanner] Focus point failed: $e');
+      errorLog('[QrMlKitCameraScanner] Focus point failed: $e');
     }
   }
 
@@ -151,7 +151,7 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
       await controller.setFlashMode(next ? FlashMode.torch : FlashMode.off);
       if (mounted) setState(() => _torchOn = next);
     } catch (e) {
-      debugPrint('[QrMlKitCameraScanner] Torch toggle failed: $e');
+      errorLog('[QrMlKitCameraScanner] Torch toggle failed: $e');
     }
   }
 
@@ -217,7 +217,7 @@ class _QrMlKitCameraScannerState extends State<QrMlKitCameraScanner>
         }
       }
     } catch (e) {
-      debugPrint('[QrMlKitCameraScanner] Process image failed: $e');
+      errorLog('[QrMlKitCameraScanner] Process image failed: $e');
     } finally {
       _isProcessing = false;
     }

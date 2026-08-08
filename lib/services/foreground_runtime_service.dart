@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/services.dart';
 
 class ForegroundRuntimeLease {
@@ -82,7 +83,7 @@ class ForegroundRuntimeService {
       );
       return ok ?? true;
     } catch (e) {
-      debugPrint('[$_logPrefix] requestNotificationPermission failed: $e');
+      errorLog('[$_logPrefix] requestNotificationPermission failed: $e');
       return true;
     }
   }
@@ -158,7 +159,7 @@ class ForegroundRuntimeService {
     try {
       await _channel.invokeMethod<void>(method, arguments);
     } catch (e) {
-      debugPrint('[$_logPrefix] _invoke($method) failed: $e');
+      errorLog('[$_logPrefix] _invoke($method) failed: $e');
     }
   }
 

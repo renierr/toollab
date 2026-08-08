@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -88,7 +89,7 @@ class QrCodec {
             frameInfo.image.height.toDouble(),
           );
         } catch (e) {
-          debugPrint('[QrCodec] Failed to get image size: $e');
+          errorLog('[QrCodec] Failed to get image size: $e');
         }
 
         Rect? rect;
@@ -137,7 +138,7 @@ class QrCodec {
         return QrDecodeResult(text: text, rect: rect, size: size);
       }
     } catch (e) {
-      debugPrint('[QrCodec] decode failed: $e');
+      errorLog('[QrCodec] decode failed: $e');
     }
     return null;
   }
@@ -163,7 +164,7 @@ class QrCodec {
                 frameInfo.image.height.toDouble(),
               );
             } catch (e) {
-              debugPrint('[QrCodec] Failed to get image size: $e');
+              errorLog('[QrCodec] Failed to get image size: $e');
             }
 
             return QrDecodeResult(
@@ -177,7 +178,7 @@ class QrCodec {
         await scanner.close();
       }
     } catch (e) {
-      debugPrint('[QrCodec] ML Kit decode failed: $e');
+      errorLog('[QrCodec] ML Kit decode failed: $e');
     }
     return null;
   }

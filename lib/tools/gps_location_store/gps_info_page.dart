@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -104,7 +105,7 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
               }
             },
             onError: (e) {
-              debugPrint('[GpsInfoPage] Geolocator stream error: $e');
+              errorLog('[GpsInfoPage] Geolocator stream error: $e');
             },
           );
 
@@ -121,7 +122,7 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
         await _loadProviders();
       }
     } catch (e) {
-      debugPrint('[GpsInfoPage] initLocation error: $e');
+      errorLog('[GpsInfoPage] initLocation error: $e');
     }
   }
 
@@ -137,7 +138,7 @@ class _GpsInfoPageState extends State<GpsInfoPage> with DisposeCleanup {
         });
       }
     } catch (e) {
-      debugPrint('[GpsInfoPage] loadProviders error: $e');
+      errorLog('[GpsInfoPage] loadProviders error: $e');
     }
   }
 

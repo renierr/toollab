@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -75,6 +76,7 @@ class HealthDatabase {
   }
 
   Future<ToolDatabase> _openDatabase() async {
+    final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
     final database = await DatabaseService.instance.getToolDatabase(
       HealthDashboardTool.config.id,
     );
@@ -111,7 +113,7 @@ class HealthDatabase {
             "UPDATE $tableName SET device_id = ? WHERE source = 'healthConnect'",
             [devId],
           );
-          debugPrint(
+          errorLog(
             '[HealthDatabase] Backfilled device_id=$devId on existing healthConnect records',
           );
         }
@@ -139,6 +141,12 @@ class HealthDatabase {
       },
     );
     _database = database;
+    if (kDebugMode) {
+      debugLog(
+        '[HealthDatabase] Database open and migration completed in '
+        '${stopwatch!.elapsedMilliseconds}ms',
+      );
+    }
     return database;
   }
 
@@ -167,6 +175,7 @@ class HealthDatabase {
     required DateTime start,
     required DateTime end,
   }) async {
+    final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
     final db = await _db();
     final placeholders = List.filled(
       dashboardRecordTypes.length,
@@ -184,11 +193,20 @@ class HealthDatabase {
       ],
       orderBy: 'start_time DESC',
     );
+    final queryMs = stopwatch?.elapsedMilliseconds;
     final records = await compute(_parseRecords, rows);
+    if (kDebugMode) {
+      debugLog(
+        '[HealthDatabase] Dashboard range: ${rows.length} rows, '
+        'query ${queryMs}ms, parse '
+        '${stopwatch!.elapsedMilliseconds - queryMs!}ms',
+      );
+    }
     return records;
   }
 
   Future<List<HealthRecord>> latestDashboardRecords() async {
+    final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
     final db = await _db();
     final results = await Future.wait(
       _latestDashboardTypes.map((type) {
@@ -202,7 +220,15 @@ class HealthDatabase {
       }),
     );
     final rows = results.expand((rows) => rows).toList();
+    final queryMs = stopwatch?.elapsedMilliseconds;
     final records = await compute(_parseRecords, rows);
+    if (kDebugMode) {
+      debugLog(
+        '[HealthDatabase] Latest dashboard values: ${rows.length} rows, '
+        'query ${queryMs}ms, parse '
+        '${stopwatch!.elapsedMilliseconds - queryMs!}ms',
+      );
+    }
     return records;
   }
 

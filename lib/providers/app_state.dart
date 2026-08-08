@@ -257,6 +257,7 @@ class AppState extends ChangeNotifier {
           baseUrl: _syncServerUrl,
           userId: _syncUserId,
           delegate: delegate,
+          backendAlreadyChecked: true,
         );
         pulledTotal += results['pulled'] ?? 0;
         pushedTotal += results['pushed'] ?? 0;

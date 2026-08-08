@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
@@ -53,6 +54,8 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   Future<void> load({bool showLoading = true}) async {
+    final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
+    if (kDebugMode) debugLog('[HealthDashboard] Starting dashboard load');
     if (showLoading && records.isEmpty) {
       isLoading = true;
       notifyListeners();
@@ -62,14 +65,22 @@ class HealthDashboardState extends ChangeNotifier {
       await _reloadRecords();
     } catch (e) {
       error = e.toString();
-      debugPrint('[HealthDashboard] Load failed: $e');
+      errorLog('[HealthDashboard] Load failed: $e');
     } finally {
       isLoading = false;
+      if (kDebugMode) {
+        debugLog(
+          '[HealthDashboard] Dashboard load completed in '
+          '${stopwatch!.elapsedMilliseconds}ms',
+        );
+      }
       notifyListeners();
     }
   }
 
   Future<void> _reloadRecords() async {
+    final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
+    if (kDebugMode) debugLog('[HealthDashboard] Loading dashboard records');
     final start = _dayAt(0);
     final end = _dayAt(6).add(const Duration(days: 1));
     final results = await Future.wait([
@@ -114,6 +125,12 @@ class HealthDashboardState extends ChangeNotifier {
         '$_sourcePreferencePrefix$type',
       );
     }
+    if (kDebugMode) {
+      debugLog(
+        '[HealthDashboard] Dashboard data ready: ${records.length} records in '
+        '${stopwatch!.elapsedMilliseconds}ms',
+      );
+    }
   }
 
   Future<void> collect() async {
@@ -128,7 +145,7 @@ class HealthDashboardState extends ChangeNotifier {
       await _reloadRecords();
     } catch (e) {
       error = e.toString();
-      debugPrint('[HealthDashboard] Collection failed: $e');
+      errorLog('[HealthDashboard] Collection failed: $e');
     } finally {
       isCollecting = false;
       notifyListeners();
@@ -141,7 +158,7 @@ class HealthDashboardState extends ChangeNotifier {
       await syncHealthConnect(forceFullHistory: true);
     } catch (e) {
       error = e.toString();
-      debugPrint('[HealthDashboard] Health Connect access failed: $e');
+      errorLog('[HealthDashboard] Health Connect access failed: $e');
       notifyListeners();
     }
   }
@@ -197,7 +214,7 @@ class HealthDashboardState extends ChangeNotifier {
       await _reloadRecords();
     } catch (e) {
       error = e.toString();
-      debugPrint('[HealthDashboard] Health Connect sync failed: $e');
+      errorLog('[HealthDashboard] Health Connect sync failed: $e');
     } finally {
       await lease?.release();
       isCollecting = false;
@@ -247,7 +264,7 @@ class HealthDashboardState extends ChangeNotifier {
       await _reloadRecords();
     } catch (e) {
       error = e.toString();
-      debugPrint('[HealthDashboard] Health Connect repair failed: $e');
+      errorLog('[HealthDashboard] Health Connect repair failed: $e');
     } finally {
       await lease?.release();
       isCollecting = false;
@@ -289,12 +306,12 @@ class HealthDashboardState extends ChangeNotifier {
         try {
           await appState.syncWithBackend([HealthDashboardSyncDelegate()]);
         } catch (e) {
-          debugPrint('[HealthDashboard] Open sync failed: $e');
+          errorLog('[HealthDashboard] Open sync failed: $e');
         }
       }
       await _reloadRecords();
     } catch (e) {
-      debugPrint('[HealthDashboard] Open sync failed: $e');
+      errorLog('[HealthDashboard] Open sync failed: $e');
     } finally {
       isCollecting = false;
       notifyListeners();
@@ -527,7 +544,7 @@ class HealthDashboardState extends ChangeNotifier {
       await _reloadRecords();
     } catch (e) {
       error = e.toString();
-      debugPrint('[HealthDashboard] Trend window load failed: $e');
+      errorLog('[HealthDashboard] Trend window load failed: $e');
     } finally {
       notifyListeners();
     }

@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:provider/provider.dart';
@@ -88,7 +89,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
         // The plugin reports a user cancellation as an error with this exact
         // message — treat it as a silent cancel, never retry or fall back.
         if (e.message == 'Operation cancelled') {
-          debugPrint('[DocumentScanner] Scan cancelled by user');
+          errorLog('[DocumentScanner] Scan cancelled by user');
           return;
         }
         // Otherwise the scanner module is unavailable (still downloading / no
@@ -97,7 +98,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
           await Future<void>.delayed(const Duration(seconds: 2));
           continue;
         }
-        debugPrint('[DocumentScanner] ML Kit unavailable, falling back: $e');
+        errorLog('[DocumentScanner] ML Kit unavailable, falling back: $e');
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.docScanMlKitUnavailableFallback)),
@@ -105,7 +106,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
         await _captureFromCamera(state);
         return;
       } catch (e) {
-        debugPrint('[DocumentScanner] Scan failed or empty: $e');
+        errorLog('[DocumentScanner] Scan failed or empty: $e');
         return;
       } finally {
         documentScanner.close();

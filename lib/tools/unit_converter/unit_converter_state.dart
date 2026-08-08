@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
@@ -123,7 +124,7 @@ class UnitConverterState extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('UnitConverterState: failed to restore settings: $e');
+      errorLog('UnitConverterState: failed to restore settings: $e');
     }
   }
 
@@ -134,7 +135,7 @@ class UnitConverterState extends ChangeNotifier {
       await db.setSetting(_toolId, _keyFrom, _from.id);
       await db.setSetting(_toolId, _keyTo, _to.id);
     } catch (e) {
-      debugPrint('UnitConverterState: failed to persist settings: $e');
+      errorLog('UnitConverterState: failed to persist settings: $e');
     }
   }
 }

@@ -1,7 +1,7 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// Waveform + spectrum snapshot captured from the Android output mix.
@@ -89,7 +89,7 @@ class SystemAudioPlayer {
       final ms = (result['durationMs'] as num?)?.toInt() ?? 0;
       return Duration(milliseconds: ms);
     } catch (e) {
-      debugPrint('$_logPrefix load failed: $e');
+      errorLog('$_logPrefix load failed: $e');
       _hasSpectrum = false;
       return null;
     }
@@ -104,7 +104,7 @@ class SystemAudioPlayer {
       await _channel.invokeMethod<void>('play');
       return true;
     } catch (e) {
-      debugPrint('$_logPrefix play failed: $e');
+      errorLog('$_logPrefix play failed: $e');
       return false;
     }
   }
@@ -143,7 +143,7 @@ class SystemAudioPlayer {
       return await _channel.invokeMethod<bool>('requestCapturePermission') ??
           false;
     } catch (e) {
-      debugPrint('$_logPrefix permission request failed: $e');
+      errorLog('$_logPrefix permission request failed: $e');
       return false;
     }
   }
@@ -153,7 +153,7 @@ class SystemAudioPlayer {
     try {
       await _channel.invokeMethod<void>(method, args);
     } catch (e) {
-      debugPrint('$_logPrefix $method failed: $e');
+      errorLog('$_logPrefix $method failed: $e');
     }
   }
 

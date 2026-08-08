@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'notes_db_helper.dart';
@@ -19,11 +20,11 @@ class NotesState extends ChangeNotifier {
         query: query,
       );
     } catch (e) {
-      debugPrint('[NotesState] Failed to load notes with tags: $e');
+      errorLog('[NotesState] Failed to load notes with tags: $e');
       try {
         _notes = await NotesDbHelper.instance.getActiveNotes(query: query);
       } catch (e2) {
-        debugPrint('[NotesState] Failed to load notes (fallback): $e2');
+        errorLog('[NotesState] Failed to load notes (fallback): $e2');
       }
     } finally {
       _isLoadingNotes = false;
@@ -82,7 +83,7 @@ class NotesState extends ChangeNotifier {
 
   void _backgroundSync() {
     _doBackgroundSync().catchError((e) {
-      debugPrint('[NotesState] Background sync failed: $e');
+      errorLog('[NotesState] Background sync failed: $e');
     });
   }
 

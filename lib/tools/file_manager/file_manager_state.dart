@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 import 'dart:isolate';
 
@@ -287,7 +288,7 @@ class FileManagerState extends ChangeNotifier {
     try {
       stats = await Isolate.run(() => statLocalPaths(paths));
     } catch (error) {
-      debugPrint('[FileManagerState] Metadata scan failed: $error');
+      errorLog('[FileManagerState] Metadata scan failed: $error');
       if (scan == _metadataScan) {
         _isScanningMetadata = false;
         notifyListeners();
@@ -446,7 +447,7 @@ class FileManagerState extends ChangeNotifier {
       _entries.sort(_compareEntries);
     } catch (error) {
       _error = error.toString().replaceFirst('Exception: ', '');
-      debugPrint('[FileManagerState] $error');
+      errorLog('[FileManagerState] $error');
     } finally {
       if (listing == _listing) {
         _isLoading = false;
@@ -529,7 +530,7 @@ class FileManagerState extends ChangeNotifier {
     try {
       return await Directory(entry.path).list(followLinks: false).length;
     } catch (error) {
-      debugPrint('[FileManagerState] Folder count failed: $error');
+      errorLog('[FileManagerState] Folder count failed: $error');
       return null;
     }
   }
@@ -544,7 +545,7 @@ class FileManagerState extends ChangeNotifier {
           .where((child) => child is! Directory)
           .length;
     } catch (error) {
-      debugPrint('[FileManagerState] Folder file count failed: $error');
+      errorLog('[FileManagerState] Folder file count failed: $error');
       return null;
     }
   }
@@ -1052,7 +1053,7 @@ class FileManagerState extends ChangeNotifier {
       await action();
     } catch (error) {
       _error = error.toString().replaceFirst('Exception: ', '');
-      debugPrint('[FileManagerState] $error');
+      errorLog('[FileManagerState] $error');
     } finally {
       _isLoading = false;
       _operation = null;
@@ -1213,7 +1214,7 @@ class FileManagerState extends ChangeNotifier {
       clearSelection();
     } catch (error) {
       _error = error.toString().replaceFirst('Exception: ', '');
-      debugPrint('[FileManagerState] Archive operation failed: $error');
+      errorLog('[FileManagerState] Archive operation failed: $error');
     } finally {
       await refresh();
       _isLoading = false;
@@ -1511,7 +1512,7 @@ class FileManagerState extends ChangeNotifier {
       await operation();
     } catch (error) {
       _error = error.toString().replaceFirst('Exception: ', '');
-      debugPrint('[FileManagerState] $error');
+      errorLog('[FileManagerState] $error');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -1536,7 +1537,7 @@ class FileManagerState extends ChangeNotifier {
       try {
         await smb.disconnect();
       } catch (error) {
-        debugPrint('[FileManagerState] SMB disconnect failed: $error');
+        errorLog('[FileManagerState] SMB disconnect failed: $error');
       }
     }
   }
@@ -1575,7 +1576,7 @@ class FileManagerState extends ChangeNotifier {
     try {
       await ftp.disconnect();
     } catch (error) {
-      debugPrint('[FileManagerState] FTP disconnect failed: $error');
+      errorLog('[FileManagerState] FTP disconnect failed: $error');
     }
   }
 

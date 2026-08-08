@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -68,7 +69,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
               if (mounted) context.read<SketchBoardState>().refreshSaved();
             })
             .catchError((e) {
-              debugPrint('[SketchBoardPage] Auto-sync on open failed: $e');
+              errorLog('[SketchBoardPage] Auto-sync on open failed: $e');
             });
       }
 
@@ -83,7 +84,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
               }
             })
             .catchError((e) {
-              debugPrint('Failed to load shared image: $e');
+              errorLog('Failed to load shared image: $e');
             });
       }
     });

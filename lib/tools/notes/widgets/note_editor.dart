@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
@@ -124,7 +125,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
         selection: TextSelection.collapsed(offset: newCursorPos),
       );
     } catch (e) {
-      debugPrint('[NoteEditor] Failed to process image: $e');
+      errorLog('[NoteEditor] Failed to process image: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,

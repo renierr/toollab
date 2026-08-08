@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 
@@ -78,7 +78,7 @@ class LocationCaptureService {
         source: LocationSource.gps,
       );
     } catch (e) {
-      debugPrint('[LocationCaptureService] GPS fix failed: $e');
+      errorLog('[LocationCaptureService] GPS fix failed: $e');
       return null;
     }
   }
@@ -103,7 +103,7 @@ class LocationCaptureService {
         source: LocationSource.ip,
       );
     } catch (e) {
-      debugPrint('[LocationCaptureService] IP fix failed: $e');
+      errorLog('[LocationCaptureService] IP fix failed: $e');
       return null;
     }
   }

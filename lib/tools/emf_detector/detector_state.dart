@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'emf_reading.dart';
 import 'sensor_service.dart';
@@ -40,7 +41,7 @@ class DetectorState extends ChangeNotifier {
     // and automatically enable simulated mode so the app is fully interactable.
     _initialSignalTimeout = Timer(const Duration(milliseconds: 1500), () {
       if (!_hasPhysicalSignal) {
-        debugPrint(
+        errorLog(
           '[DetectorState] No physical magnetometer signal detected. Activating simulator.',
         );
         setSimulationMode(true);

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
@@ -88,7 +89,7 @@ class FileConverterState extends ChangeNotifier {
       }
     } catch (e) {
       _error = e.toString();
-      debugPrint('[FileConverterState] Conversion failed: $e');
+      errorLog('[FileConverterState] Conversion failed: $e');
     } finally {
       _isConverting = false;
       notifyListeners();

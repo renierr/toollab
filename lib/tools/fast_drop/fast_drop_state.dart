@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'fast_drop_model.dart';
@@ -91,7 +92,7 @@ class FastDropState extends ChangeNotifier {
       _isServerAvailable = false;
       _fastDropError = e.toString().replaceAll('Exception: ', '');
       _fastDrops = [];
-      debugPrint('[FastDropState] Failed to load Fast Drops: $e');
+      errorLog('[FastDropState] Failed to load Fast Drops: $e');
     } finally {
       _isLoadingFastDrops = false;
       notifyListeners();
@@ -173,7 +174,7 @@ class FastDropState extends ChangeNotifier {
       await FastDropService.deleteDrop(_syncServerUrl, id);
       await loadFastDrops();
     } catch (e) {
-      debugPrint('[FastDropState] Failed to delete Fast Drop: $e');
+      errorLog('[FastDropState] Failed to delete Fast Drop: $e');
       rethrow;
     }
   }
@@ -185,7 +186,7 @@ class FastDropState extends ChangeNotifier {
       await FastDropService.keepDrop(_syncServerUrl, id);
       await loadFastDrops();
     } catch (e) {
-      debugPrint('[FastDropState] Failed to update Fast Drop retention: $e');
+      errorLog('[FastDropState] Failed to update Fast Drop retention: $e');
       rethrow;
     }
   }
@@ -197,7 +198,7 @@ class FastDropState extends ChangeNotifier {
       await FastDropService.updateDescription(_syncServerUrl, id, description);
       await loadFastDrops();
     } catch (e) {
-      debugPrint('[FastDropState] Failed to update Fast Drop description: $e');
+      errorLog('[FastDropState] Failed to update Fast Drop description: $e');
       rethrow;
     }
   }
@@ -209,7 +210,7 @@ class FastDropState extends ChangeNotifier {
       await FastDropService.updateRetention(_syncServerUrl, id, retention);
       await loadFastDrops();
     } catch (e) {
-      debugPrint('[FastDropState] Failed to update Fast Drop retention: $e');
+      errorLog('[FastDropState] Failed to update Fast Drop retention: $e');
       rethrow;
     }
   }

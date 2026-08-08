@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -56,7 +57,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
               }
             })
             .catchError((e) {
-              debugPrint('[NotesPage] Auto-sync on open failed: $e');
+              errorLog('[NotesPage] Auto-sync on open failed: $e');
             });
       }
 

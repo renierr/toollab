@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter_zxing/flutter_zxing.dart';
 
 import 'camera_zoom_overlay.dart';
@@ -41,7 +42,7 @@ class _QrCameraScannerState extends State<QrCameraScanner> {
       await controller.setFocusPoint(relative);
       await controller.setExposurePoint(relative);
     } catch (e) {
-      debugPrint('[QrCameraScanner] Focus point failed: $e');
+      errorLog('[QrCameraScanner] Focus point failed: $e');
     }
   }
 

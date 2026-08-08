@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'config.dart';
 import 'treadmill_session.dart';
@@ -54,7 +54,7 @@ class TreadmillControlDb {
         },
       );
     } catch (e) {
-      debugPrint('[TreadmillControlDb] Migration failed: $e');
+      errorLog('[TreadmillControlDb] Migration failed: $e');
     }
     return _cachedDb!;
   }

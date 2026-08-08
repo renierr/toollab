@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:isolate';
 import 'dart:typed_data';
 
@@ -944,7 +945,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _loadArchive() async {
     final repaired = await ChiptuneArchive.instance.repairEmptyRecords();
     if (repaired > 0) {
-      debugPrint('[ChiptunePage] Repaired $repaired empty archive records');
+      errorLog('[ChiptunePage] Repaired $repaired empty archive records');
       if (mounted) await _maybeAutoSync();
     }
     final modules = await ChiptuneArchive.instance.getModules();

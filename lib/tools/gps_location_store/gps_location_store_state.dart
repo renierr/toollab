@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'gps_location_store_db_helper.dart';
 import 'location_capture_service.dart';
@@ -27,7 +28,7 @@ class GpsLocationStoreState extends ChangeNotifier {
     try {
       _locations = await GpsLocationStoreDbHelper.instance.getLocations();
     } catch (e) {
-      debugPrint('[GpsLocationStoreState] Failed to load locations: $e');
+      errorLog('[GpsLocationStoreState] Failed to load locations: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -44,7 +45,7 @@ class GpsLocationStoreState extends ChangeNotifier {
       _currentPosition = await LocationCaptureService.capture();
       return true;
     } catch (e) {
-      debugPrint('[GpsLocationStoreState] Current position unavailable: $e');
+      errorLog('[GpsLocationStoreState] Current position unavailable: $e');
       return false;
     } finally {
       _isLocatingCurrent = false;

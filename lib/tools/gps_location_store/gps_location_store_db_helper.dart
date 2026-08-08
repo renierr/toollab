@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/gps_location_store/config.dart';
 import 'package:tool_lab/tools/gps_location_store/saved_location.dart';
@@ -38,7 +38,7 @@ class GpsLocationStoreDbHelper {
         },
       );
     } catch (e) {
-      debugPrint('[GpsLocationStoreDbHelper] Migration failed: $e');
+      errorLog('[GpsLocationStoreDbHelper] Migration failed: $e');
     }
     return _cachedDb!;
   }

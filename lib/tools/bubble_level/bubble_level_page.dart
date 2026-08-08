@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -98,7 +99,7 @@ class _BubbleLevelPageState extends State<BubbleLevelPage>
         samplingPeriod: const Duration(milliseconds: 50),
       ).listen(_onSensorEvent);
     } catch (e) {
-      debugPrint('[BubbleLevel] Sensors not available: $e');
+      errorLog('[BubbleLevel] Sensors not available: $e');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           final l10n = AppLocalizations.of(context);

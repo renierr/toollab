@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class ShortcutService {
@@ -32,7 +32,7 @@ class ShortcutService {
     try {
       return await _channel.invokeMethod<String>('getLaunchRoute');
     } catch (e) {
-      debugPrint('[ShortcutService] Failed to get launch route: $e');
+      errorLog('[ShortcutService] Failed to get launch route: $e');
       return null;
     }
   }
@@ -46,7 +46,7 @@ class ShortcutService {
           }) ??
           false;
     } catch (e) {
-      debugPrint('[ShortcutService] Failed to pin shortcut: $e');
+      errorLog('[ShortcutService] Failed to pin shortcut: $e');
       return false;
     }
   }
@@ -56,7 +56,7 @@ class ShortcutService {
     try {
       await _channel.invokeMethod('removeShortcut', {'id': toolId});
     } catch (e) {
-      debugPrint('[ShortcutService] Failed to remove shortcut: $e');
+      errorLog('[ShortcutService] Failed to remove shortcut: $e');
     }
   }
 
@@ -68,7 +68,7 @@ class ShortcutService {
         'enabled': enabled,
       });
     } catch (e) {
-      debugPrint('[ShortcutService] Failed to set drawer icon: $e');
+      errorLog('[ShortcutService] Failed to set drawer icon: $e');
     }
   }
 }

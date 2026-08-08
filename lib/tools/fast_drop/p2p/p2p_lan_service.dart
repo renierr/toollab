@@ -1,9 +1,9 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'p2p_models.dart';
@@ -174,7 +174,7 @@ class P2pLanService {
       _peers[peer.id] = peer;
       _peersController.add(_peers.values.toList());
     } catch (e) {
-      debugPrint('[P2pLan] invalid discovery datagram: $e');
+      errorLog('[P2pLan] invalid discovery datagram: $e');
     }
   }
 
@@ -222,7 +222,7 @@ class P2pLanService {
       _pendingConnections[peer.id] = connection;
       _incomingController.add((peer, request));
     } catch (e) {
-      debugPrint('[P2pLan] invalid handshake: $e');
+      errorLog('[P2pLan] invalid handshake: $e');
       await connection.close();
     }
   }

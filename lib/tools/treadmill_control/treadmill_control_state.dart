@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
@@ -126,7 +127,7 @@ class TreadmillControlState extends ChangeNotifier {
       syncToHealthConnect = val == 'true';
       notifyListeners();
     } catch (e) {
-      debugPrint('[TreadmillControl] Load settings failed: $e');
+      errorLog('[TreadmillControl] Load settings failed: $e');
     }
   }
 
@@ -145,7 +146,7 @@ class TreadmillControlState extends ChangeNotifier {
         );
       }
     } catch (e) {
-      debugPrint('[TreadmillControl] Update Health Connect setting failed: $e');
+      errorLog('[TreadmillControl] Update Health Connect setting failed: $e');
     }
   }
 
@@ -154,7 +155,7 @@ class TreadmillControlState extends ChangeNotifier {
       pastSessions = await TreadmillControlDb.instance.getActiveSessions();
       notifyListeners();
     } catch (e) {
-      debugPrint('[TreadmillControl] Load sessions failed: $e');
+      errorLog('[TreadmillControl] Load sessions failed: $e');
     }
   }
 
@@ -162,11 +163,11 @@ class TreadmillControlState extends ChangeNotifier {
     TreadmillHealthConnectPublisher.instance
         .publishPendingSessions()
         .catchError((e) {
-          debugPrint('[TreadmillControl] Health Connect publish error: $e');
+          errorLog('[TreadmillControl] Health Connect publish error: $e');
           return null;
         });
     syncNow().catchError((e) {
-      debugPrint('[TreadmillControl] Background sync failed: $e');
+      errorLog('[TreadmillControl] Background sync failed: $e');
       return null;
     });
   }
@@ -223,7 +224,7 @@ class TreadmillControlState extends ChangeNotifier {
       isScanning = true;
       notifyListeners();
     } catch (e) {
-      debugPrint('[TreadmillControl] Start scan failed: $e');
+      errorLog('[TreadmillControl] Start scan failed: $e');
     }
   }
 
@@ -308,7 +309,7 @@ class TreadmillControlState extends ChangeNotifier {
         // "connected" state is set by _onConnectionChange when the link is up.
         return;
       } catch (e) {
-        debugPrint(
+        errorLog(
           '[TreadmillControl] Connect attempt $attempt/$maxAttempts failed: $e',
         );
         // The link can still come up via the callback shortly after a throw.
@@ -331,7 +332,7 @@ class TreadmillControlState extends ChangeNotifier {
       treadmillDeviceId = null;
       treadmillName = null;
       notifyListeners();
-      debugPrint(
+      errorLog(
         '[TreadmillControl] Connection failed after $maxAttempts attempts',
       );
     }
@@ -383,7 +384,7 @@ class TreadmillControlState extends ChangeNotifier {
     } catch (e) {
       hrmConnection = BleConnectionState.disconnected;
       notifyListeners();
-      debugPrint('[TreadmillControl] HRM Connection failed: $e');
+      errorLog('[TreadmillControl] HRM Connection failed: $e');
     }
   }
 
@@ -434,7 +435,7 @@ class TreadmillControlState extends ChangeNotifier {
         _actualTreadmillWriteChar = profile.writeChar;
         treadmillType = profile.type;
 
-        debugPrint(
+        errorLog(
           '[TreadmillControl] Connected $deviceId type=$treadmillType '
           'svc=$_actualTreadmillService data=$_actualTreadmillDataChar '
           'write=$_actualTreadmillWriteChar cp=$_actualTreadmillControlPointChar',
@@ -458,9 +459,9 @@ class TreadmillControlState extends ChangeNotifier {
               _actualTreadmillService!,
               _actualTreadmillDataChar!,
             );
-            debugPrint('[TreadmillControl] PitPat notify subscribed OK');
+            errorLog('[TreadmillControl] PitPat notify subscribed OK');
           } catch (e) {
-            debugPrint('[TreadmillControl] PitPat notify subscribe FAILED: $e');
+            errorLog('[TreadmillControl] PitPat notify subscribe FAILED: $e');
           }
           _startPitPatHeartbeat();
         } else {
@@ -661,7 +662,7 @@ class TreadmillControlState extends ChangeNotifier {
   void _parsePitPatData(Uint8List value) {
     final frame = decodePitPatTelemetry(value);
     if (frame == null) {
-      debugPrint(
+      errorLog(
         '[TreadmillControl] PitPat packet too short (${value.length}<31), ignored',
       );
       return;
@@ -755,10 +756,10 @@ class TreadmillControlState extends ChangeNotifier {
             withoutResponse: false,
           );
         } catch (e2) {
-          debugPrint('[TreadmillControl] write failed on $characteristic: $e2');
+          errorLog('[TreadmillControl] write failed on $characteristic: $e2');
         }
       } else {
-        debugPrint('[TreadmillControl] write failed on $characteristic: $e');
+        errorLog('[TreadmillControl] write failed on $characteristic: $e');
       }
     }
   }

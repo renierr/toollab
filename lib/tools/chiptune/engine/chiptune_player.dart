@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
@@ -304,7 +305,7 @@ class ChiptunePlayer {
   void _listenToSystemEvents() {
     _systemSubscription ??= SystemAudioPlayer.instance.events.listen(
       _onSystemEvent,
-      onError: (Object e) => debugPrint('$_logPrefix system audio event: $e'),
+      onError: (Object e) => errorLog('$_logPrefix system audio event: $e'),
     );
   }
 
@@ -664,7 +665,7 @@ class ChiptunePlayer {
       try {
         SoLoud.instance.changeDevice(newDevice: device);
       } catch (e) {
-        debugPrint('$_logPrefix Error changing output device: $e');
+        errorLog('$_logPrefix Error changing output device: $e');
       }
     }
   }
@@ -782,7 +783,7 @@ class ChiptunePlayer {
               chunk.buffer.asUint8List(),
             );
           } catch (e) {
-            debugPrint('$_logPrefix addAudioDataStream failed: $e');
+            errorLog('$_logPrefix addAudioDataStream failed: $e');
             break;
           }
           guard++;
@@ -895,7 +896,7 @@ class ChiptunePlayer {
           }
         }
       } catch (e) {
-        debugPrint('$_logPrefix Error listing devices during init: $e');
+        errorLog('$_logPrefix Error listing devices during init: $e');
       }
     }
 
@@ -910,7 +911,7 @@ class ChiptunePlayer {
       try {
         SoLoud.instance.changeDevice(newDevice: savedDevice);
       } catch (e) {
-        debugPrint('$_logPrefix Error changing device during init: $e');
+        errorLog('$_logPrefix Error changing device during init: $e');
       }
     }
   }

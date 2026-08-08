@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:desktop_drop/desktop_drop.dart';
@@ -62,7 +63,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
       final path = await _tempScope.createFile(tempName, bytes: bytes);
       _addItem(_ImageItem(path: path, tempName: tempName, name: name));
     } catch (e) {
-      debugPrint('[ImagesToPdf] Failed to load $name: $e');
+      errorLog('[ImagesToPdf] Failed to load $name: $e');
     }
   }
 
@@ -75,7 +76,7 @@ class _ImagesToPdfPageState extends State<ImagesToPdfPage> with DisposeCleanup {
         try {
           await _addImageBytes(await file.readAsBytes(), file.name);
         } catch (e) {
-          debugPrint('[ImagesToPdf] Failed to load ${file.name}: $e');
+          errorLog('[ImagesToPdf] Failed to load ${file.name}: $e');
         }
       }
     }

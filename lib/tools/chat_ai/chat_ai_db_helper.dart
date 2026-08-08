@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'config.dart';
 
@@ -58,7 +58,7 @@ class ChatAiDbHelper {
         },
       );
     } catch (e) {
-      debugPrint('[ChatAiDbHelper] Migration failed: $e');
+      errorLog('[ChatAiDbHelper] Migration failed: $e');
     }
     return _cachedDb!;
   }

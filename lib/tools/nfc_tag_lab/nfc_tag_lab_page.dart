@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -66,7 +67,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
           availability == NfcAvailability.enabled ||
           availability == NfcAvailability.disabled;
     } catch (e) {
-      debugPrint('[NfcTagLab] NFC check failed: $e');
+      errorLog('[NfcTagLab] NFC check failed: $e');
       hasSupport = false;
     }
     if (mounted) {
@@ -99,7 +100,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
           NfcPollingOption.iso18092,
         },
         onSessionErrorIos: (error) {
-          debugPrint('[NfcTagLab] iOS Session Error: ${error.message}');
+          errorLog('[NfcTagLab] iOS Session Error: ${error.message}');
           if (mounted) {
             setState(() {
               _isScanning = false;
@@ -203,7 +204,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
               );
             }
           } catch (e) {
-            debugPrint('[NfcTagLab] Scan error: $e');
+            errorLog('[NfcTagLab] Scan error: $e');
             if (mounted) {
               setState(() => _isScanning = false);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -222,7 +223,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
         },
       );
     } catch (e) {
-      debugPrint('[NfcTagLab] Start session error: $e');
+      errorLog('[NfcTagLab] Start session error: $e');
       if (mounted) {
         setState(() {
           _isScanning = false;
@@ -236,7 +237,7 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
     try {
       await NfcManager.instance.stopSession();
     } catch (e) {
-      debugPrint('[NfcTagLab] Stop session error: $e');
+      errorLog('[NfcTagLab] Stop session error: $e');
     }
     if (mounted) {
       setState(() {
