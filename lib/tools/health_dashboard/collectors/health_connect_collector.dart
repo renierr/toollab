@@ -178,6 +178,19 @@ class HealthConnectCollector implements HealthDataCollector {
         hc.StandTimeRecord(:final standTime) => {
           'minutes': standTime.inMinutes,
         },
+        hc.BloodPressureRecord(:final systolic, :final diastolic) => {
+          'systolicMmhg': systolic.inMillimetersOfMercury,
+          'diastolicMmhg': diastolic.inMillimetersOfMercury,
+        },
+        hc.OxygenSaturationRecord(:final saturation) => {
+          'percent': saturation.asWhole,
+        },
+        hc.BodyFatPercentageRecord(:final percentage) => {
+          'percent': percentage.asWhole,
+        },
+        hc.BodyMassIndexRecord(:final bmi) => {'bmi': bmi.value},
+        hc.HeightRecord(:final height) => {'centimeters': height.inCentimeters},
+        hc.HydrationRecord(:final volume) => {'liters': volume.inLiters},
         _ => const {},
       };
 

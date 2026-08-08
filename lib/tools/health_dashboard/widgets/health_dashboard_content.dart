@@ -255,20 +255,16 @@ class HealthDashboardContent extends StatelessWidget {
             ],
           ),
           const HealthDashboardTrends(),
-          if (state.allHealthData.isNotEmpty) ...[
-            const SizedBox(height: 28),
-            HealthMetricCard(
-              icon: Icons.health_and_safety_outlined,
-              color: AppTheme.accentPurple,
-              label: l10n.healthDashboardAllData,
-              value: '${state.allHealthData.length}',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const HealthAllDataPage(),
-                ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.health_and_safety_outlined),
+            label: Text(l10n.healthDashboardAllData),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const HealthAllDataPage(),
               ),
             ),
-          ],
+          ),
         ],
       ),
     );

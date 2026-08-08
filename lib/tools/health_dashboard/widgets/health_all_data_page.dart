@@ -102,6 +102,24 @@ class _HealthDataTile extends StatelessWidget {
     if (record.value['minutes'] case final num minutes) {
       return '${minutes.round()} min';
     }
+    if (record.value['systolicMmhg'] case final num systolic) {
+      final diastolic = (record.value['diastolicMmhg'] as num?)?.round();
+      return diastolic == null
+          ? '${systolic.round()} mmHg'
+          : '${systolic.round()}/$diastolic mmHg';
+    }
+    if (record.value['percent'] case final num percent) {
+      return '${percent.toStringAsFixed(1)} %';
+    }
+    if (record.value['bmi'] case final num bmi) {
+      return 'BMI ${bmi.toStringAsFixed(1)}';
+    }
+    if (record.value['centimeters'] case final num centimeters) {
+      return '${centimeters.toStringAsFixed(1)} cm';
+    }
+    if (record.value['liters'] case final num liters) {
+      return '${liters.toStringAsFixed(2)} L';
+    }
     return null;
   }
 }
