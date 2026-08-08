@@ -1,10 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../health_dashboard_state.dart';
 
-class HealthImportProgressDialog extends StatelessWidget {
+class HealthImportProgressDialog extends StatefulWidget {
   const HealthImportProgressDialog({super.key});
 
   static Future<void> show(BuildContext context) async {
@@ -16,9 +18,60 @@ class HealthImportProgressDialog extends StatelessWidget {
   }
 
   @override
+  State<HealthImportProgressDialog> createState() =>
+      _HealthImportProgressDialogState();
+}
+
+class _HealthImportProgressDialogState
+    extends State<HealthImportProgressDialog> {
+  Timer? _safetyTimeoutTimer;
+  Timer? _cancelButtonTimer;
+  bool _showCancelButton = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Safety timeout: auto-close dialog if sync stalls for 3 minutes.
+    _safetyTimeoutTimer = Timer(const Duration(minutes: 3), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+
+    // Escape hatch: show emergency cancel button after 30 seconds.
+    _cancelButtonTimer = Timer(const Duration(seconds: 30), () {
+      if (mounted) {
+        setState(() {
+          _showCancelButton = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _safetyTimeoutTimer?.cancel();
+    _cancelButtonTimer?.cancel();
+    super.dispose();
+  }
+
+  void _autoDismissIfCompleted(bool isCollecting) {
+    if (!isCollecting) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final state = context.watch<HealthDashboardState>();
+
+    _autoDismissIfCompleted(state.isCollecting);
 
     return PopScope(
       canPop: false,
@@ -77,6 +130,18 @@ class HealthImportProgressDialog extends StatelessWidget {
                 color: theme.hintColor,
               ),
             ),
+            if (_showCancelButton) ...[
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    if (mounted) Navigator.of(context).pop();
+                  },
+                  child: Text(l10n.commonCancel),
+                ),
+              ),
+            ],
           ],
         ),
       ),

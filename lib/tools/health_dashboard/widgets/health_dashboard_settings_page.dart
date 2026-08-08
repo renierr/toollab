@@ -206,11 +206,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     final healthState = context.read<HealthDashboardState>();
     final messenger = ScaffoldMessenger.of(context);
     HealthImportProgressDialog.show(context);
-    try {
-      await healthState.connectHealthConnect();
-    } finally {
-      if (context.mounted) Navigator.of(context).pop();
-    }
+    await healthState.connectHealthConnect();
     if (!context.mounted) return;
     if (healthState.error != null) {
       debugPrint(
@@ -258,11 +254,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     final healthState = context.read<HealthDashboardState>();
     final messenger = ScaffoldMessenger.of(context);
     HealthImportProgressDialog.show(context);
-    try {
-      await healthState.repairHealthConnectCache();
-    } finally {
-      if (context.mounted) Navigator.of(context).pop();
-    }
+    await healthState.repairHealthConnectCache();
     if (!context.mounted) return;
     if (healthState.error != null) {
       debugPrint(
