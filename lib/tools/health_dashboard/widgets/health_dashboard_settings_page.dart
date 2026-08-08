@@ -173,14 +173,13 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await HealthConnectSettings.open();
-    } catch (_) {
+    } catch (e, stackTrace) {
+      debugPrint(
+        '[HealthDashboard] Failed to open Health Connect settings: $e\n$stackTrace',
+      );
       if (context.mounted) {
         messenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context).healthDashboardSyncFailed,
-            ),
-          ),
+          SnackBar(content: Text('Failed to open Health Connect: $e')),
         );
       }
     }
@@ -191,6 +190,11 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     await healthState.connectHealthConnect();
     if (!context.mounted) return;
+    if (healthState.error != null) {
+      debugPrint(
+        '[HealthDashboard] Health Connect import error: ${healthState.error}',
+      );
+    }
     messenger.showSnackBar(
       SnackBar(
         content: Text(
@@ -198,7 +202,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
               ? AppLocalizations.of(
                   context,
                 ).healthDashboardHealthConnectImported
-              : healthState.error!,
+              : 'Import failed: ${healthState.error}',
         ),
       ),
     );
@@ -209,6 +213,11 @@ class HealthDashboardSettingsPage extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     await healthState.repairHealthConnectCache();
     if (!context.mounted) return;
+    if (healthState.error != null) {
+      debugPrint(
+        '[HealthDashboard] Health Connect repair error: ${healthState.error}',
+      );
+    }
     messenger.showSnackBar(
       SnackBar(
         content: Text(
@@ -216,7 +225,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
               ? AppLocalizations.of(
                   context,
                 ).healthDashboardHealthConnectRepaired
-              : healthState.error!,
+              : 'Repair failed: ${healthState.error}',
         ),
       ),
     );

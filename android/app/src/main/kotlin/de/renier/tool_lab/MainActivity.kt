@@ -195,26 +195,37 @@ open class MainActivity : FlutterFragmentActivity() {
         MethodChannel(messenger, HEALTH_CONNECT_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "openSettings" -> {
-                    try {
-                        val intent = if (Build.VERSION.SDK_INT >= 34) {
-                            Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS").apply {
-                                putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
-                            }
-                        } else {
-                            Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS")
+                    val intentsToTry = listOf(
+                        Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS").apply {
+                            putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
+                        },
+                        Intent("androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS").apply {
+                            putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
+                        },
+                        Intent("android.health.connect.action.HEALTH_CONNECT_SETTINGS"),
+                        Intent("android.settings.HEALTH_CONNECT_SETTINGS"),
+                        Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS"),
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = android.net.Uri.parse("package:$packageName")
                         }
-                        startActivity(intent)
-                        result.success(null)
-                    } catch (e: android.content.ActivityNotFoundException) {
+                    )
+
+                    var launched = false
+                    for (intent in intentsToTry) {
                         try {
-                            val fallbackIntent = Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS")
-                            startActivity(fallbackIntent)
-                            result.success(null)
-                        } catch (e2: Exception) {
-                            result.error("HEALTH_CONNECT_UNAVAILABLE", "Health Connect settings unavailable: ${e2.message}", null)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
+                            launched = true
+                            break
+                        } catch (_: Exception) {
+                            // Try next intent in cascade
                         }
-                    } catch (error: Exception) {
-                        result.error("HEALTH_CONNECT_SETTINGS", error.message, null)
+                    }
+
+                    if (launched) {
+                        result.success(null)
+                    } else {
+                        result.error("HEALTH_CONNECT_UNAVAILABLE", "Could not open Health Connect settings on this device.", null)
                     }
                 }
                 else -> result.notImplemented()

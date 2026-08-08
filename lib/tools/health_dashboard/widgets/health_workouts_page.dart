@@ -5,6 +5,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
 import 'health_day_navigation.dart';
+import 'health_empty_state.dart';
 import 'health_workout_tile.dart';
 
 class HealthWorkoutsPage extends StatelessWidget {
@@ -39,9 +40,9 @@ class HealthWorkoutsPage extends StatelessWidget {
                   child: Center(child: CircularProgressIndicator()),
                 )
               else if (workouts.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Center(child: Text(l10n.healthDashboardNoData)),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: HealthEmptyState(),
                 )
               else
                 for (final workout in workouts)

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/collapsible_section.dart';
 
 import '../health_database.dart';
 import '../health_record.dart';
-import '../health_dashboard_state.dart';
-import 'health_record_details_page.dart';
-import 'health_source_badge.dart';
+import 'health_empty_state.dart';
+import 'health_record_tile.dart';
 
 class HealthMetricHistory extends StatefulWidget {
   final String type;
@@ -57,11 +55,9 @@ class _HealthMetricHistoryState extends State<HealthMetricHistory> {
   Widget build(BuildContext context) {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_records.isEmpty) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text(AppLocalizations.of(context).healthDashboardNoData),
-        ),
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: HealthEmptyState(),
       );
     }
     return Column(
@@ -74,7 +70,7 @@ class _HealthMetricHistoryState extends State<HealthMetricHistory> {
             child: Column(
               children: [
                 for (final record in group.records)
-                  _HealthRecordTile(
+                  HealthRecordTile(
                     record: record,
                     valueKey: widget.valueKey,
                     unit: widget.unit,
@@ -139,68 +135,4 @@ class _HealthRecordGroup {
   final bool isRecent;
 
   const _HealthRecordGroup(this.title, this.records, this.isRecent);
-}
-
-class _HealthRecordTile extends StatelessWidget {
-  final HealthRecord record;
-  final String valueKey;
-  final String unit;
-  final bool isNap;
-
-  const _HealthRecordTile({
-    required this.record,
-    required this.valueKey,
-    required this.unit,
-    required this.isNap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final date = DateTime.fromMillisecondsSinceEpoch(
-      record.type == 'sleep.session' ? record.endTime : record.startTime,
-    );
-    final value = record.type == 'sleep.session'
-        ? Duration(
-            milliseconds: record.endTime - record.startTime,
-          ).inMinutes.toDouble()
-        : (record.value[valueKey] as num?)?.toDouble();
-    return Card(
-      child: ListTile(
-        leading: Icon(
-          isNap ? Icons.nightlight_outlined : Icons.history_rounded,
-        ),
-        title: Text(
-          isNap
-              ? '${MaterialLocalizations.of(context).formatMediumDate(date)} · ${AppLocalizations.of(context).healthDashboardNap}'
-              : MaterialLocalizations.of(context).formatMediumDate(date),
-        ),
-        subtitle: HealthSourceBadge(packageName: record.sourceName),
-        trailing: Text(value == null ? '-' : _format(value)),
-        onTap: () {
-          final selected = DateTime(date.year, date.month, date.day);
-          context.read<HealthDashboardState>().selectDay(selected);
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => HealthRecordDetailsPage(record: record),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  String _format(double value) => switch (unit) {
-    'kg' => '${value.toStringAsFixed(1)} kg',
-    'bpm' => '${value.round()} bpm',
-    'steps' => value.round().toString(),
-    'min' =>
-      record.type == 'sleep.session'
-          ? _sleepDuration(value.round())
-          : '${value.round()} min',
-    'calories' => value.round().toString(),
-    _ => value.toStringAsFixed(1),
-  };
-
-  String _sleepDuration(int minutes) =>
-      '${minutes ~/ 60}h ${minutes.remainder(60)}m';
 }
