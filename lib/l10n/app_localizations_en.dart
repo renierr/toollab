@@ -6507,6 +6507,41 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not import health database';
 
   @override
+  String get healthDashboardImportBackupProgressTitle =>
+      'Importing health database';
+
+  @override
+  String healthDashboardImportBackupProgressStatus(int processed, int total) {
+    return 'Saving health records ($processed / $total)...';
+  }
+
+  @override
+  String healthDashboardImportBackupProgressCount(int processed, int total) {
+    return 'Processed $processed of $total records';
+  }
+
+  @override
+  String get healthDashboardImportBackupProgressHint =>
+      'Please keep the screen open while the backup is imported.';
+
+  @override
+  String get healthDashboardImportHealthConnectProgressTitle =>
+      'Importing health data';
+
+  @override
+  String get healthDashboardImportHealthConnectProgressStatus =>
+      'Fetching records from Health Connect...';
+
+  @override
+  String healthDashboardImportHealthConnectProgressCount(int count) {
+    return 'Fetched $count records so far';
+  }
+
+  @override
+  String get healthDashboardImportHealthConnectProgressHint =>
+      'Please keep the screen open while Health Connect records are being imported.';
+
+  @override
   String get healthDashboardSevenDayTotal => '7-Day Total';
 
   @override

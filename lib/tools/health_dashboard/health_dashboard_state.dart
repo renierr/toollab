@@ -18,13 +18,12 @@ class HealthDashboardState extends ChangeNotifier {
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
   static const _healthConnectLastSyncKey = 'health_connect_last_sync';
   static const _sourcePreferencePrefix = 'source_preference_';
-  static const _dashboardWindow = Duration(days: 120);
-
   final _treadmillCollector = TreadmillCollector();
   final _healthConnectCollector = HealthConnectCollector();
   List<HealthRecord> records = [];
   bool isLoading = true;
   bool isCollecting = false;
+  bool isImportingBackup = false;
   bool showTreadmillWorkouts = true;
   bool autoHealthConnectSync = false;
   int trendDayOffset = 0;
@@ -35,9 +34,13 @@ class HealthDashboardState extends ChangeNotifier {
   int allTimeDurationSeconds = 0;
   int allTimeSteps = 0;
   int allTimeWorkouts = 0;
+  Map<String, int> _dailySteps = {};
+  Map<String, double> _dailyHeartRate = {};
 
   String? collectionStatus;
   int collectedRecordCount = 0;
+  int backupImportProcessedCount = 0;
+  int backupImportTotalCount = 0;
 
   void _onCollectionProgress(String status, int count) {
     collectionStatus = status;
@@ -67,15 +70,32 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   Future<void> _reloadRecords() async {
-    records = await HealthDatabase.instance.activeRecordsSince(
-      DateTime.now().subtract(_dashboardWindow),
-    );
-    final summary = await HealthDatabase.instance.allTimeWorkoutSummary();
+    final start = _dayAt(0);
+    final end = _dayAt(6).add(const Duration(days: 1));
+    final results = await Future.wait([
+      HealthDatabase.instance.dashboardRecords(start: start, end: end),
+      HealthDatabase.instance.latestDashboardRecords(),
+      HealthDatabase.instance.allTimeWorkoutSummary(),
+      HealthDatabase.instance.allTimeSteps(),
+      HealthDatabase.instance.dailyStepTotals(start: start, end: end),
+      HealthDatabase.instance.dailyHeartRateAverages(start: start, end: end),
+    ]);
+    final weekRecords = results[0] as List<HealthRecord>;
+    final latestRecords = results[1] as List<HealthRecord>;
+    final summary = results[2] as Map<String, num>;
+    records = [
+      ...{
+        for (final record in [...weekRecords, ...latestRecords])
+          record.id: record,
+      }.values,
+    ]..sort((a, b) => b.startTime.compareTo(a.startTime));
     allTimeDistanceKm = summary['distance']!.toDouble();
     allTimeCalories = summary['calories']!.round();
     allTimeDurationSeconds = summary['duration']!.round();
     allTimeWorkouts = summary['workouts']!.toInt();
-    allTimeSteps = await HealthDatabase.instance.allTimeSteps();
+    allTimeSteps = results[3] as int;
+    _dailySteps = results[4] as Map<String, int>;
+    _dailyHeartRate = results[5] as Map<String, double>;
     showTreadmillWorkouts =
         await DatabaseService.instance.getSetting(
           HealthDashboardTool.config.id,
@@ -334,9 +354,26 @@ class HealthDashboardState extends ChangeNotifier {
   Future<String> exportBackup() => HealthDatabase.instance.exportBackup();
 
   Future<int> importBackup(String path) async {
-    final imported = await HealthDatabase.instance.importBackup(path);
-    await load();
-    return imported;
+    if (isImportingBackup) return 0;
+    isImportingBackup = true;
+    backupImportProcessedCount = 0;
+    backupImportTotalCount = 0;
+    notifyListeners();
+    try {
+      final imported = await HealthDatabase.instance.importBackup(
+        path,
+        onProgress: (processed, total) {
+          backupImportProcessedCount = processed;
+          backupImportTotalCount = total;
+          notifyListeners();
+        },
+      );
+      await load(showLoading: false);
+      return imported;
+    } finally {
+      isImportingBackup = false;
+      notifyListeners();
+    }
   }
 
   List<HealthRecord> get treadmillWorkouts => showTreadmillWorkouts
@@ -454,7 +491,7 @@ class HealthDashboardState extends ChangeNotifier {
     return preferred.isEmpty ? typed.toList() : preferred;
   }
 
-  void selectDay(DateTime day) {
+  Future<void> selectDay(DateTime day) async {
     final today = DateTime.now();
     trendDayOffset = DateTime(
       day.year,
@@ -462,23 +499,38 @@ class HealthDashboardState extends ChangeNotifier {
       day.day,
     ).difference(DateTime(today.year, today.month, today.day)).inDays;
     notifyListeners();
+    await _reloadTrendWindow();
   }
 
-  void previousTrendDay() {
+  Future<void> previousTrendDay() async {
     trendDayOffset--;
     notifyListeners();
+    await _reloadTrendWindow();
   }
 
-  void nextTrendDay() {
+  Future<void> nextTrendDay() async {
     if (trendDayOffset == 0) return;
     trendDayOffset++;
     notifyListeners();
+    await _reloadTrendWindow();
   }
 
-  void resetTrendDate() {
+  Future<void> resetTrendDate() async {
     if (trendDayOffset == 0) return;
     trendDayOffset = 0;
     notifyListeners();
+    await _reloadTrendWindow();
+  }
+
+  Future<void> _reloadTrendWindow() async {
+    try {
+      await _reloadRecords();
+    } catch (e) {
+      error = e.toString();
+      debugPrint('[HealthDashboard] Trend window load failed: $e');
+    } finally {
+      notifyListeners();
+    }
   }
 
   DateTime get trendWeekEnd => _dayAt(6);
@@ -557,12 +609,7 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   int get todaySteps {
-    final dayRecords = recordsOnDay('activity.steps', DateTime.now());
-    final deduplicated = _deduplicateIntervals(dayRecords, 'count');
-    return deduplicated.fold(
-      0,
-      (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
-    );
+    return _dailySteps[_dayKey(DateTime.now())] ?? 0;
   }
 
   double? get latestWeightKg => _latestNumeric('body.weight', 'kilograms');
@@ -620,12 +667,7 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   int get selectedWeekSteps => List<int>.generate(7, (index) {
-    final dayRecords = recordsOnDay('activity.steps', _dayAt(index));
-    final deduplicated = _deduplicateIntervals(dayRecords, 'count');
-    return deduplicated.fold(
-      0,
-      (sum, record) => sum + ((record.value['count'] as num?) ?? 0).round(),
-    );
+    return _dailySteps[_dayKey(_dayAt(index))] ?? 0;
   }).fold(0, (sum, value) => sum + value);
 
   List<HealthRecord> _deduplicateIntervals(
@@ -673,18 +715,7 @@ class HealthDashboardState extends ChangeNotifier {
 
   List<double?> get weeklyHeartRate => List<double?>.generate(7, (index) {
     final day = _dayAt(index);
-    final values = <double>[
-      for (final workout in workoutRecordsOnDay(day))
-        if (((workout.value['averageHeartRate'] as num?) ?? 0) > 0)
-          (workout.value['averageHeartRate'] as num).toDouble(),
-      for (final record in recordsOnDay('heart.rate', day))
-        if (record.type == 'heart.rate' &&
-            _isOnDay(record, day) &&
-            ((record.value['averageBpm'] as num?) ?? 0) > 0)
-          (record.value['averageBpm'] as num).toDouble(),
-    ];
-    if (values.isEmpty) return null;
-    return values.reduce((a, b) => a + b) / values.length;
+    return _dailyHeartRate[_dayKey(day)];
   });
 
   List<Map<String, dynamic>> heartRateSamplesDuring(HealthRecord session) {
@@ -719,6 +750,11 @@ class HealthDashboardState extends ChangeNotifier {
       now.day,
     ).add(Duration(days: trendDayOffset - 6 + index));
   }
+
+  String _dayKey(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 
   bool _isOnDay(HealthRecord record, DateTime day) {
     final timestamp = record.type == 'sleep.session'

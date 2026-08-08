@@ -7,6 +7,7 @@ import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../health_dashboard_state.dart';
 import '../health_database.dart';
+import 'health_import_progress_dialog.dart';
 
 class HealthBackupActions {
   static const _typeGroup = XTypeGroup(
@@ -63,6 +64,10 @@ class HealthBackupActions {
     );
     if (confirmed != true || !context.mounted) return;
     try {
+      HealthImportProgressDialog.show(
+        context,
+        operation: HealthImportOperation.backup,
+      );
       final imported = await context.read<HealthDashboardState>().importBackup(
         file.path,
       );

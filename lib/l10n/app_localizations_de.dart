@@ -6550,6 +6550,41 @@ class AppLocalizationsDe extends AppLocalizations {
       'Gesundheitsdatenbank konnte nicht importiert werden';
 
   @override
+  String get healthDashboardImportBackupProgressTitle =>
+      'Gesundheitsdatenbank wird importiert';
+
+  @override
+  String healthDashboardImportBackupProgressStatus(int processed, int total) {
+    return 'Gesundheitsdaten werden gespeichert ($processed / $total)...';
+  }
+
+  @override
+  String healthDashboardImportBackupProgressCount(int processed, int total) {
+    return '$processed von $total Daten verarbeitet';
+  }
+
+  @override
+  String get healthDashboardImportBackupProgressHint =>
+      'Bitte lassen Sie den Bildschirm geöffnet, während die Sicherung importiert wird.';
+
+  @override
+  String get healthDashboardImportHealthConnectProgressTitle =>
+      'Gesundheitsdaten werden importiert';
+
+  @override
+  String get healthDashboardImportHealthConnectProgressStatus =>
+      'Daten aus Health Connect werden abgerufen...';
+
+  @override
+  String healthDashboardImportHealthConnectProgressCount(int count) {
+    return 'Bisher $count Daten abgerufen';
+  }
+
+  @override
+  String get healthDashboardImportHealthConnectProgressHint =>
+      'Bitte lassen Sie den Bildschirm geöffnet, während Health-Connect-Daten importiert werden.';
+
+  @override
   String get healthDashboardSevenDayTotal => '7-Tage Summe';
 
   @override

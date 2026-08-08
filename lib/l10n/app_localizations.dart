@@ -11801,6 +11801,54 @@ abstract class AppLocalizations {
   /// **'Could not import health database'**
   String get healthDashboardImportBackupFailed;
 
+  /// No description provided for @healthDashboardImportBackupProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing health database'**
+  String get healthDashboardImportBackupProgressTitle;
+
+  /// No description provided for @healthDashboardImportBackupProgressStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving health records ({processed} / {total})...'**
+  String healthDashboardImportBackupProgressStatus(int processed, int total);
+
+  /// No description provided for @healthDashboardImportBackupProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed {processed} of {total} records'**
+  String healthDashboardImportBackupProgressCount(int processed, int total);
+
+  /// No description provided for @healthDashboardImportBackupProgressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please keep the screen open while the backup is imported.'**
+  String get healthDashboardImportBackupProgressHint;
+
+  /// No description provided for @healthDashboardImportHealthConnectProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing health data'**
+  String get healthDashboardImportHealthConnectProgressTitle;
+
+  /// No description provided for @healthDashboardImportHealthConnectProgressStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetching records from Health Connect...'**
+  String get healthDashboardImportHealthConnectProgressStatus;
+
+  /// No description provided for @healthDashboardImportHealthConnectProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetched {count} records so far'**
+  String healthDashboardImportHealthConnectProgressCount(int count);
+
+  /// No description provided for @healthDashboardImportHealthConnectProgressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please keep the screen open while Health Connect records are being imported.'**
+  String get healthDashboardImportHealthConnectProgressHint;
+
   /// No description provided for @healthDashboardSevenDayTotal.
   ///
   /// In en, this message translates to:

@@ -7,13 +7,18 @@ import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import '../health_dashboard_state.dart';
 
 class HealthImportProgressDialog extends StatefulWidget {
-  const HealthImportProgressDialog({super.key});
+  final HealthImportOperation operation;
 
-  static Future<void> show(BuildContext context) async {
+  const HealthImportProgressDialog({super.key, required this.operation});
+
+  static Future<void> show(
+    BuildContext context, {
+    required HealthImportOperation operation,
+  }) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const HealthImportProgressDialog(),
+      builder: (_) => HealthImportProgressDialog(operation: operation),
     );
   }
 
@@ -55,8 +60,8 @@ class _HealthImportProgressDialogState
     super.dispose();
   }
 
-  void _autoDismissIfCompleted(bool isCollecting) {
-    if (!isCollecting) {
+  void _autoDismissIfCompleted(bool isInProgress) {
+    if (!isInProgress) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
@@ -70,8 +75,22 @@ class _HealthImportProgressDialogState
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final state = context.watch<HealthDashboardState>();
+    final isBackup = widget.operation == HealthImportOperation.backup;
+    final isInProgress = isBackup
+        ? state.isImportingBackup
+        : state.isCollecting;
+    final title = isBackup
+        ? l10n.healthDashboardImportBackupProgressTitle
+        : l10n.healthDashboardImportHealthConnectProgressTitle;
+    final status = isBackup
+        ? l10n.healthDashboardImportBackupProgressStatus(
+            state.backupImportProcessedCount,
+            state.backupImportTotalCount,
+          )
+        : state.collectionStatus ??
+              l10n.healthDashboardImportHealthConnectProgressStatus;
 
-    _autoDismissIfCompleted(state.isCollecting);
+    _autoDismissIfCompleted(isInProgress);
 
     return PopScope(
       canPop: false,
@@ -86,7 +105,7 @@ class _HealthImportProgressDialogState
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Importing Health Data',
+                title,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -98,11 +117,7 @@ class _HealthImportProgressDialogState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              state.collectionStatus ??
-                  'Fetching records from Health Connect...',
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text(status, style: theme.textTheme.bodyMedium),
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -115,7 +130,14 @@ class _HealthImportProgressDialogState
                   const Icon(Icons.sync, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'Fetched ${state.collectedRecordCount} records so far',
+                    isBackup
+                        ? l10n.healthDashboardImportBackupProgressCount(
+                            state.backupImportProcessedCount,
+                            state.backupImportTotalCount,
+                          )
+                        : l10n.healthDashboardImportHealthConnectProgressCount(
+                            state.collectedRecordCount,
+                          ),
                     style: theme.textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -125,7 +147,9 @@ class _HealthImportProgressDialogState
             ),
             const SizedBox(height: 12),
             Text(
-              'Please keep the screen open while Health Connect records are being imported.',
+              isBackup
+                  ? l10n.healthDashboardImportBackupProgressHint
+                  : l10n.healthDashboardImportHealthConnectProgressHint,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.hintColor,
               ),
@@ -148,3 +172,5 @@ class _HealthImportProgressDialogState
     );
   }
 }
+
+enum HealthImportOperation { healthConnect, backup }

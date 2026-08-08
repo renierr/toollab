@@ -17,7 +17,28 @@ class HealthDatabase {
   static const _table = 'records';
   static const _backupTable = 'health_records';
   static const _deviceIdKey = 'health_device_uuid';
+  static const dashboardRecordTypes = [
+    'body.weight',
+    'heart.resting',
+    'sleep.session',
+    'workout.treadmill',
+    'workout.health_connect',
+    'health.heart_rate_variability_rmssd',
+    'health.oxygen_saturation',
+    'health.respiratory_rate',
+    'health.body_fat_percentage',
+  ];
+  static const _latestDashboardTypes = [
+    'body.weight',
+    'heart.resting',
+    'sleep.session',
+    'health.heart_rate_variability_rmssd',
+    'health.oxygen_saturation',
+    'health.respiratory_rate',
+    'health.body_fat_percentage',
+  ];
   ToolDatabase? _database;
+  Future<ToolDatabase>? _databaseFuture;
   String? _deviceId;
 
   Future<String> get deviceId async {
@@ -50,11 +71,16 @@ class HealthDatabase {
 
   Future<ToolDatabase> _db() async {
     if (_database != null) return _database!;
-    _database = await DatabaseService.instance.getToolDatabase(
+    return _databaseFuture ??= _openDatabase();
+  }
+
+  Future<ToolDatabase> _openDatabase() async {
+    final database = await DatabaseService.instance.getToolDatabase(
       HealthDashboardTool.config.id,
     );
-    await _database!.migrate(
-      currentVersion: 3,
+    final devId = await deviceId;
+    await database.migrate(
+      currentVersion: 4,
       onMigrate: (txn, oldVersion, newVersion) async {
         if (oldVersion < 1) {
           await txn.execute('''
@@ -80,26 +106,40 @@ class HealthDatabase {
         }
         if (oldVersion >= 1 && oldVersion < 2) {
           final tableName = txn.nameTable(_table);
-          await txn.execute(
-            'ALTER TABLE $tableName ADD COLUMN device_id TEXT',
-          );
-          final devId = await deviceId;
+          await txn.execute('ALTER TABLE $tableName ADD COLUMN device_id TEXT');
           await txn.execute(
             "UPDATE $tableName SET device_id = ? WHERE source = 'healthConnect'",
             [devId],
           );
-          debugPrint('[HealthDatabase] Backfilled device_id=$devId on existing healthConnect records');
+          debugPrint(
+            '[HealthDatabase] Backfilled device_id=$devId on existing healthConnect records',
+          );
         }
         if (oldVersion < 3) {
           final t = txn.nameTable(_table);
-          await txn.execute('CREATE INDEX IF NOT EXISTS idx_deleted_start ON $t (deleted, start_time)');
-          await txn.execute('CREATE INDEX IF NOT EXISTS idx_deleted_end ON $t (deleted, end_time)');
-          await txn.execute('CREATE INDEX IF NOT EXISTS idx_source_device ON $t (source, device_id)');
-          await txn.execute('CREATE INDEX IF NOT EXISTS idx_deleted_type ON $t (deleted, type)');
+          await txn.execute(
+            'CREATE INDEX IF NOT EXISTS idx_deleted_start ON $t (deleted, start_time)',
+          );
+          await txn.execute(
+            'CREATE INDEX IF NOT EXISTS idx_deleted_end ON $t (deleted, end_time)',
+          );
+          await txn.execute(
+            'CREATE INDEX IF NOT EXISTS idx_source_device ON $t (source, device_id)',
+          );
+          await txn.execute(
+            'CREATE INDEX IF NOT EXISTS idx_deleted_type ON $t (deleted, type)',
+          );
+        }
+        if (oldVersion < 4) {
+          final t = txn.nameTable(_table);
+          await txn.execute(
+            'CREATE INDEX IF NOT EXISTS idx_deleted_type_start ON $t (deleted, type, start_time)',
+          );
         }
       },
     );
-    return _database!;
+    _database = database;
+    return database;
   }
 
   Future<List<HealthRecord>> activeRecords() async {
@@ -121,6 +161,49 @@ class HealthDatabase {
       orderBy: 'start_time DESC',
     );
     return compute(_parseRecords, rows);
+  }
+
+  Future<List<HealthRecord>> dashboardRecords({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final db = await _db();
+    final placeholders = List.filled(
+      dashboardRecordTypes.length,
+      '?',
+    ).join(', ');
+    final rows = await db.query(
+      _table,
+      where:
+          'deleted = 0 AND type IN ($placeholders) '
+          'AND end_time >= ? AND start_time < ?',
+      whereArgs: [
+        ...dashboardRecordTypes,
+        start.millisecondsSinceEpoch,
+        end.millisecondsSinceEpoch,
+      ],
+      orderBy: 'start_time DESC',
+    );
+    final records = await compute(_parseRecords, rows);
+    return records;
+  }
+
+  Future<List<HealthRecord>> latestDashboardRecords() async {
+    final db = await _db();
+    final results = await Future.wait(
+      _latestDashboardTypes.map((type) {
+        return db.query(
+          _table,
+          where: 'deleted = 0 AND type = ?',
+          whereArgs: [type],
+          orderBy: 'start_time DESC',
+          limit: 50,
+        );
+      }),
+    );
+    final rows = results.expand((rows) => rows).toList();
+    final records = await compute(_parseRecords, rows);
+    return records;
   }
 
   static List<HealthRecord> _parseRecords(List<Map<String, dynamic>> rows) =>
@@ -193,12 +276,13 @@ class HealthDatabase {
       WHERE deleted = 0 AND type LIKE 'workout.%'
     ''');
     final row = rows.single;
-    return {
+    final summary = {
       'distance': (row['distance'] as num?) ?? 0,
       'calories': (row['calories'] as num?) ?? 0,
       'duration': (row['duration'] as num?) ?? 0,
       'workouts': (row['workouts'] as num?) ?? 0,
     };
+    return summary;
   }
 
   Future<int> allTimeSteps() async {
@@ -208,7 +292,63 @@ class HealthDatabase {
       FROM ${db.nameTable(_table)}
       WHERE deleted = 0 AND type = 'activity.steps'
     ''');
-    return (rows.single['steps'] as num?)?.toInt() ?? 0;
+    final steps = (rows.single['steps'] as num?)?.toInt() ?? 0;
+    return steps;
+  }
+
+  Future<Map<String, int>> dailyStepTotals({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final db = await _db();
+    final rows = await db.rawQuery(
+      '''
+      SELECT
+        strftime('%Y-%m-%d', start_time / 1000, 'unixepoch', 'localtime') AS day,
+        COALESCE(SUM(CAST(json_extract(value_json, '\$.count') AS INTEGER)), 0) AS value
+      FROM ${db.nameTable(_table)}
+      WHERE deleted = 0 AND type = 'activity.steps'
+        AND start_time >= ? AND start_time < ?
+      GROUP BY day
+    ''',
+      [start.millisecondsSinceEpoch, end.millisecondsSinceEpoch],
+    );
+    return {
+      for (final row in rows)
+        row['day'] as String: (row['value'] as num?)?.toInt() ?? 0,
+    };
+  }
+
+  Future<Map<String, double>> dailyHeartRateAverages({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final db = await _db();
+    final rows = await db.rawQuery(
+      '''
+      SELECT
+        strftime('%Y-%m-%d', start_time / 1000, 'unixepoch', 'localtime') AS day,
+        AVG(CASE
+          WHEN type = 'heart.rate'
+            THEN CAST(json_extract(value_json, '\$.averageBpm') AS REAL)
+          ELSE CAST(json_extract(value_json, '\$.averageHeartRate') AS REAL)
+        END) AS value
+      FROM ${db.nameTable(_table)}
+      WHERE deleted = 0 AND (type = 'heart.rate' OR type LIKE 'workout.%')
+        AND start_time >= ? AND start_time < ?
+        AND (CASE
+          WHEN type = 'heart.rate'
+            THEN CAST(json_extract(value_json, '\$.averageBpm') AS REAL)
+          ELSE CAST(json_extract(value_json, '\$.averageHeartRate') AS REAL)
+        END) > 0
+      GROUP BY day
+    ''',
+      [start.millisecondsSinceEpoch, end.millisecondsSinceEpoch],
+    );
+    return {
+      for (final row in rows)
+        row['day'] as String: (row['value'] as num?)?.toDouble() ?? 0,
+    };
   }
 
   Future<List<Map<String, dynamic>>> syncRecords() async {
@@ -303,7 +443,10 @@ class HealthDatabase {
     return path;
   }
 
-  Future<int> importBackup(String path) async {
+  Future<int> importBackup(
+    String path, {
+    void Function(int processed, int total)? onProgress,
+  }) async {
     final backup = await openDatabase(path, readOnly: true);
     try {
       final tables = await backup.rawQuery(
@@ -316,6 +459,8 @@ class HealthDatabase {
       final rows = await backup.query(_backupTable);
       final db = await _db();
       var imported = 0;
+      var processed = 0;
+      onProgress?.call(processed, rows.length);
       await db.transaction((txn) async {
         for (final row in rows) {
           final existing = await txn.query(
@@ -324,9 +469,14 @@ class HealthDatabase {
             whereArgs: [row['id'], row['source'], row['source_record_id']],
             limit: 1,
           );
-          if (existing.isNotEmpty) continue;
-          await txn.insert(_table, row);
-          imported++;
+          if (existing.isEmpty) {
+            await txn.insert(_table, row);
+            imported++;
+          }
+          processed++;
+          if (processed % 100 == 0 || processed == rows.length) {
+            onProgress?.call(processed, rows.length);
+          }
         }
       });
       return imported;
