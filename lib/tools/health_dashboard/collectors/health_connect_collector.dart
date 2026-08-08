@@ -170,7 +170,7 @@ class HealthConnectCollector implements HealthDataCollector {
         ),
       ),
     );
-    onProgress?.call('Import completed', records.length);
+    onProgress?.call('Processing collected records...', records.length);
     return records;
   }
 

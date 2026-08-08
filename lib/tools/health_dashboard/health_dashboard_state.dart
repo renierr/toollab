@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/power_wake_lock_service.dart';
 
 import 'collectors/health_connect_collector.dart';
 import 'collectors/treadmill_collector.dart';
@@ -132,7 +133,9 @@ class HealthDashboardState extends ChangeNotifier {
     collectionStatus = 'Starting sync...';
     collectedRecordCount = 0;
     notifyListeners();
+    WakeLockLease? lease;
     try {
+      lease = await PowerWakeLockService.acquireFull();
       final lastSync = forceFullHistory
           ? null
           : await DatabaseService.instance.getSetting(
@@ -144,12 +147,25 @@ class HealthDashboardState extends ChangeNotifier {
           : DateTime.fromMillisecondsSinceEpoch(
               int.parse(lastSync),
             ).subtract(const Duration(days: 1));
-      for (final record in await _healthConnectCollector.collect(
+      final fetchedRecords = await _healthConnectCollector.collect(
         start: start,
         onProgress: _onCollectionProgress,
-      )) {
+      );
+      int savedCount = 0;
+      for (final record in fetchedRecords) {
         await HealthDatabase.instance.upsertCollected(record);
+        savedCount++;
+        if (savedCount % 50 == 0 || savedCount == fetchedRecords.length) {
+          _onCollectionProgress(
+            'Saving to database ($savedCount / ${fetchedRecords.length})...',
+            savedCount,
+          );
+        }
       }
+      _onCollectionProgress(
+        'Refreshing health dashboard...',
+        fetchedRecords.length,
+      );
       await DatabaseService.instance.setSetting(
         HealthDashboardTool.config.id,
         _healthConnectLastSyncKey,
@@ -160,6 +176,7 @@ class HealthDashboardState extends ChangeNotifier {
       error = e.toString();
       debugPrint('[HealthDashboard] Health Connect sync failed: $e');
     } finally {
+      await lease?.release();
       isCollecting = false;
       collectionStatus = null;
       notifyListeners();
@@ -173,14 +190,29 @@ class HealthDashboardState extends ChangeNotifier {
     collectionStatus = 'Purging local cache...';
     collectedRecordCount = 0;
     notifyListeners();
+    WakeLockLease? lease;
     try {
+      lease = await PowerWakeLockService.acquireFull();
       await HealthDatabase.instance.purgeHealthConnectCache();
-      for (final record in await _healthConnectCollector.collect(
+      final fetchedRecords = await _healthConnectCollector.collect(
         start: DateTime.utc(1970),
         onProgress: _onCollectionProgress,
-      )) {
+      );
+      int savedCount = 0;
+      for (final record in fetchedRecords) {
         await HealthDatabase.instance.upsertCollected(record);
+        savedCount++;
+        if (savedCount % 50 == 0 || savedCount == fetchedRecords.length) {
+          _onCollectionProgress(
+            'Saving to database ($savedCount / ${fetchedRecords.length})...',
+            savedCount,
+          );
+        }
       }
+      _onCollectionProgress(
+        'Refreshing health dashboard...',
+        fetchedRecords.length,
+      );
       await DatabaseService.instance.setSetting(
         HealthDashboardTool.config.id,
         _healthConnectLastSyncKey,
@@ -191,6 +223,7 @@ class HealthDashboardState extends ChangeNotifier {
       error = e.toString();
       debugPrint('[HealthDashboard] Health Connect repair failed: $e');
     } finally {
+      await lease?.release();
       isCollecting = false;
       collectionStatus = null;
       notifyListeners();
@@ -211,7 +244,7 @@ class HealthDashboardState extends ChangeNotifier {
           _healthConnectLastSyncKey,
         );
         final start = lastSync == null
-            ? DateTime.now().subtract(const Duration(days: 90))
+            ? DateTime.now().subtract(const Duration(days: 7))
             : DateTime.fromMillisecondsSinceEpoch(
                 int.parse(lastSync),
               ).subtract(const Duration(days: 1));
