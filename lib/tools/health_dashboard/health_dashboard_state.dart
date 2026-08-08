@@ -151,9 +151,12 @@ class HealthDashboardState extends ChangeNotifier {
         start: start,
         onProgress: _onCollectionProgress,
       );
+      final devId = await HealthDatabase.instance.deviceId;
       int savedCount = 0;
       for (final record in fetchedRecords) {
-        await HealthDatabase.instance.upsertCollected(record);
+        await HealthDatabase.instance.upsertCollected(
+          record.copyWith(deviceId: devId),
+        );
         savedCount++;
         if (savedCount % 50 == 0 || savedCount == fetchedRecords.length) {
           _onCollectionProgress(
@@ -198,9 +201,12 @@ class HealthDashboardState extends ChangeNotifier {
         start: DateTime.utc(1970),
         onProgress: _onCollectionProgress,
       );
+      final devId = await HealthDatabase.instance.deviceId;
       int savedCount = 0;
       for (final record in fetchedRecords) {
-        await HealthDatabase.instance.upsertCollected(record);
+        await HealthDatabase.instance.upsertCollected(
+          record.copyWith(deviceId: devId),
+        );
         savedCount++;
         if (savedCount % 50 == 0 || savedCount == fetchedRecords.length) {
           _onCollectionProgress(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -15,7 +16,37 @@ class HealthDatabase {
   static final HealthDatabase instance = HealthDatabase._();
   static const _table = 'records';
   static const _backupTable = 'health_records';
+  static const _deviceIdKey = 'health_device_uuid';
   ToolDatabase? _database;
+  String? _deviceId;
+
+  Future<String> get deviceId async {
+    if (_deviceId != null) return _deviceId!;
+    _deviceId = await DatabaseService.instance.getSetting(
+      HealthDashboardTool.config.id,
+      _deviceIdKey,
+    );
+    if (_deviceId == null) {
+      _deviceId = _generateUuid();
+      await DatabaseService.instance.setSetting(
+        HealthDashboardTool.config.id,
+        _deviceIdKey,
+        _deviceId!,
+      );
+    }
+    return _deviceId!;
+  }
+
+  static String _generateUuid() {
+    final rng = Random.secure();
+    final bytes = List<int>.generate(16, (_) => rng.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+        '${hex.substring(12, 16)}-${hex.substring(16, 20)}-'
+        '${hex.substring(20)}';
+  }
 
   Future<ToolDatabase> _db() async {
     if (_database != null) return _database!;
@@ -23,7 +54,7 @@ class HealthDatabase {
       HealthDashboardTool.config.id,
     );
     await _database!.migrate(
-      currentVersion: 1,
+      currentVersion: 2,
       onMigrate: (txn, oldVersion, newVersion) async {
         if (oldVersion < 1) {
           await txn.execute('''
@@ -42,9 +73,22 @@ class HealthDatabase {
               updated_at INTEGER NOT NULL,
               deleted INTEGER NOT NULL DEFAULT 0,
               synced INTEGER NOT NULL DEFAULT 0,
+              device_id TEXT,
               UNIQUE(source, source_record_id)
             )
           ''');
+        }
+        if (oldVersion >= 1 && oldVersion < 2) {
+          final tableName = txn.nameTable(_table);
+          await txn.execute(
+            'ALTER TABLE $tableName ADD COLUMN device_id TEXT',
+          );
+          final devId = await deviceId;
+          await txn.execute(
+            "UPDATE $tableName SET device_id = ? WHERE source = 'healthConnect'",
+            [devId],
+          );
+          debugPrint('[HealthDatabase] Backfilled device_id=$devId on existing healthConnect records');
         }
       },
     );
@@ -283,7 +327,12 @@ class HealthDatabase {
 
   Future<void> purgeHealthConnectCache() async {
     final db = await _db();
-    await db.delete(_table, where: "source = 'healthConnect'");
+    final devId = await deviceId;
+    await db.delete(
+      _table,
+      where: "source = 'healthConnect' AND device_id = ?",
+      whereArgs: [devId],
+    );
   }
 
   Future<String> exportHealthConnectJson() async {

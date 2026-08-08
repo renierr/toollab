@@ -12,6 +12,7 @@ class HealthRecord {
   final Map<String, dynamic> value;
   final String? sourceName;
   final String? duplicateOf;
+  final String? deviceId;
   final bool aggregateIncluded;
   final int createdAt;
   final int updatedAt;
@@ -28,6 +29,7 @@ class HealthRecord {
     required this.value,
     this.sourceName,
     this.duplicateOf,
+    this.deviceId,
     required this.aggregateIncluded,
     required this.createdAt,
     required this.updatedAt,
@@ -45,6 +47,7 @@ class HealthRecord {
     'value_json': jsonEncode(value),
     'source_name': sourceName,
     'duplicate_of': duplicateOf,
+    'device_id': deviceId,
     'aggregate_included': aggregateIncluded ? 1 : 0,
     'created_at': createdAt,
     'updated_at': updatedAt,
@@ -66,6 +69,7 @@ class HealthRecord {
           : Map<String, dynamic>.from(rawValue as Map),
       sourceName: map['source_name'] as String?,
       duplicateOf: map['duplicate_of'] as String?,
+      deviceId: map['device_id'] as String?,
       aggregateIncluded: (map['aggregate_included'] as int? ?? 1) == 1,
       createdAt: map['created_at'] as int,
       updatedAt: map['updated_at'] as int,
@@ -76,6 +80,7 @@ class HealthRecord {
 
   HealthRecord copyWith({
     String? duplicateOf,
+    String? deviceId,
     bool? aggregateIncluded,
     int? updatedAt,
     bool? deleted,
@@ -90,6 +95,7 @@ class HealthRecord {
     value: value,
     sourceName: sourceName,
     duplicateOf: duplicateOf ?? this.duplicateOf,
+    deviceId: deviceId ?? this.deviceId,
     aggregateIncluded: aggregateIncluded ?? this.aggregateIncluded,
     createdAt: createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
