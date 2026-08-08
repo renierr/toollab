@@ -7,6 +7,8 @@ import '../health_dashboard_state.dart';
 import 'health_sleep_stage_timeline.dart';
 import 'health_source_badge.dart';
 import 'health_day_navigation.dart';
+import 'health_metric_history.dart';
+import 'health_workout_trend_chart.dart';
 
 class HealthSleepDetailsPage extends StatelessWidget {
   final HealthRecord record;
@@ -68,6 +70,28 @@ class HealthSleepDetailsPage extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: HealthDayNavigation(),
           ),
+          Text(
+            l10n.healthDashboardLastSevenDays,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: HealthWorkoutTrendChart(
+                values: state.weeklyMetricValues(
+                  'sleep.session',
+                  'durationMinutes',
+                ),
+                unit: 'min',
+                color: Colors.indigo,
+                style: HealthTrendChartStyle.bars,
+                endDate: state.trendWeekEnd,
+                onDayTap: (index) => state.selectDay(state.trendDayAt(index)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -169,6 +193,18 @@ class HealthSleepDetailsPage extends StatelessWidget {
               ),
             ),
           ],
+          const SizedBox(height: 24),
+          Text(
+            l10n.healthDashboardHistory,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          HealthMetricHistory(
+            records: state.recordsOfType('sleep.session'),
+            valueKey: 'durationMinutes',
+            unit: 'min',
+            isNap: state.isNap,
+          ),
         ],
       ),
     );
