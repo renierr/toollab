@@ -17,6 +17,7 @@ class HealthDashboardState extends ChangeNotifier {
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
   static const _healthConnectLastSyncKey = 'health_connect_last_sync';
   static const _sourcePreferencePrefix = 'source_preference_';
+  static const _dashboardWindow = Duration(days: 120);
 
   final _treadmillCollector = TreadmillCollector();
   final _healthConnectCollector = HealthConnectCollector();
@@ -28,6 +29,11 @@ class HealthDashboardState extends ChangeNotifier {
   int trendDayOffset = 0;
   final Map<String, String?> sourcePreferences = {};
   String? error;
+  double allTimeDistanceKm = 0;
+  int allTimeCalories = 0;
+  int allTimeDurationSeconds = 0;
+  int allTimeSteps = 0;
+  int allTimeWorkouts = 0;
 
   HealthDashboardState() {
     load();
@@ -38,7 +44,15 @@ class HealthDashboardState extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      records = await HealthDatabase.instance.activeRecords();
+      records = await HealthDatabase.instance.activeRecordsSince(
+        DateTime.now().subtract(_dashboardWindow),
+      );
+      final summary = await HealthDatabase.instance.allTimeWorkoutSummary();
+      allTimeDistanceKm = summary['distance']!.toDouble();
+      allTimeCalories = summary['calories']!.round();
+      allTimeDurationSeconds = summary['duration']!.round();
+      allTimeWorkouts = summary['workouts']!.toInt();
+      allTimeSteps = await HealthDatabase.instance.allTimeSteps();
       showTreadmillWorkouts =
           await DatabaseService.instance.getSetting(
             HealthDashboardTool.config.id,
@@ -75,7 +89,7 @@ class HealthDashboardState extends ChangeNotifier {
       for (final record in await _treadmillCollector.collect()) {
         await HealthDatabase.instance.upsertCollected(record);
       }
-      records = await HealthDatabase.instance.activeRecords();
+      await load();
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Collection failed: $e');
@@ -121,7 +135,7 @@ class HealthDashboardState extends ChangeNotifier {
         _healthConnectLastSyncKey,
         DateTime.now().millisecondsSinceEpoch.toString(),
       );
-      records = await HealthDatabase.instance.activeRecords();
+      await load();
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Health Connect sync failed: $e');
@@ -147,7 +161,7 @@ class HealthDashboardState extends ChangeNotifier {
         _healthConnectLastSyncKey,
         DateTime.now().millisecondsSinceEpoch.toString(),
       );
-      records = await HealthDatabase.instance.activeRecords();
+      await load();
     } catch (e) {
       error = e.toString();
       debugPrint('[HealthDashboard] Health Connect repair failed: $e');

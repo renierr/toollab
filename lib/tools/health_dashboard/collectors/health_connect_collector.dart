@@ -163,9 +163,23 @@ class HealthConnectCollector implements HealthDataCollector {
         'dataType': record.dataType.id,
         'category': record.category.name,
         'recordType': record.runtimeType.toString(),
+        ..._genericValues(record),
       },
     );
   }
+
+  Map<String, dynamic> _genericValues(hc.HealthRecord record) =>
+      switch (record) {
+        hc.FloorsClimbedRecord(:final count) => {'floors': count.value},
+        hc.ExerciseTimeRecord(:final exerciseTime) => {
+          'minutes': exerciseTime.inMinutes,
+        },
+        hc.MoveTimeRecord(:final moveTime) => {'minutes': moveTime.inMinutes},
+        hc.StandTimeRecord(:final standTime) => {
+          'minutes': standTime.inMinutes,
+        },
+        _ => const {},
+      };
 
   HealthRecord _steps(hc.StepsRecord record) => _record(
     record: record,

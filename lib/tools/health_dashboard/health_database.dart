@@ -59,6 +59,89 @@ class HealthDatabase {
     return rows.map(HealthRecord.fromMap).toList();
   }
 
+  Future<List<HealthRecord>> activeRecordsSince(DateTime start) async {
+    final db = await _db();
+    final rows = await db.query(
+      _table,
+      where: 'deleted = 0 AND end_time >= ?',
+      whereArgs: [start.millisecondsSinceEpoch],
+      orderBy: 'start_time DESC',
+    );
+    return rows.map(HealthRecord.fromMap).toList();
+  }
+
+  Future<List<HealthRecord>> recentRecords({int limit = 200}) async {
+    final db = await _db();
+    final rows = await db.query(
+      _table,
+      where: 'deleted = 0',
+      orderBy: 'start_time DESC',
+      limit: limit,
+    );
+    return rows.map(HealthRecord.fromMap).toList();
+  }
+
+  Future<List<HealthRecord>> recordsPage({
+    String? typePrefix,
+    String? type,
+    int offset = 0,
+    int limit = 100,
+  }) async {
+    final db = await _db();
+    final where = <String>['deleted = 0'];
+    final arguments = <Object?>[];
+    if (type != null) {
+      where.add('type = ?');
+      arguments.add(type);
+    } else if (typePrefix != null) {
+      where.add('type LIKE ?');
+      arguments.add('$typePrefix%');
+    }
+    final rows = await db.query(
+      _table,
+      where: where.join(' AND '),
+      whereArgs: arguments,
+      orderBy: 'start_time DESC',
+      limit: limit,
+      offset: offset,
+    );
+    return rows.map(HealthRecord.fromMap).toList();
+  }
+
+  Future<Map<String, num>> allTimeWorkoutSummary() async {
+    final db = await _db();
+    final rows = await db.rawQuery('''
+      SELECT
+        COALESCE(SUM(CAST(json_extract(value_json, '\$.distanceKm') AS REAL)), 0) AS distance,
+        COALESCE(SUM(CAST(json_extract(value_json, '\$.calories') AS REAL)), 0) AS calories,
+        COALESCE(SUM(CASE
+          WHEN type = 'workout.treadmill'
+            THEN CAST(json_extract(value_json, '\$.durationSeconds') AS INTEGER)
+          ELSE (end_time - start_time) / 1000
+        END), 0) AS duration,
+        COUNT(*) AS workouts
+      FROM ${db.nameTable(_table)}
+      WHERE deleted = 0 AND type LIKE 'workout.%'
+    ''');
+    final row = rows.single;
+    return {
+      'distance': (row['distance'] as num?) ?? 0,
+      'calories': (row['calories'] as num?) ?? 0,
+      'duration': (row['duration'] as num?) ?? 0,
+      'workouts': (row['workouts'] as num?) ?? 0,
+    };
+  }
+
+  Future<int> allTimeSteps() async {
+    final db = await _db();
+    final rows = await db.rawQuery('''
+      SELECT COALESCE(SUM(CAST(json_extract(value_json, '\$.count') AS INTEGER)), 0) AS steps
+      FROM ${db.nameTable(_table)}
+      WHERE deleted = 0 AND type = 'activity.steps'
+    ''');
+    return (rows.single['steps'] as num?)?.toInt() ?? 0;
+  }
+
   Future<List<Map<String, dynamic>>> syncRecords() async {
     final db = await _db();
     return db.query(_table, columns: ['id', 'updated_at', 'deleted']);

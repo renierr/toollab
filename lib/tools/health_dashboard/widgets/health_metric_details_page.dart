@@ -31,7 +31,6 @@ class HealthMetricDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<HealthDashboardState>();
-    final records = workoutMetric ? state.workouts : state.recordsOfType(type);
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(title)),
@@ -71,7 +70,7 @@ class HealthMetricDetailsPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           HealthMetricHistory(
-            records: records,
+            type: type,
             valueKey: valueKey,
             unit: unit,
             isNap: state.isNap,

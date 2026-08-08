@@ -200,7 +200,7 @@ class HealthSleepDetailsPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           HealthMetricHistory(
-            records: state.recordsOfType('sleep.session'),
+            type: 'sleep.session',
             valueKey: 'durationMinutes',
             unit: 'min',
             isNap: state.isNap,
