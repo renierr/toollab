@@ -26,7 +26,10 @@ class HealthConnectCollector implements HealthDataCollector {
   }
 
   @override
-  Future<List<HealthRecord>> collect({DateTime? start}) async {
+  Future<List<HealthRecord>> collect({
+    DateTime? start,
+    void Function(String status, int count)? onProgress,
+  }) async {
     if (!Platform.isAndroid) return [];
     final connector = await hc.HealthConnector.create();
     final end = DateTime.now();
@@ -34,10 +37,10 @@ class HealthConnectCollector implements HealthDataCollector {
         start ?? DateTime.now().subtract(const Duration(days: 90));
     final records = <HealthRecord>[];
 
-    // Persist every readable record so data that has no dedicated dashboard yet
-    // remains available in All Health Data. Rich converters below replace these.
-    records.addAll(await _allRecords(connector, importStart, end));
+    onProgress?.call('Fetching Health Connect records...', 0);
+    records.addAll(await _allRecords(connector, importStart, end, onProgress));
 
+    onProgress?.call('Reading step counts...', records.length);
     final steps = await _safeReadRecords<hc.StepsRecord>(
       (token) => connector.readRecords(
         hc.HealthDataType.steps.readInTimeRange(
@@ -50,6 +53,7 @@ class HealthConnectCollector implements HealthDataCollector {
     );
     records.addAll(steps.map(_steps));
 
+    onProgress?.call('Reading weight & body measurements...', records.length);
     final weights = await _safeReadRecords<hc.WeightRecord>(
       (token) => connector.readRecords(
         hc.HealthDataType.weight.readInTimeRange(
@@ -62,6 +66,7 @@ class HealthConnectCollector implements HealthDataCollector {
     );
     records.addAll(weights.map(_weight));
 
+    onProgress?.call('Reading heart rate & vitals...', records.length);
     final heartRates = await _safeReadRecords<hc.HeartRateSeriesRecord>(
       (token) => connector.readRecords(
         hc.HealthDataType.heartRateSeries.readInTimeRange(
@@ -98,6 +103,7 @@ class HealthConnectCollector implements HealthDataCollector {
     );
     records.addAll(restingRates.map(_restingHeartRate));
 
+    onProgress?.call('Reading sleep sessions...', records.length);
     final sleep = await _safeReadRecords<hc.SleepSessionRecord>(
       (token) => connector.readRecords(
         hc.HealthDataType.sleepSession.readInTimeRange(
@@ -110,6 +116,7 @@ class HealthConnectCollector implements HealthDataCollector {
     );
     records.addAll(sleep.map(_sleep));
 
+    onProgress?.call('Reading workouts & activities...', records.length);
     final workouts = await _safeReadRecords<hc.ExerciseSessionRecord>(
       (token) => connector.readRecords(
         hc.HealthDataType.exerciseSession.readInTimeRange(
@@ -163,6 +170,7 @@ class HealthConnectCollector implements HealthDataCollector {
         ),
       ),
     );
+    onProgress?.call('Import completed', records.length);
     return records;
   }
 
@@ -190,6 +198,7 @@ class HealthConnectCollector implements HealthDataCollector {
     hc.HealthConnector connector,
     DateTime start,
     DateTime end,
+    void Function(String status, int count)? onProgress,
   ) async {
     final records = <HealthRecord>[];
     for (final type in hc.HealthDataType.healthConnectDataTypes) {
@@ -210,6 +219,10 @@ class HealthConnectCollector implements HealthDataCollector {
             (response.records as List).map(
               (r) => _genericRecord(r as hc.HealthRecord),
             ),
+          );
+          onProgress?.call(
+            'Importing ${readable.runtimeType}...',
+            records.length,
           );
           pageToken =
               (response as dynamic).pageToken as String? ??

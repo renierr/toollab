@@ -35,6 +35,15 @@ class HealthDashboardState extends ChangeNotifier {
   int allTimeSteps = 0;
   int allTimeWorkouts = 0;
 
+  String? collectionStatus;
+  int collectedRecordCount = 0;
+
+  void _onCollectionProgress(String status, int count) {
+    collectionStatus = status;
+    collectedRecordCount = count;
+    notifyListeners();
+  }
+
   HealthDashboardState() {
     load();
   }
@@ -120,6 +129,8 @@ class HealthDashboardState extends ChangeNotifier {
     if (isCollecting) return;
     isCollecting = true;
     error = null;
+    collectionStatus = 'Starting sync...';
+    collectedRecordCount = 0;
     notifyListeners();
     try {
       final lastSync = forceFullHistory
@@ -135,6 +146,7 @@ class HealthDashboardState extends ChangeNotifier {
             ).subtract(const Duration(days: 1));
       for (final record in await _healthConnectCollector.collect(
         start: start,
+        onProgress: _onCollectionProgress,
       )) {
         await HealthDatabase.instance.upsertCollected(record);
       }
@@ -149,6 +161,7 @@ class HealthDashboardState extends ChangeNotifier {
       debugPrint('[HealthDashboard] Health Connect sync failed: $e');
     } finally {
       isCollecting = false;
+      collectionStatus = null;
       notifyListeners();
     }
   }
@@ -157,11 +170,14 @@ class HealthDashboardState extends ChangeNotifier {
     if (isCollecting) return;
     isCollecting = true;
     error = null;
+    collectionStatus = 'Purging local cache...';
+    collectedRecordCount = 0;
     notifyListeners();
     try {
       await HealthDatabase.instance.purgeHealthConnectCache();
       for (final record in await _healthConnectCollector.collect(
         start: DateTime.utc(1970),
+        onProgress: _onCollectionProgress,
       )) {
         await HealthDatabase.instance.upsertCollected(record);
       }
@@ -176,6 +192,7 @@ class HealthDashboardState extends ChangeNotifier {
       debugPrint('[HealthDashboard] Health Connect repair failed: $e');
     } finally {
       isCollecting = false;
+      collectionStatus = null;
       notifyListeners();
     }
   }

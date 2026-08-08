@@ -10,6 +10,7 @@ import '../health_connect_settings.dart';
 import '../health_sync_delegate.dart';
 import 'health_source_preferences_page.dart';
 import 'health_backup_actions.dart';
+import 'health_import_progress_dialog.dart';
 
 class HealthDashboardSettingsPage extends StatelessWidget {
   const HealthDashboardSettingsPage({super.key});
@@ -204,7 +205,12 @@ class HealthDashboardSettingsPage extends StatelessWidget {
   Future<void> _importHealthConnect(BuildContext context) async {
     final healthState = context.read<HealthDashboardState>();
     final messenger = ScaffoldMessenger.of(context);
-    await healthState.connectHealthConnect();
+    HealthImportProgressDialog.show(context);
+    try {
+      await healthState.connectHealthConnect();
+    } finally {
+      if (context.mounted) Navigator.of(context).pop();
+    }
     if (!context.mounted) return;
     if (healthState.error != null) {
       debugPrint(
@@ -251,7 +257,12 @@ class HealthDashboardSettingsPage extends StatelessWidget {
 
     final healthState = context.read<HealthDashboardState>();
     final messenger = ScaffoldMessenger.of(context);
-    await healthState.repairHealthConnectCache();
+    HealthImportProgressDialog.show(context);
+    try {
+      await healthState.repairHealthConnectCache();
+    } finally {
+      if (context.mounted) Navigator.of(context).pop();
+    }
     if (!context.mounted) return;
     if (healthState.error != null) {
       debugPrint(
