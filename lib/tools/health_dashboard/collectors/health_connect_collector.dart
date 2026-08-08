@@ -60,7 +60,14 @@ class HealthConnectCollector implements HealthDataCollector {
         endTime: end,
       ),
     );
+    final instantHeartRates = await connector.readRecords(
+      hc.HealthDataType.heartRate.readInTimeRange(
+        startTime: importStart,
+        endTime: end,
+      ),
+    );
     records.addAll(heartRates.records.map(_heartRate));
+    records.addAll(instantHeartRates.records.map(_instantHeartRate));
 
     final restingRates = await connector.readRecords(
       hc.HealthDataType.restingHeartRate.readInTimeRange(
@@ -102,6 +109,7 @@ class HealthConnectCollector implements HealthDataCollector {
         endTime: end,
       ),
     );
+    final usedMetricIds = <String>{};
     records.addAll(
       workouts.records.map(
         (workout) => _workout(
@@ -110,6 +118,7 @@ class HealthConnectCollector implements HealthDataCollector {
           distances.records,
           activeEnergy.records,
           speeds.records,
+          usedMetricIds,
         ),
       ),
     );
@@ -202,6 +211,24 @@ class HealthConnectCollector implements HealthDataCollector {
     value: {'bpm': record.rate.inPerMinute},
   );
 
+  HealthRecord _instantHeartRate(hc.HeartRateRecord record) => _record(
+    record: record,
+    type: 'heart.rate',
+    startTime: record.time,
+    endTime: record.time,
+    value: {
+      'averageBpm': record.rate.inPerMinute,
+      'minimumBpm': record.rate.inPerMinute,
+      'maximumBpm': record.rate.inPerMinute,
+      'samples': [
+        {
+          'time': record.time.millisecondsSinceEpoch,
+          'bpm': record.rate.inPerMinute,
+        },
+      ],
+    },
+  );
+
   HealthRecord _sleep(hc.SleepSessionRecord record) => _record(
     record: record,
     type: 'sleep.session',
@@ -227,13 +254,20 @@ class HealthConnectCollector implements HealthDataCollector {
     List<hc.DistanceRecord> distances,
     List<hc.ActiveEnergyBurnedRecord> activeEnergy,
     List<hc.SpeedSeriesRecord> speeds,
+    Set<String> usedMetricIds,
   ) {
     final matchingHeartRates = heartRates.where(
-      (item) => _matches(record, item),
+      (item) => _matches(record, item) && usedMetricIds.add(item.id.value),
     );
-    final matchingDistances = distances.where((item) => _matches(record, item));
-    final matchingEnergy = activeEnergy.where((item) => _matches(record, item));
-    final matchingSpeeds = speeds.where((item) => _matches(record, item));
+    final matchingDistances = distances.where(
+      (item) => _matches(record, item) && usedMetricIds.add(item.id.value),
+    );
+    final matchingEnergy = activeEnergy.where(
+      (item) => _matches(record, item) && usedMetricIds.add(item.id.value),
+    );
+    final matchingSpeeds = speeds.where(
+      (item) => _matches(record, item) && usedMetricIds.add(item.id.value),
+    );
     final heartSamples = matchingHeartRates
         .expand((item) => item.samples)
         .map(

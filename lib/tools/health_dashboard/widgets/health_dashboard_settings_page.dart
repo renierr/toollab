@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 
 import '../health_dashboard_state.dart';
+import '../health_connect_settings.dart';
 import '../health_sync_delegate.dart';
 import 'health_source_preferences_page.dart';
 import 'health_backup_actions.dart';
@@ -43,7 +44,7 @@ class HealthDashboardSettingsPage extends StatelessWidget {
           _SettingsSection(title: l10n.healthDashboardHealthConnect),
           ListTile(
             leading: const Icon(Icons.health_and_safety_outlined),
-            title: Text(l10n.healthDashboardImportHealthConnect),
+            title: Text(l10n.healthDashboardManageHealthConnect),
             subtitle: Text(l10n.healthDashboardConnectHealthConnectSubtitle),
             trailing: healthState.isCollecting
                 ? const SizedBox(
@@ -52,6 +53,12 @@ class HealthDashboardSettingsPage extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.chevron_right_rounded),
+            onTap: healthState.isCollecting ? null : HealthConnectSettings.open,
+          ),
+          ListTile(
+            leading: const Icon(Icons.download_rounded),
+            title: Text(l10n.healthDashboardImportHealthConnect),
+            subtitle: Text(l10n.healthDashboardConnectHealthConnectSubtitle),
             onTap: healthState.isCollecting
                 ? null
                 : () => context

@@ -24,6 +24,7 @@ open class MainActivity : FlutterFragmentActivity() {
     private val MULTICAST_CHANNEL = "de.renier.tool_lab/multicast"
     private val STORAGE_ACCESS_CHANNEL = "de.renier.tool_lab/storage_access"
     private val NATIVE_MEDIA_PLAYER_CHANNEL = "de.renier.tool_lab/native_media_player"
+    private val HEALTH_CONNECT_CHANNEL = "de.renier.tool_lab/health_connect"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
     private var systemAudioPlayerHelper: SystemAudioPlayerHelper? = null
@@ -190,6 +191,22 @@ open class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         val messenger = flutterEngine.dartExecutor.binaryMessenger
+
+        MethodChannel(messenger, HEALTH_CONNECT_CHANNEL).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "openSettings" -> {
+                    try {
+                        startActivity(Intent("androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS").apply {
+                            putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
+                        })
+                        result.success(null)
+                    } catch (error: Exception) {
+                        result.error("HEALTH_CONNECT_SETTINGS", error.message, null)
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
 
         MethodChannel(messenger, FILE_PICKER_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {

@@ -6334,6 +6334,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Health Connect jetzt importieren';
 
   @override
+  String get healthDashboardManageHealthConnect => 'Health Connect verwalten';
+
+  @override
   String get healthDashboardRepairHealthConnect =>
       'Health-Connect-Zwischenspeicher reparieren';
 

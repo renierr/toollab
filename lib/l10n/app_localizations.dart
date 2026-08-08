@@ -11423,6 +11423,12 @@ abstract class AppLocalizations {
   /// **'Import Health Connect now'**
   String get healthDashboardImportHealthConnect;
 
+  /// No description provided for @healthDashboardManageHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Health Connect'**
+  String get healthDashboardManageHealthConnect;
+
   /// No description provided for @healthDashboardRepairHealthConnect.
   ///
   /// In en, this message translates to:
