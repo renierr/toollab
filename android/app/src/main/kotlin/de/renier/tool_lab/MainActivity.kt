@@ -9,14 +9,14 @@ import android.os.Environment
 import android.provider.Settings
 import android.provider.OpenableColumns
 import androidx.core.app.ActivityCompat
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
 
-open class MainActivity : FlutterActivity() {
+open class MainActivity : FlutterFragmentActivity() {
     private val SHORTCUTS_CHANNEL = "de.renier.tool_lab/shortcuts"
     private val FOREGROUND_RUNTIME_CHANNEL = "de.renier.tool_lab/foreground_runtime"
     private val FILE_SAVE_CHANNEL = "de.renier.tool_lab/file_save"

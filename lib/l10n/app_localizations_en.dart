@@ -6196,4 +6196,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileManagerDocuments => 'Documents';
+
+  @override
+  String get toolNameHealthDashboard => 'Health Dashboard';
+
+  @override
+  String get toolDescHealthDashboard =>
+      'Bring your health data and workouts together';
+
+  @override
+  String get healthDashboardRefresh => 'Refresh health data';
+
+  @override
+  String get healthDashboardHeadline => 'Your health, in focus';
+
+  @override
+  String get healthDashboardSubtitle =>
+      'A single private view of your activity and recovery.';
+
+  @override
+  String get healthDashboardDistance => 'Distance';
+
+  @override
+  String get healthDashboardCalories => 'Calories';
+
+  @override
+  String get healthDashboardActiveTime => 'Active time';
+
+  @override
+  String get healthDashboardWorkouts => 'Workouts';
+
+  @override
+  String get healthDashboardRecentActivity => 'Recent activity';
+
+  @override
+  String get healthDashboardNoData =>
+      'No health data yet. Sync a treadmill workout or connect Health Connect on Android.';
+
+  @override
+  String get healthDashboardTreadmillRun => 'Treadmill run';
+
+  @override
+  String get healthDashboardConnectHealthConnect => 'Connect Health Connect';
 }

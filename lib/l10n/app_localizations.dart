@@ -11242,6 +11242,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Documents'**
   String get fileManagerDocuments;
+
+  /// No description provided for @toolNameHealthDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Dashboard'**
+  String get toolNameHealthDashboard;
+
+  /// No description provided for @toolDescHealthDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring your health data and workouts together'**
+  String get toolDescHealthDashboard;
+
+  /// No description provided for @healthDashboardRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh health data'**
+  String get healthDashboardRefresh;
+
+  /// No description provided for @healthDashboardHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your health, in focus'**
+  String get healthDashboardHeadline;
+
+  /// No description provided for @healthDashboardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A single private view of your activity and recovery.'**
+  String get healthDashboardSubtitle;
+
+  /// No description provided for @healthDashboardDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get healthDashboardDistance;
+
+  /// No description provided for @healthDashboardCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get healthDashboardCalories;
+
+  /// No description provided for @healthDashboardActiveTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Active time'**
+  String get healthDashboardActiveTime;
+
+  /// No description provided for @healthDashboardWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get healthDashboardWorkouts;
+
+  /// No description provided for @healthDashboardRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get healthDashboardRecentActivity;
+
+  /// No description provided for @healthDashboardNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No health data yet. Sync a treadmill workout or connect Health Connect on Android.'**
+  String get healthDashboardNoData;
+
+  /// No description provided for @healthDashboardTreadmillRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Treadmill run'**
+  String get healthDashboardTreadmillRun;
+
+  /// No description provided for @healthDashboardConnectHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect Health Connect'**
+  String get healthDashboardConnectHealthConnect;
 }
 
 class _AppLocalizationsDelegate

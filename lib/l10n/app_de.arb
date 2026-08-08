@@ -2322,5 +2322,18 @@
   "@fileManagerMoreEntries": { "placeholders": { "count": { "type": "int" } } },
   "fileManagerSkip": "Überspringen",
   "fileManagerApplyToAll": "Auf alle Konflikte anwenden",
-  "fileManagerDocuments": "Dokumente"
+  "fileManagerDocuments": "Dokumente",
+  "toolNameHealthDashboard": "Gesundheits-Dashboard",
+  "toolDescHealthDashboard": "Gesundheitsdaten und Workouts zusammenfuehren",
+  "healthDashboardRefresh": "Gesundheitsdaten aktualisieren",
+  "healthDashboardHeadline": "Deine Gesundheit im Blick",
+  "healthDashboardSubtitle": "Eine private Ansicht fuer Aktivitaet und Erholung.",
+  "healthDashboardDistance": "Distanz",
+  "healthDashboardCalories": "Kalorien",
+  "healthDashboardActiveTime": "Aktive Zeit",
+  "healthDashboardWorkouts": "Workouts",
+  "healthDashboardRecentActivity": "Letzte Aktivitaeten",
+  "healthDashboardNoData": "Noch keine Gesundheitsdaten. Synchronisiere ein Laufband-Workout oder verbinde Health Connect auf Android.",
+  "healthDashboardTreadmillRun": "Laufbandlauf",
+  "healthDashboardConnectHealthConnect": "Health Connect verbinden"
 }

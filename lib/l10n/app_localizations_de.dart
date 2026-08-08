@@ -6235,4 +6235,46 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileManagerDocuments => 'Dokumente';
+
+  @override
+  String get toolNameHealthDashboard => 'Gesundheits-Dashboard';
+
+  @override
+  String get toolDescHealthDashboard =>
+      'Gesundheitsdaten und Workouts zusammenfuehren';
+
+  @override
+  String get healthDashboardRefresh => 'Gesundheitsdaten aktualisieren';
+
+  @override
+  String get healthDashboardHeadline => 'Deine Gesundheit im Blick';
+
+  @override
+  String get healthDashboardSubtitle =>
+      'Eine private Ansicht fuer Aktivitaet und Erholung.';
+
+  @override
+  String get healthDashboardDistance => 'Distanz';
+
+  @override
+  String get healthDashboardCalories => 'Kalorien';
+
+  @override
+  String get healthDashboardActiveTime => 'Aktive Zeit';
+
+  @override
+  String get healthDashboardWorkouts => 'Workouts';
+
+  @override
+  String get healthDashboardRecentActivity => 'Letzte Aktivitaeten';
+
+  @override
+  String get healthDashboardNoData =>
+      'Noch keine Gesundheitsdaten. Synchronisiere ein Laufband-Workout oder verbinde Health Connect auf Android.';
+
+  @override
+  String get healthDashboardTreadmillRun => 'Laufbandlauf';
+
+  @override
+  String get healthDashboardConnectHealthConnect => 'Health Connect verbinden';
 }

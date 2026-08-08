@@ -3163,5 +3163,18 @@
   "@fileManagerMoreEntries": { "placeholders": { "count": { "type": "int" } } },
   "fileManagerSkip": "Skip",
   "fileManagerApplyToAll": "Apply to all conflicts",
-  "fileManagerDocuments": "Documents"
+  "fileManagerDocuments": "Documents",
+  "toolNameHealthDashboard": "Health Dashboard",
+  "toolDescHealthDashboard": "Bring your health data and workouts together",
+  "healthDashboardRefresh": "Refresh health data",
+  "healthDashboardHeadline": "Your health, in focus",
+  "healthDashboardSubtitle": "A single private view of your activity and recovery.",
+  "healthDashboardDistance": "Distance",
+  "healthDashboardCalories": "Calories",
+  "healthDashboardActiveTime": "Active time",
+  "healthDashboardWorkouts": "Workouts",
+  "healthDashboardRecentActivity": "Recent activity",
+  "healthDashboardNoData": "No health data yet. Sync a treadmill workout or connect Health Connect on Android.",
+  "healthDashboardTreadmillRun": "Treadmill run",
+  "healthDashboardConnectHealthConnect": "Connect Health Connect"
 }

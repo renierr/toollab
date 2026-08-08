@@ -31,6 +31,7 @@ import 'package:tool_lab/tools/treadmill_control/config.dart';
 import 'package:tool_lab/tools/sound_finder/config.dart';
 import 'package:tool_lab/tools/compass/config.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
+import 'package:tool_lab/tools/health_dashboard/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -85,6 +86,7 @@ class ToolRegistry {
     BluetoothScannerTool.config,
     StringTransformerTool.config,
     TreadmillControlTool.config,
+    HealthDashboardTool.config,
     FileManagerTool.config,
   ];
 }

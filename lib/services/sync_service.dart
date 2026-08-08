@@ -144,7 +144,9 @@ class SyncService {
       final lMeta = localMetaMap[sMeta.id];
 
       if (sMeta.deleted) {
-        if (lMeta != null) {
+        // A stale server tombstone must not erase a record changed locally
+        // after the deletion was written. The newer local record is pushed below.
+        if (lMeta != null && sMeta.updatedAt >= lMeta.updatedAt) {
           await delegate.finalizeLocalSync(sMeta.id, true);
           deletedCount++;
         }
