@@ -5,7 +5,9 @@ import 'config.dart';
 import 'health_database.dart';
 import 'health_record.dart';
 
-class HealthDashboardSyncDelegate implements SyncDelegate {
+class HealthDashboardSyncDelegate
+    with DefaultSyncDelegate
+    implements SyncDelegate {
   static const _cursorPrefix = 'sync_cursor_';
   @override
   String get toolId => HealthDashboardTool.config.id;

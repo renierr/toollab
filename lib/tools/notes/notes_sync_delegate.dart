@@ -2,7 +2,7 @@ import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/tools/notes/config.dart';
 import 'package:tool_lab/tools/notes/notes_db_helper.dart';
 
-class NotesSyncDelegate implements SyncDelegate {
+class NotesSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => NotesTool.config.id;
 

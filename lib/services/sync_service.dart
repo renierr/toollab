@@ -9,18 +9,13 @@ abstract class SyncDelegate {
 
   Future<List<Map<String, dynamic>>> getLocalSyncRecords();
 
-  Future<List<Map<String, dynamic>>> getLocalSyncRecordsByIds(
-    List<String> ids,
-  ) async => (await getLocalSyncRecords())
-      .where((record) => ids.contains(record['id']))
-      .toList();
+  Future<List<Map<String, dynamic>>> getLocalSyncRecordsByIds(List<String> ids);
 
-  Future<List<Map<String, dynamic>>> getLocalPendingSyncRecords() async =>
-      getLocalSyncRecords();
+  Future<List<Map<String, dynamic>>> getLocalPendingSyncRecords();
 
-  Future<String?> getSyncCursor(String syncId) async => null;
+  Future<String?> getSyncCursor(String syncId);
 
-  Future<void> saveSyncCursor(String syncId, String cursor) async {}
+  Future<void> saveSyncCursor(String syncId, String cursor);
 
   Future<Map<String, dynamic>?> getLocalRecordData(String id);
 
@@ -32,6 +27,25 @@ abstract class SyncDelegate {
   });
 
   Future<void> finalizeLocalSync(String id, bool wasDeleted);
+}
+
+mixin DefaultSyncDelegate implements SyncDelegate {
+  @override
+  Future<List<Map<String, dynamic>>> getLocalSyncRecordsByIds(
+    List<String> ids,
+  ) async => (await getLocalSyncRecords())
+      .where((record) => ids.contains(record['id']))
+      .toList();
+
+  @override
+  Future<List<Map<String, dynamic>>> getLocalPendingSyncRecords() async =>
+      getLocalSyncRecords();
+
+  @override
+  Future<String?> getSyncCursor(String syncId) async => null;
+
+  @override
+  Future<void> saveSyncCursor(String syncId, String cursor) async {}
 }
 
 class SyncService {

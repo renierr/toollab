@@ -1,7 +1,7 @@
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/tools/chiptune/chiptune_archive.dart';
 
-class ChiptuneSyncDelegate implements SyncDelegate {
+class ChiptuneSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => ChiptuneArchive.toolId;
 

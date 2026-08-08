@@ -2,7 +2,7 @@ import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/tools/grocery_list/config.dart';
 import 'grocery_list_db_helper.dart';
 
-class GroceryListSyncDelegate implements SyncDelegate {
+class GroceryListSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => GroceryListTool.config.id;
 

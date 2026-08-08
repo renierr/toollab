@@ -3,7 +3,7 @@ import 'package:tool_lab/services/sync_service.dart';
 import 'config.dart';
 import 'signatures_db_helper.dart';
 
-class SignaturesSyncDelegate implements SyncDelegate {
+class SignaturesSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => SignaturesTool.config.id;
 

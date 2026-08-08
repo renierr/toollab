@@ -3,7 +3,7 @@ import 'package:tool_lab/services/sync_service.dart';
 import 'config.dart';
 import 'sketch_board_db_helper.dart';
 
-class SketchBoardSyncDelegate implements SyncDelegate {
+class SketchBoardSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => SketchBoardTool.config.id;
 
