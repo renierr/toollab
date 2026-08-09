@@ -163,7 +163,13 @@
   "coreDatabaseImportSuccess": "Datenbank erfolgreich importiert. Deine Daten und Einstellungen wurden wiederhergestellt.",
   "coreDatabaseImportFailed": "Datenbankimport fehlgeschlagen: {error}",
   "coreDatabaseSize": "Aktuelle Datenbankgröße: {size}",
-  "@coreDatabaseSize": { "placeholders": { "size": { "type": "String" } } },
+  "@coreDatabaseSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "coreDatabaseSizeLoading": "Aktuelle Datenbankgröße: Wird geladen...",
   "coreTempFilesTitle": "Temporäre Dateien",
   "coreTempFilesUsage": "{count} Datei(en), {size} belegt",
@@ -624,11 +630,33 @@
   "miscDeviceInfoSystemUptime": "Systemlaufzeit",
   "miscDeviceInfoWindowsUptime": "Laufzeit seit letztem vollständigen Neustart",
   "miscDeviceInfoUptimeDays": "{days} T. {hours} Std.",
-  "@miscDeviceInfoUptimeDays": {"placeholders": {"days": {"type": "int"}, "hours": {"type": "int"}}},
+  "@miscDeviceInfoUptimeDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "miscDeviceInfoUptimeHours": "{hours} Std. {minutes} Min.",
-  "@miscDeviceInfoUptimeHours": {"placeholders": {"hours": {"type": "int"}, "minutes": {"type": "int"}}},
+  "@miscDeviceInfoUptimeHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "miscDeviceInfoStorageVolume": "Speicher: {name}",
-  "@miscDeviceInfoStorageVolume": {"placeholders": {"name": {}}},
+  "@miscDeviceInfoStorageVolume": {
+    "placeholders": {
+      "name": {}
+    }
+  },
   "miscDeviceInfoFree": "frei",
   "miscDeviceInfoWifiSsid": "WLAN-SSID",
   "miscDeviceInfoWifiSignal": "Signal",
@@ -990,7 +1018,7 @@
   "textToolsSummaryTitle": "Zusammenfassung (offline)",
   "textToolsKeywordsTitle": "Schlüsselwörter (offline)",
   "genaiOfflineAnalysisActive": "On-Device-KI nicht verfügbar – Offline-Textanalyse ist aktiv.",
-   "pdfNavModeMetadata": "Metadaten",
+  "pdfNavModeMetadata": "Metadaten",
   "pdfNavModeRedact": "PDF schwärzen",
   "pdfNavCloseSearch": "Suche schließen",
   "pdfNavSearchHint": "Text suchen …",
@@ -1483,14 +1511,20 @@
   "hexEditorScannedBytes": "{scanned} / {total} Bytes gescannt",
   "@hexEditorScannedBytes": {
     "placeholders": {
-      "scanned": { "type": "String" },
-      "total": { "type": "String" }
+      "scanned": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
     }
   },
   "hexEditorFoundStrings": "{count} Zeichenketten gefunden",
   "@hexEditorFoundStrings": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "hexEditorCancelled": "Abgebrochen",
@@ -1499,20 +1533,26 @@
   "hexEditorExportFailed": "Export fehlgeschlagen: {error}",
   "@hexEditorExportFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "hexEditorFailedToLoad": "Datei konnte nicht geladen werden: {error}",
   "@hexEditorFailedToLoad": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "hexEditorOffset": "Offset",
   "hexEditorSize": "Größe: {size} Bytes",
   "@hexEditorSize": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "hexEditorSearchType": "Suchtyp",
@@ -1530,7 +1570,9 @@
   "hexEditorEditByteTitle": "Byte bearbeiten bei {offset}",
   "@hexEditorEditByteTitle": {
     "placeholders": {
-      "offset": { "type": "String" }
+      "offset": {
+        "type": "String"
+      }
     }
   },
   "hexEditorEditByteHex": "Hex",
@@ -1552,7 +1594,9 @@
   "fileConverterError": "Konvertierung fehlgeschlagen: {error}",
   "@fileConverterError": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "fileConverterFormatDocx": "Word (DOCX)",
@@ -1587,7 +1631,9 @@
   "sketchElementCount": "{count} Elemente",
   "@sketchElementCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sketchTextTitle": "Text hinzufügen",
@@ -1597,7 +1643,9 @@
   "sketchDefaultName": "Zeichnung {date}",
   "@sketchDefaultName": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "sketchSaved": "Zeichnung gespeichert",
@@ -1797,7 +1845,9 @@
   "sketchExportLabelImage": "{format}-Bild",
   "@sketchExportLabelImage": {
     "placeholders": {
-      "format": { "type": "String" }
+      "format": {
+        "type": "String"
+      }
     }
   },
   "sketchImageLabel": "Bild",
@@ -1816,14 +1866,18 @@
   "codeHighlightFailedToLoad": "Code konnte nicht geladen werden: {error}",
   "@codeHighlightFailedToLoad": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "codeHighlightCopied": "Code in die Zwischenablage kopiert",
   "codeHighlightFailedToCopy": "Fehler beim Kopieren des Codes: {error}",
   "@codeHighlightFailedToCopy": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "codeHighlightTypeLabel": "Text- oder Quellcodedateien",
@@ -1842,20 +1896,26 @@
   "codeHighlightFormat": "Format",
   "@codeHighlightFailedToCopyImage": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "codeHighlightFailedToSaveImage": "Fehler beim Speichern des Bildes: {error}",
   "@codeHighlightFailedToSaveImage": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "codeHighlightExportWarningTitle": "Warnung: Großes Bild",
   "codeHighlightExportWarningMessage": "Diese Datei enthält {lines} Zeilen. Der Export sehr langer Codedateien als Bild schlägt möglicherweise aufgrund von Speicherbeschränkungen fehl oder der Text ist zu klein, um lesbar zu sein. Wir empfehlen stattdessen den Export als reine Textdatei.",
   "@codeHighlightExportWarningMessage": {
     "placeholders": {
-      "lines": { "type": "int" }
+      "lines": {
+        "type": "int"
+      }
     }
   },
   "toolNameBluetoothScanner": "Bluetooth-Scanner",
@@ -1874,7 +1934,9 @@
   "bleDeviceCount": "{count, plural, =1{1 Gerät} other{{count} Geräte}}",
   "@bleDeviceCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "bleCategoryAudio": "Audio",
@@ -1914,19 +1976,25 @@
   "bleTimeMinutesAgo": "vor {minutes} Min.",
   "@bleTimeMinutesAgo": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "bleTimeHoursAgo": "vor {hours} Std.",
   "@bleTimeHoursAgo": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "bleTimeDaysAgo": "vor {days} Tagen",
   "@bleTimeDaysAgo": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "toolNameStringTransformer": "String-Transformer",
@@ -1937,7 +2005,9 @@
   "stringTransformerCharsCount": "{count} Zeichen",
   "@stringTransformerCharsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "stringTransformerSwap": "Eingabe/Ausgabe vertauschen",
@@ -1957,13 +2027,17 @@
   "stringTransformerFailedToCopy": "Kopieren fehlgeschlagen: {error}",
   "@stringTransformerFailedToCopy": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "stringTransformerInvalidInput": "Fehler: {message}",
   "@stringTransformerInvalidInput": {
     "placeholders": {
-      "message": { "type": "String" }
+      "message": {
+        "type": "String"
+      }
     }
   },
   "stringTransformerNoEmbeddedUrl": "Keine eingebettete URL erkannt.",
@@ -1988,14 +2062,20 @@
   "treadmillHistorySyncSuccess": "Synchronisiert: {pushed} gesendet, {pulled} empfangen",
   "@treadmillHistorySyncSuccess": {
     "placeholders": {
-      "pushed": { "type": "int" },
-      "pulled": { "type": "int" }
+      "pushed": {
+        "type": "int"
+      },
+      "pulled": {
+        "type": "int"
+      }
     }
   },
   "treadmillHistorySyncFailed": "Synchronisierung fehlgeschlagen: {error}",
   "@treadmillHistorySyncFailed": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "treadmillConnectDevices": "Geräte verbinden",
@@ -2040,7 +2120,9 @@
   "treadmillHistoryImportSuccess": "{count} Workouts erfolgreich importiert",
   "@treadmillHistoryImportSuccess": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "treadmillDetailsTitle": "Trainingsdetails",
@@ -2220,7 +2302,9 @@
   "compassTiltLabel": "Neigung {deg}°",
   "@compassTiltLabel": {
     "placeholders": {
-      "deg": { "type": "String" }
+      "deg": {
+        "type": "String"
+      }
     }
   },
   "compassHoldFlatHint": "Halte das Gerät flach und waagerecht für einen genauen Kurs.",
@@ -2250,21 +2334,54 @@
   "fileManagerDiscoverShares": "Freigaben suchen",
   "fileManagerDeleteTitle": "Ausgewählte Dateien löschen?",
   "fileManagerDeleteMessage": "{count} ausgewählte Elemente und alle Inhalte ausgewählter Ordner löschen? Dies kann nicht rückgängig gemacht werden.",
-  "@fileManagerDeleteMessage": { "placeholders": { "count": { "type": "int" } } },
+  "@fileManagerDeleteMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerSelected": "{count} ausgewählt",
-  "@fileManagerSelected": { "placeholders": { "count": { "type": "int" } } },
+  "@fileManagerSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerSelect": "Dateien auswählen",
   "fileManagerSelectAll": "Alle auswählen",
   "fileManagerCopying": "Dateien werden kopiert",
   "fileManagerMoving": "Dateien werden verschoben",
   "fileManagerDeleting": "Dateien werden gelöscht",
   "fileManagerOperationProgress": "{completed} von {total} Dateien verarbeitet",
-  "@fileManagerOperationProgress": { "placeholders": { "completed": { "type": "int" }, "total": { "type": "int" } } },
+  "@fileManagerOperationProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerOperationBackground": "Wird fortgesetzt, wenn ToolLab im Hintergrund ist",
   "fileManagerMoveBuffer": "{count} Element(e) zum Verschieben bereit",
-  "@fileManagerMoveBuffer": { "placeholders": { "count": { "type": "int" } } },
+  "@fileManagerMoveBuffer": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerCopyBuffer": "{count} Element(e) zum Kopieren bereit",
-  "@fileManagerCopyBuffer": { "placeholders": { "count": { "type": "int" } } },
+  "@fileManagerCopyBuffer": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerDropActionTitle": "Abgelegte Dateien hinzufuegen",
   "fileManagerDropActionMessage": "Waehle, ob die abgelegten Dateien kopiert oder verschoben werden sollen.",
   "fileManagerMove": "Verschieben",
@@ -2276,7 +2393,13 @@
   "fileManagerSortAscending": "Aufsteigende Reihenfolge",
   "fileManagerRemoveConnectionTitle": "Verbindung entfernen?",
   "fileManagerRemoveConnectionMessage": "Gespeicherte Verbindung \"{name}\" und das gespeicherte Passwort entfernen?",
-  "@fileManagerRemoveConnectionMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@fileManagerRemoveConnectionMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "fileManagerClearClipboard": "Zwischenablage leeren",
   "fileManagerOpenChooser": "Jedes Mal fragen",
   "fileManagerOpenImages": "Bilder öffnen mit",
@@ -2301,15 +2424,33 @@
   "fileManagerFoldersFirst": "Ordner vor Dateien",
   "fileManagerFileExistsTitle": "Datei existiert bereits",
   "fileManagerFileExistsMessage": "{names} existiert bereits in diesem Ordner.",
-  "@fileManagerFileExistsMessage": { "placeholders": { "names": { "type": "String" } } },
+  "@fileManagerFileExistsMessage": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "fileManagerKeepBoth": "Beide behalten",
   "fileManagerOverwrite": "Überschreiben",
   "fileManagerRecentLocations": "Zuletzt",
   "fileManagerFolderItems": "Elemente",
   "fileManagerFolderFileCount": "{count} Dateien",
-  "@fileManagerFolderFileCount": { "placeholders": { "count": { "type": "int" } } },
+  "@fileManagerFolderFileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerFolderItemCount": "{count} Elemente",
-  "@fileManagerFolderItemCount": { "placeholders": { "count": { "type": "int" } } },
+  "@fileManagerFolderItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerInstallApk": "APK installieren",
   "fileManagerStorage": "Speicher",
   "fileManagerCompressZip": "Als ZIP komprimieren",
@@ -2318,11 +2459,29 @@
   "fileManagerExtracting": "Archiv wird entpackt",
   "fileManagerArchiveConflictTitle": "Archivdateien existieren bereits",
   "fileManagerArchiveConflictMessage": "{count} entpackte Dateien existieren bereits.",
-  "@fileManagerArchiveConflictMessage": { "placeholders": { "count": { "type": "int" } } },
+  "@fileManagerArchiveConflictMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerItemCount": "{count, plural, =1{1 Eintrag} other{{count} Einträge}}",
-  "@fileManagerItemCount": { "placeholders": { "count": { "type": "int" } } },
+  "@fileManagerItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerMoreEntries": "und {count} weitere",
-  "@fileManagerMoreEntries": { "placeholders": { "count": { "type": "int" } } },
+  "@fileManagerMoreEntries": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fileManagerSkip": "Überspringen",
   "fileManagerApplyToAll": "Auf alle Konflikte anwenden",
   "fileManagerDocuments": "Dokumente",
@@ -2361,11 +2520,35 @@
   "healthDashboardHealthConnectImported": "Health-Connect-Daten importiert",
   "healthDashboardHealthConnectRepaired": "Health-Connect-Zwischenspeicher repariert",
   "healthDashboardSyncInProgress": "Synchronisierung läuft bereits",
+  "healthDashboardSyncInProgressBody": "Ein Health-Connect-Import oder eine Cloud-Synchronisierung laeuft noch. Warte bis sie abgeschlossen ist, bevor du eine neue startest.",
   "healthDashboardSyncNoChanges": "Keine Gesundheitsdatenänderungen zum Synchronisieren",
-  "healthDashboardRepairHealthConnect": "Health-Connect-Zwischenspeicher reparieren",
-  "healthDashboardRepairHealthConnectSubtitle": "Importiert den gesamten verfuegbaren Health-Connect-Verlauf erneut und aktualisiert gespeicherte Daten.",
+  "healthDashboardRepairHealthConnect": "Health-Connect-Import neu starten",
+  "healthDashboardRepairHealthConnectSubtitle": "Lokal importierte Health-Connect-Daten loeschen und Historie erneut importieren.",
+  "healthDashboardResetHealthConnectDescription": "Dies entfernt alle lokal importierten Health-Connect-Cache- und kanonischen Daten auf diesem Geraet. Health Connect und Cloud-Daten bleiben unveraendert. Der naechste Import beginnt von vorn und kann lange dauern. Normale Importe werden ab der letzten erfolgreichen Synchronisierung fortgesetzt.",
+  "healthDashboardStartOver": "Neu starten",
   "healthDashboardHealthConnect": "Alle Health Connect Daten importieren",
   "healthDashboardConnectHealthConnectSubtitle": "Fordert Zugriff an und importiert alle verfuegbaren historischen Daten aus Health Connect.",
+  "healthDashboardHealthConnectAnalysis": "Health-Connect-Analyse exportieren",
+  "healthDashboardHealthConnectAnalysisSubtitle": "Liest jeden unterstuetzten Typ und speichert Rohdaten, Metadaten, Sessions, Routen und Fehler je Typ in einer separaten SQLite-Datenbank.",
+  "healthDashboardHealthConnectAnalysisFailed": "Health-Connect-Analyseexport fehlgeschlagen",
+  "healthDashboardHealthConnectDiscovery": "Health-Connect-Erkundung exportieren",
+  "healthDashboardHealthConnectDiscoverySubtitle": "Untersucht schnell jeden unterstützten Typ mit einer Beispielseite. Es wird kein vollständiger Verlauf exportiert.",
+  "healthDashboardHealthConnectDiscoveryFailed": "Health-Connect-Erkundungsexport fehlgeschlagen",
+  "healthDashboardHealthConnectComparison": "Quellenvergleich exportieren",
+  "healthDashboardHealthConnectComparisonSubtitle": "Exportiert 90 Tage kompakte Zepp-, Google-Fit- und Renpho-Werte. Rohdaten, Routen und andere Quellen werden ausgeschlossen.",
+  "healthDashboardHealthConnectComparisonDone": "Quellenvergleich in Downloads gespeichert",
+  "healthDashboardHealthConnectComparisonFailed": "Quellenvergleichsexport fehlgeschlagen",
+  "healthDashboardHealthConnectComparisonProgressTitle": "Quellenvergleich wird exportiert",
+  "healthDashboardHealthConnectComparisonProgressStatus": "Quellenvergleich wird vorbereitet...",
+  "healthDashboardHealthConnectComparisonProgressCount": "{count} Health-Connect-Datensaetze verarbeitet",
+  "@healthDashboardHealthConnectComparisonProgressCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardHealthConnectComparisonProgressHint": "Der Export läuft mit einer Benachrichtigung im Hintergrund weiter. Du kannst wechseln oder den Bildschirm ausschalten.",
   "healthDashboardAutoHealthConnectSync": "Health Connect beim Oeffnen synchronisieren",
   "healthDashboardAutoHealthConnectSyncSubtitle": "Health-Connect-Daten bei jedem Oeffnen des Dashboards importieren.",
   "healthDashboardSettings": "Einstellungen fuer Gesundheits-Dashboard",
@@ -2377,7 +2560,16 @@
   "healthDashboardSyncEnabled": "Gesundheitsdaten mit dem eingerichteten Backend synchronisieren.",
   "healthDashboardSyncDisabled": "Backend-Synchronisierung zuerst in Einstellungen aktivieren.",
   "healthDashboardSyncSuccess": "Synchronisiert: {pushed} hochgeladen, {pulled} geladen",
-  "@healthDashboardSyncSuccess": { "placeholders": { "pushed": { "type": "int" }, "pulled": { "type": "int" } } },
+  "@healthDashboardSyncSuccess": {
+    "placeholders": {
+      "pushed": {
+        "type": "int"
+      },
+      "pulled": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardSyncFailed": "Synchronisierung der Gesundheitsdaten fehlgeschlagen",
   "healthDashboardHealthConnectWorkout": "Health-Connect-Workout",
   "healthDashboardLastSevenDays": "Letzte 7 Tage",
@@ -2425,26 +2617,76 @@
   "healthDashboardExportBackupProgressTitle": "Gesundheitsdatenbank wird exportiert",
   "healthDashboardExportBackupProgressStatus": "Sicherung wird vorbereitet...",
   "healthDashboardExportBackupProgressCount": "{processed} von {total} Daten werden geschrieben",
-  "@healthDashboardExportBackupProgressCount": { "placeholders": { "processed": { "type": "int" }, "total": { "type": "int" } } },
+  "@healthDashboardExportBackupProgressCount": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardExportBackupProgressHint": "Lassen Sie den Bildschirm geöffnet, während die Sicherung erstellt wird.",
   "healthDashboardImportBackup": "Gesundheitsdatenbank importieren",
   "healthDashboardImportBackupSubtitle": "Daten aus einer Health-Dashboard-SQLite-Sicherung zusammenführen.",
   "healthDashboardImportBackupWarning": "Bestehende Gesundheitsdaten werden nie ersetzt. Es werden nur noch nicht vorhandene Daten importiert.",
   "healthDashboardImportBackupSuccess": "{count} neue Gesundheitsdaten importiert",
-  "@healthDashboardImportBackupSuccess": { "placeholders": { "count": { "type": "int" } } },
+  "@healthDashboardImportBackupSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardImportBackupFailed": "Gesundheitsdatenbank konnte nicht importiert werden",
   "healthDashboardSelectedDay": "Ausgewählter Tag",
   "healthDashboardImportBackupProgressTitle": "Gesundheitsdatenbank wird importiert",
   "healthDashboardImportBackupProgressStatus": "Gesundheitsdaten werden gespeichert ({processed} / {total})...",
-  "@healthDashboardImportBackupProgressStatus": { "placeholders": { "processed": { "type": "int" }, "total": { "type": "int" } } },
+  "@healthDashboardImportBackupProgressStatus": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardImportBackupProgressCount": "{processed} von {total} Daten verarbeitet",
-  "@healthDashboardImportBackupProgressCount": { "placeholders": { "processed": { "type": "int" }, "total": { "type": "int" } } },
+  "@healthDashboardImportBackupProgressCount": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardImportBackupProgressHint": "Bitte lassen Sie den Bildschirm geöffnet, während die Sicherung importiert wird.",
   "healthDashboardImportHealthConnectProgressTitle": "Gesundheitsdaten werden importiert",
   "healthDashboardImportHealthConnectProgressStatus": "Daten aus Health Connect werden abgerufen...",
   "healthDashboardImportHealthConnectProgressCount": "Bisher {count} Daten abgerufen",
-  "@healthDashboardImportHealthConnectProgressCount": { "placeholders": { "count": { "type": "int" } } },
-  "healthDashboardImportHealthConnectProgressHint": "Bitte lassen Sie den Bildschirm geöffnet, während Health-Connect-Daten importiert werden.",
+  "@healthDashboardImportHealthConnectProgressCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardImportHealthConnectProgressHint": "Der Import läuft mit einer Benachrichtigung im Hintergrund weiter. Du kannst wechseln oder den Bildschirm ausschalten.",
+  "healthDashboardHealthConnectAnalysisProgressTitle": "Health-Connect-Analyse wird exportiert",
+  "healthDashboardHealthConnectAnalysisProgressStatus": "Health-Connect-Daten werden gelesen...",
+  "healthDashboardHealthConnectAnalysisProgressCount": "{count} Daten analysiert",
+  "@healthDashboardHealthConnectAnalysisProgressCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardHealthConnectAnalysisProgressHint": "Dies ändert keine Dashboard-Daten. Der Export läuft mit einer Benachrichtigung im Hintergrund weiter.",
   "healthDashboardSevenDayTotal": "7-Tage Summe",
   "healthDashboardSevenDayAvg": "7-Tage Schnitt",
   "healthDashboardSevenDayMin": "7-Tage Min",
@@ -2459,5 +2701,10 @@
   "treadmillSyncToHealthConnectSubtitle": "Laufband-Workouts nach Abschluss in Health Connect eintragen.",
   "healthDashboardCloudBackendSync": "Cloud-Backend-Synchronisierung",
   "healthDashboardExportJson": "Health-Connect-JSON exportieren",
-  "healthDashboardExportJsonSubtitle": "Gesammelte Health-Connect-Einträge als JSON-Datei zur Analyse exportieren."
+  "healthDashboardExportJsonSubtitle": "Gesammelte Health-Connect-Einträge als JSON-Datei zur Analyse exportieren.",
+  "healthDashboardHealthConnectSettings": "Health Connect",
+  "healthDashboardHealthConnectSettingsSubtitle": "Berechtigungen, Import, automatische Synchronisierung beim Öffnen und Neustart des Imports.",
+  "healthDashboardHealthConnectOpenFailed": "Health-Connect-Einstellungen konnten nicht geöffnet werden",
+  "healthDashboardHealthConnectImportFailed": "Health-Connect-Import fehlgeschlagen",
+  "healthDashboardHealthConnectRepairFailed": "Health-Connect-Reparatur fehlgeschlagen"
 }

@@ -11465,6 +11465,12 @@ abstract class AppLocalizations {
   /// **'Sync already in progress'**
   String get healthDashboardSyncInProgress;
 
+  /// No description provided for @healthDashboardSyncInProgressBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A Health Connect import or cloud sync is still running. Wait for it to finish before starting another one.'**
+  String get healthDashboardSyncInProgressBody;
+
   /// No description provided for @healthDashboardSyncNoChanges.
   ///
   /// In en, this message translates to:
@@ -11474,14 +11480,26 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardRepairHealthConnect.
   ///
   /// In en, this message translates to:
-  /// **'Repair Health Connect cache'**
+  /// **'Start Health Connect import over'**
   String get healthDashboardRepairHealthConnect;
 
   /// No description provided for @healthDashboardRepairHealthConnectSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Re-import all available Health Connect history and update cached records.'**
+  /// **'Clear locally imported Health Connect data and import history again.'**
   String get healthDashboardRepairHealthConnectSubtitle;
+
+  /// No description provided for @healthDashboardResetHealthConnectDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes all locally imported Health Connect cache and canonical records on this device. It does not affect Health Connect or cloud data. The next import starts from the beginning and can take a long time. Regular imports resume from the last successful sync.'**
+  String get healthDashboardResetHealthConnectDescription;
+
+  /// No description provided for @healthDashboardStartOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get healthDashboardStartOver;
 
   /// No description provided for @healthDashboardHealthConnect.
   ///
@@ -11494,6 +11512,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Requests access and imports all available historical data from Health Connect.'**
   String get healthDashboardConnectHealthConnectSubtitle;
+
+  /// No description provided for @healthDashboardHealthConnectAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Health Connect analysis'**
+  String get healthDashboardHealthConnectAnalysis;
+
+  /// No description provided for @healthDashboardHealthConnectAnalysisSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Read every supported type and save raw records, metadata, sessions, routes, and per-type errors to a separate SQLite database.'**
+  String get healthDashboardHealthConnectAnalysisSubtitle;
+
+  /// No description provided for @healthDashboardHealthConnectAnalysisFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect analysis export failed'**
+  String get healthDashboardHealthConnectAnalysisFailed;
+
+  /// No description provided for @healthDashboardHealthConnectDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Health Connect discovery'**
+  String get healthDashboardHealthConnectDiscovery;
+
+  /// No description provided for @healthDashboardHealthConnectDiscoverySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quickly inspect every supported type with one sample page each. This does not export full history.'**
+  String get healthDashboardHealthConnectDiscoverySubtitle;
+
+  /// No description provided for @healthDashboardHealthConnectDiscoveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect discovery export failed'**
+  String get healthDashboardHealthConnectDiscoveryFailed;
+
+  /// No description provided for @healthDashboardHealthConnectComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Export source comparison'**
+  String get healthDashboardHealthConnectComparison;
+
+  /// No description provided for @healthDashboardHealthConnectComparisonSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export 90 days of compact Zepp, Google Fit, and Renpho values. Excludes raw records, routes, and other sources.'**
+  String get healthDashboardHealthConnectComparisonSubtitle;
+
+  /// No description provided for @healthDashboardHealthConnectComparisonDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Source comparison saved to Downloads'**
+  String get healthDashboardHealthConnectComparisonDone;
+
+  /// No description provided for @healthDashboardHealthConnectComparisonFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Source comparison export failed'**
+  String get healthDashboardHealthConnectComparisonFailed;
+
+  /// No description provided for @healthDashboardHealthConnectComparisonProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting source comparison'**
+  String get healthDashboardHealthConnectComparisonProgressTitle;
+
+  /// No description provided for @healthDashboardHealthConnectComparisonProgressStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing source comparison...'**
+  String get healthDashboardHealthConnectComparisonProgressStatus;
+
+  /// No description provided for @healthDashboardHealthConnectComparisonProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Health Connect records processed'**
+  String healthDashboardHealthConnectComparisonProgressCount(int count);
+
+  /// No description provided for @healthDashboardHealthConnectComparisonProgressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The export keeps running in the background with a notification. You can switch away or turn the screen off.'**
+  String get healthDashboardHealthConnectComparisonProgressHint;
 
   /// No description provided for @healthDashboardAutoHealthConnectSync.
   ///
@@ -11894,8 +11996,32 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardImportHealthConnectProgressHint.
   ///
   /// In en, this message translates to:
-  /// **'Please keep the screen open while Health Connect records are being imported.'**
+  /// **'The import keeps running in the background with a notification. You can switch away or turn the screen off.'**
   String get healthDashboardImportHealthConnectProgressHint;
+
+  /// No description provided for @healthDashboardHealthConnectAnalysisProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting Health Connect analysis'**
+  String get healthDashboardHealthConnectAnalysisProgressTitle;
+
+  /// No description provided for @healthDashboardHealthConnectAnalysisProgressStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Health Connect records...'**
+  String get healthDashboardHealthConnectAnalysisProgressStatus;
+
+  /// No description provided for @healthDashboardHealthConnectAnalysisProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzed {count} records'**
+  String healthDashboardHealthConnectAnalysisProgressCount(int count);
+
+  /// No description provided for @healthDashboardHealthConnectAnalysisProgressHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This does not change dashboard data. The export keeps running in the background with a notification.'**
+  String get healthDashboardHealthConnectAnalysisProgressHint;
 
   /// No description provided for @healthDashboardSevenDayTotal.
   ///
@@ -11986,6 +12112,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export raw Health Connect records as a JSON file for analysis.'**
   String get healthDashboardExportJsonSubtitle;
+
+  /// No description provided for @healthDashboardHealthConnectSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get healthDashboardHealthConnectSettings;
+
+  /// No description provided for @healthDashboardHealthConnectSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions, import, automatic sync on open, and starting the import over.'**
+  String get healthDashboardHealthConnectSettingsSubtitle;
+
+  /// No description provided for @healthDashboardHealthConnectOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open Health Connect settings'**
+  String get healthDashboardHealthConnectOpenFailed;
+
+  /// No description provided for @healthDashboardHealthConnectImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect import failed'**
+  String get healthDashboardHealthConnectImportFailed;
+
+  /// No description provided for @healthDashboardHealthConnectRepairFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect repair failed'**
+  String get healthDashboardHealthConnectRepairFailed;
 }
 
 class _AppLocalizationsDelegate

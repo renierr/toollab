@@ -459,6 +459,29 @@ open class MainActivity : FlutterFragmentActivity() {
                             result.error("SAVE_ERROR", e.message, null)
                         }
                     }
+                    "createDownloadsFilePath" -> {
+                        val fileName = call.argument<String>("fileName")
+                        if (fileName == null) {
+                            result.error("INVALID_ARGS", "fileName required", null)
+                            return@setMethodCallHandler
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
+                            result.error("STORAGE_PERMISSION", "All files access is required for a direct Downloads export", null)
+                            return@setMethodCallHandler
+                        }
+                        try {
+                            val downloadsDir = Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_DOWNLOADS
+                            )
+                            if (!downloadsDir.exists() && !downloadsDir.mkdirs()) {
+                                throw Exception("Failed to create Downloads directory")
+                            }
+                            val file = File(downloadsDir, fileName)
+                            result.success(file.absolutePath)
+                        } catch (e: Exception) {
+                            result.error("SAVE_ERROR", e.message, null)
+                        }
+                    }
                     "openFile" -> {
                         val uriString = call.argument<String>("uri")
                         val mimeType = call.argument<String>("mimeType") ?: "*/*"

@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:tool_lab/helpers/debug_log.dart';
+
 import 'package:health_connector/health_connector.dart' as hc;
 // ignore: implementation_imports
 import 'package:health_connector_core/src/models/health_data_types/health_data_type_capabilities/readable_health_data_type.dart'
@@ -8,6 +10,7 @@ import 'package:health_connector_core/src/models/health_data_types/health_data_t
 import 'package:health_connector_core/src/utils/health_record_data_type_extension.dart';
 
 import '../health_record.dart';
+import '../health_database.dart';
 import 'health_data_collector.dart';
 
 class HealthConnectCollector implements HealthDataCollector {
@@ -23,6 +26,84 @@ class HealthConnectCollector implements HealthDataCollector {
           (type as core.ReadableHealthDataType).readPermission,
       hc.HealthPlatformFeature.readHealthDataHistory.permission,
     ]);
+  }
+
+  Future<void> importCanonical({
+    required DateTime start,
+    void Function(String status, int count)? onProgress,
+  }) async {
+    if (!Platform.isAndroid) return;
+    final connector = await hc.HealthConnector.create();
+    final end = DateTime.now();
+    var total = 0;
+    var failedTypes = 0;
+    for (final type in hc.HealthDataType.healthConnectDataTypes) {
+      if (type is! core.ReadableInTimeRangeHealthDataType) continue;
+      final readable = type as core.ReadableInTimeRangeHealthDataType;
+      final typeId = readable.runtimeType.toString();
+      final checkpoint = await HealthDatabase.instance
+          .canonicalImportCheckpoint(typeId);
+      final isCompleted = checkpoint?['completed_at'] != null;
+      final rangeStart = checkpoint == null
+          ? start
+          : DateTime.fromMillisecondsSinceEpoch(
+              checkpoint['range_start']! as int,
+            );
+      final rangeEnd = checkpoint == null || isCompleted
+          ? end
+          : DateTime.fromMillisecondsSinceEpoch(
+              checkpoint['range_end']! as int,
+            );
+      var importedCount = isCompleted
+          ? 0
+          : checkpoint?['imported_count'] as int? ?? 0;
+      try {
+        // Paging follows response.nextPageRequest. The plugin exposes no page
+        // token on the response, so reading one threw before the first page
+        // could be written - every type failed silently and imported nothing.
+        dynamic request = readable.readInTimeRange(
+          startTime: rangeStart,
+          endTime: rangeEnd,
+          pageSize: 5000,
+        );
+        do {
+          final dynamic response = await connector.readRecords(request);
+          final records = (response.records as List)
+              .cast<hc.HealthRecord>()
+              .map(_genericRecord)
+              .toList();
+          request = response.nextPageRequest;
+          importedCount += records.length;
+          await HealthDatabase.instance.upsertCanonicalPage(
+            typeId: typeId,
+            rangeStart: rangeStart,
+            rangeEnd: rangeEnd,
+            // Page requests are opaque objects, so a partial type resumes from
+            // its range start instead. Canonical upserts make that idempotent.
+            nextPageToken: null,
+            importedCount: importedCount,
+            completed: request == null,
+            records: records,
+          );
+          total += records.length;
+          onProgress?.call('Importing $typeId...', total);
+        } while (request != null);
+      } catch (e) {
+        // Types this Health Connect build cannot read are expected; a genuine
+        // read/write failure must not look like one, so it is logged and the
+        // checkpoint is left untouched so the type resumes next run.
+        failedTypes++;
+        errorLog('[HealthConnectCollector] Import failed for $typeId: $e');
+      }
+    }
+    // Individually tolerated failures add up to a silent no-op when they hit
+    // every type, which is what a revoked read permission looks like.
+    if (total == 0 && failedTypes > 0) {
+      throw StateError(
+        'Health Connect returned no records and $failedTypes type(s) failed to '
+        'read - check that the app still has Health Connect read permissions.',
+      );
+    }
   }
 
   @override
@@ -245,7 +326,14 @@ class HealthConnectCollector implements HealthDataCollector {
     };
     return _record(
       record: record,
-      type: 'health.${record.dataType.id}',
+      type: switch (record) {
+        hc.SleepSessionRecord() => 'sleep.session',
+        hc.ExerciseSessionRecord() => 'workout.health_connect',
+        hc.HeartRateSeriesRecord() || hc.HeartRateRecord() => 'heart.rate',
+        hc.WeightRecord() => 'body.weight',
+        hc.StepsRecord() => 'activity.steps',
+        _ => 'health.${record.dataType.id}',
+      },
       startTime: startTime,
       endTime: endTime,
       value: {
@@ -302,6 +390,55 @@ class HealthConnectCollector implements HealthDataCollector {
           )
           .toList(),
     },
+    hc.HeartRateSeriesRecord(:final samples) => {
+      'samples': samples
+          .map(
+            (sample) => {
+              'time': sample.time.millisecondsSinceEpoch,
+              'bpm': sample.rate.inPerMinute,
+            },
+          )
+          .toList(),
+    },
+    hc.HeartRateRecord(:final time, :final rate) => {
+      'samples': [
+        {'time': time.millisecondsSinceEpoch, 'bpm': rate.inPerMinute},
+      ],
+    },
+    hc.WeightRecord(:final weight) => {'kilograms': weight.inKilograms},
+    hc.StepsRecord(:final count) => {'count': count.value},
+    hc.SleepSessionRecord(:final title, :final samples) => {
+      'title': title,
+      'stages': samples
+          .map(
+            (stage) => {
+              'startTime': stage.startTime.millisecondsSinceEpoch,
+              'endTime': stage.endTime.millisecondsSinceEpoch,
+              'type': stage.stageType.name,
+            },
+          )
+          .toList(),
+    },
+    hc.ExerciseSessionRecord(
+      :final exerciseType,
+      :final title,
+      :final notes,
+      :final lapEvents,
+    ) =>
+      {
+        'exerciseType': exerciseType.name,
+        'title': title,
+        'notes': notes,
+        'laps': lapEvents
+            .map(
+              (lap) => {
+                'startTime': lap.startTime.millisecondsSinceEpoch,
+                'endTime': lap.endTime.millisecondsSinceEpoch,
+                'distanceKm': lap.distance?.inKilometers,
+              },
+            )
+            .toList(),
+      },
     _ => const {},
   };
 

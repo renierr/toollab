@@ -20,6 +20,22 @@ import 'temp_file_manager.dart';
 class FileSaveHelper {
   static const _channel = MethodChannel('de.renier.tool_lab/file_save');
 
+  static Future<String> createAndroidDownloadsFilePath(String fileName) async {
+    if (!Platform.isAndroid) {
+      throw UnsupportedError(
+        'A public Downloads path is only available on Android.',
+      );
+    }
+    final path = await _channel.invokeMethod<String>(
+      'createDownloadsFilePath',
+      {'fileName': fileName},
+    );
+    if (path == null || path.isEmpty) {
+      throw StateError('Could not create the Downloads export path.');
+    }
+    return path;
+  }
+
   /// Resolves the save path for a file, writes [bytes] to it, and automatically
   /// handles the success or error notifications internally.
   /// On Android, uses MediaStore to save to public Downloads and posts a native notification.

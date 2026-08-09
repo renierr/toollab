@@ -6361,16 +6361,27 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardSyncInProgress => 'Synchronisierung läuft bereits';
 
   @override
+  String get healthDashboardSyncInProgressBody =>
+      'Ein Health-Connect-Import oder eine Cloud-Synchronisierung laeuft noch. Warte bis sie abgeschlossen ist, bevor du eine neue startest.';
+
+  @override
   String get healthDashboardSyncNoChanges =>
       'Keine Gesundheitsdatenänderungen zum Synchronisieren';
 
   @override
   String get healthDashboardRepairHealthConnect =>
-      'Health-Connect-Zwischenspeicher reparieren';
+      'Health-Connect-Import neu starten';
 
   @override
   String get healthDashboardRepairHealthConnectSubtitle =>
-      'Importiert den gesamten verfuegbaren Health-Connect-Verlauf erneut und aktualisiert gespeicherte Daten.';
+      'Lokal importierte Health-Connect-Daten loeschen und Historie erneut importieren.';
+
+  @override
+  String get healthDashboardResetHealthConnectDescription =>
+      'Dies entfernt alle lokal importierten Health-Connect-Cache- und kanonischen Daten auf diesem Geraet. Health Connect und Cloud-Daten bleiben unveraendert. Der naechste Import beginnt von vorn und kann lange dauern. Normale Importe werden ab der letzten erfolgreichen Synchronisierung fortgesetzt.';
+
+  @override
+  String get healthDashboardStartOver => 'Neu starten';
 
   @override
   String get healthDashboardHealthConnect =>
@@ -6379,6 +6390,63 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthDashboardConnectHealthConnectSubtitle =>
       'Fordert Zugriff an und importiert alle verfuegbaren historischen Daten aus Health Connect.';
+
+  @override
+  String get healthDashboardHealthConnectAnalysis =>
+      'Health-Connect-Analyse exportieren';
+
+  @override
+  String get healthDashboardHealthConnectAnalysisSubtitle =>
+      'Liest jeden unterstuetzten Typ und speichert Rohdaten, Metadaten, Sessions, Routen und Fehler je Typ in einer separaten SQLite-Datenbank.';
+
+  @override
+  String get healthDashboardHealthConnectAnalysisFailed =>
+      'Health-Connect-Analyseexport fehlgeschlagen';
+
+  @override
+  String get healthDashboardHealthConnectDiscovery =>
+      'Health-Connect-Erkundung exportieren';
+
+  @override
+  String get healthDashboardHealthConnectDiscoverySubtitle =>
+      'Untersucht schnell jeden unterstützten Typ mit einer Beispielseite. Es wird kein vollständiger Verlauf exportiert.';
+
+  @override
+  String get healthDashboardHealthConnectDiscoveryFailed =>
+      'Health-Connect-Erkundungsexport fehlgeschlagen';
+
+  @override
+  String get healthDashboardHealthConnectComparison =>
+      'Quellenvergleich exportieren';
+
+  @override
+  String get healthDashboardHealthConnectComparisonSubtitle =>
+      'Exportiert 90 Tage kompakte Zepp-, Google-Fit- und Renpho-Werte. Rohdaten, Routen und andere Quellen werden ausgeschlossen.';
+
+  @override
+  String get healthDashboardHealthConnectComparisonDone =>
+      'Quellenvergleich in Downloads gespeichert';
+
+  @override
+  String get healthDashboardHealthConnectComparisonFailed =>
+      'Quellenvergleichsexport fehlgeschlagen';
+
+  @override
+  String get healthDashboardHealthConnectComparisonProgressTitle =>
+      'Quellenvergleich wird exportiert';
+
+  @override
+  String get healthDashboardHealthConnectComparisonProgressStatus =>
+      'Quellenvergleich wird vorbereitet...';
+
+  @override
+  String healthDashboardHealthConnectComparisonProgressCount(int count) {
+    return '$count Health-Connect-Datensaetze verarbeitet';
+  }
+
+  @override
+  String get healthDashboardHealthConnectComparisonProgressHint =>
+      'Der Export läuft mit einer Benachrichtigung im Hintergrund weiter. Du kannst wechseln oder den Bildschirm ausschalten.';
 
   @override
   String get healthDashboardAutoHealthConnectSync =>
@@ -6615,7 +6683,24 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardImportHealthConnectProgressHint =>
-      'Bitte lassen Sie den Bildschirm geöffnet, während Health-Connect-Daten importiert werden.';
+      'Der Import läuft mit einer Benachrichtigung im Hintergrund weiter. Du kannst wechseln oder den Bildschirm ausschalten.';
+
+  @override
+  String get healthDashboardHealthConnectAnalysisProgressTitle =>
+      'Health-Connect-Analyse wird exportiert';
+
+  @override
+  String get healthDashboardHealthConnectAnalysisProgressStatus =>
+      'Health-Connect-Daten werden gelesen...';
+
+  @override
+  String healthDashboardHealthConnectAnalysisProgressCount(int count) {
+    return '$count Daten analysiert';
+  }
+
+  @override
+  String get healthDashboardHealthConnectAnalysisProgressHint =>
+      'Dies ändert keine Dashboard-Daten. Der Export läuft mit einer Benachrichtigung im Hintergrund weiter.';
 
   @override
   String get healthDashboardSevenDayTotal => '7-Tage Summe';
@@ -6665,4 +6750,23 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthDashboardExportJsonSubtitle =>
       'Gesammelte Health-Connect-Einträge als JSON-Datei zur Analyse exportieren.';
+
+  @override
+  String get healthDashboardHealthConnectSettings => 'Health Connect';
+
+  @override
+  String get healthDashboardHealthConnectSettingsSubtitle =>
+      'Berechtigungen, Import, automatische Synchronisierung beim Öffnen und Neustart des Imports.';
+
+  @override
+  String get healthDashboardHealthConnectOpenFailed =>
+      'Health-Connect-Einstellungen konnten nicht geöffnet werden';
+
+  @override
+  String get healthDashboardHealthConnectImportFailed =>
+      'Health-Connect-Import fehlgeschlagen';
+
+  @override
+  String get healthDashboardHealthConnectRepairFailed =>
+      'Health-Connect-Reparatur fehlgeschlagen';
 }

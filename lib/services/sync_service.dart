@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:http/http.dart' as http;
 import 'app_http_client.dart';
@@ -50,6 +51,11 @@ mixin DefaultSyncDelegate implements SyncDelegate {
 
 class SyncService {
   static const String _logPrefix = '[SyncService]';
+  static const _syncBatchSize = 500;
+
+  /// Measured in JSON characters, not bytes, so multi-byte text inflates the
+  /// real payload. Kept far below the backend's request ceiling to absorb that.
+  static const _syncMaxPushChars = 4 * 1024 * 1024;
 
   static Future<http.Client> get _client => AppHttpClient.client;
 
@@ -133,27 +139,50 @@ class SyncService {
 
     final metadataUri = Uri.parse('$sanitizedUrl/api/sync/$toolId/metadata');
     final cursor = await delegate.getSyncCursor(toolId);
-    final metadataResponse = await client
-        .get(
-          cursor == null
-              ? metadataUri
-              : metadataUri.replace(queryParameters: {'cursor': cursor}),
-        )
-        .timeout(httpTimeout);
-    if (metadataResponse.statusCode != 200) {
-      throw Exception(
-        'Failed to fetch metadata from server: ${metadataResponse.statusCode}',
+    String? pageCursor = cursor;
+    String? nextCursor;
+    var fullMetadata = true;
+    var hasMoreMetadata = false;
+    var truncatedMetadata = false;
+    final serverMetaList = <dynamic>[];
+    do {
+      final query = <String, String>{'limit': '$_syncBatchSize'};
+      if (pageCursor != null) query['cursor'] = pageCursor;
+      final metadataResponse = await client
+          .get(metadataUri.replace(queryParameters: query))
+          .timeout(httpTimeout);
+      if (metadataResponse.statusCode != 200) {
+        throw Exception(
+          'Failed to fetch metadata from server: ${metadataResponse.statusCode}',
+        );
+      }
+      final Map<String, dynamic> metadataJson = jsonDecode(
+        metadataResponse.body,
       );
-    }
-
-    final Map<String, dynamic> metadataJson = jsonDecode(metadataResponse.body);
-    if (metadataJson['success'] != true) {
-      throw Exception('Server returned success=false for metadata');
-    }
-
-    final List<dynamic> serverMetaList = metadataJson['records'] ?? [];
-    final bool fullMetadata = metadataJson['full'] as bool? ?? true;
-    final String? nextCursor = metadataJson['cursor'] as String?;
+      if (metadataJson['success'] != true) {
+        throw Exception('Server returned success=false for metadata');
+      }
+      serverMetaList.addAll(
+        metadataJson['records'] as List<dynamic>? ?? const [],
+      );
+      fullMetadata = metadataJson['full'] as bool? ?? true;
+      nextCursor = metadataJson['cursor'] as String?;
+      hasMoreMetadata = metadataJson['hasMore'] as bool? ?? false;
+      final advanced = metadataJson['nextCursor'] as String? ?? nextCursor;
+      // A server reporting hasMore without advancing the cursor would re-fetch
+      // the same page forever and grow serverMetaList without bound.
+      if (hasMoreMetadata && (advanced == null || advanced == pageCursor)) {
+        // Saving the cursor here would mark unseen records as already synced,
+        // so the run stays incomplete and retries from the old cursor instead.
+        truncatedMetadata = true;
+        debugLog(
+          '$_logPrefix Server reported more metadata without advancing the '
+          'cursor; stopping pagination for $toolId',
+        );
+        break;
+      }
+      pageCursor = advanced;
+    } while (hasMoreMetadata);
 
     final Map<String, _ServerMeta> serverMetaMap = {};
     for (final item in serverMetaList) {
@@ -181,7 +210,7 @@ class SyncService {
     };
 
     final List<String> toPullIds = [];
-    final List<Map<String, dynamic>> toPush = [];
+    final List<_LocalMeta> toPush = [];
 
     for (final sMeta in serverMetaMap.values) {
       final lMeta = localMetaMap[sMeta.id];
@@ -210,32 +239,19 @@ class SyncService {
               deleted: item['deleted'] as bool? ?? false,
             ),
           );
+    // Only the metadata is collected here. Payloads are read per batch in
+    // [_pushBatches] so a bulk import never holds every record in memory.
     for (final lMeta in pushCandidates) {
       final sMeta = serverMetaMap[lMeta.id];
-
-      if (lMeta.deleted) {
-        if (sMeta == null || lMeta.updatedAt > sMeta.updatedAt) {
-          toPush.add({
-            'id': lMeta.id,
-            'updatedAt': lMeta.updatedAt,
-            'deleted': true,
-          });
-        }
-      } else {
-        if (sMeta == null || lMeta.updatedAt > sMeta.updatedAt) {
-          final data = await delegate.getLocalRecordData(lMeta.id);
-          toPush.add({
-            'id': lMeta.id,
-            'data': data ?? {},
-            'updatedAt': lMeta.updatedAt,
-            'deleted': false,
-          });
-        }
+      if (sMeta == null || lMeta.updatedAt > sMeta.updatedAt) {
+        toPush.add(lMeta);
       }
     }
 
     if (toPullIds.isEmpty && toPush.isEmpty) {
-      if (nextCursor != null) await delegate.saveSyncCursor(toolId, nextCursor);
+      if (nextCursor != null && !truncatedMetadata) {
+        await delegate.saveSyncCursor(toolId, nextCursor);
+      }
       return {
         'pulled': pulledCount,
         'pushed': pushedCount,
@@ -243,95 +259,148 @@ class SyncService {
       };
     }
 
-    List<dynamic> pulledRecords = [];
     if (toPullIds.isNotEmpty) {
       final pullUri = Uri.parse('$sanitizedUrl/api/sync/$toolId/pull');
-      final pullResponse = await client
-          .post(
-            pullUri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'ids': toPullIds}),
-          )
-          .timeout(httpTimeout);
+      for (final ids in _batches(toPullIds, _syncBatchSize)) {
+        final pullResponse = await client
+            .post(
+              pullUri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({'ids': ids}),
+            )
+            .timeout(httpTimeout);
 
-      if (pullResponse.statusCode != 200) {
-        throw Exception(
-          'Failed to pull records from server: ${pullResponse.statusCode}',
-        );
-      }
-
-      final Map<String, dynamic> pullJson = jsonDecode(pullResponse.body);
-      if (pullJson['success'] != true) {
-        throw Exception('Server returned success=false for pull request');
-      }
-
-      pulledRecords = pullJson['records'] ?? [];
-    }
-
-    for (final sRec in pulledRecords) {
-      final String id = sRec['id'] as String;
-      final bool serverDeleted = sRec['deleted'] as bool? ?? false;
-      final int serverUpdatedAt = sRec['updatedAt'] as int? ?? 0;
-
-      final lMeta = localMetaMap[id];
-
-      if (serverDeleted) {
-        if (lMeta != null) {
-          await delegate.finalizeLocalSync(id, true);
-          deletedCount++;
+        if (pullResponse.statusCode != 200) {
+          throw Exception(
+            'Failed to pull records from server: ${pullResponse.statusCode}',
+          );
         }
-        continue;
-      }
 
-      if (lMeta == null || serverUpdatedAt > lMeta.updatedAt) {
-        final Map<String, dynamic> data = _unwrapBlobData(
-          sRec['data'] as Map<String, dynamic>? ?? {},
-        );
-        await delegate.savePulledRecord(
-          id: id,
-          data: data,
-          updatedAt: serverUpdatedAt,
-          deleted: false,
-        );
-        pulledCount++;
+        final Map<String, dynamic> pullJson = jsonDecode(pullResponse.body);
+        if (pullJson['success'] != true) {
+          throw Exception('Server returned success=false for pull request');
+        }
+        // Applied per batch so the decoded payloads can be released before the
+        // next page is fetched.
+        for (final sRec in pullJson['records'] as List<dynamic>? ?? const []) {
+          final String id = sRec['id'] as String;
+          final bool serverDeleted = sRec['deleted'] as bool? ?? false;
+          final int serverUpdatedAt = sRec['updatedAt'] as int? ?? 0;
+
+          final lMeta = localMetaMap[id];
+
+          if (serverDeleted) {
+            if (lMeta != null) {
+              await delegate.finalizeLocalSync(id, true);
+              deletedCount++;
+            }
+            continue;
+          }
+
+          if (lMeta == null || serverUpdatedAt > lMeta.updatedAt) {
+            final Map<String, dynamic> data = _unwrapBlobData(
+              sRec['data'] as Map<String, dynamic>? ?? {},
+            );
+            await delegate.savePulledRecord(
+              id: id,
+              data: data,
+              updatedAt: serverUpdatedAt,
+              deleted: false,
+            );
+            pulledCount++;
+          }
+        }
       }
     }
 
     if (toPush.isNotEmpty) {
       final pushUri = Uri.parse('$sanitizedUrl/api/sync/$toolId');
-      final pushResponse = await client
-          .post(
-            pushUri,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'records': toPush}),
-          )
-          .timeout(httpTimeout);
+      await for (final records in _pushBatches(delegate, toPush)) {
+        final pushResponse = await client
+            .post(
+              pushUri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({'records': records}),
+            )
+            .timeout(httpTimeout);
 
-      if (pushResponse.statusCode != 200) {
-        throw Exception(
-          'Failed to push records to server: ${pushResponse.statusCode}',
-        );
-      }
+        if (pushResponse.statusCode != 200) {
+          throw Exception(
+            'Failed to push records to server: ${pushResponse.statusCode}',
+          );
+        }
 
-      final Map<String, dynamic> pushJson = jsonDecode(pushResponse.body);
-      if (pushJson['success'] != true) {
-        throw Exception('Server returned success=false for push request');
-      }
+        final Map<String, dynamic> pushJson = jsonDecode(pushResponse.body);
+        if (pushJson['success'] != true) {
+          throw Exception('Server returned success=false for push request');
+        }
 
-      for (final pushItem in toPush) {
-        final String id = pushItem['id'] as String;
-        final bool isDel = pushItem['deleted'] as bool;
-        await delegate.finalizeLocalSync(id, isDel);
-        pushedCount++;
+        for (final pushItem in records) {
+          final String id = pushItem['id'] as String;
+          final bool isDel = pushItem['deleted'] as bool;
+          await delegate.finalizeLocalSync(id, isDel);
+          pushedCount++;
+        }
       }
     }
 
-    if (nextCursor != null) await delegate.saveSyncCursor(toolId, nextCursor);
+    if (nextCursor != null && !truncatedMetadata) {
+      await delegate.saveSyncCursor(toolId, nextCursor);
+    }
     return {
       'pulled': pulledCount,
       'pushed': pushedCount,
       'deleted': deletedCount,
     };
+  }
+
+  /// Materializes push payloads one batch at a time, capping a batch by record
+  /// count and by encoded size. Blob-carrying tools (chiptune, signatures,
+  /// sketch board) blow past any request limit long before the count cap, and a
+  /// rejected batch fails the whole sync. A record larger than the cap is sent
+  /// on its own rather than dropped.
+  static Stream<List<Map<String, dynamic>>> _pushBatches(
+    SyncDelegate delegate,
+    List<_LocalMeta> metas,
+  ) async* {
+    var batch = <Map<String, dynamic>>[];
+    var batchSize = 0;
+
+    for (final meta in metas) {
+      final record = meta.deleted
+          ? <String, dynamic>{
+              'id': meta.id,
+              'updatedAt': meta.updatedAt,
+              'deleted': true,
+            }
+          : <String, dynamic>{
+              'id': meta.id,
+              'data': await delegate.getLocalRecordData(meta.id) ?? {},
+              'updatedAt': meta.updatedAt,
+              'deleted': false,
+            };
+      final size = jsonEncode(record).length;
+
+      if (batch.isNotEmpty &&
+          (batch.length >= _syncBatchSize ||
+              batchSize + size > _syncMaxPushChars)) {
+        yield batch;
+        batch = <Map<String, dynamic>>[];
+        batchSize = 0;
+      }
+
+      batch.add(record);
+      batchSize += size;
+    }
+
+    if (batch.isNotEmpty) yield batch;
+  }
+
+  static Iterable<List<T>> _batches<T>(List<T> values, int size) sync* {
+    for (var start = 0; start < values.length; start += size) {
+      final end = min(start + size, values.length);
+      yield values.sublist(start, end);
+    }
   }
 }
 

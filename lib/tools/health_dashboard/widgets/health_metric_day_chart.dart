@@ -54,6 +54,7 @@ class HealthMetricDaySection extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: SizedBox(
+                width: double.infinity,
                 height: 190,
                 child: CustomPaint(
                   painter: _MetricDayPainter(

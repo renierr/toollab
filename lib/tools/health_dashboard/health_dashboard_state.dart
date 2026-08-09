@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 
 import 'collectors/health_connect_collector.dart';
+import 'collectors/health_connect_analysis_exporter.dart';
 import 'collectors/treadmill_collector.dart';
 import '../treadmill_control/treadmill_health_connect_publisher.dart';
 import 'config.dart';
@@ -17,11 +19,13 @@ import 'health_sync_delegate.dart';
 class HealthDashboardState extends ChangeNotifier {
   static const _showTreadmillWorkoutsKey = 'show_treadmill_workouts';
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
-  static const _healthConnectLastSyncKey = 'health_connect_last_sync';
+  static const _healthConnectLastSyncKey =
+      HealthDatabase.healthConnectLastSyncKey;
   static const _healthConnectAutoSyncInterval = Duration(minutes: 30);
   static const _sourcePreferencePrefix = 'source_preference_';
   final _treadmillCollector = TreadmillCollector();
   final _healthConnectCollector = HealthConnectCollector();
+  final _healthConnectAnalysisExporter = HealthConnectAnalysisExporter();
   List<HealthRecord> records = [];
   bool isLoading = true;
   bool isCollecting = false;
@@ -47,10 +51,44 @@ class HealthDashboardState extends ChangeNotifier {
   int backupExportProcessedCount = 0;
   int backupExportTotalCount = 0;
 
+  ForegroundRuntimeLease? _importNotification;
+
   void _onCollectionProgress(String status, int count) {
     collectionStatus = status;
     collectedRecordCount = count;
+    _importNotification?.update(
+      title: _importNotificationTitle,
+      text: count > 0 ? '$status ($count)' : status,
+    );
     notifyListeners();
+  }
+
+  static const _importNotificationTitle = 'Health Dashboard import';
+
+  /// A partial (CPU) wake lock plus a foreground notification, so a long import
+  /// keeps running with the screen off instead of holding the display awake.
+  Future<({WakeLockLease lock, ForegroundRuntimeLease? notification})>
+  _beginBackgroundWork(String text) async {
+    final lock = await PowerWakeLockService.acquirePartial();
+    ForegroundRuntimeLease? notification;
+    try {
+      notification = await ForegroundRuntimeService.acquire(
+        title: _importNotificationTitle,
+        text: text,
+      );
+    } catch (e) {
+      errorLog('[HealthDashboard] Foreground notification unavailable: $e');
+    }
+    _importNotification = notification;
+    return (lock: lock, notification: notification);
+  }
+
+  Future<void> _endBackgroundWork(
+    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work,
+  ) async {
+    _importNotification = null;
+    await work?.notification?.release();
+    await work?.lock.release();
   }
 
   HealthDashboardState() {
@@ -159,7 +197,7 @@ class HealthDashboardState extends ChangeNotifier {
   Future<void> connectHealthConnect() async {
     try {
       await _healthConnectCollector.requestAccess();
-      await syncHealthConnect(forceFullHistory: true);
+      await syncHealthConnect();
     } catch (e) {
       error = e.toString();
       errorLog('[HealthDashboard] Health Connect access failed: $e');
@@ -174,41 +212,29 @@ class HealthDashboardState extends ChangeNotifier {
     collectionStatus = 'Starting sync...';
     collectedRecordCount = 0;
     notifyListeners();
-    WakeLockLease? lease;
+    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
     try {
-      lease = await PowerWakeLockService.acquireFull();
+      work = await _beginBackgroundWork('Starting...');
       final lastSync = forceFullHistory
           ? null
           : await DatabaseService.instance.getSetting(
               HealthDashboardTool.config.id,
               _healthConnectLastSyncKey,
             );
+      // The cursor advances only after all records are saved, so an interrupted
+      // import safely repeats its one-day overlap rather than skipping data.
       final start = lastSync == null
           ? DateTime.utc(1970)
           : DateTime.fromMillisecondsSinceEpoch(
               int.parse(lastSync),
             ).subtract(const Duration(days: 1));
-      final fetchedRecords = await _healthConnectCollector.collect(
+      await _healthConnectCollector.importCanonical(
         start: start,
         onProgress: _onCollectionProgress,
       );
-      final devId = await HealthDatabase.instance.deviceId;
-      int savedCount = 0;
-      for (final record in fetchedRecords) {
-        await HealthDatabase.instance.upsertCollected(
-          record.copyWith(deviceId: devId),
-        );
-        savedCount++;
-        if (savedCount % 50 == 0 || savedCount == fetchedRecords.length) {
-          _onCollectionProgress(
-            'Saving to database ($savedCount / ${fetchedRecords.length})...',
-            savedCount,
-          );
-        }
-      }
       _onCollectionProgress(
         'Refreshing health dashboard...',
-        fetchedRecords.length,
+        collectedRecordCount,
       );
       await DatabaseService.instance.setSetting(
         HealthDashboardTool.config.id,
@@ -220,7 +246,7 @@ class HealthDashboardState extends ChangeNotifier {
       error = e.toString();
       errorLog('[HealthDashboard] Health Connect sync failed: $e');
     } finally {
-      await lease?.release();
+      await _endBackgroundWork(work);
       isCollecting = false;
       collectionStatus = null;
       notifyListeners();
@@ -234,31 +260,20 @@ class HealthDashboardState extends ChangeNotifier {
     collectionStatus = 'Purging local cache...';
     collectedRecordCount = 0;
     notifyListeners();
-    WakeLockLease? lease;
+    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
     try {
-      lease = await PowerWakeLockService.acquireFull();
+      work = await _beginBackgroundWork('Starting...');
+      // Without this the whole history read fails one type at a time and the
+      // repair reports success having imported nothing.
+      await _healthConnectCollector.requestAccess();
       await HealthDatabase.instance.purgeHealthConnectCache();
-      final fetchedRecords = await _healthConnectCollector.collect(
+      await _healthConnectCollector.importCanonical(
         start: DateTime.utc(1970),
         onProgress: _onCollectionProgress,
       );
-      final devId = await HealthDatabase.instance.deviceId;
-      int savedCount = 0;
-      for (final record in fetchedRecords) {
-        await HealthDatabase.instance.upsertCollected(
-          record.copyWith(deviceId: devId),
-        );
-        savedCount++;
-        if (savedCount % 50 == 0 || savedCount == fetchedRecords.length) {
-          _onCollectionProgress(
-            'Saving to database ($savedCount / ${fetchedRecords.length})...',
-            savedCount,
-          );
-        }
-      }
       _onCollectionProgress(
         'Refreshing health dashboard...',
-        fetchedRecords.length,
+        collectedRecordCount,
       );
       await DatabaseService.instance.setSetting(
         HealthDashboardTool.config.id,
@@ -270,7 +285,68 @@ class HealthDashboardState extends ChangeNotifier {
       error = e.toString();
       errorLog('[HealthDashboard] Health Connect repair failed: $e');
     } finally {
-      await lease?.release();
+      await _endBackgroundWork(work);
+      isCollecting = false;
+      collectionStatus = null;
+      notifyListeners();
+    }
+  }
+
+  Future<String> exportHealthConnectAnalysis() async {
+    return _exportHealthConnectAnalysis(fullHistory: true);
+  }
+
+  Future<String> exportHealthConnectDiscovery() async {
+    return _exportHealthConnectAnalysis(fullHistory: false);
+  }
+
+  Future<String> exportHealthConnectComparison() async {
+    if (isCollecting) throw StateError('Health Connect operation is running.');
+    isCollecting = true;
+    error = null;
+    collectionStatus = 'Preparing Health Connect comparison...';
+    collectedRecordCount = 0;
+    notifyListeners();
+    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
+    try {
+      work = await _beginBackgroundWork('Starting...');
+      return await _healthConnectAnalysisExporter.exportComparison(
+        onProgress: _onCollectionProgress,
+      );
+    } catch (e) {
+      error = e.toString();
+      errorLog('[HealthDashboard] Health Connect comparison export failed: $e');
+      rethrow;
+    } finally {
+      await _endBackgroundWork(work);
+      isCollecting = false;
+      collectionStatus = null;
+      notifyListeners();
+    }
+  }
+
+  Future<String> _exportHealthConnectAnalysis({
+    required bool fullHistory,
+  }) async {
+    if (isCollecting) throw StateError('Health Connect operation is running.');
+    isCollecting = true;
+    error = null;
+    collectionStatus = 'Preparing Health Connect analysis...';
+    collectedRecordCount = 0;
+    notifyListeners();
+    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
+    try {
+      work = await _beginBackgroundWork('Starting...');
+      return await _healthConnectAnalysisExporter.export(
+        onProgress: _onCollectionProgress,
+        fullHistory: fullHistory,
+      );
+    } catch (e) {
+      error = e.toString();
+      errorLog('[HealthDashboard] Health Connect analysis export failed: $e');
+      rethrow;
+    } finally {
+      await _endBackgroundWork(work);
       isCollecting = false;
       collectionStatus = null;
       notifyListeners();
@@ -279,6 +355,9 @@ class HealthDashboardState extends ChangeNotifier {
 
   Future<void> refreshOnOpen(AppState appState) async {
     if (isCollecting) return;
+    // Show what is already stored before any Health Connect or backend work, so
+    // opening the tool is never gated on a sync round trip.
+    await _reloadRecords();
     isCollecting = true;
     notifyListeners();
     try {
@@ -299,11 +378,7 @@ class HealthDashboardState extends ChangeNotifier {
           final start = lastSyncTime == null
               ? DateTime.now().subtract(const Duration(days: 7))
               : lastSyncTime.subtract(const Duration(days: 1));
-          for (final record in await _healthConnectCollector.collect(
-            start: start,
-          )) {
-            await HealthDatabase.instance.upsertCollected(record);
-          }
+          await _healthConnectCollector.importCanonical(start: start);
           await DatabaseService.instance.setSetting(
             HealthDashboardTool.config.id,
             _healthConnectLastSyncKey,
@@ -383,9 +458,9 @@ class HealthDashboardState extends ChangeNotifier {
     backupExportProcessedCount = 0;
     backupExportTotalCount = 0;
     notifyListeners();
-    WakeLockLease? lease;
+    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
     try {
-      lease = await PowerWakeLockService.acquireFull();
+      work = await _beginBackgroundWork('Starting...');
       return await HealthDatabase.instance.exportBackup(
         onProgress: (processed, total) {
           backupExportProcessedCount = processed;
@@ -394,7 +469,7 @@ class HealthDashboardState extends ChangeNotifier {
         },
       );
     } finally {
-      await lease?.release();
+      await _endBackgroundWork(work);
       isExportingBackup = false;
       notifyListeners();
     }

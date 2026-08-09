@@ -3,15 +3,12 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
-import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../health_dashboard_state.dart';
-import '../health_connect_settings.dart';
 import '../health_sync_delegate.dart';
 import 'health_source_preferences_page.dart';
 import 'health_backup_actions.dart';
-import 'health_import_progress_dialog.dart';
+import 'health_connect_settings_page.dart';
 
 class HealthDashboardSettingsPage extends StatelessWidget {
   const HealthDashboardSettingsPage({super.key});
@@ -45,11 +42,11 @@ class HealthDashboardSettingsPage extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          _SettingsSection(title: l10n.healthDashboardHealthConnect),
+          _SettingsSection(title: l10n.healthDashboardHealthConnectSettings),
           ListTile(
             leading: const Icon(Icons.health_and_safety_outlined),
-            title: Text(l10n.healthDashboardManageHealthConnect),
-            subtitle: Text(l10n.healthDashboardManageHealthConnectSubtitle),
+            title: Text(l10n.healthDashboardHealthConnectSettings),
+            subtitle: Text(l10n.healthDashboardHealthConnectSettingsSubtitle),
             trailing: healthState.isCollecting
                 ? const SizedBox(
                     width: 20,
@@ -57,32 +54,11 @@ class HealthDashboardSettingsPage extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.chevron_right_rounded),
-            onTap: healthState.isCollecting
-                ? null
-                : () => _openHealthConnectSettings(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.download_rounded),
-            title: Text(l10n.healthDashboardImportHealthConnect),
-            subtitle: Text(l10n.healthDashboardConnectHealthConnectSubtitle),
-            onTap: healthState.isCollecting
-                ? null
-                : () => _importHealthConnect(context),
-          ),
-          SwitchListTile.adaptive(
-            secondary: const Icon(Icons.autorenew_rounded),
-            title: Text(l10n.healthDashboardAutoHealthConnectSync),
-            subtitle: Text(l10n.healthDashboardAutoHealthConnectSyncSubtitle),
-            value: healthState.autoHealthConnectSync,
-            onChanged: healthState.setAutoHealthConnectSync,
-          ),
-          ListTile(
-            leading: const Icon(Icons.refresh_rounded),
-            title: Text(l10n.healthDashboardRepairHealthConnect),
-            subtitle: Text(l10n.healthDashboardRepairHealthConnectSubtitle),
-            onTap: healthState.isCollecting
-                ? null
-                : () => _repairHealthConnect(context),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const HealthConnectSettingsPage(),
+              ),
+            ),
           ),
           const Divider(height: 1),
           _SettingsSection(title: l10n.healthDashboardBackup),
@@ -185,98 +161,6 @@ class HealthDashboardSettingsPage extends StatelessWidget {
         );
       }
     }
-  }
-
-  Future<void> _openHealthConnectSettings(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await HealthConnectSettings.open();
-    } catch (e, stackTrace) {
-      errorLog(
-        '[HealthDashboard] Failed to open Health Connect settings: $e\n$stackTrace',
-      );
-      if (context.mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text('Failed to open Health Connect: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _importHealthConnect(BuildContext context) async {
-    final healthState = context.read<HealthDashboardState>();
-    final messenger = ScaffoldMessenger.of(context);
-    HealthImportProgressDialog.show(
-      context,
-      operation: HealthImportOperation.healthConnect,
-    );
-    await healthState.connectHealthConnect();
-    if (!context.mounted) return;
-    if (healthState.error != null) {
-      errorLog(
-        '[HealthDashboard] Health Connect import error: ${healthState.error}',
-      );
-    }
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          healthState.error == null
-              ? AppLocalizations.of(
-                  context,
-                ).healthDashboardHealthConnectImported
-              : 'Import failed: ${healthState.error}',
-        ),
-      ),
-    );
-  }
-
-  Future<void> _repairHealthConnect(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => ResponsiveAlertDialog(
-        title: Text(l10n.healthDashboardRepairHealthConnect),
-        content: Text(l10n.healthDashboardRepairHealthConnectSubtitle),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentRed,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-
-    final healthState = context.read<HealthDashboardState>();
-    final messenger = ScaffoldMessenger.of(context);
-    HealthImportProgressDialog.show(
-      context,
-      operation: HealthImportOperation.healthConnect,
-    );
-    await healthState.repairHealthConnectCache();
-    if (!context.mounted) return;
-    if (healthState.error != null) {
-      errorLog(
-        '[HealthDashboard] Health Connect repair error: ${healthState.error}',
-      );
-    }
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          healthState.error == null
-              ? l10n.healthDashboardHealthConnectRepaired
-              : 'Repair failed: ${healthState.error}',
-        ),
-      ),
-    );
   }
 }
 

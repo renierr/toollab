@@ -1,6 +1,7 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
@@ -18,6 +19,10 @@ class HealthBackupActions {
   static const _jsonTypeGroup = XTypeGroup(
     label: 'Health Connect JSON export',
     extensions: ['json'],
+  );
+  static const _analysisTypeGroup = XTypeGroup(
+    label: 'Health Connect analysis database',
+    extensions: ['db'],
   );
 
   static Future<void> export(BuildContext context) async {
@@ -60,6 +65,55 @@ class HealthBackupActions {
       sourcePath: path,
       acceptedTypeGroups: const [_jsonTypeGroup],
     );
+  }
+
+  static Future<void> exportHealthConnectAnalysis(BuildContext context) async {
+    await _exportHealthConnectData(context, fullHistory: true);
+  }
+
+  static Future<void> exportHealthConnectDiscovery(BuildContext context) async {
+    await _exportHealthConnectData(context, fullHistory: false);
+  }
+
+  static Future<void> _exportHealthConnectData(
+    BuildContext context, {
+    required bool fullHistory,
+  }) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    HealthImportProgressDialog.show(
+      context,
+      operation: HealthImportOperation.analysis,
+    );
+    try {
+      final exportPath = fullHistory
+          ? await context
+                .read<HealthDashboardState>()
+                .exportHealthConnectAnalysis()
+          : await context
+                .read<HealthDashboardState>()
+                .exportHealthConnectDiscovery();
+      if (!context.mounted) return;
+      await FileSaveHelper.saveFileFromPath(
+        context: context,
+        suggestedName: fullHistory
+            ? 'health_connect_analysis.db'
+            : 'health_connect_discovery.db',
+        sourcePath: exportPath,
+        acceptedTypeGroups: const [_analysisTypeGroup],
+      );
+    } catch (e) {
+      errorLog('[HealthDashboard] Health Connect analysis export failed: $e');
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            fullHistory
+                ? l10n.healthDashboardHealthConnectAnalysisFailed
+                : l10n.healthDashboardHealthConnectDiscoveryFailed,
+          ),
+        ),
+      );
+    }
   }
 
   static Future<void> import(BuildContext context) async {

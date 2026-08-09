@@ -57,16 +57,6 @@ class HealthMetricDetailsPage extends StatelessWidget {
             l10n.healthDashboardLastSevenDays,
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          if (!workoutMetric) ...[
-            HealthMetricDaySection(
-              type: type,
-              valueKey: valueKey,
-              unit: unit,
-              color: color,
-              day: state.selectedDay,
-              sum: sum,
-            ),
-          ],
           const SizedBox(height: 8),
           Card(
             child: Padding(
@@ -90,6 +80,15 @@ class HealthMetricDetailsPage extends StatelessWidget {
               ),
             ),
           ),
+          if (!workoutMetric)
+            HealthMetricDaySection(
+              type: type,
+              valueKey: valueKey,
+              unit: unit,
+              color: color,
+              day: state.selectedDay,
+              sum: sum,
+            ),
           const SizedBox(height: 24),
           Text(
             l10n.healthDashboardHistory,

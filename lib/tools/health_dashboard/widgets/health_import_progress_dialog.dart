@@ -29,21 +29,12 @@ class HealthImportProgressDialog extends StatefulWidget {
 
 class _HealthImportProgressDialogState
     extends State<HealthImportProgressDialog> {
-  Timer? _safetyTimeoutTimer;
   Timer? _cancelButtonTimer;
   bool _showCancelButton = false;
 
   @override
   void initState() {
     super.initState();
-    // Safety timeout: auto-close dialog if sync stalls for 3 minutes.
-    _safetyTimeoutTimer = Timer(const Duration(minutes: 3), () {
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    });
-
-    // Escape hatch: show emergency cancel button after 30 seconds.
     _cancelButtonTimer = Timer(const Duration(seconds: 30), () {
       if (mounted) {
         setState(() {
@@ -55,7 +46,6 @@ class _HealthImportProgressDialogState
 
   @override
   void dispose() {
-    _safetyTimeoutTimer?.cancel();
     _cancelButtonTimer?.cancel();
     super.dispose();
   }
@@ -76,13 +66,25 @@ class _HealthImportProgressDialogState
     final l10n = AppLocalizations.of(context);
     final state = context.watch<HealthDashboardState>();
     final isBackup = widget.operation == HealthImportOperation.backup;
+    final isAnalysis = widget.operation == HealthImportOperation.analysis;
+    final isComparison = widget.operation == HealthImportOperation.comparison;
     final isInProgress = isBackup
         ? state.isImportingBackup
         : state.isCollecting;
-    final title = isBackup
+    final title = isComparison
+        ? l10n.healthDashboardHealthConnectComparisonProgressTitle
+        : isAnalysis
+        ? l10n.healthDashboardHealthConnectAnalysisProgressTitle
+        : isBackup
         ? l10n.healthDashboardImportBackupProgressTitle
         : l10n.healthDashboardImportHealthConnectProgressTitle;
-    final status = isBackup
+    final status = isComparison
+        ? state.collectionStatus ??
+              l10n.healthDashboardHealthConnectComparisonProgressStatus
+        : isAnalysis
+        ? state.collectionStatus ??
+              l10n.healthDashboardHealthConnectAnalysisProgressStatus
+        : isBackup
         ? l10n.healthDashboardImportBackupProgressStatus(
             state.backupImportProcessedCount,
             state.backupImportTotalCount,
@@ -130,7 +132,15 @@ class _HealthImportProgressDialogState
                   const Icon(Icons.sync, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    isBackup
+                    isComparison
+                        ? l10n.healthDashboardHealthConnectComparisonProgressCount(
+                            state.collectedRecordCount,
+                          )
+                        : isAnalysis
+                        ? l10n.healthDashboardHealthConnectAnalysisProgressCount(
+                            state.collectedRecordCount,
+                          )
+                        : isBackup
                         ? l10n.healthDashboardImportBackupProgressCount(
                             state.backupImportProcessedCount,
                             state.backupImportTotalCount,
@@ -147,7 +157,11 @@ class _HealthImportProgressDialogState
             ),
             const SizedBox(height: 12),
             Text(
-              isBackup
+              isComparison
+                  ? l10n.healthDashboardHealthConnectComparisonProgressHint
+                  : isAnalysis
+                  ? l10n.healthDashboardHealthConnectAnalysisProgressHint
+                  : isBackup
                   ? l10n.healthDashboardImportBackupProgressHint
                   : l10n.healthDashboardImportHealthConnectProgressHint,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -173,4 +187,4 @@ class _HealthImportProgressDialogState
   }
 }
 
-enum HealthImportOperation { healthConnect, backup }
+enum HealthImportOperation { healthConnect, backup, analysis, comparison }
