@@ -3450,6 +3450,15 @@
       }
     }
   },
+  "healthDashboardStoreEmptyHint": "Nothing stored yet. Scan, then import.",
+  "healthDashboardStoreRollupRows": "{rows} daily summary rows",
+  "@healthDashboardStoreRollupRows": {
+    "placeholders": {
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardBaselineEstablished": "Change tracking started. Run an import to load history.",
   "healthDashboardSyncChangesResult": "{updated} updated, {removed} removed",
   "@healthDashboardSyncChangesResult": {

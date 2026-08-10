@@ -70,9 +70,10 @@ class HealthConnectImporter {
           : DateTime.fromMillisecondsSinceEpoch(row!['range_end'] as int);
       var imported = restart ? 0 : (row?['n'] as num?)?.toInt() ?? 0;
 
-      final packages = await store.enabledPackages(typeId);
-      // Empty means "no restriction", which is also how a type looks before
-      // discovery has run. Selecting nothing is expressed by disabling the type.
+      // Empty means no restriction. The filter only ever excludes writers the
+      // user switched off; it is never an allowlist built from discovery, which
+      // probes a bounded window and would drop every writer it did not see.
+      final packages = await store.dataOriginFilter(typeId);
       final origins = [for (final package in packages) hc.DataOrigin(package)];
 
       try {

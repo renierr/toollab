@@ -103,7 +103,10 @@ class HealthPoint {
   final double v;
   final double? v2;
 
-  const HealthPoint(this.t, this.v, [this.v2]);
+  /// Writing app, so a list can show which source a measurement came from.
+  final String? package;
+
+  const HealthPoint(this.t, this.v, [this.v2, this.package]);
 }
 
 /// An interval value read back for a list or chart.
@@ -111,8 +114,9 @@ class HealthInterval {
   final int t0;
   final int t1;
   final double v;
+  final String? package;
 
-  const HealthInterval(this.t0, this.t1, this.v);
+  const HealthInterval(this.t0, this.t1, this.v, [this.package]);
 }
 
 class HealthDiscoveredApp {
@@ -696,19 +700,14 @@ class HealthStore {
     if (metricId == null) return null;
     final rows = await db.query(
       HealthSchema.point,
-      columns: ['t', 'v', 'v2'],
+      columns: ['t', 'v', 'v2', 'app'],
       where: 'metric = ?',
       whereArgs: [metricId],
       orderBy: 't DESC',
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    final row = rows.single;
-    return HealthPoint(
-      row['t'] as int,
-      (row['v'] as num).toDouble(),
-      (row['v2'] as num?)?.toDouble(),
-    );
+    return _pointFromRow(rows.single);
   }
 
   /// Dense samples inside a window - the workout drilldown. Bounded by the
@@ -733,20 +732,12 @@ class HealthStore {
     }
     final rows = await db.query(
       HealthSchema.point,
-      columns: ['t', 'v', 'v2'],
+      columns: ['t', 'v', 'v2', 'app'],
       where: where.toString(),
       whereArgs: args,
       orderBy: 't ASC',
     );
-    return rows
-        .map(
-          (row) => HealthPoint(
-            row['t'] as int,
-            (row['v'] as num).toDouble(),
-            (row['v2'] as num?)?.toDouble(),
-          ),
-        )
-        .toList();
+    return rows.map(_pointFromRow).toList();
   }
 
   Future<List<HealthInterval>> intervalsInRange({
@@ -759,7 +750,7 @@ class HealthStore {
     if (metricId == null) return const [];
     final rows = await db.query(
       HealthSchema.interval,
-      columns: ['t0', 't1', 'v'],
+      columns: ['t0', 't1', 'v', 'app'],
       where: 'metric = ? AND t0 >= ? AND t0 < ?',
       whereArgs: [metricId, from, to],
       orderBy: 't0 ASC',
@@ -777,7 +768,7 @@ class HealthStore {
     if (metricId == null || limit <= 0) return const [];
     final rows = await db.query(
       HealthSchema.interval,
-      columns: ['t0', 't1', 'v'],
+      columns: ['t0', 't1', 'v', 'app'],
       where: 'metric = ?',
       whereArgs: [metricId],
       orderBy: 't0 DESC',
@@ -797,7 +788,7 @@ class HealthStore {
     if (metricId == null || limit <= 0) return const [];
     final rows = await db.query(
       HealthSchema.point,
-      columns: ['t', 'v', 'v2'],
+      columns: ['t', 'v', 'v2', 'app'],
       where: 'metric = ?',
       whereArgs: [metricId],
       orderBy: 't DESC',
@@ -822,17 +813,18 @@ class HealthStore {
     return (rows.single['n'] as num?)?.toInt() ?? 0;
   }
 
-  static HealthInterval _intervalFromRow(Map<String, Object?> row) =>
-      HealthInterval(
-        row['t0'] as int,
-        row['t1'] as int,
-        (row['v'] as num).toDouble(),
-      );
+  HealthInterval _intervalFromRow(Map<String, Object?> row) => HealthInterval(
+    row['t0'] as int,
+    row['t1'] as int,
+    (row['v'] as num).toDouble(),
+    _appPackages[row['app'] as int? ?? -1],
+  );
 
-  static HealthPoint _pointFromRow(Map<String, Object?> row) => HealthPoint(
+  HealthPoint _pointFromRow(Map<String, Object?> row) => HealthPoint(
     row['t'] as int,
     (row['v'] as num).toDouble(),
     (row['v2'] as num?)?.toDouble(),
+    _appPackages[row['app'] as int? ?? -1],
   );
 
   Future<List<HealthSession>> sessions({
@@ -1161,15 +1153,32 @@ class HealthStore {
 
   /// Packages the user pulls for a type. Empty means no restriction, which is
   /// also what a type looks like before discovery has run.
-  Future<List<String>> enabledPackages(String type) async {
+  /// Packages to pass as `dataOrigins` when reading [type], or empty for no
+  /// restriction.
+  ///
+  /// This filter may only ever **exclude**. Discovery is a bounded probe - a
+  /// recent window, a few pages per type - so it cannot be treated as a complete
+  /// list of writers. Using its output as an allowlist silently dropped every
+  /// writer the probe happened not to see, which is how a full import ended up
+  /// containing nothing but the one app that had written most recently.
+  ///
+  /// So a restriction is applied only when the user has actually switched
+  /// something off for this type. With everything enabled - the default, and the
+  /// state right after discovery - no filter is sent and undiscovered writers
+  /// still come in.
+  Future<List<String>> dataOriginFilter(String type) async {
     final db = await _db();
     final rows = await db.query(
       HealthSchema.typeApp,
-      columns: ['app'],
-      where: 'type = ? AND enabled = 1',
+      columns: ['app', 'enabled'],
+      where: 'type = ?',
       whereArgs: [type],
     );
+    if (rows.isEmpty) return const [];
+    final hasExclusion = rows.any((row) => (row['enabled'] as int) == 0);
+    if (!hasExclusion) return const [];
     return rows
+        .where((row) => (row['enabled'] as int) == 1)
         .map((row) => _appPackages[row['app'] as int])
         .whereType<String>()
         .toList();

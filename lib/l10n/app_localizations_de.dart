@@ -6553,6 +6553,15 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get healthDashboardStoreEmptyHint =>
+      'Noch nichts gespeichert. Erst suchen, dann importieren.';
+
+  @override
+  String healthDashboardStoreRollupRows(int rows) {
+    return '$rows Tageszusammenfassungen';
+  }
+
+  @override
   String get healthDashboardBaselineEstablished =>
       'Aenderungsverfolgung gestartet. Starte einen Import fuer die Historie.';
 

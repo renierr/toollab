@@ -11765,6 +11765,18 @@ abstract class AppLocalizations {
   /// **'{points} measurements, {sessions} sessions'**
   String healthDashboardStoreSummary(int points, int sessions);
 
+  /// No description provided for @healthDashboardStoreEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing stored yet. Scan, then import.'**
+  String get healthDashboardStoreEmptyHint;
+
+  /// No description provided for @healthDashboardStoreRollupRows.
+  ///
+  /// In en, this message translates to:
+  /// **'{rows} daily summary rows'**
+  String healthDashboardStoreRollupRows(int rows);
+
   /// No description provided for @healthDashboardBaselineEstablished.
   ///
   /// In en, this message translates to:

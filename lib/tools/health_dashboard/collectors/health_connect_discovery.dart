@@ -17,11 +17,15 @@ import 'health_connect_types.dart';
 class HealthConnectDiscovery {
   const HealthConnectDiscovery();
 
-  static const _maxPagesPerType = 3;
+  // Wide enough that a writer which only contributes occasionally still shows
+  // up, small enough to finish in seconds. The probe is a hint either way: the
+  // import filter only excludes what the user switched off, so a writer this
+  // misses is still imported.
+  static const _maxPagesPerType = 6;
   static const _pageSize = 500;
 
   Future<int> run({
-    Duration window = const Duration(days: 30),
+    Duration window = const Duration(days: 365),
     void Function(String status, int count)? onProgress,
   }) async {
     if (!Platform.isAndroid) return 0;

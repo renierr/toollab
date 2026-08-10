@@ -6510,6 +6510,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get healthDashboardStoreEmptyHint =>
+      'Nothing stored yet. Scan, then import.';
+
+  @override
+  String healthDashboardStoreRollupRows(int rows) {
+    return '$rows daily summary rows';
+  }
+
+  @override
   String get healthDashboardBaselineEstablished =>
       'Change tracking started. Run an import to load history.';
 

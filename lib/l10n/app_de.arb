@@ -2601,6 +2601,15 @@
       }
     }
   },
+  "healthDashboardStoreEmptyHint": "Noch nichts gespeichert. Erst suchen, dann importieren.",
+  "healthDashboardStoreRollupRows": "{rows} Tageszusammenfassungen",
+  "@healthDashboardStoreRollupRows": {
+    "placeholders": {
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardBaselineEstablished": "Aenderungsverfolgung gestartet. Starte einen Import fuer die Historie.",
   "healthDashboardSyncChangesResult": "{updated} aktualisiert, {removed} entfernt",
   "@healthDashboardSyncChangesResult": {

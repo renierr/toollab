@@ -9,6 +9,7 @@ import '../health_dashboard_state.dart';
 import 'health_busy_dialog.dart';
 import 'health_data_types_page.dart';
 import 'health_import_progress_dialog.dart';
+import 'health_store_status_tile.dart';
 
 /// All Health Connect options live here so the dashboard settings page keeps a
 /// single entry for them as more are added.
@@ -66,6 +67,7 @@ class HealthConnectSettingsPage extends StatelessWidget {
             title: l10n.healthDashboardSectionCollect,
             description: l10n.healthDashboardSectionCollectHint,
           ),
+          const HealthStoreStatusTile(),
           ListTile(
             leading: const Icon(Icons.download_for_offline_outlined),
             title: Text(l10n.healthDashboardImportSelected),

@@ -516,9 +516,13 @@
         </p>
         <p class="measure">Three mechanisms, in the order they apply:</p>
         <ol class="tight measure">
-          <li><b>Don't read it.</b> Selection per <code>(type, source)</code> becomes a
+          <li><b>Don't read it.</b> Switching a source off for a type becomes a
             <code>dataOrigins</code> filter on the read request, so Health Connect never hands over
-            an unselected writer's rows. Filtering beats deduplicating.</li>
+            that writer's rows. Filtering beats deduplicating.
+            <br><b>The filter only ever excludes.</b> It is sent only when something is actually
+            switched off; with everything enabled no filter is sent at all. Building it from
+            discovery instead — treating a bounded probe as the complete list of writers — made a
+            full import return nothing but the one app that had written most recently.</li>
           <li><b>Collide on insert.</b> Identical value at an identical instant cannot produce two
             rows, given the primary key. This catches exact mirrors — measured at 2,701 identical
             step rows and 104 identical weight rows.</li>
@@ -796,7 +800,7 @@
     {
       n: "Scan", sub: "discovery", title: "Scan available data",
       code: "HealthConnectDiscovery.run()",
-      body: "Bounded probe: a 30-day window, at most 3 pages of 500 records per type. Finishes in seconds. It exists so the selection screens have something to show — nobody can choose a source they have never been shown.",
+      body: "Bounded probe: a one-year window, at most 6 pages of 500 records per type. Finishes in seconds. It exists so the selection screens have something to show — nobody can choose a source they have never been shown. Its output is a hint, never a gate: a writer the probe misses is still imported.",
       writes: ["health_type", "health_type_app", "health_app"],
       no: "Writes no measurements at all."
     },
