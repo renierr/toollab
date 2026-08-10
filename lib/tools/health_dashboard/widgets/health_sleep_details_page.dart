@@ -56,158 +56,179 @@ class HealthSleepDetailsPage extends StatelessWidget {
     );
     final stageDurations = _stageDurations(stages);
     final stageOccurrences = _stageOccurrences(stages);
-    final heartRateSamples = state.heartRateSamplesDuring(session);
     final naps = state
         .recordsOnDay('sleep.session', state.selectedDay)
         .where(state.isNap)
         .toList();
     return Scaffold(
       appBar: AppBar(title: Text(l10n.healthDashboardSleepDetails)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Align(
-            alignment: Alignment.centerRight,
-            child: HealthDayNavigation(),
-          ),
-          Text(
-            l10n.healthDashboardLastSevenDays,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: HealthWorkoutTrendChart(
-                values: state.weeklyMetricValues(
-                  'sleep.session',
-                  'durationMinutes',
+      // Heart-rate curves come from the dense table by range, so they are read
+      // per session instead of being filtered out of the loaded week.
+      body: FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
+        future: _heartRates(state, [session, ...naps]),
+        builder: (context, snapshot) {
+          final heartRates = snapshot.data ?? const {};
+          final heartRateSamples = heartRates[session.id] ?? const [];
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const Align(
+                alignment: Alignment.centerRight,
+                child: HealthDayNavigation(),
+              ),
+              Text(
+                l10n.healthDashboardLastSevenDays,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: HealthWorkoutTrendChart(
+                    values: state.weeklyMetricValues(
+                      'sleep.session',
+                      'durationMinutes',
+                    ),
+                    unit: 'min',
+                    color: Colors.indigo,
+                    style: HealthTrendChartStyle.bars,
+                    endDate: state.trendWeekEnd,
+                    onDayTap: (index) =>
+                        state.selectDay(state.trendDayAt(index)),
+                  ),
                 ),
+              ),
+              const SizedBox(height: 24),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Wrap(
+                    spacing: 28,
+                    runSpacing: 16,
+                    children: [
+                      _SleepValue(
+                        label: l10n.healthDashboardSleepDuration,
+                        value:
+                            '${duration.inHours}h ${duration.inMinutes.remainder(60)}m',
+                      ),
+                      _SleepValue(
+                        label: l10n.healthDashboardSleepStart,
+                        value: MaterialLocalizations.of(
+                          context,
+                        ).formatTimeOfDay(TimeOfDay.fromDateTime(start)),
+                      ),
+                      _SleepValue(
+                        label: l10n.healthDashboardSleepEnd,
+                        value: MaterialLocalizations.of(
+                          context,
+                        ).formatTimeOfDay(TimeOfDay.fromDateTime(end)),
+                      ),
+                      if (stageDurations['awake'] case final duration?)
+                        _SleepValue(
+                          label: l10n.healthDashboardSleepAwake,
+                          value: l10n.healthDashboardSleepStageDuration(
+                            _formatDuration(duration),
+                            stageOccurrences['awake'] ?? 0,
+                          ),
+                          color: Colors.amber,
+                        ),
+                      if (stageDurations['rem'] case final duration?)
+                        _SleepValue(
+                          label: l10n.healthDashboardSleepRem,
+                          value: l10n.healthDashboardSleepStageDuration(
+                            _formatDuration(duration),
+                            stageOccurrences['rem'] ?? 0,
+                          ),
+                          color: Colors.purple,
+                        ),
+                      if (stageDurations['light'] case final duration?)
+                        _SleepValue(
+                          label: l10n.healthDashboardSleepLight,
+                          value: l10n.healthDashboardSleepStageDuration(
+                            _formatDuration(duration),
+                            stageOccurrences['light'] ?? 0,
+                          ),
+                          color: Colors.lightBlue,
+                        ),
+                      if (stageDurations['deep'] case final duration?)
+                        _SleepValue(
+                          label: l10n.healthDashboardSleepDeep,
+                          value: l10n.healthDashboardSleepStageDuration(
+                            _formatDuration(duration),
+                            stageOccurrences['deep'] ?? 0,
+                          ),
+                          color: Colors.indigo,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              HealthSourceBadge(packageName: session.sourceName),
+              const SizedBox(height: 24),
+              if (stages.isNotEmpty) ...[
+                Text(
+                  l10n.healthDashboardSleepStages,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                _SleepLegend(hasHeartRate: heartRateSamples.length >= 2),
+                const SizedBox(height: 8),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: HealthSleepStageTimeline(
+                      stages: stages,
+                      heartRateSamples: heartRateSamples,
+                      startTime: session.startTime,
+                      endTime: session.endTime,
+                    ),
+                  ),
+                ),
+              ],
+              if (naps.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Text(
+                  l10n.healthDashboardNaps,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                ...naps.map(
+                  (nap) => _NapDetails(
+                    record: nap,
+                    heartRateSamples: heartRates[nap.id] ?? const [],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              Text(
+                l10n.healthDashboardHistory,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              HealthMetricHistory(
+                type: 'sleep.session',
+                valueKey: 'durationMinutes',
                 unit: 'min',
-                color: Colors.indigo,
-                style: HealthTrendChartStyle.bars,
-                endDate: state.trendWeekEnd,
-                onDayTap: (index) => state.selectDay(state.trendDayAt(index)),
+                isNap: state.isNap,
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Wrap(
-                spacing: 28,
-                runSpacing: 16,
-                children: [
-                  _SleepValue(
-                    label: l10n.healthDashboardSleepDuration,
-                    value:
-                        '${duration.inHours}h ${duration.inMinutes.remainder(60)}m',
-                  ),
-                  _SleepValue(
-                    label: l10n.healthDashboardSleepStart,
-                    value: MaterialLocalizations.of(
-                      context,
-                    ).formatTimeOfDay(TimeOfDay.fromDateTime(start)),
-                  ),
-                  _SleepValue(
-                    label: l10n.healthDashboardSleepEnd,
-                    value: MaterialLocalizations.of(
-                      context,
-                    ).formatTimeOfDay(TimeOfDay.fromDateTime(end)),
-                  ),
-                  if (stageDurations['awake'] case final duration?)
-                    _SleepValue(
-                      label: l10n.healthDashboardSleepAwake,
-                      value: l10n.healthDashboardSleepStageDuration(
-                        _formatDuration(duration),
-                        stageOccurrences['awake'] ?? 0,
-                      ),
-                      color: Colors.amber,
-                    ),
-                  if (stageDurations['rem'] case final duration?)
-                    _SleepValue(
-                      label: l10n.healthDashboardSleepRem,
-                      value: l10n.healthDashboardSleepStageDuration(
-                        _formatDuration(duration),
-                        stageOccurrences['rem'] ?? 0,
-                      ),
-                      color: Colors.purple,
-                    ),
-                  if (stageDurations['light'] case final duration?)
-                    _SleepValue(
-                      label: l10n.healthDashboardSleepLight,
-                      value: l10n.healthDashboardSleepStageDuration(
-                        _formatDuration(duration),
-                        stageOccurrences['light'] ?? 0,
-                      ),
-                      color: Colors.lightBlue,
-                    ),
-                  if (stageDurations['deep'] case final duration?)
-                    _SleepValue(
-                      label: l10n.healthDashboardSleepDeep,
-                      value: l10n.healthDashboardSleepStageDuration(
-                        _formatDuration(duration),
-                        stageOccurrences['deep'] ?? 0,
-                      ),
-                      color: Colors.indigo,
-                    ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          HealthSourceBadge(packageName: session.sourceName),
-          const SizedBox(height: 24),
-          if (stages.isNotEmpty) ...[
-            Text(
-              l10n.healthDashboardSleepStages,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            _SleepLegend(hasHeartRate: heartRateSamples.length >= 2),
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: HealthSleepStageTimeline(
-                  stages: stages,
-                  heartRateSamples: heartRateSamples,
-                  startTime: session.startTime,
-                  endTime: session.endTime,
-                ),
-              ),
-            ),
-          ],
-          if (naps.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            Text(
-              l10n.healthDashboardNaps,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            ...naps.map(
-              (nap) => _NapDetails(
-                record: nap,
-                heartRateSamples: state.heartRateSamplesDuring(nap),
-              ),
-            ),
-          ],
-          const SizedBox(height: 24),
-          Text(
-            l10n.healthDashboardHistory,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          HealthMetricHistory(
-            type: 'sleep.session',
-            valueKey: 'durationMinutes',
-            unit: 'min',
-            isNap: state.isNap,
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
+  }
+
+  /// One lookup per session, keyed by record id.
+  static Future<Map<String, List<Map<String, dynamic>>>> _heartRates(
+    HealthDashboardState state,
+    List<HealthRecord> sessions,
+  ) async {
+    final result = <String, List<Map<String, dynamic>>>{};
+    for (final session in sessions) {
+      result[session.id] = await state.heartRateSamplesDuring(session);
+    }
+    return result;
   }
 }
 

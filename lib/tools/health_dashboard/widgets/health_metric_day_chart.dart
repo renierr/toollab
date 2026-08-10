@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
-import '../health_database.dart';
+import '../store/health_queries.dart';
 import '../health_record.dart';
 
 class HealthMetricDaySection extends StatelessWidget {
@@ -27,7 +27,7 @@ class HealthMetricDaySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) => FutureBuilder<List<HealthRecord>>(
     key: ValueKey('$type-${day.toIso8601String()}'),
-    future: HealthDatabase.instance.recordsForDay(type: type, day: day),
+    future: HealthQueries.instance.recordsForDay(type: type, day: day),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return const SizedBox.shrink();

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'health_dashboard_state.dart';
@@ -23,9 +22,7 @@ class _HealthDashboardPageState extends State<HealthDashboardPage>
     super.initState();
     Future<void>.microtask(() async {
       if (!mounted) return;
-      final healthState = context.read<HealthDashboardState>();
-      final appState = context.read<AppState>();
-      await healthState.refreshOnOpen(appState);
+      await context.read<HealthDashboardState>().refreshOnOpen();
     });
   }
 
@@ -40,7 +37,7 @@ class _HealthDashboardPageState extends State<HealthDashboardPage>
           tooltip: l10n.healthDashboardRefresh,
           onPressed: state.isCollecting
               ? null
-              : () => context.read<HealthDashboardState>().collect(),
+              : () => context.read<HealthDashboardState>().refresh(),
           icon: state.isCollecting
               ? const SizedBox(
                   width: 20,

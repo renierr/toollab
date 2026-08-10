@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/settings_section_label.dart';
 
 import '../health_connect_settings.dart';
 import '../health_dashboard_state.dart';
-import 'health_backup_actions.dart';
 import 'health_busy_dialog.dart';
+import 'health_data_types_page.dart';
 import 'health_import_progress_dialog.dart';
 
 /// All Health Connect options live here so the dashboard settings page keeps a
@@ -24,6 +23,7 @@ class HealthConnectSettingsPage extends StatelessWidget {
       appBar: AppBar(title: Text(l10n.healthDashboardHealthConnectSettings)),
       body: ListView(
         children: [
+          SettingsSectionLabel(title: l10n.healthDashboardSectionAccess),
           ListTile(
             leading: const Icon(Icons.health_and_safety_outlined),
             title: Text(l10n.healthDashboardManageHealthConnect),
@@ -39,46 +39,58 @@ class HealthConnectSettingsPage extends StatelessWidget {
                 ? null
                 : () => _openSystemSettings(context),
           ),
-          ListTile(
-            leading: const Icon(Icons.download_rounded),
-            title: Text(l10n.healthDashboardImportHealthConnect),
-            subtitle: Text(l10n.healthDashboardConnectHealthConnectSubtitle),
-            onTap: () => healthState.isCollecting
-                ? HealthBusyDialog.show(context)
-                : _import(context),
+          SettingsSectionLabel(
+            title: l10n.healthDashboardSectionSelect,
+            description: l10n.healthDashboardSectionSelectHint,
           ),
-          SwitchListTile.adaptive(
-            secondary: const Icon(Icons.autorenew_rounded),
-            title: Text(l10n.healthDashboardAutoHealthConnectSync),
-            subtitle: Text(l10n.healthDashboardAutoHealthConnectSyncSubtitle),
-            value: healthState.autoHealthConnectSync,
-            onChanged: healthState.setAutoHealthConnectSync,
-          ),
-          const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.refresh_rounded),
-            title: Text(l10n.healthDashboardRepairHealthConnect),
-            subtitle: Text(l10n.healthDashboardRepairHealthConnectSubtitle),
-            onTap: () => healthState.isCollecting
-                ? HealthBusyDialog.show(context)
-                : _repair(context),
+            leading: const Icon(Icons.checklist_rounded),
+            title: Text(l10n.healthDashboardDataTypes),
+            subtitle: Text(l10n.healthDashboardDataTypesSubtitle),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const HealthDataTypesPage(),
+              ),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.travel_explore_rounded),
-            title: Text(l10n.healthDashboardHealthConnectDiscovery),
-            subtitle: Text(l10n.healthDashboardHealthConnectDiscoverySubtitle),
+            title: Text(l10n.healthDashboardScanSources),
+            subtitle: Text(l10n.healthDashboardScanSourcesSubtitle),
             onTap: () => healthState.isCollecting
                 ? HealthBusyDialog.show(context)
-                : HealthBackupActions.exportHealthConnectDiscovery(context),
+                : healthState.runDiscovery(),
+          ),
+          SettingsSectionLabel(
+            title: l10n.healthDashboardSectionCollect,
+            description: l10n.healthDashboardSectionCollectHint,
           ),
           ListTile(
-            leading: const Icon(Icons.biotech_outlined),
-            title: Text(l10n.healthDashboardHealthConnectAnalysis),
-            subtitle: Text(l10n.healthDashboardHealthConnectAnalysisSubtitle),
+            leading: const Icon(Icons.download_for_offline_outlined),
+            title: Text(l10n.healthDashboardImportSelected),
+            subtitle: Text(l10n.healthDashboardImportSelectedSubtitle),
             onTap: () => healthState.isCollecting
                 ? HealthBusyDialog.show(context)
-                : HealthBackupActions.exportHealthConnectAnalysis(context),
+                : _importIntoStore(context, restart: false),
           ),
+          ListTile(
+            leading: const Icon(Icons.sync_rounded),
+            title: Text(l10n.healthDashboardSyncChanges),
+            subtitle: Text(l10n.healthDashboardSyncChangesSubtitle),
+            onTap: () => healthState.isCollecting
+                ? HealthBusyDialog.show(context)
+                : _syncChanges(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.restart_alt_rounded),
+            title: Text(l10n.healthDashboardImportRestart),
+            subtitle: Text(l10n.healthDashboardImportRestartSubtitle),
+            onTap: () => healthState.isCollecting
+                ? HealthBusyDialog.show(context)
+                : _importIntoStore(context, restart: true),
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -101,7 +113,10 @@ class HealthConnectSettingsPage extends StatelessWidget {
     }
   }
 
-  Future<void> _import(BuildContext context) async {
+  Future<void> _importIntoStore(
+    BuildContext context, {
+    required bool restart,
+  }) async {
     final healthState = context.read<HealthDashboardState>();
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
@@ -109,12 +124,10 @@ class HealthConnectSettingsPage extends StatelessWidget {
       context,
       operation: HealthImportOperation.healthConnect,
     );
-    await healthState.connectHealthConnect();
+    await healthState.importIntoStore(restart: restart);
     if (!context.mounted) return;
     if (healthState.error != null) {
-      errorLog(
-        '[HealthDashboard] Health Connect import error: ${healthState.error}',
-      );
+      errorLog('[HealthDashboard] Store import error: ${healthState.error}');
     }
     messenger.showSnackBar(
       SnackBar(
@@ -127,51 +140,20 @@ class HealthConnectSettingsPage extends StatelessWidget {
     );
   }
 
-  Future<void> _repair(BuildContext context) async {
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => ResponsiveAlertDialog(
-        title: Text(l10n.healthDashboardRepairHealthConnect),
-        content: Text(l10n.healthDashboardResetHealthConnectDescription),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentRed,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.healthDashboardStartOver),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
+  Future<void> _syncChanges(BuildContext context) async {
     final healthState = context.read<HealthDashboardState>();
     final messenger = ScaffoldMessenger.of(context);
-    HealthImportProgressDialog.show(
-      context,
-      operation: HealthImportOperation.healthConnect,
-    );
-    await healthState.repairHealthConnectCache();
+    final l10n = AppLocalizations.of(context);
+    final result = await healthState.syncChanges();
     if (!context.mounted) return;
-    if (healthState.error != null) {
-      errorLog(
-        '[HealthDashboard] Health Connect repair error: ${healthState.error}',
-      );
-    }
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          healthState.error == null
-              ? l10n.healthDashboardHealthConnectRepaired
-              : l10n.healthDashboardHealthConnectRepairFailed,
-        ),
-      ),
-    );
+    final message = result.needsFullImport
+        ? l10n.healthDashboardFullImportNeeded
+        : result.baselineEstablished
+        ? l10n.healthDashboardBaselineEstablished
+        : l10n.healthDashboardSyncChangesResult(
+            result.upserted,
+            result.deleted,
+          );
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 }

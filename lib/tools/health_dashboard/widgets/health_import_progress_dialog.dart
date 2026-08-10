@@ -66,25 +66,13 @@ class _HealthImportProgressDialogState
     final l10n = AppLocalizations.of(context);
     final state = context.watch<HealthDashboardState>();
     final isBackup = widget.operation == HealthImportOperation.backup;
-    final isAnalysis = widget.operation == HealthImportOperation.analysis;
-    final isComparison = widget.operation == HealthImportOperation.comparison;
     final isInProgress = isBackup
         ? state.isImportingBackup
         : state.isCollecting;
-    final title = isComparison
-        ? l10n.healthDashboardHealthConnectComparisonProgressTitle
-        : isAnalysis
-        ? l10n.healthDashboardHealthConnectAnalysisProgressTitle
-        : isBackup
+    final title = isBackup
         ? l10n.healthDashboardImportBackupProgressTitle
         : l10n.healthDashboardImportHealthConnectProgressTitle;
-    final status = isComparison
-        ? state.collectionStatus ??
-              l10n.healthDashboardHealthConnectComparisonProgressStatus
-        : isAnalysis
-        ? state.collectionStatus ??
-              l10n.healthDashboardHealthConnectAnalysisProgressStatus
-        : isBackup
+    final status = isBackup
         ? l10n.healthDashboardImportBackupProgressStatus(
             state.backupImportProcessedCount,
             state.backupImportTotalCount,
@@ -132,15 +120,7 @@ class _HealthImportProgressDialogState
                   const Icon(Icons.sync, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    isComparison
-                        ? l10n.healthDashboardHealthConnectComparisonProgressCount(
-                            state.collectedRecordCount,
-                          )
-                        : isAnalysis
-                        ? l10n.healthDashboardHealthConnectAnalysisProgressCount(
-                            state.collectedRecordCount,
-                          )
-                        : isBackup
+                    isBackup
                         ? l10n.healthDashboardImportBackupProgressCount(
                             state.backupImportProcessedCount,
                             state.backupImportTotalCount,
@@ -157,11 +137,7 @@ class _HealthImportProgressDialogState
             ),
             const SizedBox(height: 12),
             Text(
-              isComparison
-                  ? l10n.healthDashboardHealthConnectComparisonProgressHint
-                  : isAnalysis
-                  ? l10n.healthDashboardHealthConnectAnalysisProgressHint
-                  : isBackup
+              isBackup
                   ? l10n.healthDashboardImportBackupProgressHint
                   : l10n.healthDashboardImportHealthConnectProgressHint,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -187,4 +163,4 @@ class _HealthImportProgressDialogState
   }
 }
 
-enum HealthImportOperation { healthConnect, backup, analysis, comparison }
+enum HealthImportOperation { healthConnect, backup }

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/collapsible_section.dart';
 
-import '../health_database.dart';
+import '../store/health_queries.dart';
 import '../health_record.dart';
 import 'health_data_tile.dart';
 import 'health_empty_state.dart';
@@ -54,7 +54,7 @@ class _HealthAllDataPageState extends State<HealthAllDataPage> {
     if (_isFetchingMore || !_hasMore) return;
     setState(() => _isFetchingMore = true);
     try {
-      final page = await HealthDatabase.instance.recordsPage(
+      final page = await HealthQueries.instance.recordsPage(
         offset: _records.length,
       );
       if (!mounted) return;

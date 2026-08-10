@@ -2,39 +2,29 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
-import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 
-import 'collectors/health_connect_collector.dart';
-import 'collectors/health_connect_analysis_exporter.dart';
-import 'collectors/treadmill_collector.dart';
+import 'collectors/health_connect_diff.dart';
+import 'collectors/health_connect_discovery.dart';
+import 'collectors/health_connect_importer.dart';
+import 'store/health_metric_catalog.dart';
+import 'store/health_queries.dart';
+import 'store/health_store.dart';
 import '../treadmill_control/treadmill_health_connect_publisher.dart';
 import 'config.dart';
-import 'health_database.dart';
 import 'health_record.dart';
-import 'health_sync_delegate.dart';
 
 class HealthDashboardState extends ChangeNotifier {
-  static const _showTreadmillWorkoutsKey = 'show_treadmill_workouts';
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
-  static const _healthConnectLastSyncKey =
-      HealthDatabase.healthConnectLastSyncKey;
-  static const _healthConnectAutoSyncInterval = Duration(minutes: 30);
-  static const _sourcePreferencePrefix = 'source_preference_';
-  final _treadmillCollector = TreadmillCollector();
-  final _healthConnectCollector = HealthConnectCollector();
-  final _healthConnectAnalysisExporter = HealthConnectAnalysisExporter();
   List<HealthRecord> records = [];
   bool isLoading = true;
   bool isCollecting = false;
   bool isImportingBackup = false;
   bool isExportingBackup = false;
-  bool showTreadmillWorkouts = true;
   bool autoHealthConnectSync = false;
   int trendDayOffset = 0;
-  final Map<String, String?> sourcePreferences = {};
   String? error;
   double allTimeDistanceKm = 0;
   int allTimeCalories = 0;
@@ -126,12 +116,12 @@ class HealthDashboardState extends ChangeNotifier {
     final start = _dayAt(0);
     final end = _dayAt(6).add(const Duration(days: 1));
     final results = await Future.wait([
-      HealthDatabase.instance.dashboardRecords(start: start, end: end),
-      HealthDatabase.instance.latestDashboardRecords(),
-      HealthDatabase.instance.allTimeWorkoutSummary(),
-      HealthDatabase.instance.allTimeSteps(),
-      HealthDatabase.instance.dailyStepTotals(start: start, end: end),
-      HealthDatabase.instance.dailyHeartRateAverages(start: start, end: end),
+      HealthQueries.instance.dashboardRecords(start: start, end: end),
+      HealthQueries.instance.latestDashboardRecords(),
+      HealthQueries.instance.allTimeWorkoutSummary(),
+      HealthQueries.instance.allTimeSteps(),
+      HealthQueries.instance.dailyStepTotals(start: start, end: end),
+      HealthQueries.instance.dailyHeartRateAverages(start: start, end: end),
     ]);
     final weekRecords = results[0] as List<HealthRecord>;
     final latestRecords = results[1] as List<HealthRecord>;
@@ -149,24 +139,12 @@ class HealthDashboardState extends ChangeNotifier {
     allTimeSteps = results[3] as int;
     _dailySteps = results[4] as Map<String, int>;
     _dailyHeartRate = results[5] as Map<String, double>;
-    showTreadmillWorkouts =
-        await DatabaseService.instance.getSetting(
-          HealthDashboardTool.config.id,
-          _showTreadmillWorkoutsKey,
-        ) !=
-        'false';
     autoHealthConnectSync =
         await DatabaseService.instance.getSetting(
           HealthDashboardTool.config.id,
           _autoHealthConnectSyncKey,
         ) ==
         'true';
-    for (final type in _sourcePreferenceTypes) {
-      sourcePreferences[type] = await DatabaseService.instance.getSetting(
-        HealthDashboardTool.config.id,
-        '$_sourcePreferencePrefix$type',
-      );
-    }
     if (kDebugMode) {
       debugLog(
         '[HealthDashboard] Dashboard data ready: ${records.length} records in '
@@ -175,227 +153,46 @@ class HealthDashboardState extends ChangeNotifier {
     }
   }
 
-  Future<void> collect() async {
+  /// Pull-to-refresh and the toolbar refresh button. Re-reads what is stored and
+  /// pushes any treadmill sessions that have not reached Health Connect yet; it
+  /// deliberately does not import, so refreshing stays instant.
+  Future<void> refresh() async {
     if (isCollecting) return;
     isCollecting = true;
     error = null;
     notifyListeners();
     try {
-      for (final record in await _treadmillCollector.collect()) {
-        await HealthDatabase.instance.upsertCollected(record);
-      }
+      await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
       await _reloadRecords();
     } catch (e) {
       error = e.toString();
-      errorLog('[HealthDashboard] Collection failed: $e');
+      errorLog('[HealthDashboard] Refresh failed: $e');
     } finally {
       isCollecting = false;
       notifyListeners();
     }
   }
 
-  Future<void> connectHealthConnect() async {
-    try {
-      await _healthConnectCollector.requestAccess();
-      await syncHealthConnect();
-    } catch (e) {
-      error = e.toString();
-      errorLog('[HealthDashboard] Health Connect access failed: $e');
-      notifyListeners();
-    }
-  }
-
-  Future<void> syncHealthConnect({bool forceFullHistory = false}) async {
+  Future<void> refreshOnOpen() async {
     if (isCollecting) return;
-    isCollecting = true;
-    error = null;
-    collectionStatus = 'Starting sync...';
-    collectedRecordCount = 0;
-    notifyListeners();
-    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
-    try {
-      work = await _beginBackgroundWork('Starting...');
-      final lastSync = forceFullHistory
-          ? null
-          : await DatabaseService.instance.getSetting(
-              HealthDashboardTool.config.id,
-              _healthConnectLastSyncKey,
-            );
-      // The cursor advances only after all records are saved, so an interrupted
-      // import safely repeats its one-day overlap rather than skipping data.
-      final start = lastSync == null
-          ? DateTime.utc(1970)
-          : DateTime.fromMillisecondsSinceEpoch(
-              int.parse(lastSync),
-            ).subtract(const Duration(days: 1));
-      await _healthConnectCollector.importCanonical(
-        start: start,
-        onProgress: _onCollectionProgress,
-      );
-      _onCollectionProgress(
-        'Refreshing health dashboard...',
-        collectedRecordCount,
-      );
-      await DatabaseService.instance.setSetting(
-        HealthDashboardTool.config.id,
-        _healthConnectLastSyncKey,
-        DateTime.now().millisecondsSinceEpoch.toString(),
-      );
-      await _reloadRecords();
-    } catch (e) {
-      error = e.toString();
-      errorLog('[HealthDashboard] Health Connect sync failed: $e');
-    } finally {
-      await _endBackgroundWork(work);
-      isCollecting = false;
-      collectionStatus = null;
-      notifyListeners();
-    }
-  }
-
-  Future<void> repairHealthConnectCache() async {
-    if (isCollecting) return;
-    isCollecting = true;
-    error = null;
-    collectionStatus = 'Purging local cache...';
-    collectedRecordCount = 0;
-    notifyListeners();
-    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
-    try {
-      work = await _beginBackgroundWork('Starting...');
-      // Without this the whole history read fails one type at a time and the
-      // repair reports success having imported nothing.
-      await _healthConnectCollector.requestAccess();
-      await HealthDatabase.instance.purgeHealthConnectCache();
-      await _healthConnectCollector.importCanonical(
-        start: DateTime.utc(1970),
-        onProgress: _onCollectionProgress,
-      );
-      _onCollectionProgress(
-        'Refreshing health dashboard...',
-        collectedRecordCount,
-      );
-      await DatabaseService.instance.setSetting(
-        HealthDashboardTool.config.id,
-        _healthConnectLastSyncKey,
-        DateTime.now().millisecondsSinceEpoch.toString(),
-      );
-      await _reloadRecords();
-    } catch (e) {
-      error = e.toString();
-      errorLog('[HealthDashboard] Health Connect repair failed: $e');
-    } finally {
-      await _endBackgroundWork(work);
-      isCollecting = false;
-      collectionStatus = null;
-      notifyListeners();
-    }
-  }
-
-  Future<String> exportHealthConnectAnalysis() async {
-    return _exportHealthConnectAnalysis(fullHistory: true);
-  }
-
-  Future<String> exportHealthConnectDiscovery() async {
-    return _exportHealthConnectAnalysis(fullHistory: false);
-  }
-
-  Future<String> exportHealthConnectComparison() async {
-    if (isCollecting) throw StateError('Health Connect operation is running.');
-    isCollecting = true;
-    error = null;
-    collectionStatus = 'Preparing Health Connect comparison...';
-    collectedRecordCount = 0;
-    notifyListeners();
-    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
-    try {
-      work = await _beginBackgroundWork('Starting...');
-      return await _healthConnectAnalysisExporter.exportComparison(
-        onProgress: _onCollectionProgress,
-      );
-    } catch (e) {
-      error = e.toString();
-      errorLog('[HealthDashboard] Health Connect comparison export failed: $e');
-      rethrow;
-    } finally {
-      await _endBackgroundWork(work);
-      isCollecting = false;
-      collectionStatus = null;
-      notifyListeners();
-    }
-  }
-
-  Future<String> _exportHealthConnectAnalysis({
-    required bool fullHistory,
-  }) async {
-    if (isCollecting) throw StateError('Health Connect operation is running.');
-    isCollecting = true;
-    error = null;
-    collectionStatus = 'Preparing Health Connect analysis...';
-    collectedRecordCount = 0;
-    notifyListeners();
-    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
-    try {
-      work = await _beginBackgroundWork('Starting...');
-      return await _healthConnectAnalysisExporter.export(
-        onProgress: _onCollectionProgress,
-        fullHistory: fullHistory,
-      );
-    } catch (e) {
-      error = e.toString();
-      errorLog('[HealthDashboard] Health Connect analysis export failed: $e');
-      rethrow;
-    } finally {
-      await _endBackgroundWork(work);
-      isCollecting = false;
-      collectionStatus = null;
-      notifyListeners();
-    }
-  }
-
-  Future<void> refreshOnOpen(AppState appState) async {
-    if (isCollecting) return;
-    // Show what is already stored before any Health Connect or backend work, so
-    // opening the tool is never gated on a sync round trip.
+    // Show what is already stored before any Health Connect work, so opening the
+    // tool is never gated on an import.
     await _reloadRecords();
     isCollecting = true;
     notifyListeners();
     try {
-      for (final record in await _treadmillCollector.collect()) {
-        await HealthDatabase.instance.upsertCollected(record);
-      }
-      if (autoHealthConnectSync) {
-        final lastSync = await DatabaseService.instance.getSetting(
-          HealthDashboardTool.config.id,
-          _healthConnectLastSyncKey,
-        );
-        final lastSyncTime = lastSync == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(int.parse(lastSync));
-        if (lastSyncTime == null ||
-            DateTime.now().difference(lastSyncTime) >=
-                _healthConnectAutoSyncInterval) {
-          final start = lastSyncTime == null
-              ? DateTime.now().subtract(const Duration(days: 7))
-              : lastSyncTime.subtract(const Duration(days: 1));
-          await _healthConnectCollector.importCanonical(start: start);
-          await DatabaseService.instance.setSetting(
-            HealthDashboardTool.config.id,
-            _healthConnectLastSyncKey,
-            DateTime.now().millisecondsSinceEpoch.toString(),
-          );
-        }
-      }
-      if (appState.syncEnabled && !appState.isSyncing) {
-        try {
-          await appState.syncWithBackend([HealthDashboardSyncDelegate()]);
-        } catch (e) {
-          errorLog('[HealthDashboard] Open sync failed: $e');
-        }
-      }
+      // Treadmill workouts are no longer read out of Treadmill Control's
+      // database. That tool publishes them to Health Connect, so they arrive
+      // here as ordinary exercise sessions written by our own package - one
+      // source of truth instead of two copies to reconcile.
+      await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
+      // Change-token sync, not a re-import: it fetches only what Health Connect
+      // reports as changed, so opening the tool stays cheap even with a decade
+      // of history stored.
+      if (autoHealthConnectSync) await _diff.sync();
       await _reloadRecords();
     } catch (e) {
-      errorLog('[HealthDashboard] Open sync failed: $e');
+      errorLog('[HealthDashboard] Open refresh failed: $e');
     } finally {
       isCollecting = false;
       notifyListeners();
@@ -413,43 +210,129 @@ class HealthDashboardState extends ChangeNotifier {
     );
   }
 
-  Future<void> setShowTreadmillWorkouts(bool value) async {
-    if (showTreadmillWorkouts == value) return;
-    showTreadmillWorkouts = value;
+  // --- selection, full import, incremental sync ------------------------------
+
+  final _importer = const HealthConnectImporter();
+  final _discovery = const HealthConnectDiscovery();
+  final _diff = const HealthConnectDiff();
+
+  List<HealthTypeState> healthTypes = [];
+  final Map<String, List<HealthDiscoveredApp>> discoveredApps = {};
+  Map<String, int> storeRowCounts = const {};
+
+  Future<void> loadSelection() async {
+    healthTypes = await HealthStore.instance.types();
+    for (final type in healthTypes) {
+      discoveredApps[type.type] = await HealthStore.instance.discoveredApps(
+        type.type,
+      );
+    }
+    storeRowCounts = await HealthStore.instance.rowCounts();
     notifyListeners();
-    await DatabaseService.instance.setSetting(
-      HealthDashboardTool.config.id,
-      _showTreadmillWorkoutsKey,
-      value.toString(),
-    );
   }
 
-  static const _sourcePreferenceTypes = [
-    'activity.steps',
-    'body.weight',
-    'heart.resting',
-    'heart.rate',
-    'sleep.session',
-  ];
+  Future<void> setTypeEnabled(String type, bool enabled) async {
+    await HealthStore.instance.setTypeEnabled(type, enabled);
+    await loadSelection();
+  }
 
-  String? preferredSource(String type) => sourcePreferences[type];
-
-  List<String> availableSources(String type) =>
-      recordsOfType(type)
-          .map((record) => record.sourceName)
-          .whereType<String>()
-          .toSet()
-          .toList()
-        ..sort();
-
-  Future<void> setPreferredSource(String type, String? source) async {
-    sourcePreferences[type] = source;
-    notifyListeners();
-    await DatabaseService.instance.setSetting(
-      HealthDashboardTool.config.id,
-      '$_sourcePreferencePrefix$type',
-      source ?? '',
+  /// Turning a source off removes what it already contributed, otherwise the
+  /// dashboard would keep showing data from a source the user just excluded.
+  Future<void> setSourceEnabled({
+    required String type,
+    required String package,
+    required bool enabled,
+  }) async {
+    await HealthStore.instance.setAppEnabled(
+      type: type,
+      package: package,
+      enabled: enabled,
     );
+    if (!enabled) await HealthStore.instance.deleteApp(package);
+    await loadSelection();
+  }
+
+  Future<void> runDiscovery() async {
+    if (isCollecting) return;
+    isCollecting = true;
+    error = null;
+    collectionStatus = 'Scanning Health Connect...';
+    collectedRecordCount = 0;
+    notifyListeners();
+    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
+    try {
+      work = await _beginBackgroundWork('Scanning...');
+      await _importer.requestAccess();
+      await _discovery.run(onProgress: _onCollectionProgress);
+      await loadSelection();
+    } catch (e) {
+      error = e.toString();
+      errorLog('[HealthDashboard] Discovery failed: $e');
+    } finally {
+      await _endBackgroundWork(work);
+      isCollecting = false;
+      collectionStatus = null;
+      notifyListeners();
+    }
+  }
+
+  /// Full history for every enabled type. [restart] discards stored progress and
+  /// re-reads from 1970 instead of resuming.
+  Future<void> importIntoStore({bool restart = false}) async {
+    if (isCollecting) return;
+    isCollecting = true;
+    error = null;
+    collectionStatus = 'Starting import...';
+    collectedRecordCount = 0;
+    notifyListeners();
+    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
+    try {
+      work = await _beginBackgroundWork('Starting...');
+      await _importer.requestAccess();
+      if (restart) await HealthStore.instance.clearImportedData();
+      await _importer.import(
+        start: DateTime.utc(1970),
+        restart: restart,
+        onProgress: _onCollectionProgress,
+      );
+      // A full import is the moment a baseline is worth taking: every later open
+      // then only has to fetch changes.
+      await _diff.sync();
+      await loadSelection();
+    } catch (e) {
+      error = e.toString();
+      errorLog('[HealthDashboard] Store import failed: $e');
+    } finally {
+      await _endBackgroundWork(work);
+      isCollecting = false;
+      collectionStatus = null;
+      notifyListeners();
+    }
+  }
+
+  /// Change-token sync. Cheap enough to run on open: it fetches only what moved.
+  Future<HealthDiffResult> syncChanges() async {
+    if (isCollecting) return const HealthDiffResult();
+    isCollecting = true;
+    error = null;
+    notifyListeners();
+    try {
+      final result = await _diff.sync();
+      if (result.needsFullImport) {
+        errorLog(
+          '[HealthDashboard] Sync token invalid; a full import is required',
+        );
+      }
+      await loadSelection();
+      return result;
+    } catch (e) {
+      error = e.toString();
+      errorLog('[HealthDashboard] Change sync failed: $e');
+      return const HealthDiffResult();
+    } finally {
+      isCollecting = false;
+      notifyListeners();
+    }
   }
 
   Future<String> exportBackup() async {
@@ -461,7 +344,7 @@ class HealthDashboardState extends ChangeNotifier {
     ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
     try {
       work = await _beginBackgroundWork('Starting...');
-      return await HealthDatabase.instance.exportBackup(
+      return await HealthStore.instance.exportBackup(
         onProgress: (processed, total) {
           backupExportProcessedCount = processed;
           backupExportTotalCount = total;
@@ -482,7 +365,7 @@ class HealthDashboardState extends ChangeNotifier {
     backupImportTotalCount = 0;
     notifyListeners();
     try {
-      final imported = await HealthDatabase.instance.importBackup(
+      final imported = await HealthStore.instance.importBackup(
         path,
         onProgress: (processed, total) {
           backupImportProcessedCount = processed;
@@ -498,120 +381,44 @@ class HealthDashboardState extends ChangeNotifier {
     }
   }
 
-  List<HealthRecord> get treadmillWorkouts => showTreadmillWorkouts
-      ? records.where((record) => record.type == 'workout.treadmill').toList()
-      : const [];
+  // Treadmill workouts arrive as ordinary Health Connect exercise sessions
+  // written by our own package, so there is no second local copy to reconcile
+  // and no treadmill-specific dedup left. Anything published by the treadmill
+  // tool is simply a workout with our package as its source.
+  List<HealthRecord> get workouts =>
+      records
+          .where((record) => record.type == 'workout.health_connect')
+          .toList()
+        ..sort((a, b) => b.startTime.compareTo(a.startTime));
 
-  List<HealthRecord> get healthConnectWorkouts => records
-      .where((record) => record.type == 'workout.health_connect')
-      .toList();
+  List<HealthRecord> get effectiveWorkouts => workouts;
 
   List<HealthRecord> get allHealthData =>
       records.where((record) => record.type.startsWith('health.')).toList();
 
-  List<HealthRecord> get workouts =>
-      [...treadmillWorkouts, ...healthConnectWorkouts]
-        ..sort((a, b) => b.startTime.compareTo(a.startTime));
-
-  List<HealthRecord> get effectiveWorkouts => [
-    ...treadmillWorkouts,
-    ...healthConnectWorkouts.where(
-      (record) => !treadmillWorkouts.any(
-        (local) => _isPublishedTreadmillCopy(local, record),
-      ),
-    ),
-  ];
-
-  List<HealthRecord> workoutRecordsOnDay(DateTime day) {
-    final treadmill = treadmillWorkouts
-        .where((record) => _isOnDay(record, day))
-        .toList();
-    final healthConnect = healthConnectWorkouts
-        .where((record) => _isOnDay(record, day))
-        .where(
-          (record) => !treadmill.any(
-            (local) => _isPublishedTreadmillCopy(local, record),
-          ),
-        )
-        .toList();
-    return [...treadmill, ...healthConnect]
-      ..sort((a, b) => b.startTime.compareTo(a.startTime));
-  }
+  List<HealthRecord> workoutRecordsOnDay(DateTime day) =>
+      workouts.where((record) => _isOnDay(record, day)).toList();
 
   Future<List<HealthRecord>> workoutRecordsForDay(DateTime day) async {
-    final dayRecords = await HealthDatabase.instance.recordsOnDay(day);
-    final treadmill = dayRecords
-        .where(
-          (record) =>
-              showTreadmillWorkouts && record.type == 'workout.treadmill',
-        )
-        .toList();
-    final healthConnect = dayRecords
+    final dayRecords = await HealthQueries.instance.recordsOnDay(day);
+    return dayRecords
         .where((record) => record.type == 'workout.health_connect')
-        .where(
-          (record) => !treadmill.any(
-            (local) => _isPublishedTreadmillCopy(local, record),
-          ),
-        )
-        .toList();
-    return [...treadmill, ...healthConnect]
+        .toList()
       ..sort((a, b) => b.startTime.compareTo(a.startTime));
   }
 
-  bool _isPublishedTreadmillCopy(
-    HealthRecord treadmill,
-    HealthRecord healthConnect,
-  ) {
-    final clientRecordId = healthConnect.value['clientRecordId'] as String?;
-    if (clientRecordId != null &&
-        clientRecordId ==
-            '$treadmillHealthConnectClientIdPrefix${treadmill.sourceRecordId}:exercise') {
-      return true;
-    }
-    final startDiff = (treadmill.startTime - healthConnect.startTime).abs();
-    final endDiff = (treadmill.endTime - healthConnect.endTime).abs();
-    if (startDiff < 120000 && endDiff < 120000) {
-      return true;
-    }
-    final overlapStart = max(treadmill.startTime, healthConnect.startTime);
-    final overlapEnd = min(treadmill.endTime, healthConnect.endTime);
-    final overlapMs = overlapEnd - overlapStart;
-    if (overlapMs > 0) {
-      final treadmillDuration = max(1, treadmill.endTime - treadmill.startTime);
-      final hcDuration = max(
-        1,
-        healthConnect.endTime - healthConnect.startTime,
-      );
-      if (overlapMs / min(treadmillDuration, hcDuration) > 0.8) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  List<HealthRecord> recordsOfType(String type, {bool preferredOnly = false}) {
-    final typed = records.where((record) => record.type == type).toList();
-    final source = preferredSource(type);
-    if (!preferredOnly || source == null || source.isEmpty) return typed;
-    final preferred = typed
-        .where((record) => record.sourceName == source)
-        .toList();
-    return preferred.isEmpty ? typed : preferred;
-  }
+  /// Source choice happens at pull time now - only selected writers are ever
+  /// imported - so there is no display-time preference left to apply and
+  /// [preferredOnly] is accepted only to keep call sites unchanged.
+  List<HealthRecord> recordsOfType(String type, {bool preferredOnly = false}) =>
+      records.where((record) => record.type == type).toList();
 
   DateTime get selectedDay => _dayAt(6);
 
   DateTime trendDayAt(int index) => _dayAt(index);
 
-  List<HealthRecord> recordsOnDay(String type, DateTime day) {
-    final typed = recordsOfType(type).where((record) => _isOnDay(record, day));
-    final source = preferredSource(type);
-    if (source == null || source.isEmpty) return typed.toList();
-    final preferred = typed
-        .where((record) => record.sourceName == source)
-        .toList();
-    return preferred.isEmpty ? typed.toList() : preferred;
-  }
+  List<HealthRecord> recordsOnDay(String type, DateTime day) =>
+      recordsOfType(type).where((record) => _isOnDay(record, day)).toList();
 
   Future<void> selectDay(DateTime day) async {
     final today = DateTime.now();
@@ -840,28 +647,20 @@ class HealthDashboardState extends ChangeNotifier {
     return _dailyHeartRate[_dayKey(day)];
   });
 
-  List<Map<String, dynamic>> heartRateSamplesDuring(HealthRecord session) {
-    final overlapping = recordsOfType('heart.rate').where(
-      (record) =>
-          record.startTime < session.endTime &&
-          record.endTime > session.startTime,
+  /// Heart-rate curve inside a session, read straight from the dense table as a
+  /// bounded range seek. It no longer scans the loaded week's records, so a
+  /// drilldown works for any session in history, not just a recent one.
+  Future<List<Map<String, dynamic>>> heartRateSamplesDuring(
+    HealthRecord session,
+  ) async {
+    final points = await HealthStore.instance.pointsInRange(
+      metric: HealthMetrics.heartRate,
+      from: session.startTime,
+      to: session.endTime,
     );
-    final source = preferredSource('heart.rate');
-    final preferred = source == null || source.isEmpty
-        ? const <HealthRecord>[]
-        : overlapping.where((record) => record.sourceName == source).toList();
-    return (preferred.isEmpty ? overlapping : preferred)
-        .expand(
-          (record) => (record.value['samples'] as List? ?? const []).map(
-            (sample) => Map<String, dynamic>.from(sample as Map),
-          ),
-        )
-        .where(
-          (sample) =>
-              ((sample['time'] as num?)?.toInt() ?? 0) >= session.startTime &&
-              ((sample['time'] as num?)?.toInt() ?? 0) <= session.endTime,
-        )
-        .toList();
+    return [
+      for (final point in points) {'time': point.t, 'bpm': point.v},
+    ];
   }
 
   DateTime _dayAt(int index) {

@@ -6464,6 +6464,108 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardDataToShow => 'Anzuzeigende Daten';
 
   @override
+  String get healthDashboardSectionAccess => 'Zugriff';
+
+  @override
+  String get healthDashboardSectionSelect => 'Was gesammelt wird';
+
+  @override
+  String get healthDashboardSectionSelectHint =>
+      'Es wird nichts geladen, was hier nicht aktiviert ist.';
+
+  @override
+  String get healthDashboardSectionCollect => 'Sammeln';
+
+  @override
+  String get healthDashboardSectionCollectHint =>
+      'Fuellt den neuen Datenspeicher. Wird im Dashboard noch nicht angezeigt.';
+
+  @override
+  String get healthDashboardSectionCurrent => 'Dashboard-Daten';
+
+  @override
+  String get healthDashboardSectionCurrentHint =>
+      'Der aeltere Import, der das aktuell sichtbare Dashboard fuellt.';
+
+  @override
+  String get healthDashboardDataTypes => 'Datentypen';
+
+  @override
+  String get healthDashboardDataTypesSubtitle =>
+      'Auswaehlen, was aus Health Connect geladen wird';
+
+  @override
+  String get healthDashboardDataSources => 'Quellen';
+
+  @override
+  String get healthDashboardDataSourcesSubtitle =>
+      'Auswaehlen, aus welcher App jeder Typ geladen wird';
+
+  @override
+  String get healthDashboardScanSources => 'Verfuegbare Daten suchen';
+
+  @override
+  String get healthDashboardScanSourcesSubtitle =>
+      'Findet, welche Typen Daten haben und welche Apps sie geschrieben haben';
+
+  @override
+  String get healthDashboardImportSelected => 'Ausgewaehlte Daten importieren';
+
+  @override
+  String get healthDashboardImportSelectedSubtitle =>
+      'Vollstaendige Historie fuer jeden aktivierten Typ';
+
+  @override
+  String get healthDashboardImportRestart => 'Neu importieren';
+
+  @override
+  String get healthDashboardImportRestartSubtitle =>
+      'Loescht gespeicherte Daten und liest die gesamte Historie erneut';
+
+  @override
+  String get healthDashboardSyncChanges => 'Aenderungen jetzt abgleichen';
+
+  @override
+  String get healthDashboardSyncChangesSubtitle =>
+      'Laedt nur, was sich seit dem letzten Abgleich geaendert hat';
+
+  @override
+  String get healthDashboardNoTypesFound =>
+      'Noch nichts gesucht. Starte eine Suche, um zu sehen, was verfuegbar ist.';
+
+  @override
+  String get healthDashboardNoSourcesFound =>
+      'Noch keine Apps fuer diesen Typ gefunden.';
+
+  @override
+  String healthDashboardTypeRecordCount(int count) {
+    return '$count importiert';
+  }
+
+  @override
+  String healthDashboardSourceRecordCount(int count) {
+    return '$count gesehen';
+  }
+
+  @override
+  String healthDashboardStoreSummary(int points, int sessions) {
+    return '$points Messwerte, $sessions Sitzungen';
+  }
+
+  @override
+  String get healthDashboardBaselineEstablished =>
+      'Aenderungsverfolgung gestartet. Starte einen Import fuer die Historie.';
+
+  @override
+  String healthDashboardSyncChangesResult(int updated, int removed) {
+    return '$updated aktualisiert, $removed entfernt';
+  }
+
+  @override
+  String get healthDashboardFullImportNeeded =>
+      'Aenderungsverfolgung abgelaufen. Ein vollstaendiger Import ist notwendig.';
+
+  @override
   String get healthDashboardShowTreadmill => 'Laufband-Workouts';
 
   @override

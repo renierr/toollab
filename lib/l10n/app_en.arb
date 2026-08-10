@@ -3402,6 +3402,67 @@
   "healthDashboardAutoHealthConnectSyncSubtitle": "Import Health Connect data whenever the dashboard opens.",
   "healthDashboardSettings": "Health dashboard settings",
   "healthDashboardDataToShow": "Data to show",
+  "healthDashboardSectionAccess": "Access",
+  "healthDashboardSectionSelect": "What to collect",
+  "healthDashboardSectionSelectHint": "Nothing is pulled unless you enable it here.",
+  "healthDashboardSectionCollect": "Collect",
+  "healthDashboardSectionCollectHint": "Fills the new typed store. Not shown on the dashboard yet.",
+  "healthDashboardSectionCurrent": "Dashboard data",
+  "healthDashboardSectionCurrentHint": "The older import that still feeds the dashboard you see.",
+  "healthDashboardDataTypes": "Data types",
+  "healthDashboardDataTypesSubtitle": "Choose what to pull from Health Connect",
+  "healthDashboardDataSources": "Sources",
+  "healthDashboardDataSourcesSubtitle": "Choose which app each type is pulled from",
+  "healthDashboardScanSources": "Scan available data",
+  "healthDashboardScanSourcesSubtitle": "Finds which types hold data and which apps wrote it",
+  "healthDashboardImportSelected": "Import selected data",
+  "healthDashboardImportSelectedSubtitle": "Full history for every enabled type",
+  "healthDashboardImportRestart": "Re-import from scratch",
+  "healthDashboardImportRestartSubtitle": "Clears stored data and reads all history again",
+  "healthDashboardSyncChanges": "Sync changes now",
+  "healthDashboardSyncChangesSubtitle": "Fetches only what changed since the last sync",
+  "healthDashboardNoTypesFound": "Nothing scanned yet. Run a scan to see what is available.",
+  "healthDashboardNoSourcesFound": "No apps found for this type yet.",
+  "healthDashboardTypeRecordCount": "{count} imported",
+  "@healthDashboardTypeRecordCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardSourceRecordCount": "{count} seen",
+  "@healthDashboardSourceRecordCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardStoreSummary": "{points} measurements, {sessions} sessions",
+  "@healthDashboardStoreSummary": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      },
+      "sessions": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardBaselineEstablished": "Change tracking started. Run an import to load history.",
+  "healthDashboardSyncChangesResult": "{updated} updated, {removed} removed",
+  "@healthDashboardSyncChangesResult": {
+    "placeholders": {
+      "updated": {
+        "type": "int"
+      },
+      "removed": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardFullImportNeeded": "Change tracking expired. A full import is needed.",
   "healthDashboardShowTreadmill": "Treadmill workouts",
   "healthDashboardShowTreadmillSubtitle": "Include local treadmill runs in dashboard totals and activity.",
   "healthDashboardSync": "Sync",

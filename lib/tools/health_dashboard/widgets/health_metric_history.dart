@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/collapsible_section.dart';
 
-import '../health_database.dart';
+import '../store/health_queries.dart';
 import '../health_record.dart';
 import 'health_empty_state.dart';
 import 'health_record_tile.dart';
@@ -39,7 +39,7 @@ class _HealthMetricHistoryState extends State<HealthMetricHistory> {
 
   Future<void> _loadMore() async {
     if ((_isLoading && _records.isNotEmpty) || !_hasMore) return;
-    final page = await HealthDatabase.instance.recordsPage(
+    final page = await HealthQueries.instance.recordsPage(
       type: widget.type,
       offset: _records.length,
     );

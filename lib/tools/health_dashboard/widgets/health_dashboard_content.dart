@@ -24,7 +24,7 @@ class HealthDashboardContent extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
     return RefreshIndicator(
-      onRefresh: () => context.read<HealthDashboardState>().collect(),
+      onRefresh: () => context.read<HealthDashboardState>().refresh(),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
         children: [

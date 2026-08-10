@@ -9,7 +9,7 @@ import 'package:tool_lab/pages/maintenance/export_backups_card.dart';
 import 'package:tool_lab/pages/maintenance/import_backup_card.dart';
 import 'package:tool_lab/pages/maintenance/temp_files_card.dart';
 import 'package:tool_lab/providers/app_state.dart';
-import 'package:tool_lab/tools/health_dashboard/health_database.dart';
+import 'package:tool_lab/tools/health_dashboard/store/health_store.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
@@ -105,7 +105,7 @@ class MaintenancePage extends StatelessWidget {
 
     try {
       await DatabaseService.instance.importDatabaseFile(file.path);
-      await HealthDatabase.instance.resetAfterDatabaseImport();
+      HealthStore.instance.reset();
       if (!context.mounted) return;
       await context.read<AppState>().reloadFromDatabase();
       if (!context.mounted) return;

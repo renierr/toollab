@@ -1,0 +1,1154 @@
+<title>Health Dashboard — Storage Model</title>
+<style>
+  /* ---- tokens: light is the base, both dark states re-declare only tokens ---- */
+  :root {
+    --ground: #f5f8f8;
+    --surface: #ffffff;
+    --surface-2: #eef3f4;
+    --ink: #0f1b1f;
+    --ink-dim: #55696f;
+    --ink-faint: #8098a0;
+    --line: #dde6e7;
+    --line-soft: #e9eff0;
+    --accent: #0d6e76;
+    --accent-soft: #e0eff0;
+    --point: #1c6da8;
+    --point-soft: #e4eef7;
+    --interval: #a05a08;
+    --interval-soft: #f8eee1;
+    --session: #6b4c9a;
+    --session-soft: #eee9f6;
+    --legacy: #7c6a6e;
+    --legacy-soft: #efe9ea;
+    --warn: #9a5b00;
+    --shadow: 0 1px 2px rgba(15, 27, 31, .06), 0 8px 24px -12px rgba(15, 27, 31, .12);
+
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, "SF Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0b1316;
+      --surface: #111e22;
+      --surface-2: #16262b;
+      --ink: #e6eff0;
+      --ink-dim: #90a6ac;
+      --ink-faint: #6a8189;
+      --line: #21343a;
+      --line-soft: #1a2b30;
+      --accent: #38b5ac;
+      --accent-soft: #122e30;
+      --point: #62a8dc;
+      --point-soft: #12283a;
+      --interval: #d9a253;
+      --interval-soft: #33260f;
+      --session: #a78bd0;
+      --session-soft: #251d38;
+      --legacy: #9c8a8e;
+      --legacy-soft: #2a2224;
+      --warn: #d99b45;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px -14px rgba(0, 0, 0, .6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0b1316;
+    --surface: #111e22;
+    --surface-2: #16262b;
+    --ink: #e6eff0;
+    --ink-dim: #90a6ac;
+    --ink-faint: #6a8189;
+    --line: #21343a;
+    --line-soft: #1a2b30;
+    --accent: #38b5ac;
+    --accent-soft: #122e30;
+    --point: #62a8dc;
+    --point-soft: #12283a;
+    --interval: #d9a253;
+    --interval-soft: #33260f;
+    --session: #a78bd0;
+    --session-soft: #251d38;
+    --legacy: #9c8a8e;
+    --legacy-soft: #2a2224;
+    --warn: #d99b45;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 28px -14px rgba(0, 0, 0, .6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  code, pre, .mono { font-family: var(--mono); font-variant-ligatures: none; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  /* ---- shell ---- */
+  .shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 0; }
+  .rail {
+    position: sticky; top: 0; align-self: start; height: 100vh;
+    border-right: 1px solid var(--line);
+    padding: 26px 18px 26px 26px;
+    display: flex; flex-direction: column; gap: 18px;
+    overflow-y: auto;
+  }
+  .rail-mark { display: flex; flex-direction: column; gap: 2px; }
+  .rail-mark b { font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+  .rail-mark span { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); letter-spacing: .06em; text-transform: uppercase; }
+  nav.toc { display: flex; flex-direction: column; gap: 1px; }
+  nav.toc a {
+    font-size: 13px; color: var(--ink-dim); text-decoration: none;
+    padding: 5px 9px; border-radius: 5px; border-left: 2px solid transparent;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  nav.toc a .n { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
+  nav.toc a:hover { background: var(--surface-2); color: var(--ink); }
+  nav.toc a.on { color: var(--accent); border-left-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+  .rail-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+  .tbtn {
+    font-family: var(--mono); font-size: 11px; cursor: pointer;
+    background: var(--surface); color: var(--ink-dim);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; text-align: left;
+  }
+  .tbtn:hover { border-color: var(--accent); color: var(--accent); }
+
+  main { padding: 0 0 120px; min-width: 0; }
+  .wrap { max-width: 1120px; padding: 0 40px; }
+  .measure { max-width: 72ch; }
+
+  /* ---- masthead ---- */
+  header.mast { padding: 62px 0 30px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  h1 {
+    font-family: var(--serif); font-weight: 600; letter-spacing: -.02em;
+    font-size: clamp(34px, 4.6vw, 52px); line-height: 1.05; margin: 14px 0 0;
+    text-wrap: balance;
+  }
+  .dek { font-size: 17px; color: var(--ink-dim); margin: 16px 0 0; max-width: 62ch; text-wrap: pretty; }
+
+  .strip { display: flex; flex-wrap: wrap; gap: 0; margin: 34px 0 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .strip div { padding: 13px 18px; border-right: 1px solid var(--line-soft); flex: 1 1 132px; }
+  .strip div:last-child { border-right: 0; }
+  .strip dt { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); }
+  .strip dd { margin: 3px 0 0; font-family: var(--serif); font-size: 25px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .strip dd small { font-family: var(--sans); font-size: 12px; color: var(--ink-dim); letter-spacing: 0; }
+
+  /* ---- sections ---- */
+  section { padding: 58px 0 0; scroll-margin-top: 20px; }
+  h2 {
+    font-family: var(--serif); font-size: 27px; font-weight: 600; letter-spacing: -.015em;
+    margin: 0 0 6px; display: flex; align-items: baseline; gap: 12px; text-wrap: balance;
+  }
+  h2 .hn { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); font-weight: 400; letter-spacing: .06em; }
+  h3 { font-family: var(--sans); font-size: 14px; font-weight: 650; margin: 30px 0 8px; letter-spacing: .01em; }
+  p { margin: 12px 0; }
+  .lede { color: var(--ink-dim); font-size: 16px; }
+  ul.tight { margin: 12px 0; padding-left: 20px; }
+  ul.tight li { margin: 6px 0; }
+
+  /* ---- shape chips ---- */
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px; vertical-align: baseline;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 4px; white-space: nowrap; font-weight: 600;
+  }
+  .s-point { background: var(--point-soft); color: var(--point); }
+  .s-interval { background: var(--interval-soft); color: var(--interval); }
+  .s-session { background: var(--session-soft); color: var(--session); }
+  .s-legacy { background: var(--legacy-soft); color: var(--legacy); }
+  .s-dim { background: var(--surface-2); color: var(--ink-dim); }
+  .s-accent { background: var(--accent-soft); color: var(--accent); }
+
+  /* ---- pipeline ---- */
+  .pipe { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 26px 0 0; }
+  .stage {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 13px 13px 15px; cursor: pointer; text-align: left; font: inherit; color: inherit;
+    display: flex; flex-direction: column; gap: 6px; position: relative;
+    transition: border-color .15s, transform .15s;
+  }
+  .stage:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .stage[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+  .stage .sn { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); letter-spacing: .08em; }
+  .stage b { font-size: 13.5px; font-weight: 650; line-height: 1.25; }
+  .stage em { font-style: normal; font-size: 11.5px; color: var(--ink-dim); font-family: var(--mono); }
+  .stage-body {
+    margin: 10px 0 0; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 8px; padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .stage-body h4 { margin: 0 0 4px; font-size: 15px; font-family: var(--serif); font-weight: 600; }
+  .stage-body .writes { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+
+  /* ---- controls ---- */
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 22px 0 14px; }
+  .filt {
+    font-family: var(--mono); font-size: 11px; cursor: pointer; letter-spacing: .03em;
+    background: var(--surface); color: var(--ink-dim); border: 1px solid var(--line);
+    border-radius: 20px; padding: 5px 12px; text-transform: uppercase; font-weight: 600;
+  }
+  .filt:hover { color: var(--ink); border-color: var(--ink-faint); }
+  .filt[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--ground); }
+  input[type="search"] {
+    font-family: var(--mono); font-size: 12.5px; padding: 7px 11px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 230px;
+  }
+  input[type="search"]::placeholder { color: var(--ink-faint); }
+  .count { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-left: auto; }
+
+  /* ---- schema cards ---- */
+  .cards { display: flex; flex-direction: column; gap: 9px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+  .card > summary {
+    cursor: pointer; list-style: none; padding: 13px 16px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+  }
+  .card > summary::-webkit-details-marker { display: none; }
+  .card > summary:hover { background: var(--surface-2); }
+  .card .tw { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; min-width: 0; }
+  .card .tn { font-family: var(--mono); font-size: 13.5px; font-weight: 600; }
+  .card .tp { font-size: 12.5px; color: var(--ink-dim); }
+  .card .marks { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+  .card .caret { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+  .card[open] .caret { color: var(--accent); }
+  .card .inner { padding: 4px 16px 18px; border-top: 1px solid var(--line-soft); }
+  .card .why { font-size: 13.5px; color: var(--ink-dim); margin: 14px 0 4px; max-width: 76ch; }
+
+  .scroller { overflow-x: auto; margin: 12px 0 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th {
+    font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--ink-faint); font-weight: 600; white-space: nowrap; border-bottom-color: var(--line);
+  }
+  td.c { font-family: var(--mono); white-space: nowrap; }
+  td.t { font-family: var(--mono); color: var(--ink-dim); white-space: nowrap; font-size: 12px; }
+  td.d { color: var(--ink-dim); font-size: 12.5px; min-width: 24ch; }
+  tr.dim td { color: var(--ink-faint); }
+  .kb { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .05em; padding: 1px 5px; border-radius: 3px; margin-left: 6px; }
+  .k-pk { background: var(--accent-soft); color: var(--accent); }
+  .k-fk { background: var(--surface-2); color: var(--ink-dim); }
+  .k-uq { background: var(--session-soft); color: var(--session); }
+
+  pre.ddl {
+    font-size: 11.5px; line-height: 1.55; background: var(--surface-2); color: var(--ink-dim);
+    border: 1px solid var(--line-soft); border-radius: 7px; padding: 13px 15px; overflow-x: auto; margin: 14px 0 0;
+  }
+  .copy {
+    font-family: var(--mono); font-size: 10.5px; cursor: pointer; text-transform: uppercase; letter-spacing: .06em;
+    background: transparent; color: var(--ink-faint); border: 1px solid var(--line); border-radius: 5px; padding: 3px 8px;
+  }
+  .copy:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* ---- callouts ---- */
+  .note {
+    border-left: 2px solid var(--accent); background: var(--surface); padding: 14px 18px;
+    margin: 22px 0; border-radius: 0 7px 7px 0; font-size: 14px;
+  }
+  .note.warn { border-left-color: var(--warn); }
+  .note b { font-weight: 650; }
+  .note p:first-child { margin-top: 0; }
+  .note p:last-child { margin-bottom: 0; }
+
+  /* ---- size model ---- */
+  .calc { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 20px 22px; margin: 24px 0 0; }
+  .calc-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .calc label { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); }
+  input[type="range"] { flex: 1 1 260px; accent-color: var(--accent); min-width: 180px; }
+  .calc-out { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: 10px; margin: 20px 0 0; }
+  .calc-out div { border: 1px solid var(--line); border-radius: 7px; padding: 12px 14px; }
+  .calc-out dt { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); }
+  .calc-out dd { margin: 4px 0 0; font-family: var(--serif); font-size: 22px; font-variant-numeric: tabular-nums; }
+  .calc-out div.hi { border-color: var(--accent); background: var(--accent-soft); }
+  .calc-out div.hi dd { color: var(--accent); }
+  .bars { margin: 18px 0 0; display: flex; flex-direction: column; gap: 7px; }
+  .bar-row { display: grid; grid-template-columns: 88px 1fr auto; gap: 11px; align-items: center; font-size: 12px; }
+  .bar-row span:first-child { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
+  .bar { height: 9px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 5px; transition: width .25s ease; }
+  .bar-row b { font-family: var(--mono); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+  footer { margin-top: 70px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 12.5px; }
+  footer code { font-size: 11.5px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .rail { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 18px 22px; }
+    nav.toc { flex-direction: row; flex-wrap: wrap; }
+    nav.toc a { border-left: 0; border-bottom: 2px solid transparent; }
+    nav.toc a.on { border-left: 0; border-bottom-color: var(--accent); }
+    .rail-foot { margin-top: 0; }
+    .wrap { padding: 0 22px; }
+    .pipe { grid-template-columns: 1fr 1fr; }
+    header.mast { padding-top: 34px; }
+  }
+</style>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="rail-mark">
+      <b>Health Dashboard</b>
+      <span>Storage model</span>
+    </div>
+    <nav class="toc" id="toc"></nav>
+    <div class="rail-foot">
+      <button class="tbtn" id="theme" type="button">◐ Theme: auto</button>
+      <button class="tbtn" id="expand" type="button">▤ Expand all tables</button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="wrap">
+      <header class="mast">
+        <div class="eyebrow">ToolLab · lib/tools/health_dashboard</div>
+        <h1>What gets stored, and when</h1>
+        <p class="dek">
+          A read-only collector for Android Health Connect. It imports measurements into typed
+          SQLite tables built for fast queries over millions of rows — no JSON, no repeated text,
+          and no surrogate keys on the dense tables. These tables are the tool's only
+          storage.
+        </p>
+        <dl class="strip" id="strip"></dl>
+      </header>
+
+      <section id="model">
+        <h2><span class="hn">01</span> Three shapes</h2>
+        <p class="lede measure">
+          Every Health Connect record collapses into one of three storage shapes. This distinction
+          decides the table, the primary key, and how duplicates are handled — it is the single
+          idea the whole schema rests on.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr><th>Shape</th><th>Meaning</th><th>Table</th><th>Primary key</th><th>Examples</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="chip s-point">point</span></td>
+                <td class="d">A measurement at one instant. Series records explode into many.</td>
+                <td class="c">health_point</td>
+                <td class="c">(metric, t, v)</td>
+                <td class="d">heart rate, weight, SpO₂, speed sample</td>
+              </tr>
+              <tr>
+                <td><span class="chip s-interval">interval</span></td>
+                <td class="d">One value spanning a range.</td>
+                <td class="c">health_interval</td>
+                <td class="c">(metric, t0, t1, v)</td>
+                <td class="d">steps, distance, energy, hydration</td>
+              </tr>
+              <tr>
+                <td><span class="chip s-session">session</span></td>
+                <td class="d">A container with a type, a title and child parts.</td>
+                <td class="c">health_session</td>
+                <td class="c">id, unique origin</td>
+                <td class="d">workout, sleep</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <p><b>The primary key is the measurement.</b> <code>health_point</code> is keyed on
+          <code>(metric, t, v)</code> and declared <code>WITHOUT ROWID</code>, so the row stores no
+          identifier of its own. Two apps writing the same value at the same instant cannot produce
+          two rows — which is how a Google Fit mirror of a direct writer collapses on insert, with
+          no comparison pass at all.</p>
+        </div>
+
+        <h3>Why not JSON</h3>
+        <p class="measure">
+          The previous model stored the Health Connect value verbatim as <code>payload_json</code>,
+          so every aggregate ran <code>json_extract</code> over multi-megabyte blobs, and dense
+          samples were written twice — once inside the blob and once as rows. Values are now
+          converted exactly once, at the edge, into the unit the metric catalog declares.
+        </p>
+      </section>
+
+      <section id="flow">
+        <h2><span class="hn">02</span> When data is written</h2>
+        <p class="lede measure">
+          Five paths write to the store. Only two of them read Health Connect for measurements.
+          Select a stage.
+        </p>
+        <div class="pipe" id="pipe" role="tablist" aria-label="Write paths"></div>
+        <div class="stage-body" id="stageBody" role="tabpanel"></div>
+      </section>
+
+      <section id="schema">
+        <h2><span class="hn">03</span> Schema</h2>
+        <p class="lede measure">
+          Ten tables, and nothing else - the pre-typed schema is dropped rather than migrated.
+          Names are shown unprefixed; on disk every table carries a
+          <code>tool_health_dashboard_</code> prefix.
+        </p>
+        <div class="controls" id="schemaCtl"></div>
+        <div class="cards" id="cards"></div>
+      </section>
+
+      <section id="types">
+        <h2><span class="hn">04</span> Health Connect types</h2>
+        <p class="lede measure">
+          31 record types are mapped. The rest of the plugin's ~140 types yield nothing and are
+          skipped rather than stored in a generic shape. <span class="chip s-accent">default on</span>
+          marks the 14 types enabled on a fresh install.
+        </p>
+        <div class="controls" id="typeCtl">
+          <input type="search" id="typeSearch" placeholder="filter record type, id or metric…" aria-label="Filter types">
+        </div>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr>
+                <th>Health Connect record</th><th>Type id</th><th>Shape</th>
+                <th>Metric</th><th>Unit</th><th>Note</th>
+              </tr>
+            </thead>
+            <tbody id="typeRows"></tbody>
+          </table>
+        </div>
+        <p class="count" id="typeCount" style="margin-left:0"></p>
+
+        <h3>Not mapped on purpose</h3>
+        <ul class="tight measure">
+          <li><code>ActivityIntensityRecord</code> — Health Connect type, but categorical
+            (<code>activityIntensityType</code>), not a number. It has no meaningful metric.</li>
+          <li><code>ExerciseTimeRecord</code>, <code>MoveTimeRecord</code>,
+            <code>StandTimeRecord</code> — Apple Health only
+            (<code>apple_exercise_time</code> and friends), absent from
+            <code>healthConnectDataTypes</code>. This project does not support Apple platforms.</li>
+          <li>All <code>Dietary*</code>, reproductive-health, audio-exposure and event records —
+            nothing in the dashboard consumes them.</li>
+        </ul>
+      </section>
+
+      <section id="rollup">
+        <h2><span class="hn">05</span> The rollup that makes it fast</h2>
+        <p class="lede measure">
+          The dashboard never scans the dense tables. Every card, weekly chart and all-time total
+          reads <code>health_daily</code>, one row per metric per day.
+        </p>
+        <ul class="tight measure">
+          <li>A decade of 26 metrics is roughly <b>95,000 rows</b> — every read is a primary-key seek.</li>
+          <li>Refreshed only for the <code>(metric, day)</code> pairs an import actually touched,
+            in the <b>same transaction</b> as the facts, so rollups can never disagree with them.</li>
+          <li>Keyed by <b>local midnight</b> as epoch millis, so a day always means the user's day.</li>
+          <li>Day bounds come from <code>DateTime(y, m, d + 1)</code>, not <code>+ 24h</code> —
+            a fixed 24 hours lands an hour off across a DST change.</li>
+        </ul>
+        <p class="measure">
+          Dense samples are read only for a drilldown — one workout's heart-rate curve — which is a
+          bounded range seek on the <code>(metric, t)</code> key prefix.
+        </p>
+        <div class="note">
+          <p><b>Session summaries are joined, not carried.</b> A workout's distance, energy and heart
+          rate arrive from Health Connect as separate records, never as fields on the session. They
+          are reduced into <code>health_session</code>'s summary columns in SQL once both sides are
+          stored, scoped to the imported window — so a workout list renders from one table.</p>
+        </div>
+      </section>
+
+      <section id="size">
+        <h2><span class="hn">06</span> What the layout saves</h2>
+        <p class="lede measure">
+          The old sample row carried a TEXT primary key holding base64 of
+          <code>&lt;metric&gt;|&lt;time&gt;|&lt;value&gt;</code>, plus TEXT foreign keys to the
+          record and source — roughly 180 bytes re-encoding what the row already said. Drag to
+          compare at your own row count.
+        </p>
+        <div class="calc">
+          <div class="calc-row">
+            <label for="rows">Samples</label>
+            <input type="range" id="rows" min="10000" max="5000000" step="10000" value="3000000">
+            <b class="mono" id="rowsOut" style="font-variant-numeric:tabular-nums"></b>
+          </div>
+          <div class="bars">
+            <div class="bar-row">
+              <span>legacy</span>
+              <div class="bar"><i id="barOld" style="background:var(--legacy)"></i></div>
+              <b id="oldOut"></b>
+            </div>
+            <div class="bar-row">
+              <span>typed</span>
+              <div class="bar"><i id="barNew" style="background:var(--accent)"></i></div>
+              <b id="newOut"></b>
+            </div>
+          </div>
+          <dl class="calc-out">
+            <div><dt>Legacy row</dt><dd id="oldRow"></dd></div>
+            <div><dt>Typed row</dt><dd id="newRow"></dd></div>
+            <div class="hi"><dt>Reduction</dt><dd id="factor"></dd></div>
+            <div class="hi"><dt>Saved</dt><dd id="saved"></dd></div>
+          </dl>
+          <div class="scroller">
+            <table style="margin-top:18px">
+              <thead><tr><th>Field</th><th>Legacy</th><th>Typed</th><th>Why</th></tr></thead>
+              <tbody>
+                <tr><td class="c">row key</td><td class="t">~48 B TEXT</td><td class="t">0 B</td><td class="d">base64 of the row's own values; <code>WITHOUT ROWID</code> needs none</td></tr>
+                <tr><td class="c">parent record</td><td class="t">~88 B TEXT</td><td class="t">0 B</td><td class="d">samples no longer belong to a carrier record</td></tr>
+                <tr><td class="c">source</td><td class="t">~48 B TEXT</td><td class="t">1 B</td><td class="d">interned to <code>health_app.id</code></td></tr>
+                <tr><td class="c">metric name</td><td class="t">~10 B TEXT</td><td class="t">1 B</td><td class="d">interned to <code>health_metric.id</code></td></tr>
+                <tr><td class="c">time + value</td><td class="t">~14 B</td><td class="t">~14 B</td><td class="d">unchanged — this is the actual payload</td></tr>
+                <tr><td class="c">bookkeeping</td><td class="t">~13 B</td><td class="t">~1 B</td><td class="d">unit, updated_at, deleted, synced all dropped</td></tr>
+                <tr><td class="c">PK index</td><td class="t">~55 B</td><td class="t">0 B</td><td class="d">the table <em>is</em> the index</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size:12.5px;color:var(--ink-faint);margin:14px 0 0">
+            Estimates from column widths, not measured on a device. The ratio is the point, not the
+            absolute figures.
+          </p>
+        </div>
+      </section>
+
+      <section id="dupes">
+        <h2><span class="hn">07</span> Duplicates</h2>
+        <p class="lede measure">
+          Google Fit republishes other apps' data. A phone with both a direct writer and Google Fit
+          sees most measurements twice — in captured data, 1,084,472 Google Fit heart-rate records
+          alongside 390,830 from the watch's own writer.
+        </p>
+        <p class="measure">Three mechanisms, in the order they apply:</p>
+        <ol class="tight measure">
+          <li><b>Don't read it.</b> Selection per <code>(type, source)</code> becomes a
+            <code>dataOrigins</code> filter on the read request, so Health Connect never hands over
+            an unselected writer's rows. Filtering beats deduplicating.</li>
+          <li><b>Collide on insert.</b> Identical value at an identical instant cannot produce two
+            rows, given the primary key. This catches exact mirrors — measured at 2,701 identical
+            step rows and 104 identical weight rows.</li>
+          <li><b>First writer wins for sessions.</b> A session already stored for the same kind and
+            exact range by another app is treated as a mirror and skipped. One index seek, no
+            vendor names involved.</li>
+        </ol>
+        <div class="note warn">
+          <p><b>Near-mirrors never collapse.</b> Google Fit's heart rate differs from the direct
+          writer's by a mean of 1.13 bpm, so those rows are legitimately distinct values and both
+          persist. Source selection is the only real fix — which is why it matters more than
+          dedup does.</p>
+        </div>
+      </section>
+
+      <section id="incr">
+        <h2><span class="hn">08</span> Incremental sync</h2>
+        <p class="lede measure">
+          Opening the tool fetches only what changed, using Health Connect's own change tracking
+          via <code>synchronize(dataTypes, syncToken)</code>. The token is persisted as JSON in tool
+          settings alongside a scope string.
+        </p>
+        <h3>Why not a time window</h3>
+        <ul class="tight measure">
+          <li>A watch that uploads Tuesday's data on Thursday writes <em>behind</em> any watermark.
+            A window either misses those rows or has to stay permanently wide.</li>
+          <li>A window cannot observe deletions at all. Data removed in Health Connect previously
+            stayed in the database forever.</li>
+        </ul>
+        <h3>The three states it must handle</h3>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>State</th><th>Cause</th><th>Response</th></tr></thead>
+            <tbody>
+              <tr><td class="c">baseline</td><td class="d">No token yet. The first call returns <em>no records</em> by design; it only marks a starting point.</td><td class="d">Store the token, report it as a baseline — never as "nothing changed". History comes from the full import.</td></tr>
+              <tr><td class="c">scope change</td><td class="d">The token is bound to its type list; enabling a type invalidates it.</td><td class="d">Compare the stored scope string, re-establish, and let the full importer fetch the new type's history.</td></tr>
+              <tr><td class="c">expiry</td><td class="d">Health Connect expires tokens after about 30 days, throwing <code>InvalidArgumentException</code>.</td><td class="d">Clear the token and report <code>needsFullImport</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note">
+          <p><b>Deletions reach sessions and intervals, not points.</b> Those carry the Health
+          Connect record id in <code>origin</code>; deleting an interval also repairs the daily rows
+          for the days it covered. Dense points deliberately carry no id — a 36-byte identifier on
+          every one of three million samples would cost more than the whole layout saves — so a
+          deleted sample is reconciled by re-importing its window instead.</p>
+        </div>
+      </section>
+
+      <section id="state">
+        <h2><span class="hn">09</span> Current state</h2>
+        <p class="lede measure">
+          The typed store is the only storage. The dashboard reads it through a projection that
+          rebuilds the record shape the widgets already expected, so the numbers now come from
+          columns instead of parsed JSON.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Change</th><th>Effect</th><th>State</th></tr></thead>
+            <tbody>
+              <tr><td class="d">Backend sync disabled; delegate and the unbounded materializer deleted</td><td class="d">No row-per-record cloud sync. It returns later as a backup and distribution hub, not a merge peer.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Typed schema at a fresh version 1</td><td class="d">The old ladder had reached 10; it is dropped on first open rather than migrated.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Discovery probe, per-type and per-source selection</td><td class="d">Nothing is pulled unless enabled. Selection becomes the <code>dataOrigins</code> filter.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Selection-aware importer</td><td class="d">Only enabled types, only selected writers, checkpointed per type.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Change-token incremental sync</td><td class="d">Handles updates and deletions. "Sync on open" now means this, not a re-import.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Dashboard reads the typed tables only</td><td class="d">Aggregates come from <code>health_daily</code>; drilldowns are bounded range seeks.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Treadmill sourced only from Health Connect</td><td class="d">The dashboard no longer reads Treadmill Control's database; publishing defaults to on.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Debug analysis and comparison exporters removed</td><td class="d">They served a one-off phone/tablet investigation and are no longer reachable.</td><td><span class="chip s-accent">done</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note warn">
+          <p><b>The reset drops the old tables on first open.</b> It is detected by the stored schema
+          version being higher than 1, because <code>migrate()</code> would otherwise skip straight
+          past a fresh version 1. Import watermarks, sync cursors and the old per-type source
+          preferences are deleted with it.</p>
+          <p>Nothing was the only copy of anything: every measurement is re-importable from Health
+          Connect, and treadmill workouts live in Treadmill Control's own database and reach the
+          dashboard by being published to Health Connect.</p>
+        </div>
+
+        <h3>First run after the reset</h3>
+        <ol class="tight measure">
+          <li><b>Scan available data</b> - seconds. Populates the type and source lists.</li>
+          <li><b>Data types</b> - check what is enabled, and per type which apps to pull from.</li>
+          <li><b>Import selected data</b> - full history for the enabled types. This is the long one.</li>
+          <li>Afterwards <b>Sync changes now</b>, or sync on open, fetches only what moved.</li>
+        </ol>
+
+        <h3>Not yet verified</h3>
+        <ul class="tight measure">
+          <li>Nothing has run against a real Health Connect store - no discovery, import or change
+            sync has executed on a device.</li>
+          <li>The reset has not been observed on a database that actually holds the old schema.</li>
+          <li>Import throughput over full history is unmeasured under the new writer.</li>
+        </ul>
+      </section>
+
+      <section id="settings">
+        <h2><span class="hn">10</span> State kept outside the tables</h2>
+        <p class="lede measure">
+          These live in the shared <code>tool_settings</code> table, not in the tool's own tables —
+          which is why a schema rebuild has to clear them explicitly.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Key</th><th>Holds</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td class="c">_db_schema_version</td><td class="d">Migration ladder position</td><td class="d">One per tool, which is why exactly one <code>migrate()</code> owner is allowed - and how the reset is detected</td></tr>
+              <tr><td class="c">hc_sync_token</td><td class="d">Serialized <code>HealthDataSyncToken</code></td><td class="d">Opaque; dropped if it cannot be parsed</td></tr>
+              <tr><td class="c">hc_sync_token_scope</td><td class="d">Sorted enabled type ids</td><td class="d">Detects a selection change that invalidated the token</td></tr>
+              <tr><td class="c">auto_health_connect_sync</td><td class="d">Whether opening the tool syncs changes</td><td class="d">Off by default; gates the change-token sync only</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer>
+        Source: <code>lib/tools/health_dashboard/</code> — <code>store/</code> holds the schema,
+        catalog, mapper and queries; <code>collectors/</code> holds discovery, the importer and the
+        change-token sync. Schema version 1. Plugin <code>health_connector 3.9.4</code>. Update this page whenever the
+        schema or the type mapping changes.
+      </footer>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* ------------------------------------------------------------------ data */
+  const K = { PK: "pk", FK: "fk", UQ: "uq" };
+
+  const TABLES = [
+    {
+      name: "health_metric", role: "dimension", purpose: "Metric catalog",
+      why: "Interns the metric key so fact rows carry a 1-byte integer instead of a repeated string. Rows are created lazily, the first time a metric is actually imported.",
+      cols: [
+        ["id", "INTEGER", K.PK, "Referenced by every fact table"],
+        ["key", "TEXT", K.UQ, "Stable name, e.g. heart_rate — renaming one is a migration"],
+        ["unit", "TEXT", "", "The unit values were converted into at import"],
+        ["agg", "INTEGER", "", "0 total · 1 average · 2 latest — how the day collapses"],
+        ["shape", "INTEGER", "", "0 point · 1 interval"]
+      ]
+    },
+    {
+      name: "health_app", role: "dimension", purpose: "Writing apps",
+      why: "The package name of the app that wrote a record. Repeated across millions of fact rows, so it is interned. Deselecting a source deletes by this id.",
+      cols: [
+        ["id", "INTEGER", K.PK, ""],
+        ["package", "TEXT", K.UQ, "e.g. com.google.android.apps.fitness"],
+        ["label", "TEXT", "", "Optional display name"]
+      ]
+    },
+    {
+      name: "health_text", role: "dimension", purpose: "Interned strings",
+      why: "One table for every enum-like string, shared across categories on purpose: 'running' is stored once whether it arrives as an activity name or a lap kind. Genuinely unique text — a record id, freeform notes — stays inline instead, where a dimension row would only add a join.",
+      cols: [
+        ["id", "INTEGER", K.PK, ""],
+        ["value", "TEXT", K.UQ, "Activity name, session title, sleep stage name"]
+      ]
+    },
+    {
+      name: "health_point", role: "fact", shape: "point", rowless: true,
+      purpose: "Instant measurements and series samples",
+      why: "The dense table. Keyed on the measurement itself and declared WITHOUT ROWID, so no identifier is stored — and identical readings from two apps cannot both insert. Carries no record id: a 36-byte id per row would cost more than the layout saves.",
+      cols: [
+        ["metric", "INTEGER", K.PK + " " + K.FK, "→ health_metric.id"],
+        ["t", "INTEGER", K.PK, "Epoch millis of the measurement"],
+        ["v", "REAL", K.PK, "Value, already in the metric's unit"],
+        ["v2", "REAL", "", "Second half of a paired reading — diastolic only"],
+        ["app", "INTEGER", K.FK, "→ health_app.id, first writer to land the row"]
+      ],
+      idx: ["(app, metric) — deleting a deselected source, provenance filters"]
+    },
+    {
+      name: "health_interval", role: "fact", shape: "interval", rowless: true,
+      purpose: "Values spanning a range",
+      why: "Carries origin, unlike health_point: interval records are orders of magnitude fewer, and a deleted steps or distance record has to be able to leave the daily totals.",
+      cols: [
+        ["metric", "INTEGER", K.PK + " " + K.FK, "→ health_metric.id"],
+        ["t0", "INTEGER", K.PK, "Range start, epoch millis"],
+        ["t1", "INTEGER", K.PK, "Range end"],
+        ["v", "REAL", K.PK, "Value in the metric's unit"],
+        ["app", "INTEGER", K.FK, "→ health_app.id"],
+        ["origin", "TEXT", "", "Health Connect record id, so a deletion can be matched"]
+      ],
+      idx: ["(app, metric)"]
+    },
+    {
+      name: "health_session", role: "fact", shape: "session",
+      purpose: "Workouts and sleep",
+      why: "Summary columns are filled from the fact tables after import, so a workout list renders from this table alone and never reaches into the dense tables. Health Connect supplies these figures as separate records, not as session fields.",
+      cols: [
+        ["id", "INTEGER", K.PK, ""],
+        ["kind", "INTEGER", "", "0 exercise · 1 sleep"],
+        ["activity", "INTEGER", K.FK, "→ health_text — exercise type name"],
+        ["title", "INTEGER", K.FK, "→ health_text — repeats heavily, so interned"],
+        ["notes", "TEXT", "", "Freeform and near-unique, so kept inline"],
+        ["t0", "INTEGER", "", "Start"],
+        ["t1", "INTEGER", "", "End — for sleep this includes time awake in bed"],
+        ["app", "INTEGER", K.FK, "→ health_app.id"],
+        ["origin", "TEXT", K.UQ, "Health Connect record id"],
+        ["client_id", "TEXT", "", "Writer's own id — tags our treadmill sessions, and detects mirrors"],
+        ["distance_km", "REAL", "", "Summed from overlapping distance intervals"],
+        ["calories", "REAL", "", "Summed from overlapping active-energy intervals"],
+        ["steps", "INTEGER", "", "Summed from overlapping step intervals"],
+        ["avg_hr", "REAL", "", "Averaged over heart-rate points inside the range"],
+        ["max_hr", "REAL", "", "Peak heart rate inside the range"],
+        ["avg_speed", "REAL", "", "Averaged over speed points inside the range"],
+        ["max_speed", "REAL", "", "Peak speed inside the range"],
+        ["asleep_min", "INTEGER", "", "Sleep only — stages minus awake, computed at map time. Null when the writer sent no stages, keeping 'no data' distinct from zero"]
+      ],
+      idx: ["(kind, t0) — the workout and sleep lists", "(app) — source deletion"]
+    },
+    {
+      name: "health_session_part", role: "fact", shape: "session", rowless: true,
+      purpose: "Sleep stages and workout laps",
+      why: "Children of a session, replaced wholesale when the session is re-imported.",
+      cols: [
+        ["session", "INTEGER", K.PK + " " + K.FK, "→ health_session.id"],
+        ["seq", "INTEGER", K.PK, "Order within the session"],
+        ["kind", "INTEGER", "", "0 sleep stage · 1 lap"],
+        ["part", "INTEGER", K.FK, "→ health_text — stage name; null for a lap"],
+        ["t0", "INTEGER", "", "Start"],
+        ["t1", "INTEGER", "", "End"],
+        ["v", "REAL", "", "Lap distance in km"]
+      ]
+    },
+    {
+      name: "health_daily", role: "rollup", rowless: true,
+      purpose: "One row per metric per day — what the dashboard reads",
+      why: "The reason the dashboard is fast. Refreshed only for the (metric, day) pairs an import touched, inside the same transaction as the facts, so it can never disagree with them.",
+      cols: [
+        ["metric", "INTEGER", K.PK + " " + K.FK, "→ health_metric.id"],
+        ["day", "INTEGER", K.PK, "Local midnight as epoch millis"],
+        ["total", "REAL", "", "Sum — read for total metrics like steps"],
+        ["avg", "REAL", "", "Mean — read for average and latest metrics"],
+        ["lo", "REAL", "", "Day minimum"],
+        ["hi", "REAL", "", "Day maximum"],
+        ["n", "INTEGER", "", "Contributing measurements; the row is deleted at zero"]
+      ]
+    },
+    {
+      name: "health_type", role: "control", rowless: true,
+      purpose: "Per-type selection and import progress",
+      why: "One row per Health Connect data type. range_start and range_end pin the window an interrupted import was covering, so resuming cannot drift with the clock.",
+      cols: [
+        ["type", "TEXT", K.PK, "HealthDataType.id, e.g. heart_rate_series"],
+        ["enabled", "INTEGER", "", "Whether this type is pulled at all"],
+        ["history_done", "INTEGER", "", "1 once full history has been read"],
+        ["range_start", "INTEGER", "", "Window the in-flight import covers"],
+        ["range_end", "INTEGER", "", "Pinned at start, so resume re-reads the same window"],
+        ["n", "INTEGER", "", "Records imported so far"],
+        ["updated_at", "INTEGER", "", ""]
+      ]
+    },
+    {
+      name: "health_type_app", role: "control", rowless: true,
+      purpose: "Discovered writers per type, and whether to pull them",
+      why: "The enabled set becomes the dataOrigins filter on the read request. Discovery never re-enables a source the user switched off.",
+      cols: [
+        ["type", "TEXT", K.PK, "→ health_type.type"],
+        ["app", "INTEGER", K.PK + " " + K.FK, "→ health_app.id"],
+        ["enabled", "INTEGER", "", "Pulled from this writer — defaults to 1 on discovery"],
+        ["n", "INTEGER", "", "Records seen during the probe"],
+        ["last_t", "INTEGER", "", "Newest record seen from this writer"]
+      ]
+    }
+  ];
+
+  const STAGES = [
+    {
+      n: "Scan", sub: "discovery", title: "Scan available data",
+      code: "HealthConnectDiscovery.run()",
+      body: "Bounded probe: a 30-day window, at most 3 pages of 500 records per type. Finishes in seconds. It exists so the selection screens have something to show — nobody can choose a source they have never been shown.",
+      writes: ["health_type", "health_type_app", "health_app"],
+      no: "Writes no measurements at all."
+    },
+    {
+      n: "Import", sub: "full history", title: "Import selected data",
+      code: "HealthConnectImporter.import()",
+      body: "Enabled types only, each filtered to its selected writers via dataOrigins, 5000 records a page, following response.nextPageRequest. Each page and its progress land in one transaction, so an interrupted import never claims more than it stored. Afterwards session summaries are joined and a sync baseline is taken.",
+      writes: ["health_point", "health_interval", "health_session", "health_session_part", "health_daily", "health_type"],
+      no: "Skips a type whose history is already done unless restarting."
+    },
+    {
+      n: "Sync", sub: "changes only", title: "Sync changes now",
+      code: "HealthConnectDiff.sync()",
+      body: "Health Connect's own change tracking. Loops while hasMore, up to 50 rounds, writing upserts through the same path as the importer. Deleted record ids remove matching sessions and intervals, and repair the daily rows they touched.",
+      writes: ["health_point", "health_interval", "health_session", "health_daily", "hc_sync_token"],
+      no: "Cheap enough to run on tool open."
+    },
+    {
+      n: "Restart", sub: "destructive", title: "Re-import from scratch",
+      code: "clearImportedData() + import(restart: true)",
+      body: "Clears every imported row and all per-type progress, then reads all history again from 1970. The selection itself survives — types and sources stay as they were.",
+      writes: ["clears health_point, health_interval, health_session, health_session_part, health_daily"],
+      no: "Dimension tables and selection are kept."
+    },
+    {
+      n: "Deselect", sub: "on toggle", title: "Turn a source off",
+      code: "deleteApp(package) + rebuildDaily()",
+      body: "Removes everything that writer contributed across every type, then rebuilds the rollups, because a removed writer changes daily aggregates. Confirmed in the UI first, since it drops stored rows.",
+      writes: ["deletes by app, then rebuilds health_daily"],
+      no: "Applies across all types, not just the one being edited."
+    }
+  ];
+
+  const MAP = [
+    ["HeartRateSeriesRecord", "heart_rate_series", "point", "heart_rate", "bpm", 1, "One row per sample — the densest source"],
+    ["HeartRateRecord", "heart_rate", "point", "heart_rate", "bpm", 1, "Single reading, same metric"],
+    ["RestingHeartRateRecord", "resting_heart_rate", "point", "resting_heart_rate", "bpm", 1, ""],
+    ["SpeedSeriesRecord", "speed_series", "point", "speed", "km/h", 1, "One row per sample"],
+    ["PowerSeriesRecord", "power_series", "point", "power", "W", 0, "One row per sample"],
+    ["CyclingPedalingCadenceSeriesRecord", "cycling_pedaling_cadence_series", "point", "cadence", "rpm", 0, "One row per sample"],
+    ["WeightRecord", "weight", "point", "weight", "kg", 1, ""],
+    ["BodyFatPercentageRecord", "body_fat_percentage", "point", "body_fat", "%", 1, ""],
+    ["BoneMassRecord", "bone_mass", "point", "bone_mass", "kg", 0, ""],
+    ["BodyWaterMassRecord", "body_water_mass", "point", "body_water_mass", "kg", 0, ""],
+    ["LeanBodyMassRecord", "lean_body_mass", "point", "lean_body_mass", "kg", 0, ""],
+    ["BodyMassIndexRecord", "body_mass_index", "point", "bmi", "—", 0, ""],
+    ["HeightRecord", "height", "point", "height", "cm", 0, ""],
+    ["OxygenSaturationRecord", "oxygen_saturation", "point", "oxygen_saturation", "%", 1, ""],
+    ["HeartRateVariabilityRMSSDRecord", "heart_rate_variability_rmssd", "point", "hrv_rmssd", "ms", 1, ""],
+    ["RespiratoryRateRecord", "respiratory_rate", "point", "respiratory_rate", "/min", 1, ""],
+    ["BodyTemperatureRecord", "body_temperature", "point", "body_temperature", "°C", 0, ""],
+    ["BloodGlucoseRecord", "blood_glucose", "point", "blood_glucose", "mmol/L", 0, ""],
+    ["BloodPressureRecord", "blood_pressure", "point", "blood_pressure", "mmHg", 0, "The only paired metric: systolic in v, diastolic in v2"],
+    ["StepsRecord", "steps", "interval", "steps", "count", 1, ""],
+    ["DistanceRecord", "distance", "interval", "distance", "km", 1, ""],
+    ["ActiveEnergyBurnedRecord", "active_calories_burned", "interval", "active_energy", "kcal", 1, ""],
+    ["TotalEnergyBurnedRecord", "total_calories_burned", "interval", "total_energy", "kcal", 0, ""],
+    ["FloorsClimbedRecord", "floors_climbed", "interval", "floors", "count", 0, ""],
+    ["ElevationGainedRecord", "elevation_gained", "interval", "elevation_gained", "m", 0, ""],
+    ["HydrationRecord", "hydration", "interval", "hydration", "L", 0, ""],
+    ["WheelchairPushesRecord", "wheelchair_pushes", "interval", "wheelchair_pushes", "count", 0, ""],
+    ["ExerciseSessionRecord", "exercise_session", "session", "health_session kind 0", "—", 1, "Laps become session parts; summary joined from facts"],
+    ["SleepSessionRecord", "sleep_session", "session", "health_session kind 1", "—", 1, "Stages become session parts; asleep_min computed"]
+  ];
+
+  /* ------------------------------------------------------------- utilities */
+  const $ = (s) => document.querySelector(s);
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const fmt = new Intl.NumberFormat("en-US");
+
+  /* ------------------------------------------------------------------ nav */
+  const SECTIONS = [
+    ["model", "Three shapes"], ["flow", "When data is written"], ["schema", "Schema"],
+    ["types", "Health Connect types"], ["rollup", "The fast path"], ["size", "Storage saved"],
+    ["dupes", "Duplicates"], ["incr", "Incremental sync"], ["state", "Current state"],
+    ["settings", "Outside the tables"]
+  ];
+  const toc = $("#toc");
+  SECTIONS.forEach(([id, label], i) => {
+    const a = el("a");
+    a.href = "#" + id;
+    a.append(el("span", "n", String(i + 1).padStart(2, "0")), el("span", null, label));
+    toc.append(a);
+  });
+  const links = [...toc.querySelectorAll("a")];
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      links.forEach((l) => l.classList.toggle("on", l.hash === "#" + e.target.id));
+    });
+  }, { rootMargin: "-15% 0px -75% 0px" });
+  SECTIONS.forEach(([id]) => {
+    const node = document.getElementById(id);
+    if (node) spy.observe(node);
+  });
+
+  /* ---------------------------------------------------------------- strip */
+  const counts = {
+    typed: TABLES.length,
+    metrics: 26,
+    mapped: MAP.length,
+    defaults: MAP.filter((m) => m[5]).length
+  };
+  [
+    ["Schema version", "1", "fresh ladder"],
+    ["Tables", counts.typed, ""],
+    ["Metrics", counts.metrics, "18 point · 8 interval"],
+    ["Record types mapped", counts.mapped, counts.defaults + " on by default"],
+    ["Rollup rows", "~95k", "a decade of history"]
+  ].forEach(([k, v, sub]) => {
+    const d = el("div");
+    d.append(el("dt", null, k));
+    const dd = el("dd", null, String(v));
+    if (sub) { dd.append(document.createElement("br"), el("small", null, sub)); }
+    d.append(dd);
+    $("#strip").append(d);
+  });
+
+  /* -------------------------------------------------------------- stages */
+  const pipe = $("#pipe");
+  const stageBody = $("#stageBody");
+  const renderStage = (i) => {
+    const s = STAGES[i];
+    stageBody.replaceChildren();
+    stageBody.append(el("h4", null, s.title));
+    const code = el("div", "mono");
+    code.style.cssText = "font-size:11.5px;color:var(--accent)";
+    code.textContent = s.code;
+    stageBody.append(code);
+    const p = el("p", null, s.body);
+    p.style.cssText = "font-size:13.5px;max-width:74ch";
+    stageBody.append(p);
+    const w = el("div", "writes");
+    w.append(el("span", "chip s-dim", "writes"));
+    s.writes.forEach((t) => w.append(el("span", "chip s-accent", t)));
+    stageBody.append(w);
+    const no = el("p", null, s.no);
+    no.style.cssText = "font-size:12.5px;color:var(--ink-faint);margin:12px 0 0";
+    stageBody.append(no);
+    [...pipe.children].forEach((c, j) => c.setAttribute("aria-selected", String(i === j)));
+  };
+  STAGES.forEach((s, i) => {
+    const b = el("button", "stage");
+    b.type = "button";
+    b.setAttribute("role", "tab");
+    b.append(
+      el("span", "sn", String(i + 1).padStart(2, "0")),
+      el("b", null, s.n),
+      el("em", null, s.sub)
+    );
+    b.addEventListener("click", () => renderStage(i));
+    pipe.append(b);
+  });
+  renderStage(1);
+
+  /* -------------------------------------------------------------- schema */
+  const ROLES = [
+    ["all", "All"], ["dimension", "Dimension"], ["fact", "Fact"],
+    ["rollup", "Rollup"], ["control", "Control"]
+  ];
+  let role = "all";
+  const ctl = $("#schemaCtl");
+  const countEl = el("span", "count");
+  ROLES.forEach(([val, label]) => {
+    const b = el("button", "filt", label);
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(val === "all"));
+    b.addEventListener("click", () => {
+      role = val;
+      [...ctl.querySelectorAll(".filt")].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      drawCards();
+    });
+    ctl.append(b);
+  });
+  ctl.append(countEl);
+
+  const ddlFor = (t) => {
+    if (!t.cols.length) return null;
+    const pk = t.cols.filter((c) => c[2].includes(K.PK)).map((c) => c[0]);
+    const lines = t.cols.map((c) => {
+      let s = "  " + c[0] + " " + c[1];
+      if (c[2].includes(K.PK) && pk.length === 1) s += " PRIMARY KEY";
+      if (c[2].includes(K.UQ)) s += " UNIQUE";
+      return s;
+    });
+    if (pk.length > 1) lines.push("  PRIMARY KEY (" + pk.join(", ") + ")");
+    return "CREATE TABLE " + t.name + " (\n" + lines.join(",\n") + "\n)" +
+      (t.rowless ? " WITHOUT ROWID" : "") + ";";
+  };
+
+  const cards = $("#cards");
+  function drawCards() {
+    cards.replaceChildren();
+    const list = TABLES.filter((t) => role === "all" || t.role === role);
+    countEl.textContent = list.length + " of " + TABLES.length + " tables";
+    list.forEach((t) => {
+      const d = el("details", "card");
+      const sum = el("summary");
+      const caret = el("span", "caret", "▸");
+      const tw = el("div", "tw");
+      tw.append(el("span", "tn", t.name), el("span", "tp", t.purpose));
+      const marks = el("div", "marks");
+      marks.append(el("span", "chip s-dim", t.role));
+      if (t.shape) marks.append(el("span", "chip s-" + t.shape, t.shape));
+      if (t.rowless) marks.append(el("span", "chip s-accent", "without rowid"));
+      sum.append(caret, tw, marks);
+      d.append(sum);
+
+      const inner = el("div", "inner");
+      inner.append(el("p", "why", t.why));
+      if (t.cols.length) {
+        const sc = el("div", "scroller");
+        const tb = el("table");
+        tb.innerHTML = "<thead><tr><th>Column</th><th>Type</th><th>Meaning</th></tr></thead>";
+        const body = el("tbody");
+        t.cols.forEach(([n, ty, keys, note]) => {
+          const tr = el("tr");
+          const c = el("td", "c");
+          c.append(document.createTextNode(n));
+          if (keys.includes(K.PK)) c.append(el("span", "kb k-pk", "PK"));
+          if (keys.includes(K.FK)) c.append(el("span", "kb k-fk", "FK"));
+          if (keys.includes(K.UQ)) c.append(el("span", "kb k-uq", "UQ"));
+          tr.append(c, el("td", "t", ty), el("td", "d", note));
+          body.append(tr);
+        });
+        tb.append(body);
+        sc.append(tb);
+        inner.append(sc);
+      }
+      if (t.idx) {
+        inner.append(el("h3", null, "Indexes"));
+        const ul = el("ul", "tight");
+        t.idx.forEach((i) => ul.append(el("li", null, i)));
+        ul.style.fontSize = "13px";
+        inner.append(ul);
+      }
+      const ddl = ddlFor(t);
+      if (ddl) {
+        const row = el("div");
+        row.style.cssText = "display:flex;justify-content:flex-end;margin-top:14px";
+        const cp = el("button", "copy", "Copy DDL");
+        cp.type = "button";
+        cp.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(ddl);
+            cp.textContent = "Copied";
+          } catch {
+            cp.textContent = "Copy failed";
+          }
+          setTimeout(() => { cp.textContent = "Copy DDL"; }, 1400);
+        });
+        row.append(cp);
+        const pre = el("pre", "ddl", ddl);
+        inner.append(pre, row);
+      }
+      d.append(inner);
+      d.addEventListener("toggle", () => { caret.textContent = d.open ? "▾" : "▸"; });
+      cards.append(d);
+    });
+  }
+  drawCards();
+
+  $("#expand").addEventListener("click", (e) => {
+    const open = [...cards.querySelectorAll("details")].some((d) => !d.open);
+    cards.querySelectorAll("details").forEach((d) => { d.open = open; });
+    e.currentTarget.textContent = open ? "▤ Collapse all tables" : "▤ Expand all tables";
+  });
+
+  /* --------------------------------------------------------------- types */
+  const rows = $("#typeRows");
+  const typeCount = $("#typeCount");
+  const search = $("#typeSearch");
+  let shapeFilter = "all";
+  [["all", "All"], ["point", "Point"], ["interval", "Interval"], ["session", "Session"], ["def", "Default on"]]
+    .forEach(([val, label]) => {
+      const b = el("button", "filt", label);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(val === "all"));
+      b.addEventListener("click", () => {
+        shapeFilter = val;
+        [...$("#typeCtl").querySelectorAll(".filt")].forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+        drawTypes();
+      });
+      $("#typeCtl").insertBefore(b, search);
+    });
+
+  function drawTypes() {
+    const q = search.value.trim().toLowerCase();
+    rows.replaceChildren();
+    const list = MAP.filter(([rec, id, shape, metric, , def]) => {
+      if (shapeFilter === "def" && !def) return false;
+      if (shapeFilter !== "all" && shapeFilter !== "def" && shape !== shapeFilter) return false;
+      if (!q) return true;
+      return (rec + " " + id + " " + metric).toLowerCase().includes(q);
+    });
+    list.forEach(([rec, id, shape, metric, unit, def, note]) => {
+      const tr = el("tr");
+      const r = el("td", "c");
+      r.append(document.createTextNode(rec));
+      if (def) r.append(el("span", "kb k-pk", "ON"));
+      tr.append(r, el("td", "t", id));
+      const sc = el("td");
+      sc.append(el("span", "chip s-" + shape, shape));
+      tr.append(sc, el("td", "c", metric), el("td", "t", unit), el("td", "d", note));
+      rows.append(tr);
+    });
+    typeCount.textContent = list.length + " of " + MAP.length + " mapped record types";
+  }
+  search.addEventListener("input", drawTypes);
+  drawTypes();
+
+  /* ---------------------------------------------------------------- size */
+  const OLD_ROW = 48 + 88 + 48 + 10 + 14 + 13 + 55;
+  const NEW_ROW = 1 + 1 + 14 + 1 + 4;
+  const bytes = (n) => {
+    if (n < 1024) return n + " B";
+    if (n < 1048576) return (n / 1024).toFixed(0) + " KB";
+    if (n < 1073741824) return (n / 1048576).toFixed(1) + " MB";
+    return (n / 1073741824).toFixed(2) + " GB";
+  };
+  const slider = $("#rows");
+  function drawSize() {
+    const n = Number(slider.value);
+    const o = n * OLD_ROW;
+    const w = n * NEW_ROW;
+    $("#rowsOut").textContent = fmt.format(n);
+    $("#oldOut").textContent = bytes(o);
+    $("#newOut").textContent = bytes(w);
+    $("#barOld").style.width = "100%";
+    $("#barNew").style.width = (NEW_ROW / OLD_ROW * 100).toFixed(1) + "%";
+    $("#oldRow").textContent = OLD_ROW + " B";
+    $("#newRow").textContent = NEW_ROW + " B";
+    $("#factor").textContent = (OLD_ROW / NEW_ROW).toFixed(1) + "×";
+    $("#saved").textContent = bytes(o - w);
+  }
+  slider.addEventListener("input", drawSize);
+  drawSize();
+
+  /* --------------------------------------------------------------- theme */
+  const tb = $("#theme");
+  const LABEL = { auto: "◐ Theme: auto", light: "☀ Theme: light", dark: "☾ Theme: dark" };
+  let mode = "auto";
+  tb.addEventListener("click", () => {
+    mode = mode === "auto" ? "light" : mode === "light" ? "dark" : "auto";
+    if (mode === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", mode);
+    tb.textContent = LABEL[mode];
+  });
+})();
+</script>

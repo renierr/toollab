@@ -36,7 +36,7 @@ class TreadmillControlState extends ChangeNotifier {
   BleConnectionState hrmConnection = BleConnectionState.disconnected;
 
   // Settings
-  bool syncToHealthConnect = false;
+  bool syncToHealthConnect = true;
 
   // Support flags determined on connection
   bool speedControlSupported = false;
@@ -124,7 +124,9 @@ class TreadmillControlState extends ChangeNotifier {
         TreadmillControlTool.config.id,
         _syncToHealthConnectKey,
       );
-      syncToHealthConnect = val == 'true';
+      // Unset means on: the health dashboard reads treadmill workouts only via
+      // Health Connect, so publishing has to be the default.
+      syncToHealthConnect = val != 'false';
       notifyListeners();
     } catch (e) {
       errorLog('[TreadmillControl] Load settings failed: $e');

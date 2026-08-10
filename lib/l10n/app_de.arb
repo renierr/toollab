@@ -2553,6 +2553,67 @@
   "healthDashboardAutoHealthConnectSyncSubtitle": "Health-Connect-Daten bei jedem Oeffnen des Dashboards importieren.",
   "healthDashboardSettings": "Einstellungen fuer Gesundheits-Dashboard",
   "healthDashboardDataToShow": "Anzuzeigende Daten",
+  "healthDashboardSectionAccess": "Zugriff",
+  "healthDashboardSectionSelect": "Was gesammelt wird",
+  "healthDashboardSectionSelectHint": "Es wird nichts geladen, was hier nicht aktiviert ist.",
+  "healthDashboardSectionCollect": "Sammeln",
+  "healthDashboardSectionCollectHint": "Fuellt den neuen Datenspeicher. Wird im Dashboard noch nicht angezeigt.",
+  "healthDashboardSectionCurrent": "Dashboard-Daten",
+  "healthDashboardSectionCurrentHint": "Der aeltere Import, der das aktuell sichtbare Dashboard fuellt.",
+  "healthDashboardDataTypes": "Datentypen",
+  "healthDashboardDataTypesSubtitle": "Auswaehlen, was aus Health Connect geladen wird",
+  "healthDashboardDataSources": "Quellen",
+  "healthDashboardDataSourcesSubtitle": "Auswaehlen, aus welcher App jeder Typ geladen wird",
+  "healthDashboardScanSources": "Verfuegbare Daten suchen",
+  "healthDashboardScanSourcesSubtitle": "Findet, welche Typen Daten haben und welche Apps sie geschrieben haben",
+  "healthDashboardImportSelected": "Ausgewaehlte Daten importieren",
+  "healthDashboardImportSelectedSubtitle": "Vollstaendige Historie fuer jeden aktivierten Typ",
+  "healthDashboardImportRestart": "Neu importieren",
+  "healthDashboardImportRestartSubtitle": "Loescht gespeicherte Daten und liest die gesamte Historie erneut",
+  "healthDashboardSyncChanges": "Aenderungen jetzt abgleichen",
+  "healthDashboardSyncChangesSubtitle": "Laedt nur, was sich seit dem letzten Abgleich geaendert hat",
+  "healthDashboardNoTypesFound": "Noch nichts gesucht. Starte eine Suche, um zu sehen, was verfuegbar ist.",
+  "healthDashboardNoSourcesFound": "Noch keine Apps fuer diesen Typ gefunden.",
+  "healthDashboardTypeRecordCount": "{count} importiert",
+  "@healthDashboardTypeRecordCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardSourceRecordCount": "{count} gesehen",
+  "@healthDashboardSourceRecordCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardStoreSummary": "{points} Messwerte, {sessions} Sitzungen",
+  "@healthDashboardStoreSummary": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      },
+      "sessions": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardBaselineEstablished": "Aenderungsverfolgung gestartet. Starte einen Import fuer die Historie.",
+  "healthDashboardSyncChangesResult": "{updated} aktualisiert, {removed} entfernt",
+  "@healthDashboardSyncChangesResult": {
+    "placeholders": {
+      "updated": {
+        "type": "int"
+      },
+      "removed": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardFullImportNeeded": "Aenderungsverfolgung abgelaufen. Ein vollstaendiger Import ist notwendig.",
   "healthDashboardShowTreadmill": "Laufband-Workouts",
   "healthDashboardShowTreadmillSubtitle": "Lokale Laufbandlaeufe in Dashboard-Werte und Aktivitaeten aufnehmen.",
   "healthDashboardSync": "Synchronisierung",

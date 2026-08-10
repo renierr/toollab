@@ -25,7 +25,9 @@ class TreadmillHealthConnectPublisher {
       TreadmillControlTool.config.id,
       'sync_to_health_connect',
     );
-    if (enabled != 'true' && !forcePermissionRequest) return;
+    // Defaults to on: Health Connect is now the only way treadmill workouts
+    // reach the health dashboard, so an unset preference must not drop them.
+    if (enabled == 'false' && !forcePermissionRequest) return;
 
     _isPublishing = true;
     try {

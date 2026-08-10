@@ -11621,6 +11621,168 @@ abstract class AppLocalizations {
   /// **'Data to show'**
   String get healthDashboardDataToShow;
 
+  /// No description provided for @healthDashboardSectionAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Access'**
+  String get healthDashboardSectionAccess;
+
+  /// No description provided for @healthDashboardSectionSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'What to collect'**
+  String get healthDashboardSectionSelect;
+
+  /// No description provided for @healthDashboardSectionSelectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is pulled unless you enable it here.'**
+  String get healthDashboardSectionSelectHint;
+
+  /// No description provided for @healthDashboardSectionCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect'**
+  String get healthDashboardSectionCollect;
+
+  /// No description provided for @healthDashboardSectionCollectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fills the new typed store. Not shown on the dashboard yet.'**
+  String get healthDashboardSectionCollectHint;
+
+  /// No description provided for @healthDashboardSectionCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard data'**
+  String get healthDashboardSectionCurrent;
+
+  /// No description provided for @healthDashboardSectionCurrentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The older import that still feeds the dashboard you see.'**
+  String get healthDashboardSectionCurrentHint;
+
+  /// No description provided for @healthDashboardDataTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Data types'**
+  String get healthDashboardDataTypes;
+
+  /// No description provided for @healthDashboardDataTypesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what to pull from Health Connect'**
+  String get healthDashboardDataTypesSubtitle;
+
+  /// No description provided for @healthDashboardDataSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Sources'**
+  String get healthDashboardDataSources;
+
+  /// No description provided for @healthDashboardDataSourcesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which app each type is pulled from'**
+  String get healthDashboardDataSourcesSubtitle;
+
+  /// No description provided for @healthDashboardScanSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan available data'**
+  String get healthDashboardScanSources;
+
+  /// No description provided for @healthDashboardScanSourcesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finds which types hold data and which apps wrote it'**
+  String get healthDashboardScanSourcesSubtitle;
+
+  /// No description provided for @healthDashboardImportSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Import selected data'**
+  String get healthDashboardImportSelected;
+
+  /// No description provided for @healthDashboardImportSelectedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full history for every enabled type'**
+  String get healthDashboardImportSelectedSubtitle;
+
+  /// No description provided for @healthDashboardImportRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-import from scratch'**
+  String get healthDashboardImportRestart;
+
+  /// No description provided for @healthDashboardImportRestartSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears stored data and reads all history again'**
+  String get healthDashboardImportRestartSubtitle;
+
+  /// No description provided for @healthDashboardSyncChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync changes now'**
+  String get healthDashboardSyncChanges;
+
+  /// No description provided for @healthDashboardSyncChangesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetches only what changed since the last sync'**
+  String get healthDashboardSyncChangesSubtitle;
+
+  /// No description provided for @healthDashboardNoTypesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing scanned yet. Run a scan to see what is available.'**
+  String get healthDashboardNoTypesFound;
+
+  /// No description provided for @healthDashboardNoSourcesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No apps found for this type yet.'**
+  String get healthDashboardNoSourcesFound;
+
+  /// No description provided for @healthDashboardTypeRecordCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} imported'**
+  String healthDashboardTypeRecordCount(int count);
+
+  /// No description provided for @healthDashboardSourceRecordCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} seen'**
+  String healthDashboardSourceRecordCount(int count);
+
+  /// No description provided for @healthDashboardStoreSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{points} measurements, {sessions} sessions'**
+  String healthDashboardStoreSummary(int points, int sessions);
+
+  /// No description provided for @healthDashboardBaselineEstablished.
+  ///
+  /// In en, this message translates to:
+  /// **'Change tracking started. Run an import to load history.'**
+  String get healthDashboardBaselineEstablished;
+
+  /// No description provided for @healthDashboardSyncChangesResult.
+  ///
+  /// In en, this message translates to:
+  /// **'{updated} updated, {removed} removed'**
+  String healthDashboardSyncChangesResult(int updated, int removed);
+
+  /// No description provided for @healthDashboardFullImportNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Change tracking expired. A full import is needed.'**
+  String get healthDashboardFullImportNeeded;
+
   /// No description provided for @healthDashboardShowTreadmill.
   ///
   /// In en, this message translates to:
