@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.provider.OpenableColumns
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -25,6 +26,7 @@ open class MainActivity : FlutterFragmentActivity() {
     private val STORAGE_ACCESS_CHANNEL = "de.renier.tool_lab/storage_access"
     private val NATIVE_MEDIA_PLAYER_CHANNEL = "de.renier.tool_lab/native_media_player"
     private val HEALTH_CONNECT_CHANNEL = "de.renier.tool_lab/health_connect"
+    private val HEALTH_CONNECT_TAG = "ToolLabHealthConnect"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
     private var systemAudioPlayerHelper: SystemAudioPlayerHelper? = null
@@ -195,6 +197,11 @@ open class MainActivity : FlutterFragmentActivity() {
         MethodChannel(messenger, HEALTH_CONNECT_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "openSettings" -> {
+                    // Ordered best first: the per-app screen, then Health Connect's own
+                    // settings, then app info as the last resort. Landing on app info means
+                    // every Health Connect action above it failed to resolve, so each attempt
+                    // is logged - without that the cascade fails silently and there is no
+                    // evidence of which action this device does not handle.
                     val intentsToTry = listOf(
                         Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS").apply {
                             putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
@@ -212,13 +219,20 @@ open class MainActivity : FlutterFragmentActivity() {
 
                     var launched = false
                     for (intent in intentsToTry) {
+                        val action = intent.action ?: "?"
+                        val target = intent.resolveActivity(packageManager)
+                        if (target == null) {
+                            Log.w(HEALTH_CONNECT_TAG, "$action does not resolve on this device")
+                            continue
+                        }
                         try {
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(intent)
+                            Log.i(HEALTH_CONNECT_TAG, "$action opened ${target.flattenToShortString()}")
                             launched = true
                             break
-                        } catch (_: Exception) {
-                            // Try next intent in cascade
+                        } catch (e: Exception) {
+                            Log.w(HEALTH_CONNECT_TAG, "$action resolved to $target but failed to start", e)
                         }
                     }
 

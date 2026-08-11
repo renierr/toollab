@@ -40,9 +40,19 @@ class HealthWorkoutsPage extends StatelessWidget {
                   child: Center(child: CircularProgressIndicator()),
                 )
               else if (workouts.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 40),
-                  child: HealthEmptyState(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: HealthEmptyState(
+                    icon: Icons.event_busy_outlined,
+                    title: l10n.healthDashboardNoWorkoutsOnDay,
+                    message: l10n.healthDashboardNoMetricDataInWeekHint,
+                    buttonLabel: state.trendDayOffset == 0
+                        ? null
+                        : l10n.healthDashboardBackToToday,
+                    onPressed: state.trendDayOffset == 0
+                        ? null
+                        : state.resetTrendDate,
+                  ),
                 )
               else
                 for (final workout in workouts)

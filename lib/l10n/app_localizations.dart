@@ -12466,6 +12466,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health Connect repair failed'**
   String get healthDashboardHealthConnectRepairFailed;
+
+  /// No description provided for @healthDashboardHrv.
+  ///
+  /// In en, this message translates to:
+  /// **'HRV (RMSSD)'**
+  String get healthDashboardHrv;
+
+  /// No description provided for @healthDashboardOxygenSaturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Oxygen Saturation'**
+  String get healthDashboardOxygenSaturation;
+
+  /// No description provided for @healthDashboardRespiratoryRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Respiratory Rate'**
+  String get healthDashboardRespiratoryRate;
+
+  /// No description provided for @healthDashboardBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Fat'**
+  String get healthDashboardBodyFat;
+
+  /// No description provided for @healthDashboardBloodGlucose.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Glucose'**
+  String get healthDashboardBloodGlucose;
+
+  /// No description provided for @healthDashboardBmr.
+  ///
+  /// In en, this message translates to:
+  /// **'BMR'**
+  String get healthDashboardBmr;
+
+  /// No description provided for @healthDashboardVo2Max.
+  ///
+  /// In en, this message translates to:
+  /// **'VO2 Max'**
+  String get healthDashboardVo2Max;
+
+  /// No description provided for @healthDashboardLatestOxygenSaturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest Oxygen Saturation'**
+  String get healthDashboardLatestOxygenSaturation;
+
+  /// No description provided for @healthDashboardLatestRespiratoryRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest Respiratory Rate'**
+  String get healthDashboardLatestRespiratoryRate;
+
+  /// No description provided for @healthDashboardLatestBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest Body Fat'**
+  String get healthDashboardLatestBodyFat;
+
+  /// No description provided for @healthDashboardHrvTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'HRV (RMSSD) · last 7 days'**
+  String get healthDashboardHrvTrend;
+
+  /// No description provided for @healthDashboardOxygenSaturationTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Oxygen Saturation (SpO2) · last 7 days'**
+  String get healthDashboardOxygenSaturationTrend;
+
+  /// No description provided for @healthDashboardRespiratoryRateTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Respiratory Rate · last 7 days'**
+  String get healthDashboardRespiratoryRateTrend;
+
+  /// No description provided for @healthDashboardWeightBodyFatTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight & Body Fat · last 7 days'**
+  String get healthDashboardWeightBodyFatTrend;
+
+  /// No description provided for @healthDashboardChartNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get healthDashboardChartNoData;
+
+  /// No description provided for @healthDashboardLoadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get healthDashboardLoadMore;
+
+  /// No description provided for @healthDashboardScrollToTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll to top'**
+  String get healthDashboardScrollToTop;
+
+  /// No description provided for @healthDashboardShowMoreRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Show 100 more ({count} remaining)'**
+  String healthDashboardShowMoreRecords(int count);
+
+  /// No description provided for @healthDashboardLoadMoreRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more records…'**
+  String get healthDashboardLoadMoreRecords;
+
+  /// No description provided for @healthDashboardHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get healthDashboardHeight;
+
+  /// No description provided for @healthDashboardHydration.
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration'**
+  String get healthDashboardHydration;
+
+  /// No description provided for @healthDashboardBmi.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI'**
+  String get healthDashboardBmi;
+
+  /// No description provided for @healthDashboardNoMetricDataInWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'No {metric} in these 7 days'**
+  String healthDashboardNoMetricDataInWeek(String metric);
+
+  /// No description provided for @healthDashboardNoMetricDataInWeekHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick another day, or check that the type and its source are switched on.'**
+  String get healthDashboardNoMetricDataInWeekHint;
+
+  /// No description provided for @healthDashboardBackToToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to today'**
+  String get healthDashboardBackToToday;
+
+  /// No description provided for @healthDashboardNoMetricHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing stored for {metric}'**
+  String healthDashboardNoMetricHistory(String metric);
+
+  /// No description provided for @healthDashboardNoMetricHistoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Import this type from Health Connect to fill the history.'**
+  String get healthDashboardNoMetricHistoryHint;
+
+  /// No description provided for @healthDashboardNoWorkoutsOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts on this day'**
+  String get healthDashboardNoWorkoutsOnDay;
+
+  /// No description provided for @healthDashboardNoSleepOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No sleep recorded for this day'**
+  String get healthDashboardNoSleepOnDay;
+
+  /// No description provided for @healthDashboardSleepQuality.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep quality'**
+  String get healthDashboardSleepQuality;
+
+  /// No description provided for @healthDashboardSleepQualityDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Compared against general adult sleep-study ranges. Not a medical assessment.'**
+  String get healthDashboardSleepQualityDisclaimer;
+
+  /// No description provided for @healthDashboardSleepRatingGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get healthDashboardSleepRatingGood;
+
+  /// No description provided for @healthDashboardSleepRatingFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get healthDashboardSleepRatingFair;
+
+  /// No description provided for @healthDashboardSleepRatingPoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Poor'**
+  String get healthDashboardSleepRatingPoor;
+
+  /// No description provided for @healthDashboardSleepScore.
+  ///
+  /// In en, this message translates to:
+  /// **'{score} of 100'**
+  String healthDashboardSleepScore(int score);
+
+  /// No description provided for @healthDashboardSleepAsleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Asleep'**
+  String get healthDashboardSleepAsleep;
+
+  /// No description provided for @healthDashboardSleepTimeInBed.
+  ///
+  /// In en, this message translates to:
+  /// **'In bed'**
+  String get healthDashboardSleepTimeInBed;
+
+  /// No description provided for @healthDashboardSleepEfficiency.
+  ///
+  /// In en, this message translates to:
+  /// **'Efficiency'**
+  String get healthDashboardSleepEfficiency;
+
+  /// No description provided for @healthDashboardSleepAwakenings.
+  ///
+  /// In en, this message translates to:
+  /// **'Awake'**
+  String get healthDashboardSleepAwakenings;
+
+  /// No description provided for @healthDashboardSleepFindingAllInRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration, efficiency and stage shares are all in their usual ranges.'**
+  String get healthDashboardSleepFindingAllInRange;
+
+  /// No description provided for @healthDashboardSleepFindingDurationShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than 7 h asleep. Adults usually need 7-9 h.'**
+  String get healthDashboardSleepFindingDurationShort;
+
+  /// No description provided for @healthDashboardSleepFindingDurationLong.
+  ///
+  /// In en, this message translates to:
+  /// **'More than 10 h asleep, well above the usual 7-9 h.'**
+  String get healthDashboardSleepFindingDurationLong;
+
+  /// No description provided for @healthDashboardSleepFindingEfficiencyLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep efficiency below 85 %: a lot of the time in bed was spent awake.'**
+  String get healthDashboardSleepFindingEfficiencyLow;
+
+  /// No description provided for @healthDashboardSleepFindingDeepLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep sleep below 13 % of the night (usual range 13-23 %).'**
+  String get healthDashboardSleepFindingDeepLow;
+
+  /// No description provided for @healthDashboardSleepFindingDeepHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep sleep above 23 % of the night (usual range 13-23 %).'**
+  String get healthDashboardSleepFindingDeepHigh;
+
+  /// No description provided for @healthDashboardSleepFindingRemLow.
+  ///
+  /// In en, this message translates to:
+  /// **'REM below 20 % of the night (usual range 20-25 %).'**
+  String get healthDashboardSleepFindingRemLow;
+
+  /// No description provided for @healthDashboardSleepFindingRemHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'REM above 25 % of the night (usual range 20-25 %).'**
+  String get healthDashboardSleepFindingRemHigh;
+
+  /// No description provided for @healthDashboardSleepFindingAwakeHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'More than 30 minutes awake after falling asleep.'**
+  String get healthDashboardSleepFindingAwakeHigh;
+
+  /// No description provided for @healthDashboardSectionMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get healthDashboardSectionMaintenance;
+
+  /// No description provided for @healthDashboardSectionMaintenanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reclaims space. These actions delete stored rows.'**
+  String get healthDashboardSectionMaintenanceHint;
+
+  /// No description provided for @healthDashboardPruneUnused.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up and shrink database'**
+  String get healthDashboardPruneUnused;
+
+  /// No description provided for @healthDashboardPruneUnusedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes rows nothing reads any more, then rewrites the file'**
+  String get healthDashboardPruneUnusedSubtitle;
+
+  /// No description provided for @healthDashboardPruneUnusedConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes every row written by switched-off apps ({apps}), plus orphaned rows and unused labels, then rewrites the database file. Switching those apps back on will not bring the data back - only a fresh import will. This cannot be undone.'**
+  String healthDashboardPruneUnusedConfirm(String apps);
+
+  /// No description provided for @healthDashboardPruneUnusedConfirmNoApps.
+  ///
+  /// In en, this message translates to:
+  /// **'No app is switched off, so only orphaned rows and unused labels are removed before the database file is rewritten. This cannot be undone.'**
+  String get healthDashboardPruneUnusedConfirmNoApps;
+
+  /// No description provided for @healthDashboardPruneUnusedConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean up'**
+  String get healthDashboardPruneUnusedConfirmAction;
+
+  /// No description provided for @healthDashboardPruneUnusedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{rows} rows removed, database rewritten'**
+  String healthDashboardPruneUnusedDone(int rows);
+
+  /// No description provided for @healthDashboardPruneUnusedFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning up the health database failed'**
+  String get healthDashboardPruneUnusedFailed;
 }
 
 class _AppLocalizationsDelegate

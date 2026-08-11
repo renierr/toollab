@@ -9,7 +9,18 @@ import 'health_record_stat_item.dart';
 class HealthRecordStatsCard extends StatelessWidget {
   final HealthRecord record;
 
-  const HealthRecordStatsCard({super.key, required this.record});
+  /// Naming and unit for metrics whose number is stored under the generic
+  /// `value` key - speed, power, temperature and anything else the catalog does
+  /// not map to a named field. Without this they rendered nothing at all.
+  final String? fallbackLabel;
+  final String? fallbackUnit;
+
+  const HealthRecordStatsCard({
+    super.key,
+    required this.record,
+    this.fallbackLabel,
+    this.fallbackUnit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +149,7 @@ class HealthRecordStatsCard extends StatelessWidget {
         HealthRecordStatItem(
           icon: Icons.monitor_heart_rounded,
           color: AppTheme.accentPurple,
-          label: 'HRV',
+          label: l10n.healthDashboardHrv,
           value: healthValue(rmssd, 'ms'),
         ),
       );
@@ -148,7 +159,7 @@ class HealthRecordStatsCard extends StatelessWidget {
         HealthRecordStatItem(
           icon: Icons.fitness_center_rounded,
           color: AppTheme.accentGreen,
-          label: 'VO2 Max',
+          label: l10n.healthDashboardVo2Max,
           value: healthValue(vo2, 'mL/kg/min'),
         ),
       );
@@ -158,7 +169,7 @@ class HealthRecordStatsCard extends StatelessWidget {
         HealthRecordStatItem(
           icon: Icons.air_rounded,
           color: AppTheme.accentBlue,
-          label: 'Respiratory Rate',
+          label: l10n.healthDashboardRespiratoryRate,
           value: healthValue(resp, 'rpm'),
         ),
       );
@@ -168,7 +179,7 @@ class HealthRecordStatsCard extends StatelessWidget {
         HealthRecordStatItem(
           icon: Icons.bloodtype_outlined,
           color: AppTheme.accentRed,
-          label: 'Blood Glucose',
+          label: l10n.healthDashboardBloodGlucose,
           value: healthValue(glucose, 'mg/dL'),
         ),
       );
@@ -178,10 +189,53 @@ class HealthRecordStatsCard extends StatelessWidget {
         HealthRecordStatItem(
           icon: Icons.local_fire_department_outlined,
           color: AppTheme.accentAmber,
-          label: 'BMR',
+          label: l10n.healthDashboardBmr,
           value: healthValue(bmrVal, 'kcal/day'),
         ),
       );
+    }
+
+    if (val['centimeters'] case final num centimeters) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.height_rounded,
+          color: AppTheme.accentTeal,
+          label: l10n.healthDashboardHeight,
+          value: healthValue(centimeters, 'cm'),
+        ),
+      );
+    }
+    if (val['liters'] case final num liters) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.water_drop_outlined,
+          color: AppTheme.accentBlue,
+          label: l10n.healthDashboardHydration,
+          value: healthValue(liters, 'L'),
+        ),
+      );
+    }
+    if (val['bmi'] case final num bmi) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.straighten_rounded,
+          color: AppTheme.accentPurple,
+          label: l10n.healthDashboardBmi,
+          value: healthNumber(bmi, 'BMI'),
+        ),
+      );
+    }
+    if (items.isEmpty) {
+      if (_fallbackValue(val) case final num generic) {
+        items.add(
+          HealthRecordStatItem(
+            icon: Icons.insights_rounded,
+            color: AppTheme.accentBlue,
+            label: fallbackLabel ?? l10n.healthDashboardData,
+            value: healthValue(generic, fallbackUnit ?? ''),
+          ),
+        );
+      }
     }
 
     if (items.isEmpty) return const SizedBox.shrink();
@@ -192,5 +246,14 @@ class HealthRecordStatsCard extends StatelessWidget {
         child: Wrap(spacing: 24, runSpacing: 16, children: items),
       ),
     );
+  }
+
+  /// The first number in the record, so an unmapped metric still shows one.
+  num? _fallbackValue(Map<String, dynamic> val) {
+    if (val['value'] case final num value) return value;
+    for (final entry in val.entries) {
+      if (entry.value case final num value) return value;
+    }
+    return null;
   }
 }

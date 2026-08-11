@@ -14,6 +14,7 @@ import 'store/health_store.dart';
 import '../treadmill_control/treadmill_health_connect_publisher.dart';
 import 'config.dart';
 import 'health_record.dart';
+import 'health_record_values.dart';
 
 class HealthDashboardState extends ChangeNotifier {
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
@@ -293,6 +294,29 @@ class HealthDashboardState extends ChangeNotifier {
     }
   }
 
+  /// Destructive housekeeping: drops what nothing can read any more and rewrites
+  /// the database file. Callers confirm first.
+  Future<HealthPruneResult?> pruneUnusedData() async {
+    if (isCollecting) return null;
+    isCollecting = true;
+    error = null;
+    notifyListeners();
+    try {
+      final result = await HealthStore.instance.pruneUnused();
+      await loadSelection();
+      await loadAppRowCounts();
+      await _reloadRecords();
+      return result;
+    } catch (e) {
+      error = e.toString();
+      errorLog('[HealthDashboard] Pruning unused data failed: $e');
+      return null;
+    } finally {
+      isCollecting = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> runDiscovery() async {
     if (isCollecting) return;
     isCollecting = true;
@@ -428,7 +452,7 @@ class HealthDashboardState extends ChangeNotifier {
   // tool is simply a workout with our package as its source.
   List<HealthRecord> get workouts =>
       records
-          .where((record) => record.type == 'workout.health_connect')
+          .where((record) => record.type == HealthQueries.workoutType)
           .toList()
         ..sort((a, b) => b.startTime.compareTo(a.startTime));
 
@@ -443,7 +467,7 @@ class HealthDashboardState extends ChangeNotifier {
   Future<List<HealthRecord>> workoutRecordsForDay(DateTime day) async {
     final dayRecords = await HealthQueries.instance.recordsOnDay(day);
     return dayRecords
-        .where((record) => record.type == 'workout.health_connect')
+        .where((record) => record.type == HealthQueries.workoutType)
         .toList()
       ..sort((a, b) => b.startTime.compareTo(a.startTime));
   }
@@ -543,11 +567,6 @@ class HealthDashboardState extends ChangeNotifier {
             .toList();
     if (candidates.isEmpty) return null;
     candidates.sort((first, second) {
-      final firstIsTreadmill = first.type == 'workout.treadmill';
-      final secondIsTreadmill = second.type == 'workout.treadmill';
-      if (firstIsTreadmill != secondIsTreadmill) {
-        return firstIsTreadmill ? -1 : 1;
-      }
       final valueOrder = (metricValue(second, key) ?? 0).compareTo(
         metricValue(first, key) ?? 0,
       );
@@ -558,25 +577,10 @@ class HealthDashboardState extends ChangeNotifier {
     return candidates.first;
   }
 
-  double? metricValue(HealthRecord record, String key) {
-    if (record.type == 'sleep.session' && key == 'durationMinutes') {
-      return Duration(
-        milliseconds: record.endTime - record.startTime,
-      ).inMinutes.toDouble();
-    }
-    if (key == 'durationMinutes' && record.type.startsWith('workout.')) {
-      final milliseconds = record.endTime - record.startTime;
-      return record.type == 'workout.treadmill'
-          ? ((record.value['durationSeconds'] as num?)?.toDouble() ?? 0) / 60
-          : milliseconds / Duration.millisecondsPerMinute;
-    }
-    return (record.value[key] as num?)?.toDouble();
-  }
+  double? metricValue(HealthRecord record, String key) =>
+      healthRecordValue(record, key);
 
-  bool isNap(HealthRecord record) {
-    final title = (record.value['title'] as String?)?.toLowerCase() ?? '';
-    return title.contains('nickerchen') || title.contains('nap');
-  }
+  bool isNap(HealthRecord record) => healthRecordIsNap(record);
 
   int get todaySteps {
     return _dailySteps[_dayKey(DateTime.now())] ?? 0;
@@ -742,9 +746,6 @@ class HealthDashboardState extends ChangeNotifier {
     0,
     (sum, record) =>
         sum +
-        (record.type == 'workout.treadmill'
-            ? ((record.value['durationSeconds'] as num?) ?? 0).round()
-            : (record.endTime - record.startTime) ~/
-                  Duration.millisecondsPerSecond),
+        (record.endTime - record.startTime) ~/ Duration.millisecondsPerSecond,
   );
 }

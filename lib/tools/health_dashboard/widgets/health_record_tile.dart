@@ -22,28 +22,49 @@ class HealthRecordTile extends StatelessWidget {
     required this.isNap,
   });
 
+  bool get _isSleep => record.type == 'sleep.session';
+
+  bool get _spansTime => record.endTime - record.startTime >= 60000;
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final materialL10n = MaterialLocalizations.of(context);
+    final use24h = MediaQuery.alwaysUse24HourFormatOf(context);
+    // A sleep session belongs to the morning it ends on; everything else is
+    // stamped where it started.
     final date = DateTime.fromMillisecondsSinceEpoch(
-      record.type == 'sleep.session' ? record.endTime : record.startTime,
+      _isSleep ? record.endTime : record.startTime,
     );
-    final value = record.type == 'sleep.session'
+    final value = _isSleep
         ? Duration(
             milliseconds: record.endTime - record.startTime,
           ).inMinutes.toDouble()
         : (record.value[valueKey] as num?)?.toDouble();
+
+    String time(int millis) => materialL10n.formatTimeOfDay(
+      TimeOfDay.fromDateTime(DateTime.fromMillisecondsSinceEpoch(millis)),
+      alwaysUse24HourFormat: use24h,
+    );
+
+    final when = _spansTime
+        ? '${time(record.startTime)} - ${time(record.endTime)}'
+        : time(record.startTime);
+
     return Card(
       child: ListTile(
         leading: Icon(
           isNap ? Icons.nightlight_outlined : Icons.history_rounded,
         ),
         title: Text(
-          isNap
-              ? '${MaterialLocalizations.of(context).formatMediumDate(date)} · ${AppLocalizations.of(context).healthDashboardNap}'
-              : MaterialLocalizations.of(context).formatMediumDate(date),
+          '${materialL10n.formatMediumDate(date)} · $when'
+          '${isNap ? ' · ${l10n.healthDashboardNap}' : ''}',
         ),
         subtitle: HealthSourceBadge(packageName: record.sourceName),
-        trailing: Text(value == null ? '-' : _format(value)),
+        trailing: Text(
+          value == null ? '-' : _format(value),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         onTap: () {
           final selected = DateTime(date.year, date.month, date.day);
           context.read<HealthDashboardState>().selectDay(selected);
@@ -58,10 +79,7 @@ class HealthRecordTile extends StatelessWidget {
   }
 
   String _format(double value) => switch (unit) {
-    'min' =>
-      record.type == 'sleep.session'
-          ? _sleepDuration(value.round())
-          : '${value.round()} min',
+    'min' => _isSleep ? _sleepDuration(value.round()) : '${value.round()} min',
     _ => healthValue(value, unit),
   };
 

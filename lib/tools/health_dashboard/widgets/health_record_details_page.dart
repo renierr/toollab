@@ -5,6 +5,8 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import '../health_record.dart';
+import '../store/health_metric_catalog.dart';
+import '../store/health_queries.dart';
 import 'health_record_header_card.dart';
 import 'health_record_stats_card.dart';
 import 'health_sleep_details_page.dart';
@@ -33,10 +35,14 @@ class HealthRecordDetailsPage extends StatelessWidget {
         (record.value['dataType'] as String?) ??
         record.type;
 
+    // One sample is a single reading, not a curve: charting it drew an empty
+    // looking box where the value itself belongs.
     final heartSamples = _extractSamples(
       record.value['heartRateSamples'] ?? record.value['samples'],
     );
     final speedSamples = _extractSamples(record.value['speedSamples']);
+    final metric = HealthQueries.metricForType(record.type);
+    final spec = metric == null ? null : HealthMetrics.spec(metric);
 
     return Scaffold(
       appBar: AppBar(title: Text(titleStr)),
@@ -49,8 +55,12 @@ class HealthRecordDetailsPage extends StatelessWidget {
             sourceName: record.sourceName,
           ),
           const SizedBox(height: 12),
-          HealthRecordStatsCard(record: record),
-          if (heartSamples.isNotEmpty) ...[
+          HealthRecordStatsCard(
+            record: record,
+            fallbackLabel: titleStr == record.type ? null : titleStr,
+            fallbackUnit: spec?.unit,
+          ),
+          if (heartSamples.length >= 2) ...[
             const SizedBox(height: 16),
             Text(
               l10n.healthDashboardHeartRate,
@@ -71,7 +81,7 @@ class HealthRecordDetailsPage extends StatelessWidget {
               ),
             ),
           ],
-          if (speedSamples.isNotEmpty) ...[
+          if (speedSamples.length >= 2) ...[
             const SizedBox(height: 16),
             Text(
               l10n.healthDashboardSpeed,

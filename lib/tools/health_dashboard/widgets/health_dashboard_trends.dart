@@ -12,6 +12,7 @@ class HealthDashboardTrends extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<HealthDashboardState>();
+    final l10n = AppLocalizations.of(context);
     final hasDistance = state.weeklyDistanceKm.any((value) => value > 0);
     final hasPulse = state.weeklyHeartRate.any((value) => value != null);
     final weightValues = state.weeklyMetricValues('body.weight', 'kilograms');
@@ -65,7 +66,7 @@ class HealthDashboardTrends extends StatelessWidget {
           ),
         if (hasHrv)
           _MetricTrendChart(
-            title: 'HRV (RMSSD) 7-Day Trend',
+            title: l10n.healthDashboardHrvTrend,
             values: hrvValues,
             unit: 'ms',
             color: AppTheme.accentPurple,
@@ -74,7 +75,7 @@ class HealthDashboardTrends extends StatelessWidget {
           ),
         if (hasSpO2)
           _MetricTrendChart(
-            title: 'Oxygen Saturation (SpO2) 7-Day Trend',
+            title: l10n.healthDashboardOxygenSaturationTrend,
             values: spO2Values,
             unit: '%',
             color: AppTheme.accentBlue,
@@ -83,7 +84,7 @@ class HealthDashboardTrends extends StatelessWidget {
           ),
         if (hasResp)
           _MetricTrendChart(
-            title: 'Respiratory Rate 7-Day Trend',
+            title: l10n.healthDashboardRespiratoryRateTrend,
             values: respValues,
             unit: 'rpm',
             color: AppTheme.accentTeal,
@@ -112,7 +113,7 @@ class _WeightBodyFatTrend extends StatelessWidget {
     children: [
       const SizedBox(height: 24),
       Text(
-        'Weight & Body Fat Trend · Last 7 Days',
+        AppLocalizations.of(context).healthDashboardWeightBodyFatTrend,
         style: Theme.of(context).textTheme.titleMedium,
       ),
       const SizedBox(height: 8),
@@ -128,7 +129,7 @@ class _WeightBodyFatTrend extends StatelessWidget {
             overlayUnit: '%',
             overlayColor: AppTheme.accentAmber,
             label: AppLocalizations.of(context).healthDashboardWeight,
-            overlayLabel: 'Body Fat',
+            overlayLabel: AppLocalizations.of(context).healthDashboardBodyFat,
             endDate: endDate,
           ),
         ),

@@ -97,7 +97,7 @@ class _HealthAllDataPageState extends State<HealthAllDataPage> {
       appBar: AppBar(title: Text(l10n.healthDashboardAllData)),
       floatingActionButton: _showScrollToTop
           ? FloatingActionButton.small(
-              tooltip: 'Scroll to top',
+              tooltip: l10n.healthDashboardScrollToTop,
               onPressed: () {
                 _scrollController.animateTo(
                   0,
@@ -173,6 +173,7 @@ class _MonthGroupSectionState extends State<_MonthGroupSection> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final visibleRecords = widget.records.take(_visibleCount).toList();
     final remainingInGroup = widget.records.length - visibleRecords.length;
     final showButton = remainingInGroup > 0 || widget.hasMoreDatabasePages;
@@ -194,8 +195,8 @@ class _MonthGroupSectionState extends State<_MonthGroupSection> {
                   icon: const Icon(Icons.add_rounded),
                   label: Text(
                     remainingInGroup > 0
-                        ? 'Show 100 more ($remainingInGroup remaining)'
-                        : 'Load more records...',
+                        ? l10n.healthDashboardShowMoreRecords(remainingInGroup)
+                        : l10n.healthDashboardLoadMoreRecords,
                   ),
                 ),
               ),

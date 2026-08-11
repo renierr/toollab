@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/settings_section_label.dart';
 
@@ -112,6 +114,28 @@ class HealthConnectSettingsPage extends StatelessWidget {
                 ? HealthBusyDialog.show(context)
                 : _importIntoStore(context, restart: true),
           ),
+          SettingsSectionLabel(
+            title: l10n.healthDashboardSectionMaintenance,
+            description: l10n.healthDashboardSectionMaintenanceHint,
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.cleaning_services_outlined,
+              color: AppTheme.statusRed,
+            ),
+            title: Text(l10n.healthDashboardPruneUnused),
+            subtitle: Text(l10n.healthDashboardPruneUnusedSubtitle),
+            trailing: healthState.isCollecting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
+            onTap: () => healthState.isCollecting
+                ? HealthBusyDialog.show(context)
+                : _pruneUnused(context),
+          ),
           const SizedBox(height: 24),
         ],
       ),
@@ -197,6 +221,44 @@ class HealthConnectSettingsPage extends StatelessWidget {
       ),
     );
     return confirmed == true;
+  }
+
+  /// Confirmed because it deletes: a switched-off writer's rows are gone
+  /// afterwards, and switching it back on will not bring them back without a
+  /// fresh import.
+  Future<void> _pruneUnused(BuildContext context) async {
+    final healthState = context.read<HealthDashboardState>();
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    // The row count is read before the confirm so it names what will go.
+    await healthState.loadSelection();
+    if (!context.mounted) return;
+    final disabled = healthState.healthApps
+        .where((app) => !app.enabled)
+        .toList();
+    final confirmed = await ConfirmActionDialog.show(
+      context: context,
+      title: l10n.healthDashboardPruneUnused,
+      message: disabled.isEmpty
+          ? l10n.healthDashboardPruneUnusedConfirmNoApps
+          : l10n.healthDashboardPruneUnusedConfirm(
+              disabled.map((app) => app.package).join(', '),
+            ),
+      cancelLabel: l10n.commonCancel,
+      confirmLabel: l10n.healthDashboardPruneUnusedConfirmAction,
+    );
+    if (confirmed != true || !context.mounted) return;
+    final result = await healthState.pruneUnusedData();
+    if (!context.mounted) return;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          result == null
+              ? l10n.healthDashboardPruneUnusedFailed
+              : l10n.healthDashboardPruneUnusedDone(result.rows),
+        ),
+      ),
+    );
   }
 
   Future<void> _syncChanges(BuildContext context) async {

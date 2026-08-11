@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_value_format.dart';
 
@@ -530,8 +531,10 @@ class _Tooltip extends StatelessWidget {
     this.endDate,
     required this.locale,
   });
-  String _value(double? value, String unit) {
-    if (value == null) return 'No data';
+  String _value(BuildContext context, double? value, String unit) {
+    if (value == null) {
+      return AppLocalizations.of(context).healthDashboardChartNoData;
+    }
     if (unit == 'min') {
       final minutes = value.round();
       return '${minutes ~/ 60}h ${minutes.remainder(60)}m';
@@ -559,12 +562,12 @@ class _Tooltip extends StatelessWidget {
                 DateFormat.yMMMd(locale).format(date),
                 style: Theme.of(context).textTheme.labelMedium,
               ),
-              _row(context, color, _value(values[index], unit)),
+              _row(context, color, _value(context, values[index], unit)),
               if (overlayValues != null)
                 _row(
                   context,
                   overlayColor ?? Colors.red,
-                  _value(overlayValues![index], overlayUnit ?? ''),
+                  _value(context, overlayValues![index], overlayUnit ?? ''),
                 ),
             ],
           ),

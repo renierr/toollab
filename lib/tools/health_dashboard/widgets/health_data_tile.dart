@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_record.dart';
 import '../health_value_format.dart';
@@ -15,7 +16,7 @@ class HealthDataTile extends StatelessWidget {
     final date = DateTime.fromMillisecondsSinceEpoch(record.startTime);
     final dateStr =
         '${MaterialLocalizations.of(context).formatMediumDate(date)} · ${MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(date), alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context))}';
-    final details = _details();
+    final details = _details(AppLocalizations.of(context));
     return ListTile(
       leading: const Icon(Icons.health_and_safety_outlined),
       title: Text(record.value['dataType'] as String? ?? record.type),
@@ -36,7 +37,7 @@ class HealthDataTile extends StatelessWidget {
     );
   }
 
-  String? _details() {
+  String? _details(AppLocalizations l10n) {
     if (record.value['distanceKm'] case final num dist) {
       return healthValue(dist, 'km');
     }
@@ -44,7 +45,7 @@ class HealthDataTile extends StatelessWidget {
       return healthValue(cal, 'kcal');
     }
     if (record.value['floors'] case final num floors) {
-      return '${healthValue(floors, 'count')} floors';
+      return '${healthValue(floors, 'count')} ${l10n.healthDashboardFloors}';
     }
     if (record.value['minutes'] case final num minutes) {
       return healthValue(minutes, 'min');

@@ -1,9 +1,17 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 import '../health_record.dart';
 import '../health_dashboard_state.dart';
+import '../health_sleep_quality.dart';
+import '../health_value_format.dart';
+import 'health_empty_state.dart';
+import 'health_record_stat_item.dart';
+import 'health_sleep_quality_card.dart';
 import 'health_sleep_stage_timeline.dart';
 import 'health_source_badge.dart';
 import 'health_day_navigation.dart';
@@ -33,13 +41,23 @@ class HealthSleepDetailsPage extends StatelessWidget {
         appBar: AppBar(title: Text(l10n.healthDashboardSleepDetails)),
         body: ListView(
           padding: const EdgeInsets.all(16),
-          children: const [
-            Align(
+          children: [
+            const Align(
               alignment: Alignment.centerRight,
               child: HealthDayNavigation(),
             ),
-            SizedBox(height: 24),
-            Center(child: _NoSleepData()),
+            const SizedBox(height: 24),
+            HealthEmptyState(
+              icon: Icons.bedtime_off_outlined,
+              title: l10n.healthDashboardNoSleepOnDay,
+              message: l10n.healthDashboardNoMetricDataInWeekHint,
+              buttonLabel: state.trendDayOffset == 0
+                  ? null
+                  : l10n.healthDashboardBackToToday,
+              onPressed: state.trendDayOffset == 0
+                  ? null
+                  : state.resetTrendDate,
+            ),
           ],
         ),
       );
@@ -163,6 +181,22 @@ class HealthSleepDetailsPage extends StatelessWidget {
                   ),
                 ),
               ),
+              if (SleepQuality.from(
+                    stages: stages,
+                    startTime: session.startTime,
+                    endTime: session.endTime,
+                    asleepMinutes: (session.value['asleepMinutes'] as num?)
+                        ?.toInt(),
+                  )
+                  case final quality?) ...[
+                const SizedBox(height: 24),
+                Text(
+                  l10n.healthDashboardSleepQuality,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                HealthSleepQualityCard(quality: quality),
+              ],
               const SizedBox(height: 16),
               HealthSourceBadge(packageName: session.sourceName),
               const SizedBox(height: 24),
@@ -182,6 +216,49 @@ class HealthSleepDetailsPage extends StatelessWidget {
                       heartRateSamples: heartRateSamples,
                       startTime: session.startTime,
                       endTime: session.endTime,
+                    ),
+                  ),
+                ),
+              ],
+              if (_heartRateStats(heartRateSamples) case final hr?) ...[
+                const SizedBox(height: 24),
+                Text(
+                  l10n.healthDashboardHeartRate,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Wrap(
+                      spacing: 24,
+                      runSpacing: 16,
+                      children: [
+                        HealthRecordStatItem(
+                          icon: Icons.favorite_outline_rounded,
+                          color: AppTheme.accentRed,
+                          label: l10n.healthDashboardSevenDayAvg,
+                          value: healthValue(hr.average, 'bpm'),
+                        ),
+                        HealthRecordStatItem(
+                          icon: Icons.arrow_downward_rounded,
+                          color: AppTheme.statusGreen,
+                          label: l10n.healthDashboardSevenDayMin,
+                          value: healthValue(hr.min, 'bpm'),
+                        ),
+                        HealthRecordStatItem(
+                          icon: Icons.arrow_upward_rounded,
+                          color: AppTheme.statusAmber,
+                          label: l10n.healthDashboardSevenDayMax,
+                          value: healthValue(hr.max, 'bpm'),
+                        ),
+                        HealthRecordStatItem(
+                          icon: Icons.timeline_rounded,
+                          color: AppTheme.accentBlue,
+                          label: l10n.healthDashboardCount,
+                          value: healthValue(hr.count, 'count'),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -207,6 +284,7 @@ class HealthSleepDetailsPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               HealthMetricHistory(
+                metricName: l10n.healthDashboardLastSleep,
                 type: 'sleep.session',
                 valueKey: 'durationMinutes',
                 unit: 'min',
@@ -216,6 +294,22 @@ class HealthSleepDetailsPage extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  /// Min, average and max of a night's heart-rate curve. Null under two
+  /// samples, where a range would be meaningless.
+  static _HeartRateStats? _heartRateStats(List<Map<String, dynamic>> samples) {
+    final values = [
+      for (final sample in samples)
+        if (sample['bpm'] case final num bpm) bpm.toDouble(),
+    ];
+    if (values.length < 2) return null;
+    return _HeartRateStats(
+      min: values.reduce(math.min),
+      max: values.reduce(math.max),
+      average: values.reduce((a, b) => a + b) / values.length,
+      count: values.length,
     );
   }
 
@@ -232,12 +326,18 @@ class HealthSleepDetailsPage extends StatelessWidget {
   }
 }
 
-class _NoSleepData extends StatelessWidget {
-  const _NoSleepData();
+class _HeartRateStats {
+  final double min;
+  final double max;
+  final double average;
+  final int count;
 
-  @override
-  Widget build(BuildContext context) =>
-      Text(AppLocalizations.of(context).healthDashboardNoData);
+  const _HeartRateStats({
+    required this.min,
+    required this.max,
+    required this.average,
+    required this.count,
+  });
 }
 
 class _NapDetails extends StatelessWidget {

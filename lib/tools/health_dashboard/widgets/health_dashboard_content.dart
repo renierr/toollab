@@ -6,6 +6,7 @@ import 'package:tool_lab/theme/theme.dart';
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
 import '../health_value_format.dart';
+import '../store/health_queries.dart';
 import 'health_metric_card.dart';
 import 'health_metric_details_page.dart';
 import 'health_sleep_details_page.dart';
@@ -51,12 +52,11 @@ class HealthDashboardContent extends StatelessWidget {
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardDistance,
-                  type: 'workout.treadmill',
+                  type: HealthQueries.workoutType,
                   valueKey: 'distanceKm',
                   unit: 'km',
                   color: AppTheme.accentTeal,
                   sum: true,
-                  workoutMetric: true,
                 ),
               ),
               HealthMetricCard(
@@ -67,12 +67,11 @@ class HealthDashboardContent extends StatelessWidget {
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardCalories,
-                  type: 'workout.treadmill',
+                  type: HealthQueries.workoutType,
                   valueKey: 'calories',
                   unit: 'calories',
                   color: AppTheme.accentAmber,
                   sum: true,
-                  workoutMetric: true,
                 ),
               ),
               HealthMetricCard(
@@ -83,12 +82,11 @@ class HealthDashboardContent extends StatelessWidget {
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardActiveTime,
-                  type: 'workout.treadmill',
+                  type: HealthQueries.workoutType,
                   valueKey: 'durationMinutes',
                   unit: 'min',
                   color: AppTheme.accentBlue,
                   sum: true,
-                  workoutMetric: true,
                 ),
               ),
               HealthMetricCard(
@@ -159,11 +157,11 @@ class HealthDashboardContent extends StatelessWidget {
                 HealthMetricCard(
                   icon: Icons.monitor_heart_rounded,
                   color: AppTheme.accentPurple,
-                  label: 'HRV (RMSSD)',
+                  label: l10n.healthDashboardHrv,
                   value: healthValue(state.latestHrv!, 'ms'),
                   onTap: () => _openMetric(
                     context,
-                    title: 'HRV',
+                    title: l10n.healthDashboardHrv,
                     type: 'health.heart_rate_variability_rmssd',
                     valueKey: 'rmssdMs',
                     unit: 'ms',
@@ -174,11 +172,11 @@ class HealthDashboardContent extends StatelessWidget {
                 HealthMetricCard(
                   icon: Icons.percent_rounded,
                   color: AppTheme.accentBlue,
-                  label: 'Latest Oxygen Saturation',
+                  label: l10n.healthDashboardLatestOxygenSaturation,
                   value: healthValue(state.latestSpO2!, '%'),
                   onTap: () => _openMetric(
                     context,
-                    title: 'Oxygen Saturation',
+                    title: l10n.healthDashboardOxygenSaturation,
                     type: 'health.oxygen_saturation',
                     valueKey: 'percent',
                     unit: '%',
@@ -189,11 +187,11 @@ class HealthDashboardContent extends StatelessWidget {
                 HealthMetricCard(
                   icon: Icons.air_rounded,
                   color: AppTheme.accentTeal,
-                  label: 'Latest Respiratory Rate',
+                  label: l10n.healthDashboardLatestRespiratoryRate,
                   value: healthValue(state.latestRespiratoryRate!, 'rpm'),
                   onTap: () => _openMetric(
                     context,
-                    title: 'Respiratory Rate',
+                    title: l10n.healthDashboardRespiratoryRate,
                     type: 'health.respiratory_rate',
                     valueKey: 'respiratoryRate',
                     unit: 'rpm',
@@ -204,11 +202,11 @@ class HealthDashboardContent extends StatelessWidget {
                 HealthMetricCard(
                   icon: Icons.pie_chart_outline_rounded,
                   color: AppTheme.accentAmber,
-                  label: 'Latest Body Fat',
+                  label: l10n.healthDashboardLatestBodyFat,
                   value: healthValue(state.latestBodyFat!, '%'),
                   onTap: () => _openMetric(
                     context,
-                    title: 'Body Fat',
+                    title: l10n.healthDashboardBodyFat,
                     type: 'health.body_fat_percentage',
                     valueKey: 'percent',
                     unit: '%',
@@ -258,12 +256,11 @@ class HealthDashboardContent extends StatelessWidget {
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardDistance,
-                  type: 'workout.treadmill',
+                  type: HealthQueries.workoutType,
                   valueKey: 'distanceKm',
                   unit: 'km',
                   color: AppTheme.accentTeal,
                   sum: true,
-                  workoutMetric: true,
                 ),
               ),
               HealthMetricCard(
@@ -274,12 +271,11 @@ class HealthDashboardContent extends StatelessWidget {
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardCalories,
-                  type: 'workout.treadmill',
+                  type: HealthQueries.workoutType,
                   valueKey: 'calories',
                   unit: 'calories',
                   color: AppTheme.accentAmber,
                   sum: true,
-                  workoutMetric: true,
                 ),
               ),
               HealthMetricCard(
@@ -290,12 +286,11 @@ class HealthDashboardContent extends StatelessWidget {
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardActiveTime,
-                  type: 'workout.treadmill',
+                  type: HealthQueries.workoutType,
                   valueKey: 'durationMinutes',
                   unit: 'min',
                   color: AppTheme.accentBlue,
                   sum: true,
-                  workoutMetric: true,
                 ),
               ),
               HealthMetricCard(
@@ -346,7 +341,6 @@ class HealthDashboardContent extends StatelessWidget {
     required String unit,
     required Color color,
     bool sum = false,
-    bool workoutMetric = false,
   }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -357,7 +351,6 @@ class HealthDashboardContent extends StatelessWidget {
           unit: unit,
           color: color,
           sum: sum,
-          workoutMetric: workoutMetric,
         ),
       ),
     );

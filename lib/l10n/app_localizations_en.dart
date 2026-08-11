@@ -6922,4 +6922,207 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthDashboardHealthConnectRepairFailed =>
       'Health Connect repair failed';
+
+  @override
+  String get healthDashboardHrv => 'HRV (RMSSD)';
+
+  @override
+  String get healthDashboardOxygenSaturation => 'Oxygen Saturation';
+
+  @override
+  String get healthDashboardRespiratoryRate => 'Respiratory Rate';
+
+  @override
+  String get healthDashboardBodyFat => 'Body Fat';
+
+  @override
+  String get healthDashboardBloodGlucose => 'Blood Glucose';
+
+  @override
+  String get healthDashboardBmr => 'BMR';
+
+  @override
+  String get healthDashboardVo2Max => 'VO2 Max';
+
+  @override
+  String get healthDashboardLatestOxygenSaturation =>
+      'Latest Oxygen Saturation';
+
+  @override
+  String get healthDashboardLatestRespiratoryRate => 'Latest Respiratory Rate';
+
+  @override
+  String get healthDashboardLatestBodyFat => 'Latest Body Fat';
+
+  @override
+  String get healthDashboardHrvTrend => 'HRV (RMSSD) · last 7 days';
+
+  @override
+  String get healthDashboardOxygenSaturationTrend =>
+      'Oxygen Saturation (SpO2) · last 7 days';
+
+  @override
+  String get healthDashboardRespiratoryRateTrend =>
+      'Respiratory Rate · last 7 days';
+
+  @override
+  String get healthDashboardWeightBodyFatTrend =>
+      'Weight & Body Fat · last 7 days';
+
+  @override
+  String get healthDashboardChartNoData => 'No data';
+
+  @override
+  String get healthDashboardLoadMore => 'Load more';
+
+  @override
+  String get healthDashboardScrollToTop => 'Scroll to top';
+
+  @override
+  String healthDashboardShowMoreRecords(int count) {
+    return 'Show 100 more ($count remaining)';
+  }
+
+  @override
+  String get healthDashboardLoadMoreRecords => 'Load more records…';
+
+  @override
+  String get healthDashboardHeight => 'Height';
+
+  @override
+  String get healthDashboardHydration => 'Hydration';
+
+  @override
+  String get healthDashboardBmi => 'BMI';
+
+  @override
+  String healthDashboardNoMetricDataInWeek(String metric) {
+    return 'No $metric in these 7 days';
+  }
+
+  @override
+  String get healthDashboardNoMetricDataInWeekHint =>
+      'Pick another day, or check that the type and its source are switched on.';
+
+  @override
+  String get healthDashboardBackToToday => 'Back to today';
+
+  @override
+  String healthDashboardNoMetricHistory(String metric) {
+    return 'Nothing stored for $metric';
+  }
+
+  @override
+  String get healthDashboardNoMetricHistoryHint =>
+      'Import this type from Health Connect to fill the history.';
+
+  @override
+  String get healthDashboardNoWorkoutsOnDay => 'No workouts on this day';
+
+  @override
+  String get healthDashboardNoSleepOnDay => 'No sleep recorded for this day';
+
+  @override
+  String get healthDashboardSleepQuality => 'Sleep quality';
+
+  @override
+  String get healthDashboardSleepQualityDisclaimer =>
+      'Compared against general adult sleep-study ranges. Not a medical assessment.';
+
+  @override
+  String get healthDashboardSleepRatingGood => 'Good';
+
+  @override
+  String get healthDashboardSleepRatingFair => 'Fair';
+
+  @override
+  String get healthDashboardSleepRatingPoor => 'Poor';
+
+  @override
+  String healthDashboardSleepScore(int score) {
+    return '$score of 100';
+  }
+
+  @override
+  String get healthDashboardSleepAsleep => 'Asleep';
+
+  @override
+  String get healthDashboardSleepTimeInBed => 'In bed';
+
+  @override
+  String get healthDashboardSleepEfficiency => 'Efficiency';
+
+  @override
+  String get healthDashboardSleepAwakenings => 'Awake';
+
+  @override
+  String get healthDashboardSleepFindingAllInRange =>
+      'Duration, efficiency and stage shares are all in their usual ranges.';
+
+  @override
+  String get healthDashboardSleepFindingDurationShort =>
+      'Less than 7 h asleep. Adults usually need 7-9 h.';
+
+  @override
+  String get healthDashboardSleepFindingDurationLong =>
+      'More than 10 h asleep, well above the usual 7-9 h.';
+
+  @override
+  String get healthDashboardSleepFindingEfficiencyLow =>
+      'Sleep efficiency below 85 %: a lot of the time in bed was spent awake.';
+
+  @override
+  String get healthDashboardSleepFindingDeepLow =>
+      'Deep sleep below 13 % of the night (usual range 13-23 %).';
+
+  @override
+  String get healthDashboardSleepFindingDeepHigh =>
+      'Deep sleep above 23 % of the night (usual range 13-23 %).';
+
+  @override
+  String get healthDashboardSleepFindingRemLow =>
+      'REM below 20 % of the night (usual range 20-25 %).';
+
+  @override
+  String get healthDashboardSleepFindingRemHigh =>
+      'REM above 25 % of the night (usual range 20-25 %).';
+
+  @override
+  String get healthDashboardSleepFindingAwakeHigh =>
+      'More than 30 minutes awake after falling asleep.';
+
+  @override
+  String get healthDashboardSectionMaintenance => 'Maintenance';
+
+  @override
+  String get healthDashboardSectionMaintenanceHint =>
+      'Reclaims space. These actions delete stored rows.';
+
+  @override
+  String get healthDashboardPruneUnused => 'Clean up and shrink database';
+
+  @override
+  String get healthDashboardPruneUnusedSubtitle =>
+      'Deletes rows nothing reads any more, then rewrites the file';
+
+  @override
+  String healthDashboardPruneUnusedConfirm(String apps) {
+    return 'Deletes every row written by switched-off apps ($apps), plus orphaned rows and unused labels, then rewrites the database file. Switching those apps back on will not bring the data back - only a fresh import will. This cannot be undone.';
+  }
+
+  @override
+  String get healthDashboardPruneUnusedConfirmNoApps =>
+      'No app is switched off, so only orphaned rows and unused labels are removed before the database file is rewritten. This cannot be undone.';
+
+  @override
+  String get healthDashboardPruneUnusedConfirmAction => 'Clean up';
+
+  @override
+  String healthDashboardPruneUnusedDone(int rows) {
+    return '$rows rows removed, database rewritten';
+  }
+
+  @override
+  String get healthDashboardPruneUnusedFailed =>
+      'Cleaning up the health database failed';
 }

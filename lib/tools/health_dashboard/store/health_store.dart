@@ -169,6 +169,16 @@ class HealthTypeState {
   });
 }
 
+/// What a [HealthStore.pruneUnused] pass removed.
+class HealthPruneResult {
+  final int rows;
+  final int text;
+
+  const HealthPruneResult({required this.rows, required this.text});
+
+  bool get isEmpty => rows == 0 && text == 0;
+}
+
 /// Typed store for the health dashboard. Owns the schema in [HealthSchema], the
 /// dimension interning, the daily rollups and every read the UI performs.
 class HealthStore {
@@ -1158,6 +1168,69 @@ class HealthStore {
     // VACUUM cannot run inside a transaction, and it rewrites the whole shared
     // app database rather than only this tool's tables.
     if (vacuum) await db.execute('VACUUM');
+  }
+
+  /// Drops every row nothing can read any more and rewrites the file.
+  ///
+  /// "Unused" is deliberately narrow, and means exactly three things:
+  ///
+  /// 1. Rows written by a globally switched-off app. Every read filters those
+  ///    out and the rollups skip them, so they are dead weight until the writer
+  ///    is switched back on - which is why this is destructive and confirmed.
+  /// 2. Session parts whose session is gone.
+  /// 3. Interned text no session or part references any more.
+  ///
+  /// A switched-off *data type* keeps its rows: reads filter by metric, not by
+  /// Health Connect type, so that data is still on the dashboard. Rollups are
+  /// rebuilt afterwards, which also drops rollup rows for metrics left empty.
+  Future<HealthPruneResult> pruneUnused() async {
+    final db = await _db();
+    var rows = 0;
+    var text = 0;
+    if (_disabledApps.isNotEmpty) {
+      final disabled = _disabledApps.join(', ');
+      await db.transaction((txn) async {
+        final sessions = txn.nameTable(HealthSchema.session);
+        rows += await txn.rawDelete(
+          'DELETE FROM ${txn.nameTable(HealthSchema.sessionPart)} '
+          'WHERE session IN (SELECT id FROM $sessions WHERE app IN ($disabled))',
+        );
+        rows += await txn.rawDelete(
+          'DELETE FROM $sessions WHERE app IN ($disabled)',
+        );
+        rows += await txn.rawDelete(
+          'DELETE FROM ${txn.nameTable(HealthSchema.point)} '
+          'WHERE app IN ($disabled)',
+        );
+        rows += await txn.rawDelete(
+          'DELETE FROM ${txn.nameTable(HealthSchema.interval)} '
+          'WHERE app IN ($disabled)',
+        );
+      });
+    }
+    await db.transaction((txn) async {
+      final sessions = txn.nameTable(HealthSchema.session);
+      final parts = txn.nameTable(HealthSchema.sessionPart);
+      rows += await txn.rawDelete(
+        'DELETE FROM $parts WHERE session NOT IN (SELECT id FROM $sessions)',
+      );
+      text += await txn.rawDelete(
+        'DELETE FROM ${txn.nameTable(HealthSchema.text)} WHERE id NOT IN ('
+        'SELECT activity FROM $sessions WHERE activity IS NOT NULL '
+        'UNION SELECT title FROM $sessions WHERE title IS NOT NULL '
+        'UNION SELECT part FROM $parts WHERE part IS NOT NULL)',
+      );
+    });
+    await rebuildDaily();
+    // Interned ids the delete pass removed are still cached, so the text
+    // dimension is reloaded before anything reads through it again.
+    _textIds.clear();
+    _textValues.clear();
+    await _loadDimensions(db);
+    // VACUUM cannot run in a transaction, and it rewrites the whole shared app
+    // database rather than only this tool's tables.
+    await db.execute('VACUUM');
+    return HealthPruneResult(rows: rows, text: text);
   }
 
   /// Clears the full-import completion flag for [types], so the importer reads

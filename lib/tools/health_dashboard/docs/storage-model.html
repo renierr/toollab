@@ -680,6 +680,196 @@
         </div>
       </section>
 
+      <section id="hcsettings">
+        <h2><span class="hn">11</span> The Health Connect settings screen</h2>
+        <p class="lede measure">
+          Every entry on that screen either changes what gets pulled, moves data in, or deletes
+          data. Nothing here shows or hides anything on the dashboard — the dashboard always renders
+          whatever survived the pull and the rollup.
+        </p>
+
+        <div class="scroller">
+          <svg viewBox="0 0 920 322" role="img" width="920"
+               aria-label="Three gates decide what reaches the store: the per-type switch, the per-type source filter and the global app switch. A fourth rule, priority, decides which writer a day is computed from."
+               style="max-width:100%;height:auto;font-family:var(--sans)">
+            <defs>
+              <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--ink-faint)"/>
+              </marker>
+            </defs>
+
+            <!-- source -->
+            <rect x="1" y="52" width="176" height="120" rx="8" fill="var(--surface-2)" stroke="var(--line)"/>
+            <text x="89" y="80" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Health Connect</text>
+            <text x="89" y="102" text-anchor="middle" font-size="11.5" fill="var(--ink-dim)">every type</text>
+            <text x="89" y="120" text-anchor="middle" font-size="11.5" fill="var(--ink-dim)">every writing app</text>
+            <text x="89" y="146" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="var(--ink-faint)">read-only, never written</text>
+
+            <!-- gates -->
+            <g font-family="var(--mono)" font-size="10.5" font-weight="700" letter-spacing=".04em">
+              <rect x="205" y="36" width="150" height="30" rx="5" fill="var(--accent-soft)" stroke="var(--accent)"/>
+              <text x="280" y="56" text-anchor="middle" fill="var(--accent)">1 · DATA TYPES</text>
+              <rect x="205" y="98" width="150" height="30" rx="5" fill="var(--accent-soft)" stroke="var(--accent)"/>
+              <text x="280" y="118" text-anchor="middle" fill="var(--accent)">2 · APPS PER TYPE</text>
+              <rect x="205" y="160" width="150" height="30" rx="5" fill="var(--accent-soft)" stroke="var(--accent)"/>
+              <text x="280" y="180" text-anchor="middle" fill="var(--accent)">3 · APP SWITCH</text>
+            </g>
+            <g font-size="11" fill="var(--ink-dim)" font-family="var(--mono)">
+              <text x="280" y="80" text-anchor="middle">health_type.enabled</text>
+              <text x="280" y="142" text-anchor="middle">health_type_app.enabled</text>
+              <text x="280" y="204" text-anchor="middle">health_app.enabled</text>
+            </g>
+
+            <!-- facts -->
+            <rect x="405" y="52" width="168" height="120" rx="8" fill="var(--surface)" stroke="var(--line)"/>
+            <text x="489" y="78" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Facts</text>
+            <g font-size="10.5" font-family="var(--mono)">
+              <rect x="425" y="90" width="60" height="19" rx="4" fill="var(--point-soft)"/>
+              <text x="455" y="104" text-anchor="middle" fill="var(--point)">point</text>
+              <rect x="493" y="90" width="62" height="19" rx="4" fill="var(--interval-soft)"/>
+              <text x="524" y="104" text-anchor="middle" fill="var(--interval)">interval</text>
+              <rect x="425" y="117" width="66" height="19" rx="4" fill="var(--session-soft)"/>
+              <text x="458" y="131" text-anchor="middle" fill="var(--session)">session</text>
+            </g>
+            <text x="489" y="158" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="var(--ink-faint)">identical readings collide</text>
+
+            <!-- rollup -->
+            <rect x="619" y="52" width="150" height="120" rx="8" fill="var(--surface)" stroke="var(--accent)"/>
+            <text x="694" y="78" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">health_daily</text>
+            <text x="694" y="100" text-anchor="middle" font-size="11.5" fill="var(--ink-dim)">one row per</text>
+            <text x="694" y="117" text-anchor="middle" font-size="11.5" fill="var(--ink-dim)">metric and day</text>
+            <text x="694" y="146" text-anchor="middle" font-size="10.5" font-family="var(--mono)" fill="var(--ink-faint)">one writer per day</text>
+
+            <!-- dashboard -->
+            <rect x="815" y="72" width="104" height="80" rx="8" fill="var(--surface-2)" stroke="var(--line)"/>
+            <text x="867" y="106" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Dashboard</text>
+            <text x="867" y="126" text-anchor="middle" font-size="11" fill="var(--ink-dim)">cards, charts</text>
+
+            <!-- arrows -->
+            <g stroke="var(--ink-faint)" fill="none" marker-end="url(#ar)">
+              <path d="M178 112 H200"/>
+              <path d="M358 112 H400"/>
+              <path d="M575 112 H614"/>
+              <path d="M771 112 H810"/>
+            </g>
+
+            <!-- priority -->
+            <rect x="596" y="212" width="196" height="30" rx="5" fill="var(--accent-soft)" stroke="var(--accent)"/>
+            <text x="694" y="232" text-anchor="middle" font-size="10.5" font-weight="700" font-family="var(--mono)"
+                  letter-spacing=".04em" fill="var(--accent)">4 · PRIORITY, EXCLUDES NOTHING</text>
+            <path d="M694 208 V180" stroke="var(--accent)" fill="none" marker-end="url(#ar)"/>
+            <text x="694" y="262" text-anchor="middle" font-size="11" font-family="var(--mono)" fill="var(--ink-dim)">health_app.prio · lower wins</text>
+
+            <text x="1" y="296" font-size="11.5" fill="var(--ink-dim)">
+              Gates 1-3 decide whether a row is ever stored. Gate 4 decides which stored writer a day is computed from.
+            </text>
+            <text x="1" y="314" font-size="11.5" fill="var(--ink-dim)">
+              Switching a gate off keeps rows already stored; they stop being read and stop feeding the rollup.
+            </text>
+          </svg>
+        </div>
+
+        <h3>What each entry does</h3>
+        <div class="scroller">
+          <table>
+            <thead><tr><th>Entry</th><th>Does</th><th>Touches</th><th>Cost</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="d"><b>Manage Health Connect</b></td>
+                <td class="d">Leaves the app for Android's Health Connect screen, to grant or revoke read permissions</td>
+                <td class="c">nothing</td>
+                <td class="d">—</td>
+              </tr>
+              <tr>
+                <td class="d"><b>Data types</b></td>
+                <td class="d">Per-type pull switch. A type that is off is never read, so it costs nothing at all</td>
+                <td class="c">health_type.enabled</td>
+                <td class="d">—</td>
+              </tr>
+              <tr>
+                <td class="d"><b>Apps</b></td>
+                <td class="d">Global per-writer switch, plus the priority order. Off means the writer is neither pulled, read nor aggregated; its stored rows stay</td>
+                <td class="c">health_app.enabled · prio</td>
+                <td class="d">Rebuilds rollups</td>
+              </tr>
+              <tr>
+                <td class="d"><b>Scan available data</b></td>
+                <td class="d">Bounded probe — a recent window, a few pages per type — that registers which types hold data and which apps wrote it. Populates the two screens above and changes no existing choice</td>
+                <td class="c">health_type · health_type_app</td>
+                <td class="d">Seconds</td>
+              </tr>
+              <tr>
+                <td class="d"><b>Sync changes on open</b> <span class="chip s-accent">off by default</span></td>
+                <td class="d">Runs the change-token sync each time the tool opens. Off means data only arrives when an import is started by hand</td>
+                <td class="c">tool_settings</td>
+                <td class="d">—</td>
+              </tr>
+              <tr>
+                <td class="d"><b>Import selected data</b></td>
+                <td class="d">Full history for every enabled type. <b>Resumes</b>: a type whose <code>history_done</code> is set is skipped, and an unfinished one re-reads its stored range rather than a range that drifts with the clock</td>
+                <td class="c">all fact tables · health_type progress</td>
+                <td class="d">Hours at full history</td>
+              </tr>
+              <tr>
+                <td class="d"><b>Sync changes now</b></td>
+                <td class="d">The same change-token sync, on demand. Fetches only what Health Connect reports as changed, including deletions</td>
+                <td class="c">all fact tables · sync token</td>
+                <td class="d">Seconds</td>
+              </tr>
+              <tr>
+                <td class="d"><b>Re-import from scratch</b> <span class="chip s-legacy">deletes</span></td>
+                <td class="d">Empties every fact table, clears all per-type progress, then reads all history again from 1970. Use it whenever progress is stamped but the tables are empty</td>
+                <td class="c">health_daily · session_part · session · point · interval · health_type progress</td>
+                <td class="d">Hours at full history</td>
+              </tr>
+              <tr>
+                <td class="d"><b>Clean up and shrink database</b> <span class="chip s-legacy">deletes</span></td>
+                <td class="d">Drops rows nothing can read any more, then <code>VACUUM</code>s so the pages return to the filesystem</td>
+                <td class="c">rows of switched-off apps · orphan parts · unused health_text</td>
+                <td class="d">One file rewrite</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">
+          <b>Re-import from scratch clears the tables first.</b> It calls
+          <code>clearImportedData()</code>, which deletes every row of <code>health_daily</code>,
+          <code>health_session_part</code>, <code>health_session</code>, <code>health_point</code>
+          and <code>health_interval</code> in one transaction, and resets <code>history_done</code>,
+          <code>range_start</code>, <code>range_end</code> and <code>n</code> on every type. Selection
+          survives: types, discovered writers, the app switches and the priority order are all kept,
+          so the re-read pulls exactly what is selected now. It does not <code>VACUUM</code> — the
+          freed pages are reused by the rows coming straight back in.
+        </div>
+
+        <div class="note warn">
+          <b>Clean up is not reversible.</b> Switching a writer off keeps its rows precisely so
+          switching it back on is free; clean-up is the explicit decision to give that up in exchange
+          for the disk. Afterwards, re-admitting the writer needs a fresh import. A switched-off
+          <em>data type</em> keeps its rows either way: reads filter by metric, not by Health Connect
+          type, so that data is still on the dashboard and is not "unused".
+        </div>
+
+        <h3>Why a switched-off app could still be imported</h3>
+        <p class="measure">
+          The full importer passes the allowed writers as a <code>dataOrigins</code> filter, which
+          Health Connect only understands as an <em>allowlist</em>. The list can only be built from
+          the writers discovery attributed to a type, and discovery is a bounded probe — so the
+          filter is deliberately sent empty, meaning "no restriction", whenever every
+          <em>known</em> writer for that type is allowed. Treating the probe as the complete writer
+          list instead made a full import return almost nothing.
+        </p>
+        <p class="measure">
+          The consequence: a writer switched off globally that discovery never saw under a given type
+          is not in that type's list, the filter goes empty, and Health Connect hands its records
+          over anyway. They were invisible on the dashboard — every read and the rollups exclude a
+          disabled writer — but they were stored. The importer now also drops excluded packages as
+          the records arrive, which is what the change sync always had to do, since
+          <code>synchronize()</code> takes no origin filter at all.
+        </p>
+      </section>
+
       <footer>
         Source: <code>lib/tools/health_dashboard/</code> — <code>store/</code> holds the schema,
         catalog, mapper and queries; <code>collectors/</code> holds discovery, the importer and the
@@ -930,7 +1120,7 @@
     ["model", "Three shapes"], ["flow", "When data is written"], ["schema", "Schema"],
     ["types", "Health Connect types"], ["rollup", "The fast path"], ["size", "Storage saved"],
     ["dupes", "Duplicates"], ["incr", "Incremental sync"], ["state", "Current state"],
-    ["settings", "Outside the tables"]
+    ["settings", "Outside the tables"], ["hcsettings", "Settings screen"]
   ];
   const toc = $("#toc");
   SECTIONS.forEach(([id, label], i) => {

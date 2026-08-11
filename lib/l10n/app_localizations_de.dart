@@ -6969,4 +6969,209 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthDashboardHealthConnectRepairFailed =>
       'Health-Connect-Reparatur fehlgeschlagen';
+
+  @override
+  String get healthDashboardHrv => 'HRV (RMSSD)';
+
+  @override
+  String get healthDashboardOxygenSaturation => 'Sauerstoffsättigung';
+
+  @override
+  String get healthDashboardRespiratoryRate => 'Atemfrequenz';
+
+  @override
+  String get healthDashboardBodyFat => 'Körperfett';
+
+  @override
+  String get healthDashboardBloodGlucose => 'Blutzucker';
+
+  @override
+  String get healthDashboardBmr => 'Grundumsatz';
+
+  @override
+  String get healthDashboardVo2Max => 'VO2max';
+
+  @override
+  String get healthDashboardLatestOxygenSaturation =>
+      'Letzte Sauerstoffsättigung';
+
+  @override
+  String get healthDashboardLatestRespiratoryRate => 'Letzte Atemfrequenz';
+
+  @override
+  String get healthDashboardLatestBodyFat => 'Letzter Körperfettanteil';
+
+  @override
+  String get healthDashboardHrvTrend => 'HRV (RMSSD) · letzte 7 Tage';
+
+  @override
+  String get healthDashboardOxygenSaturationTrend =>
+      'Sauerstoffsättigung (SpO2) · letzte 7 Tage';
+
+  @override
+  String get healthDashboardRespiratoryRateTrend =>
+      'Atemfrequenz · letzte 7 Tage';
+
+  @override
+  String get healthDashboardWeightBodyFatTrend =>
+      'Gewicht & Körperfett · letzte 7 Tage';
+
+  @override
+  String get healthDashboardChartNoData => 'Keine Daten';
+
+  @override
+  String get healthDashboardLoadMore => 'Mehr laden';
+
+  @override
+  String get healthDashboardScrollToTop => 'Nach oben';
+
+  @override
+  String healthDashboardShowMoreRecords(int count) {
+    return '100 weitere anzeigen ($count übrig)';
+  }
+
+  @override
+  String get healthDashboardLoadMoreRecords => 'Weitere Daten laden…';
+
+  @override
+  String get healthDashboardHeight => 'Körpergröße';
+
+  @override
+  String get healthDashboardHydration => 'Flüssigkeit';
+
+  @override
+  String get healthDashboardBmi => 'BMI';
+
+  @override
+  String healthDashboardNoMetricDataInWeek(String metric) {
+    return 'Kein Wert für $metric in diesen 7 Tagen';
+  }
+
+  @override
+  String get healthDashboardNoMetricDataInWeekHint =>
+      'Wähle einen anderen Tag oder prüfe, ob der Typ und seine Quelle eingeschaltet sind.';
+
+  @override
+  String get healthDashboardBackToToday => 'Zurück zu heute';
+
+  @override
+  String healthDashboardNoMetricHistory(String metric) {
+    return 'Für $metric ist nichts gespeichert';
+  }
+
+  @override
+  String get healthDashboardNoMetricHistoryHint =>
+      'Importiere diesen Typ aus Health Connect, um den Verlauf zu füllen.';
+
+  @override
+  String get healthDashboardNoWorkoutsOnDay => 'Keine Workouts an diesem Tag';
+
+  @override
+  String get healthDashboardNoSleepOnDay =>
+      'Für diesen Tag ist kein Schlaf aufgezeichnet';
+
+  @override
+  String get healthDashboardSleepQuality => 'Schlafqualität';
+
+  @override
+  String get healthDashboardSleepQualityDisclaimer =>
+      'Verglichen mit allgemeinen Referenzwerten aus Schlafstudien für Erwachsene. Keine medizinische Beurteilung.';
+
+  @override
+  String get healthDashboardSleepRatingGood => 'Gut';
+
+  @override
+  String get healthDashboardSleepRatingFair => 'Mittel';
+
+  @override
+  String get healthDashboardSleepRatingPoor => 'Schlecht';
+
+  @override
+  String healthDashboardSleepScore(int score) {
+    return '$score von 100';
+  }
+
+  @override
+  String get healthDashboardSleepAsleep => 'Geschlafen';
+
+  @override
+  String get healthDashboardSleepTimeInBed => 'Im Bett';
+
+  @override
+  String get healthDashboardSleepEfficiency => 'Effizienz';
+
+  @override
+  String get healthDashboardSleepAwakenings => 'Wach';
+
+  @override
+  String get healthDashboardSleepFindingAllInRange =>
+      'Dauer, Effizienz und Phasenanteile liegen alle im üblichen Bereich.';
+
+  @override
+  String get healthDashboardSleepFindingDurationShort =>
+      'Weniger als 7 h geschlafen. Erwachsene brauchen meist 7-9 h.';
+
+  @override
+  String get healthDashboardSleepFindingDurationLong =>
+      'Mehr als 10 h geschlafen, deutlich über den üblichen 7-9 h.';
+
+  @override
+  String get healthDashboardSleepFindingEfficiencyLow =>
+      'Schlafeffizienz unter 85 %: ein großer Teil der Zeit im Bett war wach.';
+
+  @override
+  String get healthDashboardSleepFindingDeepLow =>
+      'Tiefschlaf unter 13 % der Nacht (üblich 13-23 %).';
+
+  @override
+  String get healthDashboardSleepFindingDeepHigh =>
+      'Tiefschlaf über 23 % der Nacht (üblich 13-23 %).';
+
+  @override
+  String get healthDashboardSleepFindingRemLow =>
+      'REM unter 20 % der Nacht (üblich 20-25 %).';
+
+  @override
+  String get healthDashboardSleepFindingRemHigh =>
+      'REM über 25 % der Nacht (üblich 20-25 %).';
+
+  @override
+  String get healthDashboardSleepFindingAwakeHigh =>
+      'Mehr als 30 Minuten wach nach dem Einschlafen.';
+
+  @override
+  String get healthDashboardSectionMaintenance => 'Wartung';
+
+  @override
+  String get healthDashboardSectionMaintenanceHint =>
+      'Gibt Speicher frei. Diese Aktionen löschen gespeicherte Zeilen.';
+
+  @override
+  String get healthDashboardPruneUnused =>
+      'Aufräumen und Datenbank verkleinern';
+
+  @override
+  String get healthDashboardPruneUnusedSubtitle =>
+      'Löscht Zeilen, die nichts mehr liest, und schreibt die Datei neu';
+
+  @override
+  String healthDashboardPruneUnusedConfirm(String apps) {
+    return 'Löscht alle Zeilen von ausgeschalteten Apps ($apps), dazu verwaiste Zeilen und unbenutzte Bezeichnungen, und schreibt die Datenbankdatei neu. Diese Apps wieder einzuschalten bringt die Daten nicht zurück - dafür ist ein neuer Import nötig. Das kann nicht widerrufen werden.';
+  }
+
+  @override
+  String get healthDashboardPruneUnusedConfirmNoApps =>
+      'Keine App ist ausgeschaltet, es werden also nur verwaiste Zeilen und unbenutzte Bezeichnungen entfernt, bevor die Datenbankdatei neu geschrieben wird. Das kann nicht widerrufen werden.';
+
+  @override
+  String get healthDashboardPruneUnusedConfirmAction => 'Aufräumen';
+
+  @override
+  String healthDashboardPruneUnusedDone(int rows) {
+    return '$rows Zeilen entfernt, Datenbank neu geschrieben';
+  }
+
+  @override
+  String get healthDashboardPruneUnusedFailed =>
+      'Aufräumen der Gesundheitsdatenbank fehlgeschlagen';
 }

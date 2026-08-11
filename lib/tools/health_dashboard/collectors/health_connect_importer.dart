@@ -75,6 +75,13 @@ class HealthConnectImporter {
       // probes a bounded window and would drop every writer it did not see.
       final packages = await store.dataOriginFilter(typeId);
       final origins = [for (final package in packages) hc.DataOrigin(package)];
+      // The origin filter is an allowlist built from the writers discovery
+      // attributed to this type, so it goes empty - no restriction - whenever
+      // every known writer is allowed. A writer switched off globally that
+      // discovery never saw under this type would slip straight through, so the
+      // records are dropped on the way in as well, exactly as the change sync
+      // has to do.
+      final excluded = await store.excludedPackages(typeId);
 
       try {
         // Paging follows response.nextPageRequest. This plugin exposes no page
@@ -92,6 +99,9 @@ class HealthConnectImporter {
           final mapped = <HealthMappedRecord>[];
           for (final record
               in (response.records as List).cast<hc.HealthRecord>()) {
+            if (excluded.contains(record.metadata.dataOrigin?.packageName)) {
+              continue;
+            }
             final result = mapper.map(record);
             if (result.isEmpty) continue;
             mapped.add(result);

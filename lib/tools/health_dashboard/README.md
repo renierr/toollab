@@ -80,13 +80,71 @@ selection screens, and it never changes an existing choice.
 
 Disabling stops a writer being pulled and drops it out of every read and
 rollup. The rows it already contributed stay, so switching it back on is
-instant and free. Reclaiming the disk is a separate, explicit action, because
-deleting rows does not shrink the file on its own - SQLite frees the pages and
-reuses them, so the delete path has to `VACUUM` to hand the space back.
+instant and free. Reclaiming the disk is a separate, explicit action - "Clean up and
+shrink database" - because deleting rows does not shrink the file on its own:
+SQLite frees the pages and reuses them, so the delete path has to `VACUUM` to
+hand the space back.
 
 Anything that re-admits a writer to a type must clear that type's
 `history_done`. Otherwise the importer skips the finished type and the newly
 allowed writer's history is never read.
+
+## The Health Connect Settings Screen
+
+Every entry either changes what gets pulled, moves data in, or deletes data.
+Nothing on it shows or hides anything on the dashboard - the dashboard renders
+whatever survived the pull and the rollup. `docs/storage-model.html` §11 has the
+same table plus a diagram of where each gate cuts.
+
+| Entry | Does | Touches |
+| --- | --- | --- |
+| Manage Health Connect | Leaves the app for Android's Health Connect screen, to grant or revoke read permission. | nothing |
+| Data types | Per-type pull switch. A type that is off is never read at all. | `health_type.enabled` |
+| Apps | Global per-writer switch plus the priority order. Off means neither pulled, read nor aggregated; stored rows stay. | `health_app.enabled`, `prio` |
+| Scan available data | Bounded probe that registers which types hold data and which apps wrote it. Populates the two screens above; changes no existing choice. | `health_type`, `health_type_app` |
+| Sync changes on open | Runs the change-token sync on every tool open. Off means data arrives only from a manual import. | `tool_settings` |
+| Import selected data | Full history for every enabled type. **Resumes** - a finished type is skipped, an unfinished one re-reads its stored range. | fact tables, per-type progress |
+| Sync changes now | The change-token sync on demand, including deletions. | fact tables, sync token |
+| Re-import from scratch | Empties every fact table, clears all progress, reads all history again from 1970. | fact tables, per-type progress |
+| Clean up and shrink database | Deletes rows nothing can read any more, then `VACUUM`s. Confirmed, irreversible. | rows of switched-off apps, orphan parts, unused `health_text` |
+
+### Re-import from scratch does clear the tables first
+
+`clearImportedData()` deletes every row of `health_daily`,
+`health_session_part`, `health_session`, `health_point` and `health_interval` in
+one transaction, then resets `history_done`, `range_start`, `range_end` and `n`
+on every type. **Selection survives**: types, discovered writers, app switches
+and priority are all kept, so the re-read pulls exactly what is selected now. It
+does not `VACUUM`, because the freed pages are reused by the rows coming back in.
+
+### Clean up: what counts as unused
+
+Only three things, and deliberately not more:
+
+1. Rows written by a **globally switched-off app**. Every read filters them out
+   and the rollups skip them, so they are dead weight - which is also why this is
+   destructive: re-admitting that writer afterwards needs a fresh import.
+2. Session parts whose session is gone.
+3. Interned `health_text` no session or part references any more.
+
+A switched-off **data type** keeps its rows. Reads filter by metric, not by
+Health Connect type, so that data is still on the dashboard and is not unused.
+Rollups are rebuilt afterwards, which also drops rollup rows for metrics left
+empty, and then the file is rewritten with `VACUUM`.
+
+### Why a switched-off app could still land in a full import
+
+The `dataOrigins` filter Health Connect accepts is an **allowlist only**, and the
+list can only be built from the writers discovery attributed to a type. Because
+discovery is a bounded probe, the filter is sent empty - "no restriction" -
+whenever every *known* writer for a type is allowed; building it from discovery
+instead made a full import return almost nothing (see Duplicates, rule 1).
+
+So a writer switched off globally that discovery never saw under some type is not
+in that type's list, the filter goes empty, and Health Connect hands its records
+over. They never appeared on the dashboard, but they were stored. The importer
+now drops excluded packages as records arrive as well - the same thing the change
+sync always had to do, since `synchronize()` accepts no origin filter.
 
 ## Duplicates
 
@@ -289,11 +347,11 @@ pruned on an interval rather than per upsert.
 
 ## Operating It
 
-**Which import entry to use.** "Import selected" resumes unfinished types.
-"Restart import" purges local Health Connect data and re-reads from the
-beginning; its purge deliberately spares treadmill records, since only Health
-Connect is re-imported afterwards. After anything that leaves progress stamped
-but the tables empty, use restart.
+**Which import entry to use.** "Import selected data" resumes unfinished types.
+"Re-import from scratch" empties the fact tables and re-reads from the beginning,
+keeping the selection. After anything that leaves progress stamped but the tables
+empty, use the re-import. Full table above in The Health Connect Settings
+Screen.
 
 **When backend sync happens.** Never during an import. The import entries
 contain no backend call at all. Backend push happens on tool open and from the

@@ -9,6 +9,8 @@ import 'health_empty_state.dart';
 import 'health_record_tile.dart';
 
 class HealthMetricHistory extends StatefulWidget {
+  /// Shown in the empty state, so it names the metric instead of the tool.
+  final String metricName;
   final String type;
   final String valueKey;
   final String unit;
@@ -16,6 +18,7 @@ class HealthMetricHistory extends StatefulWidget {
 
   const HealthMetricHistory({
     super.key,
+    required this.metricName,
     required this.type,
     required this.valueKey,
     required this.unit,
@@ -55,9 +58,14 @@ class _HealthMetricHistoryState extends State<HealthMetricHistory> {
   Widget build(BuildContext context) {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_records.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: HealthEmptyState(),
+      final l10n = AppLocalizations.of(context);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: HealthEmptyState(
+          icon: Icons.history_toggle_off_outlined,
+          title: l10n.healthDashboardNoMetricHistory(widget.metricName),
+          message: l10n.healthDashboardNoMetricHistoryHint,
+        ),
       );
     }
     return Column(
@@ -80,7 +88,10 @@ class _HealthMetricHistoryState extends State<HealthMetricHistory> {
             ),
           ),
         if (_hasMore)
-          TextButton(onPressed: _loadMore, child: const Text('Load more')),
+          TextButton(
+            onPressed: _loadMore,
+            child: Text(AppLocalizations.of(context).healthDashboardLoadMore),
+          ),
       ],
     );
   }

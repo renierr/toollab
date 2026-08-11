@@ -2822,5 +2822,104 @@
   "healthDashboardHealthConnectSettingsSubtitle": "Berechtigungen, Import, automatische Synchronisierung beim Öffnen und Neustart des Imports.",
   "healthDashboardHealthConnectOpenFailed": "Health-Connect-Einstellungen konnten nicht geöffnet werden",
   "healthDashboardHealthConnectImportFailed": "Health-Connect-Import fehlgeschlagen",
-  "healthDashboardHealthConnectRepairFailed": "Health-Connect-Reparatur fehlgeschlagen"
+  "healthDashboardHealthConnectRepairFailed": "Health-Connect-Reparatur fehlgeschlagen",
+  "healthDashboardHrv": "HRV (RMSSD)",
+  "healthDashboardOxygenSaturation": "Sauerstoffsättigung",
+  "healthDashboardRespiratoryRate": "Atemfrequenz",
+  "healthDashboardBodyFat": "Körperfett",
+  "healthDashboardBloodGlucose": "Blutzucker",
+  "healthDashboardBmr": "Grundumsatz",
+  "healthDashboardVo2Max": "VO2max",
+  "healthDashboardLatestOxygenSaturation": "Letzte Sauerstoffsättigung",
+  "healthDashboardLatestRespiratoryRate": "Letzte Atemfrequenz",
+  "healthDashboardLatestBodyFat": "Letzter Körperfettanteil",
+  "healthDashboardHrvTrend": "HRV (RMSSD) · letzte 7 Tage",
+  "healthDashboardOxygenSaturationTrend": "Sauerstoffsättigung (SpO2) · letzte 7 Tage",
+  "healthDashboardRespiratoryRateTrend": "Atemfrequenz · letzte 7 Tage",
+  "healthDashboardWeightBodyFatTrend": "Gewicht & Körperfett · letzte 7 Tage",
+  "healthDashboardChartNoData": "Keine Daten",
+  "healthDashboardLoadMore": "Mehr laden",
+  "healthDashboardScrollToTop": "Nach oben",
+  "healthDashboardShowMoreRecords": "100 weitere anzeigen ({count} übrig)",
+  "@healthDashboardShowMoreRecords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardLoadMoreRecords": "Weitere Daten laden…",
+  "healthDashboardHeight": "Körpergröße",
+  "healthDashboardHydration": "Flüssigkeit",
+  "healthDashboardBmi": "BMI",
+  "healthDashboardNoMetricDataInWeek": "Kein Wert für {metric} in diesen 7 Tagen",
+  "@healthDashboardNoMetricDataInWeek": {
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "healthDashboardNoMetricDataInWeekHint": "Wähle einen anderen Tag oder prüfe, ob der Typ und seine Quelle eingeschaltet sind.",
+  "healthDashboardBackToToday": "Zurück zu heute",
+  "healthDashboardNoMetricHistory": "Für {metric} ist nichts gespeichert",
+  "@healthDashboardNoMetricHistory": {
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "healthDashboardNoMetricHistoryHint": "Importiere diesen Typ aus Health Connect, um den Verlauf zu füllen.",
+  "healthDashboardNoWorkoutsOnDay": "Keine Workouts an diesem Tag",
+  "healthDashboardNoSleepOnDay": "Für diesen Tag ist kein Schlaf aufgezeichnet",
+  "healthDashboardSleepQuality": "Schlafqualität",
+  "healthDashboardSleepQualityDisclaimer": "Verglichen mit allgemeinen Referenzwerten aus Schlafstudien für Erwachsene. Keine medizinische Beurteilung.",
+  "healthDashboardSleepRatingGood": "Gut",
+  "healthDashboardSleepRatingFair": "Mittel",
+  "healthDashboardSleepRatingPoor": "Schlecht",
+  "healthDashboardSleepScore": "{score} von 100",
+  "@healthDashboardSleepScore": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardSleepAsleep": "Geschlafen",
+  "healthDashboardSleepTimeInBed": "Im Bett",
+  "healthDashboardSleepEfficiency": "Effizienz",
+  "healthDashboardSleepAwakenings": "Wach",
+  "healthDashboardSleepFindingAllInRange": "Dauer, Effizienz und Phasenanteile liegen alle im üblichen Bereich.",
+  "healthDashboardSleepFindingDurationShort": "Weniger als 7 h geschlafen. Erwachsene brauchen meist 7-9 h.",
+  "healthDashboardSleepFindingDurationLong": "Mehr als 10 h geschlafen, deutlich über den üblichen 7-9 h.",
+  "healthDashboardSleepFindingEfficiencyLow": "Schlafeffizienz unter 85 %: ein großer Teil der Zeit im Bett war wach.",
+  "healthDashboardSleepFindingDeepLow": "Tiefschlaf unter 13 % der Nacht (üblich 13-23 %).",
+  "healthDashboardSleepFindingDeepHigh": "Tiefschlaf über 23 % der Nacht (üblich 13-23 %).",
+  "healthDashboardSleepFindingRemLow": "REM unter 20 % der Nacht (üblich 20-25 %).",
+  "healthDashboardSleepFindingRemHigh": "REM über 25 % der Nacht (üblich 20-25 %).",
+  "healthDashboardSleepFindingAwakeHigh": "Mehr als 30 Minuten wach nach dem Einschlafen.",
+  "healthDashboardSectionMaintenance": "Wartung",
+  "healthDashboardSectionMaintenanceHint": "Gibt Speicher frei. Diese Aktionen löschen gespeicherte Zeilen.",
+  "healthDashboardPruneUnused": "Aufräumen und Datenbank verkleinern",
+  "healthDashboardPruneUnusedSubtitle": "Löscht Zeilen, die nichts mehr liest, und schreibt die Datei neu",
+  "healthDashboardPruneUnusedConfirm": "Löscht alle Zeilen von ausgeschalteten Apps ({apps}), dazu verwaiste Zeilen und unbenutzte Bezeichnungen, und schreibt die Datenbankdatei neu. Diese Apps wieder einzuschalten bringt die Daten nicht zurück - dafür ist ein neuer Import nötig. Das kann nicht widerrufen werden.",
+  "@healthDashboardPruneUnusedConfirm": {
+    "placeholders": {
+      "apps": {
+        "type": "String"
+      }
+    }
+  },
+  "healthDashboardPruneUnusedConfirmNoApps": "Keine App ist ausgeschaltet, es werden also nur verwaiste Zeilen und unbenutzte Bezeichnungen entfernt, bevor die Datenbankdatei neu geschrieben wird. Das kann nicht widerrufen werden.",
+  "healthDashboardPruneUnusedConfirmAction": "Aufräumen",
+  "healthDashboardPruneUnusedDone": "{rows} Zeilen entfernt, Datenbank neu geschrieben",
+  "@healthDashboardPruneUnusedDone": {
+    "placeholders": {
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardPruneUnusedFailed": "Aufräumen der Gesundheitsdatenbank fehlgeschlagen"
 }

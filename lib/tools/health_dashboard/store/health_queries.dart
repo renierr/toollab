@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import '../health_record.dart';
+import '../health_record_values.dart';
 import 'health_metric_catalog.dart';
+import 'health_metric_series.dart';
 import 'health_schema.dart';
 import 'health_store.dart';
 
@@ -79,6 +83,10 @@ class HealthQueries {
   };
 
   static String valueKeyFor(String metric) => _valueKeys[metric] ?? 'value';
+
+  /// The catalog metric a dashboard type string stands for, or null for the
+  /// session types, which are not catalog metrics.
+  static String? metricForType(String type) => _typeToMetric[type];
 
   /// Types the dashboard renders in its week window and latest-value cards.
   static const dashboardTypes = [
@@ -179,12 +187,15 @@ class HealthQueries {
         if (session.title != null) 'title': session.title,
         if (session.notes != null) 'notes': session.notes,
         if (session.clientId != null) 'clientRecordId': session.clientId,
-        if (isSleep)
+        if (isSleep) ...{
+          // The writer's own asleep figure, which the quality check prefers over
+          // the session span when no stages were stored.
+          if (session.asleepMin != null) 'asleepMinutes': session.asleepMin,
           'stages': [
             for (final part in parts)
               {'startTime': part.t0, 'endTime': part.t1, 'type': part.part},
-          ]
-        else ...{
+          ],
+        } else ...{
           'exerciseType': session.activity,
           'distanceKm': session.distanceKm ?? 0,
           'calories': session.calories ?? 0,
@@ -305,6 +316,87 @@ class HealthQueries {
       to: end,
     );
     return [for (final point in points) _pointRecord(metric, point)];
+  }
+
+  /// Per-day figures for one metric, the single source a drilldown reads.
+  ///
+  /// Metrics come off `health_daily`, which already picked one source per day,
+  /// so a week costs seven rollup rows. Sessions have no rollup and are summed
+  /// per day from the session table instead.
+  Future<HealthMetricSeries> metricSeries({
+    required String type,
+    required String valueKey,
+    required List<DateTime> days,
+    required bool sum,
+  }) async {
+    if (days.isEmpty) return HealthMetricSeries(days: const [], sum: sum);
+    final metric = _typeToMetric[type];
+    if (metric == null) {
+      return HealthMetricSeries(
+        days: [
+          for (final day in days) await _sessionDay(type, valueKey, day, sum),
+        ],
+        sum: sum,
+      );
+    }
+    final rollups = await _store.dailyRange(
+      metric: metric,
+      fromDay: HealthStore.dayKey(days.first.millisecondsSinceEpoch),
+      toDay: HealthStore.dayKey(days.last.millisecondsSinceEpoch),
+    );
+    final byDay = {for (final row in rollups) row.day: row};
+    return HealthMetricSeries(
+      days: [
+        for (final day in days)
+          _rollupDay(
+            day,
+            byDay[HealthStore.dayKey(day.millisecondsSinceEpoch)],
+            sum,
+          ),
+      ],
+      sum: sum,
+    );
+  }
+
+  static HealthMetricDay _rollupDay(
+    DateTime day,
+    HealthDailyValue? rollup,
+    bool sum,
+  ) {
+    if (rollup == null || rollup.n == 0) return HealthMetricDay(day: day);
+    return HealthMetricDay(
+      day: day,
+      value: sum ? rollup.total : (rollup.avg ?? rollup.total),
+      lo: rollup.lo,
+      hi: rollup.hi,
+      count: rollup.n,
+    );
+  }
+
+  Future<HealthMetricDay> _sessionDay(
+    String type,
+    String valueKey,
+    DateTime day,
+    bool sum,
+  ) async {
+    final records = await recordsForDay(type: type, day: day);
+    final values = [
+      for (final record in records)
+        if (type != sleepType || !healthRecordIsNap(record))
+          ...<double?>[healthRecordValue(record, valueKey)].whereType<double>(),
+    ];
+    if (values.isEmpty) return HealthMetricDay(day: day);
+    final total = values.reduce((a, b) => a + b);
+    return HealthMetricDay(
+      day: day,
+      // A night and its naps are separate sessions; the night is the figure.
+      value: type == sleepType
+          ? values.reduce(math.max)
+          : (sum ? total : total / values.length),
+      lo: values.reduce(math.min),
+      hi: values.reduce(math.max),
+      count: values.length,
+    );
   }
 
   /// Paged browse for the all-data and history screens.

@@ -3671,5 +3671,104 @@
   "healthDashboardHealthConnectSettingsSubtitle": "Permissions, import, automatic sync on open, and starting the import over.",
   "healthDashboardHealthConnectOpenFailed": "Could not open Health Connect settings",
   "healthDashboardHealthConnectImportFailed": "Health Connect import failed",
-  "healthDashboardHealthConnectRepairFailed": "Health Connect repair failed"
+  "healthDashboardHealthConnectRepairFailed": "Health Connect repair failed",
+  "healthDashboardHrv": "HRV (RMSSD)",
+  "healthDashboardOxygenSaturation": "Oxygen Saturation",
+  "healthDashboardRespiratoryRate": "Respiratory Rate",
+  "healthDashboardBodyFat": "Body Fat",
+  "healthDashboardBloodGlucose": "Blood Glucose",
+  "healthDashboardBmr": "BMR",
+  "healthDashboardVo2Max": "VO2 Max",
+  "healthDashboardLatestOxygenSaturation": "Latest Oxygen Saturation",
+  "healthDashboardLatestRespiratoryRate": "Latest Respiratory Rate",
+  "healthDashboardLatestBodyFat": "Latest Body Fat",
+  "healthDashboardHrvTrend": "HRV (RMSSD) · last 7 days",
+  "healthDashboardOxygenSaturationTrend": "Oxygen Saturation (SpO2) · last 7 days",
+  "healthDashboardRespiratoryRateTrend": "Respiratory Rate · last 7 days",
+  "healthDashboardWeightBodyFatTrend": "Weight & Body Fat · last 7 days",
+  "healthDashboardChartNoData": "No data",
+  "healthDashboardLoadMore": "Load more",
+  "healthDashboardScrollToTop": "Scroll to top",
+  "healthDashboardShowMoreRecords": "Show 100 more ({count} remaining)",
+  "@healthDashboardShowMoreRecords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardLoadMoreRecords": "Load more records…",
+  "healthDashboardHeight": "Height",
+  "healthDashboardHydration": "Hydration",
+  "healthDashboardBmi": "BMI",
+  "healthDashboardNoMetricDataInWeek": "No {metric} in these 7 days",
+  "@healthDashboardNoMetricDataInWeek": {
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "healthDashboardNoMetricDataInWeekHint": "Pick another day, or check that the type and its source are switched on.",
+  "healthDashboardBackToToday": "Back to today",
+  "healthDashboardNoMetricHistory": "Nothing stored for {metric}",
+  "@healthDashboardNoMetricHistory": {
+    "placeholders": {
+      "metric": {
+        "type": "String"
+      }
+    }
+  },
+  "healthDashboardNoMetricHistoryHint": "Import this type from Health Connect to fill the history.",
+  "healthDashboardNoWorkoutsOnDay": "No workouts on this day",
+  "healthDashboardNoSleepOnDay": "No sleep recorded for this day",
+  "healthDashboardSleepQuality": "Sleep quality",
+  "healthDashboardSleepQualityDisclaimer": "Compared against general adult sleep-study ranges. Not a medical assessment.",
+  "healthDashboardSleepRatingGood": "Good",
+  "healthDashboardSleepRatingFair": "Fair",
+  "healthDashboardSleepRatingPoor": "Poor",
+  "healthDashboardSleepScore": "{score} of 100",
+  "@healthDashboardSleepScore": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardSleepAsleep": "Asleep",
+  "healthDashboardSleepTimeInBed": "In bed",
+  "healthDashboardSleepEfficiency": "Efficiency",
+  "healthDashboardSleepAwakenings": "Awake",
+  "healthDashboardSleepFindingAllInRange": "Duration, efficiency and stage shares are all in their usual ranges.",
+  "healthDashboardSleepFindingDurationShort": "Less than 7 h asleep. Adults usually need 7-9 h.",
+  "healthDashboardSleepFindingDurationLong": "More than 10 h asleep, well above the usual 7-9 h.",
+  "healthDashboardSleepFindingEfficiencyLow": "Sleep efficiency below 85 %: a lot of the time in bed was spent awake.",
+  "healthDashboardSleepFindingDeepLow": "Deep sleep below 13 % of the night (usual range 13-23 %).",
+  "healthDashboardSleepFindingDeepHigh": "Deep sleep above 23 % of the night (usual range 13-23 %).",
+  "healthDashboardSleepFindingRemLow": "REM below 20 % of the night (usual range 20-25 %).",
+  "healthDashboardSleepFindingRemHigh": "REM above 25 % of the night (usual range 20-25 %).",
+  "healthDashboardSleepFindingAwakeHigh": "More than 30 minutes awake after falling asleep.",
+  "healthDashboardSectionMaintenance": "Maintenance",
+  "healthDashboardSectionMaintenanceHint": "Reclaims space. These actions delete stored rows.",
+  "healthDashboardPruneUnused": "Clean up and shrink database",
+  "healthDashboardPruneUnusedSubtitle": "Deletes rows nothing reads any more, then rewrites the file",
+  "healthDashboardPruneUnusedConfirm": "Deletes every row written by switched-off apps ({apps}), plus orphaned rows and unused labels, then rewrites the database file. Switching those apps back on will not bring the data back - only a fresh import will. This cannot be undone.",
+  "@healthDashboardPruneUnusedConfirm": {
+    "placeholders": {
+      "apps": {
+        "type": "String"
+      }
+    }
+  },
+  "healthDashboardPruneUnusedConfirmNoApps": "No app is switched off, so only orphaned rows and unused labels are removed before the database file is rewritten. This cannot be undone.",
+  "healthDashboardPruneUnusedConfirmAction": "Clean up",
+  "healthDashboardPruneUnusedDone": "{rows} rows removed, database rewritten",
+  "@healthDashboardPruneUnusedDone": {
+    "placeholders": {
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardPruneUnusedFailed": "Cleaning up the health database failed"
 }
