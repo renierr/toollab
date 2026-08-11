@@ -33,12 +33,25 @@ class _HealthDataTypesPageState extends State<HealthDataTypesPage> {
     final types = state.healthTypes;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.healthDashboardDataTypes)),
+      // Types only exist once discovery has registered them, so an untouched
+      // install lands here with an empty list. Saying so - and offering the scan
+      // - is the difference between a configurable screen and a dead end.
       body: types.isEmpty
           ? Padding(
               padding: const EdgeInsets.all(24),
-              child: Text(
-                l10n.healthDashboardNoTypesFound,
-                style: Theme.of(context).textTheme.bodyMedium,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.healthDashboardNoTypesFound,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.healthDashboardScanFirstHint,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ),
             )
           : ListView.builder(

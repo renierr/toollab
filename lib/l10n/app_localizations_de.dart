@@ -6543,6 +6543,75 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get healthDashboardDataSourcesHint =>
+      'Apps, aus denen dieser Datentyp gelesen wird. Eine abzuschalten behält die bisherigen Daten - sie wird nur nicht mehr gelesen und zählt nicht mehr in Summen.';
+
+  @override
+  String get healthDashboardApps => 'Apps';
+
+  @override
+  String get healthDashboardAppsSubtitle =>
+      'Schreibende Apps ein- oder ausschalten und Vorrang festlegen';
+
+  @override
+  String get healthDashboardNoAppsFound =>
+      'Noch keine schreibenden Apps bekannt. Zuerst nach Quellen suchen.';
+
+  @override
+  String get healthDashboardAppPriority => 'Rangfolge';
+
+  @override
+  String get healthDashboardAppPriorityHint =>
+      'Die oberste App mit Daten für einen Tag liefert die Tageswerte. Apps darunter bleiben Reserve für Tage, die sie nicht abgedeckt hat.';
+
+  @override
+  String healthDashboardAppRowCount(int count) {
+    return '$count Zeilen gespeichert';
+  }
+
+  @override
+  String healthDashboardAppTypeCount(int count) {
+    return '$count Datentypen';
+  }
+
+  @override
+  String get healthDashboardAppMoveUp => 'Höherer Vorrang';
+
+  @override
+  String get healthDashboardAppMoveDown => 'Niedrigerer Vorrang';
+
+  @override
+  String get healthDashboardAppDeleteData => 'Gespeicherte Daten löschen';
+
+  @override
+  String get healthDashboardAppDeleteDataConfirm =>
+      'Alle Zeilen dieser App löschen und die Datenbank verkleinern. Die App stattdessen auszuschalten behält die Daten und ist jederzeit umkehrbar.';
+
+  @override
+  String get healthDashboardAutoSync => 'Änderungen beim Öffnen abgleichen';
+
+  @override
+  String get healthDashboardAutoSyncSubtitle =>
+      'Bei jedem Öffnen holen, was Health Connect als geändert meldet. Aus bedeutet: Daten kommen nur beim manuellen Import.';
+
+  @override
+  String get healthDashboardImportConfirmTitle =>
+      'Gesamte Historie importieren?';
+
+  @override
+  String healthDashboardImportConfirmBody(int count) {
+    return '$count Datentypen sind ausgewählt. Deren vollständige Historie zu lesen kann bei großem Bestand Stunden dauern. Der Import läuft im Hintergrund weiter und kann abgebrochen werden.';
+  }
+
+  @override
+  String get healthDashboardImportConfirmNoTypes =>
+      'Es ist kein Datentyp ausgewählt, ein Import würde also nichts speichern. Zuerst nach Quellen suchen und dann auswählen, was gesammelt wird.';
+
+  @override
+  String get healthDashboardScanFirstHint =>
+      'Es wurde noch nichts gefunden. Health Connect durchsuchen, um zu sehen, welche Datentypen Daten enthalten und welche Apps sie geschrieben haben.';
+
+  @override
   String healthDashboardSourceRecordCount(int count) {
     return '$count gesehen';
   }
@@ -6636,6 +6705,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardGoogleFit => 'Google Fit';
+
+  @override
+  String get healthDashboardSamsungHealth => 'Samsung Health';
+
+  @override
+  String get healthDashboardFitbit => 'Fitbit';
+
+  @override
+  String get healthDashboardGarmin => 'Garmin';
+
+  @override
+  String get healthDashboardWithings => 'Withings';
+
+  @override
+  String get healthDashboardRenpho => 'Renpho';
+
+  @override
+  String get healthDashboardMiFitness => 'Mi Fitness';
+
+  @override
+  String get healthDashboardSourceHealthConnect => 'Health Connect';
+
+  @override
+  String get healthDashboardSourceUnknown => 'Unbekannte App';
 
   @override
   String get healthDashboardSourcePreferences => 'Bevorzugte Datenquellen';

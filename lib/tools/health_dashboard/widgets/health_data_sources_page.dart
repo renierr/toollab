@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/settings_section_label.dart';
 
 import '../health_dashboard_state.dart';
+import '../health_source_apps.dart';
 
 /// Which writing apps a type is pulled from.
 ///
-/// This is where the Google Fit duplication is actually solved. Google Fit
-/// republishes other apps' data, so a device with both a direct writer and
-/// Google Fit sees each measurement twice. Deselecting one means its rows are
-/// never read - the filter is applied by Health Connect itself.
+/// Per-type, unlike the global switch on the apps page: a republisher can be the
+/// only writer for weight while being a redundant copy for heart rate, so the
+/// choice has to be made per type rather than per app.
+///
+/// Switching one off is not destructive. It stops that writer being read for
+/// this type and drops it out of the aggregates; the rows it already contributed
+/// stay, so switching it back on costs nothing.
 class HealthDataSourcesPage extends StatelessWidget {
   final String type;
 
@@ -32,60 +35,33 @@ class HealthDataSourcesPage extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             )
-          : ListView.builder(
-              itemCount: sources.length,
-              itemBuilder: (context, index) {
-                final source = sources[index];
-                return SwitchListTile.adaptive(
-                  title: Text(source.package),
-                  subtitle: Text(
-                    l10n.healthDashboardSourceRecordCount(source.count),
+          : ListView(
+              children: [
+                SettingsSectionLabel(
+                  title: l10n.healthDashboardDataSources,
+                  description: l10n.healthDashboardDataSourcesHint,
+                ),
+                for (final source in sources)
+                  SwitchListTile.adaptive(
+                    secondary: Icon(healthAppIcon(source.package)),
+                    title: Text(healthAppLabel(source.package, l10n)),
+                    subtitle: Text(
+                      l10n.healthDashboardSourceRecordCount(source.count),
+                    ),
+                    value: source.enabled,
+                    onChanged: state.isCollecting
+                        ? null
+                        : (value) => context
+                              .read<HealthDashboardState>()
+                              .setSourceEnabled(
+                                type: type,
+                                package: source.package,
+                                enabled: value,
+                              ),
                   ),
-                  value: source.enabled,
-                  onChanged: state.isCollecting
-                      ? null
-                      : (value) => _toggle(context, source.package, value),
-                );
-              },
+                const SizedBox(height: 24),
+              ],
             ),
     );
-  }
-
-  Future<void> _toggle(
-    BuildContext context,
-    String package,
-    bool enabled,
-  ) async {
-    final state = context.read<HealthDashboardState>();
-    if (enabled) {
-      await state.setSourceEnabled(type: type, package: package, enabled: true);
-      return;
-    }
-    // Switching a source off deletes what it already contributed, across every
-    // type, so it is worth confirming rather than silently dropping rows.
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => ResponsiveAlertDialog(
-        title: Text(package),
-        content: Text(l10n.healthDashboardResetHealthConnectDescription),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentRed,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    await state.setSourceEnabled(type: type, package: package, enabled: false);
   }
 }

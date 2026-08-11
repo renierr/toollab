@@ -3431,6 +3431,45 @@
       }
     }
   },
+  "healthDashboardDataSourcesHint": "Apps this data type is read from. Switching one off keeps what it already contributed - it only stops being read and stops counting towards totals.",
+  "healthDashboardApps": "Apps",
+  "healthDashboardAppsSubtitle": "Switch writing apps on or off and set which one wins",
+  "healthDashboardNoAppsFound": "No writing apps known yet. Scan for sources first.",
+  "healthDashboardAppPriority": "Priority order",
+  "healthDashboardAppPriorityHint": "The topmost app with data for a day is the one that day's totals are computed from. Apps below it stay as a fallback for days it did not cover.",
+  "healthDashboardAppRowCount": "{count} rows stored",
+  "@healthDashboardAppRowCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardAppTypeCount": "{count} data types",
+  "@healthDashboardAppTypeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardAppMoveUp": "Higher priority",
+  "healthDashboardAppMoveDown": "Lower priority",
+  "healthDashboardAppDeleteData": "Delete stored data",
+  "healthDashboardAppDeleteDataConfirm": "Delete every row this app contributed and shrink the database. Switching the app off instead keeps its data and costs nothing to undo.",
+  "healthDashboardAutoSync": "Sync changes on open",
+  "healthDashboardAutoSyncSubtitle": "Fetch what Health Connect reports as changed each time the tool opens. Off means data only arrives when you import manually.",
+  "healthDashboardImportConfirmTitle": "Import full history?",
+  "healthDashboardImportConfirmBody": "{count} data types are selected. Reading their full history can take hours on a large store. It continues in the background and can be interrupted.",
+  "@healthDashboardImportConfirmBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardImportConfirmNoTypes": "No data types are selected, so an import would store nothing. Scan for sources first, then pick what to collect.",
+  "healthDashboardScanFirstHint": "Nothing has been discovered yet. Scan Health Connect to find which data types hold data and which apps wrote them.",
   "healthDashboardSourceRecordCount": "{count} seen",
   "@healthDashboardSourceRecordCount": {
     "placeholders": {
@@ -3501,6 +3540,14 @@
   "healthDashboardHuaweiHealth": "Huawei Health",
   "healthDashboardAmazfit": "Amazfit / Zepp",
   "healthDashboardGoogleFit": "Google Fit",
+  "healthDashboardSamsungHealth": "Samsung Health",
+  "healthDashboardFitbit": "Fitbit",
+  "healthDashboardGarmin": "Garmin",
+  "healthDashboardWithings": "Withings",
+  "healthDashboardRenpho": "Renpho",
+  "healthDashboardMiFitness": "Mi Fitness",
+  "healthDashboardSourceHealthConnect": "Health Connect",
+  "healthDashboardSourceUnknown": "Unknown app",
   "healthDashboardSourcePreferences": "Preferred data sources",
   "healthDashboardSourcePreferencesSubtitle": "Use a preferred app for each metric when records overlap.",
   "healthDashboardAnySource": "Any source",

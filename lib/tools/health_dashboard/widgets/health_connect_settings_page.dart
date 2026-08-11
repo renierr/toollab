@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/settings_section_label.dart';
 
 import '../health_connect_settings.dart';
 import '../health_dashboard_state.dart';
+import 'health_apps_page.dart';
 import 'health_busy_dialog.dart';
 import 'health_data_types_page.dart';
 import 'health_import_progress_dialog.dart';
@@ -56,6 +58,15 @@ class HealthConnectSettingsPage extends StatelessWidget {
             ),
           ),
           ListTile(
+            leading: const Icon(Icons.apps_rounded),
+            title: Text(l10n.healthDashboardApps),
+            subtitle: Text(l10n.healthDashboardAppsSubtitle),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const HealthAppsPage()),
+            ),
+          ),
+          ListTile(
             leading: const Icon(Icons.travel_explore_rounded),
             title: Text(l10n.healthDashboardScanSources),
             subtitle: Text(l10n.healthDashboardScanSourcesSubtitle),
@@ -68,6 +79,15 @@ class HealthConnectSettingsPage extends StatelessWidget {
             description: l10n.healthDashboardSectionCollectHint,
           ),
           const HealthStoreStatusTile(),
+          SwitchListTile.adaptive(
+            secondary: const Icon(Icons.sync_alt_rounded),
+            title: Text(l10n.healthDashboardAutoSync),
+            subtitle: Text(l10n.healthDashboardAutoSyncSubtitle),
+            value: healthState.autoHealthConnectSync,
+            onChanged: healthState.isCollecting
+                ? null
+                : (value) => healthState.setAutoHealthConnectSync(value),
+          ),
           ListTile(
             leading: const Icon(Icons.download_for_offline_outlined),
             title: Text(l10n.healthDashboardImportSelected),
@@ -122,6 +142,16 @@ class HealthConnectSettingsPage extends StatelessWidget {
     final healthState = context.read<HealthDashboardState>();
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
+    // A full import of everything selected can run for hours. Reading the
+    // selection first also catches the case where nothing is selected at all, in
+    // which case the import would have quietly stored nothing.
+    await healthState.loadSelection();
+    if (!context.mounted) return;
+    final confirmed = await _confirmFullImport(
+      context,
+      healthState.enabledTypeCount,
+    );
+    if (!confirmed || !context.mounted) return;
     HealthImportProgressDialog.show(
       context,
       operation: HealthImportOperation.healthConnect,
@@ -140,6 +170,33 @@ class HealthConnectSettingsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<bool> _confirmFullImport(BuildContext context, int typeCount) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => ResponsiveAlertDialog(
+        title: Text(l10n.healthDashboardImportConfirmTitle),
+        content: Text(
+          typeCount == 0
+              ? l10n.healthDashboardImportConfirmNoTypes
+              : l10n.healthDashboardImportConfirmBody(typeCount),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          if (typeCount > 0)
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.commonOk),
+            ),
+        ],
+      ),
+    );
+    return confirmed == true;
   }
 
   Future<void> _syncChanges(BuildContext context) async {

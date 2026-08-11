@@ -2582,6 +2582,45 @@
       }
     }
   },
+  "healthDashboardDataSourcesHint": "Apps, aus denen dieser Datentyp gelesen wird. Eine abzuschalten behält die bisherigen Daten - sie wird nur nicht mehr gelesen und zählt nicht mehr in Summen.",
+  "healthDashboardApps": "Apps",
+  "healthDashboardAppsSubtitle": "Schreibende Apps ein- oder ausschalten und Vorrang festlegen",
+  "healthDashboardNoAppsFound": "Noch keine schreibenden Apps bekannt. Zuerst nach Quellen suchen.",
+  "healthDashboardAppPriority": "Rangfolge",
+  "healthDashboardAppPriorityHint": "Die oberste App mit Daten für einen Tag liefert die Tageswerte. Apps darunter bleiben Reserve für Tage, die sie nicht abgedeckt hat.",
+  "healthDashboardAppRowCount": "{count} Zeilen gespeichert",
+  "@healthDashboardAppRowCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardAppTypeCount": "{count} Datentypen",
+  "@healthDashboardAppTypeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardAppMoveUp": "Höherer Vorrang",
+  "healthDashboardAppMoveDown": "Niedrigerer Vorrang",
+  "healthDashboardAppDeleteData": "Gespeicherte Daten löschen",
+  "healthDashboardAppDeleteDataConfirm": "Alle Zeilen dieser App löschen und die Datenbank verkleinern. Die App stattdessen auszuschalten behält die Daten und ist jederzeit umkehrbar.",
+  "healthDashboardAutoSync": "Änderungen beim Öffnen abgleichen",
+  "healthDashboardAutoSyncSubtitle": "Bei jedem Öffnen holen, was Health Connect als geändert meldet. Aus bedeutet: Daten kommen nur beim manuellen Import.",
+  "healthDashboardImportConfirmTitle": "Gesamte Historie importieren?",
+  "healthDashboardImportConfirmBody": "{count} Datentypen sind ausgewählt. Deren vollständige Historie zu lesen kann bei großem Bestand Stunden dauern. Der Import läuft im Hintergrund weiter und kann abgebrochen werden.",
+  "@healthDashboardImportConfirmBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDashboardImportConfirmNoTypes": "Es ist kein Datentyp ausgewählt, ein Import würde also nichts speichern. Zuerst nach Quellen suchen und dann auswählen, was gesammelt wird.",
+  "healthDashboardScanFirstHint": "Es wurde noch nichts gefunden. Health Connect durchsuchen, um zu sehen, welche Datentypen Daten enthalten und welche Apps sie geschrieben haben.",
   "healthDashboardSourceRecordCount": "{count} gesehen",
   "@healthDashboardSourceRecordCount": {
     "placeholders": {
@@ -2652,6 +2691,14 @@
   "healthDashboardHuaweiHealth": "Huawei Health",
   "healthDashboardAmazfit": "Amazfit / Zepp",
   "healthDashboardGoogleFit": "Google Fit",
+  "healthDashboardSamsungHealth": "Samsung Health",
+  "healthDashboardFitbit": "Fitbit",
+  "healthDashboardGarmin": "Garmin",
+  "healthDashboardWithings": "Withings",
+  "healthDashboardRenpho": "Renpho",
+  "healthDashboardMiFitness": "Mi Fitness",
+  "healthDashboardSourceHealthConnect": "Health Connect",
+  "healthDashboardSourceUnknown": "Unbekannte App",
   "healthDashboardSourcePreferences": "Bevorzugte Datenquellen",
   "healthDashboardSourcePreferencesSubtitle": "Bei überlappenden Daten eine bevorzugte App je Messwert verwenden.",
   "healthDashboardAnySource": "Beliebige Quelle",

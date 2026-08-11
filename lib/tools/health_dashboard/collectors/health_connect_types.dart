@@ -2,6 +2,8 @@ import 'package:health_connector/health_connector.dart' as hc;
 // ignore: implementation_imports
 import 'package:health_connector_core/src/models/health_data_types/health_data_type_capabilities/readable_health_data_type.dart'
     as core;
+// ignore: implementation_imports
+import 'package:health_connector_core/src/utils/health_record_data_type_extension.dart';
 
 /// Health Connect data types this app can read, keyed by the plugin's stable
 /// `HealthDataType.id`.
@@ -40,6 +42,11 @@ class HealthConnectTypes {
   }
 
   static String idOf(Object type) => (type as hc.HealthDataType).id;
+
+  /// The persisted type id of a record that came back from a read or a change
+  /// sync. Needed by the change sync, which gets records without ever naming a
+  /// type and still has to honour the per-type source selection.
+  static String idOfRecord(hc.HealthRecord record) => record.dataType.id;
 
   /// Built from the public type list rather than the plugin's own
   /// `dataTypeMap`, which is marked internal.

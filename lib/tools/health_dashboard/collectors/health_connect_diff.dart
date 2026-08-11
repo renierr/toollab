@@ -78,6 +78,9 @@ class HealthConnectDiff {
     int? touchedTo;
     var current = token;
     var rounds = 0;
+    // Resolved once per type, not per record: the exclusion set is a database
+    // read and a change round can carry thousands of records of one type.
+    final excludedByType = <String, Set<String>>{};
 
     try {
       while (rounds < _maxRounds) {
@@ -88,6 +91,15 @@ class HealthConnectDiff {
         );
         final mapped = <HealthMappedRecord>[];
         for (final record in result.upsertedRecords) {
+          // `synchronize()` takes no dataOrigins filter, so a writer the user
+          // switched off would otherwise come straight back in here on every
+          // open - the full importer's filter does not cover this path.
+          final typeId = HealthConnectTypes.idOfRecord(record);
+          final excluded = excludedByType[typeId] ??= await store
+              .excludedPackages(typeId);
+          if (excluded.contains(record.metadata.dataOrigin?.packageName)) {
+            continue;
+          }
           final row = mapper.map(record);
           if (row.isEmpty) continue;
           mapped.add(row);

@@ -19,9 +19,11 @@ import 'package:tool_lab/services/database_service.dart';
 class HealthSchema {
   HealthSchema._();
 
-  /// Version 1 of a fresh ladder. The pre-typed schema reached 10 and is dropped
-  /// outright rather than migrated - see `HealthStore._dropPreTypedSchema`.
-  static const version = 1;
+  /// Version 1 was a fresh ladder; the pre-typed schema reached 10 and is
+  /// dropped outright rather than migrated - see
+  /// `HealthStore._dropPreTypedSchema`. Version 2 adds the global per-app switch
+  /// and priority.
+  static const version = 2;
 
   static const metric = 'health_metric';
   static const app = 'health_app';
@@ -33,6 +35,10 @@ class HealthSchema {
   static const daily = 'health_daily';
   static const type = 'health_type';
   static const typeApp = 'health_type_app';
+
+  /// Starting priority for a newly discovered writer. Mid-range so the user can
+  /// promote or demote without renumbering everything.
+  static const defaultPrio = 100;
 
   static const sessionKindExercise = 0;
   static const sessionKindSleep = 1;
@@ -70,11 +76,18 @@ class HealthSchema {
         shape INTEGER NOT NULL
       )
     ''');
+    // `enabled` is global, unlike the per-type switch in health_type_app: a
+    // disabled writer is neither pulled nor counted anywhere. `prio` orders
+    // writers against each other - lower wins - and decides which single app a
+    // day's rollup is computed from. Not named `rank`, which SQLite also uses as
+    // a window function.
     await db.execute('''
       CREATE TABLE ${db.nameTable(app)} (
         id INTEGER PRIMARY KEY,
         package TEXT NOT NULL UNIQUE,
-        label TEXT
+        label TEXT,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        prio INTEGER NOT NULL DEFAULT $defaultPrio
       )
     ''');
     // One intern table for every enum-like string, shared across categories so
@@ -206,6 +219,20 @@ class HealthSchema {
     await db.execute(
       'CREATE INDEX ${db.nameTable('idx_health_interval_app')} '
       'ON ${db.nameTable(interval)} (app, metric)',
+    );
+  }
+
+  /// Adds the global per-app switch and priority to an existing v1 store.
+  /// Existing writers stay enabled at the default priority, so the rollups keep
+  /// the meaning they had until the user actually picks a primary source.
+  static Future<void> migrateToV2(ToolDatabaseExecutor db) async {
+    await db.execute(
+      'ALTER TABLE ${db.nameTable(app)} '
+      'ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1',
+    );
+    await db.execute(
+      'ALTER TABLE ${db.nameTable(app)} '
+      'ADD COLUMN prio INTEGER NOT NULL DEFAULT $defaultPrio',
     );
   }
 

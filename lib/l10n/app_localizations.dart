@@ -11753,6 +11753,114 @@ abstract class AppLocalizations {
   /// **'{count} imported'**
   String healthDashboardTypeRecordCount(int count);
 
+  /// No description provided for @healthDashboardDataSourcesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps this data type is read from. Switching one off keeps what it already contributed - it only stops being read and stops counting towards totals.'**
+  String get healthDashboardDataSourcesHint;
+
+  /// No description provided for @healthDashboardApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps'**
+  String get healthDashboardApps;
+
+  /// No description provided for @healthDashboardAppsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch writing apps on or off and set which one wins'**
+  String get healthDashboardAppsSubtitle;
+
+  /// No description provided for @healthDashboardNoAppsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No writing apps known yet. Scan for sources first.'**
+  String get healthDashboardNoAppsFound;
+
+  /// No description provided for @healthDashboardAppPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority order'**
+  String get healthDashboardAppPriority;
+
+  /// No description provided for @healthDashboardAppPriorityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The topmost app with data for a day is the one that day\'s totals are computed from. Apps below it stay as a fallback for days it did not cover.'**
+  String get healthDashboardAppPriorityHint;
+
+  /// No description provided for @healthDashboardAppRowCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rows stored'**
+  String healthDashboardAppRowCount(int count);
+
+  /// No description provided for @healthDashboardAppTypeCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} data types'**
+  String healthDashboardAppTypeCount(int count);
+
+  /// No description provided for @healthDashboardAppMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher priority'**
+  String get healthDashboardAppMoveUp;
+
+  /// No description provided for @healthDashboardAppMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower priority'**
+  String get healthDashboardAppMoveDown;
+
+  /// No description provided for @healthDashboardAppDeleteData.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete stored data'**
+  String get healthDashboardAppDeleteData;
+
+  /// No description provided for @healthDashboardAppDeleteDataConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete every row this app contributed and shrink the database. Switching the app off instead keeps its data and costs nothing to undo.'**
+  String get healthDashboardAppDeleteDataConfirm;
+
+  /// No description provided for @healthDashboardAutoSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync changes on open'**
+  String get healthDashboardAutoSync;
+
+  /// No description provided for @healthDashboardAutoSyncSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch what Health Connect reports as changed each time the tool opens. Off means data only arrives when you import manually.'**
+  String get healthDashboardAutoSyncSubtitle;
+
+  /// No description provided for @healthDashboardImportConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import full history?'**
+  String get healthDashboardImportConfirmTitle;
+
+  /// No description provided for @healthDashboardImportConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} data types are selected. Reading their full history can take hours on a large store. It continues in the background and can be interrupted.'**
+  String healthDashboardImportConfirmBody(int count);
+
+  /// No description provided for @healthDashboardImportConfirmNoTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'No data types are selected, so an import would store nothing. Scan for sources first, then pick what to collect.'**
+  String get healthDashboardImportConfirmNoTypes;
+
+  /// No description provided for @healthDashboardScanFirstHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been discovered yet. Scan Health Connect to find which data types hold data and which apps wrote them.'**
+  String get healthDashboardScanFirstHint;
+
   /// No description provided for @healthDashboardSourceRecordCount.
   ///
   /// In en, this message translates to:
@@ -11908,6 +12016,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google Fit'**
   String get healthDashboardGoogleFit;
+
+  /// No description provided for @healthDashboardSamsungHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Samsung Health'**
+  String get healthDashboardSamsungHealth;
+
+  /// No description provided for @healthDashboardFitbit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitbit'**
+  String get healthDashboardFitbit;
+
+  /// No description provided for @healthDashboardGarmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Garmin'**
+  String get healthDashboardGarmin;
+
+  /// No description provided for @healthDashboardWithings.
+  ///
+  /// In en, this message translates to:
+  /// **'Withings'**
+  String get healthDashboardWithings;
+
+  /// No description provided for @healthDashboardRenpho.
+  ///
+  /// In en, this message translates to:
+  /// **'Renpho'**
+  String get healthDashboardRenpho;
+
+  /// No description provided for @healthDashboardMiFitness.
+  ///
+  /// In en, this message translates to:
+  /// **'Mi Fitness'**
+  String get healthDashboardMiFitness;
+
+  /// No description provided for @healthDashboardSourceHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect'**
+  String get healthDashboardSourceHealthConnect;
+
+  /// No description provided for @healthDashboardSourceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown app'**
+  String get healthDashboardSourceUnknown;
 
   /// No description provided for @healthDashboardSourcePreferences.
   ///

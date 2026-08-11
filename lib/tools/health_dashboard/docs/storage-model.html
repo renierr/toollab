@@ -441,6 +441,9 @@
           <li>Keyed by <b>local midnight</b> as epoch millis, so a day always means the user's day.</li>
           <li>Day bounds come from <code>DateTime(y, m, d + 1)</code>, not <code>+ 24h</code> —
             a fixed 24 hours lands an hour off across a DST change.</li>
+          <li>Each row describes <b>one writer</b>, the day's winner — see
+            <a href="#dupes">Duplicates</a>. Aggregating across writers is what inflated step and
+            distance totals.</li>
         </ul>
         <p class="measure">
           Dense samples are read only for a drilldown — one workout's heart-rate curve — which is a
@@ -514,7 +517,7 @@
           sees most measurements twice — in captured data, 1,084,472 Google Fit heart-rate records
           alongside 390,830 from the watch's own writer.
         </p>
-        <p class="measure">Three mechanisms, in the order they apply:</p>
+        <p class="measure">Four mechanisms, in the order they apply:</p>
         <ol class="tight measure">
           <li><b>Don't read it.</b> Switching a source off for a type becomes a
             <code>dataOrigins</code> filter on the read request, so Health Connect never hands over
@@ -522,20 +525,49 @@
             <br><b>The filter only ever excludes.</b> It is sent only when something is actually
             switched off; with everything enabled no filter is sent at all. Building it from
             discovery instead — treating a bounded probe as the complete list of writers — made a
-            full import return nothing but the one app that had written most recently.</li>
+            full import return nothing but the one app that had written most recently.
+            <br><b>The change sync has to do this itself.</b> <code>synchronize()</code> accepts no
+            <code>dataOrigins</code>, so it drops excluded writers' records after reading them.
+            Without that step a deselected source came back on every tool open.</li>
           <li><b>Collide on insert.</b> Identical value at an identical instant cannot produce two
             rows, given the primary key. This catches exact mirrors — measured at 2,701 identical
             step rows and 104 identical weight rows.</li>
-          <li><b>First writer wins for sessions.</b> A session already stored for the same kind and
-            exact range by another app is treated as a mirror and skipped. One index seek, no
-            vendor names involved.</li>
+          <li><b>One writer per metric per day.</b> A <code>health_daily</code> row is computed from
+            a single writer, chosen by <code>health_app.prio</code>, then by whoever has the most
+            rows that day, then by the lowest id. Never from all writers at once.</li>
+          <li><b>Priority decides session mirrors.</b> A session already stored for the same kind and
+            exact range by another app is a mirror; the better-ranked writer keeps the slot and ties
+            keep the first writer. One index seek, no vendor names involved.</li>
         </ol>
         <div class="note warn">
-          <p><b>Near-mirrors never collapse.</b> Google Fit's heart rate differs from the direct
+          <p><b>Near-mirrors never collapse.</b> A republisher's heart rate differs from the direct
           writer's by a mean of 1.13 bpm, so those rows are legitimately distinct values and both
-          persist. Source selection is the only real fix — which is why it matters more than
-          dedup does.</p>
+          persist. The primary key cannot help here, and neither can a comparison pass — only
+          deciding which writer a day is computed from removes the duplicate from an aggregate.</p>
         </div>
+        <h3>Why summing across writers was wrong</h3>
+        <p class="measure">
+          The rollups used to be <code>SUM(v)</code> over every writer for a metric and day. A
+          republisher re-buckets the same walk into different intervals, so the rows are not
+          byte-identical, the primary key cannot collapse them, and both landed in the day's total —
+          which is what inflated steps and distance. Averages had the same problem more quietly,
+          with <code>n</code>, <code>lo</code> and <code>hi</code> mixing two streams.
+        </p>
+        <div class="note">
+          <p><b>Per day, not globally.</b> Choosing the winner for each day separately is what keeps
+          a republisher useful. On a day no other writer covered, it wins by default and its data
+          still shows up — which is the whole reason a republisher must never be excluded wholesale.
+          In the captured data the tablet was a byte-exact copy for dense metrics
+          (274,188/274,188 heart-rate rows) and still the only source of 104 weight rows.</p>
+        </div>
+        <h3>Switching a source off keeps its rows</h3>
+        <p class="measure">
+          Disabling stops a writer being pulled and drops it out of every read and rollup, but the
+          rows it already contributed stay, so switching it back on is instant and free. Reclaiming
+          the disk is a separate, explicit action — and it has to <code>VACUUM</code>, because
+          deleting rows alone does not shrink the file: SQLite frees the pages and reuses them for
+          later inserts.
+        </p>
       </section>
 
       <section id="incr">
@@ -584,8 +616,10 @@
             <thead><tr><th>Change</th><th>Effect</th><th>State</th></tr></thead>
             <tbody>
               <tr><td class="d">Backend sync disabled; delegate and the unbounded materializer deleted</td><td class="d">No row-per-record cloud sync. It returns later as a backup and distribution hub, not a merge peer.</td><td><span class="chip s-accent">done</span></td></tr>
-              <tr><td class="d">Typed schema at a fresh version 1</td><td class="d">The old ladder had reached 10; it is dropped on first open rather than migrated.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Typed schema on a fresh ladder</td><td class="d">The pre-typed ladder is dropped on first open rather than migrated.</td><td><span class="chip s-accent">done</span></td></tr>
               <tr><td class="d">Discovery probe, per-type and per-source selection</td><td class="d">Nothing is pulled unless enabled. Selection becomes the <code>dataOrigins</code> filter.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Global app switch and priority order</td><td class="d">A writer can be turned off everywhere without losing its rows, and ranked so one writer owns a day's totals.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Friendly writer names</td><td class="d">Packages resolve to app names for display; an unknown writer shows its package, never a generic label.</td><td><span class="chip s-accent">done</span></td></tr>
               <tr><td class="d">Selection-aware importer</td><td class="d">Only enabled types, only selected writers, checkpointed per type.</td><td><span class="chip s-accent">done</span></td></tr>
               <tr><td class="d">Change-token incremental sync</td><td class="d">Handles updates and deletions. "Sync on open" now means this, not a re-import.</td><td><span class="chip s-accent">done</span></td></tr>
               <tr><td class="d">Dashboard reads the typed tables only</td><td class="d">Aggregates come from <code>health_daily</code>; drilldowns are bounded range seeks.</td><td><span class="chip s-accent">done</span></td></tr>
@@ -597,9 +631,9 @@
 
         <div class="note warn">
           <p><b>The reset drops the old tables on first open.</b> It is detected by the stored schema
-          version being higher than 1, because <code>migrate()</code> would otherwise skip straight
-          past a fresh version 1. Import watermarks, sync cursors and the old per-type source
-          preferences are deleted with it.</p>
+          version being <em>higher</em> than the current one, because <code>migrate()</code> would
+          otherwise skip straight past a ladder that restarted low. Import watermarks, sync cursors
+          and the old per-type source preferences are deleted with it.</p>
           <p>Nothing was the only copy of anything: every measurement is re-importable from Health
           Connect, and treadmill workouts live in Treadmill Control's own database and reach the
           dashboard by being published to Health Connect.</p>
@@ -607,9 +641,14 @@
 
         <h3>First run after the reset</h3>
         <ol class="tight measure">
-          <li><b>Scan available data</b> - seconds. Populates the type and source lists.</li>
+          <li><b>Scan available data</b> - seconds. This step is mandatory, not optional: types and
+            writers do not exist until discovery registers them, so before it runs the selection
+            screens have nothing to show and an import would store nothing.</li>
           <li><b>Data types</b> - check what is enabled, and per type which apps to pull from.</li>
-          <li><b>Import selected data</b> - full history for the enabled types. This is the long one.</li>
+          <li><b>Apps</b> - order the writers. The topmost writer with data for a day owns that day's
+            totals, so a direct writer belongs above a republisher.</li>
+          <li><b>Import selected data</b> - full history for the enabled types. This is the long one,
+            and it asks for confirmation with the selected type count first.</li>
           <li>Afterwards <b>Sync changes now</b>, or sync on open, fetches only what moved.</li>
         </ol>
 
@@ -635,7 +674,7 @@
               <tr><td class="c">_db_schema_version</td><td class="d">Migration ladder position</td><td class="d">One per tool, which is why exactly one <code>migrate()</code> owner is allowed - and how the reset is detected</td></tr>
               <tr><td class="c">hc_sync_token</td><td class="d">Serialized <code>HealthDataSyncToken</code></td><td class="d">Opaque; dropped if it cannot be parsed</td></tr>
               <tr><td class="c">hc_sync_token_scope</td><td class="d">Sorted enabled type ids</td><td class="d">Detects a selection change that invalidated the token</td></tr>
-              <tr><td class="c">auto_health_connect_sync</td><td class="d">Whether opening the tool syncs changes</td><td class="d">Off by default; gates the change-token sync only</td></tr>
+              <tr><td class="c">auto_health_connect_sync</td><td class="d">Whether opening the tool syncs changes</td><td class="d">Off by default, switched in Health Connect settings; gates the change-token sync only</td></tr>
             </tbody>
           </table>
         </div>
@@ -644,8 +683,9 @@
       <footer>
         Source: <code>lib/tools/health_dashboard/</code> — <code>store/</code> holds the schema,
         catalog, mapper and queries; <code>collectors/</code> holds discovery, the importer and the
-        change-token sync. Schema version 1. Plugin <code>health_connector 3.9.4</code>. Update this page whenever the
-        schema or the type mapping changes.
+        change-token sync. The authoritative schema version is
+        <code>HealthSchema.version</code>. Update this page whenever the schema, the source rules or
+        the type mapping change.
       </footer>
     </div>
   </main>
@@ -672,11 +712,13 @@
     },
     {
       name: "health_app", role: "dimension", purpose: "Writing apps",
-      why: "The package name of the app that wrote a record. Repeated across millions of fact rows, so it is interned. Deselecting a source deletes by this id.",
+      why: "The package name of the app that wrote a record. Repeated across millions of fact rows, so it is interned. Also the home of the two global source controls: whether a writer counts at all, and where it sits in the priority order that decides who wins when two writers describe the same day.",
       cols: [
         ["id", "INTEGER", K.PK, ""],
         ["package", "TEXT", K.UQ, "e.g. com.google.android.apps.fitness"],
-        ["label", "TEXT", "", "Optional display name"]
+        ["label", "TEXT", "", "Optional display name — friendly names come from health_source_apps.dart"],
+        ["enabled", "INTEGER", "", "Global switch. 0 = neither pulled nor read nor aggregated, rows kept"],
+        ["prio", "INTEGER", "", "Lower wins. Picks the day's writer and the surviving side of a session mirror"]
       ]
     },
     {
@@ -698,7 +740,7 @@
         ["v2", "REAL", "", "Second half of a paired reading — diastolic only"],
         ["app", "INTEGER", K.FK, "→ health_app.id, first writer to land the row"]
       ],
-      idx: ["(app, metric) — deleting a deselected source, provenance filters"]
+      idx: ["(app, metric) — per-writer row counts, deleting a writer's data, provenance filters"]
     },
     {
       name: "health_interval", role: "fact", shape: "interval", rowless: true,
@@ -757,7 +799,7 @@
     {
       name: "health_daily", role: "rollup", rowless: true,
       purpose: "One row per metric per day — what the dashboard reads",
-      why: "The reason the dashboard is fast. Refreshed only for the (metric, day) pairs an import touched, inside the same transaction as the facts, so it can never disagree with them.",
+      why: "The reason the dashboard is fast. Refreshed only for the (metric, day) pairs an import touched, inside the same transaction as the facts, so it can never disagree with them. Every column here describes exactly one writer — the day's winner by priority, then row count, then id — which is what keeps a republisher from inflating a total.",
       cols: [
         ["metric", "INTEGER", K.PK + " " + K.FK, "→ health_metric.id"],
         ["day", "INTEGER", K.PK, "Local midnight as epoch millis"],
@@ -765,7 +807,7 @@
         ["avg", "REAL", "", "Mean — read for average and latest metrics"],
         ["lo", "REAL", "", "Day minimum"],
         ["hi", "REAL", "", "Day maximum"],
-        ["n", "INTEGER", "", "Contributing measurements; the row is deleted at zero"]
+        ["n", "INTEGER", "", "Contributing measurements from the winning writer; the row is deleted at zero"]
       ]
     },
     {
@@ -775,7 +817,7 @@
       cols: [
         ["type", "TEXT", K.PK, "HealthDataType.id, e.g. heart_rate_series"],
         ["enabled", "INTEGER", "", "Whether this type is pulled at all"],
-        ["history_done", "INTEGER", "", "1 once full history has been read"],
+        ["history_done", "INTEGER", "", "1 once full history has been read. Cleared whenever a writer is re-admitted, or the importer would skip the type and never read the new writer's history"],
         ["range_start", "INTEGER", "", "Window the in-flight import covers"],
         ["range_end", "INTEGER", "", "Pinned at start, so resume re-reads the same window"],
         ["n", "INTEGER", "", "Records imported so far"],
@@ -785,11 +827,11 @@
     {
       name: "health_type_app", role: "control", rowless: true,
       purpose: "Discovered writers per type, and whether to pull them",
-      why: "The enabled set becomes the dataOrigins filter on the read request. Discovery never re-enables a source the user switched off.",
+      why: "The enabled set becomes the dataOrigins filter on the read request. Per type rather than per app on purpose: a republisher can be the only writer for weight while being a redundant copy for heart rate. Discovery never re-enables a source the user switched off.",
       cols: [
         ["type", "TEXT", K.PK, "→ health_type.type"],
         ["app", "INTEGER", K.PK + " " + K.FK, "→ health_app.id"],
-        ["enabled", "INTEGER", "", "Pulled from this writer — defaults to 1 on discovery"],
+        ["enabled", "INTEGER", "", "Pulled from this writer for this type — defaults to 1 on discovery. Off is not destructive: existing rows stay"],
         ["n", "INTEGER", "", "Records seen during the probe"],
         ["last_t", "INTEGER", "", "Newest record seen from this writer"]
       ]
@@ -827,10 +869,17 @@
     },
     {
       n: "Deselect", sub: "on toggle", title: "Turn a source off",
-      code: "deleteApp(package) + rebuildDaily()",
-      body: "Removes everything that writer contributed across every type, then rebuilds the rollups, because a removed writer changes daily aggregates. Confirmed in the UI first, since it drops stored rows.",
-      writes: ["deletes by app, then rebuilds health_daily"],
-      no: "Applies across all types, not just the one being edited."
+      code: "setAppEnabled(package, false) + rebuildDaily()",
+      body: "Stops the writer being pulled and drops it out of every read and rollup. Its rows are kept, so switching it back on is instant and needs no re-import. The rollups are rebuilt because a writer leaving changes which one owns each day.",
+      writes: ["health_app.enabled, then rebuilds health_daily"],
+      no: "Deletes nothing. Reclaiming the disk is the separate deleteApp action, which also VACUUMs."
+    },
+    {
+      n: "Delete", sub: "explicit", title: "Drop a writer's data",
+      code: "deleteApp(package, vacuum: true)",
+      body: "The reclaim-the-space action, confirmed in the UI. Removes every row that writer contributed across all types, rebuilds the rollups, clears history_done on the affected types so its history can be read again, and VACUUMs — without which the file keeps its high-water mark.",
+      writes: ["deletes by app, rebuilds health_daily, clears health_type.history_done, VACUUM"],
+      no: "VACUUM rewrites the whole shared app database, not only this tool's tables."
     }
   ];
 
@@ -910,7 +959,7 @@
     defaults: MAP.filter((m) => m[5]).length
   };
   [
-    ["Schema version", "1", "fresh ladder"],
+    ["Source controls", "3 + order", "per type · per type+app · global · priority"],
     ["Tables", counts.typed, ""],
     ["Metrics", counts.metrics, "18 point · 8 interval"],
     ["Record types mapped", counts.mapped, counts.defaults + " on by default"],

@@ -135,6 +135,26 @@ class HealthDiscoveredApp {
   });
 }
 
+/// A writer as the global app list shows it: switched on or off everywhere, and
+/// where it sits in the priority order.
+class HealthAppState {
+  final int appId;
+  final String package;
+  final bool enabled;
+  final int prio;
+
+  /// How many data types this writer is still selected for.
+  final int typeCount;
+
+  const HealthAppState({
+    required this.appId,
+    required this.package,
+    required this.enabled,
+    required this.prio,
+    required this.typeCount,
+  });
+}
+
 class HealthTypeState {
   final String type;
   final bool enabled;
@@ -165,6 +185,15 @@ class HealthStore {
   final Map<int, String> _appPackages = {};
   final Map<int, String> _textValues = {};
 
+  /// Writers the user switched off globally. Held in memory because every dense
+  /// read has to exclude them and a join to `health_app` per query would cost
+  /// more than inlining a handful of integers.
+  final Set<int> _disabledApps = {};
+
+  /// Writer priority, lower wins. Decides which single app a day's rollup is
+  /// computed from, and which side of an exact session mirror is kept.
+  final Map<int, int> _appPrio = {};
+
   Future<ToolDatabase> _db() async {
     final existing = _database;
     if (existing != null) return existing;
@@ -182,7 +211,11 @@ class HealthStore {
     await database.migrate(
       currentVersion: HealthSchema.version,
       onMigrate: (txn, oldVersion, newVersion) async {
-        if (oldVersion < 1) await HealthSchema.create(txn);
+        if (oldVersion < 1) {
+          await HealthSchema.create(txn);
+          return;
+        }
+        if (oldVersion < 2) await HealthSchema.migrateToV2(txn);
       },
     );
     _database = database;
@@ -260,6 +293,8 @@ class HealthStore {
     _textIds.clear();
     _appPackages.clear();
     _textValues.clear();
+    _disabledApps.clear();
+    _appPrio.clear();
   }
 
   Future<void> _loadDimensions(ToolDatabase db) async {
@@ -271,6 +306,8 @@ class HealthStore {
       final package = row['package'] as String;
       _appIds[package] = id;
       _appPackages[id] = package;
+      _appPrio[id] = (row['prio'] as num?)?.toInt() ?? HealthSchema.defaultPrio;
+      if ((row['enabled'] as int? ?? 1) == 0) _disabledApps.add(id);
     }
     for (final row in await db.query(HealthSchema.text)) {
       final id = row['id'] as int;
@@ -321,7 +358,29 @@ class HealthStore {
     final id = rows.single['id'] as int;
     _appIds[package] = id;
     _appPackages[id] = package;
+    _appPrio[id] = HealthSchema.defaultPrio;
     return id;
+  }
+
+  /// `AND app NOT IN (...)` for a query that must skip globally disabled
+  /// writers, or an empty string when nothing is disabled. Disabling keeps the
+  /// rows - it only stops them being read and aggregated - so every read has to
+  /// carry this.
+  String _excludeDisabled([String column = 'app']) => _disabledApps.isEmpty
+      ? ''
+      : ' AND $column NOT IN (${_disabledApps.join(', ')})';
+
+  int _prioOf(int appId) => _appPrio[appId] ?? HealthSchema.defaultPrio;
+
+  /// Priority as an inline SQL expression rather than a join to `health_app`.
+  /// There are a handful of writers, and this keeps the rollup queries reading
+  /// nothing but the dense table's own index.
+  String _prioOrderSql([String column = 'app']) {
+    if (_appPrio.isEmpty) return '${HealthSchema.defaultPrio}';
+    final whens = _appPrio.entries
+        .map((entry) => 'WHEN ${entry.key} THEN ${entry.value}')
+        .join(' ');
+    return 'CASE $column $whens ELSE ${HealthSchema.defaultPrio} END';
   }
 
   Future<int?> _textId(ToolDatabaseExecutor db, String? value) async {
@@ -430,16 +489,35 @@ class HealthStore {
     HealthSessionRow row,
   ) async {
     // A session already stored for this exact range and kind by another app is
-    // a mirror of the same activity - Google Fit republishing a watch's workout.
-    // Keeping the first writer is vendor-neutral and costs one index seek.
-    final existing = await db.query(
+    // a mirror of the same activity - a republisher rewriting a watch's workout.
+    // Priority decides which side survives, so promoting the direct writer is
+    // enough to flip an already-imported mirror on the next read; ties keep the
+    // first writer. One index seek, no vendor names involved.
+    final matches = await db.query(
       HealthSchema.session,
-      columns: ['id', 'origin'],
+      columns: ['id', 'origin', 'app'],
       where: 'kind = ? AND t0 = ? AND t1 = ?',
       whereArgs: [row.kind, row.t0, row.t1],
       limit: 1,
     );
-    if (existing.isNotEmpty && existing.single['origin'] != row.origin) return;
+    var existing = matches.isEmpty ? null : matches.single;
+    if (existing != null && existing['origin'] != row.origin) {
+      if (_prioOf(appId) >= _prioOf(existing['app'] as int)) return;
+      // The better-ranked writer takes the slot: the mirror's parts go with it,
+      // since the row they hang off is replaced.
+      final mirrorId = existing['id'] as int;
+      await db.delete(
+        HealthSchema.sessionPart,
+        where: 'session = ?',
+        whereArgs: [mirrorId],
+      );
+      await db.delete(
+        HealthSchema.session,
+        where: 'id = ?',
+        whereArgs: [mirrorId],
+      );
+      existing = null;
+    }
     final values = {
       'kind': row.kind,
       'activity': await _textId(db, row.activity),
@@ -460,8 +538,8 @@ class HealthStore {
       'asleep_min': row.asleepMin,
     };
     final int sessionId;
-    if (existing.isNotEmpty) {
-      sessionId = existing.single['id'] as int;
+    if (existing != null) {
+      sessionId = existing['id'] as int;
       await db.update(
         HealthSchema.session,
         values,
@@ -493,6 +571,24 @@ class HealthStore {
     await batch.commit(noResult: true);
   }
 
+  /// A day's rollup is computed from **one** writer, never from all of them at
+  /// once.
+  ///
+  /// Summing across writers was the actual cause of inflated step and distance
+  /// totals: a republisher re-buckets the same walk into different intervals, so
+  /// the rows are not byte-identical, the primary key cannot collapse them, and
+  /// both landed in the day's total. Averages had the same problem in a quieter
+  /// way - `n`, `lo` and `hi` mixed two writers' streams.
+  ///
+  /// The winner is the enabled writer with the best `prio`, then the one with
+  /// the most rows that day, then the lowest id so the choice is deterministic.
+  /// Picking per day rather than globally is what keeps a republisher useful:
+  /// on a day no other writer covered, it wins by default and the data still
+  /// shows up.
+  static const _dailyWinnerColumns =
+      'SUM(v) AS total, AVG(v) AS avg, MIN(v) AS lo, MAX(v) AS hi, '
+      'COUNT(*) AS n';
+
   Future<void> _refreshDaily(
     ToolDatabaseExecutor db,
     Map<int, Set<int>> touched,
@@ -505,6 +601,7 @@ class HealthStore {
       final spec = HealthMetrics.spec(entry.key);
       if (spec != null) shapes[entry.value] = spec.shape;
     }
+    final prioCase = _prioOrderSql();
     final batch = db.batch();
     var queued = 0;
     for (final entry in touched.entries) {
@@ -515,12 +612,13 @@ class HealthStore {
       for (final day in entry.value) {
         final (start, end) = dayBounds(day);
         final rows = await db.rawQuery(
-          'SELECT SUM(v) AS total, AVG(v) AS avg, MIN(v) AS lo, MAX(v) AS hi, '
-          'COUNT(*) AS n FROM $table '
-          'WHERE metric = ? AND $column >= ? AND $column < ?',
+          'SELECT $_dailyWinnerColumns FROM $table '
+          'WHERE metric = ? AND $column >= ? AND $column < ?'
+          '${_excludeDisabled()} '
+          'GROUP BY app ORDER BY $prioCase ASC, n DESC, app ASC LIMIT 1',
           [metricId, start, end],
         );
-        final row = rows.single;
+        final row = rows.isEmpty ? const <String, Object?>{} : rows.single;
         final n = (row['n'] as num?)?.toInt() ?? 0;
         if (n == 0) {
           batch.delete(
@@ -615,17 +713,37 @@ class HealthStore {
         isInterval ? HealthSchema.interval : HealthSchema.point,
       );
       final column = isInterval ? 't0' : 't';
-      // Grouping in SQL by local midnight keeps this one pass per metric
-      // instead of one query per day.
-      await db.rawInsert(
-        'INSERT OR REPLACE INTO ${db.nameTable(HealthSchema.daily)} '
-        '(metric, day, total, avg, lo, hi, n) '
-        "SELECT metric, CAST(strftime('%s', $column / 1000, 'unixepoch', "
-        "'localtime', 'start of day') AS INTEGER) * 1000, "
-        'SUM(v), AVG(v), MIN(v), MAX(v), COUNT(*) '
-        'FROM $table WHERE metric = ? GROUP BY 2',
+      // One pass per metric, grouped by local midnight *and* writer. Picking the
+      // day's winner needs both aggregates and the writer, which no single
+      // GROUP BY can express - so the reduction happens here and the winner is
+      // chosen in Dart. Rows are bounded by days x writers, not by measurements.
+      final grouped = await db.rawQuery(
+        "SELECT CAST(strftime('%s', $column / 1000, 'unixepoch', "
+        "'localtime', 'start of day') AS INTEGER) * 1000 AS day, "
+        'app, $_dailyWinnerColumns '
+        'FROM $table WHERE metric = ?${_excludeDisabled()} '
+        'GROUP BY day, app',
         [entry.value],
       );
+      final winners = <int, Map<String, Object?>>{};
+      for (final row in grouped) {
+        final day = (row['day'] as num).toInt();
+        final best = winners[day];
+        if (best == null || _beatsDailyWinner(row, best)) winners[day] = row;
+      }
+      final batch = db.batch();
+      for (final win in winners.entries) {
+        batch.insert(HealthSchema.daily, {
+          'metric': entry.value,
+          'day': win.key,
+          'total': (win.value['total'] as num?)?.toDouble(),
+          'avg': (win.value['avg'] as num?)?.toDouble(),
+          'lo': (win.value['lo'] as num?)?.toDouble(),
+          'hi': (win.value['hi'] as num?)?.toDouble(),
+          'n': (win.value['n'] as num?)?.toInt() ?? 0,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+      if (winners.isNotEmpty) await batch.commit(noResult: true);
       onProgress?.call('Rebuilding ${entry.key}...', 0);
     }
     if (kDebugMode) {
@@ -633,6 +751,23 @@ class HealthStore {
         '[HealthStore] Daily rollups rebuilt in ${stopwatch!.elapsedMilliseconds}ms',
       );
     }
+  }
+
+  /// Same ordering as the SQL winner pick in [_refreshDaily]: priority, then
+  /// row count, then app id.
+  bool _beatsDailyWinner(
+    Map<String, Object?> candidate,
+    Map<String, Object?> current,
+  ) {
+    final candidateApp = (candidate['app'] as num).toInt();
+    final currentApp = (current['app'] as num).toInt();
+    final byPrio = _prioOf(candidateApp).compareTo(_prioOf(currentApp));
+    if (byPrio != 0) return byPrio < 0;
+    final byCount = ((current['n'] as num?)?.toInt() ?? 0).compareTo(
+      (candidate['n'] as num?)?.toInt() ?? 0,
+    );
+    if (byCount != 0) return byCount < 0;
+    return candidateApp < currentApp;
   }
 
   Future<List<HealthDailyValue>> dailyRange({
@@ -701,7 +836,7 @@ class HealthStore {
     final rows = await db.query(
       HealthSchema.point,
       columns: ['t', 'v', 'v2', 'app'],
-      where: 'metric = ?',
+      where: 'metric = ?${_excludeDisabled()}',
       whereArgs: [metricId],
       orderBy: 't DESC',
       limit: 1,
@@ -721,7 +856,8 @@ class HealthStore {
     final db = await _db();
     final metricId = _metricIds[metric];
     if (metricId == null) return const [];
-    final where = StringBuffer('metric = ? AND t >= ? AND t <= ?');
+    final where = StringBuffer('metric = ? AND t >= ? AND t <= ?')
+      ..write(_excludeDisabled());
     final args = <Object?>[metricId, from, to];
     if (package != null) {
       final appId = _appIds[package];
@@ -751,7 +887,7 @@ class HealthStore {
     final rows = await db.query(
       HealthSchema.interval,
       columns: ['t0', 't1', 'v', 'app'],
-      where: 'metric = ? AND t0 >= ? AND t0 < ?',
+      where: 'metric = ? AND t0 >= ? AND t0 < ?${_excludeDisabled()}',
       whereArgs: [metricId, from, to],
       orderBy: 't0 ASC',
     );
@@ -769,7 +905,7 @@ class HealthStore {
     final rows = await db.query(
       HealthSchema.interval,
       columns: ['t0', 't1', 'v', 'app'],
-      where: 'metric = ?',
+      where: 'metric = ?${_excludeDisabled()}',
       whereArgs: [metricId],
       orderBy: 't0 DESC',
       limit: limit,
@@ -789,7 +925,7 @@ class HealthStore {
     final rows = await db.query(
       HealthSchema.point,
       columns: ['t', 'v', 'v2', 'app'],
-      where: 'metric = ?',
+      where: 'metric = ?${_excludeDisabled()}',
       whereArgs: [metricId],
       orderBy: 't DESC',
       limit: limit,
@@ -848,6 +984,9 @@ class HealthStore {
     if (to != null) {
       where.add('t0 < ?');
       args.add(to);
+    }
+    if (_disabledApps.isNotEmpty) {
+      where.add('app NOT IN (${_disabledApps.join(', ')})');
     }
     final rows = await db.query(
       HealthSchema.session,
@@ -911,7 +1050,8 @@ class HealthStore {
       'COALESCE(SUM(calories), 0) AS calories, '
       'COALESCE(SUM((t1 - t0) / 1000), 0) AS duration, '
       'COUNT(*) AS workouts '
-      'FROM ${db.nameTable(HealthSchema.session)} WHERE kind = ?',
+      'FROM ${db.nameTable(HealthSchema.session)} '
+      'WHERE kind = ?${_excludeDisabled()}',
       [HealthSchema.sessionKindExercise],
     );
     final row = rows.single;
@@ -970,9 +1110,18 @@ class HealthStore {
     });
   }
 
-  /// Drops every row a writer contributed, for when the user deselects it. The
-  /// rollups are rebuilt because a removed writer changes daily aggregates.
-  Future<void> deleteApp(String package) async {
+  /// Drops every row a writer contributed. This is the explicit "reclaim the
+  /// space" action, not what switching a writer off does - that keeps the rows.
+  ///
+  /// Deleting rows alone does not shrink the database file: SQLite frees the
+  /// pages and reuses them for later inserts. [vacuum] rewrites the file so the
+  /// space is actually returned to the filesystem, which is the whole point of
+  /// deleting a writer with a million heart-rate rows.
+  ///
+  /// The affected types lose their `history_done` flag so a later import can
+  /// read the writer's history again if the user changes their mind. Without
+  /// that the importer skips a finished type and the years never come back.
+  Future<void> deleteApp(String package, {bool vacuum = false}) async {
     final db = await _db();
     final appId = _appIds[package];
     if (appId == null) return;
@@ -998,8 +1147,31 @@ class HealthStore {
         where: 'app = ?',
         whereArgs: [appId],
       );
+      await txn.rawUpdate(
+        'UPDATE ${txn.nameTable(HealthSchema.type)} SET history_done = 0 '
+        'WHERE type IN (SELECT type FROM '
+        '${txn.nameTable(HealthSchema.typeApp)} WHERE app = ?)',
+        [appId],
+      );
     });
     await rebuildDaily();
+    // VACUUM cannot run inside a transaction, and it rewrites the whole shared
+    // app database rather than only this tool's tables.
+    if (vacuum) await db.execute('VACUUM');
+  }
+
+  /// Clears the full-import completion flag for [types], so the importer reads
+  /// their history again instead of skipping them. Needed whenever a writer is
+  /// added back to a type that already finished importing without it.
+  Future<void> resetTypeHistory(Iterable<String> types) async {
+    if (types.isEmpty) return;
+    final db = await _db();
+    final placeholders = List.filled(types.length, '?').join(', ');
+    await db.rawUpdate(
+      'UPDATE ${db.nameTable(HealthSchema.type)} SET history_done = 0 '
+      'WHERE type IN ($placeholders)',
+      types.toList(),
+    );
   }
 
   Future<void> clearImportedData() async {
@@ -1175,16 +1347,42 @@ class HealthStore {
       whereArgs: [type],
     );
     if (rows.isEmpty) return const [];
-    final hasExclusion = rows.any((row) => (row['enabled'] as int) == 0);
-    if (!hasExclusion) return const [];
+    bool allowed(Map<String, Object?> row) =>
+        (row['enabled'] as int) == 1 &&
+        !_disabledApps.contains(row['app'] as int);
+    if (rows.every(allowed)) return const [];
     return rows
-        .where((row) => (row['enabled'] as int) == 1)
+        .where(allowed)
         .map((row) => _appPackages[row['app'] as int])
         .whereType<String>()
         .toList();
   }
 
-  Future<void> setAppEnabled({
+  /// Writers that must not contribute to [type] - switched off for this type, or
+  /// switched off globally. The full importer expresses this as a `dataOrigins`
+  /// filter, but the change sync cannot: `synchronize()` takes no origin filter,
+  /// so it has to drop the records itself.
+  Future<Set<String>> excludedPackages(String type) async {
+    final db = await _db();
+    final rows = await db.query(
+      HealthSchema.typeApp,
+      columns: ['app', 'enabled'],
+      where: 'type = ?',
+      whereArgs: [type],
+    );
+    final excluded = <String>{
+      for (final id in _disabledApps)
+        if (_appPackages[id] != null) _appPackages[id]!,
+    };
+    for (final row in rows) {
+      if ((row['enabled'] as int) == 1) continue;
+      final package = _appPackages[row['app'] as int];
+      if (package != null) excluded.add(package);
+    }
+    return excluded;
+  }
+
+  Future<void> setTypeAppEnabled({
     required String type,
     required String package,
     required bool enabled,
@@ -1198,6 +1396,98 @@ class HealthStore {
       where: 'type = ? AND app = ?',
       whereArgs: [type, appId],
     );
+  }
+
+  // --- global app switch and priority ---------------------------------------
+
+  /// Every known writer, best priority first. Row counts are omitted here
+  /// because counting a writer's dense rows is an index scan over millions of
+  /// entries - [appRowCounts] does that separately so a settings list can paint
+  /// before it finishes.
+  Future<List<HealthAppState>> apps() async {
+    final db = await _db();
+    final rows = await db.query(HealthSchema.app, orderBy: 'prio ASC, id ASC');
+    final typeCounts = <int, int>{};
+    for (final row in await db.rawQuery(
+      'SELECT app, COUNT(*) AS n FROM ${db.nameTable(HealthSchema.typeApp)} '
+      'WHERE enabled = 1 GROUP BY app',
+    )) {
+      typeCounts[row['app'] as int] = (row['n'] as num?)?.toInt() ?? 0;
+    }
+    return rows
+        .map(
+          (row) => HealthAppState(
+            appId: row['id'] as int,
+            package: row['package'] as String,
+            enabled: (row['enabled'] as int? ?? 1) == 1,
+            prio: (row['prio'] as num?)?.toInt() ?? HealthSchema.defaultPrio,
+            typeCount: typeCounts[row['id'] as int] ?? 0,
+          ),
+        )
+        .toList();
+  }
+
+  /// Stored rows per writer. Separate from [apps] because it scans the dense
+  /// tables' `(app, metric)` indexes.
+  Future<Map<int, int>> appRowCounts() async {
+    final db = await _db();
+    final counts = <int, int>{};
+    for (final table in [
+      HealthSchema.point,
+      HealthSchema.interval,
+      HealthSchema.session,
+    ]) {
+      for (final row in await db.rawQuery(
+        'SELECT app, COUNT(*) AS n FROM ${db.nameTable(table)} GROUP BY app',
+      )) {
+        final appId = row['app'] as int;
+        counts[appId] =
+            (counts[appId] ?? 0) + ((row['n'] as num?)?.toInt() ?? 0);
+      }
+    }
+    return counts;
+  }
+
+  /// Turns a writer off everywhere. The rows it already contributed are **kept**
+  /// - they stop being read and stop feeding the rollups, and come back
+  /// instantly if the writer is switched on again. Reclaiming the space is a
+  /// separate, explicit [deleteApp].
+  Future<void> setAppEnabled(String package, bool enabled) async {
+    final db = await _db();
+    final appId = _appIds[package];
+    if (appId == null) return;
+    await db.update(
+      HealthSchema.app,
+      {'enabled': enabled ? 1 : 0},
+      where: 'id = ?',
+      whereArgs: [appId],
+    );
+    if (enabled) {
+      _disabledApps.remove(appId);
+    } else {
+      _disabledApps.add(appId);
+    }
+    await rebuildDaily();
+  }
+
+  /// Reorders writers. [order] is best-first; positions become the stored
+  /// priority, so the list the user sees is the list the rollups use.
+  Future<void> setAppOrder(List<String> order) async {
+    final db = await _db();
+    await db.transaction((txn) async {
+      for (var index = 0; index < order.length; index++) {
+        final appId = _appIds[order[index]];
+        if (appId == null) continue;
+        await txn.update(
+          HealthSchema.app,
+          {'prio': index},
+          where: 'id = ?',
+          whereArgs: [appId],
+        );
+        _appPrio[appId] = index;
+      }
+    });
+    await rebuildDaily();
   }
 
   // --- backup ---------------------------------------------------------------

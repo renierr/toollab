@@ -202,6 +202,10 @@ class HealthDashboardState extends ChangeNotifier {
   List<HealthTypeState> healthTypes = [];
   final Map<String, List<HealthDiscoveredApp>> discoveredApps = {};
   Map<String, int> storeRowCounts = const {};
+  List<HealthAppState> healthApps = [];
+  Map<int, int> appRowCounts = const {};
+
+  int get enabledTypeCount => healthTypes.where((type) => type.enabled).length;
 
   Future<void> loadSelection() async {
     healthTypes = await HealthStore.instance.types();
@@ -210,7 +214,15 @@ class HealthDashboardState extends ChangeNotifier {
         type.type,
       );
     }
+    healthApps = await HealthStore.instance.apps();
     storeRowCounts = await HealthStore.instance.rowCounts();
+    notifyListeners();
+  }
+
+  /// Counting a writer's rows scans the dense tables' indexes, so the app list
+  /// paints first and fills its counts in afterwards.
+  Future<void> loadAppRowCounts() async {
+    appRowCounts = await HealthStore.instance.appRowCounts();
     notifyListeners();
   }
 
@@ -219,20 +231,66 @@ class HealthDashboardState extends ChangeNotifier {
     await loadSelection();
   }
 
-  /// Turning a source off removes what it already contributed, otherwise the
-  /// dashboard would keep showing data from a source the user just excluded.
+  /// Per-type source selection. This is a **pull** filter: switching a source
+  /// off stops it being read for this type and drops it out of the aggregates,
+  /// but keeps the rows it already contributed so switching it back on is free.
   Future<void> setSourceEnabled({
     required String type,
     required String package,
     required bool enabled,
   }) async {
-    await HealthStore.instance.setAppEnabled(
+    await HealthStore.instance.setTypeAppEnabled(
       type: type,
       package: package,
       enabled: enabled,
     );
-    if (!enabled) await HealthStore.instance.deleteApp(package);
+    // A type that already finished importing would otherwise be skipped, so the
+    // newly allowed writer's history would never be read.
+    if (enabled) await HealthStore.instance.resetTypeHistory([type]);
     await loadSelection();
+  }
+
+  /// Global source switch. Off means the writer is neither pulled nor counted
+  /// anywhere, while its stored rows stay put - see [deleteAppData] to reclaim
+  /// the space.
+  Future<void> setAppEnabled(String package, bool enabled) async {
+    await HealthStore.instance.setAppEnabled(package, enabled);
+    if (enabled) {
+      await HealthStore.instance.resetTypeHistory(
+        healthTypes.map((type) => type.type),
+      );
+    }
+    await loadSelection();
+    await load(showLoading: false);
+  }
+
+  /// Writer priority, best first. Decides which single source a day's totals are
+  /// computed from, and which side of a mirrored session survives.
+  Future<void> setAppOrder(List<String> packages) async {
+    await HealthStore.instance.setAppOrder(packages);
+    await loadSelection();
+    await load(showLoading: false);
+  }
+
+  /// Explicitly drops a writer's stored rows and shrinks the database file.
+  Future<void> deleteAppData(String package) async {
+    if (isCollecting) return;
+    isCollecting = true;
+    collectionStatus = 'Removing $package...';
+    notifyListeners();
+    try {
+      await HealthStore.instance.deleteApp(package, vacuum: true);
+      await loadSelection();
+      await loadAppRowCounts();
+      await _reloadRecords();
+    } catch (e) {
+      error = e.toString();
+      errorLog('[HealthDashboard] Deleting app data failed: $e');
+    } finally {
+      isCollecting = false;
+      collectionStatus = null;
+      notifyListeners();
+    }
   }
 
   Future<void> runDiscovery() async {
