@@ -38,6 +38,9 @@ class TreadmillControlState extends ChangeNotifier {
   // Settings
   bool syncToHealthConnect = true;
 
+  /// Outcome of the last Health Connect publish, for the UI to report on.
+  TreadmillPublishResult? lastHealthConnectPublish;
+
   // Support flags determined on connection
   bool speedControlSupported = false;
   bool inclineControlSupported = false;
@@ -143,13 +146,34 @@ class TreadmillControlState extends ChangeNotifier {
         value ? 'true' : 'false',
       );
       if (value) {
-        await TreadmillHealthConnectPublisher.instance.publishPendingSessions(
-          forcePermissionRequest: true,
-        );
+        lastHealthConnectPublish = await TreadmillHealthConnectPublisher
+            .instance
+            .publishPendingSessions(force: true);
+        notifyListeners();
       }
     } catch (e) {
       errorLog('[TreadmillControl] Update Health Connect setting failed: $e');
     }
+  }
+
+  /// Publishes pending workouts on demand, bypassing the throttle. The result
+  /// is kept so the settings sheet and the history screen can report it.
+  Future<TreadmillPublishResult> publishToHealthConnect() async {
+    final result = await TreadmillHealthConnectPublisher.instance
+        .publishPendingSessions(force: true);
+    lastHealthConnectPublish = result;
+    notifyListeners();
+    return result;
+  }
+
+  /// Deletes everything this app wrote to Health Connect and clears the publish
+  /// markers, so the next publish recreates it.
+  Future<TreadmillPublishResult> removeFromHealthConnect() async {
+    final result = await TreadmillHealthConnectPublisher.instance
+        .removeAllFromHealthConnect();
+    lastHealthConnectPublish = null;
+    notifyListeners();
+    return result;
   }
 
   Future<void> loadSessions() async {
@@ -162,11 +186,13 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   void _backgroundSync() {
+    // A workout just ended, so this run must not be throttled away.
     TreadmillHealthConnectPublisher.instance
-        .publishPendingSessions()
-        .catchError((e) {
+        .publishPendingSessions(force: true)
+        .then((result) => lastHealthConnectPublish = result)
+        .catchError((Object e) {
           errorLog('[TreadmillControl] Health Connect publish error: $e');
-          return null;
+          return const TreadmillPublishResult(TreadmillPublishOutcome.ran);
         });
     syncNow().catchError((e) {
       errorLog('[TreadmillControl] Background sync failed: $e');
@@ -178,9 +204,11 @@ class TreadmillControlState extends ChangeNotifier {
   /// pulled/pushed/deleted counts, `null` if sync is disabled/unconfigured or
   /// already running. Throws on network/backend failures so a manual trigger
   /// can surface the error.
-  Future<Map<String, int>?> syncNow() async {
-    // Health Connect OS sync runs independently of backend cloud sync
-    await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
+  Future<Map<String, int>?> syncNow({bool force = false}) async {
+    // Publishing to Health Connect is a one-way push and runs independently of
+    // the backend cloud sync, which may well be switched off.
+    lastHealthConnectPublish = await TreadmillHealthConnectPublisher.instance
+        .publishPendingSessions(force: force);
 
     if (isSyncing) return null;
     final syncEnabled = await DatabaseService.instance.getSetting(

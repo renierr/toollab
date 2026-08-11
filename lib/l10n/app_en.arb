@@ -2928,6 +2928,42 @@
     }
   },
   "treadmillConnectDevices": "Connect devices",
+  "treadmillPublishNow": "Publish now",
+  "treadmillPublishNowSubtitle": "Workouts go to Health Connect when one ends, on a manual sync and when the health dashboard opens, at most once every five minutes.",
+  "treadmillPublishDone": "Published {count} workout(s) to Health Connect",
+  "@treadmillPublishDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "treadmillPublishNothing": "Health Connect is already up to date",
+  "treadmillPublishFailed": "{count} workout(s) could not be published to Health Connect",
+  "@treadmillPublishFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "treadmillPublishNoPermission": "Health Connect did not grant write access",
+  "treadmillPublishThrottled": "Just published — nothing new to send",
+  "treadmillPublishDisabled": "Publishing to Health Connect is switched off",
+  "treadmillPublishUnsupported": "Health Connect is only available on Android",
+  "treadmillRemoveFromHealthConnect": "Remove workouts from Health Connect",
+  "treadmillRemoveFromHealthConnectSubtitle": "Deletes everything this app wrote there and publishes it again on the next run.",
+  "treadmillRemoveFromHealthConnectConfirm": "Every treadmill record ToolLab wrote is deleted from Health Connect. Records from other apps are not touched. Distance records are the exception: Health Connect offers no way to delete them here, so they are overwritten on the next publish. Your local workout history stays and is published again on the next run.",
+  "treadmillRemoveFromHealthConnectAction": "Delete",
+  "treadmillRemoveFromHealthConnectDone": "Removed — {count} workout(s) will be published again",
+  "@treadmillRemoveFromHealthConnectDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "treadmillRemoveFromHealthConnectFailed": "Removing the Health Connect data failed",
   "treadmillHistoryDashboard": "Dashboard",
   "treadmillHistoryWorkouts": "Workouts",
   "treadmillHistoryEmpty": "No workouts saved yet",

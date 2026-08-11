@@ -5260,6 +5260,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get treadmillConnectDevices => 'Connect devices';
 
   @override
+  String get treadmillPublishNow => 'Publish now';
+
+  @override
+  String get treadmillPublishNowSubtitle =>
+      'Workouts go to Health Connect when one ends, on a manual sync and when the health dashboard opens, at most once every five minutes.';
+
+  @override
+  String treadmillPublishDone(int count) {
+    return 'Published $count workout(s) to Health Connect';
+  }
+
+  @override
+  String get treadmillPublishNothing => 'Health Connect is already up to date';
+
+  @override
+  String treadmillPublishFailed(int count) {
+    return '$count workout(s) could not be published to Health Connect';
+  }
+
+  @override
+  String get treadmillPublishNoPermission =>
+      'Health Connect did not grant write access';
+
+  @override
+  String get treadmillPublishThrottled =>
+      'Just published — nothing new to send';
+
+  @override
+  String get treadmillPublishDisabled =>
+      'Publishing to Health Connect is switched off';
+
+  @override
+  String get treadmillPublishUnsupported =>
+      'Health Connect is only available on Android';
+
+  @override
+  String get treadmillRemoveFromHealthConnect =>
+      'Remove workouts from Health Connect';
+
+  @override
+  String get treadmillRemoveFromHealthConnectSubtitle =>
+      'Deletes everything this app wrote there and publishes it again on the next run.';
+
+  @override
+  String get treadmillRemoveFromHealthConnectConfirm =>
+      'Every treadmill record ToolLab wrote is deleted from Health Connect. Records from other apps are not touched. Distance records are the exception: Health Connect offers no way to delete them here, so they are overwritten on the next publish. Your local workout history stays and is published again on the next run.';
+
+  @override
+  String get treadmillRemoveFromHealthConnectAction => 'Delete';
+
+  @override
+  String treadmillRemoveFromHealthConnectDone(int count) {
+    return 'Removed — $count workout(s) will be published again';
+  }
+
+  @override
+  String get treadmillRemoveFromHealthConnectFailed =>
+      'Removing the Health Connect data failed';
+
+  @override
   String get treadmillHistoryDashboard => 'Dashboard';
 
   @override

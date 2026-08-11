@@ -264,7 +264,10 @@ class AppState extends ChangeNotifier {
         deletedTotal += results['deleted'] ?? 0;
       }
       if (delegates.any((delegate) => delegate is TreadmillSyncDelegate)) {
-        await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
+        // Manual sync: never throttled away.
+        await TreadmillHealthConnectPublisher.instance.publishPendingSessions(
+          force: true,
+        );
       }
 
       _syncLastSynced = DateTime.now().millisecondsSinceEpoch;

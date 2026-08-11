@@ -151,7 +151,10 @@ class HealthDashboardState extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
+      // The user asked for this one, so it skips the publisher's throttle.
+      await TreadmillHealthConnectPublisher.instance.publishPendingSessions(
+        force: true,
+      );
       await _reloadRecords();
     } catch (e) {
       error = e.toString();

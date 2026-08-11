@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:file_selector/file_selector.dart' as fs;
 import 'package:intl/intl.dart';
 import '../treadmill_control_state.dart';
+import '../treadmill_publish_message.dart';
 import '../treadmill_session.dart';
 import 'session_history_list_item.dart';
 import 'workout_details_sheet.dart';
@@ -167,7 +168,7 @@ class SessionHistoryList extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final result = await state.syncNow();
+      final result = await state.syncNow(force: true);
       if (!context.mounted) return;
       if (result != null) {
         messenger.showSnackBar(
@@ -181,8 +182,14 @@ class SessionHistoryList extends StatelessWidget {
           ),
         );
       } else if (state.syncToHealthConnect) {
+        // Backend sync is off, so the only thing that ran is the one-way push
+        // to Health Connect - reporting an import here was plain wrong.
         messenger.showSnackBar(
-          SnackBar(content: Text(l10n.healthDashboardHealthConnectImported)),
+          SnackBar(
+            content: Text(
+              treadmillPublishMessage(l10n, state.lastHealthConnectPublish),
+            ),
+          ),
         );
       } else {
         messenger.showSnackBar(

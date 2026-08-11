@@ -9509,6 +9509,96 @@ abstract class AppLocalizations {
   /// **'Connect devices'**
   String get treadmillConnectDevices;
 
+  /// No description provided for @treadmillPublishNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish now'**
+  String get treadmillPublishNow;
+
+  /// No description provided for @treadmillPublishNowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts go to Health Connect when one ends, on a manual sync and when the health dashboard opens, at most once every five minutes.'**
+  String get treadmillPublishNowSubtitle;
+
+  /// No description provided for @treadmillPublishDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Published {count} workout(s) to Health Connect'**
+  String treadmillPublishDone(int count);
+
+  /// No description provided for @treadmillPublishNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect is already up to date'**
+  String get treadmillPublishNothing;
+
+  /// No description provided for @treadmillPublishFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} workout(s) could not be published to Health Connect'**
+  String treadmillPublishFailed(int count);
+
+  /// No description provided for @treadmillPublishNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect did not grant write access'**
+  String get treadmillPublishNoPermission;
+
+  /// No description provided for @treadmillPublishThrottled.
+  ///
+  /// In en, this message translates to:
+  /// **'Just published — nothing new to send'**
+  String get treadmillPublishThrottled;
+
+  /// No description provided for @treadmillPublishDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Publishing to Health Connect is switched off'**
+  String get treadmillPublishDisabled;
+
+  /// No description provided for @treadmillPublishUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect is only available on Android'**
+  String get treadmillPublishUnsupported;
+
+  /// No description provided for @treadmillRemoveFromHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove workouts from Health Connect'**
+  String get treadmillRemoveFromHealthConnect;
+
+  /// No description provided for @treadmillRemoveFromHealthConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes everything this app wrote there and publishes it again on the next run.'**
+  String get treadmillRemoveFromHealthConnectSubtitle;
+
+  /// No description provided for @treadmillRemoveFromHealthConnectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Every treadmill record ToolLab wrote is deleted from Health Connect. Records from other apps are not touched. Distance records are the exception: Health Connect offers no way to delete them here, so they are overwritten on the next publish. Your local workout history stays and is published again on the next run.'**
+  String get treadmillRemoveFromHealthConnectConfirm;
+
+  /// No description provided for @treadmillRemoveFromHealthConnectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get treadmillRemoveFromHealthConnectAction;
+
+  /// No description provided for @treadmillRemoveFromHealthConnectDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed — {count} workout(s) will be published again'**
+  String treadmillRemoveFromHealthConnectDone(int count);
+
+  /// No description provided for @treadmillRemoveFromHealthConnectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing the Health Connect data failed'**
+  String get treadmillRemoveFromHealthConnectFailed;
+
   /// No description provided for @treadmillHistoryDashboard.
   ///
   /// In en, this message translates to:

@@ -5298,6 +5298,66 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillConnectDevices => 'Geräte verbinden';
 
   @override
+  String get treadmillPublishNow => 'Jetzt senden';
+
+  @override
+  String get treadmillPublishNowSubtitle =>
+      'Workouts gehen nach dem Ende, bei einer manuellen Synchronisierung und beim Öffnen des Gesundheits-Dashboards an Health Connect, höchstens alle fünf Minuten.';
+
+  @override
+  String treadmillPublishDone(int count) {
+    return '$count Workout(s) an Health Connect gesendet';
+  }
+
+  @override
+  String get treadmillPublishNothing => 'Health Connect ist bereits aktuell';
+
+  @override
+  String treadmillPublishFailed(int count) {
+    return '$count Workout(s) konnten nicht an Health Connect gesendet werden';
+  }
+
+  @override
+  String get treadmillPublishNoPermission =>
+      'Health Connect hat keinen Schreibzugriff erteilt';
+
+  @override
+  String get treadmillPublishThrottled =>
+      'Gerade erst gesendet — nichts Neues vorhanden';
+
+  @override
+  String get treadmillPublishDisabled =>
+      'Das Senden an Health Connect ist ausgeschaltet';
+
+  @override
+  String get treadmillPublishUnsupported =>
+      'Health Connect gibt es nur unter Android';
+
+  @override
+  String get treadmillRemoveFromHealthConnect =>
+      'Workouts aus Health Connect entfernen';
+
+  @override
+  String get treadmillRemoveFromHealthConnectSubtitle =>
+      'Löscht alles, was diese App dort geschrieben hat, und sendet es beim nächsten Lauf erneut.';
+
+  @override
+  String get treadmillRemoveFromHealthConnectConfirm =>
+      'Alle Laufband-Einträge, die ToolLab in Health Connect geschrieben hat, werden gelöscht. Einträge anderer Apps bleiben unberührt. Ausnahme sind Distanz-Einträge: Health Connect bietet hier keine Möglichkeit, sie zu löschen, sie werden beim nächsten Senden überschrieben. Dein lokaler Verlauf bleibt erhalten und wird beim nächsten Lauf erneut gesendet.';
+
+  @override
+  String get treadmillRemoveFromHealthConnectAction => 'Löschen';
+
+  @override
+  String treadmillRemoveFromHealthConnectDone(int count) {
+    return 'Entfernt — $count Workout(s) werden erneut gesendet';
+  }
+
+  @override
+  String get treadmillRemoveFromHealthConnectFailed =>
+      'Das Entfernen der Health-Connect-Daten ist fehlgeschlagen';
+
+  @override
   String get treadmillHistoryDashboard => 'Dashboard';
 
   @override

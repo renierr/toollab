@@ -2079,6 +2079,42 @@
     }
   },
   "treadmillConnectDevices": "Geräte verbinden",
+  "treadmillPublishNow": "Jetzt senden",
+  "treadmillPublishNowSubtitle": "Workouts gehen nach dem Ende, bei einer manuellen Synchronisierung und beim Öffnen des Gesundheits-Dashboards an Health Connect, höchstens alle fünf Minuten.",
+  "treadmillPublishDone": "{count} Workout(s) an Health Connect gesendet",
+  "@treadmillPublishDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "treadmillPublishNothing": "Health Connect ist bereits aktuell",
+  "treadmillPublishFailed": "{count} Workout(s) konnten nicht an Health Connect gesendet werden",
+  "@treadmillPublishFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "treadmillPublishNoPermission": "Health Connect hat keinen Schreibzugriff erteilt",
+  "treadmillPublishThrottled": "Gerade erst gesendet — nichts Neues vorhanden",
+  "treadmillPublishDisabled": "Das Senden an Health Connect ist ausgeschaltet",
+  "treadmillPublishUnsupported": "Health Connect gibt es nur unter Android",
+  "treadmillRemoveFromHealthConnect": "Workouts aus Health Connect entfernen",
+  "treadmillRemoveFromHealthConnectSubtitle": "Löscht alles, was diese App dort geschrieben hat, und sendet es beim nächsten Lauf erneut.",
+  "treadmillRemoveFromHealthConnectConfirm": "Alle Laufband-Einträge, die ToolLab in Health Connect geschrieben hat, werden gelöscht. Einträge anderer Apps bleiben unberührt. Ausnahme sind Distanz-Einträge: Health Connect bietet hier keine Möglichkeit, sie zu löschen, sie werden beim nächsten Senden überschrieben. Dein lokaler Verlauf bleibt erhalten und wird beim nächsten Lauf erneut gesendet.",
+  "treadmillRemoveFromHealthConnectAction": "Löschen",
+  "treadmillRemoveFromHealthConnectDone": "Entfernt — {count} Workout(s) werden erneut gesendet",
+  "@treadmillRemoveFromHealthConnectDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "treadmillRemoveFromHealthConnectFailed": "Das Entfernen der Health-Connect-Daten ist fehlgeschlagen",
   "treadmillHistoryDashboard": "Dashboard",
   "treadmillHistoryWorkouts": "Workouts",
   "treadmillHistoryEmpty": "Noch keine Workouts gespeichert",

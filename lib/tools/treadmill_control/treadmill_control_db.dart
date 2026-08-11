@@ -170,6 +170,27 @@ class TreadmillControlDb {
     );
   }
 
+  /// Marks every workout unpublished, so the next run writes them to Health
+  /// Connect again. Returns how many rows were reset.
+  Future<int> resetHealthConnectPublished() async {
+    final db = await _getDb();
+    return db.update(tableName, {
+      'health_connect_published_at': 0,
+    }, where: 'health_connect_published_at > 0');
+  }
+
+  Future<int?> earliestSessionStart() async {
+    final db = await _getDb();
+    final rows = await db.query(
+      tableName,
+      columns: ['start_time'],
+      where: 'deleted = 0',
+      orderBy: 'start_time ASC',
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first['start_time'] as int?;
+  }
+
   /// Get all sync records (including deleted ones).
   Future<List<Map<String, dynamic>>> getSyncRecords() async {
     final db = await _getDb();
@@ -185,7 +206,16 @@ class TreadmillControlDb {
     }
 
     final existing = await getSessionByUid(session.uid);
-    final values = session.copyWith(synced: true).toMap()..remove('id');
+    // The publish marker is device-local: the backend record does not carry it,
+    // so taking the pulled value would republish everything after every pull.
+    final values =
+        session
+            .copyWith(
+              synced: true,
+              healthConnectPublishedAt: existing?.healthConnectPublishedAt ?? 0,
+            )
+            .toMap()
+          ..remove('id');
     if (existing != null) {
       await db.update(
         tableName,
