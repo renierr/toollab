@@ -102,6 +102,15 @@ class HealthDashboardState extends ChangeNotifier {
     }
   }
 
+  /// Re-reads the stored data without touching Health Connect. Cheap enough to
+  /// run whenever the dashboard comes back into view, since anything the
+  /// settings screen did wrote to the store, not to this object.
+  Future<void> reloadStoredData() async {
+    if (isCollecting) return;
+    await _reloadRecords();
+    notifyListeners();
+  }
+
   Future<void> _reloadRecords() async {
     final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
     if (kDebugMode) debugLog('[HealthDashboard] Loading dashboard records');
@@ -400,6 +409,9 @@ class HealthDashboardState extends ChangeNotifier {
       // then only has to fetch changes.
       await _diff.sync();
       await loadSelection();
+      // The dashboard reads from memory, so without this it keeps showing what
+      // was loaded before the import until the page itself is rebuilt.
+      await _reloadRecords();
     } catch (e) {
       error = e.toString();
       errorLog('[HealthDashboard] Store import failed: $e');
@@ -435,6 +447,7 @@ class HealthDashboardState extends ChangeNotifier {
         );
       }
       await loadSelection();
+      if (result.upserted > 0 || result.deleted > 0) await _reloadRecords();
       return result;
     } catch (e) {
       error = e.toString();

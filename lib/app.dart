@@ -17,6 +17,7 @@ import 'package:tool_lab/pages/about_page.dart';
 import 'package:tool_lab/pages/appearance_settings_page.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
+import 'package:tool_lab/core/app_route_observer.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
 import 'package:tool_lab/tools/gps_location_store/gps_info_page.dart';
@@ -27,6 +28,7 @@ final _navigatorKey = GlobalKey<NavigatorState>();
 
 final _router = GoRouter(
   navigatorKey: _navigatorKey,
+  observers: [appRouteObserver],
   initialLocation: '/',
   routes: [
     GoRoute(
