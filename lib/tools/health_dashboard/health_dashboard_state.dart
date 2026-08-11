@@ -3,8 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
-import 'package:tool_lab/services/foreground_runtime_service.dart';
-import 'package:tool_lab/services/power_wake_lock_service.dart';
+import 'package:tool_lab/services/background_work_lease.dart';
 
 import 'collectors/health_connect_diff.dart';
 import 'collectors/health_connect_discovery.dart';
@@ -41,44 +40,28 @@ class HealthDashboardState extends ChangeNotifier {
   int backupExportProcessedCount = 0;
   int backupExportTotalCount = 0;
 
-  ForegroundRuntimeLease? _importNotification;
+  BackgroundWorkLease? _importWork;
 
   void _onCollectionProgress(String status, int count) {
     collectionStatus = status;
     collectedRecordCount = count;
-    _importNotification?.update(
-      title: _importNotificationTitle,
-      text: count > 0 ? '$status ($count)' : status,
-    );
+    _importWork?.update(count > 0 ? '$status ($count)' : status);
     notifyListeners();
   }
 
-  static const _importNotificationTitle = 'Health Dashboard import';
-
-  /// A partial (CPU) wake lock plus a foreground notification, so a long import
-  /// keeps running with the screen off instead of holding the display awake.
-  Future<({WakeLockLease lock, ForegroundRuntimeLease? notification})>
-  _beginBackgroundWork(String text) async {
-    final lock = await PowerWakeLockService.acquirePartial();
-    ForegroundRuntimeLease? notification;
-    try {
-      notification = await ForegroundRuntimeService.acquire(
-        title: _importNotificationTitle,
-        text: text,
-      );
-    } catch (e) {
-      errorLog('[HealthDashboard] Foreground notification unavailable: $e');
-    }
-    _importNotification = notification;
-    return (lock: lock, notification: notification);
+  Future<BackgroundWorkLease> _beginBackgroundWork(String text) async {
+    final work = await BackgroundWorkLease.acquire(
+      title: 'Health Dashboard import',
+      text: text,
+      logPrefix: 'HealthDashboard',
+    );
+    _importWork = work;
+    return work;
   }
 
-  Future<void> _endBackgroundWork(
-    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work,
-  ) async {
-    _importNotification = null;
-    await work?.notification?.release();
-    await work?.lock.release();
+  Future<void> _endBackgroundWork(BackgroundWorkLease? work) async {
+    _importWork = null;
+    await work?.release();
   }
 
   HealthDashboardState() {
@@ -259,7 +242,7 @@ class HealthDashboardState extends ChangeNotifier {
     collectionStatus = 'Scanning Health Connect...';
     collectedRecordCount = 0;
     notifyListeners();
-    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
+    BackgroundWorkLease? work;
     try {
       work = await _beginBackgroundWork('Scanning...');
       await _importer.requestAccess();
@@ -285,7 +268,7 @@ class HealthDashboardState extends ChangeNotifier {
     collectionStatus = 'Starting import...';
     collectedRecordCount = 0;
     notifyListeners();
-    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
+    BackgroundWorkLease? work;
     try {
       work = await _beginBackgroundWork('Starting...');
       await _importer.requestAccess();
@@ -341,7 +324,7 @@ class HealthDashboardState extends ChangeNotifier {
     backupExportProcessedCount = 0;
     backupExportTotalCount = 0;
     notifyListeners();
-    ({WakeLockLease lock, ForegroundRuntimeLease? notification})? work;
+    BackgroundWorkLease? work;
     try {
       work = await _beginBackgroundWork('Starting...');
       return await HealthStore.instance.exportBackup(

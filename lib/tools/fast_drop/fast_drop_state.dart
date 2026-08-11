@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/services/background_work_lease.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'fast_drop_model.dart';
@@ -44,6 +46,20 @@ class FastDropState extends ChangeNotifier {
         )) ??
         '';
     return _syncServerUrl;
+  }
+
+  static const _notificationTitle = 'Fast Drop transfer';
+
+  static String _progressText(
+    String verb,
+    String name,
+    int current,
+    int total,
+  ) {
+    final size = total > 0
+        ? '${FormatHelper.fileSize(current)} / ${FormatHelper.fileSize(total)}'
+        : FormatHelper.fileSize(current);
+    return '$verb $name — $size';
   }
 
   Future<bool> _isSyncEnabled() async {
@@ -134,6 +150,11 @@ class FastDropState extends ChangeNotifier {
     _transferProgressRevision.value++;
     notifyListeners();
 
+    final work = await BackgroundWorkLease.acquire(
+      title: _notificationTitle,
+      text: _progressText('Uploading', filename, 0, 0),
+      logPrefix: 'FastDropState',
+    );
     try {
       await FastDropService.uploadDrop(
         baseUrl: _syncServerUrl,
@@ -145,6 +166,7 @@ class FastDropState extends ChangeNotifier {
         onProgress: _reportTransferProgress
             ? (sent, total) {
                 _fastDropUploadProgress = (sent, total);
+                work.update(_progressText('Uploading', filename, sent, total));
                 if (_shouldNotifyTransferProgress(
                   current: sent,
                   total: total,
@@ -158,6 +180,7 @@ class FastDropState extends ChangeNotifier {
       );
       await loadFastDrops();
     } finally {
+      await work.release();
       _cancelUploadRequested = false;
       _isUploadingFastDrop = false;
       _fastDropUploadProgress = null;
@@ -233,12 +256,12 @@ class FastDropState extends ChangeNotifier {
     }
 
     int? size = knownSize;
-    if (size == null) {
-      for (final item in _fastDrops) {
-        if (item.id == id) {
-          size = item.size;
-          break;
-        }
+    var name = outputPath.split(RegExp(r'[/\\]')).last;
+    for (final item in _fastDrops) {
+      if (item.id == id) {
+        size ??= item.size;
+        name = item.filename;
+        break;
       }
     }
 
@@ -250,6 +273,11 @@ class FastDropState extends ChangeNotifier {
     _transferProgressRevision.value++;
     notifyListeners();
 
+    final work = await BackgroundWorkLease.acquire(
+      title: _notificationTitle,
+      text: _progressText('Downloading', name, 0, size ?? 0),
+      logPrefix: 'FastDropState',
+    );
     try {
       return await FastDropService.downloadDropToFile(
         baseUrl: _syncServerUrl,
@@ -259,6 +287,14 @@ class FastDropState extends ChangeNotifier {
             ? (received, total) {
                 final effectiveTotal = total > 0 ? total : (size ?? -1);
                 _fastDropDownloadProgress = (received, effectiveTotal);
+                work.update(
+                  _progressText(
+                    'Downloading',
+                    name,
+                    received,
+                    effectiveTotal > 0 ? effectiveTotal : 0,
+                  ),
+                );
                 if (_shouldNotifyTransferProgress(
                   current: received,
                   total: effectiveTotal,
@@ -271,6 +307,7 @@ class FastDropState extends ChangeNotifier {
         isCancelled: () => _cancelDownloadRequested,
       );
     } finally {
+      await work.release();
       _cancelDownloadRequested = false;
       _isDownloadingFastDrop = false;
       _fastDropDownloadProgress = null;

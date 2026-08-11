@@ -3,6 +3,8 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
+import 'package:tool_lab/services/background_work_lease.dart';
 
 import 'p2p/p2p_discovery_service.dart';
 import 'p2p/p2p_lan_service.dart';
@@ -35,6 +37,29 @@ class FastDropP2pState extends ChangeNotifier {
   String? _error;
   bool _cancelRequested = false;
   int _lastProgressNotifyMs = 0;
+
+  static const _notificationTitle = 'Fast Drop nearby transfer';
+  BackgroundWorkLease? _work;
+  String _workVerb = 'Transferring';
+  String _workFileName = '';
+
+  /// Keeps the CPU awake and shows a progress notification so a transfer
+  /// survives the screen turning off.
+  Future<void> _beginBackgroundWork(String verb, String fileName) async {
+    _workVerb = verb;
+    _workFileName = fileName;
+    _work = await BackgroundWorkLease.acquire(
+      title: _notificationTitle,
+      text: '$verb $fileName',
+      logPrefix: 'FastDropP2p',
+    );
+  }
+
+  Future<void> _endBackgroundWork() async {
+    final work = _work;
+    _work = null;
+    await work?.release();
+  }
 
   /// Pending accept/reject prompt while advertising as a receiver.
   (P2pPeer peer, P2pHandshakeRequest request)? _incomingRequest;
@@ -150,6 +175,7 @@ class FastDropP2pState extends ChangeNotifier {
     _cancelRequested = false;
     notifyListeners();
 
+    await _beginBackgroundWork('Receiving', request.fileName);
     try {
       _status = P2pStatus.transferring;
       _activeTransport = null;
@@ -183,6 +209,7 @@ class FastDropP2pState extends ChangeNotifier {
       _status = _cancelRequested ? P2pStatus.cancelled : P2pStatus.failed;
       _error = e.toString().replaceAll('Exception: ', '');
     } finally {
+      await _endBackgroundWork();
       _progress = null;
       _activeTransport = null;
       notifyListeners();
@@ -302,6 +329,7 @@ class FastDropP2pState extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
+    await _beginBackgroundWork('Sending', name);
     try {
       await _discovery.stopScan();
       await _lan.stopScanning();
@@ -365,6 +393,7 @@ class FastDropP2pState extends ChangeNotifier {
       _error = e.toString().replaceAll('Exception: ', '');
       _role = P2pRole.none;
     } finally {
+      await _endBackgroundWork();
       _progress = null;
       notifyListeners();
       if (peer.transport == P2pPeerTransport.ble) {
@@ -381,6 +410,10 @@ class FastDropP2pState extends ChangeNotifier {
   void _onProgress(int current, int total, P2pTransportKind transport) {
     _activeTransport = transport;
     _progress = (current, total);
+    _work?.update(
+      '$_workVerb $_workFileName — ${FormatHelper.fileSize(current)} / '
+      '${FormatHelper.fileSize(total)}',
+    );
     final now = DateTime.now().millisecondsSinceEpoch;
     if (current >= total || now - _lastProgressNotifyMs >= 120) {
       _lastProgressNotifyMs = now;
@@ -441,6 +474,7 @@ class FastDropP2pState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _endBackgroundWork();
     _peersSub?.cancel();
     _incomingSub?.cancel();
     _advertisingErrorSub?.cancel();

@@ -6,6 +6,27 @@ import 'package:rhttp/rhttp.dart' as rhttp;
 import 'package:tool_lab/services/app_http_client.dart';
 import 'fast_drop_model.dart';
 
+/// A rejected transfer is often answered by a reverse proxy in front of the
+/// sync server, whose body is an HTML error page rather than the backend's JSON
+/// — so the status code has to carry the meaning.
+String _transferErrorMessage(String label, int statusCode, String body) {
+  if (statusCode == 413) {
+    return '$label rejected: the file is larger than the sync server (or a '
+        'proxy in front of it) accepts (HTTP 413).';
+  }
+  try {
+    final data = jsonDecode(body);
+    if (data is Map && data['error'] != null) return data['error'].toString();
+  } catch (_) {
+    // Not the backend's JSON envelope — fall through to the generic message.
+  }
+  if (statusCode == 502 || statusCode == 504) {
+    return '$label failed: the sync server did not finish the request in time '
+        '(HTTP $statusCode). Large files may exceed a proxy timeout.';
+  }
+  return 'Failed to ${label.toLowerCase()} drop: $statusCode';
+}
+
 Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
   final messages = config['messages']! as SendPort;
   final control = ReceivePort();
@@ -90,9 +111,8 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
           .timeout(responseTimeout);
       watchdogArmed = false;
       if (response.statusCode != 200) {
-        final data = jsonDecode(response.body);
         throw Exception(
-          data['error'] ?? 'Failed to upload drop: ${response.statusCode}',
+          _transferErrorMessage('Upload', response.statusCode, response.body),
         );
       }
     } else {
@@ -109,7 +129,10 @@ Future<void> _runFastDropTransferIsolate(Map<String, Object> config) async {
             )
             .timeout(responseTimeout);
         if (response.statusCode != 200) {
-          throw Exception('Failed to download drop: ${response.statusCode}');
+          // The body is a byte stream here, so only the status carries meaning.
+          throw Exception(
+            _transferErrorMessage('Download', response.statusCode, ''),
+          );
         }
         armWatchdog();
         await sink.addStream(response.body);
