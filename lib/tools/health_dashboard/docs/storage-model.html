@@ -1080,8 +1080,8 @@
               </tr>
               <tr>
                 <td class="c">sleep</td>
-                <td class="d">SleepSession with stages</td>
-                <td class="d">One night per day, ~6¼–8¼ h</td>
+                <td class="d">SleepSession with stages · OxygenSaturation · RespiratoryRate · HeartRateVariabilityRMSSD</td>
+                <td class="d">One night per day, ~6¼–8¼ h; the three curves every 30 min <b>inside</b> the session</td>
                 <td class="d">Light · deep · REM in ~90 min cycles, brief wakes after the first</td>
               </tr>
               <tr>
@@ -1111,6 +1111,15 @@
             </tbody>
           </table>
         </div>
+        <div class="note">
+          <b>The night's curves live with the sleep group, not with vitals.</b> The sleep screen
+          lays oxygen, breathing and HRV over the session, and a morning spot reading falls outside
+          it — so generating every vital in the list still left those overlays empty. They are
+          sampled inside the night and owned by the group that owns the night, which makes picking
+          <code>sleep</code> alone yield a complete one. <code>vitals</code> keeps its own daytime
+          readings of the same metrics; the two coexist, as they would on a real device.
+        </div>
+
         <p class="measure">
           A preset is nothing but a set of groups, so a preset and a hand-picked selection are the
           same thing to the generator: <b>Everyday</b> is activity + heart + sleep + body,

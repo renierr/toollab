@@ -445,11 +445,11 @@ a preset and a hand-picked selection are the same thing to the generator.
 | Group | Records | Cadence |
 | --- | --- | --- |
 | `activity` | Steps, Distance, ActiveEnergyBurned, TotalEnergyBurned, FloorsClimbed, ElevationGained | 15 hourly step buckets, thirds of a day for distance and energy, daily for the rest |
-| `heart` | HeartRateSeries, RestingHeartRate, HeartRateVariabilityRMSSD | One series a day sampled every 20 min, the other two once |
-| `sleep` | SleepSession with stages | One night per day, ~6¼–8¼ h |
+| `heart` | HeartRateSeries, RestingHeartRate, HeartRateVariabilityRMSSD | Day-long series every 20 min, resting and HRV once in the morning |
+| `sleep` | SleepSession with stages, OxygenSaturation, RespiratoryRate, HeartRateVariabilityRMSSD | One night per day, ~6¼–8¼ h; the three curves sampled every 30 min **inside** the session |
 | `workouts` | ExerciseSession, SpeedSeries, Distance, ActiveEnergyBurned, Steps | Three a week, picked by the day itself |
 | `body` | Weight, BodyFatPercentage, LeanBodyMass, BoneMass, BodyWaterMass, Height | First three every other day, rest weekly |
-| `vitals` | OxygenSaturation, RespiratoryRate, BloodPressure, BodyTemperature, BloodGlucose | First three daily, temperature weekly, glucose 3× every third day |
+| `vitals` | OxygenSaturation, RespiratoryRate, BloodPressure, BodyTemperature, BloodGlucose | First three daily as morning readings, temperature weekly, glucose 3× every third day |
 | `hydration` | Hydration | Four a day |
 
 Presets: **Everyday** = activity + heart + sleep + body, **Athlete** adds
@@ -475,6 +475,19 @@ Two properties matter more than the shapes:
   twice replaces its records instead of adding a second copy, and the per-day
   `Random(epochDay)` seed means a 7 day set and a year set agree on the days they
   share. Feed, clear, feed again converges on the same history.
+
+**Oxygen saturation, respiratory rate and HRV belong to the `sleep` group, not
+to `vitals`.** The sleep screen lays them over the session as curves, and a
+morning spot reading falls outside it - which left those overlays empty however
+many vitals were generated. Sampling them every 30 minutes inside the night, and
+keeping them with the group that owns the night, means picking `sleep` alone
+still yields a complete one. `vitals` keeps its own daytime readings of the same
+two metrics; they coexist, as they would on a real device.
+
+Each group draws from its own `Random(epochDay * 31 + group.index)`, so a
+group's shape does not shift depending on what was selected alongside it. The
+night window is the exception: `_night(day, epochDay)` is seeded from the day
+alone, so the session and its curves agree on the same window.
 
 The values are shapes rather than noise: steps follow a waking-hour curve, heart
 rate drops overnight and rises in the evening, sleep runs in ~90 minute cycles,

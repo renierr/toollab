@@ -12,8 +12,9 @@ class HealthSleepTimelineSection extends StatefulWidget {
   final int startTime;
   final int endTime;
 
-  /// Everything available for this session; the ones with too few samples are
-  /// shown as unavailable rather than silently dropped.
+  /// Everything that could be laid over this night. An overlay with no samples
+  /// during the session stays in the legend, greyed out - otherwise a curve that
+  /// exists everywhere else looks like it was never implemented.
   final List<HealthSleepOverlay> overlays;
 
   const HealthSleepTimelineSection({
@@ -45,48 +46,45 @@ class _HealthSleepTimelineSectionState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final drawable = widget.overlays.where((o) => o.isDrawable).toList();
     final selection = _selection;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
-          spacing: 8,
+          spacing: 12,
           runSpacing: 6,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            _StageSwatch(
+            _LegendEntry(
               color: Colors.amber,
               label: l10n.healthDashboardSleepAwake,
             ),
-            _StageSwatch(
+            _LegendEntry(
               color: Colors.purple,
               label: l10n.healthDashboardSleepRem,
             ),
-            _StageSwatch(
+            _LegendEntry(
               color: Colors.lightBlue,
               label: l10n.healthDashboardSleepLight,
             ),
-            _StageSwatch(
+            _LegendEntry(
               color: Colors.indigo,
               label: l10n.healthDashboardSleepDeep,
             ),
-            for (final overlay in drawable)
-              FilterChip(
-                visualDensity: VisualDensity.compact,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                avatar: CircleAvatar(backgroundColor: overlay.color, radius: 5),
-                label: Text(overlay.label),
+            for (final overlay in widget.overlays)
+              _LegendEntry(
+                color: overlay.color,
+                label: overlay.label,
                 selected: selection.contains(overlay.key),
-                onSelected: (on) => setState(() {
-                  if (on) {
-                    selection.add(overlay.key);
-                  } else {
-                    selection.remove(overlay.key);
-                  }
-                }),
+                unavailable: !overlay.isDrawable,
+                onTap: overlay.isDrawable
+                    ? () => setState(() {
+                        if (!selection.remove(overlay.key)) {
+                          selection.add(overlay.key);
+                        }
+                      })
+                    : null,
               ),
-            if (drawable.isEmpty) Text(l10n.healthDashboardNoSleepHeartRate),
           ],
         ),
         const SizedBox(height: 8),
@@ -98,8 +96,9 @@ class _HealthSleepTimelineSectionState
               startTime: widget.startTime,
               endTime: widget.endTime,
               overlays: [
-                for (final overlay in drawable)
-                  if (selection.contains(overlay.key)) overlay,
+                for (final overlay in widget.overlays)
+                  if (overlay.isDrawable && selection.contains(overlay.key))
+                    overlay,
               ],
             ),
           ),
@@ -109,26 +108,59 @@ class _HealthSleepTimelineSectionState
   }
 }
 
-class _StageSwatch extends StatelessWidget {
+/// One legend entry. Stage colours are plain swatches; a toggleable overlay is
+/// the same swatch filled when on and outlined when off, so the two read as one
+/// legend rather than a legend with buttons stuck to it.
+class _LegendEntry extends StatelessWidget {
   final Color color;
   final String label;
+  final bool selected;
+  final bool unavailable;
+  final VoidCallback? onTap;
 
-  const _StageSwatch({required this.color, required this.label});
+  const _LegendEntry({
+    required this.color,
+    required this.label,
+    this.selected = true,
+    this.unavailable = false,
+    this.onTap,
+  });
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(2),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dim = unavailable || !selected;
+    final swatch = unavailable ? theme.hintColor : color;
+    final entry = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: dim ? Colors.transparent : swatch,
+            border: Border.all(color: swatch, width: 1.5),
+            borderRadius: BorderRadius.circular(2),
+          ),
         ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: dim ? theme.hintColor : null,
+            decoration: unavailable ? TextDecoration.lineThrough : null,
+          ),
+        ),
+      ],
+    );
+    if (onTap == null) return entry;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        child: entry,
       ),
-      const SizedBox(width: 4),
-      Text(label, style: Theme.of(context).textTheme.bodySmall),
-    ],
-  );
+    );
+  }
 }

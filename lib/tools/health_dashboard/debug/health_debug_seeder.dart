@@ -93,7 +93,14 @@ class HealthDebugSeeder {
       hc.HealthDataType.restingHeartRate,
       hc.HealthDataType.heartRateVariabilityRMSSD,
     ],
-    HealthDebugGroup.sleep: [hc.HealthDataType.sleepSession],
+    // The sleep group writes the curves a tracker records through the night, so
+    // picking it alone still yields a complete night on the sleep screen.
+    HealthDebugGroup.sleep: [
+      hc.HealthDataType.sleepSession,
+      hc.HealthDataType.oxygenSaturation,
+      hc.HealthDataType.respiratoryRate,
+      hc.HealthDataType.heartRateVariabilityRMSSD,
+    ],
     HealthDebugGroup.workouts: [
       hc.HealthDataType.exerciseSession,
       hc.HealthDataType.speedSeries,
@@ -369,24 +376,60 @@ class HealthDebugSeeder {
     DateTime now,
   ) {
     final epochDay = day.millisecondsSinceEpoch ~/ Duration.millisecondsPerDay;
-    // Seeded per day rather than per run, so a 7 day set and a 3 month set agree
-    // on the days they share and a regenerate reproduces the same shape.
-    final rng = Random(epochDay);
+    // Seeded per day *and per group*, so a 7 day set and a 3 month set agree on
+    // the days they share and a group's shape does not shift depending on which
+    // other groups were selected alongside it.
+    Random rng(HealthDebugGroup group) => Random(epochDay * 31 + group.index);
     return [
       if (groups.contains(HealthDebugGroup.activity))
-        ..._activity(day, epochDay, rng),
+        ..._activity(day, epochDay, rng(HealthDebugGroup.activity)),
       if (groups.contains(HealthDebugGroup.heart))
-        ..._heart(day, epochDay, rng, now),
+        ..._heart(day, epochDay, rng(HealthDebugGroup.heart), now),
       if (groups.contains(HealthDebugGroup.sleep))
-        ..._sleep(day, epochDay, rng),
+        ..._sleep(day, epochDay, rng(HealthDebugGroup.sleep)),
       if (groups.contains(HealthDebugGroup.workouts))
-        ..._workout(day, epochDay, rng),
-      if (groups.contains(HealthDebugGroup.body)) ..._body(day, epochDay, rng),
+        ..._workout(day, epochDay, rng(HealthDebugGroup.workouts)),
+      if (groups.contains(HealthDebugGroup.body))
+        ..._body(day, epochDay, rng(HealthDebugGroup.body)),
       if (groups.contains(HealthDebugGroup.vitals))
-        ..._vitals(day, epochDay, rng),
+        ..._vitals(day, epochDay, rng(HealthDebugGroup.vitals)),
       if (groups.contains(HealthDebugGroup.hydration))
-        ..._hydration(day, epochDay, rng),
+        ..._hydration(day, epochDay, rng(HealthDebugGroup.hydration)),
     ];
+  }
+
+  /// The night that starts on [day].
+  ///
+  /// Seeded from the day alone rather than from a group's stream, so the sleep
+  /// session and the overnight vitals cover the same window even when only one
+  /// of the two groups is generated - which is what puts those curves inside the
+  /// session the sleep screen lays them over.
+  static ({DateTime start, DateTime end}) _night(DateTime day, int epochDay) {
+    final rng = Random(epochDay * 31 + 101);
+    final start = _at(day, 22, 45).add(Duration(minutes: rng.nextInt(60)));
+    return (
+      start: start,
+      end: start.add(Duration(minutes: 375 + rng.nextInt(120))),
+    );
+  }
+
+  /// Instants every [everyMinutes] across the night, for the curves a wearable
+  /// records while asleep rather than as a single morning reading.
+  static List<DateTime> _nightSamples(
+    DateTime day,
+    int epochDay, {
+    int everyMinutes = 30,
+  }) {
+    final night = _night(day, epochDay);
+    final times = <DateTime>[];
+    for (
+      var time = night.start;
+      time.isBefore(night.end);
+      time = time.add(Duration(minutes: everyMinutes))
+    ) {
+      times.add(time);
+    }
+    return times;
   }
 
   List<hc.HealthRecord> _activity(DateTime day, int epochDay, Random rng) {
@@ -512,8 +555,7 @@ class HealthDebugSeeder {
   /// The night that starts on [day]: bed late in the evening, up the next
   /// morning, in roughly 90 minute cycles.
   List<hc.HealthRecord> _sleep(DateTime day, int epochDay, Random rng) {
-    final start = _at(day, 22, 45).add(Duration(minutes: rng.nextInt(60)));
-    final end = start.add(Duration(minutes: 375 + rng.nextInt(120)));
+    final (start: start, end: end) = _night(day, epochDay);
     final stages = <hc.SleepStageSample>[];
     var cursor = start;
     var cycle = 0;
@@ -549,6 +591,27 @@ class HealthDebugSeeder {
         title: 'Sleep',
         metadata: _meta(epochDay, 'sleep'),
       ),
+      // Oxygen, breathing and HRV through the night. They belong here rather
+      // than with the daytime vitals: the sleep screen lays them over the
+      // session, and a morning spot reading outside it gives that chart nothing
+      // to draw - which is exactly what left those curves empty before.
+      for (final (index, time) in _nightSamples(day, epochDay).indexed) ...[
+        hc.OxygenSaturationRecord(
+          time: time,
+          saturation: hc.Percentage.fromWhole(94 + rng.nextInt(5).toDouble()),
+          metadata: _meta(epochDay, 'sleep-oxygen-$index'),
+        ),
+        hc.RespiratoryRateRecord(
+          time: time,
+          rate: hc.Frequency.perMinute(12 + rng.nextInt(5).toDouble()),
+          metadata: _meta(epochDay, 'sleep-respiratory-$index'),
+        ),
+        hc.HeartRateVariabilityRMSSDRecord(
+          time: time,
+          rmssd: hc.TimeDuration.milliseconds(42 + rng.nextInt(40).toDouble()),
+          metadata: _meta(epochDay, 'sleep-hrv-$index'),
+        ),
+      ],
     ];
   }
 

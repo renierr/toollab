@@ -313,6 +313,12 @@ class HealthSleepDetailsPage extends StatelessWidget {
         '%',
         AppTheme.accentBlue,
       ),
+      (
+        HealthMetrics.hrvRmssd,
+        l10n.healthDashboardHrv,
+        'ms',
+        AppTheme.accentPurple,
+      ),
     ];
     final result = <String, List<HealthSleepOverlay>>{};
     for (final session in sessions) {

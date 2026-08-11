@@ -152,9 +152,17 @@ class _TimelineLayout {
   const _TimelineLayout(this.overlayCount);
 
   static const _top = 22.0;
-  static const _overlayLane = 44.0;
+
+  // One overlay lane is a range label, then the curve, then clear space. The
+  // trailing gap is what keeps a curve's low point off whatever sits below it:
+  // without it the baseline landed exactly on the stage bar's top edge, which is
+  // why the line looked glued to the bar however tall the lane was.
+  static const _overlayLabel = 15.0;
+  static const _overlayCurve = 40.0;
+  static const _overlayGap = 14.0;
+  static const _overlayLane = _overlayLabel + _overlayCurve + _overlayGap;
   static const _bar = 28.0;
-  static const _barGap = 12.0;
+  static const _barGap = 14.0;
   static const _stageLane = 10.0;
   static const _stageGap = 4.0;
   static const _footer = 20.0;
@@ -165,10 +173,11 @@ class _TimelineLayout {
   double get lanesBottom => lanesTop + 4 * (_stageLane + _stageGap);
   double get height => lanesBottom + _footer;
 
-  /// The band a curve is drawn in, below its own range label.
-  double overlayBase(int index) => _top + index * _overlayLane + _overlayLane;
-  double overlayLabelTop(int index) => _top + index * _overlayLane - 4;
-  double get overlayCurveHeight => _overlayLane - 20;
+  /// Zero line of a curve - the bottom of its band, above the trailing gap.
+  double overlayBase(int index) =>
+      _top + index * _overlayLane + _overlayLabel + _overlayCurve;
+  double overlayLabelTop(int index) => _top + index * _overlayLane;
+  double get overlayCurveHeight => _overlayCurve;
   double get barHeight => _bar;
   double get stageLaneHeight => _stageLane;
   double get stageLaneStride => _stageLane + _stageGap;
