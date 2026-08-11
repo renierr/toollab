@@ -98,7 +98,7 @@ same table plus a diagram of where each gate cuts.
 
 | Entry | Does | Touches |
 | --- | --- | --- |
-| Manage Health Connect | Leaves the app for Android's Health Connect screen, to grant or revoke read permission. | nothing |
+| Manage Health Connect | Leaves the app for Health Connect's own screen, to inspect or revoke read permission. Granting does not happen here. | nothing |
 | Data types | Per-type pull switch. A type that is off is never read at all. | `health_type.enabled` |
 | Apps | Global per-writer switch plus the priority order. Off means neither pulled, read nor aggregated; stored rows stay. | `health_app.enabled`, `prio` |
 | Scan available data | Bounded probe that registers which types hold data and which apps wrote it. Populates the two screens above; changes no existing choice. | `health_type`, `health_type_app` |
@@ -131,6 +131,24 @@ A switched-off **data type** keeps its rows. Reads filter by metric, not by
 Health Connect type, so that data is still on the dashboard and is not unused.
 Rollups are rebuilt afterwards, which also drops rollup rows for metrics left
 empty, and then the file is rewritten with `VACUUM`.
+
+### The per-app Health Connect screen cannot be opened
+
+`android.health.connect.action.MANAGE_HEALTH_PERMISSIONS` with `EXTRA_PACKAGE_NAME`
+resolves - to `com.google.android.healthconnect.controller`'s `SettingsActivity` -
+but starting it throws `SecurityException: ... requires
+android.permission.GRANT_RUNTIME_PERMISSIONS`. It is the deep link the system's
+own settings use, and no ordinary app can hold a signature permission. Measured
+on an Android 14 emulator, none of `androidx.health.ACTION_HEALTH_CONNECT_SETTINGS`,
+`android.health.connect.action.HEALTH_CONNECT_SETTINGS` or
+`android.settings.HEALTH_CONNECT_SETTINGS` resolves either, so the cascade ends at
+Health Connect's launcher entry and then at app info, which the UI now states
+rather than silently landing the user somewhere unexpected.
+
+**Granting is a separate mechanism.** Read access comes from the permission
+request sheet raised by `HealthConnectImporter.requestAccess()`. Every entry that
+reads Health Connect calls it first, and offers the Health Connect screen when
+nothing is granted instead of reporting a successful import of zero records.
 
 ### Why a switched-off app could still land in a full import
 

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -7,6 +5,7 @@ import 'package:tool_lab/theme/theme.dart';
 import '../health_record.dart';
 import '../store/health_metric_catalog.dart';
 import '../store/health_queries.dart';
+import 'health_record_data_section.dart';
 import 'health_record_header_card.dart';
 import 'health_record_stats_card.dart';
 import 'health_sleep_details_page.dart';
@@ -103,26 +102,7 @@ class HealthRecordDetailsPage extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 16),
-          Card(
-            child: ExpansionTile(
-              title: Text(l10n.healthDashboardData),
-              subtitle: Text(record.type),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: SelectableText(
-                      const JsonEncoder.withIndent('  ').convert(record.value),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          HealthRecordDataSection(record: record),
         ],
       ),
     );

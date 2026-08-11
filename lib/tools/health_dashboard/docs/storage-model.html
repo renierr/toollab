@@ -776,7 +776,8 @@
             <tbody>
               <tr>
                 <td class="d"><b>Manage Health Connect</b></td>
-                <td class="d">Leaves the app for Android's Health Connect screen, to grant or revoke read permissions</td>
+                <td class="d">Leaves the app for Health Connect's own screen, to inspect or revoke read
+                  permissions. <b>Granting does not happen here</b> — see the note below</td>
                 <td class="c">nothing</td>
                 <td class="d">—</td>
               </tr>
@@ -849,6 +850,34 @@
           for the disk. Afterwards, re-admitting the writer needs a fresh import. A switched-off
           <em>data type</em> keeps its rows either way: reads filter by metric, not by Health Connect
           type, so that data is still on the dashboard and is not "unused".
+        </div>
+
+        <h3>Why the per-app Health Connect screen cannot be opened</h3>
+        <p class="measure">
+          <code>android.health.connect.action.MANAGE_HEALTH_PERMISSIONS</code> with
+          <code>EXTRA_PACKAGE_NAME</code> is the obvious deep link, and it does resolve — to
+          <code>com.google.android.healthconnect.controller</code>'s <code>SettingsActivity</code>.
+          Starting it throws, because that activity is guarded by the signature permission
+          <code>GRANT_RUNTIME_PERMISSIONS</code>:
+        </p>
+        <pre class="ddl">SecurityException: Permission Denial: starting Intent
+  { act=android.health.connect.action.MANAGE_HEALTH_PERMISSIONS ...
+    cmp=com.google.android.healthconnect.controller/...SettingsActivity }
+  requires android.permission.GRANT_RUNTIME_PERMISSIONS</pre>
+        <p class="measure">
+          It is the link the system's own settings use, and no ordinary app can hold that
+          permission. On the same device none of <code>androidx.health.ACTION_HEALTH_CONNECT_SETTINGS</code>,
+          <code>android.health.connect.action.HEALTH_CONNECT_SETTINGS</code> or
+          <code>android.settings.HEALTH_CONNECT_SETTINGS</code> resolves at all, so the cascade ends
+          at Health Connect's launcher entry, and then at app info — which the UI now says out loud
+          rather than leaving the user on an unexpected screen.
+        </p>
+        <div class="note">
+          <b>Granting is a different mechanism.</b> Read access is granted through the permission
+          request sheet, which the plugin raises from
+          <code>HealthConnectImporter.requestAccess()</code>. Every entry that reads Health Connect
+          calls it first and, when nothing comes back granted, offers this screen instead of
+          reporting a successful import of zero records.
         </div>
 
         <h3>Why a switched-off app could still be imported</h3>

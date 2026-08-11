@@ -74,6 +74,11 @@
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
+        <!-- Android 14+ keeps Health Connect in the platform controller instead of the
+             APK above. Declared so getLaunchIntentForPackage can see it: the per-app
+             MANAGE_HEALTH_PERMISSIONS deep link is signature-protected, so its own
+             launcher entry is the only screen an app can open. -->
+        <package android:name="com.google.android.healthconnect.controller" />
         <intent>
             <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
         </intent>

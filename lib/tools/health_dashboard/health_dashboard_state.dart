@@ -24,6 +24,11 @@ class HealthDashboardState extends ChangeNotifier {
   bool isImportingBackup = false;
   bool isExportingBackup = false;
   bool autoHealthConnectSync = false;
+
+  /// True when the last Health Connect action stopped because nothing is
+  /// granted. The UI offers the Health Connect screen rather than reporting a
+  /// successful import of zero records.
+  bool permissionMissing = false;
   int trendDayOffset = 0;
   String? error;
   double allTimeDistanceKm = 0;
@@ -321,13 +326,17 @@ class HealthDashboardState extends ChangeNotifier {
     if (isCollecting) return;
     isCollecting = true;
     error = null;
+    permissionMissing = false;
     collectionStatus = 'Scanning Health Connect...';
     collectedRecordCount = 0;
     notifyListeners();
     BackgroundWorkLease? work;
     try {
       work = await _beginBackgroundWork('Scanning...');
-      await _importer.requestAccess();
+      if (!await _importer.requestAccess()) {
+        permissionMissing = true;
+        return;
+      }
       await _discovery.run(onProgress: _onCollectionProgress);
       await loadSelection();
     } catch (e) {
@@ -347,13 +356,17 @@ class HealthDashboardState extends ChangeNotifier {
     if (isCollecting) return;
     isCollecting = true;
     error = null;
+    permissionMissing = false;
     collectionStatus = 'Starting import...';
     collectedRecordCount = 0;
     notifyListeners();
     BackgroundWorkLease? work;
     try {
       work = await _beginBackgroundWork('Starting...');
-      await _importer.requestAccess();
+      if (!await _importer.requestAccess()) {
+        permissionMissing = true;
+        return;
+      }
       if (restart) await HealthStore.instance.clearImportedData();
       await _importer.import(
         start: DateTime.utc(1970),
@@ -380,8 +393,13 @@ class HealthDashboardState extends ChangeNotifier {
     if (isCollecting) return const HealthDiffResult();
     isCollecting = true;
     error = null;
+    permissionMissing = false;
     notifyListeners();
     try {
+      if (!await _importer.requestAccess()) {
+        permissionMissing = true;
+        return const HealthDiffResult();
+      }
       final result = await _diff.sync();
       if (result.needsFullImport) {
         errorLog(

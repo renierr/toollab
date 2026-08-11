@@ -12808,6 +12808,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cleaning up the health database failed'**
   String get healthDashboardPruneUnusedFailed;
+
+  /// No description provided for @healthDashboardManageFellBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect has no settings screen on this device, so app info opened instead.'**
+  String get healthDashboardManageFellBack;
+
+  /// No description provided for @healthDashboardPermissionNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect access needed'**
+  String get healthDashboardPermissionNeeded;
+
+  /// No description provided for @healthDashboardPermissionNeededBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was granted, so there is nothing to read. Grant read access in Health Connect, then start the import again.'**
+  String get healthDashboardPermissionNeededBody;
+
+  /// No description provided for @healthDashboardOpenHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Health Connect'**
+  String get healthDashboardOpenHealthConnect;
+
+  /// No description provided for @healthDashboardMetaApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get healthDashboardMetaApp;
+
+  /// No description provided for @healthDashboardMetaPackage.
+  ///
+  /// In en, this message translates to:
+  /// **'Package'**
+  String get healthDashboardMetaPackage;
+
+  /// No description provided for @healthDashboardMetaOurType.
+  ///
+  /// In en, this message translates to:
+  /// **'Our type'**
+  String get healthDashboardMetaOurType;
+
+  /// No description provided for @healthDashboardMetaMetricKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric key'**
+  String get healthDashboardMetaMetricKey;
+
+  /// No description provided for @healthDashboardMetaRecordType.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect type'**
+  String get healthDashboardMetaRecordType;
+
+  /// No description provided for @healthDashboardMetaActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get healthDashboardMetaActivity;
+
+  /// No description provided for @healthDashboardMetaUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored unit'**
+  String get healthDashboardMetaUnit;
+
+  /// No description provided for @healthDashboardMetaAggregation.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily aggregation'**
+  String get healthDashboardMetaAggregation;
+
+  /// No description provided for @healthDashboardMetaShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage shape'**
+  String get healthDashboardMetaShape;
+
+  /// No description provided for @healthDashboardMetaSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingested via'**
+  String get healthDashboardMetaSource;
+
+  /// No description provided for @healthDashboardMetaRowId.
+  ///
+  /// In en, this message translates to:
+  /// **'Row id'**
+  String get healthDashboardMetaRowId;
+
+  /// No description provided for @healthDashboardMetaOrigin.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect record id'**
+  String get healthDashboardMetaOrigin;
+
+  /// No description provided for @healthDashboardMetaClientId.
+  ///
+  /// In en, this message translates to:
+  /// **'Client record id'**
+  String get healthDashboardMetaClientId;
+
+  /// No description provided for @healthDashboardMetaDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Device'**
+  String get healthDashboardMetaDevice;
+
+  /// No description provided for @healthDashboardMetaDuplicateOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate of'**
+  String get healthDashboardMetaDuplicateOf;
+
+  /// No description provided for @healthDashboardMetaStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts'**
+  String get healthDashboardMetaStart;
+
+  /// No description provided for @healthDashboardMetaEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends'**
+  String get healthDashboardMetaEnd;
+
+  /// No description provided for @healthDashboardMetaDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Spans'**
+  String get healthDashboardMetaDuration;
+
+  /// No description provided for @healthDashboardMetaAggregateIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Counts in totals'**
+  String get healthDashboardMetaAggregateIncluded;
+
+  /// No description provided for @healthDashboardMetaSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced to backend'**
+  String get healthDashboardMetaSynced;
+
+  /// No description provided for @healthDashboardMetaDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get healthDashboardMetaDeleted;
+
+  /// No description provided for @healthDashboardMetaRawValues.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored values'**
+  String get healthDashboardMetaRawValues;
 }
 
 class _AppLocalizationsDelegate

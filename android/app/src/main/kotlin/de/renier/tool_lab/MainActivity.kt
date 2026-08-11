@@ -197,47 +197,57 @@ open class MainActivity : FlutterFragmentActivity() {
         MethodChannel(messenger, HEALTH_CONNECT_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "openSettings" -> {
-                    // Ordered best first: the per-app screen, then Health Connect's own
-                    // settings, then app info as the last resort. Landing on app info means
-                    // every Health Connect action above it failed to resolve, so each attempt
-                    // is logged - without that the cascade fails silently and there is no
-                    // evidence of which action this device does not handle.
-                    val intentsToTry = listOf(
-                        Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS").apply {
-                            putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
-                        },
-                        Intent("androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS").apply {
-                            putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
-                        },
-                        Intent("android.health.connect.action.HEALTH_CONNECT_SETTINGS"),
-                        Intent("android.settings.HEALTH_CONNECT_SETTINGS"),
-                        Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS"),
-                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = android.net.Uri.parse("package:$packageName")
-                        }
+                    // ACTION_MANAGE_HEALTH_PERMISSIONS is deliberately absent: it resolves to
+                    // the Health Connect controller but starting it needs the signature
+                    // permission GRANT_RUNTIME_PERMISSIONS, so a normal app is denied - it is
+                    // the deep link the system's own settings use. Granting happens through the
+                    // plugin's permission request instead; this entry is for inspecting and
+                    // revoking, so it aims at Health Connect's own screen and, where the
+                    // settings actions do not resolve, at its launcher entry.
+                    val settingsActions = listOf(
+                        "androidx.health.ACTION_HEALTH_CONNECT_SETTINGS",
+                        "android.health.connect.action.HEALTH_CONNECT_SETTINGS",
+                        "android.settings.HEALTH_CONNECT_SETTINGS"
                     )
+                    val healthConnectPackages = listOf(
+                        "com.google.android.healthconnect.controller",
+                        "com.google.android.apps.healthdata"
+                    )
+                    val attempts = mutableListOf<Pair<String, Intent>>()
+                    settingsActions.forEach { attempts.add(it to Intent(it)) }
+                    healthConnectPackages.forEach { pkg ->
+                        packageManager.getLaunchIntentForPackage(pkg)?.let {
+                            attempts.add("launcher:$pkg" to it)
+                        }
+                    }
+                    val appInfo = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = android.net.Uri.parse("package:$packageName")
+                    }
+                    attempts.add("fallback:appInfo" to appInfo)
 
-                    var launched = false
-                    for (intent in intentsToTry) {
-                        val action = intent.action ?: "?"
+                    var opened: String? = null
+                    for ((label, intent) in attempts) {
                         val target = intent.resolveActivity(packageManager)
                         if (target == null) {
-                            Log.w(HEALTH_CONNECT_TAG, "$action does not resolve on this device")
+                            Log.w(HEALTH_CONNECT_TAG, "$label does not resolve on this device")
                             continue
                         }
                         try {
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(intent)
-                            Log.i(HEALTH_CONNECT_TAG, "$action opened ${target.flattenToShortString()}")
-                            launched = true
+                            Log.i(HEALTH_CONNECT_TAG, "$label opened ${target.flattenToShortString()}")
+                            opened = label
                             break
                         } catch (e: Exception) {
-                            Log.w(HEALTH_CONNECT_TAG, "$action resolved to $target but failed to start", e)
+                            Log.w(HEALTH_CONNECT_TAG, "$label resolved to $target but failed to start", e)
                         }
                     }
 
-                    if (launched) {
-                        result.success(null)
+                    if (opened != null) {
+                        result.success(mapOf(
+                            "opened" to opened,
+                            "fallback" to opened.startsWith("fallback:")
+                        ))
                     } else {
                         result.error("HEALTH_CONNECT_UNAVAILABLE", "Could not open Health Connect settings on this device.", null)
                     }

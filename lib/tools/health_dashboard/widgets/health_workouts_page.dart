@@ -4,8 +4,10 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
+import '../store/health_queries.dart';
 import 'health_day_navigation.dart';
 import 'health_empty_state.dart';
+import 'health_metric_history.dart';
 import 'health_workout_tile.dart';
 
 class HealthWorkoutsPage extends StatelessWidget {
@@ -41,7 +43,7 @@ class HealthWorkoutsPage extends StatelessWidget {
                 )
               else if (workouts.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  padding: const EdgeInsets.symmetric(vertical: 24),
                   child: HealthEmptyState(
                     icon: Icons.event_busy_outlined,
                     title: l10n.healthDashboardNoWorkoutsOnDay,
@@ -57,6 +59,21 @@ class HealthWorkoutsPage extends StatelessWidget {
               else
                 for (final workout in workouts)
                   HealthWorkoutTile(workout: workout),
+              // The day above can easily be empty, so the full list is always
+              // reachable here rather than only through day navigation.
+              const SizedBox(height: 24),
+              Text(
+                l10n.healthDashboardHistory,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              HealthMetricHistory(
+                metricName: l10n.healthDashboardWorkouts,
+                type: HealthQueries.workoutType,
+                valueKey: 'distanceKm',
+                unit: 'km',
+                isNap: state.isNap,
+              ),
             ],
           );
         },

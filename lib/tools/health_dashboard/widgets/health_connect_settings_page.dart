@@ -74,7 +74,7 @@ class HealthConnectSettingsPage extends StatelessWidget {
             subtitle: Text(l10n.healthDashboardScanSourcesSubtitle),
             onTap: () => healthState.isCollecting
                 ? HealthBusyDialog.show(context)
-                : healthState.runDiscovery(),
+                : _runDiscovery(context),
           ),
           SettingsSectionLabel(
             title: l10n.healthDashboardSectionCollect,
@@ -146,7 +146,14 @@ class HealthConnectSettingsPage extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
     try {
-      await HealthConnectSettings.open();
+      // Health Connect's per-app screen is signature-protected, so on a device
+      // that exposes no settings action only app info opens - say so instead of
+      // leaving the user wondering why they landed there.
+      if (await HealthConnectSettings.open()) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.healthDashboardManageFellBack)),
+        );
+      }
     } catch (e, stackTrace) {
       errorLog(
         '[HealthDashboard] Failed to open Health Connect settings: $e\n$stackTrace',
@@ -182,6 +189,10 @@ class HealthConnectSettingsPage extends StatelessWidget {
     );
     await healthState.importIntoStore(restart: restart);
     if (!context.mounted) return;
+    if (healthState.permissionMissing) {
+      await _offerGrantIfMissing(context);
+      return;
+    }
     if (healthState.error != null) {
       errorLog('[HealthDashboard] Store import error: ${healthState.error}');
     }
@@ -261,12 +272,52 @@ class HealthConnectSettingsPage extends StatelessWidget {
     );
   }
 
+  Future<void> _runDiscovery(BuildContext context) async {
+    final healthState = context.read<HealthDashboardState>();
+    await healthState.runDiscovery();
+    if (!context.mounted) return;
+    await _offerGrantIfMissing(context);
+  }
+
+  /// Every entry that reads Health Connect requests permission first; the
+  /// request sheet is the only way an app can be granted access. When nothing
+  /// comes back granted, offer the Health Connect screen rather than reporting a
+  /// successful run over zero records.
+  Future<void> _offerGrantIfMissing(BuildContext context) async {
+    final healthState = context.read<HealthDashboardState>();
+    if (!healthState.permissionMissing) return;
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => ResponsiveAlertDialog(
+        title: Text(l10n.healthDashboardPermissionNeeded),
+        content: Text(l10n.healthDashboardPermissionNeededBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.healthDashboardOpenHealthConnect),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    await _openSystemSettings(context);
+  }
+
   Future<void> _syncChanges(BuildContext context) async {
     final healthState = context.read<HealthDashboardState>();
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
     final result = await healthState.syncChanges();
     if (!context.mounted) return;
+    if (healthState.permissionMissing) {
+      await _offerGrantIfMissing(context);
+      return;
+    }
     final message = result.needsFullImport
         ? l10n.healthDashboardFullImportNeeded
         : result.baselineEstablished

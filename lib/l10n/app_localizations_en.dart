@@ -7125,4 +7125,84 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthDashboardPruneUnusedFailed =>
       'Cleaning up the health database failed';
+
+  @override
+  String get healthDashboardManageFellBack =>
+      'Health Connect has no settings screen on this device, so app info opened instead.';
+
+  @override
+  String get healthDashboardPermissionNeeded => 'Health Connect access needed';
+
+  @override
+  String get healthDashboardPermissionNeededBody =>
+      'Nothing was granted, so there is nothing to read. Grant read access in Health Connect, then start the import again.';
+
+  @override
+  String get healthDashboardOpenHealthConnect => 'Open Health Connect';
+
+  @override
+  String get healthDashboardMetaApp => 'App';
+
+  @override
+  String get healthDashboardMetaPackage => 'Package';
+
+  @override
+  String get healthDashboardMetaOurType => 'Our type';
+
+  @override
+  String get healthDashboardMetaMetricKey => 'Metric key';
+
+  @override
+  String get healthDashboardMetaRecordType => 'Health Connect type';
+
+  @override
+  String get healthDashboardMetaActivity => 'Activity';
+
+  @override
+  String get healthDashboardMetaUnit => 'Stored unit';
+
+  @override
+  String get healthDashboardMetaAggregation => 'Daily aggregation';
+
+  @override
+  String get healthDashboardMetaShape => 'Storage shape';
+
+  @override
+  String get healthDashboardMetaSource => 'Ingested via';
+
+  @override
+  String get healthDashboardMetaRowId => 'Row id';
+
+  @override
+  String get healthDashboardMetaOrigin => 'Health Connect record id';
+
+  @override
+  String get healthDashboardMetaClientId => 'Client record id';
+
+  @override
+  String get healthDashboardMetaDevice => 'Device';
+
+  @override
+  String get healthDashboardMetaDuplicateOf => 'Duplicate of';
+
+  @override
+  String get healthDashboardMetaStart => 'Starts';
+
+  @override
+  String get healthDashboardMetaEnd => 'Ends';
+
+  @override
+  String get healthDashboardMetaDuration => 'Spans';
+
+  @override
+  String get healthDashboardMetaAggregateIncluded => 'Counts in totals';
+
+  @override
+  String get healthDashboardMetaSynced => 'Synced to backend';
+
+  @override
+  String get healthDashboardMetaDeleted => 'Deleted';
+
+  @override
+  String get healthDashboardMetaRawValues => 'Stored values';
 }

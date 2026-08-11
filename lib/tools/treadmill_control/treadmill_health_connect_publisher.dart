@@ -44,8 +44,16 @@ class TreadmillHealthConnectPublisher {
         hc.HealthDataType.steps.writePermission,
       ]);
       for (final session in sessions) {
-        await connector.writeRecords(_recordsFor(session));
-        await TreadmillControlDb.instance.markHealthConnectPublished(session);
+        // Per session: one workout Health Connect rejects must not stop the
+        // others, and it stays unpublished so a later fix still picks it up.
+        try {
+          await connector.writeRecords(_recordsFor(session));
+          await TreadmillControlDb.instance.markHealthConnectPublished(session);
+        } catch (e) {
+          errorLog(
+            '[TreadmillControl] Publishing session ${session.uid} failed: $e',
+          );
+        }
       }
     } catch (e) {
       errorLog('[TreadmillControl] Publish to Health Connect failed: $e');
@@ -56,9 +64,24 @@ class TreadmillHealthConnectPublisher {
 
   List<hc.HealthRecord> _recordsFor(TreadmillSession session) {
     final start = DateTime.fromMillisecondsSinceEpoch(session.startTime);
-    final end = DateTime.fromMillisecondsSinceEpoch(
+    // A sample's timestamp is seconds on the workout counter, which the
+    // treadmill's own telemetry also writes and can therefore rewind, while the
+    // session window is built from the counter's final value. A point stamped
+    // past that value made Health Connect reject the whole batch: "Time instant
+    // values must be within session interval". The window is widened to cover
+    // every sample instead of dropping real measurements, and a session with no
+    // duration still gets a non-empty one, which Health Connect also requires.
+    final points =
+        session.dataPoints.where((point) => point.timestamp >= 0).toList()
+          ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    final lastSampleSecond = points.isEmpty ? 0 : points.last.timestamp;
+    final declaredEnd = DateTime.fromMillisecondsSinceEpoch(
       session.endTime ?? session.startTime + session.elapsedTime * 1000,
     );
+    final sampleEnd = start.add(Duration(seconds: lastSampleSecond));
+    var end = declaredEnd.isAfter(sampleEnd) ? declaredEnd : sampleEnd;
+    if (!end.isAfter(start)) end = start.add(const Duration(seconds: 1));
+
     final records = <hc.HealthRecord>[
       hc.ExerciseSessionRecord(
         startTime: start,
@@ -68,40 +91,38 @@ class TreadmillHealthConnectPublisher {
         metadata: _metadata(session, 'exercise'),
       ),
     ];
-    final heartRateSamples = session.dataPoints
+    final heartRatePoints = points
         .where((point) => point.heartRate > 0)
-        .map(
-          (point) => hc.HeartRateSample(
-            time: start.add(Duration(seconds: point.timestamp)),
-            rate: hc.Frequency.perMinute(point.heartRate.toDouble()),
-          ),
-        )
         .toList();
-    if (heartRateSamples.isNotEmpty) {
+    if (heartRatePoints.isNotEmpty) {
       records.add(
         hc.HeartRateSeriesRecord(
           startTime: start,
           endTime: end,
-          samples: heartRateSamples,
+          samples: [
+            for (final point in heartRatePoints)
+              hc.HeartRateSample(
+                time: start.add(Duration(seconds: point.timestamp)),
+                rate: hc.Frequency.perMinute(point.heartRate.toDouble()),
+              ),
+          ],
           metadata: _metadata(session, 'heart-rate'),
         ),
       );
     }
-    final speedSamples = session.dataPoints
-        .where((point) => point.speed > 0)
-        .map(
-          (point) => hc.SpeedSample(
-            time: start.add(Duration(seconds: point.timestamp)),
-            speed: hc.Velocity.kilometersPerHour(point.speed),
-          ),
-        )
-        .toList();
-    if (speedSamples.isNotEmpty) {
+    final speedPoints = points.where((point) => point.speed > 0).toList();
+    if (speedPoints.isNotEmpty) {
       records.add(
         hc.SpeedSeriesRecord(
           startTime: start,
           endTime: end,
-          samples: speedSamples,
+          samples: [
+            for (final point in speedPoints)
+              hc.SpeedSample(
+                time: start.add(Duration(seconds: point.timestamp)),
+                speed: hc.Velocity.kilometersPerHour(point.speed),
+              ),
+          ],
           metadata: _metadata(session, 'speed'),
         ),
       );

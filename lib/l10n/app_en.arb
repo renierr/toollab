@@ -3770,5 +3770,31 @@
       }
     }
   },
-  "healthDashboardPruneUnusedFailed": "Cleaning up the health database failed"
+  "healthDashboardPruneUnusedFailed": "Cleaning up the health database failed",
+  "healthDashboardManageFellBack": "Health Connect has no settings screen on this device, so app info opened instead.",
+  "healthDashboardPermissionNeeded": "Health Connect access needed",
+  "healthDashboardPermissionNeededBody": "Nothing was granted, so there is nothing to read. Grant read access in Health Connect, then start the import again.",
+  "healthDashboardOpenHealthConnect": "Open Health Connect",
+  "healthDashboardMetaApp": "App",
+  "healthDashboardMetaPackage": "Package",
+  "healthDashboardMetaOurType": "Our type",
+  "healthDashboardMetaMetricKey": "Metric key",
+  "healthDashboardMetaRecordType": "Health Connect type",
+  "healthDashboardMetaActivity": "Activity",
+  "healthDashboardMetaUnit": "Stored unit",
+  "healthDashboardMetaAggregation": "Daily aggregation",
+  "healthDashboardMetaShape": "Storage shape",
+  "healthDashboardMetaSource": "Ingested via",
+  "healthDashboardMetaRowId": "Row id",
+  "healthDashboardMetaOrigin": "Health Connect record id",
+  "healthDashboardMetaClientId": "Client record id",
+  "healthDashboardMetaDevice": "Device",
+  "healthDashboardMetaDuplicateOf": "Duplicate of",
+  "healthDashboardMetaStart": "Starts",
+  "healthDashboardMetaEnd": "Ends",
+  "healthDashboardMetaDuration": "Spans",
+  "healthDashboardMetaAggregateIncluded": "Counts in totals",
+  "healthDashboardMetaSynced": "Synced to backend",
+  "healthDashboardMetaDeleted": "Deleted",
+  "healthDashboardMetaRawValues": "Stored values"
 }

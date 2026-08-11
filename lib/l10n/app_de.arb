@@ -2921,5 +2921,31 @@
       }
     }
   },
-  "healthDashboardPruneUnusedFailed": "Aufräumen der Gesundheitsdatenbank fehlgeschlagen"
+  "healthDashboardPruneUnusedFailed": "Aufräumen der Gesundheitsdatenbank fehlgeschlagen",
+  "healthDashboardManageFellBack": "Dieses Gerät hat keinen Health-Connect-Einstellungsbildschirm, daher wurde die App-Info geöffnet.",
+  "healthDashboardPermissionNeeded": "Health-Connect-Zugriff nötig",
+  "healthDashboardPermissionNeededBody": "Es wurde nichts freigegeben, also gibt es nichts zu lesen. Gib den Lesezugriff in Health Connect frei und starte den Import erneut.",
+  "healthDashboardOpenHealthConnect": "Health Connect öffnen",
+  "healthDashboardMetaApp": "App",
+  "healthDashboardMetaPackage": "Paket",
+  "healthDashboardMetaOurType": "Unser Typ",
+  "healthDashboardMetaMetricKey": "Messwert-Schlüssel",
+  "healthDashboardMetaRecordType": "Health-Connect-Typ",
+  "healthDashboardMetaActivity": "Aktivität",
+  "healthDashboardMetaUnit": "Gespeicherte Einheit",
+  "healthDashboardMetaAggregation": "Tageszusammenfassung",
+  "healthDashboardMetaShape": "Speicherform",
+  "healthDashboardMetaSource": "Erfasst über",
+  "healthDashboardMetaRowId": "Zeilen-ID",
+  "healthDashboardMetaOrigin": "Health-Connect-Datensatz-ID",
+  "healthDashboardMetaClientId": "Client-Datensatz-ID",
+  "healthDashboardMetaDevice": "Gerät",
+  "healthDashboardMetaDuplicateOf": "Duplikat von",
+  "healthDashboardMetaStart": "Beginnt",
+  "healthDashboardMetaEnd": "Endet",
+  "healthDashboardMetaDuration": "Dauer",
+  "healthDashboardMetaAggregateIncluded": "Zählt in Summen",
+  "healthDashboardMetaSynced": "Mit Backend synchronisiert",
+  "healthDashboardMetaDeleted": "Gelöscht",
+  "healthDashboardMetaRawValues": "Gespeicherte Werte"
 }

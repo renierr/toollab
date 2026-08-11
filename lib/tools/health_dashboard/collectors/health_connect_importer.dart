@@ -24,14 +24,29 @@ class HealthConnectImporter {
 
   static const _pageSize = 5000;
 
-  Future<void> requestAccess() async {
-    if (!Platform.isAndroid) return;
+  /// Asks for every read permission the tool uses, and reports whether anything
+  /// is actually granted afterwards. False means a read would return nothing, so
+  /// callers offer the Health Connect screen instead of silently importing zero
+  /// records.
+  Future<bool> requestAccess() async {
+    if (!Platform.isAndroid) return false;
     final connector = await hc.HealthConnector.create();
-    await connector.requestPermissions([
+    final results = await connector.requestPermissions([
       for (final readable in HealthConnectTypes.readable())
         readable.readPermission,
       hc.HealthPlatformFeature.readHealthDataHistory.permission,
     ]);
+    if (results.any((result) => result.status == hc.PermissionStatus.granted)) {
+      return true;
+    }
+    // The request sheet can close without a result of its own, so the granted
+    // set decides rather than the sheet's return value.
+    try {
+      return (await connector.getGrantedPermissions()).isNotEmpty;
+    } catch (e) {
+      errorLog('[HealthImporter] Reading granted permissions failed: $e');
+      return false;
+    }
   }
 
   /// Imports every enabled type. [restart] ignores stored progress and re-reads
@@ -70,17 +85,16 @@ class HealthConnectImporter {
           : DateTime.fromMillisecondsSinceEpoch(row!['range_end'] as int);
       var imported = restart ? 0 : (row?['n'] as num?)?.toInt() ?? 0;
 
-      // Empty means no restriction. The filter only ever excludes writers the
-      // user switched off; it is never an allowlist built from discovery, which
-      // probes a bounded window and would drop every writer it did not see.
+      // Health Connect only understands dataOrigins as an allowlist, and the
+      // list can only name writers discovery attributed to this type. Since
+      // discovery probes a bounded window, an empty filter deliberately means
+      // "no restriction" rather than dropping every writer it did not see. The
+      // gap that leaves: a writer switched off globally that discovery never saw
+      // under this type is not in the list, so its records arrive anyway and
+      // have to be dropped here - exactly what the change sync does, since
+      // synchronize() takes no origin filter at all.
       final packages = await store.dataOriginFilter(typeId);
       final origins = [for (final package in packages) hc.DataOrigin(package)];
-      // The origin filter is an allowlist built from the writers discovery
-      // attributed to this type, so it goes empty - no restriction - whenever
-      // every known writer is allowed. A writer switched off globally that
-      // discovery never saw under this type would slip straight through, so the
-      // records are dropped on the way in as well, exactly as the change sync
-      // has to do.
       final excluded = await store.excludedPackages(typeId);
 
       try {
