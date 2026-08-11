@@ -1,18 +1,14 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import '../health_record.dart';
-import '../health_record_values.dart';
 import '../health_dashboard_state.dart';
 import '../store/health_metric_catalog.dart';
 import '../health_sleep_quality.dart';
-import '../health_value_format.dart';
 import 'health_empty_state.dart';
-import 'health_record_stat_item.dart';
+import 'health_sleep_metric_stats.dart';
 import 'health_sleep_quality_card.dart';
 import 'health_sleep_stage_breakdown.dart';
 import 'health_sleep_stage_timeline.dart';
@@ -91,10 +87,6 @@ class HealthSleepDetailsPage extends StatelessWidget {
         builder: (context, snapshot) {
           final overlays = snapshot.data ?? const {};
           final sessionOverlays = overlays[session.id] ?? const [];
-          final heartRateSamples = [
-            for (final overlay in sessionOverlays)
-              if (overlay.key == HealthMetrics.heartRate) ...overlay.samples,
-          ];
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -196,49 +188,13 @@ class HealthSleepDetailsPage extends StatelessWidget {
                   endTime: session.endTime,
                 ),
               ],
-              if (_heartRateStats(heartRateSamples) case final hr?) ...[
-                const SizedBox(height: 24),
-                Text(
-                  l10n.healthDashboardHeartRate,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Wrap(
-                      spacing: 24,
-                      runSpacing: 16,
-                      children: [
-                        HealthRecordStatItem(
-                          icon: Icons.favorite_outline_rounded,
-                          color: AppTheme.accentRed,
-                          label: l10n.healthDashboardSevenDayAvg,
-                          value: healthValue(hr.average, 'bpm'),
-                        ),
-                        HealthRecordStatItem(
-                          icon: Icons.arrow_downward_rounded,
-                          color: AppTheme.statusGreen,
-                          label: l10n.healthDashboardSevenDayMin,
-                          value: healthValue(hr.min, 'bpm'),
-                        ),
-                        HealthRecordStatItem(
-                          icon: Icons.arrow_upward_rounded,
-                          color: AppTheme.statusAmber,
-                          label: l10n.healthDashboardSevenDayMax,
-                          value: healthValue(hr.max, 'bpm'),
-                        ),
-                        HealthRecordStatItem(
-                          icon: Icons.timeline_rounded,
-                          color: AppTheme.accentBlue,
-                          label: l10n.healthDashboardCount,
-                          value: healthValue(hr.count, 'count'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              // Every curve gets the same card, not heart rate alone - a line
+              // scaled to its own range says nothing about its values.
+              for (final overlay in sessionOverlays)
+                if (overlay.isDrawable) ...[
+                  const SizedBox(height: 24),
+                  HealthSleepMetricStats(overlay: overlay),
+                ],
               if (naps.isNotEmpty) ...[
                 const SizedBox(height: 24),
                 Text(
@@ -270,19 +226,6 @@ class HealthSleepDetailsPage extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-
-  /// Min, average and max of a night's heart-rate curve. Null under two
-  /// samples, where a range would be meaningless.
-  static _HeartRateStats? _heartRateStats(List<HealthTimedValue> samples) {
-    final values = [for (final sample in samples) sample.v];
-    if (values.length < 2) return null;
-    return _HeartRateStats(
-      min: values.reduce(math.min),
-      max: values.reduce(math.max),
-      average: values.reduce((a, b) => a + b) / values.length,
-      count: values.length,
     );
   }
 
@@ -335,20 +278,6 @@ class HealthSleepDetailsPage extends StatelessWidget {
     }
     return result;
   }
-}
-
-class _HeartRateStats {
-  final double min;
-  final double max;
-  final double average;
-  final int count;
-
-  const _HeartRateStats({
-    required this.min,
-    required this.max,
-    required this.average,
-    required this.count,
-  });
 }
 
 class _NapDetails extends StatelessWidget {

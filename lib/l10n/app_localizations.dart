@@ -12467,6 +12467,24 @@ abstract class AppLocalizations {
   /// **'7-Day Max'**
   String get healthDashboardSevenDayMax;
 
+  /// No description provided for @healthDashboardNightAvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Night Avg'**
+  String get healthDashboardNightAvg;
+
+  /// No description provided for @healthDashboardNightMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Night Min'**
+  String get healthDashboardNightMin;
+
+  /// No description provided for @healthDashboardNightMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Night Max'**
+  String get healthDashboardNightMax;
+
   /// No description provided for @healthDashboardSpeed.
   ///
   /// In en, this message translates to:

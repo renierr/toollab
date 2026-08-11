@@ -258,6 +258,35 @@
   .idlegend dt.p3 { color: var(--interval); }
   .idlegend dd { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-dim); }
 
+  /* ---- sleep timeline demo ---- */
+  .demo { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 15px 17px 12px; margin: 22px 0 0; }
+  .demolegend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
+  .lgd {
+    display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 12px;
+    color: var(--ink-dim); background: none; border: 0; padding: 3px 5px; border-radius: 5px;
+  }
+  button.lgd { cursor: pointer; }
+  button.lgd:hover { background: var(--surface-2); color: var(--ink); }
+  .lgd i { width: 10px; height: 10px; border-radius: 2px; border: 1.5px solid var(--sw); background: transparent; }
+  .lgd.on { color: var(--ink); }
+  .lgd.on i { background: var(--sw); }
+  .demowrap { position: relative; }
+  .demowrap svg { display: block; width: 100%; height: auto; touch-action: none; }
+  .tip {
+    position: absolute; top: 0; pointer-events: none; z-index: 2;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px;
+    padding: 5px 8px; font-size: 11px; line-height: 1.5; white-space: nowrap; box-shadow: var(--shadow);
+  }
+  .tip .r { display: flex; align-items: center; gap: 5px; }
+  .tip .r em { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .tip b { font-weight: 650; font-family: var(--mono); }
+  .figcap { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin: 12px 0 0; }
+  .bands { display: grid; grid-template-columns: repeat(auto-fit, minmax(146px, 1fr)); gap: 10px; margin: 18px 0 0; }
+  .bands div { border: 1px solid var(--line); border-radius: 7px; padding: 11px 13px; background: var(--surface); }
+  .bands dt { font-family: var(--mono); font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-faint); }
+  .bands dd { margin: 3px 0 0; font-family: var(--serif); font-size: 21px; }
+  .bands dd small { font-family: var(--sans); font-size: 12px; color: var(--ink-dim); }
+
   /* ---- callouts ---- */
   .note {
     border-left: 2px solid var(--accent); background: var(--surface); padding: 14px 18px;
@@ -928,8 +957,200 @@
         </p>
       </section>
 
+      <section id="detail">
+        <h2><span class="hn">12</span> Detail pages · Sleep</h2>
+        <p class="lede measure">
+          Every dashboard card opens a detail page for its record type. Sleep is by far the
+          deepest one: a night is a session, a stage list and four measured curves pulled from
+          three different tables, drawn as a single picture and then scored. This section
+          describes that page. The other types follow the same skeleton with less in it, and
+          will be documented here as they grow.
+        </p>
+
+        <h3>What the page stacks</h3>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr><th>Block</th><th>Widget</th><th>Where the numbers come from</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="d">Last seven days</td>
+                <td class="t">HealthWorkoutTrendChart</td>
+                <td class="d">One bar per night from <code>weeklyMetricValues('sleep.session', 'durationMinutes')</code> — the <code>health_daily</code> rollup, not the sessions. Tapping a bar moves the selected day.</td>
+              </tr>
+              <tr>
+                <td class="d">Header</td>
+                <td class="t">_SleepValue · HealthSleepStageBreakdown</td>
+                <td class="d">Duration, start and end of the session row, then one bar per stage with its share, duration, occurrence count and percentage.</td>
+              </tr>
+              <tr>
+                <td class="d">Quality</td>
+                <td class="t">HealthSleepQualityCard</td>
+                <td class="d"><code>SleepQuality.from(...)</code>, computed on the fly. No score is ever stored — changing a band changes every past night at once.</td>
+              </tr>
+              <tr>
+                <td class="d">Source</td>
+                <td class="t">HealthSourceBadge</td>
+                <td class="d">The writer the session was stored under — <code>health_app</code> through <code>health_session.origin</code>.</td>
+              </tr>
+              <tr>
+                <td class="d">Stages</td>
+                <td class="t">HealthSleepTimelineSection</td>
+                <td class="d">The stage list plus up to four curves read per session by time range out of <code>health_point</code> — not filtered out of the loaded week, which would miss samples outside it.</td>
+              </tr>
+              <tr>
+                <td class="d">Curve stats</td>
+                <td class="t">HealthSleepMetricStats</td>
+                <td class="d">One card per drawable curve — average, min, max and sample count over the session, in the curve's own colour. Suppressed under two samples, where a range says nothing.</td>
+              </tr>
+              <tr>
+                <td class="d">Naps</td>
+                <td class="t">_NapDetails</td>
+                <td class="d">Same-day sessions <code>state.isNap</code> flags. Each gets its own chart and its own overlays; none of them enter the main night or its score.</td>
+              </tr>
+              <tr>
+                <td class="d">History</td>
+                <td class="t">HealthMetricHistory</td>
+                <td class="d">Earlier nights, naps excluded.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="measure">
+          The night itself is the day's non-nap session that <b>ends latest</b>, not the longest
+          one — a night is picked by when it finished, so an evening session that ran past
+          midnight does not beat the one that ended this morning.
+        </p>
+
+        <h3>The stage chart</h3>
+        <p class="measure">
+          Below is the real chart, drawn from the same layout constants and the same curve
+          maths as <code>health_sleep_stage_timeline.dart</code>, on a synthetic night. Toggle
+          the curves in the legend and move the pointer across it.
+        </p>
+        <div class="demo">
+          <div class="demolegend" id="sleepLegend"></div>
+          <div class="demowrap" id="sleepWrap">
+            <svg id="sleepSvg" role="img"
+                 aria-label="A night's sleep stages as a coloured bar, four per-stage lanes beneath it, and switchable curves for heart rate, breathing, oxygen and HRV above it."></svg>
+          </div>
+          <p class="figcap" id="sleepCap"></p>
+        </div>
+        <p class="measure">
+          Three things are worth reading off it. The <b>bar</b> is the night in order, so the
+          cycles are visible as a shape. The <b>four lanes</b> under it answer "when was I in
+          deep sleep" without hunting for a colour in the bar. And the curves sit
+          <em>above</em> the bar rather than on it, because a line crossing coloured blocks is
+          unreadable at phone width.
+        </p>
+        <div class="note">
+          <b>Why a lane is three bands, not one number.</b> A curve's lane is a range label
+          (15 px), the curve itself (40 px) and then clear space (14 px). The trailing gap is
+          load-bearing: without it a curve's zero line falls exactly on the stage bar's top
+          edge, and the line reads as glued to the bar however tall the lane is made. The
+          height of the whole widget follows from the number of switched-on curves, so the
+          chart never reserves space for a curve nobody asked for.
+        </div>
+
+        <h3>One lane, one scale</h3>
+        <p class="measure">
+          The four overlays share no range — 50 bpm, 14 rpm, 96 % and 60 ms on one axis would
+          flatten everything but the widest. So each curve is scaled to <b>its own</b> minimum
+          and maximum inside the session, which makes the shape readable and the absolute
+          value meaningless; that is why the label prints the range it was scaled against, why
+          the tooltip gives the nearest actual sample rather than a position on a line, and why
+          every curve with data gets its own stats card further down the page — average, min,
+          max and sample count for the night, not for the week. The cards follow the data, not
+          the legend: switching a curve off hides the line, not the numbers behind it. They carry the curve's
+          colour instead of green-low/amber-high: a low heart rate is good and a low oxygen
+          saturation is not, so the arrows are left to mean direction only.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr><th>Overlay</th><th>Metric</th><th>Unit</th><th>Default</th><th>Written by</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="d">Heart rate</td><td class="c">heart_rate</td><td class="t">bpm</td>
+                <td class="d"><b>On</b> — the one curve a night is normally read against</td>
+                <td class="d">A tracker's overnight series; the <code>heart</code> group when generated</td>
+              </tr>
+              <tr>
+                <td class="d">Respiratory rate</td><td class="c">respiratory_rate</td><td class="t">rpm</td>
+                <td class="d">Off</td><td class="d">The <code>sleep</code> group, sampled inside the session</td>
+              </tr>
+              <tr>
+                <td class="d">Oxygen saturation</td><td class="c">oxygen_saturation</td><td class="t">%</td>
+                <td class="d">Off</td><td class="d">The <code>sleep</code> group, sampled inside the session</td>
+              </tr>
+              <tr>
+                <td class="d">HRV</td><td class="c">hrv_rmssd</td><td class="t">ms</td>
+                <td class="d">Off</td><td class="d">The <code>sleep</code> group, sampled inside the session</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="measure">
+          A metric with fewer than two samples during the session stays in the legend, struck
+          through and unclickable, rather than disappearing — otherwise a curve that exists on
+          every other night looks like it was never implemented. Sleep stages are <em>not</em>
+          toggleable: the bar is a continuous timeline, and hiding one stage would leave a hole
+          rather than a filtered view.
+        </p>
+
+        <h3>Scoring a night</h3>
+        <p class="measure">
+          <code>health_sleep_quality.dart</code> starts at 100 and subtracts for each of five
+          checks that falls outside a standard adult reference range. No weighting, no model,
+          nothing learned — five independent deductions and a floor at zero. Time asleep comes
+          from the staged spans minus the awake ones when stages exist, from the source's own
+          <code>asleepMinutes</code> when they do not, and from the whole span as a last resort.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr><th>Check</th><th>In range</th><th>Outside</th><th>Cost</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="d">Time asleep</td><td class="c">7–10 h</td><td class="d">under 6 h</td><td class="c">−25</td></tr>
+              <tr class="dim"><td class="d"></td><td class="c"></td><td class="d">6–7 h</td><td class="c">−10</td></tr>
+              <tr class="dim"><td class="d"></td><td class="c"></td><td class="d">over 10 h</td><td class="c">−15</td></tr>
+              <tr><td class="d">Efficiency <span class="chip s-dim">asleep ÷ in bed</span></td><td class="c">≥ 85 %</td><td class="d">under 75 %</td><td class="c">−20</td></tr>
+              <tr class="dim"><td class="d"></td><td class="c"></td><td class="d">75–85 %</td><td class="c">−10</td></tr>
+              <tr><td class="d">Deep share of asleep</td><td class="c">13–23 %</td><td class="d">under 13 %</td><td class="c">−10</td></tr>
+              <tr class="dim"><td class="d"></td><td class="c"></td><td class="d">over 23 %</td><td class="c">−5</td></tr>
+              <tr><td class="d">REM share of asleep</td><td class="c">20–25 %</td><td class="d">under 20 %</td><td class="c">−10</td></tr>
+              <tr class="dim"><td class="d"></td><td class="c"></td><td class="d">over 25 %</td><td class="c">−5</td></tr>
+              <tr><td class="d">Awake after falling asleep</td><td class="c">≤ 30 min</td><td class="d">over 60 min</td><td class="c">−15</td></tr>
+              <tr class="dim"><td class="d"></td><td class="c"></td><td class="d">30–60 min</td><td class="c">−5</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <dl class="bands">
+          <div><dt>Good</dt><dd>80–100</dd></div>
+          <div><dt>Fair</dt><dd>60–79</dd></div>
+          <div><dt>Poor</dt><dd>0–59<br><small>the score never goes below 0</small></dd></div>
+        </dl>
+        <div class="note">
+          <b>Two results that surprise people, both deliberate.</b> More deep sleep than the
+          reference range costs 5 points — the range is two-sided, and an unusually deep night
+          is as much an outlier as a shallow one. And the <em>number</em> of awakenings is
+          counted and shown but never scored; only the minutes awake are. So a 6 h night with
+          three brief wakes, 13 % deep and 24 % REM loses 10 points for duration alone and
+          lands on <b>90 · Good</b>. Note how close two of those sit to a cliff: 5 minutes less
+          sleep would cost 25 instead of 10, and 12.9 % deep would cost another 10.
+        </div>
+        <p class="measure">
+          The bands, a worked example and an interactive scorer live in
+          <a href="sleep-quality.html">sleep-quality.html</a> — that page is the reference for
+          the algorithm and must be updated whenever a band or a deduction changes.
+        </p>
+      </section>
+
       <section id="seed">
-        <h2><span class="hn">12</span> Generated test data <span class="chip s-accent">debug builds only</span></h2>
+        <h2><span class="hn">13</span> Generated test data <span class="chip s-accent">debug builds only</span></h2>
         <p class="lede measure">
           An emulator holds no health data, which makes most of this dashboard impossible to look
           at. The generator is the one screen here that <b>writes into</b> Health Connect: a
@@ -1145,9 +1366,11 @@
       <footer>
         Source: <code>lib/tools/health_dashboard/</code> — <code>store/</code> holds the schema,
         catalog, mapper and queries; <code>collectors/</code> holds discovery, the importer and the
-        change-token sync; <code>debug/</code> holds the test-data generator. The authoritative schema version is
-        <code>HealthSchema.version</code>. Update this page whenever the schema, the source rules or
-        the type mapping change.
+        change-token sync; <code>debug/</code> holds the test-data generator; <code>widgets/</code> holds
+        the detail pages. The authoritative schema version is <code>HealthSchema.version</code>. Update
+        this page whenever the schema, the source rules, the type mapping or a detail page's layout
+        change — the chart in §12 is a port and drifts silently otherwise. The scoring reference is
+        <a href="sleep-quality.html">sleep-quality.html</a>.
       </footer>
     </div>
   </main>
@@ -1393,7 +1616,7 @@
     ["types", "Health Connect types"], ["rollup", "The fast path"], ["size", "Storage saved"],
     ["dupes", "Duplicates"], ["incr", "Incremental sync"], ["state", "Current state"],
     ["settings", "Outside the tables"], ["hcsettings", "Settings screen"],
-    ["seed", "Generated test data"]
+    ["detail", "Detail pages · Sleep"], ["seed", "Generated test data"]
   ];
   const toc = $("#toc");
   SECTIONS.forEach(([id, label], i) => {
@@ -1655,6 +1878,216 @@
   }
   slider.addEventListener("input", drawSize);
   drawSize();
+
+  /* ------------------------------------------------- sleep timeline demo */
+  // Layout constants and the curve maths are a straight port of
+  // health_sleep_stage_timeline.dart - if that file changes, change these too.
+  const SL = {
+    top: 22, label: 15, curve: 40, gap: 14, bar: 28, barGap: 14,
+    lane: 10, laneGap: 4, footer: 20, W: 900
+  };
+  SL.overlayLane = SL.label + SL.curve + SL.gap;
+
+  const SL_START = 23 * 60 + 10;   // 23:10, minutes past midnight
+  const SL_TOTAL = 455;            // 7 h 35 m in bed
+  const SL_STAGES = [
+    ["light", 0, 18], ["deep", 18, 68], ["light", 68, 95], ["rem", 95, 115],
+    ["light", 115, 140], ["deep", 140, 175], ["light", 175, 195], ["awake", 195, 203],
+    ["rem", 203, 228], ["light", 228, 255], ["deep", 255, 268], ["light", 268, 300],
+    ["rem", 300, 325], ["light", 325, 350], ["awake", 350, 356], ["light", 356, 380],
+    ["rem", 380, 410], ["light", 410, 440], ["awake", 440, 447], ["light", 447, 455]
+  ];
+  const SL_COLOR = { awake: "#FFC107", rem: "#9C27B0", light: "#03A9F4", deep: "#3F51B5" };
+  const SL_NAME = { awake: "Awake", rem: "REM", light: "Light", deep: "Deep" };
+
+  const stageAt = (m) => (SL_STAGES.find(([, a, b]) => m >= a && m <= b) || [null])[0];
+  const clock = (m) => {
+    const t = (SL_START + m) % 1440;
+    return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0");
+  };
+
+  // Fixed seed: the figure must look the same on every load, and in a screenshot.
+  const seeded = (seed) => () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const series = (step, seed, byStage, jitter) => {
+    const rnd = seeded(seed);
+    const out = [];
+    for (let m = 0; m <= SL_TOTAL; m += step) {
+      const base = byStage[stageAt(Math.min(m, SL_TOTAL - 1)) || "light"];
+      out.push({ t: m, v: base + (rnd() - 0.5) * 2 * jitter });
+    }
+    return out;
+  };
+
+  const SL_OVERLAYS = [
+    {
+      key: "heart_rate", label: "Heart rate", unit: "bpm", color: "#EF5350",
+      samples: series(15, 7, { deep: 52, light: 57, rem: 64, awake: 71 }, 2.5)
+    },
+    {
+      key: "respiratory_rate", label: "Breathing", unit: "rpm", color: "#26A69A",
+      samples: series(30, 21, { deep: 12.4, light: 13.6, rem: 15.4, awake: 16.2 }, 0.7)
+    },
+    {
+      key: "oxygen_saturation", label: "Oxygen", unit: "%", color: "#4FC3F7",
+      samples: series(30, 33, { deep: 95.2, light: 96.6, rem: 95.4, awake: 97.8 }, 1.1)
+    },
+    {
+      key: "hrv_rmssd", label: "HRV", unit: "ms", color: "#AB47BC",
+      samples: series(30, 45, { deep: 78, light: 60, rem: 47, awake: 41 }, 6)
+    }
+  ];
+  const slOn = new Set(["heart_rate"]);   // same default as the app
+
+  const slX = (m) => (m / SL_TOTAL) * SL.W;
+  const slSvg = $("#sleepSvg");
+  const slWrap = $("#sleepWrap");
+  const slCap = $("#sleepCap");
+  let slTip = null;
+
+  const slDrawable = () => SL_OVERLAYS.filter((o) => slOn.has(o.key));
+
+  function slGeometry(count) {
+    const barTop = SL.top + count * SL.overlayLane;
+    const lanesTop = barTop + SL.bar + SL.barGap;
+    const lanesBottom = lanesTop + 4 * (SL.lane + SL.laneGap);
+    return { barTop, lanesTop, lanesBottom, height: lanesBottom + SL.footer };
+  }
+
+  function slCurve(samples, base) {
+    const values = samples.map((s) => s.v);
+    const lo = Math.min(...values);
+    const hi = Math.max(...values);
+    const range = Math.max(1, hi - lo);
+    let d = "";
+    let prev = null;
+    samples.forEach((s) => {
+      const x = slX(s.t);
+      const y = base - ((s.v - lo) / range) * SL.curve;
+      if (!prev) d += "M" + x.toFixed(1) + " " + y.toFixed(1);
+      else {
+        const cx = ((prev.x + x) / 2).toFixed(1);
+        d += "C" + cx + " " + prev.y.toFixed(1) + " " + cx + " " + y.toFixed(1) +
+             " " + x.toFixed(1) + " " + y.toFixed(1);
+      }
+      prev = { x, y };
+    });
+    return { d, lo, hi };
+  }
+
+  function drawSleep() {
+    const on = slDrawable();
+    const g = slGeometry(on.length);
+    slSvg.setAttribute("viewBox", "0 0 " + SL.W + " " + g.height);
+    let s = "";
+    SL_STAGES.forEach(([type, a, b]) => {
+      s += '<rect x="' + slX(a).toFixed(1) + '" y="' + g.barTop + '" width="' +
+           (slX(b) - slX(a)).toFixed(1) + '" height="' + SL.bar + '" rx="5" fill="' +
+           SL_COLOR[type] + '"/>';
+    });
+    on.forEach((overlay, i) => {
+      const base = SL.top + i * SL.overlayLane + SL.label + SL.curve;
+      const c = slCurve(overlay.samples, base);
+      s += '<path d="' + c.d + '" fill="none" stroke="' + overlay.color +
+           '" stroke-width="2" stroke-linecap="round"/>';
+      s += '<text x="0" y="' + (SL.top + i * SL.overlayLane + 10) + '" font-size="10" fill="' +
+           overlay.color + '">' + overlay.label + "  " + Math.round(c.lo) + "–" +
+           Math.round(c.hi) + " " + overlay.unit + "</text>";
+    });
+    ["awake", "rem", "light", "deep"].forEach((type, i) => {
+      const y = g.lanesTop + i * (SL.lane + SL.laneGap);
+      s += '<rect x="0" y="' + y + '" width="' + SL.W + '" height="' + SL.lane +
+           '" rx="3" fill="var(--ink-faint)" opacity=".16"/>';
+      SL_STAGES.filter(([t]) => t === type).forEach(([, a, b]) => {
+        s += '<rect x="' + slX(a).toFixed(1) + '" y="' + y + '" width="' +
+             (slX(b) - slX(a)).toFixed(1) + '" height="' + SL.lane + '" rx="3" fill="' +
+             SL_COLOR[type] + '"/>';
+      });
+    });
+    const foot = g.lanesBottom + 13;
+    s += '<text x="0" y="' + foot + '" font-size="11" fill="var(--ink-faint)">' + clock(0) + "</text>";
+    s += '<text x="' + SL.W + '" y="' + foot + '" font-size="11" text-anchor="end" fill="var(--ink-faint)">' +
+         clock(SL_TOTAL) + "</text>";
+    s += '<line id="sleepMark" x1="0" x2="0" y1="' + SL.top + '" y2="' + g.lanesBottom +
+         '" stroke="var(--ink-faint)" stroke-width="1" visibility="hidden"/>';
+    slSvg.innerHTML = s;
+    slCap.textContent = "7 h 35 m in bed · " + on.length + " of 4 curves on · widget height " +
+                        g.height + " px, bar top at " + g.barTop + " px";
+  }
+
+  function slLegend() {
+    const box = $("#sleepLegend");
+    box.replaceChildren();
+    ["deep", "rem", "light", "awake"].forEach((type) => {
+      const span = el("span", "lgd on");
+      span.style.setProperty("--sw", SL_COLOR[type]);
+      span.append(el("i"), document.createTextNode(SL_NAME[type]));
+      box.append(span);
+    });
+    SL_OVERLAYS.forEach((overlay) => {
+      const b = el("button", "lgd" + (slOn.has(overlay.key) ? " on" : ""));
+      b.type = "button";
+      b.style.setProperty("--sw", overlay.color);
+      b.setAttribute("aria-pressed", String(slOn.has(overlay.key)));
+      b.append(el("i"), document.createTextNode(overlay.label));
+      b.addEventListener("click", () => {
+        if (!slOn.delete(overlay.key)) slOn.add(overlay.key);
+        slLegend();
+        drawSleep();
+        slHideTip();
+      });
+      box.append(b);
+    });
+  }
+
+  function slHideTip() {
+    if (slTip) slTip.style.display = "none";
+    const mark = slSvg.querySelector("#sleepMark");
+    if (mark) mark.setAttribute("visibility", "hidden");
+  }
+
+  function slMove(clientX) {
+    const rect = slSvg.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const minute = Math.round(ratio * SL_TOTAL);
+    const mark = slSvg.querySelector("#sleepMark");
+    if (mark) {
+      mark.setAttribute("x1", slX(minute));
+      mark.setAttribute("x2", slX(minute));
+      mark.setAttribute("visibility", "visible");
+    }
+    if (!slTip) {
+      slTip = el("div", "tip");
+      slWrap.append(slTip);
+    }
+    const stage = stageAt(minute);
+    slTip.replaceChildren();
+    const head = el("div", "r");
+    head.append(el("b", null, clock(minute)));
+    if (stage) {
+      const dot = el("em");
+      dot.style.background = SL_COLOR[stage];
+      head.append(dot, el("span", null, SL_NAME[stage]));
+    }
+    slTip.append(head);
+    slDrawable().forEach((overlay) => {
+      const near = overlay.samples.reduce((best, s) =>
+        Math.abs(s.t - minute) < Math.abs(best.t - minute) ? s : best);
+      const row = el("div", "r");
+      row.style.color = overlay.color;
+      row.append(el("em"), el("span", null, Math.round(near.v) + " " + overlay.unit));
+      slTip.append(row);
+    });
+    slTip.style.display = "block";
+    const left = ratio * rect.width - slTip.offsetWidth / 2;
+    slTip.style.left = Math.min(Math.max(0, left), Math.max(0, rect.width - slTip.offsetWidth)) + "px";
+  }
+
+  slLegend();
+  drawSleep();
+  slSvg.addEventListener("pointermove", (e) => slMove(e.clientX));
+  slSvg.addEventListener("pointerdown", (e) => slMove(e.clientX));
+  slSvg.addEventListener("pointerleave", slHideTip);
 
   /* --------------------------------------------------------------- theme */
   const tb = $("#theme");

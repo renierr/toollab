@@ -516,7 +516,14 @@ and must be updated whenever a band or a deduction changes.
 Two things surprise people, both by design and both documented there: **more**
 deep sleep than the reference range costs 5 points, and the number of awakenings
 is counted and displayed but never scored - only the awake minutes are. A
-6-hour night with three brief wakes therefore scores 85 and still reads "Good".
+6-hour night with three brief wakes, 13 % deep and 24 % REM therefore loses 10
+points for duration alone, scores 90 and reads "Good".
+
+The sleep detail page around it - the stage bar, the four switchable curves and
+what each block reads from which table - is described in `docs/storage-model.html`
+§12, which also carries an interactive copy of the stage chart drawn from the same
+layout constants. That section is where detail pages for the other record types
+get documented as they grow.
 
 ## Known Gaps
 

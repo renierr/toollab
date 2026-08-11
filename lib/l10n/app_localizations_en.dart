@@ -6935,6 +6935,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthDashboardSevenDayMax => '7-Day Max';
 
   @override
+  String get healthDashboardNightAvg => 'Night Avg';
+
+  @override
+  String get healthDashboardNightMin => 'Night Min';
+
+  @override
+  String get healthDashboardNightMax => 'Night Max';
+
+  @override
   String get healthDashboardSpeed => 'Speed';
 
   @override
