@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../../treadmill_control/treadmill_control_db.dart';
 import '../../treadmill_control/widgets/workout_details_sheet.dart';
 import '../health_record.dart';
+import '../health_value_format.dart';
 import 'health_record_details_page.dart';
 
 class HealthWorkoutTile extends StatelessWidget {
@@ -52,7 +53,7 @@ class HealthWorkoutTile extends StatelessWidget {
 
   String _workoutSummary(HealthRecord workout) {
     final distance = workout.value['distanceKm'] as num?;
-    if (distance != null) return '${distance.toStringAsFixed(2)} km';
+    if (distance != null) return healthValue(distance, 'km');
     final duration = Duration(
       milliseconds: workout.endTime - workout.startTime,
     );

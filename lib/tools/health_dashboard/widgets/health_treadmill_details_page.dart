@@ -16,6 +16,7 @@ import '../../treadmill_control/widgets/workout_session_chart.dart';
 import '../../treadmill_control/widgets/workout_splits_table.dart';
 import '../../treadmill_control/workout_details_stats.dart';
 import '../health_record.dart';
+import '../health_value_format.dart';
 import 'health_source_badge.dart';
 
 class HealthTreadmillDetailsPage extends StatelessWidget {
@@ -41,7 +42,7 @@ class HealthTreadmillDetailsPage extends StatelessWidget {
         children: [
           WorkoutDetailsHeader(
             date: DateFormat.yMMMEd(locale).add_Hm().format(date),
-            distance: session.distance.toStringAsFixed(2),
+            distance: healthNumber(session.distance, 'km'),
             distanceLabel: 'km',
             duration: formatWorkoutDuration(session.elapsedTime),
             durationLabel: l10n.treadmillDetailsDuration,
@@ -53,7 +54,7 @@ class HealthTreadmillDetailsPage extends StatelessWidget {
             children: [
               TreadmillMetricTile(
                 label: l10n.treadmillDetailsAvgSpeed,
-                value: session.avgSpeed.toStringAsFixed(1),
+                value: healthNumber(session.avgSpeed, 'km/h'),
                 unit: 'km/h',
                 icon: Icons.speed,
                 color: TreadmillColors.cyanMetric,
@@ -61,7 +62,7 @@ class HealthTreadmillDetailsPage extends StatelessWidget {
               ),
               TreadmillMetricTile(
                 label: l10n.treadmillDetailsMaxSpeed,
-                value: session.maxSpeed.toStringAsFixed(1),
+                value: healthNumber(session.maxSpeed, 'km/h'),
                 unit: 'km/h',
                 icon: Icons.bolt,
                 color: TreadmillColors.cyanMetric,
@@ -111,7 +112,7 @@ class HealthTreadmillDetailsPage extends StatelessWidget {
               if (stats.hasIncline) ...[
                 TreadmillMetricTile(
                   label: l10n.treadmillDetailsAvgIncline,
-                  value: stats.avgIncline.toStringAsFixed(1),
+                  value: healthNumber(stats.avgIncline, '%'),
                   unit: '%',
                   icon: Icons.trending_up,
                   color: TreadmillColors.amberMetric,
@@ -119,7 +120,7 @@ class HealthTreadmillDetailsPage extends StatelessWidget {
                 ),
                 TreadmillMetricTile(
                   label: l10n.treadmillDetailsMaxIncline,
-                  value: stats.maxIncline.toStringAsFixed(1),
+                  value: healthNumber(stats.maxIncline, '%'),
                   unit: '%',
                   icon: Icons.terrain_outlined,
                   color: TreadmillColors.amberMetric,

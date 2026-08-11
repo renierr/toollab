@@ -6250,7 +6250,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get toolDescHealthDashboard =>
-      'Gesundheitsdaten und Workouts zusammenfuehren';
+      'Gesundheitsdaten und Workouts zusammenführen';
 
   @override
   String get healthDashboardRefresh => 'Gesundheitsdaten aktualisieren';
@@ -6260,7 +6260,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardSubtitle =>
-      'Eine private Ansicht fuer Aktivitaet und Erholung.';
+      'Eine private Ansicht für Aktivität und Erholung.';
 
   @override
   String get healthDashboardDistance => 'Distanz';
@@ -6325,7 +6325,7 @@ class AppLocalizationsDe extends AppLocalizations {
       'Durchschnittlicher Puls · letzte 7 Tage';
 
   @override
-  String get healthDashboardRecentActivity => 'Letzte Aktivitaeten';
+  String get healthDashboardRecentActivity => 'Letzte Aktivitäten';
 
   @override
   String get healthDashboardNoData =>
@@ -6362,7 +6362,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardSyncInProgressBody =>
-      'Ein Health-Connect-Import oder eine Cloud-Synchronisierung laeuft noch. Warte bis sie abgeschlossen ist, bevor du eine neue startest.';
+      'Ein Health-Connect-Import oder eine Cloud-Synchronisierung läuft noch. Warte bis sie abgeschlossen ist, bevor du eine neue startest.';
 
   @override
   String get healthDashboardSyncNoChanges =>
@@ -6374,18 +6374,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardRepairHealthConnectSubtitle =>
-      'Lokal importierte Health-Connect-Daten loeschen und Historie erneut importieren.';
+      'Lokal importierte Health-Connect-Daten löschen und Historie erneut importieren.';
 
   @override
   String get healthDashboardResetHealthConnectDescription =>
-      'Dies entfernt alle lokal importierten Health-Connect-Cache- und kanonischen Daten auf diesem Geraet. Health Connect und Cloud-Daten bleiben unveraendert. Der naechste Import beginnt von vorn und kann lange dauern. Normale Importe werden ab der letzten erfolgreichen Synchronisierung fortgesetzt.';
+      'Dies entfernt alle lokal importierten Health-Connect-Cache- und kanonischen Daten auf diesem Gerät. Health Connect und Cloud-Daten bleiben unverändert. Der nächste Import beginnt von vorn und kann lange dauern. Normale Importe werden ab der letzten erfolgreichen Synchronisierung fortgesetzt.';
 
   @override
   String get healthDashboardStartOver => 'Neu starten';
 
   @override
   String get healthDashboardConnectHealthConnectSubtitle =>
-      'Fordert Zugriff an und importiert alle verfuegbaren historischen Daten aus Health Connect.';
+      'Fordert Zugriff an und importiert alle verfügbaren historischen Daten aus Health Connect.';
 
   @override
   String get healthDashboardHealthConnectAnalysis =>
@@ -6393,7 +6393,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardHealthConnectAnalysisSubtitle =>
-      'Liest jeden unterstuetzten Typ und speichert Rohdaten, Metadaten, Sessions, Routen und Fehler je Typ in einer separaten SQLite-Datenbank.';
+      'Liest jeden unterstützten Typ und speichert Rohdaten, Metadaten, Sessions, Routen und Fehler je Typ in einer separaten SQLite-Datenbank.';
 
   @override
   String get healthDashboardHealthConnectAnalysisFailed =>
@@ -6437,7 +6437,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String healthDashboardHealthConnectComparisonProgressCount(int count) {
-    return '$count Health-Connect-Datensaetze verarbeitet';
+    return '$count Health-Connect-Datensätze verarbeitet';
   }
 
   @override
@@ -6446,15 +6446,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardAutoHealthConnectSync =>
-      'Health Connect beim Oeffnen synchronisieren';
+      'Health Connect beim Öffnen synchronisieren';
 
   @override
   String get healthDashboardAutoHealthConnectSyncSubtitle =>
-      'Health-Connect-Daten bei jedem Oeffnen des Dashboards importieren.';
+      'Health-Connect-Daten bei jedem Öffnen des Dashboards importieren.';
 
   @override
   String get healthDashboardSettings =>
-      'Einstellungen fuer Gesundheits-Dashboard';
+      'Einstellungen für Gesundheits-Dashboard';
 
   @override
   String get healthDashboardDataToShow => 'Anzuzeigende Daten';
@@ -6474,64 +6474,64 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardSectionCollectHint =>
-      'Fuellt den neuen Datenspeicher. Wird im Dashboard noch nicht angezeigt.';
+      'Füllt den neuen Datenspeicher. Wird im Dashboard noch nicht angezeigt.';
 
   @override
   String get healthDashboardSectionCurrent => 'Dashboard-Daten';
 
   @override
   String get healthDashboardSectionCurrentHint =>
-      'Der aeltere Import, der das aktuell sichtbare Dashboard fuellt.';
+      'Der ältere Import, der das aktuell sichtbare Dashboard füllt.';
 
   @override
   String get healthDashboardDataTypes => 'Datentypen';
 
   @override
   String get healthDashboardDataTypesSubtitle =>
-      'Auswaehlen, was aus Health Connect geladen wird';
+      'Auswählen, was aus Health Connect geladen wird';
 
   @override
   String get healthDashboardDataSources => 'Quellen';
 
   @override
   String get healthDashboardDataSourcesSubtitle =>
-      'Auswaehlen, aus welcher App jeder Typ geladen wird';
+      'Auswählen, aus welcher App jeder Typ geladen wird';
 
   @override
-  String get healthDashboardScanSources => 'Verfuegbare Daten suchen';
+  String get healthDashboardScanSources => 'Verfügbare Daten suchen';
 
   @override
   String get healthDashboardScanSourcesSubtitle =>
       'Findet, welche Typen Daten haben und welche Apps sie geschrieben haben';
 
   @override
-  String get healthDashboardImportSelected => 'Ausgewaehlte Daten importieren';
+  String get healthDashboardImportSelected => 'Ausgewählte Daten importieren';
 
   @override
   String get healthDashboardImportSelectedSubtitle =>
-      'Vollstaendige Historie fuer jeden aktivierten Typ';
+      'Vollständige Historie für jeden aktivierten Typ';
 
   @override
   String get healthDashboardImportRestart => 'Neu importieren';
 
   @override
   String get healthDashboardImportRestartSubtitle =>
-      'Loescht gespeicherte Daten und liest die gesamte Historie erneut';
+      'Löscht gespeicherte Daten und liest die gesamte Historie erneut';
 
   @override
-  String get healthDashboardSyncChanges => 'Aenderungen jetzt abgleichen';
+  String get healthDashboardSyncChanges => 'Änderungen jetzt abgleichen';
 
   @override
   String get healthDashboardSyncChangesSubtitle =>
-      'Laedt nur, was sich seit dem letzten Abgleich geaendert hat';
+      'Lädt nur, was sich seit dem letzten Abgleich geändert hat';
 
   @override
   String get healthDashboardNoTypesFound =>
-      'Noch nichts gesucht. Starte eine Suche, um zu sehen, was verfuegbar ist.';
+      'Noch nichts gesucht. Starte eine Suche, um zu sehen, was verfügbar ist.';
 
   @override
   String get healthDashboardNoSourcesFound =>
-      'Noch keine Apps fuer diesen Typ gefunden.';
+      'Noch keine Apps für diesen Typ gefunden.';
 
   @override
   String healthDashboardTypeRecordCount(int count) {
@@ -6628,7 +6628,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardBaselineEstablished =>
-      'Aenderungsverfolgung gestartet. Starte einen Import fuer die Historie.';
+      'Änderungsverfolgung gestartet. Starte einen Import für die Historie.';
 
   @override
   String healthDashboardSyncChangesResult(int updated, int removed) {
@@ -6637,14 +6637,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardFullImportNeeded =>
-      'Aenderungsverfolgung abgelaufen. Ein vollstaendiger Import ist notwendig.';
+      'Änderungsverfolgung abgelaufen. Ein vollständiger Import ist notwendig.';
 
   @override
   String get healthDashboardShowTreadmill => 'Laufband-Workouts';
 
   @override
   String get healthDashboardShowTreadmillSubtitle =>
-      'Lokale Laufbandlaeufe in Dashboard-Werte und Aktivitaeten aufnehmen.';
+      'Lokale Laufbandläufe in Dashboard-Werte und Aktivitäten aufnehmen.';
 
   @override
   String get healthDashboardSync => 'Synchronisierung';

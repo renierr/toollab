@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
+import '../health_value_format.dart';
 import 'health_record_details_page.dart';
 import 'health_source_badge.dart';
 
@@ -57,15 +58,11 @@ class HealthRecordTile extends StatelessWidget {
   }
 
   String _format(double value) => switch (unit) {
-    'kg' => '${value.toStringAsFixed(1)} kg',
-    'bpm' => '${value.round()} bpm',
-    'steps' => value.round().toString(),
     'min' =>
       record.type == 'sleep.session'
           ? _sleepDuration(value.round())
           : '${value.round()} min',
-    'calories' => value.round().toString(),
-    _ => value.toStringAsFixed(1),
+    _ => healthValue(value, unit),
   };
 
   String _sleepDuration(int minutes) =>

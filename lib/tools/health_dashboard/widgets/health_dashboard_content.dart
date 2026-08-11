@@ -5,6 +5,7 @@ import 'package:tool_lab/theme/theme.dart';
 
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
+import '../health_value_format.dart';
 import 'health_metric_card.dart';
 import 'health_metric_details_page.dart';
 import 'health_sleep_details_page.dart';
@@ -46,7 +47,7 @@ class HealthDashboardContent extends StatelessWidget {
                 icon: Icons.directions_run_rounded,
                 color: AppTheme.accentTeal,
                 label: l10n.healthDashboardDistanceAllTime,
-                value: '${state.allTimeDistanceKm.toStringAsFixed(1)} km',
+                value: healthValue(state.allTimeDistanceKm, 'km'),
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardDistance,
@@ -129,7 +130,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.favorite_outline_rounded,
                   color: AppTheme.accentRed,
                   label: l10n.healthDashboardLatestRestingHeartRate,
-                  value: '${state.latestRestingHeartRate!.round()} bpm',
+                  value: healthValue(state.latestRestingHeartRate!, 'bpm'),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardRestingHeartRate,
@@ -144,7 +145,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.monitor_weight_outlined,
                   color: AppTheme.accentPurple,
                   label: l10n.healthDashboardWeight,
-                  value: '${state.latestWeightKg!.toStringAsFixed(1)} kg',
+                  value: healthValue(state.latestWeightKg!, 'kg'),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardWeight,
@@ -159,7 +160,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.monitor_heart_rounded,
                   color: AppTheme.accentPurple,
                   label: 'HRV (RMSSD)',
-                  value: '${state.latestHrv!.toStringAsFixed(1)} ms',
+                  value: healthValue(state.latestHrv!, 'ms'),
                   onTap: () => _openMetric(
                     context,
                     title: 'HRV',
@@ -174,7 +175,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.percent_rounded,
                   color: AppTheme.accentBlue,
                   label: 'Latest Oxygen Saturation',
-                  value: '${state.latestSpO2!.toStringAsFixed(1)} %',
+                  value: healthValue(state.latestSpO2!, '%'),
                   onTap: () => _openMetric(
                     context,
                     title: 'Oxygen Saturation',
@@ -189,8 +190,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.air_rounded,
                   color: AppTheme.accentTeal,
                   label: 'Latest Respiratory Rate',
-                  value:
-                      '${state.latestRespiratoryRate!.toStringAsFixed(1)} rpm',
+                  value: healthValue(state.latestRespiratoryRate!, 'rpm'),
                   onTap: () => _openMetric(
                     context,
                     title: 'Respiratory Rate',
@@ -205,7 +205,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.pie_chart_outline_rounded,
                   color: AppTheme.accentAmber,
                   label: 'Latest Body Fat',
-                  value: '${state.latestBodyFat!.toStringAsFixed(1)} %',
+                  value: healthValue(state.latestBodyFat!, '%'),
                   onTap: () => _openMetric(
                     context,
                     title: 'Body Fat',
@@ -254,7 +254,7 @@ class HealthDashboardContent extends StatelessWidget {
                 icon: Icons.directions_run_rounded,
                 color: AppTheme.accentTeal,
                 label: l10n.healthDashboardDistanceLastSevenDays,
-                value: '${state.selectedWeekDistanceKm.toStringAsFixed(1)} km',
+                value: healthValue(state.selectedWeekDistanceKm, 'km'),
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardDistance,

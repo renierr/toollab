@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../health_record.dart';
+import '../health_value_format.dart';
 import 'health_record_details_page.dart';
 import 'health_source_badge.dart';
 
@@ -37,40 +38,40 @@ class HealthDataTile extends StatelessWidget {
 
   String? _details() {
     if (record.value['distanceKm'] case final num dist) {
-      return '${dist.toStringAsFixed(2)} km';
+      return healthValue(dist, 'km');
     }
     if (record.value['calories'] case final num cal) {
-      return '${cal.round()} kcal';
+      return healthValue(cal, 'kcal');
     }
     if (record.value['floors'] case final num floors) {
-      return '${floors.round()} floors';
+      return '${healthValue(floors, 'count')} floors';
     }
     if (record.value['minutes'] case final num minutes) {
-      return '${minutes.round()} min';
+      return healthValue(minutes, 'min');
     }
     if (record.value['systolicMmhg'] case final num systolic) {
       final diastolic = (record.value['diastolicMmhg'] as num?)?.round();
       return diastolic == null
-          ? '${systolic.round()} mmHg'
+          ? healthValue(systolic, 'mmHg')
           : '${systolic.round()}/$diastolic mmHg';
     }
     if (record.value['percent'] case final num percent) {
-      return '${percent.toStringAsFixed(1)} %';
+      return healthValue(percent, '%');
     }
     if (record.value['rmssdMs'] case final num rmssd) {
-      return 'HRV ${rmssd.toStringAsFixed(1)} ms';
+      return 'HRV ${healthValue(rmssd, 'ms')}';
     }
     if (record.value['vo2Max'] case final num vo2) {
-      return 'VO2 Max ${vo2.toStringAsFixed(1)}';
+      return 'VO2 Max ${healthNumber(vo2, 'mL/kg/min')}';
     }
     if (record.value['bmi'] case final num bmi) {
-      return 'BMI ${bmi.toStringAsFixed(1)}';
+      return 'BMI ${healthNumber(bmi, 'BMI')}';
     }
     if (record.value['centimeters'] case final num centimeters) {
-      return '${centimeters.toStringAsFixed(1)} cm';
+      return healthValue(centimeters, 'cm');
     }
     if (record.value['liters'] case final num liters) {
-      return '${liters.toStringAsFixed(2)} L';
+      return healthValue(liters, 'L');
     }
     return null;
   }

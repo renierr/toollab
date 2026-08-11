@@ -3,6 +3,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import '../health_record.dart';
+import '../health_value_format.dart';
 import 'health_record_stat_item.dart';
 
 class HealthRecordStatsCard extends StatelessWidget {
@@ -22,7 +23,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.directions_run_rounded,
           color: AppTheme.accentTeal,
           label: l10n.healthDashboardDistance,
-          value: '${dist.toStringAsFixed(2)} km',
+          value: healthValue(dist, 'km'),
         ),
       );
     }
@@ -32,7 +33,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.local_fire_department_rounded,
           color: AppTheme.accentAmber,
           label: l10n.healthDashboardCalories,
-          value: '${cal.round()} kcal',
+          value: healthValue(cal, 'kcal'),
         ),
       );
     }
@@ -44,8 +45,8 @@ class HealthRecordStatsCard extends StatelessWidget {
           color: AppTheme.accentRed,
           label: l10n.healthDashboardHeartRate,
           value: maxHr != null
-              ? '${avgHr.round()} bpm (max $maxHr)'
-              : '${avgHr.round()} bpm',
+              ? '${healthValue(avgHr, 'bpm')} (max $maxHr)'
+              : healthValue(avgHr, 'bpm'),
         ),
       );
     }
@@ -55,7 +56,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.speed_rounded,
           color: AppTheme.accentBlue,
           label: l10n.healthDashboardSpeed,
-          value: '${speed.toStringAsFixed(1)} km/h',
+          value: healthValue(speed, 'km/h'),
         ),
       );
     }
@@ -65,7 +66,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.directions_walk_rounded,
           color: AppTheme.accentGreen,
           label: l10n.healthDashboardCount,
-          value: '${count.round()}',
+          value: healthValue(count, 'count'),
         ),
       );
     }
@@ -75,7 +76,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.monitor_weight_outlined,
           color: AppTheme.accentPurple,
           label: l10n.healthDashboardWeight,
-          value: '${kg.toStringAsFixed(1)} kg',
+          value: healthValue(kg, 'kg'),
         ),
       );
     }
@@ -85,7 +86,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.favorite_outline_rounded,
           color: AppTheme.accentRed,
           label: l10n.healthDashboardHeartRate,
-          value: '${bpm.round()} bpm',
+          value: healthValue(bpm, 'bpm'),
         ),
       );
     }
@@ -97,7 +98,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           color: AppTheme.accentRed,
           label: l10n.healthDashboardBloodPressure,
           value: dia == null
-              ? '${sys.round()} mmHg'
+              ? healthValue(sys, 'mmHg')
               : '${sys.round()}/$dia mmHg',
         ),
       );
@@ -108,7 +109,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.percent_rounded,
           color: AppTheme.accentBlue,
           label: l10n.healthDashboardPercentage,
-          value: '${pct.toStringAsFixed(1)} %',
+          value: healthValue(pct, '%'),
         ),
       );
     }
@@ -118,7 +119,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.stairs_rounded,
           color: AppTheme.accentTeal,
           label: l10n.healthDashboardFloors,
-          value: '${fl.round()}',
+          value: healthValue(fl, 'count'),
         ),
       );
     }
@@ -128,7 +129,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.timer_outlined,
           color: AppTheme.accentBlue,
           label: l10n.healthDashboardDuration,
-          value: '${min.round()} min',
+          value: healthValue(min, 'min'),
         ),
       );
     }
@@ -138,7 +139,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.monitor_heart_rounded,
           color: AppTheme.accentPurple,
           label: 'HRV',
-          value: '${rmssd.toStringAsFixed(1)} ms',
+          value: healthValue(rmssd, 'ms'),
         ),
       );
     }
@@ -148,7 +149,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.fitness_center_rounded,
           color: AppTheme.accentGreen,
           label: 'VO2 Max',
-          value: '${vo2.toStringAsFixed(1)} mL/kg/min',
+          value: healthValue(vo2, 'mL/kg/min'),
         ),
       );
     }
@@ -158,7 +159,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.air_rounded,
           color: AppTheme.accentBlue,
           label: 'Respiratory Rate',
-          value: '${resp.toStringAsFixed(1)} rpm',
+          value: healthValue(resp, 'rpm'),
         ),
       );
     }
@@ -168,7 +169,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.bloodtype_outlined,
           color: AppTheme.accentRed,
           label: 'Blood Glucose',
-          value: '${glucose.round()} mg/dL',
+          value: healthValue(glucose, 'mg/dL'),
         ),
       );
     }
@@ -178,7 +179,7 @@ class HealthRecordStatsCard extends StatelessWidget {
           icon: Icons.local_fire_department_outlined,
           color: AppTheme.accentAmber,
           label: 'BMR',
-          value: '${bmrVal.round()} kcal/day',
+          value: healthValue(bmrVal, 'kcal/day'),
         ),
       );
     }

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_dashboard_state.dart';
+import '../health_value_format.dart';
 
 class HealthMetricSummarySection extends StatelessWidget {
   final String title;
@@ -75,16 +76,13 @@ class HealthMetricSummarySection extends StatelessWidget {
 
     String format(double? val) {
       if (val == null) return '--';
-      if (unit == 'km' || unit == 'kg' || unit == 'BMI') {
-        return '${val.toStringAsFixed(1)} $unit';
-      }
       if (unit == 'min') {
         final duration = Duration(minutes: val.round());
         final h = duration.inHours;
         final m = duration.inMinutes.remainder(60);
         return h > 0 ? '${h}h ${m}m' : '${m}m';
       }
-      return '${val.round()} $unit';
+      return healthValue(val, unit);
     }
 
     final dateStr = MaterialLocalizations.of(

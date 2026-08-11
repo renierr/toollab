@@ -5,6 +5,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../store/health_queries.dart';
 import '../health_record.dart';
+import '../health_value_format.dart';
 
 class HealthMetricDaySection extends StatelessWidget {
   final String type;
@@ -117,7 +118,7 @@ class _MetricDayPainter extends CustomPainter {
       canvas.drawLine(Offset(plot.left, y), Offset(plot.right, y), grid);
       _label(
         canvas,
-        '${(lower + (upper - lower) * (2 - index) / 2).round()}',
+        healthAxisNumber(lower + (upper - lower) * (2 - index) / 2, unit),
         Offset(plot.left - 5, y - 6),
         right: true,
       );

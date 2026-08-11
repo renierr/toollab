@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
+import '../health_value_format.dart';
+
 enum HealthTrendChartStyle { bars, line }
 
 class HealthWorkoutTrendChart extends StatefulWidget {
@@ -389,29 +391,18 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       ? '${DateFormat.E(locale).format(date)} ${date.day}'
       : '${DateFormat.E(locale).format(date)}\n${date.day} ${DateFormat.MMM(locale).format(date)}';
 
-  String _formatValue(double value) => switch (unit) {
-    'km' => '${value.toStringAsFixed(value >= 10 ? 0 : 1)} km',
-    'kg' => '${value.toStringAsFixed(1)} kg',
-    'bpm' => '${value.round()} bpm',
-    'steps' => value.round().toString(),
-    'min' => _duration(value.round()),
-    'calories' => value.round().toString(),
-    _ => value.round().toString(),
-  };
+  String _formatValue(double value) =>
+      unit == 'min' ? _duration(value.round()) : healthValue(value, unit);
 
-  String _formatAxisValue(double value) => switch (unit) {
-    'km' => value.toStringAsFixed(value >= 10 ? 0 : 1),
-    'kg' => value.toStringAsFixed(1),
-    _ => value.round().toString(),
-  };
+  String _formatAxisValue(double value) => healthAxisNumber(value, unit);
 
   String _duration(int minutes) =>
       '${minutes ~/ 60}h ${minutes.remainder(60)}m';
 
-  String _formatOverlay(double value) =>
-      overlayUnit == 'bpm' ? '${value.round()} bpm' : '${value.round()}';
+  String _formatOverlay(double value) => healthValue(value, overlayUnit ?? '');
 
-  String _formatOverlayAxis(double value) => value.round().toString();
+  String _formatOverlayAxis(double value) =>
+      healthAxisNumber(value, overlayUnit ?? '');
 
   void _label(
     Canvas canvas,
@@ -539,13 +530,15 @@ class _Tooltip extends StatelessWidget {
     this.endDate,
     required this.locale,
   });
-  String _value(double? value, String unit) => value == null
-      ? 'No data'
-      : unit == 'km'
-      ? '${value.toStringAsFixed(1)} km'
-      : unit == 'bpm'
-      ? '${value.round()} bpm'
-      : value.round().toString();
+  String _value(double? value, String unit) {
+    if (value == null) return 'No data';
+    if (unit == 'min') {
+      final minutes = value.round();
+      return '${minutes ~/ 60}h ${minutes.remainder(60)}m';
+    }
+    return healthValue(value, unit);
+  }
+
   @override
   Widget build(BuildContext context) {
     final date = (endDate ?? DateTime.now()).subtract(
