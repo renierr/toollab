@@ -11501,12 +11501,6 @@ abstract class AppLocalizations {
   /// **'Start over'**
   String get healthDashboardStartOver;
 
-  /// No description provided for @healthDashboardHealthConnect.
-  ///
-  /// In en, this message translates to:
-  /// **'Import all Health Connect data'**
-  String get healthDashboardHealthConnect;
-
   /// No description provided for @healthDashboardConnectHealthConnectSubtitle.
   ///
   /// In en, this message translates to:

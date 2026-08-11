@@ -3375,7 +3375,6 @@
   "healthDashboardRepairHealthConnectSubtitle": "Clear locally imported Health Connect data and import history again.",
   "healthDashboardResetHealthConnectDescription": "This removes all locally imported Health Connect cache and canonical records on this device. It does not affect Health Connect or cloud data. The next import starts from the beginning and can take a long time. Regular imports resume from the last successful sync.",
   "healthDashboardStartOver": "Start over",
-  "healthDashboardHealthConnect": "Import all Health Connect data",
   "healthDashboardConnectHealthConnectSubtitle": "Requests access and imports all available historical data from Health Connect.",
   "healthDashboardHealthConnectAnalysis": "Export Health Connect analysis",
   "healthDashboardHealthConnectAnalysisSubtitle": "Read every supported type and save raw records, metadata, sessions, routes, and per-type errors to a separate SQLite database.",

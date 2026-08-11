@@ -6384,10 +6384,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardStartOver => 'Neu starten';
 
   @override
-  String get healthDashboardHealthConnect =>
-      'Alle Health Connect Daten importieren';
-
-  @override
   String get healthDashboardConnectHealthConnectSubtitle =>
       'Fordert Zugriff an und importiert alle verfuegbaren historischen Daten aus Health Connect.';
 
