@@ -280,6 +280,18 @@ Import everything selected, not sessions only:
 - Session drilldowns query the same rows by time range. Sessions never own
   copied metric data.
 
+### Staying alive while it runs
+
+Every read is a platform call into another process, and a full history is minutes
+of them. Discovery, the full import, the change sync, the cleanup and the backup
+export all hold a `BackgroundWorkLease` for their duration - a partial (CPU) wake
+lock plus a foreground notification - so Doze or app standby cannot suspend the
+app halfway through and leave a type stranded mid-range.
+
+None of this can move to a background isolate: the plugin's method channels are
+bound to the main isolate, so a spawned one cannot reach Health Connect at all.
+Keeping the process scheduled is the isolation that is available.
+
 ### Paging
 
 Paging follows `response.nextPageRequest`. The plugin exposes **no** page token

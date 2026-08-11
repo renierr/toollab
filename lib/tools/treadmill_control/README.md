@@ -45,6 +45,18 @@ pending costs one query.
 `health_connect_published_at` is device-local and deliberately not part of the sync payload — a
 pull keeps whatever the local row already had, otherwise every pull would republish everything.
 
+## Staying alive while it runs
+
+Every Health Connect round trip is a platform call into another process, and a first publish of a
+long history is minutes of them with the screen usually off. Publishing and the removal therefore
+hold a `BackgroundWorkLease` — a partial (CPU) wake lock plus a foreground notification — so Doze
+and app standby cannot suspend the process mid-batch. The lease is only taken when there is
+actual work, so an idle run raises no notification.
+
+This work cannot move to a background isolate: the plugin's method channels are bound to the main
+isolate, so a spawned isolate has no way to reach Health Connect at all. Keeping the process
+scheduled is the isolation that is available.
+
 ## Session window
 
 A data point's `timestamp` counts seconds on the workout counter, which the treadmill's own

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:health_connector/health_connector.dart' as hc;
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/services/background_work_lease.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
@@ -117,18 +118,34 @@ class TreadmillHealthConnectPublisher {
       }
       var published = 0;
       var failed = 0;
-      for (final session in sessions) {
-        // Per session: one workout Health Connect rejects must not stop the
-        // others, and it stays unpublished so a later fix still picks it up.
-        try {
-          await _publish(connector, session);
-          published++;
-        } catch (e) {
-          failed++;
-          errorLog(
-            '[TreadmillControl] Publishing session ${session.uid} failed: $e',
-          );
+      // Writing a long history is minutes of platform round-trips, and the
+      // screen is usually off by then - the CPU lease keeps the process from
+      // being suspended mid-batch. Acquired only once there is real work, so a
+      // no-op run never raises a notification.
+      final work = sessions.isEmpty
+          ? null
+          : await BackgroundWorkLease.acquire(
+              title: 'Treadmill workout sync',
+              text: 'Publishing ${sessions.length} workout(s)...',
+              logPrefix: 'TreadmillControl',
+            );
+      try {
+        for (final session in sessions) {
+          // Per session: one workout Health Connect rejects must not stop the
+          // others, and it stays unpublished so a later fix still picks it up.
+          try {
+            await _publish(connector, session);
+            published++;
+            await work?.update('Published $published of ${sessions.length}');
+          } catch (e) {
+            failed++;
+            errorLog(
+              '[TreadmillControl] Publishing session ${session.uid} failed: $e',
+            );
+          }
         }
+      } finally {
+        await work?.release();
       }
       _lastRun = DateTime.now();
       return TreadmillPublishResult(
@@ -168,7 +185,16 @@ class TreadmillHealthConnectPublisher {
         earliest ?? DateTime.now().millisecondsSinceEpoch,
       ).subtract(const Duration(days: 365));
       final to = DateTime.now().add(const Duration(days: 1));
-      await _deleteWindow(connector, from, to);
+      final work = await BackgroundWorkLease.acquire(
+        title: 'Treadmill workout sync',
+        text: 'Removing published workouts...',
+        logPrefix: 'TreadmillControl',
+      );
+      try {
+        await _deleteWindow(connector, from, to);
+      } finally {
+        await work.release();
+      }
       final cleared = await TreadmillControlDb.instance
           .resetHealthConnectPublished();
       _lastRun = null;

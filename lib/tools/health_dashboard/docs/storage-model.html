@@ -596,6 +596,15 @@
           </table>
         </div>
         <div class="note">
+          <p><b>Long runs keep the CPU awake.</b> Every read is a platform call into another
+          process, and a full history is minutes of them. Discovery, the full import, the change
+          sync, the cleanup and the backup export each hold a <code>BackgroundWorkLease</code> for
+          their duration — a partial (CPU) wake lock plus a foreground notification — so
+          Doze or app standby cannot suspend the app halfway through and strand a type mid-range.
+          A background isolate is not an option: the plugin's method channels are bound to the main
+          isolate, so a spawned one cannot reach Health Connect at all.</p>
+        </div>
+        <div class="note">
           <p><b>Deletions reach sessions and intervals, not points.</b> Those carry the Health
           Connect record id in <code>origin</code>; deleting an interval also repairs the daily rows
           for the days it covered. Dense points deliberately carry no id — a 36-byte identifier on

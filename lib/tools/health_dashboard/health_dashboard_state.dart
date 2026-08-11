@@ -55,9 +55,12 @@ class HealthDashboardState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<BackgroundWorkLease> _beginBackgroundWork(String text) async {
+  Future<BackgroundWorkLease> _beginBackgroundWork(
+    String text, {
+    String title = 'Health Dashboard import',
+  }) async {
     final work = await BackgroundWorkLease.acquire(
-      title: 'Health Dashboard import',
+      title: title,
       text: text,
       logPrefix: 'HealthDashboard',
     );
@@ -172,6 +175,7 @@ class HealthDashboardState extends ChangeNotifier {
     await _reloadRecords();
     isCollecting = true;
     notifyListeners();
+    BackgroundWorkLease? work;
     try {
       // Treadmill workouts are no longer read out of Treadmill Control's
       // database. That tool publishes them to Health Connect, so they arrive
@@ -180,12 +184,20 @@ class HealthDashboardState extends ChangeNotifier {
       await TreadmillHealthConnectPublisher.instance.publishPendingSessions();
       // Change-token sync, not a re-import: it fetches only what Health Connect
       // reports as changed, so opening the tool stays cheap even with a decade
-      // of history stored.
-      if (autoHealthConnectSync) await _diff.sync();
+      // of history stored. It can still run long after a break, so it gets the
+      // CPU lease - the publish above brings its own.
+      if (autoHealthConnectSync) {
+        work = await _beginBackgroundWork(
+          'Syncing...',
+          title: 'Health Dashboard sync',
+        );
+        await _diff.sync();
+      }
       await _reloadRecords();
     } catch (e) {
       errorLog('[HealthDashboard] Open refresh failed: $e');
     } finally {
+      await _endBackgroundWork(work);
       isCollecting = false;
       notifyListeners();
     }
@@ -309,7 +321,14 @@ class HealthDashboardState extends ChangeNotifier {
     isCollecting = true;
     error = null;
     notifyListeners();
+    BackgroundWorkLease? work;
     try {
+      // A rebuild plus VACUUM over a full history runs for minutes; without the
+      // CPU lease the device can suspend the app halfway through it.
+      work = await _beginBackgroundWork(
+        'Cleaning up...',
+        title: 'Health Dashboard cleanup',
+      );
       final result = await HealthStore.instance.pruneUnused();
       await loadSelection();
       await loadAppRowCounts();
@@ -320,6 +339,7 @@ class HealthDashboardState extends ChangeNotifier {
       errorLog('[HealthDashboard] Pruning unused data failed: $e');
       return null;
     } finally {
+      await _endBackgroundWork(work);
       isCollecting = false;
       notifyListeners();
     }
@@ -398,7 +418,12 @@ class HealthDashboardState extends ChangeNotifier {
     error = null;
     permissionMissing = false;
     notifyListeners();
+    BackgroundWorkLease? work;
     try {
+      work = await _beginBackgroundWork(
+        'Syncing...',
+        title: 'Health Dashboard sync',
+      );
       if (!await _importer.requestAccess()) {
         permissionMissing = true;
         return const HealthDiffResult();
@@ -416,6 +441,7 @@ class HealthDashboardState extends ChangeNotifier {
       errorLog('[HealthDashboard] Change sync failed: $e');
       return const HealthDiffResult();
     } finally {
+      await _endBackgroundWork(work);
       isCollecting = false;
       notifyListeners();
     }
