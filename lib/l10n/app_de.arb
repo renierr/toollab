@@ -2983,5 +2983,91 @@
   "healthDashboardMetaAggregateIncluded": "Zählt in Summen",
   "healthDashboardMetaSynced": "Mit Backend synchronisiert",
   "healthDashboardMetaDeleted": "Gelöscht",
-  "healthDashboardMetaRawValues": "Gespeicherte Werte"
+  "healthDashboardMetaRawValues": "Gespeicherte Werte",
+  "healthDashboardSectionDebug": "Debug",
+  "healthDebugSeedTitle": "Generierte Testdaten",
+  "healthDebugSeedSubtitle": "Health Connect mit einer erzeugten Historie füllen",
+  "healthDebugSeedWarning": "Nur in Debug-Builds. Die Einträge werden als diese App nach Health Connect geschrieben, sind als generiert markiert und lassen sich unten wieder entfernen.",
+  "healthDebugSeedRange": "Zeitraum",
+  "healthDebugSeedDays": "{count} Tage",
+  "@healthDebugSeedDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedPresets": "Voreinstellungen",
+  "healthDebugSeedPresetsHint": "Eine Voreinstellung wählt nur eine Gruppenmenge aus — unten anpassbar.",
+  "healthDebugSeedGroups": "Datengruppen",
+  "healthDebugSeedActions": "Aktionen",
+  "healthDebugSeedGenerate": "Daten erzeugen",
+  "healthDebugSeedGenerateSubtitle": "Schreibt Tag für Tag und ersetzt bereits erzeugte Tage",
+  "healthDebugSeedGenerateConfirm": "{days} Tag(e) generierte Daten aus {groups} Gruppe(n) nach Health Connect schreiben?",
+  "@healthDebugSeedGenerateConfirm": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "groups": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedGenerateAction": "Erzeugen",
+  "healthDebugSeedProgress": "{count} Eintrag/Einträge...",
+  "@healthDebugSeedProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedDone": "{count} Eintrag/Einträge geschrieben",
+  "@healthDebugSeedDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedPartial": "{written} Eintrag/Einträge geschrieben, {failed} fehlgeschlagen",
+  "@healthDebugSeedPartial": {
+    "placeholders": {
+      "written": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedClear": "Generierte Daten entfernen",
+  "healthDebugSeedClearSubtitle": "Löscht nur Einträge, die dieser Generator geschrieben hat",
+  "healthDebugSeedClearConfirm": "Alle generierten Einträge aus Health Connect löschen und ihre Zeilen aus dem Speicher entfernen? Echte Daten bleiben erhalten.",
+  "healthDebugSeedClearAction": "Entfernen",
+  "healthDebugSeedClearDone": "{count} Eintrag/Einträge entfernt",
+  "@healthDebugSeedClearDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedNoGroups": "Mindestens eine Datengruppe auswählen",
+  "healthDebugSeedNoPermission": "Der Zugriff auf Health Connect wurde abgelehnt",
+  "healthDebugSeedFailed": "Health Connect hat den Lauf abgelehnt — siehe Log",
+  "healthDebugSeedUnsupported": "Health Connect gibt es nur unter Android",
+  "healthDebugSeedImportHint": "Generierte Daten landen in Health Connect, nicht im Dashboard. Erst Quellen suchen, dann Import neu starten.",
+  "healthDebugPresetEveryday": "Alltag",
+  "healthDebugPresetAthlete": "Sportlich",
+  "healthDebugPresetClinical": "Klinisch",
+  "healthDebugPresetEverything": "Alles",
+  "healthDebugGroupActivity": "Aktivität — Schritte, Distanz, Energie, Etagen",
+  "healthDebugGroupHeart": "Herz — Messreihe, Ruhepuls, HRV",
+  "healthDebugGroupSleep": "Schlaf — eine Nacht pro Tag mit Phasen",
+  "healthDebugGroupWorkouts": "Workouts — drei Einheiten pro Woche",
+  "healthDebugGroupBody": "Körper — Gewicht, Fettanteil, Magermasse, Größe",
+  "healthDebugGroupVitals": "Vitalwerte — Sauerstoff, Atmung, Blutdruck, Glukose",
+  "healthDebugGroupHydration": "Flüssigkeit — Getränke über den Tag verteilt"
 }

@@ -7265,4 +7265,144 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardMetaRawValues => 'Stored values';
+
+  @override
+  String get healthDashboardSectionDebug => 'Debug';
+
+  @override
+  String get healthDebugSeedTitle => 'Generated test data';
+
+  @override
+  String get healthDebugSeedSubtitle =>
+      'Fill Health Connect with a synthetic history';
+
+  @override
+  String get healthDebugSeedWarning =>
+      'Debug builds only. Records are written into Health Connect as this app, marked as generated, and can be removed again below.';
+
+  @override
+  String get healthDebugSeedRange => 'Time range';
+
+  @override
+  String healthDebugSeedDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String get healthDebugSeedPresets => 'Presets';
+
+  @override
+  String get healthDebugSeedPresetsHint =>
+      'A preset only picks a set of groups — adjust them below.';
+
+  @override
+  String get healthDebugSeedGroups => 'Data groups';
+
+  @override
+  String get healthDebugSeedActions => 'Actions';
+
+  @override
+  String get healthDebugSeedGenerate => 'Generate data';
+
+  @override
+  String get healthDebugSeedGenerateSubtitle =>
+      'Writes day by day and replaces days already generated';
+
+  @override
+  String healthDebugSeedGenerateConfirm(int days, int groups) {
+    return 'Write $days day(s) of generated data across $groups group(s) into Health Connect?';
+  }
+
+  @override
+  String get healthDebugSeedGenerateAction => 'Generate';
+
+  @override
+  String healthDebugSeedProgress(int count) {
+    return '$count record(s)...';
+  }
+
+  @override
+  String healthDebugSeedDone(int count) {
+    return 'Wrote $count record(s)';
+  }
+
+  @override
+  String healthDebugSeedPartial(int written, int failed) {
+    return 'Wrote $written record(s), $failed failed';
+  }
+
+  @override
+  String get healthDebugSeedClear => 'Remove generated data';
+
+  @override
+  String get healthDebugSeedClearSubtitle =>
+      'Deletes only records this generator wrote';
+
+  @override
+  String get healthDebugSeedClearConfirm =>
+      'Delete every generated record from Health Connect and drop its rows from the store? Real data stays.';
+
+  @override
+  String get healthDebugSeedClearAction => 'Remove';
+
+  @override
+  String healthDebugSeedClearDone(int count) {
+    return 'Removed $count record(s)';
+  }
+
+  @override
+  String get healthDebugSeedNoGroups => 'Select at least one data group';
+
+  @override
+  String get healthDebugSeedNoPermission =>
+      'Health Connect access was declined';
+
+  @override
+  String get healthDebugSeedFailed =>
+      'Health Connect refused the run — check the log';
+
+  @override
+  String get healthDebugSeedUnsupported =>
+      'Health Connect is only available on Android';
+
+  @override
+  String get healthDebugSeedImportHint =>
+      'Generated data lands in Health Connect, not in the dashboard. Run Scan sources, then Restart import, to pull it in.';
+
+  @override
+  String get healthDebugPresetEveryday => 'Everyday';
+
+  @override
+  String get healthDebugPresetAthlete => 'Athlete';
+
+  @override
+  String get healthDebugPresetClinical => 'Clinical';
+
+  @override
+  String get healthDebugPresetEverything => 'Everything';
+
+  @override
+  String get healthDebugGroupActivity =>
+      'Activity — steps, distance, energy, floors';
+
+  @override
+  String get healthDebugGroupHeart => 'Heart — rate series, resting rate, HRV';
+
+  @override
+  String get healthDebugGroupSleep => 'Sleep — one night per day with stages';
+
+  @override
+  String get healthDebugGroupWorkouts => 'Workouts — three sessions a week';
+
+  @override
+  String get healthDebugGroupBody =>
+      'Body — weight, body fat, lean mass, height';
+
+  @override
+  String get healthDebugGroupVitals =>
+      'Vitals — oxygen, breathing, pressure, glucose';
+
+  @override
+  String get healthDebugGroupHydration =>
+      'Hydration — drinks spread over the day';
 }

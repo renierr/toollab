@@ -396,6 +396,93 @@ Sanity checks after a second device joins: workout count must not roughly
 double, and heart-rate point counts must not jump about 2x. Either means the
 dedup rules are not firing.
 
+## Generated Test Data (debug builds only)
+
+An emulator holds no health data, which makes most of the dashboard impossible
+to look at. `HealthDebugSeeder` writes a synthetic history into Health Connect;
+the entry sits at the bottom of the Health Connect settings screen behind
+`kDebugMode`, so it is absent from a release build entirely.
+
+### How to use it
+
+1. **Dashboard → settings (gear) → Health Connect settings → Generated test
+   data.** Debug builds only; the tile is not compiled into a release build.
+2. **Pick a range** (7 / 30 / 90 / 180 / 365 days) and a **preset**. A preset only
+   ticks a set of groups - adjust the checkboxes afterwards if you want
+   something narrower. Grant the write permissions Health Connect asks for.
+3. **Generate data**, confirm. It runs under a `BackgroundWorkLease`, so a year
+   of everything survives the screen going off. A year of all seven groups is
+   roughly 13k records and a couple of minutes; 90 days is a few thousand.
+4. Back on the Health Connect settings screen: **Scan sources**, then **Import
+   selected data**. Generated data is just another writer, so it arrives on the
+   ordinary import path. Step 4 alone is enough on an emulator that has no other
+   writers (see below).
+5. **Remove generated data** wipes what the generator wrote - and only that -
+   then generate again. Nothing else has to be reset in between.
+
+Writing needs the matching `WRITE_*` permission **declared in the manifest**, not
+just granted: an undeclared one makes `requestPermissions` throw
+`PERMISSION_NOT_DECLARED` rather than come back denied. The eighteen the
+generator needs beyond the treadmill publisher's six live in
+`android/app/src/debug/AndroidManifest.xml`, so they merge into debug builds
+only and a release never asks for write access to weight, sleep or blood
+pressure. Keep that list in step with `HealthDebugSeeder._typesByGroup`, and
+remember a manifest change needs a full rebuild - hot reload will not pick it up.
+
+Step 4 is why the scan matters: the full importer sends the allowed writers as a
+`dataOrigins` allowlist, and that list can only name writers discovery has
+already attributed to a type. On a device with other writers present, a
+brand-new one is missing from the list until the probe runs again. On an empty
+emulator the filter is empty - "no restriction" - and the import finds it either
+way.
+
+### How it is built
+
+Seven groups - activity, heart, sleep, workouts, body, vitals, hydration - each
+cover one coherent slice of a day, and a preset is nothing but a set of them, so
+a preset and a hand-picked selection are the same thing to the generator.
+
+| Group | Records | Cadence |
+| --- | --- | --- |
+| `activity` | Steps, Distance, ActiveEnergyBurned, TotalEnergyBurned, FloorsClimbed, ElevationGained | 15 hourly step buckets, thirds of a day for distance and energy, daily for the rest |
+| `heart` | HeartRateSeries, RestingHeartRate, HeartRateVariabilityRMSSD | One series a day sampled every 20 min, the other two once |
+| `sleep` | SleepSession with stages | One night per day, ~6¼–8¼ h |
+| `workouts` | ExerciseSession, SpeedSeries, Distance, ActiveEnergyBurned, Steps | Three a week, picked by the day itself |
+| `body` | Weight, BodyFatPercentage, LeanBodyMass, BoneMass, BodyWaterMass, Height | First three every other day, rest weekly |
+| `vitals` | OxygenSaturation, RespiratoryRate, BloodPressure, BodyTemperature, BloodGlucose | First three daily, temperature weekly, glucose 3× every third day |
+| `hydration` | Hydration | Four a day |
+
+Presets: **Everyday** = activity + heart + sleep + body, **Athlete** adds
+workouts and hydration, **Clinical** = heart + body + vitals, **Everything** =
+all seven.
+
+Two properties matter more than the shapes:
+
+- **Every record carries a client record id** of
+  `toollab:health-debug:<epoch day>:<part>`. The prefix is what makes the data
+  removable again - the wipe reads the generator's types back, keeps the records
+  carrying it and deletes those by id, so real data, treadmill workouts above
+  all, is untouched. Time-range deletion would not be able to tell them apart.
+- **The id is derived from the day, not from the run.** Generating the same day
+  twice replaces its records instead of adding a second copy, and the per-day
+  `Random(epochDay)` seed means a 7 day set and a year set agree on the days they
+  share. Feed, clear, feed again converges on the same history.
+
+The values are shapes rather than noise: steps follow a waking-hour curve, heart
+rate drops overnight and rises in the evening, sleep runs in ~90 minute cycles,
+weight drifts on a sine rather than jittering, and workouts land three times a
+week picked by the day itself. Today is written only up to the current time.
+
+A batch that Health Connect rejects is retried one record at a time, so a single
+type this platform version will not take costs one record rather than two
+hundred. `BodyMassIndexRecord` is deliberately never written - Health Connect
+has no such record type.
+
+Clearing also drops the generating package's rows from the store via
+`deleteAppData`, because deleting in Health Connect alone would leave everything
+already imported behind. Generated data reaches the dashboard the same way any
+writer's does: scan sources, then import.
+
 ## Known Gaps
 
 - `canonicalSyncRecords()` queries every canonical table with no limit and

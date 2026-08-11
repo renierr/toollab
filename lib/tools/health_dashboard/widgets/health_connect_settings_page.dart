@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import '../health_dashboard_state.dart';
 import 'health_apps_page.dart';
 import 'health_busy_dialog.dart';
 import 'health_data_types_page.dart';
+import 'health_debug_seed_page.dart';
 import 'health_import_progress_dialog.dart';
 import 'health_store_status_tile.dart';
 
@@ -136,6 +138,22 @@ class HealthConnectSettingsPage extends StatelessWidget {
                 ? HealthBusyDialog.show(context)
                 : _pruneUnused(context),
           ),
+          // Debug builds only: it writes fabricated measurements into the same
+          // Health Connect store real data lives in.
+          if (kDebugMode) ...[
+            SettingsSectionLabel(title: l10n.healthDashboardSectionDebug),
+            ListTile(
+              leading: const Icon(Icons.bug_report_outlined),
+              title: Text(l10n.healthDebugSeedTitle),
+              subtitle: Text(l10n.healthDebugSeedSubtitle),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const HealthDebugSeedPage(),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
         ],
       ),

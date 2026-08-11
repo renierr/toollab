@@ -7314,4 +7314,144 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardMetaRawValues => 'Gespeicherte Werte';
+
+  @override
+  String get healthDashboardSectionDebug => 'Debug';
+
+  @override
+  String get healthDebugSeedTitle => 'Generierte Testdaten';
+
+  @override
+  String get healthDebugSeedSubtitle =>
+      'Health Connect mit einer erzeugten Historie füllen';
+
+  @override
+  String get healthDebugSeedWarning =>
+      'Nur in Debug-Builds. Die Einträge werden als diese App nach Health Connect geschrieben, sind als generiert markiert und lassen sich unten wieder entfernen.';
+
+  @override
+  String get healthDebugSeedRange => 'Zeitraum';
+
+  @override
+  String healthDebugSeedDays(int count) {
+    return '$count Tage';
+  }
+
+  @override
+  String get healthDebugSeedPresets => 'Voreinstellungen';
+
+  @override
+  String get healthDebugSeedPresetsHint =>
+      'Eine Voreinstellung wählt nur eine Gruppenmenge aus — unten anpassbar.';
+
+  @override
+  String get healthDebugSeedGroups => 'Datengruppen';
+
+  @override
+  String get healthDebugSeedActions => 'Aktionen';
+
+  @override
+  String get healthDebugSeedGenerate => 'Daten erzeugen';
+
+  @override
+  String get healthDebugSeedGenerateSubtitle =>
+      'Schreibt Tag für Tag und ersetzt bereits erzeugte Tage';
+
+  @override
+  String healthDebugSeedGenerateConfirm(int days, int groups) {
+    return '$days Tag(e) generierte Daten aus $groups Gruppe(n) nach Health Connect schreiben?';
+  }
+
+  @override
+  String get healthDebugSeedGenerateAction => 'Erzeugen';
+
+  @override
+  String healthDebugSeedProgress(int count) {
+    return '$count Eintrag/Einträge...';
+  }
+
+  @override
+  String healthDebugSeedDone(int count) {
+    return '$count Eintrag/Einträge geschrieben';
+  }
+
+  @override
+  String healthDebugSeedPartial(int written, int failed) {
+    return '$written Eintrag/Einträge geschrieben, $failed fehlgeschlagen';
+  }
+
+  @override
+  String get healthDebugSeedClear => 'Generierte Daten entfernen';
+
+  @override
+  String get healthDebugSeedClearSubtitle =>
+      'Löscht nur Einträge, die dieser Generator geschrieben hat';
+
+  @override
+  String get healthDebugSeedClearConfirm =>
+      'Alle generierten Einträge aus Health Connect löschen und ihre Zeilen aus dem Speicher entfernen? Echte Daten bleiben erhalten.';
+
+  @override
+  String get healthDebugSeedClearAction => 'Entfernen';
+
+  @override
+  String healthDebugSeedClearDone(int count) {
+    return '$count Eintrag/Einträge entfernt';
+  }
+
+  @override
+  String get healthDebugSeedNoGroups => 'Mindestens eine Datengruppe auswählen';
+
+  @override
+  String get healthDebugSeedNoPermission =>
+      'Der Zugriff auf Health Connect wurde abgelehnt';
+
+  @override
+  String get healthDebugSeedFailed =>
+      'Health Connect hat den Lauf abgelehnt — siehe Log';
+
+  @override
+  String get healthDebugSeedUnsupported =>
+      'Health Connect gibt es nur unter Android';
+
+  @override
+  String get healthDebugSeedImportHint =>
+      'Generierte Daten landen in Health Connect, nicht im Dashboard. Erst Quellen suchen, dann Import neu starten.';
+
+  @override
+  String get healthDebugPresetEveryday => 'Alltag';
+
+  @override
+  String get healthDebugPresetAthlete => 'Sportlich';
+
+  @override
+  String get healthDebugPresetClinical => 'Klinisch';
+
+  @override
+  String get healthDebugPresetEverything => 'Alles';
+
+  @override
+  String get healthDebugGroupActivity =>
+      'Aktivität — Schritte, Distanz, Energie, Etagen';
+
+  @override
+  String get healthDebugGroupHeart => 'Herz — Messreihe, Ruhepuls, HRV';
+
+  @override
+  String get healthDebugGroupSleep => 'Schlaf — eine Nacht pro Tag mit Phasen';
+
+  @override
+  String get healthDebugGroupWorkouts => 'Workouts — drei Einheiten pro Woche';
+
+  @override
+  String get healthDebugGroupBody =>
+      'Körper — Gewicht, Fettanteil, Magermasse, Größe';
+
+  @override
+  String get healthDebugGroupVitals =>
+      'Vitalwerte — Sauerstoff, Atmung, Blutdruck, Glukose';
+
+  @override
+  String get healthDebugGroupHydration =>
+      'Flüssigkeit — Getränke über den Tag verteilt';
 }

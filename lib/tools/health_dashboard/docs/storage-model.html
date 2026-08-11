@@ -244,6 +244,20 @@
   }
   .copy:hover { color: var(--accent); border-color: var(--accent); }
 
+  /* ---- client id anatomy ---- */
+  .idbox { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 18px 20px; margin: 22px 0 0; }
+  .idline { display: flex; flex-wrap: wrap; gap: 5px; font-family: var(--mono); font-size: 15px; }
+  .idline span { padding: 4px 9px; border-radius: 5px; font-weight: 650; }
+  .idline .p1 { background: var(--accent-soft); color: var(--accent); }
+  .idline .p2 { background: var(--point-soft); color: var(--point); }
+  .idline .p3 { background: var(--interval-soft); color: var(--interval); }
+  .idlegend { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin: 18px 0 0; }
+  .idlegend dt { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
+  .idlegend dt.p1 { color: var(--accent); }
+  .idlegend dt.p2 { color: var(--point); }
+  .idlegend dt.p3 { color: var(--interval); }
+  .idlegend dd { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-dim); }
+
   /* ---- callouts ---- */
   .note {
     border-left: 2px solid var(--accent); background: var(--surface); padding: 14px 18px;
@@ -838,6 +852,12 @@
                 <td class="c">rows of switched-off apps · orphan parts · unused health_text</td>
                 <td class="d">One file rewrite</td>
               </tr>
+              <tr>
+                <td class="d"><b>Generated test data</b> <span class="chip s-accent">debug builds only</span></td>
+                <td class="d">The one entry that <b>writes into Health Connect</b> rather than reading from it: a synthetic history over a chosen range, stamped with the client record id prefix <code>toollab:health-debug:</code>. Its wipe reads those records back and deletes them by id, then drops the generating package's rows from the store</td>
+                <td class="c">nothing directly · Health Connect</td>
+                <td class="d">Seconds to a minute</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -908,10 +928,207 @@
         </p>
       </section>
 
+      <section id="seed">
+        <h2><span class="hn">12</span> Generated test data <span class="chip s-accent">debug builds only</span></h2>
+        <p class="lede measure">
+          An emulator holds no health data, which makes most of this dashboard impossible to look
+          at. The generator is the one screen here that <b>writes into</b> Health Connect: a
+          synthetic history over a chosen range, removable again on its own. The entry sits at the
+          bottom of the Health Connect settings screen behind <code>kDebugMode</code>, so a release
+          build never carries it.
+        </p>
+
+        <h3>The loop</h3>
+        <div class="scroller">
+          <svg viewBox="0 0 920 232" role="img" width="920"
+               aria-label="Four steps: choose a range and groups, generate into Health Connect, scan sources, import into the store — then the dashboard renders it. A dashed return arrow from the generator wipes what was written so the cycle can start again."
+               style="max-width:100%;height:auto;font-family:var(--sans)">
+            <defs>
+              <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--ink-faint)"/>
+              </marker>
+              <marker id="ar2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                <path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/>
+              </marker>
+            </defs>
+
+            <g font-size="11.5">
+              <!-- 1 -->
+              <rect x="1" y="34" width="164" height="72" rx="8" fill="var(--surface)" stroke="var(--line)"/>
+              <text x="17" y="55" font-family="var(--mono)" font-size="10" letter-spacing=".08em" fill="var(--ink-faint)">01 · GENERATOR</text>
+              <text x="17" y="76" font-size="13" font-weight="650" fill="var(--ink)">Choose</text>
+              <text x="17" y="94" fill="var(--ink-dim)">range · preset · groups</text>
+
+              <!-- 2 -->
+              <rect x="197" y="34" width="164" height="72" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/>
+              <text x="213" y="55" font-family="var(--mono)" font-size="10" letter-spacing=".08em" fill="var(--accent)">02 · GENERATOR</text>
+              <text x="213" y="76" font-size="13" font-weight="650" fill="var(--ink)">Generate data</text>
+              <text x="213" y="94" fill="var(--ink-dim)">writes to Health Connect</text>
+
+              <!-- 3 -->
+              <rect x="393" y="34" width="164" height="72" rx="8" fill="var(--surface)" stroke="var(--line)"/>
+              <text x="409" y="55" font-family="var(--mono)" font-size="10" letter-spacing=".08em" fill="var(--ink-faint)">03 · SETTINGS</text>
+              <text x="409" y="76" font-size="13" font-weight="650" fill="var(--ink)">Scan sources</text>
+              <text x="409" y="94" fill="var(--ink-dim)">registers the writer</text>
+
+              <!-- 4 -->
+              <rect x="589" y="34" width="164" height="72" rx="8" fill="var(--surface)" stroke="var(--line)"/>
+              <text x="605" y="55" font-family="var(--mono)" font-size="10" letter-spacing=".08em" fill="var(--ink-faint)">04 · SETTINGS</text>
+              <text x="605" y="76" font-size="13" font-weight="650" fill="var(--ink)">Import selected</text>
+              <text x="605" y="94" fill="var(--ink-dim)">fills the typed tables</text>
+
+              <!-- dashboard -->
+              <rect x="785" y="42" width="134" height="56" rx="8" fill="var(--surface-2)" stroke="var(--line)"/>
+              <text x="852" y="66" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Dashboard</text>
+              <text x="852" y="85" text-anchor="middle" fill="var(--ink-dim)">cards · charts</text>
+            </g>
+
+            <g stroke="var(--ink-faint)" fill="none" marker-end="url(#ar2)">
+              <path d="M166 70 H192"/>
+              <path d="M362 70 H388"/>
+              <path d="M558 70 H584"/>
+              <path d="M754 70 H780"/>
+            </g>
+
+            <!-- return: the wipe, back to step 02 -->
+            <g stroke="var(--accent)" stroke-dasharray="5 4" fill="none">
+              <path d="M852 100 V161 H630"/>
+              <path d="M352 161 H279 V110" marker-end="url(#ar2a)"/>
+            </g>
+            <rect x="352" y="146" width="278" height="30" rx="6" fill="var(--surface)" stroke="var(--accent)"/>
+            <text x="491" y="166" text-anchor="middle" font-size="11.5" fill="var(--accent)" font-weight="650">Remove generated data · start over</text>
+
+            <text x="10" y="212" font-size="11.5" fill="var(--ink-faint)" font-family="var(--mono)">
+              Steps 03 and 04 are the ordinary import path — generated data is just another writer.
+            </text>
+          </svg>
+        </div>
+
+        <div class="note warn">
+          <b>Writing needs the permission declared, not just granted.</b> An undeclared
+          <code>WRITE_*</code> makes <code>requestPermissions</code> throw
+          <code>PERMISSION_NOT_DECLARED</code> rather than come back denied. The eighteen the
+          generator needs beyond the treadmill publisher's six sit in
+          <code>android/app/src/debug/AndroidManifest.xml</code>, so they merge into debug builds
+          alone and a release never asks for write access to weight, sleep or blood pressure. Keep
+          that list in step with <code>HealthDebugSeeder._typesByGroup</code> — and note that a
+          manifest change needs a full rebuild, not a hot reload.
+        </div>
+
+        <div class="note">
+          <b>Why step 03 exists.</b> The full importer sends the allowed writers as a
+          <code>dataOrigins</code> allowlist, and that list can only name writers discovery has
+          attributed to a type. On a device that already discovered other writers, a brand-new one is
+          missing from the list until the probe runs again. On an empty emulator the filter is empty
+          — "no restriction" — and the import finds it either way.
+        </div>
+
+        <h3>Every record is stamped, and that is what makes it removable</h3>
+        <div class="idbox">
+          <div class="idline">
+            <span class="p1">toollab:health-debug:</span><span class="p2">20489</span><span class="p3">:heart-rate</span>
+          </div>
+          <dl class="idlegend">
+            <div>
+              <dt class="p1">Prefix</dt>
+              <dd>The wipe reads the generator's types back, keeps the records carrying this and
+                deletes them <b>by id</b>. Real data — treadmill workouts above all — is never
+                matched. A time-range delete could not tell the two apart.</dd>
+            </div>
+            <div>
+              <dt class="p2">Epoch day</dt>
+              <dd>Derived from the day, not from the run. Generating the same day twice
+                <b>replaces</b> its records instead of adding a copy, so feed → clear → feed
+                converges on the same history.</dd>
+            </div>
+            <div>
+              <dt class="p3">Part</dt>
+              <dd>Fixed per record within a day. Renaming one orphans everything already written
+                under the old name, exactly as in the treadmill publisher.</dd>
+            </div>
+          </dl>
+        </div>
+
+        <h3>What a group writes</h3>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr>
+                <th>Group</th><th>Health Connect records</th><th>Cadence</th><th>Shape</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="c">activity</td>
+                <td class="d">Steps · Distance · ActiveEnergyBurned · TotalEnergyBurned · FloorsClimbed · ElevationGained</td>
+                <td class="d">15 hourly step buckets, thirds of a day for distance and energy, one a day for the rest</td>
+                <td class="d">A waking-hour curve, 6k–13k steps</td>
+              </tr>
+              <tr>
+                <td class="c">heart</td>
+                <td class="d">HeartRateSeries · RestingHeartRate · HeartRateVariabilityRMSSD</td>
+                <td class="d">One series a day, sampled every 20 min; the other two once</td>
+                <td class="d">Drops overnight, rises early evening</td>
+              </tr>
+              <tr>
+                <td class="c">sleep</td>
+                <td class="d">SleepSession with stages</td>
+                <td class="d">One night per day, ~6¼–8¼ h</td>
+                <td class="d">Light · deep · REM in ~90 min cycles, brief wakes after the first</td>
+              </tr>
+              <tr>
+                <td class="c">workouts</td>
+                <td class="d">ExerciseSession · SpeedSeries · Distance · ActiveEnergyBurned · Steps</td>
+                <td class="d">Three a week, picked by the day itself so the pattern is stable</td>
+                <td class="d">Running · cycling · strength, evenings</td>
+              </tr>
+              <tr>
+                <td class="c">body</td>
+                <td class="d">Weight · BodyFatPercentage · LeanBodyMass · BoneMass · BodyWaterMass · Height</td>
+                <td class="d">First three every other day, the rest weekly</td>
+                <td class="d">A sine drift rather than jitter, so the trend has a direction</td>
+              </tr>
+              <tr>
+                <td class="c">vitals</td>
+                <td class="d">OxygenSaturation · RespiratoryRate · BloodPressure · BodyTemperature · BloodGlucose</td>
+                <td class="d">First three daily, temperature weekly, glucose 3× every third day</td>
+                <td class="d">Healthy-adult ranges</td>
+              </tr>
+              <tr>
+                <td class="c">hydration</td>
+                <td class="d">Hydration</td>
+                <td class="d">Four a day</td>
+                <td class="d">0.25–0.5 L each</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="measure">
+          A preset is nothing but a set of groups, so a preset and a hand-picked selection are the
+          same thing to the generator: <b>Everyday</b> is activity + heart + sleep + body,
+          <b>Athlete</b> adds workouts and hydration, <b>Clinical</b> is heart + body + vitals, and
+          <b>Everything</b> is all seven. Ranges run from 7 days to a year.
+        </p>
+
+        <div class="note warn">
+          <b>Two limits worth knowing.</b> <code>BodyMassIndexRecord</code> is never written —
+          Health Connect has no such record type, whatever the plugin's type list suggests. And a
+          batch Health Connect rejects is retried one record at a time, so a type this platform
+          version will not take costs one record rather than the two hundred it shared a write with.
+        </div>
+
+        <p class="measure">
+          Removing also drops the generating package's rows through <code>deleteAppData</code>.
+          Deleting in Health Connect alone would leave everything already imported sitting in the
+          typed tables — <code>health_point</code> carries no record id, so the change sync cannot
+          retract those rows on its own.
+        </p>
+      </section>
+
       <footer>
         Source: <code>lib/tools/health_dashboard/</code> — <code>store/</code> holds the schema,
         catalog, mapper and queries; <code>collectors/</code> holds discovery, the importer and the
-        change-token sync. The authoritative schema version is
+        change-token sync; <code>debug/</code> holds the test-data generator. The authoritative schema version is
         <code>HealthSchema.version</code>. Update this page whenever the schema, the source rules or
         the type mapping change.
       </footer>
@@ -1158,7 +1375,8 @@
     ["model", "Three shapes"], ["flow", "When data is written"], ["schema", "Schema"],
     ["types", "Health Connect types"], ["rollup", "The fast path"], ["size", "Storage saved"],
     ["dupes", "Duplicates"], ["incr", "Incremental sync"], ["state", "Current state"],
-    ["settings", "Outside the tables"], ["hcsettings", "Settings screen"]
+    ["settings", "Outside the tables"], ["hcsettings", "Settings screen"],
+    ["seed", "Generated test data"]
   ];
   const toc = $("#toc");
   SECTIONS.forEach(([id, label], i) => {

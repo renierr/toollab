@@ -13054,6 +13054,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stored values'**
   String get healthDashboardMetaRawValues;
+
+  /// No description provided for @healthDashboardSectionDebug.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug'**
+  String get healthDashboardSectionDebug;
+
+  /// No description provided for @healthDebugSeedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated test data'**
+  String get healthDebugSeedTitle;
+
+  /// No description provided for @healthDebugSeedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill Health Connect with a synthetic history'**
+  String get healthDebugSeedSubtitle;
+
+  /// No description provided for @healthDebugSeedWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug builds only. Records are written into Health Connect as this app, marked as generated, and can be removed again below.'**
+  String get healthDebugSeedWarning;
+
+  /// No description provided for @healthDebugSeedRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Time range'**
+  String get healthDebugSeedRange;
+
+  /// No description provided for @healthDebugSeedDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String healthDebugSeedDays(int count);
+
+  /// No description provided for @healthDebugSeedPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Presets'**
+  String get healthDebugSeedPresets;
+
+  /// No description provided for @healthDebugSeedPresetsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A preset only picks a set of groups — adjust them below.'**
+  String get healthDebugSeedPresetsHint;
+
+  /// No description provided for @healthDebugSeedGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Data groups'**
+  String get healthDebugSeedGroups;
+
+  /// No description provided for @healthDebugSeedActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get healthDebugSeedActions;
+
+  /// No description provided for @healthDebugSeedGenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate data'**
+  String get healthDebugSeedGenerate;
+
+  /// No description provided for @healthDebugSeedGenerateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Writes day by day and replaces days already generated'**
+  String get healthDebugSeedGenerateSubtitle;
+
+  /// No description provided for @healthDebugSeedGenerateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Write {days} day(s) of generated data across {groups} group(s) into Health Connect?'**
+  String healthDebugSeedGenerateConfirm(int days, int groups);
+
+  /// No description provided for @healthDebugSeedGenerateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get healthDebugSeedGenerateAction;
+
+  /// No description provided for @healthDebugSeedProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} record(s)...'**
+  String healthDebugSeedProgress(int count);
+
+  /// No description provided for @healthDebugSeedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrote {count} record(s)'**
+  String healthDebugSeedDone(int count);
+
+  /// No description provided for @healthDebugSeedPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrote {written} record(s), {failed} failed'**
+  String healthDebugSeedPartial(int written, int failed);
+
+  /// No description provided for @healthDebugSeedClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove generated data'**
+  String get healthDebugSeedClear;
+
+  /// No description provided for @healthDebugSeedClearSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes only records this generator wrote'**
+  String get healthDebugSeedClearSubtitle;
+
+  /// No description provided for @healthDebugSeedClearConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete every generated record from Health Connect and drop its rows from the store? Real data stays.'**
+  String get healthDebugSeedClearConfirm;
+
+  /// No description provided for @healthDebugSeedClearAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get healthDebugSeedClearAction;
+
+  /// No description provided for @healthDebugSeedClearDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed {count} record(s)'**
+  String healthDebugSeedClearDone(int count);
+
+  /// No description provided for @healthDebugSeedNoGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one data group'**
+  String get healthDebugSeedNoGroups;
+
+  /// No description provided for @healthDebugSeedNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect access was declined'**
+  String get healthDebugSeedNoPermission;
+
+  /// No description provided for @healthDebugSeedFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect refused the run — check the log'**
+  String get healthDebugSeedFailed;
+
+  /// No description provided for @healthDebugSeedUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect is only available on Android'**
+  String get healthDebugSeedUnsupported;
+
+  /// No description provided for @healthDebugSeedImportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated data lands in Health Connect, not in the dashboard. Run Scan sources, then Restart import, to pull it in.'**
+  String get healthDebugSeedImportHint;
+
+  /// No description provided for @healthDebugPresetEveryday.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyday'**
+  String get healthDebugPresetEveryday;
+
+  /// No description provided for @healthDebugPresetAthlete.
+  ///
+  /// In en, this message translates to:
+  /// **'Athlete'**
+  String get healthDebugPresetAthlete;
+
+  /// No description provided for @healthDebugPresetClinical.
+  ///
+  /// In en, this message translates to:
+  /// **'Clinical'**
+  String get healthDebugPresetClinical;
+
+  /// No description provided for @healthDebugPresetEverything.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything'**
+  String get healthDebugPresetEverything;
+
+  /// No description provided for @healthDebugGroupActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity — steps, distance, energy, floors'**
+  String get healthDebugGroupActivity;
+
+  /// No description provided for @healthDebugGroupHeart.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart — rate series, resting rate, HRV'**
+  String get healthDebugGroupHeart;
+
+  /// No description provided for @healthDebugGroupSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep — one night per day with stages'**
+  String get healthDebugGroupSleep;
+
+  /// No description provided for @healthDebugGroupWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts — three sessions a week'**
+  String get healthDebugGroupWorkouts;
+
+  /// No description provided for @healthDebugGroupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Body — weight, body fat, lean mass, height'**
+  String get healthDebugGroupBody;
+
+  /// No description provided for @healthDebugGroupVitals.
+  ///
+  /// In en, this message translates to:
+  /// **'Vitals — oxygen, breathing, pressure, glucose'**
+  String get healthDebugGroupVitals;
+
+  /// No description provided for @healthDebugGroupHydration.
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration — drinks spread over the day'**
+  String get healthDebugGroupHydration;
 }
 
 class _AppLocalizationsDelegate

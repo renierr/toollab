@@ -3832,5 +3832,91 @@
   "healthDashboardMetaAggregateIncluded": "Counts in totals",
   "healthDashboardMetaSynced": "Synced to backend",
   "healthDashboardMetaDeleted": "Deleted",
-  "healthDashboardMetaRawValues": "Stored values"
+  "healthDashboardMetaRawValues": "Stored values",
+  "healthDashboardSectionDebug": "Debug",
+  "healthDebugSeedTitle": "Generated test data",
+  "healthDebugSeedSubtitle": "Fill Health Connect with a synthetic history",
+  "healthDebugSeedWarning": "Debug builds only. Records are written into Health Connect as this app, marked as generated, and can be removed again below.",
+  "healthDebugSeedRange": "Time range",
+  "healthDebugSeedDays": "{count} days",
+  "@healthDebugSeedDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedPresets": "Presets",
+  "healthDebugSeedPresetsHint": "A preset only picks a set of groups — adjust them below.",
+  "healthDebugSeedGroups": "Data groups",
+  "healthDebugSeedActions": "Actions",
+  "healthDebugSeedGenerate": "Generate data",
+  "healthDebugSeedGenerateSubtitle": "Writes day by day and replaces days already generated",
+  "healthDebugSeedGenerateConfirm": "Write {days} day(s) of generated data across {groups} group(s) into Health Connect?",
+  "@healthDebugSeedGenerateConfirm": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "groups": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedGenerateAction": "Generate",
+  "healthDebugSeedProgress": "{count} record(s)...",
+  "@healthDebugSeedProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedDone": "Wrote {count} record(s)",
+  "@healthDebugSeedDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedPartial": "Wrote {written} record(s), {failed} failed",
+  "@healthDebugSeedPartial": {
+    "placeholders": {
+      "written": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedClear": "Remove generated data",
+  "healthDebugSeedClearSubtitle": "Deletes only records this generator wrote",
+  "healthDebugSeedClearConfirm": "Delete every generated record from Health Connect and drop its rows from the store? Real data stays.",
+  "healthDebugSeedClearAction": "Remove",
+  "healthDebugSeedClearDone": "Removed {count} record(s)",
+  "@healthDebugSeedClearDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthDebugSeedNoGroups": "Select at least one data group",
+  "healthDebugSeedNoPermission": "Health Connect access was declined",
+  "healthDebugSeedFailed": "Health Connect refused the run — check the log",
+  "healthDebugSeedUnsupported": "Health Connect is only available on Android",
+  "healthDebugSeedImportHint": "Generated data lands in Health Connect, not in the dashboard. Run Scan sources, then Restart import, to pull it in.",
+  "healthDebugPresetEveryday": "Everyday",
+  "healthDebugPresetAthlete": "Athlete",
+  "healthDebugPresetClinical": "Clinical",
+  "healthDebugPresetEverything": "Everything",
+  "healthDebugGroupActivity": "Activity — steps, distance, energy, floors",
+  "healthDebugGroupHeart": "Heart — rate series, resting rate, HRV",
+  "healthDebugGroupSleep": "Sleep — one night per day with stages",
+  "healthDebugGroupWorkouts": "Workouts — three sessions a week",
+  "healthDebugGroupBody": "Body — weight, body fat, lean mass, height",
+  "healthDebugGroupVitals": "Vitals — oxygen, breathing, pressure, glucose",
+  "healthDebugGroupHydration": "Hydration — drinks spread over the day"
 }
