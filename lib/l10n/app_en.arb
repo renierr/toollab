@@ -3593,6 +3593,14 @@
   "healthDashboardSleepDuration": "Duration",
   "healthDashboardSleepStart": "Start",
   "healthDashboardSleepEnd": "End",
+  "healthDashboardSleepStageTimes": "×{count}",
+  "@healthDashboardSleepStageTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardSleepStageDuration": "{duration} ({count} times)",
   "@healthDashboardSleepStageDuration": {
     "placeholders": {
@@ -3834,6 +3842,7 @@
   "healthDashboardMetaDeleted": "Deleted",
   "healthDashboardMetaRawValues": "Stored values",
   "healthDashboardSectionDebug": "Debug",
+  "healthDebugSourceGenerated": "Generated test data",
   "healthDebugSeedTitle": "Generated test data",
   "healthDebugSeedSubtitle": "Fill Health Connect with a synthetic history",
   "healthDebugSeedWarning": "Debug builds only. Records are written into Health Connect as this app, marked as generated, and can be removed again below.",

@@ -251,8 +251,10 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
         alignRight: true,
       );
     }
-    final segments = <List<Offset>>[];
-    var segment = <Offset>[];
+    // One path through every day that has a value, so a metric measured every
+    // other day reads as a trend instead of four disconnected dots. Days without
+    // a reading simply carry no marker.
+    final points = <Offset>[];
     for (var index = 0; index < values.length; index++) {
       final value = values[index];
       final height =
@@ -272,10 +274,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
         );
         canvas.drawRRect(bar, Paint()..color = lineColor);
       } else if (showPrimary && value != null) {
-        segment.add(Offset(x, plot.bottom - height));
-      } else if (segment.isNotEmpty) {
-        segments.add(segment);
-        segment = <Offset>[];
+        points.add(Offset(x, plot.bottom - height));
       }
       if (showPrimary &&
           value != null &&
@@ -295,18 +294,17 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
         centered: true,
       );
     }
-    if (segment.isNotEmpty) segments.add(segment);
-    if (style == HealthTrendChartStyle.line) {
-      final paint = Paint()
-        ..color = lineColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round;
-      for (final points in segments) {
-        canvas.drawPath(_smoothPath(points), paint);
-        for (final point in points) {
-          canvas.drawCircle(point, 4, Paint()..color = lineColor);
-        }
+    if (style == HealthTrendChartStyle.line && points.isNotEmpty) {
+      canvas.drawPath(
+        _smoothPath(points),
+        Paint()
+          ..color = lineColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3
+          ..strokeCap = StrokeCap.round,
+      );
+      for (final point in points) {
+        canvas.drawCircle(point, 4, Paint()..color = lineColor);
       }
     }
     _drawOverlay(canvas, plot);
@@ -331,18 +329,13 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       _formatOverlayAxis(lower),
       Offset(plot.right + 5, plot.bottom - 6),
     );
-    final segments = <List<Offset>>[];
-    var segment = <Offset>[];
+    final points = <Offset>[];
     for (var index = 0; index < values.length; index++) {
       final value = values[index];
-      if (value == null) {
-        if (segment.isNotEmpty) segments.add(segment);
-        segment = <Offset>[];
-        continue;
-      }
+      if (value == null) continue;
       final x = plot.left + plot.width * (index + 0.5) / values.length;
       final y = plot.bottom - (value - lower) / (upper - lower) * plot.height;
-      segment.add(Offset(x, y));
+      points.add(Offset(x, y));
       if (!compact || index.isOdd) {
         _label(
           canvas,
@@ -352,21 +345,17 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
         );
       }
     }
-    if (segment.isNotEmpty) segments.add(segment);
-    final paint = Paint()
-      ..color = overlayColor ?? Colors.red
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-    for (final points in segments) {
-      canvas.drawPath(_smoothPath(points), paint);
-      for (final point in points) {
-        canvas.drawCircle(
-          point,
-          4,
-          Paint()..color = overlayColor ?? Colors.red,
-        );
-      }
+    if (points.isEmpty) return;
+    canvas.drawPath(
+      _smoothPath(points),
+      Paint()
+        ..color = overlayColor ?? Colors.red
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+    for (final point in points) {
+      canvas.drawCircle(point, 4, Paint()..color = overlayColor ?? Colors.red);
     }
   }
 

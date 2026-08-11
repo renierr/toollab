@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:health_connector/health_connector.dart' as hc;
 import 'package:tool_lab/helpers/debug_log.dart';
 
+import '../store/health_connect_mapper.dart';
 import '../store/health_store.dart';
 import 'health_connect_types.dart';
 
@@ -53,8 +54,10 @@ class HealthConnectDiscovery {
           final dynamic response = await connector.readRecords(request);
           for (final record
               in (response.records as List).cast<hc.HealthRecord>()) {
-            final package = record.metadata.dataOrigin?.packageName;
-            if (package == null) continue;
+            // Same resolution the mapper uses, so the debug generator shows up
+            // as its own source on the selection screens rather than hiding
+            // inside this app's own package.
+            final package = HealthConnectMapper.packageOf(record);
             counts[package] = (counts[package] ?? 0) + 1;
             final time = switch (record) {
               hc.InstantHealthRecord(:final time) => time,

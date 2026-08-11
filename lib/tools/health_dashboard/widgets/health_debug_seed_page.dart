@@ -8,6 +8,7 @@ import 'package:tool_lab/widgets/settings_section_label.dart';
 
 import '../debug/health_debug_data.dart';
 import '../debug/health_debug_seeder.dart';
+import '../health_debug_origin.dart';
 import '../health_dashboard_state.dart';
 
 /// Debug-only screen that fills Health Connect with a generated history so the
@@ -183,9 +184,11 @@ class _HealthDebugSeedPageState extends State<HealthDebugSeedPage> {
       );
       // Deleting in Health Connect leaves the rows already imported behind, and
       // the change sync only catches deletions for the shapes that carry a
-      // record id - so the generated app's rows are dropped from the store too.
-      final package = result.package;
-      if (package != null) await state.deleteAppData(package);
+      // record id - so the generated source's rows go too. Nothing real is ever
+      // filed under that package, so this cannot reach anything else.
+      if (result.outcome == HealthDebugOutcome.ran) {
+        await state.deleteAppData(healthDebugPackage);
+      }
       messenger.showSnackBar(
         SnackBar(content: Text(_message(l10n, result, seeding: false))),
       );

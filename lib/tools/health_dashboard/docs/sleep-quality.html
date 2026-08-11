@@ -1,0 +1,466 @@
+<title>Health Dashboard — Sleep Quality Scoring</title>
+<style>
+  :root {
+    --ground: #f5f8f8;
+    --surface: #ffffff;
+    --surface-2: #eef3f4;
+    --ink: #0f1b1f;
+    --ink-dim: #55696f;
+    --ink-faint: #8098a0;
+    --line: #dde6e7;
+    --line-soft: #e9eff0;
+    --accent: #0d6e76;
+    --accent-soft: #e0eff0;
+    --good: #1d7a4c;
+    --good-soft: #e2f2ea;
+    --fair: #a05a08;
+    --fair-soft: #f8eee1;
+    --poor: #a03535;
+    --poor-soft: #f8e6e6;
+    --deep: #4b3f9a;
+    --rem: #7a3f8f;
+    --shadow: 0 1px 2px rgba(15, 27, 31, .06), 0 8px 24px -12px rgba(15, 27, 31, .12);
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, "SF Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0b1316; --surface: #111e22; --surface-2: #16262b;
+      --ink: #e6eff0; --ink-dim: #90a6ac; --ink-faint: #6a8189;
+      --line: #21343a; --line-soft: #1a2b30;
+      --accent: #38b5ac; --accent-soft: #122e30;
+      --good: #4cc98a; --good-soft: #122f22;
+      --fair: #d9a253; --fair-soft: #33260f;
+      --poor: #e08383; --poor-soft: #331a1a;
+      --deep: #9a8fe0; --rem: #c98fdb;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0b1316; --surface: #111e22; --surface-2: #16262b;
+    --ink: #e6eff0; --ink-dim: #90a6ac; --ink-faint: #6a8189;
+    --line: #21343a; --line-soft: #1a2b30;
+    --accent: #38b5ac; --accent-soft: #122e30;
+    --good: #4cc98a; --good-soft: #122f22;
+    --fair: #d9a253; --fair-soft: #33260f;
+    --poor: #e08383; --poor-soft: #331a1a;
+    --deep: #9a8fe0; --rem: #c98fdb;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px -14px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, pre, .mono { font-family: var(--mono); font-variant-ligatures: none; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px 100px; }
+
+  header.mast { padding: 56px 0 26px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-family: var(--serif); font-weight: 600; letter-spacing: -.02em; font-size: clamp(30px, 5vw, 46px); line-height: 1.06; margin: 12px 0 0; }
+  .dek { font-size: 17px; color: var(--ink-dim); margin: 14px 0 0; max-width: 62ch; }
+
+  section { padding: 50px 0 0; }
+  h2 { font-family: var(--serif); font-size: 25px; font-weight: 600; letter-spacing: -.015em; margin: 0 0 6px; display: flex; align-items: baseline; gap: 12px; }
+  h2 .hn { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); font-weight: 400; letter-spacing: .06em; }
+  h3 { font-size: 14px; font-weight: 650; margin: 26px 0 8px; }
+  p { margin: 12px 0; max-width: 72ch; }
+  .lede { color: var(--ink-dim); font-size: 16px; }
+  ul.tight { margin: 12px 0; padding-left: 20px; }
+  ul.tight li { margin: 6px 0; max-width: 70ch; }
+
+  .scroller { overflow-x: auto; margin: 16px 0 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 8px 14px 8px 0; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); font-weight: 600; white-space: nowrap; border-bottom-color: var(--line); }
+  td.c { font-family: var(--mono); white-space: nowrap; }
+  td.d { color: var(--ink-dim); font-size: 13px; }
+  td.pen { font-family: var(--mono); font-weight: 700; white-space: nowrap; }
+  .minus { color: var(--poor); }
+  .zero { color: var(--good); }
+
+  .note { border-left: 2px solid var(--accent); background: var(--surface); padding: 14px 18px; margin: 22px 0; border-radius: 0 7px 7px 0; font-size: 14px; }
+  .note.warn { border-left-color: var(--fair); }
+  .note b { font-weight: 650; }
+  .note p:first-child { margin-top: 0; }
+  .note p:last-child { margin-bottom: 0; }
+
+  /* ---- scorer ---- */
+  .calc { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px; margin: 22px 0 0; box-shadow: var(--shadow); }
+  .sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px 28px; }
+  .slider label { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); }
+  .slider label b { font-family: var(--sans); font-size: 14px; letter-spacing: 0; text-transform: none; color: var(--ink); font-variant-numeric: tabular-nums; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); margin: 4px 0 0; }
+
+  .verdict { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin: 24px 0 0; padding-top: 20px; border-top: 1px solid var(--line-soft); }
+  .score { font-family: var(--serif); font-size: 54px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .score small { font-family: var(--sans); font-size: 14px; color: var(--ink-faint); }
+  .pill { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
+  .r-good { background: var(--good-soft); color: var(--good); }
+  .r-fair { background: var(--fair-soft); color: var(--fair); }
+  .r-poor { background: var(--poor-soft); color: var(--poor); }
+  .track { flex: 1 1 240px; min-width: 200px; }
+  .bar { height: 10px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 6px; transition: width .2s ease, background .2s ease; }
+  .ticks { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--ink-faint); margin-top: 4px; }
+
+  .deductions { margin: 20px 0 0; display: flex; flex-direction: column; gap: 6px; }
+  .ded { display: grid; grid-template-columns: 118px 1fr auto; gap: 12px; align-items: center; font-size: 13px; padding: 7px 10px; border-radius: 6px; background: var(--surface-2); }
+  .ded.hit { background: var(--poor-soft); }
+  .ded .k { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .06em; }
+  .ded .v { color: var(--ink-dim); }
+  .ded .p { font-family: var(--mono); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ded.hit .p { color: var(--poor); }
+  .ded .p.ok { color: var(--good); }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+  .preset { font-family: var(--mono); font-size: 11px; cursor: pointer; letter-spacing: .03em; background: var(--surface-2); color: var(--ink-dim); border: 1px solid var(--line); border-radius: 20px; padding: 5px 12px; text-transform: uppercase; font-weight: 600; }
+  .preset:hover { color: var(--accent); border-color: var(--accent); }
+
+  .tbtn { font-family: var(--mono); font-size: 11px; cursor: pointer; background: var(--surface); color: var(--ink-dim); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+  .tbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .topbar { display: flex; justify-content: flex-end; padding-top: 18px; }
+
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 12.5px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <div class="topbar"><button class="tbtn" id="theme" type="button">◐ Theme: auto</button></div>
+
+  <header class="mast">
+    <div class="eyebrow">ToolLab · lib/tools/health_dashboard/health_sleep_quality.dart</div>
+    <h1>How a night is scored</h1>
+    <p class="dek">
+      Every night starts at 100 and loses points for each thing outside the range a standard adult
+      sleep study reports. There is no weighting, no model and no learning — five independent
+      checks, fixed deductions, floored at zero. This page is the whole algorithm, plus a scorer
+      you can push around.
+    </p>
+  </header>
+
+  <section id="inputs">
+    <h2><span class="hn">01</span> What the five checks read</h2>
+    <p class="lede">
+      Only two numbers come from the record itself; the rest are derived from the stage list.
+    </p>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Quantity</th><th>How it is derived</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="c">time in bed</td>
+            <td class="d"><code>endTime − startTime</code>. The session's whole span, including
+              lying awake at either end.</td>
+          </tr>
+          <tr>
+            <td class="c">asleep</td>
+            <td class="d">Sum of every stage minus the awake ones. When a writer supplies no stages
+              at all it falls back to the record's own <code>asleepMinutes</code>, and failing that
+              the entire span counts as sleep.</td>
+          </tr>
+          <tr>
+            <td class="c">efficiency</td>
+            <td class="d"><code>asleep ÷ time in bed</code>, clamped to 0–1.</td>
+          </tr>
+          <tr>
+            <td class="c">deep share · REM share</td>
+            <td class="d">Each stage type's total <b>as a share of time asleep</b>, not of time in
+              bed. Null when no stages carry deep or REM, and a null share is skipped rather than
+              penalised.</td>
+          </tr>
+          <tr>
+            <td class="c">awake</td>
+            <td class="d">Total of the <code>awake</code>, <code>awake_in_bed</code> and
+              <code>out_of_bed</code> stages.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="rules">
+    <h2><span class="hn">02</span> The deductions</h2>
+    <p class="lede">
+      Each check fires at most once, taking the first band it matches. Deep and REM are skipped
+      entirely when the writer supplied no stages.
+    </p>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Check</th><th>Band</th><th>Cost</th><th>Reported as</th></tr></thead>
+        <tbody>
+          <tr><td class="c" rowspan="4">duration<br><span class="d">hours asleep</span></td>
+              <td class="c">&lt; 6 h</td><td class="pen minus">−25</td><td class="d">Short sleep</td></tr>
+          <tr><td class="c">6–7 h</td><td class="pen minus">−10</td><td class="d">Short sleep</td></tr>
+          <tr><td class="c">7–10 h</td><td class="pen zero">0</td><td class="d">—</td></tr>
+          <tr><td class="c">&gt; 10 h</td><td class="pen minus">−15</td><td class="d">Long sleep</td></tr>
+
+          <tr><td class="c" rowspan="3">efficiency</td>
+              <td class="c">&lt; 75 %</td><td class="pen minus">−20</td><td class="d">Low efficiency</td></tr>
+          <tr><td class="c">75–85 %</td><td class="pen minus">−10</td><td class="d">Low efficiency</td></tr>
+          <tr><td class="c">≥ 85 %</td><td class="pen zero">0</td><td class="d">—</td></tr>
+
+          <tr><td class="c" rowspan="3">deep share</td>
+              <td class="c">&lt; 13 %</td><td class="pen minus">−10</td><td class="d">Deep sleep low</td></tr>
+          <tr><td class="c">13–23 %</td><td class="pen zero">0</td><td class="d">—</td></tr>
+          <tr><td class="c">&gt; 23 %</td><td class="pen minus">−5</td><td class="d">Deep sleep high</td></tr>
+
+          <tr><td class="c" rowspan="3">REM share</td>
+              <td class="c">&lt; 20 %</td><td class="pen minus">−10</td><td class="d">REM low</td></tr>
+          <tr><td class="c">20–25 %</td><td class="pen zero">0</td><td class="d">—</td></tr>
+          <tr><td class="c">&gt; 25 %</td><td class="pen minus">−5</td><td class="d">REM high</td></tr>
+
+          <tr><td class="c" rowspan="3">awake</td>
+              <td class="c">&gt; 60 min</td><td class="pen minus">−15</td><td class="d">Long time awake</td></tr>
+          <tr><td class="c">30–60 min</td><td class="pen minus">−5</td><td class="d">Long time awake</td></tr>
+          <tr><td class="c">≤ 30 min</td><td class="pen zero">0</td><td class="d">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The verdict is a straight cut on the total: <b class="mono">≥ 80</b> good,
+      <b class="mono">60–79</b> fair, below that poor. Worst case is 100 − 25 − 20 − 10 − 10 − 15 =
+      <b>20</b>, so the floor at zero never actually fires.
+    </p>
+    <div class="note warn">
+      <b>The number of awakenings is counted but never scored.</b> It is shown next to the awake
+      total, and it counts every awake <em>stage</em> — including one before sleep onset. Only the
+      awake <em>minutes</em> cost points.
+    </div>
+  </section>
+
+  <section id="try">
+    <h2><span class="hn">03</span> Score a night</h2>
+    <p class="lede">Same arithmetic as the Dart, rule for rule.</p>
+
+    <div class="calc">
+      <div class="presets">
+        <button class="preset" data-p="screenshot" type="button">The 6 h 16 m night · 85</button>
+        <button class="preset" data-p="sixflat" type="button">6 h · 13 % deep · 24 % REM · 90</button>
+        <button class="preset" data-p="ideal" type="button">Textbook night</button>
+        <button class="preset" data-p="short" type="button">Five hours</button>
+        <button class="preset" data-p="broken" type="button">Broken night</button>
+      </div>
+
+      <div class="sliders">
+        <div class="slider">
+          <label for="bed">Time in bed <b id="bedOut"></b></label>
+          <input type="range" id="bed" min="120" max="720" step="1">
+        </div>
+        <div class="slider">
+          <label for="asleep">Asleep <b id="asleepOut"></b></label>
+          <input type="range" id="asleep" min="60" max="720" step="1">
+        </div>
+        <div class="slider">
+          <label for="deep">Deep share <b id="deepOut"></b></label>
+          <input type="range" id="deep" min="0" max="45" step="0.1">
+        </div>
+        <div class="slider">
+          <label for="rem">REM share <b id="remOut"></b></label>
+          <input type="range" id="rem" min="0" max="45" step="0.1">
+        </div>
+      </div>
+
+      <div class="verdict">
+        <div class="score"><span id="scoreOut">—</span><small> / 100</small></div>
+        <span class="pill" id="ratingOut">—</span>
+        <div class="track">
+          <div class="bar"><i id="barOut"></i></div>
+          <div class="ticks"><span>0</span><span>60 · fair</span><span>80 · good</span><span>100</span></div>
+        </div>
+      </div>
+
+      <div class="deductions" id="dedOut"></div>
+      <p class="mono" style="font-size:12px;color:var(--ink-faint);margin-top:16px" id="derived"></p>
+    </div>
+
+    <div class="note">
+      <b>Awake minutes are not a slider.</b> They are <code>time in bed − asleep</code> here, which
+      is what a stage list that tiles the whole session produces. A writer that leaves gaps between
+      stages would report less awake time than that difference implies.
+    </div>
+  </section>
+
+  <section id="worked">
+    <h2><span class="hn">04</span> Worked example</h2>
+    <p class="lede">
+      6 h 16 m in bed, 6 h 1 m asleep, 15 minutes awake across 3 wakes, deep 30.47 %, REM 24.93 %.
+    </p>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Check</th><th>Value</th><th>Band</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td class="c">duration</td><td class="c">6.02 h</td><td class="d">6–7 h</td><td class="pen minus">−10</td></tr>
+          <tr><td class="c">efficiency</td><td class="c">96.0 %</td><td class="d">≥ 85 %</td><td class="pen zero">0</td></tr>
+          <tr><td class="c">deep share</td><td class="c">30.5 %</td><td class="d">&gt; 23 %</td><td class="pen minus">−5</td></tr>
+          <tr><td class="c">REM share</td><td class="c">24.9 %</td><td class="d">20–25 %</td><td class="pen zero">0</td></tr>
+          <tr><td class="c">awake</td><td class="c">15 min</td><td class="d">≤ 30 min</td><td class="pen zero">0</td></tr>
+          <tr><td class="c"><b>total</b></td><td class="c"><b>85</b></td><td class="d">≥ 80</td><td class="pen">Good</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <b>Three wakes cost nothing.</b> They add up to 15 minutes, which is inside the 30-minute
+      allowance, and the count itself is not scored at all. The only two points lost are for
+      sleeping an hour under seven, and for <em>more</em> deep sleep than the reference range —
+      which is the one deduction most people would not expect.
+    </div>
+  </section>
+
+  <section id="weak">
+    <h2><span class="hn">05</span> Where the scoring is weak</h2>
+    <ul class="tight">
+      <li><b>Duration is under-weighted.</b> An hour short of the guidance costs 10 points, so a
+        6-hour night still lands in <em>Good</em> as long as nothing else fires. Duration is the
+        single measure with the strongest evidence behind it, and here it can be outweighed by two
+        stage-share quibbles.</li>
+      <li><b>The bands are cliffs, not curves.</b> 5 h 59 m costs 25 and 6 h 01 m costs 10, a
+        15-point swing across two minutes. Nothing interpolates.</li>
+      <li><b>More deep sleep is penalised.</b> −5 for exceeding 23 % reads as a defect on a card
+        that otherwise means "worse". It is really "unusual", not "bad".</li>
+      <li><b>The REM window is 5 points wide</b> (20–25 %), narrower than the night-to-night
+        variation of most sleepers, so the check fires on noise.</li>
+      <li><b>Efficiency shares an input with duration.</b> Both derive from <code>asleep</code>, so
+        a short night measured against a short time in bed is scored twice on the same fact.</li>
+      <li><b>Awakenings are counted and discarded.</b> Three brief wakes and one hour-long wake are
+        the same to the score if the totals match, which is not how sleep continuity works.</li>
+      <li><b>No sleep-onset latency.</b> Time between going to bed and the first non-awake stage is
+        never isolated; it only shows up inside efficiency.</li>
+    </ul>
+    <p>
+      None of this makes the number wrong — it is exactly what the rules say — but it is a coarse
+      heuristic over population ranges, not a measurement. It should be read as "nothing stood out"
+      versus "several things did", not as a grade.
+    </p>
+  </section>
+
+  <footer>
+    Source: <code>lib/tools/health_dashboard/health_sleep_quality.dart</code> —
+    <code>SleepQuality.from</code> holds every band and deduction on this page. The card that renders
+    it is <code>widgets/health_sleep_quality_card.dart</code>. Update this page whenever a band or a
+    deduction changes.
+  </footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+
+  /* theme toggle, same three states as the storage-model page */
+  const modes = ["auto", "light", "dark"];
+  let mode = 0;
+  $("#theme").addEventListener("click", () => {
+    mode = (mode + 1) % modes.length;
+    const next = modes[mode];
+    if (next === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", next);
+    $("#theme").textContent = "◐ Theme: " + next;
+  });
+
+  const RULES = [
+    { key: "duration", label: "hours asleep" },
+    { key: "efficiency", label: "asleep ÷ in bed" },
+    { key: "deep", label: "share of time asleep" },
+    { key: "rem", label: "share of time asleep" },
+    { key: "awake", label: "minutes awake" }
+  ];
+
+  /* A direct transcription of SleepQuality.from — same order, same bands. */
+  function score(bedMin, asleepMin, deepPct, remPct) {
+    const awakeMin = Math.max(0, bedMin - asleepMin);
+    const efficiency = bedMin > 0 ? Math.min(1, asleepMin / bedMin) : 0;
+    const hours = asleepMin / 60;
+    const hits = {};
+    let total = 100;
+
+    if (hours < 6) { total -= 25; hits.duration = [-25, "< 6 h"]; }
+    else if (hours < 7) { total -= 10; hits.duration = [-10, "6–7 h"]; }
+    else if (hours > 10) { total -= 15; hits.duration = [-15, "> 10 h"]; }
+    else hits.duration = [0, "7–10 h"];
+
+    if (efficiency < 0.75) { total -= 20; hits.efficiency = [-20, "< 75 %"]; }
+    else if (efficiency < 0.85) { total -= 10; hits.efficiency = [-10, "75–85 %"]; }
+    else hits.efficiency = [0, "≥ 85 %"];
+
+    const deep = deepPct / 100;
+    if (deep < 0.13) { total -= 10; hits.deep = [-10, "< 13 %"]; }
+    else if (deep > 0.23) { total -= 5; hits.deep = [-5, "> 23 %"]; }
+    else hits.deep = [0, "13–23 %"];
+
+    const rem = remPct / 100;
+    if (rem < 0.20) { total -= 10; hits.rem = [-10, "< 20 %"]; }
+    else if (rem > 0.25) { total -= 5; hits.rem = [-5, "> 25 %"]; }
+    else hits.rem = [0, "20–25 %"];
+
+    if (awakeMin > 60) { total -= 15; hits.awake = [-15, "> 60 min"]; }
+    else if (awakeMin > 30) { total -= 5; hits.awake = [-5, "30–60 min"]; }
+    else hits.awake = [0, "≤ 30 min"];
+
+    return { total: Math.max(0, total), hits, efficiency, awakeMin, hours };
+  }
+
+  const hm = (min) => `${Math.floor(min / 60)} h ${String(Math.round(min % 60)).padStart(2, "0")} m`;
+
+  function render() {
+    const bed = +$("#bed").value;
+    let asleep = +$("#asleep").value;
+    if (asleep > bed) { asleep = bed; $("#asleep").value = bed; }
+    const deep = +$("#deep").value, rem = +$("#rem").value;
+
+    $("#bedOut").textContent = hm(bed);
+    $("#asleepOut").textContent = hm(asleep);
+    $("#deepOut").textContent = deep.toFixed(1) + " %";
+    $("#remOut").textContent = rem.toFixed(1) + " %";
+
+    const r = score(bed, asleep, deep, rem);
+    const rating = r.total >= 80 ? ["good", "Good"] : r.total >= 60 ? ["fair", "Fair"] : ["poor", "Poor"];
+    $("#scoreOut").textContent = r.total;
+    const pill = $("#ratingOut");
+    pill.textContent = rating[1];
+    pill.className = "pill r-" + rating[0];
+    const bar = $("#barOut");
+    bar.style.width = r.total + "%";
+    bar.style.background = `var(--${rating[0]})`;
+
+    $("#dedOut").innerHTML = RULES.map((rule) => {
+      const [cost, band] = r.hits[rule.key];
+      return `<div class="ded${cost ? " hit" : ""}">
+        <span class="k">${rule.key}</span>
+        <span class="v">${band} · ${rule.label}</span>
+        <span class="p${cost ? "" : " ok"}">${cost ? cost : "0"}</span>
+      </div>`;
+    }).join("");
+
+    $("#derived").textContent =
+      `efficiency ${(r.efficiency * 100).toFixed(1)} % · awake ${Math.round(r.awakeMin)} min · ` +
+      `deep ${(deep / 100 * asleep).toFixed(0)} min · rem ${(rem / 100 * asleep).toFixed(0)} min`;
+  }
+
+  const PRESETS = {
+    screenshot: [376, 361, 30.5, 24.9],
+    sixflat: [380, 360, 13, 24],
+    ideal: [500, 480, 18, 22],
+    short: [320, 300, 15, 21],
+    broken: [540, 380, 9, 14]
+  };
+  document.querySelectorAll(".preset").forEach((button) => {
+    button.addEventListener("click", () => {
+      const [bed, asleep, deep, rem] = PRESETS[button.dataset.p];
+      $("#bed").value = bed; $("#asleep").value = asleep;
+      $("#deep").value = deep; $("#rem").value = rem;
+      render();
+    });
+  });
+  ["#bed", "#asleep", "#deep", "#rem"].forEach((id) =>
+    $(id).addEventListener("input", render));
+
+  const [bed, asleep, deep, rem] = PRESETS.screenshot;
+  $("#bed").value = bed; $("#asleep").value = asleep;
+  $("#deep").value = deep; $("#rem").value = rem;
+  render();
+})();
+</script>

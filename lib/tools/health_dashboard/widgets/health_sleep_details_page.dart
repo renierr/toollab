@@ -6,13 +6,17 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import '../health_record.dart';
+import '../health_record_values.dart';
 import '../health_dashboard_state.dart';
+import '../store/health_metric_catalog.dart';
 import '../health_sleep_quality.dart';
 import '../health_value_format.dart';
 import 'health_empty_state.dart';
 import 'health_record_stat_item.dart';
 import 'health_sleep_quality_card.dart';
+import 'health_sleep_stage_breakdown.dart';
 import 'health_sleep_stage_timeline.dart';
+import 'health_sleep_timeline_section.dart';
 import 'health_source_badge.dart';
 import 'health_day_navigation.dart';
 import 'health_metric_history.dart';
@@ -82,11 +86,15 @@ class HealthSleepDetailsPage extends StatelessWidget {
       appBar: AppBar(title: Text(l10n.healthDashboardSleepDetails)),
       // Heart-rate curves come from the dense table by range, so they are read
       // per session instead of being filtered out of the loaded week.
-      body: FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
-        future: _heartRates(state, [session, ...naps]),
+      body: FutureBuilder<Map<String, List<HealthSleepOverlay>>>(
+        future: _overlays(state, [session, ...naps], l10n),
         builder: (context, snapshot) {
-          final heartRates = snapshot.data ?? const {};
-          final heartRateSamples = heartRates[session.id] ?? const [];
+          final overlays = snapshot.data ?? const {};
+          final sessionOverlays = overlays[session.id] ?? const [];
+          final heartRateSamples = [
+            for (final overlay in sessionOverlays)
+              if (overlay.key == HealthMetrics.heartRate) ...overlay.samples,
+          ];
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -120,63 +128,38 @@ class HealthSleepDetailsPage extends StatelessWidget {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Wrap(
-                    spacing: 28,
-                    runSpacing: 16,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _SleepValue(
-                        label: l10n.healthDashboardSleepDuration,
-                        value:
-                            '${duration.inHours}h ${duration.inMinutes.remainder(60)}m',
+                      Wrap(
+                        spacing: 28,
+                        runSpacing: 16,
+                        children: [
+                          _SleepValue(
+                            label: l10n.healthDashboardSleepDuration,
+                            value: _formatDuration(duration),
+                          ),
+                          _SleepValue(
+                            label: l10n.healthDashboardSleepStart,
+                            value: MaterialLocalizations.of(
+                              context,
+                            ).formatTimeOfDay(TimeOfDay.fromDateTime(start)),
+                          ),
+                          _SleepValue(
+                            label: l10n.healthDashboardSleepEnd,
+                            value: MaterialLocalizations.of(
+                              context,
+                            ).formatTimeOfDay(TimeOfDay.fromDateTime(end)),
+                          ),
+                        ],
                       ),
-                      _SleepValue(
-                        label: l10n.healthDashboardSleepStart,
-                        value: MaterialLocalizations.of(
-                          context,
-                        ).formatTimeOfDay(TimeOfDay.fromDateTime(start)),
-                      ),
-                      _SleepValue(
-                        label: l10n.healthDashboardSleepEnd,
-                        value: MaterialLocalizations.of(
-                          context,
-                        ).formatTimeOfDay(TimeOfDay.fromDateTime(end)),
-                      ),
-                      if (stageDurations['awake'] case final duration?)
-                        _SleepValue(
-                          label: l10n.healthDashboardSleepAwake,
-                          value: l10n.healthDashboardSleepStageDuration(
-                            _formatDuration(duration),
-                            stageOccurrences['awake'] ?? 0,
-                          ),
-                          color: Colors.amber,
+                      if (stageDurations.isNotEmpty) ...[
+                        const Divider(height: 28),
+                        HealthSleepStageBreakdown(
+                          durations: stageDurations,
+                          occurrences: stageOccurrences,
                         ),
-                      if (stageDurations['rem'] case final duration?)
-                        _SleepValue(
-                          label: l10n.healthDashboardSleepRem,
-                          value: l10n.healthDashboardSleepStageDuration(
-                            _formatDuration(duration),
-                            stageOccurrences['rem'] ?? 0,
-                          ),
-                          color: Colors.purple,
-                        ),
-                      if (stageDurations['light'] case final duration?)
-                        _SleepValue(
-                          label: l10n.healthDashboardSleepLight,
-                          value: l10n.healthDashboardSleepStageDuration(
-                            _formatDuration(duration),
-                            stageOccurrences['light'] ?? 0,
-                          ),
-                          color: Colors.lightBlue,
-                        ),
-                      if (stageDurations['deep'] case final duration?)
-                        _SleepValue(
-                          label: l10n.healthDashboardSleepDeep,
-                          value: l10n.healthDashboardSleepStageDuration(
-                            _formatDuration(duration),
-                            stageOccurrences['deep'] ?? 0,
-                          ),
-                          color: Colors.indigo,
-                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -206,18 +189,11 @@ class HealthSleepDetailsPage extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
-                _SleepLegend(hasHeartRate: heartRateSamples.length >= 2),
-                const SizedBox(height: 8),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: HealthSleepStageTimeline(
-                      stages: stages,
-                      heartRateSamples: heartRateSamples,
-                      startTime: session.startTime,
-                      endTime: session.endTime,
-                    ),
-                  ),
+                HealthSleepTimelineSection(
+                  stages: stages,
+                  overlays: sessionOverlays,
+                  startTime: session.startTime,
+                  endTime: session.endTime,
                 ),
               ],
               if (_heartRateStats(heartRateSamples) case final hr?) ...[
@@ -273,7 +249,7 @@ class HealthSleepDetailsPage extends StatelessWidget {
                 ...naps.map(
                   (nap) => _NapDetails(
                     record: nap,
-                    heartRateSamples: heartRates[nap.id] ?? const [],
+                    overlays: overlays[nap.id] ?? const [],
                   ),
                 ),
               ],
@@ -299,11 +275,8 @@ class HealthSleepDetailsPage extends StatelessWidget {
 
   /// Min, average and max of a night's heart-rate curve. Null under two
   /// samples, where a range would be meaningless.
-  static _HeartRateStats? _heartRateStats(List<Map<String, dynamic>> samples) {
-    final values = [
-      for (final sample in samples)
-        if (sample['bpm'] case final num bpm) bpm.toDouble(),
-    ];
+  static _HeartRateStats? _heartRateStats(List<HealthTimedValue> samples) {
+    final values = [for (final sample in samples) sample.v];
     if (values.length < 2) return null;
     return _HeartRateStats(
       min: values.reduce(math.min),
@@ -313,14 +286,46 @@ class HealthSleepDetailsPage extends StatelessWidget {
     );
   }
 
-  /// One lookup per session, keyed by record id.
-  static Future<Map<String, List<Map<String, dynamic>>>> _heartRates(
+  /// The curves that can be laid over a night, one lookup per metric per
+  /// session. A metric with too few samples still comes back - the legend shows
+  /// it as unavailable rather than quietly leaving it out.
+  static Future<Map<String, List<HealthSleepOverlay>>> _overlays(
     HealthDashboardState state,
     List<HealthRecord> sessions,
+    AppLocalizations l10n,
   ) async {
-    final result = <String, List<Map<String, dynamic>>>{};
+    final specs = [
+      (
+        HealthMetrics.heartRate,
+        l10n.healthDashboardHeartRate,
+        'bpm',
+        AppTheme.accentRed,
+      ),
+      (
+        HealthMetrics.respiratoryRate,
+        l10n.healthDashboardRespiratoryRate,
+        'rpm',
+        AppTheme.accentTeal,
+      ),
+      (
+        HealthMetrics.oxygenSaturation,
+        l10n.healthDashboardOxygenSaturation,
+        '%',
+        AppTheme.accentBlue,
+      ),
+    ];
+    final result = <String, List<HealthSleepOverlay>>{};
     for (final session in sessions) {
-      result[session.id] = await state.heartRateSamplesDuring(session);
+      result[session.id] = [
+        for (final (metric, label, unit, color) in specs)
+          HealthSleepOverlay(
+            key: metric,
+            label: label,
+            unit: unit,
+            color: color,
+            samples: await state.metricSamplesDuring(session, metric),
+          ),
+      ];
     }
     return result;
   }
@@ -342,9 +347,9 @@ class _HeartRateStats {
 
 class _NapDetails extends StatelessWidget {
   final HealthRecord record;
-  final List<Map<String, dynamic>> heartRateSamples;
+  final List<HealthSleepOverlay> overlays;
 
-  const _NapDetails({required this.record, required this.heartRateSamples});
+  const _NapDetails({required this.record, required this.overlays});
 
   @override
   Widget build(BuildContext context) {
@@ -369,9 +374,9 @@ class _NapDetails extends StatelessWidget {
             ),
             if (stages.isNotEmpty) ...[
               const SizedBox(height: 12),
-              HealthSleepStageTimeline(
+              HealthSleepTimelineSection(
                 stages: stages,
-                heartRateSamples: heartRateSamples,
+                overlays: overlays,
                 startTime: record.startTime,
                 endTime: record.endTime,
               ),
@@ -414,66 +419,11 @@ Map<String, int> _stageOccurrences(List<Map<String, dynamic>> stages) {
 String _formatDuration(Duration duration) =>
     '${duration.inHours}h ${duration.inMinutes.remainder(60)}m';
 
-class _SleepLegend extends StatelessWidget {
-  final bool hasHeartRate;
-
-  const _SleepLegend({required this.hasHeartRate});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Wrap(
-      spacing: 12,
-      runSpacing: 6,
-      children: [
-        _LegendItem(color: Colors.amber, label: l10n.healthDashboardSleepAwake),
-        _LegendItem(color: Colors.purple, label: l10n.healthDashboardSleepRem),
-        _LegendItem(
-          color: Colors.lightBlue,
-          label: l10n.healthDashboardSleepLight,
-        ),
-        _LegendItem(color: Colors.indigo, label: l10n.healthDashboardSleepDeep),
-        if (hasHeartRate)
-          _LegendItem(
-            color: Colors.redAccent,
-            label: l10n.healthDashboardHeartRate,
-          ),
-        if (!hasHeartRate) Text(l10n.healthDashboardNoSleepHeartRate),
-      ],
-    );
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendItem({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-      const SizedBox(width: 4),
-      Text(label, style: Theme.of(context).textTheme.bodySmall),
-    ],
-  );
-}
-
 class _SleepValue extends StatelessWidget {
   final String label;
   final String value;
-  final Color? color;
 
-  const _SleepValue({required this.label, required this.value, this.color});
+  const _SleepValue({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) => Column(
@@ -481,20 +431,7 @@ class _SleepValue extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     children: [
       Text(value, style: Theme.of(context).textTheme.titleLarge),
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (color != null) ...[
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            const SizedBox(width: 4),
-          ],
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-        ],
-      ),
+      Text(label, style: Theme.of(context).textTheme.bodySmall),
     ],
   );
 }

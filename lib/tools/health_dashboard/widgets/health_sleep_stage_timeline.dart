@@ -1,18 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../health_record_values.dart';
+
+/// A curve drawn above the sleep stages - heart rate, breathing, oxygen.
+///
+/// Each one keeps its own lane and its own scale: the units share no range, so
+/// a common axis would flatten every curve but the widest.
+class HealthSleepOverlay {
+  final String key;
+  final String label;
+  final String unit;
+  final Color color;
+  final List<HealthTimedValue> samples;
+
+  const HealthSleepOverlay({
+    required this.key,
+    required this.label,
+    required this.unit,
+    required this.color,
+    required this.samples,
+  });
+
+  /// Two samples are the minimum a line can be drawn from, and the minimum a
+  /// range label means anything at.
+  bool get isDrawable => samples.length >= 2;
+}
+
 class HealthSleepStageTimeline extends StatefulWidget {
   final List<Map<String, dynamic>> stages;
   final int startTime;
   final int endTime;
-  final List<Map<String, dynamic>> heartRateSamples;
+
+  /// Already filtered to what the legend has switched on.
+  final List<HealthSleepOverlay> overlays;
 
   const HealthSleepStageTimeline({
     super.key,
     required this.stages,
     required this.startTime,
     required this.endTime,
-    required this.heartRateSamples,
+    this.overlays = const [],
   });
 
   @override
@@ -23,83 +51,89 @@ class HealthSleepStageTimeline extends StatefulWidget {
 class _HealthSleepStageTimelineState extends State<HealthSleepStageTimeline> {
   double? _markerX;
 
+  List<HealthSleepOverlay> get _drawable =>
+      widget.overlays.where((overlay) => overlay.isDrawable).toList();
+
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final width = constraints.maxWidth;
-      return SizedBox(
-        height: 170,
-        child: MouseRegion(
-          onHover: (event) => setState(() => _markerX = event.localPosition.dx),
-          onExit: (_) => setState(() => _markerX = null),
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (details) =>
-                setState(() => _markerX = details.localPosition.dx),
-            onHorizontalDragUpdate: (details) =>
-                setState(() => _markerX = details.localPosition.dx),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _SleepStageTimelinePainter(
-                      stages: widget.stages,
-                      startTime: widget.startTime,
-                      endTime: widget.endTime,
-                      heartRateSamples: widget.heartRateSamples,
-                      labelColor: Theme.of(context).hintColor,
-                      markerX: _markerX,
+  Widget build(BuildContext context) {
+    final overlays = _drawable;
+    final layout = _TimelineLayout(overlays.length);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return SizedBox(
+          height: layout.height,
+          child: MouseRegion(
+            onHover: (event) =>
+                setState(() => _markerX = event.localPosition.dx),
+            onExit: (_) => setState(() => _markerX = null),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (details) =>
+                  setState(() => _markerX = details.localPosition.dx),
+              onHorizontalDragUpdate: (details) =>
+                  setState(() => _markerX = details.localPosition.dx),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: _SleepStageTimelinePainter(
+                        stages: widget.stages,
+                        startTime: widget.startTime,
+                        endTime: widget.endTime,
+                        overlays: overlays,
+                        layout: layout,
+                        labelColor: Theme.of(context).hintColor,
+                        markerX: _markerX,
+                      ),
                     ),
                   ),
-                ),
-                if (_markerX != null)
-                  Positioned(
-                    left: (_markerX! - 48).clamp(0.0, width - 96),
-                    top: 0,
-                    child: _TimelineTooltip(
-                      time: _markerTime(width),
-                      heartRate: _nearestHeartRate(width),
-                      stage: _stageAtMarker(width),
+                  if (_markerX != null)
+                    Positioned(
+                      left: (_markerX! - 60).clamp(0.0, (width - 120).abs()),
+                      top: 0,
+                      child: _TimelineTooltip(
+                        time: _formatTime(_timeAt(width)),
+                        stage: _stageAtMarker(width),
+                        readings: [
+                          for (final overlay in overlays)
+                            if (_nearest(overlay, _timeAt(width))
+                                case final value?)
+                              (
+                                color: overlay.color,
+                                text: _formatValue(value, overlay.unit),
+                              ),
+                        ],
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      );
-    },
-  );
-
-  String _markerTime(double width) {
-    final ratio = (_markerX! / width).clamp(0.0, 1.0);
-    final timestamp =
-        widget.startTime +
-        ((widget.endTime - widget.startTime) * ratio).round();
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-    return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+        );
+      },
+    );
   }
 
-  int? _nearestHeartRate(double width) {
-    if (widget.heartRateSamples.isEmpty) return null;
-    final ratio = (_markerX! / width).clamp(0.0, 1.0);
-    final timestamp =
-        widget.startTime +
+  int _timeAt(double width) {
+    final ratio = width <= 0 ? 0.0 : (_markerX! / width).clamp(0.0, 1.0);
+    return widget.startTime +
         ((widget.endTime - widget.startTime) * ratio).round();
-    final sample = widget.heartRateSamples.reduce((closest, candidate) {
-      final closestTime = (closest['time'] as num?)?.toInt() ?? 0;
-      final candidateTime = (candidate['time'] as num?)?.toInt() ?? 0;
-      return (candidateTime - timestamp).abs() < (closestTime - timestamp).abs()
+  }
+
+  static double? _nearest(HealthSleepOverlay overlay, int timestamp) {
+    if (overlay.samples.isEmpty) return null;
+    final sample = overlay.samples.reduce(
+      (closest, candidate) =>
+          (candidate.t - timestamp).abs() < (closest.t - timestamp).abs()
           ? candidate
-          : closest;
-    });
-    return (sample['bpm'] as num?)?.round();
+          : closest,
+    );
+    return sample.v;
   }
 
   String? _stageAtMarker(double width) {
-    final ratio = (_markerX! / width).clamp(0.0, 1.0);
-    final timestamp =
-        widget.startTime +
-        ((widget.endTime - widget.startTime) * ratio).round();
+    final timestamp = _timeAt(width);
     for (final stage in widget.stages) {
       final start = (stage['startTime'] as num?)?.toInt() ?? widget.startTime;
       final end = (stage['endTime'] as num?)?.toInt() ?? start;
@@ -111,19 +145,58 @@ class _HealthSleepStageTimelineState extends State<HealthSleepStageTimeline> {
   }
 }
 
+/// Vertical bands, so the widget and the painter agree on where things sit.
+class _TimelineLayout {
+  final int overlayCount;
+
+  const _TimelineLayout(this.overlayCount);
+
+  static const _top = 22.0;
+  static const _overlayLane = 44.0;
+  static const _bar = 28.0;
+  static const _barGap = 12.0;
+  static const _stageLane = 10.0;
+  static const _stageGap = 4.0;
+  static const _footer = 20.0;
+
+  double get overlaysTop => _top;
+  double get barTop => _top + overlayCount * _overlayLane;
+  double get lanesTop => barTop + _bar + _barGap;
+  double get lanesBottom => lanesTop + 4 * (_stageLane + _stageGap);
+  double get height => lanesBottom + _footer;
+
+  /// The band a curve is drawn in, below its own range label.
+  double overlayBase(int index) => _top + index * _overlayLane + _overlayLane;
+  double overlayLabelTop(int index) => _top + index * _overlayLane - 4;
+  double get overlayCurveHeight => _overlayLane - 20;
+  double get barHeight => _bar;
+  double get stageLaneHeight => _stageLane;
+  double get stageLaneStride => _stageLane + _stageGap;
+}
+
+String _formatTime(int timestamp) {
+  final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+  return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+}
+
+/// Percent-style units read badly with decimals at this size; rates do not.
+String _formatValue(double value, String unit) =>
+    '${value.round()} $unit'.trimRight();
+
 class _TimelineTooltip extends StatelessWidget {
   final String time;
-  final int? heartRate;
   final String? stage;
+  final List<({Color color, String text})> readings;
 
   const _TimelineTooltip({
     required this.time,
-    required this.heartRate,
     required this.stage,
+    required this.readings,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final stageLabel = switch (stage) {
       'awake' => l10n.healthDashboardSleepAwake,
@@ -133,35 +206,56 @@ class _TimelineTooltip extends StatelessWidget {
       _ => null,
     };
     return Material(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      color: theme.colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(6),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        child: Row(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              heartRate == null ? time : '$time · $heartRate bpm',
-              style: Theme.of(context).textTheme.labelSmall,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(time, style: theme.textTheme.labelSmall),
+                if (stageLabel != null) ...[
+                  const SizedBox(width: 5),
+                  _Dot(color: _stageColor(stage!)),
+                  const SizedBox(width: 3),
+                  Text(stageLabel, style: theme.textTheme.labelSmall),
+                ],
+              ],
             ),
-            if (stageLabel != null) ...[
-              const SizedBox(width: 5),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: _stageColor(stage!),
-                  shape: BoxShape.circle,
+            for (final reading in readings)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _Dot(color: reading.color),
+                    const SizedBox(width: 4),
+                    Text(reading.text, style: theme.textTheme.labelSmall),
+                  ],
                 ),
               ),
-              const SizedBox(width: 3),
-              Text(stageLabel, style: Theme.of(context).textTheme.labelSmall),
-            ],
           ],
         ),
       ),
     );
   }
+}
+
+class _Dot extends StatelessWidget {
+  final Color color;
+
+  const _Dot({required this.color});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 8,
+    height: 8,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  );
 }
 
 Color _stageColor(String type) => switch (type) {
@@ -176,7 +270,8 @@ class _SleepStageTimelinePainter extends CustomPainter {
   final List<Map<String, dynamic>> stages;
   final int startTime;
   final int endTime;
-  final List<Map<String, dynamic>> heartRateSamples;
+  final List<HealthSleepOverlay> overlays;
+  final _TimelineLayout layout;
   final Color labelColor;
   final double? markerX;
 
@@ -184,7 +279,8 @@ class _SleepStageTimelinePainter extends CustomPainter {
     required this.stages,
     required this.startTime,
     required this.endTime,
-    required this.heartRateSamples,
+    required this.overlays,
+    required this.layout,
     required this.labelColor,
     this.markerX,
   });
@@ -201,35 +297,42 @@ class _SleepStageTimelinePainter extends CustomPainter {
       final width = ((end - start) / duration).clamp(0.0, 1.0) * size.width;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(x, 48, width, 28),
+          Rect.fromLTWH(x, layout.barTop, width, layout.barHeight),
           const Radius.circular(5),
         ),
-        Paint()..color = _color(type),
+        Paint()..color = _stageColor(type),
       );
     }
-    _drawHeartRate(canvas, size, duration);
+    for (var index = 0; index < overlays.length; index++) {
+      _drawOverlay(canvas, size, duration, overlays[index], index);
+    }
     _drawStageLanes(canvas, size, duration);
     if (markerX != null) {
       canvas.drawLine(
-        Offset(markerX!.clamp(0.0, size.width), 18),
-        Offset(markerX!.clamp(0.0, size.width), 146),
+        Offset(markerX!.clamp(0.0, size.width), layout.overlaysTop),
+        Offset(markerX!.clamp(0.0, size.width), layout.lanesBottom),
         Paint()
           ..color = labelColor
           ..strokeWidth = 1,
       );
     }
-    _label(canvas, _time(startTime), const Offset(0, 148));
-    _label(canvas, _time(endTime), Offset(size.width, 148), alignRight: true);
+    _label(canvas, _formatTime(startTime), Offset(0, layout.lanesBottom + 2));
+    _label(
+      canvas,
+      _formatTime(endTime),
+      Offset(size.width, layout.lanesBottom + 2),
+      alignRight: true,
+    );
   }
 
   void _drawStageLanes(Canvas canvas, Size size, int duration) {
     const types = ['awake', 'rem', 'light', 'deep'];
     for (var index = 0; index < types.length; index++) {
       final type = types[index];
-      final top = 88.0 + index * 14;
+      final top = layout.lanesTop + index * layout.stageLaneStride;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(0, top, size.width, 10),
+          Rect.fromLTWH(0, top, size.width, layout.stageLaneHeight),
           const Radius.circular(3),
         ),
         Paint()..color = labelColor.withValues(alpha: 0.16),
@@ -242,33 +345,38 @@ class _SleepStageTimelinePainter extends CustomPainter {
         final width = ((end - start) / duration).clamp(0.0, 1.0) * size.width;
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            Rect.fromLTWH(x, top, width, 10),
+            Rect.fromLTWH(x, top, width, layout.stageLaneHeight),
             const Radius.circular(3),
           ),
-          Paint()..color = _color(type),
+          Paint()..color = _stageColor(type),
         );
       }
     }
   }
 
-  void _drawHeartRate(Canvas canvas, Size size, int duration) {
-    if (heartRateSamples.length < 2) return;
-    final values = heartRateSamples
-        .map((sample) => (sample['bpm'] as num?)?.toDouble())
-        .whereType<double>()
-        .toList();
+  /// The curve plus the numbers behind it: without the range printed, a line
+  /// scaled to its own minimum and maximum says nothing about the values.
+  void _drawOverlay(
+    Canvas canvas,
+    Size size,
+    int duration,
+    HealthSleepOverlay overlay,
+    int index,
+  ) {
+    final values = [for (final sample in overlay.samples) sample.v];
     if (values.length < 2) return;
-    final minBpm = values.reduce((a, b) => a < b ? a : b);
-    final maxBpm = values.reduce((a, b) => a > b ? a : b);
-    final range = (maxBpm - minBpm).clamp(5, double.infinity);
+    final lo = values.reduce((a, b) => a < b ? a : b);
+    final hi = values.reduce((a, b) => a > b ? a : b);
+    final range = (hi - lo).clamp(1.0, double.infinity);
+    final base = layout.overlayBase(index);
+    final height = layout.overlayCurveHeight;
+
     final path = Path();
     Offset? previous;
-    for (final sample in heartRateSamples) {
-      final time = (sample['time'] as num?)?.toInt();
-      final bpm = (sample['bpm'] as num?)?.toDouble();
-      if (time == null || bpm == null) continue;
-      final x = ((time - startTime) / duration).clamp(0.0, 1.0) * size.width;
-      final y = 38 - ((bpm - minBpm) / range).clamp(0.0, 1.0) * 30;
+    for (final sample in overlay.samples) {
+      final x =
+          ((sample.t - startTime) / duration).clamp(0.0, 1.0) * size.width;
+      final y = base - ((sample.v - lo) / range).clamp(0.0, 1.0) * height;
       final point = Offset(x, y);
       if (previous == null) {
         path.moveTo(point.dx, point.dy);
@@ -288,18 +396,19 @@ class _SleepStageTimelinePainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = Colors.redAccent
+        ..color = overlay.color
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeCap = StrokeCap.round,
     );
-  }
-
-  Color _color(String type) => _stageColor(type);
-
-  String _time(int timestamp) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
-    return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    _label(
+      canvas,
+      '${overlay.label}  ${lo.round()}–${hi.round()} ${overlay.unit}'
+          .trimRight(),
+      Offset(0, layout.overlayLabelTop(index)),
+      color: overlay.color,
+      size: 10,
+    );
   }
 
   void _label(
@@ -307,11 +416,13 @@ class _SleepStageTimelinePainter extends CustomPainter {
     String text,
     Offset offset, {
     bool alignRight = false,
+    Color? color,
+    double size = 11,
   }) {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(color: labelColor, fontSize: 11),
+        style: TextStyle(color: color ?? labelColor, fontSize: size),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
@@ -324,7 +435,7 @@ class _SleepStageTimelinePainter extends CustomPainter {
   @override
   bool shouldRepaint(_SleepStageTimelinePainter oldDelegate) =>
       oldDelegate.stages != stages ||
-      oldDelegate.heartRateSamples != heartRateSamples ||
+      oldDelegate.overlays != overlays ||
       oldDelegate.startTime != startTime ||
       oldDelegate.endTime != endTime ||
       oldDelegate.labelColor != labelColor ||

@@ -1,5 +1,6 @@
 import 'package:health_connector/health_connector.dart' as hc;
 
+import '../health_debug_origin.dart';
 import 'health_metric_catalog.dart';
 import 'health_rows.dart';
 import 'health_schema.dart';
@@ -13,8 +14,21 @@ import 'health_schema.dart';
 class HealthConnectMapper {
   const HealthConnectMapper();
 
+  /// The writer a record is filed under.
+  ///
+  /// Everything that decides "who wrote this" - the mapper, discovery, the two
+  /// exclusion checks - goes through here, so the debug generator's records get
+  /// their own source everywhere rather than only in the tables.
+  static String packageOf(hc.HealthRecord record) {
+    final clientId = record.metadata.clientRecordId;
+    if (clientId != null && clientId.startsWith(healthDebugClientIdPrefix)) {
+      return healthDebugPackage;
+    }
+    return record.metadata.dataOrigin?.packageName ?? 'unknown';
+  }
+
   HealthMappedRecord map(hc.HealthRecord record) {
-    final package = record.metadata.dataOrigin?.packageName ?? 'unknown';
+    final package = packageOf(record);
     final points = _points(record);
     if (points.isNotEmpty) {
       return HealthMappedRecord(package: package, points: points);

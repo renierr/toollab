@@ -12209,6 +12209,12 @@ abstract class AppLocalizations {
   /// **'End'**
   String get healthDashboardSleepEnd;
 
+  /// No description provided for @healthDashboardSleepStageTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'×{count}'**
+  String healthDashboardSleepStageTimes(int count);
+
   /// No description provided for @healthDashboardSleepStageDuration.
   ///
   /// In en, this message translates to:
@@ -13060,6 +13066,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Debug'**
   String get healthDashboardSectionDebug;
+
+  /// No description provided for @healthDebugSourceGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated test data'**
+  String get healthDebugSourceGenerated;
 
   /// No description provided for @healthDebugSeedTitle.
   ///

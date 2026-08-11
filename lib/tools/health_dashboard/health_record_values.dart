@@ -1,5 +1,9 @@
 import 'health_record.dart';
 
+/// One dense sample: epoch millis and the value in the metric's stored unit.
+/// The shape the sleep timeline's overlay curves are drawn from.
+typedef HealthTimedValue = ({int t, double v});
+
 /// Reads one number out of a record, including the two cases where the number
 /// is not stored but derived from the record's span.
 double? healthRecordValue(HealthRecord record, String key) {

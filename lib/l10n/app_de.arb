@@ -2744,6 +2744,14 @@
   "healthDashboardSleepDuration": "Dauer",
   "healthDashboardSleepStart": "Beginn",
   "healthDashboardSleepEnd": "Ende",
+  "healthDashboardSleepStageTimes": "×{count}",
+  "@healthDashboardSleepStageTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardSleepStageDuration": "{duration} ({count} Mal)",
   "@healthDashboardSleepStageDuration": {
     "placeholders": {
@@ -2985,6 +2993,7 @@
   "healthDashboardMetaDeleted": "Gelöscht",
   "healthDashboardMetaRawValues": "Gespeicherte Werte",
   "healthDashboardSectionDebug": "Debug",
+  "healthDebugSourceGenerated": "Generierte Testdaten",
   "healthDebugSeedTitle": "Generierte Testdaten",
   "healthDebugSeedSubtitle": "Health Connect mit einer erzeugten Historie füllen",
   "healthDebugSeedWarning": "Nur in Debug-Builds. Die Einträge werden als diese App nach Health Connect geschrieben, sind als generiert markiert und lassen sich unten wieder entfernen.",

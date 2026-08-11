@@ -6774,6 +6774,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthDashboardSleepEnd => 'End';
 
   @override
+  String healthDashboardSleepStageTimes(int count) {
+    return '×$count';
+  }
+
+  @override
   String healthDashboardSleepStageDuration(Object duration, Object count) {
     return '$duration ($count times)';
   }
@@ -7268,6 +7273,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardSectionDebug => 'Debug';
+
+  @override
+  String get healthDebugSourceGenerated => 'Generated test data';
 
   @override
   String get healthDebugSeedTitle => 'Generated test data';

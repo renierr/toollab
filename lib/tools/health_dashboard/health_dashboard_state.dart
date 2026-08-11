@@ -8,7 +8,6 @@ import 'package:tool_lab/services/background_work_lease.dart';
 import 'collectors/health_connect_diff.dart';
 import 'collectors/health_connect_discovery.dart';
 import 'collectors/health_connect_importer.dart';
-import 'store/health_metric_catalog.dart';
 import 'store/health_queries.dart';
 import 'store/health_store.dart';
 import '../treadmill_control/treadmill_health_connect_publisher.dart';
@@ -752,20 +751,19 @@ class HealthDashboardState extends ChangeNotifier {
     return _dailyHeartRate[_dayKey(day)];
   });
 
-  /// Heart-rate curve inside a session, read straight from the dense table as a
-  /// bounded range seek. It no longer scans the loaded week's records, so a
+  /// One metric's samples inside a session, read straight from the dense table
+  /// as a bounded range seek. It does not scan the loaded week's records, so a
   /// drilldown works for any session in history, not just a recent one.
-  Future<List<Map<String, dynamic>>> heartRateSamplesDuring(
+  Future<List<HealthTimedValue>> metricSamplesDuring(
     HealthRecord session,
+    String metric,
   ) async {
     final points = await HealthStore.instance.pointsInRange(
-      metric: HealthMetrics.heartRate,
+      metric: metric,
       from: session.startTime,
       to: session.endTime,
     );
-    return [
-      for (final point in points) {'time': point.t, 'bpm': point.v},
-    ];
+    return [for (final point in points) (t: point.t, v: point.v)];
   }
 
   DateTime _dayAt(int index) {

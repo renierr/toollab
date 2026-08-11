@@ -113,11 +113,11 @@ class HealthConnectImporter {
           final mapped = <HealthMappedRecord>[];
           for (final record
               in (response.records as List).cast<hc.HealthRecord>()) {
-            if (excluded.contains(record.metadata.dataOrigin?.packageName)) {
-              continue;
-            }
             final result = mapper.map(record);
-            if (result.isEmpty) continue;
+            // Exclusion is checked on the writer the row would be stored under,
+            // not on the raw data origin, so switching a source off matches what
+            // the tables actually hold.
+            if (result.isEmpty || excluded.contains(result.package)) continue;
             mapped.add(result);
             for (final point in result.points) {
               touchedFrom = _min(touchedFrom, point.t);

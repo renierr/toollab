@@ -9,17 +9,8 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/background_work_lease.dart';
 
 import '../collectors/health_connect_types.dart';
+import '../health_debug_origin.dart';
 import 'health_debug_data.dart';
-
-/// Every generated record carries a client record id of
-/// `toollab:health-debug:<epoch day>:<part>`.
-///
-/// Two things follow from that. The prefix is what makes the data removable
-/// again: a wipe reads records back and deletes the ones carrying it, so nothing
-/// this app wrote for real - treadmill workouts above all - is touched. And
-/// because the id is derived from the day rather than from the run, generating
-/// the same day twice replaces its records instead of adding a second copy.
-const healthDebugClientIdPrefix = 'toollab:health-debug:';
 
 enum HealthDebugOutcome {
   ran,
@@ -37,23 +28,22 @@ class HealthDebugResult {
   final int records;
   final int failed;
 
-  /// The package the generated records are attributed to, read back during a
-  /// wipe. Lets the caller drop the matching rows from the dashboard's store,
-  /// which a Health Connect delete on its own does not reach.
-  final String? package;
-
-  const HealthDebugResult(
-    this.outcome, {
-    this.records = 0,
-    this.failed = 0,
-    this.package,
-  });
+  const HealthDebugResult(this.outcome, {this.records = 0, this.failed = 0});
 }
 
 /// Writes a synthetic health history into Health Connect so the dashboard has
 /// something to render on a device that holds no real data.
 ///
 /// Debug builds only - the entry point that reaches this is behind `kDebugMode`.
+///
+/// Every record carries a client record id of
+/// `${healthDebugClientIdPrefix}<epoch day>:<part>`. Two things follow. The
+/// prefix is what makes the data removable again - a wipe reads records back and
+/// deletes the ones carrying it, so nothing this app wrote for real, treadmill
+/// workouts above all, is touched; it is also what files the rows under
+/// [healthDebugPackage] on the way in. And because the id is derived from the
+/// day rather than from the run, generating the same day twice replaces its
+/// records instead of adding a second copy.
 class HealthDebugSeeder {
   const HealthDebugSeeder();
 
@@ -274,7 +264,6 @@ class HealthDebugSeeder {
       logPrefix: 'HealthDebug',
     );
     var removed = 0;
-    String? package;
     try {
       for (final readable in HealthConnectTypes.readable()) {
         final typeId = HealthConnectTypes.idOf(readable);
@@ -297,7 +286,6 @@ class HealthDebugSeeder {
               }
               if (record.id == hc.HealthRecordId.none) continue;
               ids.add(record.id);
-              package ??= record.metadata.dataOrigin?.packageName;
             }
             request = response.nextPageRequest;
           } while (request != null);
@@ -322,11 +310,7 @@ class HealthDebugSeeder {
     } finally {
       await work.release();
     }
-    return HealthDebugResult(
-      HealthDebugOutcome.ran,
-      records: removed,
-      package: package,
-    );
+    return HealthDebugResult(HealthDebugOutcome.ran, records: removed);
   }
 
   /// The write capability is not part of the exported `HealthDataType` surface,

@@ -463,6 +463,14 @@ Two properties matter more than the shapes:
   removable again - the wipe reads the generator's types back, keeps the records
   carrying it and deletes those by id, so real data, treadmill workouts above
   all, is untouched. Time-range deletion would not be able to tell them apart.
+- **It gets its own source.** Android attributes every record to the writing
+  package, and this app has one, so generated rows would otherwise be labelled
+  and switched off as Treadmill Control's real workouts.
+  `HealthConnectMapper.packageOf` files anything carrying the prefix under the
+  synthetic package `de.renier.tool_lab.generated` (`health_debug_origin.dart`),
+  which gives it its own row in Apps, its own switch and priority, and a
+  `deleteAppData` that by construction cannot reach anything real. Discovery and
+  both exclusion checks resolve the writer through the same helper.
 - **The id is derived from the day, not from the run.** Generating the same day
   twice replaces its records instead of adding a second copy, and the per-day
   `Random(epochDay)` seed means a 7 day set and a year set agree on the days they
@@ -482,6 +490,20 @@ Clearing also drops the generating package's rows from the store via
 `deleteAppData`, because deleting in Health Connect alone would leave everything
 already imported behind. Generated data reaches the dashboard the same way any
 writer's does: scan sources, then import.
+
+## Sleep Quality Scoring
+
+`health_sleep_quality.dart` starts every night at 100 and deducts for each of
+five checks that falls outside a standard adult reference range - duration,
+efficiency, deep share, REM share, awake minutes. No weighting, no model. The
+bands, a worked example and an interactive scorer live in
+[`docs/sleep-quality.html`](docs/sleep-quality.html); that page is the reference
+and must be updated whenever a band or a deduction changes.
+
+Two things surprise people, both by design and both documented there: **more**
+deep sleep than the reference range costs 5 points, and the number of awakenings
+is counted and displayed but never scored - only the awake minutes are. A
+6-hour night with three brief wakes therefore scores 85 and still reads "Good".
 
 ## Known Gaps
 

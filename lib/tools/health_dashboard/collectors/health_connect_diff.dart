@@ -97,11 +97,8 @@ class HealthConnectDiff {
           final typeId = HealthConnectTypes.idOfRecord(record);
           final excluded = excludedByType[typeId] ??= await store
               .excludedPackages(typeId);
-          if (excluded.contains(record.metadata.dataOrigin?.packageName)) {
-            continue;
-          }
           final row = mapper.map(record);
-          if (row.isEmpty) continue;
+          if (row.isEmpty || excluded.contains(row.package)) continue;
           mapped.add(row);
           for (final point in row.points) {
             touchedFrom = _min(touchedFrom, point.t);

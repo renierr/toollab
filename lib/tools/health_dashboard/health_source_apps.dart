@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import 'health_debug_origin.dart';
+
 /// Friendly names and icons for the apps that write into Health Connect.
 ///
 /// Single source of truth: the settings screens, the source badge and the app
@@ -22,6 +24,7 @@ enum HealthSourceApp {
   renpho,
   miFitness,
   healthConnect,
+  generated,
   unknown,
 }
 
@@ -29,6 +32,7 @@ enum HealthSourceApp {
 /// package variants (regional builds, betas, renamed successors).
 const _packages = <String, HealthSourceApp>{
   'ToolLab Treadmill': HealthSourceApp.treadmill,
+  healthDebugPackage: HealthSourceApp.generated,
   'de.renier.tool_lab': HealthSourceApp.treadmill,
   'com.huami.watch.hmwatchmanager': HealthSourceApp.amazfit,
   'com.google.android.apps.fitness': HealthSourceApp.googleFit,
@@ -86,6 +90,7 @@ extension HealthSourceAppDetails on HealthSourceApp {
     HealthSourceApp.withings ||
     HealthSourceApp.renpho => Icons.monitor_weight_outlined,
     HealthSourceApp.healthConnect => Icons.health_and_safety_outlined,
+    HealthSourceApp.generated => Icons.bug_report_outlined,
     HealthSourceApp.unknown => Icons.apps_rounded,
   };
 
@@ -101,6 +106,7 @@ extension HealthSourceAppDetails on HealthSourceApp {
     HealthSourceApp.renpho => l10n.healthDashboardRenpho,
     HealthSourceApp.miFitness => l10n.healthDashboardMiFitness,
     HealthSourceApp.healthConnect => l10n.healthDashboardSourceHealthConnect,
+    HealthSourceApp.generated => l10n.healthDebugSourceGenerated,
     HealthSourceApp.unknown => l10n.healthDashboardSourceUnknown,
   };
 }
