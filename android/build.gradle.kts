@@ -17,6 +17,13 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    pluginManager.withPlugin("com.android.library") {
+        if (project.name == "camera_android_camerax") {
+            dependencies {
+                add("implementation", "androidx.concurrent:concurrent-futures:1.2.0")
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
