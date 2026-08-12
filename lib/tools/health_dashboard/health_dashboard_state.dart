@@ -18,6 +18,11 @@ import 'config.dart';
 import 'health_record.dart';
 import 'health_record_values.dart';
 
+/// What the export is doing right now. Counting rows and copying the finished
+/// file are both slow enough to be reported: without them the dialog claims to
+/// be preparing while it writes, and sits at 100% while it saves.
+enum HealthExportPhase { measuring, writing, saving }
+
 class HealthDashboardState extends ChangeNotifier {
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
   static const _backupFileName = 'health_dashboard_backup.db';
@@ -51,6 +56,7 @@ class HealthDashboardState extends ChangeNotifier {
   int backupImportTotalCount = 0;
   int backupExportProcessedCount = 0;
   int backupExportTotalCount = 0;
+  HealthExportPhase backupExportPhase = HealthExportPhase.measuring;
 
   BackgroundWorkLease? _importWork;
 
@@ -496,9 +502,11 @@ class HealthDashboardState extends ChangeNotifier {
     isExportingBackup = true;
     backupExportProcessedCount = 0;
     backupExportTotalCount = 0;
+    backupExportPhase = HealthExportPhase.measuring;
     notifyListeners();
     BackgroundWorkLease? work;
     String? tempPath;
+    final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
     try {
       work = await _beginBackgroundWork(
         'Starting...',
@@ -510,24 +518,51 @@ class HealthDashboardState extends ChangeNotifier {
       await HealthStore.instance.exportBackupTo(
         target,
         onProgress: (processed, total) {
+          backupExportPhase = HealthExportPhase.writing;
           backupExportProcessedCount = processed;
           backupExportTotalCount = total;
           work?.update('$processed / $total');
           notifyListeners();
         },
       );
+      if (kDebugMode) {
+        debugLog(
+          '[HealthDashboard] Backup written in ${stopwatch!.elapsedMilliseconds}ms',
+        );
+      }
       if (tempPath == null) return target;
-      return await FileSaveHelper.saveToDownloadsHeadless(
+      // The copy out of temp is a second pass over the whole file, so it gets
+      // its own phase rather than leaving the dialog at 100% for its duration.
+      backupExportPhase = HealthExportPhase.saving;
+      work.update('Saving...', minIntervalMs: 0);
+      notifyListeners();
+      final saved = await FileSaveHelper.saveToDownloadsHeadless(
         sourcePath: target,
         fileName: _backupFileName,
         notify: notifyOnSave,
       );
+      if (kDebugMode) {
+        debugLog(
+          '[HealthDashboard] Backup saved to Downloads after '
+          '${stopwatch!.elapsedMilliseconds}ms total',
+        );
+      }
+      return saved;
     } finally {
+      // The progress dialog closes on this flag, so it flips the moment the file
+      // is done. Cleanup is platform calls - a foreground service, a wake lock -
+      // and must never be able to hold the dialog open if one of them stalls.
+      isExportingBackup = false;
+      notifyListeners();
       final temp = tempPath;
       if (temp != null) await _deleteQuietly(temp);
       await _endBackgroundWork(work);
-      isExportingBackup = false;
-      notifyListeners();
+      if (kDebugMode) {
+        debugLog(
+          '[HealthDashboard] Export cleanup done after '
+          '${stopwatch!.elapsedMilliseconds}ms total',
+        );
+      }
     }
   }
 
@@ -560,9 +595,9 @@ class HealthDashboardState extends ChangeNotifier {
       await load(showLoading: false);
       return imported;
     } finally {
-      await _endBackgroundWork(work);
       isImportingBackup = false;
       notifyListeners();
+      await _endBackgroundWork(work);
     }
   }
 

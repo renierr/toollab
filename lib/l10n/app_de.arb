@@ -2775,7 +2775,9 @@
   "healthDashboardExportBackupSubtitle": "Health-Dashboard-Daten als SQLite-Datenbank speichern.",
   "healthDashboardExportBackupWarning": "Das Exportieren einer großen Gesundheitsdatenbank kann dauern. Der Vorgang läuft weiter, wenn Sie die App verlassen, und die Datei wird am Ende gespeichert.",
   "healthDashboardExportBackupProgressTitle": "Gesundheitsdatenbank wird exportiert",
-  "healthDashboardExportBackupProgressStatus": "Sicherung wird vorbereitet...",
+  "healthDashboardExportBackupProgressStatus": "Datenbank wird vermessen...",
+  "healthDashboardExportBackupStatusWriting": "Sicherungsdatei wird geschrieben...",
+  "healthDashboardExportBackupStatusSaving": "Wird im Downloads-Ordner gespeichert...",
   "healthDashboardExportBackupProgressCount": "{processed} von {total} Zeilen geschrieben",
   "@healthDashboardExportBackupProgressCount": {
     "placeholders": {

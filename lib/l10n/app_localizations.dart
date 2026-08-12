@@ -12320,8 +12320,20 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardExportBackupProgressStatus.
   ///
   /// In en, this message translates to:
-  /// **'Preparing backup...'**
+  /// **'Measuring the database...'**
   String get healthDashboardExportBackupProgressStatus;
+
+  /// No description provided for @healthDashboardExportBackupStatusWriting.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing the backup file...'**
+  String get healthDashboardExportBackupStatusWriting;
+
+  /// No description provided for @healthDashboardExportBackupStatusSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving to the Downloads folder...'**
+  String get healthDashboardExportBackupStatusSaving;
 
   /// No description provided for @healthDashboardExportBackupProgressCount.
   ///

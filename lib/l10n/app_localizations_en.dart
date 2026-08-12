@@ -6836,7 +6836,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Exporting health database';
 
   @override
-  String get healthDashboardExportBackupProgressStatus => 'Preparing backup...';
+  String get healthDashboardExportBackupProgressStatus =>
+      'Measuring the database...';
+
+  @override
+  String get healthDashboardExportBackupStatusWriting =>
+      'Writing the backup file...';
+
+  @override
+  String get healthDashboardExportBackupStatusSaving =>
+      'Saving to the Downloads folder...';
 
   @override
   String healthDashboardExportBackupProgressCount(int processed, int total) {

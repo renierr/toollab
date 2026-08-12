@@ -25,6 +25,13 @@ class HealthExportProgressDialog extends StatelessWidget {
         }
       });
     }
+    final status = switch (state.backupExportPhase) {
+      HealthExportPhase.measuring =>
+        l10n.healthDashboardExportBackupProgressStatus,
+      HealthExportPhase.writing =>
+        l10n.healthDashboardExportBackupStatusWriting,
+      HealthExportPhase.saving => l10n.healthDashboardExportBackupStatusSaving,
+    };
     return PopScope(
       canPop: false,
       child: ResponsiveAlertDialog(
@@ -45,15 +52,16 @@ class HealthExportProgressDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.healthDashboardExportBackupProgressStatus),
+            Text(status),
             const SizedBox(height: 14),
-            Text(
-              l10n.healthDashboardExportBackupProgressCount(
-                state.backupExportProcessedCount,
-                state.backupExportTotalCount,
+            if (state.backupExportPhase != HealthExportPhase.saving)
+              Text(
+                l10n.healthDashboardExportBackupProgressCount(
+                  state.backupExportProcessedCount,
+                  state.backupExportTotalCount,
+                ),
+                style: Theme.of(context).textTheme.labelLarge,
               ),
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
             const SizedBox(height: 12),
             Text(
               l10n.healthDashboardExportBackupProgressHint,

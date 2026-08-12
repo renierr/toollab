@@ -6881,7 +6881,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardExportBackupProgressStatus =>
-      'Sicherung wird vorbereitet...';
+      'Datenbank wird vermessen...';
+
+  @override
+  String get healthDashboardExportBackupStatusWriting =>
+      'Sicherungsdatei wird geschrieben...';
+
+  @override
+  String get healthDashboardExportBackupStatusSaving =>
+      'Wird im Downloads-Ordner gespeichert...';
 
   @override
   String healthDashboardExportBackupProgressCount(int processed, int total) {

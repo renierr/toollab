@@ -3624,7 +3624,9 @@
   "healthDashboardExportBackupSubtitle": "Save Health Dashboard records as a SQLite database.",
   "healthDashboardExportBackupWarning": "Exporting a large health database can take a while. It keeps running if you leave the app, and the file is saved when it finishes.",
   "healthDashboardExportBackupProgressTitle": "Exporting health database",
-  "healthDashboardExportBackupProgressStatus": "Preparing backup...",
+  "healthDashboardExportBackupProgressStatus": "Measuring the database...",
+  "healthDashboardExportBackupStatusWriting": "Writing the backup file...",
+  "healthDashboardExportBackupStatusSaving": "Saving to the Downloads folder...",
   "healthDashboardExportBackupProgressCount": "Written {processed} of {total} rows",
   "@healthDashboardExportBackupProgressCount": {
     "placeholders": {
