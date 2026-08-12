@@ -614,7 +614,8 @@ class HealthDashboardState extends ChangeNotifier {
           .toList()
         ..sort((a, b) => b.startTime.compareTo(a.startTime));
 
-  List<HealthRecord> get effectiveWorkouts => workouts;
+  List<HealthRecord> get effectiveWorkouts =>
+      _deduplicateIntervals(workouts, 'distanceKm');
 
   List<HealthRecord> get allHealthData =>
       records.where((record) => record.type.startsWith('health.')).toList();
@@ -624,10 +625,11 @@ class HealthDashboardState extends ChangeNotifier {
 
   Future<List<HealthRecord>> workoutRecordsForDay(DateTime day) async {
     final dayRecords = await HealthQueries.instance.recordsOnDay(day);
-    return dayRecords
+    final list = dayRecords
         .where((record) => record.type == HealthQueries.workoutType)
         .toList()
       ..sort((a, b) => b.startTime.compareTo(a.startTime));
+    return _deduplicateIntervals(list, 'distanceKm');
   }
 
   /// Source choice happens at pull time now - only selected writers are ever

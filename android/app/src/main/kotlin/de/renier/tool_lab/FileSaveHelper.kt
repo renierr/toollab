@@ -60,7 +60,7 @@ object FileSaveHelper {
         }
     }
 
-    private fun resolveUniqueFileNameInDirectory(directory: File, fileName: String): String {
+    fun resolveUniqueFileNameInDirectory(directory: File, fileName: String): String {
         val (base, extension) = splitBaseAndExtension(fileName)
         var index = 0
         while (true) {

@@ -500,7 +500,8 @@ open class MainActivity : FlutterFragmentActivity() {
                             if (!downloadsDir.exists() && !downloadsDir.mkdirs()) {
                                 throw Exception("Failed to create Downloads directory")
                             }
-                            val file = File(downloadsDir, fileName)
+                            val resolvedName = FileSaveHelper.resolveUniqueFileNameInDirectory(downloadsDir, fileName)
+                            val file = File(downloadsDir, resolvedName)
                             result.success(file.absolutePath)
                         } catch (e: Exception) {
                             result.error("SAVE_ERROR", e.message, null)

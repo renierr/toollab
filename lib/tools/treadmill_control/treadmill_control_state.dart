@@ -829,6 +829,7 @@ class TreadmillControlState extends ChangeNotifier {
     if (frame.runningStateBits == pitpatStateStarting) {
       workoutStatus = WorkoutStatus.starting;
     } else if (frame.runningStateBits == pitpatStateRunning) {
+      _awaitingSpeedZero = false;
       if (workoutStatus == WorkoutStatus.paused) {
         // Resume from pause: keep accumulated metrics, restart data sampling.
         workoutStatus = WorkoutStatus.running;

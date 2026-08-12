@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -698,11 +699,11 @@ class HealthStore {
     String overlap(int? metricId, String aggregate) => metricId == null
         ? 'NULL'
         : '(SELECT $aggregate FROM $intervals i WHERE i.metric = $metricId '
-              'AND i.t0 < s.t1 AND i.t1 > s.t0)';
+              'AND i.app = s.app AND i.t0 < s.t1 AND i.t1 > s.t0)';
     String during(int? metricId, String aggregate) => metricId == null
         ? 'NULL'
         : '(SELECT $aggregate FROM $points p WHERE p.metric = $metricId '
-              'AND p.t >= s.t0 AND p.t <= s.t1)';
+              'AND p.app = s.app AND p.t >= s.t0 AND p.t <= s.t1)';
     final where = <String>['kind = ${HealthSchema.sessionKindExercise}'];
     final args = <Object?>[];
     if (from != null) {
@@ -732,6 +733,7 @@ class HealthStore {
   Future<void> rebuildDaily({
     void Function(String status, int count)? onProgress,
   }) async {
+    await refreshSessionSummaries();
     final db = await _db();
     final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
     await db.delete(HealthSchema.daily);
@@ -998,12 +1000,62 @@ class HealthStore {
     _appPackages[row['app'] as int? ?? -1],
   );
 
+  List<HealthSession> deduplicateSessions(List<HealthSession> input) {
+    if (input.length <= 1) return input;
+    final sorted = List<HealthSession>.from(input)
+      ..sort((a, b) => a.t0.compareTo(b.t0));
+    final result = <HealthSession>[];
+
+    for (final session in sorted) {
+      if (result.isEmpty) {
+        result.add(session);
+        continue;
+      }
+      final last = result.last;
+      final overlapStart = max(last.t0, session.t0);
+      final overlapEnd = min(last.t1, session.t1);
+      final overlapMs = overlapEnd - overlapStart;
+
+      if (overlapMs > 0) {
+        final lastDur = max(1, last.t1 - last.t0);
+        final sesDur = max(1, session.t1 - session.t0);
+        final overlapRatio = overlapMs / min(lastDur, sesDur);
+
+        if (overlapRatio > 0.5) {
+          final lastPackage = last.package ?? '';
+          final sesPackage = session.package ?? '';
+
+          final lastIsToolLab = lastPackage.contains('tool_lab');
+          final sesIsToolLab = sesPackage.contains('tool_lab');
+
+          if (sesIsToolLab && !lastIsToolLab) {
+            result[result.length - 1] = session;
+          } else if (!sesIsToolLab && lastIsToolLab) {
+            // Keep last
+          } else {
+            final lastPrio = _prioOf(_appIds[lastPackage] ?? -1);
+            final sesPrio = _prioOf(_appIds[sesPackage] ?? -1);
+            if (sesPrio < lastPrio ||
+                (sesPrio == lastPrio &&
+                    (session.distanceKm ?? 0) > (last.distanceKm ?? 0))) {
+              result[result.length - 1] = session;
+            }
+          }
+          continue;
+        }
+      }
+      result.add(session);
+    }
+    return result;
+  }
+
   Future<List<HealthSession>> sessions({
     int? kind,
     int? from,
     int? to,
     int limit = 200,
     int offset = 0,
+    bool deduplicate = true,
   }) async {
     final db = await _db();
     final where = <String>[];
@@ -1028,10 +1080,13 @@ class HealthStore {
       where: where.isEmpty ? null : where.join(' AND '),
       whereArgs: args.isEmpty ? null : args,
       orderBy: 't0 DESC',
-      limit: limit,
+      limit: deduplicate ? limit * 2 : limit,
       offset: offset,
     );
-    return rows.map(_sessionFromRow).toList();
+    final list = rows.map(_sessionFromRow).toList();
+    if (!deduplicate) return list;
+    final deduped = deduplicateSessions(list);
+    return deduped.length > limit ? deduped.sublist(0, limit) : deduped;
   }
 
   Future<List<HealthSessionPart>> sessionParts(int sessionId) async {
@@ -1079,22 +1134,24 @@ class HealthStore {
   /// Aggregate workout figures across all sessions, off the denormalised
   /// summary columns rather than by parsing anything.
   Future<Map<String, num>> workoutSummary() async {
-    final db = await _db();
-    final rows = await db.rawQuery(
-      'SELECT COALESCE(SUM(distance_km), 0) AS distance, '
-      'COALESCE(SUM(calories), 0) AS calories, '
-      'COALESCE(SUM((t1 - t0) / 1000), 0) AS duration, '
-      'COUNT(*) AS workouts '
-      'FROM ${db.nameTable(HealthSchema.session)} '
-      'WHERE kind = ?${_excludeDisabled()}',
-      [HealthSchema.sessionKindExercise],
+    final allSessions = await sessions(
+      kind: HealthSchema.sessionKindExercise,
+      limit: 100000,
+      deduplicate: true,
     );
-    final row = rows.single;
+    double distance = 0;
+    double calories = 0;
+    int duration = 0;
+    for (final s in allSessions) {
+      distance += s.distanceKm ?? 0;
+      calories += s.calories ?? 0;
+      duration += (s.t1 - s.t0) ~/ 1000;
+    }
     return {
-      'distance': (row['distance'] as num?) ?? 0,
-      'calories': (row['calories'] as num?) ?? 0,
-      'duration': (row['duration'] as num?) ?? 0,
-      'workouts': (row['workouts'] as num?) ?? 0,
+      'distance': distance,
+      'calories': calories,
+      'duration': duration,
+      'workouts': allSessions.length,
     };
   }
 
