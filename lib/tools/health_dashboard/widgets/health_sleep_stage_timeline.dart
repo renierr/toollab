@@ -73,6 +73,12 @@ class _HealthSleepStageTimelineState extends State<HealthSleepStageTimeline> {
                   setState(() => _markerX = details.localPosition.dx),
               onHorizontalDragUpdate: (details) =>
                   setState(() => _markerX = details.localPosition.dx),
+              // A touch has no hover to leave by, so the marker goes when the
+              // finger does - otherwise the tooltip sits over the curves for the
+              // rest of the visit. A mouse restores it on the next move.
+              onTapUp: (_) => setState(() => _markerX = null),
+              onTapCancel: () => setState(() => _markerX = null),
+              onHorizontalDragEnd: (_) => setState(() => _markerX = null),
               child: Stack(
                 children: [
                   Positioned.fill(
