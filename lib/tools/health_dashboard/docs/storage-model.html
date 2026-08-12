@@ -641,7 +641,7 @@
         <div class="note">
           <p><b>Long runs keep the CPU awake.</b> Every read is a platform call into another
           process, and a full history is minutes of them. Discovery, the full import, the change
-          sync, the cleanup and the backup export each hold a <code>BackgroundWorkLease</code> for
+          sync, the cleanup and both directions of the backup each hold a <code>BackgroundWorkLease</code> for
           their duration — a partial (CPU) wake lock plus a foreground notification — so
           Doze or app standby cannot suspend the app halfway through and strand a type mid-range.
           A background isolate is not an option: the plugin's method channels are bound to the main
@@ -1565,6 +1565,13 @@
       body: "The reclaim-the-space action, confirmed in the UI. Removes every row that writer contributed across all types, rebuilds the rollups, clears history_done on the affected types so its history can be read again, and VACUUMs — without which the file keeps its high-water mark.",
       writes: ["deletes by app, rebuilds health_daily, clears health_type.history_done, VACUUM"],
       no: "VACUUM rewrites the whole shared app database, not only this tool's tables."
+    },
+    {
+      n: "Restore", sub: "destructive", title: "Import a backup file",
+      code: "HealthStore.importBackup(path)",
+      body: "Empties every table this tool owns and refills it from the backup, in one transaction. A snapshot restore, not a merge — merging could never remove rows deleted after the backup was taken. Columns are matched by name, so an older export still restores with its missing columns at their defaults, and a file from a newer schema is rejected before anything is touched. The rollups travel in the file, so they are only rebuilt when it predates this schema or carried none.",
+      writes: ["replaces every table in HealthSchema.backupTables, clears hc_sync_token"],
+      no: "Health Connect is untouched; the export writes straight to its destination file."
     }
   ];
 

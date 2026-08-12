@@ -12308,7 +12308,7 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardExportBackupWarning.
   ///
   /// In en, this message translates to:
-  /// **'Exporting a large health database can take a while. Keep the screen open until it is finished.'**
+  /// **'Exporting a large health database can take a while. It keeps running if you leave the app, and the file is saved when it finishes.'**
   String get healthDashboardExportBackupWarning;
 
   /// No description provided for @healthDashboardExportBackupProgressTitle.
@@ -12326,14 +12326,32 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardExportBackupProgressCount.
   ///
   /// In en, this message translates to:
-  /// **'Writing {processed} of {total} records'**
+  /// **'Written {processed} of {total} rows'**
   String healthDashboardExportBackupProgressCount(int processed, int total);
 
   /// No description provided for @healthDashboardExportBackupProgressHint.
   ///
   /// In en, this message translates to:
-  /// **'Keep the screen open while the backup is created.'**
+  /// **'You can leave the app; the backup keeps being written in the background.'**
   String get healthDashboardExportBackupProgressHint;
+
+  /// No description provided for @healthDashboardExportBackupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export health database'**
+  String get healthDashboardExportBackupFailed;
+
+  /// No description provided for @healthDashboardExportBackupSavedDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Health database saved to the Downloads folder'**
+  String get healthDashboardExportBackupSavedDownloads;
+
+  /// No description provided for @healthDashboardExportBackupSavedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Health database saved to {path}'**
+  String healthDashboardExportBackupSavedTo(String path);
 
   /// No description provided for @healthDashboardImportBackup.
   ///
@@ -12344,19 +12362,31 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardImportBackupSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Merge records from a Health Dashboard SQLite backup.'**
+  /// **'Replace all stored records with a Health Dashboard SQLite backup.'**
   String get healthDashboardImportBackupSubtitle;
 
   /// No description provided for @healthDashboardImportBackupWarning.
   ///
   /// In en, this message translates to:
-  /// **'Existing health records are never replaced. Only records that are not already present will be imported.'**
+  /// **'This deletes all stored health data and replaces it with the backup\'s contents. Anything collected since the backup was taken is lost. Health Connect is not touched, so a new import can fetch that data again.'**
   String get healthDashboardImportBackupWarning;
+
+  /// No description provided for @healthDashboardImportBackupReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and restore'**
+  String get healthDashboardImportBackupReplace;
+
+  /// No description provided for @healthDashboardImportBackupTooNew.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup comes from a newer app version and cannot be restored'**
+  String get healthDashboardImportBackupTooNew;
 
   /// No description provided for @healthDashboardImportBackupSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Imported {count} new health records'**
+  /// **'Restored {count} health records'**
   String healthDashboardImportBackupSuccess(int count);
 
   /// No description provided for @healthDashboardImportBackupFailed.
@@ -12374,25 +12404,25 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardImportBackupProgressTitle.
   ///
   /// In en, this message translates to:
-  /// **'Importing health database'**
+  /// **'Restoring health database'**
   String get healthDashboardImportBackupProgressTitle;
 
   /// No description provided for @healthDashboardImportBackupProgressStatus.
   ///
   /// In en, this message translates to:
-  /// **'Saving health records ({processed} / {total})...'**
+  /// **'Replacing table {processed} of {total}...'**
   String healthDashboardImportBackupProgressStatus(int processed, int total);
 
   /// No description provided for @healthDashboardImportBackupProgressCount.
   ///
   /// In en, this message translates to:
-  /// **'Processed {processed} of {total} records'**
+  /// **'Restored {processed} of {total} tables'**
   String healthDashboardImportBackupProgressCount(int processed, int total);
 
   /// No description provided for @healthDashboardImportBackupProgressHint.
   ///
   /// In en, this message translates to:
-  /// **'Please keep the screen open while the backup is imported.'**
+  /// **'You can leave the app; the restore keeps running in the background.'**
   String get healthDashboardImportBackupProgressHint;
 
   /// No description provided for @healthDashboardImportHealthConnectProgressTitle.
@@ -12538,18 +12568,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cloud Backend Sync'**
   String get healthDashboardCloudBackendSync;
-
-  /// No description provided for @healthDashboardExportJson.
-  ///
-  /// In en, this message translates to:
-  /// **'Export Health Connect JSON'**
-  String get healthDashboardExportJson;
-
-  /// No description provided for @healthDashboardExportJsonSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Export raw Health Connect records as a JSON file for analysis.'**
-  String get healthDashboardExportJsonSubtitle;
 
   /// No description provided for @healthDashboardHealthConnectSettings.
   ///

@@ -202,6 +202,11 @@ class HealthConnectDiff {
     );
   }
 
+  /// Drops the stored token so the next [sync] rebuilds the baseline. Needed
+  /// after a restore: the token describes changes against a dataset that is no
+  /// longer the one we hold.
+  Future<void> clearSyncBaseline() => _clearToken();
+
   Future<void> _clearToken() async {
     await DatabaseService.instance.deleteSetting(
       HealthDashboardTool.config.id,

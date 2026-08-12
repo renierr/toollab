@@ -44,12 +44,6 @@ class HealthDashboardSettingsPage extends StatelessWidget {
             onTap: () => HealthBackupActions.export(context),
           ),
           ListTile(
-            leading: const Icon(Icons.data_object_rounded),
-            title: Text(l10n.healthDashboardExportJson),
-            subtitle: Text(l10n.healthDashboardExportJsonSubtitle),
-            onTap: () => HealthBackupActions.exportJson(context),
-          ),
-          ListTile(
             leading: const Icon(Icons.download_outlined),
             title: Text(l10n.healthDashboardImportBackup),
             subtitle: Text(l10n.healthDashboardImportBackupSubtitle),

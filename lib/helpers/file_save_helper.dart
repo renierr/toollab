@@ -295,6 +295,46 @@ class FileSaveHelper {
     }
   }
 
+  /// Copies a finished file into the public Downloads folder with no UI at all,
+  /// for long work that may complete while the app is in the background. Returns
+  /// the saved path, or null when the copy failed.
+  static Future<String?> saveToDownloadsHeadless({
+    required String sourcePath,
+    required String fileName,
+    bool notify = true,
+  }) async {
+    try {
+      final mimeType = _mimeTypeFromName(fileName);
+      if (!Platform.isAndroid) {
+        final docDir = await getApplicationDocumentsDirectory();
+        final dest = '${docDir.path}/$fileName';
+        await File(sourcePath).copy(dest);
+        return dest;
+      }
+      final Map? result = await _channel.invokeMethod<Map>(
+        'saveToDownloadsFromPath',
+        {'sourcePath': sourcePath, 'fileName': fileName, 'mimeType': mimeType},
+      );
+      if (result == null) return null;
+      final uriString = result['uri'] as String?;
+      if (notify && uriString != null) {
+        try {
+          await _channel.invokeMethod('showSystemNotification', {
+            'fileName': result['fileName'] as String? ?? fileName,
+            'uri': uriString,
+            'mimeType': mimeType,
+          });
+        } catch (e) {
+          errorLog('Failed to show native system notification: $e');
+        }
+      }
+      return result['filePath'] as String?;
+    } catch (e) {
+      errorLog('Failed to save file to Downloads: $e');
+      return null;
+    }
+  }
+
   /// Opens the file using the default native system app.
   static Future<void> openFile(String path, String mimeType) async {
     try {

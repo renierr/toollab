@@ -6829,7 +6829,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardExportBackupWarning =>
-      'Exporting a large health database can take a while. Keep the screen open until it is finished.';
+      'Exporting a large health database can take a while. It keeps running if you leave the app, and the file is saved when it finishes.';
 
   @override
   String get healthDashboardExportBackupProgressTitle =>
@@ -6840,27 +6840,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String healthDashboardExportBackupProgressCount(int processed, int total) {
-    return 'Writing $processed of $total records';
+    return 'Written $processed of $total rows';
   }
 
   @override
   String get healthDashboardExportBackupProgressHint =>
-      'Keep the screen open while the backup is created.';
+      'You can leave the app; the backup keeps being written in the background.';
+
+  @override
+  String get healthDashboardExportBackupFailed =>
+      'Could not export health database';
+
+  @override
+  String get healthDashboardExportBackupSavedDownloads =>
+      'Health database saved to the Downloads folder';
+
+  @override
+  String healthDashboardExportBackupSavedTo(String path) {
+    return 'Health database saved to $path';
+  }
 
   @override
   String get healthDashboardImportBackup => 'Import health database';
 
   @override
   String get healthDashboardImportBackupSubtitle =>
-      'Merge records from a Health Dashboard SQLite backup.';
+      'Replace all stored records with a Health Dashboard SQLite backup.';
 
   @override
   String get healthDashboardImportBackupWarning =>
-      'Existing health records are never replaced. Only records that are not already present will be imported.';
+      'This deletes all stored health data and replaces it with the backup\'s contents. Anything collected since the backup was taken is lost. Health Connect is not touched, so a new import can fetch that data again.';
+
+  @override
+  String get healthDashboardImportBackupReplace => 'Delete and restore';
+
+  @override
+  String get healthDashboardImportBackupTooNew =>
+      'This backup comes from a newer app version and cannot be restored';
 
   @override
   String healthDashboardImportBackupSuccess(int count) {
-    return 'Imported $count new health records';
+    return 'Restored $count health records';
   }
 
   @override
@@ -6872,21 +6892,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardImportBackupProgressTitle =>
-      'Importing health database';
+      'Restoring health database';
 
   @override
   String healthDashboardImportBackupProgressStatus(int processed, int total) {
-    return 'Saving health records ($processed / $total)...';
+    return 'Replacing table $processed of $total...';
   }
 
   @override
   String healthDashboardImportBackupProgressCount(int processed, int total) {
-    return 'Processed $processed of $total records';
+    return 'Restored $processed of $total tables';
   }
 
   @override
   String get healthDashboardImportBackupProgressHint =>
-      'Please keep the screen open while the backup is imported.';
+      'You can leave the app; the restore keeps running in the background.';
 
   @override
   String get healthDashboardImportHealthConnectProgressTitle =>
@@ -6970,13 +6990,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardCloudBackendSync => 'Cloud Backend Sync';
-
-  @override
-  String get healthDashboardExportJson => 'Export Health Connect JSON';
-
-  @override
-  String get healthDashboardExportJsonSubtitle =>
-      'Export raw Health Connect records as a JSON file for analysis.';
 
   @override
   String get healthDashboardHealthConnectSettings => 'Health Connect';

@@ -6873,7 +6873,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardExportBackupWarning =>
-      'Das Exportieren einer großen Gesundheitsdatenbank kann dauern. Lassen Sie den Bildschirm geöffnet, bis der Vorgang abgeschlossen ist.';
+      'Das Exportieren einer großen Gesundheitsdatenbank kann dauern. Der Vorgang läuft weiter, wenn Sie die App verlassen, und die Datei wird am Ende gespeichert.';
 
   @override
   String get healthDashboardExportBackupProgressTitle =>
@@ -6885,27 +6885,48 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String healthDashboardExportBackupProgressCount(int processed, int total) {
-    return '$processed von $total Daten werden geschrieben';
+    return '$processed von $total Zeilen geschrieben';
   }
 
   @override
   String get healthDashboardExportBackupProgressHint =>
-      'Lassen Sie den Bildschirm geöffnet, während die Sicherung erstellt wird.';
+      'Sie können die App verlassen; die Sicherung wird im Hintergrund weiter geschrieben.';
+
+  @override
+  String get healthDashboardExportBackupFailed =>
+      'Gesundheitsdatenbank konnte nicht exportiert werden';
+
+  @override
+  String get healthDashboardExportBackupSavedDownloads =>
+      'Gesundheitsdatenbank im Downloads-Ordner gespeichert';
+
+  @override
+  String healthDashboardExportBackupSavedTo(String path) {
+    return 'Gesundheitsdatenbank gespeichert unter $path';
+  }
 
   @override
   String get healthDashboardImportBackup => 'Gesundheitsdatenbank importieren';
 
   @override
   String get healthDashboardImportBackupSubtitle =>
-      'Daten aus einer Health-Dashboard-SQLite-Sicherung zusammenführen.';
+      'Alle gespeicherten Daten durch eine Health-Dashboard-SQLite-Sicherung ersetzen.';
 
   @override
   String get healthDashboardImportBackupWarning =>
-      'Bestehende Gesundheitsdaten werden nie ersetzt. Es werden nur noch nicht vorhandene Daten importiert.';
+      'Dabei werden alle gespeicherten Gesundheitsdaten gelöscht und durch den Inhalt der Sicherung ersetzt. Alles, was seit der Sicherung erfasst wurde, geht verloren. Health Connect bleibt unberührt, ein neuer Import kann diese Daten wieder holen.';
+
+  @override
+  String get healthDashboardImportBackupReplace =>
+      'Löschen und wiederherstellen';
+
+  @override
+  String get healthDashboardImportBackupTooNew =>
+      'Diese Sicherung stammt aus einer neueren App-Version und kann nicht wiederhergestellt werden';
 
   @override
   String healthDashboardImportBackupSuccess(int count) {
-    return '$count neue Gesundheitsdaten importiert';
+    return '$count Gesundheitsdaten wiederhergestellt';
   }
 
   @override
@@ -6917,21 +6938,21 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardImportBackupProgressTitle =>
-      'Gesundheitsdatenbank wird importiert';
+      'Gesundheitsdatenbank wird wiederhergestellt';
 
   @override
   String healthDashboardImportBackupProgressStatus(int processed, int total) {
-    return 'Gesundheitsdaten werden gespeichert ($processed / $total)...';
+    return 'Tabelle $processed von $total wird ersetzt...';
   }
 
   @override
   String healthDashboardImportBackupProgressCount(int processed, int total) {
-    return '$processed von $total Daten verarbeitet';
+    return '$processed von $total Tabellen wiederhergestellt';
   }
 
   @override
   String get healthDashboardImportBackupProgressHint =>
-      'Bitte lassen Sie den Bildschirm geöffnet, während die Sicherung importiert wird.';
+      'Sie können die App verlassen; die Wiederherstellung läuft im Hintergrund weiter.';
 
   @override
   String get healthDashboardImportHealthConnectProgressTitle =>
@@ -7017,13 +7038,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthDashboardCloudBackendSync =>
       'Cloud-Backend-Synchronisierung';
-
-  @override
-  String get healthDashboardExportJson => 'Health-Connect-JSON exportieren';
-
-  @override
-  String get healthDashboardExportJsonSubtitle =>
-      'Gesammelte Health-Connect-Einträge als JSON-Datei zur Analyse exportieren.';
 
   @override
   String get healthDashboardHealthConnectSettings => 'Health Connect';

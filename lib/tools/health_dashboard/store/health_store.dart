@@ -1,16 +1,36 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
-import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import '../config.dart';
 import 'health_metric_catalog.dart';
 import 'health_rows.dart';
 import 'health_schema.dart';
+
+/// What a backup file says about itself, read from its marker table.
+class HealthBackupInfo {
+  final int schemaVersion;
+  final DateTime? exportedAt;
+
+  const HealthBackupInfo({required this.schemaVersion, this.exportedAt});
+
+  /// A file from a newer build. Its tables may hold columns this schema cannot
+  /// place, so restoring it would silently drop data.
+  bool get isNewerThanApp => schemaVersion > HealthSchema.version;
+}
+
+class HealthBackupTooNewException implements Exception {
+  final int schemaVersion;
+
+  const HealthBackupTooNewException(this.schemaVersion);
+
+  @override
+  String toString() =>
+      'Backup schema v$schemaVersion is newer than v${HealthSchema.version}.';
+}
 
 /// A day's reduced value for one metric, straight out of `health_daily`.
 class HealthDailyValue {
@@ -1567,22 +1587,39 @@ class HealthStore {
 
   static const _backupMarkerTable = 'health_backup_marker';
 
-  /// Copies this tool's tables into a standalone database file. The work happens
-  /// inside SQLite, so nothing is materialised as Dart objects and the cost is
-  /// bounded by disk rather than by row count.
-  Future<String> exportBackup({
+  /// Copies this tool's tables into a standalone database file at [path]. The
+  /// work happens inside SQLite, so nothing is materialised as Dart objects and
+  /// the cost is bounded by disk rather than by row count.
+  ///
+  /// The caller passes the final destination, so the file is written once
+  /// instead of being built in temp and copied afterwards.
+  Future<void> exportBackupTo(
+    String path, {
     void Function(int processed, int total)? onProgress,
   }) async {
     final db = await _db();
-    final path = await TempFileManager.createFile('health_dashboard_backup.db');
     final file = File(path);
-    // ATTACH wants to create the file itself; TempFileManager may already have
-    // made an empty placeholder.
+    // ATTACH wants to create the file itself, and a picked destination may
+    // already hold an older backup.
     if (await file.exists()) await file.delete();
-    final total = HealthSchema.backupTables.length;
+    // Progress is weighted by rows: two dense tables carry nearly every byte, so
+    // counting tables would leave the bar still for the whole run.
+    final counts = <String, int>{};
+    var total = 0;
+    for (final table in HealthSchema.backupTables) {
+      final rows = await _countRows(db, table);
+      counts[table] = rows;
+      total += rows;
+    }
     onProgress?.call(0, total);
     await db.execute('ATTACH DATABASE ? AS backup', [path]);
     try {
+      // The backup is rebuilt from scratch whenever anything fails, so a journal
+      // and per-transaction fsyncs only buy a second full write of the file.
+      // Both go through rawQuery: a PRAGMA that reports its resulting value is a
+      // query, and sqflite rejects it on the execute path.
+      await db.rawQuery('PRAGMA backup.journal_mode = OFF');
+      await db.rawQuery('PRAGMA backup.synchronous = OFF');
       await db.execute(
         'CREATE TABLE backup.$_backupMarkerTable '
         '(tool_id TEXT NOT NULL, schema_version INTEGER NOT NULL, '
@@ -1596,24 +1633,43 @@ class HealthStore {
           ]);
       var processed = 0;
       for (final table in HealthSchema.backupTables) {
+        await db.execute(await _backupTableDdl(db, table));
         await db.execute(
-          'CREATE TABLE backup.$table AS SELECT * FROM ${db.nameTable(table)}',
+          'INSERT INTO backup.$table SELECT * FROM ${db.nameTable(table)}',
         );
-        onProgress?.call(++processed, total);
+        processed += counts[table] ?? 0;
+        onProgress?.call(processed, total);
       }
     } finally {
       await db.execute('DETACH DATABASE backup');
     }
-    return path;
   }
 
-  /// Merges a backup back in. Rows match on their primary key, so re-importing
-  /// the same file is idempotent. The dimension tables come along, otherwise the
-  /// interned integers in the restored facts would resolve to nothing.
-  Future<int> importBackup(
-    String path, {
-    void Function(int processed, int total)? onProgress,
-  }) async {
+  /// The live `CREATE TABLE` of [table], retargeted at the backup file. Read out
+  /// of `sqlite_master` rather than restated here, so the backup always carries
+  /// the real definition - primary keys, `WITHOUT ROWID` and all - and cannot
+  /// drift when the schema changes. Indexes are deliberately left out: they cost
+  /// export time and file size, and the import rebuilds them by writing into the
+  /// live tables.
+  Future<String> _backupTableDdl(ToolDatabase db, String table) async {
+    final named = db.nameTable(table);
+    final rows = await db.rawQuery(
+      "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
+      [named],
+    );
+    return (rows.single['sql'] as String).replaceFirst(named, 'backup.$table');
+  }
+
+  Future<int> _countRows(ToolDatabaseExecutor db, String table) async {
+    final rows = await db.rawQuery(
+      'SELECT COUNT(*) AS n FROM ${db.nameTable(table)}',
+    );
+    return (rows.single['n'] as num?)?.toInt() ?? 0;
+  }
+
+  /// Reads a backup's marker without touching the stored data, so an unusable
+  /// file is rejected before the user is asked to agree to a wipe.
+  Future<HealthBackupInfo> readBackupInfo(String path) async {
     final probe = await openDatabase(path, readOnly: true);
     try {
       final marker = await probe.rawQuery(
@@ -1623,8 +1679,33 @@ class HealthStore {
       if (marker.isEmpty) {
         throw const FormatException('Not a Health Dashboard backup.');
       }
+      final rows = await probe.rawQuery('SELECT * FROM $_backupMarkerTable');
+      final row = rows.isEmpty ? const <String, Object?>{} : rows.first;
+      final exportedAt = (row['exported_at'] as num?)?.toInt();
+      return HealthBackupInfo(
+        schemaVersion: (row['schema_version'] as num?)?.toInt() ?? 1,
+        exportedAt: exportedAt == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(exportedAt),
+      );
     } finally {
       await probe.close();
+    }
+  }
+
+  /// Replaces the stored data with the backup's contents.
+  ///
+  /// Destructive by design: a backup is a whole snapshot, and a merge could
+  /// never drop rows the user removed after taking it. Columns are matched by
+  /// name, so a file written by an older schema still restores and its missing
+  /// columns keep their defaults.
+  Future<int> importBackup(
+    String path, {
+    void Function(int processed, int total)? onProgress,
+  }) async {
+    final info = await readBackupInfo(path);
+    if (info.isNewerThanApp) {
+      throw HealthBackupTooNewException(info.schemaVersion);
     }
     final db = await _db();
     final total = HealthSchema.backupTables.length;
@@ -1633,47 +1714,57 @@ class HealthStore {
     onProgress?.call(0, total);
     await db.execute('ATTACH DATABASE ? AS backup', [path]);
     try {
-      for (final table in HealthSchema.backupTables) {
-        final present = await db.rawQuery(
-          "SELECT name FROM backup.sqlite_master WHERE type = 'table' AND name = ?",
-          [table],
-        );
-        if (present.isNotEmpty) {
-          imported += await db.rawUpdate(
-            'INSERT OR REPLACE INTO ${db.nameTable(table)} '
-            'SELECT * FROM backup.$table',
-          );
+      // One transaction: an interrupted restore leaves the previous data intact
+      // rather than a half-replaced store.
+      await db.transaction((txn) async {
+        for (final table in HealthSchema.backupTables) {
+          await txn.execute('DELETE FROM ${txn.nameTable(table)}');
+          final columns = await _sharedColumns(txn, table);
+          if (columns.isNotEmpty) {
+            final list = columns.join(', ');
+            imported += await txn.rawUpdate(
+              'INSERT OR REPLACE INTO ${txn.nameTable(table)} ($list) '
+              'SELECT $list FROM backup.$table',
+            );
+          }
+          onProgress?.call(++processed, total);
         }
-        onProgress?.call(++processed, total);
-      }
+      });
     } finally {
       await db.execute('DETACH DATABASE backup');
     }
     // The restored file brings its own dimension rows, so the interning caches
-    // are stale and the rollups must be rebuilt from the merged facts.
+    // are stale.
     reset();
-    await _db();
-    await rebuildDaily();
+    final restored = await _db();
+    // The rollups travel in the backup, so re-deriving them is only needed when
+    // the file predates this schema or carried none.
+    if (info.schemaVersion != HealthSchema.version ||
+        await _countRows(restored, HealthSchema.daily) == 0) {
+      await rebuildDaily();
+    }
     return imported;
   }
 
-  /// Flat JSON of the typed store, for inspecting it outside the app.
-  Future<String> exportJson() async {
-    final db = await _db();
-    final export = <String, dynamic>{
-      'schemaVersion': HealthSchema.version,
-      'exportedAt': DateTime.now().toIso8601String(),
-    };
-    for (final table in HealthSchema.backupTables) {
-      export[table] = await db.query(table);
-    }
-    final path = await TempFileManager.createFile(
-      'health_dashboard_export_${DateTime.now().millisecondsSinceEpoch}.json',
-    );
-    await File(
-      path,
-    ).writeAsString(const JsonEncoder.withIndent('  ').convert(export));
-    return path;
+  /// Columns [table] has in both the live schema and the backup file. An older
+  /// export is missing the newer ones; a table the export never had yields an
+  /// empty list and is simply left empty, which is what a restore means.
+  Future<List<String>> _sharedColumns(
+    ToolDatabaseExecutor db,
+    String table,
+  ) async {
+    final local = await _columnNames(db, 'main', db.nameTable(table));
+    final backup = await _columnNames(db, 'backup', table);
+    return local.where(backup.contains).toList();
+  }
+
+  Future<Set<String>> _columnNames(
+    ToolDatabaseExecutor db,
+    String schema,
+    String table,
+  ) async {
+    final rows = await db.rawQuery('PRAGMA $schema.table_info($table)');
+    return {for (final row in rows) row['name'] as String};
   }
 
   Future<Map<String, int>> rowCounts() async {

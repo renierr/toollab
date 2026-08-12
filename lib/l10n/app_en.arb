@@ -3622,10 +3622,10 @@
   "healthDashboardBackup": "Data backup",
   "healthDashboardExportBackup": "Export health database",
   "healthDashboardExportBackupSubtitle": "Save Health Dashboard records as a SQLite database.",
-  "healthDashboardExportBackupWarning": "Exporting a large health database can take a while. Keep the screen open until it is finished.",
+  "healthDashboardExportBackupWarning": "Exporting a large health database can take a while. It keeps running if you leave the app, and the file is saved when it finishes.",
   "healthDashboardExportBackupProgressTitle": "Exporting health database",
   "healthDashboardExportBackupProgressStatus": "Preparing backup...",
-  "healthDashboardExportBackupProgressCount": "Writing {processed} of {total} records",
+  "healthDashboardExportBackupProgressCount": "Written {processed} of {total} rows",
   "@healthDashboardExportBackupProgressCount": {
     "placeholders": {
       "processed": {
@@ -3636,11 +3636,23 @@
       }
     }
   },
-  "healthDashboardExportBackupProgressHint": "Keep the screen open while the backup is created.",
+  "healthDashboardExportBackupProgressHint": "You can leave the app; the backup keeps being written in the background.",
+  "healthDashboardExportBackupFailed": "Could not export health database",
+  "healthDashboardExportBackupSavedDownloads": "Health database saved to the Downloads folder",
+  "healthDashboardExportBackupSavedTo": "Health database saved to {path}",
+  "@healthDashboardExportBackupSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "healthDashboardImportBackup": "Import health database",
-  "healthDashboardImportBackupSubtitle": "Merge records from a Health Dashboard SQLite backup.",
-  "healthDashboardImportBackupWarning": "Existing health records are never replaced. Only records that are not already present will be imported.",
-  "healthDashboardImportBackupSuccess": "Imported {count} new health records",
+  "healthDashboardImportBackupSubtitle": "Replace all stored records with a Health Dashboard SQLite backup.",
+  "healthDashboardImportBackupWarning": "This deletes all stored health data and replaces it with the backup's contents. Anything collected since the backup was taken is lost. Health Connect is not touched, so a new import can fetch that data again.",
+  "healthDashboardImportBackupReplace": "Delete and restore",
+  "healthDashboardImportBackupTooNew": "This backup comes from a newer app version and cannot be restored",
+  "healthDashboardImportBackupSuccess": "Restored {count} health records",
   "@healthDashboardImportBackupSuccess": {
     "placeholders": {
       "count": {
@@ -3650,8 +3662,8 @@
   },
   "healthDashboardImportBackupFailed": "Could not import health database",
   "healthDashboardSelectedDay": "Selected day",
-  "healthDashboardImportBackupProgressTitle": "Importing health database",
-  "healthDashboardImportBackupProgressStatus": "Saving health records ({processed} / {total})...",
+  "healthDashboardImportBackupProgressTitle": "Restoring health database",
+  "healthDashboardImportBackupProgressStatus": "Replacing table {processed} of {total}...",
   "@healthDashboardImportBackupProgressStatus": {
     "placeholders": {
       "processed": {
@@ -3662,7 +3674,7 @@
       }
     }
   },
-  "healthDashboardImportBackupProgressCount": "Processed {processed} of {total} records",
+  "healthDashboardImportBackupProgressCount": "Restored {processed} of {total} tables",
   "@healthDashboardImportBackupProgressCount": {
     "placeholders": {
       "processed": {
@@ -3673,7 +3685,7 @@
       }
     }
   },
-  "healthDashboardImportBackupProgressHint": "Please keep the screen open while the backup is imported.",
+  "healthDashboardImportBackupProgressHint": "You can leave the app; the restore keeps running in the background.",
   "healthDashboardImportHealthConnectProgressTitle": "Importing health data",
   "healthDashboardImportHealthConnectProgressStatus": "Fetching records from Health Connect...",
   "healthDashboardImportHealthConnectProgressCount": "Fetched {count} records so far",
@@ -3712,8 +3724,6 @@
   "treadmillSyncToHealthConnect": "Sync workouts to Health Connect",
   "treadmillSyncToHealthConnectSubtitle": "Write treadmill run sessions to Health Connect when finished.",
   "healthDashboardCloudBackendSync": "Cloud Backend Sync",
-  "healthDashboardExportJson": "Export Health Connect JSON",
-  "healthDashboardExportJsonSubtitle": "Export raw Health Connect records as a JSON file for analysis.",
   "healthDashboardHealthConnectSettings": "Health Connect",
   "healthDashboardHealthConnectSettingsSubtitle": "Permissions, import, automatic sync on open, and starting the import over.",
   "healthDashboardHealthConnectOpenFailed": "Could not open Health Connect settings",

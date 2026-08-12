@@ -345,19 +345,50 @@ and must stay:
 
 ## Backup
 
-Scoped to this tool and done inside SQLite, so nothing is materialised as Dart
-objects and the cost is bounded by disk rather than by row count:
+A SQLite file is the only backup format. Scoped to this tool and done inside
+SQLite, so nothing is materialised as Dart objects and the cost is bounded by
+disk rather than by row count:
 
 ```sql
 ATTACH DATABASE ? AS backup;
-CREATE TABLE backup.<t> AS SELECT * FROM tool_health_dashboard_<t>;
+PRAGMA backup.journal_mode = OFF;   -- a file rebuilt on failure needs no journal
+CREATE TABLE backup.<t> (...);      -- the live DDL, read from sqlite_master
+INSERT INTO backup.<t> SELECT * FROM tool_health_dashboard_<t>;
 ```
 
-Import is the mirror (`INSERT OR REPLACE ... SELECT`) and is idempotent because
-rows match on their primary key. A marker table carries the tool id and schema
-version so a foreign file is rejected. Dimension tables are included - without
-them the interned integers resolve to nothing. The rollups are rebuilt after an
-import, because a restore bypasses `writeRecords`.
+### The backup's DDL is copied, never restated
+
+`_backupTableDdl` reads the `CREATE TABLE` out of `sqlite_master` and retargets
+the name at the `backup` schema. The file therefore always carries the real
+definition - primary keys, `WITHOUT ROWID` and all - and cannot drift when the
+schema changes. Indexes are deliberately left out: they cost export time and file
+size, and the import rebuilds them by writing into the live tables.
+
+### The export writes straight to its destination
+
+The caller resolves the final path first - a desktop save dialog, or the public
+Downloads folder on Android - and the store writes there. Only when Android
+cannot give a direct path (no all-files access) does the file go to temp and get
+copied afterwards. That copy is headless, so an export that finishes while the
+app is in the background still lands in Downloads instead of waiting for a
+picker. Both directions hold a `BackgroundWorkLease`.
+
+### Import is destructive
+
+Every table is emptied and refilled from the backup, in one transaction. A merge
+was the old behaviour and could never remove rows deleted after the backup was
+taken; a snapshot restore can. A marker table carries the tool id and schema
+version: a foreign file and a file from a newer schema are both rejected before
+the user is asked to confirm the wipe.
+
+Columns are matched by name (`_sharedColumns`), never by position, so a file
+written by an older schema still restores and its missing columns keep their
+defaults. `SELECT *` would break the moment a column was added.
+
+The rollups travel in the backup, so `rebuildDaily` runs only when the file
+predates the current schema or carried no `health_daily` rows. The change token
+is dropped after every restore - it describes changes against a dataset we no
+longer hold, so the next sync establishes a fresh baseline.
 
 The whole-app database export is separate and unaffected.
 

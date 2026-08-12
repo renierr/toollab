@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/file_save_helper.dart';
+import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/background_work_lease.dart';
 
@@ -17,6 +20,10 @@ import 'health_record_values.dart';
 
 class HealthDashboardState extends ChangeNotifier {
   static const _autoHealthConnectSyncKey = 'auto_health_connect_sync';
+  static const _backupFileName = 'health_dashboard_backup.db';
+
+  final TempFileScope _tempScope = TempFileManager.createScope();
+
   List<HealthRecord> records = [];
   bool isLoading = true;
   bool isCollecting = false;
@@ -70,6 +77,21 @@ class HealthDashboardState extends ChangeNotifier {
   Future<void> _endBackgroundWork(BackgroundWorkLease? work) async {
     _importWork = null;
     await work?.release();
+  }
+
+  Future<void> _deleteQuietly(String path) async {
+    try {
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+    } catch (e) {
+      errorLog('[HealthDashboard] Could not remove temp backup: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _tempScope.cleanTracked();
+    super.dispose();
   }
 
   HealthDashboardState() {
@@ -459,47 +481,86 @@ class HealthDashboardState extends ChangeNotifier {
     }
   }
 
-  Future<String> exportBackup() async {
+  /// Writes the backup and returns where it ended up.
+  ///
+  /// [destinationPath] is the final location when the caller could resolve one
+  /// up front - a desktop save dialog, or the public Downloads folder. Without
+  /// it the file is built in temp and copied into Downloads at the end, so an
+  /// export that finishes while the app is in the background still lands
+  /// somewhere the user can reach instead of waiting for a picker.
+  Future<String?> exportBackup({
+    String? destinationPath,
+    bool notifyOnSave = true,
+  }) async {
     if (isExportingBackup) throw StateError('Health backup export is running.');
     isExportingBackup = true;
     backupExportProcessedCount = 0;
     backupExportTotalCount = 0;
     notifyListeners();
     BackgroundWorkLease? work;
+    String? tempPath;
     try {
-      work = await _beginBackgroundWork('Starting...');
-      return await HealthStore.instance.exportBackup(
+      work = await _beginBackgroundWork(
+        'Starting...',
+        title: 'Health Dashboard export',
+      );
+      final target =
+          destinationPath ??
+          (tempPath = await _tempScope.createFile(_backupFileName));
+      await HealthStore.instance.exportBackupTo(
+        target,
         onProgress: (processed, total) {
           backupExportProcessedCount = processed;
           backupExportTotalCount = total;
+          work?.update('$processed / $total');
           notifyListeners();
         },
       );
+      if (tempPath == null) return target;
+      return await FileSaveHelper.saveToDownloadsHeadless(
+        sourcePath: target,
+        fileName: _backupFileName,
+        notify: notifyOnSave,
+      );
     } finally {
+      final temp = tempPath;
+      if (temp != null) await _deleteQuietly(temp);
       await _endBackgroundWork(work);
       isExportingBackup = false;
       notifyListeners();
     }
   }
 
+  /// Replaces the stored data with a backup's. The change token is dropped with
+  /// it: it describes a dataset that no longer exists, so the next sync has to
+  /// establish a fresh baseline instead of assuming continuity.
   Future<int> importBackup(String path) async {
     if (isImportingBackup) return 0;
     isImportingBackup = true;
     backupImportProcessedCount = 0;
     backupImportTotalCount = 0;
     notifyListeners();
+    BackgroundWorkLease? work;
     try {
+      work = await _beginBackgroundWork(
+        'Starting...',
+        title: 'Health Dashboard restore',
+      );
       final imported = await HealthStore.instance.importBackup(
         path,
         onProgress: (processed, total) {
           backupImportProcessedCount = processed;
           backupImportTotalCount = total;
+          work?.update('$processed / $total');
           notifyListeners();
         },
       );
+      await _diff.clearSyncBaseline();
+      await loadSelection();
       await load(showLoading: false);
       return imported;
     } finally {
+      await _endBackgroundWork(work);
       isImportingBackup = false;
       notifyListeners();
     }

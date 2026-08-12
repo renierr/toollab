@@ -2773,10 +2773,10 @@
   "healthDashboardBackup": "Datensicherung",
   "healthDashboardExportBackup": "Gesundheitsdatenbank exportieren",
   "healthDashboardExportBackupSubtitle": "Health-Dashboard-Daten als SQLite-Datenbank speichern.",
-  "healthDashboardExportBackupWarning": "Das Exportieren einer großen Gesundheitsdatenbank kann dauern. Lassen Sie den Bildschirm geöffnet, bis der Vorgang abgeschlossen ist.",
+  "healthDashboardExportBackupWarning": "Das Exportieren einer großen Gesundheitsdatenbank kann dauern. Der Vorgang läuft weiter, wenn Sie die App verlassen, und die Datei wird am Ende gespeichert.",
   "healthDashboardExportBackupProgressTitle": "Gesundheitsdatenbank wird exportiert",
   "healthDashboardExportBackupProgressStatus": "Sicherung wird vorbereitet...",
-  "healthDashboardExportBackupProgressCount": "{processed} von {total} Daten werden geschrieben",
+  "healthDashboardExportBackupProgressCount": "{processed} von {total} Zeilen geschrieben",
   "@healthDashboardExportBackupProgressCount": {
     "placeholders": {
       "processed": {
@@ -2787,11 +2787,23 @@
       }
     }
   },
-  "healthDashboardExportBackupProgressHint": "Lassen Sie den Bildschirm geöffnet, während die Sicherung erstellt wird.",
+  "healthDashboardExportBackupProgressHint": "Sie können die App verlassen; die Sicherung wird im Hintergrund weiter geschrieben.",
+  "healthDashboardExportBackupFailed": "Gesundheitsdatenbank konnte nicht exportiert werden",
+  "healthDashboardExportBackupSavedDownloads": "Gesundheitsdatenbank im Downloads-Ordner gespeichert",
+  "healthDashboardExportBackupSavedTo": "Gesundheitsdatenbank gespeichert unter {path}",
+  "@healthDashboardExportBackupSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "healthDashboardImportBackup": "Gesundheitsdatenbank importieren",
-  "healthDashboardImportBackupSubtitle": "Daten aus einer Health-Dashboard-SQLite-Sicherung zusammenführen.",
-  "healthDashboardImportBackupWarning": "Bestehende Gesundheitsdaten werden nie ersetzt. Es werden nur noch nicht vorhandene Daten importiert.",
-  "healthDashboardImportBackupSuccess": "{count} neue Gesundheitsdaten importiert",
+  "healthDashboardImportBackupSubtitle": "Alle gespeicherten Daten durch eine Health-Dashboard-SQLite-Sicherung ersetzen.",
+  "healthDashboardImportBackupWarning": "Dabei werden alle gespeicherten Gesundheitsdaten gelöscht und durch den Inhalt der Sicherung ersetzt. Alles, was seit der Sicherung erfasst wurde, geht verloren. Health Connect bleibt unberührt, ein neuer Import kann diese Daten wieder holen.",
+  "healthDashboardImportBackupReplace": "Löschen und wiederherstellen",
+  "healthDashboardImportBackupTooNew": "Diese Sicherung stammt aus einer neueren App-Version und kann nicht wiederhergestellt werden",
+  "healthDashboardImportBackupSuccess": "{count} Gesundheitsdaten wiederhergestellt",
   "@healthDashboardImportBackupSuccess": {
     "placeholders": {
       "count": {
@@ -2801,8 +2813,8 @@
   },
   "healthDashboardImportBackupFailed": "Gesundheitsdatenbank konnte nicht importiert werden",
   "healthDashboardSelectedDay": "Ausgewählter Tag",
-  "healthDashboardImportBackupProgressTitle": "Gesundheitsdatenbank wird importiert",
-  "healthDashboardImportBackupProgressStatus": "Gesundheitsdaten werden gespeichert ({processed} / {total})...",
+  "healthDashboardImportBackupProgressTitle": "Gesundheitsdatenbank wird wiederhergestellt",
+  "healthDashboardImportBackupProgressStatus": "Tabelle {processed} von {total} wird ersetzt...",
   "@healthDashboardImportBackupProgressStatus": {
     "placeholders": {
       "processed": {
@@ -2813,7 +2825,7 @@
       }
     }
   },
-  "healthDashboardImportBackupProgressCount": "{processed} von {total} Daten verarbeitet",
+  "healthDashboardImportBackupProgressCount": "{processed} von {total} Tabellen wiederhergestellt",
   "@healthDashboardImportBackupProgressCount": {
     "placeholders": {
       "processed": {
@@ -2824,7 +2836,7 @@
       }
     }
   },
-  "healthDashboardImportBackupProgressHint": "Bitte lassen Sie den Bildschirm geöffnet, während die Sicherung importiert wird.",
+  "healthDashboardImportBackupProgressHint": "Sie können die App verlassen; die Wiederherstellung läuft im Hintergrund weiter.",
   "healthDashboardImportHealthConnectProgressTitle": "Gesundheitsdaten werden importiert",
   "healthDashboardImportHealthConnectProgressStatus": "Daten aus Health Connect werden abgerufen...",
   "healthDashboardImportHealthConnectProgressCount": "Bisher {count} Daten abgerufen",
@@ -2863,8 +2875,6 @@
   "treadmillSyncToHealthConnect": "Workouts mit Health Connect synchronisieren",
   "treadmillSyncToHealthConnectSubtitle": "Laufband-Workouts nach Abschluss in Health Connect eintragen.",
   "healthDashboardCloudBackendSync": "Cloud-Backend-Synchronisierung",
-  "healthDashboardExportJson": "Health-Connect-JSON exportieren",
-  "healthDashboardExportJsonSubtitle": "Gesammelte Health-Connect-Einträge als JSON-Datei zur Analyse exportieren.",
   "healthDashboardHealthConnectSettings": "Health Connect",
   "healthDashboardHealthConnectSettingsSubtitle": "Berechtigungen, Import, automatische Synchronisierung beim Öffnen und Neustart des Imports.",
   "healthDashboardHealthConnectOpenFailed": "Health-Connect-Einstellungen konnten nicht geöffnet werden",
