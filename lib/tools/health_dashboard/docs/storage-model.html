@@ -961,8 +961,146 @@
         </p>
       </section>
 
+      <section id="metrics">
+        <h2><span class="hn">12</span> The numbers on the overview</h2>
+        <p class="lede measure">
+          Every card on the dashboard is one number, and the same label can mean three very
+          different things: the <em>newest reading</em>, a <em>day total</em>, or a
+          <em>window sum</em>. This section says which is which, where each one is read from,
+          and what the metric page behind it shows.
+        </p>
+
+        <h3>Overview cards</h3>
+        <p class="measure">
+          "Latest" cards are a single stored reading — the newest row for that metric, a
+          primary-key seek, never an average and never smoothed. HRV on the overview is
+          therefore <b>the last RMSSD value that was written</b>, typically one morning
+          reading, not a mean over the week; the seven-day mean only appears inside its detail
+          page. All-time and window cards are the opposite: they never touch a reading, they
+          read <code>health_daily</code> (or the session summary columns) so the cost does not
+          grow with history.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr><th>Card</th><th>What the number is</th><th>Read from</th><th>Opens</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="d">Distance · Calories · Active time <span class="chip s-dim">all time</span></td>
+                <td class="d">Sum over every exercise session ever stored. Active time is the sessions' spans, not a moving-time estimate.</td>
+                <td class="c">allTimeWorkoutSummary()</td>
+                <td class="d">The metric page for that workout figure</td>
+              </tr>
+              <tr>
+                <td class="d">Steps <span class="chip s-dim">all time</span></td>
+                <td class="d">Sum of every day's step total, one source per day already picked by the rollup — so two trackers do not double it.</td>
+                <td class="c">health_daily · steps</td>
+                <td class="d">The steps metric page</td>
+              </tr>
+              <tr>
+                <td class="d">Workouts <span class="chip s-dim">all time</span></td>
+                <td class="d">Count of exercise sessions.</td>
+                <td class="c">health_session</td>
+                <td class="d">The workouts page</td>
+              </tr>
+              <tr>
+                <td class="d">Last sleep</td>
+                <td class="d">Span of the newest non-nap session, end minus start. Naps never win this card.</td>
+                <td class="c">health_session · sleep</td>
+                <td class="d">The sleep detail page</td>
+              </tr>
+              <tr>
+                <td class="d">Latest heart rate</td>
+                <td class="d">The newest dense pulse sample — a moment, not a day. It is fetched on its own because the whole series is far too large to load with the week.</td>
+                <td class="c">health_point · heart_rate</td>
+                <td class="d">Heart rate: daily averages over the week, then the day's full curve</td>
+              </tr>
+              <tr>
+                <td class="d">Latest resting heart rate</td>
+                <td class="d">The newest resting reading, one per day from most writers. Unrelated to the pulse card above it — the source computes it, the app does not derive it.</td>
+                <td class="c">health_point · resting_heart_rate</td>
+                <td class="d">Resting heart rate metric page</td>
+              </tr>
+              <tr>
+                <td class="d">Weight · Body fat · HRV · SpO₂ · Respiratory rate</td>
+                <td class="d">The newest single reading of that metric, whenever it was taken. A card that has not been written for a week still shows last week's value.</td>
+                <td class="c">health_point · latest row</td>
+                <td class="d">That metric's page</td>
+              </tr>
+              <tr>
+                <td class="d">Steps <span class="chip s-dim">today</span></td>
+                <td class="d">Today's rollup total, not a sum of the loaded records.</td>
+                <td class="c">health_daily · steps</td>
+                <td class="d">The steps metric page</td>
+              </tr>
+              <tr>
+                <td class="d">Distance · Calories · Active time · Steps <span class="chip s-dim">last 7 days</span></td>
+                <td class="d">Sum over the seven-day window that ends on the selected day — these move with the day navigation, the all-time cards above do not.</td>
+                <td class="c">health_daily · session rows</td>
+                <td class="d">That metric's page</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>What a metric page stacks</h3>
+        <p class="measure">
+          Every card that is not a session opens the same page, so a metric is read the same way
+          whichever one it is.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr><th>Block</th><th>Widget</th><th>Where the numbers come from</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="d">Summary</td>
+                <td class="t">HealthMetricSummarySection</td>
+                <td class="d">Selected day, then the window's total (for a totalled metric) or average, and its min and max. All four come out of <code>health_daily</code>: <code>total</code>, <code>avg</code>, <code>lo</code>, <code>hi</code> — one row per day, never a scan of the readings.</td>
+              </tr>
+              <tr>
+                <td class="d">Last seven days</td>
+                <td class="t">HealthWorkoutTrendChart</td>
+                <td class="d">One point per day. Totalled metrics (steps, distance, calories, active time) are bars of the day's <b>total</b>; measured ones (pulse, weight, SpO₂, HRV) are a line of the day's <b>average</b>. Sessions have no rollup, so their days are summed from the session rows instead. Tapping a day selects it.</td>
+              </tr>
+              <tr>
+                <td class="d">Selected day</td>
+                <td class="t">HealthMetricDaySection</td>
+                <td class="d">The day's own readings, read by range: hourly bars for a totalled metric, the curve for a measured one. Shown whenever the day holds <b>more than one</b> reading — a single value is already the summary above, and one point is not a curve.</td>
+              </tr>
+              <tr>
+                <td class="d">Day stats</td>
+                <td class="t">HealthMetricDaySection · HealthRecordStatItem</td>
+                <td class="d">Total (totalled metrics only), average, min, max and reading count over that day, computed from the readings the chart drew — the same card shape the sleep and workout pages use for a curve.</td>
+              </tr>
+              <tr>
+                <td class="d">History</td>
+                <td class="t">HealthMetricHistory</td>
+                <td class="d">Earlier readings, paged, independent of the selected day.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note">
+          <b>Why the day chart is missing on some metrics.</b> Nothing is filtered out — those
+          metrics genuinely hold one reading for that day. Resting heart rate, HRV, weight and
+          body fat are typically written once, so their day section has nothing to draw and the
+          week chart is the whole story. Pulse, oxygen saturation, breathing rate and steps are
+          sampled all day and always have one.
+        </div>
+        <p class="measure">
+          Every chart in the tool answers a pointer or a finger the same way: a marker line
+          follows it, and one tooltip — <code>HealthChartTooltip</code>, shared by the week
+          chart, the day chart and the session timeline — prints the day or the time and the
+          value under it. On a curve the value is the <b>nearest real sample</b>, not a point
+          on the drawn line; on bars it is the bar's own figure.
+        </p>
+      </section>
+
       <section id="detail">
-        <h2><span class="hn">12</span> Detail pages · Sleep &amp; workouts</h2>
+        <h2><span class="hn">13</span> Detail pages · Sleep &amp; workouts</h2>
         <p class="lede measure">
           Every dashboard card opens a detail page for its record type. Sleep is by far the
           deepest one: a night is a session, a stage list and four measured curves pulled from
@@ -1203,7 +1341,7 @@
       </section>
 
       <section id="seed">
-        <h2><span class="hn">13</span> Generated test data <span class="chip s-accent">debug builds only</span></h2>
+        <h2><span class="hn">14</span> Generated test data <span class="chip s-accent">debug builds only</span></h2>
         <p class="lede measure">
           An emulator holds no health data, which makes most of this dashboard impossible to look
           at. The generator is the one screen here that <b>writes into</b> Health Connect: a
@@ -1676,6 +1814,7 @@
     ["types", "Health Connect types"], ["rollup", "The fast path"], ["size", "Storage saved"],
     ["dupes", "Duplicates"], ["incr", "Incremental sync"], ["state", "Current state"],
     ["settings", "Outside the tables"], ["hcsettings", "Settings screen"],
+    ["metrics", "The numbers on the overview"],
     ["detail", "Detail pages · Sleep & workouts"], ["seed", "Generated test data"]
   ];
   const toc = $("#toc");

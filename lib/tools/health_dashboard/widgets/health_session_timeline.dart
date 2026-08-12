@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import 'health_chart_tooltip.dart';
 import 'health_session_overlay.dart';
 
 export 'health_session_overlay.dart';
@@ -184,7 +185,7 @@ String _formatValue(double value, String unit) =>
 class _TimelineTooltip extends StatelessWidget {
   final String time;
   final String? stage;
-  final List<({Color color, String text})> readings;
+  final List<HealthChartReading> readings;
 
   const _TimelineTooltip({
     required this.time,
@@ -194,7 +195,6 @@ class _TimelineTooltip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final stageLabel = switch (stage) {
       'awake' => l10n.healthDashboardSleepAwake,
@@ -203,57 +203,14 @@ class _TimelineTooltip extends StatelessWidget {
       'deep' => l10n.healthDashboardSleepDeep,
       _ => null,
     };
-    return Material(
-      color: theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(6),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(time, style: theme.textTheme.labelSmall),
-                if (stageLabel != null) ...[
-                  const SizedBox(width: 5),
-                  _Dot(color: _stageColor(stage!)),
-                  const SizedBox(width: 3),
-                  Text(stageLabel, style: theme.textTheme.labelSmall),
-                ],
-              ],
-            ),
-            for (final reading in readings)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _Dot(color: reading.color),
-                    const SizedBox(width: 4),
-                    Text(reading.text, style: theme.textTheme.labelSmall),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
+    return HealthChartTooltip(
+      title: time,
+      titleTag: stageLabel == null
+          ? null
+          : (color: _stageColor(stage!), text: stageLabel),
+      readings: readings,
     );
   }
-}
-
-class _Dot extends StatelessWidget {
-  final Color color;
-
-  const _Dot({required this.color});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 8,
-    height: 8,
-    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-  );
 }
 
 Color _stageColor(String type) => switch (type) {

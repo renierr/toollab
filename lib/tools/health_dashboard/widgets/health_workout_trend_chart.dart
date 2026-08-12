@@ -5,6 +5,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_value_format.dart';
+import 'health_chart_tooltip.dart';
 
 enum HealthTrendChartStyle { bars, line }
 
@@ -411,13 +412,9 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       ? '${DateFormat.E(locale).format(date)} ${date.day}'
       : '${DateFormat.E(locale).format(date)}\n${date.day} ${DateFormat.MMM(locale).format(date)}';
 
-  String _formatValue(double value) =>
-      unit == 'min' ? _duration(value.round()) : healthValue(value, unit);
+  String _formatValue(double value) => healthMetricValue(value, unit);
 
   String _formatAxisValue(double value) => healthAxisNumber(value, unit);
-
-  String _duration(int minutes) =>
-      '${minutes ~/ 60}h ${minutes.remainder(60)}m';
 
   String _formatOverlay(double value) => healthValue(value, overlayUnit ?? '');
 
@@ -554,16 +551,10 @@ class _Tooltip extends StatelessWidget {
     this.endDate,
     required this.locale,
   });
-  String _value(BuildContext context, double? value, String unit) {
-    if (value == null) {
-      return AppLocalizations.of(context).healthDashboardChartNoData;
-    }
-    if (unit == 'min') {
-      final minutes = value.round();
-      return '${minutes ~/ 60}h ${minutes.remainder(60)}m';
-    }
-    return healthValue(value, unit);
-  }
+  String _value(BuildContext context, double? value, String unit) =>
+      value == null
+      ? AppLocalizations.of(context).healthDashboardChartNoData
+      : healthMetricValue(value, unit);
 
   @override
   Widget build(BuildContext context) {
@@ -572,43 +563,17 @@ class _Tooltip extends StatelessWidget {
     );
     return Align(
       alignment: Alignment.topCenter,
-      child: Material(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat.yMMMd(locale).format(date),
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
-              _row(context, color, _value(context, values[index], unit)),
-              if (overlayValues != null)
-                _row(
-                  context,
-                  overlayColor ?? Colors.red,
-                  _value(context, overlayValues![index], overlayUnit ?? ''),
-                ),
-            ],
-          ),
-        ),
+      child: HealthChartTooltip(
+        title: DateFormat.yMMMd(locale).format(date),
+        readings: [
+          (color: color, text: _value(context, values[index], unit)),
+          if (overlayValues != null)
+            (
+              color: overlayColor ?? Colors.red,
+              text: _value(context, overlayValues![index], overlayUnit ?? ''),
+            ),
+        ],
       ),
     );
   }
-
-  Widget _row(BuildContext context, Color color, String value) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-      const SizedBox(width: 5),
-      Text(value),
-    ],
-  );
 }

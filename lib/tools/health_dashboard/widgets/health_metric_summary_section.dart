@@ -60,16 +60,8 @@ class HealthMetricSummarySection extends StatelessWidget {
     );
   }
 
-  String _format(double? value) {
-    if (value == null) return '--';
-    if (unit == 'min') {
-      final duration = Duration(minutes: value.round());
-      final hours = duration.inHours;
-      final minutes = duration.inMinutes.remainder(60);
-      return hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
-    }
-    return healthValue(value, unit);
-  }
+  String _format(double? value) =>
+      value == null ? '--' : healthMetricValue(value, unit);
 }
 
 class _SummaryStatItem extends StatelessWidget {

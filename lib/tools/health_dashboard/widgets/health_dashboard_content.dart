@@ -138,6 +138,21 @@ class HealthDashboardContent extends StatelessWidget {
                     color: AppTheme.accentRed,
                   ),
                 ),
+              if (state.latestHeartRate != null)
+                HealthMetricCard(
+                  icon: Icons.favorite_rounded,
+                  color: AppTheme.accentRed,
+                  label: l10n.healthDashboardLatestHeartRate,
+                  value: healthValue(state.latestHeartRate!, 'bpm'),
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardHeartRate,
+                    type: 'heart.rate',
+                    valueKey: 'value',
+                    unit: 'bpm',
+                    color: AppTheme.accentRed,
+                  ),
+                ),
               if (state.latestWeightKg != null)
                 HealthMetricCard(
                   icon: Icons.monitor_weight_outlined,

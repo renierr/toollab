@@ -35,3 +35,12 @@ String healthValue(num value, String unit) {
   final text = healthNumber(value, unit);
   return unit.isEmpty || _bareUnits.contains(unit) ? text : '$text $unit';
 }
+
+/// A metric readout: like [healthValue], except "min" is a count of minutes and
+/// reads as hours and minutes wherever it is shown.
+String healthMetricValue(num value, String unit) {
+  if (unit != 'min') return healthValue(value, unit);
+  final minutes = value.round();
+  final hours = minutes ~/ 60;
+  return hours > 0 ? '${hours}h ${minutes.remainder(60)}m' : '${minutes}m';
+}

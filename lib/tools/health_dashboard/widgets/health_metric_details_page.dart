@@ -91,15 +91,14 @@ class HealthMetricDetailsPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (!_isSession)
-                  HealthMetricDaySection(
-                    type: type,
-                    valueKey: valueKey,
-                    unit: unit,
-                    color: color,
-                    day: state.selectedDay,
-                    sum: sum,
-                  ),
+                HealthMetricDaySection(
+                  type: type,
+                  valueKey: valueKey,
+                  unit: unit,
+                  color: color,
+                  day: state.selectedDay,
+                  sum: sum,
+                ),
               ] else
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
@@ -144,6 +143,9 @@ class HealthMetricDetailsPage extends StatelessWidget {
   ) async {
     final day = state.trendDayAt(index);
     await state.selectDay(day);
+    // A point metric has no record worth a page of its own - the day section
+    // below is the drilldown, so tapping a day just moves the selection there.
+    if (!_isSession) return;
     final records = await HealthQueries.instance.recordsForDay(
       type: type,
       day: day,

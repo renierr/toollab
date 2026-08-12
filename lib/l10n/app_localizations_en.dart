@@ -6351,6 +6351,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Latest resting heart rate';
 
   @override
+  String get healthDashboardLatestHeartRate => 'Latest heart rate';
+
+  @override
   String get healthDashboardCalories => 'Calories';
 
   @override
@@ -7004,6 +7007,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardNightMax => 'Night Max';
+
+  @override
+  String get healthDashboardDayTotal => 'Day Total';
+
+  @override
+  String get healthDashboardDayAvg => 'Day Avg';
+
+  @override
+  String get healthDashboardDayMin => 'Day Min';
+
+  @override
+  String get healthDashboardDayMax => 'Day Max';
 
   @override
   String get healthDashboardWorkoutDayTotals => 'Day total';

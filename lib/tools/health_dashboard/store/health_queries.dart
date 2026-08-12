@@ -491,6 +491,12 @@ class HealthQueries {
     };
   }
 
+  /// Newest dense heart rate sample. It is not in [_latestTypes] on purpose:
+  /// that list is also the week window, and a week of samples is tens of
+  /// thousands of rows the dashboard has no use for.
+  Future<double?> latestHeartRate() async =>
+      (await _store.latestPoint(HealthMetrics.heartRate))?.v;
+
   Future<Map<String, double>> dailyHeartRateAverages({
     required DateTime start,
     required DateTime end,

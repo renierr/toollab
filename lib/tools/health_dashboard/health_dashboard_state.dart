@@ -49,6 +49,7 @@ class HealthDashboardState extends ChangeNotifier {
   int allTimeWorkouts = 0;
   Map<String, int> _dailySteps = {};
   Map<String, double> _dailyHeartRate = {};
+  double? latestHeartRate;
 
   String? collectionStatus;
   int collectedRecordCount = 0;
@@ -150,6 +151,7 @@ class HealthDashboardState extends ChangeNotifier {
       HealthQueries.instance.allTimeSteps(),
       HealthQueries.instance.dailyStepTotals(start: start, end: end),
       HealthQueries.instance.dailyHeartRateAverages(start: start, end: end),
+      HealthQueries.instance.latestHeartRate(),
     ]);
     final weekRecords = results[0] as List<HealthRecord>;
     final latestRecords = results[1] as List<HealthRecord>;
@@ -167,6 +169,7 @@ class HealthDashboardState extends ChangeNotifier {
     allTimeSteps = results[3] as int;
     _dailySteps = results[4] as Map<String, int>;
     _dailyHeartRate = results[5] as Map<String, double>;
+    latestHeartRate = results[6] as double?;
     autoHealthConnectSync =
         await DatabaseService.instance.getSetting(
           HealthDashboardTool.config.id,

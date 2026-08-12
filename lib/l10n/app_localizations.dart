@@ -11501,6 +11501,12 @@ abstract class AppLocalizations {
   /// **'Latest resting heart rate'**
   String get healthDashboardLatestRestingHeartRate;
 
+  /// No description provided for @healthDashboardLatestHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest heart rate'**
+  String get healthDashboardLatestHeartRate;
+
   /// No description provided for @healthDashboardCalories.
   ///
   /// In en, this message translates to:
@@ -12586,6 +12592,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Night Max'**
   String get healthDashboardNightMax;
+
+  /// No description provided for @healthDashboardDayTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Total'**
+  String get healthDashboardDayTotal;
+
+  /// No description provided for @healthDashboardDayAvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Avg'**
+  String get healthDashboardDayAvg;
+
+  /// No description provided for @healthDashboardDayMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Min'**
+  String get healthDashboardDayMin;
+
+  /// No description provided for @healthDashboardDayMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Max'**
+  String get healthDashboardDayMax;
 
   /// No description provided for @healthDashboardWorkoutDayTotals.
   ///

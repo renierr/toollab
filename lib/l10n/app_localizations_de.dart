@@ -6390,6 +6390,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardLatestRestingHeartRate => 'Letzter Ruhepuls';
 
   @override
+  String get healthDashboardLatestHeartRate => 'Letzter Puls';
+
+  @override
   String get healthDashboardCalories => 'Kalorien';
 
   @override
@@ -7049,6 +7052,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardNightMax => 'Nacht Max';
+
+  @override
+  String get healthDashboardDayTotal => 'Tag Summe';
+
+  @override
+  String get healthDashboardDayAvg => 'Tag Schnitt';
+
+  @override
+  String get healthDashboardDayMin => 'Tag Min';
+
+  @override
+  String get healthDashboardDayMax => 'Tag Max';
 
   @override
   String get healthDashboardWorkoutDayTotals => 'Tagesgesamt';
