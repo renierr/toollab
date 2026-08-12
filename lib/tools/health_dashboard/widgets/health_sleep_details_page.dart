@@ -8,11 +8,11 @@ import '../health_dashboard_state.dart';
 import '../store/health_metric_catalog.dart';
 import '../health_sleep_quality.dart';
 import 'health_empty_state.dart';
-import 'health_sleep_metric_stats.dart';
+import 'health_session_metric_stats.dart';
 import 'health_sleep_quality_card.dart';
 import 'health_sleep_stage_breakdown.dart';
-import 'health_sleep_stage_timeline.dart';
-import 'health_sleep_timeline_section.dart';
+import 'health_session_overlay.dart';
+import 'health_session_timeline_section.dart';
 import 'health_source_badge.dart';
 import 'health_day_navigation.dart';
 import 'health_metric_history.dart';
@@ -82,7 +82,7 @@ class HealthSleepDetailsPage extends StatelessWidget {
       appBar: AppBar(title: Text(l10n.healthDashboardSleepDetails)),
       // Heart-rate curves come from the dense table by range, so they are read
       // per session instead of being filtered out of the loaded week.
-      body: FutureBuilder<Map<String, List<HealthSleepOverlay>>>(
+      body: FutureBuilder<Map<String, List<HealthSessionOverlay>>>(
         future: _overlays(state, [session, ...naps], l10n),
         builder: (context, snapshot) {
           final overlays = snapshot.data ?? const {};
@@ -181,7 +181,7 @@ class HealthSleepDetailsPage extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
-                HealthSleepTimelineSection(
+                HealthSessionTimelineSection(
                   stages: stages,
                   overlays: sessionOverlays,
                   startTime: session.startTime,
@@ -193,7 +193,12 @@ class HealthSleepDetailsPage extends StatelessWidget {
               for (final overlay in sessionOverlays)
                 if (overlay.isDrawable) ...[
                   const SizedBox(height: 24),
-                  HealthSleepMetricStats(overlay: overlay),
+                  HealthSessionMetricStats(
+                    overlay: overlay,
+                    averageLabel: l10n.healthDashboardNightAvg,
+                    minimumLabel: l10n.healthDashboardNightMin,
+                    maximumLabel: l10n.healthDashboardNightMax,
+                  ),
                 ],
               if (naps.isNotEmpty) ...[
                 const SizedBox(height: 24),
@@ -232,7 +237,7 @@ class HealthSleepDetailsPage extends StatelessWidget {
   /// The curves that can be laid over a night, one lookup per metric per
   /// session. A metric with too few samples still comes back - the legend shows
   /// it as unavailable rather than quietly leaving it out.
-  static Future<Map<String, List<HealthSleepOverlay>>> _overlays(
+  static Future<Map<String, List<HealthSessionOverlay>>> _overlays(
     HealthDashboardState state,
     List<HealthRecord> sessions,
     AppLocalizations l10n,
@@ -263,11 +268,11 @@ class HealthSleepDetailsPage extends StatelessWidget {
         AppTheme.accentPurple,
       ),
     ];
-    final result = <String, List<HealthSleepOverlay>>{};
+    final result = <String, List<HealthSessionOverlay>>{};
     for (final session in sessions) {
       result[session.id] = [
         for (final (metric, label, unit, color) in specs)
-          HealthSleepOverlay(
+          HealthSessionOverlay(
             key: metric,
             label: label,
             unit: unit,
@@ -282,7 +287,7 @@ class HealthSleepDetailsPage extends StatelessWidget {
 
 class _NapDetails extends StatelessWidget {
   final HealthRecord record;
-  final List<HealthSleepOverlay> overlays;
+  final List<HealthSessionOverlay> overlays;
 
   const _NapDetails({required this.record, required this.overlays});
 
@@ -309,7 +314,7 @@ class _NapDetails extends StatelessWidget {
             ),
             if (stages.isNotEmpty) ...[
               const SizedBox(height: 12),
-              HealthSleepTimelineSection(
+              HealthSessionTimelineSection(
                 stages: stages,
                 overlays: overlays,
                 startTime: record.startTime,

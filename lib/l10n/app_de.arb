@@ -2868,6 +2868,28 @@
   "healthDashboardNightAvg": "Nacht Schnitt",
   "healthDashboardNightMin": "Nacht Min",
   "healthDashboardNightMax": "Nacht Max",
+  "healthDashboardWorkoutDayTotals": "Tagesgesamt",
+  "healthDashboardWorkoutSessions": "Einheiten",
+  "healthDashboardPace": "Pace",
+  "healthDashboardAverage": "Durchschnitt",
+  "healthDashboardMinimum": "Minimum",
+  "healthDashboardMaximum": "Maximum",
+  "healthDashboardAvgHeartRate": "Ø Herzfrequenz",
+  "healthDashboardMaxHeartRate": "Max. Herzfrequenz",
+  "healthDashboardAvgSpeed": "Ø Geschwindigkeit",
+  "healthDashboardMaxSpeed": "Max. Geschwindigkeit",
+  "healthDashboardCadence": "Trittfrequenz",
+  "healthDashboardPower": "Leistung",
+  "healthDashboardDuringWorkout": "Während des Workouts",
+  "healthDashboardLaps": "Runden",
+  "healthDashboardLap": "Runde {number}",
+  "@healthDashboardLap": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardSpeed": "Geschwindigkeit",
   "healthDashboardCount": "Anzahl",
   "healthDashboardBloodPressure": "Blutdruck",

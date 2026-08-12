@@ -6973,6 +6973,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthDashboardNightMax => 'Night Max';
 
   @override
+  String get healthDashboardWorkoutDayTotals => 'Day total';
+
+  @override
+  String get healthDashboardWorkoutSessions => 'Sessions';
+
+  @override
+  String get healthDashboardPace => 'Pace';
+
+  @override
+  String get healthDashboardAverage => 'Average';
+
+  @override
+  String get healthDashboardMinimum => 'Minimum';
+
+  @override
+  String get healthDashboardMaximum => 'Maximum';
+
+  @override
+  String get healthDashboardAvgHeartRate => 'Avg heart rate';
+
+  @override
+  String get healthDashboardMaxHeartRate => 'Max heart rate';
+
+  @override
+  String get healthDashboardAvgSpeed => 'Avg speed';
+
+  @override
+  String get healthDashboardMaxSpeed => 'Max speed';
+
+  @override
+  String get healthDashboardCadence => 'Cadence';
+
+  @override
+  String get healthDashboardPower => 'Power';
+
+  @override
+  String get healthDashboardDuringWorkout => 'During the workout';
+
+  @override
+  String get healthDashboardLaps => 'Laps';
+
+  @override
+  String healthDashboardLap(int number) {
+    return 'Lap $number';
+  }
+
+  @override
   String get healthDashboardSpeed => 'Speed';
 
   @override

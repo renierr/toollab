@@ -12527,6 +12527,96 @@ abstract class AppLocalizations {
   /// **'Night Max'**
   String get healthDashboardNightMax;
 
+  /// No description provided for @healthDashboardWorkoutDayTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Day total'**
+  String get healthDashboardWorkoutDayTotals;
+
+  /// No description provided for @healthDashboardWorkoutSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get healthDashboardWorkoutSessions;
+
+  /// No description provided for @healthDashboardPace.
+  ///
+  /// In en, this message translates to:
+  /// **'Pace'**
+  String get healthDashboardPace;
+
+  /// No description provided for @healthDashboardAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get healthDashboardAverage;
+
+  /// No description provided for @healthDashboardMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum'**
+  String get healthDashboardMinimum;
+
+  /// No description provided for @healthDashboardMaximum.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum'**
+  String get healthDashboardMaximum;
+
+  /// No description provided for @healthDashboardAvgHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg heart rate'**
+  String get healthDashboardAvgHeartRate;
+
+  /// No description provided for @healthDashboardMaxHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Max heart rate'**
+  String get healthDashboardMaxHeartRate;
+
+  /// No description provided for @healthDashboardAvgSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg speed'**
+  String get healthDashboardAvgSpeed;
+
+  /// No description provided for @healthDashboardMaxSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Max speed'**
+  String get healthDashboardMaxSpeed;
+
+  /// No description provided for @healthDashboardCadence.
+  ///
+  /// In en, this message translates to:
+  /// **'Cadence'**
+  String get healthDashboardCadence;
+
+  /// No description provided for @healthDashboardPower.
+  ///
+  /// In en, this message translates to:
+  /// **'Power'**
+  String get healthDashboardPower;
+
+  /// No description provided for @healthDashboardDuringWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'During the workout'**
+  String get healthDashboardDuringWorkout;
+
+  /// No description provided for @healthDashboardLaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Laps'**
+  String get healthDashboardLaps;
+
+  /// No description provided for @healthDashboardLap.
+  ///
+  /// In en, this message translates to:
+  /// **'Lap {number}'**
+  String healthDashboardLap(int number);
+
   /// No description provided for @healthDashboardSpeed.
   ///
   /// In en, this message translates to:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
@@ -8,7 +9,9 @@ import '../store/health_queries.dart';
 import 'health_day_navigation.dart';
 import 'health_empty_state.dart';
 import 'health_metric_history.dart';
-import 'health_workout_tile.dart';
+import 'health_workout_card.dart';
+import 'health_workout_day_summary.dart';
+import 'health_workout_trend_chart.dart';
 
 class HealthWorkoutsPage extends StatelessWidget {
   const HealthWorkoutsPage({super.key});
@@ -18,6 +21,9 @@ class HealthWorkoutsPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<HealthDashboardState>();
     final day = state.selectedDay;
+    final distance = state.workoutMetricValues('distanceKm');
+    final calories = state.workoutMetricValues('calories');
+    final hasWeek = distance.any((value) => value != null);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.healthDashboardWorkouts)),
@@ -36,6 +42,32 @@ class HealthWorkoutsPage extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: HealthDayNavigation(),
               ),
+              if (hasWeek) ...[
+                Text(
+                  l10n.healthDashboardLastSevenDays,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: HealthWorkoutTrendChart(
+                      values: distance,
+                      unit: 'km',
+                      color: AppTheme.accentTeal,
+                      overlayValues: calories,
+                      overlayUnit: 'kcal',
+                      overlayColor: AppTheme.accentAmber,
+                      label: l10n.healthDashboardDistance,
+                      overlayLabel: l10n.healthDashboardCalories,
+                      endDate: state.trendWeekEnd,
+                      onDayTap: (index) =>
+                          state.selectDay(state.trendDayAt(index)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
               if (isLoading)
                 const Padding(
                   padding: EdgeInsets.all(40),
@@ -56,12 +88,22 @@ class HealthWorkoutsPage extends StatelessWidget {
                         : state.resetTrendDate,
                   ),
                 )
-              else
-                for (final workout in workouts)
-                  HealthWorkoutTile(workout: workout),
+              else ...[
+                if (workouts.length > 1) ...[
+                  HealthWorkoutDaySummary(workouts: workouts),
+                  const SizedBox(height: 16),
+                ],
+                for (final workout in workouts) ...[
+                  HealthWorkoutCard(
+                    key: ValueKey(workout.id),
+                    workout: workout,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ],
               // The day above can easily be empty, so the full list is always
               // reachable here rather than only through day navigation.
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
               Text(
                 l10n.healthDashboardHistory,
                 style: Theme.of(context).textTheme.titleLarge,

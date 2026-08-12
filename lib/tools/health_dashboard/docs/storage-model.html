@@ -962,13 +962,14 @@
       </section>
 
       <section id="detail">
-        <h2><span class="hn">12</span> Detail pages · Sleep</h2>
+        <h2><span class="hn">12</span> Detail pages · Sleep &amp; workouts</h2>
         <p class="lede measure">
           Every dashboard card opens a detail page for its record type. Sleep is by far the
           deepest one: a night is a session, a stage list and four measured curves pulled from
           three different tables, drawn as a single picture and then scored. This section
-          describes that page. The other types follow the same skeleton with less in it, and
-          will be documented here as they grow.
+          describes that page, then the workouts page, which stacks the same pieces around an
+          exercise session. The other types follow the same skeleton with less in it, and will be
+          documented here as they grow.
         </p>
 
         <h3>What the page stacks</h3>
@@ -1000,12 +1001,12 @@
               </tr>
               <tr>
                 <td class="d">Stages</td>
-                <td class="t">HealthSleepTimelineSection</td>
+                <td class="t">HealthSessionTimelineSection</td>
                 <td class="d">The stage list plus up to four curves read per session by time range out of <code>health_point</code> — not filtered out of the loaded week, which would miss samples outside it.</td>
               </tr>
               <tr>
                 <td class="d">Curve stats</td>
-                <td class="t">HealthSleepMetricStats</td>
+                <td class="t">HealthSessionMetricStats</td>
                 <td class="d">One card per drawable curve — average, min, max and sample count over the session, in the curve's own colour. Suppressed under two samples, where a range says nothing.</td>
               </tr>
               <tr>
@@ -1027,10 +1028,58 @@
           midnight does not beat the one that ended this morning.
         </p>
 
+        <h3>The workouts page</h3>
+        <p class="measure">
+          A workout is a session row too, so the page is built from the same parts as a night: the
+          week chart, one card per session, the curves measured while it ran, and the history list.
+          <code>HealthSessionTimeline</code> is the sleep chart with an empty stage list — the stage
+          bar and its four lanes collapse and only the curve lanes remain, so both pages share one
+          painter and one tooltip.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr><th>Block</th><th>Widget</th><th>Where the numbers come from</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="d">Last seven days</td>
+                <td class="t">HealthWorkoutTrendChart</td>
+                <td class="d">Distance bars with calories as the second series, both summed per day from the week's sessions (<code>workoutMetricValues</code>). Tapping a bar moves the selected day.</td>
+              </tr>
+              <tr>
+                <td class="d">Day total</td>
+                <td class="t">HealthWorkoutDaySummary</td>
+                <td class="d">Sessions, active time, distance, calories, average heart rate and steps added over the day's sessions. Left out for a single workout, where the card below says the same.</td>
+              </tr>
+              <tr>
+                <td class="d">One per session</td>
+                <td class="t">HealthWorkoutCard</td>
+                <td class="d">The <code>health_session</code> summary columns — distance, calories, avg/max heart rate, avg/max speed, steps — plus active time and pace derived from them, the laps out of <code>health_session_part</code>, and the writer badge. Tapping the header opens the full record.</td>
+              </tr>
+              <tr>
+                <td class="d">During the workout</td>
+                <td class="t">HealthSessionTimelineSection</td>
+                <td class="d">Heart rate, speed, cadence and power read per session by time range out of <code>health_point</code>, each in its own lane and scale. Heart rate is on by default; a metric with no samples stays in the legend, struck through.</td>
+              </tr>
+              <tr>
+                <td class="d">Curve stats</td>
+                <td class="t">HealthSessionMetricStats</td>
+                <td class="d">Average, min, max and sample count per drawable curve, the same card the sleep page uses with the window named differently.</td>
+              </tr>
+              <tr>
+                <td class="d">History</td>
+                <td class="t">HealthMetricHistory</td>
+                <td class="d">Earlier sessions, reachable regardless of what the selected day holds.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <h3>The stage chart</h3>
         <p class="measure">
           Below is the real chart, drawn from the same layout constants and the same curve
-          maths as <code>health_sleep_stage_timeline.dart</code>, on a synthetic night. Toggle
+          maths as <code>health_session_timeline.dart</code>, on a synthetic night. Toggle
           the curves in the legend and move the pointer across it.
         </p>
         <div class="demo">
@@ -1627,7 +1676,7 @@
     ["types", "Health Connect types"], ["rollup", "The fast path"], ["size", "Storage saved"],
     ["dupes", "Duplicates"], ["incr", "Incremental sync"], ["state", "Current state"],
     ["settings", "Outside the tables"], ["hcsettings", "Settings screen"],
-    ["detail", "Detail pages · Sleep"], ["seed", "Generated test data"]
+    ["detail", "Detail pages · Sleep & workouts"], ["seed", "Generated test data"]
   ];
   const toc = $("#toc");
   SECTIONS.forEach(([id, label], i) => {
@@ -1892,7 +1941,7 @@
 
   /* ------------------------------------------------- sleep timeline demo */
   // Layout constants and the curve maths are a straight port of
-  // health_sleep_stage_timeline.dart - if that file changes, change these too.
+  // health_session_timeline.dart - if that file changes, change these too.
   const SL = {
     top: 22, label: 15, curve: 40, gap: 14, bar: 28, barGap: 14,
     lane: 10, laneGap: 4, footer: 20, W: 900

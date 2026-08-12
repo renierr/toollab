@@ -1,46 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
-import 'health_sleep_stage_timeline.dart';
+import 'health_session_timeline.dart';
 
-/// The stage timeline plus its legend, where the overlay entries are switches.
+/// The session timeline plus its legend, where the overlay entries are switches.
 ///
 /// Only the curves toggle. A sleep stage cannot: the bar is a continuous
-/// timeline, and hiding one would leave a hole rather than a filtered view.
-class HealthSleepTimelineSection extends StatefulWidget {
-  final List<Map<String, dynamic>> stages;
+/// timeline, and hiding one would leave a hole rather than a filtered view. With
+/// no stages - a workout - the stage swatches are left out entirely.
+class HealthSessionTimelineSection extends StatefulWidget {
   final int startTime;
   final int endTime;
+  final List<Map<String, dynamic>> stages;
 
-  /// Everything that could be laid over this night. An overlay with no samples
-  /// during the session stays in the legend, greyed out - otherwise a curve that
-  /// exists everywhere else looks like it was never implemented.
-  final List<HealthSleepOverlay> overlays;
+  /// Everything that could be laid over this session. An overlay with no samples
+  /// during it stays in the legend, greyed out - otherwise a curve that exists
+  /// everywhere else looks like it was never implemented.
+  final List<HealthSessionOverlay> overlays;
 
-  const HealthSleepTimelineSection({
+  /// Curves switched on when the section first builds.
+  final Set<String> initiallyEnabled;
+
+  const HealthSessionTimelineSection({
     super.key,
-    required this.stages,
     required this.startTime,
     required this.endTime,
+    this.stages = const [],
     this.overlays = const [],
+    this.initiallyEnabled = const {'heart_rate'},
   });
 
   @override
-  State<HealthSleepTimelineSection> createState() =>
-      _HealthSleepTimelineSectionState();
+  State<HealthSessionTimelineSection> createState() =>
+      _HealthSessionTimelineSectionState();
 }
 
-class _HealthSleepTimelineSectionState
-    extends State<HealthSleepTimelineSection> {
-  /// Heart rate on by default - it is the one curve a night is usually read
-  /// against. The rest stay off so the chart opens uncluttered.
-  static const _onByDefault = {'heart_rate'};
-
+class _HealthSessionTimelineSectionState
+    extends State<HealthSessionTimelineSection> {
   Set<String>? _enabled;
 
+  /// Heart rate on by default - it is the one curve a session is usually read
+  /// against. The rest stay off so the chart opens uncluttered.
   Set<String> get _selection => _enabled ??= {
     for (final overlay in widget.overlays)
-      if (overlay.isDrawable && _onByDefault.contains(overlay.key)) overlay.key,
+      if (overlay.isDrawable && widget.initiallyEnabled.contains(overlay.key))
+        overlay.key,
   };
 
   @override
@@ -55,22 +59,24 @@ class _HealthSleepTimelineSectionState
           runSpacing: 6,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            _LegendEntry(
-              color: Colors.amber,
-              label: l10n.healthDashboardSleepAwake,
-            ),
-            _LegendEntry(
-              color: Colors.purple,
-              label: l10n.healthDashboardSleepRem,
-            ),
-            _LegendEntry(
-              color: Colors.lightBlue,
-              label: l10n.healthDashboardSleepLight,
-            ),
-            _LegendEntry(
-              color: Colors.indigo,
-              label: l10n.healthDashboardSleepDeep,
-            ),
+            if (widget.stages.isNotEmpty) ...[
+              _LegendEntry(
+                color: Colors.amber,
+                label: l10n.healthDashboardSleepAwake,
+              ),
+              _LegendEntry(
+                color: Colors.purple,
+                label: l10n.healthDashboardSleepRem,
+              ),
+              _LegendEntry(
+                color: Colors.lightBlue,
+                label: l10n.healthDashboardSleepLight,
+              ),
+              _LegendEntry(
+                color: Colors.indigo,
+                label: l10n.healthDashboardSleepDeep,
+              ),
+            ],
             for (final overlay in widget.overlays)
               _LegendEntry(
                 color: overlay.color,
@@ -91,7 +97,7 @@ class _HealthSleepTimelineSectionState
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: HealthSleepStageTimeline(
+            child: HealthSessionTimeline(
               stages: widget.stages,
               startTime: widget.startTime,
               endTime: widget.endTime,

@@ -1,63 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
-import '../health_record_values.dart';
+import 'health_session_overlay.dart';
 
-/// A curve drawn above the sleep stages - heart rate, breathing, oxygen.
+export 'health_session_overlay.dart';
+
+/// Curves over a session's span, with the sleep stage bar when there are stages.
 ///
-/// Each one keeps its own lane and its own scale: the units share no range, so
-/// a common axis would flatten every curve but the widest.
-class HealthSleepOverlay {
-  final String key;
-  final String label;
-  final String unit;
-  final Color color;
-  final List<HealthTimedValue> samples;
-
-  const HealthSleepOverlay({
-    required this.key,
-    required this.label,
-    required this.unit,
-    required this.color,
-    required this.samples,
-  });
-
-  /// Two samples are the minimum a line can be drawn from, and the minimum a
-  /// range label means anything at.
-  bool get isDrawable => samples.length >= 2;
-}
-
-class HealthSleepStageTimeline extends StatefulWidget {
-  final List<Map<String, dynamic>> stages;
+/// A workout has no stages, so it uses the same widget with [stages] empty: the
+/// stage bar and its lanes then collapse and only the curves remain.
+class HealthSessionTimeline extends StatefulWidget {
   final int startTime;
   final int endTime;
+  final List<Map<String, dynamic>> stages;
 
   /// Already filtered to what the legend has switched on.
-  final List<HealthSleepOverlay> overlays;
+  final List<HealthSessionOverlay> overlays;
 
-  const HealthSleepStageTimeline({
+  const HealthSessionTimeline({
     super.key,
-    required this.stages,
     required this.startTime,
     required this.endTime,
+    this.stages = const [],
     this.overlays = const [],
   });
 
   @override
-  State<HealthSleepStageTimeline> createState() =>
-      _HealthSleepStageTimelineState();
+  State<HealthSessionTimeline> createState() => _HealthSessionTimelineState();
 }
 
-class _HealthSleepStageTimelineState extends State<HealthSleepStageTimeline> {
+class _HealthSessionTimelineState extends State<HealthSessionTimeline> {
   double? _markerX;
 
-  List<HealthSleepOverlay> get _drawable =>
+  List<HealthSessionOverlay> get _drawable =>
       widget.overlays.where((overlay) => overlay.isDrawable).toList();
 
   @override
   Widget build(BuildContext context) {
     final overlays = _drawable;
-    final layout = _TimelineLayout(overlays.length);
+    final layout = _TimelineLayout(overlays.length, widget.stages.isNotEmpty);
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
@@ -83,7 +64,7 @@ class _HealthSleepStageTimelineState extends State<HealthSleepStageTimeline> {
                 children: [
                   Positioned.fill(
                     child: CustomPaint(
-                      painter: _SleepStageTimelinePainter(
+                      painter: _SessionTimelinePainter(
                         stages: widget.stages,
                         startTime: widget.startTime,
                         endTime: widget.endTime,
@@ -127,7 +108,7 @@ class _HealthSleepStageTimelineState extends State<HealthSleepStageTimeline> {
         ((widget.endTime - widget.startTime) * ratio).round();
   }
 
-  static double? _nearest(HealthSleepOverlay overlay, int timestamp) {
+  static double? _nearest(HealthSessionOverlay overlay, int timestamp) {
     if (overlay.samples.isEmpty) return null;
     final sample = overlay.samples.reduce(
       (closest, candidate) =>
@@ -154,8 +135,9 @@ class _HealthSleepStageTimelineState extends State<HealthSleepStageTimeline> {
 /// Vertical bands, so the widget and the painter agree on where things sit.
 class _TimelineLayout {
   final int overlayCount;
+  final bool hasStages;
 
-  const _TimelineLayout(this.overlayCount);
+  const _TimelineLayout(this.overlayCount, this.hasStages);
 
   static const _top = 22.0;
 
@@ -175,8 +157,9 @@ class _TimelineLayout {
 
   double get overlaysTop => _top;
   double get barTop => _top + overlayCount * _overlayLane;
-  double get lanesTop => barTop + _bar + _barGap;
-  double get lanesBottom => lanesTop + 4 * (_stageLane + _stageGap);
+  double get lanesTop => barTop + (hasStages ? _bar + _barGap : 0);
+  double get lanesBottom =>
+      lanesTop + (hasStages ? 4 * (_stageLane + _stageGap) : 0);
   double get height => lanesBottom + _footer;
 
   /// Zero line of a curve - the bottom of its band, above the trailing gap.
@@ -281,16 +264,16 @@ Color _stageColor(String type) => switch (type) {
   _ => Colors.blueGrey,
 };
 
-class _SleepStageTimelinePainter extends CustomPainter {
+class _SessionTimelinePainter extends CustomPainter {
   final List<Map<String, dynamic>> stages;
   final int startTime;
   final int endTime;
-  final List<HealthSleepOverlay> overlays;
+  final List<HealthSessionOverlay> overlays;
   final _TimelineLayout layout;
   final Color labelColor;
   final double? markerX;
 
-  const _SleepStageTimelinePainter({
+  const _SessionTimelinePainter({
     required this.stages,
     required this.startTime,
     required this.endTime,
@@ -341,6 +324,7 @@ class _SleepStageTimelinePainter extends CustomPainter {
   }
 
   void _drawStageLanes(Canvas canvas, Size size, int duration) {
+    if (stages.isEmpty) return;
     const types = ['awake', 'rem', 'light', 'deep'];
     for (var index = 0; index < types.length; index++) {
       final type = types[index];
@@ -375,7 +359,7 @@ class _SleepStageTimelinePainter extends CustomPainter {
     Canvas canvas,
     Size size,
     int duration,
-    HealthSleepOverlay overlay,
+    HealthSessionOverlay overlay,
     int index,
   ) {
     final values = [for (final sample in overlay.samples) sample.v];
@@ -448,7 +432,7 @@ class _SleepStageTimelinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SleepStageTimelinePainter oldDelegate) =>
+  bool shouldRepaint(_SessionTimelinePainter oldDelegate) =>
       oldDelegate.stages != stages ||
       oldDelegate.overlays != overlays ||
       oldDelegate.startTime != startTime ||

@@ -3717,6 +3717,28 @@
   "healthDashboardNightAvg": "Night Avg",
   "healthDashboardNightMin": "Night Min",
   "healthDashboardNightMax": "Night Max",
+  "healthDashboardWorkoutDayTotals": "Day total",
+  "healthDashboardWorkoutSessions": "Sessions",
+  "healthDashboardPace": "Pace",
+  "healthDashboardAverage": "Average",
+  "healthDashboardMinimum": "Minimum",
+  "healthDashboardMaximum": "Maximum",
+  "healthDashboardAvgHeartRate": "Avg heart rate",
+  "healthDashboardMaxHeartRate": "Max heart rate",
+  "healthDashboardAvgSpeed": "Avg speed",
+  "healthDashboardMaxSpeed": "Max speed",
+  "healthDashboardCadence": "Cadence",
+  "healthDashboardPower": "Power",
+  "healthDashboardDuringWorkout": "During the workout",
+  "healthDashboardLaps": "Laps",
+  "healthDashboardLap": "Lap {number}",
+  "@healthDashboardLap": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardSpeed": "Speed",
   "healthDashboardCount": "Count",
   "healthDashboardBloodPressure": "Blood Pressure",
