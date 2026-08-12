@@ -9509,6 +9509,66 @@ abstract class AppLocalizations {
   /// **'Connect devices'**
   String get treadmillConnectDevices;
 
+  /// No description provided for @treadmillSessionRunningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout still running'**
+  String get treadmillSessionRunningTitle;
+
+  /// No description provided for @treadmillSessionRunningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaving this screen keeps recording in the background - the session is saved automatically and can be recovered even if the app is closed. Stop it now to file it in the history.'**
+  String get treadmillSessionRunningMessage;
+
+  /// No description provided for @treadmillKeepRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave, keep recording'**
+  String get treadmillKeepRecording;
+
+  /// No description provided for @treadmillStopAndSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop and save'**
+  String get treadmillStopAndSave;
+
+  /// No description provided for @treadmillRecoveredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unfinished workout found'**
+  String get treadmillRecoveredTitle;
+
+  /// No description provided for @treadmillRecoveredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A workout of {duration} with {distance} km was still recording when the app closed.'**
+  String treadmillRecoveredMessage(String duration, String distance);
+
+  /// No description provided for @treadmillRecoveredResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get treadmillRecoveredResume;
+
+  /// No description provided for @treadmillRecoveredSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to history'**
+  String get treadmillRecoveredSave;
+
+  /// No description provided for @treadmillRecoveredDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get treadmillRecoveredDiscard;
+
+  /// No description provided for @treadmillRecoveredSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout saved to history'**
+  String get treadmillRecoveredSaved;
+
   /// No description provided for @treadmillPublishNow.
   ///
   /// In en, this message translates to:

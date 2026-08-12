@@ -2928,6 +2928,26 @@
     }
   },
   "treadmillConnectDevices": "Connect devices",
+  "treadmillSessionRunningTitle": "Workout still running",
+  "treadmillSessionRunningMessage": "Leaving this screen keeps recording in the background - the session is saved automatically and can be recovered even if the app is closed. Stop it now to file it in the history.",
+  "treadmillKeepRecording": "Leave, keep recording",
+  "treadmillStopAndSave": "Stop and save",
+  "treadmillRecoveredTitle": "Unfinished workout found",
+  "treadmillRecoveredMessage": "A workout of {duration} with {distance} km was still recording when the app closed.",
+  "@treadmillRecoveredMessage": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "treadmillRecoveredResume": "Continue",
+  "treadmillRecoveredSave": "Save to history",
+  "treadmillRecoveredDiscard": "Discard",
+  "treadmillRecoveredSaved": "Workout saved to history",
   "treadmillPublishNow": "Publish now",
   "treadmillPublishNowSubtitle": "Workouts go to Health Connect when one ends, on a manual sync and when the health dashboard opens, at most once every five minutes.",
   "treadmillPublishDone": "Published {count} workout(s) to Health Connect",

@@ -2079,6 +2079,26 @@
     }
   },
   "treadmillConnectDevices": "Geräte verbinden",
+  "treadmillSessionRunningTitle": "Training läuft noch",
+  "treadmillSessionRunningMessage": "Wenn du diese Seite verlässt, wird im Hintergrund weiter aufgezeichnet - die Einheit wird automatisch gesichert und lässt sich auch nach einem Schließen der App wiederherstellen. Beende sie jetzt, um sie im Verlauf abzulegen.",
+  "treadmillKeepRecording": "Verlassen, weiter aufzeichnen",
+  "treadmillStopAndSave": "Beenden und speichern",
+  "treadmillRecoveredTitle": "Unvollständiges Training gefunden",
+  "treadmillRecoveredMessage": "Ein Training über {duration} mit {distance} km wurde noch aufgezeichnet, als die App geschlossen wurde.",
+  "@treadmillRecoveredMessage": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      },
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "treadmillRecoveredResume": "Fortsetzen",
+  "treadmillRecoveredSave": "Im Verlauf speichern",
+  "treadmillRecoveredDiscard": "Verwerfen",
+  "treadmillRecoveredSaved": "Training im Verlauf gespeichert",
   "treadmillPublishNow": "Jetzt senden",
   "treadmillPublishNowSubtitle": "Workouts gehen nach dem Ende, bei einer manuellen Synchronisierung und beim Öffnen des Gesundheits-Dashboards an Health Connect, höchstens alle fünf Minuten.",
   "treadmillPublishDone": "{count} Workout(s) an Health Connect gesendet",

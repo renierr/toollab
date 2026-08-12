@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:universal_ble/universal_ble.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
@@ -20,6 +22,10 @@ export 'treadmill_models.dart';
 
 class TreadmillControlState extends ChangeNotifier {
   static const _syncToHealthConnectKey = 'sync_to_health_connect';
+  static const _activeSessionKey = 'active_session';
+
+  /// How often the running session is written to disk, in ticks (= seconds).
+  static const _snapshotEverySeconds = 10;
 
   // Scanning & Connection Status
   bool isScanning = false;
@@ -78,7 +84,10 @@ class TreadmillControlState extends ChangeNotifier {
   // Databases & Logs
   List<WorkoutDataPoint> dataPoints = [];
   List<TreadmillSession> pastSessions = [];
-  TreadmillSession? activeSession;
+
+  /// A session that was still recording when the app went away, restored from
+  /// the on-disk snapshot. The page offers to continue, keep or drop it.
+  TreadmillSession? recoveredSession;
 
   // Backend sync
   bool isSyncing = false;
@@ -110,6 +119,8 @@ class TreadmillControlState extends ChangeNotifier {
   // Aborts an in-flight connect retry loop (user cancelled / disconnected).
   bool _treadmillConnectAbort = false;
 
+  AppLifecycleListener? _lifecycleListener;
+
   TreadmillControlState() {
     _init();
   }
@@ -117,8 +128,113 @@ class TreadmillControlState extends ChangeNotifier {
   void _init() {
     UniversalBle.onConnectionChange = _onConnectionChange;
     UniversalBle.onValueChange = _onValueChange;
+    _lifecycleListener = AppLifecycleListener(
+      onStateChange: _onAppLifecycleChange,
+    );
     loadSessions();
     _loadSettings();
+    _loadRecoveredSession();
+  }
+
+  bool get hasActiveSession =>
+      workoutStatus == WorkoutStatus.running ||
+      workoutStatus == WorkoutStatus.paused ||
+      workoutStatus == WorkoutStatus.starting;
+
+  void _onAppLifecycleChange(AppLifecycleState state) {
+    // Losing the foreground is the last certain moment to write: a swipe-away
+    // or a kill never comes back.
+    if (state != AppLifecycleState.resumed && hasActiveSession) {
+      unawaited(_saveSnapshot());
+    }
+  }
+
+  /// Writes the running workout to disk so an app kill cannot lose it.
+  Future<void> _saveSnapshot() async {
+    if (dataPoints.isEmpty) return;
+    try {
+      final snapshot = TreadmillSession.fromWorkout(
+        dataPoints: dataPoints,
+        distance: distance,
+        calories: calories,
+        steps: steps,
+        elapsedTime: elapsedTime,
+        nowMs: DateTime.now().millisecondsSinceEpoch,
+      );
+      await DatabaseService.instance.setSetting(
+        TreadmillControlTool.config.id,
+        _activeSessionKey,
+        jsonEncode(snapshot.toMap()),
+      );
+    } catch (e) {
+      errorLog('[TreadmillControl] Snapshot save failed: $e');
+    }
+  }
+
+  Future<void> _clearSnapshot() async {
+    try {
+      await DatabaseService.instance.deleteSetting(
+        TreadmillControlTool.config.id,
+        _activeSessionKey,
+      );
+    } catch (e) {
+      errorLog('[TreadmillControl] Snapshot clear failed: $e');
+    }
+  }
+
+  Future<void> _loadRecoveredSession() async {
+    try {
+      final raw = await DatabaseService.instance.getSetting(
+        TreadmillControlTool.config.id,
+        _activeSessionKey,
+      );
+      if (raw == null || raw.isEmpty) return;
+      final session = TreadmillSession.fromMap(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
+      if (session.elapsedTime <= 0 || session.dataPoints.isEmpty) {
+        await _clearSnapshot();
+        return;
+      }
+      recoveredSession = session;
+      notifyListeners();
+    } catch (e) {
+      errorLog('[TreadmillControl] Snapshot load failed: $e');
+      await _clearSnapshot();
+    }
+  }
+
+  /// Puts the interrupted workout back as a paused session, so resuming adds to
+  /// it instead of starting from zero.
+  void resumeRecoveredSession() {
+    final session = recoveredSession;
+    if (session == null) return;
+    recoveredSession = null;
+    dataPoints = List.of(session.dataPoints);
+    elapsedTime = session.elapsedTime;
+    distance = session.distance;
+    calories = session.calories;
+    steps = session.steps;
+    workoutStatus = WorkoutStatus.paused;
+    notifyListeners();
+  }
+
+  /// Files the interrupted workout in the history as it was.
+  Future<void> saveRecoveredSession() async {
+    final session = recoveredSession;
+    if (session == null) return;
+    recoveredSession = null;
+    notifyListeners();
+    await TreadmillControlDb.instance.saveSession(session);
+    await _clearSnapshot();
+    await loadSessions();
+    _backgroundSync();
+  }
+
+  Future<void> discardRecoveredSession() async {
+    recoveredSession = null;
+    notifyListeners();
+    await _clearSnapshot();
   }
 
   Future<void> _loadSettings() async {
@@ -812,13 +928,17 @@ class TreadmillControlState extends ChangeNotifier {
 
   // Workout Controls (Start, Incline, Speed)
   Future<void> startWorkout() async {
+    // Resuming a paused session must keep what it already recorded.
+    final resuming = workoutStatus == WorkoutStatus.paused;
     workoutStatus = WorkoutStatus.running;
     _awaitingSpeedZero = false;
-    elapsedTime = 0;
-    distance = 0.0;
-    calories = 0;
-    steps = 0;
-    dataPoints.clear();
+    if (!resuming) {
+      elapsedTime = 0;
+      distance = 0.0;
+      calories = 0;
+      steps = 0;
+      dataPoints.clear();
+    }
 
     // Automatically trigger WakeLock
     _setWakeLock(true);
@@ -854,6 +974,7 @@ class TreadmillControlState extends ChangeNotifier {
         await _sendFtmsControl(0x08, [0x02]); // Pause stop command
       }
     }
+    await _saveSnapshot();
     notifyListeners();
   }
 
@@ -892,6 +1013,7 @@ class TreadmillControlState extends ChangeNotifier {
       await loadSessions();
       _backgroundSync();
     }
+    await _clearSnapshot();
 
     workoutStatus = WorkoutStatus.inactive;
     speed = 0.0;
@@ -1013,6 +1135,8 @@ class TreadmillControlState extends ChangeNotifier {
         ),
       );
 
+      if (elapsedTime % _snapshotEverySeconds == 0) unawaited(_saveSnapshot());
+
       notifyListeners();
     });
   }
@@ -1131,6 +1255,7 @@ class TreadmillControlState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _lifecycleListener?.dispose();
     _workoutTimer?.cancel();
     _pitpatHeartbeatTimer?.cancel();
     _scanSubscription?.cancel();

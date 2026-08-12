@@ -5,6 +5,8 @@ import 'package:universal_ble/universal_ble.dart';
 import 'treadmill_control_state.dart';
 import 'treadmill_control_colors.dart';
 import 'widgets/device_connection_sheet.dart';
+import 'widgets/treadmill_active_session_dialog.dart';
+import 'widgets/treadmill_recovered_session_dialog.dart';
 import 'widgets/treadmill_settings_sheet.dart';
 import 'widgets/workout_metrics_grid.dart';
 import 'widgets/workout_controls_panel.dart';
@@ -23,13 +25,58 @@ class TreadmillControlPage extends StatefulWidget {
 
 class _TreadmillControlPageState extends State<TreadmillControlPage>
     with DisposeCleanup {
+  bool _recoveryPromptOpen = false;
+
   @override
   void initState() {
     super.initState();
     final state = context.read<TreadmillControlState>();
     onDispose(() {
-      state.resetState(notify: false);
+      // A recording session keeps its BLE links, timers and keep-alive leases
+      // after the page is gone; only an idle tool may be torn down.
+      if (!state.hasActiveSession) state.resetState(notify: false);
     });
+  }
+
+  Future<void> _handleRecovery(TreadmillControlState state) async {
+    final session = state.recoveredSession;
+    if (session == null || _recoveryPromptOpen) return;
+    _recoveryPromptOpen = true;
+    final choice = await TreadmillRecoveredSessionDialog.show(context, session);
+    _recoveryPromptOpen = false;
+    if (!mounted) return;
+    switch (choice) {
+      case TreadmillRecoveryChoice.resume:
+        state.resumeRecoveredSession();
+      case TreadmillRecoveryChoice.save:
+        await state.saveRecoveredSession();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context).treadmillRecoveredSaved,
+              ),
+            ),
+          );
+        }
+      case TreadmillRecoveryChoice.discard:
+        await state.discardRecoveredSession();
+      case null:
+        break;
+    }
+  }
+
+  Future<void> _handleLeave() async {
+    final navigator = Navigator.of(context);
+    final state = context.read<TreadmillControlState>();
+    final choice = await TreadmillActiveSessionDialog.show(context);
+    if (!mounted || choice == null || choice == TreadmillLeaveChoice.stay) {
+      return;
+    }
+    if (choice == TreadmillLeaveChoice.stopAndSave) {
+      await state.stopWorkout();
+    }
+    if (mounted) navigator.pop();
   }
 
   void _showConnectionSheet() {
@@ -51,6 +98,12 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
 
     state.notificationTitle = l10n.treadmillNotificationTitle;
     state.notificationText = l10n.treadmillNotificationText;
+
+    if (state.recoveredSession != null && !_recoveryPromptOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _handleRecovery(state);
+      });
+    }
 
     final List<Widget> actions = [
       IconButton(
@@ -106,52 +159,58 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
       ],
     );
 
-    return ToolLayout(
-      title: 'Treadmill Control',
-      actions: actions,
-      child: ResponsiveOrientationLayout(
-        portrait: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return PopScope(
+      canPop: !state.hasActiveSession,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleLeave();
+      },
+      child: ToolLayout(
+        title: 'Treadmill Control',
+        actions: actions,
+        child: ResponsiveOrientationLayout(
+          portrait: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                WorkoutMetricsGrid(isLandscape: false),
+                const SizedBox(height: 16),
+                WorkoutControlsPanel(isLandscape: false),
+                const SizedBox(height: 24),
+                connectionBadges,
+              ],
+            ),
+          ),
+          landscape: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              WorkoutMetricsGrid(isLandscape: false),
-              const SizedBox(height: 16),
-              WorkoutControlsPanel(isLandscape: false),
-              const SizedBox(height: 24),
-              connectionBadges,
+              Expanded(
+                flex: 5,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [WorkoutControlsPanel(isLandscape: true)],
+                  ),
+                ),
+              ),
+              VerticalDivider(width: 1, color: theme.dividerColor),
+              Expanded(
+                flex: 6,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      WorkoutMetricsGrid(isLandscape: true),
+                      const SizedBox(height: 24),
+                      connectionBadges,
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-        landscape: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 5,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [WorkoutControlsPanel(isLandscape: true)],
-                ),
-              ),
-            ),
-            VerticalDivider(width: 1, color: theme.dividerColor),
-            Expanded(
-              flex: 6,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    WorkoutMetricsGrid(isLandscape: true),
-                    const SizedBox(height: 24),
-                    connectionBadges,
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

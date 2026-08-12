@@ -67,6 +67,23 @@ cover the last sample, samples are clamped into it, duplicate instants collapse 
 reading, and a zero-length session gets a one second floor. Each session is written on its own,
 so one rejected workout no longer blocks the rest.
 
+## Not losing a running session
+
+A workout only reaches `workout_sessions` when it stops, so everything between start and stop
+lives in memory and has to survive both leaving the page and the app going away.
+
+- **Leaving the page** is guarded: while `hasActiveSession` is true the route cannot pop on its
+  own, and the guard dialog offers *cancel*, *leave and keep recording*, or *stop and save*. The
+  page tears the tool down (`resetState`) only when no session is active, so a backgrounded
+  session keeps its BLE links, its sampling timer and its keep-alive leases.
+- **Crash / kill insurance**: the running workout is written to the `active_session` tool setting
+  every ten ticks, on pause, and whenever the app loses the foreground (the last certain moment
+  before a swipe-away). Stopping a workout clears the snapshot.
+- **On the next start** a leftover snapshot surfaces as a prompt: *continue* restores it as a
+  paused session — which is why resuming from pause keeps the accumulated metrics instead of
+  resetting them — *save to history* files it as it was, *discard* drops it. Dismissing the
+  prompt keeps the snapshot, so it is offered again.
+
 ## Removing published data
 
 The settings sheet's destructive action deletes every record this app wrote and resets the

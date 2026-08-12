@@ -5260,6 +5260,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get treadmillConnectDevices => 'Connect devices';
 
   @override
+  String get treadmillSessionRunningTitle => 'Workout still running';
+
+  @override
+  String get treadmillSessionRunningMessage =>
+      'Leaving this screen keeps recording in the background - the session is saved automatically and can be recovered even if the app is closed. Stop it now to file it in the history.';
+
+  @override
+  String get treadmillKeepRecording => 'Leave, keep recording';
+
+  @override
+  String get treadmillStopAndSave => 'Stop and save';
+
+  @override
+  String get treadmillRecoveredTitle => 'Unfinished workout found';
+
+  @override
+  String treadmillRecoveredMessage(String duration, String distance) {
+    return 'A workout of $duration with $distance km was still recording when the app closed.';
+  }
+
+  @override
+  String get treadmillRecoveredResume => 'Continue';
+
+  @override
+  String get treadmillRecoveredSave => 'Save to history';
+
+  @override
+  String get treadmillRecoveredDiscard => 'Discard';
+
+  @override
+  String get treadmillRecoveredSaved => 'Workout saved to history';
+
+  @override
   String get treadmillPublishNow => 'Publish now';
 
   @override

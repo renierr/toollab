@@ -5298,6 +5298,39 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillConnectDevices => 'Geräte verbinden';
 
   @override
+  String get treadmillSessionRunningTitle => 'Training läuft noch';
+
+  @override
+  String get treadmillSessionRunningMessage =>
+      'Wenn du diese Seite verlässt, wird im Hintergrund weiter aufgezeichnet - die Einheit wird automatisch gesichert und lässt sich auch nach einem Schließen der App wiederherstellen. Beende sie jetzt, um sie im Verlauf abzulegen.';
+
+  @override
+  String get treadmillKeepRecording => 'Verlassen, weiter aufzeichnen';
+
+  @override
+  String get treadmillStopAndSave => 'Beenden und speichern';
+
+  @override
+  String get treadmillRecoveredTitle => 'Unvollständiges Training gefunden';
+
+  @override
+  String treadmillRecoveredMessage(String duration, String distance) {
+    return 'Ein Training über $duration mit $distance km wurde noch aufgezeichnet, als die App geschlossen wurde.';
+  }
+
+  @override
+  String get treadmillRecoveredResume => 'Fortsetzen';
+
+  @override
+  String get treadmillRecoveredSave => 'Im Verlauf speichern';
+
+  @override
+  String get treadmillRecoveredDiscard => 'Verwerfen';
+
+  @override
+  String get treadmillRecoveredSaved => 'Training im Verlauf gespeichert';
+
+  @override
   String get treadmillPublishNow => 'Jetzt senden';
 
   @override
