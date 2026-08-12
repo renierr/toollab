@@ -1,6 +1,10 @@
 import 'dart:io';
 
 import 'package:health_connector/health_connector.dart' as hc;
+// The delete requests are not re-exported by the package barrel; see
+// _deleteWindow for why one has to be built by hand at all.
+// ignore: implementation_imports
+import 'package:health_connector_core/src/models/requests/delete_requests/delete_records_request.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/background_work_lease.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -248,11 +252,19 @@ class TreadmillHealthConnectPublisher {
     DateTime start,
     DateTime end,
   ) async {
-    // The request type is not exported, and distance is missing the delete
-    // capability altogether in this plugin version - its records survive a wipe
-    // and are overwritten by their client record id on the next publish.
+    // The request type is not exported, hence the dynamic list.
     final requests = <dynamic>[
       hc.HealthDataType.exerciseSession.deleteInTimeRange(
+        startTime: start,
+        endTime: end,
+      ),
+      // Distance is the one type whose Dart side never declares the delete
+      // capability, so it has no deleteInTimeRange() to call. The Android
+      // DistanceHandler is DeletableHealthRecordHandler like every other type
+      // and the platform call only checks platform support, so the request
+      // built by hand goes through. Drop this once the plugin declares it.
+      DeleteRecordsInTimeRangeRequest(
+        dataType: hc.HealthDataType.distance,
         startTime: start,
         endTime: end,
       ),
