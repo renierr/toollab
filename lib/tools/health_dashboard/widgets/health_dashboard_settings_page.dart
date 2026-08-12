@@ -17,11 +17,29 @@ class HealthDashboardSettingsPage extends StatelessWidget {
       appBar: AppBar(title: Text(l10n.healthDashboardSettings)),
       body: ListView(
         children: [
-          _SettingsSection(title: l10n.healthDashboardHealthConnectSettings),
+          // Off Android there is no Health Connect to configure, so the entry
+          // names what the page still offers: the store's maintenance actions.
+          _SettingsSection(
+            title: HealthConnectSettingsPage.isSupported
+                ? l10n.healthDashboardHealthConnectSettings
+                : l10n.healthDashboardSectionMaintenance,
+          ),
           ListTile(
-            leading: const Icon(Icons.health_and_safety_outlined),
-            title: Text(l10n.healthDashboardHealthConnectSettings),
-            subtitle: Text(l10n.healthDashboardHealthConnectSettingsSubtitle),
+            leading: Icon(
+              HealthConnectSettingsPage.isSupported
+                  ? Icons.health_and_safety_outlined
+                  : Icons.cleaning_services_outlined,
+            ),
+            title: Text(
+              HealthConnectSettingsPage.isSupported
+                  ? l10n.healthDashboardHealthConnectSettings
+                  : l10n.healthDashboardSectionMaintenance,
+            ),
+            subtitle: Text(
+              HealthConnectSettingsPage.isSupported
+                  ? l10n.healthDashboardHealthConnectSettingsSubtitle
+                  : l10n.healthDashboardSectionMaintenanceHint,
+            ),
             trailing: healthState.isCollecting
                 ? const SizedBox(
                     width: 20,

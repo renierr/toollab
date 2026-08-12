@@ -52,7 +52,9 @@ class HealthSchema {
 
   /// Everything this tool owns, for the backup table copy. Dimension tables are
   /// included: without them the interned integers in a restored backup resolve
-  /// to nothing.
+  /// to nothing. [daily] is deliberately absent - its `day` is local midnight of
+  /// the machine that computed it, so a rollup restored in another timezone keys
+  /// on a midnight the reader never looks up. The restore derives it instead.
   static const backupTables = [
     metric,
     app,
@@ -61,7 +63,6 @@ class HealthSchema {
     interval,
     session,
     sessionPart,
-    daily,
     type,
     typeApp,
   ];

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -18,104 +20,118 @@ import 'health_import_progress_dialog.dart';
 import 'health_store_status_tile.dart';
 
 /// All Health Connect options live here so the dashboard settings page keeps a
-/// single entry for them as more are added.
+/// single entry for them as more are added. Health Connect is Android-only, so
+/// on every other platform the page is the store's maintenance screen and
+/// nothing else - the collectors would no-op anyway.
 class HealthConnectSettingsPage extends StatelessWidget {
   const HealthConnectSettingsPage({super.key});
+
+  static bool get isSupported => Platform.isAndroid;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final healthState = context.watch<HealthDashboardState>();
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.healthDashboardHealthConnectSettings)),
+      appBar: AppBar(
+        title: Text(
+          isSupported
+              ? l10n.healthDashboardHealthConnectSettings
+              : l10n.healthDashboardSectionMaintenance,
+        ),
+      ),
       body: ListView(
         children: [
-          SettingsSectionLabel(title: l10n.healthDashboardSectionAccess),
-          ListTile(
-            leading: const Icon(Icons.health_and_safety_outlined),
-            title: Text(l10n.healthDashboardManageHealthConnect),
-            subtitle: Text(l10n.healthDashboardManageHealthConnectSubtitle),
-            trailing: healthState.isCollecting
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.chevron_right_rounded),
-            onTap: healthState.isCollecting
-                ? null
-                : () => _openSystemSettings(context),
-          ),
-          SettingsSectionLabel(
-            title: l10n.healthDashboardSectionSelect,
-            description: l10n.healthDashboardSectionSelectHint,
-          ),
-          ListTile(
-            leading: const Icon(Icons.checklist_rounded),
-            title: Text(l10n.healthDashboardDataTypes),
-            subtitle: Text(l10n.healthDashboardDataTypesSubtitle),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const HealthDataTypesPage(),
+          if (isSupported) ...[
+            SettingsSectionLabel(title: l10n.healthDashboardSectionAccess),
+            ListTile(
+              leading: const Icon(Icons.health_and_safety_outlined),
+              title: Text(l10n.healthDashboardManageHealthConnect),
+              subtitle: Text(l10n.healthDashboardManageHealthConnectSubtitle),
+              trailing: healthState.isCollecting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.chevron_right_rounded),
+              onTap: healthState.isCollecting
+                  ? null
+                  : () => _openSystemSettings(context),
+            ),
+            SettingsSectionLabel(
+              title: l10n.healthDashboardSectionSelect,
+              description: l10n.healthDashboardSectionSelectHint,
+            ),
+            ListTile(
+              leading: const Icon(Icons.checklist_rounded),
+              title: Text(l10n.healthDashboardDataTypes),
+              subtitle: Text(l10n.healthDashboardDataTypesSubtitle),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const HealthDataTypesPage(),
+                ),
               ),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.apps_rounded),
-            title: Text(l10n.healthDashboardApps),
-            subtitle: Text(l10n.healthDashboardAppsSubtitle),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const HealthAppsPage()),
+            ListTile(
+              leading: const Icon(Icons.apps_rounded),
+              title: Text(l10n.healthDashboardApps),
+              subtitle: Text(l10n.healthDashboardAppsSubtitle),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const HealthAppsPage()),
+              ),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.travel_explore_rounded),
-            title: Text(l10n.healthDashboardScanSources),
-            subtitle: Text(l10n.healthDashboardScanSourcesSubtitle),
-            onTap: () => healthState.isCollecting
-                ? HealthBusyDialog.show(context)
-                : _runDiscovery(context),
-          ),
-          SettingsSectionLabel(
-            title: l10n.healthDashboardSectionCollect,
-            description: l10n.healthDashboardSectionCollectHint,
-          ),
+            ListTile(
+              leading: const Icon(Icons.travel_explore_rounded),
+              title: Text(l10n.healthDashboardScanSources),
+              subtitle: Text(l10n.healthDashboardScanSourcesSubtitle),
+              onTap: () => healthState.isCollecting
+                  ? HealthBusyDialog.show(context)
+                  : _runDiscovery(context),
+            ),
+            SettingsSectionLabel(
+              title: l10n.healthDashboardSectionCollect,
+              description: l10n.healthDashboardSectionCollectHint,
+            ),
+          ],
           const HealthStoreStatusTile(),
-          SwitchListTile.adaptive(
-            secondary: const Icon(Icons.sync_alt_rounded),
-            title: Text(l10n.healthDashboardAutoSync),
-            subtitle: Text(l10n.healthDashboardAutoSyncSubtitle),
-            value: healthState.autoHealthConnectSync,
-            onChanged: healthState.isCollecting
-                ? null
-                : (value) => healthState.setAutoHealthConnectSync(value),
-          ),
-          ListTile(
-            leading: const Icon(Icons.download_for_offline_outlined),
-            title: Text(l10n.healthDashboardImportSelected),
-            subtitle: Text(l10n.healthDashboardImportSelectedSubtitle),
-            onTap: () => healthState.isCollecting
-                ? HealthBusyDialog.show(context)
-                : _importIntoStore(context, restart: false),
-          ),
-          ListTile(
-            leading: const Icon(Icons.sync_rounded),
-            title: Text(l10n.healthDashboardSyncChanges),
-            subtitle: Text(l10n.healthDashboardSyncChangesSubtitle),
-            onTap: () => healthState.isCollecting
-                ? HealthBusyDialog.show(context)
-                : _syncChanges(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.restart_alt_rounded),
-            title: Text(l10n.healthDashboardImportRestart),
-            subtitle: Text(l10n.healthDashboardImportRestartSubtitle),
-            onTap: () => healthState.isCollecting
-                ? HealthBusyDialog.show(context)
-                : _importIntoStore(context, restart: true),
-          ),
+          if (isSupported) ...[
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.sync_alt_rounded),
+              title: Text(l10n.healthDashboardAutoSync),
+              subtitle: Text(l10n.healthDashboardAutoSyncSubtitle),
+              value: healthState.autoHealthConnectSync,
+              onChanged: healthState.isCollecting
+                  ? null
+                  : (value) => healthState.setAutoHealthConnectSync(value),
+            ),
+            ListTile(
+              leading: const Icon(Icons.download_for_offline_outlined),
+              title: Text(l10n.healthDashboardImportSelected),
+              subtitle: Text(l10n.healthDashboardImportSelectedSubtitle),
+              onTap: () => healthState.isCollecting
+                  ? HealthBusyDialog.show(context)
+                  : _importIntoStore(context, restart: false),
+            ),
+            ListTile(
+              leading: const Icon(Icons.sync_rounded),
+              title: Text(l10n.healthDashboardSyncChanges),
+              subtitle: Text(l10n.healthDashboardSyncChangesSubtitle),
+              onTap: () => healthState.isCollecting
+                  ? HealthBusyDialog.show(context)
+                  : _syncChanges(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.restart_alt_rounded),
+              title: Text(l10n.healthDashboardImportRestart),
+              subtitle: Text(l10n.healthDashboardImportRestartSubtitle),
+              onTap: () => healthState.isCollecting
+                  ? HealthBusyDialog.show(context)
+                  : _importIntoStore(context, restart: true),
+            ),
+          ],
           SettingsSectionLabel(
             title: l10n.healthDashboardSectionMaintenance,
             description: l10n.healthDashboardSectionMaintenanceHint,
@@ -140,7 +156,7 @@ class HealthConnectSettingsPage extends StatelessWidget {
           ),
           // Debug builds only: it writes fabricated measurements into the same
           // Health Connect store real data lives in.
-          if (kDebugMode) ...[
+          if (kDebugMode && isSupported) ...[
             SettingsSectionLabel(title: l10n.healthDashboardSectionDebug),
             ListTile(
               leading: const Icon(Icons.bug_report_outlined),

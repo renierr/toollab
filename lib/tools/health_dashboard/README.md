@@ -53,6 +53,17 @@ the same instant collapse to one row on insert.
 metrics is on the order of a hundred thousand rows, so every card, weekly chart
 and all-time total is a primary-key seek.
 
+`health_daily.day` is the epoch millis of **local midnight**, and readers look a
+day up by exact key (`dayKey()`), never by a range. Every writer therefore has to
+produce the same instant. The incremental refresh uses `dayKey`/`dayBounds`; the
+full rebuild groups in SQL and needs the trailing `'utc'` in
+`strftime('%s', datetime(t, 'localtime', 'start of day'), 'utc')`. Without it
+SQLite returns the local wall clock read as if it were UTC - the same number only
+where the offset is zero. On a UTC device the two agree and nothing shows; move
+the same data to a machine at UTC+2 and every rebuilt rollup lands two hours off
+the key its reader asks for, so the drilldown charts read nothing while the raw
+history still lists every row.
+
 The pre-typed schema - `health_source_records` with a `payload_json` blob, its
 write-only normalised children, and the even earlier `records` cache - is gone.
 It is dropped outright rather than migrated, detected by a stored schema version
@@ -385,8 +396,12 @@ Columns are matched by name (`_sharedColumns`), never by position, so a file
 written by an older schema still restores and its missing columns keep their
 defaults. `SELECT *` would break the moment a column was added.
 
-The rollups travel in the backup, so `rebuildDaily` runs only when the file
-predates the current schema or carried no `health_daily` rows. The change token
+`health_daily` is not in `backupTables` and is always rebuilt by the restore. Its
+`day` is local midnight of the machine that computed it, so a rollup carried to a
+device in another timezone keys on a midnight `dailyRange` never asks for - the
+drilldown charts read nothing while the raw history still lists every row. It is
+derived data, so re-deriving it locally is both correct and cheaper than shipping
+it. The change token
 is dropped after every restore - it describes changes against a dataset we no
 longer hold, so the next sync establishes a fresh baseline.
 

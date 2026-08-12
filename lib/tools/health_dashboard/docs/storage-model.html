@@ -481,7 +481,11 @@
           <li>A decade of 26 metrics is roughly <b>95,000 rows</b> — every read is a primary-key seek.</li>
           <li>Refreshed only for the <code>(metric, day)</code> pairs an import actually touched,
             in the <b>same transaction</b> as the facts, so rollups can never disagree with them.</li>
-          <li>Keyed by <b>local midnight</b> as epoch millis, so a day always means the user's day.</li>
+          <li>Keyed by <b>local midnight</b> as epoch millis, so a day always means the user's day.
+            Every writer must produce the same instant <code>dayKey()</code> does: the full rebuild
+            groups with <code>strftime('%s', datetime(t, 'localtime', 'start of day'), 'utc')</code>
+            — dropping the trailing <code>'utc'</code> yields the local wall clock read as UTC, which
+            matches only where the offset is zero, and leaves rollups no reader ever finds.</li>
           <li>Day bounds come from <code>DateTime(y, m, d + 1)</code>, not <code>+ 24h</code> —
             a fixed 24 hours lands an hour off across a DST change.</li>
           <li>Each row describes <b>one writer</b>, the day's winner — see
@@ -1569,8 +1573,8 @@
     {
       n: "Restore", sub: "destructive", title: "Import a backup file",
       code: "HealthStore.importBackup(path)",
-      body: "Empties every table this tool owns and refills it from the backup, in one transaction. A snapshot restore, not a merge — merging could never remove rows deleted after the backup was taken. Columns are matched by name, so an older export still restores with its missing columns at their defaults, and a file from a newer schema is rejected before anything is touched. The rollups travel in the file, so they are only rebuilt when it predates this schema or carried none.",
-      writes: ["replaces every table in HealthSchema.backupTables, clears hc_sync_token"],
+      body: "Empties every table this tool owns and refills it from the backup, in one transaction. A snapshot restore, not a merge — merging could never remove rows deleted after the backup was taken. Columns are matched by name, so an older export still restores with its missing columns at their defaults, and a file from a newer schema is rejected before anything is touched. health_daily is not in the backup and is always rebuilt: its day is local midnight of the exporting machine, so a rollup restored in another timezone keys on a midnight the reader never asks for.",
+      writes: ["replaces every table in HealthSchema.backupTables, rebuilds health_daily, clears hc_sync_token"],
       no: "Health Connect is untouched; the export writes straight to its destination file."
     }
   ];

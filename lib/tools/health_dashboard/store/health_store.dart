@@ -747,9 +747,14 @@ class HealthStore {
       // day's winner needs both aggregates and the writer, which no single
       // GROUP BY can express - so the reduction happens here and the winner is
       // chosen in Dart. Rows are bounded by days x writers, not by measurements.
+      //
+      // The trailing 'utc' is what makes the key match [dayKey]: without it
+      // strftime returns the local wall clock read as if it were UTC, which is
+      // only the same instant where the offset is zero. Every reader looks the
+      // day up by [dayKey], so a shifted key is a rollup nothing ever finds.
       final grouped = await db.rawQuery(
-        "SELECT CAST(strftime('%s', $column / 1000, 'unixepoch', "
-        "'localtime', 'start of day') AS INTEGER) * 1000 AS day, "
+        "SELECT CAST(strftime('%s', datetime($column / 1000, 'unixepoch', "
+        "'localtime', 'start of day'), 'utc') AS INTEGER) * 1000 AS day, "
         'app, $_dailyWinnerColumns '
         'FROM $table WHERE metric = ?${_excludeDisabled()} '
         'GROUP BY day, app',
@@ -1736,13 +1741,11 @@ class HealthStore {
     // The restored file brings its own dimension rows, so the interning caches
     // are stale.
     reset();
-    final restored = await _db();
-    // The rollups travel in the backup, so re-deriving them is only needed when
-    // the file predates this schema or carried none.
-    if (info.schemaVersion != HealthSchema.version ||
-        await _countRows(restored, HealthSchema.daily) == 0) {
-      await rebuildDaily();
-    }
+    await _db();
+    // Always: the rollups are keyed by local midnight, so they only ever mean
+    // something on the machine that computed them. An older file may also be
+    // missing columns the reduction now reads.
+    await rebuildDaily();
     return imported;
   }
 
