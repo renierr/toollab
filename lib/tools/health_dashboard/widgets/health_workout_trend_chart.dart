@@ -254,6 +254,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     // One path through every day that has a value, so a metric measured every
     // other day reads as a trend instead of four disconnected dots. Days without
     // a reading simply carry no marker.
+    final shared = _sharedLabelDays();
     final points = <Offset>[];
     for (var index = 0; index < values.length; index++) {
       final value = values[index];
@@ -279,7 +280,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       if (showPrimary &&
           value != null &&
           value > 0 &&
-          (!compact || index.isEven)) {
+          _labelsPrimary(index, shared)) {
         _label(
           canvas,
           _formatValue(value),
@@ -307,10 +308,39 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
         canvas.drawCircle(point, 4, Paint()..color = lineColor);
       }
     }
-    _drawOverlay(canvas, plot);
+    _drawOverlay(canvas, plot, shared);
   }
 
-  void _drawOverlay(Canvas canvas, Rect plot) {
+  /// Days both curves cover. Weight and body fat run within a hair of each other,
+  /// so a label from each on the same day lands on top of the other. Such a day
+  /// carries one label and which series it belongs to alternates; a day only one
+  /// curve reaches keeps its own label either way.
+  List<int> _sharedLabelDays() {
+    final overlay = overlayValues;
+    if (!showPrimary || overlay == null) return const [];
+    return [
+      for (var index = 0; index < values.length; index++)
+        if (index < overlay.length &&
+            values[index] != null &&
+            overlay[index] != null)
+          index,
+    ];
+  }
+
+  bool _labelsPrimary(int index, List<int> shared) {
+    final rank = shared.indexOf(index);
+    if (rank >= 0) return rank.isEven;
+    // Nothing to collide with, so the only thinning left is the narrow layout's.
+    return !compact || index.isEven;
+  }
+
+  bool _labelsOverlay(int index, List<int> shared) {
+    final rank = shared.indexOf(index);
+    if (rank >= 0) return rank.isOdd;
+    return !compact || index.isEven;
+  }
+
+  void _drawOverlay(Canvas canvas, Rect plot, List<int> shared) {
     final values = overlayValues;
     if (values == null || values.whereType<double>().isEmpty) return;
     final min = values.whereType<double>().reduce((a, b) => a < b ? a : b);
@@ -336,7 +366,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       final x = plot.left + plot.width * (index + 0.5) / values.length;
       final y = plot.bottom - (value - lower) / (upper - lower) * plot.height;
       points.add(Offset(x, y));
-      if (!compact || index.isOdd) {
+      if (_labelsOverlay(index, shared)) {
         _label(
           canvas,
           _formatOverlay(value),
@@ -429,6 +459,10 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
       oldDelegate.locale != locale ||
       oldDelegate.gridColor != gridColor ||
       oldDelegate.labelColor != labelColor ||
+      oldDelegate.compact != compact ||
+      // Hiding the primary series changes nothing else about the painter, so
+      // without this the legend's first entry toggles nothing.
+      oldDelegate.showPrimary != showPrimary ||
       oldDelegate.selectedIndex != selectedIndex;
 }
 
