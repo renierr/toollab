@@ -332,18 +332,29 @@ class AppState extends ChangeNotifier {
         throw Exception('Backend server unreachable');
       }
 
+      // One tool that cannot sync - an oversized record, a schema mismatch -
+      // must not cost every other tool its run, so failures are collected and
+      // reported after the rest have had their turn.
+      final failures = <String>[];
       for (final delegate in delegates) {
-        final results = await SyncService.sync(
-          baseUrl: _syncServerUrl,
-          userId: _syncUserId,
-          delegate: delegate,
-          backendAlreadyChecked: true,
-        );
-        pulledTotal += results['pulled'] ?? 0;
-        pushedTotal += results['pushed'] ?? 0;
-        deletedTotal += results['deleted'] ?? 0;
+        try {
+          final results = await SyncService.sync(
+            baseUrl: _syncServerUrl,
+            userId: _syncUserId,
+            delegate: delegate,
+            backendAlreadyChecked: true,
+          );
+          pulledTotal += results['pulled'] ?? 0;
+          pushedTotal += results['pushed'] ?? 0;
+          deletedTotal += results['deleted'] ?? 0;
+        } catch (e) {
+          errorLog('[AppState] Sync failed for ${delegate.toolId}: $e');
+          failures.add('${delegate.toolId}: $e');
+        }
       }
       if (publishTreadmill) await _publishTreadmillSessions();
+
+      if (failures.isNotEmpty) throw Exception(failures.join('; '));
 
       _syncLastSynced = DateTime.now().millisecondsSinceEpoch;
       await _settingsService.setSyncLastSynced(_syncLastSynced);

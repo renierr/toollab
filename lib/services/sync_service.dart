@@ -80,6 +80,21 @@ class SyncService {
     }
   }
 
+  /// The backend answers a rejection with `{success: false, error: …}`, which
+  /// says which limit was hit. Reporting the bare status code instead leaves a
+  /// 413 indistinguishable between "too many records" and "payload too large".
+  static String _serverError(http.Response response) {
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map && body['error'] is String) {
+        return '${response.statusCode} ${body['error']}';
+      }
+    } catch (_) {
+      // Not JSON; the status code is all there is.
+    }
+    return '${response.statusCode}';
+  }
+
   /// Recursively unwraps `{__type: 'blob', data: …}` Maps produced by the
   /// browser-toolkit backend, replacing them with the raw base64 data string.
   /// This ensures all [SyncDelegate]s receive plain data regardless of source.
@@ -153,7 +168,8 @@ class SyncService {
           .timeout(httpTimeout);
       if (metadataResponse.statusCode != 200) {
         throw Exception(
-          'Failed to fetch metadata from server: ${metadataResponse.statusCode}',
+          'Failed to fetch metadata from server: '
+          '${_serverError(metadataResponse)}',
         );
       }
       final Map<String, dynamic> metadataJson = jsonDecode(
@@ -272,7 +288,7 @@ class SyncService {
 
         if (pullResponse.statusCode != 200) {
           throw Exception(
-            'Failed to pull records from server: ${pullResponse.statusCode}',
+            'Failed to pull records from server: ${_serverError(pullResponse)}',
           );
         }
 
@@ -326,7 +342,7 @@ class SyncService {
 
         if (pushResponse.statusCode != 200) {
           throw Exception(
-            'Failed to push records to server: ${pushResponse.statusCode}',
+            'Failed to push records to server: ${_serverError(pushResponse)}',
           );
         }
 

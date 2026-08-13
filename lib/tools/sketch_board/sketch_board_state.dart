@@ -11,6 +11,7 @@ import 'geometry/element_bounds.dart';
 import 'geometry/element_transforms.dart';
 import 'geometry/sketch_export.dart';
 import 'models/drawing_record.dart';
+import 'image_downscale.dart';
 import 'models/sketch_element.dart';
 import 'models/sketch_enums.dart';
 import 'models/sketch_history.dart';
@@ -950,16 +951,24 @@ class SketchBoardState extends ChangeNotifier {
   }
 
   Future<void> addImage(Uint8List bytes, {String mime = 'image/png'}) async {
+    var source = bytes;
+    var sourceMime = mime;
+    final capped = await downscaleSketchImage(bytes, sketchImageEditMaxEdge);
+    if (capped != null) {
+      source = capped;
+      sourceMime = downscaledMime(capped);
+    }
+
     ui.Image img;
     try {
-      final codec = await ui.instantiateImageCodec(bytes);
+      final codec = await ui.instantiateImageCodec(source);
       img = (await codec.getNextFrame()).image;
     } catch (_) {
       return;
     }
     final w0 = img.width.toDouble(), h0 = img.height.toDouble();
     final w = w0, h = h0;
-    final dataUrl = 'data:$mime;base64,${base64Encode(bytes)}';
+    final dataUrl = sketchImageDataUrl(source, sourceMime);
     _imageCache[dataUrl] = img;
 
     final isFirst = _elements.isEmpty;
@@ -1133,7 +1142,7 @@ class SketchBoardState extends ChangeNotifier {
       shortId: shortId,
       name: name,
       viewport: viewportState,
-      elements: _elements,
+      elements: await boundImagesForStorage(_elements),
       thumbnail: thumb,
       meta: meta,
     );
