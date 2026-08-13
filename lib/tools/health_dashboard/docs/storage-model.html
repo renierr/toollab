@@ -921,6 +921,11 @@
           for the disk. Afterwards, re-admitting the writer needs a fresh import. A switched-off
           <em>data type</em> keeps its rows either way: reads filter by metric, not by Health Connect
           type, so that data is still on the dashboard and is not "unused".
+          <br><br>
+          It is local, and offers no remove-everywhere choice, because it only ever touches writers
+          that are globally switched off — and a switched-off writer is not pulled from the backend
+          either. There is no separate pull-exclusion list anywhere: the writer switch is the filter,
+          the same one that already decides what is imported and what is counted.
         </div>
 
         <h3>Why the per-app Health Connect screen cannot be opened</h3>
@@ -1775,8 +1780,8 @@
     {
       n: "Delete", sub: "explicit", title: "Drop a writer's data",
       code: "deleteApp(package, vacuum: true)",
-      body: "The reclaim-the-space action, confirmed in the UI. Removes every row that writer contributed across all types, rebuilds the rollups, clears history_done on the affected types so its history can be read again, and VACUUMs — without which the file keeps its high-water mark.",
-      writes: ["deletes by app, drops that writer's health_chunk rows, rebuilds health_daily, clears health_type.history_done, VACUUM"],
+      body: "The reclaim-the-space action, confirmed in the UI. Removes every row that writer contributed across all types, rebuilds the rollups, clears history_done on the affected types so its history can be read again, and VACUUMs — without which the file keeps its high-water mark. While the tool syncs, the confirm asks which copies are meant: free space on this device drops the writer's health_chunk rows and leaves every other device alone, while remove from every device keeps them as tombstones so the deletion travels. Local is the default, being the reversible one. Neither keeps the data away on its own — a writer that is still switched on is re-imported, and re-pulled; switching it off is what makes a delete stick, and is also what stops the pull.",
+      writes: ["deletes by app, drops or tombstones that writer's health_chunk rows, rebuilds health_daily, clears health_type.history_done, VACUUM"],
       no: "VACUUM rewrites the whole shared app database, not only this tool's tables."
     },
     {

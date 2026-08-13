@@ -60,6 +60,14 @@ class AppState extends ChangeNotifier {
 
   bool isToolSyncEnabled(String toolId) => _toolSyncEnabled[toolId] ?? true;
 
+  /// Whether this tool's data actually reaches a backend right now. Asked by
+  /// destructive actions that mean something different once a server holds a
+  /// copy - deleting locally stops being the whole story.
+  bool syncsTool(String toolId) =>
+      _syncServerUrl.isNotEmpty &&
+      isToolSyncEnabled(toolId) &&
+      syncCapableTools.any((tool) => tool.id == toolId);
+
   bool _syncEnabled = false;
   bool _systemNotificationsEnabled = true;
   bool _lowLatencyAudio = true;

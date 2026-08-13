@@ -12065,6 +12065,30 @@ abstract class AppLocalizations {
   /// **'Delete every row this app contributed and shrink the database. Switching the app off instead keeps its data and costs nothing to undo.'**
   String get healthDashboardAppDeleteDataConfirm;
 
+  /// No description provided for @healthDashboardAppDeleteHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Free up space on this device'**
+  String get healthDashboardAppDeleteHere;
+
+  /// No description provided for @healthDashboardAppDeleteHereHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes the rows here only. Other devices keep their copy, and this one gets it back on the next sync unless the app is switched off.'**
+  String get healthDashboardAppDeleteHereHint;
+
+  /// No description provided for @healthDashboardAppDeleteEverywhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from every device'**
+  String get healthDashboardAppDeleteEverywhere;
+
+  /// No description provided for @healthDashboardAppDeleteEverywhereHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Says the data is wrong and deletes the server copy too, so every device drops it. This cannot be undone.'**
+  String get healthDashboardAppDeleteEverywhereHint;
+
   /// No description provided for @healthDashboardAutoSync.
   ///
   /// In en, this message translates to:

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/settings_section_label.dart';
 
+import '../config.dart';
 import '../health_dashboard_state.dart';
 import '../health_source_apps.dart';
 import '../store/health_store.dart';
 import 'health_busy_dialog.dart';
+import 'health_delete_app_dialog.dart';
 
 /// Every app that has written data, across all types.
 ///
@@ -195,30 +197,18 @@ class _HealthAppTile extends StatelessWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, String label) async {
-    final l10n = AppLocalizations.of(context);
     final state = context.read<HealthDashboardState>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => ResponsiveAlertDialog(
-        title: Text(label),
-        content: Text(l10n.healthDashboardAppDeleteDataConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.commonCancel),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentRed,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.commonDelete),
-          ),
-        ],
+    final scope = await HealthDeleteAppDialog.show(
+      context,
+      label: label,
+      canChooseScope: context.read<AppState>().syncsTool(
+        HealthDashboardTool.config.id,
       ),
     );
-    if (confirmed != true) return;
-    await state.deleteAppData(app.package);
+    if (scope == null) return;
+    await state.deleteAppData(
+      app.package,
+      everywhere: scope == HealthDeleteScope.everywhere,
+    );
   }
 }

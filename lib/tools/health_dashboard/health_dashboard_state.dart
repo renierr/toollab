@@ -333,13 +333,19 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   /// Explicitly drops a writer's stored rows and shrinks the database file.
-  Future<void> deleteAppData(String package) async {
+  /// [everywhere] additionally tombstones the writer's chunks, so the deletion
+  /// is carried to the other devices instead of only freeing space here.
+  Future<void> deleteAppData(String package, {bool everywhere = false}) async {
     if (isCollecting) return;
     isCollecting = true;
     collectionStatus = 'Removing $package...';
     notifyListeners();
     try {
-      await HealthStore.instance.deleteApp(package, vacuum: true);
+      await HealthStore.instance.deleteApp(
+        package,
+        vacuum: true,
+        everywhere: everywhere,
+      );
       await loadSelection();
       await loadAppRowCounts();
       await _reloadRecords();

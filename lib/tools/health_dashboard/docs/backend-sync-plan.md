@@ -44,10 +44,10 @@ them, so:
   weight-only-on-the-phone case, and it works by construction.
 - Two devices importing the *same* writer for the same day produce identical
   content. Last-writer-wins is a no-op rather than a clobber.
-- Deselecting a writer is a per-device display filter, not a data assertion, so
-  it stops the import and filters the view but leaves the chunk alone. Hiding a
-  writer on the tablet must not delete the phone's data. Tombstones are reserved
-  for the explicit delete actions.
+- Deselecting a writer is a per-device filter, not a data assertion, so it stops
+  the import, filters the view, stops the pull — and leaves the chunk alone.
+  Hiding a writer on the tablet must not delete the phone's data. Tombstones are
+  reserved for the explicit delete actions.
 
 Keying on the **device** instead would rebuild the failure this store was
 designed to avoid: the same measurement under two device ids, counted twice.
@@ -252,14 +252,28 @@ cleanest way to repair a device whose local state has drifted.
 
 **`deleteApp(package)` — "reclaim the space this writer costs".** Deletes by
 interned `app` id, which also catches that writer's rows pulled from other
-devices. Two intents hide behind one button and the UI has to separate them:
-*free space here* is local-only, must not touch the chunk's `updated_at`, and
-must add the writer to a local pull-exclusion list or the next sync drags it
-straight back; *this data is wrong, remove it everywhere* is a real tombstone and
-is the one case where a chunk is allowed to shrink.
+devices. Two intents hide behind one button, so the confirm dialog asks which:
 
-**`pruneUnused()`** has the same shape, scoped to globally switched-off writers,
-and takes the same answer.
+- *Free space on this device* drops the rows and the writer's manifest rows.
+  Nothing is tombstoned, so another device's copy is untouched. The default,
+  because it is the reversible one.
+- *Remove from every device* keeps the chunks and marks them `deleted`, so the
+  deletion travels. The one case where a chunk is allowed to shrink.
+
+The choice is only offered while the tool actually syncs — server configured, a
+delegate registered, the per-tool switch on. Without a backend there is one copy
+and nothing to decide.
+
+**No pull-exclusion list.** The plan originally wanted one, so a local delete
+would not be undone by the next pull. It is unnecessary: the delegate pulls only
+writers that are globally switched on, which is already what the writer switch
+means everywhere else — off is neither imported nor counted. So a local delete
+sticks exactly when the writer is switched off, and comes back when it is not,
+which is the same rule that already governs re-importing from Health Connect. One
+concept instead of two.
+
+**`pruneUnused()`** is local-only and needs no choice at all: it touches nothing
+but globally switched-off writers, and those are not pulled.
 
 `VACUUM` is orthogonal — it rewrites the file so freed pages return to the
 filesystem. It carries no sync meaning and needs no handling here.
@@ -341,10 +355,13 @@ involvement, which is the point — the new device never held that history.
    Done — the migration also rebuilds the manifest from existing rows, and a
    backup restore derives both, since a snapshot cannot know what a device has
    shipped.
-4. Decide the `deleteApp` / `pruneUnused` intent split in the UI before anything
-   can push. Cheap now, expensive after the delegate ships.
+4. ~~Decide the `deleteApp` / `pruneUnused` intent split in the UI.~~ Done — the
+   confirm dialog offers the scope while the tool syncs, `everywhere` tombstones
+   the writer's chunks, and the writer switch doubles as the pull filter, so no
+   exclusion list exists.
 5. `HealthSyncDelegate` with plain JSON payloads, including a real cursor
-   implementation. Correctness first.
+   implementation, and skipping chunks whose writer is switched off. Correctness
+   first.
 6. Swap point and interval payloads to packed blobs once step 5 is proven.
 7. Register `syncDelegateFactory` in `config.dart`, drop the comment explaining
    its absence, and fold the storage consequences into `storage-model.html`.

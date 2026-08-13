@@ -1278,7 +1278,22 @@ class HealthStore {
   /// The affected types lose their `history_done` flag so a later import can
   /// read the writer's history again if the user changes their mind. Without
   /// that the importer skips a finished type and the years never come back.
-  Future<void> deleteApp(String package, {bool vacuum = false}) async {
+  ///
+  /// [everywhere] is the difference between the two intents behind one button.
+  /// Off, this is local housekeeping: the manifest simply stops claiming rows
+  /// this device no longer holds, and another device's copy is untouched. On, it
+  /// asserts the data is wrong, and the writer's chunks stay as tombstones so
+  /// the deletion travels. This is the one case where a chunk may shrink.
+  ///
+  /// Local deletion alone does not keep the rows away. A writer that is still
+  /// switched on is re-imported from Health Connect, and once a delegate exists,
+  /// re-pulled from the backend. Switching the writer off is what makes either
+  /// stick, which is why the switch and this action are separate.
+  Future<void> deleteApp(
+    String package, {
+    bool vacuum = false,
+    bool everywhere = false,
+  }) async {
     final db = await _db();
     final appId = _appIds[package];
     if (appId == null) return;
@@ -1304,13 +1319,24 @@ class HealthStore {
         where: 'app = ?',
         whereArgs: [appId],
       );
-      // Local only: the manifest stops claiming rows this device no longer has,
-      // and nothing is tombstoned, so another device's copy is untouched.
-      await txn.delete(
-        HealthSchema.chunk,
-        where: 'app = ?',
-        whereArgs: [appId],
-      );
+      if (everywhere) {
+        await txn.update(
+          HealthSchema.chunk,
+          {
+            'deleted': 1,
+            'dirty': 1,
+            'updated_at': DateTime.now().millisecondsSinceEpoch,
+          },
+          where: 'app = ?',
+          whereArgs: [appId],
+        );
+      } else {
+        await txn.delete(
+          HealthSchema.chunk,
+          where: 'app = ?',
+          whereArgs: [appId],
+        );
+      }
       await txn.rawUpdate(
         'UPDATE ${txn.nameTable(HealthSchema.type)} SET history_done = 0 '
         'WHERE type IN (SELECT type FROM '
@@ -1337,6 +1363,11 @@ class HealthStore {
   /// A switched-off *data type* keeps its rows: reads filter by metric, not by
   /// Health Connect type, so that data is still on the dashboard. Rollups are
   /// rebuilt afterwards, which also drops rollup rows for metrics left empty.
+  ///
+  /// Always local, never a tombstone, and it needs no exclusion list: this only
+  /// ever touches writers that are globally switched off, and a switched-off
+  /// writer is not pulled from the backend either. Reclaiming the space cannot
+  /// therefore be undone by the next sync run, and cannot reach another device.
   Future<HealthPruneResult> pruneUnused() async {
     final db = await _db();
     var rows = 0;

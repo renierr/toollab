@@ -6691,6 +6691,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Delete every row this app contributed and shrink the database. Switching the app off instead keeps its data and costs nothing to undo.';
 
   @override
+  String get healthDashboardAppDeleteHere => 'Free up space on this device';
+
+  @override
+  String get healthDashboardAppDeleteHereHint =>
+      'Removes the rows here only. Other devices keep their copy, and this one gets it back on the next sync unless the app is switched off.';
+
+  @override
+  String get healthDashboardAppDeleteEverywhere => 'Remove from every device';
+
+  @override
+  String get healthDashboardAppDeleteEverywhereHint =>
+      'Says the data is wrong and deletes the server copy too, so every device drops it. This cannot be undone.';
+
+  @override
   String get healthDashboardAutoSync => 'Sync changes on open';
 
   @override

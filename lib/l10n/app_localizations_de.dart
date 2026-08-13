@@ -6733,6 +6733,22 @@ class AppLocalizationsDe extends AppLocalizations {
       'Alle Zeilen dieser App löschen und die Datenbank verkleinern. Die App stattdessen auszuschalten behält die Daten und ist jederzeit umkehrbar.';
 
   @override
+  String get healthDashboardAppDeleteHere =>
+      'Speicher auf diesem Gerät freigeben';
+
+  @override
+  String get healthDashboardAppDeleteHereHint =>
+      'Löscht die Zeilen nur hier. Andere Geräte behalten ihre Kopie, und dieses Gerät holt sie beim nächsten Abgleich zurück, solange die App nicht ausgeschaltet ist.';
+
+  @override
+  String get healthDashboardAppDeleteEverywhere =>
+      'Von allen Geräten entfernen';
+
+  @override
+  String get healthDashboardAppDeleteEverywhereHint =>
+      'Erklärt die Daten für falsch und löscht auch die Kopie auf dem Server, sodass alle Geräte sie verwerfen. Nicht umkehrbar.';
+
+  @override
   String get healthDashboardAutoSync => 'Änderungen beim Öffnen abgleichen';
 
   @override
