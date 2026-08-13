@@ -286,6 +286,23 @@
   "coreSyncEnableTitle": "Enable Synchronization",
   "coreSyncActive": "Syncing active",
   "coreSyncDisabled": "Syncing disabled",
+  "coreSyncStatsTitle": "Server Statistics",
+  "coreSyncStatsSubtitle": "What the backend is storing, per tool",
+  "coreSyncStatsRefresh": "Refresh",
+  "coreSyncStatsItems": "Items",
+  "coreSyncStatsDeleted": "Tombstones",
+  "coreSyncStatsData": "Data",
+  "coreSyncStatsTotalSize": "Total",
+  "coreSyncStatsEmpty": "The server is not storing anything yet.",
+  "coreSyncStatsUnsupported": "This server does not report statistics. Update the backend to a version that provides /api/sync/stats.",
+  "coreSyncStatsBinary": "Binary ({count})",
+  "@coreSyncStatsBinary": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "coreSyncStatsTotals": "{count} tools on the server",
+  "@coreSyncStatsTotals": {
+    "placeholders": { "count": { "type": "int" } }
+  },
   "coreSyncToolsTitle": "Tools to Synchronize",
   "coreSyncToolsSubtitle": "Choose which tools take part. New tools start switched on.",
   "coreSyncToolsDisabledHint": "A switched-off tool stops syncing but keeps its data on the server.",

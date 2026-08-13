@@ -608,6 +608,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coreSyncDisabled => 'Syncing disabled';
 
   @override
+  String get coreSyncStatsTitle => 'Server Statistics';
+
+  @override
+  String get coreSyncStatsSubtitle => 'What the backend is storing, per tool';
+
+  @override
+  String get coreSyncStatsRefresh => 'Refresh';
+
+  @override
+  String get coreSyncStatsItems => 'Items';
+
+  @override
+  String get coreSyncStatsDeleted => 'Tombstones';
+
+  @override
+  String get coreSyncStatsData => 'Data';
+
+  @override
+  String get coreSyncStatsTotalSize => 'Total';
+
+  @override
+  String get coreSyncStatsEmpty => 'The server is not storing anything yet.';
+
+  @override
+  String get coreSyncStatsUnsupported =>
+      'This server does not report statistics. Update the backend to a version that provides /api/sync/stats.';
+
+  @override
+  String coreSyncStatsBinary(int count) {
+    return 'Binary ($count)';
+  }
+
+  @override
+  String coreSyncStatsTotals(int count) {
+    return '$count tools on the server';
+  }
+
+  @override
   String get coreSyncToolsTitle => 'Tools to Synchronize';
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
@@ -374,6 +375,21 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                         ],
                       ],
                     ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Card(
+                  margin: EdgeInsets.zero,
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.analytics_outlined,
+                      color: AppTheme.accentBlue,
+                    ),
+                    title: Text(l10n.coreSyncStatsTitle),
+                    subtitle: Text(l10n.coreSyncStatsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/sync-stats'),
                   ),
                 ),
                 const SizedBox(height: 24),

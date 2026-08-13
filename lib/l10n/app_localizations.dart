@@ -1160,6 +1160,72 @@ abstract class AppLocalizations {
   /// **'Syncing disabled'**
   String get coreSyncDisabled;
 
+  /// No description provided for @coreSyncStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Statistics'**
+  String get coreSyncStatsTitle;
+
+  /// No description provided for @coreSyncStatsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What the backend is storing, per tool'**
+  String get coreSyncStatsSubtitle;
+
+  /// No description provided for @coreSyncStatsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get coreSyncStatsRefresh;
+
+  /// No description provided for @coreSyncStatsItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get coreSyncStatsItems;
+
+  /// No description provided for @coreSyncStatsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Tombstones'**
+  String get coreSyncStatsDeleted;
+
+  /// No description provided for @coreSyncStatsData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get coreSyncStatsData;
+
+  /// No description provided for @coreSyncStatsTotalSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get coreSyncStatsTotalSize;
+
+  /// No description provided for @coreSyncStatsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is not storing anything yet.'**
+  String get coreSyncStatsEmpty;
+
+  /// No description provided for @coreSyncStatsUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This server does not report statistics. Update the backend to a version that provides /api/sync/stats.'**
+  String get coreSyncStatsUnsupported;
+
+  /// No description provided for @coreSyncStatsBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Binary ({count})'**
+  String coreSyncStatsBinary(int count);
+
+  /// No description provided for @coreSyncStatsTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tools on the server'**
+  String coreSyncStatsTotals(int count);
+
   /// No description provided for @coreSyncToolsTitle.
   ///
   /// In en, this message translates to:

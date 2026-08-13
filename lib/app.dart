@@ -15,6 +15,7 @@ import 'package:tool_lab/pages/maintenance_page.dart';
 import 'package:tool_lab/pages/shortcuts_settings_page.dart';
 import 'package:tool_lab/pages/about_page.dart';
 import 'package:tool_lab/pages/appearance_settings_page.dart';
+import 'package:tool_lab/pages/sync_stats_page.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/core/app_route_observer.dart';
@@ -45,6 +46,11 @@ final _router = GoRouter(
       path: '/sync-settings',
       name: 'sync-settings',
       builder: (_, _) => const SyncSettingsPage(),
+    ),
+    GoRoute(
+      path: '/sync-stats',
+      name: 'sync-stats',
+      builder: (_, _) => const SyncStatsPage(),
     ),
     GoRoute(
       path: '/maintenance',

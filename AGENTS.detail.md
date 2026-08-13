@@ -110,6 +110,18 @@ Two behaviours the switch is required to have:
 - **Switching off never purges server data.** The tool stops participating; what is already on the backend stays.
 - **Switching on clears that tool's `sync_cursor_*` settings.** A cursor promises everything before it was already seen, so tombstones written while the tool was off sit behind it and would be missed forever. Dropping the cursor forces one full metadata pass on the next run.
 
+### 1.3.2. Server Statistics (`GET /api/sync/stats`)
+
+The backend reports what it stores per tool namespace — record count, tombstones, `dataBytes`, `binaryRecords`/`binaryBytes`, and `lastUpdatedAt` — plus a `totals` block. `?toolId=` narrows it to one namespace. Blobs are extracted into `sync_binary` on upsert and replaced by a placeholder in `sync_data`, so the two byte figures never double-count.
+
+ToolLab reads it via `SyncService.fetchStats`, which **must stay safe against a backend that does not have the route**:
+
+- A 404 returns `null`, not an exception. A missing feature is not a failure.
+- An older backend has no `/stats` route, so the path falls through to `GET /:toolId` and answers `200 {"success":true,"records":[]}` with `toolId = "stats"`. `fetchStats` therefore also returns `null` when `tools` is absent from a 200 response — the status code alone cannot distinguish the two.
+- Transport errors still throw, since those are actionable by the user.
+
+The page (`lib/pages/sync_stats_page.dart`) renders three distinct states off that: unsupported server, empty server, and error. Server namespaces carry the `-<userId>` suffix, which is stripped before matching a local `ToolModel` for the icon and localized name; an unmatched namespace still renders, keyed by its raw id.
+
 ### 1.4. Unique Record IDs (`shortId`) & Optional User Namespacing
 
 To prevent record duplication and ensure sync stability across multiple platforms (e.g., Flutter and TypeScript):

@@ -49,6 +49,53 @@ mixin DefaultSyncDelegate implements SyncDelegate {
   Future<void> saveSyncCursor(String syncId, String cursor) async {}
 }
 
+/// What the backend stores for one tool namespace. [toolId] is the server-side
+/// namespace, so it carries the `-<userId>` suffix when one is configured.
+class SyncToolStats {
+  final String toolId;
+  final int records;
+  final int deleted;
+  final int dataBytes;
+  final int binaryRecords;
+  final int binaryBytes;
+  final int? lastUpdatedAt;
+
+  const SyncToolStats({
+    required this.toolId,
+    required this.records,
+    required this.deleted,
+    required this.dataBytes,
+    required this.binaryRecords,
+    required this.binaryBytes,
+    this.lastUpdatedAt,
+  });
+
+  int get totalBytes => dataBytes + binaryBytes;
+
+  factory SyncToolStats.fromJson(Map<String, dynamic> json) => SyncToolStats(
+    toolId: json['toolId'] as String? ?? '',
+    records: (json['records'] as num?)?.toInt() ?? 0,
+    deleted: (json['deleted'] as num?)?.toInt() ?? 0,
+    dataBytes: (json['dataBytes'] as num?)?.toInt() ?? 0,
+    binaryRecords: (json['binaryRecords'] as num?)?.toInt() ?? 0,
+    binaryBytes: (json['binaryBytes'] as num?)?.toInt() ?? 0,
+    lastUpdatedAt: (json['lastUpdatedAt'] as num?)?.toInt(),
+  );
+}
+
+class SyncStats {
+  final List<SyncToolStats> tools;
+
+  const SyncStats({required this.tools});
+
+  int get records => tools.fold(0, (sum, t) => sum + t.records);
+  int get deleted => tools.fold(0, (sum, t) => sum + t.deleted);
+  int get dataBytes => tools.fold(0, (sum, t) => sum + t.dataBytes);
+  int get binaryBytes => tools.fold(0, (sum, t) => sum + t.binaryBytes);
+  int get binaryRecords => tools.fold(0, (sum, t) => sum + t.binaryRecords);
+  int get totalBytes => dataBytes + binaryBytes;
+}
+
 class SyncService {
   static const String _logPrefix = '[SyncService]';
   static const _syncBatchSize = 500;
@@ -78,6 +125,37 @@ class SyncService {
       errorLog('$_logPrefix Backend check failed: $e');
       return false;
     }
+  }
+
+  /// Storage figures the backend reports per tool, or null when this server has
+  /// no `/api/sync/stats` route. An older backend answers 404 there, and that is
+  /// a missing feature rather than a failure, so it must not read as an error.
+  /// Transport problems still throw - those the user can act on.
+  static Future<SyncStats?> fetchStats(String baseUrl) async {
+    final sanitizedUrl = baseUrl.endsWith('/')
+        ? baseUrl.substring(0, baseUrl.length - 1)
+        : baseUrl;
+    final client = await _client;
+    final response = await client
+        .get(Uri.parse('$sanitizedUrl/api/sync/stats'))
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 404) return null;
+    if (response.statusCode != 200) {
+      throw Exception('Failed to fetch sync stats: ${_serverError(response)}');
+    }
+
+    final Map<String, dynamic> json = jsonDecode(response.body);
+    // A server that routed /stats onto its /:toolId handler answers 200 with a
+    // record list instead, which is the same "no such route" case.
+    if (json['success'] != true || json['tools'] is! List) return null;
+
+    return SyncStats(
+      tools: (json['tools'] as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .map(SyncToolStats.fromJson)
+          .toList(),
+    );
   }
 
   /// The backend answers a rejection with `{success: false, error: …}`, which
