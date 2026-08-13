@@ -829,7 +829,6 @@ class TreadmillControlState extends ChangeNotifier {
     if (frame.runningStateBits == pitpatStateStarting) {
       workoutStatus = WorkoutStatus.starting;
     } else if (frame.runningStateBits == pitpatStateRunning) {
-      _awaitingSpeedZero = false;
       if (workoutStatus == WorkoutStatus.paused) {
         // Resume from pause: keep accumulated metrics, restart data sampling.
         workoutStatus = WorkoutStatus.running;
@@ -849,6 +848,12 @@ class TreadmillControlState extends ChangeNotifier {
       if (workoutStatus == WorkoutStatus.running ||
           workoutStatus == WorkoutStatus.paused) {
         stopWorkout();
+      } else {
+        // Idle bits on an already-ended session mean the treadmill has settled,
+        // so the coast-down guard can go even if no zero-speed frame ever
+        // arrived - otherwise the next run on the treadmill itself records
+        // nothing.
+        _awaitingSpeedZero = false;
       }
     }
 
