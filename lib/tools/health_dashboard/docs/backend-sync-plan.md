@@ -419,7 +419,9 @@ involvement, which is the point — the new device never held that history.
    marker, and the delegate is registered.
 6. ~~Swap point and interval payloads to packed blobs once step 5 is proven.~~
    Done — `health_chunk_codec.dart`, measured at 4.2x on real data.
-7. Register `syncDelegateFactory` in `config.dart`, drop the comment explaining
-   its absence, and fold the storage consequences into `storage-model.html`.
+7. ~~Register `syncDelegateFactory` in `config.dart`, drop the comment explaining
+   its absence, and fold the storage consequences into `storage-model.html`.~~
+   Done — the delegate is registered, and `storage-model.html` carries the chunk
+   table, the sync settings and the write paths that touch them.
 
 Steps 3 and 5 are the bulk of the work.
