@@ -242,4 +242,8 @@ class HealthMetrics {
   };
 
   static HealthMetricSpec? spec(String key) => byKey[key];
+
+  /// Whether this build knows the metric. A chunk written by a newer build can
+  /// carry one this one has no spec for, and interning it would throw.
+  static bool has(String key) => byKey.containsKey(key);
 }

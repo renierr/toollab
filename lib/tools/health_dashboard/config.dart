@@ -5,6 +5,7 @@ import 'package:tool_lab/theme/theme.dart';
 
 import 'health_dashboard_page.dart';
 import 'health_dashboard_state.dart';
+import 'health_sync_delegate.dart';
 
 class HealthDashboardTool {
   HealthDashboardTool._();
@@ -19,8 +20,7 @@ class HealthDashboardTool {
     sectionId: 'sensors',
     nameL10n: (l10n) => l10n.toolNameHealthDashboard,
     descriptionL10n: (l10n) => l10n.toolDescHealthDashboard,
-    // No syncDelegateFactory: the row-per-record backend sync cannot carry this
-    // tool's volume and is off until the store is reshaped. See README.
+    syncDelegateFactory: () => HealthSyncDelegate(),
     createPage: (_) => const HealthDashboardPage(),
     stateProviders: () => [
       ChangeNotifierProvider<HealthDashboardState>(

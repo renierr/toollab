@@ -265,12 +265,18 @@ delegate registered, the per-tool switch on. Without a backend there is one copy
 and nothing to decide.
 
 **No pull-exclusion list.** The plan originally wanted one, so a local delete
-would not be undone by the next pull. It is unnecessary: the delegate pulls only
-writers that are globally switched on, which is already what the writer switch
+would not be undone by the next pull. It is unnecessary: the delegate declines
+chunks whose writer is switched off here, which is already what the writer switch
 means everywhere else — off is neither imported nor counted. So a local delete
 sticks exactly when the writer is switched off, and comes back when it is not,
 which is the same rule that already governs re-importing from Health Connect. One
 concept instead of two.
+
+A declined chunk still gets a manifest row, marked `skipped` and stamped with the
+server's own `updated_at`. Without it the engine would see no local record and
+re-pull the same chunks on every run; with it the chunk looks settled and is
+never a push candidate, because it is not dirty and its stamp does not exceed the
+server's. Re-admitting the writer deletes those rows, so the history arrives.
 
 **`pruneUnused()`** is local-only and needs no choice at all: it touches nothing
 but globally switched-off writers, and those are not pulled.
@@ -326,6 +332,29 @@ Health dashboard gets a history-depth setting alongside its switch — how many
 years to mirror. Everyone can afford to sync notes; not everyone wants a decade
 of samples.
 
+## What applying a pulled chunk does to the manifest
+
+The merge itself is `INSERT OR IGNORE` through the normal import path, so the
+content primary keys collapse what is already stored and `dedupe_key` catches the
+one table that cannot. What the chunk's own manifest row becomes afterwards is
+the part that decides whether the two devices converge:
+
+- **The chunk was already dirty.** This device holds rows the sender did not, and
+  it was not a push candidate — the server looked newer at metadata time — so
+  nothing else would ever carry them back. It stays dirty and takes a stamp above
+  the server's, and the next run pushes the union.
+- **The chunk was clean.** Everything it held had already been pushed, so the
+  sender's copy is a superset of it and the two sides now agree. It adopts the
+  server's stamp and settles.
+
+Marking a clean chunk dirty instead is the tempting simplification and it does not
+terminate: each device would see the other's stamp as newer, mark its own copy
+dirty, and push it back forever.
+
+The stamp for the dirty case is `max(now, serverUpdatedAt + 1)` rather than `now`,
+because a device whose clock trails the sender's would otherwise write something
+the engine reads as older and re-pull the same chunk on every run.
+
 ## Restore
 
 Falls out of the above: fresh install, pull every chunk, re-intern the
@@ -359,9 +388,10 @@ involvement, which is the point — the new device never held that history.
    confirm dialog offers the scope while the tool syncs, `everywhere` tombstones
    the writer's chunks, and the writer switch doubles as the pull filter, so no
    exclusion list exists.
-5. `HealthSyncDelegate` with plain JSON payloads, including a real cursor
-   implementation, and skipping chunks whose writer is switched off. Correctness
-   first.
+5. ~~`HealthSyncDelegate` with plain JSON payloads, including a real cursor
+   implementation, and skipping chunks whose writer is switched off.~~ Done —
+   schema v4 carries the two indexes reading a chunk needs and the `skipped`
+   marker, and the delegate is registered.
 6. Swap point and interval payloads to packed blobs once step 5 is proven.
 7. Register `syncDelegateFactory` in `config.dart`, drop the comment explaining
    its absence, and fold the storage consequences into `storage-model.html`.

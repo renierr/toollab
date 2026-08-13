@@ -203,6 +203,40 @@ class HealthPruneResult {
   bool get isEmpty => rows == 0 && text == 0;
 }
 
+/// One manifest row: what the backend is owed for a (UTC day, writer) pair.
+///
+/// [id] is the sync record id the engine sees, and carries the writer's package
+/// rather than its interned id - one device's `app = 3` is another's `app = 7`.
+class HealthChunkMeta {
+  final int day;
+  final String package;
+  final int updatedAt;
+  final bool dirty;
+  final bool deleted;
+
+  const HealthChunkMeta({
+    required this.day,
+    required this.package,
+    required this.updatedAt,
+    required this.dirty,
+    required this.deleted,
+  });
+
+  String get id => 'd$day:$package';
+
+  /// Null when [id] is not a chunk id this build wrote, which is what a record
+  /// from a newer schema looks like.
+  static (int day, String package)? parseId(String id) {
+    if (!id.startsWith('d')) return null;
+    final separator = id.indexOf(':');
+    if (separator < 2) return null;
+    final day = int.tryParse(id.substring(1, separator));
+    if (day == null) return null;
+    final package = id.substring(separator + 1);
+    return package.isEmpty ? null : (day, package);
+  }
+}
+
 /// Typed store for the health dashboard. Owns the schema in [HealthSchema], the
 /// dimension interning, the daily rollups and every read the UI performs.
 class HealthStore {
@@ -257,6 +291,7 @@ class HealthStore {
         }
         if (oldVersion < 2) await HealthSchema.migrateToV2(txn);
         if (oldVersion < 3) await HealthSchema.migrateToV3(txn);
+        if (oldVersion < 4) await HealthSchema.migrateToV4(txn);
       },
     );
     _database = database;
@@ -603,11 +638,12 @@ class HealthStore {
       whereArgs: [dedupeKey],
       limit: 1,
     );
-    if (identical.isEmpty && row.origin.isNotEmpty) {
+    final origin = row.origin;
+    if (identical.isEmpty && origin != null && origin.isNotEmpty) {
       identical = await db.query(
         HealthSchema.session,
         where: 'origin = ?',
-        whereArgs: [row.origin],
+        whereArgs: [origin],
         limit: 1,
       );
     }
@@ -1953,6 +1989,381 @@ class HealthStore {
   ) async {
     final rows = await db.rawQuery('PRAGMA $schema.table_info($table)');
     return {for (final row in rows) row['name'] as String};
+  }
+
+  // --- backend sync ---------------------------------------------------------
+
+  /// The whole manifest, including chunks this device declines to carry: the
+  /// engine reads local metadata to decide what to pull, and a declined chunk
+  /// has to look settled or every run would fetch it again. Declined rows are
+  /// never push candidates, because they are never dirty and their stamp is
+  /// exactly the server's.
+  Future<List<HealthChunkMeta>> chunkManifest({bool onlyDirty = false}) async {
+    final db = await _db();
+    final rows = await db.query(
+      HealthSchema.chunk,
+      where: onlyDirty ? 'dirty = 1' : null,
+    );
+    final result = <HealthChunkMeta>[];
+    for (final row in rows) {
+      final package = _appPackages[row['app'] as int];
+      // A manifest row whose writer is gone from the dimension table cannot be
+      // named in a chunk id, so it cannot travel.
+      if (package == null) continue;
+      result.add(
+        HealthChunkMeta(
+          day: row['day'] as int,
+          package: package,
+          updatedAt: row['updated_at'] as int,
+          dirty: (row['dirty'] as int) == 1,
+          deleted: (row['deleted'] as int) == 1,
+        ),
+      );
+    }
+    return result;
+  }
+
+  /// Everything one writer wrote inside one UTC day, read out of the tables
+  /// rather than out of whatever an import produced.
+  ///
+  /// That distinction is the whole correctness argument for the chunk. Rows
+  /// pulled from another device are in here too, so a push is always a superset
+  /// of what the sender knew; serializing an import batch instead would let the
+  /// thinner device overwrite the fuller one on the server.
+  ///
+  /// Carries plain strings, never interned ids - one device's `metric = 3` is
+  /// another's `metric = 7` - and no Health Connect record ids, which name a
+  /// record in the sender's Health Connect and mean nothing in the receiver's.
+  Future<Map<String, dynamic>?> chunkPayload(int day, String package) async {
+    final db = await _db();
+    final appId = _appIds[package];
+    if (appId == null) return null;
+    final from = day * HealthSchema.chunkDayMillis;
+    final to = from + HealthSchema.chunkDayMillis;
+    final metricKeys = {for (final e in _metricIds.entries) e.value: e.key};
+
+    final points = await db.query(
+      HealthSchema.point,
+      columns: ['metric', 't', 'v', 'v2'],
+      where: 'app = ? AND t >= ? AND t < ?',
+      whereArgs: [appId, from, to],
+    );
+    final intervals = await db.query(
+      HealthSchema.interval,
+      columns: ['metric', 't0', 't1', 'v'],
+      where: 'app = ? AND t0 >= ? AND t0 < ?',
+      whereArgs: [appId, from, to],
+    );
+    final sessions = await db.query(
+      HealthSchema.session,
+      where: 'app = ? AND t0 >= ? AND t0 < ?',
+      whereArgs: [appId, from, to],
+    );
+
+    final sessionPayloads = <Map<String, dynamic>>[];
+    for (final row in sessions) {
+      final parts = await db.query(
+        HealthSchema.sessionPart,
+        where: 'session = ?',
+        whereArgs: [row['id'] as int],
+        orderBy: 'seq ASC',
+      );
+      sessionPayloads.add({
+        'kind': row['kind'],
+        't0': row['t0'],
+        't1': row['t1'],
+        'activity': ?_textValues[row['activity'] as int? ?? -1],
+        'title': ?_textValues[row['title'] as int? ?? -1],
+        if (row['notes'] != null) 'notes': row['notes'],
+        if (row['client_id'] != null) 'clientId': row['client_id'],
+        if (row['distance_km'] != null) 'distanceKm': row['distance_km'],
+        if (row['calories'] != null) 'calories': row['calories'],
+        if (row['steps'] != null) 'steps': row['steps'],
+        if (row['avg_hr'] != null) 'avgHr': row['avg_hr'],
+        if (row['max_hr'] != null) 'maxHr': row['max_hr'],
+        if (row['avg_speed'] != null) 'avgSpeed': row['avg_speed'],
+        if (row['max_speed'] != null) 'maxSpeed': row['max_speed'],
+        if (row['asleep_min'] != null) 'asleepMin': row['asleep_min'],
+        if (parts.isNotEmpty)
+          'parts': [
+            for (final part in parts)
+              [
+                part['kind'],
+                _textValues[part['part'] as int? ?? -1],
+                part['t0'],
+                part['t1'],
+                part['v'],
+              ],
+          ],
+      });
+    }
+
+    // Positional rather than keyed: a day of dense samples repeats these field
+    // names tens of thousands of times, and the keys would outweigh the values.
+    return {
+      'day': day,
+      'package': package,
+      'points': [
+        for (final row in points)
+          [metricKeys[row['metric'] as int], row['t'], row['v'], row['v2']],
+      ],
+      'intervals': [
+        for (final row in intervals)
+          [metricKeys[row['metric'] as int], row['t0'], row['t1'], row['v']],
+      ],
+      'sessions': sessionPayloads,
+    };
+  }
+
+  /// Merges a pulled chunk into the tables, through the same write path an
+  /// import uses, so content primary keys collapse what is already here and the
+  /// session dedupe rule catches the one table that cannot.
+  ///
+  /// The manifest afterwards is the subtle part. A chunk that was already dirty
+  /// stays dirty and takes a stamp newer than the server's: this device holds
+  /// rows the sender did not, and nothing else would ever carry them back. A
+  /// chunk that was clean adopts the server's stamp and settles - everything it
+  /// held was already pushed, so the sender's copy is a superset and the two
+  /// sides now agree. Marking a clean chunk dirty instead would have the two
+  /// devices push it to each other forever.
+  Future<void> applyChunk({
+    required int day,
+    required String package,
+    required Map<String, dynamic> data,
+    required int serverUpdatedAt,
+  }) async {
+    final knownApp = _appIds[package];
+    if (knownApp != null && _disabledApps.contains(knownApp)) {
+      await _writeChunkMeta(
+        day: day,
+        appId: knownApp,
+        updatedAt: serverUpdatedAt,
+        dirty: false,
+        skipped: true,
+      );
+      return;
+    }
+
+    final wasDirty = await _isChunkDirty(day, package);
+    final records = _recordsFromChunk(package, data);
+    if (records.isNotEmpty) await writeRecords(records);
+
+    final appId = _appIds[package];
+    if (appId == null) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _writeChunkMeta(
+      day: day,
+      appId: appId,
+      // Not `now` alone: a device whose clock trails the sender's would write a
+      // stamp the engine reads as older, and pull the same chunk every run.
+      updatedAt: wasDirty ? max(now, serverUpdatedAt + 1) : serverUpdatedAt,
+      dirty: wasDirty,
+      skipped: false,
+    );
+  }
+
+  List<HealthMappedRecord> _recordsFromChunk(
+    String package,
+    Map<String, dynamic> data,
+  ) {
+    final points = <HealthPointRow>[];
+    for (final row in data['points'] as List<dynamic>? ?? const []) {
+      final values = row as List<dynamic>;
+      final metric = values[0] as String?;
+      if (metric == null || !HealthMetrics.has(metric)) continue;
+      points.add(
+        HealthPointRow(
+          metric: metric,
+          t: (values[1] as num).toInt(),
+          v: (values[2] as num).toDouble(),
+          v2: (values.length > 3 ? values[3] as num? : null)?.toDouble(),
+        ),
+      );
+    }
+    final intervals = <HealthIntervalRow>[];
+    for (final row in data['intervals'] as List<dynamic>? ?? const []) {
+      final values = row as List<dynamic>;
+      final metric = values[0] as String?;
+      if (metric == null || !HealthMetrics.has(metric)) continue;
+      intervals.add(
+        HealthIntervalRow(
+          metric: metric,
+          t0: (values[1] as num).toInt(),
+          t1: (values[2] as num).toInt(),
+          v: (values[3] as num).toDouble(),
+        ),
+      );
+    }
+
+    final records = <HealthMappedRecord>[];
+    if (points.isNotEmpty || intervals.isNotEmpty) {
+      records.add(
+        HealthMappedRecord(
+          package: package,
+          points: points,
+          intervals: intervals,
+        ),
+      );
+    }
+    for (final row in data['sessions'] as List<dynamic>? ?? const []) {
+      final session = row as Map<String, dynamic>;
+      records.add(
+        HealthMappedRecord(
+          package: package,
+          session: HealthSessionRow(
+            kind: (session['kind'] as num).toInt(),
+            t0: (session['t0'] as num).toInt(),
+            t1: (session['t1'] as num).toInt(),
+            activity: session['activity'] as String?,
+            title: session['title'] as String?,
+            notes: session['notes'] as String?,
+            clientId: session['clientId'] as String?,
+            distanceKm: (session['distanceKm'] as num?)?.toDouble(),
+            calories: (session['calories'] as num?)?.toDouble(),
+            steps: (session['steps'] as num?)?.toInt(),
+            avgHr: (session['avgHr'] as num?)?.toDouble(),
+            maxHr: (session['maxHr'] as num?)?.toDouble(),
+            avgSpeed: (session['avgSpeed'] as num?)?.toDouble(),
+            maxSpeed: (session['maxSpeed'] as num?)?.toDouble(),
+            asleepMin: (session['asleepMin'] as num?)?.toInt(),
+            parts: [
+              for (final part in session['parts'] as List<dynamic>? ?? const [])
+                HealthSessionPartRow(
+                  kind: ((part as List<dynamic>)[0] as num).toInt(),
+                  part: part[1] as String?,
+                  t0: (part[2] as num?)?.toInt(),
+                  t1: (part[3] as num?)?.toInt(),
+                  v: (part[4] as num?)?.toDouble(),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+    return records;
+  }
+
+  /// Clears a chunk's dirty flag once the backend has it. [deleted] means the
+  /// deletion is now the agreed state, whether this device asserted it or
+  /// another one did, so the rows go here too - applying a deletion twice is
+  /// harmless, and skipping it would leave a tombstoned chunk holding data.
+  Future<void> finalizeChunk(int day, String package, bool deleted) async {
+    final appId = _appIds[package];
+    if (appId == null) return;
+    if (!deleted) {
+      final db = await _db();
+      await db.update(
+        HealthSchema.chunk,
+        {'dirty': 0},
+        where: 'day = ? AND app = ?',
+        whereArgs: [day, appId],
+      );
+      return;
+    }
+    await _deleteChunkRows(day, appId);
+    await _writeChunkMeta(
+      day: day,
+      appId: appId,
+      updatedAt: DateTime.now().millisecondsSinceEpoch,
+      dirty: false,
+      deleted: true,
+      skipped: false,
+    );
+  }
+
+  /// Forgets that this device declined a writer's chunks, so re-admitting the
+  /// writer pulls its history back instead of leaving the manifest claiming the
+  /// chunks are settled.
+  Future<void> clearSkippedChunks(String package) async {
+    final appId = _appIds[package];
+    if (appId == null) return;
+    final db = await _db();
+    await db.delete(
+      HealthSchema.chunk,
+      where: 'app = ? AND skipped = 1',
+      whereArgs: [appId],
+    );
+  }
+
+  Future<bool> _isChunkDirty(int day, String package) async {
+    final appId = _appIds[package];
+    if (appId == null) return false;
+    final db = await _db();
+    final rows = await db.query(
+      HealthSchema.chunk,
+      columns: ['dirty'],
+      where: 'day = ? AND app = ?',
+      whereArgs: [day, appId],
+      limit: 1,
+    );
+    return rows.isNotEmpty && (rows.first['dirty'] as int) == 1;
+  }
+
+  Future<void> _writeChunkMeta({
+    required int day,
+    required int appId,
+    required int updatedAt,
+    required bool dirty,
+    required bool skipped,
+    bool deleted = false,
+  }) async {
+    final db = await _db();
+    await db.insert(HealthSchema.chunk, {
+      'day': day,
+      'app': appId,
+      'updated_at': updatedAt,
+      'dirty': dirty ? 1 : 0,
+      'deleted': deleted ? 1 : 0,
+      'skipped': skipped ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> _deleteChunkRows(int day, int appId) async {
+    final db = await _db();
+    final from = day * HealthSchema.chunkDayMillis;
+    final to = from + HealthSchema.chunkDayMillis;
+    final touched = <int, Set<int>>{};
+    for (final row in await db.query(
+      HealthSchema.point,
+      columns: ['metric', 't'],
+      where: 'app = ? AND t >= ? AND t < ?',
+      whereArgs: [appId, from, to],
+    )) {
+      (touched[row['metric'] as int] ??= <int>{}).add(dayKey(row['t'] as int));
+    }
+    for (final row in await db.query(
+      HealthSchema.interval,
+      columns: ['metric', 't0'],
+      where: 'app = ? AND t0 >= ? AND t0 < ?',
+      whereArgs: [appId, from, to],
+    )) {
+      (touched[row['metric'] as int] ??= <int>{}).add(dayKey(row['t0'] as int));
+    }
+    await db.transaction((txn) async {
+      final sessions = txn.nameTable(HealthSchema.session);
+      await txn.rawDelete(
+        'DELETE FROM ${txn.nameTable(HealthSchema.sessionPart)} '
+        'WHERE session IN (SELECT id FROM $sessions '
+        'WHERE app = ? AND t0 >= ? AND t0 < ?)',
+        [appId, from, to],
+      );
+      await txn.delete(
+        HealthSchema.session,
+        where: 'app = ? AND t0 >= ? AND t0 < ?',
+        whereArgs: [appId, from, to],
+      );
+      await txn.delete(
+        HealthSchema.point,
+        where: 'app = ? AND t >= ? AND t < ?',
+        whereArgs: [appId, from, to],
+      );
+      await txn.delete(
+        HealthSchema.interval,
+        where: 'app = ? AND t0 >= ? AND t0 < ?',
+        whereArgs: [appId, from, to],
+      );
+      await _refreshDaily(txn, touched);
+    });
   }
 
   Future<Map<String, int>> rowCounts() async {

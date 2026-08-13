@@ -319,6 +319,10 @@ class HealthDashboardState extends ChangeNotifier {
       await HealthStore.instance.resetTypeHistory(
         healthTypes.map((type) => type.type),
       );
+      // The backend was told nothing while the writer was off - the chunks were
+      // simply declined - so re-admitting it has to forget that decision or the
+      // manifest keeps claiming they are settled and they never arrive.
+      await HealthStore.instance.clearSkippedChunks(package);
     }
     await loadSelection();
     await load(showLoading: false);

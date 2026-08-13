@@ -430,8 +430,10 @@ empty, use the re-import. Full table above in The Health Connect Settings
 Screen.
 
 **When backend sync happens.** Never during an import. The import entries
-contain no backend call at all. Backend push happens on tool open and from the
-manual Sync Now, and the open path returns early while an import holds the tool.
+contain no backend call at all. Sync runs from the app's own Sync Now, through
+`HealthSyncDelegate`, which ships one record per (UTC day, writer) rather than
+per reading. See `docs/backend-sync-plan.md` for the chunk design and
+`storage-model.html` for the tables it rests on.
 
 **Parallel devices.** Phone and tablet may import simultaneously; the imports
 are independent. Avoid syncing both at the same moment - a large sync is
@@ -573,11 +575,11 @@ get documented as they grow.
 
 ## Known Gaps
 
-- `canonicalSyncRecords()` queries every canonical table with no limit and
-  builds a Dart map per row, so a full sync materialises everything before a
-  byte moves. At this data volume it is expected to OOM on a phone. **A full
-  backend sync at full history has never been run.** Paging this is required
-  regardless of anything else.
+- **A full backend sync at full history has never been run.** The chunk design
+  removes the reason the old row-per-record sync could not do it, and payloads
+  are materialised one push batch at a time, but the claim is untested at a
+  decade of data. Packing point and interval payloads into blobs instead of
+  plain JSON is the next step and is what makes the volume reasonable.
 - Priority defaults to the same value for every writer, so the day-winner rule
   falls back to row count until the user orders the app list. Deriving a default
   order from the measured republisher signal - same `start_time`, matching
@@ -586,9 +588,8 @@ get documented as they grow.
   The workout-count and heart-rate-count checks above are the test.
 - `exportHealthConnectComparison()` and the exporter's `exportComparison` have
   no caller and no UI. They served the phone-vs-tablet analysis. Wire or delete.
-- Whether the open-time backend sync should be gated by its own setting. It runs
-  on every tool open whenever cloud sync is enabled, independent of the Health
-  Connect change-sync switch.
+- A history-depth setting: how many years to mirror. Everyone can afford to sync
+  notes; not everyone wants a decade of samples.
 - Whether dense samples should sync to desktop at all. Excluding them means
   desktop gets every chart and aggregate but no intra-workout heart-rate curves,
   and sync stays small.

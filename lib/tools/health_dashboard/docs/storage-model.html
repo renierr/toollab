@@ -1630,7 +1630,7 @@
         ["v2", "REAL", "", "Second half of a paired reading — diastolic only"],
         ["app", "INTEGER", K.FK, "→ health_app.id, first writer to land the row"]
       ],
-      idx: ["(app, metric) — per-writer row counts, deleting a writer's data, provenance filters"]
+      idx: ["(app, metric) — per-writer row counts, deleting a writer's data, provenance filters", "(app, t) — serializing one writer's day into a sync chunk, which the metric-ordered index cannot answer without walking every row that writer ever wrote"]
     },
     {
       name: "health_interval", role: "fact", shape: "interval", rowless: true,
@@ -1644,7 +1644,7 @@
         ["app", "INTEGER", K.FK, "→ health_app.id"],
         ["origin", "TEXT", "", "Health Connect record id, so a deletion can be matched"]
       ],
-      idx: ["(app, metric)"]
+      idx: ["(app, metric)", "(app, t0) — the sync chunk read"]
     },
     {
       name: "health_session", role: "fact", shape: "session",
@@ -1710,7 +1710,8 @@
         ["app", "INTEGER", K.PK + " " + K.FK, "→ health_app.id, the writer"],
         ["updated_at", "INTEGER", "", "When rows were last added for the pair"],
         ["dirty", "INTEGER", "", "1 while the backend has not seen the current contents"],
-        ["deleted", "INTEGER", "", "Tombstone — reserved for an explicit remove-everywhere action"]
+        ["deleted", "INTEGER", "", "Tombstone — written by the explicit remove-everywhere action"],
+        ["skipped", "INTEGER", "", "Seen on the server and deliberately not carried, because the writer is switched off here. Keeps the chunk from being re-pulled every run; cleared when the writer is switched back on"]
       ]
     },
     {

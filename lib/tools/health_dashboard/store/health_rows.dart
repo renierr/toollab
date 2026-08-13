@@ -62,7 +62,10 @@ class HealthSessionRow {
   final String? notes;
   final int t0;
   final int t1;
-  final String origin;
+
+  /// Health Connect record id. Null for a session rebuilt from a sync chunk:
+  /// the sender's id names a record in the sender's Health Connect, not ours.
+  final String? origin;
   final String? clientId;
   final double? distanceKm;
   final double? calories;
@@ -78,7 +81,7 @@ class HealthSessionRow {
     required this.kind,
     required this.t0,
     required this.t1,
-    required this.origin,
+    this.origin,
     this.activity,
     this.title,
     this.notes,

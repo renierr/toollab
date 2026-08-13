@@ -23,8 +23,9 @@ class HealthSchema {
   /// dropped outright rather than migrated - see
   /// `HealthStore._dropPreTypedSchema`. Version 2 adds the global per-app switch
   /// and priority. Version 3 adds device-independent session identity and the
-  /// backend sync manifest.
-  static const version = 3;
+  /// backend sync manifest. Version 4 adds what reading a chunk out of the dense
+  /// tables needs, and the marker for a chunk this device declines to carry.
+  static const version = 4;
 
   static const metric = 'health_metric';
   static const app = 'health_app';
@@ -209,6 +210,7 @@ class HealthSchema {
     ''');
     await _createChunk(db);
     await _createSessionIndexes(db);
+    await _createChunkReadIndexes(db);
     // Deleting every row a deselected writer contributed, and provenance
     // filters on charts, both start from the app.
     await db.execute(
@@ -285,9 +287,24 @@ class HealthSchema {
         updated_at INTEGER NOT NULL,
         dirty      INTEGER NOT NULL DEFAULT 1,
         deleted    INTEGER NOT NULL DEFAULT 0,
+        skipped    INTEGER NOT NULL DEFAULT 0,
         PRIMARY KEY (day, app)
       ) WITHOUT ROWID
     ''');
+  }
+
+  /// Serializing a chunk asks for one writer's rows inside one UTC day. The
+  /// existing `(app, metric)` indexes cannot answer that without walking every
+  /// row that writer ever wrote, which is the dense table in full.
+  static Future<void> _createChunkReadIndexes(ToolDatabaseExecutor db) async {
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS ${db.nameTable('idx_health_point_app_t')} '
+      'ON ${db.nameTable(point)} (app, t)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS ${db.nameTable('idx_health_interval_app_t')} '
+      'ON ${db.nameTable(interval)} (app, t0)',
+    );
   }
 
   /// Adds the global per-app switch and priority to an existing v1 store.
@@ -338,6 +355,26 @@ class HealthSchema {
     await _createSessionIndexes(db);
 
     await rebuildChunkManifest(db);
+  }
+
+  /// What serializing and declining a chunk need. `skipped` marks a chunk this
+  /// device has seen on the server and deliberately does not carry, because its
+  /// writer is switched off here - without it every run would re-pull the same
+  /// chunks and throw them away again.
+  static Future<void> migrateToV4(ToolDatabaseExecutor db) async {
+    // A store coming from v2 gets the current chunk table out of migrateToV3
+    // and already has the column; one coming from v3 does not.
+    final columns = await db.rawQuery(
+      'PRAGMA table_info(${db.nameTable(chunk)})',
+    );
+    final hasSkipped = columns.any((row) => row['name'] == 'skipped');
+    if (!hasSkipped) {
+      await db.execute(
+        'ALTER TABLE ${db.nameTable(chunk)} '
+        'ADD COLUMN skipped INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+    await _createChunkReadIndexes(db);
   }
 
   /// Fills [dedupeKey] for every session that has none, and drops the rows that
