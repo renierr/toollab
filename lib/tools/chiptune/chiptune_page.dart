@@ -1068,6 +1068,12 @@ class _ChiptunePageState extends State<ChiptunePage>
   Future<void> _runSync({bool showFeedback = true}) async {
     final appState = context.read<AppState>();
     if (!appState.syncEnabled || appState.syncServerUrl.isEmpty) return;
+    if (!appState.isToolSyncEnabled(ChiptuneTool.config.id)) {
+      if (showFeedback) {
+        _showSnack(AppLocalizations.of(context).coreSyncToolDisabled);
+      }
+      return;
+    }
     setState(() => _syncing = true);
     try {
       final result = await appState.syncWithBackend([ChiptuneSyncDelegate()]);

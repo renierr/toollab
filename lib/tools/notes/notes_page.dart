@@ -48,7 +48,9 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notesState.loadNotes();
 
-      if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty) {
+      if (appState.syncEnabled &&
+          appState.syncServerUrl.isNotEmpty &&
+          appState.isToolSyncEnabled(NotesTool.config.id)) {
         appState
             .syncWithBackend([NotesSyncDelegate()])
             .then((_) {

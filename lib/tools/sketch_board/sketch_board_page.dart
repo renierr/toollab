@@ -62,7 +62,9 @@ class _SketchBoardPageState extends State<SketchBoardPage>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final appState = context.read<AppState>();
-      if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty) {
+      if (appState.syncEnabled &&
+          appState.syncServerUrl.isNotEmpty &&
+          appState.isToolSyncEnabled(SketchBoardTool.config.id)) {
         appState
             .syncWithBackend([SketchBoardSyncDelegate()])
             .then((_) {
@@ -456,6 +458,10 @@ class _SketchBoardPageState extends State<SketchBoardPage>
     final appState = context.read<AppState>();
     if (appState.syncServerUrl.isEmpty) {
       _toast(l10n.notesSyncConfigureServerUrl);
+      return;
+    }
+    if (!appState.isToolSyncEnabled(SketchBoardTool.config.id)) {
+      _toast(l10n.coreSyncToolDisabled);
       return;
     }
     try {

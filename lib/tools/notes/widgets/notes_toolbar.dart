@@ -11,6 +11,7 @@ import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/tools/notes/notes_state.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/tools/notes/config.dart';
 import 'package:tool_lab/tools/notes/notes_sync_delegate.dart';
 import 'package:tool_lab/tools/notes/notes_db_helper.dart';
 
@@ -194,6 +195,12 @@ class _NotesToolbarState extends State<NotesToolbar> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.notesSyncConfigureServerUrl)));
+      return;
+    }
+    if (!appState.isToolSyncEnabled(NotesTool.config.id)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coreSyncToolDisabled)));
       return;
     }
 

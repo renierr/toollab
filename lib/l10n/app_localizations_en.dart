@@ -608,6 +608,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coreSyncDisabled => 'Syncing disabled';
 
   @override
+  String get coreSyncToolsTitle => 'Tools to Synchronize';
+
+  @override
+  String get coreSyncToolsSubtitle =>
+      'Choose which tools take part. New tools start switched on.';
+
+  @override
+  String get coreSyncToolsDisabledHint =>
+      'A switched-off tool stops syncing but keeps its data on the server.';
+
+  @override
+  String get coreSyncToolDisabled =>
+      'Sync is switched off for this tool in the sync settings.';
+
+  @override
   String get coreSyncServerCredentials => 'Server Credentials';
 
   @override

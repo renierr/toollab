@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/treadmill_control/treadmill_health_connect_publisher.dart';
@@ -10,6 +12,9 @@ import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 
 class AppState extends ChangeNotifier {
+  /// Per-tool setting key prefix a [SyncDelegate] stores its cursor under.
+  static const String _syncCursorPrefix = 'sync_cursor_';
+
   final SettingsService _settingsService;
 
   AppState(this._settingsService) {
@@ -28,6 +33,7 @@ class AppState extends ChangeNotifier {
     _loadRecentTimestamps();
     _loadPinnedShortcuts();
     _loadDrawerIcons();
+    _loadToolSyncEnabled();
     for (final tool in ToolRegistry.all) {
       final factory = tool.syncDelegateFactory;
       if (factory != null) registerSyncDelegate(factory());
@@ -43,9 +49,16 @@ class AppState extends ChangeNotifier {
   Map<String, int> _recentTimestamps = {};
   Map<String, bool> _pinnedShortcuts = {};
   Map<String, bool> _drawerIcons = {};
+  Map<String, bool> _toolSyncEnabled = {};
 
   Map<String, bool> get pinnedShortcuts => _pinnedShortcuts;
   Map<String, bool> get drawerIcons => _drawerIcons;
+
+  /// Tools that ship a [SyncDelegate], in registry order.
+  List<ToolModel> get syncCapableTools =>
+      ToolRegistry.all.where((t) => t.syncDelegateFactory != null).toList();
+
+  bool isToolSyncEnabled(String toolId) => _toolSyncEnabled[toolId] ?? true;
 
   bool _syncEnabled = false;
   bool _systemNotificationsEnabled = true;
@@ -125,6 +138,44 @@ class AppState extends ChangeNotifier {
       );
       _pinnedShortcuts[toolId] = true;
       notifyListeners();
+    }
+  }
+
+  /// A tool with no stored value counts as enabled, so tools that already synced
+  /// before this switch existed keep syncing after the upgrade.
+  Future<void> _loadToolSyncEnabled() async {
+    final Map<String, bool> result = {};
+    for (final tool in syncCapableTools) {
+      final value = await DatabaseService.instance.getSetting(
+        tool.id,
+        'sync_enabled',
+      );
+      result[tool.id] = value != 'false';
+    }
+    _toolSyncEnabled = result;
+    notifyListeners();
+  }
+
+  Future<void> setToolSyncEnabled(String toolId, bool value) async {
+    await DatabaseService.instance.setSetting(
+      toolId,
+      'sync_enabled',
+      value ? 'true' : 'false',
+    );
+    _toolSyncEnabled[toolId] = value;
+    if (value) await _clearSyncCursors(toolId);
+    notifyListeners();
+  }
+
+  /// A cursor promises everything before it was already seen. Tombstones written
+  /// while a tool was switched off sit behind it, so re-enabling has to drop the
+  /// cursor and let the next run re-read full metadata once.
+  Future<void> _clearSyncCursors(String toolId) async {
+    final settings = await DatabaseService.instance.getAllSettings(toolId);
+    for (final key in settings.keys) {
+      if (key.startsWith(_syncCursorPrefix)) {
+        await DatabaseService.instance.deleteSetting(toolId, key);
+      }
     }
   }
 
@@ -233,11 +284,40 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Handing finished treadmill sessions to Health Connect is device-local and
+  /// has nothing to do with the backend, so it runs whether or not the treadmill
+  /// tool takes part in sync, and its failure never fails the sync result. It
+  /// stays ordered after the sync so sessions just pulled from the backend are
+  /// published too.
+  Future<void> _publishTreadmillSessions() async {
+    try {
+      // Manual sync: never throttled away.
+      await TreadmillHealthConnectPublisher.instance.publishPendingSessions(
+        force: true,
+      );
+    } catch (e) {
+      errorLog('[AppState] Treadmill Health Connect publish failed: $e');
+    }
+  }
+
+  /// Central gate for the per-tool switch: every sync path in the app funnels
+  /// through here, including the tools that pass their own delegate instance,
+  /// so a disabled tool can never reach the backend by any route. The treadmill
+  /// Health Connect publisher is deliberately outside that gate.
   Future<Map<String, int>?> syncWithBackend(
-    List<SyncDelegate> delegates,
+    List<SyncDelegate> requested,
   ) async {
     if (_isSyncing) return null;
-    if (_syncServerUrl.isEmpty) return null;
+
+    final publishTreadmill = requested.any((d) => d is TreadmillSyncDelegate);
+    final delegates = _syncServerUrl.isEmpty
+        ? const <SyncDelegate>[]
+        : requested.where((d) => isToolSyncEnabled(d.toolId)).toList();
+
+    if (delegates.isEmpty) {
+      if (publishTreadmill) await _publishTreadmillSessions();
+      return null;
+    }
 
     _isSyncing = true;
     notifyListeners();
@@ -263,12 +343,7 @@ class AppState extends ChangeNotifier {
         pushedTotal += results['pushed'] ?? 0;
         deletedTotal += results['deleted'] ?? 0;
       }
-      if (delegates.any((delegate) => delegate is TreadmillSyncDelegate)) {
-        // Manual sync: never throttled away.
-        await TreadmillHealthConnectPublisher.instance.publishPendingSessions(
-          force: true,
-        );
-      }
+      if (publishTreadmill) await _publishTreadmillSessions();
 
       _syncLastSynced = DateTime.now().millisecondsSinceEpoch;
       await _settingsService.setSyncLastSynced(_syncLastSynced);
@@ -312,6 +387,7 @@ class AppState extends ChangeNotifier {
     await _loadRecentTimestamps();
     await _loadPinnedShortcuts();
     await _loadDrawerIcons();
+    await _loadToolSyncEnabled();
     notifyListeners();
   }
 }

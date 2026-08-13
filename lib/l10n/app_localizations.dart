@@ -1160,6 +1160,30 @@ abstract class AppLocalizations {
   /// **'Syncing disabled'**
   String get coreSyncDisabled;
 
+  /// No description provided for @coreSyncToolsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools to Synchronize'**
+  String get coreSyncToolsTitle;
+
+  /// No description provided for @coreSyncToolsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which tools take part. New tools start switched on.'**
+  String get coreSyncToolsSubtitle;
+
+  /// No description provided for @coreSyncToolsDisabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A switched-off tool stops syncing but keeps its data on the server.'**
+  String get coreSyncToolsDisabledHint;
+
+  /// No description provided for @coreSyncToolDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync is switched off for this tool in the sync settings.'**
+  String get coreSyncToolDisabled;
+
   /// No description provided for @coreSyncServerCredentials.
   ///
   /// In en, this message translates to:

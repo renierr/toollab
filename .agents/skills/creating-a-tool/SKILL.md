@@ -198,7 +198,15 @@ To enable automatic, bidirectional cloud sync with the backend server for a tool
    - `getLocalRecordData(id)`: Return the full details of a specific record to push.
    - `savePulledRecord(...)`: Save or update a pulled record from the server.
    - `finalizeLocalSync(...)`: Mark the record as successfully synchronized.
-2. Register the delegate with `SyncService` during application initialization.
+2. Register it via `syncDelegateFactory: MyToolSyncDelegate.new` in the tool's `config.dart`. `AppState` collects it from `ToolRegistry.all` automatically — there is no manual registration step, and the global "Sync Now" button picks the tool up from there.
+
+#### Per-Tool Sync Switch
+Declaring `syncDelegateFactory` also makes the tool appear in the per-tool switch list on the sync settings page (`lib/widgets/tool_sync_switches.dart`), driven off the registry — nothing to add there.
+
+- The switch is stored as a per-tool setting, `DatabaseService.setSetting(<tool id>, 'sync_enabled', ...)`, and **defaults to on**: a missing value reads as enabled, so a tool never loses sync on upgrade. Do not write a default at startup — the absence is the default.
+- **Never call `SyncService.sync` directly.** Go through `AppState.syncWithBackend`, which filters disabled tools out before touching the network. That is the only gate, and it also covers tools that pass their own delegate instance.
+- If the tool has its own sync button or an auto-sync-on-open, check `appState.isToolSyncEnabled(MyTool.config.id)` at the call site too — otherwise `syncWithBackend` returns `null` and the page reports "configure your server URL" when the real reason is the switch. Use the `coreSyncToolDisabled` string for the message.
+- Device-local side effects must sit **outside** the gate. The treadmill Health Connect publisher is the reference case: it runs whether or not the treadmill tool takes part in backend sync, because writing a finished workout to Health Connect has nothing to do with the backend.
 
 ---
 

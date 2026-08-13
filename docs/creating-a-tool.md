@@ -296,7 +296,36 @@ This applies everywhere: pages, sync delegates, DB helpers, archive classes, and
 
 ---
 
-## 8. Android Multi-Process Isolation (Running in Parallel)
+## 8. Sync-Capable Tools & the Per-Tool Switch
+
+Declaring a `syncDelegateFactory` in `config.dart` does two things: it registers the delegate with the global "Sync Now" button, and it makes the tool appear in the per-tool switch list on the sync settings page. Both are automatic — there is nothing to register by hand, and no edit to `tool_sync_switches.dart` or `sync_settings_page.dart`.
+
+**The switch defaults to on.** A tool with no stored value counts as enabled, so a newly sync-capable tool participates immediately and an existing one is never silently switched off by an upgrade.
+
+**Never call `SyncService.sync` directly.** Always go through `AppState.syncWithBackend`, which filters out disabled tools before touching the network. This is the only gate, and it covers the tools that pass their own delegate instance too.
+
+If the tool has its own sync button or an auto-sync-on-open, respect the switch at the call site as well, so the user gets an honest message instead of a silent no-op:
+
+```dart
+// auto-sync on open — skip quietly
+if (appState.syncEnabled &&
+    appState.syncServerUrl.isNotEmpty &&
+    appState.isToolSyncEnabled(MyNewTool.config.id)) {
+  appState.syncWithBackend([MyNewToolSyncDelegate()]);
+}
+
+// manual button — say why nothing happened
+if (!appState.isToolSyncEnabled(MyNewTool.config.id)) {
+  _toast(l10n.coreSyncToolDisabled);
+  return;
+}
+```
+
+Without the call-site check, `syncWithBackend` returns `null`, which existing pages report as "configure your server URL" — misleading when the real reason is the switch.
+
+---
+
+## 9. Android Multi-Process Isolation (Running in Parallel)
 
 To allow a tool (such as `calculator` or `pdf-viewer`) to run in parallel with the main app or other tools on Android (e.g. in native split-screen or multi-window mode) without FFI crashes (`rhttp`/`flutter_rust_bridge`) or SQLite database locks, configure it to run in a separate process:
 

@@ -50,7 +50,9 @@ class _SignaturesPageState extends State<SignaturesPage>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final appState = context.read<AppState>();
-      if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty) {
+      if (appState.syncEnabled &&
+          appState.syncServerUrl.isNotEmpty &&
+          appState.isToolSyncEnabled(SignaturesTool.config.id)) {
         appState
             .syncWithBackend([SignaturesSyncDelegate()])
             .then((_) {
@@ -152,6 +154,10 @@ class _SignaturesPageState extends State<SignaturesPage>
     final appState = context.read<AppState>();
     if (appState.syncServerUrl.isEmpty) {
       _toast(l10n.notesSyncConfigureServerUrl);
+      return;
+    }
+    if (!appState.isToolSyncEnabled(SignaturesTool.config.id)) {
+      _toast(l10n.coreSyncToolDisabled);
       return;
     }
 

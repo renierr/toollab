@@ -5,6 +5,7 @@ import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/tool_sync_switches.dart';
 
 class SyncSettingsPage extends StatefulWidget {
   const SyncSettingsPage({super.key});
@@ -261,6 +262,16 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                         ),
                       ),
                     ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                AnimatedOpacity(
+                  opacity: enabled ? 1.0 : 0.5,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: !enabled,
+                    child: const ToolSyncSwitches(),
                   ),
                 ),
                 const SizedBox(height: 16),

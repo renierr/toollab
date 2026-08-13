@@ -40,7 +40,9 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       listState.loadItems();
 
-      if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty) {
+      if (appState.syncEnabled &&
+          appState.syncServerUrl.isNotEmpty &&
+          appState.isToolSyncEnabled(GroceryListTool.config.id)) {
         appState
             .syncWithBackend([GroceryListSyncDelegate()])
             .then((_) {
@@ -263,6 +265,13 @@ class _GroceryListPageState extends State<GroceryListPage> with DisposeCleanup {
     final appState = context.read<AppState>();
     final listState = context.read<GroceryListState>();
     final l10n = AppLocalizations.of(context);
+
+    if (!appState.isToolSyncEnabled(GroceryListTool.config.id)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coreSyncToolDisabled)));
+      return;
+    }
 
     try {
       final results = await appState.syncWithBackend([

@@ -614,6 +614,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get coreSyncDisabled => 'Synchronisierung deaktiviert';
 
   @override
+  String get coreSyncToolsTitle => 'Zu synchronisierende Tools';
+
+  @override
+  String get coreSyncToolsSubtitle =>
+      'Wähle aus, welche Tools teilnehmen. Neue Tools sind aktiviert.';
+
+  @override
+  String get coreSyncToolsDisabledHint =>
+      'Ein deaktiviertes Tool synchronisiert nicht mehr, behält seine Daten auf dem Server aber.';
+
+  @override
+  String get coreSyncToolDisabled =>
+      'Die Synchronisierung ist für dieses Tool in den Sync-Einstellungen deaktiviert.';
+
+  @override
   String get coreSyncServerCredentials => 'Server-Zugangsdaten';
 
   @override

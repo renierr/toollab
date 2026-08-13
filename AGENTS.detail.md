@@ -92,6 +92,24 @@ Global sync settings are persisted via `SettingsService` (backed by `SharedPrefe
 - `sync_user_id`: string (unique identifier or user namespace suffix)
 - `sync_last_synced`: int (timestamp of the last successful sync operation)
 
+The global switch is the master: off means no tool syncs, and it owns the server URL and user id.
+
+### 1.3.1. Per-Tool Sync Switch
+
+Each sync-capable tool additionally carries its own switch, so enabling sync globally does not force a heavyweight tool on for someone who only wanted a light one mirrored.
+
+- **Storage**: a per-tool setting, `DatabaseService.setSetting(<tool id>, 'sync_enabled', 'true'|'false')` — the same pattern as `pinned_shortcut` and `drawer_icon`. No new table.
+- **Default is on.** A tool with no stored value reads as enabled (`isToolSyncEnabled` returns `true` for a missing key), so a tool that synced before the switch existed keeps syncing after an upgrade. Never write a default value at startup to "fix" this — the absence *is* the default.
+- **`AppState` API**: `syncCapableTools` (registry-derived, `syncDelegateFactory != null`), `isToolSyncEnabled(toolId)`, `setToolSyncEnabled(toolId, value)`.
+- **UI**: `lib/widgets/tool_sync_switches.dart`, rendered by `sync_settings_page.dart` under the same enabled-gate as the credentials card. It iterates `syncCapableTools`, so a new tool that declares a `syncDelegateFactory` appears with no edit to the widget or the page.
+
+**The gate lives in `AppState.syncWithBackend`**, which filters its argument list down to enabled tools before doing anything, and returns `null` if nothing survives. Every sync path funnels through that method — including the tools that pass their own delegate instance rather than the registered one — so a disabled tool cannot reach the backend by any route. Do not add a second gate elsewhere and do not bypass `syncWithBackend`.
+
+Two behaviours the switch is required to have:
+
+- **Switching off never purges server data.** The tool stops participating; what is already on the backend stays.
+- **Switching on clears that tool's `sync_cursor_*` settings.** A cursor promises everything before it was already seen, so tombstones written while the tool was off sit behind it and would be missed forever. Dropping the cursor forces one full metadata pass on the next run.
+
 ### 1.4. Unique Record IDs (`shortId`) & Optional User Namespacing
 
 To prevent record duplication and ensure sync stability across multiple platforms (e.g., Flutter and TypeScript):
