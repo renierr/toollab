@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/app_route_observer.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
+import 'config.dart';
 import 'health_dashboard_state.dart';
 import 'widgets/health_dashboard_content.dart';
 import 'widgets/health_dashboard_settings_page.dart';
@@ -42,6 +44,22 @@ class _HealthDashboardPageState extends State<HealthDashboardPage>
     context.read<HealthDashboardState>().reloadStoredData();
   }
 
+  /// Health Connect and the backend in one action. The backend step is handed
+  /// in as a closure so the tool's state never reaches for [AppState] - and it
+  /// is left out entirely when this tool has no delegate registered, which is
+  /// also what the global switch being off looks like from here.
+  Future<void> _refresh() {
+    final appState = context.read<AppState>();
+    final delegates = appState.syncDelegates
+        .where((delegate) => delegate.toolId == HealthDashboardTool.config.id)
+        .toList();
+    return context.read<HealthDashboardState>().refresh(
+      backendSync: delegates.isEmpty
+          ? null
+          : () => appState.syncWithBackend(delegates),
+    );
+  }
+
   void _openSettings() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -59,9 +77,7 @@ class _HealthDashboardPageState extends State<HealthDashboardPage>
       actions: [
         IconButton(
           tooltip: l10n.healthDashboardRefresh,
-          onPressed: state.isCollecting
-              ? null
-              : () => context.read<HealthDashboardState>().refresh(),
+          onPressed: state.isCollecting ? null : _refresh,
           icon: state.isCollecting
               ? const SizedBox(
                   width: 20,

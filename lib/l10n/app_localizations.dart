@@ -11510,7 +11510,7 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardRefresh.
   ///
   /// In en, this message translates to:
-  /// **'Refresh health data'**
+  /// **'Sync health data and the backend'**
   String get healthDashboardRefresh;
 
   /// No description provided for @healthDashboardHeadline.

@@ -6359,7 +6359,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Bring your health data and workouts together';
 
   @override
-  String get healthDashboardRefresh => 'Refresh health data';
+  String get healthDashboardRefresh => 'Sync health data and the backend';
 
   @override
   String get healthDashboardHeadline => 'Your health, in focus';

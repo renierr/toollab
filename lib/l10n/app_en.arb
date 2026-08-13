@@ -3413,7 +3413,7 @@
   "fileManagerDocuments": "Documents",
   "toolNameHealthDashboard": "Health Dashboard",
   "toolDescHealthDashboard": "Bring your health data and workouts together",
-  "healthDashboardRefresh": "Refresh health data",
+  "healthDashboardRefresh": "Sync health data and the backend",
   "healthDashboardHeadline": "Your health, in focus",
   "healthDashboardSubtitle": "A single private view of your activity and recovery.",
   "healthDashboardDistance": "Distance",

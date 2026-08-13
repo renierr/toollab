@@ -6399,7 +6399,8 @@ class AppLocalizationsDe extends AppLocalizations {
       'Gesundheitsdaten und Workouts zusammenführen';
 
   @override
-  String get healthDashboardRefresh => 'Gesundheitsdaten aktualisieren';
+  String get healthDashboardRefresh =>
+      'Gesundheitsdaten und Backend abgleichen';
 
   @override
   String get healthDashboardHeadline => 'Deine Gesundheit im Blick';

@@ -2558,7 +2558,7 @@
   "fileManagerDocuments": "Dokumente",
   "toolNameHealthDashboard": "Gesundheits-Dashboard",
   "toolDescHealthDashboard": "Gesundheitsdaten und Workouts zusammenführen",
-  "healthDashboardRefresh": "Gesundheitsdaten aktualisieren",
+  "healthDashboardRefresh": "Gesundheitsdaten und Backend abgleichen",
   "healthDashboardHeadline": "Deine Gesundheit im Blick",
   "healthDashboardSubtitle": "Eine private Ansicht für Aktivität und Erholung.",
   "healthDashboardDistance": "Distanz",

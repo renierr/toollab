@@ -187,21 +187,38 @@ class HealthDashboardState extends ChangeNotifier {
   /// Pull-to-refresh and the toolbar refresh button. Re-reads what is stored and
   /// pushes any treadmill sessions that have not reached Health Connect yet; it
   /// deliberately does not import, so refreshing stays instant.
-  Future<void> refresh() async {
+  /// The toolbar action: everything that can bring data in, in the one order
+  /// that makes the merge correct.
+  ///
+  /// Health Connect first, then [backendSync]. The engine pulls before it
+  /// pushes, so by the time a chunk is serialized it is computed over a table
+  /// holding both this device's fresh import and the other device's rows, and
+  /// the push is a true superset. Reversing the two would ship a chunk missing
+  /// whatever the import was about to add.
+  Future<void> refresh({Future<void> Function()? backendSync}) async {
     if (isCollecting) return;
     isCollecting = true;
     error = null;
+    permissionMissing = false;
     notifyListeners();
+    BackgroundWorkLease? work;
     try {
       // The user asked for this one, so it skips the publisher's throttle.
       await TreadmillHealthConnectPublisher.instance.publishPendingSessions(
         force: true,
       );
+      work = await _beginBackgroundWork(
+        'Syncing...',
+        title: 'Health Dashboard sync',
+      );
+      await _syncHealthConnect();
+      if (backendSync != null) await backendSync();
       await _reloadRecords();
     } catch (e) {
       error = e.toString();
       errorLog('[HealthDashboard] Refresh failed: $e');
     } finally {
+      await _endBackgroundWork(work);
       isCollecting = false;
       notifyListeners();
     }
@@ -464,6 +481,28 @@ class HealthDashboardState extends ChangeNotifier {
   }
 
   /// Change-token sync. Cheap enough to run on open: it fetches only what moved.
+  /// The change-token read, without the busy-state and reload the callers own.
+  ///
+  /// Returns nothing on a platform with no Health Connect rather than reporting
+  /// a permission problem: there is no permission to be missing on Windows, and
+  /// saying otherwise would put a broken-looking state on a screen whose data
+  /// arrives entirely through backend sync.
+  Future<HealthDiffResult> _syncHealthConnect() async {
+    if (!Platform.isAndroid) return const HealthDiffResult();
+    if (!await _importer.requestAccess()) {
+      permissionMissing = true;
+      return const HealthDiffResult();
+    }
+    final result = await _diff.sync();
+    if (result.needsFullImport) {
+      errorLog(
+        '[HealthDashboard] Sync token invalid; a full import is required',
+      );
+    }
+    await loadSelection();
+    return result;
+  }
+
   Future<HealthDiffResult> syncChanges() async {
     if (isCollecting) return const HealthDiffResult();
     isCollecting = true;
@@ -476,17 +515,7 @@ class HealthDashboardState extends ChangeNotifier {
         'Syncing...',
         title: 'Health Dashboard sync',
       );
-      if (!await _importer.requestAccess()) {
-        permissionMissing = true;
-        return const HealthDiffResult();
-      }
-      final result = await _diff.sync();
-      if (result.needsFullImport) {
-        errorLog(
-          '[HealthDashboard] Sync token invalid; a full import is required',
-        );
-      }
-      await loadSelection();
+      final result = await _syncHealthConnect();
       if (result.upserted > 0 || result.deleted > 0) await _reloadRecords();
       return result;
     } catch (e) {

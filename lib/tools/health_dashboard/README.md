@@ -430,10 +430,20 @@ empty, use the re-import. Full table above in The Health Connect Settings
 Screen.
 
 **When backend sync happens.** Never during an import. The import entries
-contain no backend call at all. Sync runs from the app's own Sync Now, through
-`HealthSyncDelegate`, which ships one record per (UTC day, writer) rather than
-per reading. See `docs/backend-sync-plan.md` for the chunk design and
-`storage-model.html` for the tables it rests on.
+contain no backend call at all. It runs from the app's global Sync Now and from
+the dashboard's own toolbar action, through `HealthSyncDelegate`, which ships one
+record per (UTC day, writer) rather than per reading. See
+`docs/backend-sync-plan.md` for the chunk design and `storage-model.html` for the
+tables it rests on.
+
+**The toolbar action does both, in that order.** Publish pending treadmill
+workouts, read Health Connect changes, then sync the backend. The engine pulls
+before it pushes, so a chunk is serialized over a table that already holds both
+this device's fresh import and the other device's rows, and the push is a true
+superset. Reversing the two would ship a chunk missing what the import was about
+to add. On Windows the Health Connect step is skipped rather than reported as a
+missing permission - there is no permission to be missing there, and that screen's
+data arrives entirely through the backend.
 
 **Parallel devices.** Phone and tablet may import simultaneously; the imports
 are independent. Avoid syncing both at the same moment - a large sync is
