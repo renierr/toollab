@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/route_dismiss.dart';
 
 void showNotificationDialog(
   BuildContext context,
@@ -11,10 +12,10 @@ void showNotificationDialog(
     context: context,
     barrierColor: Colors.black38,
     builder: (BuildContext ctx) {
+      // Times out against its own route: by then the user may have opened
+      // something on top, and that must not be what closes.
       Future.delayed(const Duration(milliseconds: 2800), () {
-        if (ctx.mounted) {
-          Navigator.of(ctx).pop();
-        }
+        if (ctx.mounted) dismissOwnRoute(ctx);
       });
 
       final theme = Theme.of(context);

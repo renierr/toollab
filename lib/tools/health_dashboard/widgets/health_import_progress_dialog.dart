@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/widgets/route_dismiss.dart';
 
 import '../health_dashboard_state.dart';
 
@@ -53,9 +54,7 @@ class _HealthImportProgressDialogState
   void _autoDismissIfCompleted(bool isInProgress) {
     if (!isInProgress) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
+        if (mounted) dismissOwnRoute(context);
       });
     }
   }
