@@ -290,13 +290,38 @@ Roughly three writers over 365 days is about 1.1k chunks a year, so a decade is
 ~11k — around 22 metadata pages at the engine's existing batch size, and only on
 the first run, since the cursor path makes later runs delta-only.
 
-Payload is the part that needs care. A day of dense samples as plain JSON is
-tens of KB, which puts a decade in the hundreds of MB. Pack each metric's day
-series instead — delta-encoded times, scaled integer values — and ship it
-through the `__type: 'blob'` wire format the backend already stores as a real
-`BLOB` and `SyncService._unwrapBlobData` already unwraps centrally. That is an
-order of magnitude smaller. History depth should also be a user setting; not
-everyone wants a decade mirrored.
+Payload is the part that needs care. A reading as JSON is about 39 bytes —
+`["heart_rate",1778803200000,61,null]` — and nearly all of it is the repeated
+metric name and a thirteen-digit timestamp. Grouped by metric, delta-encoded and
+varint-packed, the same reading is around four, and it ships through the
+`__type: 'blob'` wire format the backend already stores as a real `BLOB` and
+`SyncService._unwrapBlobData` already unwraps centrally.
+
+Measured over 129 real chunks (12,126 points, 1,947 intervals): 597 KB of dense
+JSON becomes 141 KB on the wire and 105 KB at rest, a factor of 4.2. Denser days
+do better — the per-metric header is a fixed cost, so a full heart-rate series
+day approaches 7x.
+
+**Values have to round-trip bit-for-bit.** `health_point` is keyed on
+`(metric, t, v)`, so a value returning as 10.554 instead of 10.553866523510644
+is not a rounding error, it is a different primary key, and the receiver inserts
+a second row beside the first — on every device that pulls it. Each metric
+therefore picks the smallest decimal scale that reproduces all of its values
+exactly and falls back to a full float64 when none does. Paired readings stay in
+the plain JSON list: only blood pressure carries a `v2`, there are a handful, and
+keeping them out costs less than a second optional series in the format.
+
+The first byte is a format version. A blob from a newer build **throws** rather
+than decoding to nothing: skipping the rows would settle the chunk as though it
+had been applied, and those readings would never arrive again. Failing leaves the
+chunk unsettled, so updating the app is enough to pick it up. A blob that is
+merely corrupt at a known version is dropped instead — nothing will repair it,
+and retrying forever is worse than losing it.
+
+Receivers read both forms, so chunks written before packing existed still pull.
+
+History depth should also be a user setting; not everyone wants a decade
+mirrored.
 
 ## A per-tool sync switch
 
@@ -392,7 +417,8 @@ involvement, which is the point — the new device never held that history.
    implementation, and skipping chunks whose writer is switched off.~~ Done —
    schema v4 carries the two indexes reading a chunk needs and the `skipped`
    marker, and the delegate is registered.
-6. Swap point and interval payloads to packed blobs once step 5 is proven.
+6. ~~Swap point and interval payloads to packed blobs once step 5 is proven.~~
+   Done — `health_chunk_codec.dart`, measured at 4.2x on real data.
 7. Register `syncDelegateFactory` in `config.dart`, drop the comment explaining
    its absence, and fold the storage consequences into `storage-model.html`.
 

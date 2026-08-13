@@ -7,6 +7,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import '../config.dart';
+import 'health_chunk_codec.dart';
 import 'health_metric_catalog.dart';
 import 'health_rows.dart';
 import 'health_schema.dart';
@@ -2098,22 +2099,50 @@ class HealthStore {
       });
     }
 
-    // Positional rather than keyed: a day of dense samples repeats these field
-    // names tens of thousands of times, and the keys would outweigh the values.
+    // Dense rows travel packed. Paired readings stay in the plain list: only
+    // blood pressure carries a `v2`, there are a handful of them, and keeping
+    // them out costs less than teaching the packer a second optional series.
+    final packablePoints = <List<Object?>>[];
+    final plainPoints = <List<Object?>>[];
+    for (final row in points) {
+      final metric = metricKeys[row['metric'] as int];
+      if (metric == null) continue;
+      if (row['v2'] != null) {
+        plainPoints.add([metric, row['t'], row['v'], row['v2']]);
+      } else {
+        packablePoints.add([metric, row['t'], row['v']]);
+      }
+    }
+    final packableIntervals = <List<Object?>>[];
+    for (final row in intervals) {
+      final metric = metricKeys[row['metric'] as int];
+      if (metric == null) continue;
+      packableIntervals.add([metric, row['t0'], row['t1'], row['v']]);
+    }
+    final packedPoints = HealthChunkCodec.encodePoints(packablePoints);
+    final packedIntervals = HealthChunkCodec.encodeIntervals(packableIntervals);
+
     return {
       'day': day,
       'package': package,
-      'points': [
-        for (final row in points)
-          [metricKeys[row['metric'] as int], row['t'], row['v'], row['v2']],
-      ],
-      'intervals': [
-        for (final row in intervals)
-          [metricKeys[row['metric'] as int], row['t0'], row['t1'], row['v']],
-      ],
+      // Positional rather than keyed, for the same reason the packed form
+      // exists at all: the field names would outweigh the values.
+      'points': plainPoints,
+      'intervals': const <List<Object?>>[],
+      if (packedPoints != null) 'pointsPacked': _blob(packedPoints),
+      if (packedIntervals != null) 'intervalsPacked': _blob(packedIntervals),
       'sessions': sessionPayloads,
     };
   }
+
+  /// The wire format the backend stores as a real `BLOB` rather than as base64
+  /// text, and that `SyncService._unwrapBlobData` hands back as a plain base64
+  /// string on the way in.
+  static Map<String, dynamic> _blob(String base64Data) => {
+    '__type': 'blob',
+    'mimeType': 'application/octet-stream',
+    'data': base64Data,
+  };
 
   /// Merges a pulled chunk into the tables, through the same write path an
   /// import uses, so content primary keys collapse what is already here and the
@@ -2166,8 +2195,16 @@ class HealthStore {
     String package,
     Map<String, dynamic> data,
   ) {
+    // Both forms are read. A sender that predates the packed encoding, or one
+    // whose paired readings could not be packed, puts rows in the plain lists;
+    // the blob arrives already unwrapped to base64 by the sync engine.
     final points = <HealthPointRow>[];
-    for (final row in data['points'] as List<dynamic>? ?? const []) {
+    final packedPoints = data['pointsPacked'];
+    for (final row in [
+      ...?data['points'] as List<dynamic>?,
+      if (packedPoints is String)
+        ...HealthChunkCodec.decodePoints(packedPoints),
+    ]) {
       final values = row as List<dynamic>;
       final metric = values[0] as String?;
       if (metric == null || !HealthMetrics.has(metric)) continue;
@@ -2181,7 +2218,12 @@ class HealthStore {
       );
     }
     final intervals = <HealthIntervalRow>[];
-    for (final row in data['intervals'] as List<dynamic>? ?? const []) {
+    final packedIntervals = data['intervalsPacked'];
+    for (final row in [
+      ...?data['intervals'] as List<dynamic>?,
+      if (packedIntervals is String)
+        ...HealthChunkCodec.decodeIntervals(packedIntervals),
+    ]) {
       final values = row as List<dynamic>;
       final metric = values[0] as String?;
       if (metric == null || !HealthMetrics.has(metric)) continue;

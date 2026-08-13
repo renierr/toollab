@@ -586,10 +586,10 @@ get documented as they grow.
 ## Known Gaps
 
 - **A full backend sync at full history has never been run.** The chunk design
-  removes the reason the old row-per-record sync could not do it, and payloads
-  are materialised one push batch at a time, but the claim is untested at a
-  decade of data. Packing point and interval payloads into blobs instead of
-  plain JSON is the next step and is what makes the volume reasonable.
+  removes the reason the old row-per-record sync could not do it, payloads are
+  materialised one push batch at a time, and dense rows ship packed rather than
+  as JSON - 4.2x measured on 129 real chunks. The claim is still untested at a
+  decade of data, and on two devices actually populated.
 - Priority defaults to the same value for every writer, so the day-winner rule
   falls back to row count until the user orders the app list. Deriving a default
   order from the measured republisher signal - same `start_time`, matching
