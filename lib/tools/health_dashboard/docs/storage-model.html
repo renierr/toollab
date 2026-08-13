@@ -648,11 +648,18 @@
         <div class="note">
           <p><b>Long runs keep the CPU awake.</b> Every read is a platform call into another
           process, and a full history is minutes of them. Discovery, the full import, the change
-          sync, the cleanup and both directions of the backup each hold a <code>BackgroundWorkLease</code> for
+          sync, the cleanup, both directions of the backup and the dashboard's own toolbar action
+          each hold a <code>BackgroundWorkLease</code> for
           their duration — a partial (CPU) wake lock plus a foreground notification — so
           Doze or app standby cannot suspend the app halfway through and strand a type mid-range.
           A background isolate is not an option: the plugin's method channels are bound to the main
           isolate, so a spawned one cannot reach Health Connect at all.</p>
+          <p>Backend sync is covered too, but by <code>AppState.syncWithBackend</code> rather than by
+          this tool, since the lease has to span every tool in the run. It is taken only when more
+          than one delegate is syncing: a single-tool sync is the cheap fire-on-open kind and would
+          otherwise flash a notification every time a tool is opened. The one tool heavy enough to
+          need protection on its own is this one, and its toolbar action already holds a lease around
+          the whole chain.</p>
         </div>
         <div class="note">
           <p><b>Deletions reach sessions and intervals, not points.</b> Those carry the Health
@@ -674,7 +681,10 @@
           <table>
             <thead><tr><th>Change</th><th>Effect</th><th>State</th></tr></thead>
             <tbody>
-              <tr><td class="d">Backend sync disabled; delegate and the unbounded materializer deleted</td><td class="d">No row-per-record cloud sync. It returns later as a backup and distribution hub, not a merge peer.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Backend sync returns, one record per (UTC day, writer)</td><td class="d">A backup and distribution hub, not a merge peer. The row-per-record delegate that could not carry this volume is gone; a chunk is a whole day of one writer's data, so a decade is about eleven thousand records rather than millions.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Device-independent session identity</td><td class="d"><code>dedupe_key</code> replaces the Health Connect record id as the rule, so a workout pulled from another device updates its row instead of inserting a second one.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Dense chunk rows ship packed, not as JSON</td><td class="d">Grouped by metric, delta-encoded, varint-packed and sent as a real <code>BLOB</code>. 4.2x measured on 129 real chunks; values round-trip bit-for-bit, which they must, since <code>v</code> is part of the primary key.</td><td><span class="chip s-accent">done</span></td></tr>
+              <tr><td class="d">Two devices actually populated</td><td class="d">The case the chunk design exists for. Verified on one device against a live backend; the cross-device merge is not yet observed.</td><td><span class="chip s-dim">open</span></td></tr>
               <tr><td class="d">Typed schema on a fresh ladder</td><td class="d">The pre-typed ladder is dropped on first open rather than migrated.</td><td><span class="chip s-accent">done</span></td></tr>
               <tr><td class="d">Discovery probe, per-type and per-source selection</td><td class="d">Nothing is pulled unless enabled. Selection becomes the <code>dataOrigins</code> filter.</td><td><span class="chip s-accent">done</span></td></tr>
               <tr><td class="d">Global app switch and priority order</td><td class="d">A writer can be turned off everywhere without losing its rows, and ranked so one writer owns a day's totals.</td><td><span class="chip s-accent">done</span></td></tr>
@@ -734,6 +744,8 @@
               <tr><td class="c">hc_sync_token</td><td class="d">Serialized <code>HealthDataSyncToken</code></td><td class="d">Opaque; dropped if it cannot be parsed</td></tr>
               <tr><td class="c">hc_sync_token_scope</td><td class="d">Sorted enabled type ids</td><td class="d">Detects a selection change that invalidated the token</td></tr>
               <tr><td class="c">auto_health_connect_sync</td><td class="d">Whether opening the tool syncs changes</td><td class="d">Off by default, switched in Health Connect settings; gates the change-token sync only</td></tr>
+              <tr><td class="c">sync_cursor_&lt;syncId&gt;</td><td class="d">Where the last backend metadata pass stopped</td><td class="d">Keyed by sync id, not by tool: the server namespace carries the user id, and a cursor from one user's namespace promises nothing about another's. Cleared by the re-import and whenever the tool's sync switch is turned back on, since tombstones written while it was off sit behind the cursor</td></tr>
+              <tr><td class="c">sync_enabled</td><td class="d">Whether this tool syncs to the backend</td><td class="d">Absent means on, so a tool that already synced before the per-tool switch existed keeps syncing after the upgrade</td></tr>
             </tbody>
           </table>
         </div>
@@ -1570,8 +1582,9 @@
 
       <footer>
         Source: <code>lib/tools/health_dashboard/</code> — <code>store/</code> holds the schema,
-        catalog, mapper and queries; <code>collectors/</code> holds discovery, the importer and the
-        change-token sync; <code>debug/</code> holds the test-data generator; <code>widgets/</code> holds
+        catalog, mapper, queries and the chunk codec; <code>collectors/</code> holds discovery, the
+        importer and the change-token sync; <code>health_sync_delegate.dart</code> is the backend
+        side; <code>debug/</code> holds the test-data generator; <code>widgets/</code> holds
         the detail pages. The authoritative schema version is <code>HealthSchema.version</code>. Update
         this page whenever the schema, the source rules, the type mapping or a detail page's layout
         change — the chart in §12 is a port and drifts silently otherwise. The scoring reference is
@@ -1763,6 +1776,13 @@
       body: "Health Connect's own change tracking. Loops while hasMore, up to 50 rounds, writing upserts through the same path as the importer. Deleted record ids remove matching sessions and intervals, and repair the daily rows they touched.",
       writes: ["health_point", "health_interval", "health_session", "health_daily", "hc_sync_token"],
       no: "Cheap enough to run on tool open."
+    },
+    {
+      n: "Backend", sub: "day + writer", title: "Sync with the backend",
+      code: "HealthSyncDelegate",
+      body: "One record per (UTC day, writer), not per reading. The payload is read out of the tables rather than out of an import batch, so it always holds what this device pulled from others too and a push can only ever be a superset — serializing the import batch instead would let the thinner device overwrite the fuller one on the server. It carries plain strings: interned ids and Health Connect record ids name things that exist only on the sending device. Dense rows travel packed as a BLOB; paired readings and sessions stay JSON. Applying a pulled chunk keeps it dirty only if it already was, which is what makes two devices converge instead of pushing the same day to each other forever.",
+      writes: ["all fact tables", "health_chunk", "health_daily", "sync_cursor_<syncId>"],
+      no: "Never during an import. Runs from the global Sync Now and from this tool's toolbar action, after Health Connect so the push includes what just arrived."
     },
     {
       n: "Restart", sub: "destructive", title: "Re-import from scratch",

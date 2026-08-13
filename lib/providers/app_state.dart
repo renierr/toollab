@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/core/tool_registry.dart';
+import 'package:tool_lab/services/background_work_lease.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/treadmill_control/treadmill_health_connect_publisher.dart';
 import 'package:tool_lab/tools/treadmill_control/treadmill_sync_delegate.dart';
@@ -334,6 +335,19 @@ class AppState extends ChangeNotifier {
     int pushedTotal = 0;
     int deletedTotal = 0;
 
+    // Only the all-tools run takes one. A single-tool sync is the cheap
+    // fire-on-open kind and would flash a foreground notification every time a
+    // tool is opened; the one tool heavy enough to need protection alone, the
+    // health dashboard, already holds a lease around its own action.
+    BackgroundWorkLease? work;
+    if (delegates.length > 1) {
+      work = await BackgroundWorkLease.acquire(
+        title: 'ToolLab sync',
+        text: 'Syncing ${delegates.length} tools...',
+        logPrefix: 'AppState',
+      );
+    }
+
     try {
       final available = await SyncService.isBackendAvailable(_syncServerUrl);
       if (!available) {
@@ -344,7 +358,11 @@ class AppState extends ChangeNotifier {
       // must not cost every other tool its run, so failures are collected and
       // reported after the rest have had their turn.
       final failures = <String>[];
+      var done = 0;
       for (final delegate in delegates) {
+        await work?.update(
+          'Syncing ${delegate.toolId} (${++done}/${delegates.length})...',
+        );
         try {
           final results = await SyncService.sync(
             baseUrl: _syncServerUrl,
@@ -372,6 +390,7 @@ class AppState extends ChangeNotifier {
         'deleted': deletedTotal,
       };
     } finally {
+      await work?.release();
       _isSyncing = false;
       notifyListeners();
     }
