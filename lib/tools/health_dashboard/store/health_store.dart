@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
@@ -205,6 +206,12 @@ class HealthStore {
   HealthStore._();
 
   static final HealthStore instance = HealthStore._();
+
+  /// How much two sessions have to overlap before they count as one activity
+  /// two writers each recorded. Measured against the **longer** of the two, so a
+  /// short walk logged inside a long run is not swallowed by it - a ratio taken
+  /// against the shorter side would read 1.0 there and collapse them.
+  static const double _mirrorOverlapRatio = 0.7;
 
   ToolDatabase? _database;
   Future<ToolDatabase>? _opening;
@@ -518,24 +525,48 @@ class HealthStore {
     int appId,
     HealthSessionRow row,
   ) async {
-    // A session already stored for this exact range and kind by another app is
-    // a mirror of the same activity - a republisher rewriting a watch's workout.
-    // Priority decides which side survives, so promoting the direct writer is
-    // enough to flip an already-imported mirror on the next read; ties keep the
-    // first writer. One index seek, no vendor names involved.
-    final matches = await db.query(
+    // A session another app already stored for the same activity is a mirror.
+    // Two writers rarely agree on where an activity starts and ends - a
+    // republisher rewrites a watch's workout to the millisecond, but a treadmill
+    // and a watch timing the same run differ at both ends - so the match is an
+    // overlap, not an equality. Priority decides which side survives, which is
+    // what makes promoting a writer flip an already-imported mirror on the next
+    // import; ties keep the first writer. Same-app sessions only collapse on an
+    // exact range: an app that logs two overlapping activities means it.
+    final span = max(1, row.t1 - row.t0);
+    final candidates = await db.query(
       HealthSchema.session,
-      columns: ['id', 'origin', 'app'],
-      where: 'kind = ? AND t0 = ? AND t1 = ?',
-      whereArgs: [row.kind, row.t0, row.t1],
-      limit: 1,
+      columns: ['id', 'origin', 'app', 't0', 't1'],
+      // Anything clearing the ratio has to start within one span of this row,
+      // which bounds the scan instead of walking every session ever stored.
+      where: 'kind = ? AND t0 >= ? AND t0 < ? AND t1 > ?',
+      whereArgs: [row.kind, row.t0 - span, row.t1, row.t0],
     );
-    var existing = matches.isEmpty ? null : matches.single;
-    if (existing != null && existing['origin'] != row.origin) {
-      if (_prioOf(appId) >= _prioOf(existing['app'] as int)) return;
+    Map<String, Object?>? existing;
+    Map<String, Object?>? mirror;
+    var bestRatio = 0.0;
+    for (final candidate in candidates) {
+      if (candidate['origin'] == row.origin) {
+        existing = candidate;
+        mirror = null;
+        break;
+      }
+      final t0 = candidate['t0'] as int;
+      final t1 = candidate['t1'] as int;
+      final exact = t0 == row.t0 && t1 == row.t1;
+      if (candidate['app'] as int == appId && !exact) continue;
+      final overlap = min(t1, row.t1) - max(t0, row.t0);
+      final ratio = overlap / max(span, max(1, t1 - t0));
+      if (ratio >= _mirrorOverlapRatio && ratio > bestRatio) {
+        bestRatio = ratio;
+        mirror = candidate;
+      }
+    }
+    if (existing == null && mirror != null) {
+      if (_prioOf(appId) >= _prioOf(mirror['app'] as int)) return;
       // The better-ranked writer takes the slot: the mirror's parts go with it,
       // since the row they hang off is replaced.
-      final mirrorId = existing['id'] as int;
+      final mirrorId = mirror['id'] as int;
       await db.delete(
         HealthSchema.sessionPart,
         where: 'session = ?',
@@ -546,7 +577,6 @@ class HealthStore {
         where: 'id = ?',
         whereArgs: [mirrorId],
       );
-      existing = null;
     }
     final values = {
       'kind': row.kind,

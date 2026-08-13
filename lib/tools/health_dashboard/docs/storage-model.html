@@ -582,9 +582,12 @@
           <li><b>One writer per metric per day.</b> A <code>health_daily</code> row is computed from
             a single writer, chosen by <code>health_app.prio</code>, then by whoever has the most
             rows that day, then by the lowest id. Never from all writers at once.</li>
-          <li><b>Priority decides session mirrors.</b> A session already stored for the same kind and
-            exact range by another app is a mirror; the better-ranked writer keeps the slot and ties
-            keep the first writer. One index seek, no vendor names involved.</li>
+          <li><b>Priority decides session mirrors.</b> A session another app already stored for the
+            same kind, overlapping by at least 70% of the longer of the two, is a mirror; the
+            better-ranked writer keeps the slot and ties keep the first writer. The ratio is taken
+            against the longer side so a short walk logged inside a long run is not swallowed by it.
+            Same-app sessions only collapse on an exact range — an app logging two overlapping
+            activities means it. Bounded by <code>(kind, t0)</code>, no vendor names involved.</li>
         </ol>
         <div class="note warn">
           <p><b>Near-mirrors never collapse.</b> A republisher's heart rate differs from the direct
