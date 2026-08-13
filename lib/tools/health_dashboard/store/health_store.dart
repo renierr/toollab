@@ -67,7 +67,10 @@ class HealthSession {
   final int t0;
   final int t1;
   final String? package;
-  final String origin;
+
+  /// The Health Connect record id, and only meaningful on the device that
+  /// imported it. Null for a session that arrived through backend sync.
+  final String? origin;
   final String? clientId;
   final double? distanceKm;
   final double? calories;
@@ -83,7 +86,7 @@ class HealthSession {
     required this.kind,
     required this.t0,
     required this.t1,
-    required this.origin,
+    this.origin,
     this.activity,
     this.title,
     this.notes,
@@ -253,6 +256,7 @@ class HealthStore {
           return;
         }
         if (oldVersion < 2) await HealthSchema.migrateToV2(txn);
+        if (oldVersion < 3) await HealthSchema.migrateToV3(txn);
       },
     );
     _database = database;
@@ -302,7 +306,11 @@ class HealthStore {
       'restarting at version ${HealthSchema.version}',
     );
     await db.transaction((txn) async {
-      for (final table in [..._preTypedTables, ...HealthSchema.backupTables]) {
+      for (final table in [
+        ..._preTypedTables,
+        ...HealthSchema.backupTables,
+        HealthSchema.chunk,
+      ]) {
         await txn.execute('DROP TABLE IF EXISTS ${txn.nameTable(table)}');
       }
       // Import watermarks, sync cursors and per-type source preferences all
@@ -475,27 +483,32 @@ class HealthStore {
     // (metricId, dayKey) pairs, so a page spanning three days recomputes three
     // days rather than the whole metric.
     final touched = <int, Set<int>>{};
+    // (chunkDay, appId) pairs that actually gained rows.
+    final dirty = <(int, int)>{};
     await db.transaction((txn) async {
-      final batch = txn.batch();
-      var queued = 0;
+      // Batched per chunk rather than per page, so the row counter below can
+      // attribute what it inserted. A page is one writer over a few days, so
+      // this is a handful of commits, not one per row.
+      final batches = <(int, int), ToolBatch>{};
       for (final record in records) {
         if (record.isEmpty) continue;
         final appId = await _appId(txn, record.package);
         for (final row in record.points) {
           final metricId = await _metricId(txn, row.metric);
-          batch.insert(HealthSchema.point, {
+          final key = (HealthSchema.chunkDay(row.t), appId);
+          (batches[key] ??= txn.batch()).insert(HealthSchema.point, {
             'metric': metricId,
             't': row.t,
             'v': row.v,
             'v2': row.v2,
             'app': appId,
           }, conflictAlgorithm: ConflictAlgorithm.ignore);
-          queued++;
           (touched[metricId] ??= <int>{}).add(dayKey(row.t));
         }
         for (final row in record.intervals) {
           final metricId = await _metricId(txn, row.metric);
-          batch.insert(HealthSchema.interval, {
+          final key = (HealthSchema.chunkDay(row.t0), appId);
+          (batches[key] ??= txn.batch()).insert(HealthSchema.interval, {
             'metric': metricId,
             't0': row.t0,
             't1': row.t1,
@@ -503,28 +516,101 @@ class HealthStore {
             'app': appId,
             'origin': row.origin,
           }, conflictAlgorithm: ConflictAlgorithm.ignore);
-          queued++;
           (touched[metricId] ??= <int>{}).add(dayKey(row.t0));
         }
         written += record.rowCount;
       }
+      for (final entry in batches.entries) {
+        final before = await _totalChanges(txn);
+        await entry.value.commit(noResult: true);
+        if (await _totalChanges(txn) > before) dirty.add(entry.key);
+      }
       // Sessions need their generated id, so they cannot ride the batch.
-      if (queued > 0) await batch.commit(noResult: true);
       for (final record in records) {
         final session = record.session;
         if (session == null) continue;
-        await _writeSession(txn, await _appId(txn, record.package), session);
+        final appId = await _appId(txn, record.package);
+        final changed = await _writeSession(
+          txn,
+          appId,
+          record.package,
+          session,
+        );
+        if (changed) dirty.add((HealthSchema.chunkDay(session.t0), appId));
       }
+      await _markChunks(txn, dirty);
       await _refreshDaily(txn, touched);
     });
     return written;
   }
 
-  Future<void> _writeSession(
+  /// Rows this connection has written since it opened. Read either side of a
+  /// commit it gives the number of rows an `INSERT OR IGNORE` batch actually
+  /// inserted, which sqflite's own result cannot: a `WITHOUT ROWID` table leaves
+  /// `last_insert_rowid()` untouched, so an ignored insert is indistinguishable
+  /// from a real one. Safe inside a transaction, where nothing else writes.
+  Future<int> _totalChanges(ToolDatabaseExecutor db) async {
+    final rows = await db.rawQuery('SELECT total_changes() AS n');
+    return (rows.single['n'] as num?)?.toInt() ?? 0;
+  }
+
+  /// Marks chunks as holding rows the backend has not seen. Only called for
+  /// pairs that actually gained content: bumping on every import would make each
+  /// run re-upload a full day, and the other device pull it straight back.
+  Future<void> _markChunks(
+    ToolDatabaseExecutor db,
+    Set<(int, int)> chunks,
+  ) async {
+    if (chunks.isEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final batch = db.batch();
+    for (final (day, app) in chunks) {
+      batch.insert(HealthSchema.chunk, {
+        'day': day,
+        'app': app,
+        'updated_at': now,
+        'dirty': 1,
+        'deleted': 0,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    await batch.commit(noResult: true);
+  }
+
+  /// Returns whether the stored data changed, which is what decides if the
+  /// session's chunk owes the backend anything.
+  Future<bool> _writeSession(
     ToolDatabaseExecutor db,
     int appId,
+    String package,
     HealthSessionRow row,
   ) async {
+    final dedupeKey = HealthSchema.dedupeKey(
+      kind: row.kind,
+      t0: row.t0,
+      t1: row.t1,
+      package: package,
+      clientId: row.clientId,
+    );
+    // Identity first, and outside the time window below: a writer that shifted
+    // a workout's bounds still reports the same client record. Origin is the
+    // fallback rather than the rule - measured across a phone and a tablet it
+    // agrees for 624/626 exercise sessions but only 152/167 sleep ones, so it
+    // catches a row an edited range moved out of reach of the key while being
+    // too unreliable to identify a session on its own.
+    var identical = await db.query(
+      HealthSchema.session,
+      where: 'dedupe_key = ?',
+      whereArgs: [dedupeKey],
+      limit: 1,
+    );
+    if (identical.isEmpty && row.origin.isNotEmpty) {
+      identical = await db.query(
+        HealthSchema.session,
+        where: 'origin = ?',
+        whereArgs: [row.origin],
+        limit: 1,
+      );
+    }
     // A session another app already stored for the same activity is a mirror.
     // Two writers rarely agree on where an activity starts and ends - a
     // republisher rewrites a watch's workout to the millisecond, but a treadmill
@@ -534,36 +620,33 @@ class HealthStore {
     // import; ties keep the first writer. Same-app sessions only collapse on an
     // exact range: an app that logs two overlapping activities means it.
     final span = max(1, row.t1 - row.t0);
-    final candidates = await db.query(
-      HealthSchema.session,
-      columns: ['id', 'origin', 'app', 't0', 't1'],
-      // Anything clearing the ratio has to start within one span of this row,
-      // which bounds the scan instead of walking every session ever stored.
-      where: 'kind = ? AND t0 >= ? AND t0 < ? AND t1 > ?',
-      whereArgs: [row.kind, row.t0 - span, row.t1, row.t0],
-    );
-    Map<String, Object?>? existing;
+    Map<String, Object?>? existing = identical.isEmpty ? null : identical.first;
     Map<String, Object?>? mirror;
-    var bestRatio = 0.0;
-    for (final candidate in candidates) {
-      if (candidate['origin'] == row.origin) {
-        existing = candidate;
-        mirror = null;
-        break;
-      }
-      final t0 = candidate['t0'] as int;
-      final t1 = candidate['t1'] as int;
-      final exact = t0 == row.t0 && t1 == row.t1;
-      if (candidate['app'] as int == appId && !exact) continue;
-      final overlap = min(t1, row.t1) - max(t0, row.t0);
-      final ratio = overlap / max(span, max(1, t1 - t0));
-      if (ratio >= _mirrorOverlapRatio && ratio > bestRatio) {
-        bestRatio = ratio;
-        mirror = candidate;
+    if (existing == null) {
+      final candidates = await db.query(
+        HealthSchema.session,
+        columns: ['id', 'app', 't0', 't1'],
+        // Anything clearing the ratio has to start within one span of this row,
+        // which bounds the scan instead of walking every session ever stored.
+        where: 'kind = ? AND t0 >= ? AND t0 < ? AND t1 > ?',
+        whereArgs: [row.kind, row.t0 - span, row.t1, row.t0],
+      );
+      var bestRatio = 0.0;
+      for (final candidate in candidates) {
+        final t0 = candidate['t0'] as int;
+        final t1 = candidate['t1'] as int;
+        final exact = t0 == row.t0 && t1 == row.t1;
+        if (candidate['app'] as int == appId && !exact) continue;
+        final overlap = min(t1, row.t1) - max(t0, row.t0);
+        final ratio = overlap / max(span, max(1, t1 - t0));
+        if (ratio >= _mirrorOverlapRatio && ratio > bestRatio) {
+          bestRatio = ratio;
+          mirror = candidate;
+        }
       }
     }
     if (existing == null && mirror != null) {
-      if (_prioOf(appId) >= _prioOf(mirror['app'] as int)) return;
+      if (_prioOf(appId) >= _prioOf(mirror['app'] as int)) return false;
       // The better-ranked writer takes the slot: the mirror's parts go with it,
       // since the row they hang off is replaced.
       final mirrorId = mirror['id'] as int;
@@ -587,6 +670,7 @@ class HealthStore {
       't1': row.t1,
       'app': appId,
       'origin': row.origin,
+      'dedupe_key': dedupeKey,
       'client_id': row.clientId,
       'distance_km': row.distanceKm,
       'calories': row.calories,
@@ -598,8 +682,14 @@ class HealthStore {
       'asleep_min': row.asleepMin,
     };
     final int sessionId;
-    if (existing != null) {
-      sessionId = existing['id'] as int;
+    final stored = existing;
+    if (stored != null) {
+      // A re-import that carries the same row must leave the store alone, or
+      // every run would mark the chunk dirty and re-upload the day. Parts are
+      // left alone too: they come out of the same record, so a summary that did
+      // not move means nothing under it moved either.
+      if (values.entries.every((e) => stored[e.key] == e.value)) return false;
+      sessionId = stored['id'] as int;
       await db.update(
         HealthSchema.session,
         values,
@@ -614,7 +704,7 @@ class HealthStore {
     } else {
       sessionId = await db.insert(HealthSchema.session, values);
     }
-    if (row.parts.isEmpty) return;
+    if (row.parts.isEmpty) return true;
     final batch = db.batch();
     for (var index = 0; index < row.parts.length; index++) {
       final part = row.parts[index];
@@ -629,6 +719,7 @@ class HealthStore {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
+    return true;
   }
 
   /// A day's rollup is computed from **one** writer, never from all of them at
@@ -1095,7 +1186,7 @@ class HealthStore {
     t0: row['t0'] as int,
     t1: row['t1'] as int,
     package: _appPackages[row['app'] as int? ?? -1],
-    origin: row['origin'] as String,
+    origin: row['origin'] as String?,
     clientId: row['client_id'] as String?,
     distanceKm: (row['distance_km'] as num?)?.toDouble(),
     calories: (row['calories'] as num?)?.toDouble(),
@@ -1213,6 +1304,13 @@ class HealthStore {
         where: 'app = ?',
         whereArgs: [appId],
       );
+      // Local only: the manifest stops claiming rows this device no longer has,
+      // and nothing is tombstoned, so another device's copy is untouched.
+      await txn.delete(
+        HealthSchema.chunk,
+        where: 'app = ?',
+        whereArgs: [appId],
+      );
       await txn.rawUpdate(
         'UPDATE ${txn.nameTable(HealthSchema.type)} SET history_done = 0 '
         'WHERE type IN (SELECT type FROM '
@@ -1262,6 +1360,10 @@ class HealthStore {
           'DELETE FROM ${txn.nameTable(HealthSchema.interval)} '
           'WHERE app IN ($disabled)',
         );
+        await txn.rawDelete(
+          'DELETE FROM ${txn.nameTable(HealthSchema.chunk)} '
+          'WHERE app IN ($disabled)',
+        );
       });
     }
     await db.transaction((txn) async {
@@ -1303,12 +1405,25 @@ class HealthStore {
     );
   }
 
+  /// Wipes the imported data so the next import reads it back from scratch.
+  ///
+  /// Under backend sync this is a **local rebuild**, not a deletion, and the
+  /// manifest and cursor go with the rows. An empty manifest has nothing to
+  /// push, so the next run pulls every server chunk back and the Health Connect
+  /// re-import adds this device's share on top. Keeping either behind would say
+  /// the opposite - that this device already shipped data it no longer holds -
+  /// and the server copy would never come home.
   Future<void> clearImportedData() async {
     final db = await _db();
     await db.transaction((txn) async {
-      for (final table in HealthSchema.dataTables) {
+      for (final table in [...HealthSchema.dataTables, HealthSchema.chunk]) {
         await txn.delete(table);
       }
+      await txn.executor.delete(
+        'tool_settings',
+        where: 'tool_id = ? AND key LIKE ?',
+        whereArgs: [HealthDashboardTool.config.id, 'sync_cursor_%'],
+      );
       await txn.update(HealthSchema.type, {
         'history_done': 0,
         'range_start': null,
@@ -1769,6 +1884,14 @@ class HealthStore {
     } finally {
       await db.execute('DETACH DATABASE backup');
     }
+    // A file written before session identity existed restores with the column
+    // empty, and the manifest is not in the backup at all - it describes what
+    // this device owes the backend, which a snapshot cannot know. Both are
+    // derived from the rows that just landed.
+    await db.transaction((txn) async {
+      await HealthSchema.backfillDedupeKeys(txn);
+      await HealthSchema.rebuildChunkManifest(txn);
+    });
     // The restored file brings its own dimension rows, so the interning caches
     // are stale.
     reset();

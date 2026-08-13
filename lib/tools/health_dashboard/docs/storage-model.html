@@ -390,7 +390,7 @@
                 <td><span class="chip s-session">session</span></td>
                 <td class="d">A container with a type, a title and child parts.</td>
                 <td class="c">health_session</td>
-                <td class="c">id, unique origin</td>
+                <td class="c">id, unique dedupe_key</td>
                 <td class="d">workout, sleep</td>
               </tr>
             </tbody>
@@ -907,6 +907,12 @@
           survives: types, discovered writers, the app switches and the priority order are all kept,
           so the re-read pulls exactly what is selected now. It does not <code>VACUUM</code> — the
           freed pages are reused by the rows coming straight back in.
+          <br><br>
+          <code>health_chunk</code> and the stored sync cursor go with the rows. This is a local
+          rebuild, not a deletion: with an empty manifest the next sync run has nothing to push and
+          pulls every server chunk back, the Health Connect re-read adds this device's share on top,
+          and the following push ships the union. Nothing shrinks on the server at any point, which
+          also makes this the cleanest repair for a device whose local state has drifted.
         </div>
 
         <div class="note warn">
@@ -1138,7 +1144,7 @@
               <tr>
                 <td class="d">Source</td>
                 <td class="t">HealthSourceBadge</td>
-                <td class="d">The writer the session was stored under — <code>health_app</code> through <code>health_session.origin</code>.</td>
+                <td class="d">The writer the session was stored under — <code>health_app</code> through <code>health_session.app</code>.</td>
               </tr>
               <tr>
                 <td class="d">Stages</td>
@@ -1638,7 +1644,7 @@
     {
       name: "health_session", role: "fact", shape: "session",
       purpose: "Workouts and sleep",
-      why: "Summary columns are filled from the fact tables after import, so a workout list renders from this table alone and never reaches into the dense tables. Health Connect supplies these figures as separate records, not as session fields.",
+      why: "Summary columns are filled from the fact tables after import, so a workout list renders from this table alone and never reaches into the dense tables. Health Connect supplies these figures as separate records, not as session fields. Identity is dedupe_key, not origin: a Health Connect record id is assigned by the device that stored the row, so the same workout carries a different one on every device and a copy pulled from another device would insert beside the local one. Every other fact table is keyed on its own content and collapses a duplicate for free; this is the only table that cannot.",
       cols: [
         ["id", "INTEGER", K.PK, ""],
         ["kind", "INTEGER", "", "0 exercise · 1 sleep"],
@@ -1648,7 +1654,8 @@
         ["t0", "INTEGER", "", "Start"],
         ["t1", "INTEGER", "", "End — for sleep this includes time awake in bed"],
         ["app", "INTEGER", K.FK, "→ health_app.id"],
-        ["origin", "TEXT", K.UQ, "Health Connect record id"],
+        ["origin", "TEXT", "", "Health Connect record id — per-device provenance. Null for a session that only ever arrived through backend sync"],
+        ["dedupe_key", "TEXT", K.UQ, "Device-independent identity: 'c:' + client_id where the writer set one, otherwise 'k:' + kind|t0|t1|package"],
         ["client_id", "TEXT", "", "Writer's own id — tags our treadmill sessions, and detects mirrors"],
         ["distance_km", "REAL", "", "Summed from overlapping distance intervals"],
         ["calories", "REAL", "", "Summed from overlapping active-energy intervals"],
@@ -1659,7 +1666,7 @@
         ["max_speed", "REAL", "", "Peak speed inside the range"],
         ["asleep_min", "INTEGER", "", "Sleep only — stages minus awake, computed at map time. Null when the writer sent no stages, keeping 'no data' distinct from zero"]
       ],
-      idx: ["(kind, t0) — the workout and sleep lists", "(app) — source deletion"]
+      idx: ["(kind, t0) — the workout and sleep lists", "(app) — source deletion", "(dedupe_key) unique — identity, and what makes a pulled copy update rather than duplicate"]
     },
     {
       name: "health_session_part", role: "fact", shape: "session", rowless: true,
@@ -1687,6 +1694,18 @@
         ["lo", "REAL", "", "Day minimum"],
         ["hi", "REAL", "", "Day maximum"],
         ["n", "INTEGER", "", "Contributing measurements from the winning writer; the row is deleted at zero"]
+      ]
+    },
+    {
+      name: "health_chunk", role: "control", rowless: true,
+      purpose: "What this device owes the backend, one row per (UTC day, writer)",
+      why: "The sync manifest. Exists so the metadata phase never scans health_point: a decade is millions of readings but only about eleven thousand chunks. The day is UTC, deliberately unlike health_daily's local midnight — a chunk is a sync partition rather than something the user reads, and two devices in different timezones have to cut the same rows the same way. dirty is set only when rows actually landed; bumping it on every import would make each run re-upload a full day and the other device pull it straight back. Not in backupTables: a snapshot cannot know what a device has shipped, so a restore derives the manifest from the rows instead.",
+      cols: [
+        ["day", "INTEGER", K.PK, "Epoch day, UTC"],
+        ["app", "INTEGER", K.PK + " " + K.FK, "→ health_app.id, the writer"],
+        ["updated_at", "INTEGER", "", "When rows were last added for the pair"],
+        ["dirty", "INTEGER", "", "1 while the backend has not seen the current contents"],
+        ["deleted", "INTEGER", "", "Tombstone — reserved for an explicit remove-everywhere action"]
       ]
     },
     {
@@ -1757,14 +1776,14 @@
       n: "Delete", sub: "explicit", title: "Drop a writer's data",
       code: "deleteApp(package, vacuum: true)",
       body: "The reclaim-the-space action, confirmed in the UI. Removes every row that writer contributed across all types, rebuilds the rollups, clears history_done on the affected types so its history can be read again, and VACUUMs — without which the file keeps its high-water mark.",
-      writes: ["deletes by app, rebuilds health_daily, clears health_type.history_done, VACUUM"],
+      writes: ["deletes by app, drops that writer's health_chunk rows, rebuilds health_daily, clears health_type.history_done, VACUUM"],
       no: "VACUUM rewrites the whole shared app database, not only this tool's tables."
     },
     {
       n: "Restore", sub: "destructive", title: "Import a backup file",
       code: "HealthStore.importBackup(path)",
-      body: "Empties every table this tool owns and refills it from the backup, in one transaction. A snapshot restore, not a merge — merging could never remove rows deleted after the backup was taken. Columns are matched by name, so an older export still restores with its missing columns at their defaults, and a file from a newer schema is rejected before anything is touched. health_daily is not in the backup and is always rebuilt: its day is local midnight of the exporting machine, so a rollup restored in another timezone keys on a midnight the reader never asks for.",
-      writes: ["replaces every table in HealthSchema.backupTables, rebuilds health_daily, clears hc_sync_token"],
+      body: "Empties every table this tool owns and refills it from the backup, in one transaction. A snapshot restore, not a merge — merging could never remove rows deleted after the backup was taken. Columns are matched by name, so an older export still restores with its missing columns at their defaults, and a file from a newer schema is rejected before anything is touched. health_daily is not in the backup and is always rebuilt: its day is local midnight of the exporting machine, so a rollup restored in another timezone keys on a midnight the reader never asks for. Session identity and health_chunk are derived afterwards for the same reason — an older file has no dedupe_key, and no snapshot can say what a device has already shipped to the backend.",
+      writes: ["replaces every table in HealthSchema.backupTables, rebuilds health_daily and health_chunk, backfills dedupe_key, clears hc_sync_token"],
       no: "Health Connect is untouched; the export writes straight to its destination file."
     }
   ];

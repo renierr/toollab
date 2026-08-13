@@ -22,8 +22,9 @@ class HealthSchema {
   /// Version 1 was a fresh ladder; the pre-typed schema reached 10 and is
   /// dropped outright rather than migrated - see
   /// `HealthStore._dropPreTypedSchema`. Version 2 adds the global per-app switch
-  /// and priority.
-  static const version = 2;
+  /// and priority. Version 3 adds device-independent session identity and the
+  /// backend sync manifest.
+  static const version = 3;
 
   static const metric = 'health_metric';
   static const app = 'health_app';
@@ -35,10 +36,36 @@ class HealthSchema {
   static const daily = 'health_daily';
   static const type = 'health_type';
   static const typeApp = 'health_type_app';
+  static const chunk = 'health_chunk';
+
+  /// A chunk day is UTC, unlike `HealthStore.dayKey`, which is local midnight.
+  /// The chunk is a sync partition, not something the user reads, and two
+  /// devices in different timezones have to cut the same rows the same way.
+  static const chunkDayMillis = 86400000;
+
+  static int chunkDay(int millis) => millis ~/ chunkDayMillis;
 
   /// Starting priority for a newly discovered writer. Mid-range so the user can
   /// promote or demote without renumbering everything.
   static const defaultPrio = 100;
+
+  /// Device-independent identity for a session row.
+  ///
+  /// `origin` cannot serve: it is the Health Connect record id, assigned by the
+  /// Health Connect instance that stored the row, so the same workout carries a
+  /// different one on every device and a pulled copy would insert beside the
+  /// local one. The writer's own [clientId] is stable across devices wherever it
+  /// is set - every treadmill workout has one - and the composite covers the
+  /// third-party writers that set none.
+  static String dedupeKey({
+    required int kind,
+    required int t0,
+    required int t1,
+    required String package,
+    String? clientId,
+  }) => clientId != null && clientId.isNotEmpty
+      ? 'c:$clientId'
+      : 'k:$kind|$t0|$t1|$package';
 
   static const sessionKindExercise = 0;
   static const sessionKindSleep = 1;
@@ -126,30 +153,7 @@ class HealthSchema {
         PRIMARY KEY (metric, t0, t1, v)
       ) WITHOUT ROWID
     ''');
-    // Summary columns are denormalised at import so a workout list renders from
-    // this table alone, with no reach into the dense tables.
-    await db.execute('''
-      CREATE TABLE ${db.nameTable(session)} (
-        id INTEGER PRIMARY KEY,
-        kind INTEGER NOT NULL,
-        activity INTEGER,
-        title INTEGER,
-        notes TEXT,
-        t0 INTEGER NOT NULL,
-        t1 INTEGER NOT NULL,
-        app INTEGER NOT NULL,
-        origin TEXT NOT NULL UNIQUE,
-        client_id TEXT,
-        distance_km REAL,
-        calories REAL,
-        steps INTEGER,
-        avg_hr REAL,
-        max_hr REAL,
-        avg_speed REAL,
-        max_speed REAL,
-        asleep_min INTEGER
-      )
-    ''');
+    await _createSession(db);
     await db.execute('''
       CREATE TABLE ${db.nameTable(sessionPart)} (
         session INTEGER NOT NULL,
@@ -203,14 +207,8 @@ class HealthSchema {
         PRIMARY KEY (type, app)
       ) WITHOUT ROWID
     ''');
-    await db.execute(
-      'CREATE INDEX ${db.nameTable('idx_health_session_time')} '
-      'ON ${db.nameTable(session)} (kind, t0)',
-    );
-    await db.execute(
-      'CREATE INDEX ${db.nameTable('idx_health_session_app')} '
-      'ON ${db.nameTable(session)} (app)',
-    );
+    await _createChunk(db);
+    await _createSessionIndexes(db);
     // Deleting every row a deselected writer contributed, and provenance
     // filters on charts, both start from the app.
     await db.execute(
@@ -221,6 +219,75 @@ class HealthSchema {
       'CREATE INDEX ${db.nameTable('idx_health_interval_app')} '
       'ON ${db.nameTable(interval)} (app, metric)',
     );
+  }
+
+  /// Summary columns are denormalised at import so a workout list renders from
+  /// this table alone, with no reach into the dense tables. `origin` is nullable
+  /// and no longer unique: it is per-device provenance, and a row that only ever
+  /// arrived through a sync chunk has no local Health Connect record to name.
+  /// Identity is [dedupeKey].
+  static Future<void> _createSession(ToolDatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE ${db.nameTable(session)} (
+        id INTEGER PRIMARY KEY,
+        kind INTEGER NOT NULL,
+        activity INTEGER,
+        title INTEGER,
+        notes TEXT,
+        t0 INTEGER NOT NULL,
+        t1 INTEGER NOT NULL,
+        app INTEGER NOT NULL,
+        origin TEXT,
+        dedupe_key TEXT,
+        client_id TEXT,
+        distance_km REAL,
+        calories REAL,
+        steps INTEGER,
+        avg_hr REAL,
+        max_hr REAL,
+        avg_speed REAL,
+        max_speed REAL,
+        asleep_min INTEGER
+      )
+    ''');
+  }
+
+  static Future<void> _createSessionIndexes(ToolDatabaseExecutor db) async {
+    await db.execute(
+      'CREATE INDEX ${db.nameTable('idx_health_session_time')} '
+      'ON ${db.nameTable(session)} (kind, t0)',
+    );
+    await db.execute(
+      'CREATE INDEX ${db.nameTable('idx_health_session_app')} '
+      'ON ${db.nameTable(session)} (app)',
+    );
+    await db.execute(
+      'CREATE UNIQUE INDEX ${db.nameTable('idx_health_session_dedupe')} '
+      'ON ${db.nameTable(session)} (dedupe_key)',
+    );
+    // Origin lost its UNIQUE constraint and with it the implicit index that
+    // deleting by Health Connect record id relied on.
+    await db.execute(
+      'CREATE INDEX ${db.nameTable('idx_health_session_origin')} '
+      'ON ${db.nameTable(session)} (origin)',
+    );
+  }
+
+  /// What this device owes the backend, one row per (UTC day, writer). Exists so
+  /// the sync metadata phase never scans `health_point`. `dirty` is set by the
+  /// importer whenever rows actually landed for the pair, and cleared once the
+  /// chunk has been pushed.
+  static Future<void> _createChunk(ToolDatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE ${db.nameTable(chunk)} (
+        day        INTEGER NOT NULL,
+        app        INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        dirty      INTEGER NOT NULL DEFAULT 1,
+        deleted    INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (day, app)
+      ) WITHOUT ROWID
+    ''');
   }
 
   /// Adds the global per-app switch and priority to an existing v1 store.
@@ -237,8 +304,99 @@ class HealthSchema {
     );
   }
 
+  /// Session identity and the sync manifest.
+  ///
+  /// The session table is rebuilt rather than altered: `origin` has to lose both
+  /// `NOT NULL` and `UNIQUE`, and SQLite cannot drop a constraint in place. The
+  /// manifest is filled from the data already stored and marked dirty, so this
+  /// device's existing history is what the first sync run offers the server.
+  static Future<void> migrateToV3(ToolDatabaseExecutor db) async {
+    await _createChunk(db);
+
+    const columns =
+        'id, kind, activity, title, notes, t0, t1, app, origin, client_id, '
+        'distance_km, calories, steps, avg_hr, max_hr, avg_speed, max_speed, '
+        'asleep_min';
+    final sessions = db.nameTable(session);
+    final previous = db.nameTable('${session}_v2');
+    await db.execute('ALTER TABLE $sessions RENAME TO $previous');
+    // The old indexes followed the table through the rename and would collide
+    // with the new ones by name.
+    await db.execute(
+      'DROP INDEX IF EXISTS ${db.nameTable('idx_health_session_time')}',
+    );
+    await db.execute(
+      'DROP INDEX IF EXISTS ${db.nameTable('idx_health_session_app')}',
+    );
+    await _createSession(db);
+    await db.execute(
+      'INSERT INTO $sessions ($columns) SELECT $columns FROM $previous',
+    );
+    await db.execute('DROP TABLE $previous');
+
+    await backfillDedupeKeys(db);
+    await _createSessionIndexes(db);
+
+    await rebuildChunkManifest(db);
+  }
+
+  /// Fills [dedupeKey] for every session that has none, and drops the rows that
+  /// turn out to be the same session twice. Also the repair after a backup
+  /// written by an older schema is restored.
+  ///
+  /// A pre-v3 store can hold two rows that resolve to one identity - the import
+  /// path only merged what its overlap check caught - so this has to leave a set
+  /// the unique index can be built over. `UPDATE OR IGNORE` matters when the
+  /// index already exists: the second row of a pair keeps a null key instead of
+  /// failing the statement, and is then removed with the rest.
+  ///
+  /// The survivor is the copy carrying the most parts, not the lowest id. Parts
+  /// go with the row they hang off, and a re-import does not bring them back:
+  /// the import path leaves a session alone when its summary columns already
+  /// match, so a discarded copy's sleep stages would simply be gone.
+  static Future<void> backfillDedupeKeys(ToolDatabaseExecutor db) async {
+    final sessions = db.nameTable(session);
+    await db.execute(
+      "UPDATE OR IGNORE $sessions SET dedupe_key = COALESCE("
+      "'c:' || NULLIF(client_id, ''), "
+      "'k:' || kind || '|' || t0 || '|' || t1 || '|' || "
+      "COALESCE((SELECT package FROM ${db.nameTable(app)} AS a "
+      "WHERE a.id = $sessions.app), '?')"
+      ') WHERE dedupe_key IS NULL',
+    );
+    final keep =
+        'SELECT (SELECT y.id FROM $sessions AS y WHERE y.dedupe_key = g.dedupe_key '
+        'ORDER BY (SELECT COUNT(*) FROM ${db.nameTable(sessionPart)} AS p '
+        'WHERE p.session = y.id) DESC, y.id LIMIT 1) '
+        'FROM (SELECT DISTINCT dedupe_key FROM $sessions '
+        'WHERE dedupe_key IS NOT NULL) AS g';
+    final duplicates =
+        'SELECT id FROM $sessions '
+        'WHERE dedupe_key IS NULL OR id NOT IN ($keep)';
+    await db.execute(
+      'DELETE FROM ${db.nameTable(sessionPart)} WHERE session IN ($duplicates)',
+    );
+    await db.execute('DELETE FROM $sessions WHERE id IN ($duplicates)');
+  }
+
+  /// Derives the whole manifest from the stored rows, every chunk dirty. Used
+  /// where local data appears without going through the importer - the v3
+  /// migration, and a backup restore.
+  static Future<void> rebuildChunkManifest(ToolDatabaseExecutor db) async {
+    await db.execute('DELETE FROM ${db.nameTable(chunk)}');
+    await db.execute(
+      'INSERT INTO ${db.nameTable(chunk)} (day, app, updated_at, dirty, deleted) '
+      'SELECT day, app, ?, 1, 0 FROM ('
+      'SELECT t / $chunkDayMillis AS day, app FROM ${db.nameTable(point)} '
+      'UNION SELECT t0 / $chunkDayMillis, app FROM ${db.nameTable(interval)} '
+      'UNION SELECT t0 / $chunkDayMillis, app FROM ${db.nameTable(session)})',
+      [DateTime.now().millisecondsSinceEpoch],
+    );
+  }
+
   static Future<void> drop(ToolDatabaseExecutor db) async {
     for (final table in [
+      chunk,
       daily,
       sessionPart,
       session,

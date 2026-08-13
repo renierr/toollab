@@ -179,7 +179,7 @@ class HealthQueries {
     return HealthRecord(
       id: 's:${session.id}',
       source: HealthSource.healthConnect,
-      sourceRecordId: session.origin,
+      sourceRecordId: session.origin ?? '',
       type: isSleep ? sleepType : workoutType,
       startTime: session.t0,
       endTime: session.t1,

@@ -63,7 +63,7 @@ exist:
 | --- | --- | --- |
 | `health_point` | `(metric, t, v)` | identical rows collapse |
 | `health_interval` | `(metric, t0, t1, v)` | identical rows collapse |
-| `health_session` | `origin` UNIQUE | **inserts a duplicate — see below** |
+| `health_session` | surrogate `id` | **inserts a duplicate — see below** |
 | `health_daily` | — | never synced, recomputed locally |
 
 Applying a chunk is `INSERT OR IGNORE` of its rows, then marking the touched
@@ -104,22 +104,35 @@ Two corollaries:
 
 ## The one real schema change: session identity
 
-`health_session.origin` holds the Health Connect record id, which is a
-**per-device** value. The same logical workout carries a different one on each
-device, so a pulled session inserts as a second copy. This is the only place a
-genuine duplicate appears.
+Every other fact table is keyed on its own content, so a pulled row that is
+already present simply collapses. `health_session` cannot be: `health_session_part`
+hangs off its surrogate `id`, and the summary columns are not identity. Its only
+uniqueness rule was `origin UNIQUE`, and `origin` is the Health Connect record
+id — assigned by the Health Connect instance that stored the row.
+
+That id is **mostly, not reliably** shared across devices. The captured
+phone/tablet comparison in `README.md` puts it at 624/626 for exercise sessions
+and 152/167 for sleep. A rule that is right 96% of the time is a fine hint and a
+bad primary key, and it is also `NOT NULL`, which a row that only ever arrived
+through a chunk has nothing to satisfy.
 
 Schema v3:
 
-- add `dedupe_key TEXT`, backfilled as `client_id` when present, otherwise a
-  hash of `kind | t0 | t1 | app`
-- unique index on `dedupe_key`
-- `origin` keeps its column but loses `UNIQUE` (table rebuild)
+- add `dedupe_key TEXT`, unique: `c:<client_id>` where the writer set one,
+  otherwise `k:<kind>|<t0>|<t1>|<package>`
+- `origin` keeps its column but loses `UNIQUE` and `NOT NULL` (table rebuild),
+  and gains a plain index — `deleteSessionsByOrigin` was relying on the implicit
+  one the constraint provided
+- the import path matches on `dedupe_key` first and falls back to `origin`, so
+  a writer that edits a workout's bounds still updates its row rather than
+  adding one
 
-`client_id` already exists and is already populated from
-`metadata.clientRecordId` in `health_connect_mapper.dart`, so every treadmill
-workout — written as `toollab:treadmill-control:<uid>:<part>` — dedupes across
-devices for free. Only third-party sessions fall back to the content hash.
+A plain composite rather than a hash: it is device-independent either way, and
+readable in a debug dump. `client_id` already exists and is already populated
+from `metadata.clientRecordId` in `health_connect_mapper.dart`, so every
+treadmill workout — written as `toollab:treadmill-control:<uid>:<part>` —
+dedupes across devices for free, including when the same workout arrives once
+through the treadmill tool's own sync and once inside a health chunk.
 
 ## Dimension tables: send strings, never ids
 
@@ -144,10 +157,23 @@ CREATE TABLE health_chunk (
 ) WITHOUT ROWID
 ```
 
+`day` is a **UTC** epoch day, deliberately unlike `health_daily`, which keys on
+local midnight. A chunk is a sync partition rather than something the user reads,
+and two devices in different timezones have to cut the same rows the same way.
+
 The importer bumps `(day, app)` whenever rows land for it. The delegate maps
 straight onto the engine's existing shape: `getLocalSyncRecords` reads this
 table, `getLocalPendingSyncRecords` is `WHERE dirty = 1`, and
 `finalizeLocalSync` clears `dirty`.
+
+"Whenever rows land" has to mean rows that were actually inserted, and sqflite
+cannot report that: `INSERT OR IGNORE` into a `WITHOUT ROWID` table leaves
+`last_insert_rowid()` untouched, so an ignored insert is indistinguishable from a
+real one. `writeRecords` therefore batches per chunk instead of per page and
+reads SQLite's `total_changes()` either side of each commit. Sessions are
+counted separately: `_writeSession` compares against the stored row and returns
+whether anything moved, because an UPDATE writing identical values still counts
+as a change.
 
 ## Everything this adds to the schema
 
@@ -160,14 +186,8 @@ No other table changes, and no existing table gains a device column.
 writers over a decade this is ~11k rows.
 
 **New column — `health_session.dedupe_key TEXT`**, unique, with `origin` losing
-its own `UNIQUE` (a table rebuild). Backfilled as `client_id` where present,
-otherwise a hash of `kind | t0 | t1 | app`. This is the only genuine duplicate in
-the protocol: `origin` is a Health Connect record id and is per-device, so the
-same workout carries a different one on each device. `client_id` is already
-populated from `metadata.clientRecordId`, so every treadmill workout — written as
-`toollab:treadmill-control:<uid>:<part>` — dedupes for free, including when the
-same workout arrives once through the treadmill tool's own sync and once through
-a health chunk.
+its own `UNIQUE` and `NOT NULL` (a table rebuild). See the section above for what
+it holds and why the Health Connect record id cannot serve.
 
 **Cursor storage — no table.** `getSyncCursor` / `saveSyncCursor` go through
 `DatabaseService.setSetting(<tool id>, 'sync_cursor_<syncId>', …)`, keyed by
@@ -316,9 +336,11 @@ involvement, which is the point — the new device never held that history.
 2. ~~Per-tool sync switch, defaulting on.~~ Done — `AppState.syncWithBackend` is
    the single gate, the switch list is registry-driven, and re-enabling a tool
    drops its cursor. Nothing below is reachable until a delegate exists.
-3. Schema v3: `dedupe_key` and `health_chunk`, with the importer maintaining
-   both, and `clearImportedData` extended to clear the manifest and cursor. No
-   network, no visible behaviour change; verifiable on its own.
+3. ~~Schema v3: `dedupe_key` and `health_chunk`, with the importer maintaining
+   both, and `clearImportedData` extended to clear the manifest and cursor.~~
+   Done — the migration also rebuilds the manifest from existing rows, and a
+   backup restore derives both, since a snapshot cannot know what a device has
+   shipped.
 4. Decide the `deleteApp` / `pruneUnused` intent split in the UI before anything
    can push. Cheap now, expensive after the delegate ships.
 5. `HealthSyncDelegate` with plain JSON payloads, including a real cursor
