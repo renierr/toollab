@@ -40,6 +40,7 @@
     <uses-permission android:name="android.permission.health.READ_EXERCISE_ROUTE" />
     <uses-permission android:name="android.permission.health.READ_FLOORS_CLIMBED" />
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE_VARIABILITY" />
     <uses-permission android:name="android.permission.health.READ_HEIGHT" />
@@ -74,10 +75,6 @@
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
-        <!-- Android 14+ keeps Health Connect in the platform controller instead of the
-             APK above. Declared so getLaunchIntentForPackage can see it: the per-app
-             MANAGE_HEALTH_PERMISSIONS deep link is signature-protected, so its own
-             launcher entry is the only screen an app can open. -->
         <package android:name="com.google.android.healthconnect.controller" />
         <intent>
             <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
@@ -96,6 +93,13 @@
         </intent>
         <intent>
             <action android:name="androidx.health.ACTION_HEALTH_CONNECT_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+            <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.PRIVACY_SETTINGS" />
         </intent>
     </queries>
     <application

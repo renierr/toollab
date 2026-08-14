@@ -1,5 +1,6 @@
 package de.renier.tool_lab
 
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
@@ -197,29 +198,48 @@ open class MainActivity : FlutterFragmentActivity() {
         MethodChannel(messenger, HEALTH_CONNECT_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "openSettings" -> {
-                    // ACTION_MANAGE_HEALTH_PERMISSIONS is deliberately absent: it resolves to
-                    // the Health Connect controller but starting it needs the signature
-                    // permission GRANT_RUNTIME_PERMISSIONS, so a normal app is denied - it is
-                    // the deep link the system's own settings use. Granting happens through the
-                    // plugin's permission request instead; this entry is for inspecting and
-                    // revoking, so it aims at Health Connect's own screen and, where the
-                    // settings actions do not resolve, at its launcher entry.
-                    val settingsActions = listOf(
-                        "androidx.health.ACTION_HEALTH_CONNECT_SETTINGS",
-                        "android.health.connect.action.HEALTH_CONNECT_SETTINGS",
-                        "android.settings.HEALTH_CONNECT_SETTINGS"
-                    )
-                    val healthConnectPackages = listOf(
+                    val attempts = mutableListOf<Pair<String, Intent>>()
+
+                    // 1. Android 14+ / system settings actions
+                    attempts.add("settings:system" to Intent("android.settings.HEALTH_CONNECT_SETTINGS"))
+                    attempts.add("settings:health_connect" to Intent("android.health.connect.action.HEALTH_CONNECT_SETTINGS"))
+                    attempts.add("settings:androidx" to Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS"))
+
+                    // 2. Health Connect per-app permissions screen
+                    attempts.add("permissions:androidx" to Intent("androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS").apply {
+                        putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
+                    })
+                    attempts.add("permissions:system" to Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS").apply {
+                        putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
+                    })
+
+                    // 3. Explicit Health Connect Controller activities (Samsung, Pixel, Android 14+)
+                    attempts.add("component:controller_main" to Intent().apply {
+                        component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.MainActivity")
+                    })
+                    attempts.add("component:controller_manage" to Intent().apply {
+                        component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.permissions.ManageHealthDataActivity")
+                    })
+
+                    // 4. Standalone Health Connect APK launchers (Android 13 and below)
+                    listOf(
                         "com.google.android.healthconnect.controller",
                         "com.google.android.apps.healthdata"
-                    )
-                    val attempts = mutableListOf<Pair<String, Intent>>()
-                    settingsActions.forEach { attempts.add(it to Intent(it)) }
-                    healthConnectPackages.forEach { pkg ->
+                    ).forEach { pkg ->
                         packageManager.getLaunchIntentForPackage(pkg)?.let {
                             attempts.add("launcher:$pkg" to it)
                         }
                     }
+
+                    // 5. Health permissions usage intent
+                    attempts.add("action:health_usage" to Intent("android.intent.action.VIEW_PERMISSION_USAGE").apply {
+                        addCategory("android.intent.category.HEALTH_PERMISSIONS")
+                    })
+
+                    // 6. Privacy settings
+                    attempts.add("fallback:privacy" to Intent(Settings.ACTION_PRIVACY_SETTINGS))
+
+                    // 7. App Info (last resort)
                     val appInfo = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                         data = android.net.Uri.parse("package:$packageName")
                     }
@@ -227,19 +247,14 @@ open class MainActivity : FlutterFragmentActivity() {
 
                     var opened: String? = null
                     for ((label, intent) in attempts) {
-                        val target = intent.resolveActivity(packageManager)
-                        if (target == null) {
-                            Log.w(HEALTH_CONNECT_TAG, "$label does not resolve on this device")
-                            continue
-                        }
                         try {
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(intent)
-                            Log.i(HEALTH_CONNECT_TAG, "$label opened ${target.flattenToShortString()}")
+                            Log.i(HEALTH_CONNECT_TAG, "$label started successfully")
                             opened = label
                             break
                         } catch (e: Exception) {
-                            Log.w(HEALTH_CONNECT_TAG, "$label resolved to $target but failed to start", e)
+                            Log.w(HEALTH_CONNECT_TAG, "$label failed to start: ${e.message}")
                         }
                     }
 
