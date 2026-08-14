@@ -14,6 +14,22 @@ void main() {
       expect(MimeTypeHelper.getMimeType('document.md'), 'text/markdown');
       expect(MimeTypeHelper.getMimeType('document.markdown'), 'text/markdown');
       expect(MimeTypeHelper.getMimeType('data.json'), 'application/json');
+      expect(
+        MimeTypeHelper.getMimeType('database.db'),
+        'application/vnd.sqlite3',
+      );
+      expect(
+        MimeTypeHelper.getMimeType('database.sqlite'),
+        'application/vnd.sqlite3',
+      );
+      expect(
+        MimeTypeHelper.getMimeType('database.sqlite3'),
+        'application/vnd.sqlite3',
+      );
+      expect(
+        MimeTypeHelper.getMimeType('database.db3'),
+        'application/vnd.sqlite3',
+      );
       expect(MimeTypeHelper.getMimeType('index.html'), 'text/html');
       expect(MimeTypeHelper.getMimeType('styles.css'), 'text/css');
       expect(MimeTypeHelper.getMimeType('image.webp'), 'image/webp');
@@ -43,6 +59,10 @@ void main() {
       expect(
         MimeTypeHelper.detectFromMagicBytes([0x25, 0x50, 0x44, 0x46, 0x2D]),
         'application/pdf',
+      );
+      expect(
+        MimeTypeHelper.detectFromMagicBytes('SQLite format 3\x00'.codeUnits),
+        'application/vnd.sqlite3',
       );
       expect(
         MimeTypeHelper.detectFromMagicBytes([

@@ -56,6 +56,11 @@ class MimeTypeHelper {
       case 'md':
       case 'markdown':
         return 'text/markdown';
+      case 'db':
+      case 'sqlite':
+      case 'sqlite3':
+      case 'db3':
+        return 'application/vnd.sqlite3';
       case 'json':
         return 'application/json';
       // Web / Text / Code
@@ -230,6 +235,9 @@ class MimeTypeHelper {
     // Documents
     if (_matchesAscii(bytes, 0, '%PDF')) {
       return 'application/pdf';
+    }
+    if (_matchesAscii(bytes, 0, 'SQLite format 3\x00')) {
+      return 'application/vnd.sqlite3';
     }
 
     // Archives (ZIP-based formats — Office files share the ZIP signature, so

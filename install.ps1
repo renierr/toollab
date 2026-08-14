@@ -1,4 +1,4 @@
-﻿param(
+param(
   [switch]$Uninstall,
   [switch]$Silent
 )
@@ -28,6 +28,10 @@ $FileTypes = @(
   @{ Extension = '.md';      ProgId = "$AppName.md";      Description = 'Markdown Document'; MimeType = 'text/markdown' }
   @{ Extension = '.markdown'; ProgId = "$AppName.markdown"; Description = 'Markdown Document'; MimeType = 'text/markdown' }
   @{ Extension = '.txt';     ProgId = "$AppName.txt";     Description = 'Text Document';     MimeType = 'text/plain' }
+  @{ Extension = '.db';      ProgId = "$AppName.db";      Description = 'SQLite Database';   MimeType = 'application/vnd.sqlite3' }
+  @{ Extension = '.sqlite';  ProgId = "$AppName.sqlite";  Description = 'SQLite Database';   MimeType = 'application/vnd.sqlite3' }
+  @{ Extension = '.sqlite3'; ProgId = "$AppName.sqlite3"; Description = 'SQLite Database';   MimeType = 'application/vnd.sqlite3' }
+  @{ Extension = '.db3';     ProgId = "$AppName.db3";     Description = 'SQLite Database';   MimeType = 'application/vnd.sqlite3' }
   @{ Extension = '.png';      ProgId = "$AppName.png";      Description = 'PNG Image';         MimeType = 'image/png' }
   @{ Extension = '.jpg';      ProgId = "$AppName.jpg";      Description = 'JPEG Image';        MimeType = 'image/jpeg' }
   @{ Extension = '.jpeg';     ProgId = "$AppName.jpeg";     Description = 'JPEG Image';        MimeType = 'image/jpeg' }
