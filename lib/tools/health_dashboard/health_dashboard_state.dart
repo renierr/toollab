@@ -247,11 +247,11 @@ class HealthDashboardState extends ChangeNotifier {
           'Syncing...',
           title: 'Health Dashboard sync',
         );
-        // A rejected token is recovered here rather than only logged: the open
-        // path is the one that runs unattended, so leaving it unhandled is what
-        // silently stopped Health Connect data arriving at all.
-        if ((await _diff.sync()).needsFullImport) {
-          await _recoverRejectedToken();
+        final result = await _syncHealthConnect();
+        if (result.upserted > 0 ||
+            result.deleted > 0 ||
+            (result.recovered ?? 0) > 0) {
+          await _reloadRecords();
         }
       }
       await _reloadRecords();
@@ -499,7 +499,23 @@ class HealthDashboardState extends ChangeNotifier {
       return const HealthDiffResult();
     }
     var result = await _diff.sync();
-    if (result.needsFullImport) result = await _recoverRejectedToken();
+    if (result.needsFullImport || result.baselineEstablished) {
+      result = await _recoverRejectedToken();
+    } else {
+      try {
+        final recentImported = await _importer.importRecent();
+        if (recentImported > 0) {
+          result = HealthDiffResult(
+            upserted: result.upserted + recentImported,
+            deleted: result.deleted,
+            baselineEstablished: result.baselineEstablished,
+            recovered: result.recovered,
+          );
+        }
+      } catch (e) {
+        debugLog('[HealthDashboard] Recent safeguard import failed: $e');
+      }
+    }
     await loadSelection();
     return result;
   }

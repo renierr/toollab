@@ -175,6 +175,80 @@ class HealthConnectImporter {
     return total;
   }
 
+  /// Reads records across a recent time window without altering pagination state.
+  Future<int> importRecent({
+    Duration window = const Duration(days: 2),
+    void Function(String status, int count)? onProgress,
+  }) async {
+    if (!Platform.isAndroid) return 0;
+    final connector = await hc.HealthConnector.create();
+    const mapper = HealthConnectMapper();
+    final store = HealthStore.instance;
+    final enabled = await store.enabledTypes();
+    final now = DateTime.now();
+    final rangeStart = now.subtract(window);
+    var total = 0;
+    int? touchedFrom;
+    int? touchedTo;
+
+    for (final readable in HealthConnectTypes.readable()) {
+      final typeId = HealthConnectTypes.idOf(readable);
+      if (!enabled.contains(typeId)) continue;
+
+      final packages = await store.dataOriginFilter(typeId);
+      final origins = [for (final package in packages) hc.DataOrigin(package)];
+      final excluded = await store.excludedPackages(typeId);
+
+      try {
+        dynamic request = readable.readInTimeRange(
+          startTime: rangeStart,
+          endTime: now,
+          pageSize: _pageSize,
+          dataOrigins: origins,
+        );
+        do {
+          final dynamic response = await connector.readRecords(request);
+          final mapped = <HealthMappedRecord>[];
+          for (final record
+              in (response.records as List).cast<hc.HealthRecord>()) {
+            final result = mapper.map(record);
+            if (result.isEmpty || excluded.contains(result.package)) continue;
+            mapped.add(result);
+            for (final point in result.points) {
+              touchedFrom = _min(touchedFrom, point.t);
+              touchedTo = _max(touchedTo, point.t);
+            }
+            for (final interval in result.intervals) {
+              touchedFrom = _min(touchedFrom, interval.t0);
+              touchedTo = _max(touchedTo, interval.t1);
+            }
+            final session = result.session;
+            if (session != null) {
+              touchedFrom = _min(touchedFrom, session.t0);
+              touchedTo = _max(touchedTo, session.t1);
+            }
+          }
+          request = response.nextPageRequest;
+          if (mapped.isNotEmpty) {
+            await store.writeRecords(mapped);
+            total += mapped.length;
+          }
+          onProgress?.call('Reading recent $typeId...', total);
+        } while (request != null);
+      } catch (e) {
+        debugLog('[HealthImporter] Recent read for $typeId failed: $e');
+      }
+    }
+
+    if (touchedFrom != null) {
+      await HealthStore.instance.refreshSessionSummaries(
+        from: touchedFrom,
+        to: touchedTo,
+      );
+    }
+    return total;
+  }
+
   static int _min(int? current, int value) =>
       current == null || value < current ? value : current;
 
