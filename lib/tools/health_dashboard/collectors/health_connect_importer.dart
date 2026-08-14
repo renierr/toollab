@@ -35,6 +35,7 @@ class HealthConnectImporter {
       for (final readable in HealthConnectTypes.readable())
         readable.readPermission,
       hc.HealthPlatformFeature.readHealthDataHistory.permission,
+      hc.HealthPlatformFeature.readHealthDataInBackground.permission,
     ]);
     if (results.any((result) => result.status == hc.PermissionStatus.granted)) {
       return true;

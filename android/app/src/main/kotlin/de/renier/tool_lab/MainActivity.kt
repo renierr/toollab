@@ -200,10 +200,12 @@ open class MainActivity : FlutterFragmentActivity() {
                 "openSettings" -> {
                     val attempts = mutableListOf<Pair<String, Intent>>()
 
-                    // 1. Android 14+ / system settings actions
+                    // 1. System / Android 14+ settings actions
                     attempts.add("settings:system" to Intent("android.settings.HEALTH_CONNECT_SETTINGS"))
                     attempts.add("settings:health_connect" to Intent("android.health.connect.action.HEALTH_CONNECT_SETTINGS"))
                     attempts.add("settings:androidx" to Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS"))
+                    attempts.add("settings:samsung" to Intent("com.samsung.android.healthconnect.action.HEALTH_CONNECT_SETTINGS"))
+                    attempts.add("uri:healthconnect" to Intent(Intent.ACTION_VIEW, android.net.Uri.parse("healthconnect://settings")))
 
                     // 2. Health Connect per-app permissions screen
                     attempts.add("permissions:androidx" to Intent("androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS").apply {
@@ -214,10 +216,13 @@ open class MainActivity : FlutterFragmentActivity() {
                     })
 
                     // 3. Explicit Health Connect Controller activities (Samsung, Pixel, Android 14+)
-                    attempts.add("component:controller_main" to Intent().apply {
+                    attempts.add("component:controller_main_action" to Intent(Intent.ACTION_MAIN).apply {
                         component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.MainActivity")
                     })
-                    attempts.add("component:controller_manage" to Intent().apply {
+                    attempts.add("component:controller_view" to Intent(Intent.ACTION_VIEW).apply {
+                        component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.MainActivity")
+                    })
+                    attempts.add("component:controller_manage" to Intent(Intent.ACTION_MAIN).apply {
                         component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.permissions.ManageHealthDataActivity")
                     })
 
@@ -236,10 +241,7 @@ open class MainActivity : FlutterFragmentActivity() {
                         addCategory("android.intent.category.HEALTH_PERMISSIONS")
                     })
 
-                    // 6. Privacy settings
-                    attempts.add("fallback:privacy" to Intent(Settings.ACTION_PRIVACY_SETTINGS))
-
-                    // 7. App Info (last resort)
+                    // 6. App Info (last resort)
                     val appInfo = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                         data = android.net.Uri.parse("package:$packageName")
                     }

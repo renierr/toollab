@@ -1,6 +1,11 @@
+import 'dart:io';
+
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 
+import 'collectors/health_connect_diff.dart';
+import 'collectors/health_connect_importer.dart';
 import 'config.dart';
 import 'store/health_store.dart';
 
@@ -23,13 +28,32 @@ class HealthSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => HealthDashboardTool.config.id;
 
-  @override
-  Future<List<Map<String, dynamic>>> getLocalSyncRecords() async =>
-      _asRecords(await HealthStore.instance.chunkManifest());
+  Future<void> _refreshHealthConnect() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final diff = const HealthConnectDiff();
+      final diffResult = await diff.sync();
+      if (!diffResult.needsFullImport && !diffResult.baselineEstablished) {
+        await const HealthConnectImporter().importRecent();
+      }
+    } catch (e) {
+      debugLog('[HealthSyncDelegate] Health Connect sync failed: $e');
+    }
+  }
 
   @override
-  Future<List<Map<String, dynamic>>> getLocalPendingSyncRecords() async =>
-      _asRecords(await HealthStore.instance.chunkManifest(onlyDirty: true));
+  Future<List<Map<String, dynamic>>> getLocalSyncRecords() async {
+    await _refreshHealthConnect();
+    return _asRecords(await HealthStore.instance.chunkManifest());
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getLocalPendingSyncRecords() async {
+    await _refreshHealthConnect();
+    return _asRecords(
+      await HealthStore.instance.chunkManifest(onlyDirty: true),
+    );
+  }
 
   /// The mixin's version scans the whole manifest per id. A decade is around
   /// eleven thousand chunks against a page of five hundred ids, so the lookup
