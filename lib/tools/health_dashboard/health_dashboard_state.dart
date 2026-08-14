@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -62,6 +63,13 @@ class HealthDashboardState extends ChangeNotifier {
 
   BackgroundWorkLease? _importWork;
 
+  /// Long enough to swallow a run of arrow taps, short enough that the numbers
+  /// on the dashboard are already right by the time the user gets back to it.
+  static const _rollupRebuildDelay = Duration(milliseconds: 900);
+
+  Timer? _rollupRebuild;
+  bool _disposed = false;
+
   void _onCollectionProgress(String status, int count) {
     collectionStatus = status;
     collectedRecordCount = count;
@@ -98,6 +106,8 @@ class HealthDashboardState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    _rollupRebuild?.cancel();
     _tempScope.cleanTracked();
     super.dispose();
   }
@@ -335,6 +345,11 @@ class HealthDashboardState extends ChangeNotifier {
   /// anywhere, while its stored rows stay put - see [deleteAppData] to reclaim
   /// the space.
   Future<void> setAppEnabled(String package, bool enabled) async {
+    healthApps = [
+      for (final app in healthApps)
+        app.package == package ? app.withEnabled(enabled) : app,
+    ];
+    notifyListeners();
     await HealthStore.instance.setAppEnabled(package, enabled);
     if (enabled) {
       await HealthStore.instance.resetTypeHistory(
@@ -346,15 +361,42 @@ class HealthDashboardState extends ChangeNotifier {
       await HealthStore.instance.clearSkippedChunks(package);
     }
     await loadSelection();
-    await load(showLoading: false);
+    _scheduleRollupRebuild();
   }
 
   /// Writer priority, best first. Decides which single source a day's totals are
   /// computed from, and which side of a mirrored session survives.
   Future<void> setAppOrder(List<String> packages) async {
+    final byPackage = {for (final app in healthApps) app.package: app};
+    final ordered = <HealthAppState>[];
+    for (final package in packages) {
+      final app = byPackage.remove(package);
+      if (app != null) ordered.add(app);
+    }
+    // Painted before the store is even asked: the rebuild the new order forces
+    // reads every row, and an arrow that only moves once that finishes reads as
+    // a dead button.
+    healthApps = [...ordered, ...byPackage.values];
+    notifyListeners();
     await HealthStore.instance.setAppOrder(packages);
-    await loadSelection();
-    await load(showLoading: false);
+    _scheduleRollupRebuild();
+  }
+
+  /// Recomputes the rollups a changed writer order or switch invalidated, once
+  /// the user has stopped changing them. Walking a source up three places would
+  /// otherwise pay for three whole-store passes to reach one result.
+  void _scheduleRollupRebuild() {
+    _rollupRebuild?.cancel();
+    _rollupRebuild = Timer(_rollupRebuildDelay, () async {
+      try {
+        await HealthStore.instance.rebuildDaily(sessions: false);
+        if (_disposed) return;
+        await _reloadRecords();
+      } catch (e) {
+        errorLog('[HealthDashboard] Rollup rebuild failed: $e');
+      }
+      if (!_disposed) notifyListeners();
+    });
   }
 
   /// Explicitly drops a writer's stored rows and shrinks the database file.

@@ -178,6 +178,14 @@ class HealthAppState {
     required this.prio,
     required this.typeCount,
   });
+
+  HealthAppState withEnabled(bool value) => HealthAppState(
+    appId: appId,
+    package: package,
+    enabled: value,
+    prio: prio,
+    typeCount: typeCount,
+  );
 }
 
 class HealthTypeState {
@@ -895,10 +903,16 @@ class HealthStore {
 
   /// Rebuilds every daily rollup from the fact tables. Only needed after a bulk
   /// change that bypassed [writeRecords], such as the backfill or a restore.
+  ///
+  /// [sessions] also refreshes the denormalised session summaries, which is the
+  /// expensive half on a large store. A summary is computed from its own
+  /// writer's rows, so a change that only moved writers around - a priority
+  /// reorder, a global switch - cannot alter one and skips the pass.
   Future<void> rebuildDaily({
+    bool sessions = true,
     void Function(String status, int count)? onProgress,
   }) async {
-    await refreshSessionSummaries();
+    if (sessions) await refreshSessionSummaries();
     final db = await _db();
     final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
     await db.delete(HealthSchema.daily);
@@ -1777,6 +1791,8 @@ class HealthStore {
   /// - they stop being read and stop feeding the rollups, and come back
   /// instantly if the writer is switched on again. Reclaiming the space is a
   /// separate, explicit [deleteApp].
+  ///
+  /// The rollups are the caller's to rebuild - see [setAppOrder].
   Future<void> setAppEnabled(String package, bool enabled) async {
     final db = await _db();
     final appId = _appIds[package];
@@ -1792,11 +1808,15 @@ class HealthStore {
     } else {
       _disabledApps.add(appId);
     }
-    await rebuildDaily();
   }
 
   /// Reorders writers. [order] is best-first; positions become the stored
   /// priority, so the list the user sees is the list the rollups use.
+  ///
+  /// The rollups are **not** rebuilt here, though priority decides which writer
+  /// each day is computed from and they do have to be. Rebuilding reads the
+  /// whole store, and only the caller knows whether a run of arrow taps has
+  /// settled - see `HealthDashboardState._scheduleRollupRebuild`.
   Future<void> setAppOrder(List<String> order) async {
     final db = await _db();
     await db.transaction((txn) async {
@@ -1812,7 +1832,6 @@ class HealthStore {
         _appPrio[appId] = index;
       }
     });
-    await rebuildDaily();
   }
 
   // --- backup ---------------------------------------------------------------

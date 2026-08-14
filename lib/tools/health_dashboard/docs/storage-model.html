@@ -1811,10 +1811,17 @@
     },
     {
       n: "Deselect", sub: "on toggle", title: "Turn a source off",
-      code: "setAppEnabled(package, false) + rebuildDaily()",
-      body: "Stops the writer being pulled and drops it out of every read and rollup. Its rows are kept, so switching it back on is instant and needs no re-import. The rollups are rebuilt because a writer leaving changes which one owns each day.",
-      writes: ["health_app.enabled, then rebuilds health_daily"],
+      code: "setAppEnabled(package, false)",
+      body: "Stops the writer being pulled and drops it out of every read and rollup. Its rows are kept, so switching it back on is instant and needs no re-import. Switching it back on also clears history_done and this device's skipped chunks, so the writer's history can be read and pulled again. The rollups have to be rebuilt because a writer leaving changes which one owns each day — but not inside this call: see Reorder.",
+      writes: ["health_app.enabled, then health_daily once the rebuild fires"],
       no: "Deletes nothing. Reclaiming the disk is the separate deleteApp action, which also VACUUMs."
+    },
+    {
+      n: "Reorder", sub: "on arrow tap", title: "Rank the writers",
+      code: "setAppOrder(packages)",
+      body: "Positions become health_app.prio, which picks the writer each day's rollup is computed from. Writing the order is a handful of updates; recomputing every rollup afterwards reads the whole store, so the two are separate. The state object repaints the list from the new order immediately and debounces the rebuild by 900 ms, which is what keeps walking a writer up three places from paying for three whole-store passes. That rebuild skips the session summaries: a summary is computed from its own writer's rows, so no amount of reordering can move one.",
+      writes: ["health_app.prio, then health_daily once the rebuild fires"],
+      no: "Does not retro-fit session mirrors. Which side of a mirror survives is decided by priority at import time, not here."
     },
     {
       n: "Delete", sub: "explicit", title: "Drop a writer's data",
