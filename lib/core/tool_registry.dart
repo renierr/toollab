@@ -32,6 +32,7 @@ import 'package:tool_lab/tools/sound_finder/config.dart';
 import 'package:tool_lab/tools/compass/config.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
 import 'package:tool_lab/tools/health_dashboard/config.dart';
+import 'package:tool_lab/tools/sqlite_viewer/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -79,6 +80,7 @@ class ToolRegistry {
     GpsLocationStoreTool.config,
     ChatAiTool.config,
     HexEditorTool.config,
+    SqliteViewerTool.config,
     FileConverterTool.config,
     SketchBoardTool.config,
     UnitConverterTool.config,

@@ -7617,4 +7617,299 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthDebugGroupHydration =>
       'Hydration — drinks spread over the day';
+
+  @override
+  String get toolNameSqliteViewer => 'SQLite Viewer';
+
+  @override
+  String get toolDescSqliteViewer =>
+      'Inspect SQLite databases: schema, tables and free SQL';
+
+  @override
+  String get sqliteViewerOpenTitle => 'Open a SQLite database';
+
+  @override
+  String get sqliteViewerDropSubtitle =>
+      'Drop a .db file here or browse for one';
+
+  @override
+  String get sqliteViewerTypeLabel => 'SQLite database';
+
+  @override
+  String get sqliteViewerInternalTitle => 'ToolLab databases';
+
+  @override
+  String get sqliteViewerInternalSubtitle =>
+      'Opened as a read-only copy so the running app is not disturbed';
+
+  @override
+  String get sqliteViewerNoInternal => 'No ToolLab databases found';
+
+  @override
+  String get sqliteViewerAppDatabase => 'app database';
+
+  @override
+  String get sqliteViewerErrorMissing => 'The file no longer exists.';
+
+  @override
+  String get sqliteViewerErrorNotSqlite =>
+      'This file is not a SQLite database.';
+
+  @override
+  String get sqliteViewerErrorLocked =>
+      'The database is locked or cannot be read.';
+
+  @override
+  String sqliteViewerErrorUnknown(String detail) {
+    return 'The database could not be opened: $detail';
+  }
+
+  @override
+  String get sqliteViewerTabOverview => 'Overview';
+
+  @override
+  String get sqliteViewerTabData => 'Data';
+
+  @override
+  String get sqliteViewerTabSql => 'SQL';
+
+  @override
+  String get sqliteViewerSectionFile => 'File';
+
+  @override
+  String get sqliteViewerSectionPragmas => 'Database parameters';
+
+  @override
+  String get sqliteViewerFileName => 'Name';
+
+  @override
+  String get sqliteViewerFileSize => 'Size';
+
+  @override
+  String get sqliteViewerFilePath => 'Path';
+
+  @override
+  String get sqliteViewerSqliteVersion => 'SQLite version';
+
+  @override
+  String get sqliteViewerPageSize => 'Page size';
+
+  @override
+  String get sqliteViewerPageCount => 'Pages';
+
+  @override
+  String get sqliteViewerFreelistPages => 'Free pages';
+
+  @override
+  String get sqliteViewerEncoding => 'Encoding';
+
+  @override
+  String get sqliteViewerJournalMode => 'Journal mode';
+
+  @override
+  String get sqliteViewerAutoVacuum => 'Auto vacuum';
+
+  @override
+  String get sqliteViewerUserVersion => 'User version';
+
+  @override
+  String get sqliteViewerApplicationId => 'Application ID';
+
+  @override
+  String get sqliteViewerObjects => 'Objects';
+
+  @override
+  String get sqliteViewerTables => 'Tables';
+
+  @override
+  String get sqliteViewerViews => 'Views';
+
+  @override
+  String get sqliteViewerIndexes => 'Indexes';
+
+  @override
+  String get sqliteViewerTriggers => 'Triggers';
+
+  @override
+  String get sqliteViewerNoObjects => 'This database has no tables or views.';
+
+  @override
+  String get sqliteViewerSelectObject => 'Select a table or view.';
+
+  @override
+  String get sqliteViewerIntegrityTitle => 'Integrity';
+
+  @override
+  String get sqliteViewerRunIntegrityCheck => 'Run integrity check';
+
+  @override
+  String get sqliteViewerIntegrityOk => 'Intact';
+
+  @override
+  String get sqliteViewerIntegrityFailed => 'Problems found';
+
+  @override
+  String get sqliteViewerIntegrityEmpty => 'Not checked yet';
+
+  @override
+  String get sqliteViewerSchema => 'Schema';
+
+  @override
+  String get sqliteViewerDdl => 'Definition (DDL)';
+
+  @override
+  String get sqliteViewerForeignKeys => 'Foreign keys';
+
+  @override
+  String get sqliteViewerPrimaryKey => 'PK';
+
+  @override
+  String get sqliteViewerNotNull => 'NOT NULL';
+
+  @override
+  String get sqliteViewerUnique => 'UNIQUE';
+
+  @override
+  String sqliteViewerDefaultValue(String value) {
+    return 'default $value';
+  }
+
+  @override
+  String get sqliteViewerSearchHint => 'Filter rows…';
+
+  @override
+  String sqliteViewerRowRange(String start, String end, String total) {
+    return '$start – $end of $total';
+  }
+
+  @override
+  String get sqliteViewerPreviousPage => 'Previous page';
+
+  @override
+  String get sqliteViewerNextPage => 'Next page';
+
+  @override
+  String get sqliteViewerNoRows => 'No rows';
+
+  @override
+  String get sqliteViewerAddRow => 'Insert row';
+
+  @override
+  String get sqliteViewerDeleteRow => 'Delete row';
+
+  @override
+  String get sqliteViewerDeleteRowConfirm =>
+      'Delete this row? This cannot be undone.';
+
+  @override
+  String get sqliteViewerWriteFailed => 'The change could not be written.';
+
+  @override
+  String get sqliteViewerNull => 'NULL';
+
+  @override
+  String get sqliteViewerSetNull => 'Set NULL';
+
+  @override
+  String get sqliteViewerEmptyValue => 'Empty value';
+
+  @override
+  String get sqliteViewerShowImage => 'Open image';
+
+  @override
+  String get sqliteViewerEditModeOn => 'Edit mode on';
+
+  @override
+  String get sqliteViewerEditModeOff => 'Read-only';
+
+  @override
+  String get sqliteViewerEditModeBanner =>
+      'Edit mode: changes are written immediately and cannot be undone.';
+
+  @override
+  String get sqliteViewerReadOnlyNotice =>
+      'Read-only. Enable edit mode to change data.';
+
+  @override
+  String get sqliteViewerSnapshotNotice =>
+      'Working on a copy — changes do not reach the original file.';
+
+  @override
+  String get sqliteViewerInternalNotice =>
+      'A ToolLab database, opened read-only as a copy.';
+
+  @override
+  String get sqliteViewerEnableEditTitle => 'Enable edit mode?';
+
+  @override
+  String get sqliteViewerEnableEditMessage =>
+      'Writes go straight into the database file and cannot be undone.';
+
+  @override
+  String get sqliteViewerEnableEditMessageCopy =>
+      'Writes go into the working copy, not the original file. Save a copy afterwards to keep the changes.';
+
+  @override
+  String get sqliteViewerEnable => 'Enable';
+
+  @override
+  String get sqliteViewerEditNotPossible =>
+      'This database cannot be opened for writing.';
+
+  @override
+  String get sqliteViewerEditNotAllowedInternal =>
+      'ToolLab\'s own databases stay read-only here.';
+
+  @override
+  String get sqliteViewerSaveCopy => 'Save modified copy';
+
+  @override
+  String get sqliteViewerSaveCopyFailed =>
+      'The working copy is no longer available.';
+
+  @override
+  String get sqliteViewerSqlHint => 'SELECT * FROM ...';
+
+  @override
+  String get sqliteViewerSqlIdle => 'Run a statement to see its result.';
+
+  @override
+  String get sqliteViewerRun => 'Run';
+
+  @override
+  String get sqliteViewerQueryEmpty => 'Enter a statement first.';
+
+  @override
+  String get sqliteViewerReadOnlyRefusal =>
+      'Read-only: only SELECT, EXPLAIN and reading PRAGMA statements run.';
+
+  @override
+  String get sqliteViewerConfirmWriteTitle => 'Run this statement?';
+
+  @override
+  String get sqliteViewerConfirmWriteMessage =>
+      'It modifies the database and cannot be undone.';
+
+  @override
+  String sqliteViewerRowsReturned(String count, String ms) {
+    return '$count rows in $ms ms';
+  }
+
+  @override
+  String sqliteViewerRowsAffected(String count, String ms) {
+    return '$count rows affected in $ms ms';
+  }
+
+  @override
+  String sqliteViewerStatementDone(String ms) {
+    return 'Statement executed in $ms ms';
+  }
+
+  @override
+  String sqliteViewerTruncated(String count) {
+    return 'Only the first $count rows are shown.';
+  }
+
+  @override
+  String get sqliteViewerSqlError => 'SQL error';
 }

@@ -1,46 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:tool_lab/helpers/syntax/syntax_highlighter.dart';
+import 'package:tool_lab/widgets/syntax_highlight_editing_controller.dart';
 import '../code_highlight_state.dart';
-
-class SyntaxHighlightEditingController extends TextEditingController {
-  SyntaxHighlightEditingController({super.text});
-
-  void updateHighlight() {
-    notifyListeners();
-  }
-
-  @override
-  TextSpan buildTextSpan({
-    required BuildContext context,
-    TextStyle? style,
-    required bool withComposing,
-  }) {
-    final state = Provider.of<CodeHighlightState>(context, listen: false);
-    final theme = Theme.of(context);
-    final scopes = state.cachedScopes;
-    final tokens = state.cachedTokens;
-
-    if (tokens.isEmpty || text.isEmpty) {
-      return TextSpan(
-        text: text,
-        style: TextStyle(
-          color: theme.colorScheme.onSurface,
-          fontFamily: 'monospace',
-        ),
-      );
-    }
-
-    return TextSpan(
-      children: SyntaxHighlighter.buildSpans(text, tokens, scopes, theme),
-      style: TextStyle(
-        color: theme.colorScheme.onSurface,
-        fontFamily: 'monospace',
-      ),
-    );
-  }
-}
 
 class CodeHighlightEditor extends StatefulWidget {
   const CodeHighlightEditor({super.key});
@@ -66,6 +28,7 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
 
     if (_controller == null) {
       _controller = SyntaxHighlightEditingController(text: state.code ?? '');
+      _controller!.setHighlight(state.cachedTokens, state.cachedScopes);
       _controller!.addListener(_onTextChanged);
     } else if (state.code != null && state.code != _controller!.text) {
       // Keep editor in sync if text changed externally (e.g. file loaded)
@@ -87,8 +50,9 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
   }
 
   void _onStateChanged() {
-    if (mounted) {
-      _controller?.updateHighlight();
+    final state = _state;
+    if (mounted && state != null) {
+      _controller?.setHighlight(state.cachedTokens, state.cachedScopes);
     }
   }
 

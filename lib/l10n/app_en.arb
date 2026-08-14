@@ -4024,5 +4024,154 @@
   "healthDebugGroupWorkouts": "Workouts — three sessions a week",
   "healthDebugGroupBody": "Body — weight, body fat, lean mass, height",
   "healthDebugGroupVitals": "Vitals — oxygen, breathing, pressure, glucose",
-  "healthDebugGroupHydration": "Hydration — drinks spread over the day"
+  "healthDebugGroupHydration": "Hydration — drinks spread over the day",
+  "toolNameSqliteViewer": "SQLite Viewer",
+  "toolDescSqliteViewer": "Inspect SQLite databases: schema, tables and free SQL",
+  "sqliteViewerOpenTitle": "Open a SQLite database",
+  "sqliteViewerDropSubtitle": "Drop a .db file here or browse for one",
+  "sqliteViewerTypeLabel": "SQLite database",
+  "sqliteViewerInternalTitle": "ToolLab databases",
+  "sqliteViewerInternalSubtitle": "Opened as a read-only copy so the running app is not disturbed",
+  "sqliteViewerNoInternal": "No ToolLab databases found",
+  "sqliteViewerAppDatabase": "app database",
+  "sqliteViewerErrorMissing": "The file no longer exists.",
+  "sqliteViewerErrorNotSqlite": "This file is not a SQLite database.",
+  "sqliteViewerErrorLocked": "The database is locked or cannot be read.",
+  "sqliteViewerErrorUnknown": "The database could not be opened: {detail}",
+  "@sqliteViewerErrorUnknown": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "sqliteViewerTabOverview": "Overview",
+  "sqliteViewerTabData": "Data",
+  "sqliteViewerTabSql": "SQL",
+  "sqliteViewerSectionFile": "File",
+  "sqliteViewerSectionPragmas": "Database parameters",
+  "sqliteViewerFileName": "Name",
+  "sqliteViewerFileSize": "Size",
+  "sqliteViewerFilePath": "Path",
+  "sqliteViewerSqliteVersion": "SQLite version",
+  "sqliteViewerPageSize": "Page size",
+  "sqliteViewerPageCount": "Pages",
+  "sqliteViewerFreelistPages": "Free pages",
+  "sqliteViewerEncoding": "Encoding",
+  "sqliteViewerJournalMode": "Journal mode",
+  "sqliteViewerAutoVacuum": "Auto vacuum",
+  "sqliteViewerUserVersion": "User version",
+  "sqliteViewerApplicationId": "Application ID",
+  "sqliteViewerObjects": "Objects",
+  "sqliteViewerTables": "Tables",
+  "sqliteViewerViews": "Views",
+  "sqliteViewerIndexes": "Indexes",
+  "sqliteViewerTriggers": "Triggers",
+  "sqliteViewerNoObjects": "This database has no tables or views.",
+  "sqliteViewerSelectObject": "Select a table or view.",
+  "sqliteViewerIntegrityTitle": "Integrity",
+  "sqliteViewerRunIntegrityCheck": "Run integrity check",
+  "sqliteViewerIntegrityOk": "Intact",
+  "sqliteViewerIntegrityFailed": "Problems found",
+  "sqliteViewerIntegrityEmpty": "Not checked yet",
+  "sqliteViewerSchema": "Schema",
+  "sqliteViewerDdl": "Definition (DDL)",
+  "sqliteViewerForeignKeys": "Foreign keys",
+  "sqliteViewerPrimaryKey": "PK",
+  "sqliteViewerNotNull": "NOT NULL",
+  "sqliteViewerUnique": "UNIQUE",
+  "sqliteViewerDefaultValue": "default {value}",
+  "@sqliteViewerDefaultValue": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "sqliteViewerSearchHint": "Filter rows…",
+  "sqliteViewerRowRange": "{start} – {end} of {total}",
+  "@sqliteViewerRowRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "sqliteViewerPreviousPage": "Previous page",
+  "sqliteViewerNextPage": "Next page",
+  "sqliteViewerNoRows": "No rows",
+  "sqliteViewerAddRow": "Insert row",
+  "sqliteViewerDeleteRow": "Delete row",
+  "sqliteViewerDeleteRowConfirm": "Delete this row? This cannot be undone.",
+  "sqliteViewerWriteFailed": "The change could not be written.",
+  "sqliteViewerNull": "NULL",
+  "sqliteViewerSetNull": "Set NULL",
+  "sqliteViewerEmptyValue": "Empty value",
+  "sqliteViewerShowImage": "Open image",
+  "sqliteViewerEditModeOn": "Edit mode on",
+  "sqliteViewerEditModeOff": "Read-only",
+  "sqliteViewerEditModeBanner": "Edit mode: changes are written immediately and cannot be undone.",
+  "sqliteViewerReadOnlyNotice": "Read-only. Enable edit mode to change data.",
+  "sqliteViewerSnapshotNotice": "Working on a copy — changes do not reach the original file.",
+  "sqliteViewerInternalNotice": "A ToolLab database, opened read-only as a copy.",
+  "sqliteViewerEnableEditTitle": "Enable edit mode?",
+  "sqliteViewerEnableEditMessage": "Writes go straight into the database file and cannot be undone.",
+  "sqliteViewerEnableEditMessageCopy": "Writes go into the working copy, not the original file. Save a copy afterwards to keep the changes.",
+  "sqliteViewerEnable": "Enable",
+  "sqliteViewerEditNotPossible": "This database cannot be opened for writing.",
+  "sqliteViewerEditNotAllowedInternal": "ToolLab's own databases stay read-only here.",
+  "sqliteViewerSaveCopy": "Save modified copy",
+  "sqliteViewerSaveCopyFailed": "The working copy is no longer available.",
+  "sqliteViewerSqlHint": "SELECT * FROM ...",
+  "sqliteViewerSqlIdle": "Run a statement to see its result.",
+  "sqliteViewerRun": "Run",
+  "sqliteViewerQueryEmpty": "Enter a statement first.",
+  "sqliteViewerReadOnlyRefusal": "Read-only: only SELECT, EXPLAIN and reading PRAGMA statements run.",
+  "sqliteViewerConfirmWriteTitle": "Run this statement?",
+  "sqliteViewerConfirmWriteMessage": "It modifies the database and cannot be undone.",
+  "sqliteViewerRowsReturned": "{count} rows in {ms} ms",
+  "@sqliteViewerRowsReturned": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "ms": {
+        "type": "String"
+      }
+    }
+  },
+  "sqliteViewerRowsAffected": "{count} rows affected in {ms} ms",
+  "@sqliteViewerRowsAffected": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      },
+      "ms": {
+        "type": "String"
+      }
+    }
+  },
+  "sqliteViewerStatementDone": "Statement executed in {ms} ms",
+  "@sqliteViewerStatementDone": {
+    "placeholders": {
+      "ms": {
+        "type": "String"
+      }
+    }
+  },
+  "sqliteViewerTruncated": "Only the first {count} rows are shown.",
+  "@sqliteViewerTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "sqliteViewerSqlError": "SQL error"
 }

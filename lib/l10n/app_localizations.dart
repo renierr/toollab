@@ -13654,6 +13654,534 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hydration — drinks spread over the day'**
   String get healthDebugGroupHydration;
+
+  /// No description provided for @toolNameSqliteViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'SQLite Viewer'**
+  String get toolNameSqliteViewer;
+
+  /// No description provided for @toolDescSqliteViewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect SQLite databases: schema, tables and free SQL'**
+  String get toolDescSqliteViewer;
+
+  /// No description provided for @sqliteViewerOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open a SQLite database'**
+  String get sqliteViewerOpenTitle;
+
+  /// No description provided for @sqliteViewerDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop a .db file here or browse for one'**
+  String get sqliteViewerDropSubtitle;
+
+  /// No description provided for @sqliteViewerTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'SQLite database'**
+  String get sqliteViewerTypeLabel;
+
+  /// No description provided for @sqliteViewerInternalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ToolLab databases'**
+  String get sqliteViewerInternalTitle;
+
+  /// No description provided for @sqliteViewerInternalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened as a read-only copy so the running app is not disturbed'**
+  String get sqliteViewerInternalSubtitle;
+
+  /// No description provided for @sqliteViewerNoInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'No ToolLab databases found'**
+  String get sqliteViewerNoInternal;
+
+  /// No description provided for @sqliteViewerAppDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'app database'**
+  String get sqliteViewerAppDatabase;
+
+  /// No description provided for @sqliteViewerErrorMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The file no longer exists.'**
+  String get sqliteViewerErrorMissing;
+
+  /// No description provided for @sqliteViewerErrorNotSqlite.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is not a SQLite database.'**
+  String get sqliteViewerErrorNotSqlite;
+
+  /// No description provided for @sqliteViewerErrorLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The database is locked or cannot be read.'**
+  String get sqliteViewerErrorLocked;
+
+  /// No description provided for @sqliteViewerErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'The database could not be opened: {detail}'**
+  String sqliteViewerErrorUnknown(String detail);
+
+  /// No description provided for @sqliteViewerTabOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get sqliteViewerTabOverview;
+
+  /// No description provided for @sqliteViewerTabData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get sqliteViewerTabData;
+
+  /// No description provided for @sqliteViewerTabSql.
+  ///
+  /// In en, this message translates to:
+  /// **'SQL'**
+  String get sqliteViewerTabSql;
+
+  /// No description provided for @sqliteViewerSectionFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get sqliteViewerSectionFile;
+
+  /// No description provided for @sqliteViewerSectionPragmas.
+  ///
+  /// In en, this message translates to:
+  /// **'Database parameters'**
+  String get sqliteViewerSectionPragmas;
+
+  /// No description provided for @sqliteViewerFileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sqliteViewerFileName;
+
+  /// No description provided for @sqliteViewerFileSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get sqliteViewerFileSize;
+
+  /// No description provided for @sqliteViewerFilePath.
+  ///
+  /// In en, this message translates to:
+  /// **'Path'**
+  String get sqliteViewerFilePath;
+
+  /// No description provided for @sqliteViewerSqliteVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'SQLite version'**
+  String get sqliteViewerSqliteVersion;
+
+  /// No description provided for @sqliteViewerPageSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Page size'**
+  String get sqliteViewerPageSize;
+
+  /// No description provided for @sqliteViewerPageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages'**
+  String get sqliteViewerPageCount;
+
+  /// No description provided for @sqliteViewerFreelistPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Free pages'**
+  String get sqliteViewerFreelistPages;
+
+  /// No description provided for @sqliteViewerEncoding.
+  ///
+  /// In en, this message translates to:
+  /// **'Encoding'**
+  String get sqliteViewerEncoding;
+
+  /// No description provided for @sqliteViewerJournalMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal mode'**
+  String get sqliteViewerJournalMode;
+
+  /// No description provided for @sqliteViewerAutoVacuum.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto vacuum'**
+  String get sqliteViewerAutoVacuum;
+
+  /// No description provided for @sqliteViewerUserVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'User version'**
+  String get sqliteViewerUserVersion;
+
+  /// No description provided for @sqliteViewerApplicationId.
+  ///
+  /// In en, this message translates to:
+  /// **'Application ID'**
+  String get sqliteViewerApplicationId;
+
+  /// No description provided for @sqliteViewerObjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Objects'**
+  String get sqliteViewerObjects;
+
+  /// No description provided for @sqliteViewerTables.
+  ///
+  /// In en, this message translates to:
+  /// **'Tables'**
+  String get sqliteViewerTables;
+
+  /// No description provided for @sqliteViewerViews.
+  ///
+  /// In en, this message translates to:
+  /// **'Views'**
+  String get sqliteViewerViews;
+
+  /// No description provided for @sqliteViewerIndexes.
+  ///
+  /// In en, this message translates to:
+  /// **'Indexes'**
+  String get sqliteViewerIndexes;
+
+  /// No description provided for @sqliteViewerTriggers.
+  ///
+  /// In en, this message translates to:
+  /// **'Triggers'**
+  String get sqliteViewerTriggers;
+
+  /// No description provided for @sqliteViewerNoObjects.
+  ///
+  /// In en, this message translates to:
+  /// **'This database has no tables or views.'**
+  String get sqliteViewerNoObjects;
+
+  /// No description provided for @sqliteViewerSelectObject.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a table or view.'**
+  String get sqliteViewerSelectObject;
+
+  /// No description provided for @sqliteViewerIntegrityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrity'**
+  String get sqliteViewerIntegrityTitle;
+
+  /// No description provided for @sqliteViewerRunIntegrityCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Run integrity check'**
+  String get sqliteViewerRunIntegrityCheck;
+
+  /// No description provided for @sqliteViewerIntegrityOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Intact'**
+  String get sqliteViewerIntegrityOk;
+
+  /// No description provided for @sqliteViewerIntegrityFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Problems found'**
+  String get sqliteViewerIntegrityFailed;
+
+  /// No description provided for @sqliteViewerIntegrityEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked yet'**
+  String get sqliteViewerIntegrityEmpty;
+
+  /// No description provided for @sqliteViewerSchema.
+  ///
+  /// In en, this message translates to:
+  /// **'Schema'**
+  String get sqliteViewerSchema;
+
+  /// No description provided for @sqliteViewerDdl.
+  ///
+  /// In en, this message translates to:
+  /// **'Definition (DDL)'**
+  String get sqliteViewerDdl;
+
+  /// No description provided for @sqliteViewerForeignKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Foreign keys'**
+  String get sqliteViewerForeignKeys;
+
+  /// No description provided for @sqliteViewerPrimaryKey.
+  ///
+  /// In en, this message translates to:
+  /// **'PK'**
+  String get sqliteViewerPrimaryKey;
+
+  /// No description provided for @sqliteViewerNotNull.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT NULL'**
+  String get sqliteViewerNotNull;
+
+  /// No description provided for @sqliteViewerUnique.
+  ///
+  /// In en, this message translates to:
+  /// **'UNIQUE'**
+  String get sqliteViewerUnique;
+
+  /// No description provided for @sqliteViewerDefaultValue.
+  ///
+  /// In en, this message translates to:
+  /// **'default {value}'**
+  String sqliteViewerDefaultValue(String value);
+
+  /// No description provided for @sqliteViewerSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter rows…'**
+  String get sqliteViewerSearchHint;
+
+  /// No description provided for @sqliteViewerRowRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end} of {total}'**
+  String sqliteViewerRowRange(String start, String end, String total);
+
+  /// No description provided for @sqliteViewerPreviousPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get sqliteViewerPreviousPage;
+
+  /// No description provided for @sqliteViewerNextPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get sqliteViewerNextPage;
+
+  /// No description provided for @sqliteViewerNoRows.
+  ///
+  /// In en, this message translates to:
+  /// **'No rows'**
+  String get sqliteViewerNoRows;
+
+  /// No description provided for @sqliteViewerAddRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert row'**
+  String get sqliteViewerAddRow;
+
+  /// No description provided for @sqliteViewerDeleteRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete row'**
+  String get sqliteViewerDeleteRow;
+
+  /// No description provided for @sqliteViewerDeleteRowConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this row? This cannot be undone.'**
+  String get sqliteViewerDeleteRowConfirm;
+
+  /// No description provided for @sqliteViewerWriteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The change could not be written.'**
+  String get sqliteViewerWriteFailed;
+
+  /// No description provided for @sqliteViewerNull.
+  ///
+  /// In en, this message translates to:
+  /// **'NULL'**
+  String get sqliteViewerNull;
+
+  /// No description provided for @sqliteViewerSetNull.
+  ///
+  /// In en, this message translates to:
+  /// **'Set NULL'**
+  String get sqliteViewerSetNull;
+
+  /// No description provided for @sqliteViewerEmptyValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty value'**
+  String get sqliteViewerEmptyValue;
+
+  /// No description provided for @sqliteViewerShowImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open image'**
+  String get sqliteViewerShowImage;
+
+  /// No description provided for @sqliteViewerEditModeOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit mode on'**
+  String get sqliteViewerEditModeOn;
+
+  /// No description provided for @sqliteViewerEditModeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only'**
+  String get sqliteViewerEditModeOff;
+
+  /// No description provided for @sqliteViewerEditModeBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit mode: changes are written immediately and cannot be undone.'**
+  String get sqliteViewerEditModeBanner;
+
+  /// No description provided for @sqliteViewerReadOnlyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only. Enable edit mode to change data.'**
+  String get sqliteViewerReadOnlyNotice;
+
+  /// No description provided for @sqliteViewerSnapshotNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on a copy — changes do not reach the original file.'**
+  String get sqliteViewerSnapshotNotice;
+
+  /// No description provided for @sqliteViewerInternalNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'A ToolLab database, opened read-only as a copy.'**
+  String get sqliteViewerInternalNotice;
+
+  /// No description provided for @sqliteViewerEnableEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable edit mode?'**
+  String get sqliteViewerEnableEditTitle;
+
+  /// No description provided for @sqliteViewerEnableEditMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Writes go straight into the database file and cannot be undone.'**
+  String get sqliteViewerEnableEditMessage;
+
+  /// No description provided for @sqliteViewerEnableEditMessageCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Writes go into the working copy, not the original file. Save a copy afterwards to keep the changes.'**
+  String get sqliteViewerEnableEditMessageCopy;
+
+  /// No description provided for @sqliteViewerEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable'**
+  String get sqliteViewerEnable;
+
+  /// No description provided for @sqliteViewerEditNotPossible.
+  ///
+  /// In en, this message translates to:
+  /// **'This database cannot be opened for writing.'**
+  String get sqliteViewerEditNotPossible;
+
+  /// No description provided for @sqliteViewerEditNotAllowedInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'ToolLab\'s own databases stay read-only here.'**
+  String get sqliteViewerEditNotAllowedInternal;
+
+  /// No description provided for @sqliteViewerSaveCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save modified copy'**
+  String get sqliteViewerSaveCopy;
+
+  /// No description provided for @sqliteViewerSaveCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The working copy is no longer available.'**
+  String get sqliteViewerSaveCopyFailed;
+
+  /// No description provided for @sqliteViewerSqlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT * FROM ...'**
+  String get sqliteViewerSqlHint;
+
+  /// No description provided for @sqliteViewerSqlIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Run a statement to see its result.'**
+  String get sqliteViewerSqlIdle;
+
+  /// No description provided for @sqliteViewerRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get sqliteViewerRun;
+
+  /// No description provided for @sqliteViewerQueryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a statement first.'**
+  String get sqliteViewerQueryEmpty;
+
+  /// No description provided for @sqliteViewerReadOnlyRefusal.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only: only SELECT, EXPLAIN and reading PRAGMA statements run.'**
+  String get sqliteViewerReadOnlyRefusal;
+
+  /// No description provided for @sqliteViewerConfirmWriteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Run this statement?'**
+  String get sqliteViewerConfirmWriteTitle;
+
+  /// No description provided for @sqliteViewerConfirmWriteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'It modifies the database and cannot be undone.'**
+  String get sqliteViewerConfirmWriteMessage;
+
+  /// No description provided for @sqliteViewerRowsReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rows in {ms} ms'**
+  String sqliteViewerRowsReturned(String count, String ms);
+
+  /// No description provided for @sqliteViewerRowsAffected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rows affected in {ms} ms'**
+  String sqliteViewerRowsAffected(String count, String ms);
+
+  /// No description provided for @sqliteViewerStatementDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement executed in {ms} ms'**
+  String sqliteViewerStatementDone(String ms);
+
+  /// No description provided for @sqliteViewerTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the first {count} rows are shown.'**
+  String sqliteViewerTruncated(String count);
+
+  /// No description provided for @sqliteViewerSqlError.
+  ///
+  /// In en, this message translates to:
+  /// **'SQL error'**
+  String get sqliteViewerSqlError;
 }
 
 class _AppLocalizationsDelegate

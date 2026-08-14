@@ -580,6 +580,19 @@
         </activity-alias>
 
         <activity-alias
+            android:name="de.renier.tool_lab.SqliteViewerAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="SQLite Viewer"
+            android:icon="@mipmap/ic_launcher"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
             android:name="de.renier.tool_lab.HealthDashboardAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Health Dashboard"
