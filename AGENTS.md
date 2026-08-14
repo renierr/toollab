@@ -131,6 +131,10 @@ For every tool added to the app, launcher entry points must be maintained:
 - **MainActivity.kt**: Map the alias class name to the tool's GoRouter route in `handleIntent` (e.g., `de.renier.tool_lab.CalculatorAlias` maps to `/calculator`).
 - **ShortcutHelper.kt**: Add the tool mapping in `setDrawerIconEnabled` to enable/disable the activity-alias component.
 
+### 9. Background Tasks (Android)
+- Work that must happen while the app is closed goes through `BackgroundTaskService` (`lib/services/background_task_service.dart`). Declare a `BackgroundTask` and register it via `backgroundTasks` in the tool's `ToolModel` — never add a scheduler, plugin or timer of your own.
+- Expose it with the shared `BackgroundTaskTile` (`lib/widgets/background_task_tile.dart`), guarded by `BackgroundTaskService.isSupported`.
+- A scheduled run has no UI, no providers and no localizations, is a second isolate with its own database connection, and is killed after ten minutes: no permission requests, no `AppState`, no static run markers, incremental work only. See [creating-a-tool.md §9](docs/creating-a-tool.md).
 
 ---
 

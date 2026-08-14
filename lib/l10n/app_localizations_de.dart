@@ -156,6 +156,43 @@ class AppLocalizationsDe extends AppLocalizations {
   String get commonBrowseFiles => 'Dateien durchsuchen';
 
   @override
+  String get backgroundTaskOff => 'Aus';
+
+  @override
+  String backgroundTaskEveryMinutes(int minutes) {
+    return 'Alle $minutes Minuten';
+  }
+
+  @override
+  String backgroundTaskEveryHours(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'Alle $hours Stunden',
+      one: 'Jede Stunde',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backgroundTaskEveryDay => 'Einmal täglich';
+
+  @override
+  String get backgroundTaskRunNow => 'Jetzt ausführen';
+
+  @override
+  String get backgroundTaskNeverRun => 'Noch nicht gelaufen';
+
+  @override
+  String backgroundTaskLastRun(String when, String detail) {
+    return 'Letzter Lauf $when: $detail';
+  }
+
+  @override
+  String get backgroundTaskDozeHint =>
+      'Wann ein Hintergrundlauf wirklich stattfindet, entscheidet Android. Das Intervall ist eine Obergrenze, keine Zusage - im Tiefschlaf kann ein Lauf Stunden zu spät kommen.';
+
+  @override
   String chipFailedToParseModule(Object error) {
     return 'Modul konnte nicht geladen werden: $error';
   }
@@ -6981,6 +7018,16 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get healthDashboardNoSleepHeartRate =>
       'Keine Herzfrequenzwerte während dieser Schlafphase';
+
+  @override
+  String get healthDashboardSectionBackground => 'Automatischer Abgleich';
+
+  @override
+  String get healthDashboardBackgroundSync => 'Im Hintergrund abgleichen';
+
+  @override
+  String get healthDashboardBackgroundSyncSubtitle =>
+      'Health-Connect-Änderungen importieren und an das Backend senden, während die App geschlossen ist.';
 
   @override
   String get healthDashboardBackup => 'Datensicherung';

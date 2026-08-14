@@ -3,6 +3,7 @@ import 'package:provider/single_child_widget.dart';
 
 import 'shared_file.dart';
 export 'shared_file.dart';
+import 'background_task.dart';
 import '../services/sync_service.dart';
 import '../l10n/app_localizations.dart';
 
@@ -31,6 +32,10 @@ class ToolModel {
   final SyncDelegate Function()? syncDelegateFactory;
   final List<SingleChildWidget> Function()? stateProviders;
 
+  /// Work the tool wants run on a schedule while the app is closed. Collected by
+  /// `BackgroundTaskService`, which owns the scheduling and the execution.
+  final List<BackgroundTask> Function()? backgroundTasks;
+
   /// Optional localized overrides. When set, [localizedName] /
   /// [localizedDescription] use them; otherwise the raw [name] /
   /// [description] are returned. Declared inline in each tool's `config.dart`.
@@ -51,6 +56,7 @@ class ToolModel {
     this.fileExtensions = const [],
     this.syncDelegateFactory,
     this.stateProviders,
+    this.backgroundTasks,
     this.nameL10n,
     this.descriptionL10n,
     this.androidProcessIsolated = false,

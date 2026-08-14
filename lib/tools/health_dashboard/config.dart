@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'health_background_sync.dart';
 import 'health_dashboard_page.dart';
 import 'health_dashboard_state.dart';
 import 'health_sync_delegate.dart';
@@ -21,6 +22,7 @@ class HealthDashboardTool {
     nameL10n: (l10n) => l10n.toolNameHealthDashboard,
     descriptionL10n: (l10n) => l10n.toolDescHealthDashboard,
     syncDelegateFactory: () => HealthSyncDelegate(),
+    backgroundTasks: () => [HealthBackgroundSync.task],
     createPage: (_) => const HealthDashboardPage(),
     stateProviders: () => [
       ChangeNotifierProvider<HealthDashboardState>(

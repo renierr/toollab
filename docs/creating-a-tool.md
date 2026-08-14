@@ -215,6 +215,7 @@ class MyNewTool {
     ),
     createPage: (sf) => const MyNewToolPage(),  // route auto-wired
     syncDelegateFactory: MyNewToolSyncDelegate.new,  // if sync needed
+    backgroundTasks: () => [MyNewToolBackground.task],  // if it runs on a schedule
     stateProviders: () => [                // if tool needs state management
       ChangeNotifierProvider<MyNewToolState>(
         create: (_) => MyNewToolState(),
@@ -302,7 +303,7 @@ Declaring a `syncDelegateFactory` in `config.dart` does two things: it registers
 
 **The switch defaults to on.** A tool with no stored value counts as enabled, so a newly sync-capable tool participates immediately and an existing one is never silently switched off by an upgrade.
 
-**Never call `SyncService.sync` directly.** Always go through `AppState.syncWithBackend`, which filters out disabled tools before touching the network. This is the only gate, and it covers the tools that pass their own delegate instance too.
+**Never call `SyncService.sync` directly.** Always go through `AppState.syncWithBackend`, which filters out disabled tools before touching the network. This is the only gate, and it covers the tools that pass their own delegate instance too. The one exception is a background task (section 10): there is no widget tree there to read a provider from, so it repeats the same gate itself.
 
 If the tool has its own sync button or an auto-sync-on-open, respect the switch at the call site as well, so the user gets an honest message instead of a silent no-op:
 
@@ -325,7 +326,47 @@ Without the call-site check, `syncWithBackend` returns `null`, which existing pa
 
 ---
 
-## 9. Android Multi-Process Isolation (Running in Parallel)
+## 9. Background Tasks (Running While the App Is Closed)
+
+A tool that has to act on an interval — pull new data, publish something, clean up — declares a `BackgroundTask` and lets `BackgroundTaskService` (`lib/services/background_task_service.dart`) schedule it on Android WorkManager. Do not add a plugin, a service or a timer of your own.
+
+```dart
+// my_new_tool_background.dart
+static final BackgroundTask task = BackgroundTask(
+  id: '${MyNewTool.config.id}-refresh',
+  defaultInterval: const Duration(hours: 4),
+  requiresNetwork: true,          // hold the run back until there is a connection
+  run: _run,
+);
+
+static Future<BackgroundTaskResult> _run() async {
+  // ... work ...
+  return const BackgroundTaskResult.done('42 refreshed');
+}
+```
+
+```dart
+// config.dart
+backgroundTasks: () => [MyNewToolBackground.task],
+```
+
+That is the whole registration: `BackgroundTaskService.init()` in `main.dart` collects tasks from `ToolRegistry.all` and applies each stored schedule, and the same registry resolves the task id in the headless isolate.
+
+**Give the user the switch.** Drop a `BackgroundTaskTile` (`lib/widgets/background_task_tile.dart`) into the tool's settings page, guarded by `BackgroundTaskService.isSupported` (Android only). It renders the interval picker, a "Run now" action and the last run's outcome; the intervals themselves come from `BackgroundTaskService.intervalChoices`, so every tool offers the same steps.
+
+**What a scheduled run may and may not do.** It executes in a headless Flutter engine — plugins are registered, so platform channels work, but:
+
+- **No UI, so no permission requests.** No Activity exists; asking throws or hangs. A missing grant must degrade to doing less, never to a prompt.
+- **No providers and no localizations.** Reach state through services (`DatabaseService`, `SettingsService`), never through `AppState`. A gate that lives in `AppState` has to be repeated.
+- **It is a second isolate with its own database connection.** The service takes a settings-table lock so a task cannot run twice at once, but any cooldown or "last run" marker of your own must be persisted, not static.
+- **Ten minutes, then killed.** Only incremental work belongs here; long imports stay on the tool's own screen where a `BackgroundWorkLease` can hold the process.
+- **Be idempotent.** The platform can stop and retry a run at any point, and `BackgroundTaskResult.failed` asks it to.
+
+**The interval is a ceiling, not a schedule.** WorkManager's floor is 15 minutes, and in Doze a run waits for the next maintenance window — hours, on an idle phone. Nothing short of a foreground service changes that, so never build a feature that depends on a run happening *at* a particular time.
+
+---
+
+## 10. Android Multi-Process Isolation (Running in Parallel)
 
 To allow a tool (such as `calculator` or `pdf-viewer`) to run in parallel with the main app or other tools on Android (e.g. in native split-screen or multi-window mode) without FFI crashes (`rhttp`/`flutter_rust_bridge`) or SQLite database locks, configure it to run in a separate process:
 

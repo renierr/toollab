@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/services/database_service.dart';
 
+import '../config.dart';
 import 'health_connect_diff.dart';
 import 'health_connect_importer.dart';
 
@@ -24,7 +26,10 @@ class HealthConnectCatchUp {
   /// whose delegate would otherwise read the same window again seconds later.
   static const _cooldown = Duration(minutes: 1);
 
-  static DateTime? _lastRun;
+  /// Persisted instead of held in memory: a scheduled background run happens in
+  /// its own isolate, where a static knows nothing about what the open app did a
+  /// moment ago.
+  static const _lastRunKey = 'hc_catch_up_last_run';
 
   /// [force] belongs to user-initiated runs, which must report what they found
   /// even if an opportunistic one just finished. Unforced callers inside the
@@ -38,12 +43,8 @@ class HealthConnectCatchUp {
     void Function(String status, int count)? onProgress,
   }) async {
     if (!Platform.isAndroid) return const HealthDiffResult();
-    final now = DateTime.now();
-    final last = _lastRun;
-    if (!force && last != null && now.difference(last) < _cooldown) {
-      return const HealthDiffResult();
-    }
-    _lastRun = now;
+    if (!force && await _withinCooldown()) return const HealthDiffResult();
+    await _markRun();
 
     final result = await const HealthConnectDiff().sync(onProgress: onProgress);
     if (result.needsFullImport) return _recover(onProgress);
@@ -67,6 +68,25 @@ class HealthConnectCatchUp {
       return result;
     }
   }
+
+  Future<bool> _withinCooldown() async {
+    final stored = int.tryParse(
+      await DatabaseService.instance.getSetting(
+            HealthDashboardTool.config.id,
+            _lastRunKey,
+          ) ??
+          '',
+    );
+    if (stored == null) return false;
+    final last = DateTime.fromMillisecondsSinceEpoch(stored);
+    return DateTime.now().difference(last) < _cooldown;
+  }
+
+  Future<void> _markRun() => DatabaseService.instance.setSetting(
+    HealthDashboardTool.config.id,
+    _lastRunKey,
+    '${DateTime.now().millisecondsSinceEpoch}',
+  );
 
   /// Brings the store back up to date after the change token was rejected.
   ///

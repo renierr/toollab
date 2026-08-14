@@ -764,6 +764,8 @@
               <tr><td class="c">auto_health_connect_sync</td><td class="d">Whether opening the tool syncs changes</td><td class="d">Off by default, switched in Health Connect settings; gates the change-token sync only</td></tr>
               <tr><td class="c">sync_cursor_&lt;syncId&gt;</td><td class="d">Where the last backend metadata pass stopped</td><td class="d">Keyed by sync id, not by tool: the server namespace carries the user id, and a cursor from one user's namespace promises nothing about another's. Cleared by the re-import and whenever the tool's sync switch is turned back on, since tombstones written while it was off sit behind the cursor</td></tr>
               <tr><td class="c">sync_enabled</td><td class="d">Whether this tool syncs to the backend</td><td class="d">Absent means on, so a tool that already synced before the per-tool switch existed keeps syncing after the upgrade</td></tr>
+              <tr><td class="c">hc_catch_up_last_run</td><td class="d">When the last catch-up read Health Connect</td><td class="d">Persisted rather than static: the scheduled background run is a second isolate, where an in-memory timestamp knows nothing about what the open app just did</td></tr>
+              <tr><td class="c">_background_tasks / &lt;task&gt;_*</td><td class="d">Interval, last result and run lock of a scheduled task</td><td class="d">Not this tool's namespace - <code>BackgroundTaskService</code> keeps every tool's schedules together, the way <code>SettingsService</code> uses <code>_app</code></td></tr>
             </tbody>
           </table>
         </div>
@@ -1812,7 +1814,14 @@ then      Samsung action → healthconnect:// → per-app deep link →
       code: "HealthSyncDelegate",
       body: "One record per (UTC day, writer), not per reading. The payload is read out of the tables rather than out of an import batch, so it always holds what this device pulled from others too and a push can only ever be a superset — serializing the import batch instead would let the thinner device overwrite the fuller one on the server. It carries plain strings: interned ids and Health Connect record ids name things that exist only on the sending device. Dense rows travel packed as a BLOB; paired readings and sessions stay JSON. Applying a pulled chunk keeps it dirty only if it already was, which is what makes two devices converge instead of pushing the same day to each other forever.",
       writes: ["all fact tables", "health_chunk", "health_daily", "sync_cursor_<syncId>"],
-      no: "Never during an import. Runs from the global Sync Now and from this tool's toolbar action, after Health Connect so the push includes what just arrived."
+      no: "Never during an import. Runs from the global Sync Now, from this tool's toolbar action and from the scheduled background run, after Health Connect so the push includes what just arrived."
+    },
+    {
+      n: "Background", sub: "app closed", title: "Run on a schedule",
+      code: "HealthBackgroundSync.task",
+      body: "A BackgroundTask declared in config.dart and scheduled by BackgroundTaskService on Android WorkManager — 4 hours by default, 15 minutes to daily, or off. One run is the change sync followed by the backend sync, the same two calls the open tool makes. READ_HEALTH_DATA_IN_BACKGROUND is what makes the read legal with no UI on screen; it grants no wakeup, so the interval is a ceiling and Doze can push a run hours late. There is no Activity, so nothing here may request a permission — a missing grant just reads nothing. It is a second isolate with its own database connection, hence the settings-table lock and the persisted catch-up cooldown. Only the incremental path may run here: a worker is killed at 10 minutes.",
+      writes: ["everything Sync and Backend write", "<task>_last_status"],
+      no: "Never the full history import. The last outcome is persisted because nothing else would report it."
     },
     {
       n: "Restart", sub: "destructive", title: "Re-import from scratch",

@@ -155,6 +155,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonBrowseFiles => 'Browse Files';
 
   @override
+  String get backgroundTaskOff => 'Off';
+
+  @override
+  String backgroundTaskEveryMinutes(int minutes) {
+    return 'Every $minutes minutes';
+  }
+
+  @override
+  String backgroundTaskEveryHours(int hours) {
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
+      locale: localeName,
+      other: 'Every $hours hours',
+      one: 'Every hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get backgroundTaskEveryDay => 'Once a day';
+
+  @override
+  String get backgroundTaskRunNow => 'Run now';
+
+  @override
+  String get backgroundTaskNeverRun => 'Has not run yet';
+
+  @override
+  String backgroundTaskLastRun(String when, String detail) {
+    return 'Last run $when: $detail';
+  }
+
+  @override
+  String get backgroundTaskDozeHint =>
+      'Android decides when a background run actually happens, so the interval is a limit, not a promise. In deep sleep a run can be hours late.';
+
+  @override
   String chipFailedToParseModule(Object error) {
     return 'Failed to parse module: $error';
   }
@@ -6933,6 +6970,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get healthDashboardNoSleepHeartRate =>
       'No heart-rate samples during this sleep session';
+
+  @override
+  String get healthDashboardSectionBackground => 'Automatic sync';
+
+  @override
+  String get healthDashboardBackgroundSync => 'Sync in the background';
+
+  @override
+  String get healthDashboardBackgroundSyncSubtitle =>
+      'Import Health Connect changes and send them to the backend while the app is closed.';
 
   @override
   String get healthDashboardBackup => 'Data backup';

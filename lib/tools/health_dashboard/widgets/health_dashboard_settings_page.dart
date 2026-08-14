@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/background_task_service.dart';
+import 'package:tool_lab/widgets/background_task_tile.dart';
 
+import '../health_background_sync.dart';
 import '../health_dashboard_state.dart';
 import 'health_backup_actions.dart';
 import 'health_connect_settings_page.dart';
@@ -53,6 +56,19 @@ class HealthDashboardSettingsPage extends StatelessWidget {
               ),
             ),
           ),
+          if (BackgroundTaskService.isSupported) ...[
+            const Divider(height: 1),
+            _SettingsSection(title: l10n.healthDashboardSectionBackground),
+            BackgroundTaskTile(
+              task: HealthBackgroundSync.task,
+              title: l10n.healthDashboardBackgroundSync,
+              description: l10n.healthDashboardBackgroundSyncSubtitle,
+              icon: Icons.sync_outlined,
+              // A manual run writes straight to the store, so the dashboard
+              // keeps showing stale records until it re-reads them.
+              onRunFinished: healthState.reloadStoredData,
+            ),
+          ],
           const Divider(height: 1),
           _SettingsSection(title: l10n.healthDashboardBackup),
           ListTile(

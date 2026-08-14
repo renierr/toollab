@@ -313,9 +313,10 @@ export all hold a `BackgroundWorkLease` for their duration - a partial (CPU) wak
 lock plus a foreground notification - so Doze or app standby cannot suspend the
 app halfway through and leave a type stranded mid-range.
 
-None of this can move to a background isolate: the plugin's method channels are
-bound to the main isolate, so a spawned one cannot reach Health Connect at all.
-Keeping the process scheduled is the isolation that is available.
+A plain spawned isolate is no way around this: `Isolate.spawn` gives no platform
+channels, so the plugin cannot be reached from one at all. A scheduled background
+run is different - see below - because a headless Flutter engine registers the
+plugins itself.
 
 ### Paging
 
@@ -350,6 +351,39 @@ every open.
 Deletions can only be matched against rows carrying the Health Connect record
 id, which is sessions and intervals. Storing that id on every one of millions of
 dense samples would cost more than the schema saves.
+
+### Background sync (app closed)
+
+`HealthBackgroundSync.task` is a `BackgroundTask` declared in `config.dart` and
+scheduled by `BackgroundTaskService` (Android WorkManager). Default interval **4
+hours**; the picker offers 15 min to daily, and "Off". One run is exactly what the
+open tool does: `HealthConnectCatchUp` first, then the backend sync through
+`HealthSyncDelegate`.
+
+What makes the read legal there is `READ_HEALTH_DATA_IN_BACKGROUND`, which the
+importer already asks for alongside the read permissions. It lifts Health
+Connect's foreground requirement and nothing else - there is no wakeup and no Doze
+exemption in it, and Health Connect has no change callback to subscribe to, so a
+schedule plus the change token is the whole mechanism.
+
+Four consequences worth remembering before changing this path:
+
+- **The interval is a ceiling, not a schedule.** In Doze a run waits for the next
+  maintenance window, which can be hours. Only a foreground service beats that,
+  and Android 15 caps `dataSync` services at 6h a day.
+- **A run has no Activity.** It must never request a permission; a missing grant
+  simply reads nothing. `HealthConnectCatchUp` and the importer's read path hold
+  to that, `requestAccess` does not and stays out of it.
+- **It is a second isolate with its own database connection.** WAL keeps reads
+  safe; `BackgroundTaskService` takes a settings-table lock so the two never run
+  the same task at once, and the catch-up cooldown is persisted rather than
+  static for the same reason. A write that still collides fails the run, which
+  WorkManager retries with backoff.
+- **Only the incremental path may run there.** A worker is killed at 10 minutes;
+  a full history import is minutes to hours and belongs to the tool's own screen.
+
+The last run's outcome is persisted and shown in the tool's settings, since
+nothing else in the app would ever report it.
 
 ## Measured Performance
 
@@ -444,9 +478,12 @@ empty, use the re-import. Full table above in The Health Connect Settings
 Screen.
 
 **When backend sync happens.** Never during an import. The import entries
-contain no backend call at all. It runs from the app's global Sync Now and from
-the dashboard's own toolbar action, through `HealthSyncDelegate`, which ships one
-record per (UTC day, writer) rather than per reading. See
+contain no backend call at all. It runs from the app's global Sync Now, from the
+dashboard's own toolbar action, and from the scheduled background run, through
+`HealthSyncDelegate`, which ships one record per (UTC day, writer) rather than
+per reading. The background run repeats the delegate gate (a configured server
+plus this tool's sync switch) instead of calling `AppState`, which does not exist
+in that isolate. See
 `docs/backend-sync-plan.md` for the chunk design and `storage-model.html` for the
 tables it rests on.
 

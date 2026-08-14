@@ -51,6 +51,39 @@
   "commonBack": "Back",
   "commonHome": "Home",
   "commonBrowseFiles": "Browse Files",
+  "backgroundTaskOff": "Off",
+  "backgroundTaskEveryMinutes": "Every {minutes} minutes",
+  "@backgroundTaskEveryMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "backgroundTaskEveryHours": "{hours, plural, =1{Every hour} other{Every {hours} hours}}",
+  "@backgroundTaskEveryHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "backgroundTaskEveryDay": "Once a day",
+  "backgroundTaskRunNow": "Run now",
+  "backgroundTaskNeverRun": "Has not run yet",
+  "backgroundTaskLastRun": "Last run {when}: {detail}",
+  "@backgroundTaskLastRun": {
+    "description": "Result of the last background run. {detail} is a short technical summary reported by the task itself and stays untranslated.",
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "backgroundTaskDozeHint": "Android decides when a background run actually happens, so the interval is a limit, not a promise. In deep sleep a run can be hours late.",
   "chipFailedToParseModule": "Failed to parse module: {error}",
   "chipFailedToOpenSharedFile": "Failed to open shared file: {error}",
   "chipUnsupportedAudioOpenedInternally": "Opened with the internal audio player",
@@ -3676,6 +3709,9 @@
   "healthDashboardSleepDeep": "Deep",
   "healthDashboardHeartRate": "Heart rate",
   "healthDashboardNoSleepHeartRate": "No heart-rate samples during this sleep session",
+  "healthDashboardSectionBackground": "Automatic sync",
+  "healthDashboardBackgroundSync": "Sync in the background",
+  "healthDashboardBackgroundSyncSubtitle": "Import Health Connect changes and send them to the backend while the app is closed.",
   "healthDashboardBackup": "Data backup",
   "healthDashboardExportBackup": "Export health database",
   "healthDashboardExportBackupSubtitle": "Save Health Dashboard records as a SQLite database.",

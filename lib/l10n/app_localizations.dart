@@ -386,6 +386,54 @@ abstract class AppLocalizations {
   /// **'Browse Files'**
   String get commonBrowseFiles;
 
+  /// No description provided for @backgroundTaskOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get backgroundTaskOff;
+
+  /// No description provided for @backgroundTaskEveryMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {minutes} minutes'**
+  String backgroundTaskEveryMinutes(int minutes);
+
+  /// No description provided for @backgroundTaskEveryHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours, plural, =1{Every hour} other{Every {hours} hours}}'**
+  String backgroundTaskEveryHours(int hours);
+
+  /// No description provided for @backgroundTaskEveryDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Once a day'**
+  String get backgroundTaskEveryDay;
+
+  /// No description provided for @backgroundTaskRunNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Run now'**
+  String get backgroundTaskRunNow;
+
+  /// No description provided for @backgroundTaskNeverRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Has not run yet'**
+  String get backgroundTaskNeverRun;
+
+  /// Result of the last background run. {detail} is a short technical summary reported by the task itself and stays untranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last run {when}: {detail}'**
+  String backgroundTaskLastRun(String when, String detail);
+
+  /// No description provided for @backgroundTaskDozeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Android decides when a background run actually happens, so the interval is a limit, not a promise. In deep sleep a run can be hours late.'**
+  String get backgroundTaskDozeHint;
+
   /// No description provided for @chipFailedToParseModule.
   ///
   /// In en, this message translates to:
@@ -12490,6 +12538,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No heart-rate samples during this sleep session'**
   String get healthDashboardNoSleepHeartRate;
+
+  /// No description provided for @healthDashboardSectionBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic sync'**
+  String get healthDashboardSectionBackground;
+
+  /// No description provided for @healthDashboardBackgroundSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync in the background'**
+  String get healthDashboardBackgroundSync;
+
+  /// No description provided for @healthDashboardBackgroundSyncSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Health Connect changes and send them to the backend while the app is closed.'**
+  String get healthDashboardBackgroundSyncSubtitle;
 
   /// No description provided for @healthDashboardBackup.
   ///
