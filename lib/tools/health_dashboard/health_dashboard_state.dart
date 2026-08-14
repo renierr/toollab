@@ -8,6 +8,7 @@ import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/background_work_lease.dart';
 
+import 'collectors/health_connect_catch_up.dart';
 import 'collectors/health_connect_diff.dart';
 import 'collectors/health_connect_discovery.dart';
 import 'collectors/health_connect_importer.dart';
@@ -247,13 +248,10 @@ class HealthDashboardState extends ChangeNotifier {
           'Syncing...',
           title: 'Health Dashboard sync',
         );
-        final result = await _syncHealthConnect();
-        if (result.upserted > 0 ||
-            result.deleted > 0 ||
-            (result.recovered ?? 0) > 0) {
-          await _reloadRecords();
-        }
+        await _syncHealthConnect();
       }
+      // Unconditional: the treadmill publish above writes rows the sync result
+      // says nothing about.
       await _reloadRecords();
     } catch (e) {
       errorLog('[HealthDashboard] Open refresh failed: $e');
@@ -280,6 +278,7 @@ class HealthDashboardState extends ChangeNotifier {
   final _importer = const HealthConnectImporter();
   final _discovery = const HealthConnectDiscovery();
   final _diff = const HealthConnectDiff();
+  final _catchUp = const HealthConnectCatchUp();
 
   List<HealthTypeState> healthTypes = [];
   final Map<String, List<HealthDiscoveredApp>> discoveredApps = {};
@@ -485,8 +484,8 @@ class HealthDashboardState extends ChangeNotifier {
     }
   }
 
-  /// Change-token sync. Cheap enough to run on open: it fetches only what moved.
-  /// The change-token read, without the busy-state and reload the callers own.
+  /// Change-token sync plus its repairs. Cheap enough to run on open: it fetches
+  /// only what moved, without the busy-state and reload the callers own.
   ///
   /// Returns nothing on a platform with no Health Connect rather than reporting
   /// a permission problem: there is no permission to be missing on Windows, and
@@ -498,64 +497,11 @@ class HealthDashboardState extends ChangeNotifier {
       permissionMissing = true;
       return const HealthDiffResult();
     }
-    var result = await _diff.sync();
-    if (result.needsFullImport || result.baselineEstablished) {
-      result = await _recoverRejectedToken();
-    } else {
-      try {
-        final recentImported = await _importer.importRecent();
-        if (recentImported > 0) {
-          result = HealthDiffResult(
-            upserted: result.upserted + recentImported,
-            deleted: result.deleted,
-            baselineEstablished: result.baselineEstablished,
-            recovered: result.recovered,
-          );
-        }
-      } catch (e) {
-        debugLog('[HealthDashboard] Recent safeguard import failed: $e');
-      }
-    }
-    await loadSelection();
-    return result;
-  }
-
-  /// How far back a recovery re-reads. Health Connect expires a change token
-  /// after roughly a month, so nothing older than this can have been missed by
-  /// one - and a window costs a fraction of re-reading a decade.
-  static const _catchUpDays = 35;
-
-  /// Brings the store back up to date after the change token was rejected.
-  ///
-  /// This is deliberately **not** the restart import: that wipes every data
-  /// table first, so recovering from an expired token would cost the user their
-  /// history. Re-reading is idempotent instead - `health_point`'s primary key is
-  /// the measurement, so a row already stored simply collapses on insert - which
-  /// makes a plain windowed re-read safe to run unattended.
-  ///
-  /// The new baseline is taken *before* the read, so anything written while the
-  /// window is being imported is reported by the next sync rather than falling
-  /// into the gap between the two.
-  Future<HealthDiffResult> _recoverRejectedToken() async {
-    errorLog(
-      '[HealthDashboard] Sync token rejected; re-reading recent history',
-    );
     try {
-      final baseline = await _diff.sync();
-      final types = await HealthStore.instance.enabledTypes();
-      await HealthStore.instance.resetTypeHistory(types);
-      final imported = await _importer.import(
-        start: DateTime.now().subtract(const Duration(days: _catchUpDays)),
-        onProgress: _onCollectionProgress,
-      );
-      debugLog('[HealthDashboard] Token recovery imported $imported records');
-      return baseline.recoveredWith(imported);
-    } catch (e) {
-      errorLog('[HealthDashboard] Token recovery failed: $e');
-      return const HealthDiffResult(needsFullImport: true);
+      return await _catchUp.run(onProgress: _onCollectionProgress);
     } finally {
       collectionStatus = null;
-      notifyListeners();
+      await loadSelection();
     }
   }
 

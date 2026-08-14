@@ -12,6 +12,9 @@ import '../store/health_store.dart';
 import 'health_connect_types.dart';
 
 class HealthDiffResult {
+  /// Rows the store actually gained, change feed and trailing safety pass
+  /// together - not rows offered, which a re-read inflates with duplicates that
+  /// collapse on insert.
   final int upserted;
   final int deleted;
 
@@ -23,7 +26,7 @@ class HealthDiffResult {
   /// True when the token was rejected and a full import is the only way back.
   final bool needsFullImport;
 
-  /// Records pulled by the catch-up re-read that recovered a rejected token.
+  /// Rows stored by the catch-up re-read that recovered a rejected token.
   /// Non-null means the recovery ran, so [needsFullImport] was handled rather
   /// than merely reported.
   final int? recovered;

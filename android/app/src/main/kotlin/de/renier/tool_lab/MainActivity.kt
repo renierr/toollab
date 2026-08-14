@@ -198,16 +198,21 @@ open class MainActivity : FlutterFragmentActivity() {
         MethodChannel(messenger, HEALTH_CONNECT_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "openSettings" -> {
+                    // Granting happens through the plugin's permission request; this entry is
+                    // for inspecting and revoking, so it aims at Health Connect's own screens.
+                    // Which of them exists depends on the OS version and the OEM, so the list is
+                    // ordered by preference and simply tried in turn.
                     val attempts = mutableListOf<Pair<String, Intent>>()
 
-                    // 1. System / Android 14+ settings actions
                     attempts.add("settings:system" to Intent("android.settings.HEALTH_CONNECT_SETTINGS"))
                     attempts.add("settings:health_connect" to Intent("android.health.connect.action.HEALTH_CONNECT_SETTINGS"))
                     attempts.add("settings:androidx" to Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS"))
                     attempts.add("settings:samsung" to Intent("com.samsung.android.healthconnect.action.HEALTH_CONNECT_SETTINGS"))
                     attempts.add("uri:healthconnect" to Intent(Intent.ACTION_VIEW, android.net.Uri.parse("healthconnect://settings")))
 
-                    // 2. Health Connect per-app permissions screen
+                    // The per-app deep link the system's own settings use. Starting it needs the
+                    // signature permission GRANT_RUNTIME_PERMISSIONS, so it is denied on most
+                    // devices - kept because where it is allowed it lands on the exact screen.
                     attempts.add("permissions:androidx" to Intent("androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS").apply {
                         putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
                     })
@@ -215,7 +220,8 @@ open class MainActivity : FlutterFragmentActivity() {
                         putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
                     })
 
-                    // 3. Explicit Health Connect Controller activities (Samsung, Pixel, Android 14+)
+                    // Android 14+ keeps Health Connect in the platform controller, which has no
+                    // launcher entry of its own, so its activities are named explicitly.
                     attempts.add("component:controller_main_action" to Intent(Intent.ACTION_MAIN).apply {
                         component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.MainActivity")
                     })
@@ -226,7 +232,7 @@ open class MainActivity : FlutterFragmentActivity() {
                         component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.permissions.ManageHealthDataActivity")
                     })
 
-                    // 4. Standalone Health Connect APK launchers (Android 13 and below)
+                    // Android 13 and below ship it as an ordinary APK, which does have one.
                     listOf(
                         "com.google.android.healthconnect.controller",
                         "com.google.android.apps.healthdata"
@@ -236,17 +242,14 @@ open class MainActivity : FlutterFragmentActivity() {
                         }
                     }
 
-                    // 5. Health permissions usage intent
-                    attempts.add("action:health_usage" to Intent("android.intent.action.VIEW_PERMISSION_USAGE").apply {
-                        addCategory("android.intent.category.HEALTH_PERMISSIONS")
-                    })
-
-                    // 6. App Info (last resort)
                     val appInfo = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                         data = android.net.Uri.parse("package:$packageName")
                     }
                     attempts.add("fallback:appInfo" to appInfo)
 
+                    // Started without resolveActivity first: package visibility hides the
+                    // controller from resolution on Android 11+ even where starting it succeeds,
+                    // so asking would rule out the entries that actually work.
                     var opened: String? = null
                     for ((label, intent) in attempts) {
                         try {

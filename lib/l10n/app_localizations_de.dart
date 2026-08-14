@@ -6275,6 +6275,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fileManagerOpenMarkdown => 'Markdown öffnen mit';
 
   @override
+  String get fileManagerOpenSqlite => 'SQLite-Datenbanken öffnen mit';
+
+  @override
   String get fileManagerOpenWithSystem => 'Mit Systemstandard öffnen';
 
   @override

@@ -513,6 +513,10 @@ class HealthStore {
   /// Writes a page of mapped records and refreshes only the daily rollups the
   /// page touched. One transaction, so an interrupted import never leaves the
   /// rollups disagreeing with the facts.
+  ///
+  /// Returns the rows that were actually stored, not the rows offered: a
+  /// re-read hands the same measurements back and they collapse on insert, so
+  /// counting what arrived would report changes on a page that changed nothing.
   Future<int> writeRecords(Iterable<HealthMappedRecord> records) async {
     final db = await _db();
     var written = 0;
@@ -554,12 +558,13 @@ class HealthStore {
           }, conflictAlgorithm: ConflictAlgorithm.ignore);
           (touched[metricId] ??= <int>{}).add(dayKey(row.t0));
         }
-        written += record.rowCount;
       }
       for (final entry in batches.entries) {
         final before = await _totalChanges(txn);
         await entry.value.commit(noResult: true);
-        if (await _totalChanges(txn) > before) dirty.add(entry.key);
+        final inserted = await _totalChanges(txn) - before;
+        if (inserted > 0) dirty.add(entry.key);
+        written += inserted;
       }
       // Sessions need their generated id, so they cannot ride the batch.
       for (final record in records) {
@@ -572,7 +577,10 @@ class HealthStore {
           record.package,
           session,
         );
-        if (changed) dirty.add((HealthSchema.chunkDay(session.t0), appId));
+        if (changed) {
+          dirty.add((HealthSchema.chunkDay(session.t0), appId));
+          written++;
+        }
       }
       await _markChunks(txn, dirty);
       await _refreshDaily(txn, touched);

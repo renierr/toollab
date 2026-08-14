@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 
-import 'collectors/health_connect_diff.dart';
-import 'collectors/health_connect_importer.dart';
+import 'collectors/health_connect_catch_up.dart';
 import 'config.dart';
 import 'store/health_store.dart';
 
@@ -28,16 +25,15 @@ class HealthSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => HealthDashboardTool.config.id;
 
+  /// Pulls from Health Connect before the manifest is read, so a device that
+  /// syncs without ever opening the tool still contributes today's data. Not
+  /// forced: the tool's own refresh runs one immediately before triggering
+  /// backend sync, and reading the same window twice per pull is wasted work.
   Future<void> _refreshHealthConnect() async {
-    if (!Platform.isAndroid) return;
     try {
-      final diff = const HealthConnectDiff();
-      final diffResult = await diff.sync();
-      if (!diffResult.needsFullImport && !diffResult.baselineEstablished) {
-        await const HealthConnectImporter().importRecent();
-      }
+      await const HealthConnectCatchUp().run(force: false);
     } catch (e) {
-      debugLog('[HealthSyncDelegate] Health Connect sync failed: $e');
+      errorLog('[HealthSyncDelegate] Health Connect catch-up failed: $e');
     }
   }
 

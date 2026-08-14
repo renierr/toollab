@@ -115,7 +115,4 @@ class HealthMappedRecord {
   });
 
   bool get isEmpty => points.isEmpty && intervals.isEmpty && session == null;
-
-  int get rowCount =>
-      points.length + intervals.length + (session == null ? 0 : 1);
 }

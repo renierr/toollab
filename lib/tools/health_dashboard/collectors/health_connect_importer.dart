@@ -60,15 +60,13 @@ class HealthConnectImporter {
   }) async {
     if (!Platform.isAndroid) return 0;
     final connector = await hc.HealthConnector.create();
-    const mapper = HealthConnectMapper();
     final store = HealthStore.instance;
     final enabled = await store.enabledTypes();
     final now = DateTime.now();
     var total = 0;
     var failed = 0;
     var attempted = 0;
-    int? touchedFrom;
-    int? touchedTo;
+    final touched = _TouchedRange();
 
     for (final readable in HealthConnectTypes.readable()) {
       final typeId = HealthConnectTypes.idOf(readable);
@@ -99,56 +97,30 @@ class HealthConnectImporter {
       final excluded = await store.excludedPackages(typeId);
 
       try {
-        // Paging follows response.nextPageRequest. This plugin exposes no page
-        // token on the read response; reading one threw before the first page
-        // could be written, which made a full import finish in seconds and
-        // store nothing.
-        dynamic request = readable.readInTimeRange(
-          startTime: rangeStart,
-          endTime: rangeEnd,
-          pageSize: _pageSize,
-          dataOrigins: origins,
+        await _readPages(
+          connector: connector,
+          readable: readable,
+          start: rangeStart,
+          end: rangeEnd,
+          origins: origins,
+          excluded: excluded,
+          touched: touched,
+          onPage: (page, last) async {
+            imported += page.length;
+            // The page and its progress land in one transaction, so an
+            // interrupted import never claims to have stored more than it did.
+            await store.writeRecords(page);
+            await store.markTypeProgress(
+              type: typeId,
+              count: imported,
+              historyDone: last,
+              rangeStart: rangeStart.millisecondsSinceEpoch,
+              rangeEnd: rangeEnd.millisecondsSinceEpoch,
+            );
+            total += page.length;
+            onProgress?.call('Importing $typeId...', total);
+          },
         );
-        do {
-          final dynamic response = await connector.readRecords(request);
-          final mapped = <HealthMappedRecord>[];
-          for (final record
-              in (response.records as List).cast<hc.HealthRecord>()) {
-            final result = mapper.map(record);
-            // Exclusion is checked on the writer the row would be stored under,
-            // not on the raw data origin, so switching a source off matches what
-            // the tables actually hold.
-            if (result.isEmpty || excluded.contains(result.package)) continue;
-            mapped.add(result);
-            for (final point in result.points) {
-              touchedFrom = _min(touchedFrom, point.t);
-              touchedTo = _max(touchedTo, point.t);
-            }
-            for (final interval in result.intervals) {
-              touchedFrom = _min(touchedFrom, interval.t0);
-              touchedTo = _max(touchedTo, interval.t1);
-            }
-            final session = result.session;
-            if (session != null) {
-              touchedFrom = _min(touchedFrom, session.t0);
-              touchedTo = _max(touchedTo, session.t1);
-            }
-          }
-          request = response.nextPageRequest;
-          imported += mapped.length;
-          // The page and its progress land in one transaction, so an interrupted
-          // import never claims to have stored more than it did.
-          await store.writeRecords(mapped);
-          await store.markTypeProgress(
-            type: typeId,
-            count: imported,
-            historyDone: request == null,
-            rangeStart: rangeStart.millisecondsSinceEpoch,
-            rangeEnd: rangeEnd.millisecondsSinceEpoch,
-          );
-          total += mapped.length;
-          onProgress?.call('Importing $typeId...', total);
-        } while (request != null);
       } catch (e) {
         failed++;
         errorLog('[HealthImporter] $typeId failed: $e');
@@ -157,12 +129,9 @@ class HealthConnectImporter {
 
     // Distance, energy and heart rate arrive as their own records, so a session's
     // summary can only be joined once both sides are stored.
-    if (touchedFrom != null) {
+    if (!touched.isEmpty) {
       onProgress?.call('Summarising workouts...', total);
-      await HealthStore.instance.refreshSessionSummaries(
-        from: touchedFrom,
-        to: touchedTo,
-      );
+      await store.refreshSessionSummaries(from: touched.from!, to: touched.to);
     }
 
     // Failures are tolerated per type, which adds up to a silent no-op when they
@@ -176,21 +145,26 @@ class HealthConnectImporter {
     return total;
   }
 
-  /// Reads records across a recent time window without altering pagination state.
+  /// Re-reads a trailing [window] and returns the rows it actually stored.
+  ///
+  /// Deliberately blind to the per-type import bookkeeping: it neither skips a
+  /// finished type nor records progress, so a window read can never move a
+  /// pagination cursor or mark a decade of history done after covering a month.
+  /// Re-reading is safe because it is idempotent - a measurement already stored
+  /// collapses on the primary key - which is also why the count comes from the
+  /// store rather than from what Health Connect handed over.
   Future<int> importRecent({
     Duration window = const Duration(days: 2),
     void Function(String status, int count)? onProgress,
   }) async {
     if (!Platform.isAndroid) return 0;
     final connector = await hc.HealthConnector.create();
-    const mapper = HealthConnectMapper();
     final store = HealthStore.instance;
     final enabled = await store.enabledTypes();
     final now = DateTime.now();
     final rangeStart = now.subtract(window);
-    var total = 0;
-    int? touchedFrom;
-    int? touchedTo;
+    var stored = 0;
+    final touched = _TouchedRange();
 
     for (final readable in HealthConnectTypes.readable()) {
       final typeId = HealthConnectTypes.idOf(readable);
@@ -201,58 +175,92 @@ class HealthConnectImporter {
       final excluded = await store.excludedPackages(typeId);
 
       try {
-        dynamic request = readable.readInTimeRange(
-          startTime: rangeStart,
-          endTime: now,
-          pageSize: _pageSize,
-          dataOrigins: origins,
+        await _readPages(
+          connector: connector,
+          readable: readable,
+          start: rangeStart,
+          end: now,
+          origins: origins,
+          excluded: excluded,
+          touched: touched,
+          onPage: (page, last) async {
+            if (page.isNotEmpty) stored += await store.writeRecords(page);
+            onProgress?.call('Reading recent $typeId...', stored);
+          },
         );
-        do {
-          final dynamic response = await connector.readRecords(request);
-          final mapped = <HealthMappedRecord>[];
-          for (final record
-              in (response.records as List).cast<hc.HealthRecord>()) {
-            final result = mapper.map(record);
-            if (result.isEmpty || excluded.contains(result.package)) continue;
-            mapped.add(result);
-            for (final point in result.points) {
-              touchedFrom = _min(touchedFrom, point.t);
-              touchedTo = _max(touchedTo, point.t);
-            }
-            for (final interval in result.intervals) {
-              touchedFrom = _min(touchedFrom, interval.t0);
-              touchedTo = _max(touchedTo, interval.t1);
-            }
-            final session = result.session;
-            if (session != null) {
-              touchedFrom = _min(touchedFrom, session.t0);
-              touchedTo = _max(touchedTo, session.t1);
-            }
-          }
-          request = response.nextPageRequest;
-          if (mapped.isNotEmpty) {
-            await store.writeRecords(mapped);
-            total += mapped.length;
-          }
-          onProgress?.call('Reading recent $typeId...', total);
-        } while (request != null);
       } catch (e) {
-        debugLog('[HealthImporter] Recent read for $typeId failed: $e');
+        errorLog('[HealthImporter] Recent read for $typeId failed: $e');
       }
     }
 
-    if (touchedFrom != null) {
-      await HealthStore.instance.refreshSessionSummaries(
-        from: touchedFrom,
-        to: touchedTo,
-      );
+    if (!touched.isEmpty) {
+      await store.refreshSessionSummaries(from: touched.from!, to: touched.to);
     }
-    return total;
+    return stored;
   }
 
-  static int _min(int? current, int value) =>
-      current == null || value < current ? value : current;
+  /// Pages one type over a range, handing each page to [onPage] along with
+  /// whether it was the last. Paging follows `response.nextPageRequest`: this
+  /// plugin exposes no page token on the read response, and reading one threw
+  /// before the first page could be written, which made a full import finish in
+  /// seconds and store nothing.
+  Future<void> _readPages({
+    required hc.HealthConnector connector,
+    required ReadableHealthType readable,
+    required DateTime start,
+    required DateTime end,
+    required List<hc.DataOrigin> origins,
+    required Set<String> excluded,
+    required _TouchedRange touched,
+    required Future<void> Function(List<HealthMappedRecord> page, bool last)
+    onPage,
+  }) async {
+    const mapper = HealthConnectMapper();
+    dynamic request = readable.readInTimeRange(
+      startTime: start,
+      endTime: end,
+      pageSize: _pageSize,
+      dataOrigins: origins,
+    );
+    do {
+      final dynamic response = await connector.readRecords(request);
+      final page = <HealthMappedRecord>[];
+      for (final record in (response.records as List).cast<hc.HealthRecord>()) {
+        final result = mapper.map(record);
+        // Exclusion is checked on the writer the row would be stored under, not
+        // on the raw data origin, so switching a source off matches what the
+        // tables actually hold.
+        if (result.isEmpty || excluded.contains(result.package)) continue;
+        page.add(result);
+        touched.add(result);
+      }
+      request = response.nextPageRequest;
+      await onPage(page, request == null);
+    } while (request != null);
+  }
+}
 
-  static int _max(int? current, int value) =>
-      current == null || value > current ? value : current;
+/// The span the written rows cover, which is all the session summaries need to
+/// know to recompute the right days.
+class _TouchedRange {
+  int? from;
+  int? to;
+
+  bool get isEmpty => from == null;
+
+  void add(HealthMappedRecord record) {
+    for (final point in record.points) {
+      _widen(point.t, point.t);
+    }
+    for (final interval in record.intervals) {
+      _widen(interval.t0, interval.t1);
+    }
+    final session = record.session;
+    if (session != null) _widen(session.t0, session.t1);
+  }
+
+  void _widen(int t0, int t1) {
+    if (from == null || t0 < from!) from = t0;
+    if (to == null || t1 > to!) to = t1;
+  }
 }

@@ -5,6 +5,10 @@ import 'package:health_connector_core/src/models/health_data_types/health_data_t
 // ignore: implementation_imports
 import 'package:health_connector_core/src/utils/health_record_data_type_extension.dart';
 
+/// A type the plugin can read over a time range. Aliased here so callers get at
+/// it without repeating the implementation import above.
+typedef ReadableHealthType = core.ReadableInTimeRangeHealthDataType;
+
 /// Health Connect data types this app can read, keyed by the plugin's stable
 /// `HealthDataType.id`.
 ///
@@ -36,9 +40,9 @@ class HealthConnectTypes {
     'speed_series',
   };
 
-  static Iterable<core.ReadableInTimeRangeHealthDataType> readable() {
+  static Iterable<ReadableHealthType> readable() {
     return hc.HealthDataType.healthConnectDataTypes
-        .whereType<core.ReadableInTimeRangeHealthDataType>();
+        .whereType<ReadableHealthType>();
   }
 
   static String idOf(Object type) => (type as hc.HealthDataType).id;

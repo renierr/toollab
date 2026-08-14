@@ -639,12 +639,30 @@
           <table>
             <thead><tr><th>State</th><th>Cause</th><th>Response</th></tr></thead>
             <tbody>
-              <tr><td class="c">baseline</td><td class="d">No token yet. The first call returns <em>no records</em> by design; it only marks a starting point.</td><td class="d">Store the token, report it as a baseline — never as "nothing changed". History comes from the full import.</td></tr>
+              <tr><td class="c">baseline</td><td class="d">No token yet. The first call returns <em>no records</em> by design; it only marks a starting point.</td><td class="d">Store the token, report it as a baseline — never as "nothing changed". The trailing window below covers the last two days; the rest of the history comes from the full import.</td></tr>
               <tr><td class="c">scope change</td><td class="d">The token is bound to its type list; enabling a type invalidates it.</td><td class="d">Compare the stored scope string, re-establish, and let the full importer fetch the new type's history.</td></tr>
-              <tr><td class="c">expiry</td><td class="d">Health Connect expires tokens after about 30 days, throwing <code>InvalidArgumentException</code>.</td><td class="d">Clear the token, then recover automatically: take a fresh baseline, clear <code>history_done</code> and the pinned range on the enabled types, and re-read a window slightly wider than the expiry. <b>Not</b> the restart import — that deletes first, and re-reading is idempotent because the measurement <em>is</em> the primary key. <code>needsFullImport</code> now only survives when the recovery itself fails.</td></tr>
+              <tr><td class="c">expiry</td><td class="d">Health Connect expires tokens after about 30 days, throwing <code>InvalidArgumentException</code>.</td><td class="d">Clear the token, then recover automatically: take a fresh baseline and re-read a window slightly wider than the expiry. <b>Not</b> the restart import — that deletes first — and not the resuming full import either, which owns <code>history_done</code> and the pinned range and would mark a decade done after covering a month. Re-reading is idempotent because the measurement <em>is</em> the primary key. <code>needsFullImport</code> now only survives when the recovery itself fails.</td></tr>
             </tbody>
           </table>
         </div>
+        <h3>The trailing window under it</h3>
+        <p class="measure">
+          Every catch-up that did not end in a recovery finishes by re-reading the last two days
+          (<code>HealthConnectImporter.importRecent</code>). The change feed stays the source of
+          truth — this only backs it up where a writer backdates records behind a token that has
+          already moved past them, and where a freshly established baseline reported nothing at all.
+          Like the recovery it touches no per-type bookkeeping, and it counts what the store
+          actually inserted, so a window in which nothing changed reports zero rather than
+          re-reporting everything it re-read.
+        </p>
+        <p class="measure">
+          Both callers go through <code>HealthConnectCatchUp</code>: the tool's own refresh forces a
+          run, while the backend sync delegate asks for an unforced one and is skipped inside a
+          one-minute cooldown — a refresh triggers backend sync immediately afterwards, and without
+          the cooldown the same window would be read twice per pull. Sync from the settings screen
+          reaches Health Connect through the same path, so a device that never opens the tool still
+          collects and still recovers a rejected token.
+        </p>
         <div class="note">
           <p><b>Long runs keep the CPU awake.</b> Every read is a platform call into another
           process, and a full history is minutes of them. Discovery, the full import, the change
@@ -884,7 +902,7 @@
               </tr>
               <tr>
                 <td class="d"><b>Sync changes now</b></td>
-                <td class="d">The same change-token sync, on demand. Fetches only what Health Connect reports as changed, including deletions — the change log records the <em>write</em>, so a device that uploads days later still arrives here. A rejected token recovers itself by re-reading a recent window, on this path and on open alike; there is no separate recovery action</td>
+                <td class="d">The same change-token sync, on demand. Fetches only what Health Connect reports as changed, including deletions — the change log records the <em>write</em>, so a device that uploads days later still arrives here. It then re-reads the last two days as a safety net, and a rejected token recovers itself by widening that window to a month. Both happen on this path, on open, and under backend sync alike; there is no separate recovery action</td>
                 <td class="c">all fact tables · sync token</td>
                 <td class="d">Seconds</td>
               </tr>
@@ -1583,8 +1601,8 @@
       <footer>
         Source: <code>lib/tools/health_dashboard/</code> — <code>store/</code> holds the schema,
         catalog, mapper, queries and the chunk codec; <code>collectors/</code> holds discovery, the
-        importer and the change-token sync; <code>health_sync_delegate.dart</code> is the backend
-        side; <code>debug/</code> holds the test-data generator; <code>widgets/</code> holds
+        importer, the change-token sync and the catch-up that sequences them;
+        <code>health_sync_delegate.dart</code> is the backend side; <code>debug/</code> holds the test-data generator; <code>widgets/</code> holds
         the detail pages. The authoritative schema version is <code>HealthSchema.version</code>. Update
         this page whenever the schema, the source rules, the type mapping or a detail page's layout
         change — the chart in §12 is a port and drifts silently otherwise. The scoring reference is
@@ -1734,7 +1752,7 @@
       cols: [
         ["type", "TEXT", K.PK, "HealthDataType.id, e.g. heart_rate_series"],
         ["enabled", "INTEGER", "", "Whether this type is pulled at all"],
-        ["history_done", "INTEGER", "", "1 once full history has been read. Cleared whenever a writer is re-admitted or a rejected change token is recovered, or the importer would skip the type and never read what it missed"],
+        ["history_done", "INTEGER", "", "1 once full history has been read. Cleared whenever a writer is re-admitted, or the importer would skip the type and never read what it missed. Window reads (the trailing safety pass, the token recovery) leave it alone — they cover a month, not a history"],
         ["range_start", "INTEGER", "", "Window the in-flight import covers, cleared with history_done"],
         ["range_end", "INTEGER", "", "Pinned at start, so resume re-reads the same window. Cleared with history_done — left behind, it would make the next import replay the range the finished one already covered and never reach anything written since"],
         ["n", "INTEGER", "", "Records imported so far"],

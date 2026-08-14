@@ -2481,6 +2481,7 @@
   "fileManagerOpenVideo": "Video öffnen mit",
   "fileManagerOpenInternalPlayer": "Interner Player",
   "fileManagerOpenMarkdown": "Markdown öffnen mit",
+  "fileManagerOpenSqlite": "SQLite-Datenbanken öffnen mit",
   "fileManagerOpenWithSystem": "Mit Systemstandard öffnen",
   "fileManagerDownloads": "Downloads",
   "fileManagerGrantFileAccess": "Zugriff auf Gerätedateien erlauben",
