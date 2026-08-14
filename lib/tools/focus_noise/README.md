@@ -2,8 +2,17 @@
 
 This tool is built to make adding sounds easy.
 
-Current defaults are fully generated at runtime (including Forest/City), so
-there is no audible seam from loop wrap.
+Current defaults are fully generated at runtime (including Forest/City). Each
+one is pre-rendered once into a loop-ready WAV and looped natively, so no Dart
+timer feeds playback.
+
+Two things keep the loop wrap inaudible, both in `engine/noise_loop_builder.dart`:
+
+- The seam is closed with an **equal-power** (sin/cos) crossfade against extra
+  audio rendered past the loop end. Linear weights would lose ~3 dB mid-fade,
+  because the two sides are uncorrelated noise.
+- The fade length is per noise type — the more low-frequency energy a noise
+  carries, the longer it needs (brown most, white/green least).
 
 ## Sound types
 
