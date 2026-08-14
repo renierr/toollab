@@ -15,8 +15,11 @@ import 'db/sqlite_models.dart';
 
 const List<int> kSqliteViewerPageSizes = [25, 50, 100, 250];
 
+const int kSqliteViewerTabCount = 3;
+
 class SqliteViewerState extends ChangeNotifier {
   static const String _sqlLanguage = 'sql';
+  static const int dataTabIndex = 1;
 
   final SqliteInspector _inspector = SqliteInspector();
   TempFileScope? _scope;
@@ -29,6 +32,7 @@ class SqliteViewerState extends ChangeNotifier {
   bool _editMode = false;
   bool _hasEdits = false;
   bool _isBusy = false;
+  int _tabIndex = 0;
 
   SqliteOpenFailure? _openFailure;
   String? _openDetail;
@@ -68,6 +72,7 @@ class SqliteViewerState extends ChangeNotifier {
   bool get canEnableEditMode => isOpen && !_isInternal;
   bool get hasEdits => _hasEdits;
   bool get isBusy => _isBusy;
+  int get tabIndex => _tabIndex;
   SqliteOpenFailure? get openFailure => _openFailure;
   String? get openDetail => _openDetail;
 
@@ -97,6 +102,12 @@ class SqliteViewerState extends ChangeNotifier {
       _objects.where((o) => o.type == type).toList();
 
   void attachScope(TempFileScope scope) => _scope = scope;
+
+  void setTabIndex(int index) {
+    if (_tabIndex == index) return;
+    _tabIndex = index;
+    notifyListeners();
+  }
 
   // ---------------------------------------------------------------------------
   // Opening
@@ -171,6 +182,7 @@ class SqliteViewerState extends ChangeNotifier {
       _isInternal = isInternal;
       _editMode = false;
       _hasEdits = false;
+      _tabIndex = 0;
       _resetQuery();
       unawaited(SyntaxHighlighter.preload(const [_sqlLanguage]));
       await _reloadStructure();
@@ -226,6 +238,7 @@ class SqliteViewerState extends ChangeNotifier {
     _isInternal = false;
     _editMode = false;
     _hasEdits = false;
+    _tabIndex = 0;
     _overview = null;
     _objects = const [];
     _selected = null;
@@ -246,8 +259,12 @@ class SqliteViewerState extends ChangeNotifier {
   // Browsing
   // ---------------------------------------------------------------------------
 
+  /// Picking an object is a request to look at its rows, so it always lands on
+  /// the data tab — even when that object was already selected.
   Future<void> selectObject(DbObject object) async {
+    _tabIndex = dataTabIndex;
     if (_selected?.name == object.name && _selected?.type == object.type) {
+      notifyListeners();
       return;
     }
     _setBusy(true);
