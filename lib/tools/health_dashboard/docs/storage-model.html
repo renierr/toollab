@@ -641,7 +641,7 @@
             <tbody>
               <tr><td class="c">baseline</td><td class="d">No token yet. The first call returns <em>no records</em> by design; it only marks a starting point.</td><td class="d">Store the token, report it as a baseline — never as "nothing changed". History comes from the full import.</td></tr>
               <tr><td class="c">scope change</td><td class="d">The token is bound to its type list; enabling a type invalidates it.</td><td class="d">Compare the stored scope string, re-establish, and let the full importer fetch the new type's history.</td></tr>
-              <tr><td class="c">expiry</td><td class="d">Health Connect expires tokens after about 30 days, throwing <code>InvalidArgumentException</code>.</td><td class="d">Clear the token and report <code>needsFullImport</code>.</td></tr>
+              <tr><td class="c">expiry</td><td class="d">Health Connect expires tokens after about 30 days, throwing <code>InvalidArgumentException</code>.</td><td class="d">Clear the token, then recover automatically: take a fresh baseline, clear <code>history_done</code> and the pinned range on the enabled types, and re-read a window slightly wider than the expiry. <b>Not</b> the restart import — that deletes first, and re-reading is idempotent because the measurement <em>is</em> the primary key. <code>needsFullImport</code> now only survives when the recovery itself fails.</td></tr>
             </tbody>
           </table>
         </div>
@@ -884,7 +884,7 @@
               </tr>
               <tr>
                 <td class="d"><b>Sync changes now</b></td>
-                <td class="d">The same change-token sync, on demand. Fetches only what Health Connect reports as changed, including deletions</td>
+                <td class="d">The same change-token sync, on demand. Fetches only what Health Connect reports as changed, including deletions — the change log records the <em>write</em>, so a device that uploads days later still arrives here. A rejected token recovers itself by re-reading a recent window, on this path and on open alike; there is no separate recovery action</td>
                 <td class="c">all fact tables · sync token</td>
                 <td class="d">Seconds</td>
               </tr>
@@ -1734,9 +1734,9 @@
       cols: [
         ["type", "TEXT", K.PK, "HealthDataType.id, e.g. heart_rate_series"],
         ["enabled", "INTEGER", "", "Whether this type is pulled at all"],
-        ["history_done", "INTEGER", "", "1 once full history has been read. Cleared whenever a writer is re-admitted, or the importer would skip the type and never read the new writer's history"],
-        ["range_start", "INTEGER", "", "Window the in-flight import covers"],
-        ["range_end", "INTEGER", "", "Pinned at start, so resume re-reads the same window"],
+        ["history_done", "INTEGER", "", "1 once full history has been read. Cleared whenever a writer is re-admitted or a rejected change token is recovered, or the importer would skip the type and never read what it missed"],
+        ["range_start", "INTEGER", "", "Window the in-flight import covers, cleared with history_done"],
+        ["range_end", "INTEGER", "", "Pinned at start, so resume re-reads the same window. Cleared with history_done — left behind, it would make the next import replay the range the finished one already covered and never reach anything written since"],
         ["n", "INTEGER", "", "Records imported so far"],
         ["updated_at", "INTEGER", "", ""]
       ]

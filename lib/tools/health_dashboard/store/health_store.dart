@@ -1462,12 +1462,17 @@ class HealthStore {
   /// Clears the full-import completion flag for [types], so the importer reads
   /// their history again instead of skipping them. Needed whenever a writer is
   /// added back to a type that already finished importing without it.
+  /// The pinned window goes with the flag. Keeping `range_end` behind would make
+  /// the next import resume over the range the finished one already covered, so
+  /// it could never reach anything written since - which is how re-enabling a
+  /// source replayed old data and missed today's.
   Future<void> resetTypeHistory(Iterable<String> types) async {
     if (types.isEmpty) return;
     final db = await _db();
     final placeholders = List.filled(types.length, '?').join(', ');
     await db.rawUpdate(
-      'UPDATE ${db.nameTable(HealthSchema.type)} SET history_done = 0 '
+      'UPDATE ${db.nameTable(HealthSchema.type)} SET history_done = 0, '
+      'range_start = NULL, range_end = NULL '
       'WHERE type IN ($placeholders)',
       types.toList(),
     );

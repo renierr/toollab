@@ -2738,7 +2738,15 @@
       }
     }
   },
-  "healthDashboardFullImportNeeded": "Änderungsverfolgung abgelaufen. Ein vollständiger Import ist notwendig.",
+  "healthDashboardFullImportNeeded": "Änderungsverfolgung abgelaufen, Wiederherstellung fehlgeschlagen. Ein vollständiger Import ist notwendig.",
+  "healthDashboardSyncRecovered": "Änderungsverfolgung abgelaufen. Letzte Historie neu gelesen: {imported} Datensätze.",
+  "@healthDashboardSyncRecovered": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardShowTreadmill": "Laufband-Workouts",
   "healthDashboardShowTreadmillSubtitle": "Lokale Laufbandläufe in Dashboard-Werte und Aktivitäten aufnehmen.",
   "healthDashboardSync": "Synchronisierung",

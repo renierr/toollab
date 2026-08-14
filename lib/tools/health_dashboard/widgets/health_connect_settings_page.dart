@@ -352,8 +352,11 @@ class HealthConnectSettingsPage extends StatelessWidget {
       await _offerGrantIfMissing(context);
       return;
     }
+    final recovered = result.recovered;
     final message = result.needsFullImport
         ? l10n.healthDashboardFullImportNeeded
+        : recovered != null
+        ? l10n.healthDashboardSyncRecovered(recovered)
         : result.baselineEstablished
         ? l10n.healthDashboardBaselineEstablished
         : l10n.healthDashboardSyncChangesResult(

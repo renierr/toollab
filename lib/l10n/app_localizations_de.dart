@@ -6810,7 +6810,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get healthDashboardFullImportNeeded =>
-      'Änderungsverfolgung abgelaufen. Ein vollständiger Import ist notwendig.';
+      'Änderungsverfolgung abgelaufen, Wiederherstellung fehlgeschlagen. Ein vollständiger Import ist notwendig.';
+
+  @override
+  String healthDashboardSyncRecovered(int imported) {
+    return 'Änderungsverfolgung abgelaufen. Letzte Historie neu gelesen: $imported Datensätze.';
+  }
 
   @override
   String get healthDashboardShowTreadmill => 'Laufband-Workouts';

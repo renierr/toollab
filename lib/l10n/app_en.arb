@@ -3593,7 +3593,15 @@
       }
     }
   },
-  "healthDashboardFullImportNeeded": "Change tracking expired. A full import is needed.",
+  "healthDashboardFullImportNeeded": "Change tracking expired and recovery failed. A full import is needed.",
+  "healthDashboardSyncRecovered": "Change tracking expired. Re-read recent history: {imported} records.",
+  "@healthDashboardSyncRecovered": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      }
+    }
+  },
   "healthDashboardShowTreadmill": "Treadmill workouts",
   "healthDashboardShowTreadmillSubtitle": "Include local treadmill runs in dashboard totals and activity.",
   "healthDashboardSync": "Sync",

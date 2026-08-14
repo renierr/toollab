@@ -247,7 +247,12 @@ class HealthDashboardState extends ChangeNotifier {
           'Syncing...',
           title: 'Health Dashboard sync',
         );
-        await _diff.sync();
+        // A rejected token is recovered here rather than only logged: the open
+        // path is the one that runs unattended, so leaving it unhandled is what
+        // silently stopped Health Connect data arriving at all.
+        if ((await _diff.sync()).needsFullImport) {
+          await _recoverRejectedToken();
+        }
       }
       await _reloadRecords();
     } catch (e) {
@@ -493,14 +498,49 @@ class HealthDashboardState extends ChangeNotifier {
       permissionMissing = true;
       return const HealthDiffResult();
     }
-    final result = await _diff.sync();
-    if (result.needsFullImport) {
-      errorLog(
-        '[HealthDashboard] Sync token invalid; a full import is required',
-      );
-    }
+    var result = await _diff.sync();
+    if (result.needsFullImport) result = await _recoverRejectedToken();
     await loadSelection();
     return result;
+  }
+
+  /// How far back a recovery re-reads. Health Connect expires a change token
+  /// after roughly a month, so nothing older than this can have been missed by
+  /// one - and a window costs a fraction of re-reading a decade.
+  static const _catchUpDays = 35;
+
+  /// Brings the store back up to date after the change token was rejected.
+  ///
+  /// This is deliberately **not** the restart import: that wipes every data
+  /// table first, so recovering from an expired token would cost the user their
+  /// history. Re-reading is idempotent instead - `health_point`'s primary key is
+  /// the measurement, so a row already stored simply collapses on insert - which
+  /// makes a plain windowed re-read safe to run unattended.
+  ///
+  /// The new baseline is taken *before* the read, so anything written while the
+  /// window is being imported is reported by the next sync rather than falling
+  /// into the gap between the two.
+  Future<HealthDiffResult> _recoverRejectedToken() async {
+    errorLog(
+      '[HealthDashboard] Sync token rejected; re-reading recent history',
+    );
+    try {
+      final baseline = await _diff.sync();
+      final types = await HealthStore.instance.enabledTypes();
+      await HealthStore.instance.resetTypeHistory(types);
+      final imported = await _importer.import(
+        start: DateTime.now().subtract(const Duration(days: _catchUpDays)),
+        onProgress: _onCollectionProgress,
+      );
+      debugLog('[HealthDashboard] Token recovery imported $imported records');
+      return baseline.recoveredWith(imported);
+    } catch (e) {
+      errorLog('[HealthDashboard] Token recovery failed: $e');
+      return const HealthDiffResult(needsFullImport: true);
+    } finally {
+      collectionStatus = null;
+      notifyListeners();
+    }
   }
 
   Future<HealthDiffResult> syncChanges() async {

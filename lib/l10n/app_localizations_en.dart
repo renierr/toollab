@@ -6763,7 +6763,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get healthDashboardFullImportNeeded =>
-      'Change tracking expired. A full import is needed.';
+      'Change tracking expired and recovery failed. A full import is needed.';
+
+  @override
+  String healthDashboardSyncRecovered(int imported) {
+    return 'Change tracking expired. Re-read recent history: $imported records.';
+  }
 
   @override
   String get healthDashboardShowTreadmill => 'Treadmill workouts';

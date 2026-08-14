@@ -12176,8 +12176,14 @@ abstract class AppLocalizations {
   /// No description provided for @healthDashboardFullImportNeeded.
   ///
   /// In en, this message translates to:
-  /// **'Change tracking expired. A full import is needed.'**
+  /// **'Change tracking expired and recovery failed. A full import is needed.'**
   String get healthDashboardFullImportNeeded;
+
+  /// No description provided for @healthDashboardSyncRecovered.
+  ///
+  /// In en, this message translates to:
+  /// **'Change tracking expired. Re-read recent history: {imported} records.'**
+  String healthDashboardSyncRecovered(int imported);
 
   /// No description provided for @healthDashboardShowTreadmill.
   ///

@@ -23,12 +23,25 @@ class HealthDiffResult {
   /// True when the token was rejected and a full import is the only way back.
   final bool needsFullImport;
 
+  /// Records pulled by the catch-up re-read that recovered a rejected token.
+  /// Non-null means the recovery ran, so [needsFullImport] was handled rather
+  /// than merely reported.
+  final int? recovered;
+
   const HealthDiffResult({
     this.upserted = 0,
     this.deleted = 0,
     this.baselineEstablished = false,
     this.needsFullImport = false,
+    this.recovered,
   });
+
+  HealthDiffResult recoveredWith(int imported) => HealthDiffResult(
+    upserted: upserted,
+    deleted: deleted,
+    baselineEstablished: baselineEstablished,
+    recovered: imported,
+  );
 }
 
 /// Incremental Health Connect sync built on the platform's own change tracking.
