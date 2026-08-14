@@ -1,6 +1,5 @@
 package de.renier.tool_lab
 
-import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
@@ -9,7 +8,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.provider.OpenableColumns
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -26,8 +24,6 @@ open class MainActivity : FlutterFragmentActivity() {
     private val MULTICAST_CHANNEL = "de.renier.tool_lab/multicast"
     private val STORAGE_ACCESS_CHANNEL = "de.renier.tool_lab/storage_access"
     private val NATIVE_MEDIA_PLAYER_CHANNEL = "de.renier.tool_lab/native_media_player"
-    private val HEALTH_CONNECT_CHANNEL = "de.renier.tool_lab/health_connect"
-    private val HEALTH_CONNECT_TAG = "ToolLabHealthConnect"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
     private var systemAudioPlayerHelper: SystemAudioPlayerHelper? = null
@@ -195,86 +191,7 @@ open class MainActivity : FlutterFragmentActivity() {
         super.configureFlutterEngine(flutterEngine)
         val messenger = flutterEngine.dartExecutor.binaryMessenger
 
-        MethodChannel(messenger, HEALTH_CONNECT_CHANNEL).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "openSettings" -> {
-                    // Granting happens through the plugin's permission request; this entry is
-                    // for inspecting and revoking, so it aims at Health Connect's own screens.
-                    // Which of them exists depends on the OS version and the OEM, so the list is
-                    // ordered by preference and simply tried in turn.
-                    val attempts = mutableListOf<Pair<String, Intent>>()
-
-                    attempts.add("settings:system" to Intent("android.settings.HEALTH_CONNECT_SETTINGS"))
-                    attempts.add("settings:health_connect" to Intent("android.health.connect.action.HEALTH_CONNECT_SETTINGS"))
-                    attempts.add("settings:androidx" to Intent("androidx.health.ACTION_HEALTH_CONNECT_SETTINGS"))
-                    attempts.add("settings:samsung" to Intent("com.samsung.android.healthconnect.action.HEALTH_CONNECT_SETTINGS"))
-                    attempts.add("uri:healthconnect" to Intent(Intent.ACTION_VIEW, android.net.Uri.parse("healthconnect://settings")))
-
-                    // The per-app deep link the system's own settings use. Starting it needs the
-                    // signature permission GRANT_RUNTIME_PERMISSIONS, so it is denied on most
-                    // devices - kept because where it is allowed it lands on the exact screen.
-                    attempts.add("permissions:androidx" to Intent("androidx.health.ACTION_MANAGE_HEALTH_PERMISSIONS").apply {
-                        putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
-                    })
-                    attempts.add("permissions:system" to Intent("android.health.connect.action.MANAGE_HEALTH_PERMISSIONS").apply {
-                        putExtra(Intent.EXTRA_PACKAGE_NAME, packageName)
-                    })
-
-                    // Android 14+ keeps Health Connect in the platform controller, which has no
-                    // launcher entry of its own, so its activities are named explicitly.
-                    attempts.add("component:controller_main_action" to Intent(Intent.ACTION_MAIN).apply {
-                        component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.MainActivity")
-                    })
-                    attempts.add("component:controller_view" to Intent(Intent.ACTION_VIEW).apply {
-                        component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.MainActivity")
-                    })
-                    attempts.add("component:controller_manage" to Intent(Intent.ACTION_MAIN).apply {
-                        component = ComponentName("com.google.android.healthconnect.controller", "com.google.android.healthconnect.controller.permissions.ManageHealthDataActivity")
-                    })
-
-                    // Android 13 and below ship it as an ordinary APK, which does have one.
-                    listOf(
-                        "com.google.android.healthconnect.controller",
-                        "com.google.android.apps.healthdata"
-                    ).forEach { pkg ->
-                        packageManager.getLaunchIntentForPackage(pkg)?.let {
-                            attempts.add("launcher:$pkg" to it)
-                        }
-                    }
-
-                    val appInfo = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                        data = android.net.Uri.parse("package:$packageName")
-                    }
-                    attempts.add("fallback:appInfo" to appInfo)
-
-                    // Started without resolveActivity first: package visibility hides the
-                    // controller from resolution on Android 11+ even where starting it succeeds,
-                    // so asking would rule out the entries that actually work.
-                    var opened: String? = null
-                    for ((label, intent) in attempts) {
-                        try {
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            startActivity(intent)
-                            Log.i(HEALTH_CONNECT_TAG, "$label started successfully")
-                            opened = label
-                            break
-                        } catch (e: Exception) {
-                            Log.w(HEALTH_CONNECT_TAG, "$label failed to start: ${e.message}")
-                        }
-                    }
-
-                    if (opened != null) {
-                        result.success(mapOf(
-                            "opened" to opened,
-                            "fallback" to opened.startsWith("fallback:")
-                        ))
-                    } else {
-                        result.error("HEALTH_CONNECT_UNAVAILABLE", "Could not open Health Connect settings on this device.", null)
-                    }
-                }
-                else -> result.notImplemented()
-            }
-        }
+        HealthConnectSettingsHelper(this).registerChannel(messenger)
 
         MethodChannel(messenger, FILE_PICKER_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {

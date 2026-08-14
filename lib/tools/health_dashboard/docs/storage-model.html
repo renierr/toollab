@@ -958,25 +958,37 @@
           the same one that already decides what is imported and what is counted.
         </div>
 
-        <h3>Why the per-app Health Connect screen cannot be opened</h3>
+        <h3>Which screen "Manage Health Connect" opens</h3>
         <p class="measure">
-          <code>android.health.connect.action.MANAGE_HEALTH_PERMISSIONS</code> with
-          <code>EXTRA_PACKAGE_NAME</code> is the obvious deep link, and it does resolve — to
-          <code>com.google.android.healthconnect.controller</code>'s <code>SettingsActivity</code>.
-          Starting it throws, because that activity is guarded by the signature permission
-          <code>GRANT_RUNTIME_PERMISSIONS</code>:
+          The action names differ per OS version, which is the whole difficulty:
+          Android 14 moved Health Connect into the platform and renamed its entry points, so the
+          <code>androidx.health.*</code> actions resolve to nothing there, and the platform actions
+          resolve to nothing on Android 13 and below. <code>HealthConnectSettingsHelper</code>
+          therefore picks per <code>SDK_INT</code> and tries in order:
+        </p>
+        <pre class="ddl">API 34+   android.health.connect.action.HEALTH_HOME_SETTINGS
+          android.health.connect.action.MANAGE_HEALTH_DATA
+API &lt; 34  androidx.health.ACTION_HEALTH_CONNECT_SETTINGS  (setPackage healthdata)
+          androidx.health.ACTION_MANAGE_HEALTH_DATA      (setPackage healthdata)
+then      Samsung action → healthconnect:// → per-app deep link →
+          controller component → launcher entry → app info</pre>
+        <p class="measure">
+          The per-app screen stays a long shot:
+          <code>MANAGE_HEALTH_PERMISSIONS</code> with <code>EXTRA_PACKAGE_NAME</code> resolves — to
+          <code>com.google.android.healthconnect.controller</code>'s <code>SettingsActivity</code> —
+          but starting it throws, because that activity is guarded by the signature permission
+          <code>GRANT_RUNTIME_PERMISSIONS</code>, which no ordinary app can hold:
         </p>
         <pre class="ddl">SecurityException: Permission Denial: starting Intent
   { act=android.health.connect.action.MANAGE_HEALTH_PERMISSIONS ...
     cmp=com.google.android.healthconnect.controller/...SettingsActivity }
   requires android.permission.GRANT_RUNTIME_PERMISSIONS</pre>
         <p class="measure">
-          It is the link the system's own settings use, and no ordinary app can hold that
-          permission. On the same device none of <code>androidx.health.ACTION_HEALTH_CONNECT_SETTINGS</code>,
-          <code>android.health.connect.action.HEALTH_CONNECT_SETTINGS</code> or
-          <code>android.settings.HEALTH_CONNECT_SETTINGS</code> resolves at all, so the cascade ends
-          at Health Connect's launcher entry, and then at app info — which the UI now says out loud
-          rather than leaving the user on an unexpected screen.
+          So the landing screen is Health Connect's home, where "App permissions" leads to this
+          app's own entry. Every action tried is also declared in <code>&lt;queries&gt;</code>, since
+          package visibility filters implicit resolution. Only when all of them fail does the cascade
+          end at app info — which the UI says out loud rather than leaving the user on an unexpected
+          screen.
         </p>
         <div class="note">
           <b>Granting is a different mechanism.</b> Read access is granted through the permission

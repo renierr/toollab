@@ -143,18 +143,32 @@ Health Connect type, so that data is still on the dashboard and is not unused.
 Rollups are rebuilt afterwards, which also drops rollup rows for metrics left
 empty, and then the file is rewritten with `VACUUM`.
 
-### The per-app Health Connect screen cannot be opened
+### Which screen "Manage Health Connect" opens
 
+The action names differ per OS version. Android 14 moved Health Connect into the
+platform and renamed its entry points, so the `androidx.health.*` actions resolve
+to nothing there, and the platform actions resolve to nothing on Android 13 and
+below. `HealthConnectSettingsHelper` picks per `SDK_INT`:
+
+| API | Actions tried first |
+| --- | --- |
+| 34+ | `android.health.connect.action.HEALTH_HOME_SETTINGS`, then `...MANAGE_HEALTH_DATA` |
+| < 34 | `androidx.health.ACTION_HEALTH_CONNECT_SETTINGS`, then `androidx.health.ACTION_MANAGE_HEALTH_DATA`, both with `setPackage("com.google.android.apps.healthdata")` |
+
+Then, for OEM and older builds: the Samsung action, `healthconnect://settings`,
+the per-app deep link, the controller component, its launcher entry, and finally
+app info. Every action is also declared in `<queries>`, because package
+visibility filters implicit resolution.
+
+The per-app screen stays a long shot:
 `android.health.connect.action.MANAGE_HEALTH_PERMISSIONS` with `EXTRA_PACKAGE_NAME`
 resolves - to `com.google.android.healthconnect.controller`'s `SettingsActivity` -
 but starting it throws `SecurityException: ... requires
 android.permission.GRANT_RUNTIME_PERMISSIONS`. It is the deep link the system's
-own settings use, and no ordinary app can hold a signature permission. Measured
-on an Android 14 emulator, none of `androidx.health.ACTION_HEALTH_CONNECT_SETTINGS`,
-`android.health.connect.action.HEALTH_CONNECT_SETTINGS` or
-`android.settings.HEALTH_CONNECT_SETTINGS` resolves either, so the cascade ends at
-Health Connect's launcher entry and then at app info, which the UI now states
-rather than silently landing the user somewhere unexpected.
+own settings use, and no ordinary app can hold a signature permission. So the
+landing screen is Health Connect's home, where "App permissions" leads to this
+app's entry. Only when everything fails does the cascade end at app info, which
+the UI states rather than silently landing the user somewhere unexpected.
 
 **Granting is a separate mechanism.** Read access comes from the permission
 request sheet raised by `HealthConnectImporter.requestAccess()`. Every entry that
