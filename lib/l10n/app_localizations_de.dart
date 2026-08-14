@@ -1703,6 +1703,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get miscCalculatorCopyResultTooltip => 'Ergebnis kopieren';
 
   @override
+  String get miscCalculatorPasteTooltip => 'Aus Zwischenablage einfügen';
+
+  @override
+  String get miscCalculatorPasteInvalid =>
+      'Zwischenablage enthält keine nutzbare Zahl';
+
+  @override
   String get miscCalculatorBackspaceTooltip => 'Rücktaste';
 
   @override

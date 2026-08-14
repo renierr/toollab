@@ -1688,6 +1688,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get miscCalculatorCopyResultTooltip => 'Copy result';
 
   @override
+  String get miscCalculatorPasteTooltip => 'Paste from clipboard';
+
+  @override
+  String get miscCalculatorPasteInvalid => 'Clipboard has no usable number';
+
+  @override
   String get miscCalculatorBackspaceTooltip => 'Backspace';
 
   @override

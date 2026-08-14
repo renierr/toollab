@@ -140,6 +140,12 @@ class _CalculatorPageState extends State<CalculatorPage>
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
     final key = event.logicalKey;
 
+    if (key == LogicalKeyboardKey.keyV &&
+        HardwareKeyboard.instance.isControlPressed) {
+      _onPaste();
+      return KeyEventResult.handled;
+    }
+
     if (key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.numpadEnter) {
       _onEquals();
@@ -211,6 +217,25 @@ class _CalculatorPageState extends State<CalculatorPage>
         ),
       );
     }
+  }
+
+  Future<void> _onPaste() async {
+    HapticFeedback.lightImpact();
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted) return;
+
+    final cleaned = CalculatorCore.sanitizePaste(data?.text ?? '');
+    final l10n = AppLocalizations.of(context);
+    if (cleaned == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.miscCalculatorPasteInvalid),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    _onInput(cleaned);
   }
 
   void _showHistory() {
@@ -301,6 +326,7 @@ class _CalculatorPageState extends State<CalculatorPage>
                     ),
                     onShowHistory: _showHistory,
                     onCopy: _onCopy,
+                    onPaste: _onPaste,
                     onBackspace: _onBackspace,
                     isShort: isShort,
                   ),

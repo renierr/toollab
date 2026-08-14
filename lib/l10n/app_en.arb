@@ -893,6 +893,8 @@
   "miscCalculatorSciLabel": "SCI",
   "miscCalculatorHistLabel": "HIST",
   "miscCalculatorCopyResultTooltip": "Copy result",
+  "miscCalculatorPasteTooltip": "Paste from clipboard",
+  "miscCalculatorPasteInvalid": "Clipboard has no usable number",
   "miscCalculatorBackspaceTooltip": "Backspace",
   "miscCalculatorHistoryTitle": "History",
   "miscCalculatorNoHistory": "No calculations yet",

@@ -7,6 +7,7 @@ class CalculatorToolbar extends StatelessWidget {
   final VoidCallback onToggleSci;
   final VoidCallback onShowHistory;
   final VoidCallback onCopy;
+  final VoidCallback onPaste;
   final VoidCallback onBackspace;
   final bool isShort;
 
@@ -16,6 +17,7 @@ class CalculatorToolbar extends StatelessWidget {
     required this.onToggleSci,
     required this.onShowHistory,
     required this.onCopy,
+    required this.onPaste,
     required this.onBackspace,
     this.isShort = false,
   });
@@ -49,6 +51,12 @@ class CalculatorToolbar extends StatelessWidget {
                 icon: Icon(Icons.copy, size: isShort ? 18 : 20),
                 onPressed: onCopy,
                 tooltip: l10n.miscCalculatorCopyResultTooltip,
+                visualDensity: VisualDensity.compact,
+              ),
+              IconButton(
+                icon: Icon(Icons.content_paste, size: isShort ? 18 : 20),
+                onPressed: onPaste,
+                tooltip: l10n.miscCalculatorPasteTooltip,
                 visualDensity: VisualDensity.compact,
               ),
               IconButton(

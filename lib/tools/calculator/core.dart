@@ -183,4 +183,42 @@ class CalculatorCore {
   }
 
   static bool _isOperator(String s) => '+-*/^'.contains(s);
+
+  /// Turns arbitrary clipboard text into something the tokenizer accepts.
+  /// Returns null when nothing usable is left.
+  static String? sanitizePaste(String raw) {
+    var s = raw.trim();
+    if (s.isEmpty) return null;
+
+    s = s
+        .replaceAll('−', '-')
+        .replaceAll('–', '-')
+        .replaceAll('—', '-')
+        .replaceAll('×', '*')
+        .replaceAll('⋅', '*')
+        .replaceAll('·', '*')
+        .replaceAll('÷', '/')
+        .replaceAll(':', '/')
+        .replaceAll('²', '^2')
+        .replaceAll('³', '^3')
+        .replaceAll('√', 'sqrt')
+        .replaceAll('π', 'PI');
+
+    // Whitespace, apostrophes and underscores only ever group digits here.
+    s = s.replaceAll(RegExp(r"[\s'’_]"), '');
+
+    final hasDot = s.contains('.');
+    final hasComma = s.contains(',');
+    if (hasComma && hasDot) {
+      s = s.replaceAll(',', '');
+    } else if (hasComma) {
+      final grouped = RegExp(r'^[^,]*\d{1,3}(,\d{3})+(\D|$)').hasMatch(s);
+      s = grouped ? s.replaceAll(',', '') : s.replaceAll(',', '.');
+    }
+
+    // Drop currency symbols, equals signs, trailing prose, etc.
+    s = s.replaceAll(RegExp(r'[^0-9a-zA-Z.()+\-*/^%]'), '');
+    if (s.isEmpty || !RegExp(r'[0-9]').hasMatch(s)) return null;
+    return s;
+  }
 }

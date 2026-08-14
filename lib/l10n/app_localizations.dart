@@ -3083,6 +3083,18 @@ abstract class AppLocalizations {
   /// **'Copy result'**
   String get miscCalculatorCopyResultTooltip;
 
+  /// No description provided for @miscCalculatorPasteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste from clipboard'**
+  String get miscCalculatorPasteTooltip;
+
+  /// No description provided for @miscCalculatorPasteInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard has no usable number'**
+  String get miscCalculatorPasteInvalid;
+
   /// No description provided for @miscCalculatorBackspaceTooltip.
   ///
   /// In en, this message translates to:
