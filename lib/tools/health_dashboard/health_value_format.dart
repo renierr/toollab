@@ -29,21 +29,30 @@ String healthNumber(num value, String unit) =>
     value.toStringAsFixed(healthFractionDigits(unit));
 
 /// Compact large values for space-constrained dashboard readouts.
-String healthCompactNumber(num value) {
+String healthCompactNumber(num value, {int fractionDigits = 0}) {
   final absoluteValue = value.abs();
-  if (absoluteValue < 1000) return value.toStringAsFixed(0);
-  final (divisor, suffix, fractionDigits) = switch (absoluteValue) {
-    >= 1000000 => (1000000, 'M', 2),
-    _ => (1000, 'k', 1),
+  if (absoluteValue < 1000) {
+    return _trimmedFixed(value, fractionDigits);
+  }
+  final (divisor, suffix) = switch (absoluteValue) {
+    >= 1000000 => (1000000, 'M'),
+    _ => (1000, 'k'),
   };
-  final text = (value / divisor).toStringAsFixed(fractionDigits);
-  return '${num.parse(text)}$suffix';
+  return '${_trimmedFixed(value / divisor, fractionDigits)}$suffix';
 }
 
 /// Compact number plus unit suffix for overview cards.
 String healthCompactValue(num value, String unit) {
-  final text = healthCompactNumber(value);
+  final text = healthCompactNumber(
+    value,
+    fractionDigits: healthFractionDigits(unit),
+  );
   return unit.isEmpty || _bareUnits.contains(unit) ? text : '$text $unit';
+}
+
+String _trimmedFixed(num value, int fractionDigits) {
+  if (fractionDigits == 0) return value.toStringAsFixed(0);
+  return num.parse(value.toStringAsFixed(fractionDigits)).toString();
 }
 
 String healthAxisNumber(num value, String unit) =>

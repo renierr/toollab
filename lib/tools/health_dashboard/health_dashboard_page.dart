@@ -92,7 +92,7 @@ class _HealthDashboardPageState extends State<HealthDashboardPage>
           icon: const Icon(Icons.settings_outlined),
         ),
       ],
-      child: const HealthDashboardContent(),
+      child: HealthDashboardContent(onRefresh: _refresh),
     );
   }
 }

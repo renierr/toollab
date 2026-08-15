@@ -17,7 +17,9 @@ import 'health_workouts_page.dart';
 import 'health_nutrition_page.dart';
 
 class HealthDashboardContent extends StatelessWidget {
-  const HealthDashboardContent({super.key});
+  final Future<void> Function() onRefresh;
+
+  const HealthDashboardContent({super.key, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class HealthDashboardContent extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
     return RefreshIndicator(
-      onRefresh: () => context.read<HealthDashboardState>().refresh(),
+      onRefresh: onRefresh,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
         children: [
