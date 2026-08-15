@@ -49,6 +49,9 @@ class HealthDashboardState extends ChangeNotifier {
   int allTimeDurationSeconds = 0;
   int allTimeSteps = 0;
   int allTimeWorkouts = 0;
+  int allTimeIntakeCalories = 0;
+  int selectedWeekIntakeCalories = 0;
+  Map<String, double> todayNutrition = {};
   Map<String, int> _dailySteps = {};
   Map<String, double> _dailyHeartRate = {};
   double? latestHeartRate;
@@ -163,6 +166,20 @@ class HealthDashboardState extends ChangeNotifier {
       HealthQueries.instance.dailyStepTotals(start: start, end: end),
       HealthQueries.instance.dailyHeartRateAverages(start: start, end: end),
       HealthQueries.instance.latestHeartRate(),
+      HealthQueries.instance.nutritionTotals(),
+      HealthQueries.instance.nutritionTotals(
+        from: _dayAt(0).millisecondsSinceEpoch,
+        to: _dayAt(6).add(const Duration(days: 1)).millisecondsSinceEpoch,
+      ),
+      HealthQueries.instance.nutritionTotals(
+        from: DateTime.now()
+            .copyWith(hour: 0, minute: 0, second: 0, millisecond: 0)
+            .millisecondsSinceEpoch,
+        to: DateTime.now()
+            .copyWith(hour: 0, minute: 0, second: 0, millisecond: 0)
+            .add(const Duration(days: 1))
+            .millisecondsSinceEpoch,
+      ),
     ]);
     final weekRecords = results[0] as List<HealthRecord>;
     final latestRecords = results[1] as List<HealthRecord>;
@@ -181,6 +198,11 @@ class HealthDashboardState extends ChangeNotifier {
     _dailySteps = results[4] as Map<String, int>;
     _dailyHeartRate = results[5] as Map<String, double>;
     latestHeartRate = results[6] as double?;
+    allTimeIntakeCalories = (results[7] as Map<String, double>)['energy']!
+        .round();
+    selectedWeekIntakeCalories = (results[8] as Map<String, double>)['energy']!
+        .round();
+    todayNutrition = results[9] as Map<String, double>;
     autoHealthConnectSync =
         await DatabaseService.instance.getSetting(
           HealthDashboardTool.config.id,

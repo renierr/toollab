@@ -360,9 +360,9 @@
       </header>
 
       <section id="model">
-        <h2><span class="hn">01</span> Three shapes</h2>
+        <h2><span class="hn">01</span> Four shapes</h2>
         <p class="lede measure">
-          Every Health Connect record collapses into one of three storage shapes. This distinction
+          Every Health Connect record collapses into one of four storage shapes. This distinction
           decides the table, the primary key, and how duplicates are handled — it is the single
           idea the whole schema rests on.
         </p>
@@ -392,6 +392,13 @@
                 <td class="c">health_session</td>
                 <td class="c">id, unique dedupe_key</td>
                 <td class="d">workout, sleep</td>
+              </tr>
+              <tr>
+                <td><span class="chip s-session">nutrition</span></td>
+                <td class="d">One consumed meal with linked calories and macros.</td>
+                <td class="c">health_nutrition</td>
+                <td class="c">id, unique dedupe_key</td>
+                <td class="d">NutritionRecord: food name, kcal, protein, carbohydrates, fat</td>
               </tr>
             </tbody>
           </table>

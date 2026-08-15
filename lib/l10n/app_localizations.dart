@@ -11669,6 +11669,72 @@ abstract class AppLocalizations {
   /// **'Calories'**
   String get healthDashboardCalories;
 
+  /// No description provided for @healthDashboardCaloriesIntakeAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories intake · all time'**
+  String get healthDashboardCaloriesIntakeAllTime;
+
+  /// No description provided for @healthDashboardCaloriesIntakeLastSevenDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories intake · last 7 days'**
+  String get healthDashboardCaloriesIntakeLastSevenDays;
+
+  /// No description provided for @healthDashboardCaloriesIntakeToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories intake · today'**
+  String get healthDashboardCaloriesIntakeToday;
+
+  /// No description provided for @healthDashboardNutrition.
+  ///
+  /// In en, this message translates to:
+  /// **'Nutrition'**
+  String get healthDashboardNutrition;
+
+  /// No description provided for @healthDashboardMeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal'**
+  String get healthDashboardMeal;
+
+  /// No description provided for @healthDashboardMealsOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Meals on {date}'**
+  String healthDashboardMealsOnDay(String date);
+
+  /// No description provided for @healthDashboardNoMeals.
+  ///
+  /// In en, this message translates to:
+  /// **'No meals recorded.'**
+  String get healthDashboardNoMeals;
+
+  /// No description provided for @healthDashboardMealTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal timeline'**
+  String get healthDashboardMealTimeline;
+
+  /// No description provided for @healthDashboardProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get healthDashboardProtein;
+
+  /// No description provided for @healthDashboardCarbohydrates.
+  ///
+  /// In en, this message translates to:
+  /// **'Carbohydrates'**
+  String get healthDashboardCarbohydrates;
+
+  /// No description provided for @healthDashboardFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get healthDashboardFat;
+
   /// No description provided for @healthDashboardActiveTime.
   ///
   /// In en, this message translates to:

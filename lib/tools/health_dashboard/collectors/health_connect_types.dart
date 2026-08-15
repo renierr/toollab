@@ -38,6 +38,7 @@ class HealthConnectTypes {
     'sleep_session',
     'exercise_session',
     'speed_series',
+    'nutrition',
   };
 
   static Iterable<ReadableHealthType> readable() {

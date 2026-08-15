@@ -29,6 +29,7 @@ class HealthRecordDetailsPage extends StatelessWidget {
     final start = DateTime.fromMillisecondsSinceEpoch(record.startTime);
     final end = DateTime.fromMillisecondsSinceEpoch(record.endTime);
     final titleStr =
+        (record.value['foodName'] as String?) ??
         (record.value['title'] as String?) ??
         (record.value['exerciseType'] as String?) ??
         (record.value['dataType'] as String?) ??

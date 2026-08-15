@@ -59,6 +59,7 @@ class HealthQueries {
 
   static const workoutType = 'workout.health_connect';
   static const sleepType = 'sleep.session';
+  static const nutritionType = 'nutrition.meal';
 
   /// The value key each metric's number is published under, kept identical to
   /// the keys the widgets already read.
@@ -219,6 +220,30 @@ class HealthQueries {
     );
   }
 
+  HealthRecord _nutritionRecord(HealthNutrition meal) => HealthRecord(
+    id: 'n:${meal.id}',
+    source: HealthSource.healthConnect,
+    sourceRecordId: meal.origin ?? '',
+    type: nutritionType,
+    startTime: meal.t0,
+    endTime: meal.t1,
+    value: {
+      if (meal.foodName != null) 'foodName': meal.foodName,
+      if (meal.mealType != null) 'mealType': meal.mealType,
+      if (meal.clientId != null) 'clientRecordId': meal.clientId,
+      if (meal.energyKcal != null) 'calories': meal.energyKcal,
+      if (meal.proteinG != null) 'proteinG': meal.proteinG,
+      if (meal.carbohydrateG != null) 'carbohydrateG': meal.carbohydrateG,
+      if (meal.fatG != null) 'fatG': meal.fatG,
+    },
+    sourceName: meal.package,
+    aggregateIncluded: true,
+    createdAt: meal.t0,
+    updatedAt: meal.t1,
+    deleted: false,
+    synced: false,
+  );
+
   // --- dashboard reads ------------------------------------------------------
 
   Future<List<HealthRecord>> dashboardRecords({
@@ -231,6 +256,9 @@ class HealthQueries {
     final records = <HealthRecord>[];
     for (final session in await _store.sessions(from: from, to: to)) {
       records.add(await _sessionRecord(session));
+    }
+    for (final meal in await _store.nutrition(from: from, to: to)) {
+      records.add(_nutritionRecord(meal));
     }
     for (final type in _latestTypes) {
       if (type == sleepType) continue;
@@ -298,6 +326,12 @@ class HealthQueries {
           : HealthSchema.sessionKindExercise;
       final sessions = await _store.sessions(kind: kind, from: start, to: end);
       return [for (final session in sessions) await _sessionRecord(session)];
+    }
+    if (type == nutritionType) {
+      return [
+        for (final meal in await _store.nutrition(from: start, to: end))
+          _nutritionRecord(meal),
+      ];
     }
     final metric = _typeToMetric[type];
     if (metric == null) return const [];
@@ -420,6 +454,12 @@ class HealthQueries {
           await _sessionRecord(session, withParts: false),
       ];
     }
+    if (type == nutritionType) {
+      return [
+        for (final meal in await _store.nutrition(limit: limit, offset: offset))
+          _nutritionRecord(meal),
+      ];
+    }
     if (type != null) {
       final metric = _typeToMetric[type];
       if (metric == null) return const [];
@@ -490,6 +530,9 @@ class HealthQueries {
       for (final day in days) _dayKeyString(day.day): (day.total ?? 0).round(),
     };
   }
+
+  Future<Map<String, double>> nutritionTotals({int? from, int? to}) =>
+      _store.nutritionTotals(from: from, to: to);
 
   /// Newest dense heart rate sample. It is not in [_latestTypes] on purpose:
   /// that list is also the week window, and a week of samples is tens of

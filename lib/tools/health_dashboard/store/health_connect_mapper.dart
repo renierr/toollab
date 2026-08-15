@@ -41,6 +41,10 @@ class HealthConnectMapper {
     if (session != null) {
       return HealthMappedRecord(package: package, session: session);
     }
+    final nutrition = _nutrition(record);
+    if (nutrition != null) {
+      return HealthMappedRecord(package: package, nutrition: nutrition);
+    }
     return HealthMappedRecord(package: package);
   }
 
@@ -260,6 +264,32 @@ class HealthConnectMapper {
               t1: stage.endTime.millisecondsSinceEpoch,
             ),
         ],
+      ),
+    _ => null,
+  };
+
+  HealthNutritionRow? _nutrition(hc.HealthRecord record) => switch (record) {
+    hc.NutritionRecord(
+      :final startTime,
+      :final endTime,
+      :final foodName,
+      :final mealType,
+      :final energy,
+      :final protein,
+      :final totalCarbohydrate,
+      :final totalFat,
+    ) =>
+      HealthNutritionRow(
+        t0: startTime.millisecondsSinceEpoch,
+        t1: endTime.millisecondsSinceEpoch,
+        origin: record.id.value,
+        clientId: record.metadata.clientRecordId,
+        foodName: foodName,
+        mealType: mealType.name,
+        energyKcal: energy?.inKilocalories,
+        proteinG: protein?.inGrams,
+        carbohydrateG: totalCarbohydrate?.inGrams,
+        fatG: totalFat?.inGrams,
       ),
     _ => null,
   };

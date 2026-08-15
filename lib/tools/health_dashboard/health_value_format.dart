@@ -8,6 +8,7 @@ const _bareUnits = {'steps', 'calories', 'count', 'BMI'};
 /// never renders at two precisions across pages.
 int healthFractionDigits(String unit) => switch (unit) {
   'kg' || 'km' || '%' || 'L' || 'mmol/L' || 'BMI' => 2,
+  'g' ||
   'ms' ||
   'cm' ||
   'm' ||

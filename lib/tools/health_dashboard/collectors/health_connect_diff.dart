@@ -129,6 +129,11 @@ class HealthConnectDiff {
             touchedFrom = _min(touchedFrom, session.t0);
             touchedTo = _max(touchedTo, session.t1);
           }
+          final nutrition = row.nutrition;
+          if (nutrition != null) {
+            touchedFrom = _min(touchedFrom, nutrition.t0);
+            touchedTo = _max(touchedTo, nutrition.t1);
+          }
         }
         await store.writeRecords(mapped);
         upserted += mapped.length;
@@ -144,6 +149,7 @@ class HealthConnectDiff {
         if (ids.isNotEmpty) {
           await store.deleteSessionsByOrigin(ids);
           await store.deleteIntervalsByOrigin(ids);
+          await store.deleteNutritionByOrigin(ids);
           deleted += ids.length;
         }
 

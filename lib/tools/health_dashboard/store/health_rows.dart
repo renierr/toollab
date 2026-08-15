@@ -98,6 +98,34 @@ class HealthSessionRow {
   });
 }
 
+/// One meal with its nutrients intact. Nutrition must not be split into metric
+/// rows: the meal name is what makes calories and macros useful together.
+class HealthNutritionRow {
+  final int t0;
+  final int t1;
+  final String? origin;
+  final String? clientId;
+  final String? foodName;
+  final String? mealType;
+  final double? energyKcal;
+  final double? proteinG;
+  final double? carbohydrateG;
+  final double? fatG;
+
+  const HealthNutritionRow({
+    required this.t0,
+    required this.t1,
+    this.origin,
+    this.clientId,
+    this.foodName,
+    this.mealType,
+    this.energyKcal,
+    this.proteinG,
+    this.carbohydrateG,
+    this.fatG,
+  });
+}
+
 /// Everything one Health Connect record turned into. A dense series record
 /// yields many points; a workout yields a session plus its parts.
 class HealthMappedRecord {
@@ -106,13 +134,19 @@ class HealthMappedRecord {
   final List<HealthPointRow> points;
   final List<HealthIntervalRow> intervals;
   final HealthSessionRow? session;
+  final HealthNutritionRow? nutrition;
 
   const HealthMappedRecord({
     required this.package,
     this.points = const [],
     this.intervals = const [],
     this.session,
+    this.nutrition,
   });
 
-  bool get isEmpty => points.isEmpty && intervals.isEmpty && session == null;
+  bool get isEmpty =>
+      points.isEmpty &&
+      intervals.isEmpty &&
+      session == null &&
+      nutrition == null;
 }

@@ -6456,6 +6456,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthDashboardCalories => 'Calories';
 
   @override
+  String get healthDashboardCaloriesIntakeAllTime =>
+      'Calories intake · all time';
+
+  @override
+  String get healthDashboardCaloriesIntakeLastSevenDays =>
+      'Calories intake · last 7 days';
+
+  @override
+  String get healthDashboardCaloriesIntakeToday => 'Calories intake · today';
+
+  @override
+  String get healthDashboardNutrition => 'Nutrition';
+
+  @override
+  String get healthDashboardMeal => 'Meal';
+
+  @override
+  String healthDashboardMealsOnDay(String date) {
+    return 'Meals on $date';
+  }
+
+  @override
+  String get healthDashboardNoMeals => 'No meals recorded.';
+
+  @override
+  String get healthDashboardMealTimeline => 'Meal timeline';
+
+  @override
+  String get healthDashboardProtein => 'Protein';
+
+  @override
+  String get healthDashboardCarbohydrates => 'Carbohydrates';
+
+  @override
+  String get healthDashboardFat => 'Fat';
+
+  @override
   String get healthDashboardActiveTime => 'Active time';
 
   @override

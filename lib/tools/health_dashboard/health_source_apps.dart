@@ -14,6 +14,7 @@ import 'health_debug_origin.dart';
 /// then reads as if Health Connect itself measured it.
 enum HealthSourceApp {
   treadmill,
+  nutriScan,
   amazfit,
   huaweiHealth,
   googleFit,
@@ -34,6 +35,7 @@ const _packages = <String, HealthSourceApp>{
   'ToolLab Treadmill': HealthSourceApp.treadmill,
   healthDebugPackage: HealthSourceApp.generated,
   'de.renier.tool_lab': HealthSourceApp.treadmill,
+  'de.renier.calorie_tracker': HealthSourceApp.nutriScan,
   'com.huami.watch.hmwatchmanager': HealthSourceApp.amazfit,
   'com.google.android.apps.fitness': HealthSourceApp.googleFit,
   'com.google.android.apps.healthdata': HealthSourceApp.healthConnect,
@@ -80,6 +82,7 @@ IconData healthAppIcon(String? packageName) =>
 extension HealthSourceAppDetails on HealthSourceApp {
   IconData get icon => switch (this) {
     HealthSourceApp.treadmill => Icons.directions_run_rounded,
+    HealthSourceApp.nutriScan => Icons.restaurant_rounded,
     HealthSourceApp.amazfit ||
     HealthSourceApp.huaweiHealth ||
     HealthSourceApp.samsungHealth ||
@@ -96,6 +99,7 @@ extension HealthSourceAppDetails on HealthSourceApp {
 
   String label(AppLocalizations l10n) => switch (this) {
     HealthSourceApp.treadmill => l10n.toolNameTreadmillControl,
+    HealthSourceApp.nutriScan => 'NutriScan',
     HealthSourceApp.amazfit => l10n.healthDashboardAmazfit,
     HealthSourceApp.huaweiHealth => l10n.healthDashboardHuaweiHealth,
     HealthSourceApp.googleFit => l10n.healthDashboardGoogleFit,

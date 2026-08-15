@@ -48,6 +48,36 @@ class HealthRecordStatsCard extends StatelessWidget {
         ),
       );
     }
+    if (val['proteinG'] case final num protein) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.fitness_center_rounded,
+          color: AppTheme.accentGreen,
+          label: l10n.healthDashboardProtein,
+          value: healthValue(protein, 'g'),
+        ),
+      );
+    }
+    if (val['carbohydrateG'] case final num carbohydrate) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.grain_rounded,
+          color: AppTheme.accentAmber,
+          label: l10n.healthDashboardCarbohydrates,
+          value: healthValue(carbohydrate, 'g'),
+        ),
+      );
+    }
+    if (val['fatG'] case final num fat) {
+      items.add(
+        HealthRecordStatItem(
+          icon: Icons.water_drop_outlined,
+          color: AppTheme.accentBlue,
+          label: l10n.healthDashboardFat,
+          value: healthValue(fat, 'g'),
+        ),
+      );
+    }
     if (val['averageHeartRate'] case final num avgHr) {
       final maxHr = (val['maximumHeartRate'] as num?)?.round();
       items.add(

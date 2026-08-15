@@ -14,6 +14,7 @@ import 'health_dashboard_trends.dart';
 import 'health_day_navigation.dart';
 import 'health_all_data_page.dart';
 import 'health_workouts_page.dart';
+import 'health_nutrition_page.dart';
 
 class HealthDashboardContent extends StatelessWidget {
   const HealthDashboardContent({super.key});
@@ -60,6 +61,17 @@ class HealthDashboardContent extends StatelessWidget {
                 ),
               ),
               HealthMetricCard(
+                icon: Icons.restaurant_rounded,
+                color: AppTheme.accentAmber,
+                label: l10n.healthDashboardCaloriesIntakeAllTime,
+                value: healthValue(state.allTimeIntakeCalories, 'kcal'),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HealthNutritionPage(),
+                  ),
+                ),
+              ),
+              HealthMetricCard(
                 icon: Icons.directions_walk_rounded,
                 color: AppTheme.accentGreen,
                 label: l10n.healthDashboardStepsAllTime,
@@ -72,6 +84,28 @@ class HealthDashboardContent extends StatelessWidget {
                   unit: 'steps',
                   color: AppTheme.accentGreen,
                   sum: true,
+                ),
+              ),
+              HealthMetricCard(
+                icon: Icons.restaurant_rounded,
+                color: AppTheme.accentAmber,
+                label: l10n.healthDashboardCaloriesIntakeLastSevenDays,
+                value: healthValue(state.selectedWeekIntakeCalories, 'kcal'),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HealthNutritionPage(),
+                  ),
+                ),
+              ),
+              HealthMetricCard(
+                icon: Icons.today_rounded,
+                color: AppTheme.accentAmber,
+                label: l10n.healthDashboardCaloriesIntakeToday,
+                value: healthValue(state.todayNutrition['energy'] ?? 0, 'kcal'),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HealthNutritionPage(),
+                  ),
                 ),
               ),
               HealthMetricCard(

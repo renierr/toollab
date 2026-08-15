@@ -2585,6 +2585,22 @@
   "healthDashboardLatestRestingHeartRate": "Letzter Ruhepuls",
   "healthDashboardLatestHeartRate": "Letzter Puls",
   "healthDashboardCalories": "Kalorien",
+  "healthDashboardCaloriesIntakeAllTime": "Kalorienaufnahme · Gesamt",
+  "healthDashboardCaloriesIntakeLastSevenDays": "Kalorienaufnahme · letzte 7 Tage",
+  "healthDashboardCaloriesIntakeToday": "Kalorienaufnahme · heute",
+  "healthDashboardNutrition": "Ernährung",
+  "healthDashboardMeal": "Mahlzeit",
+  "healthDashboardMealsOnDay": "Mahlzeiten am {date}",
+  "@healthDashboardMealsOnDay": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "healthDashboardNoMeals": "Keine Mahlzeiten erfasst.",
+  "healthDashboardMealTimeline": "Mahlzeitenverlauf",
+  "healthDashboardProtein": "Protein",
+  "healthDashboardCarbohydrates": "Kohlenhydrate",
+  "healthDashboardFat": "Fett",
   "healthDashboardActiveTime": "Aktive Zeit",
   "healthDashboardWorkouts": "Workouts",
   "healthDashboardStepsToday": "Schritte heute",

@@ -25,7 +25,7 @@ class HealthSchema {
   /// and priority. Version 3 adds device-independent session identity and the
   /// backend sync manifest. Version 4 adds what reading a chunk out of the dense
   /// tables needs, and the marker for a chunk this device declines to carry.
-  static const version = 4;
+  static const version = 5;
 
   static const metric = 'health_metric';
   static const app = 'health_app';
@@ -34,6 +34,7 @@ class HealthSchema {
   static const interval = 'health_interval';
   static const session = 'health_session';
   static const sessionPart = 'health_session_part';
+  static const nutrition = 'health_nutrition';
   static const daily = 'health_daily';
   static const type = 'health_type';
   static const typeApp = 'health_type_app';
@@ -76,7 +77,14 @@ class HealthSchema {
 
   /// Tables carrying imported data, ordered so a delete pass can walk them
   /// without tripping over references.
-  static const dataTables = [daily, sessionPart, session, point, interval];
+  static const dataTables = [
+    daily,
+    nutrition,
+    sessionPart,
+    session,
+    point,
+    interval,
+  ];
 
   /// Everything this tool owns, for the backup table copy. Dimension tables are
   /// included: without them the interned integers in a restored backup resolve
@@ -91,6 +99,7 @@ class HealthSchema {
     interval,
     session,
     sessionPart,
+    nutrition,
     type,
     typeApp,
   ];
@@ -155,6 +164,7 @@ class HealthSchema {
       ) WITHOUT ROWID
     ''');
     await _createSession(db);
+    await _createNutrition(db);
     await db.execute('''
       CREATE TABLE ${db.nameTable(sessionPart)} (
         session INTEGER NOT NULL,
@@ -210,6 +220,14 @@ class HealthSchema {
     ''');
     await _createChunk(db);
     await _createSessionIndexes(db);
+    await db.execute(
+      'CREATE INDEX ${db.nameTable('idx_health_nutrition_time')} '
+      'ON ${db.nameTable(nutrition)} (t0)',
+    );
+    await db.execute(
+      'CREATE INDEX ${db.nameTable('idx_health_nutrition_app')} '
+      'ON ${db.nameTable(nutrition)} (app)',
+    );
     await _createChunkReadIndexes(db);
     // Deleting every row a deselected writer contributed, and provenance
     // filters on charts, both start from the app.
@@ -250,6 +268,26 @@ class HealthSchema {
         avg_speed REAL,
         max_speed REAL,
         asleep_min INTEGER
+      )
+    ''');
+  }
+
+  static Future<void> _createNutrition(ToolDatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE ${db.nameTable(nutrition)} (
+        id INTEGER PRIMARY KEY,
+        t0 INTEGER NOT NULL,
+        t1 INTEGER NOT NULL,
+        app INTEGER NOT NULL,
+        origin TEXT,
+        client_id TEXT,
+        food_name TEXT,
+        meal_type TEXT,
+        energy_kcal REAL,
+        protein_g REAL,
+        carbohydrate_g REAL,
+        fat_g REAL,
+        dedupe_key TEXT NOT NULL UNIQUE
       )
     ''');
   }
@@ -377,6 +415,18 @@ class HealthSchema {
     await _createChunkReadIndexes(db);
   }
 
+  static Future<void> migrateToV5(ToolDatabaseExecutor db) async {
+    await _createNutrition(db);
+    await db.execute(
+      'CREATE INDEX ${db.nameTable('idx_health_nutrition_time')} '
+      'ON ${db.nameTable(nutrition)} (t0)',
+    );
+    await db.execute(
+      'CREATE INDEX ${db.nameTable('idx_health_nutrition_app')} '
+      'ON ${db.nameTable(nutrition)} (app)',
+    );
+  }
+
   /// Fills [dedupeKey] for every session that has none, and drops the rows that
   /// turn out to be the same session twice. Also the repair after a backup
   /// written by an older schema is restored.
@@ -426,7 +476,8 @@ class HealthSchema {
       'SELECT day, app, ?, 1, 0 FROM ('
       'SELECT t / $chunkDayMillis AS day, app FROM ${db.nameTable(point)} '
       'UNION SELECT t0 / $chunkDayMillis, app FROM ${db.nameTable(interval)} '
-      'UNION SELECT t0 / $chunkDayMillis, app FROM ${db.nameTable(session)})',
+      'UNION SELECT t0 / $chunkDayMillis, app FROM ${db.nameTable(session)} '
+      'UNION SELECT t0 / $chunkDayMillis, app FROM ${db.nameTable(nutrition)})',
       [DateTime.now().millisecondsSinceEpoch],
     );
   }
@@ -437,6 +488,7 @@ class HealthSchema {
       daily,
       sessionPart,
       session,
+      nutrition,
       point,
       interval,
       typeApp,

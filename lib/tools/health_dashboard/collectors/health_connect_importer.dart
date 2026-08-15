@@ -257,6 +257,8 @@ class _TouchedRange {
     }
     final session = record.session;
     if (session != null) _widen(session.t0, session.t1);
+    final nutrition = record.nutrition;
+    if (nutrition != null) _widen(nutrition.t0, nutrition.t1);
   }
 
   void _widen(int t0, int t1) {

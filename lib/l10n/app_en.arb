@@ -3465,6 +3465,22 @@
   "healthDashboardLatestRestingHeartRate": "Latest resting heart rate",
   "healthDashboardLatestHeartRate": "Latest heart rate",
   "healthDashboardCalories": "Calories",
+  "healthDashboardCaloriesIntakeAllTime": "Calories intake · all time",
+  "healthDashboardCaloriesIntakeLastSevenDays": "Calories intake · last 7 days",
+  "healthDashboardCaloriesIntakeToday": "Calories intake · today",
+  "healthDashboardNutrition": "Nutrition",
+  "healthDashboardMeal": "Meal",
+  "healthDashboardMealsOnDay": "Meals on {date}",
+  "@healthDashboardMealsOnDay": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "healthDashboardNoMeals": "No meals recorded.",
+  "healthDashboardMealTimeline": "Meal timeline",
+  "healthDashboardProtein": "Protein",
+  "healthDashboardCarbohydrates": "Carbohydrates",
+  "healthDashboardFat": "Fat",
   "healthDashboardActiveTime": "Active time",
   "healthDashboardWorkouts": "Workouts",
   "healthDashboardStepsToday": "Steps today",

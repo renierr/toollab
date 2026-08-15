@@ -144,6 +144,36 @@ class HealthInterval {
   const HealthInterval(this.t0, this.t1, this.v, [this.package]);
 }
 
+class HealthNutrition {
+  final int id;
+  final int t0;
+  final int t1;
+  final String? package;
+  final String? origin;
+  final String? clientId;
+  final String? foodName;
+  final String? mealType;
+  final double? energyKcal;
+  final double? proteinG;
+  final double? carbohydrateG;
+  final double? fatG;
+
+  const HealthNutrition({
+    required this.id,
+    required this.t0,
+    required this.t1,
+    this.package,
+    this.origin,
+    this.clientId,
+    this.foodName,
+    this.mealType,
+    this.energyKcal,
+    this.proteinG,
+    this.carbohydrateG,
+    this.fatG,
+  });
+}
+
 class HealthDiscoveredApp {
   final int appId;
   final String package;
@@ -301,6 +331,7 @@ class HealthStore {
         if (oldVersion < 2) await HealthSchema.migrateToV2(txn);
         if (oldVersion < 3) await HealthSchema.migrateToV3(txn);
         if (oldVersion < 4) await HealthSchema.migrateToV4(txn);
+        if (oldVersion < 5) await HealthSchema.migrateToV5(txn);
       },
     );
     _database = database;
@@ -567,6 +598,16 @@ class HealthStore {
           (touched[metricId] ??= <int>{}).add(dayKey(row.t0));
         }
       }
+      for (final record in records) {
+        final nutrition = record.nutrition;
+        if (nutrition == null) continue;
+        final appId = await _appId(txn, record.package);
+        final changed = await _writeNutrition(txn, appId, nutrition);
+        if (changed) {
+          dirty.add((HealthSchema.chunkDay(nutrition.t0), appId));
+          written++;
+        }
+      }
       for (final entry in batches.entries) {
         final before = await _totalChanges(txn);
         await entry.value.commit(noResult: true);
@@ -772,6 +813,52 @@ class HealthStore {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
+    return true;
+  }
+
+  Future<bool> _writeNutrition(
+    ToolDatabaseExecutor db,
+    int appId,
+    HealthNutritionRow row,
+  ) async {
+    final key = row.clientId?.isNotEmpty == true
+        ? 'c:${row.clientId}'
+        : 'k:$appId|${row.t0}|${row.t1}|${row.foodName}|${row.energyKcal}';
+    final values = {
+      't0': row.t0,
+      't1': row.t1,
+      'app': appId,
+      'origin': row.origin,
+      'client_id': row.clientId,
+      'food_name': row.foodName,
+      'meal_type': row.mealType,
+      'energy_kcal': row.energyKcal,
+      'protein_g': row.proteinG,
+      'carbohydrate_g': row.carbohydrateG,
+      'fat_g': row.fatG,
+      'dedupe_key': key,
+    };
+    final existing = await db.query(
+      HealthSchema.nutrition,
+      where: 'dedupe_key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) {
+      if (values.entries.every(
+        (entry) => existing.single[entry.key] == entry.value,
+      )) {
+        return false;
+      }
+      await db.update(
+        HealthSchema.nutrition,
+        values,
+        where: 'id = ?',
+        whereArgs: [existing.single['id']],
+      );
+      return true;
+    }
+    await db.insert(HealthSchema.nutrition, values);
     return true;
   }
 
@@ -1130,6 +1217,85 @@ class HealthStore {
     return rows.map(_intervalFromRow).toList();
   }
 
+  Future<List<HealthNutrition>> nutrition({
+    int? from,
+    int? to,
+    int limit = 200,
+    int offset = 0,
+  }) async {
+    final db = await _db();
+    final where = <String>[];
+    final args = <Object?>[];
+    if (from != null) {
+      where.add('t0 >= ?');
+      args.add(from);
+    }
+    if (to != null) {
+      where.add('t0 < ?');
+      args.add(to);
+    }
+    if (_disabledApps.isNotEmpty) {
+      where.add('app NOT IN (${_disabledApps.join(', ')})');
+    }
+    final rows = await db.query(
+      HealthSchema.nutrition,
+      where: where.isEmpty ? null : where.join(' AND '),
+      whereArgs: args.isEmpty ? null : args,
+      orderBy: 't0 DESC',
+      limit: limit,
+      offset: offset,
+    );
+    return rows.map(_nutritionFromRow).toList();
+  }
+
+  Future<Map<String, double>> nutritionTotals({int? from, int? to}) async {
+    final db = await _db();
+    final where = <String>[];
+    final args = <Object?>[];
+    if (from != null) {
+      where.add('t0 >= ?');
+      args.add(from);
+    }
+    if (to != null) {
+      where.add('t0 < ?');
+      args.add(to);
+    }
+    if (_disabledApps.isNotEmpty) {
+      where.add('app NOT IN (${_disabledApps.join(', ')})');
+    }
+    final rows = await db.rawQuery(
+      'SELECT COALESCE(SUM(energy_kcal), 0) AS energy, '
+      'COALESCE(SUM(protein_g), 0) AS protein, '
+      'COALESCE(SUM(carbohydrate_g), 0) AS carbohydrate, '
+      'COALESCE(SUM(fat_g), 0) AS fat FROM ${db.nameTable(HealthSchema.nutrition)}'
+      '${where.isEmpty ? '' : ' WHERE ${where.join(' AND ')}'}',
+      args,
+    );
+    final row = rows.single;
+    return {
+      'energy': (row['energy'] as num).toDouble(),
+      'protein': (row['protein'] as num).toDouble(),
+      'carbohydrate': (row['carbohydrate'] as num).toDouble(),
+      'fat': (row['fat'] as num).toDouble(),
+    };
+  }
+
+  HealthNutrition _nutritionFromRow(Map<String, Object?> row) =>
+      HealthNutrition(
+        id: row['id'] as int,
+        t0: row['t0'] as int,
+        t1: row['t1'] as int,
+        package: _appPackages[row['app'] as int? ?? -1],
+        origin: row['origin'] as String?,
+        clientId: row['client_id'] as String?,
+        foodName: row['food_name'] as String?,
+        mealType: row['meal_type'] as String?,
+        energyKcal: (row['energy_kcal'] as num?)?.toDouble(),
+        proteinG: (row['protein_g'] as num?)?.toDouble(),
+        carbohydrateG: (row['carbohydrate_g'] as num?)?.toDouble(),
+        fatG: (row['fat_g'] as num?)?.toDouble(),
+      );
+
   Future<List<HealthPoint>> pointPage({
     required String metric,
     required int offset,
@@ -1326,6 +1492,18 @@ class HealthStore {
     });
   }
 
+  Future<void> deleteNutritionByOrigin(Iterable<String> origins) async {
+    if (origins.isEmpty) return;
+    final db = await _db();
+    final ids = origins.toList();
+    final placeholders = List.filled(ids.length, '?').join(', ');
+    await db.delete(
+      HealthSchema.nutrition,
+      where: 'origin IN ($placeholders)',
+      whereArgs: ids,
+    );
+  }
+
   /// Drops every row a writer contributed. This is the explicit "reclaim the
   /// space" action, not what switching a writer off does - that keeps the rows.
   ///
@@ -1375,6 +1553,11 @@ class HealthStore {
       );
       await txn.delete(
         HealthSchema.interval,
+        where: 'app = ?',
+        whereArgs: [appId],
+      );
+      await txn.delete(
+        HealthSchema.nutrition,
         where: 'app = ?',
         whereArgs: [appId],
       );
@@ -1774,6 +1957,7 @@ class HealthStore {
     for (final table in [
       HealthSchema.point,
       HealthSchema.interval,
+      HealthSchema.nutrition,
       HealthSchema.session,
     ]) {
       for (final row in await db.rawQuery(
@@ -2092,6 +2276,11 @@ class HealthStore {
       where: 'app = ? AND t0 >= ? AND t0 < ?',
       whereArgs: [appId, from, to],
     );
+    final nutrition = await db.query(
+      HealthSchema.nutrition,
+      where: 'app = ? AND t0 >= ? AND t0 < ?',
+      whereArgs: [appId, from, to],
+    );
 
     final sessionPayloads = <Map<String, dynamic>>[];
     for (final row in sessions) {
@@ -2164,6 +2353,21 @@ class HealthStore {
       if (packedPoints != null) 'pointsPacked': _blob(packedPoints),
       if (packedIntervals != null) 'intervalsPacked': _blob(packedIntervals),
       'sessions': sessionPayloads,
+      'nutrition': [
+        for (final row in nutrition)
+          {
+            't0': row['t0'],
+            't1': row['t1'],
+            if (row['client_id'] != null) 'clientId': row['client_id'],
+            if (row['food_name'] != null) 'foodName': row['food_name'],
+            if (row['meal_type'] != null) 'mealType': row['meal_type'],
+            if (row['energy_kcal'] != null) 'energyKcal': row['energy_kcal'],
+            if (row['protein_g'] != null) 'proteinG': row['protein_g'],
+            if (row['carbohydrate_g'] != null)
+              'carbohydrateG': row['carbohydrate_g'],
+            if (row['fat_g'] != null) 'fatG': row['fat_g'],
+          },
+      ],
     };
   }
 
@@ -2314,6 +2518,25 @@ class HealthStore {
         ),
       );
     }
+    for (final row in data['nutrition'] as List<dynamic>? ?? const []) {
+      final meal = row as Map<String, dynamic>;
+      records.add(
+        HealthMappedRecord(
+          package: package,
+          nutrition: HealthNutritionRow(
+            t0: (meal['t0'] as num).toInt(),
+            t1: (meal['t1'] as num).toInt(),
+            clientId: meal['clientId'] as String?,
+            foodName: meal['foodName'] as String?,
+            mealType: meal['mealType'] as String?,
+            energyKcal: (meal['energyKcal'] as num?)?.toDouble(),
+            proteinG: (meal['proteinG'] as num?)?.toDouble(),
+            carbohydrateG: (meal['carbohydrateG'] as num?)?.toDouble(),
+            fatG: (meal['fatG'] as num?)?.toDouble(),
+          ),
+        ),
+      );
+    }
     return records;
   }
 
@@ -2433,6 +2656,11 @@ class HealthStore {
       );
       await txn.delete(
         HealthSchema.interval,
+        where: 'app = ? AND t0 >= ? AND t0 < ?',
+        whereArgs: [appId, from, to],
+      );
+      await txn.delete(
+        HealthSchema.nutrition,
         where: 'app = ? AND t0 >= ? AND t0 < ?',
         whereArgs: [appId, from, to],
       );

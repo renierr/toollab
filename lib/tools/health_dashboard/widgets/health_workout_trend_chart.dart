@@ -9,6 +9,18 @@ import 'health_chart_tooltip.dart';
 
 enum HealthTrendChartStyle { bars, line }
 
+class HealthTrendTooltipSeries {
+  final List<double?> values;
+  final String unit;
+  final Color color;
+
+  const HealthTrendTooltipSeries({
+    required this.values,
+    required this.unit,
+    required this.color,
+  });
+}
+
 class HealthWorkoutTrendChart extends StatefulWidget {
   final List<double?> values;
   final String unit;
@@ -21,6 +33,7 @@ class HealthWorkoutTrendChart extends StatefulWidget {
   final ValueChanged<int>? onDayTap;
   final String? label;
   final String? overlayLabel;
+  final List<HealthTrendTooltipSeries> tooltipSeries;
 
   const HealthWorkoutTrendChart({
     super.key,
@@ -35,6 +48,7 @@ class HealthWorkoutTrendChart extends StatefulWidget {
     this.onDayTap,
     this.label,
     this.overlayLabel,
+    this.tooltipSeries = const [],
   });
 
   @override
@@ -103,6 +117,7 @@ class _HealthWorkoutTrendChartState extends State<HealthWorkoutTrendChart> {
                       showPrimary: _showPrimary,
                       selectedIndex: _selectedIndex,
                       locale: Localizations.localeOf(context).toString(),
+                      tooltipSeries: widget.tooltipSeries,
                       gridColor: Theme.of(
                         context,
                       ).colorScheme.outline.withValues(alpha: 0.2),
@@ -125,6 +140,7 @@ class _HealthWorkoutTrendChartState extends State<HealthWorkoutTrendChart> {
                         overlayColor: widget.overlayColor,
                         endDate: widget.endDate,
                         locale: Localizations.localeOf(context).toString(),
+                        tooltipSeries: widget.tooltipSeries,
                       ),
                     ),
                 ],
@@ -177,6 +193,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
   final Color? overlayColor;
   final DateTime? endDate;
   final String locale;
+  final List<HealthTrendTooltipSeries> tooltipSeries;
   final Color gridColor;
   final Color labelColor;
   final bool compact;
@@ -193,6 +210,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     this.overlayColor,
     this.endDate,
     required this.locale,
+    required this.tooltipSeries,
     required this.gridColor,
     required this.labelColor,
     required this.compact,
@@ -540,6 +558,7 @@ class _Tooltip extends StatelessWidget {
   final Color? overlayColor;
   final DateTime? endDate;
   final String locale;
+  final List<HealthTrendTooltipSeries> tooltipSeries;
   const _Tooltip({
     required this.index,
     required this.values,
@@ -550,6 +569,7 @@ class _Tooltip extends StatelessWidget {
     this.overlayColor,
     this.endDate,
     required this.locale,
+    required this.tooltipSeries,
   });
   String _value(BuildContext context, double? value, String unit) =>
       value == null
@@ -571,6 +591,11 @@ class _Tooltip extends StatelessWidget {
             (
               color: overlayColor ?? Colors.red,
               text: _value(context, overlayValues![index], overlayUnit ?? ''),
+            ),
+          for (final series in tooltipSeries)
+            (
+              color: series.color,
+              text: _value(context, series.values[index], series.unit),
             ),
         ],
       ),
