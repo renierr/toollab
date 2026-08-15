@@ -2588,6 +2588,7 @@
   "healthDashboardCaloriesIntakeAllTime": "Kalorienaufnahme · Gesamt",
   "healthDashboardCaloriesIntakeLastSevenDays": "Kalorienaufnahme · letzte 7 Tage",
   "healthDashboardCaloriesIntakeToday": "Kalorienaufnahme · heute",
+  "healthDashboardCaloriesToday": "Kalorien · heute",
   "healthDashboardNutrition": "Ernährung",
   "healthDashboardMeal": "Mahlzeit",
   "healthDashboardMealsOnDay": "Mahlzeiten am {date}",

@@ -11687,6 +11687,12 @@ abstract class AppLocalizations {
   /// **'Calories intake · today'**
   String get healthDashboardCaloriesIntakeToday;
 
+  /// No description provided for @healthDashboardCaloriesToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories · today'**
+  String get healthDashboardCaloriesToday;
+
   /// No description provided for @healthDashboardNutrition.
   ///
   /// In en, this message translates to:

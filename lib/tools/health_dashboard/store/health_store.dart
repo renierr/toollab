@@ -1425,16 +1425,26 @@ class HealthStore {
 
   /// Aggregate workout figures across all sessions, off the denormalised
   /// summary columns rather than by parsing anything.
-  Future<Map<String, num>> workoutSummary() async {
+  Future<Map<String, num>> workoutSummary({int? from, int? to}) async {
     final db = await _db();
+    final where = <String>['kind = ?${_excludeDisabled()}'];
+    final args = <Object?>[HealthSchema.sessionKindExercise];
+    if (from != null) {
+      where.add('t1 >= ?');
+      args.add(from);
+    }
+    if (to != null) {
+      where.add('t0 < ?');
+      args.add(to);
+    }
     final rows = await db.rawQuery(
       'SELECT COALESCE(SUM(distance_km), 0) AS distance, '
       'COALESCE(SUM(calories), 0) AS calories, '
       'COALESCE(SUM((t1 - t0) / 1000), 0) AS duration, '
       'COUNT(*) AS workouts '
       'FROM ${db.nameTable(HealthSchema.session)} '
-      'WHERE kind = ?${_excludeDisabled()}',
-      [HealthSchema.sessionKindExercise],
+      'WHERE ${where.join(' AND ')}',
+      args,
     );
     final row = rows.single;
     return {

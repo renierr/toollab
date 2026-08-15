@@ -51,6 +51,7 @@ class HealthDashboardState extends ChangeNotifier {
   int allTimeWorkouts = 0;
   int allTimeIntakeCalories = 0;
   int selectedWeekIntakeCalories = 0;
+  int todayCalories = 0;
   Map<String, double> todayNutrition = {};
   Map<String, int> _dailySteps = {};
   Map<String, double> _dailyHeartRate = {};
@@ -180,6 +181,15 @@ class HealthDashboardState extends ChangeNotifier {
             .add(const Duration(days: 1))
             .millisecondsSinceEpoch,
       ),
+      HealthQueries.instance.workoutCalories(
+        from: DateTime.now()
+            .copyWith(hour: 0, minute: 0, second: 0, millisecond: 0)
+            .millisecondsSinceEpoch,
+        to: DateTime.now()
+            .copyWith(hour: 0, minute: 0, second: 0, millisecond: 0)
+            .add(const Duration(days: 1))
+            .millisecondsSinceEpoch,
+      ),
     ]);
     final weekRecords = results[0] as List<HealthRecord>;
     final latestRecords = results[1] as List<HealthRecord>;
@@ -203,6 +213,7 @@ class HealthDashboardState extends ChangeNotifier {
     selectedWeekIntakeCalories = (results[8] as Map<String, double>)['energy']!
         .round();
     todayNutrition = results[9] as Map<String, double>;
+    todayCalories = results[10] as int;
     autoHealthConnectSync =
         await DatabaseService.instance.getSetting(
           HealthDashboardTool.config.id,

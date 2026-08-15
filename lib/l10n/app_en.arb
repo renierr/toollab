@@ -3468,6 +3468,7 @@
   "healthDashboardCaloriesIntakeAllTime": "Calories intake · all time",
   "healthDashboardCaloriesIntakeLastSevenDays": "Calories intake · last 7 days",
   "healthDashboardCaloriesIntakeToday": "Calories intake · today",
+  "healthDashboardCaloriesToday": "Calories · today",
   "healthDashboardNutrition": "Nutrition",
   "healthDashboardMeal": "Meal",
   "healthDashboardMealsOnDay": "Meals on {date}",

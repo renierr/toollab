@@ -6508,6 +6508,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get healthDashboardCaloriesIntakeToday => 'Kalorienaufnahme · heute';
 
   @override
+  String get healthDashboardCaloriesToday => 'Kalorien · heute';
+
+  @override
   String get healthDashboardNutrition => 'Ernährung';
 
   @override

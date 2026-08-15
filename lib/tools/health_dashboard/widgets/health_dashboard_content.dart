@@ -49,7 +49,7 @@ class HealthDashboardContent extends StatelessWidget {
                 icon: Icons.directions_run_rounded,
                 color: AppTheme.accentTeal,
                 label: l10n.healthDashboardDistanceAllTime,
-                value: healthValue(state.allTimeDistanceKm, 'km'),
+                value: healthCompactValue(state.allTimeDistanceKm, 'km'),
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardDistance,
@@ -61,21 +61,10 @@ class HealthDashboardContent extends StatelessWidget {
                 ),
               ),
               HealthMetricCard(
-                icon: Icons.restaurant_rounded,
-                color: AppTheme.accentAmber,
-                label: l10n.healthDashboardCaloriesIntakeAllTime,
-                value: healthValue(state.allTimeIntakeCalories, 'kcal'),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const HealthNutritionPage(),
-                  ),
-                ),
-              ),
-              HealthMetricCard(
                 icon: Icons.directions_walk_rounded,
                 color: AppTheme.accentGreen,
                 label: l10n.healthDashboardStepsAllTime,
-                value: '${state.allTimeSteps}',
+                value: healthCompactValue(state.allTimeSteps, 'steps'),
                 onTap: () => _openMetric(
                   context,
                   title: l10n.healthDashboardStepsToday,
@@ -87,21 +76,25 @@ class HealthDashboardContent extends StatelessWidget {
                 ),
               ),
               HealthMetricCard(
-                icon: Icons.restaurant_rounded,
+                icon: Icons.local_fire_department_rounded,
                 color: AppTheme.accentAmber,
-                label: l10n.healthDashboardCaloriesIntakeLastSevenDays,
-                value: healthValue(state.selectedWeekIntakeCalories, 'kcal'),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const HealthNutritionPage(),
-                  ),
+                label: l10n.healthDashboardCaloriesAllTime,
+                value: healthCompactValue(state.allTimeCalories, 'calories'),
+                onTap: () => _openMetric(
+                  context,
+                  title: l10n.healthDashboardCalories,
+                  type: HealthQueries.workoutType,
+                  valueKey: 'calories',
+                  unit: 'calories',
+                  color: AppTheme.accentAmber,
+                  sum: true,
                 ),
               ),
               HealthMetricCard(
-                icon: Icons.today_rounded,
+                icon: Icons.restaurant_rounded,
                 color: AppTheme.accentAmber,
-                label: l10n.healthDashboardCaloriesIntakeToday,
-                value: healthValue(state.todayNutrition['energy'] ?? 0, 'kcal'),
+                label: l10n.healthDashboardCaloriesIntakeAllTime,
+                value: healthCompactValue(state.allTimeIntakeCalories, 'kcal'),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const HealthNutritionPage(),
@@ -124,18 +117,14 @@ class HealthDashboardContent extends StatelessWidget {
                 ),
               ),
               HealthMetricCard(
-                icon: Icons.local_fire_department_rounded,
-                color: AppTheme.accentAmber,
-                label: l10n.healthDashboardCaloriesAllTime,
-                value: '${state.allTimeCalories}',
-                onTap: () => _openMetric(
-                  context,
-                  title: l10n.healthDashboardCalories,
-                  type: HealthQueries.workoutType,
-                  valueKey: 'calories',
-                  unit: 'calories',
-                  color: AppTheme.accentAmber,
-                  sum: true,
+                icon: Icons.monitor_heart_outlined,
+                color: AppTheme.accentRed,
+                label: l10n.healthDashboardWorkoutsAllTime,
+                value: healthCompactValue(state.allTimeWorkouts, 'count'),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const HealthWorkoutsPage(),
+                  ),
                 ),
               ),
               if (state.latestSleepMinutes != null)
@@ -151,7 +140,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.favorite_rounded,
                   color: AppTheme.accentRed,
                   label: l10n.healthDashboardLatestHeartRate,
-                  value: healthValue(state.latestHeartRate!, 'bpm'),
+                  value: healthCompactValue(state.latestHeartRate!, 'bpm'),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardHeartRate,
@@ -166,7 +155,10 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.favorite_outline_rounded,
                   color: AppTheme.accentRed,
                   label: l10n.healthDashboardLatestRestingHeartRate,
-                  value: healthValue(state.latestRestingHeartRate!, 'bpm'),
+                  value: healthCompactValue(
+                    state.latestRestingHeartRate!,
+                    'bpm',
+                  ),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardRestingHeartRate,
@@ -181,7 +173,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.monitor_heart_rounded,
                   color: AppTheme.accentPurple,
                   label: l10n.healthDashboardHrv,
-                  value: healthValue(state.latestHrv!, 'ms'),
+                  value: healthCompactValue(state.latestHrv!, 'ms'),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardHrv,
@@ -196,7 +188,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.directions_walk_rounded,
                   color: AppTheme.accentGreen,
                   label: l10n.healthDashboardStepsToday,
-                  value: '${state.todaySteps}',
+                  value: healthCompactValue(state.todaySteps, 'steps'),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardStepsToday,
@@ -207,12 +199,43 @@ class HealthDashboardContent extends StatelessWidget {
                     sum: true,
                   ),
                 ),
+              if (state.todayCalories > 0)
+                HealthMetricCard(
+                  icon: Icons.local_fire_department_rounded,
+                  color: AppTheme.accentAmber,
+                  label: l10n.healthDashboardCaloriesToday,
+                  value: healthCompactValue(state.todayCalories, 'calories'),
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardCalories,
+                    type: HealthQueries.workoutType,
+                    valueKey: 'calories',
+                    unit: 'calories',
+                    color: AppTheme.accentAmber,
+                    sum: true,
+                  ),
+                ),
+              if ((state.todayNutrition['energy'] ?? 0) > 0)
+                HealthMetricCard(
+                  icon: Icons.restaurant_rounded,
+                  color: AppTheme.accentAmber,
+                  label: l10n.healthDashboardCaloriesIntakeToday,
+                  value: healthCompactValue(
+                    state.todayNutrition['energy'] ?? 0,
+                    'kcal',
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HealthNutritionPage(),
+                    ),
+                  ),
+                ),
               if (state.latestWeightKg != null)
                 HealthMetricCard(
                   icon: Icons.monitor_weight_outlined,
                   color: AppTheme.accentPurple,
                   label: l10n.healthDashboardWeight,
-                  value: healthValue(state.latestWeightKg!, 'kg'),
+                  value: healthCompactValue(state.latestWeightKg!, 'kg'),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardWeight,
@@ -227,7 +250,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.pie_chart_outline_rounded,
                   color: AppTheme.accentAmber,
                   label: l10n.healthDashboardLatestBodyFat,
-                  value: healthValue(state.latestBodyFat!, '%'),
+                  value: healthCompactValue(state.latestBodyFat!, '%'),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardBodyFat,
@@ -242,7 +265,7 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.percent_rounded,
                   color: AppTheme.accentBlue,
                   label: l10n.healthDashboardLatestOxygenSaturation,
-                  value: healthValue(state.latestSpO2!, '%'),
+                  value: healthCompactValue(state.latestSpO2!, '%'),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardOxygenSaturation,
@@ -257,7 +280,10 @@ class HealthDashboardContent extends StatelessWidget {
                   icon: Icons.air_rounded,
                   color: AppTheme.accentTeal,
                   label: l10n.healthDashboardLatestRespiratoryRate,
-                  value: healthValue(state.latestRespiratoryRate!, 'rpm'),
+                  value: healthCompactValue(
+                    state.latestRespiratoryRate!,
+                    'rpm',
+                  ),
                   onTap: () => _openMetric(
                     context,
                     title: l10n.healthDashboardRespiratoryRate,
@@ -267,17 +293,6 @@ class HealthDashboardContent extends StatelessWidget {
                     color: AppTheme.accentTeal,
                   ),
                 ),
-              HealthMetricCard(
-                icon: Icons.monitor_heart_outlined,
-                color: AppTheme.accentRed,
-                label: l10n.healthDashboardWorkoutsAllTime,
-                value: '${state.allTimeWorkouts}',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const HealthWorkoutsPage(),
-                  ),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 28),
@@ -297,66 +312,88 @@ class HealthDashboardContent extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              HealthMetricCard(
-                icon: Icons.directions_run_rounded,
-                color: AppTheme.accentTeal,
-                label: l10n.healthDashboardDistanceLastSevenDays,
-                value: healthValue(state.selectedWeekDistanceKm, 'km'),
-                onTap: () => _openMetric(
-                  context,
-                  title: l10n.healthDashboardDistance,
-                  type: HealthQueries.workoutType,
-                  valueKey: 'distanceKm',
-                  unit: 'km',
+              if (state.selectedWeekDistanceKm > 0)
+                HealthMetricCard(
+                  icon: Icons.directions_run_rounded,
                   color: AppTheme.accentTeal,
-                  sum: true,
+                  label: l10n.healthDashboardDistanceLastSevenDays,
+                  value: healthCompactValue(state.selectedWeekDistanceKm, 'km'),
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardDistance,
+                    type: HealthQueries.workoutType,
+                    valueKey: 'distanceKm',
+                    unit: 'km',
+                    color: AppTheme.accentTeal,
+                    sum: true,
+                  ),
                 ),
-              ),
-              HealthMetricCard(
-                icon: Icons.directions_walk_rounded,
-                color: AppTheme.accentGreen,
-                label: l10n.healthDashboardStepsLastSevenDays,
-                value: '${state.selectedWeekSteps}',
-                onTap: () => _openMetric(
-                  context,
-                  title: l10n.healthDashboardStepsToday,
-                  type: 'activity.steps',
-                  valueKey: 'count',
-                  unit: 'steps',
+              if (state.selectedWeekSteps > 0)
+                HealthMetricCard(
+                  icon: Icons.directions_walk_rounded,
                   color: AppTheme.accentGreen,
-                  sum: true,
+                  label: l10n.healthDashboardStepsLastSevenDays,
+                  value: healthCompactValue(state.selectedWeekSteps, 'steps'),
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardStepsToday,
+                    type: 'activity.steps',
+                    valueKey: 'count',
+                    unit: 'steps',
+                    color: AppTheme.accentGreen,
+                    sum: true,
+                  ),
                 ),
-              ),
-              HealthMetricCard(
-                icon: Icons.timer_outlined,
-                color: AppTheme.accentBlue,
-                label: l10n.healthDashboardActiveTimeLastSevenDays,
-                value: _duration(state.selectedWeekDurationSeconds),
-                onTap: () => _openMetric(
-                  context,
-                  title: l10n.healthDashboardActiveTime,
-                  type: HealthQueries.workoutType,
-                  valueKey: 'durationMinutes',
-                  unit: 'min',
+              if (state.selectedWeekDurationSeconds > 0)
+                HealthMetricCard(
+                  icon: Icons.timer_outlined,
                   color: AppTheme.accentBlue,
-                  sum: true,
+                  label: l10n.healthDashboardActiveTimeLastSevenDays,
+                  value: _duration(state.selectedWeekDurationSeconds),
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardActiveTime,
+                    type: HealthQueries.workoutType,
+                    valueKey: 'durationMinutes',
+                    unit: 'min',
+                    color: AppTheme.accentBlue,
+                    sum: true,
+                  ),
                 ),
-              ),
-              HealthMetricCard(
-                icon: Icons.local_fire_department_rounded,
-                color: AppTheme.accentAmber,
-                label: l10n.healthDashboardCaloriesLastSevenDays,
-                value: '${state.selectedWeekCalories}',
-                onTap: () => _openMetric(
-                  context,
-                  title: l10n.healthDashboardCalories,
-                  type: HealthQueries.workoutType,
-                  valueKey: 'calories',
-                  unit: 'calories',
+              if (state.selectedWeekCalories > 0)
+                HealthMetricCard(
+                  icon: Icons.local_fire_department_rounded,
                   color: AppTheme.accentAmber,
-                  sum: true,
+                  label: l10n.healthDashboardCaloriesLastSevenDays,
+                  value: healthCompactValue(
+                    state.selectedWeekCalories,
+                    'calories',
+                  ),
+                  onTap: () => _openMetric(
+                    context,
+                    title: l10n.healthDashboardCalories,
+                    type: HealthQueries.workoutType,
+                    valueKey: 'calories',
+                    unit: 'calories',
+                    color: AppTheme.accentAmber,
+                    sum: true,
+                  ),
                 ),
-              ),
+              if (state.selectedWeekIntakeCalories > 0)
+                HealthMetricCard(
+                  icon: Icons.restaurant_rounded,
+                  color: AppTheme.accentAmber,
+                  label: l10n.healthDashboardCaloriesIntakeLastSevenDays,
+                  value: healthCompactValue(
+                    state.selectedWeekIntakeCalories,
+                    'kcal',
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HealthNutritionPage(),
+                    ),
+                  ),
+                ),
             ],
           ),
           const HealthDashboardTrends(),

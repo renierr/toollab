@@ -514,6 +514,9 @@ class HealthQueries {
 
   Future<Map<String, num>> allTimeWorkoutSummary() => _store.workoutSummary();
 
+  Future<int> workoutCalories({required int from, required int to}) async =>
+      (await _store.workoutSummary(from: from, to: to))['calories']!.round();
+
   Future<int> allTimeSteps() async =>
       (await _store.allTimeTotal(HealthMetrics.steps)).round();
 
