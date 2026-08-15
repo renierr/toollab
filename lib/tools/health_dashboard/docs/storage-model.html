@@ -1070,6 +1070,12 @@ then      Samsung action → healthconnect:// → per-app deep link →
                 <td class="d">The workouts page</td>
               </tr>
               <tr>
+                <td class="d">Calories intake <span class="chip s-dim">all time</span></td>
+                <td class="d">Sum of the energy in every stored nutrition record.</td>
+                <td class="c">health_nutrition</td>
+                <td class="d">The nutrition page</td>
+              </tr>
+              <tr>
                 <td class="d">Last sleep</td>
                 <td class="d">Span of the newest non-nap session, end minus start. Naps never win this card.</td>
                 <td class="c">health_session · sleep</td>
@@ -1094,16 +1100,48 @@ then      Samsung action → healthconnect:// → per-app deep link →
                 <td class="d">That metric's page</td>
               </tr>
               <tr>
-                <td class="d">Steps <span class="chip s-dim">today</span></td>
-                <td class="d">Today's rollup total, not a sum of the loaded records.</td>
-                <td class="c">health_daily · steps</td>
-                <td class="d">The steps metric page</td>
+                <td class="d">Steps · Calories burned · Calories intake <span class="chip s-dim">today</span></td>
+                <td class="d">Today's step rollup, exercise-session calories, and nutrition energy total. Each card is hidden until its total is greater than zero.</td>
+                <td class="c">health_daily · steps<br>health_session<br>health_nutrition</td>
+                <td class="d">The steps metric page, workout metric page, or nutrition page</td>
               </tr>
               <tr>
-                <td class="d">Distance · Calories · Active time · Steps <span class="chip s-dim">last 7 days</span></td>
-                <td class="d">Sum over the seven-day window that ends on the selected day — these move with the day navigation, the all-time cards above do not.</td>
-                <td class="c">health_daily · session rows</td>
-                <td class="d">That metric's page</td>
+                <td class="d">Distance · Steps · Active time · Calories burned · Calories intake <span class="chip s-dim">last 7 days</span></td>
+                <td class="d">Sum over the seven-day window that ends on the selected day — these move with day navigation, the all-time cards above do not. Each card is hidden until its total is greater than zero.</td>
+                <td class="c">health_daily · health_session · health_nutrition</td>
+                <td class="d">That metric's page or the nutrition page</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Overview trends</h3>
+        <p class="measure">
+          Trend cards sit below the seven-day totals and use the same selected seven-day window.
+          They are rendered in this order: workout trend, weight with body-fat overlay, HRV,
+          oxygen saturation, then respiratory rate. Missing days remain gaps; no values are
+          interpolated or invented.
+        </p>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr><th>Trend</th><th>Series</th><th>Visibility</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="d">Workout trend</td>
+                <td class="d">Daily distance with daily average heart rate as an overlay.</td>
+                <td class="d">Shown when either series has at least one value.</td>
+              </tr>
+              <tr>
+                <td class="d">Weight &amp; body fat</td>
+                <td class="d">Daily average weight with daily average body fat as an overlay.</td>
+                <td class="d">Shown when either series has at least one value.</td>
+              </tr>
+              <tr>
+                <td class="d">HRV · Oxygen saturation · Respiratory rate</td>
+                <td class="d">One daily average line per metric.</td>
+                <td class="d">Each chart is shown only when its metric has at least one value.</td>
               </tr>
             </tbody>
           </table>
