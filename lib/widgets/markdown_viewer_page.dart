@@ -23,6 +23,8 @@ class MarkdownViewerConfig {
   final bool showExportPdf;
   final bool showEdit;
   final bool showDelete;
+  final bool showReload;
+  final Future<void> Function()? onReload;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final VoidCallback? onClose;
@@ -42,6 +44,8 @@ class MarkdownViewerConfig {
     this.showExportPdf = true,
     this.showEdit = false,
     this.showDelete = false,
+    this.showReload = false,
+    this.onReload,
     this.onEdit,
     this.onDelete,
     this.onClose,
@@ -69,6 +73,7 @@ class MarkdownViewerPage extends StatefulWidget {
 
 class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
   bool _showBody = false;
+  bool _reloading = false;
   late FrontmatterResult _frontmatter;
 
   @override
@@ -173,6 +178,17 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
     }
   }
 
+  Future<void> _reload() async {
+    final reload = widget.config.onReload;
+    if (reload == null || _reloading) return;
+    setState(() => _reloading = true);
+    try {
+      await reload();
+    } finally {
+      if (mounted) setState(() => _reloading = false);
+    }
+  }
+
   Future<void> _exportPdf(BuildContext context) async {
     final fileName =
         '${(widget.config.exportSuggestedName ?? 'document').replaceAll(RegExp(r'\.md$'), '')}.pdf';
@@ -206,6 +222,21 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
             onPressed: config.onClose,
           ),
           actions: [
+            if (config.showReload && config.onReload != null)
+              IconButton(
+                icon: _reloading
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: config.accentColor,
+                        ),
+                      )
+                    : const Icon(Icons.refresh),
+                tooltip: l10n.widgetMarkdownReload,
+                onPressed: _reloading ? null : _reload,
+              ),
             if (config.showShare)
               IconButton(
                 icon: const Icon(Icons.share_outlined),

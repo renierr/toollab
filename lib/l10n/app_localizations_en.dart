@@ -1883,6 +1883,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get miscMarkdownTypeLabel => 'Markdown';
 
   @override
+  String get miscMarkdownReloaded => 'Reloaded from disk';
+
+  @override
+  String get miscMarkdownReloadNoChange => 'File unchanged';
+
+  @override
+  String get miscMarkdownReloadMissing => 'File no longer exists on disk';
+
+  @override
   String get nfcEditorFormTitle => 'NDEF Record Creator';
 
   @override
@@ -3131,6 +3140,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetFileDropReleaseToLoad => 'Release to load file';
+
+  @override
+  String get widgetMarkdownReload => 'Reload from disk';
 
   @override
   String get widgetMarkdownExportMarkdown => 'Export Markdown';

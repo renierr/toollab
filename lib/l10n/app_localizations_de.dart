@@ -1901,6 +1901,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get miscMarkdownTypeLabel => 'Markdown';
 
   @override
+  String get miscMarkdownReloaded => 'Neu geladen';
+
+  @override
+  String get miscMarkdownReloadNoChange => 'Datei unverändert';
+
+  @override
+  String get miscMarkdownReloadMissing => 'Datei existiert nicht mehr';
+
+  @override
   String get nfcEditorFormTitle => 'NDEF-Datensatz erstellen';
 
   @override
@@ -3159,6 +3168,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get widgetFileDropReleaseToLoad => 'Loslassen zum Laden';
+
+  @override
+  String get widgetMarkdownReload => 'Von Datenträger neu laden';
 
   @override
   String get widgetMarkdownExportMarkdown => 'Markdown exportieren';

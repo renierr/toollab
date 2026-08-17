@@ -1014,6 +1014,9 @@
   "miscMarkdownOpenTitle": "Open a Markdown File",
   "miscMarkdownDropSubtitle": "Drag & drop a .md or .txt file here",
   "miscMarkdownTypeLabel": "Markdown",
+  "miscMarkdownReloaded": "Reloaded from disk",
+  "miscMarkdownReloadNoChange": "File unchanged",
+  "miscMarkdownReloadMissing": "File no longer exists on disk",
   "nfcEditorFormTitle": "NDEF Record Creator",
   "nfcTemplatePreset": "Template Preset",
   "nfcTemplateCustomRecord": "Custom Record",
@@ -1912,6 +1915,7 @@
     }
   },
   "widgetFileDropReleaseToLoad": "Release to load file",
+  "widgetMarkdownReload": "Reload from disk",
   "widgetMarkdownExportMarkdown": "Export Markdown",
   "widgetMarkdownExportPdf": "Export PDF",
   "widgetMarkdownUpdated": "Updated: {date}",

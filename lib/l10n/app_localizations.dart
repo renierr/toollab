@@ -3425,6 +3425,24 @@ abstract class AppLocalizations {
   /// **'Markdown'**
   String get miscMarkdownTypeLabel;
 
+  /// No description provided for @miscMarkdownReloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Reloaded from disk'**
+  String get miscMarkdownReloaded;
+
+  /// No description provided for @miscMarkdownReloadNoChange.
+  ///
+  /// In en, this message translates to:
+  /// **'File unchanged'**
+  String get miscMarkdownReloadNoChange;
+
+  /// No description provided for @miscMarkdownReloadMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'File no longer exists on disk'**
+  String get miscMarkdownReloadMissing;
+
   /// No description provided for @nfcEditorFormTitle.
   ///
   /// In en, this message translates to:
@@ -5536,6 +5554,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Release to load file'**
   String get widgetFileDropReleaseToLoad;
+
+  /// No description provided for @widgetMarkdownReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload from disk'**
+  String get widgetMarkdownReload;
 
   /// No description provided for @widgetMarkdownExportMarkdown.
   ///

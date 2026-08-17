@@ -23,6 +23,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
     with DisposeCleanup {
   String? _fileContent;
   String? _fileName;
+  String? _filePath;
 
   @override
   void initState() {
@@ -54,6 +55,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
           setState(() {
             _fileContent = text;
             _fileName = file.name;
+            _filePath = file.path;
           });
         }
       }
@@ -74,6 +76,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         setState(() {
           _fileContent = content;
           _fileName = file.name;
+          _filePath = file.path.isEmpty ? null : file.path;
         });
       }
     } catch (e) {
@@ -86,6 +89,39 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
     }
   }
 
+  Future<void> _reloadFromDisk() async {
+    final path = _filePath;
+    if (path == null) return;
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final diskFile = File(path);
+      if (!await diskFile.exists()) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.miscMarkdownReloadMissing)),
+        );
+        return;
+      }
+      final text = await diskFile.readAsString();
+      if (!mounted) return;
+      final changed = text != _fileContent;
+      setState(() => _fileContent = text);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            changed
+                ? l10n.miscMarkdownReloaded
+                : l10n.miscMarkdownReloadNoChange,
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.miscMarkdownFailedToRead(e.toString()))),
+      );
+    }
+  }
+
   void _onClose() {
     if (widget.sharedFile != null) {
       if (Navigator.of(context).canPop()) {
@@ -94,12 +130,14 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         setState(() {
           _fileContent = null;
           _fileName = null;
+          _filePath = null;
         });
       }
     } else {
       setState(() {
         _fileContent = null;
         _fileName = null;
+        _filePath = null;
       });
     }
   }
@@ -138,6 +176,8 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         showExport: true,
         showEdit: false,
         showDelete: false,
+        showReload: _filePath != null,
+        onReload: _filePath != null ? _reloadFromDisk : null,
         onClose: _onClose,
         exportSuggestedName: _fileName ?? 'document.md',
       ),
