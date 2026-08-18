@@ -32,13 +32,13 @@ class NotesState extends ChangeNotifier {
     }
   }
 
-  Future<void> saveNote(
+  Future<int> saveNote(
     String content, {
     int? id,
     String? shortId,
     List<String>? tags,
   }) async {
-    await NotesDbHelper.instance.saveNote(
+    final savedId = await NotesDbHelper.instance.saveNote(
       content,
       id: id,
       shortId: shortId,
@@ -46,6 +46,7 @@ class NotesState extends ChangeNotifier {
     );
     await loadNotes();
     _backgroundSync();
+    return savedId;
   }
 
   Future<void> deleteNote(int id) async {

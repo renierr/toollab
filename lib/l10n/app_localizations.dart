@@ -3947,6 +3947,12 @@ abstract class AppLocalizations {
   /// **'Failed to load shared file: {error}'**
   String notesFailedToLoadSharedFile(String error);
 
+  /// No description provided for @notesSaveKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and keep editing'**
+  String get notesSaveKeepEditing;
+
   /// No description provided for @notesNoteSaved.
   ///
   /// In en, this message translates to:

@@ -784,6 +784,7 @@
   "nfcHexEmulator": "Hex-Emulator",
   "nfcRecordsParsed": "{count} Datensätze geparst",
   "notesFailedToLoadSharedFile": "Gemeinsame Datei konnte nicht geladen werden: {error}",
+  "notesSaveKeepEditing": "Speichern und weiter bearbeiten",
   "notesNoteSaved": "Notiz gespeichert",
   "notesFailedToSaveNote": "Notiz konnte nicht gespeichert werden: {error}",
   "notesDeleteNoteTitle": "Notiz löschen",

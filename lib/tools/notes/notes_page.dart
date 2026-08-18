@@ -172,6 +172,42 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     }
   }
 
+  /// Persists (and syncs) without leaving the editor; a new note becomes the
+  /// editor's current note so the next save updates instead of inserting.
+  Future<bool> _saveNoteKeepEditing(String content, List<String> tags) async {
+    final notesState = context.read<NotesState>();
+    final l10n = AppLocalizations.of(context);
+    try {
+      final savedId = await notesState.saveNote(
+        content,
+        id: _editingId,
+        tags: tags,
+      );
+      if (!mounted) return true;
+      setState(() {
+        _editingId = savedId;
+        _editingTags = tags;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.notesNoteSaved),
+          backgroundColor: AppTheme.accentGreen,
+        ),
+      );
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.notesFailedToSaveNote(e.toString())),
+            backgroundColor: AppTheme.accentRed,
+          ),
+        );
+      }
+      return false;
+    }
+  }
+
   Future<void> _deleteNote(int id) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await ConfirmActionDialog.show(
@@ -259,6 +295,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
         initialTags: _editingTags,
         allTags: sortedAllTags,
         onSave: _saveNote,
+        onSaveKeepEditing: _saveNoteKeepEditing,
         onCancel: _closeEditor,
       );
     }

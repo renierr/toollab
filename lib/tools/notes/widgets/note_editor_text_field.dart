@@ -4,12 +4,14 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 class NoteEditorTextField extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
+  final ScrollController? scrollController;
   final bool isMonospace;
 
   const NoteEditorTextField({
     super.key,
     required this.controller,
     required this.focusNode,
+    this.scrollController,
     this.isMonospace = false,
   });
 
@@ -23,6 +25,7 @@ class NoteEditorTextField extends StatelessWidget {
       child: TextField(
         controller: controller,
         focusNode: focusNode,
+        scrollController: scrollController,
         maxLines: null,
         keyboardType: TextInputType.multiline,
         clipBehavior: Clip.none,

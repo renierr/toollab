@@ -2196,6 +2196,9 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get notesSaveKeepEditing => 'Speichern und weiter bearbeiten';
+
+  @override
   String get notesNoteSaved => 'Notiz gespeichert';
 
   @override

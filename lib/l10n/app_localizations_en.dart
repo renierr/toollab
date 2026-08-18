@@ -2174,6 +2174,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get notesSaveKeepEditing => 'Save and keep editing';
+
+  @override
   String get notesNoteSaved => 'Note saved';
 
   @override

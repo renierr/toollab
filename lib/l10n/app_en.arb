@@ -1174,6 +1174,7 @@
       }
     }
   },
+  "notesSaveKeepEditing": "Save and keep editing",
   "notesNoteSaved": "Note saved",
   "notesFailedToSaveNote": "Failed to save note: {error}",
   "@notesFailedToSaveNote": {

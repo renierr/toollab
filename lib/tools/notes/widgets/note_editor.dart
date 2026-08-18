@@ -26,6 +26,8 @@ class NoteEditor extends StatefulWidget {
   final List<String> initialTags;
   final List<String> allTags;
   final Function(String content, List<String> tags) onSave;
+  final Future<bool> Function(String content, List<String> tags)?
+  onSaveKeepEditing;
   final VoidCallback onCancel;
 
   const NoteEditor({
@@ -35,6 +37,7 @@ class NoteEditor extends StatefulWidget {
     this.initialTags = const [],
     this.allTags = const [],
     required this.onSave,
+    this.onSaveKeepEditing,
     required this.onCancel,
   });
 
@@ -47,6 +50,10 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
   late final FocusNode _focusNode;
   late List<String> _tags;
   late String _initialBody;
+  late final ScrollController _editScrollController;
+  late final ScrollController _previewScrollController;
+  double _editScrollOffset = 0;
+  TextSelection? _editSelection;
 
   /// Image data URIs are kept out of the editable buffer entirely — a base64
   /// blob in the text field breaks caret/selection mapping on Android.
@@ -251,10 +258,73 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     onDispose(_controller.dispose);
     _focusNode = FocusNode(onKeyEvent: _handleKeyEvent);
     onDispose(_focusNode.dispose);
+    _editScrollController = ScrollController();
+    onDispose(_editScrollController.dispose);
+    _previewScrollController = ScrollController();
+    onDispose(_previewScrollController.dispose);
     _tags = List.from(widget.initialTags);
     _controller.addListener(() {
       setState(() {});
     });
+  }
+
+  void _changeMode(NoteEditMode mode) {
+    if (mode == _editMode) return;
+    final leavingPreview = _editMode == NoteEditMode.preview;
+    if (!leavingPreview) {
+      _editSelection = _controller.selection;
+      if (_editScrollController.hasClients) {
+        _editScrollOffset = _editScrollController.offset;
+      }
+    }
+    setState(() {
+      _editMode = mode;
+      _controller.showRawSource = mode == NoteEditMode.source;
+    });
+    if (mode == NoteEditMode.preview) {
+      _afterLayout(_alignPreviewToCaret);
+    } else if (leavingPreview) {
+      _afterLayout(_restoreEditPosition);
+    }
+  }
+
+  /// Scroll positions only exist once the new mode's viewport has been laid
+  /// out, and its extent is only final on the frame after that.
+  void _afterLayout(VoidCallback action) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) action();
+      });
+    });
+  }
+
+  /// Line ratio of the caret mapped onto the preview's scroll extent — an
+  /// approximation, since rendered markdown has no per-line anchors.
+  void _alignPreviewToCaret() {
+    if (!_previewScrollController.hasClients) return;
+    final text = _controller.text;
+    final lines = text.split('\n').length;
+    if (lines <= 1) return;
+    final caret = (_editSelection?.baseOffset ?? 0).clamp(0, text.length);
+    final caretLine = text.substring(0, caret).split('\n').length - 1;
+    final ratio = (caretLine / (lines - 1)).clamp(0.0, 1.0);
+    final max = _previewScrollController.position.maxScrollExtent;
+    _previewScrollController.jumpTo(max * ratio);
+  }
+
+  void _restoreEditPosition() {
+    final selection = _editSelection;
+    if (selection != null) {
+      final max = _controller.text.length;
+      if (selection.start <= max && selection.end <= max) {
+        _controller.selection = selection;
+      }
+    }
+    if (_editScrollController.hasClients) {
+      final max = _editScrollController.position.maxScrollExtent;
+      _editScrollController.jumpTo(_editScrollOffset.clamp(0.0, max));
+    }
   }
 
   void _insertText(String prefix, {String suffix = ''}) {
@@ -327,6 +397,13 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
 
   void _saveNote() {
     widget.onSave(_composeContent(), _tags);
+  }
+
+  Future<void> _saveAndKeepEditing() async {
+    final saved = await widget.onSaveKeepEditing!(_composeContent(), _tags);
+    if (saved && mounted) {
+      setState(() => _initialBody = _controller.text);
+    }
   }
 
   Future<void> _exportPdf(BuildContext context) async {
@@ -408,6 +485,21 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                               ),
                             ),
                             const SizedBox(width: 8),
+                            if (widget.onSaveKeepEditing != null)
+                              IconButton(
+                                icon: Icon(
+                                  Icons.save_outlined,
+                                  color: _controller.text.trim().isEmpty
+                                      ? theme.colorScheme.onSurface.withValues(
+                                          alpha: 0.3,
+                                        )
+                                      : AppTheme.accentTeal,
+                                ),
+                                tooltip: l10n.notesSaveKeepEditing,
+                                onPressed: _controller.text.trim().isEmpty
+                                    ? null
+                                    : _saveAndKeepEditing,
+                              ),
                             IconButton(
                               icon: Icon(
                                 Icons.save,
@@ -480,13 +572,8 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                                     ),
                                   ],
                                   selected: {_editMode},
-                                  onSelectionChanged: (newSelection) {
-                                    setState(() {
-                                      _editMode = newSelection.first;
-                                      _controller.showRawSource =
-                                          _editMode == NoteEditMode.source;
-                                    });
-                                  },
+                                  onSelectionChanged: (newSelection) =>
+                                      _changeMode(newSelection.first),
                                 ),
                                 IconButton(
                                   icon: const Icon(
@@ -551,6 +638,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                           final title = _getTitle(content);
                           final body = _getPureContent(content);
                           return SingleChildScrollView(
+                            controller: _previewScrollController,
                             physics: physics,
                             child: Container(
                               color: theme.colorScheme.surface,
@@ -595,6 +683,7 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                         child: NoteEditorTextField(
                           controller: _controller,
                           focusNode: _focusNode,
+                          scrollController: _editScrollController,
                           isMonospace: _editMode == NoteEditMode.source,
                         ),
                       ),
