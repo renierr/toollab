@@ -4,6 +4,8 @@ import 'dart:math' as math;
 /// "1234 steps").
 const _bareUnits = {'steps', 'calories', 'count', 'BMI'};
 
+const _calorieUnits = {'calories', 'kcal'};
+
 /// Fraction digits per display unit — the single source of truth, so a metric
 /// never renders at two precisions across pages.
 int healthFractionDigits(String unit) => switch (unit) {
@@ -29,23 +31,33 @@ String healthNumber(num value, String unit) =>
     value.toStringAsFixed(healthFractionDigits(unit));
 
 /// Compact large values for space-constrained dashboard readouts.
-String healthCompactNumber(num value, {int fractionDigits = 0}) {
+String healthCompactNumber(
+  num value, {
+  int fractionDigits = 0,
+  int compactFrom = 1000,
+  int? compactFractionDigits,
+}) {
   final absoluteValue = value.abs();
-  if (absoluteValue < 1000) {
+  if (absoluteValue < compactFrom) {
     return _trimmedFixed(value, fractionDigits);
   }
   final (divisor, suffix) = switch (absoluteValue) {
     >= 1000000 => (1000000, 'M'),
     _ => (1000, 'k'),
   };
-  return '${_trimmedFixed(value / divisor, fractionDigits)}$suffix';
+  return '${_trimmedFixed(value / divisor, compactFractionDigits ?? fractionDigits)}$suffix';
 }
 
-/// Compact number plus unit suffix for overview cards.
+/// Compact number plus unit suffix for overview cards. Calorie readouts stay
+/// spelled out through four digits and keep two fraction digits once compacted,
+/// so a day of intake never degrades to a lossy "1k".
 String healthCompactValue(num value, String unit) {
+  final isCalories = _calorieUnits.contains(unit);
   final text = healthCompactNumber(
     value,
     fractionDigits: healthFractionDigits(unit),
+    compactFrom: isCalories ? 10000 : 1000,
+    compactFractionDigits: isCalories ? 2 : null,
   );
   return unit.isEmpty || _bareUnits.contains(unit) ? text : '$text $unit';
 }

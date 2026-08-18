@@ -6,14 +6,21 @@ import 'package:tool_lab/theme/theme.dart';
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
 import '../health_value_format.dart';
+import '../store/health_metric_series.dart';
 import '../store/health_queries.dart';
 import 'health_day_navigation.dart';
 import 'health_metric_day_chart.dart';
+import 'health_metric_summary_section.dart';
 import 'health_record_stat_item.dart';
 import 'health_workout_trend_chart.dart';
 import 'health_record_details_page.dart';
 import 'health_source_badge.dart';
 
+double _total(List<HealthRecord> meals, String key) =>
+    meals.fold<double>(0, (sum, meal) => sum + (meal.value[key] as num? ?? 0));
+
+/// One load of the whole trend window feeds every section, so day navigation
+/// moves the totals, the timeline and the meal list together.
 class HealthNutritionPage extends StatelessWidget {
   const HealthNutritionPage({super.key});
 
@@ -24,109 +31,134 @@ class HealthNutritionPage extends StatelessWidget {
     final day = state.selectedDay;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.healthDashboardNutrition)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Align(
-            alignment: Alignment.centerRight,
-            child: const HealthDayNavigation(),
-          ),
-          _NutritionTotalsCard(totals: state.todayNutrition),
-          const SizedBox(height: 20),
-          Text(
-            l10n.healthDashboardCaloriesLastSevenDays,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          _NutritionTrend(),
-          const SizedBox(height: 20),
-          Text(
-            l10n.healthDashboardMealTimeline,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          _NutritionDayTimeline(day: day),
-          const SizedBox(height: 20),
-          Text(
-            l10n.healthDashboardMealsOnDay(
-              MaterialLocalizations.of(context).formatMediumDate(day),
+      body: FutureBuilder<List<List<HealthRecord>>>(
+        future: Future.wait([
+          for (var index = 0; index < 7; index++)
+            HealthQueries.instance.recordsForDay(
+              type: HealthQueries.nutritionType,
+              day: state.trendDayAt(index),
             ),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          _MealsForDay(day: day),
-        ],
+        ]),
+        builder: (context, snapshot) {
+          final days = snapshot.data;
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              const Align(
+                alignment: Alignment.centerRight,
+                child: HealthDayNavigation(),
+              ),
+              if (days == null)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else ...[
+                _NutritionTotalsCard(meals: days.last),
+                const SizedBox(height: 16),
+                HealthMetricSummarySection(
+                  series: _caloriesSeries(state, days),
+                  unit: 'kcal',
+                  color: AppTheme.accentAmber,
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  l10n.healthDashboardCaloriesLastSevenDays,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                _NutritionTrend(days: days),
+                const SizedBox(height: 20),
+                Text(
+                  l10n.healthDashboardMealTimeline,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                _NutritionDayTimeline(meals: days.last),
+                const SizedBox(height: 20),
+                Text(
+                  l10n.healthDashboardMealsOnDay(
+                    MaterialLocalizations.of(context).formatMediumDate(day),
+                  ),
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                _MealsForDay(meals: days.last),
+              ],
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  HealthMetricSeries _caloriesSeries(
+    HealthDashboardState state,
+    List<List<HealthRecord>> days,
+  ) => HealthMetricSeries(
+    sum: true,
+    days: [
+      for (var index = 0; index < days.length; index++)
+        HealthMetricDay(
+          day: state.trendDayAt(index),
+          value: days[index].isEmpty ? null : _total(days[index], 'calories'),
+          count: days[index].length,
+        ),
+    ],
+  );
+}
+
+class _NutritionTrend extends StatelessWidget {
+  final List<List<HealthRecord>> days;
+
+  const _NutritionTrend({required this.days});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.read<HealthDashboardState>();
+    final values = [for (final meals in days) _total(meals, 'calories')];
+    if (values.every((value) => value == 0)) {
+      return Text(AppLocalizations.of(context).healthDashboardNoMeals);
+    }
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: HealthWorkoutTrendChart(
+          values: values,
+          unit: 'kcal',
+          color: AppTheme.accentAmber,
+          style: HealthTrendChartStyle.line,
+          endDate: state.trendWeekEnd,
+          onDayTap: (index) => state.selectDay(state.trendDayAt(index)),
+          tooltipSeries: [
+            HealthTrendTooltipSeries(
+              values: [for (final meals in days) _total(meals, 'proteinG')],
+              unit: 'g protein',
+              color: AppTheme.accentGreen,
+            ),
+            HealthTrendTooltipSeries(
+              values: [
+                for (final meals in days) _total(meals, 'carbohydrateG'),
+              ],
+              unit: 'g carbs',
+              color: AppTheme.accentAmber,
+            ),
+            HealthTrendTooltipSeries(
+              values: [for (final meals in days) _total(meals, 'fatG')],
+              unit: 'g fat',
+              color: AppTheme.accentBlue,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _NutritionTrend extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<HealthDashboardState>();
-    return FutureBuilder<List<List<HealthRecord>>>(
-      future: Future.wait([
-        for (var index = 0; index < 7; index++)
-          HealthQueries.instance.recordsForDay(
-            type: HealthQueries.nutritionType,
-            day: state.trendDayAt(index),
-          ),
-      ]),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final days = snapshot.data!;
-        double total(List<HealthRecord> meals, String key) =>
-            meals.fold<double>(
-              0,
-              (sum, meal) => sum + (meal.value[key] as num? ?? 0),
-            );
-        final values = [for (final meals in days) total(meals, 'calories')];
-        if (values.every((value) => value == 0)) {
-          return Text(AppLocalizations.of(context).healthDashboardNoMeals);
-        }
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: HealthWorkoutTrendChart(
-              values: values,
-              unit: 'kcal',
-              color: AppTheme.accentAmber,
-              style: HealthTrendChartStyle.line,
-              endDate: state.trendWeekEnd,
-              tooltipSeries: [
-                HealthTrendTooltipSeries(
-                  values: [for (final meals in days) total(meals, 'proteinG')],
-                  unit: 'g protein',
-                  color: AppTheme.accentGreen,
-                ),
-                HealthTrendTooltipSeries(
-                  values: [
-                    for (final meals in days) total(meals, 'carbohydrateG'),
-                  ],
-                  unit: 'g carbs',
-                  color: AppTheme.accentAmber,
-                ),
-                HealthTrendTooltipSeries(
-                  values: [for (final meals in days) total(meals, 'fatG')],
-                  unit: 'g fat',
-                  color: AppTheme.accentBlue,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 class _NutritionTotalsCard extends StatelessWidget {
-  final Map<String, double> totals;
+  final List<HealthRecord> meals;
 
-  const _NutritionTotalsCard({required this.totals});
+  const _NutritionTotalsCard({required this.meals});
 
   @override
   Widget build(BuildContext context) {
@@ -138,29 +170,29 @@ class _NutritionTotalsCard extends StatelessWidget {
           spacing: 24,
           runSpacing: 16,
           children: [
-            _NutritionValue(
+            HealthRecordStatItem(
               icon: Icons.local_fire_department_rounded,
               color: AppTheme.accentAmber,
               label: l10n.healthDashboardCalories,
-              value: healthValue(totals['energy'] ?? 0, 'kcal'),
+              value: healthValue(_total(meals, 'calories'), 'kcal'),
             ),
-            _NutritionValue(
+            HealthRecordStatItem(
               icon: Icons.fitness_center_rounded,
               color: AppTheme.accentGreen,
               label: l10n.healthDashboardProtein,
-              value: healthValue(totals['protein'] ?? 0, 'g'),
+              value: healthValue(_total(meals, 'proteinG'), 'g'),
             ),
-            _NutritionValue(
+            HealthRecordStatItem(
               icon: Icons.grain_rounded,
               color: AppTheme.accentAmber,
               label: l10n.healthDashboardCarbohydrates,
-              value: healthValue(totals['carbohydrate'] ?? 0, 'g'),
+              value: healthValue(_total(meals, 'carbohydrateG'), 'g'),
             ),
-            _NutritionValue(
+            HealthRecordStatItem(
               icon: Icons.water_drop_outlined,
               color: AppTheme.accentBlue,
               label: l10n.healthDashboardFat,
-              value: healthValue(totals['fat'] ?? 0, 'g'),
+              value: healthValue(_total(meals, 'fatG'), 'g'),
             ),
           ],
         ),
@@ -169,88 +201,46 @@ class _NutritionTotalsCard extends StatelessWidget {
   }
 }
 
-class _NutritionValue extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String label;
-  final String value;
-
-  const _NutritionValue({
-    required this.icon,
-    required this.color,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) => HealthRecordStatItem(
-    icon: icon,
-    color: color,
-    label: label,
-    value: value,
-  );
-}
-
 class _MealsForDay extends StatelessWidget {
-  final DateTime day;
+  final List<HealthRecord> meals;
 
-  const _MealsForDay({required this.day});
+  const _MealsForDay({required this.meals});
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<List<HealthRecord>>(
-    future: HealthQueries.instance.recordsForDay(
-      type: HealthQueries.nutritionType,
-      day: day,
-    ),
-    builder: (context, snapshot) {
-      if (!snapshot.hasData) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      final meals = snapshot.data!;
-      if (meals.isEmpty) {
-        return Text(AppLocalizations.of(context).healthDashboardNoMeals);
-      }
-      return Column(
-        children: [for (final meal in meals) _MealTile(meal: meal)],
-      );
-    },
-  );
+  Widget build(BuildContext context) {
+    if (meals.isEmpty) {
+      return Text(AppLocalizations.of(context).healthDashboardNoMeals);
+    }
+    return Column(children: [for (final meal in meals) _MealTile(meal: meal)]);
+  }
 }
 
 class _NutritionDayTimeline extends StatelessWidget {
-  final DateTime day;
+  final List<HealthRecord> meals;
 
-  const _NutritionDayTimeline({required this.day});
+  const _NutritionDayTimeline({required this.meals});
 
   @override
-  Widget build(BuildContext context) => FutureBuilder<List<HealthRecord>>(
-    future: HealthQueries.instance.recordsForDay(
-      type: HealthQueries.nutritionType,
-      day: day,
-    ),
-    builder: (context, snapshot) {
-      if (!snapshot.hasData) return const SizedBox.shrink();
-      final meals = snapshot.data!;
-      if (meals.length < 2) return const SizedBox.shrink();
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: HealthMetricDayChart(
-            readings: [
-              for (final meal in meals)
-                (
-                  t: meal.startTime,
-                  v: (meal.value['calories'] as num? ?? 0).toDouble(),
-                ),
-            ],
-            unit: 'kcal',
-            color: AppTheme.accentAmber,
-            sum: true,
-          ),
+  Widget build(BuildContext context) {
+    if (meals.length < 2) return const SizedBox.shrink();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: HealthMetricDayChart(
+          readings: [
+            for (final meal in meals)
+              (
+                t: meal.startTime,
+                v: (meal.value['calories'] as num? ?? 0).toDouble(),
+              ),
+          ],
+          unit: 'kcal',
+          color: AppTheme.accentAmber,
+          sum: true,
         ),
-      );
-    },
-  );
+      ),
+    );
+  }
 }
 
 class _MealTile extends StatelessWidget {
