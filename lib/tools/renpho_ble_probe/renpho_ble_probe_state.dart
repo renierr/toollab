@@ -50,10 +50,11 @@ class RenphoBleProbeState extends ChangeNotifier {
       RenphoBleProbeTool.config.id,
       'profile',
     );
-    if (raw != null)
+    if (raw != null) {
       _profile = RenphoProfile.fromJson(
         jsonDecode(raw) as Map<String, dynamic>,
       );
+    }
     _history = await RenphoMeasurementDb.instance.recent();
     notifyListeners();
   }
@@ -77,8 +78,9 @@ class RenphoBleProbeState extends ChangeNotifier {
       await UniversalBle.requestPermissions(withAndroidFineLocation: false);
       _scanSubscription = UniversalBle.scanStream.listen((device) {
         _devices[device.deviceId] = device;
-        if (_isScale(device) && _deviceId == null && !_connecting)
+        if (_isScale(device) && _deviceId == null && !_connecting) {
           unawaited(_connect(device.deviceId));
+        }
         notifyListeners();
       }, onError: (e) => _fail('Bluetooth scan failed: $e'));
       await UniversalBle.startScan(
@@ -141,8 +143,9 @@ class RenphoBleProbeState extends ChangeNotifier {
               ) &&
               !characteristic.properties.contains(
                 CharacteristicProperty.indicate,
-              ))
+              )) {
             continue;
+          }
           final sub =
               UniversalBle.characteristicValueStream(
                 id,
@@ -210,8 +213,9 @@ class RenphoBleProbeState extends ChangeNotifier {
       return;
     }
     if (bytes.length < 3 || bytes[0] != 0x55 || bytes[1] != 0xAA) return;
-    if (bytes[2] == 0x21 && bytes.length >= 10)
+    if (bytes[2] == 0x21 && bytes.length >= 10) {
       _liveWeightKg = _u16(bytes, 8) / 100;
+    }
     _advance(bytes[2]);
     notifyListeners();
   }
@@ -229,8 +233,9 @@ class RenphoBleProbeState extends ChangeNotifier {
       unawaited(_ack(sequence));
       return;
     }
-    if (pieces[2] == 0x25 && pieces.length >= 42 && _validChecksum(pieces))
+    if (pieces[2] == 0x25 && pieces.length >= 42 && _validChecksum(pieces)) {
       unawaited(_saveResult(pieces));
+    }
   }
 
   void _advance(int type) {

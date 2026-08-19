@@ -83,8 +83,9 @@ class _RenphoBleProbePageState extends State<RenphoBleProbePage> {
               if (parsedHeight == null ||
                   parsedHeight < 80 ||
                   parsedHeight > 250 ||
-                  parsedBirth == null)
+                  parsedBirth == null) {
                 return;
+              }
               Navigator.pop(
                 context,
                 RenphoProfile(
@@ -107,17 +108,19 @@ class _RenphoBleProbePageState extends State<RenphoBleProbePage> {
     try {
       final count = await RenphoHealthConnectPublisher.instance
           .publishPending();
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Published $count measurement(s) to Health Connect.'),
           ),
         );
+      }
     } catch (e) {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Health Connect export failed: $e')),
         );
+      }
     }
   }
 

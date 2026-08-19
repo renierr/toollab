@@ -11,8 +11,9 @@ class RenphoHealthConnectPublisher {
   static final instance = RenphoHealthConnectPublisher._();
 
   Future<int> publishPending() async {
-    if (!Platform.isAndroid)
+    if (!Platform.isAndroid) {
       throw UnsupportedError('Health Connect is Android only.');
+    }
     final connector = await hc.HealthConnector.create();
     final permissions = [
       hc.HealthDataType.weight.writePermission,
