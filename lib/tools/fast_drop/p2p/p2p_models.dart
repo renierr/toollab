@@ -93,7 +93,7 @@ class P2pReceivedFile {
 
 /// Cause of a failed nearby transfer, so the UI can show a localized text
 /// instead of a raw platform error string.
-enum P2pErrorCode { bleConnectFailed, peerDeclined }
+enum P2pErrorCode { bleConnectFailed, peerDeclined, transferStalled }
 
 /// Thrown when the BLE GATT connection to a peer could not be established.
 class P2pConnectException implements Exception {
@@ -102,4 +102,13 @@ class P2pConnectException implements Exception {
 
   @override
   String toString() => 'P2pConnectException: $details';
+}
+
+/// Thrown when a Bluetooth transfer stops making progress on either side.
+class P2pStalledException implements Exception {
+  final String details;
+  const P2pStalledException(this.details);
+
+  @override
+  String toString() => 'P2pStalledException: $details';
 }

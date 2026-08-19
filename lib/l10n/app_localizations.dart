@@ -2183,6 +2183,12 @@ abstract class AppLocalizations {
   /// **'The other device declined the transfer.'**
   String get fastDropP2pErrorDeclined;
 
+  /// No description provided for @fastDropP2pErrorStalled.
+  ///
+  /// In en, this message translates to:
+  /// **'The Bluetooth transfer stopped making progress and was aborted. Keep both devices close and awake, then start the transfer again.'**
+  String get fastDropP2pErrorStalled;
+
   /// No description provided for @fastDropP2pDismissFile.
   ///
   /// In en, this message translates to:

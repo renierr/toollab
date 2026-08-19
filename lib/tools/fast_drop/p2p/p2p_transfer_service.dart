@@ -63,6 +63,9 @@ class P2pTransferService {
     final file = File(outputPath);
     final sink = file.openWrite();
     int received = 0;
+    int ackedBytes = 0;
+    var lastProgressAt = DateTime.now();
+    Timer? stallTimer;
     final completer = Completer<String>();
     P2pTransportKind? activeTransport;
     bool isFinishing = false;
@@ -130,7 +133,9 @@ class P2pTransferService {
       errorLog('[P2pTransfer] LAN server bind failed, BLE-only: $e');
     }
 
-    // BLE fallback path.
+    // BLE fallback path. Acks are batched (and always sent for the final
+    // chunk) so the notify traffic doesn't compete with the incoming writes
+    // on the same link, while still feeding the sender's send window.
     discovery.setDataWriteHandler((deviceId, chunk) async {
       try {
         if (activeTransport == P2pTransportKind.lan) return;
@@ -141,12 +146,33 @@ class P2pTransferService {
         }
         sink.add(chunk);
         received += chunk.length;
+        lastProgressAt = DateTime.now();
         onProgress(received, expectedSize, P2pTransportKind.ble);
-        unawaited(discovery.sendAck(deviceId, received));
+        final ackThreshold =
+            chunk.length * (P2pProtocol.bleAckWindowChunks ~/ 2);
+        if (received >= expectedSize || received - ackedBytes >= ackThreshold) {
+          ackedBytes = received;
+          unawaited(discovery.sendAck(deviceId, received));
+        }
         await finishIfDone();
       } catch (e, stackTrace) {
         fail(e, stackTrace);
       }
+    });
+
+    stallTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (completer.isCompleted || isFinishing) return;
+      if (activeTransport != P2pTransportKind.ble) return;
+      if (DateTime.now().difference(lastProgressAt) <
+          P2pProtocol.bleStallTimeout) {
+        return;
+      }
+      fail(
+        P2pStalledException(
+          'no BLE chunk for ${P2pProtocol.bleStallTimeout.inSeconds}s '
+          'at $received/$expectedSize bytes',
+        ),
+      );
     });
 
     checkCancelled();
@@ -155,6 +181,12 @@ class P2pTransferService {
       await completer.future;
       return outputPath;
     } finally {
+      stallTimer.cancel();
+      if (!isFinishing) {
+        try {
+          await sink.close();
+        } catch (_) {}
+      }
       await _closeServer();
     }
   }
@@ -361,11 +393,70 @@ class P2pTransferService {
 
     final safeChunkSize = chunkSize < 8 ? 8 : chunkSize;
     int sent = 0;
+    int acked = 0;
+    var lastAckAt = DateTime.now();
+
+    // The receiver reports the bytes it has written to disk. Without
+    // listening to it the sender happily "completes" while the receiver is
+    // still missing most of the file, leaving it stuck forever.
+    StreamSubscription<Uint8List>? ackSub;
+    try {
+      ackSub =
+          UniversalBle.characteristicValueStream(
+            bleDeviceId,
+            P2pProtocol.ackCharUuid,
+          ).listen((value) {
+            if (value.length < 4) return;
+            acked = ByteData.sublistView(
+              value,
+              0,
+              4,
+            ).getUint32(0, Endian.little);
+            lastAckAt = DateTime.now();
+          });
+      await UniversalBle.subscribeNotifications(
+        bleDeviceId,
+        service.uuid,
+        P2pProtocol.ackCharUuid,
+      );
+    } catch (e) {
+      errorLog('[P2pTransfer] ack channel unavailable: $e');
+      await ackSub?.cancel();
+      ackSub = null;
+    }
+
+    var useAcks = ackSub != null;
+
+    /// Blocks until the receiver has acked at least [target] bytes. A peer
+    /// that never acks at all is treated as one without an ack channel —
+    /// only a peer that acked and then went quiet counts as stalled.
+    Future<void> waitForAck(int target) async {
+      while (acked < target) {
+        if (isCancelled()) {
+          throw Exception('Transfer cancelled');
+        }
+        if (DateTime.now().difference(lastAckAt) >
+            P2pProtocol.bleStallTimeout) {
+          if (acked == 0) {
+            errorLog('[P2pTransfer] no acks from receiver, sending blind');
+            useAcks = false;
+            return;
+          }
+          throw P2pStalledException('receiver acked $acked of $fileSize bytes');
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+    }
+
     final raf = await File(filePath).open();
     try {
+      final window = safeChunkSize * P2pProtocol.bleAckWindowChunks;
       while (sent < fileSize) {
         if (isCancelled()) {
           throw Exception('Transfer cancelled');
+        }
+        if (useAcks && sent - acked >= window) {
+          await waitForAck(sent - window + safeChunkSize);
         }
         final remaining = fileSize - sent;
         final chunkLen = remaining < safeChunkSize ? remaining : safeChunkSize;
@@ -383,8 +474,17 @@ class P2pTransferService {
         sent += chunk.length;
         onProgress(sent, fileSize, P2pTransportKind.ble);
       }
+      if (useAcks) await waitForAck(fileSize);
     } finally {
       await raf.close();
+      await ackSub?.cancel();
+      try {
+        await UniversalBle.unsubscribe(
+          bleDeviceId,
+          service.uuid,
+          P2pProtocol.ackCharUuid,
+        );
+      } catch (_) {}
     }
   }
 }

@@ -1217,6 +1217,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das andere Gerät hat die Übertragung abgelehnt.';
 
   @override
+  String get fastDropP2pErrorStalled =>
+      'Die Bluetooth-Übertragung kam nicht mehr voran und wurde abgebrochen. Halte beide Geräte nah beieinander und wach, und starte die Übertragung erneut.';
+
+  @override
   String get fastDropP2pDismissFile => 'Verwerfen';
 
   @override

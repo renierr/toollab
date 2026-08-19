@@ -76,6 +76,7 @@ class FastDropP2pView extends StatelessWidget {
                 P2pErrorCode.bleConnectFailed =>
                   l10n.fastDropP2pErrorBleConnect,
                 P2pErrorCode.peerDeclined => l10n.fastDropP2pErrorDeclined,
+                P2pErrorCode.transferStalled => l10n.fastDropP2pErrorStalled,
                 null => p2pState.error!,
               },
               style: theme.textTheme.bodySmall?.copyWith(

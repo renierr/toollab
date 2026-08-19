@@ -212,7 +212,7 @@ class FastDropP2pState extends ChangeNotifier {
       _status = P2pStatus.completed;
     } catch (e) {
       _status = _cancelRequested ? P2pStatus.cancelled : P2pStatus.failed;
-      _error = e.toString().replaceAll('Exception: ', '');
+      _setTransferError(e);
     } finally {
       await _endBackgroundWork();
       _progress = null;
@@ -397,12 +397,7 @@ class FastDropP2pState extends ChangeNotifier {
       clearPendingSendFile();
     } catch (e) {
       _status = _cancelRequested ? P2pStatus.cancelled : P2pStatus.failed;
-      if (e is P2pConnectException) {
-        _errorCode = P2pErrorCode.bleConnectFailed;
-        errorLog('[FastDropP2p] BLE connect failed: ${e.details}');
-      } else {
-        _error = e.toString().replaceAll('Exception: ', '');
-      }
+      _setTransferError(e);
       _role = P2pRole.none;
     } finally {
       await _endBackgroundWork();
@@ -411,6 +406,21 @@ class FastDropP2pState extends ChangeNotifier {
       if (peer.transport == P2pPeerTransport.ble) {
         await _discovery.disconnect(peer.bleDeviceId);
       }
+    }
+  }
+
+  /// Maps a transfer failure to a localizable code where we have one, so
+  /// the UI never shows a raw platform error string.
+  void _setTransferError(Object e) {
+    switch (e) {
+      case P2pConnectException():
+        _errorCode = P2pErrorCode.bleConnectFailed;
+        errorLog('[FastDropP2p] BLE connect failed: ${e.details}');
+      case P2pStalledException():
+        _errorCode = P2pErrorCode.transferStalled;
+        errorLog('[FastDropP2p] transfer stalled: ${e.details}');
+      default:
+        _error = e.toString().replaceAll('Exception: ', '');
     }
   }
 

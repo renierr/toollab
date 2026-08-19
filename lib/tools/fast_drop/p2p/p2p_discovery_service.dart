@@ -212,15 +212,20 @@ class P2pDiscoveryService {
     _dataWriteHandler = onChunk;
   }
 
-  Future<void> sendAck(String bleDeviceId, int chunksReceived) async {
-    final bytes = ByteData(4)..setUint32(0, chunksReceived, Endian.little);
+  /// Reports the number of bytes written to disk back to the sender, which
+  /// uses it as the send window and as proof the transfer is alive.
+  Future<void> sendAck(String bleDeviceId, int bytesReceived) async {
+    final bytes = ByteData(4)..setUint32(0, bytesReceived, Endian.little);
     try {
       await UniversalBlePeripheral.updateCharacteristicValue(
         characteristicId: P2pProtocol.ackCharUuid,
         value: bytes.buffer.asUint8List(),
-        deviceId: bleDeviceId,
+        // See respondToRequest: Windows only supports broadcast notifies.
+        deviceId: Platform.isWindows ? null : bleDeviceId,
       );
-    } catch (_) {}
+    } catch (e) {
+      errorLog('[P2pDiscovery] ack notify failed: $e');
+    }
   }
 
   // ---------------------------------------------------------------------

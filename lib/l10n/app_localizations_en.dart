@@ -1207,6 +1207,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The other device declined the transfer.';
 
   @override
+  String get fastDropP2pErrorStalled =>
+      'The Bluetooth transfer stopped making progress and was aborted. Keep both devices close and awake, then start the transfer again.';
+
+  @override
   String get fastDropP2pDismissFile => 'Dismiss';
 
   @override

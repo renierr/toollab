@@ -392,6 +392,7 @@
   "fastDropP2pDecline": "Ablehnen",
   "fastDropP2pErrorBleConnect": "Bluetooth-Verbindung zum Gerät konnte nicht aufgebaut werden. Bringe die Geräte näher zusammen, stelle sicher, dass das andere Gerät noch auf einen Sender wartet, und versuche es erneut.",
   "fastDropP2pErrorDeclined": "Das andere Gerät hat die Übertragung abgelehnt.",
+  "fastDropP2pErrorStalled": "Die Bluetooth-Übertragung kam nicht mehr voran und wurde abgebrochen. Halte beide Geräte nah beieinander und wach, und starte die Übertragung erneut.",
   "fastDropP2pDismissFile": "Verwerfen",
   "focusAutoStopTimer": "Auto-Stopp-Timer",
   "focusStartPlaybackToEnableTimer": "Wiedergabe starten, um Timer zu aktivieren",

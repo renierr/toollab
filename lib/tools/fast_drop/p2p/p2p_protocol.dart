@@ -26,7 +26,7 @@ class P2pProtocol {
   static const String dataCharUuid = '7a51c1b2-6e9e-4e6a-8f9a-9e2b5b2b6a11';
 
   /// Ack/flow-control channel for the BLE fallback transfer (receiver ->
-  /// sender), carries the number of chunks received so far as a varint-ish
+  /// sender), carries the number of bytes written to disk so far as a
   /// little-endian uint32.
   static const String ackCharUuid = '7a51c1b3-6e9e-4e6a-8f9a-9e2b5b2b6a11';
 
@@ -51,6 +51,14 @@ class P2pProtocol {
   /// (or this default) size are split using [chunkWithLengthPrefix] so they
   /// survive even on stacks that don't support automatic GATT long writes.
   static const int defaultSafeChunkSize = 20;
+
+  /// How many chunks the BLE sender may run ahead of the last acked byte
+  /// count before it waits for the receiver to catch up.
+  static const int bleAckWindowChunks = 8;
+
+  /// No progress on the BLE fallback for this long counts as a dead
+  /// transfer on either side, rather than hanging forever.
+  static const Duration bleStallTimeout = Duration(seconds: 20);
 
   /// How long to try connecting to each candidate LAN IP.
   static const Duration lanConnectAttemptTimeout = Duration(seconds: 2);
