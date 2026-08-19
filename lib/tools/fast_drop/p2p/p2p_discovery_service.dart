@@ -40,6 +40,7 @@ class P2pDiscoveryService {
   final P2pChunkReassembler _requestReassembler = P2pChunkReassembler();
   final P2pChunkReassembler _responseReassembler = P2pChunkReassembler();
   void Function(String deviceId, Uint8List chunk)? _dataWriteHandler;
+  Future<void> _ackChain = Future<void>.value();
 
   /// Safe per-write payload size for the central (sender) role, updated
   /// once an MTU has been negotiated with the connected peripheral.
@@ -214,7 +215,16 @@ class P2pDiscoveryService {
 
   /// Reports the number of bytes written to disk back to the sender, which
   /// uses it as the send window and as proof the transfer is alive.
-  Future<void> sendAck(String bleDeviceId, int bytesReceived) async {
+  ///
+  /// Calls are serialized: the peripheral APIs stage the payload on the
+  /// characteristic before notifying, so two overlapping acks would send the
+  /// same (newer) value twice instead of one each.
+  Future<void> sendAck(String bleDeviceId, int bytesReceived) {
+    _ackChain = _ackChain.then((_) => _notifyAck(bleDeviceId, bytesReceived));
+    return _ackChain;
+  }
+
+  Future<void> _notifyAck(String bleDeviceId, int bytesReceived) async {
     final bytes = ByteData(4)..setUint32(0, bytesReceived, Endian.little);
     try {
       await UniversalBlePeripheral.updateCharacteristicValue(

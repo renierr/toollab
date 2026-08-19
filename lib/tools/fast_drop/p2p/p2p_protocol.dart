@@ -60,6 +60,21 @@ class P2pProtocol {
   /// transfer on either side, rather than hanging forever.
   static const Duration bleStallTimeout = Duration(seconds: 20);
 
+  /// How often the receiver repeats its latest cumulative ack. GATT
+  /// notifications are lossy (Android silently drops one while another is
+  /// still in flight), and acks are otherwise only produced by incoming
+  /// chunks — so a single lost ack inside the final send window would leave
+  /// the sender waiting for a count that is never sent again.
+  static const Duration bleAckResendInterval = Duration(seconds: 1);
+
+  /// How often the closing ack is repeated once the receiver has the whole
+  /// file, since after that no further chunk arrives to trigger a resend.
+  static const int bleFinalAckRepeats = 3;
+
+  /// Gap between the repeated closing acks, long enough for the previous
+  /// notification to leave the controller.
+  static const Duration bleFinalAckSpacing = Duration(milliseconds: 150);
+
   /// How long to try connecting to each candidate LAN IP.
   static const Duration lanConnectAttemptTimeout = Duration(seconds: 2);
 

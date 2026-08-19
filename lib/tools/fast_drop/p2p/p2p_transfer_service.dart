@@ -66,6 +66,8 @@ class P2pTransferService {
     int ackedBytes = 0;
     var lastProgressAt = DateTime.now();
     Timer? stallTimer;
+    Timer? ackResendTimer;
+    String? ackDeviceId;
     final completer = Completer<String>();
     P2pTransportKind? activeTransport;
     bool isFinishing = false;
@@ -85,8 +87,19 @@ class P2pTransferService {
     Future<void> finishIfDone() async {
       if (received >= expectedSize && !completer.isCompleted && !isFinishing) {
         isFinishing = true;
+        ackResendTimer?.cancel();
         await sink.flush();
         await sink.close();
+        // The sender only stops once it has seen the closing byte count, and
+        // no further chunk will arrive to trigger another ack — so repeat it
+        // rather than trusting a single (droppable) notification.
+        final deviceId = ackDeviceId;
+        if (deviceId != null) {
+          for (var i = 0; i < P2pProtocol.bleFinalAckRepeats; i++) {
+            await discovery.sendAck(deviceId, received);
+            await Future<void>.delayed(P2pProtocol.bleFinalAckSpacing);
+          }
+        }
         completer.complete(outputPath);
       }
     }
@@ -144,6 +157,18 @@ class P2pTransferService {
           fail(Exception('Transfer cancelled'));
           return;
         }
+        ackDeviceId = deviceId;
+        // Acks are lossy, so keep repeating the latest count independently of
+        // incoming chunks: a single dropped ack inside the sender's window
+        // would otherwise wedge both sides until they time out.
+        ackResendTimer ??= Timer.periodic(P2pProtocol.bleAckResendInterval, (
+          _,
+        ) {
+          if (completer.isCompleted || isFinishing) return;
+          final target = ackDeviceId;
+          if (target == null) return;
+          unawaited(discovery.sendAck(target, received));
+        });
         sink.add(chunk);
         received += chunk.length;
         lastProgressAt = DateTime.now();
@@ -182,6 +207,7 @@ class P2pTransferService {
       return outputPath;
     } finally {
       stallTimer.cancel();
+      ackResendTimer?.cancel();
       if (!isFinishing) {
         try {
           await sink.close();
@@ -407,11 +433,16 @@ class P2pTransferService {
             P2pProtocol.ackCharUuid,
           ).listen((value) {
             if (value.length < 4) return;
-            acked = ByteData.sublistView(
+            final reported = ByteData.sublistView(
               value,
               0,
               4,
             ).getUint32(0, Endian.little);
+            // The receiver repeats its latest count to survive dropped
+            // notifications, so only a rising count proves it is still
+            // draining bytes — otherwise a wedged peer would never time out.
+            if (reported <= acked) return;
+            acked = reported;
             lastAckAt = DateTime.now();
           });
       await UniversalBle.subscribeNotifications(
@@ -461,6 +492,11 @@ class P2pTransferService {
         final remaining = fileSize - sent;
         final chunkLen = remaining < safeChunkSize ? remaining : safeChunkSize;
         final chunk = await raf.read(chunkLen);
+        if (chunk.isEmpty) {
+          throw Exception(
+            'File ended after $sent of $fileSize announced bytes',
+          );
+        }
         await UniversalBle.write(
           bleDeviceId,
           service.uuid,
