@@ -26,6 +26,7 @@ import 'package:tool_lab/tools/sketch_board/config.dart';
 import 'package:tool_lab/tools/unit_converter/config.dart';
 import 'package:tool_lab/tools/code_highlight/config.dart';
 import 'package:tool_lab/tools/bluetooth_scanner/config.dart';
+import 'package:tool_lab/tools/renpho_ble_probe/config.dart';
 import 'package:tool_lab/tools/string_transformer/config.dart';
 import 'package:tool_lab/tools/treadmill_control/config.dart';
 import 'package:tool_lab/tools/sound_finder/config.dart';
@@ -86,6 +87,7 @@ class ToolRegistry {
     UnitConverterTool.config,
     CodeHighlightTool.config,
     BluetoothScannerTool.config,
+    RenphoBleProbeTool.config,
     StringTransformerTool.config,
     TreadmillControlTool.config,
     HealthDashboardTool.config,
