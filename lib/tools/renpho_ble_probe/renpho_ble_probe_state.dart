@@ -25,6 +25,7 @@ class RenphoBleProbeState extends ChangeNotifier {
   WakeLockLease? _wakeLock;
   bool _scanning = false, _connecting = false, _ready = false, _saving = false;
   String? _deviceId, _error, _status;
+  String? _resolvedService, _resolvedWrite, _resolvedNotify, _resolvedIndicate;
   double? _liveWeightKg;
   RenphoMeasurement? _latest;
   RenphoProfile _profile = RenphoProfile(
@@ -108,6 +109,10 @@ class RenphoBleProbeState extends ChangeNotifier {
     _scanning = false;
     final id = _deviceId;
     _deviceId = null;
+    _resolvedService = null;
+    _resolvedWrite = null;
+    _resolvedNotify = null;
+    _resolvedIndicate = null;
     _ready = false;
     for (final subscription in _subscriptions) {
       await subscription.cancel();
@@ -137,13 +142,36 @@ class RenphoBleProbeState extends ChangeNotifier {
       await UniversalBle.connect(id, timeout: const Duration(seconds: 15));
       _deviceId = id;
       _wakeLock = await PowerWakeLockService.acquireFull();
+      final services = await UniversalBle.discoverServices(id);
+      final controlService = services
+          .where((service) => _sameUuid(service.uuid, _service))
+          .firstOrNull;
+      if (controlService == null) {
+        throw StateError(
+          'The scale does not expose the required 1A10 control service. Found: ${services.map((service) => service.uuid).join(', ')}',
+        );
+      }
+      _resolvedService = controlService.uuid;
+      _resolvedWrite = _characteristicUuid(controlService, _write);
+      _resolvedNotify = _characteristicUuid(controlService, _notify);
+      _resolvedIndicate = _characteristicUuid(controlService, _indicate);
+      final missing = <String>[
+        if (_resolvedWrite == null) '2A11 write',
+        if (_resolvedNotify == null) '2A10 notification',
+        if (_resolvedIndicate == null) '2A12 indication',
+      ];
+      if (missing.isNotEmpty) {
+        throw StateError(
+          'The 1A10 service is missing ${missing.join(', ')}. Found: ${controlService.characteristics.map((characteristic) => characteristic.uuid).join(', ')}',
+        );
+      }
       // The Android HCI capture proves that 2A10 uses notifications and 2A12
       // uses indications. Enabling 2A12 as a notification leaves its CCCD in
       // the wrong mode and the scale never sends the B2 acknowledgement.
       try {
         await UniversalBle.requestMtu(id, 247);
       } catch (_) {}
-      for (final characteristic in [_notify, _indicate]) {
+      for (final characteristic in [_resolvedNotify!, _resolvedIndicate!]) {
         _subscriptions.add(
           UniversalBle.characteristicValueStream(id, characteristic).listen(
             (value) => _onFrame(characteristic, value),
@@ -151,8 +179,16 @@ class RenphoBleProbeState extends ChangeNotifier {
           ),
         );
       }
-      await UniversalBle.subscribeNotifications(id, _service, _notify);
-      await UniversalBle.subscribeIndications(id, _service, _indicate);
+      await UniversalBle.subscribeNotifications(
+        id,
+        _resolvedService!,
+        _resolvedNotify!,
+      );
+      await UniversalBle.subscribeIndications(
+        id,
+        _resolvedService!,
+        _resolvedIndicate!,
+      );
       await Future<void>.delayed(const Duration(milliseconds: 500));
       _stage = 1;
       await _writePacket([
@@ -348,7 +384,13 @@ class RenphoBleProbeState extends ChangeNotifier {
   Future<void> _writePacket(List<int> packet) async {
     final id = _deviceId;
     if (id == null) return;
-    await UniversalBle.write(id, _service, _write, Uint8List.fromList(packet));
+    await UniversalBle.write(
+      id,
+      _resolvedService ?? _service,
+      _resolvedWrite ?? _write,
+      Uint8List.fromList(packet),
+      withoutResponse: false,
+    );
   }
 
   void _armTimeout(String message) {
@@ -423,6 +465,21 @@ class RenphoBleProbeState extends ChangeNotifier {
   bool _isScale(BleDevice device) =>
       device.deviceId.replaceAll('-', ':').toUpperCase() == scaleMacAddress ||
       (device.name ?? '').toUpperCase() == 'RT-MSC04';
+
+  String? _characteristicUuid(BleService service, String expected) => service
+      .characteristics
+      .where((characteristic) => _sameUuid(characteristic.uuid, expected))
+      .map((characteristic) => characteristic.uuid)
+      .firstOrNull;
+
+  bool _sameUuid(String left, String right) =>
+      _shortUuid(left) == _shortUuid(right);
+
+  String _shortUuid(String value) {
+    final normalized = value.toLowerCase().replaceAll('-', '');
+    return normalized.length >= 8 ? normalized.substring(4, 8) : normalized;
+  }
+
   @override
   void dispose() {
     unawaited(stop());
