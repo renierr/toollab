@@ -179,15 +179,17 @@ class P2pDiscoveryService {
       await Future<void>.delayed(const Duration(milliseconds: 300));
     }
 
-    final payload = Uint8List.fromList(utf8.encode(response.encode()));
     int chunkSize = P2pProtocol.defaultSafeChunkSize;
+    int? maxLen;
     try {
-      final maxLen = await UniversalBlePeripheral.getMaximumNotifyLength(
-        bleDeviceId,
-      );
+      maxLen = await UniversalBlePeripheral.getMaximumNotifyLength(bleDeviceId);
       if (maxLen != null && maxLen > 8) chunkSize = maxLen;
     } catch (_) {}
 
+    // Tell the sender what this link looks like from here, so it does not
+    // write more per chunk than this stack can take in.
+    final json = {...response.toJson(), 'maxPayload': maxLen};
+    final payload = Uint8List.fromList(utf8.encode(jsonEncode(json)));
     final chunks = P2pProtocol.chunkWithLengthPrefix(
       payload,
       chunkSize: chunkSize,
@@ -347,7 +349,13 @@ class P2pDiscoveryService {
 
       final raw = await _pendingResponse!.future.timeout(timeout);
       final json = jsonDecode(utf8.decode(raw)) as Map<String, dynamic>;
-      return P2pHandshakeResponse.fromJson(json);
+      final response = P2pHandshakeResponse.fromJson(json);
+      final peerMax = response.maxPayload;
+      if (peerMax != null && peerMax > 8 && peerMax < _centralChunkSize) {
+        errorLog('[P2pDiscovery] peer caps payload at $peerMax');
+        _centralChunkSize = peerMax;
+      }
+      return response;
     } finally {
       await _handshakeResponseSub?.cancel();
       _handshakeResponseSub = null;

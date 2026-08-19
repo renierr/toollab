@@ -197,6 +197,7 @@ class FastDropP2pState extends ChangeNotifier {
             )
           : await _receiveBleFile(peer, request, outputPath);
 
+      debugLog('[FastDropP2p] receive finished, saved to $savedPath');
       _receivedFiles.insert(
         0,
         P2pReceivedFile(
@@ -214,6 +215,7 @@ class FastDropP2pState extends ChangeNotifier {
       _status = _cancelRequested ? P2pStatus.cancelled : P2pStatus.failed;
       _setTransferError(e);
     } finally {
+      debugLog('[FastDropP2p] receive settled as $_status');
       await _endBackgroundWork();
       _progress = null;
       _activeTransport = null;

@@ -48,6 +48,10 @@ class P2pTransferService {
   ServerSocket? _serverSocket;
   StreamSubscription<Socket>? _serverSub;
 
+  /// Bumped per [receiveFile] so a previous transfer's closing acks cannot
+  /// leak into the next one and fake progress the receiver does not have.
+  int _receiveGeneration = 0;
+
   /// Starts listening for an incoming LAN transfer and arms the BLE
   /// fallback data-write handler. Completes with the output file path once
   /// [expectedSize] bytes have arrived via either channel, or throws if
@@ -60,6 +64,7 @@ class P2pTransferService {
     required bool Function() isCancelled,
     required Future<void> Function() onReady,
   }) async {
+    final generation = ++_receiveGeneration;
     final file = File(outputPath);
     final sink = file.openWrite();
     int received = 0;
@@ -68,6 +73,7 @@ class P2pTransferService {
     Timer? stallTimer;
     Timer? ackResendTimer;
     String? ackDeviceId;
+    int chunkCount = 0;
     final completer = Completer<String>();
     P2pTransportKind? activeTransport;
     bool isFinishing = false;
@@ -85,22 +91,27 @@ class P2pTransferService {
     }
 
     Future<void> finishIfDone() async {
-      if (received >= expectedSize && !completer.isCompleted && !isFinishing) {
-        isFinishing = true;
-        ackResendTimer?.cancel();
+      if (received < expectedSize || completer.isCompleted || isFinishing) {
+        return;
+      }
+      isFinishing = true;
+      ackResendTimer?.cancel();
+      debugLog('[P2pTransfer] rx got $received/$expectedSize, closing file');
+      try {
         await sink.flush();
         await sink.close();
-        // The sender only stops once it has seen the closing byte count, and
-        // no further chunk will arrive to trigger another ack — so repeat it
-        // rather than trusting a single (droppable) notification.
-        final deviceId = ackDeviceId;
-        if (deviceId != null) {
-          for (var i = 0; i < P2pProtocol.bleFinalAckRepeats; i++) {
-            await discovery.sendAck(deviceId, received);
-            await Future<void>.delayed(P2pProtocol.bleFinalAckSpacing);
-          }
-        }
-        completer.complete(outputPath);
+      } catch (e, stackTrace) {
+        fail(e, stackTrace);
+        return;
+      }
+      debugLog('[P2pTransfer] rx file closed, transfer done');
+      completer.complete(outputPath);
+      // Only now, with the result already handed over: the sender stops on
+      // the closing byte count and no further chunk will arrive to trigger
+      // another ack, so repeat it rather than trusting one notification.
+      final deviceId = ackDeviceId;
+      if (deviceId != null) {
+        unawaited(_repeatClosingAck(discovery, deviceId, received, generation));
       }
     }
 
@@ -171,7 +182,16 @@ class P2pTransferService {
         });
         sink.add(chunk);
         received += chunk.length;
+        chunkCount++;
         lastProgressAt = DateTime.now();
+        if (chunkCount == 1 ||
+            chunkCount % 32 == 0 ||
+            received >= expectedSize) {
+          debugLog(
+            '[P2pTransfer] rx chunk #$chunkCount len=${chunk.length} '
+            '$received/$expectedSize',
+          );
+        }
         onProgress(received, expectedSize, P2pTransportKind.ble);
         final ackThreshold =
             chunk.length * (P2pProtocol.bleAckWindowChunks ~/ 2);
@@ -185,8 +205,10 @@ class P2pTransferService {
       }
     });
 
+    // isFinishing is deliberately not an exemption: a close that never
+    // returns would otherwise leave the receiver hanging at 100% forever.
     stallTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (completer.isCompleted || isFinishing) return;
+      if (completer.isCompleted) return;
       if (activeTransport != P2pTransportKind.ble) return;
       if (DateTime.now().difference(lastProgressAt) <
           P2pProtocol.bleStallTimeout) {
@@ -194,14 +216,19 @@ class P2pTransferService {
       }
       fail(
         P2pStalledException(
-          'no BLE chunk for ${P2pProtocol.bleStallTimeout.inSeconds}s '
-          'at $received/$expectedSize bytes',
+          isFinishing
+              ? 'stuck closing the file at $received/$expectedSize bytes'
+              : 'no BLE chunk for ${P2pProtocol.bleStallTimeout.inSeconds}s '
+                    'at $received/$expectedSize bytes',
         ),
       );
     });
 
     checkCancelled();
-    await onReady();
+    // Not awaited: the accept notification is already on its way, and a
+    // peripheral call that never returns must not be able to outlive the
+    // transfer it is announcing.
+    unawaited(onReady().catchError((Object e, StackTrace s) => fail(e, s)));
     try {
       await completer.future;
       return outputPath;
@@ -214,6 +241,22 @@ class P2pTransferService {
         } catch (_) {}
       }
       await _closeServer();
+    }
+  }
+
+  /// Keeps answering with the closing byte count after the file is complete,
+  /// so a sender that lost the ack — and is re-sending the tail it thinks is
+  /// missing — still learns it is done instead of reporting a stall.
+  Future<void> _repeatClosingAck(
+    P2pDiscoveryService discovery,
+    String deviceId,
+    int total,
+    int generation,
+  ) async {
+    for (var i = 0; i < P2pProtocol.bleClosingAckRepeats; i++) {
+      if (_receiveGeneration != generation) return;
+      await discovery.sendAck(deviceId, total);
+      await Future<void>.delayed(P2pProtocol.bleClosingAckInterval);
     }
   }
 
@@ -421,6 +464,7 @@ class P2pTransferService {
     int sent = 0;
     int acked = 0;
     var lastAckAt = DateTime.now();
+    var lastAckSeenAt = DateTime.now();
 
     // The receiver reports the bytes it has written to disk. Without
     // listening to it the sender happily "completes" while the receiver is
@@ -438,12 +482,16 @@ class P2pTransferService {
               0,
               4,
             ).getUint32(0, Endian.little);
-            // The receiver repeats its latest count to survive dropped
-            // notifications, so only a rising count proves it is still
-            // draining bytes — otherwise a wedged peer would never time out.
+            // Counts are cumulative, so the newest notification always
+            // carries the receiver's current total — even a repeat of one
+            // already seen proves what it holds right now.
+            lastAckSeenAt = DateTime.now();
+            // Only a rising count proves it is still draining bytes, though:
+            // otherwise the repeats would keep a wedged peer looking alive.
             if (reported <= acked) return;
             acked = reported;
             lastAckAt = DateTime.now();
+            debugLog('[P2pTransfer] tx ack $acked/$fileSize (sent $sent)');
           });
       await UniversalBle.subscribeNotifications(
         bleDeviceId,
@@ -457,6 +505,10 @@ class P2pTransferService {
     }
 
     var useAcks = ackSub != null;
+    debugLog(
+      '[P2pTransfer] tx starting $fileSize bytes, chunk=$safeChunkSize, '
+      'acks=$useAcks',
+    );
 
     /// Blocks until the receiver has acked at least [target] bytes. A peer
     /// that never acks at all is treated as one without an ack channel —
@@ -479,38 +531,84 @@ class P2pTransferService {
       }
     }
 
-    final raf = await File(filePath).open();
-    try {
-      final window = safeChunkSize * P2pProtocol.bleAckWindowChunks;
-      while (sent < fileSize) {
+    /// Waits up to [grace] for the receiver to ack the whole file.
+    Future<bool> awaitFinalAck(Duration grace) async {
+      final deadline = DateTime.now().add(grace);
+      while (acked < fileSize) {
         if (isCancelled()) {
           throw Exception('Transfer cancelled');
         }
-        if (useAcks && sent - acked >= window) {
-          await waitForAck(sent - window + safeChunkSize);
-        }
-        final remaining = fileSize - sent;
-        final chunkLen = remaining < safeChunkSize ? remaining : safeChunkSize;
-        final chunk = await raf.read(chunkLen);
-        if (chunk.isEmpty) {
-          throw Exception(
-            'File ended after $sent of $fileSize announced bytes',
-          );
-        }
-        await UniversalBle.write(
-          bleDeviceId,
-          service.uuid,
-          P2pProtocol.dataCharUuid,
-          Uint8List.fromList(chunk),
-          withoutResponse: false,
-        ).timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => throw Exception('BLE write timed out'),
-        );
-        sent += chunk.length;
-        onProgress(sent, fileSize, P2pTransportKind.ble);
+        if (DateTime.now().isAfter(deadline)) return false;
+        await Future<void>.delayed(const Duration(milliseconds: 50));
       }
-      if (useAcks) await waitForAck(fileSize);
+      return true;
+    }
+
+    final raf = await File(filePath).open();
+    try {
+      final window = safeChunkSize * P2pProtocol.bleAckWindowChunks;
+
+      Future<void> sendFrom(int offset) async {
+        sent = offset;
+        await raf.setPosition(offset);
+        while (sent < fileSize) {
+          if (isCancelled()) {
+            throw Exception('Transfer cancelled');
+          }
+          if (useAcks && sent - acked >= window) {
+            debugLog('[P2pTransfer] tx window full at $sent, acked=$acked');
+            await waitForAck(sent - window + safeChunkSize);
+          }
+          final remaining = fileSize - sent;
+          final chunkLen = remaining < safeChunkSize
+              ? remaining
+              : safeChunkSize;
+          final chunk = await raf.read(chunkLen);
+          if (chunk.isEmpty) {
+            throw Exception(
+              'File ended after $sent of $fileSize announced bytes',
+            );
+          }
+          await UniversalBle.write(
+            bleDeviceId,
+            service.uuid,
+            P2pProtocol.dataCharUuid,
+            Uint8List.fromList(chunk),
+            withoutResponse: false,
+          ).timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('BLE write timed out'),
+          );
+          sent += chunk.length;
+          onProgress(sent, fileSize, P2pTransportKind.ble);
+        }
+      }
+
+      await sendFrom(0);
+      debugLog('[P2pTransfer] tx wrote all $sent bytes, acked=$acked');
+
+      // A write the receiver never saw is recoverable: its ack is a
+      // cumulative byte count, so rewind to what it actually holds and send
+      // the gap again instead of waiting for bytes it will never receive.
+      // Losing the last (often tiny) chunk would otherwise wedge both sides.
+      for (var attempt = 0; useAcks; attempt++) {
+        if (await awaitFinalAck(P2pProtocol.bleFinalAckGrace)) break;
+        if (acked == 0) {
+          errorLog('[P2pTransfer] no acks from receiver, assuming delivered');
+          break;
+        }
+        if (attempt >= P2pProtocol.bleTailResendAttempts ||
+            DateTime.now().difference(lastAckSeenAt) >
+                P2pProtocol.bleAckFreshness) {
+          throw P2pStalledException('receiver acked $acked of $fileSize bytes');
+        }
+        errorLog(
+          '[P2pTransfer] tail gap, resending $acked..$fileSize '
+          '(attempt ${attempt + 1})',
+        );
+        await sendFrom(acked);
+      }
+      debugLog('[P2pTransfer] tx done, acked=$acked');
     } finally {
       await raf.close();
       await ackSub?.cancel();

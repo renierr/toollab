@@ -40,11 +40,6 @@ class P2pProtocol {
   /// separate from [lanPort], whose connections always begin with JSON.
   static const int bleLanFallbackPort = 53211;
 
-  /// Size of each BLE fallback chunk payload, comfortably under common
-  /// negotiated MTUs (247 requested, 23 default) so it works even if MTU
-  /// negotiation fails.
-  static const int bleChunkSize = 180;
-
   /// Conservative default GATT write/notify payload size assumed before any
   /// MTU negotiation has taken place (default ATT MTU is 23 bytes, minus a
   /// 3-byte ATT header). Writes/notifications larger than the negotiated
@@ -68,12 +63,25 @@ class P2pProtocol {
   static const Duration bleAckResendInterval = Duration(seconds: 1);
 
   /// How often the closing ack is repeated once the receiver has the whole
-  /// file, since after that no further chunk arrives to trigger a resend.
-  static const int bleFinalAckRepeats = 3;
+  /// file. No further chunk arrives to trigger one, so it has to keep
+  /// answering for as long as the sender may still be asking — long enough
+  /// to cover [bleFinalAckGrace] plus every [bleTailResendAttempts] round.
+  static const int bleClosingAckRepeats = 14;
 
-  /// Gap between the repeated closing acks, long enough for the previous
-  /// notification to leave the controller.
-  static const Duration bleFinalAckSpacing = Duration(milliseconds: 150);
+  /// Gap between the repeated closing acks.
+  static const Duration bleClosingAckInterval = Duration(seconds: 1);
+
+  /// How long the sender waits for the closing ack before it treats the
+  /// difference as writes the receiver never saw.
+  static const Duration bleFinalAckGrace = Duration(seconds: 3);
+
+  /// How recently the sender must have heard from the receiver before it
+  /// dares re-send a gap. Resending against a stale count would append bytes
+  /// the receiver already holds, so a quiet peer is failed instead.
+  static const Duration bleAckFreshness = Duration(milliseconds: 2500);
+
+  /// How often the sender re-sends the unacked tail before giving up.
+  static const int bleTailResendAttempts = 3;
 
   /// How long to try connecting to each candidate LAN IP.
   static const Duration lanConnectAttemptTimeout = Duration(seconds: 2);
@@ -206,12 +214,18 @@ class P2pHandshakeResponse {
   final int lanPort;
   final String? transferToken;
 
+  /// Largest GATT payload the receiver's own stack reports for this link,
+  /// or null when it cannot tell. The two platforms do not always agree on
+  /// the negotiated MTU, so the sender writes at the smaller of the two.
+  final int? maxPayload;
+
   const P2pHandshakeResponse({
     required this.accepted,
     required this.receiverName,
     this.candidateIps = const [],
     this.lanPort = P2pProtocol.lanPort,
     this.transferToken,
+    this.maxPayload,
   });
 
   Map<String, dynamic> toJson() => {
@@ -221,6 +235,7 @@ class P2pHandshakeResponse {
     'candidateIps': candidateIps,
     'lanPort': lanPort,
     'transferToken': transferToken,
+    'maxPayload': maxPayload,
   };
 
   String encode() => jsonEncode(toJson());
@@ -234,5 +249,6 @@ class P2pHandshakeResponse {
             .toList(),
         lanPort: json['lanPort'] as int? ?? P2pProtocol.lanPort,
         transferToken: json['transferToken'] as String?,
+        maxPayload: json['maxPayload'] as int?,
       );
 }
