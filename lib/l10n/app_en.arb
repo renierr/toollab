@@ -644,6 +644,8 @@
   },
   "fastDropP2pAccept": "Accept",
   "fastDropP2pDecline": "Decline",
+  "fastDropP2pErrorBleConnect": "Could not establish a Bluetooth connection to the device. Move the devices closer together, make sure the other device still shows \"Waiting for a sender\", then try again.",
+  "fastDropP2pErrorDeclined": "The other device declined the transfer.",
   "fastDropP2pDismissFile": "Dismiss",
   "focusAutoStopTimer": "Auto-stop Timer",
   "focusStartPlaybackToEnableTimer": "Start playback to enable timer",

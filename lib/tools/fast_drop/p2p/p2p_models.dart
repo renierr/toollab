@@ -90,3 +90,16 @@ class P2pReceivedFile {
     required this.receivedAt,
   });
 }
+
+/// Cause of a failed nearby transfer, so the UI can show a localized text
+/// instead of a raw platform error string.
+enum P2pErrorCode { bleConnectFailed, peerDeclined }
+
+/// Thrown when the BLE GATT connection to a peer could not be established.
+class P2pConnectException implements Exception {
+  final String details;
+  const P2pConnectException(this.details);
+
+  @override
+  String toString() => 'P2pConnectException: $details';
+}

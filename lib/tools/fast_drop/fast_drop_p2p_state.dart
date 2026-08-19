@@ -35,6 +35,7 @@ class FastDropP2pState extends ChangeNotifier {
   P2pTransportKind? _activeTransport;
   (int current, int total)? _progress;
   String? _error;
+  P2pErrorCode? _errorCode;
   bool _cancelRequested = false;
   int _lastProgressNotifyMs = 0;
 
@@ -77,6 +78,9 @@ class FastDropP2pState extends ChangeNotifier {
   P2pTransportKind? get activeTransport => _activeTransport;
   (int current, int total)? get progress => _progress;
   String? get error => _error;
+
+  /// Set instead of [error] when the failure has a localizable cause.
+  P2pErrorCode? get errorCode => _errorCode;
   (P2pPeer peer, P2pHandshakeRequest request)? get incomingRequest =>
       _incomingRequest;
   List<P2pReceivedFile> get receivedFiles => List.unmodifiable(_receivedFiles);
@@ -103,6 +107,7 @@ class FastDropP2pState extends ChangeNotifier {
     _role = P2pRole.receiving;
     _status = P2pStatus.advertising;
     _error = null;
+    _errorCode = null;
     notifyListeners();
 
     try {
@@ -273,6 +278,7 @@ class FastDropP2pState extends ChangeNotifier {
     _role = P2pRole.sending;
     _status = P2pStatus.scanning;
     _error = null;
+    _errorCode = null;
     _peers = [];
     notifyListeners();
 
@@ -327,6 +333,7 @@ class FastDropP2pState extends ChangeNotifier {
     _cancelRequested = false;
     _status = P2pStatus.handshaking;
     _error = null;
+    _errorCode = null;
     notifyListeners();
 
     await _beginBackgroundWork('Sending', name);
@@ -366,7 +373,7 @@ class FastDropP2pState extends ChangeNotifier {
 
       if (!response.accepted) {
         _status = P2pStatus.failed;
-        _error = 'Peer declined the transfer';
+        _errorCode = P2pErrorCode.peerDeclined;
         notifyListeners();
         return;
       }
@@ -390,7 +397,12 @@ class FastDropP2pState extends ChangeNotifier {
       clearPendingSendFile();
     } catch (e) {
       _status = _cancelRequested ? P2pStatus.cancelled : P2pStatus.failed;
-      _error = e.toString().replaceAll('Exception: ', '');
+      if (e is P2pConnectException) {
+        _errorCode = P2pErrorCode.bleConnectFailed;
+        errorLog('[FastDropP2p] BLE connect failed: ${e.details}');
+      } else {
+        _error = e.toString().replaceAll('Exception: ', '');
+      }
       _role = P2pRole.none;
     } finally {
       await _endBackgroundWork();
@@ -467,6 +479,7 @@ class FastDropP2pState extends ChangeNotifier {
     _role = P2pRole.none;
     _status = P2pStatus.idle;
     _error = null;
+    _errorCode = null;
     _progress = null;
     _activeTransport = null;
     notifyListeners();

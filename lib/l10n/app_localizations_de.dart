@@ -1209,6 +1209,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fastDropP2pDecline => 'Ablehnen';
 
   @override
+  String get fastDropP2pErrorBleConnect =>
+      'Bluetooth-Verbindung zum Gerät konnte nicht aufgebaut werden. Bringe die Geräte näher zusammen, stelle sicher, dass das andere Gerät noch auf einen Sender wartet, und versuche es erneut.';
+
+  @override
+  String get fastDropP2pErrorDeclined =>
+      'Das andere Gerät hat die Übertragung abgelehnt.';
+
+  @override
   String get fastDropP2pDismissFile => 'Verwerfen';
 
   @override

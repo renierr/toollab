@@ -1199,6 +1199,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fastDropP2pDecline => 'Decline';
 
   @override
+  String get fastDropP2pErrorBleConnect =>
+      'Could not establish a Bluetooth connection to the device. Move the devices closer together, make sure the other device still shows \"Waiting for a sender\", then try again.';
+
+  @override
+  String get fastDropP2pErrorDeclined =>
+      'The other device declined the transfer.';
+
+  @override
   String get fastDropP2pDismissFile => 'Dismiss';
 
   @override

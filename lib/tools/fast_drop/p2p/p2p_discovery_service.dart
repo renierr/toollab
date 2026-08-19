@@ -274,7 +274,7 @@ class P2pDiscoveryService {
     required P2pHandshakeRequest request,
     Duration timeout = const Duration(seconds: 15),
   }) async {
-    await UniversalBle.connect(bleDeviceId);
+    await _connect(bleDeviceId);
     final services = await UniversalBle.discoverServices(bleDeviceId);
     final service = services.firstWhere(
       (s) => s.uuid.toLowerCase() == P2pProtocol.serviceUuid.toLowerCase(),
@@ -338,6 +338,76 @@ class P2pDiscoveryService {
       _handshakeResponseSub = null;
       _pendingResponse = null;
       _responseReassembler.reset(bleDeviceId);
+    }
+  }
+
+  /// Establishes the GATT link, tolerating the transient failures the
+  /// Windows stack reports right after scanning (ConnectAsync then throws
+  /// E_UNEXPECTED / "Schwerwiegender Fehler"). Each retry starts from a
+  /// clean slate because a half-open device object keeps failing.
+  Future<void> _connect(String bleDeviceId) async {
+    await stopScan();
+    if (Platform.isWindows) {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+
+    const maxAttempts = 3;
+    Object? lastError;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await UniversalBle.connect(
+          bleDeviceId,
+          timeout: const Duration(seconds: 20),
+        );
+        return;
+      } catch (e) {
+        lastError = e;
+        errorLog('[P2pDiscovery] connect attempt $attempt failed: $e');
+        try {
+          await UniversalBle.disconnect(bleDeviceId);
+        } catch (_) {}
+        await Future<void>.delayed(Duration(milliseconds: 400 * attempt));
+        // Last chance: an unpaired peer is only connectable while its
+        // advertisement is fresh in the platform cache, so re-observe it.
+        if (attempt == maxAttempts - 1) {
+          await _refreshAdvertisement(bleDeviceId);
+        }
+      }
+    }
+    throw P2pConnectException('$lastError');
+  }
+
+  /// Scans until [bleDeviceId] advertises again (or [timeout] elapses),
+  /// without touching the peer list the UI is showing.
+  Future<void> _refreshAdvertisement(
+    String bleDeviceId, {
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final target = bleDeviceId.toLowerCase();
+    final seen = Completer<void>();
+    StreamSubscription<BleDevice>? sub;
+    try {
+      sub = UniversalBle.scanStream.listen((device) {
+        if (device.deviceId.toLowerCase() == target && !seen.isCompleted) {
+          seen.complete();
+        }
+      }, onError: (_) {});
+      await UniversalBle.startScan();
+      await seen.future.timeout(
+        timeout,
+        onTimeout: () =>
+            errorLog('[P2pDiscovery] rescan did not re-observe $bleDeviceId'),
+      );
+    } catch (e) {
+      errorLog('[P2pDiscovery] rescan before final connect failed: $e');
+    } finally {
+      await sub?.cancel();
+      try {
+        await UniversalBle.stopScan();
+      } catch (_) {}
+      if (Platform.isWindows) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      }
     }
   }
 

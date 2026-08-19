@@ -2171,6 +2171,18 @@ abstract class AppLocalizations {
   /// **'Decline'**
   String get fastDropP2pDecline;
 
+  /// No description provided for @fastDropP2pErrorBleConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not establish a Bluetooth connection to the device. Move the devices closer together, make sure the other device still shows \"Waiting for a sender\", then try again.'**
+  String get fastDropP2pErrorBleConnect;
+
+  /// No description provided for @fastDropP2pErrorDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'The other device declined the transfer.'**
+  String get fastDropP2pErrorDeclined;
+
   /// No description provided for @fastDropP2pDismissFile.
   ///
   /// In en, this message translates to:

@@ -390,6 +390,8 @@
   },
   "fastDropP2pAccept": "Annehmen",
   "fastDropP2pDecline": "Ablehnen",
+  "fastDropP2pErrorBleConnect": "Bluetooth-Verbindung zum Gerät konnte nicht aufgebaut werden. Bringe die Geräte näher zusammen, stelle sicher, dass das andere Gerät noch auf einen Sender wartet, und versuche es erneut.",
+  "fastDropP2pErrorDeclined": "Das andere Gerät hat die Übertragung abgelehnt.",
   "fastDropP2pDismissFile": "Verwerfen",
   "focusAutoStopTimer": "Auto-Stopp-Timer",
   "focusStartPlaybackToEnableTimer": "Wiedergabe starten, um Timer zu aktivieren",
