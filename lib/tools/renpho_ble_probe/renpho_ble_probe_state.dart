@@ -14,6 +14,8 @@ class RenphoBleProbeState extends ChangeNotifier {
   static const scaleMacAddress = '60:30:F2:74:22:06';
   static const _service = '00001a10-0000-1000-8000-00805f9b34fb';
   static const _write = '00002a11-0000-1000-8000-00805f9b34fb';
+  static const _notify = '00002a10-0000-1000-8000-00805f9b34fb';
+  static const _indicate = '00002a12-0000-1000-8000-00805f9b34fb';
   final _devices = <String, BleDevice>{};
   final _frames = <Map<String, String>>[];
   final _fragments = <int, List<int>>{};
@@ -135,38 +137,22 @@ class RenphoBleProbeState extends ChangeNotifier {
       await UniversalBle.connect(id, timeout: const Duration(seconds: 15));
       _deviceId = id;
       _wakeLock = await PowerWakeLockService.acquireFull();
-      final services = await UniversalBle.discoverServices(id);
-      for (final service in services) {
-        for (final characteristic in service.characteristics) {
-          if (!characteristic.properties.contains(
-                CharacteristicProperty.notify,
-              ) &&
-              !characteristic.properties.contains(
-                CharacteristicProperty.indicate,
-              )) {
-            continue;
-          }
-          final sub =
-              UniversalBle.characteristicValueStream(
-                id,
-                characteristic.uuid,
-              ).listen(
-                (value) => _onFrame(characteristic.uuid, value),
-                onError: (e) => _fail('Bluetooth receive failed: $e'),
-              );
-          _subscriptions.add(sub);
-          try {
-            await UniversalBle.subscribeNotifications(
-              id,
-              service.uuid,
-              characteristic.uuid,
-            );
-          } catch (_) {
-            await sub.cancel();
-            _subscriptions.remove(sub);
-          }
-        }
+      // The Android HCI capture proves that 2A10 uses notifications and 2A12
+      // uses indications. Enabling 2A12 as a notification leaves its CCCD in
+      // the wrong mode and the scale never sends the B2 acknowledgement.
+      try {
+        await UniversalBle.requestMtu(id, 247);
+      } catch (_) {}
+      for (final characteristic in [_notify, _indicate]) {
+        _subscriptions.add(
+          UniversalBle.characteristicValueStream(id, characteristic).listen(
+            (value) => _onFrame(characteristic, value),
+            onError: (e) => _fail('Bluetooth receive failed: $e'),
+          ),
+        );
       }
+      await UniversalBle.subscribeNotifications(id, _service, _notify);
+      await UniversalBle.subscribeIndications(id, _service, _indicate);
       await Future<void>.delayed(const Duration(milliseconds: 500));
       _stage = 1;
       await _writePacket([
@@ -187,9 +173,7 @@ class RenphoBleProbeState extends ChangeNotifier {
         0,
       ]);
       _status = 'Preparing local scan...';
-      _armTimeout(
-        'The scale did not acknowledge setup. Wake it and try again.',
-      );
+      _armTimeout('The scale did not acknowledge setup. Retrying once...');
     } catch (e) {
       _fail('Could not connect to the scale: $e');
       await stop();
@@ -370,8 +354,50 @@ class RenphoBleProbeState extends ChangeNotifier {
   void _armTimeout(String message) {
     _stageTimer?.cancel();
     _stageTimer = Timer(const Duration(seconds: 8), () {
-      if (!_ready) _fail(message);
+      if (_ready) return;
+      if (_stage == 1) {
+        _status = message;
+        notifyListeners();
+        unawaited(_retryB2());
+        return;
+      }
+      _fail(message);
     });
+  }
+
+  Future<void> _retryB2() async {
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (_stage != 1 || _deviceId == null) return;
+    try {
+      await _writePacket([
+        0x55,
+        0xAA,
+        0xB2,
+        0,
+        9,
+        0,
+        1,
+        6,
+        0xC2,
+        0x19,
+        0xAF,
+        0xB2,
+        1,
+        2,
+        0,
+      ]);
+      _status = 'Retrying local scan setup...';
+      _stageTimer = Timer(const Duration(seconds: 8), () {
+        if (_stage == 1) {
+          _fail(
+            'The scale did not acknowledge setup. Disconnect, wake it, and retry.',
+          );
+        }
+      });
+      notifyListeners();
+    } catch (e) {
+      _fail('Could not retry setup: $e');
+    }
   }
 
   void _fail(String message) {
