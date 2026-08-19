@@ -98,13 +98,15 @@ class _TagInputState extends State<TagInput> {
     });
   }
 
+  void _selectSuggestion(String suggestion) {
+    _addTag(suggestion);
+    _focusNode.requestFocus();
+  }
+
   void _onSubmit(String value) {
-    if (_filteredSuggestions.isNotEmpty) {
-      _addTag(_filteredSuggestions.first);
-      return;
-    }
     _addTag(value);
     setState(() {
+      _filteredSuggestions = [];
       _showSuggestions = false;
     });
   }
@@ -207,7 +209,7 @@ class _TagInputState extends State<TagInput> {
                                 suggestion,
                                 style: const TextStyle(fontSize: 13),
                               ),
-                              onTap: () => _onSubmit(suggestion),
+                              onTap: () => _selectSuggestion(suggestion),
                             );
                           },
                         ),
