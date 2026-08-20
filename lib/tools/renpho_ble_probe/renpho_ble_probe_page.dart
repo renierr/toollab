@@ -27,8 +27,11 @@ class _RenphoBleProbePageState extends State<RenphoBleProbePage>
     super.initState();
     final state = context.read<RenphoBleProbeState>();
     onDispose(state.disconnect);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) state.load();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await state.load();
+      if (!mounted) return;
+      state.backgroundSync();
     });
   }
 

@@ -398,7 +398,7 @@ class RenphoBleProbeState extends ChangeNotifier {
     }
     if (added > 0) {
       await refreshHistory();
-      _backgroundSync();
+      backgroundSync();
     }
     return RenphoImportOutcome(
       added: added,
@@ -1014,7 +1014,7 @@ class RenphoBleProbeState extends ChangeNotifier {
       } else {
         unawaited(_closeSession(saved.weightKg));
       }
-      _backgroundSync();
+      backgroundSync();
     } catch (e) {
       _fail(RenphoFailure.saveFailed, '$e');
     }
@@ -1038,7 +1038,9 @@ class RenphoBleProbeState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _backgroundSync() {
+  /// Pushes what is pending to Health Connect and runs the backend sync. Both
+  /// halves check their own switch, so this is safe to fire on tool open.
+  void backgroundSync() {
     // Publishing to Health Connect is a one-way push and runs independently of
     // the backend sync, which may well be switched off.
     unawaited(
@@ -1067,6 +1069,10 @@ class RenphoBleProbeState extends ChangeNotifier {
     if (_syncing) return null;
     final settings = DatabaseService.instance;
     if (await settings.getSetting('_app', 'sync_enabled') != 'true') {
+      return null;
+    }
+    final toolId = RenphoBleProbeTool.config.id;
+    if (await settings.getSetting(toolId, 'sync_enabled') == 'false') {
       return null;
     }
     final serverUrl = await settings.getSetting('_app', 'sync_server_url');

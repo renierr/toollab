@@ -272,12 +272,14 @@ details page keeps visually separate:
 
 ## Sync and Health Connect
 
-Backend sync goes through `RenphoSyncDelegate` and follows the app-wide sync
-switch like every other tool. Health Connect is separate and **off by default** —
-body composition is personal even by health-data standards. When enabled it
-writes weight, body fat, lean mass, bone mass, body water and BMR, each record
-tagged with a client id derived from the measurement uid so a re-publish
-replaces rather than duplicates.
+Backend sync goes through `RenphoSyncDelegate` and follows the app-wide switch
+plus this tool's own sync switch, like every other tool. `backgroundSync()` fires
+both halves on tool open, after a completed scan, and after a JSON import; the
+toolbar button runs the backend half only. Health Connect is separate and **off
+by default** — body composition is personal even by health-data standards. When
+enabled it writes weight, body fat, lean mass, bone mass, body water and BMR,
+each record tagged with a client id derived from the measurement uid so a
+re-publish replaces rather than duplicates.
 
 ## Profile
 
