@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/collapsible_section.dart';
 import 'package:tool_lab/widgets/data_row.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 
 import '../renpho_body_metrics.dart';
 import '../renpho_measurement.dart';
+import 'renpho_body_map.dart';
 import 'renpho_metrics_grid.dart';
 import 'renpho_segment_table.dart';
 
@@ -179,7 +181,19 @@ class RenphoMeasurementDetailsPage extends StatelessWidget {
           InfoCard(
             icon: Icons.accessibility_new_outlined,
             title: l10n.renphoSectionSegments,
-            child: RenphoSegmentTable(derived: derived),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                RenphoBodyMap(derived: derived),
+                const SizedBox(height: 12),
+                CollapsibleSection(
+                  icon: Icons.table_chart_outlined,
+                  title: l10n.renphoSegmentTable,
+                  initiallyExpanded: false,
+                  child: RenphoSegmentTable(derived: derived),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           InfoCard(

@@ -3431,5 +3431,9 @@
   "renphoSegmentRightArm": "Arm rechts",
   "renphoSegmentLeftLeg": "Bein links",
   "renphoSegmentRightLeg": "Bein rechts",
-  "renphoSegmentTrunk": "Rumpf"
+  "renphoSegmentTrunk": "Rumpf",
+  "renphoSegmentMuscleOfStandard": "Muskeln vom Standard",
+  "renphoSegmentFatOfStandard": "Fett vom Standard",
+  "renphoSegmentMapHint": "Tippe auf einen Körperteil oder seine Beschriftung für die vollständige Aufschlüsselung.",
+  "renphoSegmentTable": "Alle Segmente als Tabelle"
 }

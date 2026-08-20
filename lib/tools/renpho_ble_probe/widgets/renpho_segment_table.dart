@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../renpho_body_metrics.dart';
+import '../renpho_segment_labels.dart';
 
 /// The eight-electrode breakdown. The masses are the trustworthy column; the
 /// percentages of standard divide by a reference as small as 0.64 kg, so a
@@ -34,7 +35,7 @@ class RenphoSegmentTable extends StatelessWidget {
           for (final segment in derived.segments)
             DataRow(
               cells: [
-                DataCell(Text(_name(l10n, segment.segment))),
+                DataCell(Text(segment.segment.label(l10n))),
                 DataCell(Text('${segment.muscleMassKg.toStringAsFixed(2)} kg')),
                 DataCell(
                   Text(
@@ -51,13 +52,4 @@ class RenphoSegmentTable extends StatelessWidget {
       ),
     );
   }
-
-  String _name(AppLocalizations l10n, RenphoSegment segment) =>
-      switch (segment) {
-        RenphoSegment.leftArm => l10n.renphoSegmentLeftArm,
-        RenphoSegment.rightArm => l10n.renphoSegmentRightArm,
-        RenphoSegment.leftLeg => l10n.renphoSegmentLeftLeg,
-        RenphoSegment.rightLeg => l10n.renphoSegmentRightLeg,
-        RenphoSegment.trunk => l10n.renphoSegmentTrunk,
-      };
 }

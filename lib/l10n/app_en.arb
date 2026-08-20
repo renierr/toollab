@@ -4408,5 +4408,9 @@
   "renphoSegmentRightArm": "Right arm",
   "renphoSegmentLeftLeg": "Left leg",
   "renphoSegmentRightLeg": "Right leg",
-  "renphoSegmentTrunk": "Trunk"
+  "renphoSegmentTrunk": "Trunk",
+  "renphoSegmentMuscleOfStandard": "Muscle of standard",
+  "renphoSegmentFatOfStandard": "Fat of standard",
+  "renphoSegmentMapHint": "Tap a body part or its label for the full breakdown of that segment.",
+  "renphoSegmentTable": "All segments as a table"
 }

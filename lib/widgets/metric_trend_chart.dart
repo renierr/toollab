@@ -35,6 +35,10 @@ class MetricTrendChart extends StatefulWidget {
   final String? overlayLabel;
   final List<MetricTrendTooltipSeries> tooltipSeries;
 
+  /// Lifts the primary series above the overlay with a glow, for charts whose
+  /// two curves run close enough to hide each other.
+  final bool emphasizePrimary;
+
   const MetricTrendChart({
     super.key,
     required this.values,
@@ -49,6 +53,7 @@ class MetricTrendChart extends StatefulWidget {
     this.label,
     this.overlayLabel,
     this.tooltipSeries = const [],
+    this.emphasizePrimary = false,
   });
 
   @override
@@ -117,6 +122,7 @@ class _MetricTrendChartState extends State<MetricTrendChart> {
                       selectedIndex: _selectedIndex,
                       locale: Localizations.localeOf(context).toString(),
                       tooltipSeries: widget.tooltipSeries,
+                      emphasizePrimary: widget.emphasizePrimary,
                       gridColor: Theme.of(
                         context,
                       ).colorScheme.outline.withValues(alpha: 0.2),
@@ -193,6 +199,7 @@ class _MetricTrendPainter extends CustomPainter {
   final DateTime? endDate;
   final String locale;
   final List<MetricTrendTooltipSeries> tooltipSeries;
+  final bool emphasizePrimary;
   final Color gridColor;
   final Color labelColor;
   final bool compact;
@@ -210,6 +217,7 @@ class _MetricTrendPainter extends CustomPainter {
     this.endDate,
     required this.locale,
     required this.tooltipSeries,
+    required this.emphasizePrimary,
     required this.gridColor,
     required this.labelColor,
     required this.compact,
@@ -313,20 +321,49 @@ class _MetricTrendPainter extends CustomPainter {
         centered: true,
       );
     }
+    // The overlay goes down first so the primary curve stays readable where
+    // the two run on top of each other.
+    _drawOverlay(canvas, plot, shared);
     if (style == MetricTrendChartStyle.line && points.isNotEmpty) {
+      final path = _smoothPath(points);
+      if (emphasizePrimary) {
+        // A drop shadow cast downwards, so the primary curve sits visibly in
+        // front of the overlay instead of glowing around it.
+        canvas.save();
+        canvas.translate(0, 4);
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = Colors.black.withValues(alpha: 0.5)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 5
+            ..strokeCap = StrokeCap.round
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+        );
+        canvas.restore();
+      }
       canvas.drawPath(
-        _smoothPath(points),
+        path,
         Paint()
           ..color = lineColor
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
+          ..strokeWidth = emphasizePrimary ? 3.5 : 3
           ..strokeCap = StrokeCap.round,
       );
       for (final point in points) {
         canvas.drawCircle(point, 4, Paint()..color = lineColor);
       }
+      if (emphasizePrimary) {
+        canvas.drawCircle(
+          points.last + const Offset(0, 4),
+          6,
+          Paint()
+            ..color = Colors.black.withValues(alpha: 0.5)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+        );
+        canvas.drawCircle(points.last, 5.5, Paint()..color = lineColor);
+      }
     }
-    _drawOverlay(canvas, plot, shared);
   }
 
   /// Days both curves cover. Weight and body fat run within a hair of each other,
@@ -474,6 +511,7 @@ class _MetricTrendPainter extends CustomPainter {
       oldDelegate.gridColor != gridColor ||
       oldDelegate.labelColor != labelColor ||
       oldDelegate.compact != compact ||
+      oldDelegate.emphasizePrimary != emphasizePrimary ||
       // Hiding the primary series changes nothing else about the painter, so
       // without this the legend's first entry toggles nothing.
       oldDelegate.showPrimary != showPrimary ||

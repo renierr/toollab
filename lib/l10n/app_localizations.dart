@@ -15196,6 +15196,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trunk'**
   String get renphoSegmentTrunk;
+
+  /// No description provided for @renphoSegmentMuscleOfStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle of standard'**
+  String get renphoSegmentMuscleOfStandard;
+
+  /// No description provided for @renphoSegmentFatOfStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat of standard'**
+  String get renphoSegmentFatOfStandard;
+
+  /// No description provided for @renphoSegmentMapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a body part or its label for the full breakdown of that segment.'**
+  String get renphoSegmentMapHint;
+
+  /// No description provided for @renphoSegmentTable.
+  ///
+  /// In en, this message translates to:
+  /// **'All segments as a table'**
+  String get renphoSegmentTable;
 }
 
 class _AppLocalizationsDelegate

@@ -8543,4 +8543,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get renphoSegmentTrunk => 'Rumpf';
+
+  @override
+  String get renphoSegmentMuscleOfStandard => 'Muskeln vom Standard';
+
+  @override
+  String get renphoSegmentFatOfStandard => 'Fett vom Standard';
+
+  @override
+  String get renphoSegmentMapHint =>
+      'Tippe auf einen Körperteil oder seine Beschriftung für die vollständige Aufschlüsselung.';
+
+  @override
+  String get renphoSegmentTable => 'Alle Segmente als Tabelle';
 }

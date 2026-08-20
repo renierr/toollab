@@ -97,7 +97,7 @@ class _RenphoBleProbePageState extends State<RenphoBleProbePage>
                     if (latest != null) ...[
                       _SectionTitle(title: l10n.renphoSectionLatest),
                       const SizedBox(height: 8),
-                      RenphoMetricsGrid(measurement: latest),
+                      RenphoMetricsGrid(measurement: latest, showTrends: true),
                       const SizedBox(height: 24),
                     ],
                     const RenphoTrends(),

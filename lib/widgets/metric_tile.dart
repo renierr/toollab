@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/widgets/sparkline.dart';
 
 class MetricTile extends StatelessWidget {
   final String label;
@@ -8,6 +9,9 @@ class MetricTile extends StatelessWidget {
   final Color color;
   final bool compact;
 
+  /// Recent readings of this metric, drawn as a trend line behind the value.
+  final List<double?>? trend;
+
   const MetricTile({
     super.key,
     required this.label,
@@ -16,56 +20,71 @@ class MetricTile extends StatelessWidget {
     required this.color,
     this.unit,
     this.compact = false,
+    this.trend,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final trend = this.trend;
     return Card(
-      child: Padding(
-        padding: EdgeInsets.all(compact ? 12 : 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: compact ? 18 : 24),
-            SizedBox(height: compact ? 8 : 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          if (trend != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: compact ? 42 : 52,
+              child: Sparkline(values: trend, color: color),
+            ),
+          Padding(
+            padding: EdgeInsets.all(compact ? 12 : 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Flexible(
-                  child: Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style:
-                        (compact
-                                ? theme.textTheme.titleMedium
-                                : theme.textTheme.titleLarge)
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                Icon(icon, color: color, size: compact ? 18 : 24),
+                SizedBox(height: compact ? 8 : 12),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        value,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            (compact
+                                    ? theme.textTheme.titleMedium
+                                    : theme.textTheme.titleLarge)
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    if (unit != null) ...[
+                      const SizedBox(width: 3),
+                      Text(
+                        unit!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
                   ),
                 ),
-                if (unit != null) ...[
-                  const SizedBox(width: 3),
-                  Text(
-                    unit!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.hintColor,
-                    ),
-                  ),
-                ],
               ],
             ),
-            Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

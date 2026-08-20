@@ -8482,4 +8482,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get renphoSegmentTrunk => 'Trunk';
+
+  @override
+  String get renphoSegmentMuscleOfStandard => 'Muscle of standard';
+
+  @override
+  String get renphoSegmentFatOfStandard => 'Fat of standard';
+
+  @override
+  String get renphoSegmentMapHint =>
+      'Tap a body part or its label for the full breakdown of that segment.';
+
+  @override
+  String get renphoSegmentTable => 'All segments as a table';
 }
