@@ -13,7 +13,7 @@ import 'health_debug_origin.dart';
 /// back to a generic "Health Connect" label - a scale nobody has a mapping for
 /// then reads as if Health Connect itself measured it.
 enum HealthSourceApp {
-  treadmill,
+  toolLab,
   nutriScan,
   amazfit,
   huaweiHealth,
@@ -32,9 +32,9 @@ enum HealthSourceApp {
 /// Exact package names first; [_prefixes] catches vendors who ship several
 /// package variants (regional builds, betas, renamed successors).
 const _packages = <String, HealthSourceApp>{
-  'ToolLab Treadmill': HealthSourceApp.treadmill,
+  'ToolLab Treadmill': HealthSourceApp.toolLab,
   healthDebugPackage: HealthSourceApp.generated,
-  'de.renier.tool_lab': HealthSourceApp.treadmill,
+  'de.renier.tool_lab': HealthSourceApp.toolLab,
   'de.renier.calorie_tracker': HealthSourceApp.nutriScan,
   'com.huami.watch.hmwatchmanager': HealthSourceApp.amazfit,
   'com.google.android.apps.fitness': HealthSourceApp.googleFit,
@@ -81,7 +81,7 @@ IconData healthAppIcon(String? packageName) =>
 
 extension HealthSourceAppDetails on HealthSourceApp {
   IconData get icon => switch (this) {
-    HealthSourceApp.treadmill => Icons.directions_run_rounded,
+    HealthSourceApp.toolLab => Icons.handyman_outlined,
     HealthSourceApp.nutriScan => Icons.restaurant_rounded,
     HealthSourceApp.amazfit ||
     HealthSourceApp.huaweiHealth ||
@@ -98,7 +98,7 @@ extension HealthSourceAppDetails on HealthSourceApp {
   };
 
   String label(AppLocalizations l10n) => switch (this) {
-    HealthSourceApp.treadmill => l10n.toolNameTreadmillControl,
+    HealthSourceApp.toolLab => 'ToolLab',
     HealthSourceApp.nutriScan => 'NutriScan',
     HealthSourceApp.amazfit => l10n.healthDashboardAmazfit,
     HealthSourceApp.huaweiHealth => l10n.healthDashboardHuaweiHealth,
