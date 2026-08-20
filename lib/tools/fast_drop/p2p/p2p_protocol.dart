@@ -47,6 +47,20 @@ class P2pProtocol {
   /// survive even on stacks that don't support automatic GATT long writes.
   static const int defaultSafeChunkSize = 20;
 
+  /// Largest payload a single GATT write or notification may carry: the ATT
+  /// maximum attribute length. A peer that negotiates a bigger MTU (Windows
+  /// asks for 517) must not be turned into a bigger chunk — Android's
+  /// `writeCharacteristic` rejects a longer value by throwing, which only
+  /// surfaces in Dart as a platform-channel failure.
+  static const int maxGattPayloadSize = 512;
+
+  /// Clamps a payload size derived from a negotiated MTU into the range a
+  /// single write/notification can actually carry.
+  static int safePayloadSize(int size) {
+    if (size < 8) return defaultSafeChunkSize;
+    return size > maxGattPayloadSize ? maxGattPayloadSize : size;
+  }
+
   /// How many chunks the BLE sender may run ahead of the last acked byte
   /// count before it waits for the receiver to catch up.
   static const int bleAckWindowChunks = 8;
@@ -99,7 +113,7 @@ class P2pProtocol {
     Uint8List payload, {
     required int chunkSize,
   }) {
-    final safeChunkSize = chunkSize < 8 ? 8 : chunkSize;
+    final safeChunkSize = safePayloadSize(chunkSize);
     final header = ByteData(4)..setUint32(0, payload.length, Endian.big);
     final withHeader = Uint8List(4 + payload.length)
       ..setRange(0, 4, header.buffer.asUint8List())

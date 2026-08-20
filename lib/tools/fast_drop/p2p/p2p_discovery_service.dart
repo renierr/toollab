@@ -183,12 +183,22 @@ class P2pDiscoveryService {
     int? maxLen;
     try {
       maxLen = await UniversalBlePeripheral.getMaximumNotifyLength(bleDeviceId);
-      if (maxLen != null && maxLen > 8) chunkSize = maxLen;
+      if (maxLen != null && maxLen > 8) {
+        chunkSize = P2pProtocol.safePayloadSize(maxLen);
+      }
     } catch (_) {}
 
     // Tell the sender what this link looks like from here, so it does not
-    // write more per chunk than this stack can take in.
-    final json = {...response.toJson(), 'maxPayload': maxLen};
+    // write more per chunk than this stack can take in. Always reported, and
+    // never above the ATT attribute maximum: a sender only lowers its own
+    // chunk size from this, and an Android central throws outright on a
+    // longer write.
+    final json = {
+      ...response.toJson(),
+      'maxPayload': P2pProtocol.safePayloadSize(
+        maxLen ?? P2pProtocol.maxGattPayloadSize,
+      ),
+    };
     final payload = Uint8List.fromList(utf8.encode(jsonEncode(json)));
     final chunks = P2pProtocol.chunkWithLengthPrefix(
       payload,
@@ -302,7 +312,7 @@ class P2pDiscoveryService {
     try {
       final mtu = await UniversalBle.requestMtu(bleDeviceId, 247);
       if (mtu > 3) {
-        _centralChunkSize = mtu - 3;
+        _centralChunkSize = P2pProtocol.safePayloadSize(mtu - 3);
       }
     } catch (e) {
       errorLog('[P2pDiscovery] MTU request failed, using default: $e');
@@ -353,7 +363,7 @@ class P2pDiscoveryService {
       final peerMax = response.maxPayload;
       if (peerMax != null && peerMax > 8 && peerMax < _centralChunkSize) {
         errorLog('[P2pDiscovery] peer caps payload at $peerMax');
-        _centralChunkSize = peerMax;
+        _centralChunkSize = P2pProtocol.safePayloadSize(peerMax);
       }
       return response;
     } finally {

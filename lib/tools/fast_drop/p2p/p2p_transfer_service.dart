@@ -460,7 +460,7 @@ class P2pTransferService {
       orElse: () => throw Exception('Peer service not found'),
     );
 
-    final safeChunkSize = chunkSize < 8 ? 8 : chunkSize;
+    final safeChunkSize = P2pProtocol.safePayloadSize(chunkSize);
     int sent = 0;
     int acked = 0;
     var lastAckAt = DateTime.now();
