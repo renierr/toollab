@@ -18,7 +18,8 @@ to Health Connect. No Renpho cloud account is involved at any point.
 - Derives everything else on read (see *Calculated values*), so a formula fix
   corrects the whole history rather than only later scans.
 - Dashboard: live readout, metric grid, two seven-day trend charts (weight over
-  body fat, muscle over body water) and the full history with per-scan details.
+  body fat, muscle over body water) and the history in collapsible monthly
+  blocks with per-scan details.
 
 ## Files
 
@@ -238,6 +239,19 @@ Insertion goes through the same thirty-second window that keeps the scale's
 replayed records out, so re-importing a file changes nothing. Imported rows are
 flagged as such and show a distinct icon and source in the history, because they
 were neither measured live nor read out of the scale's memory.
+
+### Reading the history
+
+The history is grouped into one collapsible block per month, newest open and the
+rest shut. Nothing about a closed month is in memory beyond its name and count:
+the dashboard reads the newest two rows for the headline and its delta, one week
+for the trend charts, and a list of bare timestamps for the month index. A
+month's measurements are read when its block is opened and the least recently
+opened months are dropped once a handful are cached.
+
+The block bodies are built only while open. An `AnimatedCrossFade`-style
+collapse would build every closed month's rows as well, which is exactly the
+cost this avoids.
 
 ## Calculated values
 

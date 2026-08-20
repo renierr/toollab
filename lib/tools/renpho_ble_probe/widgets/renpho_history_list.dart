@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:provider/provider.dart';
@@ -10,15 +12,18 @@ import '../renpho_colors.dart';
 import '../renpho_measurement.dart';
 import 'renpho_measurement_details_page.dart';
 
+/// The history, one collapsible block per month. The newest month opens; the
+/// rest stay shut and their measurements are never read until they are opened,
+/// so years of scans cost a month index rather than a list of every row.
 class RenphoHistoryList extends StatelessWidget {
-  final List<RenphoMeasurement> measurements;
-
-  const RenphoHistoryList({super.key, required this.measurements});
+  const RenphoHistoryList({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<RenphoBleProbeState>();
     final l10n = AppLocalizations.of(context);
-    if (measurements.isEmpty) {
+    final months = state.historyMonths;
+    if (months.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Text(
@@ -30,16 +35,116 @@ class RenphoHistoryList extends StatelessWidget {
         ),
       );
     }
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: measurements.length,
-      itemBuilder: (context, index) => RenphoHistoryListItem(
-        measurement: measurements[index],
-        previous: index + 1 < measurements.length
-            ? measurements[index + 1]
-            : null,
-      ),
+    return Column(
+      children: [
+        for (var index = 0; index < months.length; index++)
+          _MonthSection(
+            key: ValueKey(months[index].key),
+            month: months[index],
+            initiallyExpanded: index == 0,
+          ),
+      ],
+    );
+  }
+}
+
+class _MonthSection extends StatefulWidget {
+  final RenphoHistoryMonth month;
+  final bool initiallyExpanded;
+
+  const _MonthSection({
+    super.key,
+    required this.month,
+    required this.initiallyExpanded,
+  });
+
+  @override
+  State<_MonthSection> createState() => _MonthSectionState();
+}
+
+class _MonthSectionState extends State<_MonthSection> {
+  late bool _expanded = widget.initiallyExpanded;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_expanded) _ensureLoaded();
+  }
+
+  void _ensureLoaded() {
+    final state = context.read<RenphoBleProbeState>();
+    if (state.monthRows(widget.month) == null) {
+      unawaited(state.loadMonth(widget.month));
+    }
+  }
+
+  void _toggle() {
+    setState(() => _expanded = !_expanded);
+    if (_expanded) _ensureLoaded();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<RenphoBleProbeState>();
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final rows = state.monthRows(widget.month);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InkWell(
+          onTap: _toggle,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    DateFormat.yMMMM(locale).format(widget.month.start),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${widget.month.count}',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedRotation(
+                  turns: _expanded ? 0.0 : -0.25,
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(Icons.expand_more, size: 22),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Built only while open. An AnimatedCrossFade would build the rows of
+        // every collapsed month as well, which is the cost this avoids.
+        if (_expanded)
+          if (rows == null)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            for (var index = 0; index < rows.length; index++)
+              RenphoHistoryListItem(
+                measurement: rows[index],
+                previous: index + 1 < rows.length ? rows[index + 1] : null,
+              ),
+      ],
     );
   }
 }

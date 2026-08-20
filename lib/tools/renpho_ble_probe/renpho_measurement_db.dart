@@ -129,6 +129,32 @@ class RenphoMeasurementDb {
     return rows.map(RenphoMeasurement.fromMap).toList();
   }
 
+  /// Just the timestamps, newest first. One indexed integer column is cheap
+  /// enough to read whole, and it is all the month index needs — the rows
+  /// themselves are only loaded for the month the user opens.
+  Future<List<int>> timestamps() async {
+    final db = await _database();
+    final rows = await db.query(
+      table,
+      columns: const ['measured_at'],
+      where: 'deleted = 0',
+      orderBy: 'measured_at DESC',
+    );
+    return rows.map((row) => row['measured_at'] as int).toList();
+  }
+
+  /// Rows in `[from, to)`, newest first.
+  Future<List<RenphoMeasurement>> between(DateTime from, DateTime to) async {
+    final db = await _database();
+    final rows = await db.query(
+      table,
+      where: 'deleted = 0 AND measured_at >= ? AND measured_at < ?',
+      whereArgs: [from.millisecondsSinceEpoch, to.millisecondsSinceEpoch],
+      orderBy: 'measured_at DESC',
+    );
+    return rows.map(RenphoMeasurement.fromMap).toList();
+  }
+
   Future<RenphoMeasurement?> byUid(String uid) async {
     final db = await _database();
     final rows = await db.query(

@@ -66,6 +66,24 @@ class RenphoImportOutcome {
   bool get isEmpty => added == 0 && duplicates == 0;
 }
 
+/// One month of history: enough to render a collapsed section header without
+/// holding any of its measurements.
+class RenphoHistoryMonth {
+  final int year;
+  final int month;
+  final int count;
+
+  const RenphoHistoryMonth({
+    required this.year,
+    required this.month,
+    required this.count,
+  });
+
+  DateTime get start => DateTime(year, month);
+  DateTime get end => DateTime(year, month + 1);
+  String get key => '$year-$month';
+}
+
 class RenphoDiscoveredScale {
   final String id;
   final String name;
@@ -130,8 +148,13 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   // Data
   RenphoProfile _profile = RenphoProfile.empty;
-  List<RenphoMeasurement> _history = const [];
   RenphoMeasurement? _latest;
+  RenphoMeasurement? _previous;
+  List<RenphoMeasurement> _week = const [];
+  List<RenphoHistoryMonth> _months = const [];
+  final _monthRows = <String, List<RenphoMeasurement>>{};
+  final _monthOrder = <String>[];
+  final _monthsLoading = <String>{};
   bool _loaded = false;
   bool _syncing = false;
   bool _healthConnectEnabled = false;
@@ -166,10 +189,43 @@ class RenphoBleProbeState extends ChangeNotifier {
   bool get syncing => _syncing;
   bool get healthConnectEnabled => _healthConnectEnabled;
   RenphoPublishResult? get lastPublish => _lastPublish;
-  List<RenphoMeasurement> get history => List.unmodifiable(_history);
   RenphoMeasurement? get latest => _latest;
+  RenphoMeasurement? get previous => _previous;
 
-  RenphoMeasurement? get previous => _history.length < 2 ? null : _history[1];
+  /// The months that hold scans, newest first. Only the index is kept in
+  /// memory; a month's rows are read when its section is opened.
+  List<RenphoHistoryMonth> get historyMonths => List.unmodifiable(_months);
+
+  List<RenphoMeasurement>? monthRows(RenphoHistoryMonth month) =>
+      _monthRows[month.key];
+
+  bool isMonthLoading(RenphoHistoryMonth month) =>
+      _monthsLoading.contains(month.key);
+
+  /// Reads one month on demand and keeps only the most recently opened few, so
+  /// scrolling back through years of scans does not accumulate every row.
+  Future<void> loadMonth(RenphoHistoryMonth month) async {
+    if (_monthRows.containsKey(month.key) || !_monthsLoading.add(month.key)) {
+      return;
+    }
+    try {
+      final rows = await RenphoMeasurementDb.instance.between(
+        month.start,
+        month.end,
+      );
+      _monthRows[month.key] = rows;
+      _monthOrder.remove(month.key);
+      _monthOrder.add(month.key);
+      while (_monthOrder.length > _monthCacheLimit) {
+        _monthRows.remove(_monthOrder.removeAt(0));
+      }
+    } finally {
+      _monthsLoading.remove(month.key);
+      notifyListeners();
+    }
+  }
+
+  static const _monthCacheLimit = 6;
 
   /// One value per day for the last seven days, newest last, so the trend chart
   /// can line up two series on the same axis. A day with several scans reports
@@ -178,7 +234,7 @@ class RenphoBleProbeState extends ChangeNotifier {
     final today = DateTime.now();
     final midnight = DateTime(today.year, today.month, today.day);
     final byDay = <int, RenphoMeasurement>{};
-    for (final measurement in _history.reversed) {
+    for (final measurement in _week.reversed) {
       final day = DateTime(
         measurement.measuredAt.year,
         measurement.measuredAt.month,
@@ -217,10 +273,49 @@ class RenphoBleProbeState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reloads the dashboard's own data plus the month index. The history itself
+  /// stays out of memory: the newest two rows cover the headline and its delta,
+  /// and one week covers the trend charts.
   Future<void> refreshHistory() async {
-    _history = await RenphoMeasurementDb.instance.all();
-    _latest = _history.isEmpty ? null : _history.first;
+    final db = RenphoMeasurementDb.instance;
+    final newest = await db.all(limit: 2);
+    _latest = newest.isEmpty ? null : newest.first;
+    _previous = newest.length < 2 ? null : newest[1];
+
+    final today = DateTime.now();
+    final from = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    ).subtract(const Duration(days: 6));
+    _week = await db.between(from, today.add(const Duration(days: 1)));
+
+    _months = _monthIndex(await db.timestamps());
+    // A month already on screen has to be re-read; anything else is dropped.
+    final open = _monthRows.keys.toList();
+    _monthRows.clear();
+    _monthOrder.clear();
     notifyListeners();
+    for (final month in _months) {
+      if (open.contains(month.key)) await loadMonth(month);
+    }
+  }
+
+  List<RenphoHistoryMonth> _monthIndex(List<int> timestamps) {
+    final counts = <String, RenphoHistoryMonth>{};
+    for (final value in timestamps) {
+      final at = DateTime.fromMillisecondsSinceEpoch(value);
+      final key = '${at.year}-${at.month}';
+      final existing = counts[key];
+      counts[key] = RenphoHistoryMonth(
+        year: at.year,
+        month: at.month,
+        count: (existing?.count ?? 0) + 1,
+      );
+    }
+    final months = counts.values.toList()
+      ..sort((a, b) => b.start.compareTo(a.start));
+    return months;
   }
 
   Future<void> saveProfile(RenphoProfile profile) async {

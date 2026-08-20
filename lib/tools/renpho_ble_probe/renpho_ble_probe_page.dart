@@ -101,7 +101,7 @@ class _RenphoBleProbePageState extends State<RenphoBleProbePage>
                     const SizedBox(height: 24),
                     _SectionTitle(title: l10n.renphoSectionHistory),
                     const SizedBox(height: 8),
-                    RenphoHistoryList(measurements: state.history),
+                    const RenphoHistoryList(),
                   ],
                 ),
               ),
