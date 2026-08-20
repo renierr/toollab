@@ -17,9 +17,11 @@ to Health Connect. No Renpho cloud account is involved at any point.
   segment impedances, plus the stored records the scale kept while offline.
 - Derives everything else on read (see *Calculated values*), so a formula fix
   corrects the whole history rather than only later scans.
-- Dashboard: live readout, metric grid, two seven-day trend charts (weight over
-  body fat, muscle over body water) and the history in collapsible monthly
-  blocks with per-scan details.
+- Dashboard: live readout, metric grid with the week behind each figure, two
+  seven-day trend charts (weight over body fat, muscle over body water) and the
+  history in collapsible monthly blocks with per-scan details.
+- Per-scan details show the segments as an interactive body map, and the toolbar
+  exports a one-page PDF report (see *PDF report*).
 
 ## Files
 
@@ -34,6 +36,10 @@ to Health Connect. No Renpho cloud account is involved at any point.
 | `renpho_health_connect_publisher.dart` | Health Connect push, behind its own local switch. |
 | `renpho_import.dart` | Reads a Renpho export into measurements. Pure parsing, no database. |
 | `renpho_error_message.dart` | Maps `RenphoFailure` to localized text. |
+| `renpho_body_geometry.dart` | The front-view figure in a normalised box: segment paths, callout rectangles, anchors, the value-to-colour rule. Drives the on-screen map and the printed one. |
+| `renpho_body_image.dart` | Renders that figure off-screen to a PNG for the report. |
+| `renpho_assessment.dart` | Rates a measurement against published reference ranges. Pure logic, no strings. |
+| `renpho_report_pdf.dart` | Builds the one-page PDF. |
 | `widgets/` | All presentation. Only the routed page uses `ToolLayout`; pushed sub-pages use a plain `Scaffold`, because `ToolBackButton` resolves a GoRouter state that a `MaterialPageRoute` does not have. |
 
 ## Protocol
@@ -270,6 +276,22 @@ details page keeps visually separate:
    (Mifflin-St Jeor, Katch-McArdle, Kushner-Schoeller, Sun, Janssen) at 100, 50
    and 20 kHz, shown for comparison.
 
+## PDF report
+
+The toolbar's PDF button builds one A4 page for the latest reading: the profile
+and both timestamps, six key values, the segment figure with its callouts and
+table, the assessment, and the two seven-day charts. The figure is the same
+geometry as the on-screen map, rendered off-screen on a light background; the
+charts are vector charts from the `pdf` package.
+
+`renphoAssessment` rates seven values against population reference ranges — BMI
+against the WHO classes, body fat against the ACE ranges by sex, the visceral
+score against the scale's own 1-14 scale, body water and the skeletal muscle
+index (EWGSOP2 cut-offs) by sex, the weakest segment against its standard, and
+the left/right muscle difference. These are population averages behind a
+consumer bioimpedance estimate, which is what the page's footer says; change the
+ranges and the footer together.
+
 ## Sync and Health Connect
 
 Backend sync goes through `RenphoSyncDelegate` and follows the app-wide switch
@@ -291,5 +313,5 @@ numbers that look real and are not.
 ## Keeping this current
 
 This file is part of the tool. When the frame layout, the setup sequence, the
-stored fields, the derived tiers or the export behaviour change, change this
-file in the same commit.
+stored fields, the derived tiers, the report's reference ranges or the export
+behaviour change, change this file in the same commit.

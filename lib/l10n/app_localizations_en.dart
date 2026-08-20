@@ -8495,4 +8495,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get renphoSegmentTable => 'All segments as a table';
+
+  @override
+  String get renphoReportTooltip => 'Create PDF report';
+
+  @override
+  String get renphoReportTitle => 'Body composition report';
+
+  @override
+  String get renphoReportGenerated => 'Created';
+
+  @override
+  String get renphoReportMeasured => 'Measured';
+
+  @override
+  String get renphoReportYears => 'years';
+
+  @override
+  String get renphoReportAssessment => 'Assessment';
+
+  @override
+  String get renphoReportMetric => 'Metric';
+
+  @override
+  String get renphoReportValue => 'Result';
+
+  @override
+  String get renphoReportReference => 'Reference';
+
+  @override
+  String get renphoReportRating => 'Rating';
+
+  @override
+  String get renphoReportTrendWeight => 'Weight, last 7 days';
+
+  @override
+  String get renphoReportTrendComposition => 'Composition in %, last 7 days';
+
+  @override
+  String get renphoReportDisclaimer =>
+      'Bioimpedance estimates from a consumer scale, not a clinical measurement. The reference ranges follow population data (WHO for BMI, ACE for body fat, EWGSOP2 for the muscle index) and do not replace a medical diagnosis.';
+
+  @override
+  String get renphoReportFailed => 'Could not create the report';
+
+  @override
+  String get renphoReportNoMeasurement => 'No measurement to report yet';
+
+  @override
+  String get renphoAssessmentSegmentMuscle => 'Weakest segment vs standard';
+
+  @override
+  String get renphoAssessmentSymmetry => 'Left/right difference';
+
+  @override
+  String get renphoRatingLow => 'Low';
+
+  @override
+  String get renphoRatingOptimal => 'Optimal';
+
+  @override
+  String get renphoRatingElevated => 'Elevated';
+
+  @override
+  String get renphoRatingHigh => 'High';
 }

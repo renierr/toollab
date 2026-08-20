@@ -8556,4 +8556,71 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get renphoSegmentTable => 'Alle Segmente als Tabelle';
+
+  @override
+  String get renphoReportTooltip => 'PDF-Bericht erstellen';
+
+  @override
+  String get renphoReportTitle => 'Körperanalyse-Bericht';
+
+  @override
+  String get renphoReportGenerated => 'Erstellt';
+
+  @override
+  String get renphoReportMeasured => 'Gemessen';
+
+  @override
+  String get renphoReportYears => 'Jahre';
+
+  @override
+  String get renphoReportAssessment => 'Bewertung';
+
+  @override
+  String get renphoReportMetric => 'Messwert';
+
+  @override
+  String get renphoReportValue => 'Ergebnis';
+
+  @override
+  String get renphoReportReference => 'Referenz';
+
+  @override
+  String get renphoReportRating => 'Einstufung';
+
+  @override
+  String get renphoReportTrendWeight => 'Gewicht, letzte 7 Tage';
+
+  @override
+  String get renphoReportTrendComposition =>
+      'Zusammensetzung in %, letzte 7 Tage';
+
+  @override
+  String get renphoReportDisclaimer =>
+      'Bioimpedanz-Schätzungen einer Verbraucherwaage, keine klinische Messung. Die Referenzbereiche folgen Bevölkerungsdaten (WHO für den BMI, ACE für den Körperfettanteil, EWGSOP2 für den Muskelindex) und ersetzen keine ärztliche Diagnose.';
+
+  @override
+  String get renphoReportFailed => 'Bericht konnte nicht erstellt werden';
+
+  @override
+  String get renphoReportNoMeasurement =>
+      'Noch keine Messung für einen Bericht';
+
+  @override
+  String get renphoAssessmentSegmentMuscle =>
+      'Schwächstes Segment vom Standard';
+
+  @override
+  String get renphoAssessmentSymmetry => 'Unterschied links/rechts';
+
+  @override
+  String get renphoRatingLow => 'Niedrig';
+
+  @override
+  String get renphoRatingOptimal => 'Optimal';
+
+  @override
+  String get renphoRatingElevated => 'Erhöht';
+
+  @override
+  String get renphoRatingHigh => 'Hoch';
 }

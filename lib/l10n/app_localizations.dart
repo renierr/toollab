@@ -15220,6 +15220,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All segments as a table'**
   String get renphoSegmentTable;
+
+  /// No description provided for @renphoReportTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Create PDF report'**
+  String get renphoReportTooltip;
+
+  /// No description provided for @renphoReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body composition report'**
+  String get renphoReportTitle;
+
+  /// No description provided for @renphoReportGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get renphoReportGenerated;
+
+  /// No description provided for @renphoReportMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured'**
+  String get renphoReportMeasured;
+
+  /// No description provided for @renphoReportYears.
+  ///
+  /// In en, this message translates to:
+  /// **'years'**
+  String get renphoReportYears;
+
+  /// No description provided for @renphoReportAssessment.
+  ///
+  /// In en, this message translates to:
+  /// **'Assessment'**
+  String get renphoReportAssessment;
+
+  /// No description provided for @renphoReportMetric.
+  ///
+  /// In en, this message translates to:
+  /// **'Metric'**
+  String get renphoReportMetric;
+
+  /// No description provided for @renphoReportValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get renphoReportValue;
+
+  /// No description provided for @renphoReportReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get renphoReportReference;
+
+  /// No description provided for @renphoReportRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get renphoReportRating;
+
+  /// No description provided for @renphoReportTrendWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight, last 7 days'**
+  String get renphoReportTrendWeight;
+
+  /// No description provided for @renphoReportTrendComposition.
+  ///
+  /// In en, this message translates to:
+  /// **'Composition in %, last 7 days'**
+  String get renphoReportTrendComposition;
+
+  /// No description provided for @renphoReportDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Bioimpedance estimates from a consumer scale, not a clinical measurement. The reference ranges follow population data (WHO for BMI, ACE for body fat, EWGSOP2 for the muscle index) and do not replace a medical diagnosis.'**
+  String get renphoReportDisclaimer;
+
+  /// No description provided for @renphoReportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the report'**
+  String get renphoReportFailed;
+
+  /// No description provided for @renphoReportNoMeasurement.
+  ///
+  /// In en, this message translates to:
+  /// **'No measurement to report yet'**
+  String get renphoReportNoMeasurement;
+
+  /// No description provided for @renphoAssessmentSegmentMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weakest segment vs standard'**
+  String get renphoAssessmentSegmentMuscle;
+
+  /// No description provided for @renphoAssessmentSymmetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Left/right difference'**
+  String get renphoAssessmentSymmetry;
+
+  /// No description provided for @renphoRatingLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get renphoRatingLow;
+
+  /// No description provided for @renphoRatingOptimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Optimal'**
+  String get renphoRatingOptimal;
+
+  /// No description provided for @renphoRatingElevated.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevated'**
+  String get renphoRatingElevated;
+
+  /// No description provided for @renphoRatingHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get renphoRatingHigh;
 }
 
 class _AppLocalizationsDelegate
