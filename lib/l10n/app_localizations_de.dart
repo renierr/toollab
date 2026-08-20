@@ -8588,11 +8588,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get renphoReportRating => 'Einstufung';
 
   @override
-  String get renphoReportTrendWeight => 'Gewicht, letzte 7 Tage';
-
-  @override
-  String get renphoReportTrendComposition =>
-      'Zusammensetzung in %, letzte 7 Tage';
+  String get renphoReportTrends => 'Letzte 7 Tage';
 
   @override
   String get renphoReportDisclaimer =>

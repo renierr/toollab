@@ -79,7 +79,7 @@ List<RenphoAssessmentEntry> renphoAssessment(RenphoDerived derived) {
     RenphoAssessmentEntry(
       metric: RenphoAssessmentMetric.skeletalMuscleIndex,
       value: '${derived.skeletalMuscleIndex.toStringAsFixed(1)} kg/m²',
-      reference: male ? '≥ 7.0 kg/m²' : '≥ 5.5 kg/m²',
+      reference: male ? 'min. 7.0 kg/m²' : 'min. 5.5 kg/m²',
       rating: derived.skeletalMuscleIndex < (male ? 7.0 : 5.5)
           ? RenphoRating.low
           : RenphoRating.optimal,
@@ -87,7 +87,7 @@ List<RenphoAssessmentEntry> renphoAssessment(RenphoDerived derived) {
     RenphoAssessmentEntry(
       metric: RenphoAssessmentMetric.segmentMuscle,
       value: '${weakest.toStringAsFixed(0)} %',
-      reference: '≥ 90 %',
+      reference: 'min. 90 %',
       rating: weakest >= 90 ? RenphoRating.optimal : RenphoRating.low,
     ),
     RenphoAssessmentEntry(

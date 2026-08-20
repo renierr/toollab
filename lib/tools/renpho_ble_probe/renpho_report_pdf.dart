@@ -82,30 +82,74 @@ Future<Uint8List> buildRenphoReportPdf({
                   flex: 5,
                   child: _section(l10n.renphoReportAssessment, [
                     _assessmentTable(derived, l10n),
-                    pw.SizedBox(height: 10),
-                    _legend([
-                      (_weightColor, l10n.renphoMetricWeight),
-                    ], l10n.renphoReportTrendWeight),
-                    _TrendChart(
-                      labels: dayLabels,
-                      series: [(_weightColor, weightSeries)],
-                      height: 92,
+                    pw.SizedBox(height: 12),
+                    pw.Text(
+                      l10n.renphoReportTrends,
+                      style: pw.TextStyle(
+                        fontSize: 11,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
                     ),
-                    pw.SizedBox(height: 10),
-                    _legend([
-                      (_fatColor, l10n.renphoMetricBodyFat),
-                      (_muscleColor, l10n.renphoMetricMuscle),
-                      (_waterColor, l10n.renphoMetricBodyWater),
-                    ], l10n.renphoReportTrendComposition),
-                    _TrendChart(
-                      labels: dayLabels,
-                      series: [
-                        (_fatColor, bodyFatSeries),
-                        (_muscleColor, muscleSeries),
-                        (_waterColor, waterSeries),
+                    // One panel per metric: on a shared axis every curve reads
+                    // as flat, since body fat and body water sit 50 points
+                    // apart.
+                    for (final row in [
+                      [
+                        (
+                          l10n.renphoMetricWeight,
+                          'kg',
+                          _weightColor,
+                          weightSeries,
+                        ),
+                        (
+                          l10n.renphoMetricBodyFat,
+                          '%',
+                          _fatColor,
+                          bodyFatSeries,
+                        ),
                       ],
-                      height: 92,
-                    ),
+                      [
+                        (
+                          l10n.renphoMetricMuscle,
+                          '%',
+                          _muscleColor,
+                          muscleSeries,
+                        ),
+                        (
+                          l10n.renphoMetricBodyWater,
+                          '%',
+                          _waterColor,
+                          waterSeries,
+                        ),
+                      ],
+                    ])
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(top: 6),
+                        child: pw.Row(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Expanded(
+                              child: _TrendPanel(
+                                title: row.first.$1,
+                                unit: row.first.$2,
+                                color: row.first.$3,
+                                values: row.first.$4,
+                                labels: dayLabels,
+                              ),
+                            ),
+                            pw.SizedBox(width: 10),
+                            pw.Expanded(
+                              child: _TrendPanel(
+                                title: row.last.$1,
+                                unit: row.last.$2,
+                                color: row.last.$3,
+                                values: row.last.$4,
+                                labels: dayLabels,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ]),
                 ),
               ],
@@ -349,97 +393,109 @@ pw.TableRow _row(
   ],
 );
 
-pw.Widget _legend(List<(PdfColor, String)> entries, String title) => pw.Padding(
-  padding: const pw.EdgeInsets.only(bottom: 3),
-  child: pw.Row(
-    children: [
-      pw.Expanded(
-        child: pw.Text(
-          title,
-          style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
-        ),
-      ),
-      for (final entry in entries) ...[
-        pw.Container(
-          width: 6,
-          height: 6,
-          margin: const pw.EdgeInsets.only(left: 6, right: 2),
-          decoration: pw.BoxDecoration(
-            color: entry.$1,
-            shape: pw.BoxShape.circle,
-          ),
-        ),
-        pw.Text(
-          entry.$2,
-          style: const pw.TextStyle(fontSize: 7, color: _muted),
-        ),
-      ],
-    ],
-  ),
-);
-
-/// The seven-day curves. One shared axis per chart, so weight stands alone and
-/// the percentages travel together.
-class _TrendChart extends pw.StatelessWidget {
+/// One metric over the week on its own axis, so the day-to-day movement shows
+/// instead of being swamped by the distance between metrics.
+class _TrendPanel extends pw.StatelessWidget {
+  final String title;
+  final String unit;
+  final PdfColor color;
+  final List<double?> values;
   final List<String> labels;
-  final List<(PdfColor, List<double?>)> series;
-  final double height;
 
-  _TrendChart({
+  _TrendPanel({
+    required this.title,
+    required this.unit,
+    required this.color,
+    required this.values,
     required this.labels,
-    required this.series,
-    required this.height,
   });
 
   @override
   pw.Widget build(pw.Context context) {
-    final readings = series
-        .expand((entry) => entry.$2)
-        .whereType<double>()
-        .toList();
-    if (readings.length < 2) return pw.SizedBox(height: height);
-    final lowest = readings.reduce(math.min);
-    final highest = readings.reduce(math.max);
-    final padding = math.max((highest - lowest) * 0.2, 0.4);
-    final lower = lowest - padding;
-    final upper = highest + padding;
+    final readings = values.whereType<double>().toList();
+    final decimals = unit == 'kg' ? 2 : 1;
+    final lowest = readings.isEmpty ? 0.0 : readings.reduce(math.min);
+    final highest = readings.isEmpty ? 1.0 : readings.reduce(math.max);
+    final padding = math.max((highest - lowest) * 0.25, 0.15);
 
-    return pw.SizedBox(
-      height: height,
-      child: pw.Chart(
-        grid: pw.CartesianGrid(
-          xAxis: pw.FixedAxis.fromStrings(
-            labels,
-            textStyle: const pw.TextStyle(fontSize: 6, color: _muted),
-            marginStart: 2,
-            marginEnd: 2,
-          ),
-          yAxis: pw.FixedAxis(
-            [lower, (lower + upper) / 2, upper],
-            format: (value) => value.toStringAsFixed(1),
-            textStyle: const pw.TextStyle(fontSize: 6, color: _muted),
-            divisions: true,
-            divisionsColor: _hairline,
-            divisionsWidth: .5,
-          ),
-        ),
-        datasets: [
-          for (final entry in series)
-            pw.LineDataSet(
-              data: [
-                for (var index = 0; index < entry.$2.length; index++)
-                  if (entry.$2[index] != null)
-                    pw.PointChartValue(index.toDouble(), entry.$2[index]!),
-              ],
-              color: entry.$1,
-              lineWidth: 1.4,
-              pointSize: 2,
-              isCurved: true,
-              drawSurface: series.length == 1,
-              surfaceOpacity: .12,
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        pw.Row(
+          children: [
+            pw.Container(
+              width: 6,
+              height: 6,
+              margin: const pw.EdgeInsets.only(right: 4),
+              decoration: pw.BoxDecoration(
+                color: color,
+                shape: pw.BoxShape.circle,
+              ),
             ),
-        ],
-      ),
+            pw.Expanded(
+              child: pw.Text(
+                title,
+                maxLines: 1,
+                style: pw.TextStyle(
+                  fontSize: 8,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+            if (readings.isNotEmpty)
+              pw.Text(
+                '${readings.last.toStringAsFixed(decimals)} $unit',
+                style: pw.TextStyle(fontSize: 8, color: color),
+              ),
+          ],
+        ),
+        pw.SizedBox(height: 2),
+        pw.SizedBox(
+          height: 76,
+          child: readings.length < 2
+              ? pw.SizedBox()
+              : pw.Chart(
+                  grid: pw.CartesianGrid(
+                    xAxis: pw.FixedAxis.fromStrings(
+                      labels,
+                      textStyle: const pw.TextStyle(fontSize: 6, color: _muted),
+                      marginStart: 2,
+                      marginEnd: 2,
+                    ),
+                    yAxis: pw.FixedAxis(
+                      [
+                        lowest - padding,
+                        (lowest + highest) / 2,
+                        highest + padding,
+                      ],
+                      format: (value) => value.toStringAsFixed(decimals),
+                      textStyle: const pw.TextStyle(fontSize: 6, color: _muted),
+                      divisions: true,
+                      divisionsColor: _hairline,
+                      divisionsWidth: .5,
+                    ),
+                  ),
+                  datasets: [
+                    pw.LineDataSet(
+                      data: [
+                        for (var index = 0; index < values.length; index++)
+                          if (values[index] != null)
+                            pw.PointChartValue(
+                              index.toDouble(),
+                              values[index]!,
+                            ),
+                      ],
+                      color: color,
+                      lineWidth: 1.4,
+                      pointSize: 2,
+                      isCurved: true,
+                      drawSurface: true,
+                      surfaceOpacity: .12,
+                    ),
+                  ],
+                ),
+        ),
+      ],
     );
   }
 }

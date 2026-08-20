@@ -15281,17 +15281,11 @@ abstract class AppLocalizations {
   /// **'Rating'**
   String get renphoReportRating;
 
-  /// No description provided for @renphoReportTrendWeight.
+  /// No description provided for @renphoReportTrends.
   ///
   /// In en, this message translates to:
-  /// **'Weight, last 7 days'**
-  String get renphoReportTrendWeight;
-
-  /// No description provided for @renphoReportTrendComposition.
-  ///
-  /// In en, this message translates to:
-  /// **'Composition in %, last 7 days'**
-  String get renphoReportTrendComposition;
+  /// **'Last 7 days'**
+  String get renphoReportTrends;
 
   /// No description provided for @renphoReportDisclaimer.
   ///
