@@ -21,7 +21,7 @@ class RenphoMeasurementDb {
     );
     try {
       await _db!.migrate(
-        currentVersion: 2,
+        currentVersion: 3,
         onMigrate: (txn, oldVersion, _) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -65,6 +65,12 @@ class RenphoMeasurementDb {
               'UPDATE ${txn.nameTable(table)} '
               'SET created_at = measured_at, updated_at = measured_at '
               'WHERE updated_at = 0',
+            );
+          }
+          if (oldVersion < 3) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(table)} '
+              'ADD COLUMN imported INTEGER NOT NULL DEFAULT 0',
             );
           }
         },

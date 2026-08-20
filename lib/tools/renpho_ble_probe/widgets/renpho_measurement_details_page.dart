@@ -323,7 +323,9 @@ class RenphoMeasurementDetailsPage extends StatelessWidget {
                 ),
                 InfoRow(
                   label: l10n.renphoSource,
-                  value: measurement.stored
+                  value: measurement.imported
+                      ? l10n.renphoSourceImported
+                      : measurement.stored
                       ? l10n.renphoSourceStored
                       : l10n.renphoSourceLive,
                 ),

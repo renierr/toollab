@@ -7,6 +7,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../renpho_ble_probe_state.dart';
 import 'renpho_device_sheet.dart';
 import 'renpho_health_connect_actions.dart';
+import 'renpho_import_tile.dart';
 import 'renpho_profile_dialog.dart';
 
 /// Tool-local settings. Backend sync stays with the global switch in the app
@@ -97,6 +98,8 @@ class RenphoSettingsSheet extends StatelessWidget {
                   RenphoDeviceSheet.show(context);
                 },
               ),
+              const Divider(),
+              const RenphoImportTile(),
               if (Platform.isAndroid) ...[
                 const Divider(),
                 SwitchListTile.adaptive(

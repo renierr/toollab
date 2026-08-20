@@ -8116,6 +8116,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renphoStepHintComputing => 'Calculating the body composition...';
 
   @override
+  String get renphoImportTitle => 'Import old data';
+
+  @override
+  String get renphoImportSubtitle =>
+      'Read a Renpho JSON export into the local history';
+
+  @override
+  String get renphoImportNothing => 'Nothing to import from that file.';
+
+  @override
+  String renphoImportDone(int added, int duplicates, int skipped) {
+    return 'Imported $added, skipped $duplicates already present and $skipped unusable.';
+  }
+
+  @override
+  String get renphoSourceImported => 'Imported from an export';
+
+  @override
   String get renphoPhaseIdle => 'Idle';
 
   @override

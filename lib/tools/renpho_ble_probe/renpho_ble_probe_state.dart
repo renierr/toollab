@@ -10,6 +10,7 @@ import 'package:universal_ble/universal_ble.dart';
 
 import 'config.dart';
 import 'renpho_health_connect_publisher.dart';
+import 'renpho_import.dart';
 import 'renpho_measurement.dart';
 import 'renpho_measurement_db.dart';
 import 'renpho_scale_protocol.dart';
@@ -49,6 +50,21 @@ enum RenphoFailure {
 /// like separate operations to the user — step on and stand still, then grab
 /// the handles — so the UI names them instead of showing one blanket status.
 enum RenphoMeasureStep { waiting, weighing, impedance, computing, done }
+
+/// What an import did, for the message shown afterwards.
+class RenphoImportOutcome {
+  final int added;
+  final int duplicates;
+  final int skipped;
+
+  const RenphoImportOutcome({
+    required this.added,
+    required this.duplicates,
+    required this.skipped,
+  });
+
+  bool get isEmpty => added == 0 && duplicates == 0;
+}
 
 class RenphoDiscoveredScale {
   final String id;
@@ -262,6 +278,38 @@ class RenphoBleProbeState extends ChangeNotifier {
     await RenphoMeasurementDb.instance.softDelete(uid);
     await refreshHistory();
     unawaited(syncNow());
+  }
+
+  /// Reads a Renpho export and adds what is not already there. Duplicates are
+  /// rejected by the same window that keeps the scale's replayed records out,
+  /// so re-importing the same file changes nothing.
+  Future<RenphoImportOutcome> importFromJson(String source) async {
+    final RenphoImportParse parsed;
+    try {
+      parsed = parseRenphoImport(source, _profile);
+    } catch (e) {
+      errorLog('[RenphoScale] Import failed: $e');
+      return const RenphoImportOutcome(added: 0, duplicates: 0, skipped: 0);
+    }
+    var added = 0;
+    var duplicates = 0;
+    for (final measurement in parsed.measurements) {
+      final saved = await RenphoMeasurementDb.instance.insert(measurement);
+      if (saved == null) {
+        duplicates++;
+      } else {
+        added++;
+      }
+    }
+    if (added > 0) {
+      await refreshHistory();
+      _backgroundSync();
+    }
+    return RenphoImportOutcome(
+      added: added,
+      duplicates: duplicates,
+      skipped: parsed.skipped,
+    );
   }
 
   // Discovery ---------------------------------------------------------------

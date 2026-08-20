@@ -8173,6 +8173,25 @@ class AppLocalizationsDe extends AppLocalizations {
       'Körperzusammensetzung wird berechnet...';
 
   @override
+  String get renphoImportTitle => 'Alte Daten importieren';
+
+  @override
+  String get renphoImportSubtitle =>
+      'Renpho-JSON-Export in die lokale Historie einlesen';
+
+  @override
+  String get renphoImportNothing =>
+      'In dieser Datei ist nichts zum Importieren.';
+
+  @override
+  String renphoImportDone(int added, int duplicates, int skipped) {
+    return '$added importiert, $duplicates bereits vorhanden übersprungen, $skipped unbrauchbar.';
+  }
+
+  @override
+  String get renphoSourceImported => 'Aus einem Export importiert';
+
+  @override
   String get renphoPhaseIdle => 'Inaktiv';
 
   @override

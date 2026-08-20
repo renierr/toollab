@@ -31,6 +31,7 @@ to Health Connect. No Renpho cloud account is involved at any point.
 | `renpho_measurement_db.dart` | Namespaced SQLite table, migrations, dedupe, sync bookkeeping. |
 | `renpho_sync_delegate.dart` | Backend sync, behind the app-wide sync switch. |
 | `renpho_health_connect_publisher.dart` | Health Connect push, behind its own local switch. |
+| `renpho_import.dart` | Reads a Renpho export into measurements. Pure parsing, no database. |
 | `renpho_error_message.dart` | Maps `RenphoFailure` to localized text. |
 | `widgets/` | All presentation. Only the routed page uses `ToolLayout`; pushed sub-pages use a plain `Scaffold`, because `ToolBackButton` resolves a GoRouter state that a `MaterialPageRoute` does not have. |
 
@@ -206,7 +207,37 @@ The measurement table lives in the tool's namespaced database, keyed by tool id.
 Only measured fields are persisted, together with a snapshot of the profile the
 scan was taken under, so a later height correction does not silently rewrite old
 results. Sync bookkeeping (`synced`, `deleted`, `created_at`, `updated_at`,
-`health_connect_published_at`) rides on the same row.
+`health_connect_published_at`) rides on the same row, as does the provenance of
+the reading: measured live, read out of the scale's memory, or imported.
+
+## Importing an existing history
+
+Tool settings → *Alte Daten importieren* reads a JSON export into the local
+history. The parser is deliberately lenient, because the same data reaches
+people in three different shapes: the raw cloud response, rows dumped out of a
+helper script, and this tool's own sync payload. Every field is looked up under
+all the spellings seen in those, and the record list is found whether the file
+is a bare array or wrapped in `data`, `data.lists`, `measurements`, `records`,
+`rows` or `items`.
+
+Fields taken from a cloud record: `weight`, `bmi`, `bodyfat`, `muscle`
+(skeletal muscle percent — *not* `sinewRatio`, which is itself derived),
+`visfat`, the ten `z20*`/`z100*` impedances, `height`, `gender` (1 male,
+0 female) and `measureAge` or `birthday`. `bodyage` is ignored on purpose: that
+is the metabolic age the scale estimates, not the person's.
+
+Two traps worth remembering:
+
+- **`timeStamp` is not a real unix epoch.** Across a whole export it sits a
+  fixed number of hours away from the `localCreatedAt` in the same record, so
+  the local wall clock is used whenever both are present.
+- **A record with no body composition is still kept.** Plain weigh-ins carry
+  only a weight, and the weight trend is the series people look at most.
+
+Insertion goes through the same thirty-second window that keeps the scale's
+replayed records out, so re-importing a file changes nothing. Imported rows are
+flagged as such and show a distinct icon and source in the history, because they
+were neither measured live nor read out of the scale's memory.
 
 ## Calculated values
 

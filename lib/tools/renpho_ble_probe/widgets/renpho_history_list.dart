@@ -69,7 +69,9 @@ class RenphoHistoryListItem extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: RenphoColors.weight.withValues(alpha: 0.15),
           child: Icon(
-            measurement.stored
+            measurement.imported
+                ? Icons.file_upload_outlined
+                : measurement.stored
                 ? Icons.history_toggle_off
                 : Icons.monitor_weight_outlined,
             color: RenphoColors.weight,

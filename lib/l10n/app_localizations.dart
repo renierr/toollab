@@ -14525,6 +14525,36 @@ abstract class AppLocalizations {
   /// **'Calculating the body composition...'**
   String get renphoStepHintComputing;
 
+  /// No description provided for @renphoImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import old data'**
+  String get renphoImportTitle;
+
+  /// No description provided for @renphoImportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Read a Renpho JSON export into the local history'**
+  String get renphoImportSubtitle;
+
+  /// No description provided for @renphoImportNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to import from that file.'**
+  String get renphoImportNothing;
+
+  /// No description provided for @renphoImportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {added}, skipped {duplicates} already present and {skipped} unusable.'**
+  String renphoImportDone(int added, int duplicates, int skipped);
+
+  /// No description provided for @renphoSourceImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported from an export'**
+  String get renphoSourceImported;
+
   /// No description provided for @renphoPhaseIdle.
   ///
   /// In en, this message translates to:

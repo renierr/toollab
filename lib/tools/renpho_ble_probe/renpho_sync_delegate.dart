@@ -35,6 +35,7 @@ class RenphoSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
       'visceralFat': measurement.visceralFat,
       'impedance': measurement.impedance,
       'stored': measurement.stored,
+      'imported': measurement.imported,
       'packetHex': measurement.packetHex,
       'profileName': measurement.profileName,
       'profileSex': measurement.profileSex,
@@ -94,6 +95,7 @@ class RenphoSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
               )
             : const {},
         stored: data['stored'] as bool? ?? false,
+        imported: data['imported'] as bool? ?? false,
         packetHex: data['packetHex'] as String? ?? '',
         profileName: data['profileName'] as String? ?? 'User',
         profileSex: data['profileSex'] as String? ?? 'male',

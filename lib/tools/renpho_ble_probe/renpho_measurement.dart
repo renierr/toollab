@@ -89,6 +89,10 @@ class RenphoMeasurement {
   /// True when the record came out of the scale's own memory rather than off a
   /// live scan.
   final bool stored;
+
+  /// True when the record was read out of an export file rather than measured
+  /// by this app at all.
+  final bool imported;
   final String packetHex;
 
   // The profile at the time of the scan, so a later height correction does not
@@ -120,6 +124,7 @@ class RenphoMeasurement {
     required this.profileHeightCm,
     required this.profileAge,
     this.stored = false,
+    this.imported = false,
     this.packetHex = '',
     this.synced = false,
     this.deleted = false,
@@ -147,6 +152,7 @@ class RenphoMeasurement {
     visceralFat: visceralFat,
     impedance: impedance,
     stored: stored,
+    imported: imported,
     packetHex: packetHex,
     profileName: profileName,
     profileSex: profileSex,
@@ -171,6 +177,7 @@ class RenphoMeasurement {
     'visceral_fat': visceralFat,
     'impedance_json': jsonEncode(impedance),
     'stored_record': stored ? 1 : 0,
+    'imported': imported ? 1 : 0,
     'packet_hex': packetHex,
     'profile_name': profileName,
     'profile_sex': profileSex,
@@ -197,6 +204,7 @@ class RenphoMeasurement {
         visceralFat: (row['visceral_fat'] as num).toInt(),
         impedance: decodeRenphoImpedance(row['impedance_json'] as String?),
         stored: (row['stored_record'] as int? ?? 0) == 1,
+        imported: (row['imported'] as int? ?? 0) == 1,
         packetHex: row['packet_hex'] as String? ?? '',
         profileName: row['profile_name'] as String? ?? 'User',
         profileSex: row['profile_sex'] as String? ?? 'male',
