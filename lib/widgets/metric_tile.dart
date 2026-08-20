@@ -99,7 +99,11 @@ class MetricGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final columns = constraints.maxWidth < 500 ? 2 : wideColumns;
+      final columns = constraints.maxWidth < 240
+          ? 1
+          : constraints.maxWidth < 500
+          ? 2
+          : wideColumns;
       final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
       return Wrap(
         spacing: 12,

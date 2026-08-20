@@ -46,21 +46,24 @@ class RenphoScanCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  weight == null ? '--.--' : weight.toStringAsFixed(2),
-                  style: theme.textTheme.displayMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: live ? RenphoColors.weight : null,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    weight == null ? '--.--' : weight.toStringAsFixed(2),
+                    style: theme.textTheme.displayMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: live ? RenphoColors.weight : null,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                Text('kg', style: theme.textTheme.titleMedium),
-              ],
+                  const SizedBox(width: 6),
+                  Text('kg', style: theme.textTheme.titleMedium),
+                ],
+              ),
             ),
             const SizedBox(height: 10),
             // Once the scale is set up the step indicator carries the

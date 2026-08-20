@@ -327,20 +327,24 @@ class _MetricTrendPainter extends CustomPainter {
     if (style == MetricTrendChartStyle.line && points.isNotEmpty) {
       final path = _smoothPath(points);
       if (emphasizePrimary) {
-        // A drop shadow cast downwards, so the primary curve sits visibly in
-        // front of the overlay instead of glowing around it.
-        canvas.save();
-        canvas.translate(0, 4);
+        // A wash fading to the baseline, so the primary curve reads as the
+        // front layer where the two run on top of each other.
+        final area = Path.from(path)
+          ..lineTo(points.last.dx, plot.bottom)
+          ..lineTo(points.first.dx, plot.bottom)
+          ..close();
         canvas.drawPath(
-          path,
+          area,
           Paint()
-            ..color = Colors.black.withValues(alpha: 0.5)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 5
-            ..strokeCap = StrokeCap.round
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                lineColor.withValues(alpha: 0.30),
+                lineColor.withValues(alpha: 0),
+              ],
+            ).createShader(plot),
         );
-        canvas.restore();
       }
       canvas.drawPath(
         path,
@@ -354,13 +358,6 @@ class _MetricTrendPainter extends CustomPainter {
         canvas.drawCircle(point, 4, Paint()..color = lineColor);
       }
       if (emphasizePrimary) {
-        canvas.drawCircle(
-          points.last + const Offset(0, 4),
-          6,
-          Paint()
-            ..color = Colors.black.withValues(alpha: 0.5)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-        );
         canvas.drawCircle(points.last, 5.5, Paint()..color = lineColor);
       }
     }
