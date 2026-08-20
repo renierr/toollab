@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_record.dart';
-import '../health_value_format.dart';
+import 'package:tool_lab/helpers/health_value_format.dart';
 import 'health_record_details_page.dart';
 import 'health_source_badge.dart';
 

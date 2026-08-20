@@ -14,7 +14,7 @@ import '../../../widgets/collapsible_section.dart';
 import '../treadmill_control_colors.dart';
 import '../treadmill_session.dart';
 import '../workout_details_stats.dart';
-import 'treadmill_metric_tile.dart';
+import 'package:tool_lab/widgets/metric_tile.dart';
 import 'workout_details_header.dart';
 import 'workout_hr_zone_bar.dart';
 import 'workout_incline_chart.dart';
@@ -209,9 +209,9 @@ class _WorkoutDetailsSheetState extends State<WorkoutDetailsSheet>
                   paceLabel: l10n.treadmillDetailsPaceUnit,
                 ),
                 const SizedBox(height: 16),
-                TreadmillMetricGrid(
+                MetricGrid(
                   children: [
-                    TreadmillMetricTile(
+                    MetricTile(
                       label: l10n.treadmillDetailsAvgSpeed,
                       value: widget.session.avgSpeed.toStringAsFixed(1),
                       unit: 'km/h',
@@ -219,7 +219,7 @@ class _WorkoutDetailsSheetState extends State<WorkoutDetailsSheet>
                       color: TreadmillColors.cyanMetric,
                       compact: true,
                     ),
-                    TreadmillMetricTile(
+                    MetricTile(
                       label: l10n.treadmillDetailsMaxSpeed,
                       value: widget.session.maxSpeed.toStringAsFixed(1),
                       unit: 'km/h',
@@ -227,7 +227,7 @@ class _WorkoutDetailsSheetState extends State<WorkoutDetailsSheet>
                       color: TreadmillColors.cyanMetric,
                       compact: true,
                     ),
-                    TreadmillMetricTile(
+                    MetricTile(
                       label: l10n.treadmillDetailsAvgHr,
                       value: '${widget.session.avgHeartRate.round()}',
                       unit: 'bpm',
@@ -235,7 +235,7 @@ class _WorkoutDetailsSheetState extends State<WorkoutDetailsSheet>
                       color: TreadmillColors.redMetric,
                       compact: true,
                     ),
-                    TreadmillMetricTile(
+                    MetricTile(
                       label: l10n.treadmillDetailsMaxHr,
                       value: '${widget.session.maxHeartRate.round()}',
                       unit: 'bpm',
@@ -243,7 +243,7 @@ class _WorkoutDetailsSheetState extends State<WorkoutDetailsSheet>
                       color: TreadmillColors.redMetric,
                       compact: true,
                     ),
-                    TreadmillMetricTile(
+                    MetricTile(
                       label: l10n.treadmillDetailsCalories,
                       value: '${widget.session.calories}',
                       unit: 'kcal',
@@ -252,7 +252,7 @@ class _WorkoutDetailsSheetState extends State<WorkoutDetailsSheet>
                       compact: true,
                     ),
                     if (stats.minHeartRate > 0)
-                      TreadmillMetricTile(
+                      MetricTile(
                         label: l10n.treadmillDetailsMinHr,
                         value: '${stats.minHeartRate.round()}',
                         unit: 'bpm',
@@ -261,7 +261,7 @@ class _WorkoutDetailsSheetState extends State<WorkoutDetailsSheet>
                         compact: true,
                       ),
                     if (widget.session.steps > 0)
-                      TreadmillMetricTile(
+                      MetricTile(
                         label: l10n.treadmillDetailsSteps,
                         value: NumberFormat.decimalPattern(
                           locale,
@@ -271,7 +271,7 @@ class _WorkoutDetailsSheetState extends State<WorkoutDetailsSheet>
                         compact: true,
                       ),
                     if (stats.hasIncline) ...[
-                      TreadmillMetricTile(
+                      MetricTile(
                         label: l10n.treadmillDetailsAvgIncline,
                         value: stats.avgIncline.toStringAsFixed(1),
                         unit: '%',
@@ -279,7 +279,7 @@ class _WorkoutDetailsSheetState extends State<WorkoutDetailsSheet>
                         color: TreadmillColors.amberMetric,
                         compact: true,
                       ),
-                      TreadmillMetricTile(
+                      MetricTile(
                         label: l10n.treadmillDetailsMaxIncline,
                         value: stats.maxIncline.toStringAsFixed(1),
                         unit: '%',

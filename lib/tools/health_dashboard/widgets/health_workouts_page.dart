@@ -11,7 +11,7 @@ import 'health_empty_state.dart';
 import 'health_metric_history.dart';
 import 'health_workout_card.dart';
 import 'health_workout_day_summary.dart';
-import 'health_workout_trend_chart.dart';
+import 'package:tool_lab/widgets/metric_trend_chart.dart';
 
 class HealthWorkoutsPage extends StatelessWidget {
   const HealthWorkoutsPage({super.key});
@@ -51,7 +51,7 @@ class HealthWorkoutsPage extends StatelessWidget {
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: HealthWorkoutTrendChart(
+                    child: MetricTrendChart(
                       values: distance,
                       unit: 'km',
                       color: AppTheme.accentTeal,

@@ -2,90 +2,254 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
+import 'package:tool_lab/services/sync_service.dart';
 import 'package:universal_ble/universal_ble.dart';
 
 import 'config.dart';
+import 'renpho_health_connect_publisher.dart';
 import 'renpho_measurement.dart';
 import 'renpho_measurement_db.dart';
+import 'renpho_scale_protocol.dart';
+import 'renpho_sync_delegate.dart';
+
+enum RenphoScanPhase {
+  /// Nothing running.
+  idle,
+  discovering,
+  connecting,
+
+  /// Connected, walking the B2/B3/B8/B7 setup handshake.
+  preparing,
+
+  /// Handshake done — the scale is waiting for the user to step on.
+  ready,
+
+  /// A result came in and is being written.
+  saving,
+}
+
+class RenphoDiscoveredScale {
+  final String id;
+  final String name;
+  final int rssi;
+
+  const RenphoDiscoveredScale({
+    required this.id,
+    required this.name,
+    required this.rssi,
+  });
+}
 
 class RenphoBleProbeState extends ChangeNotifier {
-  static const scaleMacAddress = '60:30:F2:74:22:06';
-  static const _service = '00001a10-0000-1000-8000-00805f9b34fb';
-  static const _write = '00002a11-0000-1000-8000-00805f9b34fb';
-  static const _notify = '00002a10-0000-1000-8000-00805f9b34fb';
-  static const _indicate = '00002a12-0000-1000-8000-00805f9b34fb';
-  final _devices = <String, BleDevice>{};
-  final _frames = <Map<String, String>>[];
-  final _fragments = <int, List<int>>{};
-  StreamSubscription<BleDevice>? _scanSubscription;
-  final _subscriptions = <StreamSubscription<Uint8List>>[];
-  Timer? _stageTimer;
-  WakeLockLease? _wakeLock;
-  bool _scanning = false, _connecting = false, _ready = false, _saving = false;
-  String? _deviceId, _error, _status;
-  String? _resolvedService, _resolvedWrite, _resolvedNotify, _resolvedIndicate;
-  double? _liveWeightKg;
-  RenphoMeasurement? _latest;
-  RenphoProfile _profile = RenphoProfile(
-    name: 'User',
-    sex: 'male',
-    heightCm: 173,
-    birthDate: DateTime(1976, 1, 1),
-  );
-  List<RenphoMeasurement> _history = [];
-  int _stage = 0;
+  static const _profileKey = 'profile';
+  static const _lastDeviceKey = 'last_device_id';
+  static const _lastDeviceNameKey = 'last_device_name';
 
+  /// Names the MorphoScan family advertises. Anything else has to be picked by
+  /// hand, which is also the escape hatch for a relabelled unit.
+  static const _knownNames = ['RT-MSC04', 'R-AMSC04'];
+
+  // Discovery / connection
+  bool _scanning = false;
+  final _discovered = <String, RenphoDiscoveredScale>{};
+  String? _deviceId;
+  String? _deviceName;
+  String? _lastDeviceId;
+  String? _lastDeviceName;
+  bool _autoConnect = true;
+  bool _connectAborted = false;
+  StreamSubscription<BleDevice>? _scanSubscription;
+
+  // Resolved GATT handles
+  String? _controlService;
+  String? _writeCharacteristic;
+  String? _notifyCharacteristic;
+  String? _indicateCharacteristic;
+  String? _resultService;
+  String? _resultCharacteristic;
+  final _subscriptions = <StreamSubscription<Uint8List>>[];
+
+  // Session
+  RenphoScanPhase _phase = RenphoScanPhase.idle;
+  int _stage = 0;
+  Timer? _stageTimer;
+  bool _handshakeRetried = false;
+  WakeLockLease? _wakeLock;
+  final _assembler = RenphoFragmentAssembler();
+  double? _liveWeightKg;
+  String? _error;
+  String? _statusOverride;
+  int _importedStoredRecords = 0;
+
+  // Data
+  RenphoProfile _profile = RenphoProfile.empty;
+  List<RenphoMeasurement> _history = const [];
+  RenphoMeasurement? _latest;
+  bool _loaded = false;
+  bool _syncing = false;
+  bool _healthConnectEnabled = false;
+  RenphoPublishResult? _lastPublish;
+
+  RenphoScanPhase get phase => _phase;
   bool get scanning => _scanning;
-  bool get connecting => _connecting;
-  bool get ready => _ready;
-  bool get saving => _saving;
+  bool get busy =>
+      _phase == RenphoScanPhase.discovering ||
+      _phase == RenphoScanPhase.connecting ||
+      _phase == RenphoScanPhase.preparing ||
+      _phase == RenphoScanPhase.saving;
+  bool get connected => _deviceId != null;
+  bool get ready => _phase == RenphoScanPhase.ready;
   String? get error => _error;
-  String get status => _status ?? 'Tap scan, then wake the scale.';
+  String? get statusOverride => _statusOverride;
   double? get liveWeightKg => _liveWeightKg;
-  RenphoMeasurement? get latest => _latest;
+  String? get deviceName => _deviceName ?? _lastDeviceName;
+  String? get deviceId => _deviceId;
+  String? get rememberedDeviceId => _lastDeviceId;
+  bool get autoConnect => _autoConnect;
+  int get importedStoredRecords => _importedStoredRecords;
+  List<RenphoDiscoveredScale> get discovered =>
+      _discovered.values.toList()..sort((a, b) => b.rssi.compareTo(a.rssi));
+
   RenphoProfile get profile => _profile;
+  bool get profileConfigured => _profile.configured;
+  bool get loaded => _loaded;
+  bool get syncing => _syncing;
+  bool get healthConnectEnabled => _healthConnectEnabled;
+  RenphoPublishResult? get lastPublish => _lastPublish;
   List<RenphoMeasurement> get history => List.unmodifiable(_history);
+  RenphoMeasurement? get latest => _latest;
+
+  RenphoMeasurement? get previous => _history.length < 2 ? null : _history[1];
+
+  /// One value per day for the last seven days, newest last, so the trend chart
+  /// can line up two series on the same axis. A day with several scans reports
+  /// the latest one.
+  List<double?> weeklySeries(double Function(RenphoMeasurement) pick) {
+    final today = DateTime.now();
+    final midnight = DateTime(today.year, today.month, today.day);
+    final byDay = <int, RenphoMeasurement>{};
+    for (final measurement in _history.reversed) {
+      final day = DateTime(
+        measurement.measuredAt.year,
+        measurement.measuredAt.month,
+        measurement.measuredAt.day,
+      );
+      final offset = midnight.difference(day).inDays;
+      if (offset < 0 || offset > 6) continue;
+      byDay[6 - offset] = measurement;
+    }
+    return [
+      for (var index = 0; index < 7; index++)
+        byDay[index] == null ? null : pick(byDay[index]!),
+    ];
+  }
 
   Future<void> load() async {
-    final raw = await DatabaseService.instance.getSetting(
-      RenphoBleProbeTool.config.id,
-      'profile',
-    );
-    if (raw != null) {
-      _profile = RenphoProfile.fromJson(
-        jsonDecode(raw) as Map<String, dynamic>,
-      );
+    if (_loaded) return;
+    final settings = DatabaseService.instance;
+    final toolId = RenphoBleProbeTool.config.id;
+    final raw = await settings.getSetting(toolId, _profileKey);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        _profile = RenphoProfile.fromJson(
+          jsonDecode(raw) as Map<String, dynamic>,
+        );
+      } catch (e) {
+        errorLog('[RenphoScale] Profile load failed: $e');
+      }
     }
-    _history = await RenphoMeasurementDb.instance.recent();
+    _lastDeviceId = await settings.getSetting(toolId, _lastDeviceKey);
+    _lastDeviceName = await settings.getSetting(toolId, _lastDeviceNameKey);
+    _healthConnectEnabled = await RenphoHealthConnectPublisher.instance
+        .isEnabled();
+    await refreshHistory();
+    _loaded = true;
+    notifyListeners();
+  }
+
+  Future<void> refreshHistory() async {
+    _history = await RenphoMeasurementDb.instance.all();
+    _latest = _history.isEmpty ? null : _history.first;
     notifyListeners();
   }
 
   Future<void> saveProfile(RenphoProfile profile) async {
-    _profile = profile;
+    _profile = profile.copyWith(configured: true);
     await DatabaseService.instance.setSetting(
       RenphoBleProbeTool.config.id,
-      'profile',
-      jsonEncode(profile.toJson()),
+      _profileKey,
+      jsonEncode(_profile.toJson()),
     );
     notifyListeners();
   }
 
+  Future<void> setHealthConnectEnabled(bool enabled) async {
+    _healthConnectEnabled = enabled;
+    notifyListeners();
+    await RenphoHealthConnectPublisher.instance.setEnabled(enabled);
+    if (enabled) {
+      _lastPublish = await RenphoHealthConnectPublisher.instance.publishPending(
+        force: true,
+      );
+      notifyListeners();
+    }
+  }
+
+  Future<RenphoPublishResult> publishToHealthConnect() async {
+    _lastPublish = await RenphoHealthConnectPublisher.instance.publishPending(
+      force: true,
+    );
+    notifyListeners();
+    return _lastPublish!;
+  }
+
+  Future<RenphoPublishResult> removeFromHealthConnect() async {
+    final result = await RenphoHealthConnectPublisher.instance.removeAll();
+    notifyListeners();
+    return result;
+  }
+
+  void setAutoConnect(bool value) {
+    _autoConnect = value;
+    notifyListeners();
+  }
+
+  Future<void> forgetDevice() async {
+    _lastDeviceId = null;
+    _lastDeviceName = null;
+    final settings = DatabaseService.instance;
+    final toolId = RenphoBleProbeTool.config.id;
+    await settings.deleteSetting(toolId, _lastDeviceKey);
+    await settings.deleteSetting(toolId, _lastDeviceNameKey);
+    notifyListeners();
+  }
+
+  Future<void> deleteMeasurement(String uid) async {
+    await RenphoMeasurementDb.instance.softDelete(uid);
+    await refreshHistory();
+    unawaited(syncNow());
+  }
+
+  // Discovery ---------------------------------------------------------------
+
   Future<void> startScan() async {
-    if (_scanning || _connecting) return;
+    if (_scanning || _phase == RenphoScanPhase.connecting) return;
     _error = null;
-    _status = 'Looking for MorphoScan Nova. Step on the scale to wake it.';
+    _importedStoredRecords = 0;
+    _liveWeightKg = null;
+    _discovered.clear();
+    _phase = RenphoScanPhase.discovering;
     notifyListeners();
     try {
       await UniversalBle.requestPermissions(withAndroidFineLocation: false);
-      _scanSubscription = UniversalBle.scanStream.listen((device) {
-        _devices[device.deviceId] = device;
-        if (_isScale(device) && _deviceId == null && !_connecting) {
-          unawaited(_connect(device.deviceId));
-        }
-        notifyListeners();
-      }, onError: (e) => _fail('Bluetooth scan failed: $e'));
+      await _scanSubscription?.cancel();
+      _scanSubscription = UniversalBle.scanStream.listen(
+        _onDeviceFound,
+        onError: (Object e) => _fail('Bluetooth scan failed: $e'),
+      );
       await UniversalBle.startScan(
         platformConfig: PlatformConfig(
           android: AndroidOptions(scanMode: AndroidScanMode.lowLatency),
@@ -94,381 +258,492 @@ class RenphoBleProbeState extends ChangeNotifier {
       _scanning = true;
       notifyListeners();
     } catch (e) {
-      _fail('Bluetooth permission or scan failed: $e');
+      await _scanSubscription?.cancel();
+      _scanSubscription = null;
+      _fail('Bluetooth is unavailable or permission was refused: $e');
+      _phase = RenphoScanPhase.idle;
+      notifyListeners();
     }
   }
 
-  Future<void> stop() async {
-    _stageTimer?.cancel();
-    _stageTimer = null;
+  Future<void> stopScan() async {
+    if (!_scanning) return;
     try {
       await UniversalBle.stopScan();
     } catch (_) {}
     await _scanSubscription?.cancel();
     _scanSubscription = null;
     _scanning = false;
-    final id = _deviceId;
-    _deviceId = null;
-    _resolvedService = null;
-    _resolvedWrite = null;
-    _resolvedNotify = null;
-    _resolvedIndicate = null;
-    _ready = false;
+    if (_phase == RenphoScanPhase.discovering) _phase = RenphoScanPhase.idle;
+    notifyListeners();
+  }
+
+  void _onDeviceFound(BleDevice device) {
+    final name = (device.name ?? '').trim();
+    final id = device.deviceId;
+    if (!_looksLikeScale(id, name)) return;
+    _discovered[id] = RenphoDiscoveredScale(
+      id: id,
+      name: name.isEmpty ? 'Unnamed scale' : name,
+      rssi: device.rssi ?? 0,
+    );
+    notifyListeners();
+    if (_autoConnect &&
+        _deviceId == null &&
+        _phase == RenphoScanPhase.discovering &&
+        (_lastDeviceId == null || _lastDeviceId == id)) {
+      unawaited(connect(id, _discovered[id]!.name));
+    }
+  }
+
+  /// The scale is only recognised by its advertised name or by having been
+  /// paired here before — no MAC address is baked into the app, because that
+  /// only ever matches one person's unit.
+  bool _looksLikeScale(String id, String name) {
+    if (_lastDeviceId != null && id == _lastDeviceId) return true;
+    final upper = name.toUpperCase();
+    if (upper.isEmpty) return false;
+    return _knownNames.contains(upper) ||
+        upper.contains('MSC04') ||
+        upper.contains('MORPHOSCAN') ||
+        upper.contains('RENPHO');
+  }
+
+  // Connection --------------------------------------------------------------
+
+  Future<void> connect(String id, String name) async {
+    if (_phase == RenphoScanPhase.connecting || _deviceId != null) return;
+    _connectAborted = false;
+    _phase = RenphoScanPhase.connecting;
+    _deviceName = name;
+    _error = null;
+    notifyListeners();
+    await stopScan();
+
+    // The scale advertises for a few seconds after it wakes and then sleeps
+    // again; a single connect attempt loses that race often enough to look
+    // broken.
+    const attempts = 4;
+    for (var attempt = 1; attempt <= attempts; attempt++) {
+      if (_connectAborted) return;
+      try {
+        await UniversalBle.connect(id, timeout: const Duration(seconds: 15));
+      } catch (e) {
+        errorLog('[RenphoScale] Connect attempt $attempt/$attempts: $e');
+        if (_connectAborted) return;
+        if (attempt < attempts) {
+          await Future<void>.delayed(Duration(milliseconds: 600 * attempt));
+        }
+        continue;
+      }
+      // The link is up. A failure past this point is about the device, not the
+      // connection, so it is reported instead of retried.
+      _deviceId = id;
+      try {
+        await _rememberDevice(id, name);
+        await _prepare(id);
+      } catch (e) {
+        _fail('$e');
+        await disconnect();
+      }
+      return;
+    }
+    _fail('Could not connect to the scale. Wake it and try again.');
+    await disconnect();
+  }
+
+  Future<void> _rememberDevice(String id, String name) async {
+    _lastDeviceId = id;
+    _lastDeviceName = name;
+    final settings = DatabaseService.instance;
+    final toolId = RenphoBleProbeTool.config.id;
+    await settings.setSetting(toolId, _lastDeviceKey, id);
+    await settings.setSetting(toolId, _lastDeviceNameKey, name);
+  }
+
+  Future<void> _prepare(String id) async {
+    _phase = RenphoScanPhase.preparing;
+    _statusOverride = null;
+    notifyListeners();
+
+    _wakeLock = await PowerWakeLockService.acquireFull();
+    // Android holds the ATT MTU at 23 until asked. Result fragments are larger
+    // than that and would arrive truncated.
+    try {
+      await UniversalBle.requestMtu(id, 247);
+    } catch (_) {}
+
+    final services = await UniversalBle.discoverServices(id);
+    final control = services
+        .where(
+          (service) => _sameUuid(service.uuid, RenphoScaleUuids.controlService),
+        )
+        .firstOrNull;
+    if (control == null) {
+      throw StateError(
+        'This device does not expose the 1A10 control service. '
+        'Found: ${services.map((service) => service.uuid).join(', ')}',
+      );
+    }
+    _controlService = control.uuid;
+    _writeCharacteristic = _find(control, RenphoScaleUuids.controlWrite);
+    _notifyCharacteristic = _find(control, RenphoScaleUuids.controlNotify);
+    _indicateCharacteristic = _find(control, RenphoScaleUuids.controlIndicate);
+    final missing = [
+      if (_writeCharacteristic == null) '2A11 write',
+      if (_notifyCharacteristic == null) '2A10 notify',
+      if (_indicateCharacteristic == null) '2A12 indicate',
+    ];
+    if (missing.isNotEmpty) {
+      throw StateError('The 1A10 service is missing ${missing.join(', ')}.');
+    }
+
+    // Body-composition results travel on their own transport characteristic,
+    // which lives outside the control service. Without this subscription the
+    // handshake completes and no result ever arrives.
+    for (final service in services) {
+      final characteristic = _find(service, RenphoScaleUuids.resultTransport);
+      if (characteristic != null) {
+        _resultService = service.uuid;
+        _resultCharacteristic = characteristic;
+        break;
+      }
+    }
+
+    await _listen(
+      id,
+      _controlService!,
+      _notifyCharacteristic!,
+      indicate: false,
+    );
+    // The capture proves 2A10 notifies and 2A12 indicates. Subscribing 2A12 as
+    // a notification leaves its CCCD in the wrong mode and the scale never
+    // sends the B2 acknowledgement.
+    await _listen(
+      id,
+      _controlService!,
+      _indicateCharacteristic!,
+      indicate: true,
+    );
+    if (_resultCharacteristic != null) {
+      await _listen(
+        id,
+        _resultService!,
+        _resultCharacteristic!,
+        indicate: false,
+      );
+    } else {
+      errorLog('[RenphoScale] No 0003 result transport found on this device');
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    _stage = 1;
+    _handshakeRetried = false;
+    await _write(RenphoScaleCommands.handshake());
+    _armTimeout();
+  }
+
+  Future<void> _listen(
+    String id,
+    String service,
+    String characteristic, {
+    required bool indicate,
+  }) async {
+    _subscriptions.add(
+      UniversalBle.characteristicValueStream(id, characteristic).listen(
+        (value) => _onFrame(value),
+        onError: (Object e) => errorLog('[RenphoScale] Receive failed: $e'),
+      ),
+    );
+    if (indicate) {
+      await UniversalBle.subscribeIndications(id, service, characteristic);
+    } else {
+      await UniversalBle.subscribeNotifications(id, service, characteristic);
+    }
+  }
+
+  Future<void> disconnect() async {
+    _connectAborted = true;
+    _stageTimer?.cancel();
+    _stageTimer = null;
+    await stopScan();
     for (final subscription in _subscriptions) {
       await subscription.cancel();
     }
     _subscriptions.clear();
+    _assembler.clear();
     await _wakeLock?.release();
     _wakeLock = null;
+    final id = _deviceId;
+    _deviceId = null;
+    _controlService = null;
+    _writeCharacteristic = null;
+    _notifyCharacteristic = null;
+    _indicateCharacteristic = null;
+    _resultService = null;
+    _resultCharacteristic = null;
+    _stage = 0;
+    _liveWeightKg = null;
+    if (_phase != RenphoScanPhase.saving) _phase = RenphoScanPhase.idle;
     if (id != null) {
       try {
         await UniversalBle.disconnect(id);
       } catch (_) {}
     }
-    _status = 'Disconnected. Tap scan for another measurement.';
     notifyListeners();
   }
 
-  Future<void> _connect(String id) async {
-    _connecting = true;
-    notifyListeners();
-    try {
-      await UniversalBle.stopScan();
-      await _scanSubscription?.cancel();
-      _scanSubscription = null;
-      _scanning = false;
-      _status = 'Connecting to scale...';
+  // Frames ------------------------------------------------------------------
+
+  void _onFrame(List<int> value) {
+    final bytes = List<int>.from(value);
+    if (kDebugMode) debugLog('[RenphoScale] RX ${renphoHex(bytes)}');
+
+    if (RenphoFragmentAssembler.isFragment(bytes)) {
+      final packet = _assembler.add(bytes);
+      // The acknowledgement carries the transport's fragment sequence, not the
+      // sequence byte inside the reassembled packet.
+      if (packet != null) {
+        _onPacket(packet, fragmented: true, fragmentSequence: bytes[1]);
+      }
+      return;
+    }
+    _onPacket(bytes, fragmented: false);
+  }
+
+  void _onPacket(
+    List<int> packet, {
+    required bool fragmented,
+    int? fragmentSequence,
+  }) {
+    if (packet.length < 3 || packet[0] != 0x55 || packet[1] != 0xAA) return;
+    final type = packet[2];
+
+    final live = decodeRenphoLiveWeight(packet);
+    if (live != null) {
+      _liveWeightKg = live;
       notifyListeners();
-      await UniversalBle.connect(id, timeout: const Duration(seconds: 15));
-      _deviceId = id;
-      _wakeLock = await PowerWakeLockService.acquireFull();
-      final services = await UniversalBle.discoverServices(id);
-      final controlService = services
-          .where((service) => _sameUuid(service.uuid, _service))
-          .firstOrNull;
-      if (controlService == null) {
-        throw StateError(
-          'The scale does not expose the required 1A10 control service. Found: ${services.map((service) => service.uuid).join(', ')}',
-        );
+      return;
+    }
+
+    if (type == 0x24 || type == 0x25 || type == 0x26) {
+      // A truncated or corrupted result would decode into a plausible-looking
+      // body composition, so a bad checksum drops the packet.
+      if (fragmented && !renphoChecksumValid(packet)) {
+        errorLog('[RenphoScale] Dropped result with bad checksum');
+        return;
       }
-      _resolvedService = controlService.uuid;
-      _resolvedWrite = _characteristicUuid(controlService, _write);
-      _resolvedNotify = _characteristicUuid(controlService, _notify);
-      _resolvedIndicate = _characteristicUuid(controlService, _indicate);
-      final missing = <String>[
-        if (_resolvedWrite == null) '2A11 write',
-        if (_resolvedNotify == null) '2A10 notification',
-        if (_resolvedIndicate == null) '2A12 indication',
-      ];
-      if (missing.isNotEmpty) {
-        throw StateError(
-          'The 1A10 service is missing ${missing.join(', ')}. Found: ${controlService.characteristics.map((characteristic) => characteristic.uuid).join(', ')}',
-        );
-      }
-      // The Android HCI capture proves that 2A10 uses notifications and 2A12
-      // uses indications. Enabling 2A12 as a notification leaves its CCCD in
-      // the wrong mode and the scale never sends the B2 acknowledgement.
-      try {
-        await UniversalBle.requestMtu(id, 247);
-      } catch (_) {}
-      for (final characteristic in [_resolvedNotify!, _resolvedIndicate!]) {
-        _subscriptions.add(
-          UniversalBle.characteristicValueStream(id, characteristic).listen(
-            (value) => _onFrame(characteristic, value),
-            onError: (e) => _fail('Bluetooth receive failed: $e'),
+      final result = decodeRenphoResult(packet);
+      // The scale expects each complete stored record to be acknowledged
+      // before it moves on to the next one.
+      if (type == 0x26 && packet.length > 5) {
+        unawaited(
+          _write(
+            RenphoScaleCommands.acknowledge(fragmentSequence ?? packet[5]),
           ),
         );
       }
-      await UniversalBle.subscribeNotifications(
-        id,
-        _resolvedService!,
-        _resolvedNotify!,
-      );
-      await UniversalBle.subscribeIndications(
-        id,
-        _resolvedService!,
-        _resolvedIndicate!,
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      _stage = 1;
-      await _writePacket([
-        0x55,
-        0xAA,
-        0xB2,
-        0,
-        9,
-        0,
-        1,
-        6,
-        0xC2,
-        0x19,
-        0xAF,
-        0xB2,
-        1,
-        2,
-        0,
-      ]);
-      _status = 'Preparing local scan...';
-      _armTimeout('The scale did not acknowledge setup. Retrying once...');
-    } catch (e) {
-      _fail('Could not connect to the scale: $e');
-      await stop();
-    } finally {
-      _connecting = false;
-      notifyListeners();
-    }
-  }
-
-  void _onFrame(String uuid, List<int> value) {
-    final bytes = List<int>.from(value);
-    _frames.add({
-      'at': DateTime.now().toIso8601String(),
-      'characteristic': uuid,
-      'hex': _hex(bytes),
-    });
-    if (_frames.length > 500) _frames.removeAt(0);
-    if (bytes.length >= 4 &&
-        (bytes[0] == 0xAD || bytes[0] == 0xAE || bytes[0] == 0xAF)) {
-      _fragment(bytes);
+      if (result == null) {
+        if (type == 0x24) {
+          // 0x24 is the settled weight without body composition; keep it on
+          // screen but do not store a scan for it.
+          final weight = _weightOnly(packet);
+          if (weight != null) {
+            _liveWeightKg = weight;
+            notifyListeners();
+          }
+        }
+        return;
+      }
+      if (!result.hasBodyComposition) {
+        _liveWeightKg = result.weightKg;
+        notifyListeners();
+        return;
+      }
+      unawaited(_store(result));
       return;
     }
-    if (bytes.length < 3 || bytes[0] != 0x55 || bytes[1] != 0xAA) return;
-    if (bytes[2] == 0x21 && bytes.length >= 10) {
-      _liveWeightKg = _u16(bytes, 8) / 100;
-    }
-    _advance(bytes[2]);
-    notifyListeners();
+
+    _advanceSetup(type);
   }
 
-  void _fragment(List<int> fragment) {
-    final sequence = fragment[1];
-    if (fragment[0] == 0xAD) _fragments[sequence] = [];
-    final pieces = _fragments[sequence];
-    if (pieces == null) return;
-    pieces.addAll(fragment.sublist(3));
-    if (fragment[0] != 0xAF || fragment[2] != 0) return;
-    _fragments.remove(sequence);
-    if (pieces.length < 3 || pieces[0] != 0x55 || pieces[1] != 0xAA) return;
-    if (pieces[2] == 0x26) {
-      unawaited(_ack(sequence));
-      return;
-    }
-    if (pieces[2] == 0x25 && pieces.length >= 42 && _validChecksum(pieces)) {
-      unawaited(_saveResult(pieces));
-    }
+  double? _weightOnly(List<int> packet) {
+    if (packet.length < 11) return null;
+    return ((packet[7] << 24) |
+            (packet[8] << 16) |
+            (packet[9] << 8) |
+            packet[10]) /
+        100;
   }
 
-  void _advance(int type) {
+  void _advanceSetup(int type) {
     if (_stage == 1 && type == 0x20) {
       _stage = 2;
-      _stageTimer?.cancel();
-      final seconds = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
-      unawaited(
-        _writePacket(
-          _checksum([
-            0x55,
-            0xAA,
-            0xB3,
-            0,
-            0x0B,
-            1,
-            7,
-            1,
-            1,
-            (seconds >> 24) & 255,
-            (seconds >> 16) & 255,
-            (seconds >> 8) & 255,
-            seconds & 255,
-            0,
-            0x78,
-            0,
-          ]),
-        ),
-      );
-      _armTimeout(
-        'The scale did not continue setup after B3. Disconnect and retry.',
-      );
+      unawaited(_write(RenphoScaleCommands.setClock(DateTime.now())));
+      _armTimeout();
     } else if (_stage == 2 && type == 0x22) {
       _stage = 3;
-      unawaited(
-        _writePacket([
-          0x55,
-          0xAA,
-          0xB8,
-          0,
-          0x0C,
-          2,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0xC6,
-        ]),
-      );
-      _armTimeout(
-        'The scale did not continue setup after B8. Disconnect and retry.',
-      );
+      unawaited(_write(RenphoScaleCommands.requestStoredRecords()));
+      _armTimeout();
     } else if (_stage == 3 && type == 0x23) {
       _stage = 4;
-      final name = utf8.encode(_profile.name).take(20).toList();
-      final packet = [
-        0x55,
-        0xAA,
-        0xB7,
-        0,
-        6 + name.length,
-        3,
-        1,
-        0,
-        1,
-        0,
-        name.length,
-        ...name,
-      ];
-      unawaited(_writePacket(_checksum(packet)));
-      _ready = true;
-      _status =
-          'Ready. Stand barefoot, then hold both handles until the result appears.';
+      unawaited(_write(RenphoScaleCommands.selectUser(_profile.name)));
       _stageTimer?.cancel();
-    }
-  }
-
-  Future<void> _saveResult(List<int> packet) async {
-    if (_saving) return;
-    _saving = true;
-    notifyListeners();
-    try {
-      final impedance = <String, double>{
-        'z20Body': packet[13] / 10,
-        'z20HandL': _u16(packet, 14) / 10,
-        'z20HandR': _u16(packet, 16) / 10,
-        'z20FootL': _u16(packet, 18) / 10,
-        'z20FootR': _u16(packet, 20) / 10,
-        'z100Body': _u16(packet, 22) / 10,
-        'z100HandL': _u16(packet, 24) / 10,
-        'z100HandR': _u16(packet, 26) / 10,
-        'z100FootL': _u16(packet, 28) / 10,
-        'z100FootR': _u16(packet, 30) / 10,
-      };
-      final measurement = RenphoMeasurement(
-        uid: RenphoMeasurementDb.instance.newUid(),
-        measuredAt: DateTime.now(),
-        weightKg: _u16(packet, 9) / 100,
-        bmi: _u16(packet, 35) / 10,
-        bodyFatPercent: packet[34] / 10,
-        musclePercent: _u16(packet, 37) / 10,
-        visceralFat: _u16(packet, 39),
-        impedance: impedance,
-        packetHex: _hex(packet),
-      );
-      await RenphoMeasurementDb.instance.save(measurement);
-      _latest = measurement;
-      _history = await RenphoMeasurementDb.instance.recent();
-      _status = 'Measurement saved locally.';
-    } catch (e) {
-      _fail('Could not save measurement: $e');
-    } finally {
-      _saving = false;
+      _stageTimer = null;
+      _phase = RenphoScanPhase.ready;
+      _error = null;
       notifyListeners();
     }
   }
 
-  Future<void> _ack(int sequence) =>
-      _writePacket(_checksum([0x55, 0xAA, 0xB6, 0, 2, sequence, 1]));
-  Future<void> _writePacket(List<int> packet) async {
-    final id = _deviceId;
-    if (id == null) return;
-    await UniversalBle.write(
-      id,
-      _resolvedService ?? _service,
-      _resolvedWrite ?? _write,
-      Uint8List.fromList(packet),
-      withoutResponse: false,
+  Future<void> _store(RenphoScaleResult result) async {
+    _phase = RenphoScanPhase.saving;
+    notifyListeners();
+    try {
+      final receivedAt = DateTime.now();
+      final measuredAt = result.measuredAt(receivedAt);
+      final measurement = RenphoMeasurement(
+        uid: RenphoMeasurementDb.instance.newUid(),
+        measuredAt: measuredAt,
+        weightKg: result.weightKg,
+        bmi: result.bmi,
+        bodyFatPercent: result.bodyFatPercent,
+        musclePercent: result.musclePercent,
+        visceralFat: result.visceralFat,
+        impedance: result.impedance,
+        stored: result.isStored,
+        packetHex: result.packetHex,
+        profileName: _profile.name,
+        profileSex: _profile.sex,
+        profileHeightCm: _profile.heightCm,
+        profileAge: _profile.ageAt(measuredAt),
+      );
+      final saved = await RenphoMeasurementDb.instance.insert(measurement);
+      if (saved == null) {
+        // A stored record the scale replays on every connect.
+        _phase = _deviceId == null
+            ? RenphoScanPhase.idle
+            : RenphoScanPhase.ready;
+        notifyListeners();
+        return;
+      }
+      if (result.isStored) {
+        _importedStoredRecords++;
+      } else {
+        _liveWeightKg = saved.weightKg;
+      }
+      await refreshHistory();
+      _phase = _deviceId == null ? RenphoScanPhase.idle : RenphoScanPhase.ready;
+      notifyListeners();
+      _backgroundSync();
+    } catch (e) {
+      _fail('Could not save the measurement: $e');
+    }
+  }
+
+  void _backgroundSync() {
+    // Publishing to Health Connect is a one-way push and runs independently of
+    // the backend sync, which may well be switched off.
+    unawaited(
+      RenphoHealthConnectPublisher.instance
+          .publishPending()
+          .then((result) {
+            _lastPublish = result;
+            notifyListeners();
+          })
+          .catchError((Object e) {
+            errorLog('[RenphoScale] Health Connect publish error: $e');
+          }),
+    );
+    unawaited(
+      syncNow().catchError((Object e) {
+        errorLog('[RenphoScale] Background sync failed: $e');
+        return null;
+      }),
     );
   }
 
-  void _armTimeout(String message) {
-    _stageTimer?.cancel();
-    _stageTimer = Timer(const Duration(seconds: 8), () {
-      if (_ready) return;
-      if (_stage == 1) {
-        _status = message;
-        notifyListeners();
-        unawaited(_retryB2());
-        return;
-      }
-      _fail(message);
-    });
+  /// Two-way sync of the measurement history with the backend. Returns the
+  /// pulled/pushed/deleted counts, or null when sync is off, unconfigured, or
+  /// already running.
+  Future<Map<String, int>?> syncNow() async {
+    if (_syncing) return null;
+    final settings = DatabaseService.instance;
+    if (await settings.getSetting('_app', 'sync_enabled') != 'true') {
+      return null;
+    }
+    final serverUrl = await settings.getSetting('_app', 'sync_server_url');
+    if (serverUrl == null || serverUrl.isEmpty) return null;
+    final userId = await settings.getSetting('_app', 'sync_user_id') ?? '';
+
+    _syncing = true;
+    notifyListeners();
+    try {
+      final result = await SyncService.sync(
+        baseUrl: serverUrl,
+        userId: userId,
+        delegate: RenphoSyncDelegate(),
+      );
+      await refreshHistory();
+      return result;
+    } finally {
+      _syncing = false;
+      notifyListeners();
+    }
   }
 
-  Future<void> _retryB2() async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (_stage != 1 || _deviceId == null) return;
+  // Plumbing ----------------------------------------------------------------
+
+  Future<void> _write(Uint8List packet) async {
+    final id = _deviceId;
+    final service = _controlService;
+    final characteristic = _writeCharacteristic;
+    if (id == null || service == null || characteristic == null) return;
     try {
-      await _writePacket([
-        0x55,
-        0xAA,
-        0xB2,
-        0,
-        9,
-        0,
-        1,
-        6,
-        0xC2,
-        0x19,
-        0xAF,
-        0xB2,
-        1,
-        2,
-        0,
-      ]);
-      _status = 'Retrying local scan setup...';
-      _stageTimer = Timer(const Duration(seconds: 8), () {
-        if (_stage == 1) {
-          _fail(
-            'The scale did not acknowledge setup. Disconnect, wake it, and retry.',
-          );
-        }
-      });
-      notifyListeners();
+      if (kDebugMode) debugLog('[RenphoScale] TX ${renphoHex(packet)}');
+      await UniversalBle.write(
+        id,
+        service,
+        characteristic,
+        packet,
+        withoutResponse: false,
+      );
     } catch (e) {
-      _fail('Could not retry setup: $e');
+      errorLog('[RenphoScale] Write failed: $e');
     }
+  }
+
+  /// The handshake is the one step that reliably stalls when the scale drifted
+  /// back to sleep between advertising and connecting, so it gets one silent
+  /// retry before the failure is reported.
+  void _armTimeout() {
+    _stageTimer?.cancel();
+    _stageTimer = Timer(const Duration(seconds: 8), () {
+      if (_phase == RenphoScanPhase.ready) return;
+      if (_stage == 1 && !_handshakeRetried) {
+        _handshakeRetried = true;
+        _statusOverride = 'The scale did not answer. Retrying setup...';
+        notifyListeners();
+        unawaited(_write(RenphoScaleCommands.handshake()));
+        _armTimeout();
+        return;
+      }
+      _fail(
+        'The scale stopped responding during setup (step $_stage). '
+        'Step on it to wake it, then scan again.',
+      );
+      unawaited(disconnect());
+    });
   }
 
   void _fail(String message) {
     _error = message;
-    _status = message;
+    _statusOverride = null;
     notifyListeners();
   }
 
-  int _u16(List<int> value, int offset) =>
-      (value[offset] << 8) | value[offset + 1];
-  List<int> _checksum(List<int> value) => [
-    ...value,
-    value.fold(0, (sum, byte) => (sum + byte) & 255),
-  ];
-  bool _validChecksum(List<int> value) =>
-      value.length > 1 &&
-      value.sublist(0, value.length - 1).fold(0, (sum, byte) => sum + byte) &
-              255 ==
-          value.last;
-  String _hex(List<int> bytes) => bytes
-      .map((value) => value.toRadixString(16).padLeft(2, '0').toUpperCase())
-      .join(' ');
-  bool _isScale(BleDevice device) =>
-      device.deviceId.replaceAll('-', ':').toUpperCase() == scaleMacAddress ||
-      (device.name ?? '').toUpperCase() == 'RT-MSC04';
-
-  String? _characteristicUuid(BleService service, String expected) => service
-      .characteristics
-      .where((characteristic) => _sameUuid(characteristic.uuid, expected))
+  String? _find(BleService service, String uuid) => service.characteristics
+      .where((characteristic) => _sameUuid(characteristic.uuid, uuid))
       .map((characteristic) => characteristic.uuid)
       .firstOrNull;
 
@@ -482,7 +757,7 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   @override
   void dispose() {
-    unawaited(stop());
+    unawaited(disconnect());
     super.dispose();
   }
 }

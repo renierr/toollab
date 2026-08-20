@@ -5,7 +5,7 @@ import 'package:tool_lab/theme/theme.dart';
 
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
-import '../health_value_format.dart';
+import 'package:tool_lab/helpers/health_value_format.dart';
 import '../store/health_queries.dart';
 import 'health_metric_card.dart';
 import 'health_metric_details_page.dart';

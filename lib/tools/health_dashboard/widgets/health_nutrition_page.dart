@@ -5,14 +5,14 @@ import 'package:tool_lab/theme/theme.dart';
 
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
-import '../health_value_format.dart';
+import 'package:tool_lab/helpers/health_value_format.dart';
 import '../store/health_metric_series.dart';
 import '../store/health_queries.dart';
 import 'health_day_navigation.dart';
 import 'health_metric_day_chart.dart';
 import 'health_metric_summary_section.dart';
 import 'health_record_stat_item.dart';
-import 'health_workout_trend_chart.dart';
+import 'package:tool_lab/widgets/metric_trend_chart.dart';
 import 'health_record_details_page.dart';
 import 'health_source_badge.dart';
 
@@ -123,27 +123,27 @@ class _NutritionTrend extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: HealthWorkoutTrendChart(
+        child: MetricTrendChart(
           values: values,
           unit: 'kcal',
           color: AppTheme.accentAmber,
-          style: HealthTrendChartStyle.line,
+          style: MetricTrendChartStyle.line,
           endDate: state.trendWeekEnd,
           onDayTap: (index) => state.selectDay(state.trendDayAt(index)),
           tooltipSeries: [
-            HealthTrendTooltipSeries(
+            MetricTrendTooltipSeries(
               values: [for (final meals in days) _total(meals, 'proteinG')],
               unit: 'g protein',
               color: AppTheme.accentGreen,
             ),
-            HealthTrendTooltipSeries(
+            MetricTrendTooltipSeries(
               values: [
                 for (final meals in days) _total(meals, 'carbohydrateG'),
               ],
               unit: 'g carbs',
               color: AppTheme.accentAmber,
             ),
-            HealthTrendTooltipSeries(
+            MetricTrendTooltipSeries(
               values: [for (final meals in days) _total(meals, 'fatG')],
               unit: 'g fat',
               color: AppTheme.accentBlue,

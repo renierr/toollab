@@ -8029,4 +8029,387 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sqliteViewerSqlError => 'SQL error';
+
+  @override
+  String get toolNameRenphoScale => 'Renpho Scale';
+
+  @override
+  String get toolDescRenphoScale =>
+      'Local MorphoScan Nova body-composition scans, stored on this device';
+
+  @override
+  String get renphoStartScan => 'Scan for the scale';
+
+  @override
+  String get renphoStopScan => 'Stop';
+
+  @override
+  String get renphoStatusIdle =>
+      'Step on the scale to wake it, then start the scan.';
+
+  @override
+  String get renphoStatusDiscovering => 'Looking for the scale...';
+
+  @override
+  String get renphoStatusConnecting => 'Connecting...';
+
+  @override
+  String get renphoStatusPreparing => 'Preparing the measurement...';
+
+  @override
+  String get renphoStatusReady =>
+      'Stand barefoot on the scale, then hold both handles until the result appears.';
+
+  @override
+  String get renphoStatusSaving => 'Saving the measurement...';
+
+  @override
+  String get renphoPhaseIdle => 'Idle';
+
+  @override
+  String get renphoPhaseDiscovering => 'Searching';
+
+  @override
+  String get renphoPhaseConnecting => 'Connecting';
+
+  @override
+  String get renphoPhasePreparing => 'Preparing';
+
+  @override
+  String get renphoPhaseReady => 'Ready';
+
+  @override
+  String get renphoPhaseSaving => 'Saving';
+
+  @override
+  String renphoImportedStored(int count) {
+    return 'Imported $count measurement(s) from the scale memory';
+  }
+
+  @override
+  String get renphoSyncNow => 'Sync now';
+
+  @override
+  String get renphoSectionLatest => 'Latest measurement';
+
+  @override
+  String get renphoSectionHistory => 'History';
+
+  @override
+  String get renphoDevicesTitle => 'Scale';
+
+  @override
+  String get renphoAutoConnect => 'Connect automatically';
+
+  @override
+  String get renphoAutoConnectSubtitle =>
+      'Connect to the known scale as soon as it is found';
+
+  @override
+  String get renphoNoDevices => 'No scale found yet. Step on it to wake it.';
+
+  @override
+  String get renphoConnect => 'Connect';
+
+  @override
+  String get renphoConnected => 'Connected';
+
+  @override
+  String get renphoForgetDevice => 'Forget this scale';
+
+  @override
+  String get renphoNoRememberedDevice => 'No scale paired yet';
+
+  @override
+  String get renphoProfileTitle => 'Measurement profile';
+
+  @override
+  String get renphoProfileFirstRunHint =>
+      'Sex, height and birth date drive every calculated value. Enter them before the first scan.';
+
+  @override
+  String get renphoProfileName => 'Name';
+
+  @override
+  String get renphoProfileNameHelper =>
+      'Sent to the scale to select the user slot';
+
+  @override
+  String get renphoProfileSex => 'Sex';
+
+  @override
+  String get renphoProfileHeight => 'Height (cm)';
+
+  @override
+  String get renphoProfileHeightInvalid =>
+      'Enter a height between 80 and 250 cm';
+
+  @override
+  String get renphoProfileBirthDate => 'Birth date';
+
+  @override
+  String get renphoSexMale => 'Male';
+
+  @override
+  String get renphoSexFemale => 'Female';
+
+  @override
+  String get renphoSettingsTitle => 'Scale settings';
+
+  @override
+  String get renphoSyncToHealthConnect => 'Write to Health Connect';
+
+  @override
+  String get renphoSyncToHealthConnectSubtitle =>
+      'Weight, body fat, lean mass, bone mass, body water and BMR';
+
+  @override
+  String get renphoBackendSyncHint =>
+      'Backend sync follows the global sync switch in the app settings.';
+
+  @override
+  String get renphoPublishNow => 'Publish now';
+
+  @override
+  String get renphoPublishNowSubtitle =>
+      'Write every unpublished measurement to Health Connect';
+
+  @override
+  String get renphoRemoveFromHealthConnect => 'Remove from Health Connect';
+
+  @override
+  String get renphoRemoveFromHealthConnectSubtitle =>
+      'Delete every scale record this app wrote';
+
+  @override
+  String get renphoRemoveFromHealthConnectConfirm =>
+      'Delete every body-composition record this app wrote to Health Connect? The local history is kept and can be published again.';
+
+  @override
+  String get renphoRemoveFromHealthConnectFailed =>
+      'Could not remove the Health Connect records';
+
+  @override
+  String renphoRemoveFromHealthConnectDone(int count) {
+    return 'Removed the records; $count measurement(s) can be published again';
+  }
+
+  @override
+  String get renphoPublishNothing => 'Health Connect is already up to date';
+
+  @override
+  String get renphoPublishUnsupported =>
+      'Health Connect is only available on Android';
+
+  @override
+  String get renphoPublishDisabled =>
+      'Writing to Health Connect is switched off';
+
+  @override
+  String get renphoPublishNoPermission =>
+      'Health Connect write permission was not granted';
+
+  @override
+  String get renphoPublishThrottled => 'Already published a moment ago';
+
+  @override
+  String renphoPublishFailed(int count) {
+    return '$count measurement(s) could not be published';
+  }
+
+  @override
+  String renphoPublishDone(int count) {
+    return 'Published $count measurement(s) to Health Connect';
+  }
+
+  @override
+  String get renphoMetricWeight => 'Weight';
+
+  @override
+  String get renphoMetricBodyFat => 'Body fat';
+
+  @override
+  String get renphoMetricMuscle => 'Muscle';
+
+  @override
+  String get renphoMetricBmi => 'BMI';
+
+  @override
+  String get renphoMetricBmiOnScale => 'BMI reported by the scale';
+
+  @override
+  String get renphoMetricFatMass => 'Fat mass';
+
+  @override
+  String get renphoMetricFatFreeMass => 'Fat-free mass';
+
+  @override
+  String get renphoMetricBodyWater => 'Body water';
+
+  @override
+  String get renphoMetricVisceralFat => 'Visceral score';
+
+  @override
+  String get renphoMetricSkeletalMuscleMass => 'Skeletal muscle mass';
+
+  @override
+  String get renphoMetricProtein => 'Protein';
+
+  @override
+  String get renphoMetricLeanSoftTissue => 'Lean soft tissue';
+
+  @override
+  String get renphoMetricSubcutaneousFat => 'Subcutaneous fat';
+
+  @override
+  String get renphoMetricBoneMass => 'Bone mass';
+
+  @override
+  String get renphoMetricBmr => 'Basal metabolic rate';
+
+  @override
+  String get renphoMetricBodyScore => 'Body score';
+
+  @override
+  String get renphoMetricBodyType => 'Body type';
+
+  @override
+  String get renphoMetricObesityDegree => 'Obesity degree';
+
+  @override
+  String get renphoMetricWeightControl => 'Weight control';
+
+  @override
+  String get renphoMetricTargetWeight => 'Target weight';
+
+  @override
+  String get renphoMetricSmi => 'Skeletal muscle index';
+
+  @override
+  String get renphoTrendWeightBodyFat => 'Weight and body fat, last 7 days';
+
+  @override
+  String get renphoTrendMuscleWater => 'Muscle and body water, last 7 days';
+
+  @override
+  String get renphoHistoryEmpty =>
+      'No measurements yet. Everything you scan stays on this device.';
+
+  @override
+  String get renphoDeleteMeasurement => 'Delete measurement';
+
+  @override
+  String get renphoDeleteMeasurementConfirm =>
+      'Delete this measurement? It is removed from the backend and from Health Connect on the next sync.';
+
+  @override
+  String get renphoSectionReported => 'Reported by the scale';
+
+  @override
+  String get renphoSectionReportedHint =>
+      'These five values plus the ten segment impedances are the whole measurement. The visceral figure is a device score, not a fat mass.';
+
+  @override
+  String get renphoSectionExact => 'Exact calculations';
+
+  @override
+  String get renphoSectionModel => 'Renpho model';
+
+  @override
+  String get renphoModelUncalibrated =>
+      'These coefficients were fitted against one profile (male, 173 cm). For a different body they are indicative, not measured.';
+
+  @override
+  String get renphoSectionSegments => 'Segment composition';
+
+  @override
+  String get renphoSectionImpedance => 'Impedance';
+
+  @override
+  String get renphoSectionEnergy => 'Resting energy estimates';
+
+  @override
+  String get renphoEnergyHint =>
+      'Resting-energy estimates, not measured metabolism.';
+
+  @override
+  String get renphoSectionPublished => 'Independent published equations';
+
+  @override
+  String renphoPublishedHint(String ohms) {
+    return 'Peer-reviewed equations, as a cross-check. They are specified for 50 kHz resistance, which this scale does not measure; the 50 kHz column interpolates to $ohms ohm and is the weakest assumption here.';
+  }
+
+  @override
+  String get renphoSectionRecord => 'Record';
+
+  @override
+  String get renphoWholeBody20 => 'Whole body at 20 kHz';
+
+  @override
+  String get renphoWholeBody100 => 'Whole body at 100 kHz';
+
+  @override
+  String get renphoImpedanceRatio => '100/20 kHz ratio';
+
+  @override
+  String get renphoArmDifference => 'Left/right arm difference';
+
+  @override
+  String get renphoLegDifference => 'Left/right leg difference';
+
+  @override
+  String get renphoImpedanceHint =>
+      'The whole-body value is an arm + torso + leg path approximation. The 100/20 kHz ratio is an extracellular-water and cell-integrity proxy.';
+
+  @override
+  String get renphoEquation => 'Equation';
+
+  @override
+  String get renphoAgeAtScan => 'Age at measurement';
+
+  @override
+  String get renphoSource => 'Source';
+
+  @override
+  String get renphoSourceStored => 'From the scale memory';
+
+  @override
+  String get renphoSourceLive => 'Live scan';
+
+  @override
+  String get renphoRawPacket => 'Raw packet';
+
+  @override
+  String get renphoCopyPacket => 'Copy packet';
+
+  @override
+  String get renphoPacketCopied => 'Packet copied';
+
+  @override
+  String get renphoSegment => 'Segment';
+
+  @override
+  String get renphoSegmentMuscle => 'Muscle';
+
+  @override
+  String get renphoSegmentOfStandard => 'Of standard';
+
+  @override
+  String get renphoSegmentFat => 'Fat';
+
+  @override
+  String get renphoSegmentLeftArm => 'Left arm';
+
+  @override
+  String get renphoSegmentRightArm => 'Right arm';
+
+  @override
+  String get renphoSegmentLeftLeg => 'Left leg';
+
+  @override
+  String get renphoSegmentRightLeg => 'Right leg';
+
+  @override
+  String get renphoSegmentTrunk => 'Trunk';
 }

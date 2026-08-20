@@ -4,28 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:tool_lab/l10n/app_localizations.dart';
 
-import '../health_value_format.dart';
-import 'health_chart_tooltip.dart';
+import 'package:tool_lab/helpers/health_value_format.dart';
+import 'package:tool_lab/widgets/health_chart_tooltip.dart';
 
-enum HealthTrendChartStyle { bars, line }
+enum MetricTrendChartStyle { bars, line }
 
-class HealthTrendTooltipSeries {
+class MetricTrendTooltipSeries {
   final List<double?> values;
   final String unit;
   final Color color;
 
-  const HealthTrendTooltipSeries({
+  const MetricTrendTooltipSeries({
     required this.values,
     required this.unit,
     required this.color,
   });
 }
 
-class HealthWorkoutTrendChart extends StatefulWidget {
+class MetricTrendChart extends StatefulWidget {
   final List<double?> values;
   final String unit;
   final Color color;
-  final HealthTrendChartStyle style;
+  final MetricTrendChartStyle style;
   final List<double?>? overlayValues;
   final String? overlayUnit;
   final Color? overlayColor;
@@ -33,14 +33,14 @@ class HealthWorkoutTrendChart extends StatefulWidget {
   final ValueChanged<int>? onDayTap;
   final String? label;
   final String? overlayLabel;
-  final List<HealthTrendTooltipSeries> tooltipSeries;
+  final List<MetricTrendTooltipSeries> tooltipSeries;
 
-  const HealthWorkoutTrendChart({
+  const MetricTrendChart({
     super.key,
     required this.values,
     required this.unit,
     required this.color,
-    this.style = HealthTrendChartStyle.bars,
+    this.style = MetricTrendChartStyle.bars,
     this.overlayValues,
     this.overlayUnit,
     this.overlayColor,
@@ -52,11 +52,10 @@ class HealthWorkoutTrendChart extends StatefulWidget {
   });
 
   @override
-  State<HealthWorkoutTrendChart> createState() =>
-      _HealthWorkoutTrendChartState();
+  State<MetricTrendChart> createState() => _MetricTrendChartState();
 }
 
-class _HealthWorkoutTrendChartState extends State<HealthWorkoutTrendChart> {
+class _MetricTrendChartState extends State<MetricTrendChart> {
   bool _showPrimary = true;
   bool _showOverlay = true;
   int? _selectedIndex;
@@ -104,7 +103,7 @@ class _HealthWorkoutTrendChartState extends State<HealthWorkoutTrendChart> {
                   CustomPaint(
                     key: ValueKey(widget.endDate),
                     size: Size.infinite,
-                    painter: _HealthWorkoutTrendPainter(
+                    painter: _MetricTrendPainter(
                       values: widget.values,
                       unit: widget.unit,
                       lineColor: widget.color,
@@ -183,24 +182,24 @@ class _HealthWorkoutTrendChartState extends State<HealthWorkoutTrendChart> {
   }
 }
 
-class _HealthWorkoutTrendPainter extends CustomPainter {
+class _MetricTrendPainter extends CustomPainter {
   final List<double?> values;
   final String unit;
   final Color lineColor;
-  final HealthTrendChartStyle style;
+  final MetricTrendChartStyle style;
   final List<double?>? overlayValues;
   final String? overlayUnit;
   final Color? overlayColor;
   final DateTime? endDate;
   final String locale;
-  final List<HealthTrendTooltipSeries> tooltipSeries;
+  final List<MetricTrendTooltipSeries> tooltipSeries;
   final Color gridColor;
   final Color labelColor;
   final bool compact;
   final bool showPrimary;
   final int? selectedIndex;
 
-  const _HealthWorkoutTrendPainter({
+  const _MetricTrendPainter({
     required this.values,
     required this.unit,
     required this.lineColor,
@@ -233,10 +232,10 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
     );
     final rawMinValue = values.whereType<double>().fold(rawMaxValue, math.min);
     final padding = math.max((rawMaxValue - rawMinValue).abs() * 0.15, 1.0);
-    final minValue = style == HealthTrendChartStyle.line
+    final minValue = style == MetricTrendChartStyle.line
         ? math.max(0, rawMinValue - padding)
         : 0.0;
-    final maxValue = style == HealthTrendChartStyle.line
+    final maxValue = style == MetricTrendChartStyle.line
         ? rawMaxValue + padding
         : rawMaxValue;
     final plot = Rect.fromLTWH(
@@ -282,7 +281,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
           (maxValue - minValue) *
           plot.height;
       final x = plot.left + plot.width * (index + 0.5) / values.length;
-      if (showPrimary && style == HealthTrendChartStyle.bars) {
+      if (showPrimary && style == MetricTrendChartStyle.bars) {
         final bar = RRect.fromRectAndRadius(
           Rect.fromLTWH(
             x - barWidth / 2,
@@ -314,7 +313,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
         centered: true,
       );
     }
-    if (style == HealthTrendChartStyle.line && points.isNotEmpty) {
+    if (style == MetricTrendChartStyle.line && points.isNotEmpty) {
       canvas.drawPath(
         _smoothPath(points),
         Paint()
@@ -462,7 +461,7 @@ class _HealthWorkoutTrendPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_HealthWorkoutTrendPainter oldDelegate) =>
+  bool shouldRepaint(_MetricTrendPainter oldDelegate) =>
       oldDelegate.values != values ||
       oldDelegate.unit != unit ||
       oldDelegate.lineColor != lineColor ||
@@ -558,7 +557,7 @@ class _Tooltip extends StatelessWidget {
   final Color? overlayColor;
   final DateTime? endDate;
   final String locale;
-  final List<HealthTrendTooltipSeries> tooltipSeries;
+  final List<MetricTrendTooltipSeries> tooltipSeries;
   const _Tooltip({
     required this.index,
     required this.values,

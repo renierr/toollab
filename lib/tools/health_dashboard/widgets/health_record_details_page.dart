@@ -10,7 +10,7 @@ import 'health_record_header_card.dart';
 import 'health_record_stats_card.dart';
 import 'health_sleep_details_page.dart';
 import 'health_treadmill_details_page.dart';
-import 'health_workout_trend_chart.dart';
+import 'package:tool_lab/widgets/metric_trend_chart.dart';
 
 class HealthRecordDetailsPage extends StatelessWidget {
   final HealthRecord record;
@@ -70,13 +70,13 @@ class HealthRecordDetailsPage extends StatelessWidget {
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: HealthWorkoutTrendChart(
+                child: MetricTrendChart(
                   values: heartSamples
                       .map((s) => s['value'] as double?)
                       .toList(),
                   unit: 'bpm',
                   color: AppTheme.accentRed,
-                  style: HealthTrendChartStyle.line,
+                  style: MetricTrendChartStyle.line,
                 ),
               ),
             ),
@@ -91,13 +91,13 @@ class HealthRecordDetailsPage extends StatelessWidget {
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: HealthWorkoutTrendChart(
+                child: MetricTrendChart(
                   values: speedSamples
                       .map((s) => s['value'] as double?)
                       .toList(),
                   unit: 'km/h',
                   color: AppTheme.accentTeal,
-                  style: HealthTrendChartStyle.line,
+                  style: MetricTrendChartStyle.line,
                 ),
               ),
             ),

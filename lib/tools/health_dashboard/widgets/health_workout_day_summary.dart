@@ -5,7 +5,7 @@ import 'package:tool_lab/theme/theme.dart';
 import '../../treadmill_control/workout_details_stats.dart';
 import '../health_record.dart';
 import '../health_record_values.dart';
-import '../health_value_format.dart';
+import 'package:tool_lab/helpers/health_value_format.dart';
 import 'health_record_stat_item.dart';
 
 /// What a day of workouts adds up to, shown above the sessions themselves.

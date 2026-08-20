@@ -4235,5 +4235,157 @@
       }
     }
   },
-  "sqliteViewerSqlError": "SQL error"
+  "sqliteViewerSqlError": "SQL error",
+  "toolNameRenphoScale": "Renpho Scale",
+  "toolDescRenphoScale": "Local MorphoScan Nova body-composition scans, stored on this device",
+  "renphoStartScan": "Scan for the scale",
+  "renphoStopScan": "Stop",
+  "renphoStatusIdle": "Step on the scale to wake it, then start the scan.",
+  "renphoStatusDiscovering": "Looking for the scale...",
+  "renphoStatusConnecting": "Connecting...",
+  "renphoStatusPreparing": "Preparing the measurement...",
+  "renphoStatusReady": "Stand barefoot on the scale, then hold both handles until the result appears.",
+  "renphoStatusSaving": "Saving the measurement...",
+  "renphoPhaseIdle": "Idle",
+  "renphoPhaseDiscovering": "Searching",
+  "renphoPhaseConnecting": "Connecting",
+  "renphoPhasePreparing": "Preparing",
+  "renphoPhaseReady": "Ready",
+  "renphoPhaseSaving": "Saving",
+  "renphoImportedStored": "Imported {count} measurement(s) from the scale memory",
+  "@renphoImportedStored": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "renphoSyncNow": "Sync now",
+  "renphoSectionLatest": "Latest measurement",
+  "renphoSectionHistory": "History",
+  "renphoDevicesTitle": "Scale",
+  "renphoAutoConnect": "Connect automatically",
+  "renphoAutoConnectSubtitle": "Connect to the known scale as soon as it is found",
+  "renphoNoDevices": "No scale found yet. Step on it to wake it.",
+  "renphoConnect": "Connect",
+  "renphoConnected": "Connected",
+  "renphoForgetDevice": "Forget this scale",
+  "renphoNoRememberedDevice": "No scale paired yet",
+  "renphoProfileTitle": "Measurement profile",
+  "renphoProfileFirstRunHint": "Sex, height and birth date drive every calculated value. Enter them before the first scan.",
+  "renphoProfileName": "Name",
+  "renphoProfileNameHelper": "Sent to the scale to select the user slot",
+  "renphoProfileSex": "Sex",
+  "renphoProfileHeight": "Height (cm)",
+  "renphoProfileHeightInvalid": "Enter a height between 80 and 250 cm",
+  "renphoProfileBirthDate": "Birth date",
+  "renphoSexMale": "Male",
+  "renphoSexFemale": "Female",
+  "renphoSettingsTitle": "Scale settings",
+  "renphoSyncToHealthConnect": "Write to Health Connect",
+  "renphoSyncToHealthConnectSubtitle": "Weight, body fat, lean mass, bone mass, body water and BMR",
+  "renphoBackendSyncHint": "Backend sync follows the global sync switch in the app settings.",
+  "renphoPublishNow": "Publish now",
+  "renphoPublishNowSubtitle": "Write every unpublished measurement to Health Connect",
+  "renphoRemoveFromHealthConnect": "Remove from Health Connect",
+  "renphoRemoveFromHealthConnectSubtitle": "Delete every scale record this app wrote",
+  "renphoRemoveFromHealthConnectConfirm": "Delete every body-composition record this app wrote to Health Connect? The local history is kept and can be published again.",
+  "renphoRemoveFromHealthConnectFailed": "Could not remove the Health Connect records",
+  "renphoRemoveFromHealthConnectDone": "Removed the records; {count} measurement(s) can be published again",
+  "@renphoRemoveFromHealthConnectDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "renphoPublishNothing": "Health Connect is already up to date",
+  "renphoPublishUnsupported": "Health Connect is only available on Android",
+  "renphoPublishDisabled": "Writing to Health Connect is switched off",
+  "renphoPublishNoPermission": "Health Connect write permission was not granted",
+  "renphoPublishThrottled": "Already published a moment ago",
+  "renphoPublishFailed": "{count} measurement(s) could not be published",
+  "@renphoPublishFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "renphoPublishDone": "Published {count} measurement(s) to Health Connect",
+  "@renphoPublishDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "renphoMetricWeight": "Weight",
+  "renphoMetricBodyFat": "Body fat",
+  "renphoMetricMuscle": "Muscle",
+  "renphoMetricBmi": "BMI",
+  "renphoMetricBmiOnScale": "BMI reported by the scale",
+  "renphoMetricFatMass": "Fat mass",
+  "renphoMetricFatFreeMass": "Fat-free mass",
+  "renphoMetricBodyWater": "Body water",
+  "renphoMetricVisceralFat": "Visceral score",
+  "renphoMetricSkeletalMuscleMass": "Skeletal muscle mass",
+  "renphoMetricProtein": "Protein",
+  "renphoMetricLeanSoftTissue": "Lean soft tissue",
+  "renphoMetricSubcutaneousFat": "Subcutaneous fat",
+  "renphoMetricBoneMass": "Bone mass",
+  "renphoMetricBmr": "Basal metabolic rate",
+  "renphoMetricBodyScore": "Body score",
+  "renphoMetricBodyType": "Body type",
+  "renphoMetricObesityDegree": "Obesity degree",
+  "renphoMetricWeightControl": "Weight control",
+  "renphoMetricTargetWeight": "Target weight",
+  "renphoMetricSmi": "Skeletal muscle index",
+  "renphoTrendWeightBodyFat": "Weight and body fat, last 7 days",
+  "renphoTrendMuscleWater": "Muscle and body water, last 7 days",
+  "renphoHistoryEmpty": "No measurements yet. Everything you scan stays on this device.",
+  "renphoDeleteMeasurement": "Delete measurement",
+  "renphoDeleteMeasurementConfirm": "Delete this measurement? It is removed from the backend and from Health Connect on the next sync.",
+  "renphoSectionReported": "Reported by the scale",
+  "renphoSectionReportedHint": "These five values plus the ten segment impedances are the whole measurement. The visceral figure is a device score, not a fat mass.",
+  "renphoSectionExact": "Exact calculations",
+  "renphoSectionModel": "Renpho model",
+  "renphoModelUncalibrated": "These coefficients were fitted against one profile (male, 173 cm). For a different body they are indicative, not measured.",
+  "renphoSectionSegments": "Segment composition",
+  "renphoSectionImpedance": "Impedance",
+  "renphoSectionEnergy": "Resting energy estimates",
+  "renphoEnergyHint": "Resting-energy estimates, not measured metabolism.",
+  "renphoSectionPublished": "Independent published equations",
+  "renphoPublishedHint": "Peer-reviewed equations, as a cross-check. They are specified for 50 kHz resistance, which this scale does not measure; the 50 kHz column interpolates to {ohms} ohm and is the weakest assumption here.",
+  "@renphoPublishedHint": {
+    "placeholders": {
+      "ohms": {
+        "type": "String"
+      }
+    }
+  },
+  "renphoSectionRecord": "Record",
+  "renphoWholeBody20": "Whole body at 20 kHz",
+  "renphoWholeBody100": "Whole body at 100 kHz",
+  "renphoImpedanceRatio": "100/20 kHz ratio",
+  "renphoArmDifference": "Left/right arm difference",
+  "renphoLegDifference": "Left/right leg difference",
+  "renphoImpedanceHint": "The whole-body value is an arm + torso + leg path approximation. The 100/20 kHz ratio is an extracellular-water and cell-integrity proxy.",
+  "renphoEquation": "Equation",
+  "renphoAgeAtScan": "Age at measurement",
+  "renphoSource": "Source",
+  "renphoSourceStored": "From the scale memory",
+  "renphoSourceLive": "Live scan",
+  "renphoRawPacket": "Raw packet",
+  "renphoCopyPacket": "Copy packet",
+  "renphoPacketCopied": "Packet copied",
+  "renphoSegment": "Segment",
+  "renphoSegmentMuscle": "Muscle",
+  "renphoSegmentOfStandard": "Of standard",
+  "renphoSegmentFat": "Fat",
+  "renphoSegmentLeftArm": "Left arm",
+  "renphoSegmentRightArm": "Right arm",
+  "renphoSegmentLeftLeg": "Left leg",
+  "renphoSegmentRightLeg": "Right leg",
+  "renphoSegmentTrunk": "Trunk"
 }

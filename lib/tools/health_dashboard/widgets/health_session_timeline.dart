@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
-import 'health_chart_tooltip.dart';
+import 'package:tool_lab/widgets/health_chart_tooltip.dart';
 import 'health_session_overlay.dart';
 
 export 'health_session_overlay.dart';

@@ -16,7 +16,7 @@ import 'health_session_timeline_section.dart';
 import 'health_source_badge.dart';
 import 'health_day_navigation.dart';
 import 'health_metric_history.dart';
-import 'health_workout_trend_chart.dart';
+import 'package:tool_lab/widgets/metric_trend_chart.dart';
 
 class HealthSleepDetailsPage extends StatelessWidget {
   final HealthRecord record;
@@ -102,14 +102,14 @@ class HealthSleepDetailsPage extends StatelessWidget {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: HealthWorkoutTrendChart(
+                  child: MetricTrendChart(
                     values: state.weeklyMetricValues(
                       'sleep.session',
                       'durationMinutes',
                     ),
                     unit: 'min',
                     color: Colors.indigo,
-                    style: HealthTrendChartStyle.bars,
+                    style: MetricTrendChartStyle.bars,
                     endDate: state.trendWeekEnd,
                     onDayTap: (index) =>
                         state.selectDay(state.trendDayAt(index)),

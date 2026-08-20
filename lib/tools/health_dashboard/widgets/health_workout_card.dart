@@ -9,7 +9,7 @@ import '../../treadmill_control/workout_details_stats.dart';
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
 import '../health_record_values.dart';
-import '../health_value_format.dart';
+import 'package:tool_lab/helpers/health_value_format.dart';
 import '../store/health_metric_catalog.dart';
 import 'health_record_details_page.dart';
 import 'health_record_stat_item.dart';

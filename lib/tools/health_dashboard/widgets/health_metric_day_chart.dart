@@ -6,8 +6,8 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../store/health_queries.dart';
 import '../health_record.dart';
 import '../health_record_values.dart';
-import '../health_value_format.dart';
-import 'health_chart_tooltip.dart';
+import 'package:tool_lab/helpers/health_value_format.dart';
+import 'package:tool_lab/widgets/health_chart_tooltip.dart';
 import 'health_record_stat_item.dart';
 
 /// The selected day behind a metric's week: its readings over 24 hours plus the

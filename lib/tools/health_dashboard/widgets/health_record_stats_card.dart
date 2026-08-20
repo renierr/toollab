@@ -3,7 +3,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import '../health_record.dart';
-import '../health_value_format.dart';
+import 'package:tool_lab/helpers/health_value_format.dart';
 import 'health_record_stat_item.dart';
 
 class HealthRecordStatsCard extends StatelessWidget {

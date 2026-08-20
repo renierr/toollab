@@ -11,7 +11,7 @@ import 'health_metric_history.dart';
 import 'health_metric_summary_section.dart';
 import 'health_metric_day_chart.dart';
 import 'health_record_details_page.dart';
-import 'health_workout_trend_chart.dart';
+import 'package:tool_lab/widgets/metric_trend_chart.dart';
 
 class HealthMetricDetailsPage extends StatelessWidget {
   final String title;
@@ -78,13 +78,13 @@ class HealthMetricDetailsPage extends StatelessWidget {
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: HealthWorkoutTrendChart(
+                    child: MetricTrendChart(
                       values: series.values,
                       unit: unit,
                       color: color,
                       style: sum
-                          ? HealthTrendChartStyle.bars
-                          : HealthTrendChartStyle.line,
+                          ? MetricTrendChartStyle.bars
+                          : MetricTrendChartStyle.line,
                       endDate: state.trendWeekEnd,
                       onDayTap: (index) =>
                           _openDayRecord(context, state, index),

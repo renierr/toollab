@@ -14374,6 +14374,708 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SQL error'**
   String get sqliteViewerSqlError;
+
+  /// No description provided for @toolNameRenphoScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Renpho Scale'**
+  String get toolNameRenphoScale;
+
+  /// No description provided for @toolDescRenphoScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Local MorphoScan Nova body-composition scans, stored on this device'**
+  String get toolDescRenphoScale;
+
+  /// No description provided for @renphoStartScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan for the scale'**
+  String get renphoStartScan;
+
+  /// No description provided for @renphoStopScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get renphoStopScan;
+
+  /// No description provided for @renphoStatusIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Step on the scale to wake it, then start the scan.'**
+  String get renphoStatusIdle;
+
+  /// No description provided for @renphoStatusDiscovering.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for the scale...'**
+  String get renphoStatusDiscovering;
+
+  /// No description provided for @renphoStatusConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting...'**
+  String get renphoStatusConnecting;
+
+  /// No description provided for @renphoStatusPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the measurement...'**
+  String get renphoStatusPreparing;
+
+  /// No description provided for @renphoStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Stand barefoot on the scale, then hold both handles until the result appears.'**
+  String get renphoStatusReady;
+
+  /// No description provided for @renphoStatusSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving the measurement...'**
+  String get renphoStatusSaving;
+
+  /// No description provided for @renphoPhaseIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get renphoPhaseIdle;
+
+  /// No description provided for @renphoPhaseDiscovering.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching'**
+  String get renphoPhaseDiscovering;
+
+  /// No description provided for @renphoPhaseConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting'**
+  String get renphoPhaseConnecting;
+
+  /// No description provided for @renphoPhasePreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing'**
+  String get renphoPhasePreparing;
+
+  /// No description provided for @renphoPhaseReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get renphoPhaseReady;
+
+  /// No description provided for @renphoPhaseSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving'**
+  String get renphoPhaseSaving;
+
+  /// No description provided for @renphoImportedStored.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} measurement(s) from the scale memory'**
+  String renphoImportedStored(int count);
+
+  /// No description provided for @renphoSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get renphoSyncNow;
+
+  /// No description provided for @renphoSectionLatest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest measurement'**
+  String get renphoSectionLatest;
+
+  /// No description provided for @renphoSectionHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get renphoSectionHistory;
+
+  /// No description provided for @renphoDevicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale'**
+  String get renphoDevicesTitle;
+
+  /// No description provided for @renphoAutoConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect automatically'**
+  String get renphoAutoConnect;
+
+  /// No description provided for @renphoAutoConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the known scale as soon as it is found'**
+  String get renphoAutoConnectSubtitle;
+
+  /// No description provided for @renphoNoDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'No scale found yet. Step on it to wake it.'**
+  String get renphoNoDevices;
+
+  /// No description provided for @renphoConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get renphoConnect;
+
+  /// No description provided for @renphoConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get renphoConnected;
+
+  /// No description provided for @renphoForgetDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Forget this scale'**
+  String get renphoForgetDevice;
+
+  /// No description provided for @renphoNoRememberedDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'No scale paired yet'**
+  String get renphoNoRememberedDevice;
+
+  /// No description provided for @renphoProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurement profile'**
+  String get renphoProfileTitle;
+
+  /// No description provided for @renphoProfileFirstRunHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex, height and birth date drive every calculated value. Enter them before the first scan.'**
+  String get renphoProfileFirstRunHint;
+
+  /// No description provided for @renphoProfileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get renphoProfileName;
+
+  /// No description provided for @renphoProfileNameHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to the scale to select the user slot'**
+  String get renphoProfileNameHelper;
+
+  /// No description provided for @renphoProfileSex.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex'**
+  String get renphoProfileSex;
+
+  /// No description provided for @renphoProfileHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height (cm)'**
+  String get renphoProfileHeight;
+
+  /// No description provided for @renphoProfileHeightInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a height between 80 and 250 cm'**
+  String get renphoProfileHeightInvalid;
+
+  /// No description provided for @renphoProfileBirthDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth date'**
+  String get renphoProfileBirthDate;
+
+  /// No description provided for @renphoSexMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get renphoSexMale;
+
+  /// No description provided for @renphoSexFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get renphoSexFemale;
+
+  /// No description provided for @renphoSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale settings'**
+  String get renphoSettingsTitle;
+
+  /// No description provided for @renphoSyncToHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Write to Health Connect'**
+  String get renphoSyncToHealthConnect;
+
+  /// No description provided for @renphoSyncToHealthConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight, body fat, lean mass, bone mass, body water and BMR'**
+  String get renphoSyncToHealthConnectSubtitle;
+
+  /// No description provided for @renphoBackendSyncHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Backend sync follows the global sync switch in the app settings.'**
+  String get renphoBackendSyncHint;
+
+  /// No description provided for @renphoPublishNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish now'**
+  String get renphoPublishNow;
+
+  /// No description provided for @renphoPublishNowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write every unpublished measurement to Health Connect'**
+  String get renphoPublishNowSubtitle;
+
+  /// No description provided for @renphoRemoveFromHealthConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from Health Connect'**
+  String get renphoRemoveFromHealthConnect;
+
+  /// No description provided for @renphoRemoveFromHealthConnectSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete every scale record this app wrote'**
+  String get renphoRemoveFromHealthConnectSubtitle;
+
+  /// No description provided for @renphoRemoveFromHealthConnectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete every body-composition record this app wrote to Health Connect? The local history is kept and can be published again.'**
+  String get renphoRemoveFromHealthConnectConfirm;
+
+  /// No description provided for @renphoRemoveFromHealthConnectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove the Health Connect records'**
+  String get renphoRemoveFromHealthConnectFailed;
+
+  /// No description provided for @renphoRemoveFromHealthConnectDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed the records; {count} measurement(s) can be published again'**
+  String renphoRemoveFromHealthConnectDone(int count);
+
+  /// No description provided for @renphoPublishNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect is already up to date'**
+  String get renphoPublishNothing;
+
+  /// No description provided for @renphoPublishUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect is only available on Android'**
+  String get renphoPublishUnsupported;
+
+  /// No description provided for @renphoPublishDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing to Health Connect is switched off'**
+  String get renphoPublishDisabled;
+
+  /// No description provided for @renphoPublishNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Connect write permission was not granted'**
+  String get renphoPublishNoPermission;
+
+  /// No description provided for @renphoPublishThrottled.
+  ///
+  /// In en, this message translates to:
+  /// **'Already published a moment ago'**
+  String get renphoPublishThrottled;
+
+  /// No description provided for @renphoPublishFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} measurement(s) could not be published'**
+  String renphoPublishFailed(int count);
+
+  /// No description provided for @renphoPublishDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Published {count} measurement(s) to Health Connect'**
+  String renphoPublishDone(int count);
+
+  /// No description provided for @renphoMetricWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get renphoMetricWeight;
+
+  /// No description provided for @renphoMetricBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat'**
+  String get renphoMetricBodyFat;
+
+  /// No description provided for @renphoMetricMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle'**
+  String get renphoMetricMuscle;
+
+  /// No description provided for @renphoMetricBmi.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI'**
+  String get renphoMetricBmi;
+
+  /// No description provided for @renphoMetricBmiOnScale.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI reported by the scale'**
+  String get renphoMetricBmiOnScale;
+
+  /// No description provided for @renphoMetricFatMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat mass'**
+  String get renphoMetricFatMass;
+
+  /// No description provided for @renphoMetricFatFreeMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat-free mass'**
+  String get renphoMetricFatFreeMass;
+
+  /// No description provided for @renphoMetricBodyWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Body water'**
+  String get renphoMetricBodyWater;
+
+  /// No description provided for @renphoMetricVisceralFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Visceral score'**
+  String get renphoMetricVisceralFat;
+
+  /// No description provided for @renphoMetricSkeletalMuscleMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Skeletal muscle mass'**
+  String get renphoMetricSkeletalMuscleMass;
+
+  /// No description provided for @renphoMetricProtein.
+  ///
+  /// In en, this message translates to:
+  /// **'Protein'**
+  String get renphoMetricProtein;
+
+  /// No description provided for @renphoMetricLeanSoftTissue.
+  ///
+  /// In en, this message translates to:
+  /// **'Lean soft tissue'**
+  String get renphoMetricLeanSoftTissue;
+
+  /// No description provided for @renphoMetricSubcutaneousFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Subcutaneous fat'**
+  String get renphoMetricSubcutaneousFat;
+
+  /// No description provided for @renphoMetricBoneMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Bone mass'**
+  String get renphoMetricBoneMass;
+
+  /// No description provided for @renphoMetricBmr.
+  ///
+  /// In en, this message translates to:
+  /// **'Basal metabolic rate'**
+  String get renphoMetricBmr;
+
+  /// No description provided for @renphoMetricBodyScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Body score'**
+  String get renphoMetricBodyScore;
+
+  /// No description provided for @renphoMetricBodyType.
+  ///
+  /// In en, this message translates to:
+  /// **'Body type'**
+  String get renphoMetricBodyType;
+
+  /// No description provided for @renphoMetricObesityDegree.
+  ///
+  /// In en, this message translates to:
+  /// **'Obesity degree'**
+  String get renphoMetricObesityDegree;
+
+  /// No description provided for @renphoMetricWeightControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight control'**
+  String get renphoMetricWeightControl;
+
+  /// No description provided for @renphoMetricTargetWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Target weight'**
+  String get renphoMetricTargetWeight;
+
+  /// No description provided for @renphoMetricSmi.
+  ///
+  /// In en, this message translates to:
+  /// **'Skeletal muscle index'**
+  String get renphoMetricSmi;
+
+  /// No description provided for @renphoTrendWeightBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight and body fat, last 7 days'**
+  String get renphoTrendWeightBodyFat;
+
+  /// No description provided for @renphoTrendMuscleWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle and body water, last 7 days'**
+  String get renphoTrendMuscleWater;
+
+  /// No description provided for @renphoHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No measurements yet. Everything you scan stays on this device.'**
+  String get renphoHistoryEmpty;
+
+  /// No description provided for @renphoDeleteMeasurement.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete measurement'**
+  String get renphoDeleteMeasurement;
+
+  /// No description provided for @renphoDeleteMeasurementConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this measurement? It is removed from the backend and from Health Connect on the next sync.'**
+  String get renphoDeleteMeasurementConfirm;
+
+  /// No description provided for @renphoSectionReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported by the scale'**
+  String get renphoSectionReported;
+
+  /// No description provided for @renphoSectionReportedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These five values plus the ten segment impedances are the whole measurement. The visceral figure is a device score, not a fat mass.'**
+  String get renphoSectionReportedHint;
+
+  /// No description provided for @renphoSectionExact.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact calculations'**
+  String get renphoSectionExact;
+
+  /// No description provided for @renphoSectionModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Renpho model'**
+  String get renphoSectionModel;
+
+  /// No description provided for @renphoModelUncalibrated.
+  ///
+  /// In en, this message translates to:
+  /// **'These coefficients were fitted against one profile (male, 173 cm). For a different body they are indicative, not measured.'**
+  String get renphoModelUncalibrated;
+
+  /// No description provided for @renphoSectionSegments.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment composition'**
+  String get renphoSectionSegments;
+
+  /// No description provided for @renphoSectionImpedance.
+  ///
+  /// In en, this message translates to:
+  /// **'Impedance'**
+  String get renphoSectionImpedance;
+
+  /// No description provided for @renphoSectionEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting energy estimates'**
+  String get renphoSectionEnergy;
+
+  /// No description provided for @renphoEnergyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting-energy estimates, not measured metabolism.'**
+  String get renphoEnergyHint;
+
+  /// No description provided for @renphoSectionPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Independent published equations'**
+  String get renphoSectionPublished;
+
+  /// No description provided for @renphoPublishedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer-reviewed equations, as a cross-check. They are specified for 50 kHz resistance, which this scale does not measure; the 50 kHz column interpolates to {ohms} ohm and is the weakest assumption here.'**
+  String renphoPublishedHint(String ohms);
+
+  /// No description provided for @renphoSectionRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get renphoSectionRecord;
+
+  /// No description provided for @renphoWholeBody20.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole body at 20 kHz'**
+  String get renphoWholeBody20;
+
+  /// No description provided for @renphoWholeBody100.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole body at 100 kHz'**
+  String get renphoWholeBody100;
+
+  /// No description provided for @renphoImpedanceRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'100/20 kHz ratio'**
+  String get renphoImpedanceRatio;
+
+  /// No description provided for @renphoArmDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'Left/right arm difference'**
+  String get renphoArmDifference;
+
+  /// No description provided for @renphoLegDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'Left/right leg difference'**
+  String get renphoLegDifference;
+
+  /// No description provided for @renphoImpedanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole-body value is an arm + torso + leg path approximation. The 100/20 kHz ratio is an extracellular-water and cell-integrity proxy.'**
+  String get renphoImpedanceHint;
+
+  /// No description provided for @renphoEquation.
+  ///
+  /// In en, this message translates to:
+  /// **'Equation'**
+  String get renphoEquation;
+
+  /// No description provided for @renphoAgeAtScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Age at measurement'**
+  String get renphoAgeAtScan;
+
+  /// No description provided for @renphoSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get renphoSource;
+
+  /// No description provided for @renphoSourceStored.
+  ///
+  /// In en, this message translates to:
+  /// **'From the scale memory'**
+  String get renphoSourceStored;
+
+  /// No description provided for @renphoSourceLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live scan'**
+  String get renphoSourceLive;
+
+  /// No description provided for @renphoRawPacket.
+  ///
+  /// In en, this message translates to:
+  /// **'Raw packet'**
+  String get renphoRawPacket;
+
+  /// No description provided for @renphoCopyPacket.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy packet'**
+  String get renphoCopyPacket;
+
+  /// No description provided for @renphoPacketCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet copied'**
+  String get renphoPacketCopied;
+
+  /// No description provided for @renphoSegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment'**
+  String get renphoSegment;
+
+  /// No description provided for @renphoSegmentMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle'**
+  String get renphoSegmentMuscle;
+
+  /// No description provided for @renphoSegmentOfStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Of standard'**
+  String get renphoSegmentOfStandard;
+
+  /// No description provided for @renphoSegmentFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat'**
+  String get renphoSegmentFat;
+
+  /// No description provided for @renphoSegmentLeftArm.
+  ///
+  /// In en, this message translates to:
+  /// **'Left arm'**
+  String get renphoSegmentLeftArm;
+
+  /// No description provided for @renphoSegmentRightArm.
+  ///
+  /// In en, this message translates to:
+  /// **'Right arm'**
+  String get renphoSegmentRightArm;
+
+  /// No description provided for @renphoSegmentLeftLeg.
+  ///
+  /// In en, this message translates to:
+  /// **'Left leg'**
+  String get renphoSegmentLeftLeg;
+
+  /// No description provided for @renphoSegmentRightLeg.
+  ///
+  /// In en, this message translates to:
+  /// **'Right leg'**
+  String get renphoSegmentRightLeg;
+
+  /// No description provided for @renphoSegmentTrunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Trunk'**
+  String get renphoSegmentTrunk;
 }
 
 class _AppLocalizationsDelegate

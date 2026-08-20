@@ -4,7 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import '../health_dashboard_state.dart';
-import 'health_workout_trend_chart.dart';
+import 'package:tool_lab/widgets/metric_trend_chart.dart';
 
 class HealthDashboardTrends extends StatelessWidget {
   const HealthDashboardTrends({super.key});
@@ -70,7 +70,7 @@ class HealthDashboardTrends extends StatelessWidget {
             values: hrvValues,
             unit: 'ms',
             color: AppTheme.accentPurple,
-            style: HealthTrendChartStyle.line,
+            style: MetricTrendChartStyle.line,
             endDate: state.trendWeekEnd,
           ),
         if (hasSpO2)
@@ -79,7 +79,7 @@ class HealthDashboardTrends extends StatelessWidget {
             values: spO2Values,
             unit: '%',
             color: AppTheme.accentBlue,
-            style: HealthTrendChartStyle.line,
+            style: MetricTrendChartStyle.line,
             endDate: state.trendWeekEnd,
           ),
         if (hasResp)
@@ -88,7 +88,7 @@ class HealthDashboardTrends extends StatelessWidget {
             values: respValues,
             unit: 'rpm',
             color: AppTheme.accentTeal,
-            style: HealthTrendChartStyle.line,
+            style: MetricTrendChartStyle.line,
             endDate: state.trendWeekEnd,
           ),
       ],
@@ -120,11 +120,11 @@ class _WeightBodyFatTrend extends StatelessWidget {
       Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: HealthWorkoutTrendChart(
+          child: MetricTrendChart(
             values: weight,
             unit: 'kg',
             color: AppTheme.accentPurple,
-            style: HealthTrendChartStyle.line,
+            style: MetricTrendChartStyle.line,
             overlayValues: bodyFat,
             overlayUnit: '%',
             overlayColor: AppTheme.accentAmber,
@@ -162,7 +162,7 @@ class _DistancePulseTrend extends StatelessWidget {
       Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: HealthWorkoutTrendChart(
+          child: MetricTrendChart(
             values: distance,
             unit: 'km',
             color: AppTheme.accentTeal,
@@ -184,7 +184,7 @@ class _MetricTrendChart extends StatelessWidget {
   final List<double?> values;
   final String unit;
   final Color color;
-  final HealthTrendChartStyle style;
+  final MetricTrendChartStyle style;
   final DateTime endDate;
 
   const _MetricTrendChart({
@@ -206,7 +206,7 @@ class _MetricTrendChart extends StatelessWidget {
       Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: HealthWorkoutTrendChart(
+          child: MetricTrendChart(
             values: values,
             unit: unit,
             color: color,

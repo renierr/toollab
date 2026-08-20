@@ -15,7 +15,7 @@ import '../treadmill_control_colors.dart';
 import '../treadmill_control_state.dart';
 import '../treadmill_session.dart';
 import '../../../l10n/app_localizations.dart';
-import 'treadmill_metric_tile.dart';
+import 'package:tool_lab/widgets/metric_tile.dart';
 
 class SessionHistoryDashboard extends StatefulWidget {
   const SessionHistoryDashboard({super.key});
@@ -476,33 +476,33 @@ class _SessionHistoryDashboardState extends State<SessionHistoryDashboard>
               ),
             ),
             const SizedBox(height: 16),
-            TreadmillMetricGrid(
+            MetricGrid(
               children: [
-                TreadmillMetricTile(
+                MetricTile(
                   label: l10n.treadmillHistoryTotalDistance,
                   value: '${totalDistance.toStringAsFixed(1)} km',
                   icon: Icons.route_outlined,
                   color: TreadmillColors.cyanMetric,
                 ),
-                TreadmillMetricTile(
+                MetricTile(
                   label: l10n.treadmillHistoryTotalDuration,
                   value: _duration(totalDuration),
                   icon: Icons.timer_outlined,
                   color: TreadmillColors.greenMetric,
                 ),
-                TreadmillMetricTile(
+                MetricTile(
                   label: l10n.treadmillHistoryTotalCalories,
                   value: '$totalCalories kcal',
                   icon: Icons.local_fire_department_outlined,
                   color: TreadmillColors.amberMetric,
                 ),
-                TreadmillMetricTile(
+                MetricTile(
                   label: l10n.treadmillHistoryAverageSpeed,
                   value: '${avgSpeed.toStringAsFixed(1)} km/h',
                   icon: Icons.speed_outlined,
                   color: TreadmillColors.redMetric,
                 ),
-                TreadmillMetricTile(
+                MetricTile(
                   label: l10n.treadmillHistoryWorkoutCount,
                   value: '${sessions.length}',
                   icon: Icons.directions_run_outlined,

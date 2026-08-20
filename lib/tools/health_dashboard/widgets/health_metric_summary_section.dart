@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_dashboard_state.dart';
-import '../health_value_format.dart';
+import 'package:tool_lab/helpers/health_value_format.dart';
 import '../store/health_metric_series.dart';
 
 class HealthMetricSummarySection extends StatelessWidget {

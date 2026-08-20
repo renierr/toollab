@@ -75,6 +75,9 @@
     <uses-permission android:name="android.permission.health.WRITE_WEIGHT" />
     <uses-permission android:name="android.permission.health.WRITE_BODY_FAT" />
     <uses-permission android:name="android.permission.health.WRITE_LEAN_BODY_MASS" />
+    <uses-permission android:name="android.permission.health.WRITE_BONE_MASS" />
+    <uses-permission android:name="android.permission.health.WRITE_BODY_WATER_MASS" />
+    <uses-permission android:name="android.permission.health.WRITE_BASAL_METABOLIC_RATE" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
@@ -602,6 +605,19 @@
             android:name="de.renier.tool_lab.HealthDashboardAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Health Dashboard"
+            android:icon="@mipmap/ic_launcher"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.RenphoBleProbeAlias"
+            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:label="Renpho Scale"
             android:icon="@mipmap/ic_launcher"
             android:enabled="false"
             android:exported="true">

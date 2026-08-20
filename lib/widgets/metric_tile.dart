@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class TreadmillMetricTile extends StatelessWidget {
+class MetricTile extends StatelessWidget {
   final String label;
   final String value;
   final String? unit;
@@ -8,7 +8,7 @@ class TreadmillMetricTile extends StatelessWidget {
   final Color color;
   final bool compact;
 
-  const TreadmillMetricTile({
+  const MetricTile({
     super.key,
     required this.label,
     required this.value,
@@ -71,15 +71,11 @@ class TreadmillMetricTile extends StatelessWidget {
   }
 }
 
-class TreadmillMetricGrid extends StatelessWidget {
-  final List<TreadmillMetricTile> children;
+class MetricGrid extends StatelessWidget {
+  final List<MetricTile> children;
   final int wideColumns;
 
-  const TreadmillMetricGrid({
-    super.key,
-    required this.children,
-    this.wideColumns = 4,
-  });
+  const MetricGrid({super.key, required this.children, this.wideColumns = 4});
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
