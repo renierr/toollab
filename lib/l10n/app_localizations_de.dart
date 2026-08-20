@@ -8120,7 +8120,60 @@ class AppLocalizationsDe extends AppLocalizations {
   String get renphoStatusSaving => 'Messung wird gespeichert...';
 
   @override
-  String get renphoPhaseIdle => 'Bereit';
+  String get renphoStatusRetrying =>
+      'Die Waage hat nicht geantwortet. Einrichtung wird wiederholt...';
+
+  @override
+  String get renphoErrorBluetooth =>
+      'Bluetooth ist nicht verfügbar oder die Berechtigung wurde verweigert.';
+
+  @override
+  String get renphoErrorNotFound =>
+      'Keine Waage gefunden. Kurz drauftreten, um sie zu wecken, dann erneut suchen.';
+
+  @override
+  String get renphoErrorScan => 'Die Bluetooth-Suche ist fehlgeschlagen.';
+
+  @override
+  String get renphoErrorConnect =>
+      'Verbindung zur Waage nicht möglich. Kurz drauftreten, um sie zu wecken, dann erneut versuchen.';
+
+  @override
+  String get renphoErrorSetup =>
+      'Die Waage hat während der Einrichtung nicht mehr geantwortet. Kurz drauftreten, um sie zu wecken, dann erneut suchen.';
+
+  @override
+  String get renphoErrorSave => 'Die Messung konnte nicht gespeichert werden.';
+
+  @override
+  String get renphoPhaseComplete => 'Fertig';
+
+  @override
+  String get renphoStatusComplete => 'Messung abgeschlossen und gespeichert.';
+
+  @override
+  String get renphoStepWeight => 'Gewicht';
+
+  @override
+  String get renphoStepImpedance => 'Griffe';
+
+  @override
+  String get renphoStepResult => 'Ergebnis';
+
+  @override
+  String get renphoStepHintWeight =>
+      'Barfuß auf die Waage stellen und ruhig stehen bleiben.';
+
+  @override
+  String get renphoStepHintImpedance =>
+      'Beide Griffe fassen, Arme gestreckt, ruhig halten.';
+
+  @override
+  String get renphoStepHintComputing =>
+      'Körperzusammensetzung wird berechnet...';
+
+  @override
+  String get renphoPhaseIdle => 'Inaktiv';
 
   @override
   String get renphoPhaseDiscovering => 'Suche';
@@ -8139,7 +8192,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String renphoImportedStored(int count) {
-    return '$count Messung(en) aus dem Speicher der Waage importiert';
+    return 'Zusätzlich $count ältere Messung(en) aus dem Speicher der Waage importiert';
   }
 
   @override

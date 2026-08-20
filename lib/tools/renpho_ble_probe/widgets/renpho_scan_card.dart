@@ -6,6 +6,8 @@ import 'package:tool_lab/widgets/status_badge.dart';
 
 import '../renpho_ble_probe_state.dart';
 import '../renpho_colors.dart';
+import '../renpho_error_message.dart';
+import 'renpho_measure_steps.dart';
 
 /// The live readout: what the scale is measuring right now, what the tool is
 /// waiting for, and the one button that starts or stops it.
@@ -60,14 +62,19 @@ class RenphoScanCard extends StatelessWidget {
                 Text('kg', style: theme.textTheme.titleMedium),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              _status(l10n, state),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            const SizedBox(height: 10),
+            // Once the scale is set up the step indicator carries the
+            // instructions, so the flat status line would only repeat it.
+            if (_showSteps(state.phase))
+              RenphoMeasureSteps(step: state.measureStep)
+            else
+              Text(
+                _status(l10n, state),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
             if (state.importedStoredRecords > 0) ...[
               const SizedBox(height: 6),
               Text(
@@ -81,7 +88,7 @@ class RenphoScanCard extends StatelessWidget {
             if (state.error != null) ...[
               const SizedBox(height: 10),
               Text(
-                state.error!,
+                renphoErrorMessage(l10n, state.error!, state.errorDetail),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.error,
@@ -111,8 +118,13 @@ class RenphoScanCard extends StatelessWidget {
     );
   }
 
+  bool _showSteps(RenphoScanPhase phase) =>
+      phase == RenphoScanPhase.ready ||
+      phase == RenphoScanPhase.saving ||
+      phase == RenphoScanPhase.complete;
+
   String _status(AppLocalizations l10n, RenphoBleProbeState state) {
-    if (state.statusOverride != null) return state.statusOverride!;
+    if (state.retryingSetup) return l10n.renphoStatusRetrying;
     return switch (state.phase) {
       RenphoScanPhase.idle => l10n.renphoStatusIdle,
       RenphoScanPhase.discovering => l10n.renphoStatusDiscovering,
@@ -120,6 +132,7 @@ class RenphoScanCard extends StatelessWidget {
       RenphoScanPhase.preparing => l10n.renphoStatusPreparing,
       RenphoScanPhase.ready => l10n.renphoStatusReady,
       RenphoScanPhase.saving => l10n.renphoStatusSaving,
+      RenphoScanPhase.complete => l10n.renphoStatusComplete,
     };
   }
 }
@@ -151,6 +164,10 @@ class _PhaseBadge extends StatelessWidget {
       ),
       RenphoScanPhase.ready => (l10n.renphoPhaseReady, AppTheme.statusGreen),
       RenphoScanPhase.saving => (l10n.renphoPhaseSaving, AppTheme.accentTeal),
+      RenphoScanPhase.complete => (
+        l10n.renphoPhaseComplete,
+        AppTheme.statusGreen,
+      ),
     };
     return StatusBadge(label: label, color: color, showDot: true);
   }

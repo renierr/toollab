@@ -171,31 +171,38 @@ class RenphoFragmentAssembler {
 class RenphoScaleCommands {
   RenphoScaleCommands._();
 
-  static Uint8List handshake() => Uint8List.fromList([
-    0x55, 0xAA, 0xB2, 0x00, 0x09, 0x00, 0x01, 0x06, //
-    0xC2, 0x19, 0xAF, 0xB2, 0x01, 0x02, 0x00,
-  ]);
-
-  static Uint8List setClock(DateTime now) {
-    final seconds = now.toUtc().millisecondsSinceEpoch ~/ 1000;
+  /// The scale expects the last weight the app knows about, and the official
+  /// app re-sends this packet after every result to close the session.
+  static Uint8List handshake({int sequence = 0, double? lastWeightKg}) {
+    final grams = ((lastWeightKg ?? 65.75) * 100).round().clamp(0, 0xFFFF);
     return _withChecksum([
-      0x55, 0xAA, 0xB3, 0x00, 0x0B, 0x01, 0x07, 0x01, 0x01, //
-      (seconds >> 24) & 0xFF, (seconds >> 16) & 0xFF,
-      (seconds >> 8) & 0xFF, seconds & 0xFF,
-      0x00, 0x78, 0x00,
+      0x55, 0xAA, 0xB2, 0x00, 0x09, sequence & 0xFF, 0x01, 0x06, //
+      0xC2, (grams >> 8) & 0xFF, grams & 0xFF, 0xB2, 0x01, 0x02,
     ]);
   }
 
-  static Uint8List requestStoredRecords() => Uint8List.fromList([
-    0x55, 0xAA, 0xB8, 0x00, 0x0C, 0x02, 0x01, 0x00, 0x00, //
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC6,
-  ]);
+  static Uint8List setClock(DateTime now, {int sequence = 0x01}) {
+    final seconds = now.toUtc().millisecondsSinceEpoch ~/ 1000;
+    final offset = now.timeZoneOffset.inMinutes;
+    return _withChecksum([
+      0x55, 0xAA, 0xB3, 0x00, 0x0B, sequence & 0xFF, 0x07, 0x01, 0x01, //
+      (seconds >> 24) & 0xFF, (seconds >> 16) & 0xFF,
+      (seconds >> 8) & 0xFF, seconds & 0xFF,
+      (offset >> 8) & 0xFF, offset & 0xFF, 0x00,
+    ]);
+  }
 
-  static Uint8List selectUser(String name) {
+  static Uint8List requestStoredRecords({int sequence = 0x02}) =>
+      _withChecksum([
+        0x55, 0xAA, 0xB8, 0x00, 0x0C, sequence & 0xFF, 0x01, 0x00, 0x00, //
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      ]);
+
+  static Uint8List selectUser(String name, {int sequence = 0x03}) {
     final encoded = _asciiName(name);
     return _withChecksum([
-      0x55, 0xAA, 0xB7, 0x00, 6 + encoded.length, 0x03, 0x01, 0x00, //
-      0x01, 0x00, encoded.length, ...encoded,
+      0x55, 0xAA, 0xB7, 0x00, 6 + encoded.length, sequence & 0xFF, 0x01, //
+      0x00, 0x01, 0x00, encoded.length, ...encoded,
     ]);
   }
 
@@ -212,6 +219,19 @@ class RenphoScaleCommands {
     ];
   }
 }
+
+/// The frame type the scale answers a setup command with: the command type
+/// minus 0x90, so 0xB2 is acknowledged by 0x22. Captures disagree about the
+/// pairing across firmware revisions, so callers treat this as a hint.
+int renphoAckFor(int commandType) => (commandType - 0x90) & 0xFF;
+
+/// 0x20 is a free-running state broadcast, not an acknowledgement — the scale
+/// emits it on connect and again when the impedance phase starts.
+bool renphoIsStateBroadcast(int type) => type == 0x20;
+
+/// The state byte inside a 0x20 broadcast, or null when the frame is too short.
+int? renphoBroadcastState(List<int> packet) =>
+    packet.length > 6 && packet[2] == 0x20 ? packet[6] : null;
 
 Uint8List _withChecksum(List<int> packet) => Uint8List.fromList([
   ...packet,

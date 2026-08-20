@@ -29,7 +29,26 @@ enum RenphoScanPhase {
 
   /// A result came in and is being written.
   saving,
+
+  /// A live measurement finished and the session was closed.
+  complete,
 }
+
+/// Why a scan stopped. The message itself lives in the l10n bundle, so the
+/// state never carries user-facing text.
+enum RenphoFailure {
+  bluetoothUnavailable,
+  scanFailed,
+  notFound,
+  connectFailed,
+  setupFailed,
+  saveFailed,
+}
+
+/// Where a measurement stands, as the scale reports it. The two halves feel
+/// like separate operations to the user — step on and stand still, then grab
+/// the handles — so the UI names them instead of showing one blanket status.
+enum RenphoMeasureStep { waiting, weighing, impedance, computing, done }
 
 class RenphoDiscoveredScale {
   final String id;
@@ -62,6 +81,7 @@ class RenphoBleProbeState extends ChangeNotifier {
   bool _autoConnect = true;
   bool _connectAborted = false;
   StreamSubscription<BleDevice>? _scanSubscription;
+  Timer? _discoveryTimer;
 
   // Resolved GATT handles
   String? _controlService;
@@ -75,13 +95,21 @@ class RenphoBleProbeState extends ChangeNotifier {
   // Session
   RenphoScanPhase _phase = RenphoScanPhase.idle;
   int _stage = 0;
-  Timer? _stageTimer;
+  int? _expectedAck;
+  bool _setupDone = false;
+  bool _frameSeen = false;
   bool _handshakeRetried = false;
+  Timer? _stageTimer;
+  Timer? _watchdog;
+  Timer? _idleTimer;
+  Duration _pacing = const Duration(milliseconds: 1200);
   WakeLockLease? _wakeLock;
   final _assembler = RenphoFragmentAssembler();
   double? _liveWeightKg;
-  String? _error;
-  String? _statusOverride;
+  RenphoMeasureStep _step = RenphoMeasureStep.waiting;
+  RenphoFailure? _error;
+  String? _errorDetail;
+  bool _retryingSetup = false;
   int _importedStoredRecords = 0;
 
   // Data
@@ -100,11 +128,14 @@ class RenphoBleProbeState extends ChangeNotifier {
       _phase == RenphoScanPhase.connecting ||
       _phase == RenphoScanPhase.preparing ||
       _phase == RenphoScanPhase.saving;
+  bool get complete => _phase == RenphoScanPhase.complete;
   bool get connected => _deviceId != null;
   bool get ready => _phase == RenphoScanPhase.ready;
-  String? get error => _error;
-  String? get statusOverride => _statusOverride;
+  RenphoFailure? get error => _error;
+  String? get errorDetail => _errorDetail;
+  bool get retryingSetup => _retryingSetup;
   double? get liveWeightKg => _liveWeightKg;
+  RenphoMeasureStep get measureStep => _step;
   String? get deviceName => _deviceName ?? _lastDeviceName;
   String? get deviceId => _deviceId;
   String? get rememberedDeviceId => _lastDeviceId;
@@ -237,18 +268,28 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   Future<void> startScan() async {
     if (_scanning || _phase == RenphoScanPhase.connecting) return;
+    // A session left open by the previous run keeps the link up, and a
+    // connected scale stops advertising — so it would never show up again.
+    if (_deviceId != null) await disconnect();
     _error = null;
+    _errorDetail = null;
     _importedStoredRecords = 0;
     _liveWeightKg = null;
+    _step = RenphoMeasureStep.waiting;
     _discovered.clear();
     _phase = RenphoScanPhase.discovering;
     notifyListeners();
+    // The user is standing in front of the scale from the moment they press
+    // search, so the screen stays on for the whole session, not just the part
+    // after a link is up.
+    _wakeLock ??= await PowerWakeLockService.acquireFull();
     try {
       await UniversalBle.requestPermissions(withAndroidFineLocation: false);
+      if (await _connectSystemDevice()) return;
       await _scanSubscription?.cancel();
       _scanSubscription = UniversalBle.scanStream.listen(
         _onDeviceFound,
-        onError: (Object e) => _fail('Bluetooth scan failed: $e'),
+        onError: (Object e) => _fail(RenphoFailure.scanFailed, '$e'),
       );
       await UniversalBle.startScan(
         platformConfig: PlatformConfig(
@@ -256,17 +297,57 @@ class RenphoBleProbeState extends ChangeNotifier {
         ),
       );
       _scanning = true;
+      _armDiscoveryTimeout();
       notifyListeners();
     } catch (e) {
       await _scanSubscription?.cancel();
       _scanSubscription = null;
-      _fail('Bluetooth is unavailable or permission was refused: $e');
+      _fail(RenphoFailure.bluetoothUnavailable, '$e');
       _phase = RenphoScanPhase.idle;
       notifyListeners();
     }
   }
 
+  /// A scale the OS already holds a link to never appears in a scan. Windows in
+  /// particular keeps the connection alive across app restarts, which looks
+  /// exactly like the scale having vanished.
+  Future<bool> _connectSystemDevice() async {
+    if (!_autoConnect) return false;
+    List<BleDevice> devices;
+    try {
+      devices = await UniversalBle.getSystemDevices();
+    } catch (e) {
+      debugLog('[RenphoScale] System device lookup failed: $e');
+      return false;
+    }
+    for (final device in devices) {
+      final name = (device.name ?? '').trim();
+      if (!_looksLikeScale(device.deviceId, name)) continue;
+      debugLog('[RenphoScale] Reusing system device ${device.deviceId}');
+      await connect(
+        device.deviceId,
+        name.isEmpty ? (_lastDeviceName ?? 'Scale') : name,
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /// The scale advertises only for a few seconds after it is woken, so a scan
+  /// that finds nothing is the normal outcome of a sleeping unit — say so
+  /// instead of spinning forever.
+  void _armDiscoveryTimeout() {
+    _discoveryTimer?.cancel();
+    _discoveryTimer = Timer(const Duration(seconds: 20), () {
+      if (_phase != RenphoScanPhase.discovering) return;
+      unawaited(stopScan());
+      if (_discovered.isEmpty) _fail(RenphoFailure.notFound);
+    });
+  }
+
   Future<void> stopScan() async {
+    _discoveryTimer?.cancel();
+    _discoveryTimer = null;
     if (!_scanning) return;
     try {
       await UniversalBle.stopScan();
@@ -275,7 +356,15 @@ class RenphoBleProbeState extends ChangeNotifier {
     _scanSubscription = null;
     _scanning = false;
     if (_phase == RenphoScanPhase.discovering) _phase = RenphoScanPhase.idle;
+    // Only the scan held the screen awake; a connected session releases it in
+    // disconnect instead.
+    if (_deviceId == null) await _releaseWakeLock();
     notifyListeners();
+  }
+
+  Future<void> _releaseWakeLock() async {
+    await _wakeLock?.release();
+    _wakeLock = null;
   }
 
   void _onDeviceFound(BleDevice device) {
@@ -317,8 +406,12 @@ class RenphoBleProbeState extends ChangeNotifier {
     _phase = RenphoScanPhase.connecting;
     _deviceName = name;
     _error = null;
+    _errorDetail = null;
     notifyListeners();
-    await stopScan();
+    // The scan deliberately keeps running. Stopping it first lets the platform
+    // drop the freshly seen advertisement, and Windows then answers the connect
+    // with "Unreachable" even though the scale is sitting right there.
+    _discoveryTimer?.cancel();
 
     // The scale advertises for a few seconds after it wakes and then sleeps
     // again; a single connect attempt loses that race often enough to look
@@ -331,24 +424,32 @@ class RenphoBleProbeState extends ChangeNotifier {
       } catch (e) {
         errorLog('[RenphoScale] Connect attempt $attempt/$attempts: $e');
         if (_connectAborted) return;
+        // An unreachable device is one that went back to sleep. Leaving the
+        // scan up means the next advertisement re-registers it before the
+        // retry, which is the difference between working and not.
+        try {
+          await UniversalBle.disconnect(id);
+        } catch (_) {}
         if (attempt < attempts) {
-          await Future<void>.delayed(Duration(milliseconds: 600 * attempt));
+          await Future<void>.delayed(Duration(milliseconds: 800 * attempt));
         }
         continue;
       }
       // The link is up. A failure past this point is about the device, not the
       // connection, so it is reported instead of retried.
       _deviceId = id;
+      await stopScan();
       try {
         await _rememberDevice(id, name);
         await _prepare(id);
       } catch (e) {
-        _fail('$e');
+        _fail(RenphoFailure.connectFailed, '$e');
         await disconnect();
       }
       return;
     }
-    _fail('Could not connect to the scale. Wake it and try again.');
+    await stopScan();
+    _fail(RenphoFailure.connectFailed);
     await disconnect();
   }
 
@@ -363,10 +464,9 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   Future<void> _prepare(String id) async {
     _phase = RenphoScanPhase.preparing;
-    _statusOverride = null;
     notifyListeners();
 
-    _wakeLock = await PowerWakeLockService.acquireFull();
+    _wakeLock ??= await PowerWakeLockService.acquireFull();
     // Android holds the ATT MTU at 23 until asked. Result fragments are larger
     // than that and would arrive truncated.
     try {
@@ -437,10 +537,7 @@ class RenphoBleProbeState extends ChangeNotifier {
     }
 
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    _stage = 1;
-    _handshakeRetried = false;
-    await _write(RenphoScaleCommands.handshake());
-    _armTimeout();
+    _startSetup();
   }
 
   Future<void> _listen(
@@ -466,14 +563,17 @@ class RenphoBleProbeState extends ChangeNotifier {
     _connectAborted = true;
     _stageTimer?.cancel();
     _stageTimer = null;
+    _watchdog?.cancel();
+    _watchdog = null;
+    _idleTimer?.cancel();
+    _idleTimer = null;
     await stopScan();
     for (final subscription in _subscriptions) {
       await subscription.cancel();
     }
     _subscriptions.clear();
     _assembler.clear();
-    await _wakeLock?.release();
-    _wakeLock = null;
+    await _releaseWakeLock();
     final id = _deviceId;
     _deviceId = null;
     _controlService = null;
@@ -483,8 +583,13 @@ class RenphoBleProbeState extends ChangeNotifier {
     _resultService = null;
     _resultCharacteristic = null;
     _stage = 0;
-    _liveWeightKg = null;
-    if (_phase != RenphoScanPhase.saving) _phase = RenphoScanPhase.idle;
+    _setupDone = false;
+    _expectedAck = null;
+    _retryingSetup = false;
+    if (_phase != RenphoScanPhase.saving &&
+        _phase != RenphoScanPhase.complete) {
+      _phase = RenphoScanPhase.idle;
+    }
     if (id != null) {
       try {
         await UniversalBle.disconnect(id);
@@ -497,6 +602,8 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   void _onFrame(List<int> value) {
     final bytes = List<int>.from(value);
+    _frameSeen = true;
+    _armIdleDisconnect();
     if (kDebugMode) debugLog('[RenphoScale] RX ${renphoHex(bytes)}');
 
     if (RenphoFragmentAssembler.isFragment(bytes)) {
@@ -522,6 +629,7 @@ class RenphoBleProbeState extends ChangeNotifier {
     final live = decodeRenphoLiveWeight(packet);
     if (live != null) {
       _liveWeightKg = live;
+      _stepTo(RenphoMeasureStep.weighing);
       notifyListeners();
       return;
     }
@@ -546,12 +654,15 @@ class RenphoBleProbeState extends ChangeNotifier {
       if (result == null) {
         if (type == 0x24) {
           // 0x24 is the settled weight without body composition; keep it on
-          // screen but do not store a scan for it.
+          // screen but do not store a scan for it. It also means the user is
+          // already standing there, so the setup cannot dawdle any longer.
           final weight = _weightOnly(packet);
           if (weight != null) {
             _liveWeightKg = weight;
             notifyListeners();
           }
+          _stepTo(RenphoMeasureStep.impedance);
+          _hurrySetup();
         }
         return;
       }
@@ -564,7 +675,29 @@ class RenphoBleProbeState extends ChangeNotifier {
       return;
     }
 
+    switch (renphoBroadcastState(packet)) {
+      case _impedancePhaseState:
+        _stepTo(RenphoMeasureStep.impedance);
+        _hurrySetup();
+        return;
+      case _computingState:
+        _stepTo(RenphoMeasureStep.computing);
+        return;
+    }
     _advanceSetup(type);
+  }
+
+  /// The 0x20 states the scale broadcasts: 0x09 when it starts driving the
+  /// handles, 0x11 once it has everything and is computing.
+  static const _impedancePhaseState = 0x09;
+  static const _computingState = 0x11;
+
+  /// The measurement only ever moves forward within a session, so a stray live
+  /// weight arriving after the handles are gripped cannot drag it back.
+  void _stepTo(RenphoMeasureStep step) {
+    if (step.index <= _step.index) return;
+    _step = step;
+    notifyListeners();
   }
 
   double? _weightOnly(List<int> packet) {
@@ -576,24 +709,121 @@ class RenphoBleProbeState extends ChangeNotifier {
         100;
   }
 
-  void _advanceSetup(int type) {
-    if (_stage == 1 && type == 0x20) {
-      _stage = 2;
-      unawaited(_write(RenphoScaleCommands.setClock(DateTime.now())));
-      _armTimeout();
-    } else if (_stage == 2 && type == 0x22) {
-      _stage = 3;
-      unawaited(_write(RenphoScaleCommands.requestStoredRecords()));
-      _armTimeout();
-    } else if (_stage == 3 && type == 0x23) {
-      _stage = 4;
-      unawaited(_write(RenphoScaleCommands.selectUser(_profile.name)));
-      _stageTimer?.cancel();
-      _stageTimer = null;
-      _phase = RenphoScanPhase.ready;
-      _error = null;
-      notifyListeners();
+  // Setup handshake ---------------------------------------------------------
+
+  /// The four setup writes, in order. The scale will not compute a body
+  /// composition until it has seen all of them.
+  Uint8List _setupPacket(int step) => switch (step) {
+    0 => RenphoScaleCommands.handshake(
+      lastWeightKg: _liveWeightKg ?? _latest?.weightKg,
+    ),
+    1 => RenphoScaleCommands.setClock(DateTime.now()),
+    2 => RenphoScaleCommands.requestStoredRecords(),
+    _ => RenphoScaleCommands.selectUser(_profile.name),
+  };
+
+  void _startSetup() {
+    _stage = 0;
+    _setupDone = false;
+    _frameSeen = false;
+    _handshakeRetried = false;
+    _pacing = const Duration(milliseconds: 1200);
+    _sendSetupStep(0);
+    _armWatchdog();
+  }
+
+  void _sendSetupStep(int step) {
+    if (step >= 4) {
+      _completeSetup();
+      return;
     }
+    _stage = step;
+    final packet = _setupPacket(step);
+    _expectedAck = renphoAckFor(packet[2]);
+    unawaited(_write(packet));
+    _stageTimer?.cancel();
+    // Waiting for an acknowledgement that never comes is worse than sending the
+    // next packet unprompted: the scale answers different frames on different
+    // firmware, and an unfinished sequence leaves it in weight-only mode. The
+    // spacing still matters — writing all four at once makes it drop the
+    // profile entirely.
+    _stageTimer = Timer(_pacing, () {
+      if (_setupDone || _stage != step) return;
+      if (kDebugMode) {
+        debugLog('[RenphoScale] No ack for setup step $step, continuing');
+      }
+      _sendSetupStep(step + 1);
+    });
+  }
+
+  void _advanceSetup(int type) {
+    if (_setupDone) {
+      // The scale re-announces its state during the measurement; nothing to do
+      // unless it dropped back to needing the profile again.
+      return;
+    }
+    // A 0x20 broadcast arrives unprompted on connect and again when the
+    // impedance phase starts, so it only counts when it is the frame this step
+    // was actually waiting for.
+    if (renphoIsStateBroadcast(type) && type != _expectedAck) return;
+    final step = _stage;
+    _stageTimer?.cancel();
+    _sendSetupStep(step + 1);
+  }
+
+  /// The scale started the impedance phase before the sequence finished. It
+  /// needs the rest of the setup now, so the pacing drops to the minimum.
+  void _hurrySetup() {
+    if (_setupDone) return;
+    _pacing = const Duration(milliseconds: 250);
+    _stageTimer?.cancel();
+    _sendSetupStep(_stage + 1);
+  }
+
+  void _completeSetup() {
+    _setupDone = true;
+    _expectedAck = null;
+    _stageTimer?.cancel();
+    _stageTimer = null;
+    _watchdog?.cancel();
+    _watchdog = null;
+    _phase = RenphoScanPhase.ready;
+    _error = null;
+    _errorDetail = null;
+    _retryingSetup = false;
+    _armIdleDisconnect();
+    notifyListeners();
+  }
+
+  /// A link left open keeps the scale from advertising, so the next scan finds
+  /// nothing at all. An idle session is dropped rather than held forever.
+  void _armIdleDisconnect() {
+    if (_deviceId == null) return;
+    _idleTimer?.cancel();
+    _idleTimer = Timer(const Duration(minutes: 5), () {
+      if (_phase == RenphoScanPhase.saving) return;
+      unawaited(disconnect());
+    });
+  }
+
+  /// Covers the case the per-step timer cannot: a scale that answers nothing at
+  /// all. One silent retry, because the unit often drifts back to sleep between
+  /// advertising and the first write.
+  void _armWatchdog() {
+    _watchdog?.cancel();
+    _watchdog = Timer(const Duration(seconds: 8), () {
+      if (_setupDone) return;
+      if (!_frameSeen && !_handshakeRetried) {
+        _handshakeRetried = true;
+        _retryingSetup = true;
+        notifyListeners();
+        _sendSetupStep(0);
+        _armWatchdog();
+        return;
+      }
+      _fail(RenphoFailure.setupFailed);
+      unawaited(disconnect());
+    });
   }
 
   Future<void> _store(RenphoScaleResult result) async {
@@ -633,12 +863,36 @@ class RenphoBleProbeState extends ChangeNotifier {
         _liveWeightKg = saved.weightKg;
       }
       await refreshHistory();
-      _phase = _deviceId == null ? RenphoScanPhase.idle : RenphoScanPhase.ready;
-      notifyListeners();
+      if (result.isStored) {
+        _phase = _deviceId == null
+            ? RenphoScanPhase.idle
+            : RenphoScanPhase.ready;
+        notifyListeners();
+      } else {
+        unawaited(_closeSession(saved.weightKg));
+      }
       _backgroundSync();
     } catch (e) {
-      _fail('Could not save the measurement: $e');
+      _fail(RenphoFailure.saveFailed, '$e');
     }
+  }
+
+  /// A live measurement ends the session: the official app re-sends B2 with the
+  /// weight it just received, and holding the link open afterwards only stops
+  /// the scale from advertising for the next scan.
+  Future<void> _closeSession(double weightKg) async {
+    _step = RenphoMeasureStep.done;
+    _phase = RenphoScanPhase.complete;
+    notifyListeners();
+    if (_deviceId != null) {
+      await _write(
+        RenphoScaleCommands.handshake(sequence: 0x04, lastWeightKg: weightKg),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await disconnect();
+    }
+    _phase = RenphoScanPhase.complete;
+    notifyListeners();
   }
 
   void _backgroundSync() {
@@ -713,32 +967,10 @@ class RenphoBleProbeState extends ChangeNotifier {
     }
   }
 
-  /// The handshake is the one step that reliably stalls when the scale drifted
-  /// back to sleep between advertising and connecting, so it gets one silent
-  /// retry before the failure is reported.
-  void _armTimeout() {
-    _stageTimer?.cancel();
-    _stageTimer = Timer(const Duration(seconds: 8), () {
-      if (_phase == RenphoScanPhase.ready) return;
-      if (_stage == 1 && !_handshakeRetried) {
-        _handshakeRetried = true;
-        _statusOverride = 'The scale did not answer. Retrying setup...';
-        notifyListeners();
-        unawaited(_write(RenphoScaleCommands.handshake()));
-        _armTimeout();
-        return;
-      }
-      _fail(
-        'The scale stopped responding during setup (step $_stage). '
-        'Step on it to wake it, then scan again.',
-      );
-      unawaited(disconnect());
-    });
-  }
-
-  void _fail(String message) {
-    _error = message;
-    _statusOverride = null;
+  void _fail(RenphoFailure failure, [String? detail]) {
+    _error = failure;
+    _errorDetail = detail;
+    _retryingSetup = false;
     notifyListeners();
   }
 

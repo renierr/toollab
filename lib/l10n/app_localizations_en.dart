@@ -8064,6 +8064,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renphoStatusSaving => 'Saving the measurement...';
 
   @override
+  String get renphoStatusRetrying =>
+      'The scale did not answer. Retrying setup...';
+
+  @override
+  String get renphoErrorBluetooth =>
+      'Bluetooth is unavailable or permission was refused.';
+
+  @override
+  String get renphoErrorNotFound =>
+      'No scale found. Step on it to wake it, then scan again.';
+
+  @override
+  String get renphoErrorScan => 'The Bluetooth scan failed.';
+
+  @override
+  String get renphoErrorConnect =>
+      'Could not connect to the scale. Step on it to wake it, then try again.';
+
+  @override
+  String get renphoErrorSetup =>
+      'The scale stopped responding during setup. Step on it to wake it, then scan again.';
+
+  @override
+  String get renphoErrorSave => 'Could not save the measurement.';
+
+  @override
+  String get renphoPhaseComplete => 'Done';
+
+  @override
+  String get renphoStatusComplete => 'Measurement complete and saved.';
+
+  @override
+  String get renphoStepWeight => 'Weight';
+
+  @override
+  String get renphoStepImpedance => 'Handles';
+
+  @override
+  String get renphoStepResult => 'Result';
+
+  @override
+  String get renphoStepHintWeight =>
+      'Stand barefoot on the scale and keep still.';
+
+  @override
+  String get renphoStepHintImpedance =>
+      'Grab both handles, arms straight, and hold still.';
+
+  @override
+  String get renphoStepHintComputing => 'Calculating the body composition...';
+
+  @override
   String get renphoPhaseIdle => 'Idle';
 
   @override
@@ -8083,7 +8135,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String renphoImportedStored(int count) {
-    return 'Imported $count measurement(s) from the scale memory';
+    return 'Also imported $count earlier measurement(s) from the scale memory';
   }
 
   @override

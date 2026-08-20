@@ -14435,6 +14435,96 @@ abstract class AppLocalizations {
   /// **'Saving the measurement...'**
   String get renphoStatusSaving;
 
+  /// No description provided for @renphoStatusRetrying.
+  ///
+  /// In en, this message translates to:
+  /// **'The scale did not answer. Retrying setup...'**
+  String get renphoStatusRetrying;
+
+  /// No description provided for @renphoErrorBluetooth.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth is unavailable or permission was refused.'**
+  String get renphoErrorBluetooth;
+
+  /// No description provided for @renphoErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No scale found. Step on it to wake it, then scan again.'**
+  String get renphoErrorNotFound;
+
+  /// No description provided for @renphoErrorScan.
+  ///
+  /// In en, this message translates to:
+  /// **'The Bluetooth scan failed.'**
+  String get renphoErrorScan;
+
+  /// No description provided for @renphoErrorConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to the scale. Step on it to wake it, then try again.'**
+  String get renphoErrorConnect;
+
+  /// No description provided for @renphoErrorSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'The scale stopped responding during setup. Step on it to wake it, then scan again.'**
+  String get renphoErrorSetup;
+
+  /// No description provided for @renphoErrorSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the measurement.'**
+  String get renphoErrorSave;
+
+  /// No description provided for @renphoPhaseComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get renphoPhaseComplete;
+
+  /// No description provided for @renphoStatusComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurement complete and saved.'**
+  String get renphoStatusComplete;
+
+  /// No description provided for @renphoStepWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get renphoStepWeight;
+
+  /// No description provided for @renphoStepImpedance.
+  ///
+  /// In en, this message translates to:
+  /// **'Handles'**
+  String get renphoStepImpedance;
+
+  /// No description provided for @renphoStepResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get renphoStepResult;
+
+  /// No description provided for @renphoStepHintWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Stand barefoot on the scale and keep still.'**
+  String get renphoStepHintWeight;
+
+  /// No description provided for @renphoStepHintImpedance.
+  ///
+  /// In en, this message translates to:
+  /// **'Grab both handles, arms straight, and hold still.'**
+  String get renphoStepHintImpedance;
+
+  /// No description provided for @renphoStepHintComputing.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating the body composition...'**
+  String get renphoStepHintComputing;
+
   /// No description provided for @renphoPhaseIdle.
   ///
   /// In en, this message translates to:
@@ -14474,7 +14564,7 @@ abstract class AppLocalizations {
   /// No description provided for @renphoImportedStored.
   ///
   /// In en, this message translates to:
-  /// **'Imported {count} measurement(s) from the scale memory'**
+  /// **'Also imported {count} earlier measurement(s) from the scale memory'**
   String renphoImportedStored(int count);
 
   /// No description provided for @renphoSyncNow.

@@ -5,7 +5,6 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/data_row.dart';
 import 'package:tool_lab/widgets/info_card.dart';
-import 'package:tool_lab/widgets/tool_layout.dart';
 
 import '../renpho_body_metrics.dart';
 import '../renpho_measurement.dart';
@@ -25,11 +24,17 @@ class RenphoMeasurementDetailsPage extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final derived = RenphoDerived(measurement);
 
-    return ToolLayout(
-      title: DateFormat.yMMMd(
-        locale,
-      ).add_Hm().format(measurement.measuredAt.toLocal()),
-      child: ListView(
+    // A pushed sub-page sits outside the GoRouter tree, so it uses a plain
+    // AppBar rather than ToolLayout, whose back button resolves a router state.
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          DateFormat.yMMMd(
+            locale,
+          ).add_Hm().format(measurement.measuredAt.toLocal()),
+        ),
+      ),
+      body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           RenphoMetricsGrid(measurement: measurement),
