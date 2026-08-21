@@ -30,11 +30,7 @@ class AppState extends ChangeNotifier {
     _syncServerUrl = _settingsService.getSyncServerUrl();
     _syncUserId = _settingsService.getSyncUserId();
     _syncLastSynced = _settingsService.getSyncLastSynced();
-    _loadFavorites();
-    _loadRecentTimestamps();
-    _loadPinnedShortcuts();
-    _loadDrawerIcons();
-    _loadToolSyncEnabled();
+    _loadPersistedState();
     for (final tool in ToolRegistry.all) {
       final factory = tool.syncDelegateFactory;
       if (factory != null) registerSyncDelegate(factory());
@@ -111,26 +107,29 @@ class AppState extends ChangeNotifier {
 
   int getLastUsed(String toolId) => _recentTimestamps[toolId] ?? 0;
 
-  Future<void> _loadFavorites() async {
-    _favorites = await DatabaseService.instance.getFavoriteIds();
-    notifyListeners();
-  }
-
-  Future<void> _loadRecentTimestamps() async {
-    _recentTimestamps = await DatabaseService.instance.getRecentTimestamps();
-    notifyListeners();
-  }
-
-  Future<void> _loadPinnedShortcuts() async {
-    final Map<String, bool> result = {};
-    for (final tool in ToolRegistry.all) {
-      final value = await DatabaseService.instance.getSetting(
-        tool.id,
-        'pinned_shortcut',
-      );
-      result[tool.id] = value == 'true';
-    }
-    _pinnedShortcuts = result;
+  /// Loads everything the tool grid reads, then notifies once. Notifying per
+  /// loader rebuilt the grid five times during startup, and the recent-usage
+  /// load reorders it, so the reshuffle was visible after the first frame.
+  ///
+  /// A tool with no stored value counts as enabled for sync, so tools that
+  /// already synced before that switch existed keep syncing after the upgrade.
+  Future<void> _loadPersistedState() async {
+    final db = DatabaseService.instance;
+    _favorites = await db.getFavoriteIds();
+    _recentTimestamps = await db.getRecentTimestamps();
+    final pinned = await db.getSettingForAllTools('pinned_shortcut');
+    final drawer = await db.getSettingForAllTools('drawer_icon');
+    final toolSync = await db.getSettingForAllTools('sync_enabled');
+    _pinnedShortcuts = {
+      for (final tool in ToolRegistry.all) tool.id: pinned[tool.id] == 'true',
+    };
+    _drawerIcons = {
+      for (final tool in ToolRegistry.all) tool.id: drawer[tool.id] == 'true',
+    };
+    _toolSyncEnabled = {
+      for (final tool in syncCapableTools)
+        tool.id: toolSync[tool.id] != 'false',
+    };
     notifyListeners();
   }
 
@@ -148,21 +147,6 @@ class AppState extends ChangeNotifier {
       _pinnedShortcuts[toolId] = true;
       notifyListeners();
     }
-  }
-
-  /// A tool with no stored value counts as enabled, so tools that already synced
-  /// before this switch existed keep syncing after the upgrade.
-  Future<void> _loadToolSyncEnabled() async {
-    final Map<String, bool> result = {};
-    for (final tool in syncCapableTools) {
-      final value = await DatabaseService.instance.getSetting(
-        tool.id,
-        'sync_enabled',
-      );
-      result[tool.id] = value != 'false';
-    }
-    _toolSyncEnabled = result;
-    notifyListeners();
   }
 
   Future<void> setToolSyncEnabled(String toolId, bool value) async {
@@ -186,19 +170,6 @@ class AppState extends ChangeNotifier {
         await DatabaseService.instance.deleteSetting(toolId, key);
       }
     }
-  }
-
-  Future<void> _loadDrawerIcons() async {
-    final Map<String, bool> result = {};
-    for (final tool in ToolRegistry.all) {
-      final value = await DatabaseService.instance.getSetting(
-        tool.id,
-        'drawer_icon',
-      );
-      result[tool.id] = value == 'true';
-    }
-    _drawerIcons = result;
-    notifyListeners();
   }
 
   Future<void> toggleDrawerIcon(String toolId) async {
@@ -421,11 +392,6 @@ class AppState extends ChangeNotifier {
     _syncServerUrl = _settingsService.getSyncServerUrl();
     _syncUserId = _settingsService.getSyncUserId();
     _syncLastSynced = _settingsService.getSyncLastSynced();
-    await _loadFavorites();
-    await _loadRecentTimestamps();
-    await _loadPinnedShortcuts();
-    await _loadDrawerIcons();
-    await _loadToolSyncEnabled();
-    notifyListeners();
+    await _loadPersistedState();
   }
 }

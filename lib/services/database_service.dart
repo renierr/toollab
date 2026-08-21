@@ -186,6 +186,19 @@ class DatabaseService {
     return {for (final r in rows) r['key'] as String: r['value'] as String};
   }
 
+  /// Reads one setting [key] across every tool at once, keyed by tool id. Tools
+  /// with no stored value are absent, so callers apply their own default.
+  Future<Map<String, String>> getSettingForAllTools(String key) async {
+    final db = await database;
+    final rows = await db.query(
+      _tableSettings,
+      columns: ['tool_id', 'value'],
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+    return {for (final r in rows) r['tool_id'] as String: r['value'] as String};
+  }
+
   Future<void> deleteSetting(String toolId, String key) async {
     final db = await database;
     await db.delete(

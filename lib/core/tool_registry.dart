@@ -58,7 +58,7 @@ class ToolRegistry {
     ),
   };
 
-  static List<ToolModel> get all => [
+  static final List<ToolModel> all = [
     CalculatorTool.config,
     BubbleLevelTool.config,
     CompassTool.config,
