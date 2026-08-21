@@ -183,7 +183,7 @@ Measured on 3.47.1, release build, time to first frame:
 | Config | Time |
 | --- | --- |
 | Impeller (3.47 default) | 2150 ms |
-| Skia (this switch) | ~580 ms |
+| Skia (this switch) | 408 ms |
 | `flutter create` hello-world, Impeller | 1920 ms |
 | `flutter create` hello-world, Skia | 345 ms |
 
