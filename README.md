@@ -163,6 +163,50 @@ flutter test
 
 Outputs land in `dist/`.
 
+### Windows Renderer: Impeller Disabled
+
+**2026-08-21** — `windows/runner/main.cpp` pins the Windows build to the legacy Skia
+renderer:
+
+```cpp
+project.set_impeller_switch(flutter::ImpellerSwitch::Disabled);
+```
+
+Flutter 3.47.0 made Impeller the default renderer on Windows. The only Impeller
+backend Windows builds is GLES over ANGLE, which cannot ship precompiled shaders
+— it hands GLSL source to the driver at runtime, and ANGLE then translates it to
+HLSL and compiles it with `d3dcompiler_47`. Impeller's program cache is
+in-memory only, so the whole cost is paid on every launch.
+
+Measured on 3.47.1, release build, time to first frame:
+
+| Config | Time |
+| --- | --- |
+| Impeller (3.47 default) | 2150 ms |
+| Skia (this switch) | ~580 ms |
+| `flutter create` hello-world, Impeller | 1920 ms |
+| `flutter create` hello-world, Skia | 345 ms |
+
+So ~1.6 s of it is the renderer, not this app. Not caused by the hybrid
+Intel/NVIDIA GPU — forcing the discrete card measured 1800 ms, within noise of
+the default.
+
+**Re-test on every Flutter upgrade.** Remove the line and compare startup when
+either of these lands:
+
+- Windows gains an Impeller Vulkan backend. Today `shell/platform/linux` and
+  `shell/platform/windows` are GLES-only; the Windows embedder's `BUILD.gn`
+  links only `impeller/renderer/backend/gles` plus the ANGLE static libs, and no
+  file in it mentions Vulkan.
+- Impeller gets a persistent on-disk program cache on Windows, or ANGLE shader
+  compilation stops being on the startup path.
+
+Once either is true this switch becomes a pessimization — Skia is the deprecated
+path and will eventually be removed. Deleting the line restores the default.
+
+Note that Skia and Impeller differ slightly on blur, some blend modes and stroke
+edges, so re-check visuals when toggling.
+
 ### Verification
 ```bash
 dart format ./lib
