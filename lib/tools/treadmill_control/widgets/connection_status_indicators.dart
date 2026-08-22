@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:universal_ble/universal_ble.dart';
 import '../treadmill_control_state.dart';
-import '../treadmill_control_colors.dart';
+import 'package:tool_lab/widgets/workout/workout_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 
 class ConnectionStatusIndicators extends StatelessWidget {

@@ -5,6 +5,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 
 class DatabaseService {
   static const String _dbName = 'tool_lab.db';
@@ -16,22 +17,21 @@ class DatabaseService {
   DatabaseService._privateConstructor();
   static final DatabaseService instance = DatabaseService._privateConstructor();
 
-  Database? _database;
+  Future<Database>? _databaseFuture;
 
   /// Allows overriding the database path (e.g. to [inMemoryDatabasePath] for isolated tests).
   String? dbPathOverride;
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
-  }
+  /// Memoizes the init future so concurrent first callers share one connection.
+  Future<Database> get database => _databaseFuture ??= _initDatabase();
 
   /// Closes the database and resets the connection so it can be reinitialized.
   Future<void> close() async {
-    if (_database != null) {
-      await _database!.close();
-      _database = null;
+    final future = _databaseFuture;
+    if (future != null) {
+      _databaseFuture = null;
+      final db = await future;
+      await db.close();
     }
   }
 
@@ -64,7 +64,9 @@ class DatabaseService {
     );
     try {
       await db.execute('PRAGMA journal_mode=WAL;');
-    } catch (_) {}
+    } catch (e) {
+      errorLog('DatabaseService: failed to enable WAL mode: $e');
+    }
     return db;
   }
 
@@ -229,7 +231,9 @@ class DatabaseService {
     final db = await database;
     try {
       await db.execute('PRAGMA wal_checkpoint(FULL);');
-    } catch (_) {}
+    } catch (e) {
+      errorLog('DatabaseService: WAL checkpoint failed before export: $e');
+    }
     final path = db.path;
     final file = File(path);
     if (!await file.exists()) {
@@ -322,12 +326,35 @@ class DatabaseService {
 
     final db = await database;
     final path = db.path;
+
+    // Stage the import beside the target so a crash mid-copy cannot leave the
+    // live database truncated or missing.
+    final tempPath = '$path.import_tmp';
+    await File(sourcePath).copy(tempPath);
+
     await close();
-
-    await File(sourcePath).copy(path);
-
-    // Reopen so subsequent access uses the imported data.
-    await database;
+    try {
+      final target = File(path);
+      if (await target.exists()) {
+        await target.delete();
+      }
+      for (final sidecar in ['-wal', '-shm']) {
+        final f = File('$path$sidecar');
+        if (await f.exists()) {
+          await f.delete();
+        }
+      }
+      await File(tempPath).rename(path);
+    } catch (e) {
+      errorLog(
+        'DatabaseService: database import failed, reopening old data: $e',
+      );
+      rethrow;
+    } finally {
+      // Reopen so subsequent access uses the imported data (or recovers the
+      // previous connection state if the swap failed).
+      await database;
+    }
   }
 }
 

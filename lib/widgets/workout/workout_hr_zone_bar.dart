@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../theme/theme.dart';
-import '../workout_details_stats.dart';
+import '../../theme/theme.dart';
+import 'workout_details_stats.dart';
 
 class WorkoutHrZoneBar extends StatelessWidget {
   final List<HeartRateZone> zones;

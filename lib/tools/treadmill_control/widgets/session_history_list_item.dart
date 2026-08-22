@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../treadmill_session.dart';
+import 'package:tool_lab/widgets/workout/workout_session.dart';
 import '../../../l10n/app_localizations.dart';
 
 class SessionHistoryListItem extends StatelessWidget {

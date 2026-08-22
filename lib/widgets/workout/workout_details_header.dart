@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../treadmill_control_colors.dart';
+import 'workout_colors.dart';
 
 class WorkoutDetailsHeader extends StatelessWidget {
   final String date;

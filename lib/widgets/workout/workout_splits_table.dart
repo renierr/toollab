@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../treadmill_control_colors.dart';
-import '../workout_details_stats.dart';
+import 'workout_colors.dart';
+import 'workout_details_stats.dart';
 
 class WorkoutSplitsTable extends StatelessWidget {
   final List<WorkoutSplit> splits;

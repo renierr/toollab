@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:universal_ble/universal_ble.dart';
 import 'treadmill_control_state.dart';
-import 'treadmill_control_colors.dart';
+import 'package:tool_lab/widgets/workout/workout_colors.dart';
 import 'widgets/device_connection_sheet.dart';
 import 'widgets/treadmill_active_session_dialog.dart';
 import 'widgets/treadmill_recovered_session_dialog.dart';
@@ -13,7 +12,7 @@ import 'widgets/workout_controls_panel.dart';
 import '../../core/tool_page_state.dart';
 import '../../widgets/tool_layout.dart';
 import '../../widgets/responsive_orientation_layout.dart';
-import '../../widgets/status_badge.dart';
+import 'widgets/treadmill_connection_badges.dart';
 import '../../../l10n/app_localizations.dart';
 
 class TreadmillControlPage extends StatefulWidget {
@@ -138,26 +137,15 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
       ),
     ];
 
-    final Widget connectionBadges = Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        _buildDeviceBadge(
-          context: context,
-          label: 'Treadmill',
-          connectionState: state.treadmillConnection,
-          deviceType: state.treadmillType == TreadmillType.pitpat
-              ? 'PITPAT'
-              : (state.treadmillType == TreadmillType.ftms ? 'FTMS' : null),
-          onTap: _showConnectionSheet,
-        ),
-        _buildDeviceBadge(
-          context: context,
-          label: 'Heart Rate',
-          connectionState: state.hrmConnection,
-          onTap: _showConnectionSheet,
-        ),
-      ],
+    final Widget connectionBadges = TreadmillConnectionBadges(
+      treadmillState: state.treadmillConnection,
+      treadmillType: switch (state.treadmillType) {
+        TreadmillType.pitpat => 'PITPAT',
+        TreadmillType.ftms => 'FTMS',
+        _ => null,
+      },
+      hrmState: state.hrmConnection,
+      onTap: _showConnectionSheet,
     );
 
     return PopScope(
@@ -214,35 +202,6 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildDeviceBadge({
-    required BuildContext context,
-    required String label,
-    required BleConnectionState connectionState,
-    String? deviceType,
-    required VoidCallback onTap,
-  }) {
-    final isConnected = connectionState == BleConnectionState.connected;
-    final isConnecting = connectionState == BleConnectionState.connecting;
-
-    String statusText = 'Disconnected';
-    Color badgeColor = Colors.red;
-
-    if (isConnected) {
-      statusText = deviceType != null ? 'Connected ($deviceType)' : 'Connected';
-      badgeColor = Colors.green;
-    } else if (isConnecting) {
-      statusText = 'Connecting...';
-      badgeColor = Colors.amber;
-    }
-
-    return StatusBadge(
-      label: '$label: $statusText',
-      color: badgeColor,
-      showDot: true,
-      onTap: onTap,
     );
   }
 }

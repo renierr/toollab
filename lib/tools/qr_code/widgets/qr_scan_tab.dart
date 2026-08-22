@@ -7,10 +7,11 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/drop_zone_action_button.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/tools/qr_code/config.dart';
+import 'package:tool_lab/tools/qr_code/qr_code_state.dart';
 import 'package:tool_lab/tools/qr_code/qr_codec.dart';
 
 import 'qr_camera_scanner.dart';
@@ -31,7 +32,6 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
   String? _result;
   bool _cameraMode = false;
   int _seq = 0;
-  String _engine = 'zxing';
 
   String? _capturedImagePath;
   Rect? _barcodeRect;
@@ -45,31 +45,11 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
     _scope = TempFileManager.createScope();
     onDispose(() => _scope.cleanTracked());
     _cameraMode = false;
-    _loadSettings();
+    context.read<QrCodeState>().restore();
   }
 
-  Future<void> _loadSettings() async {
-    final stored = await DatabaseService.instance.getSetting(
-      QrCodeTool.config.id,
-      'scanner_engine',
-    );
-    if (stored != null && mounted) {
-      setState(() {
-        _engine = stored;
-      });
-    }
-  }
-
-  Future<void> _saveSetting(String value) async {
-    setState(() {
-      _engine = value;
-    });
-    await DatabaseService.instance.setSetting(
-      QrCodeTool.config.id,
-      'scanner_engine',
-      value,
-    );
-  }
+  void _saveSetting(String value) =>
+      context.read<QrCodeState>().setScannerEngine(value);
 
   Color get _accent => QrCodeTool.config.accentColor;
 
@@ -89,7 +69,8 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
     String? capturedPath;
 
     final QrDecodeResult? result;
-    if (_engine == 'mlkit' && Platform.isAndroid) {
+    if (context.read<QrCodeState>().scannerEngine == 'mlkit' &&
+        Platform.isAndroid) {
       result = await QrCodec.decodeImageFileMlKit(path);
     } else {
       result = await QrCodec.decodeImageFile(path);
@@ -161,8 +142,9 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
       );
     }
 
+    final engine = context.watch<QrCodeState>().scannerEngine;
     final Widget cameraView;
-    if (_engine == 'mlkit') {
+    if (engine == 'mlkit') {
       cameraView = QrMlKitCameraScanner(
         accentColor: _accent,
         scope: _scope,
@@ -202,7 +184,7 @@ class _QrScanTabState extends State<QrScanTab> with DisposeCleanup {
             mainAxisSize: MainAxisSize.min,
             children: [
               _EngineToggle(
-                engine: _engine,
+                engine: engine,
                 accentColor: _accent,
                 onChanged: _saveSetting,
               ),

@@ -17,12 +17,12 @@ import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/helpers/system_audio_player.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
-import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'chiptune_archive.dart';
+import 'chiptune_state.dart';
 import 'chiptune_sync_delegate.dart';
 import 'collection_service.dart';
 import 'config.dart';
@@ -37,7 +37,6 @@ import 'widgets/chiptune_playlist_panel.dart';
 import 'widgets/chiptune_tweaks_dialog.dart';
 import 'widgets/chiptune_random_button.dart';
 import 'widgets/modarchive_fetch_dialog.dart';
-import 'widgets/visualizations/chiptune_viz_registry.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
@@ -122,18 +121,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   List<ArchivedModule> _archive = [];
   bool _syncing = false;
   bool _backendAvailable = false;
-  double _volume = 0.7;
-  double _stereoWidth = 1.0;
-  ChiptuneInterpolation _interpolation = ChiptuneInterpolation.sinc;
-  double _preAmp = defaultPreAmp;
-  ChiptuneAmigaFilter _amigaFilter = ChiptuneAmigaFilter.auto;
-  double _rampStep = defaultRampStep;
-  double _modSeparation = defaultModSeparation;
-  bool _looping = false;
-  bool _visualizerEnabled = true;
   bool _appInForeground = true;
-  String _currentVizId = ChiptuneVizRegistry.defaultId;
-  int? _outputDeviceId;
 
   /// True while an externally-opened/shared file is being read + decoded, so the
   /// view shows a spinner instead of briefly flashing the empty upload zone.
@@ -147,6 +135,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   @override
   void initState() {
     super.initState();
+    final settings = context.read<ChiptuneState>();
     _openingSharedFile = widget.sharedFile != null;
     WidgetsBinding.instance.addObserver(this);
     onDispose(() => WidgetsBinding.instance.removeObserver(this));
@@ -163,18 +152,22 @@ class _ChiptunePageState extends State<ChiptunePage>
     // Hold the wakelock + foreground service across a song-end when another
     // track will auto-follow, so the (possibly background) fetch is not killed.
     _player.shouldKeepPlaybackAlive = () =>
-        !_looping &&
+        !settings.looping &&
         (_randomMode ||
             _serverRandomMode ||
             _nextPlaylistIndex() != null ||
             _nextArchivedId() != null);
+
+    settings.addListener(_applySettingsToPlayer);
+    onDispose(() => settings.removeListener(_applySettingsToPlayer));
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Restore settings first (fast db reads for volume/looping), then load the
       // opened file so playback starts ASAP. The archive + auto-sync (which can
       // do slow network calls) run afterwards — they only populate the local
       // files panel and must not delay playback of a file the user just opened.
-      await _restoreSettings();
+      await context.read<ChiptuneState>().restore();
+      _applySettingsToPlayer();
       if (widget.sharedFile != null) {
         await _loadSharedFile(widget.sharedFile!);
       }
@@ -201,69 +194,17 @@ class _ChiptunePageState extends State<ChiptunePage>
     }
   }
 
-  Future<void> _restoreSettings() async {
-    final db = DatabaseService.instance;
-    final vol = await db.getSetting(ChiptuneArchive.toolId, 'volume');
-    final loop = await db.getSetting(ChiptuneArchive.toolId, 'looping');
-    final vis = await db.getSetting(ChiptuneArchive.toolId, 'vis_id');
-    final visOn = await db.getSetting(ChiptuneArchive.toolId, 'visualizer');
-    final widthStr = await db.getSetting(
-      ChiptuneArchive.toolId,
-      'stereo_width',
-    );
-    final interpStr = await db.getSetting(
-      ChiptuneArchive.toolId,
-      'interpolation',
-    );
-    final preAmpStr = await db.getSetting(ChiptuneArchive.toolId, 'preamp');
-    final amigaStr = await db.getSetting(
-      ChiptuneArchive.toolId,
-      'amiga_filter',
-    );
-    final rampStr = await db.getSetting(ChiptuneArchive.toolId, 'ramp_step');
-    final sepStr = await db.getSetting(
-      ChiptuneArchive.toolId,
-      'mod_separation',
-    );
-    final deviceIdStr = await db.getSetting(
-      ChiptuneArchive.toolId,
-      'output_device_id',
-    );
-    if (!mounted) return;
-    final interpIdx = int.tryParse(interpStr ?? '');
-    final amigaIdx = int.tryParse(amigaStr ?? '');
-    setState(() {
-      _volume = double.tryParse(vol ?? '') ?? 0.7;
-      _stereoWidth = double.tryParse(widthStr ?? '') ?? 1.0;
-      _interpolation =
-          (interpIdx != null &&
-              interpIdx >= 0 &&
-              interpIdx < ChiptuneInterpolation.values.length)
-          ? ChiptuneInterpolation.values[interpIdx]
-          : ChiptuneInterpolation.sinc;
-      _preAmp = double.tryParse(preAmpStr ?? '') ?? defaultPreAmp;
-      _amigaFilter =
-          (amigaIdx != null &&
-              amigaIdx >= 0 &&
-              amigaIdx < ChiptuneAmigaFilter.values.length)
-          ? ChiptuneAmigaFilter.values[amigaIdx]
-          : ChiptuneAmigaFilter.auto;
-      _rampStep = double.tryParse(rampStr ?? '') ?? defaultRampStep;
-      _modSeparation = double.tryParse(sepStr ?? '') ?? defaultModSeparation;
-      _looping = loop == '1';
-      _visualizerEnabled = visOn != '0';
-      _currentVizId = vis ?? ChiptuneVizRegistry.defaultId;
-      _outputDeviceId = int.tryParse(deviceIdStr ?? '');
-    });
-    _player.setVolume(_volume);
-    _player.setStereoWidth(_stereoWidth);
-    _player.setInterpolation(_interpolation);
-    _player.setPreAmp(_preAmp);
-    _player.setAmigaFilter(_amigaFilter);
-    _player.setRampStep(_rampStep);
-    _player.setModSeparation(_modSeparation);
-    _player.setLooping(_looping);
-    _player.setInitialDeviceId(_outputDeviceId);
+  void _applySettingsToPlayer() {
+    final s = context.read<ChiptuneState>();
+    _player.setVolume(s.volume);
+    _player.setStereoWidth(s.stereoWidth);
+    _player.setInterpolation(s.interpolation);
+    _player.setPreAmp(s.preAmp);
+    _player.setAmigaFilter(s.amigaFilter);
+    _player.setRampStep(s.rampStep);
+    _player.setModSeparation(s.modSeparation);
+    _player.setLooping(s.looping);
+    _player.setInitialDeviceId(s.outputDeviceId);
   }
 
   // ---- File loading ----
@@ -325,7 +266,8 @@ class _ChiptunePageState extends State<ChiptunePage>
   /// callers can fall back to the external player.
   Future<bool> _loadSystemAudio(String path, String fileName) async {
     if (!SystemAudioPlayer.isSupported) return false;
-    if (_visualizerEnabled && !_capturePermissionAsked) {
+    if (context.read<ChiptuneState>().visualizerEnabled &&
+        !_capturePermissionAsked) {
       _capturePermissionAsked = true;
       await SystemAudioPlayer.instance.requestCapturePermission();
     }
@@ -505,112 +447,41 @@ class _ChiptunePageState extends State<ChiptunePage>
     }
   }
 
-  void _setVolume(double v) {
-    setState(() => _volume = v);
-    _player.setVolume(v);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'volume',
-      v.toStringAsFixed(3),
-    );
-  }
+  void _setVolume(double v) => context.read<ChiptuneState>().setVolume(v);
 
-  void _setStereoWidth(double v) {
-    setState(() => _stereoWidth = v);
-    _player.setStereoWidth(v);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'stereo_width',
-      v.toStringAsFixed(3),
-    );
-  }
+  void _setStereoWidth(double v) =>
+      context.read<ChiptuneState>().setStereoWidth(v);
 
-  void _setInterpolation(ChiptuneInterpolation mode) {
-    setState(() => _interpolation = mode);
-    _player.setInterpolation(mode);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'interpolation',
-      mode.index.toString(),
-    );
-  }
+  void _setInterpolation(ChiptuneInterpolation mode) =>
+      context.read<ChiptuneState>().setInterpolation(mode);
 
-  void _setPreAmp(double v) {
-    setState(() => _preAmp = v);
-    _player.setPreAmp(v);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'preamp',
-      v.toStringAsFixed(3),
-    );
-  }
+  void _setPreAmp(double v) => context.read<ChiptuneState>().setPreAmp(v);
 
-  void _setAmigaFilter(ChiptuneAmigaFilter mode) {
-    setState(() => _amigaFilter = mode);
-    _player.setAmigaFilter(mode);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'amiga_filter',
-      mode.index.toString(),
-    );
-  }
+  void _setAmigaFilter(ChiptuneAmigaFilter mode) =>
+      context.read<ChiptuneState>().setAmigaFilter(mode);
 
-  void _setRampStep(double v) {
-    setState(() => _rampStep = v);
-    _player.setRampStep(v);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'ramp_step',
-      v.toStringAsFixed(4),
-    );
-  }
+  void _setRampStep(double v) => context.read<ChiptuneState>().setRampStep(v);
 
-  void _setModSeparation(double v) {
-    setState(() => _modSeparation = v);
-    _player.setModSeparation(v);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'mod_separation',
-      v.toStringAsFixed(3),
-    );
-  }
+  void _setModSeparation(double v) =>
+      context.read<ChiptuneState>().setModSeparation(v);
 
-  void _setLooping(bool v) {
-    setState(() => _looping = v);
-    _player.setLooping(v);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'looping',
-      v ? '1' : '0',
-    );
-  }
+  void _setLooping(bool v) => context.read<ChiptuneState>().setLooping(v);
 
-  void _setVisualizerEnabled(bool v) {
-    setState(() => _visualizerEnabled = v);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'visualizer',
-      v ? '1' : '0',
-    );
-  }
+  void _setVisualizerEnabled(bool v) =>
+      context.read<ChiptuneState>().setVisualizerEnabled(v);
 
-  void _setVizId(String id) {
-    setState(() => _currentVizId = id);
-    DatabaseService.instance.setSetting(ChiptuneArchive.toolId, 'vis_id', id);
-  }
+  void _setVizId(String id) =>
+      context.read<ChiptuneState>().setCurrentVizId(id);
 
   void _setOutputDevice(PlaybackDevice? device) {
-    setState(() => _outputDeviceId = device?.id);
+    context.read<ChiptuneState>().setOutputDeviceId(device?.id);
     _player.setOutputDevice(device);
-    DatabaseService.instance.setSetting(
-      ChiptuneArchive.toolId,
-      'output_device_id',
-      device?.id.toString() ?? '',
-    );
   }
 
   void _showDeviceSelectionDialog(List<PlaybackDevice> devices) {
     final l10n = AppLocalizations.of(context);
+    final settings = context.read<ChiptuneState>();
+    final selectedId = settings.outputDeviceId;
     showDialog(
       context: context,
       builder: (context) {
@@ -626,8 +497,8 @@ class _ChiptunePageState extends State<ChiptunePage>
                   itemBuilder: (context, index) {
                     final device = devices[index];
                     final isSelected =
-                        (_outputDeviceId == null && device.isDefault) ||
-                        (_outputDeviceId == device.id);
+                        (selectedId == null && device.isDefault) ||
+                        (selectedId == device.id);
                     return ListTile(
                       leading: Icon(
                         device.isDefault
@@ -656,7 +527,9 @@ class _ChiptunePageState extends State<ChiptunePage>
                           : null,
                       onTap: () {
                         setDialogState(() {
-                          _outputDeviceId = device.isDefault ? null : device.id;
+                          settings.setOutputDeviceId(
+                            device.isDefault ? null : device.id,
+                          );
                         });
                         _setOutputDevice(device.isDefault ? null : device);
                         Navigator.of(context).pop();
@@ -680,14 +553,15 @@ class _ChiptunePageState extends State<ChiptunePage>
   }
 
   void _showTweaksDialog() {
+    final s = context.read<ChiptuneState>();
     ChiptuneTweaksDialog.show(
       context,
-      interpolation: _interpolation,
-      stereoWidth: _stereoWidth,
-      preAmp: _preAmp,
-      amigaFilter: _amigaFilter,
-      rampStep: _rampStep,
-      modSeparation: _modSeparation,
+      interpolation: s.interpolation,
+      stereoWidth: s.stereoWidth,
+      preAmp: s.preAmp,
+      amigaFilter: s.amigaFilter,
+      rampStep: s.rampStep,
+      modSeparation: s.modSeparation,
       onInterpolationChanged: _setInterpolation,
       onStereoWidthChanged: _setStereoWidth,
       onPreAmpChanged: _setPreAmp,
@@ -725,7 +599,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   }
 
   void _onPlaybackEnded() {
-    if (_looping) return;
+    if (context.read<ChiptuneState>().looping) return;
     if (_randomMode) {
       // Nothing left playing to keep, so tear down the session on failure.
       _advanceRandom(stopOnFailure: true);
@@ -765,7 +639,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   // ---- Random (The Mod Archive) ----
 
   void _onNearEnd() {
-    if (_looping) return;
+    if (context.read<ChiptuneState>().looping) return;
     if (_randomMode) {
       _startPrefetch();
     } else if (_serverRandomMode) {
@@ -1132,6 +1006,7 @@ class _ChiptunePageState extends State<ChiptunePage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final settings = context.watch<ChiptuneState>();
     final module = _player.module;
     final hasPlayable = _player.hasAudio;
     final isPlainAudio = _player.isPlainAudio;
@@ -1160,11 +1035,11 @@ class _ChiptunePageState extends State<ChiptunePage>
         player: _player,
         fileName: _currentFileName,
         format: _currentFormat,
-        looping: _looping,
-        volume: _volume,
-        visualizerEnabled: _visualizerEnabled,
+        looping: settings.looping,
+        volume: settings.volume,
+        visualizerEnabled: settings.visualizerEnabled,
         animateVisualizer: _appInForeground,
-        currentVizId: _currentVizId,
+        currentVizId: settings.currentVizId,
         onVizChanged: _setVizId,
         playlistPanel: _buildPlaylistPanel(),
         archivePanel: _buildArchivePanel(),
@@ -1180,11 +1055,11 @@ class _ChiptunePageState extends State<ChiptunePage>
       content = ChiptunePlayerView(
         player: _player,
         module: module!,
-        looping: _looping,
-        volume: _volume,
-        visualizerEnabled: _visualizerEnabled,
+        looping: settings.looping,
+        volume: settings.volume,
+        visualizerEnabled: settings.visualizerEnabled,
         animateVisualizer: _appInForeground,
-        currentVizId: _currentVizId,
+        currentVizId: settings.currentVizId,
         onVizChanged: _setVizId,
         randomTune: _randomMode ? _currentTune : null,
         serverTune: _serverRandomMode ? _currentServerTune : null,
@@ -1248,13 +1123,13 @@ class _ChiptunePageState extends State<ChiptunePage>
                     child: Row(
                       children: [
                         Icon(
-                          _visualizerEnabled
+                          settings.visualizerEnabled
                               ? Icons.equalizer
                               : Icons.equalizer_outlined,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          _visualizerEnabled
+                          settings.visualizerEnabled
                               ? l10n.chipHideVisualizer
                               : l10n.chipShowVisualizer,
                         ),
@@ -1291,7 +1166,7 @@ class _ChiptunePageState extends State<ChiptunePage>
                   _exportToWav();
                   break;
                 case 'visualizer':
-                  _setVisualizerEnabled(!_visualizerEnabled);
+                  _setVisualizerEnabled(!settings.visualizerEnabled);
                   break;
                 case 'tweaks':
                   _showTweaksDialog();

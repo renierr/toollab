@@ -3,14 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+
+import 'package:provider/provider.dart';
 
 import 'config.dart';
 import 'engine/focus_noise_player.dart';
 import 'focus_noise_breathing.dart';
 import 'focus_noise_sound.dart';
+import 'focus_noise_state.dart';
 import 'widgets/focus_noise_cards.dart';
 
 class FocusNoisePage extends StatefulWidget {
@@ -21,25 +23,15 @@ class FocusNoisePage extends StatefulWidget {
 }
 
 class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
-  static String get _toolId => FocusNoiseTool.config.id;
-  static const String _keySound = 'selected_sound';
-  static const String _keyVolume = 'volume';
-  static const String _keyBreathingMode = 'breathing_mode';
-  static const String _keyTimerCustomMinutes = 'timer_custom_minutes';
-
   final FocusNoisePlayer _player = FocusNoisePlayer.instance;
 
-  FocusNoiseSound _selectedSound = FocusNoiseCatalog.sounds.first;
-  double _volume = 0.65;
   bool _isPlaying = false;
 
   Timer? _timerTicker;
   DateTime? _timerTarget;
-  int _customMinutes = 30;
 
   bool _breathingActive = false;
   WakeLockLease? _breathingWakeLock;
-  FocusBreathingMode _breathingMode = FocusBreathingMode.relax;
   Timer? _breathingTimer;
   int _breathingStepIndex = 0;
   String? _breathingStepLabel;
@@ -52,10 +44,6 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     // Reuse the shared player and reflect any playback still running in the
     // background instead of tearing it down on page leave.
     _isPlaying = _player.isPlaying;
-    if (_isPlaying && _player.currentSound != null) {
-      _selectedSound = _player.currentSound!;
-      _volume = _player.volume;
-    }
     _player.onExternalStop = _onPlayerExternalStop;
     onDispose(() => _player.onExternalStop = null);
     onDispose(() => _timerTicker?.cancel());
@@ -73,38 +61,23 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   }
 
   Future<void> _restoreSettings() async {
-    final db = DatabaseService.instance;
-    final soundId = await db.getSetting(_toolId, _keySound);
-    final volumeRaw = await db.getSetting(_toolId, _keyVolume);
-    final modeRaw = await db.getSetting(_toolId, _keyBreathingMode);
-    final customRaw = await db.getSetting(_toolId, _keyTimerCustomMinutes);
-
-    if (!mounted) return;
-    setState(() {
-      // When returning to an active session, keep the sound/volume that is
-      // actually playing rather than the last persisted values.
-      if (!_player.isPlaying) {
-        if (soundId != null && soundId.isNotEmpty) {
-          _selectedSound = FocusNoiseCatalog.byId(soundId);
-        }
-        _volume = double.tryParse(volumeRaw ?? '')?.clamp(0.0, 1.0) ?? 0.65;
-      }
-      _breathingMode = switch (modeRaw) {
-        'box' => FocusBreathingMode.box,
-        'calm' => FocusBreathingMode.calm,
-        _ => FocusBreathingMode.relax,
-      };
-      _customMinutes = int.tryParse(customRaw ?? '')?.clamp(1, 1440) ?? 30;
-    });
-    if (!_player.isPlaying) _player.setVolume(_volume);
+    final settings = context.read<FocusNoiseState>();
+    // When returning to an active session, keep the sound/volume that is
+    // actually playing rather than the last persisted values.
+    if (_player.isPlaying && _player.currentSound != null) {
+      settings.adoptPlayback(_player.currentSound!, _player.volume);
+    } else {
+      await settings.restore();
+      if (!_player.isPlaying) _player.setVolume(settings.volume);
+    }
   }
 
   Future<void> _selectSound(FocusNoiseSound sound) async {
-    setState(() => _selectedSound = sound);
-    await DatabaseService.instance.setSetting(_toolId, _keySound, sound.id);
+    final settings = context.read<FocusNoiseState>();
+    settings.setSelectedSound(sound);
     if (_isPlaying) {
       await _player.play(sound);
-      _player.setVolume(_volume);
+      _player.setVolume(settings.volume);
     }
   }
 
@@ -132,20 +105,16 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
       return;
     }
 
-    await _player.play(_selectedSound);
-    _player.setVolume(_volume);
+    final settings = context.read<FocusNoiseState>();
+    await _player.play(settings.selectedSound);
+    _player.setVolume(settings.volume);
     if (!mounted) return;
     setState(() => _isPlaying = true);
   }
 
   Future<void> _setVolume(double value) async {
-    setState(() => _volume = value);
+    context.read<FocusNoiseState>().setVolume(value);
     _player.setVolume(value);
-    await DatabaseService.instance.setSetting(
-      _toolId,
-      _keyVolume,
-      value.toStringAsFixed(3),
-    );
   }
 
   void _setTimerMinutes(int minutes) {
@@ -153,13 +122,8 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     final int clamped = minutes.clamp(1, 1440);
     setState(() {
       _timerTarget = DateTime.now().add(Duration(minutes: clamped));
-      _customMinutes = clamped;
     });
-    DatabaseService.instance.setSetting(
-      _toolId,
-      _keyTimerCustomMinutes,
-      clamped.toString(),
-    );
+    context.read<FocusNoiseState>().setCustomMinutes(clamped);
 
     _timerTicker ??= Timer.periodic(const Duration(seconds: 1), (_) {
       final target = _timerTarget;
@@ -191,19 +155,8 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   }
 
   Future<void> _setBreathingMode(FocusBreathingMode mode) async {
-    setState(() {
-      _breathingMode = mode;
-      _breathingStepIndex = 0;
-    });
-    await DatabaseService.instance.setSetting(
-      _toolId,
-      _keyBreathingMode,
-      switch (mode) {
-        FocusBreathingMode.box => 'box',
-        FocusBreathingMode.relax => 'relax',
-        FocusBreathingMode.calm => 'calm',
-      },
-    );
+    setState(() => _breathingStepIndex = 0);
+    context.read<FocusNoiseState>().setBreathingMode(mode);
     if (_breathingActive) {
       _runBreathingStep(restart: true);
     }
@@ -235,7 +188,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   void _runBreathingStep({bool restart = false}) {
     _breathingTimer?.cancel();
     final FocusBreathingPattern pattern = FocusBreathingCatalog.byMode(
-      _breathingMode,
+      context.read<FocusNoiseState>().breathingMode,
     );
     if (restart) {
       _breathingStepIndex = 0;
@@ -259,21 +212,23 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final settings = context.watch<FocusNoiseState>();
+    final selectedSound = settings.selectedSound;
     final String statusText = _isPlaying
-        ? l10n.focusPlayingSound(_selectedSound.name)
-        : l10n.focusSelectedSound(_selectedSound.name);
+        ? l10n.focusPlayingSound(selectedSound.name)
+        : l10n.focusSelectedSound(selectedSound.name);
 
     final Widget content = SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: FocusNoiseCards(
         statusText: statusText,
-        selectedSound: _selectedSound,
+        selectedSound: selectedSound,
         isPlaying: _isPlaying,
-        volume: _volume,
+        volume: settings.volume,
         timerTarget: _timerTarget,
         timerLabel: _timerLabel(),
-        customMinutes: _customMinutes,
-        breathingMode: _breathingMode,
+        customMinutes: settings.customMinutes,
+        breathingMode: settings.breathingMode,
         breathingActive: _breathingActive,
         breathingStepLabel: _breathingStepLabel ?? l10n.focusReady,
         breathingScale: _breathingScale,
@@ -281,14 +236,14 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
         onSelectSound: _selectSound,
         onVolumeChanged: _setVolume,
         onTogglePlay: _togglePlayback,
-        onCustomMinutesDecrement: () {
-          setState(() => _customMinutes = (_customMinutes - 1).clamp(1, 1440));
-        },
-        onCustomMinutesIncrement: () {
-          setState(() => _customMinutes = (_customMinutes + 1).clamp(1, 1440));
-        },
+        onCustomMinutesDecrement: () => settings.setCustomMinutes(
+          (settings.customMinutes - 1).clamp(1, 1440),
+        ),
+        onCustomMinutesIncrement: () => settings.setCustomMinutes(
+          (settings.customMinutes + 1).clamp(1, 1440),
+        ),
         onSetPresetMinutes: _setTimerMinutes,
-        onSetCustomTimer: () => _setTimerMinutes(_customMinutes),
+        onSetCustomTimer: () => _setTimerMinutes(settings.customMinutes),
         onCancelTimer: _cancelTimer,
         onBreathingModeChanged: _setBreathingMode,
         onToggleBreathing: _toggleBreathing,

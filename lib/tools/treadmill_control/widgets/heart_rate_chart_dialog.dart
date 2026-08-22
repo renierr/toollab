@@ -2,7 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../treadmill_control_state.dart';
-import '../../../../widgets/responsive_alert_dialog.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class HeartRateChartDialog extends StatelessWidget {
   const HeartRateChartDialog({super.key});
@@ -11,13 +12,15 @@ class HeartRateChartDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
     final state = context.watch<TreadmillControlState>();
     final history = state.hrmHistory;
 
     if (history.isEmpty) {
-      return const ResponsiveAlertDialog(
-        title: Text('Heart Rate History'),
-        content: Text('No heart rate data recorded yet.'),
+      final l10n = AppLocalizations.of(context);
+      return ResponsiveAlertDialog(
+        title: Text(l10n.treadmillHrHistoryTitle),
+        content: Text(l10n.treadmillHrHistoryEmpty),
       );
     }
 
@@ -46,7 +49,7 @@ class HeartRateChartDialog extends StatelessWidget {
     durationStr += '${totalDuration.inSeconds % 60}s';
 
     return ResponsiveAlertDialog(
-      title: const Text('Heart Rate History'),
+      title: Text(AppLocalizations.of(context).treadmillHrHistoryTitle),
       content: SizedBox(
         width: 500,
         child: Column(
@@ -60,27 +63,27 @@ class HeartRateChartDialog extends StatelessWidget {
               alignment: WrapAlignment.spaceBetween,
               children: [
                 _StatItem(
-                  label: 'Current',
+                  label: AppLocalizations.of(context).treadmillHrCurrent,
                   value: '$current bpm',
                   color: Colors.red,
                 ),
                 _StatItem(
-                  label: 'Average',
+                  label: AppLocalizations.of(context).treadmillHistoryAverage,
                   value: '${avgVal.round()} bpm',
                   color: Colors.blue,
                 ),
                 _StatItem(
-                  label: 'Max',
+                  label: AppLocalizations.of(context).treadmillHrMax,
                   value: '$maxVal bpm',
                   color: Colors.orange,
                 ),
                 _StatItem(
-                  label: 'Min',
+                  label: AppLocalizations.of(context).treadmillHrMin,
                   value: '$minVal bpm',
                   color: Colors.green,
                 ),
                 _StatItem(
-                  label: 'Duration',
+                  label: AppLocalizations.of(context).treadmillDetailsDuration,
                   value: durationStr,
                   color: Colors.purple,
                 ),
@@ -99,10 +102,10 @@ class HeartRateChartDialog extends StatelessWidget {
                 ),
               ),
               child: rollingHistory.length < 2
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'Accumulating data for chart...',
-                        style: TextStyle(fontSize: 12),
+                        l10n.treadmillHrAccumulating,
+                        style: const TextStyle(fontSize: 12),
                       ),
                     )
                   : CustomPaint(
@@ -119,7 +122,7 @@ class HeartRateChartDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Close'),
+          child: Text(l10n.commonClose),
         ),
       ],
     );

@@ -8575,4 +8575,122 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get renphoRatingHigh => 'High';
+
+  @override
+  String get treadmillHistoryDeleteTitle => 'Delete Workout?';
+
+  @override
+  String get treadmillHistoryDeleteMessage =>
+      'Are you sure you want to delete this workout session permanently?';
+
+  @override
+  String get treadmillHistoryExportEmpty => 'No sessions to export';
+
+  @override
+  String get treadmillHistoryExportSaved =>
+      'Workouts backup saved to Downloads';
+
+  @override
+  String treadmillHistoryExportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String treadmillHistoryImportFailed(String error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String get treadmillHistoryJsonLabel => 'JSON Backup';
+
+  @override
+  String get treadmillSimulateDevice => 'Simulate Device';
+
+  @override
+  String get treadmillConnectedDevices => 'Connected Devices';
+
+  @override
+  String get treadmillFallbackName => 'Treadmill';
+
+  @override
+  String get treadmillHrmFallbackName => 'Heart Rate Monitor';
+
+  @override
+  String treadmillConnectedStatus(String id) {
+    return 'Connected | $id';
+  }
+
+  @override
+  String get treadmillDisconnect => 'Disconnect';
+
+  @override
+  String get treadmillConnect => 'Connect';
+
+  @override
+  String get treadmillScanTreadmills => 'Treadmills';
+
+  @override
+  String get treadmillScanNoTreadmills => 'No treadmills found';
+
+  @override
+  String get treadmillScanHrms => 'Heart Rate Monitors';
+
+  @override
+  String get treadmillScanNoHrms => 'No heart rate monitors found';
+
+  @override
+  String get treadmillHrHistoryTitle => 'Heart Rate History';
+
+  @override
+  String get treadmillHrHistoryEmpty => 'No heart rate data recorded yet.';
+
+  @override
+  String get treadmillHrCurrent => 'Current';
+
+  @override
+  String get treadmillHrMax => 'Max';
+
+  @override
+  String get treadmillHrMin => 'Min';
+
+  @override
+  String get treadmillHrAccumulating => 'Accumulating data for chart...';
+
+  @override
+  String get treadmillLabel => 'Treadmill';
+
+  @override
+  String get codeHighlightCreateBlankFile => 'Create Blank File';
+
+  @override
+  String get imageViewerFormatPng => 'PNG (.png)';
+
+  @override
+  String get imageViewerFormatJpeg => 'JPEG (.jpg)';
+
+  @override
+  String get imageViewerFormatBmp => 'BMP (.bmp)';
+
+  @override
+  String get imageViewerFormatWebp => 'WebP (.webp)';
+
+  @override
+  String noteFailedToProcessImage(String error) {
+    return 'Failed to process image: $error';
+  }
+
+  @override
+  String get fastDropNotificationTitle => 'Fast Drop transfer';
+
+  @override
+  String get fastDropUploading => 'Uploading';
+
+  @override
+  String get fastDropDownloading => 'Downloading';
+
+  @override
+  String get sfMorseLiveTranslate => 'Live Translate';
+
+  @override
+  String get sfMorseDecodingAudioFile => 'Decoding audio file...';
 }

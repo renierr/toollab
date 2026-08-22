@@ -19,7 +19,7 @@ class _CodeHighlightEditorState extends State<CodeHighlightEditor> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final state = Provider.of<CodeHighlightState>(context);
+    final state = context.watch<CodeHighlightState>();
     if (_state != state) {
       _state?.removeListener(_onStateChanged);
       _state = state;

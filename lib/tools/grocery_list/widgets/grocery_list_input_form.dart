@@ -141,7 +141,7 @@ class _GroceryListInputFormState extends State<GroceryListInputForm>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
     final state = context.watch<GroceryListState>();
     final history = state.history;
 
@@ -156,7 +156,7 @@ class _GroceryListInputFormState extends State<GroceryListInputForm>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+          color: Theme.of(context).colorScheme.outlineVariant,
           width: 1,
         ),
       ),
@@ -222,9 +222,9 @@ class _GroceryListInputFormState extends State<GroceryListInputForm>
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 side: BorderSide(
-                                  color: isDark
-                                      ? Colors.grey[800]!
-                                      : Colors.grey[200]!,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
                                 ),
                               ),
                               child: ConstrainedBox(
@@ -259,7 +259,7 @@ class _GroceryListInputFormState extends State<GroceryListInputForm>
                 final amountField = Container(
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                      color: Theme.of(context).colorScheme.outlineVariant,
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -281,9 +281,9 @@ class _GroceryListInputFormState extends State<GroceryListInputForm>
                             border: InputBorder.none,
                             labelText: l10n.groceryAmount,
                             labelStyle: TextStyle(
-                              color: isDark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 12,
                             ),
                             floatingLabelBehavior: FloatingLabelBehavior.always,
@@ -368,7 +368,7 @@ class _GroceryListInputFormState extends State<GroceryListInputForm>
                                 backgroundColor: widget.editingItem != null
                                     ? AppTheme.accentGreen
                                     : AppTheme.accentTeal,
-                                foregroundColor: Colors.white,
+                                foregroundColor: theme.colorScheme.onPrimary,
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
@@ -425,7 +425,7 @@ class _GroceryListInputFormState extends State<GroceryListInputForm>
                                   backgroundColor: widget.editingItem != null
                                       ? AppTheme.accentGreen
                                       : AppTheme.accentTeal,
-                                  foregroundColor: Colors.white,
+                                  foregroundColor: theme.colorScheme.onPrimary,
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 20,
                                     horizontal: 24,

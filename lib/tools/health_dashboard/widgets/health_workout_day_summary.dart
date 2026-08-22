@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
-import '../../treadmill_control/workout_details_stats.dart';
+import 'package:tool_lab/widgets/workout/workout_details_stats.dart';
 import '../health_record.dart';
 import '../health_record_values.dart';
 import 'package:tool_lab/helpers/health_value_format.dart';

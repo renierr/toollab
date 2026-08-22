@@ -15376,6 +15376,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'High'**
   String get renphoRatingHigh;
+
+  /// No description provided for @treadmillHistoryDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Workout?'**
+  String get treadmillHistoryDeleteTitle;
+
+  /// No description provided for @treadmillHistoryDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this workout session permanently?'**
+  String get treadmillHistoryDeleteMessage;
+
+  /// No description provided for @treadmillHistoryExportEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions to export'**
+  String get treadmillHistoryExportEmpty;
+
+  /// No description provided for @treadmillHistoryExportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts backup saved to Downloads'**
+  String get treadmillHistoryExportSaved;
+
+  /// No description provided for @treadmillHistoryExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String treadmillHistoryExportFailed(String error);
+
+  /// No description provided for @treadmillHistoryImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}'**
+  String treadmillHistoryImportFailed(String error);
+
+  /// No description provided for @treadmillHistoryJsonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'JSON Backup'**
+  String get treadmillHistoryJsonLabel;
+
+  /// No description provided for @treadmillSimulateDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate Device'**
+  String get treadmillSimulateDevice;
+
+  /// No description provided for @treadmillConnectedDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected Devices'**
+  String get treadmillConnectedDevices;
+
+  /// No description provided for @treadmillFallbackName.
+  ///
+  /// In en, this message translates to:
+  /// **'Treadmill'**
+  String get treadmillFallbackName;
+
+  /// No description provided for @treadmillHrmFallbackName.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart Rate Monitor'**
+  String get treadmillHrmFallbackName;
+
+  /// No description provided for @treadmillConnectedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected | {id}'**
+  String treadmillConnectedStatus(String id);
+
+  /// No description provided for @treadmillDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get treadmillDisconnect;
+
+  /// No description provided for @treadmillConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get treadmillConnect;
+
+  /// No description provided for @treadmillScanTreadmills.
+  ///
+  /// In en, this message translates to:
+  /// **'Treadmills'**
+  String get treadmillScanTreadmills;
+
+  /// No description provided for @treadmillScanNoTreadmills.
+  ///
+  /// In en, this message translates to:
+  /// **'No treadmills found'**
+  String get treadmillScanNoTreadmills;
+
+  /// No description provided for @treadmillScanHrms.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart Rate Monitors'**
+  String get treadmillScanHrms;
+
+  /// No description provided for @treadmillScanNoHrms.
+  ///
+  /// In en, this message translates to:
+  /// **'No heart rate monitors found'**
+  String get treadmillScanNoHrms;
+
+  /// No description provided for @treadmillHrHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart Rate History'**
+  String get treadmillHrHistoryTitle;
+
+  /// No description provided for @treadmillHrHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No heart rate data recorded yet.'**
+  String get treadmillHrHistoryEmpty;
+
+  /// No description provided for @treadmillHrCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get treadmillHrCurrent;
+
+  /// No description provided for @treadmillHrMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get treadmillHrMax;
+
+  /// No description provided for @treadmillHrMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get treadmillHrMin;
+
+  /// No description provided for @treadmillHrAccumulating.
+  ///
+  /// In en, this message translates to:
+  /// **'Accumulating data for chart...'**
+  String get treadmillHrAccumulating;
+
+  /// No description provided for @treadmillLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Treadmill'**
+  String get treadmillLabel;
+
+  /// No description provided for @codeHighlightCreateBlankFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Blank File'**
+  String get codeHighlightCreateBlankFile;
+
+  /// No description provided for @imageViewerFormatPng.
+  ///
+  /// In en, this message translates to:
+  /// **'PNG (.png)'**
+  String get imageViewerFormatPng;
+
+  /// No description provided for @imageViewerFormatJpeg.
+  ///
+  /// In en, this message translates to:
+  /// **'JPEG (.jpg)'**
+  String get imageViewerFormatJpeg;
+
+  /// No description provided for @imageViewerFormatBmp.
+  ///
+  /// In en, this message translates to:
+  /// **'BMP (.bmp)'**
+  String get imageViewerFormatBmp;
+
+  /// No description provided for @imageViewerFormatWebp.
+  ///
+  /// In en, this message translates to:
+  /// **'WebP (.webp)'**
+  String get imageViewerFormatWebp;
+
+  /// No description provided for @noteFailedToProcessImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to process image: {error}'**
+  String noteFailedToProcessImage(String error);
+
+  /// No description provided for @fastDropNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast Drop transfer'**
+  String get fastDropNotificationTitle;
+
+  /// No description provided for @fastDropUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading'**
+  String get fastDropUploading;
+
+  /// No description provided for @fastDropDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading'**
+  String get fastDropDownloading;
+
+  /// No description provided for @sfMorseLiveTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Translate'**
+  String get sfMorseLiveTranslate;
+
+  /// No description provided for @sfMorseDecodingAudioFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Decoding audio file...'**
+  String get sfMorseDecodingAudioFile;
 }
 
 class _AppLocalizationsDelegate

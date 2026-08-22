@@ -58,7 +58,7 @@ class DeviceConnectionSheet extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Simulate Device',
+                  l10n.treadmillSimulateDevice,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -94,7 +94,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                         state.hrmConnection ==
                             BleConnectionState.connected) ...[
                       Text(
-                        'Connected Devices',
+                        l10n.treadmillConnectedDevices,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -108,15 +108,19 @@ class DeviceConnectionSheet extends StatelessWidget {
                             Icons.directions_run_outlined,
                             color: theme.colorScheme.primary,
                           ),
-                          title: Text(state.treadmillName ?? 'Treadmill'),
+                          title: Text(
+                            state.treadmillName ?? l10n.treadmillFallbackName,
+                          ),
                           subtitle: Text(
-                            'Connected | ${state.treadmillDeviceId}',
+                            l10n.treadmillConnectedStatus(
+                              state.treadmillDeviceId!,
+                            ),
                           ),
                           trailing: TextButton(
                             onPressed: () =>
                                 state.disconnectTreadmill(forget: true),
                             child: Text(
-                              'Disconnect',
+                              l10n.treadmillDisconnect,
                               style: TextStyle(color: theme.colorScheme.error),
                             ),
                           ),
@@ -128,12 +132,16 @@ class DeviceConnectionSheet extends StatelessWidget {
                             Icons.favorite_border,
                             color: Colors.red,
                           ),
-                          title: Text(state.hrmName ?? 'Heart Rate Monitor'),
-                          subtitle: Text('Connected | ${state.hrmDeviceId}'),
+                          title: Text(
+                            state.hrmName ?? l10n.treadmillHrmFallbackName,
+                          ),
+                          subtitle: Text(
+                            l10n.treadmillConnectedStatus(state.hrmDeviceId!),
+                          ),
                           trailing: TextButton(
                             onPressed: () => state.disconnectHrm(forget: true),
                             child: Text(
-                              'Disconnect',
+                              l10n.treadmillDisconnect,
                               style: TextStyle(color: theme.colorScheme.error),
                             ),
                           ),
@@ -142,7 +150,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                     ],
                     // Treadmills Section
                     Text(
-                      'Treadmills',
+                      l10n.treadmillScanTreadmills,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -152,7 +160,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          'No treadmills found',
+                          l10n.treadmillScanNoTreadmills,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.hintColor,
                           ),
@@ -178,7 +186,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                                   : null,
                             ),
                             title: Text(dev.name),
-                            subtitle: Text('RSSI: ${dev.rssi} | ${dev.id}'),
+                            subtitle: Text('RSSI ${dev.rssi} | ${dev.id}'),
                             trailing: _buildConnectButton(
                               context: context,
                               isCurrent: isCurrent,
@@ -194,7 +202,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                     const Divider(),
                     // Heart Rate Monitors Section
                     Text(
-                      'Heart Rate Monitors',
+                      l10n.treadmillScanHrms,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -204,7 +212,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          'No heart rate monitors found',
+                          l10n.treadmillScanNoHrms,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.hintColor,
                           ),
@@ -230,7 +238,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                                   : null,
                             ),
                             title: Text(dev.name),
-                            subtitle: Text('RSSI: ${dev.rssi} | ${dev.id}'),
+                            subtitle: Text('RSSI ${dev.rssi} | ${dev.id}'),
                             trailing: _buildConnectButton(
                               context: context,
                               isCurrent: isCurrent,
@@ -253,7 +261,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                 state.stopScan();
                 Navigator.of(context).pop();
               },
-              child: const Text('Close'),
+              child: Text(l10n.commonClose),
             ),
           ],
         ),
@@ -269,6 +277,7 @@ class DeviceConnectionSheet extends StatelessWidget {
     required VoidCallback onDisconnect,
   }) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     if (isCurrent) {
       if (connectionState == BleConnectionState.connecting) {
         return const SizedBox(
@@ -281,12 +290,15 @@ class DeviceConnectionSheet extends StatelessWidget {
         return TextButton(
           onPressed: onDisconnect,
           child: Text(
-            'Disconnect',
+            l10n.treadmillDisconnect,
             style: TextStyle(color: theme.colorScheme.error),
           ),
         );
       }
     }
-    return ElevatedButton(onPressed: onConnect, child: const Text('Connect'));
+    return ElevatedButton(
+      onPressed: onConnect,
+      child: Text(l10n.treadmillConnect),
+    );
   }
 }

@@ -4,8 +4,8 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import '../../treadmill_control/treadmill_control_db.dart';
-import '../../treadmill_control/widgets/workout_details_sheet.dart';
-import '../../treadmill_control/workout_details_stats.dart';
+import 'package:tool_lab/widgets/workout/workout_details_sheet.dart';
+import 'package:tool_lab/widgets/workout/workout_details_stats.dart';
 import '../health_dashboard_state.dart';
 import '../health_record.dart';
 import '../health_record_values.dart';

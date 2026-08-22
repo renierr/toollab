@@ -1,7 +1,7 @@
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/tools/treadmill_control/config.dart';
 import 'package:tool_lab/tools/treadmill_control/treadmill_control_db.dart';
-import 'package:tool_lab/tools/treadmill_control/treadmill_session.dart';
+import 'package:tool_lab/widgets/workout/workout_session.dart';
 
 class TreadmillSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override

@@ -2608,7 +2608,9 @@
   "healthDashboardMealsOnDay": "Mahlzeiten am {date}",
   "@healthDashboardMealsOnDay": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "healthDashboardNoMeals": "Keine Mahlzeiten erfasst.",
@@ -3461,5 +3463,69 @@
   "renphoRatingLow": "Niedrig",
   "renphoRatingOptimal": "Optimal",
   "renphoRatingElevated": "Erhöht",
-  "renphoRatingHigh": "Hoch"
+  "renphoRatingHigh": "Hoch",
+  "treadmillHistoryDeleteTitle": "Workout löschen?",
+  "treadmillHistoryDeleteMessage": "Möchtest du diese Trainingseinheit endgültig löschen?",
+  "treadmillHistoryExportEmpty": "Keine Einheiten zum Exportieren",
+  "treadmillHistoryExportSaved": "Workout-Backup in Downloads gespeichert",
+  "treadmillHistoryExportFailed": "Export fehlgeschlagen: {error}",
+  "@treadmillHistoryExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "treadmillHistoryImportFailed": "Import fehlgeschlagen: {error}",
+  "@treadmillHistoryImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "treadmillHistoryJsonLabel": "JSON-Backup",
+  "treadmillSimulateDevice": "Gerät simulieren",
+  "treadmillConnectedDevices": "Verbundene Geräte",
+  "treadmillFallbackName": "Laufband",
+  "treadmillHrmFallbackName": "Herzfrequenzmesser",
+  "treadmillConnectedStatus": "Verbunden | {id}",
+  "@treadmillConnectedStatus": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "treadmillDisconnect": "Trennen",
+  "treadmillConnect": "Verbinden",
+  "treadmillScanTreadmills": "Laufbänder",
+  "treadmillScanNoTreadmills": "Keine Laufbänder gefunden",
+  "treadmillScanHrms": "Herzfrequenzmesser",
+  "treadmillScanNoHrms": "Keine Herzfrequenzmesser gefunden",
+  "treadmillHrHistoryTitle": "Herzfrequenzverlauf",
+  "treadmillHrHistoryEmpty": "Noch keine Herzfrequenzdaten aufgezeichnet.",
+  "treadmillHrCurrent": "Aktuell",
+  "treadmillHrMax": "Max",
+  "treadmillHrMin": "Min",
+  "treadmillHrAccumulating": "Daten für das Diagramm werden gesammelt …",
+  "treadmillLabel": "Laufband",
+  "codeHighlightCreateBlankFile": "Leere Datei erstellen",
+  "imageViewerFormatPng": "PNG (.png)",
+  "imageViewerFormatJpeg": "JPEG (.jpg)",
+  "imageViewerFormatBmp": "BMP (.bmp)",
+  "imageViewerFormatWebp": "WebP (.webp)",
+  "noteFailedToProcessImage": "Bild konnte nicht verarbeitet werden: {error}",
+  "@noteFailedToProcessImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fastDropNotificationTitle": "Fast-Drop-Übertragung",
+  "fastDropUploading": "Wird hochgeladen",
+  "fastDropDownloading": "Wird heruntergeladen",
+  "sfMorseLiveTranslate": "Live-Übersetzung",
+  "sfMorseDecodingAudioFile": "Audiodatei wird dekodiert …"
 }

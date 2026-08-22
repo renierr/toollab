@@ -8638,4 +8638,124 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get renphoRatingHigh => 'Hoch';
+
+  @override
+  String get treadmillHistoryDeleteTitle => 'Workout löschen?';
+
+  @override
+  String get treadmillHistoryDeleteMessage =>
+      'Möchtest du diese Trainingseinheit endgültig löschen?';
+
+  @override
+  String get treadmillHistoryExportEmpty => 'Keine Einheiten zum Exportieren';
+
+  @override
+  String get treadmillHistoryExportSaved =>
+      'Workout-Backup in Downloads gespeichert';
+
+  @override
+  String treadmillHistoryExportFailed(String error) {
+    return 'Export fehlgeschlagen: $error';
+  }
+
+  @override
+  String treadmillHistoryImportFailed(String error) {
+    return 'Import fehlgeschlagen: $error';
+  }
+
+  @override
+  String get treadmillHistoryJsonLabel => 'JSON-Backup';
+
+  @override
+  String get treadmillSimulateDevice => 'Gerät simulieren';
+
+  @override
+  String get treadmillConnectedDevices => 'Verbundene Geräte';
+
+  @override
+  String get treadmillFallbackName => 'Laufband';
+
+  @override
+  String get treadmillHrmFallbackName => 'Herzfrequenzmesser';
+
+  @override
+  String treadmillConnectedStatus(String id) {
+    return 'Verbunden | $id';
+  }
+
+  @override
+  String get treadmillDisconnect => 'Trennen';
+
+  @override
+  String get treadmillConnect => 'Verbinden';
+
+  @override
+  String get treadmillScanTreadmills => 'Laufbänder';
+
+  @override
+  String get treadmillScanNoTreadmills => 'Keine Laufbänder gefunden';
+
+  @override
+  String get treadmillScanHrms => 'Herzfrequenzmesser';
+
+  @override
+  String get treadmillScanNoHrms => 'Keine Herzfrequenzmesser gefunden';
+
+  @override
+  String get treadmillHrHistoryTitle => 'Herzfrequenzverlauf';
+
+  @override
+  String get treadmillHrHistoryEmpty =>
+      'Noch keine Herzfrequenzdaten aufgezeichnet.';
+
+  @override
+  String get treadmillHrCurrent => 'Aktuell';
+
+  @override
+  String get treadmillHrMax => 'Max';
+
+  @override
+  String get treadmillHrMin => 'Min';
+
+  @override
+  String get treadmillHrAccumulating =>
+      'Daten für das Diagramm werden gesammelt …';
+
+  @override
+  String get treadmillLabel => 'Laufband';
+
+  @override
+  String get codeHighlightCreateBlankFile => 'Leere Datei erstellen';
+
+  @override
+  String get imageViewerFormatPng => 'PNG (.png)';
+
+  @override
+  String get imageViewerFormatJpeg => 'JPEG (.jpg)';
+
+  @override
+  String get imageViewerFormatBmp => 'BMP (.bmp)';
+
+  @override
+  String get imageViewerFormatWebp => 'WebP (.webp)';
+
+  @override
+  String noteFailedToProcessImage(String error) {
+    return 'Bild konnte nicht verarbeitet werden: $error';
+  }
+
+  @override
+  String get fastDropNotificationTitle => 'Fast-Drop-Übertragung';
+
+  @override
+  String get fastDropUploading => 'Wird hochgeladen';
+
+  @override
+  String get fastDropDownloading => 'Wird heruntergeladen';
+
+  @override
+  String get sfMorseLiveTranslate => 'Live-Übersetzung';
+
+  @override
+  String get sfMorseDecodingAudioFile => 'Audiodatei wird dekodiert …';
 }

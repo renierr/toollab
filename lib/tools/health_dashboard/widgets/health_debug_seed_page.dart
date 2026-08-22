@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
+import 'package:tool_lab/widgets/health_connect_actions.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 import 'package:tool_lab/widgets/settings_section_label.dart';
 
@@ -86,7 +87,7 @@ class _HealthDebugSeedPageState extends State<HealthDebugSeedPage> {
             leading: const Icon(Icons.auto_fix_high_outlined),
             title: Text(l10n.healthDebugSeedGenerate),
             subtitle: Text(_status ?? l10n.healthDebugSeedGenerateSubtitle),
-            trailing: _busy ? const _TileSpinner() : null,
+            trailing: _busy ? const BusyTileSpinner() : null,
             onTap: _busy ? null : _seed,
           ),
           ListTile(
@@ -251,16 +252,5 @@ class _ChipRow extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16),
     child: Wrap(spacing: 8, runSpacing: 8, children: children),
-  );
-}
-
-class _TileSpinner extends StatelessWidget {
-  const _TileSpinner();
-
-  @override
-  Widget build(BuildContext context) => const SizedBox(
-    width: 20,
-    height: 20,
-    child: CircularProgressIndicator(strokeWidth: 2),
   );
 }

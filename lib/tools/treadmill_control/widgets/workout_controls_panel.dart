@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../treadmill_control_state.dart';
-import '../treadmill_control_colors.dart';
+import 'package:tool_lab/widgets/workout/workout_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'workout_action_button.dart';
 import 'connection_status_indicators.dart';

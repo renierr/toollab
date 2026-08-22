@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'treadmill_session.dart';
+import 'workout_session.dart';
 
 class WorkoutSplit {
   final double endDistance;

@@ -11,7 +11,7 @@ import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
 import 'treadmill_control_db.dart';
-import 'treadmill_session.dart';
+import 'package:tool_lab/widgets/workout/workout_session.dart';
 
 /// Every record written here carries a client record id of
 /// `toollab:treadmill-control:<session uid>:<part>`.

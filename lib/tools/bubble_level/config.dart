@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'bubble_level_page.dart';
+import 'bubble_level_state.dart';
 
 class BubbleLevelTool {
   BubbleLevelTool._();
@@ -18,5 +20,10 @@ class BubbleLevelTool {
     nameL10n: (l10n) => l10n.toolNameBubbleLevel,
     descriptionL10n: (l10n) => l10n.toolDescBubbleLevel,
     createPage: (_) => const BubbleLevelPage(),
+    stateProviders: () => [
+      ChangeNotifierProvider<BubbleLevelState>(
+        create: (_) => BubbleLevelState(),
+      ),
+    ],
   );
 }

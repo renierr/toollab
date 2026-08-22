@@ -6,9 +6,11 @@ import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'fast_drop_model.dart';
 import 'fast_drop_service.dart';
+import 'config.dart';
 
 class FastDropState extends ChangeNotifier {
   static const bool _reportTransferProgress = true;
+  static const String _kRetention = 'retention';
   List<FastDropItem> _fastDrops = [];
   bool _isLoadingFastDrops = false;
   bool _isUploadingFastDrop = false;
@@ -24,6 +26,30 @@ class FastDropState extends ChangeNotifier {
   DateTime? _transferStartedAt;
   final ValueNotifier<int> _transferProgressRevision = ValueNotifier(0);
   String _syncServerUrl = '';
+  String _retention = '24';
+
+  String get retention => _retention;
+
+  Future<void> loadRetention() async {
+    final val = await DatabaseService.instance.getSetting(
+      FastDropTool.config.id,
+      _kRetention,
+    );
+    if (val != null && val.isNotEmpty) {
+      _retention = val;
+      notifyListeners();
+    }
+  }
+
+  void setRetention(String val) {
+    _retention = val;
+    notifyListeners();
+    DatabaseService.instance.setSetting(
+      FastDropTool.config.id,
+      _kRetention,
+      val,
+    );
+  }
 
   List<FastDropItem> get fastDrops => _fastDrops;
   bool get isLoadingFastDrops => _isLoadingFastDrops;
@@ -48,7 +74,8 @@ class FastDropState extends ChangeNotifier {
     return _syncServerUrl;
   }
 
-  static const _notificationTitle = 'Fast Drop transfer';
+  /// Notification strings come from the caller so they follow app locale.
+  static const _notificationTitleFallback = 'Fast Drop transfer';
 
   static String _progressText(
     String verb,
@@ -129,6 +156,8 @@ class FastDropState extends ChangeNotifier {
     required String retention,
     required String source,
     required String mimeType,
+    String? notificationTitle,
+    String? uploadingLabel,
   }) async {
     await _loadServerUrl();
     final syncEnabled = await _isSyncEnabled();
@@ -151,8 +180,8 @@ class FastDropState extends ChangeNotifier {
     notifyListeners();
 
     final work = await BackgroundWorkLease.acquire(
-      title: _notificationTitle,
-      text: _progressText('Uploading', filename, 0, 0),
+      title: notificationTitle ?? _notificationTitleFallback,
+      text: _progressText(uploadingLabel ?? 'Uploading', filename, 0, 0),
       logPrefix: 'FastDropState',
     );
     try {
@@ -166,7 +195,14 @@ class FastDropState extends ChangeNotifier {
         onProgress: _reportTransferProgress
             ? (sent, total) {
                 _fastDropUploadProgress = (sent, total);
-                work.update(_progressText('Uploading', filename, sent, total));
+                work.update(
+                  _progressText(
+                    uploadingLabel ?? 'Uploading',
+                    filename,
+                    sent,
+                    total,
+                  ),
+                );
                 if (_shouldNotifyTransferProgress(
                   current: sent,
                   total: total,
@@ -242,6 +278,8 @@ class FastDropState extends ChangeNotifier {
     required String id,
     required String outputPath,
     int? knownSize,
+    String? notificationTitle,
+    String? downloadingLabel,
   }) async {
     await _loadServerUrl();
     final syncEnabled = await _isSyncEnabled();
@@ -274,8 +312,13 @@ class FastDropState extends ChangeNotifier {
     notifyListeners();
 
     final work = await BackgroundWorkLease.acquire(
-      title: _notificationTitle,
-      text: _progressText('Downloading', name, 0, size ?? 0),
+      title: notificationTitle ?? _notificationTitleFallback,
+      text: _progressText(
+        downloadingLabel ?? 'Downloading',
+        name,
+        0,
+        size ?? 0,
+      ),
       logPrefix: 'FastDropState',
     );
     try {
@@ -289,7 +332,7 @@ class FastDropState extends ChangeNotifier {
                 _fastDropDownloadProgress = (received, effectiveTotal);
                 work.update(
                   _progressText(
-                    'Downloading',
+                    downloadingLabel ?? 'Downloading',
                     name,
                     received,
                     effectiveTotal > 0 ? effectiveTotal : 0,

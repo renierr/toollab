@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import '../grocery_item.dart';
 
@@ -27,6 +28,7 @@ class GroceryListItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -36,15 +38,13 @@ class GroceryListItemRow extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: item.checked
-                ? (isDark
-                      ? Colors.grey[900]!.withValues(alpha: 0.5)
-                      : Colors.grey[100]!)
+                ? theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  )
                 : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: item.checked
-                  ? (isDark ? Colors.grey[850]! : Colors.grey[200]!)
-                  : (isDark ? Colors.grey[800]! : Colors.grey[300]!),
+              color: theme.colorScheme.outlineVariant,
               width: 1,
             ),
             boxShadow: item.checked
@@ -82,7 +82,7 @@ class GroceryListItemRow extends StatelessWidget {
                             ? TextDecoration.lineThrough
                             : null,
                         color: item.checked
-                            ? (isDark ? Colors.grey[500] : Colors.grey[400])
+                            ? theme.colorScheme.onSurfaceVariant
                             : theme.colorScheme.onSurface,
                         fontWeight: item.checked
                             ? FontWeight.normal
@@ -115,9 +115,7 @@ class GroceryListItemRow extends StatelessWidget {
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                               color: item.checked
-                                  ? (isDark
-                                        ? Colors.grey[500]
-                                        : Colors.grey[400])
+                                  ? theme.colorScheme.onSurfaceVariant
                                   : AppTheme.accentTeal,
                             ),
                           ),
@@ -126,7 +124,7 @@ class GroceryListItemRow extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.edit_outlined, size: 20),
                           onPressed: onEdit,
-                          tooltip: 'Edit',
+                          tooltip: l10n.commonEdit,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           splashRadius: 20,
@@ -136,7 +134,7 @@ class GroceryListItemRow extends StatelessWidget {
                           icon: const Icon(Icons.delete_outline, size: 20),
                           onPressed: onDelete,
                           color: AppTheme.statusRed,
-                          tooltip: 'Delete',
+                          tooltip: l10n.commonDelete,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           splashRadius: 20,

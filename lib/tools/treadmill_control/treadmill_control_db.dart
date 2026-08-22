@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'config.dart';
-import 'treadmill_session.dart';
+import 'package:tool_lab/widgets/workout/workout_session.dart';
 
 class TreadmillControlDb {
   static const String tableName = 'workout_sessions';

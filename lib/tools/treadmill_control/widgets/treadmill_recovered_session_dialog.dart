@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
-import '../treadmill_session.dart';
-import '../workout_details_stats.dart';
+import 'package:tool_lab/widgets/workout/workout_session.dart';
+import 'package:tool_lab/widgets/workout/workout_details_stats.dart';
 
 enum TreadmillRecoveryChoice { resume, save, discard }
 

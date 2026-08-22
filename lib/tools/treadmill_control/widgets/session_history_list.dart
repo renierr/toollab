@@ -6,9 +6,9 @@ import 'package:file_selector/file_selector.dart' as fs;
 import 'package:intl/intl.dart';
 import '../treadmill_control_state.dart';
 import '../treadmill_publish_message.dart';
-import '../treadmill_session.dart';
+import 'package:tool_lab/widgets/workout/workout_session.dart';
 import 'session_history_list_item.dart';
-import 'workout_details_sheet.dart';
+import 'package:tool_lab/widgets/workout/workout_details_sheet.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../../helpers/file_save_helper.dart';
 import '../../../../widgets/collapsible_section.dart';
@@ -137,24 +137,26 @@ class SessionHistoryList extends StatelessWidget {
     TreadmillSession session,
   ) {
     if (session.id == null) return;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Workout?'),
-        content: const Text(
-          'Are you sure you want to delete this workout session permanently?',
-        ),
+        title: Text(l10n.treadmillHistoryDeleteTitle),
+        content: Text(l10n.treadmillHistoryDeleteMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () {
               state.deleteSession(session.id!);
               Navigator.of(context).pop();
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.commonDelete,
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -207,10 +209,11 @@ class SessionHistoryList extends StatelessWidget {
     BuildContext context,
     TreadmillControlState state,
   ) async {
+    final l10n = AppLocalizations.of(context);
     if (state.pastSessions.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('No sessions to export')));
+      ).showSnackBar(SnackBar(content: Text(l10n.treadmillHistoryExportEmpty)));
       return;
     }
 
@@ -223,13 +226,13 @@ class SessionHistoryList extends StatelessWidget {
         context: context,
         suggestedName: 'treadmill_workouts_backup.json',
         bytes: bytes,
-        successMessageAndroid: 'Workouts backup saved to Downloads',
+        successMessageAndroid: l10n.treadmillHistoryExportSaved,
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.treadmillHistoryExportFailed('$e'))),
+        );
       }
     }
   }
@@ -240,10 +243,7 @@ class SessionHistoryList extends StatelessWidget {
   ) async {
     final l10n = AppLocalizations.of(context);
     try {
-      const typeGroup = fs.XTypeGroup(
-        label: 'JSON Backup',
-        extensions: ['json'],
-      );
+      const typeGroup = fs.XTypeGroup(label: 'JSON', extensions: ['json']);
       final file = await fs.openFile(acceptedTypeGroups: [typeGroup]);
       if (file == null) return;
 
@@ -269,9 +269,9 @@ class SessionHistoryList extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Import failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.treadmillHistoryImportFailed('$e'))),
+        );
       }
     }
   }

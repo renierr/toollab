@@ -181,7 +181,7 @@ class _SfMorseAnalyserState extends State<SfMorseAnalyser> {
                       FilledButton.icon(
                         onPressed: () => state.startMorseListening(),
                         icon: const Icon(Icons.mic),
-                        label: const Text('Live Translate'),
+                        label: Text(l10n.sfMorseLiveTranslate),
                       ),
 
                     if (state.morseDecodedText.isNotEmpty)
@@ -298,11 +298,11 @@ class _SfMorseAnalyserState extends State<SfMorseAnalyser> {
                 ),
                 if (_isDecodingFile) ...[
                   const SizedBox(height: 16),
-                  const Row(
+                  Row(
                     children: [
-                      CircularProgressIndicator(strokeWidth: 2),
-                      SizedBox(width: 12),
-                      Text('Decoding audio file...'),
+                      const CircularProgressIndicator(strokeWidth: 2),
+                      const SizedBox(width: 12),
+                      Text(l10n.sfMorseDecodingAudioFile),
                     ],
                   ),
                 ],

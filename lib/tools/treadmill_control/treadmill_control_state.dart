@@ -12,7 +12,7 @@ import 'package:tool_lab/services/sync_service.dart';
 import 'config.dart';
 import 'treadmill_control_db.dart';
 import 'treadmill_health_connect_publisher.dart';
-import 'treadmill_session.dart';
+import 'package:tool_lab/widgets/workout/workout_session.dart';
 import 'treadmill_models.dart';
 import 'treadmill_protocol.dart';
 import 'treadmill_gatt_resolver.dart';

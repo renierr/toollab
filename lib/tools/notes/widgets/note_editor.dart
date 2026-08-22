@@ -134,9 +134,10 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
     } catch (e) {
       errorLog('[NoteEditor] Failed to process image: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to process image: $e')));
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.noteFailedToProcessImage(e.toString()))),
+        );
       }
     }
   }

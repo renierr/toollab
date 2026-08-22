@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'chiptune_page.dart';
+import 'chiptune_state.dart';
 import 'chiptune_sync_delegate.dart';
 
 class ChiptuneTool {
@@ -58,5 +60,8 @@ class ChiptuneTool {
     ],
     createPage: (sd) => ChiptunePage(sharedFile: sd?.firstFile),
     syncDelegateFactory: ChiptuneSyncDelegate.new,
+    stateProviders: () => [
+      ChangeNotifierProvider<ChiptuneState>(create: (_) => ChiptuneState()),
+    ],
   );
 }

@@ -11,9 +11,9 @@ import '../../../core/tool_page_state.dart';
 import '../../../helpers/clipboard_helper.dart';
 import '../../../helpers/file_save_helper.dart';
 import '../../../helpers/temp_file_manager.dart';
-import '../treadmill_control_colors.dart';
+import 'package:tool_lab/widgets/workout/workout_colors.dart';
 import '../treadmill_control_state.dart';
-import '../treadmill_session.dart';
+import 'package:tool_lab/widgets/workout/workout_session.dart';
 import '../../../l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/metric_tile.dart';
 

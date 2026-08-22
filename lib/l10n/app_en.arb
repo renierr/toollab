@@ -330,11 +330,19 @@
   "coreSyncStatsUnsupported": "This server does not report statistics. Update the backend to a version that provides /api/sync/stats.",
   "coreSyncStatsBinary": "Binary ({count})",
   "@coreSyncStatsBinary": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "coreSyncStatsTotals": "{count} tools on the server",
   "@coreSyncStatsTotals": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "coreSyncToolsTitle": "Tools to Synchronize",
   "coreSyncToolsSubtitle": "Choose which tools take part. New tools start switched on.",
@@ -3488,7 +3496,9 @@
   "healthDashboardMealsOnDay": "Meals on {date}",
   "@healthDashboardMealsOnDay": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "healthDashboardNoMeals": "No meals recorded.",
@@ -4271,7 +4281,19 @@
   "renphoImportSubtitle": "Read a Renpho JSON export into the local history",
   "renphoImportNothing": "Nothing to import from that file.",
   "renphoImportDone": "Imported {added}, skipped {duplicates} already present and {skipped} unusable.",
-  "@renphoImportDone": {"placeholders": {"added": {"type": "int"}, "duplicates": {"type": "int"}, "skipped": {"type": "int"}}},
+  "@renphoImportDone": {
+    "placeholders": {
+      "added": {
+        "type": "int"
+      },
+      "duplicates": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
   "renphoSourceImported": "Imported from an export",
   "renphoPhaseIdle": "Idle",
   "renphoPhaseDiscovering": "Searching",
@@ -4438,5 +4460,69 @@
   "renphoRatingLow": "Low",
   "renphoRatingOptimal": "Optimal",
   "renphoRatingElevated": "Elevated",
-  "renphoRatingHigh": "High"
+  "renphoRatingHigh": "High",
+  "treadmillHistoryDeleteTitle": "Delete Workout?",
+  "treadmillHistoryDeleteMessage": "Are you sure you want to delete this workout session permanently?",
+  "treadmillHistoryExportEmpty": "No sessions to export",
+  "treadmillHistoryExportSaved": "Workouts backup saved to Downloads",
+  "treadmillHistoryExportFailed": "Export failed: {error}",
+  "@treadmillHistoryExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "treadmillHistoryImportFailed": "Import failed: {error}",
+  "@treadmillHistoryImportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "treadmillHistoryJsonLabel": "JSON Backup",
+  "treadmillSimulateDevice": "Simulate Device",
+  "treadmillConnectedDevices": "Connected Devices",
+  "treadmillFallbackName": "Treadmill",
+  "treadmillHrmFallbackName": "Heart Rate Monitor",
+  "treadmillConnectedStatus": "Connected | {id}",
+  "@treadmillConnectedStatus": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "treadmillDisconnect": "Disconnect",
+  "treadmillConnect": "Connect",
+  "treadmillScanTreadmills": "Treadmills",
+  "treadmillScanNoTreadmills": "No treadmills found",
+  "treadmillScanHrms": "Heart Rate Monitors",
+  "treadmillScanNoHrms": "No heart rate monitors found",
+  "treadmillHrHistoryTitle": "Heart Rate History",
+  "treadmillHrHistoryEmpty": "No heart rate data recorded yet.",
+  "treadmillHrCurrent": "Current",
+  "treadmillHrMax": "Max",
+  "treadmillHrMin": "Min",
+  "treadmillHrAccumulating": "Accumulating data for chart...",
+  "treadmillLabel": "Treadmill",
+  "codeHighlightCreateBlankFile": "Create Blank File",
+  "imageViewerFormatPng": "PNG (.png)",
+  "imageViewerFormatJpeg": "JPEG (.jpg)",
+  "imageViewerFormatBmp": "BMP (.bmp)",
+  "imageViewerFormatWebp": "WebP (.webp)",
+  "noteFailedToProcessImage": "Failed to process image: {error}",
+  "@noteFailedToProcessImage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fastDropNotificationTitle": "Fast Drop transfer",
+  "fastDropUploading": "Uploading",
+  "fastDropDownloading": "Downloading",
+  "sfMorseLiveTranslate": "Live Translate",
+  "sfMorseDecodingAudioFile": "Decoding audio file..."
 }

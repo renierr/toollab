@@ -2,9 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../treadmill_control_colors.dart';
-import '../treadmill_session.dart';
-import '../workout_details_stats.dart';
+import 'workout_colors.dart';
+import 'workout_session.dart';
+import 'workout_details_stats.dart';
 import 'workout_chart_legend.dart';
 
 /// Speed (stepped area, left axis) and heart rate (smoothed line, right axis)

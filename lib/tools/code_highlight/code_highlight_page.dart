@@ -214,7 +214,7 @@ class _CodeHighlightToolPageState extends State<CodeHighlightToolPage>
                   state.setCode('');
                 },
                 icon: const Icon(Icons.edit_note),
-                label: const Text('Create Blank File'),
+                label: Text(l10n.codeHighlightCreateBlankFile),
               ),
             ],
           ),

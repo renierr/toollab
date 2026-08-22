@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'qr_code_page.dart';
+import 'qr_code_state.dart';
 
 class QrCodeTool {
   QrCodeTool._();
@@ -20,5 +22,8 @@ class QrCodeTool {
     descriptionL10n: (l10n) => l10n.toolDescQrCode,
     fileExtensions: ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'],
     createPage: (_) => const QrCodePage(),
+    stateProviders: () => [
+      ChangeNotifierProvider<QrCodeState>(create: (_) => QrCodeState()),
+    ],
   );
 }
