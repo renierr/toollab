@@ -1072,7 +1072,9 @@ class RenphoBleProbeState extends ChangeNotifier {
       return null;
     }
     final toolId = RenphoBleProbeTool.config.id;
-    if (await settings.getSetting(toolId, 'sync_enabled') == 'false') {
+    if (!DatabaseService.isToolSyncEnabled(
+      await settings.getSetting(toolId, DatabaseService.toolSyncEnabledKey),
+    )) {
       return null;
     }
     final serverUrl = await settings.getSetting('_app', 'sync_server_url');

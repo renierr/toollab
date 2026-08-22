@@ -20,6 +20,12 @@ class DatabaseService {
   /// Where the previous database is parked while the staged import is swapped in.
   static const String _importOldSuffix = '.import_old';
 
+  /// Per-tool backend sync switch stored in [tool_settings]. Absent means
+  /// enabled, so tools that synced before the switch existed keep syncing.
+  static const String toolSyncEnabledKey = 'sync_enabled';
+
+  static bool isToolSyncEnabled(String? stored) => stored != 'false';
+
   DatabaseService._privateConstructor();
   static final DatabaseService instance = DatabaseService._privateConstructor();
 
@@ -102,6 +108,18 @@ class DatabaseService {
 
     // The target is gone, so a swap was interrupted mid-way. Restore from the
     // newest staged copy that validates; otherwise nothing else can be done.
+    // Any WAL sidecars on disk belong to the removed database and must not
+    // survive next to a restored file.
+    for (final sidecar in ['-wal', '-shm']) {
+      final f = File('$path$sidecar');
+      if (await f.exists()) {
+        try {
+          await f.delete();
+        } catch (e) {
+          errorLog('DatabaseService: failed to remove $path$sidecar: $e');
+        }
+      }
+    }
     for (final source in [
       File('$path$_importTmpSuffix'),
       File('$path$_importOldSuffix'),

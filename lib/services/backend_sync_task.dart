@@ -15,8 +15,6 @@ import 'package:tool_lab/services/sync_service.dart';
 class BackendSyncTask {
   BackendSyncTask._();
 
-  static const _settingSyncEnabled = 'sync_enabled';
-
   static final BackgroundTask task = BackgroundTask(
     id: 'backend-sync',
     defaultInterval: const Duration(hours: 24),
@@ -50,9 +48,9 @@ class BackendSyncTask {
       if (delegateFactory == null) continue;
       final enabled = await DatabaseService.instance.getSetting(
         tool.id,
-        _settingSyncEnabled,
+        DatabaseService.toolSyncEnabledKey,
       );
-      if (enabled == 'false') continue;
+      if (!DatabaseService.isToolSyncEnabled(enabled)) continue;
       tools++;
       try {
         final result = await SyncService.sync(

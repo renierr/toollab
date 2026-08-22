@@ -14,7 +14,7 @@ class TreadmillHealthConnectActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return HealthConnectActions(
+    return HealthConnectActions<TreadmillPublishResult>(
       publishTitle: l10n.treadmillPublishNow,
       publishSubtitle: l10n.treadmillPublishNowSubtitle,
       removeTitle: l10n.treadmillRemoveFromHealthConnect,
@@ -27,9 +27,9 @@ class TreadmillHealthConnectActions extends StatelessWidget {
       onRemove: () =>
           context.read<TreadmillControlState>().removeFromHealthConnect(),
       publishResultMessage: (l10n, result) =>
-          treadmillPublishMessage(l10n, result! as TreadmillPublishResult),
+          treadmillPublishMessage(l10n, result!),
       removeResultMessage: (l10n, result) {
-        final r = result! as TreadmillPublishResult;
+        final r = result!;
         return r.failed > 0
             ? l10n.treadmillRemoveFromHealthConnectFailed
             : l10n.treadmillRemoveFromHealthConnectDone(r.published);

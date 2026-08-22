@@ -17,7 +17,6 @@ class HeartRateChartDialog extends StatelessWidget {
     final history = state.hrmHistory;
 
     if (history.isEmpty) {
-      final l10n = AppLocalizations.of(context);
       return ResponsiveAlertDialog(
         title: Text(l10n.treadmillHrHistoryTitle),
         content: Text(l10n.treadmillHrHistoryEmpty),
@@ -49,7 +48,7 @@ class HeartRateChartDialog extends StatelessWidget {
     durationStr += '${totalDuration.inSeconds % 60}s';
 
     return ResponsiveAlertDialog(
-      title: Text(AppLocalizations.of(context).treadmillHrHistoryTitle),
+      title: Text(l10n.treadmillHrHistoryTitle),
       content: SizedBox(
         width: 500,
         child: Column(
@@ -63,27 +62,27 @@ class HeartRateChartDialog extends StatelessWidget {
               alignment: WrapAlignment.spaceBetween,
               children: [
                 _StatItem(
-                  label: AppLocalizations.of(context).treadmillHrCurrent,
+                  label: l10n.treadmillHrCurrent,
                   value: '$current bpm',
                   color: Colors.red,
                 ),
                 _StatItem(
-                  label: AppLocalizations.of(context).treadmillHistoryAverage,
+                  label: l10n.treadmillHistoryAverage,
                   value: '${avgVal.round()} bpm',
                   color: Colors.blue,
                 ),
                 _StatItem(
-                  label: AppLocalizations.of(context).treadmillHrMax,
+                  label: l10n.treadmillHrMax,
                   value: '$maxVal bpm',
                   color: Colors.orange,
                 ),
                 _StatItem(
-                  label: AppLocalizations.of(context).treadmillHrMin,
+                  label: l10n.treadmillHrMin,
                   value: '$minVal bpm',
                   color: Colors.green,
                 ),
                 _StatItem(
-                  label: AppLocalizations.of(context).treadmillDetailsDuration,
+                  label: l10n.treadmillDetailsDuration,
                   value: durationStr,
                   color: Colors.purple,
                 ),

@@ -599,12 +599,9 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
-  Future<void> disconnectTreadmill({
-    bool notify = true,
-    bool forget = false,
-  }) async {
+  Future<void> disconnectTreadmill({bool notify = true}) async {
     _treadmillConnectAbort = true;
-    if (treadmillDeviceId == null && !forget) return;
+    if (treadmillDeviceId == null) return;
     final deviceId = treadmillDeviceId;
 
     if (workoutStatus == WorkoutStatus.running ||
@@ -612,11 +609,7 @@ class TreadmillControlState extends ChangeNotifier {
       await stopWorkout();
     }
 
-    if (forget) {
-      savedTreadmillId = null;
-      savedTreadmillName = null;
-      await _persistSavedDevice(_savedTreadmillKey, null, null);
-    }
+    // The remembered device is kept, so the next tool visit reconnects.
 
     treadmillConnection = BleConnectionState.disconnected;
     treadmillDeviceId = null;
@@ -664,15 +657,9 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
-  Future<void> disconnectHrm({bool notify = true, bool forget = false}) async {
-    if (hrmDeviceId == null && !forget) return;
+  Future<void> disconnectHrm({bool notify = true}) async {
+    if (hrmDeviceId == null) return;
     final deviceId = hrmDeviceId;
-
-    if (forget) {
-      savedHrmId = null;
-      savedHrmName = null;
-      await _persistSavedDevice(_savedHrmKey, null, null);
-    }
 
     hrmConnection = BleConnectionState.disconnected;
     hrmDeviceId = null;

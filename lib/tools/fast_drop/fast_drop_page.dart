@@ -48,7 +48,6 @@ class FastDropPage extends StatefulWidget {
 
 class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
   late final TempFileScope _scope = TempFileManager.createScope();
-  String get _retention => context.read<FastDropState>().retention;
   List<SharedFile> _pendingSharedFiles = [];
   bool _isUploadingPending = false;
   FastDropMode _mode = FastDropMode.cloud;
@@ -104,6 +103,8 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     final appState = context.read<AppState>();
     final fastDropState = context.read<FastDropState>();
     if (!appState.syncEnabled || !fastDropState.isServerAvailable) return;
+    // Captured before any await so a defunct element is never touched.
+    final retention = fastDropState.retention;
     final l10n = AppLocalizations.of(context);
     try {
       final text = await ClipboardHelper.getText();
@@ -122,7 +123,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
           uploadingLabel: l10n.fastDropUploading,
           filename: filename,
           filePath: path,
-          retention: _retention,
+          retention: retention,
           source: 'clipboard',
           mimeType: 'text/plain',
         );
@@ -142,7 +143,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             uploadingLabel: l10n.fastDropUploading,
             filename: filename,
             filePath: path,
-            retention: _retention,
+            retention: retention,
             source: 'clipboard',
             mimeType: 'image/png',
           );
@@ -174,6 +175,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     final appState = context.read<AppState>();
     final fastDropState = context.read<FastDropState>();
     if (!appState.syncEnabled || !fastDropState.isServerAvailable) return;
+    final retention = fastDropState.retention;
     final l10n = AppLocalizations.of(context);
     try {
       if (mounted) {
@@ -207,7 +209,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
             uploadingLabel: l10n.fastDropUploading,
             filename: file.name,
             filePath: file.path,
-            retention: _retention,
+            retention: retention,
             source: 'file',
             mimeType: mimeType,
           );
@@ -240,6 +242,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
     final appState = context.read<AppState>();
     final fastDropState = context.read<FastDropState>();
     if (!appState.syncEnabled || !fastDropState.isServerAvailable) return;
+    final retention = fastDropState.retention;
     final l10n = AppLocalizations.of(context);
     final filesToUpload = List<SharedFile>.from(_pendingSharedFiles);
     try {
@@ -271,7 +274,7 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
           uploadingLabel: l10n.fastDropUploading,
           filename: file.name,
           filePath: file.path,
-          retention: _retention,
+          retention: retention,
           source: 'file',
           mimeType: mimeType,
         );

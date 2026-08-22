@@ -119,7 +119,9 @@ class AppState extends ChangeNotifier {
     _recentTimestamps = await db.getRecentTimestamps();
     final pinned = await db.getSettingForAllTools('pinned_shortcut');
     final drawer = await db.getSettingForAllTools('drawer_icon');
-    final toolSync = await db.getSettingForAllTools('sync_enabled');
+    final toolSync = await db.getSettingForAllTools(
+      DatabaseService.toolSyncEnabledKey,
+    );
     _pinnedShortcuts = {
       for (final tool in ToolRegistry.all) tool.id: pinned[tool.id] == 'true',
     };
@@ -128,7 +130,7 @@ class AppState extends ChangeNotifier {
     };
     _toolSyncEnabled = {
       for (final tool in syncCapableTools)
-        tool.id: toolSync[tool.id] != 'false',
+        tool.id: DatabaseService.isToolSyncEnabled(toolSync[tool.id]),
     };
     notifyListeners();
   }
@@ -152,7 +154,7 @@ class AppState extends ChangeNotifier {
   Future<void> setToolSyncEnabled(String toolId, bool value) async {
     await DatabaseService.instance.setSetting(
       toolId,
-      'sync_enabled',
+      DatabaseService.toolSyncEnabledKey,
       value ? 'true' : 'false',
     );
     _toolSyncEnabled[toolId] = value;

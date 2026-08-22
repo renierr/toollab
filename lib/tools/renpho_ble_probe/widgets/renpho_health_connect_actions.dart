@@ -14,7 +14,7 @@ class RenphoHealthConnectActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return HealthConnectActions(
+    return HealthConnectActions<RenphoPublishResult>(
       publishTitle: l10n.renphoPublishNow,
       publishSubtitle: l10n.renphoPublishNowSubtitle,
       removeTitle: l10n.renphoRemoveFromHealthConnect,
@@ -27,9 +27,9 @@ class RenphoHealthConnectActions extends StatelessWidget {
       onRemove: () =>
           context.read<RenphoBleProbeState>().removeFromHealthConnect(),
       publishResultMessage: (l10n, result) =>
-          renphoPublishMessage(l10n, result! as RenphoPublishResult),
+          renphoPublishMessage(l10n, result!),
       removeResultMessage: (l10n, result) {
-        final r = result! as RenphoPublishResult;
+        final r = result!;
         return r.failed > 0
             ? l10n.renphoRemoveFromHealthConnectFailed
             : l10n.renphoRemoveFromHealthConnectDone(r.published);

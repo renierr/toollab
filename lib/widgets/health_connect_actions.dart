@@ -21,7 +21,7 @@ class BusyTileSpinner extends StatelessWidget {
 /// Labels are resolved by the caller so each tool can use its own l10n keys;
 /// [onPublish] / [onRemove] return tool-specific results that are fed back
 /// through the message builders for the snackbars.
-class HealthConnectActions extends StatefulWidget {
+class HealthConnectActions<T> extends StatefulWidget {
   const HealthConnectActions({
     super.key,
     required this.publishTitle,
@@ -45,18 +45,17 @@ class HealthConnectActions extends StatefulWidget {
   final String removeConfirmActionLabel;
   final String cancelLabel;
 
-  final Future<Object?> Function() onPublish;
-  final Future<Object?> Function() onRemove;
-  final String Function(AppLocalizations l10n, Object? result)
-  publishResultMessage;
-  final String Function(AppLocalizations l10n, Object? result)
-  removeResultMessage;
+  final Future<T?> Function() onPublish;
+  final Future<T?> Function() onRemove;
+  final String Function(AppLocalizations l10n, T? result) publishResultMessage;
+  final String Function(AppLocalizations l10n, T? result) removeResultMessage;
 
   @override
-  State<HealthConnectActions> createState() => _HealthConnectActionsState();
+  State<HealthConnectActions<T>> createState() =>
+      _HealthConnectActionsState<T>();
 }
 
-class _HealthConnectActionsState extends State<HealthConnectActions> {
+class _HealthConnectActionsState<T> extends State<HealthConnectActions<T>> {
   bool _publishing = false;
   bool _removing = false;
 

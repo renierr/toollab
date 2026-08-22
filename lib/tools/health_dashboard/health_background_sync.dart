@@ -20,8 +20,6 @@ import 'health_sync_delegate.dart';
 class HealthBackgroundSync {
   HealthBackgroundSync._();
 
-  static const _settingSyncEnabled = 'sync_enabled';
-
   /// Not const because the id is derived from the tool id, which lives in the
   /// `config.dart` that declares this task in turn.
   static final BackgroundTask task = BackgroundTask(
@@ -72,9 +70,9 @@ class HealthBackgroundSync {
     if (url.isEmpty) return null;
     final enabled = await DatabaseService.instance.getSetting(
       HealthDashboardTool.config.id,
-      _settingSyncEnabled,
+      DatabaseService.toolSyncEnabledKey,
     );
-    if (enabled == 'false') return null;
+    if (!DatabaseService.isToolSyncEnabled(enabled)) return null;
 
     final result = await SyncService.sync(
       baseUrl: url,
