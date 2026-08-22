@@ -14,6 +14,12 @@ class DatabaseService {
   static const String _tableSettings = 'tool_settings';
   static const String _tableRecentUsage = 'tool_recent_usage';
 
+  /// Staging file for an in-progress import ([importDatabaseFile]).
+  static const String _importTmpSuffix = '.import_tmp';
+
+  /// Where the previous database is parked while the staged import is swapped in.
+  static const String _importOldSuffix = '.import_old';
+
   DatabaseService._privateConstructor();
   static final DatabaseService instance = DatabaseService._privateConstructor();
 
@@ -56,6 +62,10 @@ class DatabaseService {
       path = p.join(docDir.path, _dbName);
     }
 
+    if (path != inMemoryDatabasePath) {
+      await _recoverInterruptedImport(path);
+    }
+
     final db = await openDatabase(
       path,
       version: _dbVersion,
@@ -68,6 +78,47 @@ class DatabaseService {
       errorLog('DatabaseService: failed to enable WAL mode: $e');
     }
     return db;
+  }
+
+  /// Finishes or rolls back an import that was interrupted by a crash, using
+  /// the staged file before ever creating a fresh database.
+  Future<void> _recoverInterruptedImport(String path) async {
+    final target = File(path);
+    if (await target.exists()) {
+      // Swap never started (staging leftover) or already completed — the live
+      // database is authoritative, so just drop any staging leftovers.
+      for (final suffix in [_importTmpSuffix, _importOldSuffix]) {
+        final f = File('$path$suffix');
+        if (await f.exists()) {
+          try {
+            await f.delete();
+          } catch (e) {
+            errorLog('DatabaseService: failed to remove $path$suffix: $e');
+          }
+        }
+      }
+      return;
+    }
+
+    // The target is gone, so a swap was interrupted mid-way. Restore from the
+    // newest staged copy that validates; otherwise nothing else can be done.
+    for (final source in [
+      File('$path$_importTmpSuffix'),
+      File('$path$_importOldSuffix'),
+    ]) {
+      if (!await source.exists()) continue;
+      try {
+        await validateDatabaseFile(source.path);
+        await source.rename(path);
+        errorLog('DatabaseService: recovered database from ${source.path}');
+        return;
+      } catch (e) {
+        errorLog('DatabaseService: staged file ${source.path} unusable: $e');
+        try {
+          await source.delete();
+        } catch (_) {}
+      }
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -318,8 +369,10 @@ class DatabaseService {
   /// Replaces the active database file with the file at [sourcePath] after
   /// validating it.
   ///
-  /// Closes and reopens the connection so the imported data takes effect
-  /// (running any schema migrations). Throws if the file is invalid or
+  /// The old database is parked in a `.import_old` file instead of deleted, so
+  /// a failed swap rolls back to it and an interrupted one is recovered on the
+  /// next open. Closes and reopens the connection so the imported data takes
+  /// effect (running any schema migrations). Throws if the file is invalid or
   /// incompatible.
   Future<void> importDatabaseFile(String sourcePath) async {
     await validateDatabaseFile(sourcePath);
@@ -329,14 +382,18 @@ class DatabaseService {
 
     // Stage the import beside the target so a crash mid-copy cannot leave the
     // live database truncated or missing.
-    final tempPath = '$path.import_tmp';
+    final tempPath = '$path$_importTmpSuffix';
     await File(sourcePath).copy(tempPath);
 
     await close();
     try {
       final target = File(path);
+      final backupPath = '$path$_importOldSuffix';
+
+      // Park the old database aside first — nothing is destroyed until the
+      // staged file has successfully taken its place.
       if (await target.exists()) {
-        await target.delete();
+        await target.rename(backupPath);
       }
       for (final sidecar in ['-wal', '-shm']) {
         final f = File('$path$sidecar');
@@ -344,15 +401,31 @@ class DatabaseService {
           await f.delete();
         }
       }
-      await File(tempPath).rename(path);
+      try {
+        await File(tempPath).rename(path);
+      } catch (e) {
+        // Swap failed: put the old database back before reopening. If even
+        // that fails, _recoverInterruptedImport finishes the job next launch.
+        final backup = File(backupPath);
+        if (!await target.exists() && await backup.exists()) {
+          await backup.rename(path);
+        }
+        rethrow;
+      }
+
+      final backup = File(backupPath);
+      if (await backup.exists()) {
+        try {
+          await backup.delete();
+        } catch (e) {
+          errorLog('DatabaseService: failed to remove old database copy: $e');
+        }
+      }
     } catch (e) {
-      errorLog(
-        'DatabaseService: database import failed, reopening old data: $e',
-      );
+      errorLog('DatabaseService: database import failed, kept previous data.');
       rethrow;
     } finally {
-      // Reopen so subsequent access uses the imported data (or recovers the
-      // previous connection state if the swap failed).
+      // Reopen so subsequent access uses the imported (or restored) data.
       await database;
     }
   }
