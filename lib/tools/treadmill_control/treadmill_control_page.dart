@@ -36,6 +36,7 @@ class _TreadmillControlPageState extends State<TreadmillControlPage>
       // after the page is gone; only an idle tool may be torn down.
       if (!state.hasActiveSession) state.resetState(notify: false);
     });
+    state.autoConnectSavedDevices();
   }
 
   Future<void> _handleRecovery(TreadmillControlState state) async {

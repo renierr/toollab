@@ -279,7 +279,6 @@ class TreadmillControlState extends ChangeNotifier {
       savedHrmId = hrmMap?['id'];
       savedHrmName = hrmMap?['name'];
       notifyListeners();
-      _autoConnectSavedDevices();
     } catch (e) {
       errorLog('[TreadmillControl] Load saved devices failed: $e');
     }
@@ -314,13 +313,50 @@ class TreadmillControlState extends ChangeNotifier {
 
   /// Reconnects to previously connected devices. Best-effort: without
   /// Bluetooth permissions yet or with the device powered off this fails
-  /// silently and the user connects manually via the sheet.
-  void _autoConnectSavedDevices() {
-    if (!isSimulator && savedTreadmillId != null && treadmillDeviceId == null) {
-      unawaited(connectTreadmill(savedTreadmillId!, savedTreadmillName));
+  /// silently and the user connects manually via the sheet. Called when the
+  /// tool page opens — never at app start, where other tools may not want
+  /// BLE radio activity.
+  void autoConnectSavedDevices() {
+    if (!isSimulator &&
+        savedTreadmillId != null &&
+        treadmillDeviceId == null &&
+        _autoConnectTried.add(savedTreadmillId!)) {
+      unawaited(
+        connectTreadmill(
+          savedTreadmillId!,
+          savedTreadmillName,
+          stopScanning: false,
+        ),
+      );
     }
-    if (savedHrmId != null && hrmDeviceId == null) {
-      unawaited(connectHrm(savedHrmId!, savedHrmName));
+    if (savedHrmId != null &&
+        hrmDeviceId == null &&
+        _autoConnectTried.add(savedHrmId!)) {
+      unawaited(connectHrm(savedHrmId!, savedHrmName, stopScanning: false));
+    }
+  }
+
+  // Device ids an auto-connect was already attempted for; refilled on every
+  // scan so discovery gets a fresh chance after a failed direct attempt.
+  final Set<String> _autoConnectTried = {};
+
+  /// Connects a discovered device if it is one of the remembered ones and no
+  /// connection attempt is running yet. Runs while the scan stays active so
+  /// the other device kind can still be found.
+  void _maybeAutoConnectDiscovered(String deviceId) {
+    final isSavedTreadmill =
+        deviceId == savedTreadmillId &&
+        treadmillDeviceId == null &&
+        !isSimulator;
+    final isSavedHrm = deviceId == savedHrmId && hrmDeviceId == null;
+    if (!isSavedTreadmill && !isSavedHrm) return;
+    if (!_autoConnectTried.add(deviceId)) return;
+    if (isSavedTreadmill) {
+      unawaited(
+        connectTreadmill(deviceId, savedTreadmillName, stopScanning: false),
+      );
+    } else {
+      unawaited(connectHrm(deviceId, savedHrmName, stopScanning: false));
     }
   }
 
@@ -433,6 +469,7 @@ class TreadmillControlState extends ChangeNotifier {
     if (isScanning) return;
     discoveredTreadmills.clear();
     discoveredHrms.clear();
+    _autoConnectTried.clear();
 
     try {
       await UniversalBle.requestPermissions(withAndroidFineLocation: false);
@@ -489,6 +526,7 @@ class TreadmillControlState extends ChangeNotifier {
       } else {
         discoveredTreadmills[idx] = dev;
       }
+      _maybeAutoConnectDiscovered(dev.id);
       notifyListeners();
     }
 
@@ -499,18 +537,23 @@ class TreadmillControlState extends ChangeNotifier {
       } else {
         discoveredHrms[idx] = dev;
       }
+      _maybeAutoConnectDiscovered(dev.id);
       notifyListeners();
     }
   }
 
   // Connection Controls
-  Future<void> connectTreadmill(String deviceId, String? name) async {
+  Future<void> connectTreadmill(
+    String deviceId,
+    String? name, {
+    bool stopScanning = true,
+  }) async {
     treadmillDeviceId = deviceId;
     treadmillName = name;
     treadmillConnection = BleConnectionState.connecting;
     _treadmillConnectAbort = false;
     notifyListeners();
-    await stopScan();
+    if (stopScanning) await stopScan();
 
     const int maxAttempts = 4;
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -602,12 +645,16 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
-  Future<void> connectHrm(String deviceId, String? name) async {
+  Future<void> connectHrm(
+    String deviceId,
+    String? name, {
+    bool stopScanning = true,
+  }) async {
     hrmDeviceId = deviceId;
     hrmName = name;
     hrmConnection = BleConnectionState.connecting;
     notifyListeners();
-    await stopScan();
+    if (stopScanning) await stopScan();
     try {
       await UniversalBle.connect(deviceId);
     } catch (e) {
