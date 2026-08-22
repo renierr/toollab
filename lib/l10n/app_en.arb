@@ -3391,6 +3391,7 @@
   "fileManagerOpenVideo": "Open video with",
   "fileManagerOpenInternalPlayer": "Internal player",
   "fileManagerOpenMarkdown": "Open Markdown with",
+  "fileManagerOpenText": "Open text files with",
   "fileManagerOpenSqlite": "Open SQLite databases with",
   "fileManagerOpenWithSystem": "Open with system default",
   "fileManagerDownloads": "Downloads",

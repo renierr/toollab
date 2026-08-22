@@ -6318,6 +6318,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileManagerOpenMarkdown => 'Open Markdown with';
 
   @override
+  String get fileManagerOpenText => 'Open text files with';
+
+  @override
   String get fileManagerOpenSqlite => 'Open SQLite databases with';
 
   @override

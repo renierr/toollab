@@ -131,6 +131,7 @@ class FileManagerSettingsPage extends StatelessWidget {
       FileManagerOpenCategory.audio => 'audio.mp3',
       FileManagerOpenCategory.video => 'video.mp4',
       FileManagerOpenCategory.markdown => 'document.md',
+      FileManagerOpenCategory.text => 'document.txt',
       FileManagerOpenCategory.sqlite => 'database.db',
     },
     mimeType: switch (category) {
@@ -139,6 +140,7 @@ class FileManagerSettingsPage extends StatelessWidget {
       FileManagerOpenCategory.audio => 'audio/mpeg',
       FileManagerOpenCategory.video => 'video/mp4',
       FileManagerOpenCategory.markdown => 'text/markdown',
+      FileManagerOpenCategory.text => 'text/plain',
       FileManagerOpenCategory.sqlite => 'application/vnd.sqlite3',
     },
   );
@@ -152,6 +154,7 @@ class FileManagerSettingsPage extends StatelessWidget {
     FileManagerOpenCategory.audio => l10n.fileManagerOpenAudio,
     FileManagerOpenCategory.video => l10n.fileManagerOpenVideo,
     FileManagerOpenCategory.markdown => l10n.fileManagerOpenMarkdown,
+    FileManagerOpenCategory.text => l10n.fileManagerOpenText,
     FileManagerOpenCategory.sqlite => l10n.fileManagerOpenSqlite,
   };
 }

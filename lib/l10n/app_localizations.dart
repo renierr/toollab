@@ -11429,6 +11429,12 @@ abstract class AppLocalizations {
   /// **'Open Markdown with'**
   String get fileManagerOpenMarkdown;
 
+  /// No description provided for @fileManagerOpenText.
+  ///
+  /// In en, this message translates to:
+  /// **'Open text files with'**
+  String get fileManagerOpenText;
+
   /// No description provided for @fileManagerOpenSqlite.
   ///
   /// In en, this message translates to:
