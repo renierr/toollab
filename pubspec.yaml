@@ -67,6 +67,8 @@ dependencies:
   ftpconnect: ^2.0.10
   dart_smb2: ^0.1.1
   flutter_secure_storage: ^10.3.1
+  re_editor: ^0.10.0
+  re_highlight: ^0.0.3
   health_connector: ^3.9.4
   health_connector_core: ^3.9.2
   workmanager: ^0.10.7

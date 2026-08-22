@@ -371,9 +371,15 @@ class FileSaveHelper {
     required BuildContext context,
     required String path,
     required String mimeType,
+    SharedFileOrigin? origin,
   }) async {
     final name = path.split(Platform.pathSeparator).last.split('/').last;
-    final file = SharedFile(path: path, name: name, mimeType: mimeType);
+    final file = SharedFile(
+      path: path,
+      name: name,
+      mimeType: mimeType,
+      origin: origin,
+    );
     final matchingTools = SharingService.instance.getMatchingTools(file);
 
     if (matchingTools.isEmpty) {

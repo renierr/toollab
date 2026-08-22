@@ -90,6 +90,7 @@ class _FileManagerPageState extends State<FileManagerPage>
     if (!mounted || path == null) return;
     try {
       final mimeType = MimeTypeHelper.getMimeType(entry.name);
+      final origin = state.originFor(entry);
       final category = state.openCategoryForMime(mimeType);
       final toolId = category == null ? null : state.openToolId(category);
       if (toolId == NativeMediaPlayer.preferenceId) {
@@ -105,7 +106,12 @@ class _FileManagerPageState extends State<FileManagerPage>
         context.push(
           tool.route,
           extra: SharedData.single(
-            SharedFile(path: path, name: entry.name, mimeType: mimeType),
+            SharedFile(
+              path: path,
+              name: entry.name,
+              mimeType: mimeType,
+              origin: origin,
+            ),
           ),
         );
         return;
@@ -114,6 +120,7 @@ class _FileManagerPageState extends State<FileManagerPage>
         context: context,
         path: path,
         mimeType: mimeType,
+        origin: origin,
       );
     } catch (error) {
       if (mounted) {

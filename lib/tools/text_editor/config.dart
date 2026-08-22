@@ -1,0 +1,96 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/theme/theme.dart';
+
+import 'text_editor_page.dart';
+import 'text_editor_state.dart';
+
+class TextEditorTool {
+  TextEditorTool._();
+
+  static ToolModel get config => ToolModel(
+    id: 'text-editor',
+    name: 'Text Editor',
+    description: 'Edit text files, local or from network shares',
+    icon: Icons.article_outlined,
+    route: '/text-editor',
+    accentColor: AppTheme.accentTeal,
+    sectionId: 'utilities',
+    androidProcessIsolated: true,
+    nameL10n: (l10n) => l10n.toolNameTextEditor,
+    descriptionL10n: (l10n) => l10n.toolDescTextEditor,
+    stateProviders: () => [
+      ChangeNotifierProvider<TextEditorState>(create: (_) => TextEditorState()),
+    ],
+    shareTarget: const ShareTargetConfig(
+      accept: [
+        'text/*',
+        'application/json',
+        'application/xml',
+        'application/yaml',
+        'application/javascript',
+        'application/x-javascript',
+        'application/x-sh',
+        'application/toml',
+        'application/sql',
+      ],
+    ),
+    fileExtensions: [
+      'txt',
+      'log',
+      'csv',
+      'tsv',
+      'ini',
+      'cfg',
+      'conf',
+      'toml',
+      'properties',
+      'env',
+      'bat',
+      'cmd',
+      'ps1',
+      'sh',
+      'bash',
+      'zsh',
+      'json',
+      'xml',
+      'svg',
+      'yaml',
+      'yml',
+      'html',
+      'htm',
+      'css',
+      'scss',
+      'less',
+      'js',
+      'mjs',
+      'cjs',
+      'jsx',
+      'ts',
+      'mts',
+      'cts',
+      'tsx',
+      'dart',
+      'py',
+      'pyw',
+      'java',
+      'kt',
+      'kts',
+      'go',
+      'rs',
+      'c',
+      'h',
+      'cpp',
+      'hpp',
+      'cc',
+      'cs',
+      'rb',
+      'php',
+      'sql',
+      'md',
+      'markdown',
+    ],
+    createPage: (sd) => TextEditorToolPage(sharedFile: sd?.firstFile),
+  );
+}

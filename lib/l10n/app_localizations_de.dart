@@ -8758,4 +8758,116 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sfMorseDecodingAudioFile => 'Audiodatei wird dekodiert …';
+
+  @override
+  String get toolNameTextEditor => 'Texteditor';
+
+  @override
+  String get toolDescTextEditor =>
+      'Textdateien bearbeiten – lokal oder aus dem Netzwerk';
+
+  @override
+  String get textEditorOpenTitle => 'Textdatei öffnen';
+
+  @override
+  String get textEditorDropSubtitle =>
+      'Datei hierher ziehen oder zum Auswählen klicken';
+
+  @override
+  String get textEditorTypeLabel => 'Text- und Quellcodedateien';
+
+  @override
+  String get textEditorNewBlank => 'Neue Datei';
+
+  @override
+  String get textEditorPasteClipboard => 'Text einfügen';
+
+  @override
+  String get textEditorClipboardEmpty =>
+      'Zwischenablage ist leer oder enthält keinen Text';
+
+  @override
+  String get textEditorRecentFiles => 'Zuletzt geöffnet';
+
+  @override
+  String get textEditorNoRecentFiles => 'Noch keine zuletzt geöffneten Dateien';
+
+  @override
+  String get textEditorReopenFailed =>
+      'Datei konnte nicht erneut geöffnet werden';
+
+  @override
+  String get textEditorUnsavedTitle => 'Ungespeicherte Änderungen';
+
+  @override
+  String get textEditorUnsavedMessage =>
+      'Das Dokument hat ungespeicherte Änderungen. Vor dem Schließen speichern?';
+
+  @override
+  String get textEditorDiscardChanges => 'Verwerfen';
+
+  @override
+  String get textEditorSaveAndClose => 'Speichern & schließen';
+
+  @override
+  String get textEditorSaveAs => 'Speichern unter…';
+
+  @override
+  String textEditorSavedTo(Object path) {
+    return 'Gespeichert unter $path';
+  }
+
+  @override
+  String get textEditorFind => 'Suchen';
+
+  @override
+  String get textEditorFindHint => 'Suchen';
+
+  @override
+  String get textEditorReplaceHint => 'Ersetzen durch';
+
+  @override
+  String get textEditorFindNoResults => 'Keine Treffer';
+
+  @override
+  String get textEditorFindPrevious => 'Vorheriger Treffer';
+
+  @override
+  String get textEditorFindNext => 'Nächster Treffer';
+
+  @override
+  String get textEditorReplaceOne => 'Ersetzen';
+
+  @override
+  String get textEditorReplaceAll => 'Alle ersetzen';
+
+  @override
+  String get textEditorFindMode => 'Suchmodus';
+
+  @override
+  String get textEditorReplaceMode => 'Ersetzen-Modus';
+
+  @override
+  String get textEditorUndo => 'Rückgängig';
+
+  @override
+  String get textEditorRedo => 'Wiederholen';
+
+  @override
+  String get textEditorFontSmaller => 'Kleinere Schrift';
+
+  @override
+  String get textEditorFontLarger => 'Größere Schrift';
+
+  @override
+  String get textEditorWordWrap => 'Umbruch';
+
+  @override
+  String get textEditorSyntaxHighlight => 'Hervorhebung';
+
+  @override
+  String get textEditorUnsavedChanges => 'Ungespeicherte Änderungen';
+
+  @override
+  String get textEditorRemote => 'Remote';
 }

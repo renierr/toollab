@@ -8693,4 +8693,114 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sfMorseDecodingAudioFile => 'Decoding audio file...';
+
+  @override
+  String get toolNameTextEditor => 'Text Editor';
+
+  @override
+  String get toolDescTextEditor =>
+      'Edit text files, local or from network shares';
+
+  @override
+  String get textEditorOpenTitle => 'Open text file';
+
+  @override
+  String get textEditorDropSubtitle => 'Drop file here or click to choose';
+
+  @override
+  String get textEditorTypeLabel => 'Text and source code files';
+
+  @override
+  String get textEditorNewBlank => 'New file';
+
+  @override
+  String get textEditorPasteClipboard => 'Paste text';
+
+  @override
+  String get textEditorClipboardEmpty =>
+      'Clipboard is empty or contains no text';
+
+  @override
+  String get textEditorRecentFiles => 'Recent files';
+
+  @override
+  String get textEditorNoRecentFiles => 'No recent files yet';
+
+  @override
+  String get textEditorReopenFailed => 'Could not reopen file';
+
+  @override
+  String get textEditorUnsavedTitle => 'Unsaved changes';
+
+  @override
+  String get textEditorUnsavedMessage =>
+      'The document has unsaved changes. Save before closing?';
+
+  @override
+  String get textEditorDiscardChanges => 'Discard';
+
+  @override
+  String get textEditorSaveAndClose => 'Save & close';
+
+  @override
+  String get textEditorSaveAs => 'Save as…';
+
+  @override
+  String textEditorSavedTo(Object path) {
+    return 'Saved to $path';
+  }
+
+  @override
+  String get textEditorFind => 'Find';
+
+  @override
+  String get textEditorFindHint => 'Search';
+
+  @override
+  String get textEditorReplaceHint => 'Replace with';
+
+  @override
+  String get textEditorFindNoResults => 'No matches';
+
+  @override
+  String get textEditorFindPrevious => 'Previous match';
+
+  @override
+  String get textEditorFindNext => 'Next match';
+
+  @override
+  String get textEditorReplaceOne => 'Replace';
+
+  @override
+  String get textEditorReplaceAll => 'Replace all';
+
+  @override
+  String get textEditorFindMode => 'Find mode';
+
+  @override
+  String get textEditorReplaceMode => 'Replace mode';
+
+  @override
+  String get textEditorUndo => 'Undo';
+
+  @override
+  String get textEditorRedo => 'Redo';
+
+  @override
+  String get textEditorFontSmaller => 'Smaller font';
+
+  @override
+  String get textEditorFontLarger => 'Larger font';
+
+  @override
+  String get textEditorWordWrap => 'Wrap';
+
+  @override
+  String get textEditorSyntaxHighlight => 'Highlighting';
+
+  @override
+  String get textEditorUnsavedChanges => 'Unsaved changes';
+
+  @override
+  String get textEditorRemote => 'Remote';
 }

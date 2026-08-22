@@ -484,3 +484,4 @@ open class MainActivity : FlutterFragmentActivity() {
 class CalculatorActivity : MainActivity()
 class PdfViewerActivity : MainActivity()
 class FileManagerActivity : MainActivity()
+class TextEditorActivity : MainActivity()

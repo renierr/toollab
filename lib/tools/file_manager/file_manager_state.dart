@@ -10,6 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
@@ -1722,5 +1723,32 @@ class FileManagerState extends ChangeNotifier {
     return index < 0 ? '' : path.substring(0, index);
   }
 
-  String _passwordKey(String id) => '${FileManagerTool.config.id}.password.$id';
+  String _passwordKey(String id) => passwordKey(id);
+
+  /// Shared with tools that receive downloaded files (e.g. text editor) so they
+  /// can look up the connection password to upload changes back.
+  static String passwordKey(String id) =>
+      '${FileManagerTool.config.id}.password.$id';
+
+  /// Origin metadata for a downloaded remote file, carried on the [SharedFile]
+  /// so the receiving tool can save back to the same location. Null for local
+  /// files and archive entries.
+  SharedFileOrigin? originFor(FileManagerEntry entry) {
+    if (_locationType == FileManagerLocationType.local) return null;
+    if (entry.isArchiveEntry) return null;
+    final profile = _connection;
+    if (profile == null) return null;
+    return SharedFileOrigin(
+      connectionId: profile.id,
+      protocol: switch (_locationType) {
+        FileManagerLocationType.ftp => 'ftp',
+        _ => 'smb',
+      },
+      host: profile.host,
+      port: profile.port,
+      share: profile.share,
+      username: profile.username,
+      remotePath: _joinRemotePath(_path, entry.name),
+    );
+  }
 }

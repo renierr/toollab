@@ -15592,6 +15592,216 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Decoding audio file...'**
   String get sfMorseDecodingAudioFile;
+
+  /// No description provided for @toolNameTextEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Text Editor'**
+  String get toolNameTextEditor;
+
+  /// No description provided for @toolDescTextEditor.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit text files, local or from network shares'**
+  String get toolDescTextEditor;
+
+  /// No description provided for @textEditorOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open text file'**
+  String get textEditorOpenTitle;
+
+  /// No description provided for @textEditorDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop file here or click to choose'**
+  String get textEditorDropSubtitle;
+
+  /// No description provided for @textEditorTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Text and source code files'**
+  String get textEditorTypeLabel;
+
+  /// No description provided for @textEditorNewBlank.
+  ///
+  /// In en, this message translates to:
+  /// **'New file'**
+  String get textEditorNewBlank;
+
+  /// No description provided for @textEditorPasteClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste text'**
+  String get textEditorPasteClipboard;
+
+  /// No description provided for @textEditorClipboardEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard is empty or contains no text'**
+  String get textEditorClipboardEmpty;
+
+  /// No description provided for @textEditorRecentFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent files'**
+  String get textEditorRecentFiles;
+
+  /// No description provided for @textEditorNoRecentFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent files yet'**
+  String get textEditorNoRecentFiles;
+
+  /// No description provided for @textEditorReopenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reopen file'**
+  String get textEditorReopenFailed;
+
+  /// No description provided for @textEditorUnsavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get textEditorUnsavedTitle;
+
+  /// No description provided for @textEditorUnsavedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The document has unsaved changes. Save before closing?'**
+  String get textEditorUnsavedMessage;
+
+  /// No description provided for @textEditorDiscardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get textEditorDiscardChanges;
+
+  /// No description provided for @textEditorSaveAndClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & close'**
+  String get textEditorSaveAndClose;
+
+  /// No description provided for @textEditorSaveAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as…'**
+  String get textEditorSaveAs;
+
+  /// No description provided for @textEditorSavedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {path}'**
+  String textEditorSavedTo(Object path);
+
+  /// No description provided for @textEditorFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Find'**
+  String get textEditorFind;
+
+  /// No description provided for @textEditorFindHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get textEditorFindHint;
+
+  /// No description provided for @textEditorReplaceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace with'**
+  String get textEditorReplaceHint;
+
+  /// No description provided for @textEditorFindNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get textEditorFindNoResults;
+
+  /// No description provided for @textEditorFindPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous match'**
+  String get textEditorFindPrevious;
+
+  /// No description provided for @textEditorFindNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next match'**
+  String get textEditorFindNext;
+
+  /// No description provided for @textEditorReplaceOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get textEditorReplaceOne;
+
+  /// No description provided for @textEditorReplaceAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace all'**
+  String get textEditorReplaceAll;
+
+  /// No description provided for @textEditorFindMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Find mode'**
+  String get textEditorFindMode;
+
+  /// No description provided for @textEditorReplaceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace mode'**
+  String get textEditorReplaceMode;
+
+  /// No description provided for @textEditorUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get textEditorUndo;
+
+  /// No description provided for @textEditorRedo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get textEditorRedo;
+
+  /// No description provided for @textEditorFontSmaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Smaller font'**
+  String get textEditorFontSmaller;
+
+  /// No description provided for @textEditorFontLarger.
+  ///
+  /// In en, this message translates to:
+  /// **'Larger font'**
+  String get textEditorFontLarger;
+
+  /// No description provided for @textEditorWordWrap.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrap'**
+  String get textEditorWordWrap;
+
+  /// No description provided for @textEditorSyntaxHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlighting'**
+  String get textEditorSyntaxHighlight;
+
+  /// No description provided for @textEditorUnsavedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get textEditorUnsavedChanges;
+
+  /// No description provided for @textEditorRemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote'**
+  String get textEditorRemote;
 }
 
 class _AppLocalizationsDelegate
