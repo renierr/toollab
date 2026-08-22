@@ -631,7 +631,7 @@
             android:name="de.renier.tool_lab.TextEditorAlias"
             android:targetActivity="de.renier.tool_lab.MainActivity"
             android:label="Text Editor"
-            android:icon="@mipmap/ic_launcher"
+            android:icon="@mipmap/ic_launcher_text_editor"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
