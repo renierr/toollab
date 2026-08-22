@@ -69,6 +69,10 @@ class TextEditorState extends ChangeNotifier {
   bool _initialized = false;
   bool _dirty = false;
   bool _suppressDirty = false;
+
+  /// Document content as of the last load/save; reference only, dropped once
+  /// the document becomes dirty.
+  String? _cleanSnapshot;
   String? _filePath;
   String? _fileName;
   SharedFileOrigin? _origin;
@@ -113,10 +117,21 @@ class TextEditorState extends ChangeNotifier {
         SchedulerPhase.persistentCallbacks) {
       return;
     }
-    if (!_dirty) {
-      _dirty = true;
-      notifyListeners();
+    if (!_dirty && !_hasContentChanged()) {
+      return;
     }
+    _dirty = true;
+    _cleanSnapshot = null;
+    notifyListeners();
+  }
+
+  /// Controller notifications also fire for caret moves, selection changes
+  /// and toolbar-driven rebuilds, so dirty tracking compares the content
+  /// against the last saved/loaded state.
+  bool _hasContentChanged() {
+    final snapshot = _cleanSnapshot;
+    if (snapshot == null) return true;
+    return controller.text != snapshot;
   }
 
   Future<void> initialize() async {
@@ -235,6 +250,9 @@ class TextEditorState extends ChangeNotifier {
       controller.text = text;
       controller.clearHistory();
       _suppressDirty = false;
+      // Snapshot what the editor actually round-trips (it normalizes
+      // line endings), not the raw decoded string.
+      _cleanSnapshot = controller.text;
       findController.close();
       _dirty = false;
       await _recordRecent(
@@ -268,6 +286,7 @@ class TextEditorState extends ChangeNotifier {
     controller.text = '';
     controller.clearHistory();
     _suppressDirty = false;
+    _cleanSnapshot = controller.text;
     unawaited(_remoteScope.cleanTracked());
     if (notify) notifyListeners();
   }
@@ -282,6 +301,7 @@ class TextEditorState extends ChangeNotifier {
     controller.text = content;
     controller.clearHistory();
     _suppressDirty = false;
+    _cleanSnapshot = controller.text;
     findController.close();
     _dirty = false;
     notifyListeners();
@@ -294,6 +314,7 @@ class TextEditorState extends ChangeNotifier {
     _origin = null;
     _languageKey = TextEditorLanguages.keyForFileName(name);
     _dirty = false;
+    _cleanSnapshot = controller.text;
     await _recordRecent(
       TextEditorRecentFile(path: path, name: name, openedAt: DateTime.now()),
     );
@@ -324,6 +345,7 @@ class TextEditorState extends ChangeNotifier {
         }
       }
       _dirty = false;
+      _cleanSnapshot = text;
       await _touchRecent(_filePath!, _fileName!, _origin);
       return true;
     } catch (error) {

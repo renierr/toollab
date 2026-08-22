@@ -38,6 +38,11 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
   late final TextEditorState _state;
   bool _toolsExpanded = true;
 
+  /// Keeps a single editor element alive across rebuilds; re_editor fires
+  /// controller notifications from its own initState, and an overlapping old
+  /// element would call setState mid-build.
+  final GlobalKey _surfaceKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -130,8 +135,22 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
         ],
       ),
     );
-    if (result == _LeaveDecision.save) return _state.save();
+    if (result == _LeaveDecision.save) {
+      if (_state.filePath == null) {
+        await _saveAs();
+        // Still dirty when the picker was cancelled.
+        return !_state.dirty;
+      }
+      return _state.save();
+    }
     return result == _LeaveDecision.discard;
+  }
+
+  /// New documents have no backing file yet; saving them opens the picker.
+  Future<void> _save() async {
+    if (_state.isSaving) return;
+    if (_state.filePath == null) return _saveAs();
+    await _state.save();
   }
 
   Future<void> _requestPop() async {
@@ -241,7 +260,7 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
         actions: [
           IconButton(
             tooltip: l10n.commonSave,
-            onPressed: state.isSaving ? null : () => state.save(),
+            onPressed: state.isSaving ? null : _save,
             icon: const Icon(Icons.save_outlined),
           ),
           IconButton(
@@ -279,7 +298,9 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
           children: [
             TextEditorToolbar(state: state, expanded: _toolsExpanded),
             const Divider(height: 1),
-            Expanded(child: TextEditorSurface(state: state)),
+            Expanded(
+              child: TextEditorSurface(key: _surfaceKey, state: state),
+            ),
             DefaultTextStyle.merge(
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               child: TextEditorStatusBar(state: state),

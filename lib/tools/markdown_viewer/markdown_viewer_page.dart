@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
+import 'package:tool_lab/core/app_route_observer.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/markdown_viewer_page.dart';
@@ -20,10 +21,11 @@ class MarkdownViewerToolPage extends StatefulWidget {
 }
 
 class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
-    with DisposeCleanup {
+    with DisposeCleanup, RouteAware {
   String? _fileContent;
   String? _fileName;
   String? _filePath;
+  SharedFile? _sharedFile;
 
   @override
   void initState() {
@@ -44,6 +46,22 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
       }
     });
     onDispose(sharingSub.cancel);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final route = ModalRoute.of(context);
+      if (route != null && mounted) {
+        appRouteObserver.subscribe(this, route);
+      }
+    });
+    onDispose(() => appRouteObserver.unsubscribe(this));
+  }
+
+  /// A tool pushed above the viewer (e.g. the text editor) may have changed
+  /// the file; reload silently when its route pops back.
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    _reloadFromDisk(showFeedback: false);
   }
 
   Future<void> _loadSharedFile(SharedFile file) async {
@@ -56,6 +74,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
             _fileContent = text;
             _fileName = file.name;
             _filePath = file.path;
+            _sharedFile = file;
           });
         }
       }
@@ -77,6 +96,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
           _fileContent = content;
           _fileName = file.name;
           _filePath = file.path.isEmpty ? null : file.path;
+          _sharedFile = null;
         });
       }
     } catch (e) {
@@ -89,7 +109,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
     }
   }
 
-  Future<void> _reloadFromDisk() async {
+  Future<void> _reloadFromDisk({bool showFeedback = true}) async {
     final path = _filePath;
     if (path == null) return;
     final l10n = AppLocalizations.of(context);
@@ -97,15 +117,18 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
     try {
       final diskFile = File(path);
       if (!await diskFile.exists()) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.miscMarkdownReloadMissing)),
-        );
+        if (showFeedback) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.miscMarkdownReloadMissing)),
+          );
+        }
         return;
       }
       final text = await diskFile.readAsString();
       if (!mounted) return;
       final changed = text != _fileContent;
       setState(() => _fileContent = text);
+      if (!showFeedback) return;
       messenger.showSnackBar(
         SnackBar(
           content: Text(
@@ -116,6 +139,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         ),
       );
     } catch (e) {
+      if (!showFeedback || !mounted) return;
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.miscMarkdownFailedToRead(e.toString()))),
       );
@@ -131,6 +155,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
           _fileContent = null;
           _fileName = null;
           _filePath = null;
+          _sharedFile = null;
         });
       }
     } else {
@@ -138,6 +163,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         _fileContent = null;
         _fileName = null;
         _filePath = null;
+        _sharedFile = null;
       });
     }
   }
@@ -180,6 +206,7 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
         onReload: _filePath != null ? _reloadFromDisk : null,
         onClose: _onClose,
         exportSuggestedName: _fileName ?? 'document.md',
+        sharedFile: _sharedFile,
       ),
     );
   }

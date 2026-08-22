@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
@@ -33,6 +34,11 @@ class MarkdownViewerConfig {
   final bool selectable;
   final int? updatedAt;
 
+  /// Original shared file backing the content, when one exists. Forwarded on
+  /// share so receiving tools keep the source path and origin metadata
+  /// instead of a detached content copy.
+  final SharedFile? sharedFile;
+
   /// Renders a metadata card for YAML frontmatter when the document has one.
   final bool showFrontmatter;
 
@@ -53,6 +59,7 @@ class MarkdownViewerConfig {
     this.exportMimeType = 'text/markdown',
     this.selectable = true,
     this.updatedAt,
+    this.sharedFile,
     this.showFrontmatter = true,
   });
 }
@@ -157,6 +164,17 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
   }
 
   Future<void> _shareContent() async {
+    final shared = widget.config.sharedFile;
+    if (shared != null && await File(shared.path).exists()) {
+      if (!mounted) return;
+      await FileSaveHelper.showShareChooser(
+        context: context,
+        path: shared.path,
+        mimeType: shared.mimeType,
+        sharedFile: shared,
+      );
+      return;
+    }
     if (Platform.isAndroid || Platform.isWindows) {
       try {
         final tempPath = await TempFileManager.createFile(
