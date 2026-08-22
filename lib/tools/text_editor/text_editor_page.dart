@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
@@ -294,18 +294,28 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
             ],
           ),
         ],
-        child: Column(
-          children: [
-            TextEditorToolbar(state: state, expanded: _toolsExpanded),
-            const Divider(height: 1),
-            Expanded(
-              child: TextEditorSurface(key: _surfaceKey, state: state),
-            ),
-            DefaultTextStyle.merge(
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-              child: TextEditorStatusBar(state: state),
-            ),
-          ],
+        child: CallbackShortcuts(
+          bindings: {
+            SingleActivator(LogicalKeyboardKey.keyS, control: true, meta: true):
+                _save,
+            SingleActivator(LogicalKeyboardKey.keyF, control: true, meta: true):
+                _toggleFind,
+          },
+          child: Column(
+            children: [
+              TextEditorToolbar(state: state, expanded: _toolsExpanded),
+              const Divider(height: 1),
+              Expanded(
+                child: TextEditorSurface(key: _surfaceKey, state: state),
+              ),
+              DefaultTextStyle.merge(
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                child: TextEditorStatusBar(state: state),
+              ),
+            ],
+          ),
         ),
       ),
     );

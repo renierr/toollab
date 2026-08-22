@@ -25,6 +25,7 @@ class TextEditorSurface extends StatelessWidget {
         cursorColor: theme.colorScheme.primary,
         selectionColor: theme.colorScheme.primary.withValues(alpha: 0.25),
         highlightColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+        cursorLineColor: theme.colorScheme.primary.withValues(alpha: 0.08),
         codeTheme: state.highlightEnabled && state.languageKey != null
             ? TextEditorLanguages.themeFor(state.languageKey!, theme.brightness)
             : null,
@@ -43,6 +44,11 @@ class TextEditorSurface extends StatelessWidget {
                   color: theme.colorScheme.onSurface,
                   fontSize: state.fontSize * 0.85,
                 ),
+              ),
+              DefaultCodeChunkIndicator(
+                width: 18,
+                controller: chunkController,
+                notifier: notifier,
               ),
             ],
           ),
