@@ -5,7 +5,9 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/services/backend_sync_task.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/background_task_tile.dart';
 import 'package:tool_lab/widgets/tool_sync_switches.dart';
 
 class SyncSettingsPage extends StatefulWidget {
@@ -273,6 +275,23 @@ class _SyncSettingsPageState extends State<SyncSettingsPage>
                   child: IgnorePointer(
                     ignoring: !enabled,
                     child: const ToolSyncSwitches(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                AnimatedOpacity(
+                  opacity: enabled ? 1.0 : 0.5,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: !enabled,
+                    child: Card(
+                      margin: EdgeInsets.zero,
+                      child: BackgroundTaskTile(
+                        task: BackendSyncTask.task,
+                        icon: Icons.update_outlined,
+                        title: l10n.coreSyncBackgroundTitle,
+                        description: l10n.coreSyncBackgroundSubtitle,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

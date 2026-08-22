@@ -7,6 +7,8 @@ import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:workmanager/workmanager.dart';
 
+import 'backend_sync_task.dart';
+
 import 'database_service.dart';
 
 export 'package:tool_lab/core/background_task.dart';
@@ -59,7 +61,11 @@ class BackgroundTaskService {
 
   static bool get isSupported => Platform.isAndroid;
 
+  /// Tasks not owned by any single tool.
+  static List<BackgroundTask> get globalTasks => [BackendSyncTask.task];
+
   static List<BackgroundTask> get tasks => [
+    ...globalTasks,
     for (final tool in ToolRegistry.all) ...?tool.backgroundTasks?.call(),
   ];
 

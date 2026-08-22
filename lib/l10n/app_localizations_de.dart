@@ -704,6 +704,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Die Synchronisierung ist für dieses Tool in den Sync-Einstellungen deaktiviert.';
 
   @override
+  String get coreSyncBackgroundTitle => 'Hintergrund-Synchronisierung';
+
+  @override
+  String get coreSyncBackgroundSubtitle =>
+      'Wie oft im Hintergrund eine vollständige Synchronisierung aller aktivierten Tools läuft, während die App geschlossen ist.';
+
+  @override
   String get coreSyncServerCredentials => 'Server-Zugangsdaten';
 
   @override

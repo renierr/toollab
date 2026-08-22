@@ -1298,6 +1298,18 @@ abstract class AppLocalizations {
   /// **'Sync is switched off for this tool in the sync settings.'**
   String get coreSyncToolDisabled;
 
+  /// No description provided for @coreSyncBackgroundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background Sync'**
+  String get coreSyncBackgroundTitle;
+
+  /// No description provided for @coreSyncBackgroundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How often a full sync of all enabled tools runs in the background while the app is closed.'**
+  String get coreSyncBackgroundSubtitle;
+
   /// No description provided for @coreSyncServerCredentials.
   ///
   /// In en, this message translates to:

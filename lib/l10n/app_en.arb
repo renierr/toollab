@@ -340,6 +340,8 @@
   "coreSyncToolsSubtitle": "Choose which tools take part. New tools start switched on.",
   "coreSyncToolsDisabledHint": "A switched-off tool stops syncing but keeps its data on the server.",
   "coreSyncToolDisabled": "Sync is switched off for this tool in the sync settings.",
+  "coreSyncBackgroundTitle": "Background Sync",
+  "coreSyncBackgroundSubtitle": "How often a full sync of all enabled tools runs in the background while the app is closed.",
   "coreSyncServerCredentials": "Server Credentials",
   "coreSyncServerBaseUrl": "Server Base URL",
   "coreSyncServerUrlRequired": "Server URL is required when sync is enabled",

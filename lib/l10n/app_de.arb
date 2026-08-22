@@ -212,6 +212,8 @@
   "coreSyncToolsSubtitle": "Wähle aus, welche Tools teilnehmen. Neue Tools sind aktiviert.",
   "coreSyncToolsDisabledHint": "Ein deaktiviertes Tool synchronisiert nicht mehr, behält seine Daten auf dem Server aber.",
   "coreSyncToolDisabled": "Die Synchronisierung ist für dieses Tool in den Sync-Einstellungen deaktiviert.",
+  "coreSyncBackgroundTitle": "Hintergrund-Synchronisierung",
+  "coreSyncBackgroundSubtitle": "Wie oft im Hintergrund eine vollständige Synchronisierung aller aktivierten Tools läuft, während die App geschlossen ist.",
   "coreSyncServerCredentials": "Server-Zugangsdaten",
   "coreSyncServerBaseUrl": "Server-Basis-URL",
   "coreSyncServerUrlRequired": "Server-URL ist erforderlich, wenn die Synchronisierung aktiviert ist",

@@ -698,6 +698,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sync is switched off for this tool in the sync settings.';
 
   @override
+  String get coreSyncBackgroundTitle => 'Background Sync';
+
+  @override
+  String get coreSyncBackgroundSubtitle =>
+      'How often a full sync of all enabled tools runs in the background while the app is closed.';
+
+  @override
   String get coreSyncServerCredentials => 'Server Credentials';
 
   @override
