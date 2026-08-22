@@ -36,6 +36,7 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
     with DisposeCleanup {
   late final TempFileScope _scope;
   late final TextEditorState _state;
+  bool _toolsExpanded = true;
 
   @override
   void initState() {
@@ -248,6 +249,15 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
             onPressed: _toggleFind,
             icon: const Icon(Icons.search),
           ),
+          IconButton(
+            tooltip: l10n.textEditorTools,
+            onPressed: () => setState(() => _toolsExpanded = !_toolsExpanded),
+            icon: AnimatedRotation(
+              turns: _toolsExpanded ? 0.0 : -0.25,
+              duration: const Duration(milliseconds: 200),
+              child: const Icon(Icons.expand_more),
+            ),
+          ),
           PopupMenuButton<String>(
             onSelected: (value) => switch (value) {
               'save-as' => _saveAs(),
@@ -267,7 +277,7 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
         ],
         child: Column(
           children: [
-            TextEditorToolbar(state: state),
+            TextEditorToolbar(state: state, expanded: _toolsExpanded),
             const Divider(height: 1),
             Expanded(child: TextEditorSurface(state: state)),
             DefaultTextStyle.merge(

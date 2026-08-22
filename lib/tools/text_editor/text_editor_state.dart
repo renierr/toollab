@@ -107,13 +107,15 @@ class TextEditorState extends ChangeNotifier {
 
   void _onControllerChanged() {
     if (_suppressDirty) return;
+    // re_editor fires a notification while its widget mounts (delegate swap)
+    // even though nothing changed; real edits never happen mid-build.
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      return;
+    }
     if (!_dirty) {
       _dirty = true;
-      // re_editor notifies synchronously while the editor widget mounts, so
-      // deferring keeps this notification out of the build phase.
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (_dirty) notifyListeners();
-      });
+      notifyListeners();
     }
   }
 

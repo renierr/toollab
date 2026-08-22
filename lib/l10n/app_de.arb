@@ -3567,5 +3567,9 @@
   "textEditorWordWrap": "Umbruch",
   "textEditorSyntaxHighlight": "Hervorhebung",
   "textEditorUnsavedChanges": "Ungespeicherte Änderungen",
-  "textEditorRemote": "Remote"
+  "textEditorRemote": "Remote",
+  "textEditorTools": "Werkzeuge",
+  "commonCut": "Ausschneiden",
+  "commonPaste": "Einfügen",
+  "textEditorSelectAll": "Alles auswählen"
 }

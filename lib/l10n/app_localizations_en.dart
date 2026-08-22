@@ -8803,4 +8803,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get textEditorRemote => 'Remote';
+
+  @override
+  String get textEditorTools => 'Tools';
+
+  @override
+  String get commonCut => 'Cut';
+
+  @override
+  String get commonPaste => 'Paste';
+
+  @override
+  String get textEditorSelectAll => 'Select all';
 }

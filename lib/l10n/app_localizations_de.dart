@@ -8870,4 +8870,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get textEditorRemote => 'Remote';
+
+  @override
+  String get textEditorTools => 'Werkzeuge';
+
+  @override
+  String get commonCut => 'Ausschneiden';
+
+  @override
+  String get commonPaste => 'Einfügen';
+
+  @override
+  String get textEditorSelectAll => 'Alles auswählen';
 }

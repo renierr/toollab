@@ -4564,5 +4564,9 @@
   "textEditorWordWrap": "Wrap",
   "textEditorSyntaxHighlight": "Highlighting",
   "textEditorUnsavedChanges": "Unsaved changes",
-  "textEditorRemote": "Remote"
+  "textEditorRemote": "Remote",
+  "textEditorTools": "Tools",
+  "commonCut": "Cut",
+  "commonPaste": "Paste",
+  "textEditorSelectAll": "Select all"
 }

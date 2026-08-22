@@ -15802,6 +15802,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remote'**
   String get textEditorRemote;
+
+  /// No description provided for @textEditorTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get textEditorTools;
+
+  /// No description provided for @commonCut.
+  ///
+  /// In en, this message translates to:
+  /// **'Cut'**
+  String get commonCut;
+
+  /// No description provided for @commonPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get commonPaste;
+
+  /// No description provided for @textEditorSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get textEditorSelectAll;
 }
 
 class _AppLocalizationsDelegate

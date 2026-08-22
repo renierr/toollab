@@ -4,6 +4,7 @@ import 'package:re_editor/re_editor.dart';
 import 'package:tool_lab/tools/text_editor/text_editor_languages.dart';
 import 'package:tool_lab/tools/text_editor/text_editor_state.dart';
 import 'package:tool_lab/tools/text_editor/widgets/text_editor_find_bar.dart';
+import 'package:tool_lab/tools/text_editor/widgets/text_editor_selection_toolbar.dart';
 
 class TextEditorSurface extends StatelessWidget {
   final TextEditorState state;
@@ -47,6 +48,7 @@ class TextEditorSurface extends StatelessWidget {
           ),
       findBuilder: (context, findController, readOnly) =>
           TextEditorFindBar(controller: findController),
+      toolbarController: const TextEditorSelectionToolbar(),
     );
   }
 }
