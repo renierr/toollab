@@ -467,7 +467,7 @@ class PdfEngineHelper {
         ...targetPages.skip(insertAt),
       ];
 
-      return targetDoc.encodePdf();
+      return await targetDoc.encodePdf();
     } finally {
       sourceDoc.dispose();
     }

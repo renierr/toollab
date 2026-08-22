@@ -456,10 +456,14 @@ class _FileManagerPageState extends State<FileManagerPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _awaitingStorageAccess) {
+    if (state != AppLifecycleState.resumed) return;
+    if (_awaitingStorageAccess) {
       _awaitingStorageAccess = false;
       context.read<FileManagerState>().initialize();
+      return;
     }
+    // Files may have changed elsewhere while the app was backgrounded.
+    if (!_state.isLoading) _state.refresh();
   }
 
   Future<String?> _showNameDialog(
