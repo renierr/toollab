@@ -5390,6 +5390,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get treadmillConnectDevices => 'Connect devices';
 
   @override
+  String get treadmillBadgeTreadmill => 'Treadmill';
+
+  @override
+  String get treadmillStatusConnected => 'Connected';
+
+  @override
+  String get treadmillStatusConnecting => 'Connecting…';
+
+  @override
+  String get treadmillStatusDisconnected => 'Disconnected';
+
+  @override
   String get treadmillSessionRunningTitle => 'Workout still running';
 
   @override

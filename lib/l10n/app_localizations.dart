@@ -9719,6 +9719,30 @@ abstract class AppLocalizations {
   /// **'Connect devices'**
   String get treadmillConnectDevices;
 
+  /// No description provided for @treadmillBadgeTreadmill.
+  ///
+  /// In en, this message translates to:
+  /// **'Treadmill'**
+  String get treadmillBadgeTreadmill;
+
+  /// No description provided for @treadmillStatusConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get treadmillStatusConnected;
+
+  /// No description provided for @treadmillStatusConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get treadmillStatusConnecting;
+
+  /// No description provided for @treadmillStatusDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get treadmillStatusDisconnected;
+
   /// No description provided for @treadmillSessionRunningTitle.
   ///
   /// In en, this message translates to:

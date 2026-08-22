@@ -23,6 +23,8 @@ export 'treadmill_models.dart';
 class TreadmillControlState extends ChangeNotifier {
   static const _syncToHealthConnectKey = 'sync_to_health_connect';
   static const _activeSessionKey = 'active_session';
+  static const _savedTreadmillKey = 'saved_treadmill_device';
+  static const _savedHrmKey = 'saved_hrm_device';
 
   /// How often the running session is written to disk, in ticks (= seconds).
   static const _snapshotEverySeconds = 10;
@@ -40,6 +42,12 @@ class TreadmillControlState extends ChangeNotifier {
   String? hrmDeviceId;
   String? hrmName;
   BleConnectionState hrmConnection = BleConnectionState.disconnected;
+
+  // Remembered devices for auto-reconnect on app start.
+  String? savedTreadmillId;
+  String? savedTreadmillName;
+  String? savedHrmId;
+  String? savedHrmName;
 
   // Settings
   bool syncToHealthConnect = true;
@@ -250,6 +258,70 @@ class TreadmillControlState extends ChangeNotifier {
     } catch (e) {
       errorLog('[TreadmillControl] Load settings failed: $e');
     }
+    await _loadSavedDevices();
+  }
+
+  Future<void> _loadSavedDevices() async {
+    try {
+      final rawTreadmill = await DatabaseService.instance.getSetting(
+        TreadmillControlTool.config.id,
+        _savedTreadmillKey,
+      );
+      final treadmillMap = _decodeSavedDevice(rawTreadmill);
+      savedTreadmillId = treadmillMap?['id'];
+      savedTreadmillName = treadmillMap?['name'];
+
+      final rawHrm = await DatabaseService.instance.getSetting(
+        TreadmillControlTool.config.id,
+        _savedHrmKey,
+      );
+      final hrmMap = _decodeSavedDevice(rawHrm);
+      savedHrmId = hrmMap?['id'];
+      savedHrmName = hrmMap?['name'];
+      notifyListeners();
+      _autoConnectSavedDevices();
+    } catch (e) {
+      errorLog('[TreadmillControl] Load saved devices failed: $e');
+    }
+  }
+
+  Map<String, String>? _decodeSavedDevice(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    final map = jsonDecode(raw) as Map<String, dynamic>;
+    final id = map['id'] as String?;
+    if (id == null || id.isEmpty) return null;
+    return {'id': id, 'name': (map['name'] as String?) ?? ''};
+  }
+
+  Future<void> _persistSavedDevice(String key, String? id, String? name) async {
+    try {
+      if (id == null) {
+        await DatabaseService.instance.deleteSetting(
+          TreadmillControlTool.config.id,
+          key,
+        );
+      } else {
+        await DatabaseService.instance.setSetting(
+          TreadmillControlTool.config.id,
+          key,
+          jsonEncode({'id': id, 'name': name ?? ''}),
+        );
+      }
+    } catch (e) {
+      errorLog('[TreadmillControl] Persist saved device failed: $e');
+    }
+  }
+
+  /// Reconnects to previously connected devices. Best-effort: without
+  /// Bluetooth permissions yet or with the device powered off this fails
+  /// silently and the user connects manually via the sheet.
+  void _autoConnectSavedDevices() {
+    if (!isSimulator && savedTreadmillId != null && treadmillDeviceId == null) {
+      unawaited(connectTreadmill(savedTreadmillId!, savedTreadmillName));
+    }
+    if (savedHrmId != null && hrmDeviceId == null) {
+      unawaited(connectHrm(savedHrmId!, savedHrmName));
+    }
   }
 
   Future<void> setSyncToHealthConnect(bool value) async {
@@ -432,7 +504,7 @@ class TreadmillControlState extends ChangeNotifier {
   }
 
   // Connection Controls
-  Future<void> connectTreadmill(String deviceId, String name) async {
+  Future<void> connectTreadmill(String deviceId, String? name) async {
     treadmillDeviceId = deviceId;
     treadmillName = name;
     treadmillConnection = BleConnectionState.connecting;
@@ -484,14 +556,23 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
-  Future<void> disconnectTreadmill({bool notify = true}) async {
+  Future<void> disconnectTreadmill({
+    bool notify = true,
+    bool forget = false,
+  }) async {
     _treadmillConnectAbort = true;
-    if (treadmillDeviceId == null) return;
-    final deviceId = treadmillDeviceId!;
+    if (treadmillDeviceId == null && !forget) return;
+    final deviceId = treadmillDeviceId;
 
     if (workoutStatus == WorkoutStatus.running ||
         workoutStatus == WorkoutStatus.paused) {
       await stopWorkout();
+    }
+
+    if (forget) {
+      savedTreadmillId = null;
+      savedTreadmillName = null;
+      await _persistSavedDevice(_savedTreadmillKey, null, null);
     }
 
     treadmillConnection = BleConnectionState.disconnected;
@@ -514,12 +595,14 @@ class TreadmillControlState extends ChangeNotifier {
 
     if (notify) notifyListeners();
 
-    try {
-      await UniversalBle.disconnect(deviceId);
-    } catch (_) {}
+    if (deviceId != null) {
+      try {
+        await UniversalBle.disconnect(deviceId);
+      } catch (_) {}
+    }
   }
 
-  Future<void> connectHrm(String deviceId, String name) async {
+  Future<void> connectHrm(String deviceId, String? name) async {
     hrmDeviceId = deviceId;
     hrmName = name;
     hrmConnection = BleConnectionState.connecting;
@@ -534,9 +617,15 @@ class TreadmillControlState extends ChangeNotifier {
     }
   }
 
-  Future<void> disconnectHrm({bool notify = true}) async {
-    if (hrmDeviceId == null) return;
-    final deviceId = hrmDeviceId!;
+  Future<void> disconnectHrm({bool notify = true, bool forget = false}) async {
+    if (hrmDeviceId == null && !forget) return;
+    final deviceId = hrmDeviceId;
+
+    if (forget) {
+      savedHrmId = null;
+      savedHrmName = null;
+      await _persistSavedDevice(_savedHrmKey, null, null);
+    }
 
     hrmConnection = BleConnectionState.disconnected;
     hrmDeviceId = null;
@@ -547,9 +636,11 @@ class TreadmillControlState extends ChangeNotifier {
 
     if (notify) notifyListeners();
 
-    try {
-      await UniversalBle.disconnect(deviceId);
-    } catch (_) {}
+    if (deviceId != null) {
+      try {
+        await UniversalBle.disconnect(deviceId);
+      } catch (_) {}
+    }
   }
 
   void _onConnectionChange(
@@ -563,6 +654,11 @@ class TreadmillControlState extends ChangeNotifier {
     if (deviceId == treadmillDeviceId) {
       treadmillConnection = state;
       if (state == BleConnectionState.connected) {
+        savedTreadmillId = deviceId;
+        savedTreadmillName = treadmillName;
+        unawaited(
+          _persistSavedDevice(_savedTreadmillKey, deviceId, treadmillName),
+        );
         _isControlRequested = false;
         final services = await UniversalBle.discoverServices(deviceId);
 
@@ -684,6 +780,9 @@ class TreadmillControlState extends ChangeNotifier {
     } else if (deviceId == hrmDeviceId) {
       hrmConnection = state;
       if (state == BleConnectionState.connected) {
+        savedHrmId = deviceId;
+        savedHrmName = hrmName;
+        unawaited(_persistSavedDevice(_savedHrmKey, deviceId, hrmName));
         final services = await UniversalBle.discoverServices(deviceId);
 
         final hrmProfile = resolveHrmGatt(services);

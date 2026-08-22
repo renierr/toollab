@@ -2114,6 +2114,10 @@
     }
   },
   "treadmillConnectDevices": "Geräte verbinden",
+  "treadmillBadgeTreadmill": "Laufband",
+  "treadmillStatusConnected": "Verbunden",
+  "treadmillStatusConnecting": "Verbindet…",
+  "treadmillStatusDisconnected": "Getrennt",
   "treadmillSessionRunningTitle": "Training läuft noch",
   "treadmillSessionRunningMessage": "Wenn du diese Seite verlässt, wird im Hintergrund weiter aufgezeichnet - die Einheit wird automatisch gesichert und lässt sich auch nach einem Schließen der App wiederherstellen. Beende sie jetzt, um sie im Verlauf abzulegen.",
   "treadmillKeepRecording": "Verlassen, weiter aufzeichnen",

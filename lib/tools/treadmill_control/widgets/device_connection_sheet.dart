@@ -113,7 +113,8 @@ class DeviceConnectionSheet extends StatelessWidget {
                             'Connected | ${state.treadmillDeviceId}',
                           ),
                           trailing: TextButton(
-                            onPressed: () => state.disconnectTreadmill(),
+                            onPressed: () =>
+                                state.disconnectTreadmill(forget: true),
                             child: Text(
                               'Disconnect',
                               style: TextStyle(color: theme.colorScheme.error),
@@ -130,7 +131,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                           title: Text(state.hrmName ?? 'Heart Rate Monitor'),
                           subtitle: Text('Connected | ${state.hrmDeviceId}'),
                           trailing: TextButton(
-                            onPressed: () => state.disconnectHrm(),
+                            onPressed: () => state.disconnectHrm(forget: true),
                             child: Text(
                               'Disconnect',
                               style: TextStyle(color: theme.colorScheme.error),
@@ -184,7 +185,8 @@ class DeviceConnectionSheet extends StatelessWidget {
                               connectionState: state.treadmillConnection,
                               onConnect: () =>
                                   state.connectTreadmill(dev.id, dev.name),
-                              onDisconnect: () => state.disconnectTreadmill(),
+                              onDisconnect: () =>
+                                  state.disconnectTreadmill(forget: true),
                             ),
                           );
                         },
@@ -235,7 +237,8 @@ class DeviceConnectionSheet extends StatelessWidget {
                               connectionState: state.hrmConnection,
                               onConnect: () =>
                                   state.connectHrm(dev.id, dev.name),
-                              onDisconnect: () => state.disconnectHrm(),
+                              onDisconnect: () =>
+                                  state.disconnectHrm(forget: true),
                             ),
                           );
                         },

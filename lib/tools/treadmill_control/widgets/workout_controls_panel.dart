@@ -4,6 +4,7 @@ import '../treadmill_control_state.dart';
 import '../treadmill_control_colors.dart';
 import '../../../../l10n/app_localizations.dart';
 import 'workout_action_button.dart';
+import 'connection_status_indicators.dart';
 
 class WorkoutControlsPanel extends StatelessWidget {
   final bool isLandscape;
@@ -54,6 +55,7 @@ class WorkoutControlsPanel extends StatelessWidget {
                 onPressed: () => state.stopWorkout(),
               ),
             ],
+            const ConnectionStatusIndicators(),
           ],
         ),
         if (state.speedControlSupported &&

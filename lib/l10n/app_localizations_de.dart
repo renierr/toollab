@@ -5429,6 +5429,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get treadmillConnectDevices => 'Geräte verbinden';
 
   @override
+  String get treadmillBadgeTreadmill => 'Laufband';
+
+  @override
+  String get treadmillStatusConnected => 'Verbunden';
+
+  @override
+  String get treadmillStatusConnecting => 'Verbindet…';
+
+  @override
+  String get treadmillStatusDisconnected => 'Getrennt';
+
+  @override
   String get treadmillSessionRunningTitle => 'Training läuft noch';
 
   @override

@@ -2994,6 +2994,10 @@
     }
   },
   "treadmillConnectDevices": "Connect devices",
+  "treadmillBadgeTreadmill": "Treadmill",
+  "treadmillStatusConnected": "Connected",
+  "treadmillStatusConnecting": "Connecting…",
+  "treadmillStatusDisconnected": "Disconnected",
   "treadmillSessionRunningTitle": "Workout still running",
   "treadmillSessionRunningMessage": "Leaving this screen keeps recording in the background - the session is saved automatically and can be recovered even if the app is closed. Stop it now to file it in the history.",
   "treadmillKeepRecording": "Leave, keep recording",
