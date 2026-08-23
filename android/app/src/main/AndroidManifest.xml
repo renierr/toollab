@@ -224,6 +224,22 @@
               />
         </activity>
 
+        <activity
+            android:name="de.renier.tool_lab.TextEditorActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":text_editor"
+            android:taskAffinity="de.renier.tool_lab.text_editor"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"
+                />
+        </activity>
+
         <activity-alias
             android:name="de.renier.tool_lab.FileManagerAlias"
             android:targetActivity="de.renier.tool_lab.FileManagerActivity"
@@ -629,7 +645,7 @@
 
         <activity-alias
             android:name="de.renier.tool_lab.TextEditorAlias"
-            android:targetActivity="de.renier.tool_lab.MainActivity"
+            android:targetActivity="de.renier.tool_lab.TextEditorActivity"
             android:label="Text Editor"
             android:icon="@mipmap/ic_launcher_text_editor"
             android:enabled="false"
