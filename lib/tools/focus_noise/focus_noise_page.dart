@@ -45,7 +45,9 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     // background instead of tearing it down on page leave.
     _isPlaying = _player.isPlaying;
     _player.onExternalStop = _onPlayerExternalStop;
+    _player.onExternalStateChange = _onPlayerExternalStateChange;
     onDispose(() => _player.onExternalStop = null);
+    onDispose(() => _player.onExternalStateChange = null);
     onDispose(() => _timerTicker?.cancel());
     onDispose(() => _breathingTimer?.cancel());
     onDispose(() => _breathingWakeLock?.release());
@@ -58,6 +60,27 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     final l10n = AppLocalizations.of(context);
     _player.notificationTitle = l10n.focusNotificationTitle;
     _player.notificationText = l10n.focusNotificationText;
+    _syncPlayerNotification();
+  }
+
+  /// Composes the notification body from the active sound and timer state and
+  /// pushes it to the foreground lease.
+  void _syncPlayerNotification() {
+    if (!_player.isPlaying) return;
+    final l10n = AppLocalizations.of(context);
+    final name = context.read<FocusNoiseState>().selectedSound.name;
+    _player.notificationText = _timerTarget != null
+        ? _timerLabel()
+        : (_player.isPaused
+              ? l10n.focusPausedSound(name)
+              : l10n.focusPlayingSound(name));
+    _player.refreshNotification();
+  }
+
+  void _onPlayerExternalStateChange() {
+    if (!mounted) return;
+    setState(() {});
+    _syncPlayerNotification();
   }
 
   Future<void> _restoreSettings() async {
@@ -78,6 +101,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     if (_isPlaying) {
       await _player.play(sound);
       _player.setVolume(settings.volume);
+      _syncPlayerNotification();
     }
   }
 
@@ -110,6 +134,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     _player.setVolume(settings.volume);
     if (!mounted) return;
     setState(() => _isPlaying = true);
+    _syncPlayerNotification();
   }
 
   Future<void> _setVolume(double value) async {
@@ -124,6 +149,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
       _timerTarget = DateTime.now().add(Duration(minutes: clamped));
     });
     context.read<FocusNoiseState>().setCustomMinutes(clamped);
+    _syncPlayerNotification();
 
     _timerTicker ??= Timer.periodic(const Duration(seconds: 1), (_) {
       final target = _timerTarget;
@@ -131,14 +157,20 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
       final remaining = target.difference(DateTime.now());
       if (remaining <= Duration.zero) {
         _togglePlayback();
-      } else if (mounted) {
-        setState(() {});
+      } else {
+        // Push the countdown into the notification once per minute; the UI
+        // label refreshes every tick.
+        if (remaining.inSeconds % 60 == 0) {
+          _syncPlayerNotification();
+        }
+        if (mounted) setState(() {});
       }
     });
   }
 
   void _cancelTimer() {
     setState(() => _timerTarget = null);
+    _syncPlayerNotification();
   }
 
   String _timerLabel() {
@@ -214,9 +246,11 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     final l10n = AppLocalizations.of(context);
     final settings = context.watch<FocusNoiseState>();
     final selectedSound = settings.selectedSound;
-    final String statusText = _isPlaying
-        ? l10n.focusPlayingSound(selectedSound.name)
-        : l10n.focusSelectedSound(selectedSound.name);
+    final String statusText = !_isPlaying
+        ? l10n.focusSelectedSound(selectedSound.name)
+        : _player.isPaused
+        ? l10n.focusPausedSound(selectedSound.name)
+        : l10n.focusPlayingSound(selectedSound.name);
 
     final Widget content = SingleChildScrollView(
       padding: const EdgeInsets.all(16),

@@ -29,6 +29,10 @@ class ToolLabForegroundService : Service() {
         private const val ACTION_PLAYBACK_STATE = "de.renier.tool_lab.foreground.PLAYBACK_STATE"
         private const val ACTION_STOP = "de.renier.tool_lab.foreground.STOP"
 
+        // Stop has no dedicated slot in Android 13+ system-drawn media
+        // notifications, so it is exposed as a custom session action.
+        const val CUSTOM_ACTION_STOP = "de.renier.tool_lab.media.STOP"
+
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_TEXT = "text"
         private const val EXTRA_ACTIONS = "actions"
@@ -242,6 +246,9 @@ class ToolLabForegroundService : Service() {
             override fun onSkipToNext() = sendActionToFlutter("next")
             override fun onSkipToPrevious() = sendActionToFlutter("previous")
             override fun onSeekTo(pos: Long) = sendActionToFlutter("seek:${pos.toInt()}")
+            override fun onCustomAction(action: String, extras: android.os.Bundle?) {
+                if (action == CUSTOM_ACTION_STOP) sendActionToFlutter("stop")
+            }
         })
         session.isActive = true
         mediaSession = session
@@ -253,34 +260,43 @@ class ToolLabForegroundService : Service() {
         mediaSession = null
     }
 
-    private fun playbackActions(): Long {
-        var actions = PlaybackStateCompat.ACTION_PLAY or
-            PlaybackStateCompat.ACTION_PAUSE or
-            PlaybackStateCompat.ACTION_PLAY_PAUSE or
-            PlaybackStateCompat.ACTION_STOP
+    private fun refreshPlaybackState(session: MediaSessionCompat? = null) {
+        val target = session ?: mediaSession ?: return
+        // Advertise only what the tool actually supports — Android 13+ renders
+        // the notification buttons from these flags, not from the added
+        // notification actions.
         val names = lastActions.orEmpty()
+        var actions = 0L
+        if ("play" in names || "pause" in names) {
+            actions = actions or PlaybackStateCompat.ACTION_PLAY or
+                PlaybackStateCompat.ACTION_PAUSE or
+                PlaybackStateCompat.ACTION_PLAY_PAUSE
+        }
         if ("next" in names) actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
         if ("previous" in names) actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
         if (lastSeekable) actions = actions or PlaybackStateCompat.ACTION_SEEK_TO
-        return actions
-    }
 
-    private fun refreshPlaybackState(session: MediaSessionCompat? = null) {
-        val target = session ?: mediaSession ?: return
-        target.setPlaybackState(
-            PlaybackStateCompat.Builder()
-                .setActions(playbackActions())
-                .setState(
-                    if (lastPlaying) {
-                        PlaybackStateCompat.STATE_PLAYING
-                    } else {
-                        PlaybackStateCompat.STATE_PAUSED
-                    },
-                    lastPositionMs.coerceAtLeast(0),
-                    if (lastPlaying) 1f else 0f,
-                )
-                .build(),
-        )
+        val builder = PlaybackStateCompat.Builder()
+            .setActions(actions)
+            .setState(
+                if (lastPlaying) {
+                    PlaybackStateCompat.STATE_PLAYING
+                } else {
+                    PlaybackStateCompat.STATE_PAUSED
+                },
+                lastPositionMs.coerceAtLeast(0),
+                if (lastPlaying) 1f else 0f,
+            )
+        if ("stop" in names) {
+            builder.addCustomAction(
+                PlaybackStateCompat.CustomAction.Builder(
+                    CUSTOM_ACTION_STOP,
+                    "Stop",
+                    android.R.drawable.ic_menu_close_clear_cancel,
+                ).build(),
+            )
+        }
+        target.setPlaybackState(builder.build())
     }
 
     // ---- Notification building ----

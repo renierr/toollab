@@ -2315,6 +2315,12 @@ abstract class AppLocalizations {
   /// **'Playing {name}'**
   String focusPlayingSound(String name);
 
+  /// No description provided for @focusPausedSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused {name}'**
+  String focusPausedSound(String name);
+
   /// No description provided for @focusSelectedSound.
   ///
   /// In en, this message translates to:

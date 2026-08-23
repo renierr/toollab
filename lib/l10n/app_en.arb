@@ -690,7 +690,16 @@
     }
   },
   "focusPlayingSound": "Playing {name}",
+
   "@focusPlayingSound": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "focusPausedSound": "Paused {name}",
+  "@focusPausedSound": {
     "placeholders": {
       "name": {
         "type": "String"

@@ -421,6 +421,7 @@
     }
   },
   "focusPlayingSound": "{name} wird abgespielt",
+  "focusPausedSound": "{name} pausiert",
   "@focusPlayingSound": {
     "placeholders": {
       "name": {

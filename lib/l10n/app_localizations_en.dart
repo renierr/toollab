@@ -1282,6 +1282,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String focusPausedSound(String name) {
+    return 'Paused $name';
+  }
+
+  @override
   String focusSelectedSound(String name) {
     return 'Selected $name';
   }

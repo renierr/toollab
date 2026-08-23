@@ -1293,6 +1293,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String focusPausedSound(String name) {
+    return '$name pausiert';
+  }
+
+  @override
   String focusSelectedSound(String name) {
     return '$name ausgewählt';
   }

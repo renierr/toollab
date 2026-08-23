@@ -21,6 +21,7 @@ class FocusNoisePlayer {
   SoundHandle? _handle;
   AudioSource? _source;
   bool _isPlaying = false;
+  bool _isPaused = false;
   double _volume = 0.65;
   FocusNoiseSound? _currentSound;
   WakeLockLease? _partialWakeLock;
@@ -30,22 +31,37 @@ class FocusNoisePlayer {
   int _playGeneration = 0;
 
   /// Localized text for the background-playback foreground notification.
-  /// Set by the page once a [BuildContext] is available.
+  /// Set by the page once a [BuildContext] is available; the page composes
+  /// sound name and timer state into it and calls [refreshNotification].
   String notificationTitle = 'Focus noise active';
   String notificationText = 'ToolLab keeps ambient audio running';
 
   /// Invoked when playback is stopped from outside the app (the notification's
   /// stop action), so the page can sync its UI state.
   VoidCallback? onExternalStop;
+
+  /// Invoked when play/pause changes from outside the app (notification
+  /// buttons), so the page can resync its transport state.
+  VoidCallback? onExternalStateChange;
   StreamSubscription<MediaButton>? _mediaButtonSub;
 
   void _initMediaControls() {
     _mediaButtonSub ??= MediaControlsService.instance.buttonEvents.listen((
       button,
     ) {
-      if (button == MediaButton.stop || button == MediaButton.pause) {
-        unawaited(stop());
-        onExternalStop?.call();
+      switch (button) {
+        case MediaButton.stop:
+          unawaited(stop());
+          onExternalStop?.call();
+          break;
+        case MediaButton.pause:
+          pause();
+          break;
+        case MediaButton.play:
+          resume();
+          break;
+        default:
+          break;
       }
     });
   }
@@ -68,6 +84,7 @@ class FocusNoisePlayer {
   }
 
   bool get isPlaying => _isPlaying;
+  bool get isPaused => _isPaused;
   double get volume => _volume;
   FocusNoiseSound? get currentSound => _currentSound;
 
@@ -93,7 +110,26 @@ class FocusNoisePlayer {
     _handle = SoLoud.instance.play(source, volume: _volume);
     SoLoud.instance.setLooping(_handle!, true);
     _isPlaying = true;
+    _isPaused = false;
     _updateMediaControls(sound.name, MediaPlaybackStatus.playing);
+  }
+
+  void pause() {
+    final SoundHandle? handle = _handle;
+    if (handle == null || !_isPlaying || _isPaused) return;
+    SoLoud.instance.setPause(handle, true);
+    _isPaused = true;
+    _refreshNotification();
+    onExternalStateChange?.call();
+  }
+
+  void resume() {
+    final SoundHandle? handle = _handle;
+    if (handle == null || !_isPlaying || !_isPaused) return;
+    SoLoud.instance.setPause(handle, false);
+    _isPaused = false;
+    _refreshNotification();
+    onExternalStateChange?.call();
   }
 
   Future<AudioSource> _loadAsset(FocusNoiseSound sound) {
@@ -123,6 +159,7 @@ class FocusNoisePlayer {
 
   Future<void> stop() async {
     _isPlaying = false;
+    _isPaused = false;
     _playGeneration++;
 
     unawaited(MediaControlsService.instance.clear());
@@ -158,17 +195,42 @@ class FocusNoisePlayer {
       _foregroundRuntimeLease = await ForegroundRuntimeService.acquire(
         title: notificationTitle,
         text: notificationText,
-        actions: const ['stop'],
+        actions: const ['pause', 'stop'],
         // Media treatment without a seek bar: the shade lists it as active
         // audio playback.
         media: MediaNotificationData(
-          title: notificationTitle,
+          title: _currentSound?.name ?? notificationTitle,
           positionMs: 0,
           playing: true,
         ),
       );
       ForegroundRuntimeService.addActionListener(_handleNotificationAction);
     }
+  }
+
+  /// Re-pushes the current title/text/actions/media state to the notification.
+  /// The page composes [notificationText] (sound name, timer) and calls this
+  /// when either changes; pause/resume use it internally.
+  void refreshNotification() {
+    if (_foregroundRuntimeLease == null || !_isPlaying) return;
+    _refreshNotification();
+  }
+
+  void _refreshNotification() {
+    final ForegroundRuntimeLease? lease = _foregroundRuntimeLease;
+    if (lease == null) return;
+    unawaited(
+      lease.update(
+        title: notificationTitle,
+        text: notificationText,
+        actions: _isPaused ? const ['play', 'stop'] : const ['pause', 'stop'],
+        media: MediaNotificationData(
+          title: _currentSound?.name ?? notificationTitle,
+          positionMs: 0,
+          playing: _isPlaying && !_isPaused,
+        ),
+      ),
+    );
   }
 
   void _releaseLocks() {
@@ -184,9 +246,17 @@ class FocusNoisePlayer {
   }
 
   void _handleNotificationAction(String action) {
-    if (action == 'stop') {
-      unawaited(stop());
-      onExternalStop?.call();
+    switch (action) {
+      case 'stop':
+        unawaited(stop());
+        onExternalStop?.call();
+        break;
+      case 'pause':
+        pause();
+        break;
+      case 'play':
+        resume();
+        break;
     }
   }
 
@@ -194,5 +264,7 @@ class FocusNoisePlayer {
     await stop();
     _mediaButtonSub?.cancel();
     _mediaButtonSub = null;
+    onExternalStop = null;
+    onExternalStateChange = null;
   }
 }
