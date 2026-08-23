@@ -265,7 +265,6 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
         title:
             '${state.dirty ? '• ' : ''}${state.fileName ?? TextEditorTool.config.localizedName(l10n)}',
         actions: [
-          const TextEditorSettingsButton(),
           IconButton(
             tooltip: l10n.commonSave,
             onPressed: state.isSaving ? null : _save,
@@ -287,6 +286,9 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
           ),
           PopupMenuButton<String>(
             onSelected: (value) => switch (value) {
+              'settings' => context.push(
+                '${TextEditorTool.config.route}/settings',
+              ),
               'save-as' => _saveAs(),
               'share' => _share(),
               'close' => _requestPop(),
@@ -298,6 +300,10 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
                 child: Text(l10n.textEditorSaveAs),
               ),
               PopupMenuItem(value: 'share', child: Text(l10n.commonShare)),
+              PopupMenuItem(
+                value: 'settings',
+                child: Text(l10n.textEditorSettings),
+              ),
               PopupMenuItem(value: 'close', child: Text(l10n.commonClose)),
             ],
           ),
