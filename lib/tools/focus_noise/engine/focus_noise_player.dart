@@ -159,6 +159,13 @@ class FocusNoisePlayer {
         title: notificationTitle,
         text: notificationText,
         actions: const ['stop'],
+        // Media treatment without a seek bar: the shade lists it as active
+        // audio playback.
+        media: MediaNotificationData(
+          title: notificationTitle,
+          positionMs: 0,
+          playing: true,
+        ),
       );
       ForegroundRuntimeService.addActionListener(_handleNotificationAction);
     }

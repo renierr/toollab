@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 /// Media-session payload for a lease. When set, the Android notification is
 /// rendered as a MediaStyle notification with metadata, a live progress bar
 /// (extrapolated from position + playing) and seek support.
+///
+/// Leave [durationMs] null for endless audio (noise generators): the session
+/// still gets media treatment without a seek bar.
 class MediaNotificationData {
   final String title;
   final String? artist;
@@ -37,6 +40,9 @@ typedef _LeaseSnapshot = ({
   String text,
   List<String>? actions,
   MediaNotificationData? media,
+  int? chronometerSinceMs,
+  int? progress,
+  int? progressMax,
 });
 
 class ForegroundRuntimeLease {
@@ -51,11 +57,17 @@ class ForegroundRuntimeLease {
     await ForegroundRuntimeService._releaseLease(_id);
   }
 
+  /// [chronometerSinceMs] shows a system-rendered ticking timer since that
+  /// epoch timestamp (pass null to clear). [progress]/[progressMax] show a
+  /// determinate progress bar.
   Future<void> update({
     required String title,
     required String text,
     List<String>? actions,
     MediaNotificationData? media,
+    int? chronometerSinceMs,
+    int? progress,
+    int? progressMax,
   }) async {
     if (_released) return;
     await ForegroundRuntimeService._updateLease(
@@ -64,6 +76,9 @@ class ForegroundRuntimeLease {
       text: text,
       actions: actions,
       media: media,
+      chronometerSinceMs: chronometerSinceMs,
+      progress: progress,
+      progressMax: progressMax,
     );
   }
 
@@ -137,27 +152,24 @@ class ForegroundRuntimeService {
     required String text,
     List<String>? actions,
     MediaNotificationData? media,
+    int? chronometerSinceMs,
+    int? progress,
+    int? progressMax,
   }) async {
     await requestNotificationPermission();
     final int leaseId = _nextLeaseId++;
     final bool wasInactive = _activeLeases.isEmpty;
-    final snapshot = (title: title, text: text, actions: actions, media: media);
+    final snapshot = (
+      title: title,
+      text: text,
+      actions: actions,
+      media: media,
+      chronometerSinceMs: chronometerSinceMs,
+      progress: progress,
+      progressMax: progressMax,
+    );
     _activeLeases[leaseId] = snapshot;
-    if (wasInactive) {
-      await _invoke('start', {
-        'title': title,
-        'text': text,
-        'actions': actions,
-        'media': media?.toMap(),
-      });
-    } else {
-      await _invoke('update', {
-        'title': title,
-        'text': text,
-        'actions': actions,
-        'media': media?.toMap(),
-      });
-    }
+    await _invoke(wasInactive ? 'start' : 'update', _snapshotArgs(snapshot));
     return ForegroundRuntimeLease._(leaseId);
   }
 
@@ -179,26 +191,38 @@ class ForegroundRuntimeService {
     await _invoke('stop');
   }
 
+  static Map<String, Object?> _snapshotArgs(_LeaseSnapshot s) => {
+    'title': s.title,
+    'text': s.text,
+    'actions': s.actions,
+    'media': s.media?.toMap(),
+    'chronometerSinceMs': s.chronometerSinceMs,
+    'progress': s.progress,
+    'progressMax': s.progressMax,
+  };
+
   static Future<void> _updateLease(
     int leaseId, {
     required String title,
     required String text,
     List<String>? actions,
     MediaNotificationData? media,
+    int? chronometerSinceMs,
+    int? progress,
+    int? progressMax,
   }) async {
     if (!_activeLeases.containsKey(leaseId)) return;
-    _activeLeases[leaseId] = (
+    final snapshot = (
       title: title,
       text: text,
       actions: actions,
       media: media,
+      chronometerSinceMs: chronometerSinceMs,
+      progress: progress,
+      progressMax: progressMax,
     );
-    await _invoke('update', {
-      'title': title,
-      'text': text,
-      'actions': actions,
-      'media': media?.toMap(),
-    });
+    _activeLeases[leaseId] = snapshot;
+    await _invoke('update', _snapshotArgs(snapshot));
   }
 
   static Future<void> _releaseLease(int leaseId) async {
@@ -210,13 +234,7 @@ class ForegroundRuntimeService {
       return;
     }
 
-    final latest = _activeLeases.values.last;
-    await _invoke('update', {
-      'title': latest.title,
-      'text': latest.text,
-      'actions': latest.actions,
-      'media': latest.media?.toMap(),
-    });
+    await _invoke('update', _snapshotArgs(_activeLeases.values.last));
   }
 
   static Future<void> _invoke(

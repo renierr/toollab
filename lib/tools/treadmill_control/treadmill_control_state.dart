@@ -1082,6 +1082,7 @@ class TreadmillControlState extends ChangeNotifier {
     // Automatically trigger WakeLock
     _setWakeLock(true);
     _setSessionKeepAlive(true);
+    _syncSessionChronometer(running: true);
 
     if (isSimulator) {
       speed = 3.0;
@@ -1104,6 +1105,7 @@ class TreadmillControlState extends ChangeNotifier {
   Future<void> pauseWorkout() async {
     workoutStatus = WorkoutStatus.paused;
     _workoutTimer?.cancel();
+    _syncSessionChronometer(running: false);
     if (!isSimulator &&
         treadmillConnection == BleConnectionState.connected &&
         treadmillDeviceId != null) {
@@ -1231,6 +1233,8 @@ class TreadmillControlState extends ChangeNotifier {
       _foregroundLease ??= await ForegroundRuntimeService.acquire(
         title: notificationTitle,
         text: notificationText,
+        chronometerSinceMs:
+            DateTime.now().millisecondsSinceEpoch - elapsedTime * 1000,
       );
     } else {
       final cpu = _sessionCpuLease;
@@ -1240,6 +1244,23 @@ class TreadmillControlState extends ChangeNotifier {
       _foregroundLease = null;
       if (fg != null) unawaited(fg.release());
     }
+  }
+
+  /// Re-arms or freezes the notification's ticking chronometer. The elapsed
+  /// offset keeps the shown time correct across pause/resume of an
+  /// accumulated session.
+  void _syncSessionChronometer({required bool running}) {
+    final ForegroundRuntimeLease? fg = _foregroundLease;
+    if (fg == null) return;
+    unawaited(
+      fg.update(
+        title: notificationTitle,
+        text: notificationText,
+        chronometerSinceMs: running
+            ? DateTime.now().millisecondsSinceEpoch - elapsedTime * 1000
+            : null,
+      ),
+    );
   }
 
   // Timer Tick & Simulator Mode

@@ -1287,6 +1287,8 @@ class FileManagerState extends ChangeNotifier {
                     : move
                     ? 'Moving'
                     : 'Copying'} $_operationCompleted of $_operationTotal files',
+            progress: _operationCompleted,
+            progressMax: _operationTotal,
           );
         } else if (data['type'] == 'error') {
           operationError = operationError == null

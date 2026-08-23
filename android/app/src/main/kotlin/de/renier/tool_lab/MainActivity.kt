@@ -309,7 +309,16 @@ open class MainActivity : FlutterFragmentActivity() {
                     val text = call.argument<String>("text") ?: "Running in background"
                     val actions = call.argument<List<String>>("actions")
                     val media = call.argument<Map<String, Any?>>("media")
-                    ToolLabForegroundService.start(this, title, text, actions, media)
+                    ToolLabForegroundService.start(
+                        this,
+                        title,
+                        text,
+                        actions,
+                        media,
+                        (call.argument<Number>("chronometerSinceMs"))?.toLong(),
+                        call.argument<Number>("progress")?.toInt(),
+                        call.argument<Number>("progressMax")?.toInt(),
+                    )
                     result.success(true)
                 }
                 "update" -> {
@@ -317,7 +326,16 @@ open class MainActivity : FlutterFragmentActivity() {
                     val text = call.argument<String>("text") ?: "Running in background"
                     val actions = call.argument<List<String>>("actions")
                     val media = call.argument<Map<String, Any?>>("media")
-                    ToolLabForegroundService.update(this, title, text, actions, media)
+                    ToolLabForegroundService.update(
+                        this,
+                        title,
+                        text,
+                        actions,
+                        media,
+                        (call.argument<Number>("chronometerSinceMs"))?.toLong(),
+                        call.argument<Number>("progress")?.toInt(),
+                        call.argument<Number>("progressMax")?.toInt(),
+                    )
                     result.success(true)
                 }
                 "playbackState" -> {

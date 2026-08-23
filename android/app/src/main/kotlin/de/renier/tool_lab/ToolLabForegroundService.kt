@@ -51,14 +51,22 @@ class ToolLabForegroundService : Service() {
         private var lastPlaying: Boolean = false
         private var lastSeekable: Boolean = false
 
+        // Plain-notification extras.
+        private var lastChronometerSinceMs: Long? = null
+        private var lastProgress: Int? = null
+        private var lastProgressMax: Int? = null
+
         fun start(
             context: Context,
             title: String,
             text: String,
             actions: List<String>?,
             media: Map<String, Any?>?,
+            chronometerSinceMs: Long?,
+            progress: Int?,
+            progressMax: Int?,
         ) {
-            applyState(title, text, actions, media)
+            applyState(title, text, actions, media, chronometerSinceMs, progress, progressMax)
             ContextCompat.startForegroundService(
                 context,
                 serviceIntent(context, ACTION_START),
@@ -71,8 +79,11 @@ class ToolLabForegroundService : Service() {
             text: String,
             actions: List<String>?,
             media: Map<String, Any?>?,
+            chronometerSinceMs: Long?,
+            progress: Int?,
+            progressMax: Int?,
         ) {
-            applyState(title, text, actions, media)
+            applyState(title, text, actions, media, chronometerSinceMs, progress, progressMax)
             context.startService(serviceIntent(context, ACTION_UPDATE))
         }
 
@@ -97,6 +108,9 @@ class ToolLabForegroundService : Service() {
             lastDurationMs = 0
             lastPositionMs = 0
             lastSeekable = false
+            lastChronometerSinceMs = null
+            lastProgress = null
+            lastProgressMax = null
             val intent = Intent(context, ToolLabForegroundService::class.java).apply {
                 action = ACTION_STOP
             }
@@ -108,6 +122,9 @@ class ToolLabForegroundService : Service() {
             text: String,
             actions: List<String>?,
             media: Map<String, Any?>?,
+            chronometerSinceMs: Long?,
+            progress: Int?,
+            progressMax: Int?,
         ) {
             lastTitle = title
             lastText = text
@@ -117,14 +134,20 @@ class ToolLabForegroundService : Service() {
                 lastMediaArtist = null
                 lastDurationMs = 0
                 lastSeekable = false
-                return
+            } else {
+                lastMediaTitle = media["title"] as? String ?: title
+                lastMediaArtist = media["artist"] as? String
+                lastDurationMs = (media["durationMs"] as? Number)?.toLong() ?: 0L
+                lastPositionMs = (media["positionMs"] as? Number)?.toLong() ?: 0L
+                lastPlaying = media["playing"] as? Boolean ?: false
+                lastSeekable = media["seekable"] as? Boolean ?: false
             }
-            lastMediaTitle = media["title"] as? String ?: title
-            lastMediaArtist = media["artist"] as? String
-            lastDurationMs = (media["durationMs"] as? Number)?.toLong() ?: 0L
-            lastPositionMs = (media["positionMs"] as? Number)?.toLong() ?: 0L
-            lastPlaying = media["playing"] as? Boolean ?: false
-            lastSeekable = media["seekable"] as? Boolean ?: false
+            // Progress/chronometer are plain-notification extras; never mix
+            // them with a media seek bar.
+            val hasProgress = progress != null && progressMax != null && progressMax > 0 && media == null
+            lastProgress = if (hasProgress) progress else null
+            lastProgressMax = if (hasProgress) progressMax else null
+            lastChronometerSinceMs = if (media == null) chronometerSinceMs else null
         }
 
         private fun serviceIntent(context: Context, action: String): Intent =
@@ -297,6 +320,17 @@ class ToolLabForegroundService : Service() {
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
         } else {
             builder.setContentText(lastText)
+
+            val chronoSince = lastChronometerSinceMs
+            if (chronoSince != null) {
+                builder.setShowWhen(true).setUsesChronometer(true).setWhen(chronoSince)
+            }
+
+            val progressMax = lastProgressMax
+            val progress = lastProgress
+            if (progressMax != null && progressMax > 0 && progress != null) {
+                builder.setProgress(progressMax, progress.coerceIn(0, progressMax), false)
+            }
         }
 
         var compactIndex = 0
