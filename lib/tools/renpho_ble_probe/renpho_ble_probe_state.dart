@@ -1014,7 +1014,7 @@ class RenphoBleProbeState extends ChangeNotifier {
       } else {
         unawaited(_closeSession(saved.weightKg));
       }
-      backgroundSync();
+      backgroundSync(publishImmediately: true);
     } catch (e) {
       _fail(RenphoFailure.saveFailed, '$e');
     }
@@ -1040,12 +1040,12 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   /// Pushes what is pending to Health Connect and runs the backend sync. Both
   /// halves check their own switch, so this is safe to fire on tool open.
-  void backgroundSync() {
+  void backgroundSync({bool publishImmediately = false}) {
     // Publishing to Health Connect is a one-way push and runs independently of
     // the backend sync, which may well be switched off.
     unawaited(
       RenphoHealthConnectPublisher.instance
-          .publishPending()
+          .publishPending(skipThrottle: publishImmediately)
           .then((result) {
             _lastPublish = result;
             notifyListeners();

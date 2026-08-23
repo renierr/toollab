@@ -85,9 +85,13 @@ class RenphoHealthConnectPublisher {
   );
 
   /// Publishes every scan whose stored data is newer than its last publish.
-  /// [force] skips the throttle and asks for permissions even when the setting
-  /// is off, which is what the manual action and the settings toggle need.
-  Future<RenphoPublishResult> publishPending({bool force = false}) async {
+  /// [force] asks for permissions even when the setting is off, which is what
+  /// the manual action and the settings toggle need. [skipThrottle] is for a
+  /// newly saved scan, which must not wait behind an earlier background check.
+  Future<RenphoPublishResult> publishPending({
+    bool force = false,
+    bool skipThrottle = false,
+  }) async {
     if (!Platform.isAndroid) {
       return const RenphoPublishResult(RenphoPublishOutcome.unsupported);
     }
@@ -101,6 +105,7 @@ class RenphoHealthConnectPublisher {
     }
     final last = _lastRun;
     if (!force &&
+        !skipThrottle &&
         last != null &&
         DateTime.now().difference(last) < _minInterval) {
       return const RenphoPublishResult(RenphoPublishOutcome.throttled);
@@ -197,15 +202,12 @@ class RenphoHealthConnectPublisher {
 
   Future<bool> _ensureWriteAccess(hc.HealthConnector connector) async {
     final needed = _writePermissions;
-    final results = await connector.requestPermissions(needed);
-    if (results.any((result) => result.status == hc.PermissionStatus.granted)) {
-      return true;
-    }
-    // Already-granted permissions are not requestable, so the request comes
-    // back empty-handed and the granted set has to decide.
+    await connector.requestPermissions(needed);
+    // Already-granted permissions are not requestable, so the granted set is
+    // authoritative. One write call contains every type in [needed].
     try {
       final granted = await connector.getGrantedPermissions();
-      return needed.any(granted.contains);
+      return needed.every(granted.contains);
     } catch (e) {
       errorLog('[RenphoScale] Reading granted permissions failed: $e');
       return false;
