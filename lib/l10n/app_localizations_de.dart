@@ -6541,6 +6541,15 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get fileManagerCollapseGroup => 'Ordner einklappen';
+
+  @override
+  String get fileManagerExpandGroup => 'Ordner ausklappen';
+
+  @override
+  String get fileManagerOpenFolder => 'Ordner im Explorer öffnen';
+
+  @override
   String fileManagerMoreEntries(int count) {
     return 'und $count weitere';
   }

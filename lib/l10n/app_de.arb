@@ -2619,6 +2619,9 @@
       }
     }
   },
+  "fileManagerCollapseGroup": "Ordner einklappen",
+  "fileManagerExpandGroup": "Ordner ausklappen",
+  "fileManagerOpenFolder": "Ordner im Explorer öffnen",
   "fileManagerMoreEntries": "und {count} weitere",
   "@fileManagerMoreEntries": {
     "placeholders": {

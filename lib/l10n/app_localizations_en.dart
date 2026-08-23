@@ -6500,6 +6500,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get fileManagerCollapseGroup => 'Collapse folder';
+
+  @override
+  String get fileManagerExpandGroup => 'Expand folder';
+
+  @override
+  String get fileManagerOpenFolder => 'Open folder in explorer';
+
+  @override
   String fileManagerMoreEntries(int count) {
     return 'and $count more';
   }

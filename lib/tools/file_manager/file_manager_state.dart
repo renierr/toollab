@@ -279,8 +279,6 @@ class FileManagerState extends ChangeNotifier {
         } catch (_) {
           continue;
         }
-        // Hard cap so a huge gallery cannot exhaust memory with thumbnails.
-        if (images.length >= 2000) break;
       }
     }
     images.sort(

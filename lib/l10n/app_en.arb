@@ -3515,6 +3515,9 @@
       }
     }
   },
+  "fileManagerCollapseGroup": "Collapse folder",
+  "fileManagerExpandGroup": "Expand folder",
+  "fileManagerOpenFolder": "Open folder in explorer",
   "fileManagerMoreEntries": "and {count} more",
   "@fileManagerMoreEntries": {
     "placeholders": {

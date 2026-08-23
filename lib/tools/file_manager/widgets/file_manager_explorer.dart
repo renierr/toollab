@@ -372,6 +372,7 @@ class _CategoryView extends StatelessWidget {
                     child: FileManagerImageGrid(
                       entries: state.entries,
                       onOpen: onOpenImage,
+                      onOpenFolder: (path) => state.openLocal(path),
                     ),
                   ),
                   FileManagerCategory.apps => FileManagerAppsView(

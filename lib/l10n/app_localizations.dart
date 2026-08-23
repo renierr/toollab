@@ -11729,6 +11729,24 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 item} other{{count} items}}'**
   String fileManagerItemCount(int count);
 
+  /// No description provided for @fileManagerCollapseGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse folder'**
+  String get fileManagerCollapseGroup;
+
+  /// No description provided for @fileManagerExpandGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand folder'**
+  String get fileManagerExpandGroup;
+
+  /// No description provided for @fileManagerOpenFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open folder in explorer'**
+  String get fileManagerOpenFolder;
+
   /// No description provided for @fileManagerMoreEntries.
   ///
   /// In en, this message translates to:
