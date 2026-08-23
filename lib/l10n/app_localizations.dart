@@ -11591,6 +11591,72 @@ abstract class AppLocalizations {
   /// **'Recent'**
   String get fileManagerRecentLocations;
 
+  /// No description provided for @fileManagerCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Categories'**
+  String get fileManagerCategories;
+
+  /// No description provided for @fileManagerCategoryImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get fileManagerCategoryImages;
+
+  /// No description provided for @fileManagerCategoryApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps'**
+  String get fileManagerCategoryApps;
+
+  /// No description provided for @fileManagerCategorySystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System files'**
+  String get fileManagerCategorySystem;
+
+  /// No description provided for @fileManagerNoImages.
+  ///
+  /// In en, this message translates to:
+  /// **'No images found'**
+  String get fileManagerNoImages;
+
+  /// No description provided for @fileManagerNoApps.
+  ///
+  /// In en, this message translates to:
+  /// **'No apps found'**
+  String get fileManagerNoApps;
+
+  /// No description provided for @fileManagerNoSystemPaths.
+  ///
+  /// In en, this message translates to:
+  /// **'No system folders available'**
+  String get fileManagerNoSystemPaths;
+
+  /// No description provided for @fileManagerAppCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 app} other{{count} apps}}'**
+  String fileManagerAppCount(int count);
+
+  /// No description provided for @fileManagerStorageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {total} used'**
+  String fileManagerStorageUsed(String used, String total);
+
+  /// No description provided for @fileManagerStorageFree.
+  ///
+  /// In en, this message translates to:
+  /// **'{free} free'**
+  String fileManagerStorageFree(String free);
+
+  /// No description provided for @fileManagerOpenAppInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'App info'**
+  String get fileManagerOpenAppInfo;
+
   /// No description provided for @fileManagerFolderItems.
   ///
   /// In en, this message translates to:

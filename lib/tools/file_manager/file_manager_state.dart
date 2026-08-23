@@ -12,12 +12,14 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
 import 'package:tool_lab/tools/file_manager/archives/archive_handler.dart';
 import 'package:tool_lab/tools/file_manager/archives/zip_archive_handler.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_installed_apps.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_operation_worker.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
@@ -29,6 +31,8 @@ enum FileManagerOperation { copy, move, delete, compress, extract }
 enum FileManagerConflictResolution { overwrite, keepBoth }
 
 enum FileManagerSortField { name, modified, size }
+
+enum FileManagerCategory { none, images, apps, system }
 
 enum FileManagerOpenCategory {
   images,
@@ -101,6 +105,9 @@ class FileManagerState extends ChangeNotifier {
   int _metadataScan = 0;
   int _listing = 0;
   bool _isScanningMetadata = false;
+  FileManagerCategory _category = FileManagerCategory.none;
+  List<FileManagerAppInfo> _installedApps = [];
+  FileManagerStorageInfo? _storageInfo;
   static const List<ArchiveHandler> _archiveHandlers = [ZipArchiveHandler()];
 
   List<FileManagerEntry> get entries => _entries;
@@ -169,6 +176,156 @@ class FileManagerState extends ChangeNotifier {
   int get operationTotal => _operationTotal;
   FileManagerOperation? get operation => _operation;
   FileManagerSortField get sortField => _sortField;
+  FileManagerCategory get category => _category;
+  List<FileManagerAppInfo> get installedApps => _installedApps;
+  FileManagerStorageInfo? get storageInfo => _storageInfo;
+
+  /// The category views replace the folder listing; the underlying path stays
+  /// untouched, so closing a category restores it unchanged.
+  bool get isBrowsingCategory => _category != FileManagerCategory.none;
+
+  String categoryTitle(AppLocalizations l10n) => switch (_category) {
+    FileManagerCategory.images => l10n.fileManagerCategoryImages,
+    FileManagerCategory.apps => l10n.fileManagerCategoryApps,
+    FileManagerCategory.system => l10n.fileManagerCategorySystem,
+    FileManagerCategory.none => '',
+  };
+
+  Future<void> setCategory(FileManagerCategory category) async {
+    if (category == _category && category != FileManagerCategory.none) {
+      return;
+    }
+    clearSelection();
+    if (category == FileManagerCategory.none) return closeCategory();
+    _category = category;
+    await _loadActiveCategory();
+  }
+
+  /// Leaves the special view and reloads the folder that was open before.
+  Future<void> closeCategory() async {
+    if (!isBrowsingCategory) return;
+    _category = FileManagerCategory.none;
+    notifyListeners();
+    if (_locationType == FileManagerLocationType.local) {
+      return openLocal(_path);
+    }
+    return refresh();
+  }
+
+  Future<void> _loadActiveCategory() async {
+    switch (_category) {
+      case FileManagerCategory.images:
+        await _load(_loadImageEntries);
+      case FileManagerCategory.apps:
+        await _load(_loadInstalledApps);
+      case FileManagerCategory.system:
+        await _load(_loadSystemEntries);
+      case FileManagerCategory.none:
+        break;
+    }
+  }
+
+  List<String> _imageRoots() {
+    if (FileManagerStorageAccess.isAndroid && usesSharedStorage) {
+      final base = sharedStoragePath;
+      return [
+        'DCIM',
+        'Pictures',
+        'Download',
+      ].map((dir) => p.join(base, dir)).toList();
+    }
+    if (Platform.isWindows) {
+      final home = Platform.environment['USERPROFILE'];
+      if (home != null) return [p.join(home, 'Pictures')];
+    }
+    return const [];
+  }
+
+  static const _imageExtensions = {
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'webp',
+    'bmp',
+    'heic',
+  };
+
+  static bool _isImagePath(String path) => _imageExtensions.contains(
+    p.extension(path).replaceFirst('.', '').toLowerCase(),
+  );
+
+  Future<void> _loadImageEntries() async {
+    final images = <FileManagerEntry>[];
+    for (final root in _imageRoots()) {
+      final directory = Directory(root);
+      if (!await directory.exists()) continue;
+      await for (final entity in directory.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entity is! File || !_isImagePath(entity.path)) continue;
+        try {
+          final stat = await entity.stat();
+          images.add(
+            FileManagerEntry(
+              name: p.basename(entity.path),
+              path: entity.path,
+              isDirectory: false,
+              size: stat.size,
+              modified: stat.modified,
+            ),
+          );
+        } catch (_) {
+          continue;
+        }
+        // Hard cap so a huge gallery cannot exhaust memory with thumbnails.
+        if (images.length >= 2000) break;
+      }
+    }
+    images.sort(
+      (a, b) => (b.modified ?? DateTime.fromMillisecondsSinceEpoch(0))
+          .compareTo(a.modified ?? DateTime.fromMillisecondsSinceEpoch(0)),
+    );
+    _entries = images;
+  }
+
+  Future<void> _loadInstalledApps() async {
+    _installedApps = await FileManagerInstalledApps.list();
+    _storageInfo = await FileManagerInstalledApps.storageInfo();
+  }
+
+  List<String> get systemRoots {
+    if (Platform.isAndroid) {
+      return const ['/system', '/vendor', '/etc', '/data', '/cache'];
+    }
+    if (Platform.isWindows) {
+      final windowsDir = Platform.environment['SystemRoot'] ?? r'C:\Windows';
+      return [
+        windowsDir,
+        r'C:\Program Files',
+        r'C:\Program Files (x86)',
+        r'C:\ProgramData',
+      ];
+    }
+    return const [];
+  }
+
+  Future<void> _loadSystemEntries() async {
+    final entries = <FileManagerEntry>[];
+    for (final root in systemRoots) {
+      final stat = await FileSystemEntity.type(root);
+      if (stat == FileSystemEntityType.notFound) continue;
+      entries.add(
+        FileManagerEntry(
+          name: p.basename(root) == '' ? root : p.basename(root),
+          path: root,
+          isDirectory: true,
+        ),
+      );
+    }
+    _entries = entries;
+  }
 
   /// The folder-local sort chosen via the explorer toggle, or null once the
   /// folder changed.
@@ -423,6 +580,7 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> openLocal(String directory) async {
+    _category = FileManagerCategory.none;
     _archivePath = null;
     _archiveDirectory = '';
     _locationType = FileManagerLocationType.local;
@@ -573,6 +731,7 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> openConnection(FileManagerConnection profile) async {
+    _category = FileManagerCategory.none;
     await _disconnectRemote();
     final password = await _secureStorage.read(key: _passwordKey(profile.id));
     await _load(() async {
@@ -1315,6 +1474,7 @@ class FileManagerState extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
+    if (isBrowsingCategory) return _loadActiveCategory();
     if (isArchiveBrowsing) return _loadArchiveEntries();
     if (_locationType == FileManagerLocationType.local) return openLocal(_path);
     await _load(() async {
@@ -1365,6 +1525,9 @@ class FileManagerState extends ChangeNotifier {
   /// the listeners are being torn down; `initialize()` rebuilds all of it.
   Future<void> releaseOnExit() async {
     clearSortOverride();
+    _category = FileManagerCategory.none;
+    _installedApps = [];
+    _storageInfo = null;
     _clearEntryLoaders();
     _listing++;
     _isLoading = false;

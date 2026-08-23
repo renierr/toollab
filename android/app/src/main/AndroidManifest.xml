@@ -693,5 +693,10 @@
             <data android:mimeType="text/plain"/>
         </intent>
         <package android:name="com.google.android.aicore" />
+        <!-- File Manager app category: lists launchable apps without QUERY_ALL_PACKAGES. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
     </queries>
 </manifest>

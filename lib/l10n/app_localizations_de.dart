@@ -6445,6 +6445,51 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fileManagerRecentLocations => 'Zuletzt';
 
   @override
+  String get fileManagerCategories => 'Kategorien';
+
+  @override
+  String get fileManagerCategoryImages => 'Bilder';
+
+  @override
+  String get fileManagerCategoryApps => 'Apps';
+
+  @override
+  String get fileManagerCategorySystem => 'Systemdateien';
+
+  @override
+  String get fileManagerNoImages => 'Keine Bilder gefunden';
+
+  @override
+  String get fileManagerNoApps => 'Keine Apps gefunden';
+
+  @override
+  String get fileManagerNoSystemPaths => 'Keine Systemordner verfügbar';
+
+  @override
+  String fileManagerAppCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Apps',
+      one: '1 App',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fileManagerStorageUsed(String used, String total) {
+    return '$used von $total belegt';
+  }
+
+  @override
+  String fileManagerStorageFree(String free) {
+    return '$free frei';
+  }
+
+  @override
+  String get fileManagerOpenAppInfo => 'App-Info';
+
+  @override
   String get fileManagerFolderItems => 'Elemente';
 
   @override

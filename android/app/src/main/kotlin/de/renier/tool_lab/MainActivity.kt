@@ -193,6 +193,8 @@ open class MainActivity : FlutterFragmentActivity() {
 
         HealthConnectSettingsHelper(this).registerChannel(messenger)
 
+        InstalledAppsHelper.register(this, messenger)
+
         MethodChannel(messenger, FILE_PICKER_CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "pickFiles" -> {

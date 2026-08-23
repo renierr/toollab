@@ -7,10 +7,13 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_apps_view.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_breadcrumbs.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_icon.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_file_name.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_file_drop_zone.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_image_grid.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_system_view.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
 
 class FileManagerExplorer extends StatelessWidget {
@@ -38,6 +41,7 @@ class FileManagerExplorer extends StatelessWidget {
   final Future<void> Function(List<String> paths, bool chooseAction)
   onDropFiles;
   final ScrollController scrollController;
+  final VoidCallback onCloseCategory;
   const FileManagerExplorer({
     super.key,
     required this.state,
@@ -63,11 +67,21 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onRefresh,
     required this.onDropFiles,
     required this.scrollController,
+    required this.onCloseCategory,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    if (state.isBrowsingCategory) {
+      return _CategoryView(
+        state: state,
+        onClose: onCloseCategory,
+        onRefresh: onRefresh,
+        onOpenImage: onOpen,
+        onOpenSystemPath: onOpenPath,
+      );
+    }
     if (state.isLoading && state.entries.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -294,6 +308,89 @@ class FileManagerExplorer extends StatelessWidget {
       ],
     );
   }
+}
+
+class _CategoryView extends StatelessWidget {
+  final FileManagerState state;
+  final VoidCallback onClose;
+  final AsyncCallback onRefresh;
+  final ValueChanged<FileManagerEntry> onOpenImage;
+  final ValueChanged<String> onOpenSystemPath;
+
+  const _CategoryView({
+    required this.state,
+    required this.onClose,
+    required this.onRefresh,
+    required this.onOpenImage,
+    required this.onOpenSystemPath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      children: [
+        Material(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: l10n.commonBack,
+                onPressed: state.isLoading ? null : onClose,
+                icon: const Icon(Icons.arrow_back),
+              ),
+              Expanded(
+                child: Text(
+                  state.categoryTitle(l10n),
+                  style: Theme.of(context).textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.fileManagerRefresh,
+                onPressed: state.isLoading ? null : () => onRefresh(),
+                icon: const Icon(Icons.refresh),
+              ),
+            ],
+          ),
+        ),
+        if (state.error != null)
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              state.error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        Expanded(
+          child: state.isLoading && _bodyEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : switch (state.category) {
+                  FileManagerCategory.images => RefreshIndicator(
+                    onRefresh: onRefresh,
+                    child: FileManagerImageGrid(
+                      entries: state.entries,
+                      onOpen: onOpenImage,
+                    ),
+                  ),
+                  FileManagerCategory.apps => FileManagerAppsView(
+                    apps: state.installedApps,
+                    storageInfo: state.storageInfo,
+                  ),
+                  FileManagerCategory.system => FileManagerSystemView(
+                    entries: state.entries,
+                    onOpen: (entry) => onOpenSystemPath(entry.path),
+                  ),
+                  FileManagerCategory.none => const SizedBox.shrink(),
+                },
+        ),
+      ],
+    );
+  }
+
+  bool get _bodyEmpty =>
+      state.category != FileManagerCategory.apps || state.installedApps.isEmpty;
 }
 
 class _OperationProgress extends StatelessWidget {

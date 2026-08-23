@@ -3440,6 +3440,41 @@
   "fileManagerKeepBoth": "Keep both",
   "fileManagerOverwrite": "Overwrite",
   "fileManagerRecentLocations": "Recent",
+  "fileManagerCategories": "Categories",
+  "fileManagerCategoryImages": "Images",
+  "fileManagerCategoryApps": "Apps",
+  "fileManagerCategorySystem": "System files",
+  "fileManagerNoImages": "No images found",
+  "fileManagerNoApps": "No apps found",
+  "fileManagerNoSystemPaths": "No system folders available",
+  "fileManagerAppCount": "{count, plural, =1{1 app} other{{count} apps}}",
+  "@fileManagerAppCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileManagerStorageUsed": "{used} of {total} used",
+  "@fileManagerStorageUsed": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "fileManagerStorageFree": "{free} free",
+  "@fileManagerStorageFree": {
+    "placeholders": {
+      "free": {
+        "type": "String"
+      }
+    }
+  },
+  "fileManagerOpenAppInfo": "App info",
   "fileManagerFolderItems": "Items",
   "fileManagerFolderFileCount": "{count} files",
   "@fileManagerFolderFileCount": {

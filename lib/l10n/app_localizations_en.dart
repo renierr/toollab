@@ -6405,6 +6405,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fileManagerRecentLocations => 'Recent';
 
   @override
+  String get fileManagerCategories => 'Categories';
+
+  @override
+  String get fileManagerCategoryImages => 'Images';
+
+  @override
+  String get fileManagerCategoryApps => 'Apps';
+
+  @override
+  String get fileManagerCategorySystem => 'System files';
+
+  @override
+  String get fileManagerNoImages => 'No images found';
+
+  @override
+  String get fileManagerNoApps => 'No apps found';
+
+  @override
+  String get fileManagerNoSystemPaths => 'No system folders available';
+
+  @override
+  String fileManagerAppCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count apps',
+      one: '1 app',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String fileManagerStorageUsed(String used, String total) {
+    return '$used of $total used';
+  }
+
+  @override
+  String fileManagerStorageFree(String free) {
+    return '$free free';
+  }
+
+  @override
+  String get fileManagerOpenAppInfo => 'App info';
+
+  @override
   String get fileManagerFolderItems => 'Items';
 
   @override

@@ -3,6 +3,7 @@ import 'package:path/path.dart' as p;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_category_picker.dart';
 
 class FileManagerLocations extends StatelessWidget {
   final FileManagerState state;
@@ -11,6 +12,7 @@ class FileManagerLocations extends StatelessWidget {
   final ValueChanged<FileManagerConnection> onOpenConnection;
   final ValueChanged<FileManagerConnection> onRemoveConnection;
   final VoidCallback onRequestStorageAccess;
+  final ValueChanged<FileManagerCategory> onSelectCategory;
 
   const FileManagerLocations({
     super.key,
@@ -20,6 +22,7 @@ class FileManagerLocations extends StatelessWidget {
     required this.onOpenConnection,
     required this.onRemoveConnection,
     required this.onRequestStorageAccess,
+    required this.onSelectCategory,
   });
 
   @override
@@ -85,6 +88,12 @@ class FileManagerLocations extends StatelessWidget {
         onOpenPath: onOpenPath,
       ),
     ],
+    const Divider(),
+    FileManagerCategoryPicker(
+      state: state,
+      onSelected: onSelectCategory,
+      narrow: false,
+    ),
     ...state.favoritePaths.map(
       (path) => _LocationTile(
         icon: Icons.star_outline,
@@ -137,6 +146,11 @@ class FileManagerLocations extends StatelessWidget {
         pathLabel: _favoriteLabel,
         onOpenPath: onOpenPath,
       ),
+    FileManagerCategoryPicker(
+      state: state,
+      onSelected: onSelectCategory,
+      narrow: true,
+    ),
     ...state.favoritePaths.map(
       (path) => _LocationChip(
         icon: Icons.star_outline,

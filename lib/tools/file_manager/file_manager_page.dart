@@ -479,9 +479,14 @@ class _FileManagerPageState extends State<FileManagerPage>
     }
     if (_pendingScrollOffset != null) _scheduleScrollRestore(state);
     return PopScope(
-      canPop: !state.canNavigateBack,
+      canPop: !state.canNavigateBack && !state.isBrowsingCategory,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && state.canNavigateBack) _goUp();
+        if (didPop) return;
+        if (state.isBrowsingCategory) {
+          state.closeCategory();
+        } else if (state.canNavigateBack) {
+          _goUp();
+        }
       },
       child: ToolLayout(
         title: FileManagerTool.config.localizedName(l10n),
@@ -505,7 +510,8 @@ class _FileManagerPageState extends State<FileManagerPage>
           ),
           IconButton(
             tooltip: l10n.fileManagerNewFolder,
-            onPressed: state.isLoading || state.isReadOnly
+            onPressed:
+                state.isLoading || state.isReadOnly || state.isBrowsingCategory
                 ? null
                 : _createFolder,
             icon: const Icon(Icons.create_new_folder_outlined),
@@ -516,6 +522,7 @@ class _FileManagerPageState extends State<FileManagerPage>
               onPressed:
                   state.isLoading ||
                       state.isReadOnly ||
+                      state.isBrowsingCategory ||
                       state.isRemote &&
                           state.connection?.protocol == FileManagerProtocol.ftp
                   ? null
@@ -542,6 +549,7 @@ class _FileManagerPageState extends State<FileManagerPage>
               onOpenConnection: state.openConnection,
               onRemoveConnection: _removeConnection,
               onRequestStorageAccess: _requestStorageAccess,
+              onSelectCategory: state.setCategory,
             );
             final explorer = NotificationListener<UserScrollNotification>(
               onNotification: (_) {
@@ -571,6 +579,7 @@ class _FileManagerPageState extends State<FileManagerPage>
                 onExtract: _extractArchive,
                 onRefresh: state.refresh,
                 onDropFiles: _dropFiles,
+                onCloseCategory: state.closeCategory,
                 scrollController: _scrollController,
               ),
             );
