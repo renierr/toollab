@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 
@@ -21,18 +22,115 @@ class FileManagerImageGrid extends StatelessWidget {
         child: Text(AppLocalizations.of(context).fileManagerNoImages),
       );
     }
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
+    final groups = <String, List<FileManagerEntry>>{};
+    for (final entry in entries) {
+      groups.putIfAbsent(p.dirname(entry.path), () => []).add(entry);
+    }
+    final prefix = _commonPrefix(groups.keys);
+    return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 160,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 1,
+      slivers: [
+        for (final group in groups.entries) ...[
+          SliverToBoxAdapter(
+            child: _GroupHeader(
+              folder: _relativeFolder(group.key, prefix),
+              count: group.value.length,
+            ),
+          ),
+          SliverGrid(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 160,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 1,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) =>
+                  _ImageTile(entry: group.value[index], onOpen: onOpen),
+              childCount: group.value.length,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _commonPrefix(Iterable<String> directories) {
+    if (directories.isEmpty) return '';
+    var segments = directories.first
+        .replaceAll('\\', '/')
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .toList();
+    for (final directory in directories.skip(1)) {
+      final parts = directory
+          .replaceAll('\\', '/')
+          .split('/')
+          .where((part) => part.isNotEmpty)
+          .toList();
+      var shared = 0;
+      while (shared < segments.length &&
+          shared < parts.length &&
+          segments[shared].toLowerCase() == parts[shared].toLowerCase()) {
+        shared++;
+      }
+      segments = segments.sublist(0, shared);
+      if (segments.isEmpty) break;
+    }
+    return segments.join('/');
+  }
+
+  /// Strips the prefix every group shares so headers show e.g.
+  /// "DCIM/Camera" instead of the full storage path.
+  String _relativeFolder(String directory, String prefix) {
+    var normalized = directory.replaceAll('\\', '/');
+    if (prefix.isNotEmpty &&
+        normalized.toLowerCase().startsWith(prefix.toLowerCase())) {
+      normalized = normalized.substring(prefix.length);
+    }
+    final relative = normalized
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .join('/');
+    return relative.isEmpty ? p.basename(directory) : relative;
+  }
+}
+
+class _GroupHeader extends StatelessWidget {
+  final String folder;
+  final int count;
+
+  const _GroupHeader({required this.folder, required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
+      child: Row(
+        children: [
+          Icon(
+            Icons.folder_outlined,
+            size: 16,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              folder,
+              style: Theme.of(context).textTheme.titleSmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(
+            l10n.fileManagerItemCount(count),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
-      itemCount: entries.length,
-      itemBuilder: (context, index) =>
-          _ImageTile(entry: entries[index], onOpen: onOpen),
     );
   }
 }
