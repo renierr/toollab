@@ -69,6 +69,7 @@ class FileManagerState extends ChangeNotifier {
   bool _hasAllFilesAccess = true;
   String? _error;
   bool _isLoading = false;
+  bool _disposed = false;
   FileManagerLocationType _locationType = FileManagerLocationType.local;
   FileManagerConnection? _connection;
   FTPConnect? _ftp;
@@ -257,36 +258,59 @@ class FileManagerState extends ChangeNotifier {
 
   Future<void> _loadImageEntries() async {
     final images = <FileManagerEntry>[];
-    for (final root in _imageRoots()) {
-      final directory = Directory(root);
-      if (!await directory.exists()) continue;
-      await for (final entity in directory.list(
-        recursive: true,
-        followLinks: false,
-      )) {
-        if (entity is! File || !_isImagePath(entity.path)) continue;
-        try {
-          final stat = await entity.stat();
-          images.add(
-            FileManagerEntry(
-              name: p.basename(entity.path),
-              path: entity.path,
-              isDirectory: false,
-              size: stat.size,
-              modified: stat.modified,
-            ),
-          );
-        } catch (_) {
-          continue;
+    final pending = [for (final root in _imageRoots()) Directory(root)];
+    var lastNotify = DateTime.now();
+    while (pending.isNotEmpty) {
+      final directory = pending.removeLast();
+      List<FileSystemEntity> children;
+      try {
+        children = await directory.list(followLinks: false).toList();
+      } catch (_) {
+        continue;
+      }
+      for (final entity in children) {
+        if (entity is Directory) {
+          if (_isHiddenEntry(p.basename(entity.path))) continue;
+          try {
+            if (await File(p.join(entity.path, '.nomedia')).exists()) continue;
+          } catch (_) {
+            continue;
+          }
+          pending.add(entity);
+        } else if (entity is File && _isImagePath(entity.path)) {
+          try {
+            final stat = await entity.stat();
+            images.add(
+              FileManagerEntry(
+                name: p.basename(entity.path),
+                path: entity.path,
+                isDirectory: false,
+                size: stat.size,
+                modified: stat.modified,
+              ),
+            );
+          } catch (_) {
+            continue;
+          }
         }
       }
+      // Keep sorted so progressive updates show newest first.
+      images.sort(
+        (a, b) => (b.modified ?? DateTime.fromMillisecondsSinceEpoch(0))
+            .compareTo(a.modified ?? DateTime.fromMillisecondsSinceEpoch(0)),
+      );
+      _entries = List.of(images);
+      final now = DateTime.now();
+      if (now.difference(lastNotify).inMilliseconds >= 250 && !_disposed) {
+        notifyListeners();
+        lastNotify = now;
+      }
     }
-    images.sort(
-      (a, b) => (b.modified ?? DateTime.fromMillisecondsSinceEpoch(0))
-          .compareTo(a.modified ?? DateTime.fromMillisecondsSinceEpoch(0)),
-    );
     _entries = images;
   }
+
+  /// Android hides dot-folders (e.g. .thumbnails) from media views too.
+  static bool _isHiddenEntry(String name) => name.startsWith('.');
 
   Future<void> _loadInstalledApps() async {
     _installedApps = await FileManagerInstalledApps.list();
@@ -1696,6 +1720,7 @@ class FileManagerState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _clearEntryLoaders();
     _emptyMetadata.dispose();
     _emptyChildCount.dispose();

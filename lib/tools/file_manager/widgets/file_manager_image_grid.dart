@@ -209,15 +209,26 @@ class _ImageTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            const ColoredBox(color: Color(0x10888888)),
+            // Decode at tile width only; height stays proportional so
+            // BoxFit.cover crops correctly instead of distorting.
             Image.file(
               File(entry.path),
               fit: BoxFit.cover,
               filterQuality: FilterQuality.low,
-              cacheWidth: 320,
-              cacheHeight: 320,
+              cacheWidth: (160 * MediaQuery.devicePixelRatioOf(context))
+                  .round(),
               errorBuilder: (_, _, _) =>
                   const Icon(Icons.broken_image_outlined),
               gaplessPlayback: true,
+              frameBuilder: (context, child, frame, wasSyncLoaded) {
+                if (wasSyncLoaded) return child;
+                return AnimatedOpacity(
+                  opacity: frame == null ? 0 : 1,
+                  duration: const Duration(milliseconds: 150),
+                  child: child,
+                );
+              },
             ),
             Positioned(
               left: 0,
