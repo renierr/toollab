@@ -31,6 +31,7 @@ class ToneGenerator {
   AudioSource? _noiseSource;
 
   Timer? _rebuildTimer;
+  Timer? _notifyDebounce;
   bool _isPlaying = false;
 
   /// Guards against a late-arriving async build overwriting a newer request.
@@ -91,6 +92,47 @@ class ToneGenerator {
   double get _toneVolume => _volume * (1 - _noiseMix);
   double get _noiseVolume => _volume * _noiseMix;
 
+  /// What is playing, as the media card's main line. Kept language-neutral
+  /// (Hz + waveform name), matching the SMTC title format.
+  String get mediaTitle =>
+      '${_frequency.round()} Hz '
+      '${_waveform.name[0].toUpperCase()}${_waveform.name.substring(1)}';
+
+  String get _detailText => _noiseMix > 0
+      ? '$notificationText (+${(_noiseMix * 100).round()}% noise)'
+      : notificationText;
+
+  /// Re-pushes the current frequency/waveform/noise state to the notification.
+  void refreshNotification() {
+    final ForegroundRuntimeLease? lease = _fgLease;
+    if (!_isPlaying || lease == null) return;
+    unawaited(
+      lease.update(
+        title: notificationTitle,
+        text: _detailText,
+        actions: const ['stop'],
+        // State text rides in the artist line because Android 13+ media cards
+        // hide content/sub text.
+        media: MediaNotificationData(
+          title: mediaTitle,
+          artist: _detailText,
+          positionMs: 0,
+          playing: true,
+        ),
+      ),
+    );
+  }
+
+  /// Debounced refresh so dragging the frequency slider does not thrash the
+  /// notification channel.
+  void _scheduleNotificationRefresh() {
+    if (!_isPlaying) return;
+    _notifyDebounce?.cancel();
+    _notifyDebounce = Timer(const Duration(milliseconds: 250), () {
+      refreshNotification();
+    });
+  }
+
   double _speedFor(double hz) =>
       (hz / ToneLoopBuilder.baseFrequency).clamp(_minSpeed, _maxSpeed);
 
@@ -104,10 +146,8 @@ class ToneGenerator {
     await _spawnTone(generation);
     if (_noiseMix > 0) await _spawnNoise(generation);
 
-    _updateMediaControls(
-      '${_frequency.round()} Hz ${_waveform.name}',
-      MediaPlaybackStatus.playing,
-    );
+    _updateMediaControls(mediaTitle, MediaPlaybackStatus.playing);
+    refreshNotification();
   }
 
   Future<void> _spawnTone(int generation) async {
@@ -188,12 +228,14 @@ class ToneGenerator {
     if (handle != null) {
       SoLoud.instance.setRelativePlaySpeed(handle, _speedFor(_frequency));
     }
+    _scheduleNotificationRefresh();
   }
 
   void setWaveform(ToneWaveform w) {
     if (_waveform == w) return;
     _waveform = w;
     _scheduleRebuild();
+    _scheduleNotificationRefresh();
   }
 
   void setPhaseOffset(double radians) {
@@ -208,6 +250,7 @@ class ToneGenerator {
     if (_isPlaying && _noiseMix > 0 && _noiseSource == null) {
       unawaited(_spawnNoise(_generation));
     }
+    _scheduleNotificationRefresh();
   }
 
   void setVolume(double value) {
@@ -227,6 +270,8 @@ class ToneGenerator {
     _generation++;
     _rebuildTimer?.cancel();
     _rebuildTimer = null;
+    _notifyDebounce?.cancel();
+    _notifyDebounce = null;
 
     await _stopSource(_toneHandle, _toneSource);
     _toneHandle = null;
@@ -261,10 +306,11 @@ class ToneGenerator {
         title: notificationTitle,
         text: notificationText,
         actions: const ['stop'],
-        // Media treatment without a seek bar: the shade lists it as active
-        // audio playback.
+        // Media treatment without a seek bar; the state text rides in the
+        // artist line because Android 13+ media cards hide content/sub text.
         media: MediaNotificationData(
           title: notificationTitle,
+          artist: notificationText,
           positionMs: 0,
           playing: true,
         ),
@@ -297,4 +343,6 @@ class ToneGenerator {
     _mediaButtonSub?.cancel();
     _mediaButtonSub = null;
   }
+
+  // _notifyDebounce is cancelled in [stop], which dispose awaits.
 }

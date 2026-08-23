@@ -197,9 +197,11 @@ class FocusNoisePlayer {
         text: notificationText,
         actions: const ['pause', 'stop'],
         // Media treatment without a seek bar: the shade lists it as active
-        // audio playback.
+        // audio playback. State text rides in the artist line because Android
+        // 13+ system-drawn media cards hide content/sub text.
         media: MediaNotificationData(
           title: _currentSound?.name ?? notificationTitle,
+          artist: notificationText,
           positionMs: 0,
           playing: true,
         ),
@@ -226,6 +228,7 @@ class FocusNoisePlayer {
         actions: _isPaused ? const ['play', 'stop'] : const ['pause', 'stop'],
         media: MediaNotificationData(
           title: _currentSound?.name ?? notificationTitle,
+          artist: notificationText,
           positionMs: 0,
           playing: _isPlaying && !_isPaused,
         ),
