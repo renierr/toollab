@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'responsive_alert_dialog.dart';
 
 class ToolChooserDialog extends StatefulWidget {
@@ -65,6 +67,7 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: InkWell(
         onTap: () {
+          context.read<AppState>().recordToolUsage(tool.id);
           Navigator.of(context).pop((tool, _rememberChoice));
         },
         borderRadius: BorderRadius.circular(12),
@@ -128,9 +131,16 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    final internalTools = widget.tools
-        .where((t) => t.id != 'system-share' && t.id != 'system-default')
-        .toList();
+    final appState = context.read<AppState>();
+    final internalTools =
+        widget.tools
+            .where((t) => t.id != 'system-share' && t.id != 'system-default')
+            .toList()
+          ..sort(
+            (a, b) => appState
+                .getLastUsed(b.id)
+                .compareTo(appState.getLastUsed(a.id)),
+          );
     final systemTools = widget.tools
         .where((t) => t.id == 'system-share' || t.id == 'system-default')
         .toList();
