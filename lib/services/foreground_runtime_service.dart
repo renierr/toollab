@@ -90,10 +90,20 @@ class ForegroundRuntimeLease {
     required bool playing,
   }) async {
     if (_released) return;
-    await ForegroundRuntimeService.updatePlayback(
+    await ForegroundRuntimeService._updatePlayback(
+      _id,
       positionMs: positionMs,
       playing: playing,
     );
+  }
+
+  void addActionListener(void Function(String action) listener) {
+    if (_released) return;
+    ForegroundRuntimeService._addActionListener(_id, listener);
+  }
+
+  void removeActionListener() {
+    ForegroundRuntimeService._removeActionListener(_id);
   }
 }
 
@@ -107,19 +117,23 @@ class ForegroundRuntimeService {
   static final Map<int, _LeaseSnapshot> _activeLeases = <int, _LeaseSnapshot>{};
   static int _nextLeaseId = 1;
 
-  static final List<void Function(String action)> _actionListeners = [];
+  static final Map<int, void Function(String action)> _actionListeners =
+      <int, void Function(String action)>{};
 
   static bool get isActive => _activeLeases.isNotEmpty;
 
-  static void addActionListener(void Function(String action) listener) {
+  static void _addActionListener(
+    int leaseId,
+    void Function(String action) listener,
+  ) {
     if (_actionListeners.isEmpty) {
       _channel.setMethodCallHandler(_handleMethodCall);
     }
-    _actionListeners.add(listener);
+    _actionListeners[leaseId] = listener;
   }
 
-  static void removeActionListener(void Function(String action) listener) {
-    _actionListeners.remove(listener);
+  static void _removeActionListener(int leaseId) {
+    _actionListeners.remove(leaseId);
     if (_actionListeners.isEmpty) {
       _channel.setMethodCallHandler(null);
     }
@@ -128,9 +142,9 @@ class ForegroundRuntimeService {
   static Future<void> _handleMethodCall(MethodCall call) async {
     if (call.method == 'onAction') {
       final action = call.arguments as String;
-      for (final listener in List.of(_actionListeners)) {
-        listener(action);
-      }
+      final leaseId = _activeLeases.keys.lastOrNull;
+      final listener = leaseId == null ? null : _actionListeners[leaseId];
+      listener?.call(action);
     }
   }
 
@@ -168,18 +182,24 @@ class ForegroundRuntimeService {
       progress: progress,
       progressMax: progressMax,
     );
-    _activeLeases[leaseId] = snapshot;
+    _activeLeases
+      ..remove(leaseId)
+      ..[leaseId] = snapshot;
     await _invoke(wasInactive ? 'start' : 'update', _snapshotArgs(snapshot));
     return ForegroundRuntimeLease._(leaseId);
   }
 
   /// Position/state-only refresh of the active media session (no notification
   /// rebuild). No-op when no lease carries a [MediaNotificationData].
-  static Future<void> updatePlayback({
+  static Future<void> _updatePlayback(
+    int leaseId, {
     required int positionMs,
     required bool playing,
   }) async {
-    if (!_activeLeases.values.any((s) => s.media != null)) return;
+    if (_activeLeases.keys.lastOrNull != leaseId ||
+        _activeLeases[leaseId]?.media == null) {
+      return;
+    }
     await _invoke('playbackState', {
       'positionMs': positionMs,
       'playing': playing,
@@ -188,6 +208,8 @@ class ForegroundRuntimeService {
 
   static Future<void> releaseAll() async {
     _activeLeases.clear();
+    _actionListeners.clear();
+    _channel.setMethodCallHandler(null);
     await _invoke('stop');
   }
 
@@ -221,13 +243,17 @@ class ForegroundRuntimeService {
       progress: progress,
       progressMax: progressMax,
     );
-    _activeLeases[leaseId] = snapshot;
+    // A lease that refreshes its notification becomes the visible owner.
+    _activeLeases
+      ..remove(leaseId)
+      ..[leaseId] = snapshot;
     await _invoke('update', _snapshotArgs(snapshot));
   }
 
   static Future<void> _releaseLease(int leaseId) async {
     if (!_activeLeases.containsKey(leaseId)) return;
     _activeLeases.remove(leaseId);
+    _removeActionListener(leaseId);
 
     if (_activeLeases.isEmpty) {
       await _invoke('stop');

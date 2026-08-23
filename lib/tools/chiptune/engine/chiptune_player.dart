@@ -975,16 +975,16 @@ class ChiptunePlayer {
         actions: _notificationActions(playing: true),
         media: _mediaData(playing: true),
       );
-      ForegroundRuntimeService.addActionListener(_handleNotificationAction);
+      _foregroundRuntimeLease!.addActionListener(_handleNotificationAction);
     }
   }
 
   void _releasePlaybackRuntimeLocks() {
     if (_foregroundRuntimeLease != null) {
-      ForegroundRuntimeService.removeActionListener(_handleNotificationAction);
       final foregroundLease = _foregroundRuntimeLease;
       _foregroundRuntimeLease = null;
       if (foregroundLease != null) {
+        foregroundLease.removeActionListener();
         unawaited(foregroundLease.release());
       }
     }

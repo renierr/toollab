@@ -119,6 +119,10 @@ class FocusNoisePlayer {
     if (handle == null || !_isPlaying || _isPaused) return;
     SoLoud.instance.setPause(handle, true);
     _isPaused = true;
+    _updateMediaControls(
+      _currentSound?.name ?? notificationTitle,
+      MediaPlaybackStatus.paused,
+    );
     _refreshNotification();
     onExternalStateChange?.call();
   }
@@ -128,6 +132,10 @@ class FocusNoisePlayer {
     if (handle == null || !_isPlaying || !_isPaused) return;
     SoLoud.instance.setPause(handle, false);
     _isPaused = false;
+    _updateMediaControls(
+      _currentSound?.name ?? notificationTitle,
+      MediaPlaybackStatus.playing,
+    );
     _refreshNotification();
     onExternalStateChange?.call();
   }
@@ -206,7 +214,7 @@ class FocusNoisePlayer {
           playing: true,
         ),
       );
-      ForegroundRuntimeService.addActionListener(_handleNotificationAction);
+      _foregroundRuntimeLease!.addActionListener(_handleNotificationAction);
     }
   }
 
@@ -238,10 +246,12 @@ class FocusNoisePlayer {
 
   void _releaseLocks() {
     if (_foregroundRuntimeLease != null) {
-      ForegroundRuntimeService.removeActionListener(_handleNotificationAction);
       final ForegroundRuntimeLease? lease = _foregroundRuntimeLease;
       _foregroundRuntimeLease = null;
-      if (lease != null) unawaited(lease.release());
+      if (lease != null) {
+        lease.removeActionListener();
+        unawaited(lease.release());
+      }
     }
     final WakeLockLease? wakeLock = _partialWakeLock;
     _partialWakeLock = null;

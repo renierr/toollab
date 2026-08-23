@@ -440,6 +440,11 @@ class TreadmillControlState extends ChangeNotifier {
       'sync_enabled',
     );
     if (syncEnabled != 'true') return null;
+    final toolSyncEnabled = await DatabaseService.instance.getSetting(
+      TreadmillControlTool.config.id,
+      DatabaseService.toolSyncEnabledKey,
+    );
+    if (!DatabaseService.isToolSyncEnabled(toolSyncEnabled)) return null;
     final serverUrl = await DatabaseService.instance.getSetting(
       '_app',
       'sync_server_url',
@@ -1404,6 +1409,7 @@ class TreadmillControlState extends ChangeNotifier {
     dataPoints.clear();
     discoveredTreadmills.clear();
     discoveredHrms.clear();
+    _autoConnectTried.clear();
     isScanning = false;
     hrmHistory.clear();
     speedControlSupported = false;

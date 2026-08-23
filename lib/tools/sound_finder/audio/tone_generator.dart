@@ -315,16 +315,18 @@ class ToneGenerator {
           playing: true,
         ),
       );
-      ForegroundRuntimeService.addActionListener(_handleNotificationAction);
+      _fgLease!.addActionListener(_handleNotificationAction);
     }
   }
 
   void _releaseLocks() {
     if (_fgLease != null) {
-      ForegroundRuntimeService.removeActionListener(_handleNotificationAction);
       final ForegroundRuntimeLease? lease = _fgLease;
       _fgLease = null;
-      if (lease != null) unawaited(lease.release());
+      if (lease != null) {
+        lease.removeActionListener();
+        unawaited(lease.release());
+      }
     }
     final WakeLockLease? wakeLock = _wakeLock;
     _wakeLock = null;

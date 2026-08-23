@@ -99,7 +99,7 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
       ).showSnackBar(SnackBar(content: Text(l10n.textEditorClipboardEmpty)));
       return;
     }
-    _state.startBlank(name: 'pasted.txt', content: text);
+    _state.startBlank(name: 'pasted.txt', content: text, dirty: true);
   }
 
   void _toggleFind() {

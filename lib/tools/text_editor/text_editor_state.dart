@@ -292,7 +292,11 @@ class TextEditorState extends ChangeNotifier {
   }
 
   /// Starts an unsaved document; saving prompts for a location first.
-  void startBlank({String name = 'untitled.txt', String content = ''}) {
+  void startBlank({
+    String name = 'untitled.txt',
+    String content = '',
+    bool dirty = false,
+  }) {
     _filePath = null;
     _fileName = name;
     _origin = null;
@@ -303,7 +307,7 @@ class TextEditorState extends ChangeNotifier {
     _suppressDirty = false;
     _cleanSnapshot = controller.text;
     findController.close();
-    _dirty = false;
+    _dirty = dirty;
     notifyListeners();
   }
 

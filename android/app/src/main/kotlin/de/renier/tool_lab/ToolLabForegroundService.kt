@@ -335,6 +335,7 @@ class ToolLabForegroundService : Service() {
                 .setShowWhen(false)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
         } else {
+            releaseSession()
             builder.setContentText(lastText)
 
             val chronoSince = lastChronometerSinceMs

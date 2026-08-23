@@ -66,6 +66,7 @@ class HealthBackgroundSync {
   /// the gate is closed, which is not a failure.
   static Future<String?> _syncBackend() async {
     final settings = await SettingsService.init();
+    if (!settings.getSyncEnabled()) return null;
     final url = settings.getSyncServerUrl();
     if (url.isEmpty) return null;
     final enabled = await DatabaseService.instance.getSetting(
