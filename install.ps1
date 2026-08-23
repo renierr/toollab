@@ -92,53 +92,62 @@ function Install-Files {
   Write-Ok "Files copied ($((Get-ChildItem $InstallDir -Recurse -File).Count) files)"
 }
 
+function Set-RegValues {
+  param(
+    [Parameter(Mandatory)] [string] $Path,
+    [Parameter(Mandatory)] [hashtable] $Values
+  )
+  $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($Path)
+  try {
+    foreach ($entry in $Values.GetEnumerator()) {
+      if ($null -eq $entry.Value) { continue }
+      # .NET API uses an empty-string name for the key's (default) value
+      $name = if ($entry.Key -eq '(default)') { '' } else { $entry.Key }
+      $key.SetValue($name, $entry.Value.Value, $entry.Value.Kind)
+    }
+  } finally {
+    $key.Close()
+  }
+}
+
 function Register-FileAssociations {
   $exePath = Join-Path $InstallDir $ExeName
+  $sz = [Microsoft.Win32.RegistryValueKind]::String
   foreach ($ft in $FileTypes) {
     $ext = $ft.Extension
     $progId = $ft.ProgId
     $desc = $ft.Description
-    # Extension -> ProgId
-    $extKey = "HKCU:\Software\Classes\$ext"
-    New-Item -Path $extKey -Force | Out-Null
-    Set-ItemProperty -Path $extKey -Name '(default)' -Value $progId -Force
-    # PerceivedType
-    if ($ext -eq '.txt') {
-      Set-ItemProperty -Path $extKey -Name 'PerceivedType' -Value 'text' -Force
+    Set-RegValues -Path "Software\Classes\$ext" -Values @{
+      '(default)'    = @{ Value = $progId; Kind = $sz }
+      'PerceivedType'= $(if ($ext -eq '.txt') { @{ Value = 'text'; Kind = $sz } } else { $null })
     }
-    # ProgId
-    $progKey = "HKCU:\Software\Classes\$progId"
-    New-Item -Path $progKey -Force | Out-Null
-    Set-ItemProperty -Path $progKey -Name '(default)' -Value "$desc" -Force
-    # FriendlyAppName
-    $appKey = "$progKey\Application"
-    New-Item -Path $appKey -Force | Out-Null
-    Set-ItemProperty -Path $appKey -Name 'FriendlyAppName' -Value $AppName -Force
-    Set-ItemProperty -Path $appKey -Name 'ApplicationName' -Value $AppName -Force
-    Set-ItemProperty -Path $appKey -Name 'ApplicationIcon' -Value "$exePath,0" -Force
-    # DefaultIcon
-    $iconKey = "$progKey\DefaultIcon"
-    New-Item -Path $iconKey -Force | Out-Null
-    Set-ItemProperty -Path $iconKey -Name '(default)' -Value "$exePath,0" -Force
-    # shell\open\command
-    $cmdKey = "$progKey\shell\open\command"
-    New-Item -Path $cmdKey -Force | Out-Null
-    Set-ItemProperty -Path $cmdKey -Name '(default)' -Value "`"$exePath`" `"%1`"" -Force
+    Set-RegValues -Path "Software\Classes\$progId\Application" -Values @{
+      'FriendlyAppName' = @{ Value = $AppName; Kind = $sz }
+      'ApplicationName' = @{ Value = $AppName; Kind = $sz }
+      'ApplicationIcon' = @{ Value = "$exePath,0"; Kind = $sz }
+    }
+    Set-RegValues -Path "Software\Classes\$progId\DefaultIcon" -Values @{
+      '(default)' = @{ Value = "$exePath,0"; Kind = $sz }
+    }
+    Set-RegValues -Path "Software\Classes\$progId\shell\open\command" -Values @{
+      '(default)' = @{ Value = "`"$exePath`" `"%1`""; Kind = $sz }
+    }
+    Set-RegValues -Path "Software\Classes\$progId" -Values @{
+      '(default)' = @{ Value = $desc; Kind = $sz }
+    }
     Write-Ok "Registered $ext → $progId"
   }
 }
 
 function Register-OpenWithList {
+  $none = [Microsoft.Win32.RegistryValueKind]::None
   foreach ($ft in $FileTypes) {
     $ext = $ft.Extension
     $progId = $ft.ProgId
-    $choiceKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext\OpenWithProgids"
-    New-Item -Path $choiceKey -Force | Out-Null
-    $existing = Get-ItemProperty -Path $choiceKey -Name $progId -ErrorAction SilentlyContinue
-    if ($null -eq $existing) {
-      New-ItemProperty -Path $choiceKey -Name $progId -PropertyType 'None' -Value ([byte[]]@()) -Force | Out-Null
+    Set-RegValues -Path "Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext\OpenWithProgids" -Values @{
+      $progId = @{ Value = [byte[]] @(); Kind = $none }
     }
-    New-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext\OpenWithList" -Force | Out-Null
+    Set-RegValues -Path "Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\$ext\OpenWithList" -Values @{}
   }
 }
 
