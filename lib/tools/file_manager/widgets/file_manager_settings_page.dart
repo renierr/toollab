@@ -4,7 +4,10 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/native_media_player.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dialog.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 class FileManagerSettingsPage extends StatelessWidget {
   const FileManagerSettingsPage({super.key});
@@ -117,10 +120,81 @@ class FileManagerSettingsPage extends StatelessWidget {
                 ),
               ),
             ),
+            const Divider(height: 1),
+            _SettingsSection(title: l10n.fileManagerConnections),
+            ListTile(
+              leading: const Icon(Icons.add_link_outlined),
+              title: Text(l10n.fileManagerAddConnection),
+              onTap: () => _addConnection(context),
+            ),
+            ...state.connections.map(
+              (profile) => ListTile(
+                leading: Icon(
+                  profile.protocol == FileManagerProtocol.ftp
+                      ? Icons.cloud_outlined
+                      : Icons.folder_shared_outlined,
+                ),
+                title: Text(profile.label),
+                subtitle: Text(
+                  profile.host,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  onPressed: () => _removeConnection(context, profile),
+                  icon: const Icon(Icons.delete_outline),
+                ),
+                onTap: () =>
+                    context.read<FileManagerState>().openConnection(profile),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _addConnection(BuildContext context) async {
+    final state = context.read<FileManagerState>();
+    final result = await showDialog<(FileManagerConnection, String)>(
+      context: context,
+      builder: (_) => FileManagerConnectionDialog(
+        onDiscoverSmbShares: state.discoverSmbShares,
+      ),
+    );
+    if (result != null && context.mounted) {
+      await context.read<FileManagerState>().saveConnection(
+        result.$1,
+        result.$2,
+      );
+    }
+  }
+
+  Future<void> _removeConnection(
+    BuildContext context,
+    FileManagerConnection profile,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => ResponsiveAlertDialog(
+        title: Text(l10n.fileManagerRemoveConnectionTitle),
+        content: Text(l10n.fileManagerRemoveConnectionMessage(profile.label)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.commonRemove),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await context.read<FileManagerState>().removeConnection(profile);
+    }
   }
 
   SharedFile _exampleFile(FileManagerOpenCategory category) => SharedFile(

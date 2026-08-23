@@ -9,7 +9,6 @@ class FileManagerLocations extends StatelessWidget {
   final ValueChanged<String> onOpenLocal;
   final ValueChanged<String> onOpenPath;
   final ValueChanged<FileManagerConnection> onOpenConnection;
-  final VoidCallback onAddConnection;
   final ValueChanged<FileManagerConnection> onRemoveConnection;
   final VoidCallback onRequestStorageAccess;
 
@@ -19,7 +18,6 @@ class FileManagerLocations extends StatelessWidget {
     required this.onOpenLocal,
     required this.onOpenPath,
     required this.onOpenConnection,
-    required this.onAddConnection,
     required this.onRemoveConnection,
     required this.onRequestStorageAccess,
   });
@@ -99,11 +97,6 @@ class FileManagerLocations extends StatelessWidget {
       dense: true,
       leading: const Icon(Icons.dns_outlined),
       title: Text(l10n.fileManagerConnections),
-      trailing: IconButton(
-        tooltip: l10n.commonAdd,
-        onPressed: onAddConnection,
-        icon: const Icon(Icons.add),
-      ),
     ),
     ...state.connections.map(
       (profile) => _ConnectionTile(
@@ -150,11 +143,6 @@ class FileManagerLocations extends StatelessWidget {
         label: _favoriteLabel(path),
         onTap: () => onOpenLocal(path),
       ),
-    ),
-    _LocationChip(
-      icon: Icons.add_link_outlined,
-      label: l10n.fileManagerAddConnection,
-      onTap: onAddConnection,
     ),
     ...state.connections.map(
       (profile) => _LocationChip(

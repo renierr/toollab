@@ -11168,7 +11168,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileManagerAddConnection.
   ///
   /// In en, this message translates to:
-  /// **'Connections'**
+  /// **'Add connection'**
   String get fileManagerAddConnection;
 
   /// No description provided for @fileManagerRefresh.

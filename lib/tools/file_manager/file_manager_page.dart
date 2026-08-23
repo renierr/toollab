@@ -15,7 +15,6 @@ import 'package:tool_lab/tools/file_manager/archives/archive_handler.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
-import 'package:tool_lab/tools/file_manager/widgets/file_manager_connection_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_archive_conflict_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_delete_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_details_dialog.dart';
@@ -358,21 +357,6 @@ class _FileManagerPageState extends State<FileManagerPage>
     return true;
   }
 
-  Future<void> _addConnection() async {
-    final result = await showDialog<(FileManagerConnection, String)>(
-      context: context,
-      builder: (_) => FileManagerConnectionDialog(
-        onDiscoverSmbShares: context.read<FileManagerState>().discoverSmbShares,
-      ),
-    );
-    if (result != null && mounted) {
-      await context.read<FileManagerState>().saveConnection(
-        result.$1,
-        result.$2,
-      );
-    }
-  }
-
   Future<void> _requestStorageAccess() async {
     _awaitingStorageAccess = true;
     await FileManagerStorageAccess.requestAllFilesAccess();
@@ -556,7 +540,6 @@ class _FileManagerPageState extends State<FileManagerPage>
               onOpenLocal: _openLocal,
               onOpenPath: _openPath,
               onOpenConnection: state.openConnection,
-              onAddConnection: _addConnection,
               onRemoveConnection: _removeConnection,
               onRequestStorageAccess: _requestStorageAccess,
             );

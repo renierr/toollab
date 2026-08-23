@@ -2421,7 +2421,7 @@
   "toolDescFileManager": "Lokale Dateien sowie FTP- und SMB-Netzwerkfreigaben durchsuchen",
   "fileManagerAppFiles": "Home",
   "fileManagerConnections": "Verbindungen",
-  "fileManagerAddConnection": "Verbindungen",
+  "fileManagerAddConnection": "Verbindung hinzufügen",
   "fileManagerRefresh": "Aktualisieren",
   "fileManagerNewFolder": "Neuer Ordner",
   "fileManagerFavorite": "Ordner favorisieren",

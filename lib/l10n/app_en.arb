@@ -3317,7 +3317,7 @@
   "toolDescFileManager": "Browse local files and FTP or SMB network shares",
   "fileManagerAppFiles": "Default folder",
   "fileManagerConnections": "Connections",
-  "fileManagerAddConnection": "Connections",
+  "fileManagerAddConnection": "Add connection",
   "fileManagerRefresh": "Refresh",
   "fileManagerNewFolder": "New folder",
   "fileManagerFavorite": "Favorite folder",
