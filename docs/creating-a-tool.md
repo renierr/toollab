@@ -408,3 +408,39 @@ To allow a tool (such as `calculator` or `pdf-viewer`) to run in parallel with t
 
 4. **Register in Kotlin shortcut helper**:
    In [ShortcutHelper.kt](file:///C:/dev/flutter/toolkit/android/app/src/main/kotlin/de/renier/tool_lab/ShortcutHelper.kt), add the tool ID to the `isolatedTools` set inside `toolIdToActivityClassName()`.
+
+## 11. Foreground Runtime & Media Notifications
+
+If a tool must keep working with the app in the background (playback, sensor recording, transfers) or expose media controls, use the shared services — never build your own Android service, notification or media session. Full spec: [AGENTS.detail.md §5](../AGENTS.detail.md#5-foreground-runtime--media-notifications).
+
+**Android — keep running + notification**: acquire a lease from `ForegroundRuntimeService` (`lib/services/foreground_runtime_service.dart`). All leases share one foreground notification (last update wins). Pass a `MediaNotificationData` for audio tools to get a MediaStyle notification with seek bar and live progress; use `lease.updatePlayback(...)` for cheap position refreshes.
+
+```dart
+late final ForegroundRuntimeLease _lease;
+
+@override
+void initState() {
+  super.initState();
+  _startLease();
+  onDispose(() async => _lease.release());
+}
+
+Future<void> _startLease() async {
+  _lease = await ForegroundRuntimeService.acquire(
+    title: 'My Tool',
+    text: 'Running…',
+    progress: 0,
+    progressMax: 100,
+  );
+}
+```
+
+**Desktop media keys / OS overlay**: push state through `MediaControlsService.instance` (`lib/services/media_controls_service.dart`, Windows SMTC, Linux MPRIS) and listen to `buttonEvents`:
+
+```dart
+onDispose(() {
+  MediaControlsService.instance.clear();
+});
+```
+
+For non-media background work prefer `BackgroundWorkLease` (`lib/services/background_work_lease.dart`) — partial wake lock plus a plain throttled-notification.

@@ -16,6 +16,9 @@
 | **GPS Location Store** | Save and manage GPS waypoints with map view |
 | **Bluetooth Scanner** | Discover and inspect nearby Bluetooth devices |
 | **Treadmill Control** | Control treadmill speed and incline over Bluetooth |
+| **Compass** | Tilt-compensated heading dial with magnetic status |
+| **Health Dashboard** | Bring your health data and workouts together |
+| **Renpho Local Scale** | Read body composition from Renpho scales over Bluetooth |
 
 ### Utilities
 | Tool | Description |
@@ -40,6 +43,9 @@
 | **Unit Converter** | Convert between measurement units |
 | **Code Highlight & Edit** | Syntax-highlighted code viewer and editor |
 | **String Transformer** | Transform text with various operations |
+| **File Manager** | Browse local files and FTP or SMB network shares |
+| **Text Editor** | Edit text files, local or from network shares |
+| **SQLite Viewer** | Inspect SQLite databases: schema, tables and free SQL |
 
 ### Information
 | Tool | Description |
@@ -59,7 +65,7 @@ lib/
   constants.dart        — App version and name constants
   core/
     tool_model.dart       — ToolModel, ToolSection definitions
-    tool_registry.dart    — Central registry of all tools (3 sections, 28 tools)
+    tool_registry.dart    — Central registry of all tools (3 sections, 34 tools)
     tool_page_state.dart  — DisposeCleanup mixin for tool pages
   helpers/              — File save, temp files, WAV encoding, etc.
   l10n/                 — Localization (en, de) via ARB + gen_l10n
@@ -68,7 +74,7 @@ lib/
     app_state.dart        — Global ChangeNotifier (language, theme, sync state)
   services/             — Database, settings, sync, wake lock, foreground service
   theme/                — Material 3 light/dark theme, AppTheme colors
-  tools/                — 28 tool directories, each with a self-contained layout
+  tools/                — 34 tool directories, each with a self-contained layout
   widgets/              — Shared reusable widgets (ToolCard, ResponsiveLayout, etc.)
 ```
 
@@ -102,7 +108,7 @@ lib/tools/<name>/
 
 - Tool settings are stored per-tool via `DatabaseService` (SQLite).
 - Global settings (theme, locale) use `SharedPreferences` via `SettingsService`.
-- Select tools support bidirectional cloud sync via `SyncDelegate` (Notes, Grocery List, Signatures, Sketch Board, Chiptune, and others).
+- Select tools support bidirectional cloud sync via `SyncDelegate` (Notes, Grocery List, Signatures, Sketch Board, Chiptune, Treadmill Control, Health Dashboard, and Renpho Local Scale).
 
 ---
 

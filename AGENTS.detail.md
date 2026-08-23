@@ -324,3 +324,37 @@ Rules:
 - Only `config.dart`, `<name>_page.dart`, the optional `<name>_colors.dart`, and non-widget support files (enums, models, mode definitions) sit directly at the tool root.
 - Cross-tool widgets (used by 2+ tools) still belong in the shared `lib/widgets/`, not in any tool's `widgets/`.
 - Imports use absolute package paths, e.g. `package:tool_lab/tools/<name>/widgets/<name>_display.dart`.
+
+---
+
+## 5. Foreground Runtime & Media Notifications
+
+Long-running tools (audio playback, sensors, transfers) surface themselves through two independent layers. Tools must use these services — never create their own Android service, notification or media session.
+
+### 5.1 `ForegroundRuntimeService` (`lib/services/foreground_runtime_service.dart`) — Android only
+
+Wraps the shared foreground service (native handler: `ToolLabForegroundService.kt`, channel `de.renier.tool_lab/foreground_runtime`). All tool leases render into **one** foreground notification; the most recently acquired/updated lease is the visible owner, and releasing it falls back to the previous lease's snapshot.
+
+- **Lease model**: `acquire(...)` returns a `ForegroundRuntimeLease`; the service starts on the first lease and stops when the last one is released.
+- **Notification content**: `title`/`text`, optional `actions` (labels; taps arrive via `addActionListener`), optional ticking chronometer (`chronometerSinceMs`) and/or determinate progress bar (`progress`/`progressMax`).
+- **Media mode**: pass a `MediaNotificationData` to render a MediaStyle notification with metadata, seek support and a system-extrapolated progress bar (`durationMs: null` = endless audio, no seek bar). Use `lease.updatePlayback(positionMs:, playing:)` for position/state refreshes — it updates the media session without rebuilding the notification.
+- **Lifecycle**: release via `lease.release()` in `onDispose`. `releaseAll()` is the nuclear stop (maintenance page). Notification permission is requested implicitly by `acquire`.
+- No-ops on non-Android platforms — safe to call unconditionally.
+
+### 5.2 `MediaControlsService` (`lib/services/media_controls_service.dart`) — Windows / Linux desktop
+
+System media integration (hardware media keys, OS media overlay) as a singleton facade with platform impls:
+
+| Platform | Impl | Mechanism |
+| --- | --- | --- |
+| Windows | `MediaControlsWindowsImpl` | System Media Transport Controls via channel `de.renier.tool_lab/media_controls` |
+| Linux | `MediaControlsLinuxImpl` | MPRIS over D-Bus (`org.mpris.MediaPlayer2.toollab`) |
+| Other | `MediaControlsStubImpl` | No-op |
+
+Push metadata/status/position via `updateMetadata`/`updatePlaybackStatus`/`updatePosition`; button presses arrive on the broadcast stream `buttonEvents` (`MediaButton.play/pause/stop/next/previous`). Call `clear()` when playback ends and register `dispose()` cleanup via `onDispose`.
+
+### 5.3 Typical pairing
+
+Audio tools pair both layers: `ForegroundRuntimeService` keeps the process alive with the MediaStyle notification (Android), while `MediaControlsService` feeds the desktop media keys. Non-media work uses `BackgroundWorkLease` (`lib/services/background_work_lease.dart`) instead — a partial wake lock plus a plain foreground notification with throttled progress updates; the notification is best-effort, the wake lock is not.
+
+Reference implementations: `lib/tools/chiptune/engine/chiptune_player.dart`, `lib/tools/focus_noise/engine/focus_noise_player.dart`, `lib/tools/sound_finder/audio/tone_generator.dart`, `lib/tools/treadmill_control/treadmill_control_state.dart`.
