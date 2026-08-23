@@ -5,6 +5,8 @@ import 'package:path/path.dart' as p;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 
+const double _tileExtent = 160;
+
 class FileManagerImageGrid extends StatefulWidget {
   final List<FileManagerEntry> entries;
   final ValueChanged<FileManagerEntry> onOpen;
@@ -53,7 +55,7 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
           if (!_collapsedFolders.contains(group.key))
             SliverGrid(
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 160,
+                maxCrossAxisExtent: _tileExtent,
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
                 childAspectRatio: 1,
@@ -210,14 +212,15 @@ class _ImageTile extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             const ColoredBox(color: Color(0x10888888)),
-            // Decode at tile width only; height stays proportional so
+            // Decode at 2x tile width; height stays proportional so
             // BoxFit.cover crops correctly instead of distorting.
             Image.file(
               File(entry.path),
               fit: BoxFit.cover,
-              filterQuality: FilterQuality.low,
-              cacheWidth: (160 * MediaQuery.devicePixelRatioOf(context))
-                  .round(),
+              filterQuality: FilterQuality.medium,
+              cacheWidth:
+                  (_tileExtent * 2 * MediaQuery.devicePixelRatioOf(context))
+                      .round(),
               errorBuilder: (_, _, _) =>
                   const Icon(Icons.broken_image_outlined),
               gaplessPlayback: true,

@@ -454,7 +454,9 @@ class _FileManagerPageState extends State<FileManagerPage>
       return;
     }
     // Files may have changed elsewhere while the app was backgrounded.
-    if (!_state.isLoading) _state.refresh();
+    // Category views (images etc.) rebuild from scratch on refresh, which
+    // would reset scroll position — skip them.
+    if (!_state.isLoading && !_state.isBrowsingCategory) _state.refresh();
   }
 
   Future<String?> _showNameDialog(
