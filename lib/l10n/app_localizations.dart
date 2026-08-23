@@ -15815,6 +15815,24 @@ abstract class AppLocalizations {
   /// **'Tools'**
   String get textEditorTools;
 
+  /// No description provided for @textEditorSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get textEditorSettings;
+
+  /// No description provided for @textEditorDefaultsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Defaults applied when opening a file'**
+  String get textEditorDefaultsSubtitle;
+
+  /// No description provided for @textEditorFontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Font size'**
+  String get textEditorFontSize;
+
   /// No description provided for @commonCut.
   ///
   /// In en, this message translates to:

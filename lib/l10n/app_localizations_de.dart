@@ -8878,6 +8878,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get textEditorTools => 'Werkzeuge';
 
   @override
+  String get textEditorSettings => 'Einstellungen';
+
+  @override
+  String get textEditorDefaultsSubtitle =>
+      'Standardwerte beim Öffnen einer Datei';
+
+  @override
+  String get textEditorFontSize => 'Schriftgröße';
+
+  @override
   String get commonCut => 'Ausschneiden';
 
   @override

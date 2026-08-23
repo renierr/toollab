@@ -16,6 +16,7 @@ import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/tools/text_editor/config.dart';
 import 'package:tool_lab/tools/text_editor/text_editor_state.dart';
 import 'package:tool_lab/tools/text_editor/widgets/recent_files_list.dart';
+import 'package:tool_lab/tools/text_editor/widgets/text_editor_settings_button.dart';
 import 'package:tool_lab/tools/text_editor/widgets/text_editor_status_bar.dart';
 import 'package:tool_lab/tools/text_editor/widgets/text_editor_surface.dart';
 import 'package:tool_lab/tools/text_editor/widgets/text_editor_toolbar.dart';
@@ -195,14 +196,20 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
 
     if (!state.initialized || (state.isLoading && state.filePath == null)) {
       return Scaffold(
-        appBar: AppBar(title: Text(TextEditorTool.config.localizedName(l10n))),
+        appBar: AppBar(
+          title: Text(TextEditorTool.config.localizedName(l10n)),
+          actions: [const TextEditorSettingsButton()],
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (state.filePath == null && state.fileName == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(TextEditorTool.config.localizedName(l10n))),
+        appBar: AppBar(
+          title: Text(TextEditorTool.config.localizedName(l10n)),
+          actions: [const TextEditorSettingsButton()],
+        ),
         body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -258,6 +265,7 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
         title:
             '${state.dirty ? '• ' : ''}${state.fileName ?? TextEditorTool.config.localizedName(l10n)}',
         actions: [
+          const TextEditorSettingsButton(),
           IconButton(
             tooltip: l10n.commonSave,
             onPressed: state.isSaving ? null : _save,

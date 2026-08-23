@@ -3570,6 +3570,9 @@
   "textEditorUnsavedChanges": "Ungespeicherte Änderungen",
   "textEditorRemote": "Remote",
   "textEditorTools": "Werkzeuge",
+  "textEditorSettings": "Einstellungen",
+  "textEditorDefaultsSubtitle": "Standardwerte beim Öffnen einer Datei",
+  "textEditorFontSize": "Schriftgröße",
   "commonCut": "Ausschneiden",
   "commonPaste": "Einfügen",
   "textEditorSelectAll": "Alles auswählen"

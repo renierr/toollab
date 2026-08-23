@@ -4567,6 +4567,9 @@
   "textEditorUnsavedChanges": "Unsaved changes",
   "textEditorRemote": "Remote",
   "textEditorTools": "Tools",
+  "textEditorSettings": "Settings",
+  "textEditorDefaultsSubtitle": "Defaults applied when opening a file",
+  "textEditorFontSize": "Font size",
   "commonCut": "Cut",
   "commonPaste": "Paste",
   "textEditorSelectAll": "Select all"

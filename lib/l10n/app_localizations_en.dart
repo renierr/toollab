@@ -8811,6 +8811,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get textEditorTools => 'Tools';
 
   @override
+  String get textEditorSettings => 'Settings';
+
+  @override
+  String get textEditorDefaultsSubtitle =>
+      'Defaults applied when opening a file';
+
+  @override
+  String get textEditorFontSize => 'Font size';
+
+  @override
   String get commonCut => 'Cut';
 
   @override
