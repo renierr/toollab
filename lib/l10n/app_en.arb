@@ -4564,6 +4564,7 @@
   "textEditorFindHint": "Search",
   "textEditorReplaceHint": "Replace with",
   "textEditorFindNoResults": "No matches",
+  "textEditorFindSearching": "Searching…",
   "textEditorFindPrevious": "Previous match",
   "textEditorFindNext": "Next match",
   "textEditorReplaceOne": "Replace",

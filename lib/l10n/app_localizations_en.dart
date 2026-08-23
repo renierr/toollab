@@ -8783,6 +8783,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get textEditorFindNoResults => 'No matches';
 
   @override
+  String get textEditorFindSearching => 'Searching…';
+
+  @override
   String get textEditorFindPrevious => 'Previous match';
 
   @override

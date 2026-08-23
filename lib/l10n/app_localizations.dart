@@ -15755,6 +15755,12 @@ abstract class AppLocalizations {
   /// **'No matches'**
   String get textEditorFindNoResults;
 
+  /// No description provided for @textEditorFindSearching.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching…'**
+  String get textEditorFindSearching;
+
   /// No description provided for @textEditorFindPrevious.
   ///
   /// In en, this message translates to:

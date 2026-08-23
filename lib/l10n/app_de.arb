@@ -3567,6 +3567,7 @@
   "textEditorFindHint": "Suchen",
   "textEditorReplaceHint": "Ersetzen durch",
   "textEditorFindNoResults": "Keine Treffer",
+  "textEditorFindSearching": "Suche…",
   "textEditorFindPrevious": "Vorheriger Treffer",
   "textEditorFindNext": "Nächster Treffer",
   "textEditorReplaceOne": "Ersetzen",

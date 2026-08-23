@@ -8850,6 +8850,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get textEditorFindNoResults => 'Keine Treffer';
 
   @override
+  String get textEditorFindSearching => 'Suche…';
+
+  @override
   String get textEditorFindPrevious => 'Vorheriger Treffer';
 
   @override
