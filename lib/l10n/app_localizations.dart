@@ -4613,6 +4613,36 @@ abstract class AppLocalizations {
   /// **'Select text in the document, then tap \"Redact Selected\"'**
   String get pdfEditRedactSelectHint;
 
+  /// No description provided for @pdfEditRedactFindTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Find text'**
+  String get pdfEditRedactFindTooltip;
+
+  /// No description provided for @pdfEditRedactFindTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Text to Redact'**
+  String get pdfEditRedactFindTitle;
+
+  /// No description provided for @pdfEditRedactFindFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search text'**
+  String get pdfEditRedactFindFieldLabel;
+
+  /// No description provided for @pdfEditRedactFindMarkAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark All'**
+  String get pdfEditRedactFindMarkAll;
+
+  /// No description provided for @pdfEditRedactFoundCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} occurrence(s) marked'**
+  String pdfEditRedactFoundCount(int count);
+
   /// No description provided for @pdfEditMetaTitle2.
   ///
   /// In en, this message translates to:

@@ -12,6 +12,7 @@ class PdfRedactEditAppBar extends StatelessWidget
   final VoidCallback onCancel;
   final VoidCallback onModeChange;
   final VoidCallback? onRedactSelected;
+  final VoidCallback? onFind;
   final VoidCallback? onApply;
 
   const PdfRedactEditAppBar({
@@ -23,6 +24,7 @@ class PdfRedactEditAppBar extends StatelessWidget
     required this.onCancel,
     required this.onModeChange,
     this.onRedactSelected,
+    this.onFind,
     this.onApply,
   });
 
@@ -54,6 +56,12 @@ class PdfRedactEditAppBar extends StatelessWidget
             icon: const Icon(Icons.text_fields),
             tooltip: l10n.pdfEditRedactModeSelect,
             onPressed: onModeChange,
+          ),
+        if (mode == PdfRedactEditMode.draw)
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: l10n.pdfEditRedactFindTooltip,
+            onPressed: onFind,
           ),
         if (mode == PdfRedactEditMode.draw)
           IconButton(

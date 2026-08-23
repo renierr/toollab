@@ -933,6 +933,18 @@
   },
   "pdfEditRedactRedactSelected": "Auswahl schwärzen",
   "pdfEditRedactSelectHint": "Text im Dokument auswählen, dann auf \"Auswahl schwärzen\" tippen",
+  "pdfEditRedactFindTooltip": "Text suchen",
+  "pdfEditRedactFindTitle": "Zu schwärzenden Text finden",
+  "pdfEditRedactFindFieldLabel": "Suchtext",
+  "pdfEditRedactFindMarkAll": "Alle markieren",
+  "pdfEditRedactFoundCount": "{count} Fundstelle(n) markiert",
+  "@pdfEditRedactFoundCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pdfEditMetaTitle2": "Metadaten: {fileName}",
   "pdfEditMetaReload": "Metadaten neu laden",
   "pdfEditMetaLoadFailed": "Metadaten konnten nicht geladen werden",

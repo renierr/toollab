@@ -2581,6 +2581,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'Select text in the document, then tap \"Redact Selected\"';
 
   @override
+  String get pdfEditRedactFindTooltip => 'Find text';
+
+  @override
+  String get pdfEditRedactFindTitle => 'Find Text to Redact';
+
+  @override
+  String get pdfEditRedactFindFieldLabel => 'Search text';
+
+  @override
+  String get pdfEditRedactFindMarkAll => 'Mark All';
+
+  @override
+  String pdfEditRedactFoundCount(int count) {
+    return '$count occurrence(s) marked';
+  }
+
+  @override
   String pdfEditMetaTitle2(String fileName) {
     return 'Metadata: $fileName';
   }

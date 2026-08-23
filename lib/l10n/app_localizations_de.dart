@@ -2606,6 +2606,23 @@ class AppLocalizationsDe extends AppLocalizations {
       'Text im Dokument auswählen, dann auf \"Auswahl schwärzen\" tippen';
 
   @override
+  String get pdfEditRedactFindTooltip => 'Text suchen';
+
+  @override
+  String get pdfEditRedactFindTitle => 'Zu schwärzenden Text finden';
+
+  @override
+  String get pdfEditRedactFindFieldLabel => 'Suchtext';
+
+  @override
+  String get pdfEditRedactFindMarkAll => 'Alle markieren';
+
+  @override
+  String pdfEditRedactFoundCount(int count) {
+    return '$count Fundstelle(n) markiert';
+  }
+
+  @override
   String pdfEditMetaTitle2(String fileName) {
     return 'Metadaten: $fileName';
   }

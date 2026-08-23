@@ -11,6 +11,7 @@ import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 import 'pdf_redact_done_page.dart';
 import 'pdf_redact_draw_view.dart';
 import 'pdf_redact_edit_appbar.dart';
+import 'pdf_redact_find_dialog.dart';
 import 'pdf_redact_processing_page.dart';
 import 'pdf_redact_select_view.dart';
 
@@ -211,6 +212,53 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
   int get _totalMarkCount =>
       _redactionMarks.values.fold(0, (s, l) => s + l.length);
 
+  Future<void> _findAndMarkAll() async {
+    final query = await PdfRedactFindDialog.show(context);
+    if (query == null || _doc == null || !mounted) return;
+
+    var count = 0;
+    try {
+      for (final page in _doc!.pages) {
+        final pageText = await page.loadStructuredText();
+        await for (final match in pageText.allMatches(query)) {
+          final pageIdx = page.pageNumber - 1;
+          for (final frag in match.enumerateFragmentBoundingRects()) {
+            final pdfRect = frag.bounds;
+            _redactionMarks[pageIdx]!.add(
+              Rect.fromLTRB(
+                pdfRect.left,
+                pdfRect.bottom,
+                pdfRect.right,
+                pdfRect.top,
+              ),
+            );
+            count++;
+          }
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).pdfEditRedactFailed(e.toString()),
+          ),
+        ),
+      );
+    }
+    if (!mounted) return;
+    await _renderPage(_pageIndex);
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(context).pdfEditRedactFoundCount(count),
+        ),
+      ),
+    );
+  }
+
   Future<void> _apply() async {
     if (_totalMarkCount == 0 || _doc == null) return;
     setState(() => _phase = _Phase.processing);
@@ -313,25 +361,29 @@ class _PdfRedactPanelState extends State<PdfRedactPanel> with DisposeCleanup {
               : PdfRedactEditMode.draw,
         ),
         onRedactSelected: _redactSelectedText,
+        onFind: _findAndMarkAll,
         onApply: _apply,
       ),
       body: _inputMode == PdfRedactEditMode.draw
-          ? PdfRedactDrawView(
-              pageImage: _pageImages[_pageIndex]!,
-              marksFrac: _redactionMarks[_pageIndex]!
-                  .map(_pdfRectToFrac)
-                  .toList(),
-              pageAspect: _pageAspect(_pageIndex),
-              pageIndex: _pageIndex,
-              pageCount: _pageCount,
-              totalMarkCount: _totalMarkCount,
-              isDrawing: _isDrawing,
-              onNewMark: _addMark,
-              onDeleteMark: _removeMark,
-              onPrevPage: () => _goToPage(_pageIndex - 1),
-              onNextPage: () => _goToPage(_pageIndex + 1),
-              onToggleDraw: () => setState(() => _isDrawing = !_isDrawing),
-            )
+          ? _pageImages[_pageIndex] == null
+                ? const Center(child: CircularProgressIndicator())
+                : PdfRedactDrawView(
+                    pageImage: _pageImages[_pageIndex]!,
+                    marksFrac: _redactionMarks[_pageIndex]!
+                        .map(_pdfRectToFrac)
+                        .toList(),
+                    pageAspect: _pageAspect(_pageIndex),
+                    pageIndex: _pageIndex,
+                    pageCount: _pageCount,
+                    totalMarkCount: _totalMarkCount,
+                    isDrawing: _isDrawing,
+                    onNewMark: _addMark,
+                    onDeleteMark: _removeMark,
+                    onPrevPage: () => _goToPage(_pageIndex - 1),
+                    onNextPage: () => _goToPage(_pageIndex + 1),
+                    onToggleDraw: () =>
+                        setState(() => _isDrawing = !_isDrawing),
+                  )
           : PdfRedactSelectView(
               filePath: widget.session.filePath,
               passwordProvider: widget.session.passwordProvider,

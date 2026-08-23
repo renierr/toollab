@@ -1497,6 +1497,18 @@
   },
   "pdfEditRedactRedactSelected": "Redact Selected",
   "pdfEditRedactSelectHint": "Select text in the document, then tap \"Redact Selected\"",
+  "pdfEditRedactFindTooltip": "Find text",
+  "pdfEditRedactFindTitle": "Find Text to Redact",
+  "pdfEditRedactFindFieldLabel": "Search text",
+  "pdfEditRedactFindMarkAll": "Mark All",
+  "pdfEditRedactFoundCount": "{count} occurrence(s) marked",
+  "@pdfEditRedactFoundCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pdfEditMetaTitle2": "Metadata: {fileName}",
   "@pdfEditMetaTitle2": {
     "placeholders": {
