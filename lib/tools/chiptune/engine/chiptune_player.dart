@@ -562,6 +562,7 @@ class ChiptunePlayer {
     if (wasPlaying) {
       unawaited(_feed());
     }
+    _pushPlaybackState();
   }
 
   /// Seeks native audio to an absolute position (no-op for tracker modules,
@@ -584,6 +585,18 @@ class ChiptunePlayer {
         target < _totalDuration - _prefetchLead) {
       _nearEndFired = false;
     }
+    _pushPlaybackState();
+  }
+
+  /// Cheap position/state-only refresh of the media session so the
+  /// notification's progress bar jumps to the seek target immediately.
+  void _pushPlaybackState() {
+    unawaited(
+      _foregroundRuntimeLease?.updatePlayback(
+        positionMs: elapsed.value.inMilliseconds,
+        playing: state.value == ChiptunePlaybackState.playing,
+      ),
+    );
   }
 
   void setVolume(double volume) {
@@ -830,7 +843,9 @@ class ChiptunePlayer {
     _maybePushNotificationUpdate(now);
   }
 
-  /// Throttled (30 s) refresh of the background-playback notification text.
+  /// Throttled (30 s) drift-correction refresh of the background-playback
+  /// notification. Between refreshes the progress bar is extrapolated natively
+  /// by the media session (position + speed), so no per-second rebuilds happen.
   void _maybePushNotificationUpdate(DateTime now) {
     if (_foregroundRuntimeLease == null ||
         state.value != ChiptunePlaybackState.playing) {
@@ -843,13 +858,12 @@ class ChiptunePlayer {
     }
     _lastNotificationUpdateAt = now;
     notificationText = formatTime(elapsed.value, _totalDuration);
-    final actions = <String>['pause', 'stop'];
-    if (onNext != null) actions.add('next');
     unawaited(
       _foregroundRuntimeLease!.update(
         title: notificationTitle,
         text: notificationText,
-        actions: actions,
+        actions: _notificationActions(playing: true),
+        media: _mediaData(playing: true),
       ),
     );
     _updateMediaPosition(elapsed.value);
@@ -879,6 +893,10 @@ class ChiptunePlayer {
     // advance (or the fetch fails) it calls stop() to release them.
     if (!(shouldKeepPlaybackAlive?.call() ?? false)) {
       _releasePlaybackRuntimeLocks();
+    } else {
+      // Lease survives the auto-advance gap; park the progress bar so the
+      // session does not keep extrapolating a finished song.
+      _pushPlaybackState();
     }
     onEnded?.call();
   }
@@ -951,14 +969,11 @@ class ChiptunePlayer {
   Future<void> _acquirePlaybackRuntimeLocks() async {
     _partialWakeLock ??= await PowerWakeLockService.acquirePartial();
     if (_foregroundRuntimeLease == null) {
-      final List<String> actions = ['pause', 'stop'];
-      if (onNext != null) {
-        actions.add('next');
-      }
       _foregroundRuntimeLease = await ForegroundRuntimeService.acquire(
         title: notificationTitle,
         text: notificationText,
-        actions: actions,
+        actions: _notificationActions(playing: true),
+        media: _mediaData(playing: true),
       );
       ForegroundRuntimeService.addActionListener(_handleNotificationAction);
     }
@@ -987,7 +1002,8 @@ class ChiptunePlayer {
       lease.update(
         title: notificationTitle,
         text: notificationText,
-        actions: ['play', 'stop'],
+        actions: _notificationActions(playing: false),
+        media: _mediaData(playing: false),
       ),
     );
   }
@@ -995,14 +1011,40 @@ class ChiptunePlayer {
   void _updateNotificationForResume() {
     final lease = _foregroundRuntimeLease;
     if (lease == null) return;
-    final actions = <String>['pause', 'stop'];
-    if (onNext != null) actions.add('next');
     unawaited(
       lease.update(
         title: notificationTitle,
         text: notificationText,
-        actions: actions,
+        actions: _notificationActions(playing: true),
+        media: _mediaData(playing: true),
       ),
+    );
+  }
+
+  /// Action order matches the MediaStyle compact-view layout:
+  /// previous | play/pause | next, with stop only in the expanded view.
+  List<String> _notificationActions({required bool playing}) {
+    final actions = <String>[];
+    if (onPrevious != null) actions.add('previous');
+    actions.add(playing ? 'pause' : 'play');
+    if (onNext != null) actions.add('next');
+    actions.add('stop');
+    return actions;
+  }
+
+  /// Snapshot for the Android media session: drives metadata, the progress bar
+  /// and seek support in the MediaStyle notification.
+  MediaNotificationData _mediaData({required bool playing}) {
+    final mod = _module;
+    return MediaNotificationData(
+      title: notificationTitle,
+      artist: mod?.type,
+      durationMs: _totalDuration > Duration.zero
+          ? _totalDuration.inMilliseconds
+          : null,
+      positionMs: elapsed.value.inMilliseconds,
+      playing: playing,
+      seekable: hasAudio && _totalDuration > Duration.zero,
     );
   }
 
@@ -1062,6 +1104,11 @@ class ChiptunePlayer {
   }
 
   void _handleNotificationAction(String action) {
+    if (action.startsWith('seek:')) {
+      final ms = int.tryParse(action.substring(5));
+      if (ms != null) _seekFromNotification(Duration(milliseconds: ms));
+      return;
+    }
     switch (action) {
       case 'play':
         unawaited(play());
@@ -1075,7 +1122,28 @@ class ChiptunePlayer {
       case 'next':
         onNext?.call();
         break;
+      case 'previous':
+        onPrevious?.call();
+        break;
     }
+  }
+
+  /// Translates a notification seek into the right seek primitive: plain audio
+  /// seeks by absolute time, tracker modules map the song time back to an
+  /// order/row via [orderRowAtSongTime].
+  void _seekFromNotification(Duration target) {
+    if (isPlainAudio) {
+      seekTo(target);
+      return;
+    }
+    final mod = _module;
+    if (mod == null) return;
+    Duration clamped = target;
+    if (_totalDuration > Duration.zero && clamped > _totalDuration) {
+      clamped = _totalDuration;
+    }
+    final pos = orderRowAtSongTime(mod, clamped);
+    seek(pos.order, pos.row);
   }
 
   void dispose() {

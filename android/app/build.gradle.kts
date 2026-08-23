@@ -75,4 +75,5 @@ flutter {
 dependencies {
     implementation("com.google.mlkit:genai-prompt:1.0.0-beta2")
     implementation("androidx.media3:media3-exoplayer:1.10.1")
+    implementation("androidx.media:media:1.7.0")
 }

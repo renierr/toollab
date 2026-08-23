@@ -20,16 +20,37 @@ const int _fxItSetTempo = 0x21; // IT Txx
 ///
 /// IT per-tick tempo slides (Txx slide) are not modelled — they are rare and
 /// would require a tick-level pass; the result is otherwise accurate.
-Duration estimateSongDuration(ModuleFile mod) => _simulate(mod);
+Duration estimateSongDuration(ModuleFile mod) => _simulate(mod).time;
 
-/// Cumulative play time from the song start up to the first time the play head
-/// reaches order [targetOrder], row [targetRow]. Used to keep the elapsed-time
-/// readout correct after seeking (the audio stream's own timer resets on seek).
+class _SimulateResult {
+  final Duration time;
+  final int order;
+  final int row;
+  const _SimulateResult(this.time, this.order, this.row);
+}
+
 Duration songTimeAt(ModuleFile mod, int targetOrder, int targetRow) =>
-    _simulate(mod, targetOrder: targetOrder, targetRow: targetRow);
+    _simulate(mod, targetOrder: targetOrder, targetRow: targetRow).time;
 
-Duration _simulate(ModuleFile mod, {int? targetOrder, int? targetRow}) {
-  if (mod.sequence.isEmpty || mod.patterns.isEmpty) return Duration.zero;
+/// Inverse of [songTimeAt]: the order/row the play head sits at after playing
+/// for [time]. Used to translate a seek from the media notification into a
+/// tracker seek. Falls back to the last simulated position when [time] exceeds
+/// the song length.
+({int order, int row}) orderRowAtSongTime(ModuleFile mod, Duration time) {
+  final result = _simulate(mod, targetTime: time);
+  if (result.row < 0) return (order: result.order, row: 0);
+  return (order: result.order, row: result.row);
+}
+
+_SimulateResult _simulate(
+  ModuleFile mod, {
+  int? targetOrder,
+  int? targetRow,
+  Duration? targetTime,
+}) {
+  if (mod.sequence.isEmpty || mod.patterns.isEmpty) {
+    return const _SimulateResult(Duration.zero, 0, -1);
+  }
 
   final bool isMod = mod.type == 'MOD';
   int ticksPerRow = mod.defaultSpeed != 0 ? mod.defaultSpeed : 6;
@@ -86,6 +107,18 @@ Duration _simulate(ModuleFile mod, {int? targetOrder, int? targetRow}) {
         (position > targetOrder ||
             (position == targetOrder && rowIndex >= targetRow!))) {
       break;
+    }
+
+    // Stop once enough play time has accumulated: the current position is the
+    // row a seek to [targetTime] should land on. rowIndex < 0 means the caller
+    // passed a non-positive target time; clamp to row 0 there.
+    if (targetTime != null &&
+        seconds * 1000 >= targetTime.inMilliseconds - 0.5) {
+      return _SimulateResult(
+        Duration(milliseconds: seconds.round()),
+        position,
+        rowIndex,
+      );
     }
 
     final pat = patternAt(position);
@@ -149,5 +182,13 @@ Duration _simulate(ModuleFile mod, {int? targetOrder, int? targetRow}) {
     seconds += (ticksPerRow * 2.5 / bpm) * (1 + patternDelay);
   }
 
-  return Duration(milliseconds: (seconds * 1000).round());
+  return _SimulateResult(
+    Duration(milliseconds: (seconds * 1000).round()),
+    position < 0
+        ? 0
+        : (position >= mod.sequence.length
+              ? mod.sequence.length - 1
+              : position),
+    rowIndex,
+  );
 }

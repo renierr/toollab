@@ -9,9 +9,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import androidx.media.app.NotificationCompat as MediaNotificationCompat
 
 class ToolLabForegroundService : Service() {
     companion object {
@@ -22,42 +26,64 @@ class ToolLabForegroundService : Service() {
 
         private const val ACTION_START = "de.renier.tool_lab.foreground.START"
         private const val ACTION_UPDATE = "de.renier.tool_lab.foreground.UPDATE"
+        private const val ACTION_PLAYBACK_STATE = "de.renier.tool_lab.foreground.PLAYBACK_STATE"
         private const val ACTION_STOP = "de.renier.tool_lab.foreground.STOP"
 
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_TEXT = "text"
         private const val EXTRA_ACTIONS = "actions"
+        private const val EXTRA_MEDIA_TITLE = "mediaTitle"
+        private const val EXTRA_MEDIA_ARTIST = "mediaArtist"
+        private const val EXTRA_DURATION_MS = "durationMs"
+        private const val EXTRA_POSITION_MS = "positionMs"
+        private const val EXTRA_PLAYING = "playing"
+        private const val EXTRA_SEEKABLE = "seekable"
 
         private var lastTitle: String = "ToolLab active"
         private var lastText: String = "Running in background"
         private var lastActions: ArrayList<String>? = null
 
-        fun start(context: Context, title: String, text: String, actions: List<String>?) {
-            lastTitle = title
-            lastText = text
-            lastActions = actions?.let { ArrayList(it) }
-            val intent = Intent(context, ToolLabForegroundService::class.java).apply {
-                action = ACTION_START
-                putExtra(EXTRA_TITLE, title)
-                putExtra(EXTRA_TEXT, text)
-                if (actions != null) {
-                    putStringArrayListExtra(EXTRA_ACTIONS, ArrayList(actions))
-                }
-            }
-            ContextCompat.startForegroundService(context, intent)
+        // Media snapshot (null mediaTitle = plain non-media notification).
+        private var lastMediaTitle: String? = null
+        private var lastMediaArtist: String? = null
+        private var lastDurationMs: Long = 0
+        private var lastPositionMs: Long = 0
+        private var lastPlaying: Boolean = false
+        private var lastSeekable: Boolean = false
+
+        fun start(
+            context: Context,
+            title: String,
+            text: String,
+            actions: List<String>?,
+            media: Map<String, Any?>?,
+        ) {
+            applyState(title, text, actions, media)
+            ContextCompat.startForegroundService(
+                context,
+                serviceIntent(context, ACTION_START),
+            )
         }
 
-        fun update(context: Context, title: String, text: String, actions: List<String>?) {
-            lastTitle = title
-            lastText = text
-            lastActions = actions?.let { ArrayList(it) }
+        fun update(
+            context: Context,
+            title: String,
+            text: String,
+            actions: List<String>?,
+            media: Map<String, Any?>?,
+        ) {
+            applyState(title, text, actions, media)
+            context.startService(serviceIntent(context, ACTION_UPDATE))
+        }
+
+        fun updatePlayback(context: Context, positionMs: Long, playing: Boolean) {
+            lastPositionMs = positionMs
+            lastPlaying = playing
+            if (lastMediaTitle == null) return
             val intent = Intent(context, ToolLabForegroundService::class.java).apply {
-                action = ACTION_UPDATE
-                putExtra(EXTRA_TITLE, title)
-                putExtra(EXTRA_TEXT, text)
-                if (actions != null) {
-                    putStringArrayListExtra(EXTRA_ACTIONS, ArrayList(actions))
-                }
+                action = ACTION_PLAYBACK_STATE
+                putExtra(EXTRA_POSITION_MS, positionMs)
+                putExtra(EXTRA_PLAYING, playing)
             }
             context.startService(intent)
         }
@@ -66,12 +92,46 @@ class ToolLabForegroundService : Service() {
             lastTitle = "ToolLab active"
             lastText = "Running in background"
             lastActions = null
+            lastMediaTitle = null
+            lastMediaArtist = null
+            lastDurationMs = 0
+            lastPositionMs = 0
+            lastSeekable = false
             val intent = Intent(context, ToolLabForegroundService::class.java).apply {
                 action = ACTION_STOP
             }
             context.startService(intent)
         }
+
+        private fun applyState(
+            title: String,
+            text: String,
+            actions: List<String>?,
+            media: Map<String, Any?>?,
+        ) {
+            lastTitle = title
+            lastText = text
+            lastActions = actions?.let { ArrayList(it) }
+            if (media == null) {
+                lastMediaTitle = null
+                lastMediaArtist = null
+                lastDurationMs = 0
+                lastSeekable = false
+                return
+            }
+            lastMediaTitle = media["title"] as? String ?: title
+            lastMediaArtist = media["artist"] as? String
+            lastDurationMs = (media["durationMs"] as? Number)?.toLong() ?: 0L
+            lastPositionMs = (media["positionMs"] as? Number)?.toLong() ?: 0L
+            lastPlaying = media["playing"] as? Boolean ?: false
+            lastSeekable = media["seekable"] as? Boolean ?: false
+        }
+
+        private fun serviceIntent(context: Context, action: String): Intent =
+            Intent(context, ToolLabForegroundService::class.java).apply { this.action = action }
     }
+
+    private var mediaSession: MediaSessionCompat? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -80,7 +140,7 @@ class ToolLabForegroundService : Service() {
             ensureChannel()
 
             if (intent == null) {
-                startForegroundSafely(buildNotification(lastTitle, lastText, lastActions))
+                startForegroundSafely(buildNotification())
                 return START_STICKY
             }
 
@@ -92,27 +152,19 @@ class ToolLabForegroundService : Service() {
             }
 
             when (action) {
-                ACTION_START -> {
-                    val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
-                    val text = intent.getStringExtra(EXTRA_TEXT) ?: "Running in background"
-                    val actions = intent.getStringArrayListExtra(EXTRA_ACTIONS)
-                    startForegroundSafely(buildNotification(title, text, actions))
-                }
-                ACTION_UPDATE -> {
-                    val title = intent.getStringExtra(EXTRA_TITLE) ?: "ToolLab active"
-                    val text = intent.getStringExtra(EXTRA_TEXT) ?: "Running in background"
-                    val actions = intent.getStringArrayListExtra(EXTRA_ACTIONS)
-                    val manager =
-                        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                    manager.notify(NOTIFICATION_ID, buildNotification(title, text, actions))
+                ACTION_START -> startForegroundSafely(buildNotification())
+                ACTION_UPDATE -> notify(buildNotification())
+                ACTION_PLAYBACK_STATE -> {
+                    lastPositionMs = intent.getLongExtra(EXTRA_POSITION_MS, 0)
+                    lastPlaying = intent.getBooleanExtra(EXTRA_PLAYING, false)
+                    refreshPlaybackState()
                 }
                 ACTION_STOP -> {
+                    releaseSession()
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
                 }
-                else -> {
-                    startForegroundSafely(buildNotification(lastTitle, lastText, lastActions))
-                }
+                else -> startForegroundSafely(buildNotification())
             }
         } catch (e: Exception) {
             android.util.Log.e("ToolLabFGS", "Error in onStartCommand: ", e)
@@ -141,6 +193,11 @@ class ToolLabForegroundService : Service() {
         )
     }
 
+    private fun notify(notification: Notification) {
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.notify(NOTIFICATION_ID, notification)
+    }
+
     private fun sendActionToFlutter(actionName: String) {
         val channel = MainActivity.channel
         if (channel != null) {
@@ -150,7 +207,62 @@ class ToolLabForegroundService : Service() {
         }
     }
 
-    private fun buildNotification(title: String, text: String, actions: List<String>?): Notification {
+    // ---- Media session ----
+
+    private fun ensureSession(): MediaSessionCompat {
+        mediaSession?.let { return it }
+        val session = MediaSessionCompat(this, "ToolLabMediaSession")
+        session.setCallback(object : MediaSessionCompat.Callback() {
+            override fun onPlay() = sendActionToFlutter("play")
+            override fun onPause() = sendActionToFlutter("pause")
+            override fun onStop() = sendActionToFlutter("stop")
+            override fun onSkipToNext() = sendActionToFlutter("next")
+            override fun onSkipToPrevious() = sendActionToFlutter("previous")
+            override fun onSeekTo(pos: Long) = sendActionToFlutter("seek:${pos.toInt()}")
+        })
+        session.isActive = true
+        mediaSession = session
+        return session
+    }
+
+    private fun releaseSession() {
+        mediaSession?.release()
+        mediaSession = null
+    }
+
+    private fun playbackActions(): Long {
+        var actions = PlaybackStateCompat.ACTION_PLAY or
+            PlaybackStateCompat.ACTION_PAUSE or
+            PlaybackStateCompat.ACTION_PLAY_PAUSE or
+            PlaybackStateCompat.ACTION_STOP
+        val names = lastActions.orEmpty()
+        if ("next" in names) actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+        if ("previous" in names) actions = actions or PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+        if (lastSeekable) actions = actions or PlaybackStateCompat.ACTION_SEEK_TO
+        return actions
+    }
+
+    private fun refreshPlaybackState(session: MediaSessionCompat? = null) {
+        val target = session ?: mediaSession ?: return
+        target.setPlaybackState(
+            PlaybackStateCompat.Builder()
+                .setActions(playbackActions())
+                .setState(
+                    if (lastPlaying) {
+                        PlaybackStateCompat.STATE_PLAYING
+                    } else {
+                        PlaybackStateCompat.STATE_PAUSED
+                    },
+                    lastPositionMs.coerceAtLeast(0),
+                    if (lastPlaying) 1f else 0f,
+                )
+                .build(),
+        )
+    }
+
+    // ---- Notification building ----
+
+    private fun buildNotification(): Notification {
         val openIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -161,44 +273,77 @@ class ToolLabForegroundService : Service() {
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_media_play)
-            .setContentTitle(title)
-            .setContentText(text)
+            .setContentTitle(lastTitle)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
 
-        actions?.forEach { action ->
-            val icon = when (action) {
-                "play" -> android.R.drawable.ic_media_play
-                "pause" -> android.R.drawable.ic_media_pause
-                "stop" -> android.R.drawable.ic_menu_close_clear_cancel
-                "next" -> android.R.drawable.ic_media_next
-                "previous" -> android.R.drawable.ic_media_previous
-                else -> return@forEach
-            }
-            val label = when (action) {
-                "play" -> "Play"
-                "pause" -> "Pause"
-                "stop" -> "Stop"
-                "next" -> "Next"
-                "previous" -> "Previous"
-                else -> action.replaceFirstChar { it.uppercase() }
-            }
-
-            val actionIntent = Intent(this, ToolLabForegroundService::class.java).apply {
-                this.action = "de.renier.tool_lab.foreground.action.$action"
-            }
-            val pendingAction = PendingIntent.getService(
-                this,
-                action.hashCode(),
-                actionIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        val mediaTitle = lastMediaTitle
+        if (mediaTitle != null) {
+            val session = ensureSession()
+            session.setMetadata(
+                MediaMetadataCompat.Builder()
+                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, mediaTitle)
+                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, lastMediaArtist ?: "")
+                    .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, lastDurationMs.coerceAtLeast(0))
+                    .build(),
             )
-            builder.addAction(icon, label, pendingAction)
+            refreshPlaybackState(session)
+
+            builder
+                .setContentText(lastMediaArtist ?: "")
+                .setSubText(lastText)
+                .setShowWhen(false)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        } else {
+            builder.setContentText(lastText)
+        }
+
+        var compactIndex = 0
+        val compactIndices = mutableListOf<Int>()
+        lastActions.orEmpty().forEach { name ->
+            val styled = styledAction(name) ?: return@forEach
+            builder.addAction(styled.first, styled.second, actionPendingIntent(name))
+            if (compactIndex < 3 && name != "stop") {
+                compactIndices.add(compactIndex)
+            }
+            compactIndex++
+        }
+
+        if (mediaTitle != null) {
+            val style = MediaNotificationCompat.MediaStyle()
+                .setMediaSession(ensureSession().sessionToken)
+            if (compactIndices.isNotEmpty()) {
+                style.setShowActionsInCompactView(*compactIndices.toIntArray())
+            }
+            builder.setStyle(style)
         }
 
         return builder.build()
+    }
+
+    private fun styledAction(name: String): Pair<Int, String>? {
+        val (icon, label) = when (name) {
+            "play" -> android.R.drawable.ic_media_play to "Play"
+            "pause" -> android.R.drawable.ic_media_pause to "Pause"
+            "stop" -> android.R.drawable.ic_menu_close_clear_cancel to "Stop"
+            "next" -> android.R.drawable.ic_media_next to "Next"
+            "previous" -> android.R.drawable.ic_media_previous to "Previous"
+            else -> return null
+        }
+        return icon to label
+    }
+
+    private fun actionPendingIntent(name: String): PendingIntent {
+        val actionIntent = Intent(this, ToolLabForegroundService::class.java).apply {
+            this.action = "de.renier.tool_lab.foreground.action.$name"
+        }
+        return PendingIntent.getService(
+            this,
+            name.hashCode(),
+            actionIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     private fun ensureChannel() {

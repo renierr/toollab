@@ -308,14 +308,22 @@ open class MainActivity : FlutterFragmentActivity() {
                     val title = call.argument<String>("title") ?: "ToolLab active"
                     val text = call.argument<String>("text") ?: "Running in background"
                     val actions = call.argument<List<String>>("actions")
-                    ToolLabForegroundService.start(this, title, text, actions)
+                    val media = call.argument<Map<String, Any?>>("media")
+                    ToolLabForegroundService.start(this, title, text, actions, media)
                     result.success(true)
                 }
                 "update" -> {
                     val title = call.argument<String>("title") ?: "ToolLab active"
                     val text = call.argument<String>("text") ?: "Running in background"
                     val actions = call.argument<List<String>>("actions")
-                    ToolLabForegroundService.update(this, title, text, actions)
+                    val media = call.argument<Map<String, Any?>>("media")
+                    ToolLabForegroundService.update(this, title, text, actions, media)
+                    result.success(true)
+                }
+                "playbackState" -> {
+                    val positionMs = (call.argument<Number>("positionMs") ?: 0).toLong()
+                    val playing = call.argument<Boolean>("playing") ?: false
+                    ToolLabForegroundService.updatePlayback(this, positionMs, playing)
                     result.success(true)
                 }
                 "stop" -> {

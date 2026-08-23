@@ -2,18 +2,47 @@ import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/services.dart';
 
-class ForegroundRuntimeLease {
-  ForegroundRuntimeLease._(
-    this._id, {
+/// Media-session payload for a lease. When set, the Android notification is
+/// rendered as a MediaStyle notification with metadata, a live progress bar
+/// (extrapolated from position + playing) and seek support.
+class MediaNotificationData {
+  final String title;
+  final String? artist;
+  final int? durationMs;
+  final int positionMs;
+  final bool playing;
+  final bool seekable;
+
+  const MediaNotificationData({
     required this.title,
-    required this.text,
-    this.actions,
+    this.artist,
+    this.durationMs,
+    required this.positionMs,
+    required this.playing,
+    this.seekable = false,
   });
 
+  Map<String, Object?> toMap() => <String, Object?>{
+    'title': title,
+    'artist': artist,
+    'durationMs': durationMs,
+    'positionMs': positionMs,
+    'playing': playing,
+    'seekable': seekable,
+  };
+}
+
+typedef _LeaseSnapshot = ({
+  String title,
+  String text,
+  List<String>? actions,
+  MediaNotificationData? media,
+});
+
+class ForegroundRuntimeLease {
+  ForegroundRuntimeLease._(this._id);
+
   final int _id;
-  final String title;
-  final String text;
-  final List<String>? actions;
   bool _released = false;
 
   Future<void> release() async {
@@ -26,6 +55,7 @@ class ForegroundRuntimeLease {
     required String title,
     required String text,
     List<String>? actions,
+    MediaNotificationData? media,
   }) async {
     if (_released) return;
     await ForegroundRuntimeService._updateLease(
@@ -33,6 +63,21 @@ class ForegroundRuntimeLease {
       title: title,
       text: text,
       actions: actions,
+      media: media,
+    );
+  }
+
+  /// Cheap position/state-only refresh. Updates the media session's playback
+  /// state so the system-extrapolated progress bar stays accurate without
+  /// rebuilding the notification.
+  Future<void> updatePlayback({
+    required int positionMs,
+    required bool playing,
+  }) async {
+    if (_released) return;
+    await ForegroundRuntimeService.updatePlayback(
+      positionMs: positionMs,
+      playing: playing,
     );
   }
 }
@@ -44,8 +89,7 @@ class ForegroundRuntimeService {
     'de.renier.tool_lab/foreground_runtime',
   );
 
-  static final Map<int, ({String title, String text, List<String>? actions})>
-  _activeLeases = <int, ({String title, String text, List<String>? actions})>{};
+  static final Map<int, _LeaseSnapshot> _activeLeases = <int, _LeaseSnapshot>{};
   static int _nextLeaseId = 1;
 
   static final List<void Function(String action)> _actionListeners = [];
@@ -92,30 +136,42 @@ class ForegroundRuntimeService {
     required String title,
     required String text,
     List<String>? actions,
+    MediaNotificationData? media,
   }) async {
     await requestNotificationPermission();
     final int leaseId = _nextLeaseId++;
     final bool wasInactive = _activeLeases.isEmpty;
-    _activeLeases[leaseId] = (title: title, text: text, actions: actions);
+    final snapshot = (title: title, text: text, actions: actions, media: media);
+    _activeLeases[leaseId] = snapshot;
     if (wasInactive) {
       await _invoke('start', {
         'title': title,
         'text': text,
         'actions': actions,
+        'media': media?.toMap(),
       });
     } else {
       await _invoke('update', {
         'title': title,
         'text': text,
         'actions': actions,
+        'media': media?.toMap(),
       });
     }
-    return ForegroundRuntimeLease._(
-      leaseId,
-      title: title,
-      text: text,
-      actions: actions,
-    );
+    return ForegroundRuntimeLease._(leaseId);
+  }
+
+  /// Position/state-only refresh of the active media session (no notification
+  /// rebuild). No-op when no lease carries a [MediaNotificationData].
+  static Future<void> updatePlayback({
+    required int positionMs,
+    required bool playing,
+  }) async {
+    if (!_activeLeases.values.any((s) => s.media != null)) return;
+    await _invoke('playbackState', {
+      'positionMs': positionMs,
+      'playing': playing,
+    });
   }
 
   static Future<void> releaseAll() async {
@@ -128,10 +184,21 @@ class ForegroundRuntimeService {
     required String title,
     required String text,
     List<String>? actions,
+    MediaNotificationData? media,
   }) async {
     if (!_activeLeases.containsKey(leaseId)) return;
-    _activeLeases[leaseId] = (title: title, text: text, actions: actions);
-    await _invoke('update', {'title': title, 'text': text, 'actions': actions});
+    _activeLeases[leaseId] = (
+      title: title,
+      text: text,
+      actions: actions,
+      media: media,
+    );
+    await _invoke('update', {
+      'title': title,
+      'text': text,
+      'actions': actions,
+      'media': media?.toMap(),
+    });
   }
 
   static Future<void> _releaseLease(int leaseId) async {
@@ -148,6 +215,7 @@ class ForegroundRuntimeService {
       'title': latest.title,
       'text': latest.text,
       'actions': latest.actions,
+      'media': latest.media?.toMap(),
     });
   }
 
