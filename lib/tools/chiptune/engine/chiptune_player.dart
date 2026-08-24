@@ -37,6 +37,11 @@ class SongPosition {
 /// buffer stream. A periodic feed loop keeps a small look-ahead buffer filled
 /// so playback stays smooth without large latency.
 class ChiptunePlayer {
+  /// Shared instance so playback survives leaving the tool page and keeps
+  /// running in the background via the foreground service. Never disposed —
+  /// it lives for the whole app lifetime.
+  static final ChiptunePlayer instance = ChiptunePlayer._();
+
   static const int sampleRate = 44100;
   static const String _logPrefix = '[ChiptunePlayer]';
 
@@ -73,8 +78,6 @@ class ChiptunePlayer {
   SoundHandle? _handle;
   Timer? _feedTimer;
   bool _feedInProgress = false;
-  StreamSubscription<RenderRowEvent>? _rowSubscription;
-  StreamSubscription<void>? _endedSubscription;
 
   ModuleFile? _module;
   WorkletModule? _worklet;
@@ -185,8 +188,10 @@ class ChiptunePlayer {
     }
   }
 
-  ChiptunePlayer() {
-    _rowSubscription = _renderWorker.onRow.listen((event) {
+  ChiptunePlayer._() {
+    // Subscriptions live for the app lifetime; the stream holds them, so no
+    // field reference is needed.
+    _renderWorker.onRow.listen((event) {
       if (!_uiUpdatesEnabled) return;
       final DateTime now = DateTime.now();
       final DateTime? last = _lastUiUpdateAt;
@@ -217,7 +222,7 @@ class ChiptunePlayer {
         );
       }
     });
-    _endedSubscription = _renderWorker.onEnded.listen((_) {
+    _renderWorker.onEnded.listen((_) {
       _rendererEnded = true;
     });
   }
@@ -1144,24 +1149,5 @@ class ChiptunePlayer {
     }
     final pos = orderRowAtSongTime(mod, clamped);
     seek(pos.order, pos.row);
-  }
-
-  void dispose() {
-    _stopInternal();
-    _disposeNativeSource();
-    _releaseSystemSource();
-    _releasePlaybackRuntimeLocks();
-    _systemSubscription?.cancel();
-    _systemSubscription = null;
-    _rowSubscription?.cancel();
-    _endedSubscription?.cancel();
-    _mediaButtonSub?.cancel();
-    _mediaButtonSub = null;
-    unawaited(_renderWorker.dispose());
-    state.dispose();
-    position.dispose();
-    channelActivity.dispose();
-    elapsed.dispose();
-    systemSpectrum.dispose();
   }
 }

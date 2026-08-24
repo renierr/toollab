@@ -4,6 +4,7 @@ import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'chiptune_page.dart';
+import 'chiptune_playback_state.dart';
 import 'chiptune_state.dart';
 import 'chiptune_sync_delegate.dart';
 
@@ -62,6 +63,9 @@ class ChiptuneTool {
     syncDelegateFactory: ChiptuneSyncDelegate.new,
     stateProviders: () => [
       ChangeNotifierProvider<ChiptuneState>(create: (_) => ChiptuneState()),
+      ChangeNotifierProvider<ChiptunePlaybackState>(
+        create: (_) => ChiptunePlaybackState(),
+      ),
     ],
   );
 }
