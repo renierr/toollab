@@ -204,36 +204,51 @@ class RenphoHealthConnectPublisher {
     }
   }
 
-  /// The granted subset, never an all-or-nothing verdict: Health Connect
-  /// revokes single types (unused-app reset, a type the user unticked, a type
-  /// this Health Connect version does not carry) and one missing type must not
-  /// keep the weight of every scan out.
+  /// The write types worth attempting - advisory, not a verdict. Health
+  /// Connect revokes single types (the unused-app reset, a type the user
+  /// unticked, a type this version does not carry), so one missing type must
+  /// not keep the weight of every scan out; and when the permission state
+  /// cannot be read at all, every type is attempted rather than none, because
+  /// a write without permission fails only its own type.
   Future<Set<hc.HealthDataPermission>> _grantedWriteTypes(
     hc.HealthConnector connector,
   ) async {
     final needed = _writePermissions;
-    var granted = await _readGranted(connector);
+    var read = await _readGranted(connector);
+    final granted = {...?read?.where(needed.contains)};
     final missing = needed.where((p) => !granted.contains(p)).toList();
     if (missing.isNotEmpty) {
       // A background run has no activity to show the sheet on, so this can
       // throw; whatever is already granted still gets written.
       try {
-        await connector.requestPermissions(missing);
-        granted = await _readGranted(connector);
+        for (final result in await connector.requestPermissions(missing)) {
+          final permission = result.permission;
+          if (result.status == hc.PermissionStatus.granted &&
+              permission is hc.HealthDataPermission) {
+            granted.add(permission);
+          }
+        }
+        final after = await _readGranted(connector);
+        if (after != null) {
+          read = after;
+          granted.addAll(needed.where(after.contains));
+        }
       } catch (e) {
         errorLog('[RenphoScale] Requesting write permissions failed: $e');
       }
     }
-    final usable = needed.where(granted.contains).toSet();
-    if (usable.length != needed.length) {
+    if (granted.isEmpty && read == null) return needed.toSet();
+    if (granted.length != needed.length) {
       debugLog(
-        '[RenphoScale] ${usable.length}/${needed.length} write permissions granted',
+        '[RenphoScale] ${granted.length}/${needed.length} write permissions granted',
       );
     }
-    return usable;
+    return granted;
   }
 
-  Future<Set<hc.HealthDataPermission>> _readGranted(
+  /// Null when the permission state could not be read, which is not the same as
+  /// nothing being granted.
+  Future<Set<hc.HealthDataPermission>?> _readGranted(
     hc.HealthConnector connector,
   ) async {
     try {
@@ -242,7 +257,7 @@ class RenphoHealthConnectPublisher {
           .toSet();
     } catch (e) {
       errorLog('[RenphoScale] Reading granted permissions failed: $e');
-      return const {};
+      return null;
     }
   }
 

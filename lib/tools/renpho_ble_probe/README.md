@@ -306,11 +306,12 @@ re-publish replaces rather than duplicates.
 The push is deliberately resilient, because a scan that misses Health Connect is
 otherwise lost until someone notices:
 
-- Permissions are evaluated per type. Health Connect can revoke a single type
-  (the unused-app reset, a type the user unticked, a type the installed version
-  does not carry); only the missing ones are re-requested and the granted ones
-  are still written. Nothing is published only when not a single type is
-  granted.
+- Permissions are evaluated per type and treated as advisory. Health Connect
+  can revoke a single type (the unused-app reset, a type the user unticked, a
+  type the installed version does not carry); only the missing ones are
+  re-requested and the granted ones are still written. The granted set is read
+  back, but a read that fails is not read as "nothing granted" — then every type
+  is attempted, since a write without permission fails only its own type.
 - Records are written one type at a time. One rejected value cannot take the
   other five down with it.
 - A scan is marked published only when every writable type went through, and the
