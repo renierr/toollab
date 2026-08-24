@@ -7,6 +7,11 @@ import 'package:tool_lab/tools/text_editor/widgets/text_editor_find_bar.dart';
 import 'package:tool_lab/tools/text_editor/widgets/text_editor_selection_toolbar.dart';
 
 class TextEditorSurface extends StatelessWidget {
+  /// Editor line height factor; the gutter reuses it so line numbers keep the
+  /// same line box as the code text and stay aligned at any font size.
+  static const _lineHeight = 1.4;
+  static const _numberScale = 0.85;
+
   final TextEditorState state;
 
   const TextEditorSurface({super.key, required this.state});
@@ -14,6 +19,11 @@ class TextEditorSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final numberStyle = TextStyle(
+      fontSize: state.fontSize * _numberScale,
+      height: _lineHeight / _numberScale,
+      fontFamilyFallback: const ['Consolas', 'Courier New', 'monospace'],
+    );
     return CodeEditor(
       controller: state.controller,
       scrollController: state.scrollController,
@@ -21,6 +31,7 @@ class TextEditorSurface extends StatelessWidget {
       wordWrap: state.wordWrap,
       style: CodeEditorStyle(
         fontSize: state.fontSize,
+        fontHeight: _lineHeight,
         fontFamilyFallback: const ['Consolas', 'Courier New', 'monospace'],
         cursorColor: theme.colorScheme.primary,
         selectionColor: theme.colorScheme.primary.withValues(alpha: 0.25),
@@ -36,13 +47,11 @@ class TextEditorSurface extends StatelessWidget {
               DefaultCodeLineNumber(
                 controller: editingController,
                 notifier: notifier,
-                textStyle: TextStyle(
+                textStyle: numberStyle.copyWith(
                   color: theme.colorScheme.outline,
-                  fontSize: state.fontSize * 0.85,
                 ),
-                focusedTextStyle: TextStyle(
+                focusedTextStyle: numberStyle.copyWith(
                   color: theme.colorScheme.onSurface,
-                  fontSize: state.fontSize * 0.85,
                 ),
               ),
               DefaultCodeChunkIndicator(

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ import 'package:tool_lab/tools/text_editor/widgets/text_editor_status_bar.dart';
 import 'package:tool_lab/tools/text_editor/widgets/text_editor_surface.dart';
 import 'package:tool_lab/tools/text_editor/widgets/text_editor_toolbar.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:tool_lab/widgets/file_name_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
@@ -160,12 +162,32 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
     }
   }
 
+  /// Closing returns to the file chooser; popping the route would dead-end in
+  /// a standalone single-tool launch, which has nothing to pop to.
+  Future<void> _closeDocument() async {
+    if (await _confirmLeave()) _state.closeDocument();
+  }
+
   Future<void> _saveAs() async {
     final l10n = AppLocalizations.of(context);
+    var name = _state.fileName ?? 'untitled.txt';
+    // Android exports straight into Downloads without a name prompt of its
+    // own; desktop gets the native Save As dialog instead.
+    if (Platform.isAndroid) {
+      final chosen = await showDialog<String>(
+        context: context,
+        builder: (context) => FileNameDialog(
+          title: l10n.textEditorFileNameTitle,
+          initialValue: name,
+        ),
+      );
+      if (chosen == null || !mounted) return;
+      name = chosen;
+    }
     final bytes = Uint8List.fromList(utf8.encode(_state.controller.text));
     final destPath = await FileSaveHelper.saveFile(
       context: context,
-      suggestedName: _state.fileName ?? 'untitled.txt',
+      suggestedName: name,
       bytes: bytes,
       successMessageGeneralBuilder: (displayPath) =>
           l10n.textEditorSavedTo(displayPath),
@@ -291,7 +313,7 @@ class _TextEditorToolPageState extends State<TextEditorToolPage>
               ),
               'save-as' => _saveAs(),
               'share' => _share(),
-              'close' => _requestPop(),
+              'close' => _closeDocument(),
               _ => {},
             },
             itemBuilder: (context) => [

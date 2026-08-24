@@ -8889,6 +8889,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get textEditorSaveAndClose => 'Speichern & schließen';
 
   @override
+  String get textEditorFileNameTitle => 'Dateiname';
+
+  @override
   String get textEditorSaveAs => 'Speichern unter…';
 
   @override

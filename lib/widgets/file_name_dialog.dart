@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
-class FileManagerNameDialog extends StatefulWidget {
+class FileNameDialog extends StatefulWidget {
   final String title;
   final String initialValue;
 
-  const FileManagerNameDialog({
+  const FileNameDialog({
     super.key,
     required this.title,
     required this.initialValue,
   });
 
   @override
-  State<FileManagerNameDialog> createState() => _FileManagerNameDialogState();
+  State<FileNameDialog> createState() => _FileNameDialogState();
 }
 
-class _FileManagerNameDialogState extends State<FileManagerNameDialog> {
+class _FileNameDialogState extends State<FileNameDialog> {
   late final TextEditingController _controller =
       TextEditingController.fromValue(
         TextEditingValue(

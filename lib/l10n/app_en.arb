@@ -4600,6 +4600,7 @@
   "textEditorUnsavedMessage": "The document has unsaved changes. Save before closing?",
   "textEditorDiscardChanges": "Discard",
   "textEditorSaveAndClose": "Save & close",
+  "textEditorFileNameTitle": "File name",
   "textEditorSaveAs": "Save as…",
   "textEditorSavedTo": "Saved to {path}",
   "@textEditorSavedTo": {

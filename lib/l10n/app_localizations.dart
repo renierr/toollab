@@ -15809,6 +15809,12 @@ abstract class AppLocalizations {
   /// **'Save & close'**
   String get textEditorSaveAndClose;
 
+  /// No description provided for @textEditorFileNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'File name'**
+  String get textEditorFileNameTitle;
+
   /// No description provided for @textEditorSaveAs.
   ///
   /// In en, this message translates to:

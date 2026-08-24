@@ -3595,6 +3595,7 @@
   "textEditorUnsavedMessage": "Das Dokument hat ungespeicherte Änderungen. Vor dem Schließen speichern?",
   "textEditorDiscardChanges": "Verwerfen",
   "textEditorSaveAndClose": "Speichern & schließen",
+  "textEditorFileNameTitle": "Dateiname",
   "textEditorSaveAs": "Speichern unter…",
   "textEditorSavedTo": "Gespeichert unter {path}",
   "@textEditorSavedTo": {

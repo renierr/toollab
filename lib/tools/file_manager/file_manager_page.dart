@@ -22,7 +22,7 @@ import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_name_list
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_drop_action_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
-import 'package:tool_lab/tools/file_manager/widgets/file_manager_name_dialog.dart';
+import 'package:tool_lab/widgets/file_name_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -465,8 +465,7 @@ class _FileManagerPageState extends State<FileManagerPage>
   }) async {
     return showDialog<String>(
       context: context,
-      builder: (_) =>
-          FileManagerNameDialog(title: title, initialValue: initialValue),
+      builder: (_) => FileNameDialog(title: title, initialValue: initialValue),
     );
   }
 

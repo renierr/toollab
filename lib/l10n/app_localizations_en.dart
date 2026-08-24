@@ -8822,6 +8822,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get textEditorSaveAndClose => 'Save & close';
 
   @override
+  String get textEditorFileNameTitle => 'File name';
+
+  @override
   String get textEditorSaveAs => 'Save as…';
 
   @override
