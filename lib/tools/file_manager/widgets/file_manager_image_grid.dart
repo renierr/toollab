@@ -8,6 +8,8 @@ import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_path_labels.dart';
 
 const int _maxColumns = 16;
+const double _coverOversample = 1.5;
+const int _maxDecodeWidth = 896;
 const double _spacing = 8;
 const double _gridPadding = 8;
 
@@ -304,15 +306,20 @@ class _ImageTile extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             const ColoredBox(color: Color(0x10888888)),
-            // Decode at 2x tile width; height stays proportional so
-            // BoxFit.cover crops correctly instead of distorting.
+            // BoxFit.cover fills the square from the shorter side, so a
+            // landscape photo needs more than the tile's own pixel width or it
+            // gets upscaled: 1.5x covers 4:3 exactly. Height stays
+            // proportional, and the cap bounds a high-DPI screen of tiles.
             Image.file(
               File(entry.path),
               fit: BoxFit.cover,
               filterQuality: FilterQuality.medium,
               cacheWidth:
-                  (tileExtent * 2 * MediaQuery.devicePixelRatioOf(context))
-                      .round(),
+                  (tileExtent *
+                          _coverOversample *
+                          MediaQuery.devicePixelRatioOf(context))
+                      .round()
+                      .clamp(96, _maxDecodeWidth),
               errorBuilder: (_, _, _) =>
                   const Icon(Icons.broken_image_outlined),
               gaplessPlayback: true,
