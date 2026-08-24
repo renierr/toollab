@@ -16006,6 +16006,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move {count} selected item(s) to \"{folder}\"?'**
   String fileManagerMoveMessage(int count, String folder);
+
+  /// No description provided for @fileManagerDateToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get fileManagerDateToday;
+
+  /// No description provided for @fileManagerDateYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get fileManagerDateYesterday;
+
+  /// No description provided for @fileManagerZoomIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Larger previews'**
+  String get fileManagerZoomIn;
+
+  /// No description provided for @fileManagerZoomOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Smaller previews'**
+  String get fileManagerZoomOut;
+
+  /// No description provided for @fileManagerUnknownDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown date'**
+  String get fileManagerUnknownDate;
+
+  /// No description provided for @fileManagerDeselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get fileManagerDeselectAll;
 }
 
 class _AppLocalizationsDelegate

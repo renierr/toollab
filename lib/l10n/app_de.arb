@@ -3642,5 +3642,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "fileManagerDateToday": "Heute",
+  "fileManagerDateYesterday": "Gestern",
+  "fileManagerZoomIn": "Größere Vorschau",
+  "fileManagerZoomOut": "Kleinere Vorschau",
+  "fileManagerUnknownDate": "Unbekanntes Datum",
+  "fileManagerDeselectAll": "Auswahl aufheben"
 }

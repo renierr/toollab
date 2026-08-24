@@ -604,6 +604,7 @@ class _FileManagerPageState extends State<FileManagerPage>
                 onToggleSelection: state.toggleSelection,
                 onEnterSelectionMode: state.enterSelectionMode,
                 onSelectAll: state.selectAll,
+                onToggleSelectAll: state.toggleSelectAll,
                 onClearSelection: state.clearSelection,
                 onDeleteSelection: _confirmDelete,
                 onMoveSelection: _moveSelection,

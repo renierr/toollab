@@ -8991,4 +8991,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String fileManagerMoveMessage(int count, String folder) {
     return '$count ausgewählte(s) Element(e) nach \"$folder\" verschieben?';
   }
+
+  @override
+  String get fileManagerDateToday => 'Heute';
+
+  @override
+  String get fileManagerDateYesterday => 'Gestern';
+
+  @override
+  String get fileManagerZoomIn => 'Größere Vorschau';
+
+  @override
+  String get fileManagerZoomOut => 'Kleinere Vorschau';
+
+  @override
+  String get fileManagerUnknownDate => 'Unbekanntes Datum';
+
+  @override
+  String get fileManagerDeselectAll => 'Auswahl aufheben';
 }

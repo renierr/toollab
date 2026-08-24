@@ -54,6 +54,7 @@ class FileManagerState extends ChangeNotifier {
   static const _sortAscendingKey = 'sort_ascending';
   static const _foldersFirstKey = 'folders_first';
   static const _startupPathKey = 'startup_path';
+  static const _imageTileExtentKey = 'image_tile_extent';
   static const _openToolPrefix = 'open_tool_';
   static const _secureStorage = FlutterSecureStorage();
 
@@ -109,6 +110,7 @@ class FileManagerState extends ChangeNotifier {
   int _listing = 0;
   bool _isScanningMetadata = false;
   FileManagerCategory _category = FileManagerCategory.none;
+  double _imageTileExtent = defaultImageTileExtent;
   List<FileManagerAppInfo> _installedApps = [];
   FileManagerStorageInfo? _storageInfo;
   static const List<ArchiveHandler> _archiveHandlers = [ZipArchiveHandler()];
@@ -180,6 +182,31 @@ class FileManagerState extends ChangeNotifier {
   FileManagerOperation? get operation => _operation;
   FileManagerSortField get sortField => _sortField;
   FileManagerCategory get category => _category;
+
+  static const double minImageTileExtent = 96;
+  static const double maxImageTileExtent = 320;
+  static const double defaultImageTileExtent = 160;
+  static const double _imageTileExtentStep = 32;
+
+  double get imageTileExtent => _imageTileExtent;
+  bool get canEnlargeImageTiles => _imageTileExtent < maxImageTileExtent;
+  bool get canShrinkImageTiles => _imageTileExtent > minImageTileExtent;
+
+  Future<void> stepImageTileExtent(bool enlarge) async {
+    final next =
+        (_imageTileExtent +
+                (enlarge ? _imageTileExtentStep : -_imageTileExtentStep))
+            .clamp(minImageTileExtent, maxImageTileExtent);
+    if (next == _imageTileExtent) return;
+    _imageTileExtent = next.toDouble();
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      FileManagerTool.config.id,
+      _imageTileExtentKey,
+      _imageTileExtent.toString(),
+    );
+  }
+
   List<FileManagerAppInfo> get installedApps => _installedApps;
   FileManagerStorageInfo? get storageInfo => _storageInfo;
 
@@ -549,6 +576,11 @@ class FileManagerState extends ChangeNotifier {
     _sortAscending = settings[_sortAscendingKey] != 'false';
     _foldersFirst = settings[_foldersFirstKey] != 'false';
     _startupPath = settings[_startupPathKey];
+    _imageTileExtent =
+        (double.tryParse(settings[_imageTileExtentKey] ?? '') ??
+                defaultImageTileExtent)
+            .clamp(minImageTileExtent, maxImageTileExtent)
+            .toDouble();
     for (final category in FileManagerOpenCategory.values) {
       _openToolIds[category] = settings['$_openToolPrefix${category.name}'];
     }
@@ -1009,6 +1041,19 @@ class FileManagerState extends ChangeNotifier {
       ..clear()
       ..addAll(_entries.map((entry) => entry.path));
     notifyListeners();
+  }
+
+  bool get isAllSelected =>
+      _entries.isNotEmpty && _selectedPaths.length == _entries.length;
+
+  void toggleSelectAll() {
+    if (isAllSelected) {
+      _selectedPaths.clear();
+      _isSelectionMode = true;
+      notifyListeners();
+      return;
+    }
+    selectAll();
   }
 
   void clearSelection() {

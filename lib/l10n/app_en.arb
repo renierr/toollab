@@ -4646,5 +4646,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "fileManagerDateToday": "Today",
+  "fileManagerDateYesterday": "Yesterday",
+  "fileManagerZoomIn": "Larger previews",
+  "fileManagerZoomOut": "Smaller previews",
+  "fileManagerUnknownDate": "Unknown date",
+  "fileManagerDeselectAll": "Deselect all"
 }

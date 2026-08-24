@@ -3,10 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_date_groups.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_path_labels.dart';
-
-const double _tileExtent = 160;
 
 class FileManagerImageGrid extends StatefulWidget {
   final List<FileManagerEntry> entries;
@@ -15,6 +14,7 @@ class FileManagerImageGrid extends StatefulWidget {
   final Set<String> selectedPaths;
   final bool isSelectionMode;
   final ValueChanged<FileManagerEntry> onToggleSelection;
+  final double tileExtent;
 
   const FileManagerImageGrid({
     super.key,
@@ -24,6 +24,7 @@ class FileManagerImageGrid extends StatefulWidget {
     required this.selectedPaths,
     required this.isSelectionMode,
     required this.onToggleSelection,
+    required this.tileExtent,
   });
 
   @override
@@ -40,11 +41,13 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
         child: Text(AppLocalizations.of(context).fileManagerNoImages),
       );
     }
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final now = DateTime.now();
     final groups = <String, List<FileManagerEntry>>{};
     for (final entry in widget.entries) {
       groups.putIfAbsent(p.dirname(entry.path), () => []).add(entry);
     }
-
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -60,30 +63,62 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
             ),
           ),
           if (!_collapsedFolders.contains(group.key))
-            SliverGrid(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: _tileExtent,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 1,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => _ImageTile(
-                  entry: group.value[index],
-                  selected: widget.selectedPaths.contains(
-                    group.value[index].path,
-                  ),
-                  selectionMode: widget.isSelectionMode,
-                  onOpen: widget.onOpen,
-                  onToggleSelection: widget.onToggleSelection,
+            for (final dateGroup in _byDate(
+              group.value,
+              now,
+              locale,
+              l10n,
+            )) ...[
+              SliverToBoxAdapter(child: _DateHeader(label: dateGroup.key)),
+              SliverGrid(
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: widget.tileExtent,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 1,
                 ),
-                childCount: group.value.length,
-                addAutomaticKeepAlives: false,
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => _ImageTile(
+                    entry: dateGroup.value[index],
+                    tileExtent: widget.tileExtent,
+                    selected: widget.selectedPaths.contains(
+                      dateGroup.value[index].path,
+                    ),
+                    selectionMode: widget.isSelectionMode,
+                    onOpen: widget.onOpen,
+                    onToggleSelection: widget.onToggleSelection,
+                  ),
+                  childCount: dateGroup.value.length,
+                  addAutomaticKeepAlives: false,
+                ),
               ),
-            ),
+            ],
         ],
       ],
     );
+  }
+
+  /// Entries arrive newest first, so consecutive runs of the same date label
+  /// are the groups — no extra sort, no map of the whole listing.
+  List<MapEntry<String, List<FileManagerEntry>>> _byDate(
+    List<FileManagerEntry> entries,
+    DateTime now,
+    String locale,
+    AppLocalizations l10n,
+  ) {
+    final groups = <MapEntry<String, List<FileManagerEntry>>>[];
+    for (final entry in entries) {
+      final modified = entry.modified;
+      final label = modified == null
+          ? l10n.fileManagerUnknownDate
+          : fileManagerDateGroup(modified, now, locale, l10n);
+      if (groups.isNotEmpty && groups.last.key == label) {
+        groups.last.value.add(entry);
+      } else {
+        groups.add(MapEntry(label, [entry]));
+      }
+    }
+    return groups;
   }
 
   void Function() _toggleCollapsed(String folder) {
@@ -168,8 +203,36 @@ class _GroupHeader extends StatelessWidget {
   }
 }
 
+class _DateHeader extends StatelessWidget {
+  final String label;
+
+  const _DateHeader({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(child: Divider(height: 1, color: theme.dividerColor)),
+        ],
+      ),
+    );
+  }
+}
+
 class _ImageTile extends StatelessWidget {
   final FileManagerEntry entry;
+  final double tileExtent;
   final bool selected;
   final bool selectionMode;
   final ValueChanged<FileManagerEntry> onOpen;
@@ -177,6 +240,7 @@ class _ImageTile extends StatelessWidget {
 
   const _ImageTile({
     required this.entry,
+    required this.tileExtent,
     required this.selected,
     required this.selectionMode,
     required this.onOpen,
@@ -210,7 +274,7 @@ class _ImageTile extends StatelessWidget {
               fit: BoxFit.cover,
               filterQuality: FilterQuality.medium,
               cacheWidth:
-                  (_tileExtent * 2 * MediaQuery.devicePixelRatioOf(context))
+                  (tileExtent * 2 * MediaQuery.devicePixelRatioOf(context))
                       .round(),
               errorBuilder: (_, _, _) =>
                   const Icon(Icons.broken_image_outlined),

@@ -33,6 +33,7 @@ class FileManagerExplorer extends StatelessWidget {
   final ValueChanged<FileManagerEntry> onToggleSelection;
   final VoidCallback onEnterSelectionMode;
   final VoidCallback onSelectAll;
+  final VoidCallback onToggleSelectAll;
   final VoidCallback onClearSelection;
   final VoidCallback onDeleteSelection;
   final VoidCallback onMoveSelection;
@@ -61,6 +62,7 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onToggleSelection,
     required this.onEnterSelectionMode,
     required this.onSelectAll,
+    required this.onToggleSelectAll,
     required this.onClearSelection,
     required this.onDeleteSelection,
     required this.onMoveSelection,
@@ -83,7 +85,8 @@ class FileManagerExplorer extends StatelessWidget {
         onOpenImage: onOpen,
         onOpenSystemPath: onOpenPath,
         onToggleSelection: onToggleSelection,
-        onSelectAll: onSelectAll,
+        onEnterSelectionMode: onEnterSelectionMode,
+        onToggleSelectAll: onToggleSelectAll,
         onClearSelection: onClearSelection,
         onDeleteSelection: onDeleteSelection,
         onMoveSelection: onMoveSelection,
@@ -324,7 +327,8 @@ class _CategoryView extends StatelessWidget {
   final ValueChanged<FileManagerEntry> onOpenImage;
   final ValueChanged<String> onOpenSystemPath;
   final ValueChanged<FileManagerEntry> onToggleSelection;
-  final VoidCallback onSelectAll;
+  final VoidCallback onEnterSelectionMode;
+  final VoidCallback onToggleSelectAll;
   final VoidCallback onClearSelection;
   final VoidCallback onDeleteSelection;
   final VoidCallback onMoveSelection;
@@ -336,7 +340,8 @@ class _CategoryView extends StatelessWidget {
     required this.onOpenImage,
     required this.onOpenSystemPath,
     required this.onToggleSelection,
-    required this.onSelectAll,
+    required this.onEnterSelectionMode,
+    required this.onToggleSelectAll,
     required this.onClearSelection,
     required this.onDeleteSelection,
     required this.onMoveSelection,
@@ -345,7 +350,7 @@ class _CategoryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final selecting = state.hasSelection;
+    final selecting = state.isSelectionMode || state.hasSelection;
     return Column(
       children: [
         Material(
@@ -372,23 +377,56 @@ class _CategoryView extends StatelessWidget {
                 ),
               ),
               if (state.category == FileManagerCategory.images &&
-                  !state.isRemote) ...[
+                  !selecting) ...[
                 IconButton(
-                  tooltip: l10n.fileManagerSelectAll,
+                  tooltip: l10n.fileManagerZoomOut,
+                  onPressed: state.canShrinkImageTiles
+                      ? () => state.stepImageTileExtent(false)
+                      : null,
+                  icon: const Icon(Icons.zoom_out),
+                ),
+                IconButton(
+                  tooltip: l10n.fileManagerZoomIn,
+                  onPressed: state.canEnlargeImageTiles
+                      ? () => state.stepImageTileExtent(true)
+                      : null,
+                  icon: const Icon(Icons.zoom_in),
+                ),
+              ],
+              if (state.category == FileManagerCategory.images &&
+                  !state.isRemote) ...[
+                if (!selecting)
+                  IconButton(
+                    tooltip: l10n.fileManagerSelect,
+                    onPressed: state.isLoading || state.entries.isEmpty
+                        ? null
+                        : onEnterSelectionMode,
+                    icon: const Icon(Icons.checklist_outlined),
+                  ),
+                IconButton(
+                  tooltip: state.isAllSelected
+                      ? l10n.fileManagerDeselectAll
+                      : l10n.fileManagerSelectAll,
                   onPressed: state.isLoading || state.entries.isEmpty
                       ? null
-                      : onSelectAll,
-                  icon: const Icon(Icons.select_all),
+                      : onToggleSelectAll,
+                  icon: Icon(
+                    state.isAllSelected ? Icons.deselect : Icons.select_all,
+                  ),
                 ),
                 if (selecting) ...[
                   IconButton(
                     tooltip: l10n.fileManagerMove,
-                    onPressed: state.isLoading ? null : onMoveSelection,
+                    onPressed: state.isLoading || !state.hasSelection
+                        ? null
+                        : onMoveSelection,
                     icon: const Icon(Icons.drive_file_move_outline),
                   ),
                   IconButton(
                     tooltip: l10n.commonDelete,
-                    onPressed: state.isLoading ? null : onDeleteSelection,
+                    onPressed: state.isLoading || !state.hasSelection
+                        ? null
+                        : onDeleteSelection,
                     icon: const Icon(Icons.delete_outline),
                   ),
                 ],
@@ -422,6 +460,7 @@ class _CategoryView extends StatelessWidget {
                       selectedPaths: state.selectedPaths,
                       isSelectionMode: state.isSelectionMode,
                       onToggleSelection: onToggleSelection,
+                      tileExtent: state.imageTileExtent,
                     ),
                   ),
                   FileManagerCategory.apps => FileManagerAppsView(
