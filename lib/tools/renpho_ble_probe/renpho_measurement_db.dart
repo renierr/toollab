@@ -200,12 +200,14 @@ class RenphoMeasurementDb {
   }
 
   /// Bumped without touching `updated_at`, so publishing does not make the row
-  /// look edited to the backend sync.
+  /// look edited to the backend sync. Stamped with the version that was
+  /// actually written, not the wall clock, so an edit made while the publish
+  /// ran still shows up as pending afterwards.
   Future<void> markHealthConnectPublished(RenphoMeasurement measurement) async {
     final db = await _database();
     await db.update(
       table,
-      {'health_connect_published_at': DateTime.now().millisecondsSinceEpoch},
+      {'health_connect_published_at': measurement.updatedAt},
       where: 'uid = ?',
       whereArgs: [measurement.uid],
     );

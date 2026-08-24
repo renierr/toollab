@@ -119,7 +119,8 @@ class RenphoHealthConnectPublisher {
         return const RenphoPublishResult(RenphoPublishOutcome.ran);
       }
       final connector = await hc.HealthConnector.create();
-      if (!await _ensureWriteAccess(connector)) {
+      final granted = await _grantedWriteTypes(connector);
+      if (granted.isEmpty) {
         return const RenphoPublishResult(RenphoPublishOutcome.noPermission);
       }
       var published = 0;
@@ -136,7 +137,7 @@ class RenphoHealthConnectPublisher {
           // One rejected scan must not stop the others, and it stays
           // unpublished so a later fix still picks it up.
           try {
-            await _publish(connector, measurement);
+            await _publish(connector, measurement, granted);
             published++;
             await work?.update('Published $published of ${pending.length}');
           } catch (e) {
@@ -147,7 +148,10 @@ class RenphoHealthConnectPublisher {
       } finally {
         await work?.release();
       }
-      _lastRun = DateTime.now();
+      // Only a clean run arms the throttle, so a scan that failed to reach
+      // Health Connect is retried on the next open instead of being held back
+      // for five minutes.
+      if (failed == 0) _lastRun = DateTime.now();
       return RenphoPublishResult(
         RenphoPublishOutcome.ran,
         published: published,
@@ -170,7 +174,7 @@ class RenphoHealthConnectPublisher {
     }
     try {
       final connector = await hc.HealthConnector.create();
-      if (!await _ensureWriteAccess(connector)) {
+      if ((await _grantedWriteTypes(connector)).isEmpty) {
         return const RenphoPublishResult(RenphoPublishOutcome.noPermission);
       }
       final earliest = await RenphoMeasurementDb.instance.earliestMeasurement();
@@ -200,25 +204,75 @@ class RenphoHealthConnectPublisher {
     }
   }
 
-  Future<bool> _ensureWriteAccess(hc.HealthConnector connector) async {
+  /// The granted subset, never an all-or-nothing verdict: Health Connect
+  /// revokes single types (unused-app reset, a type the user unticked, a type
+  /// this Health Connect version does not carry) and one missing type must not
+  /// keep the weight of every scan out.
+  Future<Set<hc.HealthDataPermission>> _grantedWriteTypes(
+    hc.HealthConnector connector,
+  ) async {
     final needed = _writePermissions;
-    await connector.requestPermissions(needed);
-    // Already-granted permissions are not requestable, so the granted set is
-    // authoritative. One write call contains every type in [needed].
+    var granted = await _readGranted(connector);
+    final missing = needed.where((p) => !granted.contains(p)).toList();
+    if (missing.isNotEmpty) {
+      // A background run has no activity to show the sheet on, so this can
+      // throw; whatever is already granted still gets written.
+      try {
+        await connector.requestPermissions(missing);
+        granted = await _readGranted(connector);
+      } catch (e) {
+        errorLog('[RenphoScale] Requesting write permissions failed: $e');
+      }
+    }
+    final usable = needed.where(granted.contains).toSet();
+    if (usable.length != needed.length) {
+      debugLog(
+        '[RenphoScale] ${usable.length}/${needed.length} write permissions granted',
+      );
+    }
+    return usable;
+  }
+
+  Future<Set<hc.HealthDataPermission>> _readGranted(
+    hc.HealthConnector connector,
+  ) async {
     try {
-      final granted = await connector.getGrantedPermissions();
-      return needed.every(granted.contains);
+      return (await connector.getGrantedPermissions())
+          .whereType<hc.HealthDataPermission>()
+          .toSet();
     } catch (e) {
       errorLog('[RenphoScale] Reading granted permissions failed: $e');
-      return false;
+      return const {};
     }
   }
 
+  /// Written one type at a time: a single record Health Connect rejects would
+  /// otherwise take the whole scan down with it. The scan counts as published
+  /// only when every writable type went through, so a transient failure is
+  /// retried - the client record id makes a repeat an upsert, never a
+  /// duplicate.
   Future<void> _publish(
     hc.HealthConnector connector,
     RenphoMeasurement measurement,
+    Set<hc.HealthDataPermission> granted,
   ) async {
-    await connector.writeRecords(_recordsFor(measurement));
+    var wrote = 0;
+    final failures = <String>[];
+    for (final group in _recordGroups(measurement)) {
+      if (!granted.contains(group.permission)) continue;
+      try {
+        await connector.writeRecords(group.records);
+        wrote++;
+      } catch (e) {
+        failures.add('${group.part}: $e');
+      }
+    }
+    if (wrote == 0) {
+      throw StateError(
+        failures.isEmpty ? 'no writable record types' : failures.join('; '),
+      );
+    }
+    if (failures.isNotEmpty) throw StateError(failures.join('; '));
     await RenphoMeasurementDb.instance.markHealthConnectPublished(measurement);
   }
 
@@ -266,43 +320,85 @@ class RenphoHealthConnectPublisher {
 
   /// Health Connect rejects an out-of-range value and takes the whole batch
   /// down with it, so each derived figure is clamped to the type's own limits.
-  List<hc.HealthRecord> _recordsFor(RenphoMeasurement measurement) {
+  List<_RenphoRecordGroup> _recordGroups(RenphoMeasurement measurement) {
     final derived = RenphoDerived(measurement);
     final time = measurement.measuredAt;
     return [
-      hc.WeightRecord(
-        time: time,
-        weight: hc.Mass.kilograms(renphoClamp(measurement.weightKg, 1, 1000)),
-        metadata: _metadata(measurement, _partWeight),
+      _RenphoRecordGroup(
+        _partWeight,
+        hc.HealthDataType.weight.writePermission,
+        [
+          hc.WeightRecord(
+            time: time,
+            weight: hc.Mass.kilograms(
+              renphoClamp(measurement.weightKg, 1, 1000),
+            ),
+            metadata: _metadata(measurement, _partWeight),
+          ),
+        ],
       ),
-      hc.BodyFatPercentageRecord(
-        time: time,
-        percentage: hc.Percentage.fromWhole(
-          renphoClamp(measurement.bodyFatPercent, 0, 100),
-        ),
-        metadata: _metadata(measurement, _partBodyFat),
+      _RenphoRecordGroup(
+        _partBodyFat,
+        hc.HealthDataType.bodyFatPercentage.writePermission,
+        [
+          hc.BodyFatPercentageRecord(
+            time: time,
+            percentage: hc.Percentage.fromWhole(
+              renphoClamp(measurement.bodyFatPercent, 0, 100),
+            ),
+            metadata: _metadata(measurement, _partBodyFat),
+          ),
+        ],
       ),
-      hc.LeanBodyMassRecord(
-        time: time,
-        mass: hc.Mass.kilograms(renphoClamp(derived.fatFreeMassKg, 1, 1000)),
-        metadata: _metadata(measurement, _partLeanMass),
+      _RenphoRecordGroup(
+        _partLeanMass,
+        hc.HealthDataType.leanBodyMass.writePermission,
+        [
+          hc.LeanBodyMassRecord(
+            time: time,
+            mass: hc.Mass.kilograms(
+              renphoClamp(derived.fatFreeMassKg, 1, 1000),
+            ),
+            metadata: _metadata(measurement, _partLeanMass),
+          ),
+        ],
       ),
-      hc.BoneMassRecord(
-        time: time,
-        mass: hc.Mass.kilograms(renphoClamp(derived.boneMassKg, 0.1, 15)),
-        metadata: _metadata(measurement, _partBoneMass),
+      _RenphoRecordGroup(
+        _partBoneMass,
+        hc.HealthDataType.boneMass.writePermission,
+        [
+          hc.BoneMassRecord(
+            time: time,
+            mass: hc.Mass.kilograms(renphoClamp(derived.boneMassKg, 0.1, 15)),
+            metadata: _metadata(measurement, _partBoneMass),
+          ),
+        ],
       ),
-      hc.BodyWaterMassRecord(
-        time: time,
-        mass: hc.Mass.kilograms(renphoClamp(derived.bodyWaterMassKg, 0.3, 500)),
-        metadata: _metadata(measurement, _partBodyWater),
+      _RenphoRecordGroup(
+        _partBodyWater,
+        hc.HealthDataType.bodyWaterMass.writePermission,
+        [
+          hc.BodyWaterMassRecord(
+            time: time,
+            mass: hc.Mass.kilograms(
+              renphoClamp(derived.bodyWaterMassKg, 0.3, 500),
+            ),
+            metadata: _metadata(measurement, _partBodyWater),
+          ),
+        ],
       ),
-      hc.BasalMetabolicRateRecord(
-        time: time,
-        rate: hc.Power.kilocaloriesPerDay(
-          renphoClamp(derived.bmrForExportKcal, 0, 10000),
-        ),
-        metadata: _metadata(measurement, _partBmr),
+      _RenphoRecordGroup(
+        _partBmr,
+        hc.HealthDataType.basalMetabolicRate.writePermission,
+        [
+          hc.BasalMetabolicRateRecord(
+            time: time,
+            rate: hc.Power.kilocaloriesPerDay(
+              renphoClamp(derived.bmrForExportKcal, 0, 10000),
+            ),
+            metadata: _metadata(measurement, _partBmr),
+          ),
+        ],
       ),
     ];
   }
@@ -319,4 +415,12 @@ class RenphoHealthConnectPublisher {
         // sync, so the newest version of a scan wins the upsert.
         clientRecordVersion: measurement.updatedAt,
       );
+}
+
+class _RenphoRecordGroup {
+  final String part;
+  final hc.HealthDataPermission permission;
+  final List<hc.HealthRecord> records;
+
+  const _RenphoRecordGroup(this.part, this.permission, this.records);
 }

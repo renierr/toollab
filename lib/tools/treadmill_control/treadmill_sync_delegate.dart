@@ -1,11 +1,19 @@
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/tools/treadmill_control/config.dart';
 import 'package:tool_lab/tools/treadmill_control/treadmill_control_db.dart';
+import 'package:tool_lab/tools/treadmill_control/treadmill_health_connect_publisher.dart';
 import 'package:tool_lab/widgets/workout/workout_session.dart';
 
 class TreadmillSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => TreadmillControlTool.config.id;
+
+  @override
+  Future<void> publishToHealthConnect() async {
+    await TreadmillHealthConnectPublisher.instance.publishPendingSessions(
+      force: true,
+    );
+  }
 
   @override
   Future<List<Map<String, dynamic>>> getLocalSyncRecords() async {

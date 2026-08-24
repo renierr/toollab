@@ -28,6 +28,11 @@ abstract class SyncDelegate {
   });
 
   Future<void> finalizeLocalSync(String id, bool wasDeleted);
+
+  /// Runs after the backend sync, for tools that also push their records into
+  /// Health Connect. Device-local and independent of the backend, so it runs
+  /// even when the tool takes no part in sync.
+  Future<void> publishToHealthConnect();
 }
 
 mixin DefaultSyncDelegate implements SyncDelegate {
@@ -47,6 +52,9 @@ mixin DefaultSyncDelegate implements SyncDelegate {
 
   @override
   Future<void> saveSyncCursor(String syncId, String cursor) async {}
+
+  @override
+  Future<void> publishToHealthConnect() async {}
 }
 
 /// What the backend stores for one tool namespace. [toolId] is the server-side

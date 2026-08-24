@@ -1,12 +1,22 @@
 import 'package:tool_lab/services/sync_service.dart';
 
 import 'config.dart';
+import 'renpho_health_connect_publisher.dart';
 import 'renpho_measurement.dart';
 import 'renpho_measurement_db.dart';
 
 class RenphoSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => RenphoBleProbeTool.config.id;
+
+  /// Not forced: the Health Connect switch stays the user's decision, but a
+  /// sync must never wait behind the background throttle.
+  @override
+  Future<void> publishToHealthConnect() async {
+    await RenphoHealthConnectPublisher.instance.publishPending(
+      skipThrottle: true,
+    );
+  }
 
   @override
   Future<List<Map<String, dynamic>>> getLocalSyncRecords() async {

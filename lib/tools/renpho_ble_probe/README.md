@@ -303,6 +303,27 @@ enabled it writes weight, body fat, lean mass, bone mass, body water and BMR,
 each record tagged with a client id derived from the measurement uid so a
 re-publish replaces rather than duplicates.
 
+The push is deliberately resilient, because a scan that misses Health Connect is
+otherwise lost until someone notices:
+
+- Permissions are evaluated per type. Health Connect can revoke a single type
+  (the unused-app reset, a type the user unticked, a type the installed version
+  does not carry); only the missing ones are re-requested and the granted ones
+  are still written. Nothing is published only when not a single type is
+  granted.
+- Records are written one type at a time. One rejected value cannot take the
+  other five down with it.
+- A scan is marked published only when every writable type went through, and the
+  marker stores the `updated_at` that was written, so a failure or a concurrent
+  edit leaves it pending. Re-publishing is an upsert on the client record id, so
+  a retry never duplicates.
+- The five-minute throttle is armed only by a clean run, and a failed run is
+  retried on the next open.
+- Publishing runs after a scan, on tool open, and on every backend sync — the
+  sync path goes through `SyncDelegate.publishToHealthConnect()`, so it fires
+  even when the tool itself takes no part in sync. The local Health Connect
+  switch still decides.
+
 ## Profile
 
 Sex, height and birth date never reach the scale; they only feed the

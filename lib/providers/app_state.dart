@@ -6,8 +6,6 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/core/tool_registry.dart';
 import 'package:tool_lab/services/background_work_lease.dart';
 import 'package:tool_lab/services/database_service.dart';
-import 'package:tool_lab/tools/treadmill_control/treadmill_health_connect_publisher.dart';
-import 'package:tool_lab/tools/treadmill_control/treadmill_sync_delegate.dart';
 import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
@@ -266,19 +264,19 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Handing finished treadmill sessions to Health Connect is device-local and
-  /// has nothing to do with the backend, so it runs whether or not the treadmill
-  /// tool takes part in sync, and its failure never fails the sync result. It
-  /// stays ordered after the sync so sessions just pulled from the backend are
-  /// published too.
-  Future<void> _publishTreadmillSessions() async {
-    try {
-      // Manual sync: never throttled away.
-      await TreadmillHealthConnectPublisher.instance.publishPendingSessions(
-        force: true,
-      );
-    } catch (e) {
-      errorLog('[AppState] Treadmill Health Connect publish failed: $e');
+  /// Handing records to Health Connect is device-local and has nothing to do
+  /// with the backend, so it runs whether or not the tool takes part in sync,
+  /// and one tool's failure never fails the sync result. It stays ordered after
+  /// the sync so records just pulled from the backend are published too.
+  Future<void> _publishToHealthConnect(List<SyncDelegate> delegates) async {
+    for (final delegate in delegates) {
+      try {
+        await delegate.publishToHealthConnect();
+      } catch (e) {
+        errorLog(
+          '[AppState] Health Connect publish failed for ${delegate.toolId}: $e',
+        );
+      }
     }
   }
 
@@ -291,13 +289,12 @@ class AppState extends ChangeNotifier {
   ) async {
     if (_isSyncing) return null;
 
-    final publishTreadmill = requested.any((d) => d is TreadmillSyncDelegate);
     final delegates = _syncServerUrl.isEmpty
         ? const <SyncDelegate>[]
         : requested.where((d) => isToolSyncEnabled(d.toolId)).toList();
 
     if (delegates.isEmpty) {
-      if (publishTreadmill) await _publishTreadmillSessions();
+      await _publishToHealthConnect(requested);
       return null;
     }
 
@@ -351,7 +348,7 @@ class AppState extends ChangeNotifier {
           failures.add('${delegate.toolId}: $e');
         }
       }
-      if (publishTreadmill) await _publishTreadmillSessions();
+      await _publishToHealthConnect(requested);
 
       if (failures.isNotEmpty) throw Exception(failures.join('; '));
 
