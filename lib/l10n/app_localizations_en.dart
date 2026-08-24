@@ -334,6 +334,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chipNextTrackTooltip => 'Next track';
 
   @override
+  String get chipMiniPlayerTooltip => 'Now playing';
+
+  @override
+  String get chipMiniOpenPlayer => 'Open player';
+
+  @override
   String get chipRandomMenuTooltip => 'Random tune';
 
   @override

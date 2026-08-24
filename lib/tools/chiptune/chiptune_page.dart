@@ -58,7 +58,13 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     final settings = context.read<ChiptuneState>();
     _playback.onMessage = (message) =>
         _showSnack(message(AppLocalizations.of(context)));
+    _playback.onManualRandomSkip = () => ModArchiveFetchDialog.show(
+      context,
+      _playback.modArchive,
+      autoPlay: true,
+    );
     onDispose(() => _playback.onMessage = null);
+    onDispose(() => _playback.onManualRandomSkip = null);
 
     void applySettings() => _playback.applySettings(settings);
     settings.addListener(applySettings);
@@ -160,34 +166,11 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     }
   }
 
-  /// Manual skip via the transport next button — keeps the fetch-progress modal.
-  Future<void> _skipRandom() async {
-    final tune = await ModArchiveFetchDialog.show(
-      context,
-      _playback.modArchive,
-      autoPlay: true,
-    );
-    if (tune == null || !mounted) return;
-    if (!await _playback.playRandomTune(tune) && mounted) {
-      _showSnack(
-        AppLocalizations.of(context).chipFailedToParseModule(tune.fileName),
-      );
-    }
-  }
-
+  /// Manual skip via the transport next button — keeps the fetch-progress
+  /// modal through [ChiptunePlaybackState.onManualRandomSkip].
   VoidCallback? _nextButtonAction() {
     if (!_playback.hasNext) return null;
-    return () {
-      if (_playback.randomModeActive) {
-        _skipRandom();
-      } else if (_playback.serverRandomModeActive) {
-        _playback.startServerRandom();
-      } else if (_playback.nextPlaylistIndex != null) {
-        _playback.playPlaylistIndex(_playback.nextPlaylistIndex!);
-      } else if (_playback.nextArchivedId != null) {
-        _playback.playArchived(_playback.nextArchivedId!);
-      }
-    };
+    return () => _playback.skipNext();
   }
 
   // ---- Device selection ----

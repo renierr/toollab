@@ -131,6 +131,8 @@
   "chipRandomTooltip": "Random tune from The Mod Archive",
   "chipNextRandomTooltip": "Next random tune",
   "chipNextTrackTooltip": "Next track",
+  "chipMiniPlayerTooltip": "Now playing",
+  "chipMiniOpenPlayer": "Open player",
   "chipRandomMenuTooltip": "Random tune",
   "chipRandomSourceLabel": "Source",
   "chipRandomSourceModArchive": "The Mod Archive",

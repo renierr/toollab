@@ -686,6 +686,18 @@ abstract class AppLocalizations {
   /// **'Next track'**
   String get chipNextTrackTooltip;
 
+  /// No description provided for @chipMiniPlayerTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get chipMiniPlayerTooltip;
+
+  /// No description provided for @chipMiniOpenPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open player'**
+  String get chipMiniOpenPlayer;
+
   /// No description provided for @chipRandomMenuTooltip.
   ///
   /// In en, this message translates to:

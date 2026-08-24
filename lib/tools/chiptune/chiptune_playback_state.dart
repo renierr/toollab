@@ -87,6 +87,11 @@ class ChiptunePlaybackState extends ChangeNotifier with WidgetsBindingObserver {
   /// snackbars whenever a page is attached to listen.
   void Function(String Function(AppLocalizations l10n) message)? onMessage;
 
+  /// Set by the page (and any mini-player UI). Lets [skipNext] keep the
+  /// ModArchive fetch dialog for manual random skips; without it a manual skip
+  /// in random mode falls back to a silent auto-fetch.
+  Future<ModArchiveTune?> Function()? onManualRandomSkip;
+
   ChiptunePlaybackState() {
     WidgetsBinding.instance.addObserver(this);
     player.onEnded = _onPlaybackEnded;
@@ -147,6 +152,20 @@ class ChiptunePlaybackState extends ChangeNotifier with WidgetsBindingObserver {
 
   int? get nextPlaylistIndex => _nextPlaylistIndex();
   String? get nextArchivedId => _nextArchivedId();
+
+  /// Manual 'next' from any UI (transport bar, notification, mini-player).
+  /// Random mode keeps its fetch dialog via [onManualRandomSkip] when set.
+  Future<void> skipNext() async {
+    if (_randomMode && onManualRandomSkip != null) {
+      final tune = await onManualRandomSkip!();
+      if (tune == null) return;
+      if (!await playRandomTune(tune)) {
+        _emit((l10n) => l10n.chipFailedToParseModule(tune.fileName));
+      }
+      return;
+    }
+    await _onPlaybackNext();
+  }
 
   static bool _isNativeAudioName(String name) {
     final lower = name.toLowerCase();
