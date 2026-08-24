@@ -54,7 +54,7 @@ class FileManagerState extends ChangeNotifier {
   static const _sortAscendingKey = 'sort_ascending';
   static const _foldersFirstKey = 'folders_first';
   static const _startupPathKey = 'startup_path';
-  static const _imageColumnsKey = 'image_columns';
+  static const _imageTileSizeKey = 'image_tile_size';
   static const _openToolPrefix = 'open_tool_';
   static const _secureStorage = FlutterSecureStorage();
 
@@ -110,9 +110,8 @@ class FileManagerState extends ChangeNotifier {
   int _listing = 0;
   bool _isScanningMetadata = false;
   FileManagerCategory _category = FileManagerCategory.none;
-  int? _imageColumns;
-  int _imageAutoColumns = 4;
-  int _imageMaxColumns = maxImageColumns;
+  double _imageTileSize = defaultImageTileSize;
+  double _imageGridWidth = 0;
   List<FileManagerAppInfo> _installedApps = [];
   FileManagerStorageInfo? _storageInfo;
   static const List<ArchiveHandler> _archiveHandlers = [ZipArchiveHandler()];
@@ -185,44 +184,44 @@ class FileManagerState extends ChangeNotifier {
   FileManagerSortField get sortField => _sortField;
   FileManagerCategory get category => _category;
 
-  /// Preview size is a column count, not a pixel size: a pixel size only
-  /// changes the layout when it crosses a column boundary, so several of the
-  /// steps used to do nothing. Null follows the width until the user zooms.
-  static const int minImageColumns = 1;
-  static const int maxImageColumns = 16;
+  /// Preview size is a target width: the grid still fits as many columns as
+  /// the window allows, so resizing keeps working. A step alone can land on
+  /// the same column count, so stepping continues until the layout changes.
+  static const double minImageTileSize = 80;
+  static const double maxImageTileSize = 400;
+  static const double defaultImageTileSize = 160;
+  static const double _imageTileSizeStep = 16;
 
-  int get imageColumns => _imageColumns ?? _imageAutoColumns;
-  bool get canEnlargeImageTiles => imageColumns > minImageColumns;
-  bool get canShrinkImageTiles => imageColumns < _imageMaxColumns;
+  double get imageTileSize => _imageTileSize;
+  bool get canEnlargeImageTiles => _imageTileSize < maxImageTileSize;
+  bool get canShrinkImageTiles => _imageTileSize > minImageTileSize;
 
-  /// The grid reports what its width allows — the count it would pick on its
-  /// own, and the most columns that still leave a usable thumbnail — so the
-  /// first zoom starts from what the user sees and the buttons stop where the
-  /// layout stops changing.
-  void reportImageGridColumns(int auto, int max) {
-    if (_imageAutoColumns == auto && _imageMaxColumns == max) return;
-    final wasEnabled = canShrinkImageTiles;
-    _imageAutoColumns = auto;
-    _imageMaxColumns = max;
-    if (_imageColumns == null || wasEnabled != canShrinkImageTiles) {
-      notifyListeners();
+  void reportImageGridWidth(double width) => _imageGridWidth = width;
+
+  Future<void> stepImageTileSize(bool enlarge) async {
+    final columns = _columnsFor(_imageTileSize);
+    var next = _imageTileSize;
+    while (true) {
+      final candidate =
+          (next + (enlarge ? _imageTileSizeStep : -_imageTileSizeStep))
+              .clamp(minImageTileSize, maxImageTileSize)
+              .toDouble();
+      if (candidate == next) break;
+      next = candidate;
+      if (_columnsFor(next) != columns) break;
     }
-  }
-
-  Future<void> stepImageZoom(bool enlarge) async {
-    final next = (imageColumns + (enlarge ? -1 : 1)).clamp(
-      minImageColumns,
-      _imageMaxColumns,
-    );
-    if (next == _imageColumns) return;
-    _imageColumns = next;
+    if (next == _imageTileSize) return;
+    _imageTileSize = next;
     notifyListeners();
     await DatabaseService.instance.setSetting(
       FileManagerTool.config.id,
-      _imageColumnsKey,
-      next.toString(),
+      _imageTileSizeKey,
+      _imageTileSize.toString(),
     );
   }
+
+  int _columnsFor(double tileSize) =>
+      _imageGridWidth <= 0 ? 0 : (_imageGridWidth / tileSize).ceil();
 
   List<FileManagerAppInfo> get installedApps => _installedApps;
   FileManagerStorageInfo? get storageInfo => _storageInfo;
@@ -593,9 +592,11 @@ class FileManagerState extends ChangeNotifier {
     _sortAscending = settings[_sortAscendingKey] != 'false';
     _foldersFirst = settings[_foldersFirstKey] != 'false';
     _startupPath = settings[_startupPathKey];
-    _imageColumns = int.tryParse(
-      settings[_imageColumnsKey] ?? '',
-    )?.clamp(minImageColumns, maxImageColumns);
+    _imageTileSize =
+        (double.tryParse(settings[_imageTileSizeKey] ?? '') ??
+                defaultImageTileSize)
+            .clamp(minImageTileSize, maxImageTileSize)
+            .toDouble();
     for (final category in FileManagerOpenCategory.values) {
       _openToolIds[category] = settings['$_openToolPrefix${category.name}'];
     }

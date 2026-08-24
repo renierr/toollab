@@ -381,14 +381,14 @@ class _CategoryView extends StatelessWidget {
                 IconButton(
                   tooltip: l10n.fileManagerZoomOut,
                   onPressed: state.canShrinkImageTiles
-                      ? () => state.stepImageZoom(false)
+                      ? () => state.stepImageTileSize(false)
                       : null,
                   icon: const Icon(Icons.zoom_out),
                 ),
                 IconButton(
                   tooltip: l10n.fileManagerZoomIn,
                   onPressed: state.canEnlargeImageTiles
-                      ? () => state.stepImageZoom(true)
+                      ? () => state.stepImageTileSize(true)
                       : null,
                   icon: const Icon(Icons.zoom_in),
                 ),
@@ -460,8 +460,8 @@ class _CategoryView extends StatelessWidget {
                       selectedPaths: state.selectedPaths,
                       isSelectionMode: state.isSelectionMode,
                       onToggleSelection: onToggleSelection,
-                      columns: state.imageColumns,
-                      onGridColumns: state.reportImageGridColumns,
+                      tileSize: state.imageTileSize,
+                      onGridWidth: state.reportImageGridWidth,
                     ),
                   ),
                   FileManagerCategory.apps => FileManagerAppsView(

@@ -7,8 +7,6 @@ import 'package:tool_lab/tools/file_manager/file_manager_date_groups.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_path_labels.dart';
 
-const double _referenceTileExtent = 160;
-const double _minTileExtent = 72;
 const int _maxColumns = 16;
 const double _spacing = 8;
 const double _gridPadding = 8;
@@ -20,8 +18,8 @@ class FileManagerImageGrid extends StatefulWidget {
   final Set<String> selectedPaths;
   final bool isSelectionMode;
   final ValueChanged<FileManagerEntry> onToggleSelection;
-  final int columns;
-  final void Function(int auto, int max) onGridColumns;
+  final double tileSize;
+  final ValueChanged<double> onGridWidth;
 
   const FileManagerImageGrid({
     super.key,
@@ -31,8 +29,8 @@ class FileManagerImageGrid extends StatefulWidget {
     required this.selectedPaths,
     required this.isSelectionMode,
     required this.onToggleSelection,
-    required this.columns,
-    required this.onGridColumns,
+    required this.tileSize,
+    required this.onGridWidth,
   });
 
   @override
@@ -41,8 +39,6 @@ class FileManagerImageGrid extends StatefulWidget {
 
 class _FileManagerImageGridState extends State<FileManagerImageGrid> {
   final Set<String> _collapsedFolders = {};
-  int? _reportedAutoColumns;
-  int? _reportedMaxColumns;
 
   @override
   Widget build(BuildContext context) {
@@ -61,11 +57,8 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth - _gridPadding * 2;
-        _reportColumns(width);
-        final columns = widget.columns.clamp(
-          1,
-          (width / _minTileExtent).floor().clamp(1, _maxColumns),
-        );
+        widget.onGridWidth(width);
+        final columns = (width / widget.tileSize).ceil().clamp(1, _maxColumns);
         final tileExtent = (width - _spacing * (columns - 1)) / columns;
         return _buildGrid(
           context,
@@ -78,17 +71,6 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
         );
       },
     );
-  }
-
-  void _reportColumns(double width) {
-    final auto = (width / _referenceTileExtent).round().clamp(1, _maxColumns);
-    final max = (width / _minTileExtent).floor().clamp(1, _maxColumns);
-    if (auto == _reportedAutoColumns && max == _reportedMaxColumns) return;
-    _reportedAutoColumns = auto;
-    _reportedMaxColumns = max;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) widget.onGridColumns(auto, max);
-    });
   }
 
   Widget _buildGrid(
