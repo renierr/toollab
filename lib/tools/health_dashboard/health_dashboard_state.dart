@@ -268,7 +268,7 @@ class HealthDashboardState extends ChangeNotifier {
     }
   }
 
-  Future<void> refreshOnOpen() async {
+  Future<void> refreshOnOpen({Future<void> Function()? backendSync}) async {
     if (isCollecting) return;
     // Show what is already stored before any Health Connect work, so opening the
     // tool is never gated on an import.
@@ -292,6 +292,15 @@ class HealthDashboardState extends ChangeNotifier {
           title: 'Health Dashboard sync',
         );
         await _syncHealthConnect();
+      }
+      // Same order as the toolbar refresh: pull from Health Connect first so the
+      // push ships a superset.
+      if (backendSync != null) {
+        work ??= await _beginBackgroundWork(
+          'Syncing...',
+          title: 'Health Dashboard sync',
+        );
+        await backendSync();
       }
       // Unconditional: the treadmill publish above writes rows the sync result
       // says nothing about.

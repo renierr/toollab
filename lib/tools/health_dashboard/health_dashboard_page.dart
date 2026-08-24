@@ -26,7 +26,9 @@ class _HealthDashboardPageState extends State<HealthDashboardPage>
     onDispose(() => appRouteObserver.unsubscribe(this));
     Future<void>.microtask(() async {
       if (!mounted) return;
-      await context.read<HealthDashboardState>().refreshOnOpen();
+      await context.read<HealthDashboardState>().refreshOnOpen(
+        backendSync: _backendSync(),
+      );
     });
   }
 
@@ -48,15 +50,18 @@ class _HealthDashboardPageState extends State<HealthDashboardPage>
   /// in as a closure so the tool's state never reaches for [AppState] - and it
   /// is left out entirely when this tool has no delegate registered, which is
   /// also what the global switch being off looks like from here.
-  Future<void> _refresh() {
+  Future<void> Function()? _backendSync() {
     final appState = context.read<AppState>();
     final delegates = appState.syncDelegates
         .where((delegate) => delegate.toolId == HealthDashboardTool.config.id)
         .toList();
+    if (delegates.isEmpty) return null;
+    return () => appState.syncWithBackend(delegates);
+  }
+
+  Future<void> _refresh() {
     return context.read<HealthDashboardState>().refresh(
-      backendSync: delegates.isEmpty
-          ? null
-          : () => appState.syncWithBackend(delegates),
+      backendSync: _backendSync(),
     );
   }
 
