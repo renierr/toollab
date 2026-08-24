@@ -207,6 +207,7 @@ class FileManagerState extends ChangeNotifier {
   /// Leaves the special view and reloads the folder that was open before.
   Future<void> closeCategory() async {
     if (!isBrowsingCategory) return;
+    clearSelection();
     _category = FileManagerCategory.none;
     notifyListeners();
     if (_locationType == FileManagerLocationType.local) {
@@ -1304,6 +1305,15 @@ class FileManagerState extends ChangeNotifier {
       clearSelection();
       await refresh();
     });
+  }
+
+  Future<void> moveSelectedTo(String destination) async {
+    if (isRemote || _selectedPaths.isEmpty) return;
+    await _runLocalOperation(
+      _selectedPaths.toList(),
+      destination: destination,
+      move: true,
+    );
   }
 
   bool canExtract(FileManagerEntry entry) =>

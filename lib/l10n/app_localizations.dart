@@ -15982,6 +15982,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select all'**
   String get textEditorSelectAll;
+
+  /// No description provided for @fileManagerChooseDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose destination folder'**
+  String get fileManagerChooseDestination;
+
+  /// No description provided for @fileManagerSelectFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select folder'**
+  String get fileManagerSelectFolder;
+
+  /// No description provided for @fileManagerMoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move selected files?'**
+  String get fileManagerMoveTitle;
+
+  /// No description provided for @fileManagerMoveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Move {count} selected item(s) to \"{folder}\"?'**
+  String fileManagerMoveMessage(int count, String folder);
 }
 
 class _AppLocalizationsDelegate

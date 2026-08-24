@@ -690,7 +690,6 @@
     }
   },
   "focusPlayingSound": "Playing {name}",
-
   "@focusPlayingSound": {
     "placeholders": {
       "name": {
@@ -4633,5 +4632,19 @@
   "textEditorFontSize": "Font size",
   "commonCut": "Cut",
   "commonPaste": "Paste",
-  "textEditorSelectAll": "Select all"
+  "textEditorSelectAll": "Select all",
+  "fileManagerChooseDestination": "Choose destination folder",
+  "fileManagerSelectFolder": "Select folder",
+  "fileManagerMoveTitle": "Move selected files?",
+  "fileManagerMoveMessage": "Move {count} selected item(s) to \"{folder}\"?",
+  "@fileManagerMoveMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  }
 }

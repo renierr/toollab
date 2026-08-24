@@ -12,12 +12,18 @@ class FileManagerImageGrid extends StatefulWidget {
   final List<FileManagerEntry> entries;
   final ValueChanged<FileManagerEntry> onOpen;
   final ValueChanged<String> onOpenFolder;
+  final Set<String> selectedPaths;
+  final bool isSelectionMode;
+  final ValueChanged<FileManagerEntry> onToggleSelection;
 
   const FileManagerImageGrid({
     super.key,
     required this.entries,
     required this.onOpen,
     required this.onOpenFolder,
+    required this.selectedPaths,
+    required this.isSelectionMode,
+    required this.onToggleSelection,
   });
 
   @override
@@ -64,7 +70,12 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
               delegate: SliverChildBuilderDelegate(
                 (context, index) => _ImageTile(
                   entry: group.value[index],
+                  selected: widget.selectedPaths.contains(
+                    group.value[index].path,
+                  ),
+                  selectionMode: widget.isSelectionMode,
                   onOpen: widget.onOpen,
+                  onToggleSelection: widget.onToggleSelection,
                 ),
                 childCount: group.value.length,
                 addAutomaticKeepAlives: false,
@@ -159,17 +170,35 @@ class _GroupHeader extends StatelessWidget {
 
 class _ImageTile extends StatelessWidget {
   final FileManagerEntry entry;
+  final bool selected;
+  final bool selectionMode;
   final ValueChanged<FileManagerEntry> onOpen;
+  final ValueChanged<FileManagerEntry> onToggleSelection;
 
-  const _ImageTile({required this.entry, required this.onOpen});
+  const _ImageTile({
+    required this.entry,
+    required this.selected,
+    required this.selectionMode,
+    required this.onOpen,
+    required this.onToggleSelection,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return InkWell(
       borderRadius: BorderRadius.circular(8),
-      onTap: () => onOpen(entry),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+      onTap: () => selectionMode ? onToggleSelection(entry) : onOpen(entry),
+      onLongPress: () => onToggleSelection(entry),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? theme.colorScheme.primary : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -195,6 +224,21 @@ class _ImageTile extends StatelessWidget {
                 );
               },
             ),
+            if (selected)
+              ColoredBox(
+                color: theme.colorScheme.primary.withValues(alpha: 0.35),
+              ),
+            if (selectionMode || selected)
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Icon(
+                  selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                  size: 20,
+                  color: selected ? theme.colorScheme.primary : Colors.white70,
+                  shadows: const [Shadow(blurRadius: 4)],
+                ),
+              ),
             Positioned(
               left: 0,
               right: 0,
@@ -204,10 +248,10 @@ class _ImageTile extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 child: Text(
                   entry.name,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: Colors.white),
-                  maxLines: 1,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

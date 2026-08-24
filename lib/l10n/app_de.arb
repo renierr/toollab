@@ -3628,5 +3628,19 @@
   "textEditorFontSize": "Schriftgröße",
   "commonCut": "Ausschneiden",
   "commonPaste": "Einfügen",
-  "textEditorSelectAll": "Alles auswählen"
+  "textEditorSelectAll": "Alles auswählen",
+  "fileManagerChooseDestination": "Zielordner wählen",
+  "fileManagerSelectFolder": "Ordner auswählen",
+  "fileManagerMoveTitle": "Ausgewählte Dateien verschieben?",
+  "fileManagerMoveMessage": "{count} ausgewählte(s) Element(e) nach \"{folder}\" verschieben?",
+  "@fileManagerMoveMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "folder": {
+        "type": "String"
+      }
+    }
+  }
 }

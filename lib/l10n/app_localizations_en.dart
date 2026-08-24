@@ -8910,4 +8910,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get textEditorSelectAll => 'Select all';
+
+  @override
+  String get fileManagerChooseDestination => 'Choose destination folder';
+
+  @override
+  String get fileManagerSelectFolder => 'Select folder';
+
+  @override
+  String get fileManagerMoveTitle => 'Move selected files?';
+
+  @override
+  String fileManagerMoveMessage(int count, String folder) {
+    return 'Move $count selected item(s) to \"$folder\"?';
+  }
 }

@@ -8977,4 +8977,18 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get textEditorSelectAll => 'Alles auswählen';
+
+  @override
+  String get fileManagerChooseDestination => 'Zielordner wählen';
+
+  @override
+  String get fileManagerSelectFolder => 'Ordner auswählen';
+
+  @override
+  String get fileManagerMoveTitle => 'Ausgewählte Dateien verschieben?';
+
+  @override
+  String fileManagerMoveMessage(int count, String folder) {
+    return '$count ausgewählte(s) Element(e) nach \"$folder\" verschieben?';
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
@@ -13,6 +14,7 @@ import 'package:tool_lab/tools/file_manager/config.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
 import 'package:tool_lab/tools/file_manager/archives/archive_handler.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_path_labels.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_archive_conflict_dialog.dart';
@@ -21,7 +23,9 @@ import 'package:tool_lab/tools/file_manager/widgets/file_manager_details_dialog.
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_entry_name_list.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_drop_action_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_explorer.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_folder_picker_dialog.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_locations.dart';
+import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/file_name_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
@@ -357,6 +361,32 @@ class _FileManagerPageState extends State<FileManagerPage>
     return true;
   }
 
+  Future<void> _moveSelection() async {
+    final state = context.read<FileManagerState>();
+    final l10n = AppLocalizations.of(context);
+    final selected = state.selectedPaths.toList();
+    if (selected.isEmpty) return;
+    final destination = await showDialog<String>(
+      context: context,
+      builder: (_) =>
+          FileManagerFolderPickerDialog(initialPath: p.dirname(selected.first)),
+    );
+    if (destination == null || !mounted) return;
+    final confirmed = await ConfirmActionDialog.show(
+      context: context,
+      title: l10n.fileManagerMoveTitle,
+      message: l10n.fileManagerMoveMessage(
+        selected.length,
+        fileManagerFolderLabel(destination),
+      ),
+      cancelLabel: l10n.commonCancel,
+      confirmLabel: l10n.fileManagerMove,
+      confirmColor: Theme.of(context).colorScheme.primary,
+    );
+    if (confirmed != true || !mounted) return;
+    await state.moveSelectedTo(destination);
+  }
+
   Future<void> _requestStorageAccess() async {
     _awaitingStorageAccess = true;
     await FileManagerStorageAccess.requestAllFilesAccess();
@@ -576,6 +606,7 @@ class _FileManagerPageState extends State<FileManagerPage>
                 onSelectAll: state.selectAll,
                 onClearSelection: state.clearSelection,
                 onDeleteSelection: _confirmDelete,
+                onMoveSelection: _moveSelection,
                 onCreateZip: _createZip,
                 onExtract: _extractArchive,
                 onRefresh: state.refresh,
