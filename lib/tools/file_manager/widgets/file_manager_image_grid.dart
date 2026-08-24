@@ -7,6 +7,12 @@ import 'package:tool_lab/tools/file_manager/file_manager_date_groups.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_path_labels.dart';
 
+const double _referenceTileExtent = 160;
+const double _minTileExtent = 72;
+const int _maxColumns = 16;
+const double _spacing = 8;
+const double _gridPadding = 8;
+
 class FileManagerImageGrid extends StatefulWidget {
   final List<FileManagerEntry> entries;
   final ValueChanged<FileManagerEntry> onOpen;
@@ -14,7 +20,8 @@ class FileManagerImageGrid extends StatefulWidget {
   final Set<String> selectedPaths;
   final bool isSelectionMode;
   final ValueChanged<FileManagerEntry> onToggleSelection;
-  final double tileExtent;
+  final int columns;
+  final void Function(int auto, int max) onGridColumns;
 
   const FileManagerImageGrid({
     super.key,
@@ -24,7 +31,8 @@ class FileManagerImageGrid extends StatefulWidget {
     required this.selectedPaths,
     required this.isSelectionMode,
     required this.onToggleSelection,
-    required this.tileExtent,
+    required this.columns,
+    required this.onGridColumns,
   });
 
   @override
@@ -33,6 +41,8 @@ class FileManagerImageGrid extends StatefulWidget {
 
 class _FileManagerImageGridState extends State<FileManagerImageGrid> {
   final Set<String> _collapsedFolders = {};
+  int? _reportedAutoColumns;
+  int? _reportedMaxColumns;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +58,48 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
     for (final entry in widget.entries) {
       groups.putIfAbsent(p.dirname(entry.path), () => []).add(entry);
     }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth - _gridPadding * 2;
+        _reportColumns(width);
+        final columns = widget.columns.clamp(
+          1,
+          (width / _minTileExtent).floor().clamp(1, _maxColumns),
+        );
+        final tileExtent = (width - _spacing * (columns - 1)) / columns;
+        return _buildGrid(
+          context,
+          l10n,
+          locale,
+          now,
+          groups,
+          columns,
+          tileExtent,
+        );
+      },
+    );
+  }
+
+  void _reportColumns(double width) {
+    final auto = (width / _referenceTileExtent).round().clamp(1, _maxColumns);
+    final max = (width / _minTileExtent).floor().clamp(1, _maxColumns);
+    if (auto == _reportedAutoColumns && max == _reportedMaxColumns) return;
+    _reportedAutoColumns = auto;
+    _reportedMaxColumns = max;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) widget.onGridColumns(auto, max);
+    });
+  }
+
+  Widget _buildGrid(
+    BuildContext context,
+    AppLocalizations l10n,
+    String locale,
+    DateTime now,
+    Map<String, List<FileManagerEntry>> groups,
+    int columns,
+    double tileExtent,
+  ) {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -70,26 +122,29 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
               l10n,
             )) ...[
               SliverToBoxAdapter(child: _DateHeader(label: dateGroup.key)),
-              SliverGrid(
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: widget.tileExtent,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 1,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => _ImageTile(
-                    entry: dateGroup.value[index],
-                    tileExtent: widget.tileExtent,
-                    selected: widget.selectedPaths.contains(
-                      dateGroup.value[index].path,
-                    ),
-                    selectionMode: widget.isSelectionMode,
-                    onOpen: widget.onOpen,
-                    onToggleSelection: widget.onToggleSelection,
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: _gridPadding),
+                sliver: SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    mainAxisSpacing: _spacing,
+                    crossAxisSpacing: _spacing,
+                    childAspectRatio: 1,
                   ),
-                  childCount: dateGroup.value.length,
-                  addAutomaticKeepAlives: false,
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _ImageTile(
+                      entry: dateGroup.value[index],
+                      tileExtent: tileExtent,
+                      selected: widget.selectedPaths.contains(
+                        dateGroup.value[index].path,
+                      ),
+                      selectionMode: widget.isSelectionMode,
+                      onOpen: widget.onOpen,
+                      onToggleSelection: widget.onToggleSelection,
+                    ),
+                    childCount: dateGroup.value.length,
+                    addAutomaticKeepAlives: false,
+                  ),
                 ),
               ),
             ],

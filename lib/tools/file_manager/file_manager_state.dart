@@ -54,7 +54,7 @@ class FileManagerState extends ChangeNotifier {
   static const _sortAscendingKey = 'sort_ascending';
   static const _foldersFirstKey = 'folders_first';
   static const _startupPathKey = 'startup_path';
-  static const _imageTileExtentKey = 'image_tile_extent';
+  static const _imageColumnsKey = 'image_columns';
   static const _openToolPrefix = 'open_tool_';
   static const _secureStorage = FlutterSecureStorage();
 
@@ -110,7 +110,9 @@ class FileManagerState extends ChangeNotifier {
   int _listing = 0;
   bool _isScanningMetadata = false;
   FileManagerCategory _category = FileManagerCategory.none;
-  double _imageTileExtent = defaultImageTileExtent;
+  int? _imageColumns;
+  int _imageAutoColumns = 4;
+  int _imageMaxColumns = maxImageColumns;
   List<FileManagerAppInfo> _installedApps = [];
   FileManagerStorageInfo? _storageInfo;
   static const List<ArchiveHandler> _archiveHandlers = [ZipArchiveHandler()];
@@ -183,27 +185,42 @@ class FileManagerState extends ChangeNotifier {
   FileManagerSortField get sortField => _sortField;
   FileManagerCategory get category => _category;
 
-  static const double minImageTileExtent = 96;
-  static const double maxImageTileExtent = 320;
-  static const double defaultImageTileExtent = 160;
-  static const double _imageTileExtentStep = 32;
+  /// Preview size is a column count, not a pixel size: a pixel size only
+  /// changes the layout when it crosses a column boundary, so several of the
+  /// steps used to do nothing. Null follows the width until the user zooms.
+  static const int minImageColumns = 1;
+  static const int maxImageColumns = 16;
 
-  double get imageTileExtent => _imageTileExtent;
-  bool get canEnlargeImageTiles => _imageTileExtent < maxImageTileExtent;
-  bool get canShrinkImageTiles => _imageTileExtent > minImageTileExtent;
+  int get imageColumns => _imageColumns ?? _imageAutoColumns;
+  bool get canEnlargeImageTiles => imageColumns > minImageColumns;
+  bool get canShrinkImageTiles => imageColumns < _imageMaxColumns;
 
-  Future<void> stepImageTileExtent(bool enlarge) async {
-    final next =
-        (_imageTileExtent +
-                (enlarge ? _imageTileExtentStep : -_imageTileExtentStep))
-            .clamp(minImageTileExtent, maxImageTileExtent);
-    if (next == _imageTileExtent) return;
-    _imageTileExtent = next.toDouble();
+  /// The grid reports what its width allows — the count it would pick on its
+  /// own, and the most columns that still leave a usable thumbnail — so the
+  /// first zoom starts from what the user sees and the buttons stop where the
+  /// layout stops changing.
+  void reportImageGridColumns(int auto, int max) {
+    if (_imageAutoColumns == auto && _imageMaxColumns == max) return;
+    final wasEnabled = canShrinkImageTiles;
+    _imageAutoColumns = auto;
+    _imageMaxColumns = max;
+    if (_imageColumns == null || wasEnabled != canShrinkImageTiles) {
+      notifyListeners();
+    }
+  }
+
+  Future<void> stepImageZoom(bool enlarge) async {
+    final next = (imageColumns + (enlarge ? -1 : 1)).clamp(
+      minImageColumns,
+      _imageMaxColumns,
+    );
+    if (next == _imageColumns) return;
+    _imageColumns = next;
     notifyListeners();
     await DatabaseService.instance.setSetting(
       FileManagerTool.config.id,
-      _imageTileExtentKey,
-      _imageTileExtent.toString(),
+      _imageColumnsKey,
+      next.toString(),
     );
   }
 
@@ -576,11 +593,9 @@ class FileManagerState extends ChangeNotifier {
     _sortAscending = settings[_sortAscendingKey] != 'false';
     _foldersFirst = settings[_foldersFirstKey] != 'false';
     _startupPath = settings[_startupPathKey];
-    _imageTileExtent =
-        (double.tryParse(settings[_imageTileExtentKey] ?? '') ??
-                defaultImageTileExtent)
-            .clamp(minImageTileExtent, maxImageTileExtent)
-            .toDouble();
+    _imageColumns = int.tryParse(
+      settings[_imageColumnsKey] ?? '',
+    )?.clamp(minImageColumns, maxImageColumns);
     for (final category in FileManagerOpenCategory.values) {
       _openToolIds[category] = settings['$_openToolPrefix${category.name}'];
     }
