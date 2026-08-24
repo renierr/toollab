@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 
 class FileManagerEntryIcon extends StatelessWidget {
   final FileManagerEntry entry;
@@ -18,11 +20,15 @@ class FileManagerEntryIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (showPreview && isImage(entry)) {
+      final crop = context.select<FileManagerState, bool>(
+        (state) => state.cropImagePreviews,
+      );
       // Only cacheWidth: constraining both axes squashes the decode instead of
-      // letting BoxFit.cover crop. Decoding at 2x keeps cropped wide images
-      // sharp; height stays proportional, so a thumbnail is still tiny.
-      final cacheWidth = (size * 2 * MediaQuery.devicePixelRatioOf(context))
-          .round();
+      // letting the fit crop. Cropping needs the extra factor so a wide image
+      // still fills the square; fitting is bounded by the longer side.
+      final cacheWidth =
+          (size * (crop ? 2 : 1) * MediaQuery.devicePixelRatioOf(context))
+              .round();
       return ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: SizedBox(
@@ -31,7 +37,7 @@ class FileManagerEntryIcon extends StatelessWidget {
           child: Image.file(
             File(entry.path),
             cacheWidth: cacheWidth,
-            fit: BoxFit.cover,
+            fit: crop ? BoxFit.cover : BoxFit.contain,
             filterQuality: FilterQuality.medium,
             gaplessPlayback: true,
             errorBuilder: (_, _, _) => _fallbackIcon(context),
