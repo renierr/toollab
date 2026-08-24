@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/app_route_observer.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../config.dart';
@@ -12,27 +13,32 @@ import '../engine/chiptune_player.dart' as engine;
 /// tool. Expands into a compact info card with transport controls and a jump
 /// back to the player page.
 ///
-/// Lives above the app Navigator (MaterialApp.builder), which provides no
-/// Overlay — so it deliberately avoids FABs, Tooltips and dialogs, and
-/// navigates through the passed [router] instead of context lookups.
-class ChiptuneMiniPlayer extends StatefulWidget {
+/// Contributed through the tool's `overlayBuilder`, so it lives above the app
+/// Navigator, which provides no Overlay — it deliberately avoids FABs, Tooltips
+/// and dialogs, and navigates through the passed [router] instead of context
+/// lookups. Sitting above the Navigator it would also paint over a modal
+/// barrier, hence the [popupRouteActive] gate.
+class ChiptuneMiniPlayer extends StatelessWidget {
   final GoRouter router;
 
   const ChiptuneMiniPlayer({super.key, required this.router});
 
   @override
-  State<ChiptuneMiniPlayer> createState() => _ChiptuneMiniPlayerState();
-}
-
-class _ChiptuneMiniPlayerState extends State<ChiptuneMiniPlayer> {
-  bool _expanded = false;
-
-  @override
   Widget build(BuildContext context) {
-    final delegate = widget.router.routerDelegate;
+    final delegate = router.routerDelegate;
     return ListenableBuilder(
-      listenable: delegate,
+      listenable: Listenable.merge([
+        ChiptunePlaybackState.sessionStarted,
+        popupRouteActive,
+        delegate,
+      ]),
       builder: (context, _) {
+        // Reading the provider before the session exists would create it — and
+        // the audio engine with it — for users who never open the tool.
+        if (!ChiptunePlaybackState.sessionStarted.value ||
+            popupRouteActive.value) {
+          return const SizedBox.shrink();
+        }
         // Not .uri: it ignores pushed (imperative) routes, so the guard would
         // miss the player page when it was reached via router.push.
         final matches = delegate.currentConfiguration.matches;
@@ -41,40 +47,68 @@ class _ChiptuneMiniPlayerState extends State<ChiptuneMiniPlayer> {
         if (path == playerRoute || path.startsWith('$playerRoute/')) {
           return const SizedBox.shrink();
         }
-        final playback = context.watch<ChiptunePlaybackState>();
-        return ValueListenableBuilder<engine.ChiptunePlaybackState>(
-          valueListenable: playback.player.state,
-          builder: (context, state, _) {
-            final active =
-                state == engine.ChiptunePlaybackState.playing ||
-                state == engine.ChiptunePlaybackState.paused;
-            if (!active) {
-              _expanded = false;
-              return const SizedBox.shrink();
-            }
-            final l10n = AppLocalizations.of(context);
-            return Positioned(
-              left: 12,
-              bottom: 12 + MediaQuery.paddingOf(context).bottom,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_expanded) ...[
-                    _MiniPlayerCard(router: widget.router),
-                    const SizedBox(height: 8),
-                  ],
-                  _MiniPlayerButton(
-                    expanded: _expanded,
-                    label: l10n.chipMiniPlayerTooltip,
-                    onToggle: () => setState(() => _expanded = !_expanded),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
+        return _MiniPlayerGate(router: router);
       },
+    );
+  }
+}
+
+/// Mounts the mini player only while the shared player holds a track, so the
+/// expanded/collapsed state resets by itself once playback stops.
+class _MiniPlayerGate extends StatelessWidget {
+  final GoRouter router;
+
+  const _MiniPlayerGate({required this.router});
+
+  @override
+  Widget build(BuildContext context) {
+    final playback = context.watch<ChiptunePlaybackState>();
+    return ValueListenableBuilder<engine.ChiptunePlaybackState>(
+      valueListenable: playback.player.state,
+      builder: (context, state, _) {
+        final active =
+            state == engine.ChiptunePlaybackState.playing ||
+            state == engine.ChiptunePlaybackState.paused;
+        if (!active) return const SizedBox.shrink();
+        return _MiniPlayerStack(router: router);
+      },
+    );
+  }
+}
+
+class _MiniPlayerStack extends StatefulWidget {
+  final GoRouter router;
+
+  const _MiniPlayerStack({required this.router});
+
+  @override
+  State<_MiniPlayerStack> createState() => _MiniPlayerStackState();
+}
+
+class _MiniPlayerStackState extends State<_MiniPlayerStack> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Positioned(
+      left: 12,
+      bottom: 12 + MediaQuery.paddingOf(context).bottom,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_expanded) ...[
+            _MiniPlayerCard(router: widget.router),
+            const SizedBox(height: 8),
+          ],
+          _MiniPlayerButton(
+            expanded: _expanded,
+            label: l10n.chipMiniPlayerTooltip,
+            onToggle: () => setState(() => _expanded = !_expanded),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -223,9 +257,7 @@ class _MiniPlayerCard extends StatelessWidget {
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                 ),
-                onPressed: () {
-                  router.push(ChiptuneTool.config.route);
-                },
+                onPressed: () => router.push(ChiptuneTool.config.route),
                 icon: const Icon(Icons.open_in_full_outlined, size: 16),
                 label: Text(l10n.chipMiniOpenPlayer),
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/single_child_widget.dart';
 
 import 'shared_file.dart';
@@ -32,6 +33,14 @@ class ToolModel {
   final SyncDelegate Function()? syncDelegateFactory;
   final List<SingleChildWidget> Function()? stateProviders;
 
+  /// An app-wide overlay the tool contributes above the Navigator (a mini
+  /// player, a recording indicator). Collected in `app.dart` from
+  /// `ToolRegistry.all`, so the shell never imports a tool itself. It is built
+  /// outside any Overlay — no tooltips, no dialogs — and navigates through the
+  /// passed [GoRouter] instead of a context lookup. Keep it cheap: it is built
+  /// on every frame the shell rebuilds, even when the tool was never opened.
+  final Widget Function(GoRouter router)? overlayBuilder;
+
   /// Work the tool wants run on a schedule while the app is closed. Collected by
   /// `BackgroundTaskService`, which owns the scheduling and the execution.
   final List<BackgroundTask> Function()? backgroundTasks;
@@ -56,6 +65,7 @@ class ToolModel {
     this.fileExtensions = const [],
     this.syncDelegateFactory,
     this.stateProviders,
+    this.overlayBuilder,
     this.backgroundTasks,
     this.nameL10n,
     this.descriptionL10n,

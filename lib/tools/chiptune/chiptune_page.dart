@@ -89,8 +89,12 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final l10n = AppLocalizations.of(context);
-    _playback.player.notificationTitle = l10n.chipNotificationTitle;
-    _playback.player.notificationText = l10n.chipNotificationText;
+    // Idle placeholder only — a loaded track owns the notification title, and
+    // playback outlives this page, so re-entering must not overwrite it.
+    if (!_playback.player.hasAudio) {
+      _playback.player.notificationTitle = l10n.chipNotificationTitle;
+      _playback.player.notificationText = l10n.chipNotificationText;
+    }
     _playback.syncServerUrl = context.read<AppState>().syncServerUrl;
   }
 

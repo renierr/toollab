@@ -21,7 +21,6 @@ import 'package:tool_lab/services/shortcut_service.dart';
 import 'package:tool_lab/core/app_route_observer.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
-import 'package:tool_lab/tools/chiptune/widgets/chiptune_mini_player.dart';
 import 'package:tool_lab/tools/gps_location_store/gps_info_page.dart';
 import 'package:tool_lab/tools/treadmill_control/treadmill_history_page.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_settings_page.dart';
@@ -31,7 +30,7 @@ final _navigatorKey = GlobalKey<NavigatorState>();
 
 final _router = GoRouter(
   navigatorKey: _navigatorKey,
-  observers: [appRouteObserver],
+  observers: [appRouteObserver, popupRouteTracker],
   initialLocation: '/',
   routes: [
     GoRoute(
@@ -117,6 +116,14 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   StreamSubscription<SharedData>? _sharingSubscription;
   String? _lastSharedFilePath;
   DateTime? _lastSharedTime;
+
+  /// App-wide overlays contributed by tools, built once and stacked above the
+  /// Navigator. Order follows `ToolRegistry.all`.
+  late final List<Widget> _toolOverlays = ToolRegistry.all
+      .map((t) => t.overlayBuilder)
+      .nonNulls
+      .map((build) => build(_router))
+      .toList(growable: false);
 
   @override
   void initState() {
@@ -265,12 +272,9 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: _router,
       builder: (context, child) {
-        return Stack(
-          children: [
-            child ?? const SizedBox.shrink(),
-            ChiptuneMiniPlayer(router: _router),
-          ],
-        );
+        final content = child ?? const SizedBox.shrink();
+        if (_toolOverlays.isEmpty) return content;
+        return Stack(children: [content, ..._toolOverlays]);
       },
       debugShowCheckedModeBanner: false,
     );

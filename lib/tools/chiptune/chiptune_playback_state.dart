@@ -42,6 +42,11 @@ class ChiptunePlaybackState extends ChangeNotifier with WidgetsBindingObserver {
     'flac',
   ];
 
+  /// Set once this app-scoped session exists — i.e. the tool page was opened at
+  /// least once. The global mini player gates on it so an app run that never
+  /// touches the tool never builds the session or the audio engine.
+  static final ValueNotifier<bool> sessionStarted = ValueNotifier(false);
+
   final ChiptunePlayer player = ChiptunePlayer.instance;
   final ModArchiveService _modArchive = ModArchiveService();
   final ChiptuneCollectionService _collection = ChiptuneCollectionService();
@@ -94,6 +99,11 @@ class ChiptunePlaybackState extends ChangeNotifier with WidgetsBindingObserver {
 
   ChiptunePlaybackState() {
     WidgetsBinding.instance.addObserver(this);
+    // Deferred: creation happens from a page's initState, mid-build for the
+    // shell overlay that listens to this.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => sessionStarted.value = true,
+    );
     player.onEnded = _onPlaybackEnded;
     player.onNext = _onPlaybackNext;
     player.onNearEnd = _onNearEnd;
@@ -108,6 +118,13 @@ class ChiptunePlaybackState extends ChangeNotifier with WidgetsBindingObserver {
         _serverRandomMode ||
         _nextPlaylistIndex() != null ||
         _nextArchivedId() != null;
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    sessionStarted.value = false;
+    super.dispose();
   }
 
   @override

@@ -7,6 +7,7 @@ import 'chiptune_page.dart';
 import 'chiptune_playback_state.dart';
 import 'chiptune_state.dart';
 import 'chiptune_sync_delegate.dart';
+import 'widgets/chiptune_mini_player.dart';
 
 class ChiptuneTool {
   ChiptuneTool._();
@@ -67,5 +68,6 @@ class ChiptuneTool {
         create: (_) => ChiptunePlaybackState(),
       ),
     ],
+    overlayBuilder: (router) => ChiptuneMiniPlayer(router: router),
   );
 }
