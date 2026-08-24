@@ -30,7 +30,7 @@ final _navigatorKey = GlobalKey<NavigatorState>();
 
 final _router = GoRouter(
   navigatorKey: _navigatorKey,
-  observers: [appRouteObserver, popupRouteTracker],
+  observers: [popupRouteTracker, appRouteObserver],
   initialLocation: '/',
   routes: [
     GoRoute(

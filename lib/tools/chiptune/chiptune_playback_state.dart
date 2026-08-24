@@ -209,6 +209,11 @@ class ChiptunePlaybackState extends ChangeNotifier with WidgetsBindingObserver {
         audioExtensions.any((extension) => lower.endsWith('.$extension'));
   }
 
+  /// Set by the page for as long as it is on screen. Off-page the player
+  /// deepens its look-ahead, because the PCM pump then competes with the rest
+  /// of the app for the main isolate.
+  void setUiAttached(bool attached) => player.setUiAttached(attached);
+
   /// Mirrors persisted settings onto the shared player. Called by the page
   /// whenever [ChiptuneState] changes.
   void applySettings(ChiptuneState s) {

@@ -10,6 +10,7 @@ import 'package:file_selector/file_selector.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/app_route_observer.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
@@ -45,7 +46,8 @@ class ChiptunePage extends StatefulWidget {
   State<ChiptunePage> createState() => _ChiptunePageState();
 }
 
-class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
+class _ChiptunePageState extends State<ChiptunePage>
+    with DisposeCleanup, RouteAware {
   late final ChiptunePlaybackState _playback;
 
   bool _syncing = false;
@@ -65,6 +67,10 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
     );
     onDispose(() => _playback.onMessage = null);
     onDispose(() => _playback.onManualRandomSkip = null);
+
+    _playback.setUiAttached(true);
+    onDispose(() => _playback.setUiAttached(false));
+    onDispose(() => appRouteObserver.unsubscribe(this));
 
     void applySettings() => _playback.applySettings(settings);
     settings.addListener(applySettings);
@@ -96,7 +102,21 @@ class _ChiptunePageState extends State<ChiptunePage> with DisposeCleanup {
       _playback.player.notificationText = l10n.chipNotificationText;
     }
     _playback.syncServerUrl = context.read<AppState>().syncServerUrl;
+    final route = ModalRoute.of(context);
+    if (route != null) appRouteObserver.subscribe(this, route);
   }
+
+  /// This page stays alive under a pushed screen, so dispose alone would leave
+  /// the player in its on-screen mode while the user works elsewhere. A dialog
+  /// on top of the page does not count — it still shows the player behind it.
+  @override
+  void didPushNext() {
+    if (popupRouteTracker.popupOnTop) return;
+    _playback.setUiAttached(false);
+  }
+
+  @override
+  void didPopNext() => _playback.setUiAttached(true);
 
   // ---- Snackbars ----
 

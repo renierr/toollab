@@ -21,6 +21,11 @@ final popupRouteTracker = _PopupRouteTracker();
 class _PopupRouteTracker extends NavigatorObserver {
   int _depth = 0;
 
+  /// Synchronous counterpart to [popupRouteActive], updated before the other
+  /// observers run so a `RouteAware.didPushNext` can tell a dialog opening on
+  /// top of a page from a real navigation away from it.
+  bool get popupOnTop => _depth > 0;
+
   void _apply() {
     final active = _depth > 0;
     if (popupRouteActive.value == active) return;

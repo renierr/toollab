@@ -45,20 +45,33 @@ class ChiptunePlayer {
   static const int sampleRate = 44100;
   static const String _logPrefix = '[ChiptunePlayer]';
 
-  // Larger look-ahead keeps playback stable under background throttling.
-  static const double _bufferAheadSeconds = 6.0;
+  // Look-ahead while the tool page is on screen. Kept short so tweaks that are
+  // baked into the rendered PCM (stereo width, interpolation, ...) are heard
+  // soon after they are changed.
+  static const double _bufferAheadAttached = 6.0;
+  // Off-page the PCM pump shares the main isolate with whatever the user is
+  // doing, and a route transition or a heavy tool can stall it for seconds. An
+  // underrun is an audible skip; a few MB of extra look-ahead is not.
+  static const double _bufferAheadDetached = 15.0;
   // How long before a song's end [onNearEnd] fires, giving the page time to
   // prefetch the next track so the transition is gapless.
   static const Duration _prefetchLead = Duration(seconds: 10);
   static const int _chunkFrames = 8192;
-  static const Duration _feedIntervalForeground = Duration(milliseconds: 16);
-  static const Duration _feedIntervalBackground = Duration(milliseconds: 48);
+  static const Duration _feedIntervalAttached = Duration(milliseconds: 16);
+  // Detached the deep look-ahead carries playback between ticks, so the pump
+  // wakes the main isolate a third as often while the user works elsewhere.
+  static const Duration _feedIntervalDetached = Duration(milliseconds: 48);
   static const Duration _uiUpdateIntervalForeground = Duration(
     milliseconds: 24,
   );
   static const Duration _elapsedUpdateIntervalForeground = Duration(
     milliseconds: 80,
   );
+  // Off-page only the mini player reads the elapsed time.
+  static const Duration _elapsedUpdateIntervalDetached = Duration(
+    milliseconds: 250,
+  );
+  static const Duration _updateNever = Duration(hours: 1);
 
   final ChiptuneRenderWorker _renderWorker = ChiptuneRenderWorker();
 
@@ -92,7 +105,8 @@ class ChiptunePlayer {
   DateTime? _lastElapsedUpdateAt;
   DateTime? _lastNotificationUpdateAt;
   bool _uiUpdatesEnabled = true;
-  Duration _feedInterval = _feedIntervalForeground;
+  bool _uiAttached = true;
+  Duration _feedInterval = _feedIntervalAttached;
   Duration _uiUpdateInterval = _uiUpdateIntervalForeground;
   Duration _elapsedUpdateInterval = _elapsedUpdateIntervalForeground;
   bool _ended = false;
@@ -173,26 +187,49 @@ class ChiptunePlayer {
   Duration get totalDuration => _totalDuration;
 
   void setUiUpdatesEnabled(bool enabled) {
+    if (_uiUpdatesEnabled == enabled) return;
     _uiUpdatesEnabled = enabled;
-    _feedInterval = enabled ? _feedIntervalForeground : _feedIntervalBackground;
-    _uiUpdateInterval = enabled
+    _applyUiMode();
+  }
+
+  /// Set while the tool page is on screen. Detached, nobody draws the
+  /// visualizer, only the mini player reads the elapsed time, and the pump
+  /// buffers much further ahead because the main isolate is busy elsewhere.
+  void setUiAttached(bool attached) {
+    if (_uiAttached == attached) return;
+    _uiAttached = attached;
+    _applyUiMode();
+  }
+
+  /// True only while the app is resumed *and* the player page is on screen —
+  /// the one case where per-row visualizer data is actually drawn.
+  bool get _visualUpdatesEnabled => _uiUpdatesEnabled && _uiAttached;
+
+  double get _bufferAheadSeconds =>
+      _visualUpdatesEnabled ? _bufferAheadAttached : _bufferAheadDetached;
+
+  void _applyUiMode() {
+    _feedInterval = _visualUpdatesEnabled
+        ? _feedIntervalAttached
+        : _feedIntervalDetached;
+    _uiUpdateInterval = _visualUpdatesEnabled
         ? _uiUpdateIntervalForeground
-        : const Duration(hours: 1);
-    _elapsedUpdateInterval = enabled
-        ? _elapsedUpdateIntervalForeground
-        : const Duration(hours: 1);
-    if (!enabled) {
-      _lastUiUpdateAt = null;
-      _lastElapsedUpdateAt = null;
-      _lastNotificationUpdateAt = null;
-    }
+        : _updateNever;
+    _elapsedUpdateInterval = !_uiUpdatesEnabled
+        ? _updateNever
+        : (_uiAttached
+              ? _elapsedUpdateIntervalForeground
+              : _elapsedUpdateIntervalDetached);
+    _lastUiUpdateAt = null;
+    _lastElapsedUpdateAt = null;
+    if (!_uiUpdatesEnabled) _lastNotificationUpdateAt = null;
   }
 
   ChiptunePlayer._() {
     // Subscriptions live for the app lifetime; the stream holds them, so no
     // field reference is needed.
     _renderWorker.onRow.listen((event) {
-      if (!_uiUpdatesEnabled) return;
+      if (!_visualUpdatesEnabled) return;
       final DateTime now = DateTime.now();
       final DateTime? last = _lastUiUpdateAt;
       if (last != null && now.difference(last) < _uiUpdateInterval) {
@@ -318,7 +355,7 @@ class ChiptunePlayer {
     if (!_isSystem) return;
 
     final spectrum = event.spectrum;
-    if (spectrum != null && _uiUpdatesEnabled) {
+    if (spectrum != null && _visualUpdatesEnabled) {
       systemSpectrum.value = spectrum;
     }
 
@@ -396,7 +433,7 @@ class ChiptunePlayer {
         duration: _totalDuration > Duration.zero ? _totalDuration : null,
         hasNext: onNext != null,
       );
-      if (!_isNative) await _feed();
+      if (!_isNative) await _feed(initial: true);
       _startFeed();
       return;
     }
@@ -438,7 +475,7 @@ class ChiptunePlayer {
     );
 
     // Pre-fill before starting so playback begins instantly.
-    await _feed();
+    await _feed(initial: true);
     _handle = SoLoud.instance.play(_stream!, volume: 1);
     state.value = ChiptunePlaybackState.playing;
     _startFeed();
@@ -565,7 +602,7 @@ class ChiptunePlayer {
     elapsed.value = _elapsedBase;
     position.value = SongPosition(order, row);
     if (wasPlaying) {
-      unawaited(_feed());
+      unawaited(_feed(initial: true));
     }
     _pushPlaybackState();
   }
@@ -705,7 +742,10 @@ class ChiptunePlayer {
     });
   }
 
-  Future<void> _feed() async {
+  /// [initial] tops up only to the short look-ahead: a track start (or a
+  /// resume/seek) must not wait for the deep off-page cushion to render —
+  /// the steady-state loop grows it over the next ticks.
+  Future<void> _feed({bool initial = false}) async {
     if (_feedInProgress) return;
     _feedInProgress = true;
 
@@ -771,11 +811,14 @@ class ChiptunePlayer {
       }
 
       if (!_rendererEnded) {
-        final int targetBytes = (sampleRate * _bufferAheadSeconds * 2 * 4)
+        final double ahead = initial
+            ? _bufferAheadAttached
+            : _bufferAheadSeconds;
+        final int targetBytes = (sampleRate * ahead * 2 * 4)
             .toInt(); // stereo f32
         final int chunkBytes = _chunkFrames * 2 * Float32List.bytesPerElement;
         final int maxIterations = ((targetBytes / chunkBytes).ceil() + 8)
-            .clamp(8, 96)
+            .clamp(8, 192)
             .toInt();
         int guard = 0;
         while (!_ended && guard < maxIterations) {
