@@ -89,6 +89,14 @@ class FileManagerSettingsPage extends StatelessWidget {
               onChanged: state.updateFoldersFirst,
             ),
             const Divider(height: 1),
+            _SettingsSection(title: l10n.fileManagerImagePreviews),
+            SwitchListTile.adaptive(
+              title: Text(l10n.fileManagerCropPreviews),
+              subtitle: Text(l10n.fileManagerCropPreviewsHint),
+              value: state.cropImagePreviews,
+              onChanged: state.updateCropImagePreviews,
+            ),
+            const Divider(height: 1),
             _SettingsSection(title: l10n.fileManagerOpenWith),
             ...FileManagerOpenCategory.values.map(
               (category) => ListTile(

@@ -3648,5 +3648,8 @@
   "fileManagerZoomIn": "Größere Vorschau",
   "fileManagerZoomOut": "Kleinere Vorschau",
   "fileManagerUnknownDate": "Unbekanntes Datum",
-  "fileManagerDeselectAll": "Auswahl aufheben"
+  "fileManagerDeselectAll": "Auswahl aufheben",
+  "fileManagerImagePreviews": "Bildvorschau",
+  "fileManagerCropPreviews": "Kachel ausfüllen",
+  "fileManagerCropPreviewsHint": "Vorschau quadratisch beschneiden. Aus zeigt das ganze Bild und braucht weniger Speicher."
 }

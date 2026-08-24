@@ -21,6 +21,7 @@ class FileManagerImageGrid extends StatefulWidget {
   final bool isSelectionMode;
   final ValueChanged<FileManagerEntry> onToggleSelection;
   final double tileSize;
+  final bool crop;
   final ValueChanged<double> onGridWidth;
 
   const FileManagerImageGrid({
@@ -32,6 +33,7 @@ class FileManagerImageGrid extends StatefulWidget {
     required this.isSelectionMode,
     required this.onToggleSelection,
     required this.tileSize,
+    required this.crop,
     required this.onGridWidth,
   });
 
@@ -119,6 +121,7 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
                     (context, index) => _ImageTile(
                       entry: dateGroup.value[index],
                       tileExtent: tileExtent,
+                      crop: widget.crop,
                       selected: widget.selectedPaths.contains(
                         dateGroup.value[index].path,
                       ),
@@ -272,6 +275,7 @@ class _DateHeader extends StatelessWidget {
 class _ImageTile extends StatelessWidget {
   final FileManagerEntry entry;
   final double tileExtent;
+  final bool crop;
   final bool selected;
   final bool selectionMode;
   final ValueChanged<FileManagerEntry> onOpen;
@@ -280,6 +284,7 @@ class _ImageTile extends StatelessWidget {
   const _ImageTile({
     required this.entry,
     required this.tileExtent,
+    required this.crop,
     required this.selected,
     required this.selectionMode,
     required this.onOpen,
@@ -306,17 +311,17 @@ class _ImageTile extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             const ColoredBox(color: Color(0x10888888)),
-            // BoxFit.cover fills the square from the shorter side, so a
-            // landscape photo needs more than the tile's own pixel width or it
-            // gets upscaled: 1.5x covers 4:3 exactly. Height stays
-            // proportional, and the cap bounds a high-DPI screen of tiles.
+            // Cover fills the square from the shorter side, so a landscape
+            // photo needs more than the tile's own pixel width or it gets
+            // upscaled: 1.5x covers 4:3 exactly. Contain is bounded by the
+            // longer side, where the tile width alone is always enough.
             Image.file(
               File(entry.path),
-              fit: BoxFit.cover,
+              fit: crop ? BoxFit.cover : BoxFit.contain,
               filterQuality: FilterQuality.medium,
               cacheWidth:
                   (tileExtent *
-                          _coverOversample *
+                          (crop ? _coverOversample : 1) *
                           MediaQuery.devicePixelRatioOf(context))
                       .round()
                       .clamp(96, _maxDecodeWidth),

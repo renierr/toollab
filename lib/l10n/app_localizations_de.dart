@@ -9009,4 +9009,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get fileManagerDeselectAll => 'Auswahl aufheben';
+
+  @override
+  String get fileManagerImagePreviews => 'Bildvorschau';
+
+  @override
+  String get fileManagerCropPreviews => 'Kachel ausfüllen';
+
+  @override
+  String get fileManagerCropPreviewsHint =>
+      'Vorschau quadratisch beschneiden. Aus zeigt das ganze Bild und braucht weniger Speicher.';
 }

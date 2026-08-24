@@ -461,6 +461,7 @@ class _CategoryView extends StatelessWidget {
                       isSelectionMode: state.isSelectionMode,
                       onToggleSelection: onToggleSelection,
                       tileSize: state.imageTileSize,
+                      crop: state.cropImagePreviews,
                       onGridWidth: state.reportImageGridWidth,
                     ),
                   ),

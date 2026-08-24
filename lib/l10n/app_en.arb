@@ -4652,5 +4652,8 @@
   "fileManagerZoomIn": "Larger previews",
   "fileManagerZoomOut": "Smaller previews",
   "fileManagerUnknownDate": "Unknown date",
-  "fileManagerDeselectAll": "Deselect all"
+  "fileManagerDeselectAll": "Deselect all",
+  "fileManagerImagePreviews": "Image previews",
+  "fileManagerCropPreviews": "Fill the tile",
+  "fileManagerCropPreviewsHint": "Crop previews to a square. Off shows the whole image, which also uses less memory."
 }

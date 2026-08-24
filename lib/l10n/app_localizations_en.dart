@@ -8942,4 +8942,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileManagerDeselectAll => 'Deselect all';
+
+  @override
+  String get fileManagerImagePreviews => 'Image previews';
+
+  @override
+  String get fileManagerCropPreviews => 'Fill the tile';
+
+  @override
+  String get fileManagerCropPreviewsHint =>
+      'Crop previews to a square. Off shows the whole image, which also uses less memory.';
 }

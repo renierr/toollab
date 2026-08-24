@@ -55,6 +55,7 @@ class FileManagerState extends ChangeNotifier {
   static const _foldersFirstKey = 'folders_first';
   static const _startupPathKey = 'startup_path';
   static const _imageTileSizeKey = 'image_tile_size';
+  static const _cropImagePreviewsKey = 'crop_image_previews';
   static const _openToolPrefix = 'open_tool_';
   static const _secureStorage = FlutterSecureStorage();
 
@@ -112,6 +113,7 @@ class FileManagerState extends ChangeNotifier {
   FileManagerCategory _category = FileManagerCategory.none;
   double _imageTileSize = defaultImageTileSize;
   double _imageGridWidth = 0;
+  bool _cropImagePreviews = true;
   List<FileManagerAppInfo> _installedApps = [];
   FileManagerStorageInfo? _storageInfo;
   static const List<ArchiveHandler> _archiveHandlers = [ZipArchiveHandler()];
@@ -197,6 +199,21 @@ class FileManagerState extends ChangeNotifier {
   bool get canShrinkImageTiles => _imageTileSize > minImageTileSize;
 
   void reportImageGridWidth(double width) => _imageGridWidth = width;
+
+  /// Cropping fills every tile, which looks tidier; fitting shows the whole
+  /// image and needs no oversampled decode.
+  bool get cropImagePreviews => _cropImagePreviews;
+
+  Future<void> updateCropImagePreviews(bool crop) async {
+    if (_cropImagePreviews == crop) return;
+    _cropImagePreviews = crop;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      FileManagerTool.config.id,
+      _cropImagePreviewsKey,
+      crop.toString(),
+    );
+  }
 
   Future<void> stepImageTileSize(bool enlarge) async {
     final columns = _columnsFor(_imageTileSize);
@@ -592,6 +609,7 @@ class FileManagerState extends ChangeNotifier {
     _sortAscending = settings[_sortAscendingKey] != 'false';
     _foldersFirst = settings[_foldersFirstKey] != 'false';
     _startupPath = settings[_startupPathKey];
+    _cropImagePreviews = settings[_cropImagePreviewsKey] != 'false';
     _imageTileSize =
         (double.tryParse(settings[_imageTileSizeKey] ?? '') ??
                 defaultImageTileSize)

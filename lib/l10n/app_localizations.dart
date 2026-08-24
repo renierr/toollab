@@ -16042,6 +16042,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deselect all'**
   String get fileManagerDeselectAll;
+
+  /// No description provided for @fileManagerImagePreviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Image previews'**
+  String get fileManagerImagePreviews;
+
+  /// No description provided for @fileManagerCropPreviews.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill the tile'**
+  String get fileManagerCropPreviews;
+
+  /// No description provided for @fileManagerCropPreviewsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop previews to a square. Off shows the whole image, which also uses less memory.'**
+  String get fileManagerCropPreviewsHint;
 }
 
 class _AppLocalizationsDelegate
