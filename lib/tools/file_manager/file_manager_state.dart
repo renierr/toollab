@@ -10,12 +10,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:tool_lab/helpers/windows_known_folders.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/tools/file_manager/config.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_path_labels.dart';
 import 'package:tool_lab/tools/file_manager/archives/archive_handler.dart';
 import 'package:tool_lab/tools/file_manager/archives/zip_archive_handler.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
@@ -226,7 +228,7 @@ class FileManagerState extends ChangeNotifier {
     }
   }
 
-  List<String> _imageRoots() {
+  Future<List<String>> _imageRoots() async {
     if (FileManagerStorageAccess.isAndroid && usesSharedStorage) {
       final base = sharedStoragePath;
       return [
@@ -236,7 +238,19 @@ class FileManagerState extends ChangeNotifier {
       ].map((dir) => p.join(base, dir)).toList();
     }
     if (Platform.isWindows) {
-      final home = Platform.environment['USERPROFILE'];
+      return WindowsKnownFolders.existingPaths(
+        const [
+          WindowsKnownFolders.pictures,
+          WindowsKnownFolders.cameraRoll,
+          WindowsKnownFolders.downloads,
+        ],
+        // A OneDrive-redirected library can leave files behind in the local
+        // folder, so scan the plain guesses too when they still exist.
+        extraGuesses: const ['Pictures', 'Downloads'],
+      );
+    }
+    if (Platform.isLinux) {
+      final home = Platform.environment['HOME'];
       if (home != null) return [p.join(home, 'Pictures')];
     }
     return const [];
@@ -258,7 +272,7 @@ class FileManagerState extends ChangeNotifier {
 
   Future<void> _loadImageEntries() async {
     final images = <FileManagerEntry>[];
-    final pending = [for (final root in _imageRoots()) Directory(root)];
+    final pending = [for (final root in await _imageRoots()) Directory(root)];
     var lastNotify = DateTime.now();
     while (pending.isNotEmpty) {
       final directory = pending.removeLast();
@@ -509,19 +523,8 @@ class FileManagerState extends ChangeNotifier {
         .split('/')
         .where((part) => part.isNotEmpty)
         .toList();
-    const labels = {
-      'download': 'Downloads',
-      'downloads': 'Downloads',
-      'documents': 'Documents',
-      'images': 'Images',
-      'pictures': 'Images',
-      'music': 'Music',
-      'videos': 'Videos',
-      'movies': 'Videos',
-      'dcim': 'DCIM',
-    };
     for (var index = 0; index < parts.length; index++) {
-      final label = labels[parts[index].toLowerCase()];
+      final label = fileManagerFolderLabels[parts[index].toLowerCase()];
       if (label != null) return [label, ...parts.skip(index + 1)].join('/');
     }
     return parts.isEmpty
@@ -560,8 +563,12 @@ class FileManagerState extends ChangeNotifier {
       }
     }
     final documents = await getApplicationDocumentsDirectory();
-    _appFilesPath = _userFolderPath('Documents') ?? documents.path;
-    _downloadsPath = _userFolderPath('Downloads') ?? documents.path;
+    _appFilesPath =
+        await _userFolderPath('Documents', WindowsKnownFolders.documents) ??
+        documents.path;
+    _downloadsPath =
+        await _userFolderPath('Downloads', WindowsKnownFolders.downloads) ??
+        documents.path;
     await openLocal(await _resolvedStartupPath());
   }
 
@@ -581,10 +588,11 @@ class FileManagerState extends ChangeNotifier {
     _drives = roots;
   }
 
-  String? _userFolderPath(String folder) {
+  /// [knownFolder] is the Windows registry value name; [folder] is the plain
+  /// folder name used on Linux and as the Windows fallback.
+  Future<String?> _userFolderPath(String folder, String knownFolder) async {
     if (Platform.isWindows) {
-      final home = Platform.environment['USERPROFILE'];
-      return home == null ? null : p.join(home, folder);
+      return WindowsKnownFolders.path(knownFolder, fallbackName: folder);
     }
     if (Platform.isLinux) {
       final home = Platform.environment['HOME'];

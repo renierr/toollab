@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_connection.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_path_labels.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_category_picker.dart';
 
@@ -173,18 +174,7 @@ class FileManagerLocations extends StatelessWidget {
     final normalized = path.replaceAll('\\', '/');
     if (normalized.endsWith('/storage/emulated/0')) return 'Storage';
     final name = p.posix.basename(normalized);
-    const commonFolders = {
-      'download',
-      'downloads',
-      'documents',
-      'images',
-      'pictures',
-      'music',
-      'videos',
-      'movies',
-      'dcim',
-    };
-    if (commonFolders.contains(name.toLowerCase())) return name;
+    if (fileManagerFolderLabels.containsKey(name.toLowerCase())) return name;
     final parent = p.posix.basename(p.posix.dirname(normalized));
     return parent.isEmpty || parent == '.' ? name : '$parent/$name';
   }

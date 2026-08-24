@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
+import 'package:tool_lab/tools/file_manager/file_manager_path_labels.dart';
 
 const double _tileExtent = 160;
 
@@ -37,7 +38,7 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
     for (final entry in widget.entries) {
       groups.putIfAbsent(p.dirname(entry.path), () => []).add(entry);
     }
-    final prefix = _commonPrefix(groups.keys);
+
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -45,7 +46,7 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
           SliverToBoxAdapter(
             child: _GroupHeader(
               folderPath: group.key,
-              folder: _relativeFolder(group.key, prefix),
+              folder: fileManagerFolderLabel(group.key),
               count: group.value.length,
               collapsed: _collapsedFolders.contains(group.key),
               onToggle: () => setState(_toggleCollapsed(group.key)),
@@ -81,46 +82,6 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
       });
     };
   }
-
-  String _commonPrefix(Iterable<String> directories) {
-    if (directories.isEmpty) return '';
-    var segments = directories.first
-        .replaceAll('\\', '/')
-        .split('/')
-        .where((part) => part.isNotEmpty)
-        .toList();
-    for (final directory in directories.skip(1)) {
-      final parts = directory
-          .replaceAll('\\', '/')
-          .split('/')
-          .where((part) => part.isNotEmpty)
-          .toList();
-      var shared = 0;
-      while (shared < segments.length &&
-          shared < parts.length &&
-          segments[shared].toLowerCase() == parts[shared].toLowerCase()) {
-        shared++;
-      }
-      segments = segments.sublist(0, shared);
-      if (segments.isEmpty) break;
-    }
-    return segments.join('/');
-  }
-
-  /// Strips the prefix every group shares so headers show e.g.
-  /// "DCIM/Camera" instead of the full storage path.
-  String _relativeFolder(String directory, String prefix) {
-    var normalized = directory.replaceAll('\\', '/');
-    if (prefix.isNotEmpty &&
-        normalized.toLowerCase().startsWith(prefix.toLowerCase())) {
-      normalized = normalized.substring(prefix.length);
-    }
-    final relative = normalized
-        .split('/')
-        .where((part) => part.isNotEmpty)
-        .join('/');
-    return relative.isEmpty ? p.basename(directory) : relative;
-  }
 }
 
 class _GroupHeader extends StatelessWidget {
@@ -153,6 +114,7 @@ class _GroupHeader extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(
                 Icons.folder_outlined,
@@ -164,10 +126,10 @@ class _GroupHeader extends StatelessWidget {
                 child: Text(
                   folder,
                   style: Theme.of(context).textTheme.titleSmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 l10n.fileManagerItemCount(count),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(

@@ -19,8 +19,9 @@ class FileManagerEntryIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     if (showPreview && isImage(entry)) {
       // Only cacheWidth: constraining both axes squashes the decode instead of
-      // letting BoxFit.cover crop. Height stays proportional and small.
-      final cacheWidth = (size * MediaQuery.devicePixelRatioOf(context))
+      // letting BoxFit.cover crop. Decoding at 2x keeps cropped wide images
+      // sharp; height stays proportional, so a thumbnail is still tiny.
+      final cacheWidth = (size * 2 * MediaQuery.devicePixelRatioOf(context))
           .round();
       return ClipRRect(
         borderRadius: BorderRadius.circular(4),
