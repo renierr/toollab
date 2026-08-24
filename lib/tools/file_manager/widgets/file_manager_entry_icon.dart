@@ -18,18 +18,23 @@ class FileManagerEntryIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (showPreview && isImage(entry)) {
-      final cacheSize = (size * MediaQuery.devicePixelRatioOf(context)).round();
+      // Only cacheWidth: constraining both axes squashes the decode instead of
+      // letting BoxFit.cover crop. Height stays proportional and small.
+      final cacheWidth = (size * MediaQuery.devicePixelRatioOf(context))
+          .round();
       return ClipRRect(
         borderRadius: BorderRadius.circular(4),
-        child: Image.file(
-          File(entry.path),
+        child: SizedBox(
           width: size,
           height: size,
-          cacheWidth: cacheSize,
-          cacheHeight: cacheSize,
-          fit: BoxFit.cover,
-          filterQuality: FilterQuality.low,
-          errorBuilder: (_, _, _) => _fallbackIcon(context),
+          child: Image.file(
+            File(entry.path),
+            cacheWidth: cacheWidth,
+            fit: BoxFit.cover,
+            filterQuality: FilterQuality.medium,
+            gaplessPlayback: true,
+            errorBuilder: (_, _, _) => _fallbackIcon(context),
+          ),
         ),
       );
     }
