@@ -53,6 +53,11 @@ class ChiptunePlayer {
   // doing, and a route transition or a heavy tool can stall it for seconds. An
   // underrun is an audible skip; a few MB of extra look-ahead is not.
   static const double _bufferAheadDetached = 15.0;
+  // SoLoud only reclaims the consumed part of a buffer stream once it exceeds
+  // the unconsumed rest, and it kills the stream for good the moment a write
+  // would pass this cap. So the cap must clear twice the deepest look-ahead,
+  // otherwise the reclaim never happens and playback dies mid-song.
+  static const Duration _maxStreamBuffer = Duration(seconds: 45);
   // How long before a song's end [onNearEnd] fires, giving the page time to
   // prefetch the next track so the transition is gapless.
   static const Duration _prefetchLead = Duration(seconds: 10);
@@ -471,7 +476,7 @@ class ChiptunePlayer {
       format: BufferType.f32le,
       bufferingType: BufferingType.released,
       bufferingTimeNeeds: 0,
-      maxBufferSizeDuration: const Duration(seconds: 30),
+      maxBufferSizeDuration: _maxStreamBuffer,
     );
 
     // Pre-fill before starting so playback begins instantly.
@@ -844,11 +849,16 @@ class ChiptunePlayer {
               chunk.buffer.asUint8List(),
             );
           } catch (e) {
+            // A rejected write leaves the stream permanently closed on the
+            // native side, so the song can only end here — silently stalling
+            // would leave the tool 'playing' forever with no sound.
             errorLog('$_logPrefix addAudioDataStream failed: $e');
+            _ended = true;
             break;
           }
           guard++;
         }
+        if (_ended) _onSongEnded();
       }
     } finally {
       _feedInProgress = false;
