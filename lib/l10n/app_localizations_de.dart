@@ -8204,6 +8204,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String get renphoStopScan => 'Stopp';
 
   @override
+  String get renphoGuestScan => 'Gastmessung';
+
+  @override
+  String get renphoGuestBadge => 'Gast';
+
+  @override
+  String get renphoGuestTitle => 'Gastmessung';
+
+  @override
+  String get renphoGuestHint =>
+      'Die Waage misst als \"Guest\". Nichts aus dieser Messung wird gespeichert — kein Verlauf, kein Health Connect, keine Synchronisierung.';
+
+  @override
+  String get renphoGuestAge => 'Alter (Jahre)';
+
+  @override
+  String get renphoGuestStart => 'Messung starten';
+
+  @override
+  String get renphoGuestResultTitle => 'Gast-Ergebnis';
+
+  @override
+  String get renphoGuestNotSaved =>
+      'Dieses Ergebnis existiert nur auf diesem Bildschirm. Als JSON exportieren, um es zu behalten — beim Verlassen wird es verworfen.';
+
+  @override
+  String get renphoGuestMeasuredAt => 'Gemessen am';
+
+  @override
+  String get renphoGuestExport => 'JSON exportieren';
+
+  @override
   String get renphoStatusIdle =>
       'Stell dich kurz auf die Waage, um sie zu wecken, und starte dann die Suche.';
 

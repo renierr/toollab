@@ -101,6 +101,10 @@ class RenphoBleProbeState extends ChangeNotifier {
   static const _lastDeviceKey = 'last_device_id';
   static const _lastDeviceNameKey = 'last_device_name';
 
+  /// The name a guest session hands the scale, instead of the owner's, so the
+  /// unit does not file the reading under a stored user.
+  static const guestUserName = 'Guest';
+
   /// Names the MorphoScan family advertises. Anything else has to be picked by
   /// hand, which is also the escape hatch for a relabelled unit.
   static const _knownNames = ['RT-MSC04', 'R-AMSC04'];
@@ -148,6 +152,8 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   // Data
   RenphoProfile _profile = RenphoProfile.empty;
+  RenphoProfile? _guestProfile;
+  RenphoMeasurement? _guestResult;
   RenphoMeasurement? _latest;
   RenphoMeasurement? _previous;
   List<RenphoMeasurement> _week = const [];
@@ -185,6 +191,14 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   RenphoProfile get profile => _profile;
   bool get profileConfigured => _profile.configured;
+
+  /// Set for the duration of a guest session. Its reading is never written to
+  /// the database, Health Connect or the backend.
+  RenphoProfile? get guestProfile => _guestProfile;
+  bool get guestMode => _guestProfile != null;
+
+  /// The finished guest reading, held in memory only until the next scan.
+  RenphoMeasurement? get guestResult => _guestResult;
   bool get loaded => _loaded;
   bool get syncing => _syncing;
   bool get healthConnectEnabled => _healthConnectEnabled;
@@ -409,8 +423,21 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   // Discovery ---------------------------------------------------------------
 
-  Future<void> startScan() async {
+  /// Runs one scan for somebody who is not the owner: the scale is told the
+  /// guest name and the result is kept in memory only.
+  Future<void> startGuestScan(RenphoProfile guest) async {
     if (_scanning || _phase == RenphoScanPhase.connecting) return;
+    _guestProfile = guest.copyWith(name: guestUserName, configured: true);
+    _guestResult = null;
+    await startScan(keepGuest: true);
+  }
+
+  Future<void> startScan({bool keepGuest = false}) async {
+    if (_scanning || _phase == RenphoScanPhase.connecting) return;
+    if (!keepGuest) {
+      _guestProfile = null;
+      _guestResult = null;
+    }
     // A session left open by the previous run keeps the link up, and a
     // connected scale stops advertising — so it would never show up again.
     if (_deviceId != null) await disconnect();
@@ -854,16 +881,20 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   // Setup handshake ---------------------------------------------------------
 
-  /// The four setup writes, in order. The scale will not compute a body
-  /// composition until it has seen all of them.
-  Uint8List _setupPacket(int step) => switch (step) {
-    0 => RenphoScaleCommands.handshake(
+  /// The setup writes, in order. The scale will not compute a body composition
+  /// until it has seen all of them. A guest session leaves the stored-record
+  /// request out: replayed records belong to the owner and would be dropped
+  /// unsaved, since nothing from a guest session is written.
+  List<Uint8List> _setupSequence() => [
+    RenphoScaleCommands.handshake(
       lastWeightKg: _liveWeightKg ?? _latest?.weightKg,
     ),
-    1 => RenphoScaleCommands.setClock(DateTime.now()),
-    2 => RenphoScaleCommands.requestStoredRecords(),
-    _ => RenphoScaleCommands.selectUser(_profile.name),
-  };
+    RenphoScaleCommands.setClock(DateTime.now()),
+    if (_guestProfile == null) RenphoScaleCommands.requestStoredRecords(),
+    RenphoScaleCommands.selectUser((_guestProfile ?? _profile).name),
+  ];
+
+  var _setup = const <Uint8List>[];
 
   void _startSetup() {
     _stage = 0;
@@ -871,17 +902,18 @@ class RenphoBleProbeState extends ChangeNotifier {
     _frameSeen = false;
     _handshakeRetried = false;
     _pacing = const Duration(milliseconds: 1200);
+    _setup = _setupSequence();
     _sendSetupStep(0);
     _armWatchdog();
   }
 
   void _sendSetupStep(int step) {
-    if (step >= 4) {
+    if (step >= _setup.length) {
       _completeSetup();
       return;
     }
     _stage = step;
-    final packet = _setupPacket(step);
+    final packet = _setup[step];
     _expectedAck = renphoAckFor(packet[2]);
     unawaited(_write(packet));
     _stageTimer?.cancel();
@@ -969,7 +1001,38 @@ class RenphoBleProbeState extends ChangeNotifier {
     });
   }
 
+  /// A guest reading never reaches the database, Health Connect or the backend
+  /// — it is built in memory, shown once and dropped on the next scan.
+  void _keepGuestResult(RenphoScaleResult result) {
+    final guest = _guestProfile!;
+    final measuredAt = result.measuredAt(DateTime.now());
+    _liveWeightKg = result.weightKg;
+    _guestResult = RenphoMeasurement(
+      uid: 'guest',
+      measuredAt: measuredAt,
+      weightKg: result.weightKg,
+      bmi: result.bmi,
+      bodyFatPercent: result.bodyFatPercent,
+      musclePercent: result.musclePercent,
+      visceralFat: result.visceralFat,
+      impedance: result.impedance,
+      packetHex: result.packetHex,
+      profileName: guest.name,
+      profileSex: guest.sex,
+      profileHeightCm: guest.heightCm,
+      profileAge: guest.ageAt(measuredAt),
+    );
+    unawaited(_closeSession(result.weightKg));
+  }
+
   Future<void> _store(RenphoScaleResult result) async {
+    if (_guestProfile != null) {
+      // Stored records are the owner's own past scans; a guest session neither
+      // asked for them nor may write them, so they are left on the scale.
+      if (result.isStored) return;
+      _keepGuestResult(result);
+      return;
+    }
     _phase = RenphoScanPhase.saving;
     notifyListeners();
     try {

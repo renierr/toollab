@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' show DateFormat;
+import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/collapsible_section.dart';
@@ -8,6 +11,7 @@ import 'package:tool_lab/widgets/data_row.dart';
 import 'package:tool_lab/widgets/info_card.dart';
 
 import '../renpho_body_metrics.dart';
+import '../renpho_guest_export.dart';
 import '../renpho_measurement.dart';
 import 'renpho_body_map.dart';
 import 'renpho_metrics_grid.dart';
@@ -18,7 +22,15 @@ import 'renpho_segment_table.dart';
 class RenphoMeasurementDetailsPage extends StatelessWidget {
   final RenphoMeasurement measurement;
 
-  const RenphoMeasurementDetailsPage({super.key, required this.measurement});
+  /// A guest reading exists only on this page: it is not in the database and
+  /// the JSON export is the only way to keep it.
+  final bool guest;
+
+  const RenphoMeasurementDetailsPage({
+    super.key,
+    required this.measurement,
+    this.guest = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,14 +43,57 @@ class RenphoMeasurementDetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          DateFormat.yMMMd(
-            locale,
-          ).add_Hm().format(measurement.measuredAt.toLocal()),
+          guest
+              ? l10n.renphoGuestResultTitle
+              : DateFormat.yMMMd(
+                  locale,
+                ).add_Hm().format(measurement.measuredAt.toLocal()),
         ),
+        actions: [
+          if (guest)
+            IconButton(
+              tooltip: l10n.renphoGuestExport,
+              icon: const Icon(Icons.download_outlined),
+              onPressed: () => _exportJson(context),
+            ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (guest) ...[
+            InfoCard(
+              icon: Icons.person_add_alt_outlined,
+              title: l10n.renphoGuestResultTitle,
+              titleColor: AppTheme.statusAmber,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.renphoGuestNotSaved,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  InfoRow(
+                    label: l10n.renphoGuestMeasuredAt,
+                    value: DateFormat.yMMMd(
+                      locale,
+                    ).add_Hms().format(measurement.measuredAt.toLocal()),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _exportJson(context),
+                      icon: const Icon(Icons.download_outlined),
+                      label: Text(l10n.renphoGuestExport),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           RenphoMetricsGrid(measurement: measurement),
           const SizedBox(height: 16),
           InfoCard(
@@ -352,6 +407,20 @@ class RenphoMeasurementDetailsPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _exportJson(BuildContext context) async {
+    final json = renphoMeasurementJson(measurement, guest: guest);
+    final stamp = DateFormat(
+      'yyyyMMdd_HHmm',
+    ).format(measurement.measuredAt.toLocal());
+    await FileSaveHelper.saveFile(
+      context: context,
+      suggestedName: guest
+          ? 'renpho_guest_$stamp.json'
+          : 'renpho_scan_$stamp.json',
+      bytes: Uint8List.fromList(utf8.encode(json)),
     );
   }
 }

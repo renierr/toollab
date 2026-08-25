@@ -14573,6 +14573,66 @@ abstract class AppLocalizations {
   /// **'Stop'**
   String get renphoStopScan;
 
+  /// No description provided for @renphoGuestScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest scan'**
+  String get renphoGuestScan;
+
+  /// No description provided for @renphoGuestBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest'**
+  String get renphoGuestBadge;
+
+  /// No description provided for @renphoGuestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest scan'**
+  String get renphoGuestTitle;
+
+  /// No description provided for @renphoGuestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The scale is asked to measure as \"Guest\". Nothing from this scan is saved — no history, no Health Connect, no sync.'**
+  String get renphoGuestHint;
+
+  /// No description provided for @renphoGuestAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age (years)'**
+  String get renphoGuestAge;
+
+  /// No description provided for @renphoGuestStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start scan'**
+  String get renphoGuestStart;
+
+  /// No description provided for @renphoGuestResultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guest result'**
+  String get renphoGuestResultTitle;
+
+  /// No description provided for @renphoGuestNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This reading exists only on this screen. Export it as JSON to keep it — leaving the page discards it.'**
+  String get renphoGuestNotSaved;
+
+  /// No description provided for @renphoGuestMeasuredAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured at'**
+  String get renphoGuestMeasuredAt;
+
+  /// No description provided for @renphoGuestExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export JSON'**
+  String get renphoGuestExport;
+
   /// No description provided for @renphoStatusIdle.
   ///
   /// In en, this message translates to:

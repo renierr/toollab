@@ -11,9 +11,12 @@ import 'config.dart';
 import 'renpho_ble_probe_state.dart';
 import 'renpho_body_image.dart';
 import 'renpho_body_metrics.dart';
+import 'renpho_measurement.dart';
 import 'renpho_report_pdf.dart';
 import 'renpho_segment_labels.dart';
+import 'widgets/renpho_guest_dialog.dart';
 import 'widgets/renpho_history_list.dart';
+import 'widgets/renpho_measurement_details_page.dart';
 import 'widgets/renpho_metrics_grid.dart';
 import 'widgets/renpho_profile_dialog.dart';
 import 'widgets/renpho_scan_card.dart';
@@ -30,18 +33,46 @@ class RenphoBleProbePage extends StatefulWidget {
 class _RenphoBleProbePageState extends State<RenphoBleProbePage>
     with DisposeCleanup<RenphoBleProbePage> {
   bool _creatingReport = false;
+  RenphoMeasurement? _shownGuestResult;
 
   @override
   void initState() {
     super.initState();
     final state = context.read<RenphoBleProbeState>();
     onDispose(state.disconnect);
+    state.addListener(_onStateChanged);
+    onDispose(() => state.removeListener(_onStateChanged));
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       await state.load();
       if (!mounted) return;
       state.backgroundSync();
     });
+  }
+
+  /// A guest reading is never stored, so the details page is opened for it the
+  /// moment it arrives — closing it discards the reading.
+  void _onStateChanged() {
+    final result = context.read<RenphoBleProbeState>().guestResult;
+    if (result == null || result == _shownGuestResult) return;
+    _shownGuestResult = result;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) =>
+              RenphoMeasurementDetailsPage(measurement: result, guest: true),
+        ),
+      );
+    });
+  }
+
+  Future<void> _guestScan() async {
+    final state = context.read<RenphoBleProbeState>();
+    if (state.busy || state.connected) return;
+    final guest = await RenphoGuestDialog.show(context, profile: state.profile);
+    if (guest == null || !mounted) return;
+    await state.startGuestScan(guest);
   }
 
   /// Scanning without a profile would attribute a body composition to invented
@@ -163,7 +194,7 @@ class _RenphoBleProbePageState extends State<RenphoBleProbePage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    RenphoScanCard(onScan: _scan),
+                    RenphoScanCard(onScan: _scan, onGuestScan: _guestScan),
                     const SizedBox(height: 20),
                     if (latest != null) ...[
                       _SectionTitle(

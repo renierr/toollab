@@ -127,6 +127,11 @@ transfer, so a stored record gets a real timestamp rather than the arrival time.
 makes the scale drop the profile and fall back to weight-only mode with its
 "open the Renpho app" prompt.
 
+A **guest** session leaves `B8` out and sends `B7` with the name `Guest`, so the
+scale neither replays the owner's stored records — a guest session may not write
+anything, so replayed records would be acknowledged and lost — nor files the
+reading under the stored profile.
+
 The acknowledgement type is *usually* the command type minus `0x90`, so `B2` is
 answered by `0x22`. Firmware revisions disagree about this, and the unprompted
 `0x20` broadcast lands in the middle of the exchange, so the app does **not**

@@ -13,8 +13,13 @@ import 'renpho_measure_steps.dart';
 /// waiting for, and the one button that starts or stops it.
 class RenphoScanCard extends StatelessWidget {
   final VoidCallback onScan;
+  final VoidCallback onGuestScan;
 
-  const RenphoScanCard({super.key, required this.onScan});
+  const RenphoScanCard({
+    super.key,
+    required this.onScan,
+    required this.onGuestScan,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,20 +34,26 @@ class RenphoScanCard extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            // A Wrap, not a Row: with a guest badge on screen as well there is
+            // no longer room for all three side by side on a phone.
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 6,
               children: [
-                Flexible(child: _PhaseBadge(phase: state.phase)),
-                if (state.deviceName != null) ...[
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: StatusBadge(
-                      label: state.deviceName!,
-                      color: theme.colorScheme.outline,
-                      icon: Icons.bluetooth,
-                    ),
+                _PhaseBadge(phase: state.phase),
+                if (state.guestMode)
+                  StatusBadge(
+                    label: l10n.renphoGuestBadge,
+                    color: AppTheme.statusAmber,
+                    icon: Icons.person_add_alt_outlined,
                   ),
-                ],
+                if (state.deviceName != null)
+                  StatusBadge(
+                    label: state.deviceName!,
+                    color: theme.colorScheme.outline,
+                    icon: Icons.bluetooth,
+                  ),
               ],
             ),
             const SizedBox(height: 14),
@@ -112,6 +123,17 @@ class RenphoScanCard extends StatelessWidget {
                   state.busy || state.connected
                       ? l10n.renphoStopScan
                       : l10n.renphoStartScan,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              child: TextButton.icon(
+                onPressed: state.busy || state.connected ? null : onGuestScan,
+                icon: const Icon(Icons.person_add_alt_outlined, size: 18),
+                label: Text(
+                  l10n.renphoGuestScan,
+                  style: theme.textTheme.bodySmall,
                 ),
               ),
             ),

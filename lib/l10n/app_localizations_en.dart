@@ -8148,6 +8148,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renphoStopScan => 'Stop';
 
   @override
+  String get renphoGuestScan => 'Guest scan';
+
+  @override
+  String get renphoGuestBadge => 'Guest';
+
+  @override
+  String get renphoGuestTitle => 'Guest scan';
+
+  @override
+  String get renphoGuestHint =>
+      'The scale is asked to measure as \"Guest\". Nothing from this scan is saved — no history, no Health Connect, no sync.';
+
+  @override
+  String get renphoGuestAge => 'Age (years)';
+
+  @override
+  String get renphoGuestStart => 'Start scan';
+
+  @override
+  String get renphoGuestResultTitle => 'Guest result';
+
+  @override
+  String get renphoGuestNotSaved =>
+      'This reading exists only on this screen. Export it as JSON to keep it — leaving the page discards it.';
+
+  @override
+  String get renphoGuestMeasuredAt => 'Measured at';
+
+  @override
+  String get renphoGuestExport => 'Export JSON';
+
+  @override
   String get renphoStatusIdle =>
       'Step on the scale to wake it, then start the scan.';
 
