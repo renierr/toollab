@@ -1,6 +1,17 @@
 import 'package:intl/intl.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+/// Bucket key equal iff two dates share the same [fileManagerDateGroup]
+/// label. Integer comparison lets consecutive-run grouping run without
+/// building a DateFormat per entry; labels are formatted once per group.
+(int, int)? fileManagerDateBucket(DateTime? date, DateTime now) {
+  if (date == null) return null;
+  final day = DateTime(date.year, date.month, date.day);
+  final days = DateTime(now.year, now.month, now.day).difference(day).inDays;
+  if (days >= 0 && days < 7) return (0, day.millisecondsSinceEpoch);
+  return (1, date.year * 12 + date.month);
+}
+
 /// Labels a file's date with the coarsest bucket that still tells the user
 /// something: exact days for the last week, months within the current year,
 /// month and year before that.

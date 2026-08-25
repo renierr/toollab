@@ -335,6 +335,7 @@ class FileManagerState extends ChangeNotifier {
     final images = <FileManagerEntry>[];
     final pending = [for (final root in await _imageRoots()) Directory(root)];
     var lastNotify = DateTime.now();
+    var dirty = false;
     while (pending.isNotEmpty) {
       final directory = pending.removeLast();
       List<FileSystemEntity> children;
@@ -364,22 +365,35 @@ class FileManagerState extends ChangeNotifier {
                 modified: stat.modified,
               ),
             );
+            dirty = true;
           } catch (_) {
             continue;
           }
         }
       }
-      // Keep sorted so progressive updates show newest first.
+      // Sorting the whole list per directory would be O(dirs * n log n);
+      // only sort when a throttled UI update actually reads it.
+      final now = DateTime.now();
+      if (!_disposed && now.difference(lastNotify).inMilliseconds >= 250) {
+        if (dirty) {
+          images.sort(
+            (a, b) => (b.modified ?? DateTime.fromMillisecondsSinceEpoch(0))
+                .compareTo(
+                  a.modified ?? DateTime.fromMillisecondsSinceEpoch(0),
+                ),
+          );
+          dirty = false;
+        }
+        _entries = List.of(images);
+        notifyListeners();
+        lastNotify = now;
+      }
+    }
+    if (dirty) {
       images.sort(
         (a, b) => (b.modified ?? DateTime.fromMillisecondsSinceEpoch(0))
             .compareTo(a.modified ?? DateTime.fromMillisecondsSinceEpoch(0)),
       );
-      _entries = List.of(images);
-      final now = DateTime.now();
-      if (now.difference(lastNotify).inMilliseconds >= 250 && !_disposed) {
-        notifyListeners();
-        lastNotify = now;
-      }
     }
     _entries = images;
   }

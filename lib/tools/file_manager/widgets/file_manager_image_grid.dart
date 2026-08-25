@@ -140,27 +140,33 @@ class _FileManagerImageGridState extends State<FileManagerImageGrid> {
     );
   }
 
-  /// Entries arrive newest first, so consecutive runs of the same date label
-  /// are the groups — no extra sort, no map of the whole listing.
+  /// Entries arrive newest first, so consecutive runs of the same date bucket
+  /// are the groups — no extra sort, no map of the whole listing. The label
+  /// (with its DateFormat) is built once per group, not per entry.
   List<MapEntry<String, List<FileManagerEntry>>> _byDate(
     List<FileManagerEntry> entries,
     DateTime now,
     String locale,
     AppLocalizations l10n,
   ) {
-    final groups = <MapEntry<String, List<FileManagerEntry>>>[];
+    final groups =
+        <({(int, int)? bucket, String label, List<FileManagerEntry> items})>[];
     for (final entry in entries) {
-      final modified = entry.modified;
-      final label = modified == null
-          ? l10n.fileManagerUnknownDate
-          : fileManagerDateGroup(modified, now, locale, l10n);
-      if (groups.isNotEmpty && groups.last.key == label) {
-        groups.last.value.add(entry);
+      final bucket = fileManagerDateBucket(entry.modified, now);
+      if (groups.isNotEmpty && groups.last.bucket == bucket) {
+        groups.last.items.add(entry);
       } else {
-        groups.add(MapEntry(label, [entry]));
+        final modified = entry.modified;
+        groups.add((
+          bucket: bucket,
+          label: modified == null
+              ? l10n.fileManagerUnknownDate
+              : fileManagerDateGroup(modified, now, locale, l10n),
+          items: [entry],
+        ));
       }
     }
-    return groups;
+    return [for (final group in groups) MapEntry(group.label, group.items)];
   }
 
   void Function() _toggleCollapsed(String folder) {
