@@ -331,6 +331,11 @@ class FileManagerState extends ChangeNotifier {
     p.extension(path).replaceFirst('.', '').toLowerCase(),
   );
 
+  static int _compareModifiedDesc(FileManagerEntry a, FileManagerEntry b) =>
+      (b.modified?.millisecondsSinceEpoch ?? 0).compareTo(
+        a.modified?.millisecondsSinceEpoch ?? 0,
+      );
+
   Future<void> _loadImageEntries() async {
     final images = <FileManagerEntry>[];
     final pending = [for (final root in await _imageRoots()) Directory(root)];
@@ -376,12 +381,7 @@ class FileManagerState extends ChangeNotifier {
       final now = DateTime.now();
       if (!_disposed && now.difference(lastNotify).inMilliseconds >= 250) {
         if (dirty) {
-          images.sort(
-            (a, b) => (b.modified ?? DateTime.fromMillisecondsSinceEpoch(0))
-                .compareTo(
-                  a.modified ?? DateTime.fromMillisecondsSinceEpoch(0),
-                ),
-          );
+          images.sort(_compareModifiedDesc);
           dirty = false;
         }
         _entries = List.of(images);
@@ -390,10 +390,7 @@ class FileManagerState extends ChangeNotifier {
       }
     }
     if (dirty) {
-      images.sort(
-        (a, b) => (b.modified ?? DateTime.fromMillisecondsSinceEpoch(0))
-            .compareTo(a.modified ?? DateTime.fromMillisecondsSinceEpoch(0)),
-      );
+      images.sort(_compareModifiedDesc);
     }
     _entries = images;
   }
