@@ -25,6 +25,10 @@ import 'package:tool_lab/tools/file_manager/file_manager_installed_apps.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_storage_access.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_operation_worker.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
+import 'package:tool_lab/tools/file_manager/services/file_manager_entry_loaders.dart';
+import 'package:tool_lab/tools/file_manager/services/file_manager_image_scanner.dart';
+import 'package:tool_lab/tools/file_manager/services/file_manager_smb_transfer.dart';
+import 'package:tool_lab/tools/file_manager/services/file_manager_system_loader.dart';
 
 enum FileManagerLocationType { local, ftp, smb }
 
@@ -95,18 +99,7 @@ class FileManagerState extends ChangeNotifier {
   bool _sortAscending = true;
   bool _foldersFirst = true;
   final Map<FileManagerOpenCategory, String?> _openToolIds = {};
-  final Map<String, ValueNotifier<FileStat?>> _metadata = {};
-  final ValueNotifier<FileStat?> _emptyMetadata = ValueNotifier<FileStat?>(
-    null,
-  );
-  final List<FileManagerEntry> _metadataQueue = [];
-  final Set<String> _queuedMetadataPaths = {};
-  int _activeMetadataLoads = 0;
-  final Map<String, ValueNotifier<int?>> _childCounts = {};
-  final ValueNotifier<int?> _emptyChildCount = ValueNotifier<int?>(null);
-  final List<String> _childCountQueue = [];
-  final Set<String> _queuedChildCountPaths = {};
-  int _activeChildCountLoads = 0;
+  final FileManagerEntryLoaders _entryLoaders = FileManagerEntryLoaders();
   int _metadataScan = 0;
   int _listing = 0;
   bool _isScanningMetadata = false;
@@ -289,150 +282,30 @@ class FileManagerState extends ChangeNotifier {
     }
   }
 
-  Future<List<String>> _imageRoots() async {
-    if (FileManagerStorageAccess.isAndroid && usesSharedStorage) {
-      final base = sharedStoragePath;
-      return [
-        'DCIM',
-        'Pictures',
-        'Download',
-      ].map((dir) => p.join(base, dir)).toList();
-    }
-    if (Platform.isWindows) {
-      return WindowsKnownFolders.existingPaths(
-        const [
-          WindowsKnownFolders.pictures,
-          WindowsKnownFolders.cameraRoll,
-          WindowsKnownFolders.downloads,
-        ],
-        // A OneDrive-redirected library can leave files behind in the local
-        // folder, so scan the plain guesses too when they still exist.
-        extraGuesses: const ['Pictures', 'Downloads'],
-      );
-    }
-    if (Platform.isLinux) {
-      final home = Platform.environment['HOME'];
-      if (home != null) return [p.join(home, 'Pictures')];
-    }
-    return const [];
-  }
-
-  static const _imageExtensions = {
-    'jpg',
-    'jpeg',
-    'png',
-    'gif',
-    'webp',
-    'bmp',
-    'heic',
-  };
-
-  static bool _isImagePath(String path) => _imageExtensions.contains(
-    p.extension(path).replaceFirst('.', '').toLowerCase(),
-  );
-
-  static int _compareModifiedDesc(FileManagerEntry a, FileManagerEntry b) =>
-      (b.modified?.millisecondsSinceEpoch ?? 0).compareTo(
-        a.modified?.millisecondsSinceEpoch ?? 0,
-      );
-
   Future<void> _loadImageEntries() async {
-    final images = <FileManagerEntry>[];
-    final pending = [for (final root in await _imageRoots()) Directory(root)];
-    var lastNotify = DateTime.now();
-    var dirty = false;
-    while (pending.isNotEmpty) {
-      final directory = pending.removeLast();
-      List<FileSystemEntity> children;
-      try {
-        children = await directory.list(followLinks: false).toList();
-      } catch (_) {
-        continue;
-      }
-      for (final entity in children) {
-        if (entity is Directory) {
-          if (_isHiddenEntry(p.basename(entity.path))) continue;
-          try {
-            if (await File(p.join(entity.path, '.nomedia')).exists()) continue;
-          } catch (_) {
-            continue;
-          }
-          pending.add(entity);
-        } else if (entity is File && _isImagePath(entity.path)) {
-          try {
-            final stat = await entity.stat();
-            images.add(
-              FileManagerEntry(
-                name: p.basename(entity.path),
-                path: entity.path,
-                isDirectory: false,
-                size: stat.size,
-                modified: stat.modified,
-              ),
-            );
-            dirty = true;
-          } catch (_) {
-            continue;
-          }
-        }
-      }
-      // Sorting the whole list per directory would be O(dirs * n log n);
-      // only sort when a throttled UI update actually reads it.
-      final now = DateTime.now();
-      if (!_disposed && now.difference(lastNotify).inMilliseconds >= 250) {
-        if (dirty) {
-          images.sort(_compareModifiedDesc);
-          dirty = false;
-        }
-        _entries = List.of(images);
+    _entries = await FileManagerImageScanner.scan(
+      roots: await FileManagerImageScanner.roots(
+        usesSharedStorage: usesSharedStorage,
+        sharedStoragePath: sharedStoragePath,
+      ),
+      onUpdate: (entries) {
+        _entries = entries;
         notifyListeners();
-        lastNotify = now;
-      }
-    }
-    if (dirty) {
-      images.sort(_compareModifiedDesc);
-    }
-    _entries = images;
+      },
+      isCancelled: () => _disposed,
+    );
   }
-
-  /// Android hides dot-folders (e.g. .thumbnails) from media views too.
-  static bool _isHiddenEntry(String name) => name.startsWith('.');
 
   Future<void> _loadInstalledApps() async {
-    _installedApps = await FileManagerInstalledApps.list();
-    _storageInfo = await FileManagerInstalledApps.storageInfo();
+    final snapshot = await FileManagerSystemLoader.loadInstalledApps();
+    _installedApps = snapshot.apps;
+    _storageInfo = snapshot.storage;
   }
 
-  List<String> get systemRoots {
-    if (Platform.isAndroid) {
-      return const ['/system', '/vendor', '/etc', '/data', '/cache'];
-    }
-    if (Platform.isWindows) {
-      final windowsDir = Platform.environment['SystemRoot'] ?? r'C:\Windows';
-      return [
-        windowsDir,
-        r'C:\Program Files',
-        r'C:\Program Files (x86)',
-        r'C:\ProgramData',
-      ];
-    }
-    return const [];
-  }
+  List<String> get systemRoots => FileManagerSystemLoader.systemRoots();
 
   Future<void> _loadSystemEntries() async {
-    final entries = <FileManagerEntry>[];
-    for (final root in systemRoots) {
-      final stat = await FileSystemEntity.type(root);
-      if (stat == FileSystemEntityType.notFound) continue;
-      entries.add(
-        FileManagerEntry(
-          name: p.basename(root) == '' ? root : p.basename(root),
-          path: root,
-          isDirectory: true,
-        ),
-      );
-    }
-    _entries = entries;
+    _entries = await FileManagerSystemLoader.loadSystemEntries();
   }
 
   /// The folder-local sort chosen via the explorer toggle, or null once the
@@ -453,99 +326,24 @@ class FileManagerState extends ChangeNotifier {
   String? openToolId(FileManagerOpenCategory category) =>
       _openToolIds[category];
 
-  ValueListenable<FileStat?> metadataFor(FileManagerEntry entry) {
-    if (entry.modified != null || entry.isArchiveEntry || isRemote) {
-      return _emptyMetadata;
-    }
-    final notifier = _metadata.putIfAbsent(
-      entry.path,
-      () => ValueNotifier<FileStat?>(null),
-    );
-    if (!_queuedMetadataPaths.contains(entry.path) && notifier.value == null) {
-      _queuedMetadataPaths.add(entry.path);
-      _metadataQueue.add(entry);
-      _startMetadataLoads();
-    }
-    return notifier;
-  }
+  ValueListenable<FileStat?> metadataFor(FileManagerEntry entry) =>
+      _entryLoaders.metadataFor(
+        entry,
+        request: entry.modified == null && !entry.isArchiveEntry && !isRemote,
+      );
 
-  void _startMetadataLoads() {
-    while (_activeMetadataLoads < 2 && _metadataQueue.isNotEmpty) {
-      final entry = _metadataQueue.removeAt(0);
-      _activeMetadataLoads++;
-      FileStat.stat(entry.path)
-          .then((stat) => _metadata[entry.path]?.value = stat)
-          .catchError((_) => null)
-          .whenComplete(() {
-            _activeMetadataLoads--;
-            _startMetadataLoads();
-          });
-    }
-  }
-
-  /// Lazily counts a folder's direct children, one visible row at a time so a
-  /// deep tree never stalls the listing.
-  ValueListenable<int?> childCountFor(FileManagerEntry entry) {
-    if (!entry.isDirectory ||
-        entry.isBrokenLink ||
-        entry.isArchiveEntry ||
-        isRemote) {
-      return _emptyChildCount;
-    }
-    final notifier = _childCounts.putIfAbsent(
-      entry.path,
-      () => ValueNotifier<int?>(null),
-    );
-    if (!_queuedChildCountPaths.contains(entry.path) &&
-        notifier.value == null) {
-      _queuedChildCountPaths.add(entry.path);
-      _childCountQueue.add(entry.path);
-      _startChildCountLoads();
-    }
-    return notifier;
-  }
-
-  void _startChildCountLoads() {
-    while (_activeChildCountLoads < 2 && _childCountQueue.isNotEmpty) {
-      final path = _childCountQueue.removeAt(0);
-      _activeChildCountLoads++;
-      _countChildren(path)
-          .then((count) => _childCounts[path]?.value = count)
-          .catchError((_) => null)
-          .whenComplete(() {
-            _activeChildCountLoads--;
-            _startChildCountLoads();
-          });
-    }
-  }
-
-  Future<int?> _countChildren(String path) async {
-    try {
-      var count = 0;
-      await for (final _ in Directory(path).list(followLinks: false)) {
-        count++;
-      }
-      return count;
-    } catch (error) {
-      return null;
-    }
-  }
+  ValueListenable<int?> childCountFor(FileManagerEntry entry) =>
+      _entryLoaders.childCountFor(
+        entry,
+        request:
+            entry.isDirectory &&
+            !entry.isBrokenLink &&
+            !entry.isArchiveEntry &&
+            !isRemote,
+      );
 
   void _clearEntryLoaders() {
-    for (final notifier in _metadata.values) {
-      notifier.dispose();
-    }
-    for (final notifier in _childCounts.values) {
-      notifier.dispose();
-    }
-    _childCounts.clear();
-    _childCountQueue.clear();
-    _queuedChildCountPaths.clear();
-    _activeChildCountLoads = 0;
-    _metadata.clear();
-    _metadataQueue.clear();
-    _queuedMetadataPaths.clear();
-    _activeMetadataLoads = 0;
+    _entryLoaders.reset();
     _metadataScan++;
     _isScanningMetadata = false;
   }
@@ -1246,12 +1044,14 @@ class FileManagerState extends ChangeNotifier {
       () async {
         for (final source in _clipboardPaths) {
           try {
-            await _copyLocalEntityToSmb(
+            await FileManagerSmbTransfer.copyLocalEntityToSmb(
               smb,
               source,
               _joinRemotePath(_path, p.basename(source)),
             );
-            if (_clipboardIsCut) await _deleteLocalEntity(source);
+            if (_clipboardIsCut) {
+              await FileManagerSmbTransfer.deleteLocalEntity(source);
+            }
           } catch (error) {
             _recordOperationError(source, error);
           } finally {
@@ -1279,12 +1079,14 @@ class FileManagerState extends ChangeNotifier {
         () async {
           for (final source in _clipboardPaths) {
             try {
-              await _copySmbEntityToLocal(
+              await FileManagerSmbTransfer.copySmbEntityToLocal(
                 smb,
                 source,
                 p.join(_path, p.basename(source)),
               );
-              if (_clipboardIsCut) await _deleteSmbEntity(smb, source);
+              if (_clipboardIsCut) {
+                await FileManagerSmbTransfer.deleteSmbEntity(smb, source);
+              }
             } catch (error) {
               _recordOperationError(source, error);
             } finally {
@@ -1312,7 +1114,11 @@ class FileManagerState extends ChangeNotifier {
             if (_clipboardIsCut) {
               await smb.rename(source, destination);
             } else {
-              await _copySmbEntity(smb, source, destination);
+              await FileManagerSmbTransfer.copySmbEntity(
+                smb,
+                source,
+                destination,
+              );
             }
           } catch (error) {
             _recordOperationError(source, error);
@@ -1829,9 +1635,7 @@ class FileManagerState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
-    _clearEntryLoaders();
-    _emptyMetadata.dispose();
-    _emptyChildCount.dispose();
+    _entryLoaders.dispose();
     super.dispose();
   }
 
@@ -1885,91 +1689,6 @@ class FileManagerState extends ChangeNotifier {
       await ftp.disconnect();
     } catch (error) {
       errorLog('[FileManagerState] FTP disconnect failed: $error');
-    }
-  }
-
-  Future<void> _copySmbEntity(
-    Smb2Pool smb,
-    String source,
-    String destination,
-  ) async {
-    final stat = await smb.stat(source);
-    if (stat.isDirectory) {
-      await smb.mkdir(destination);
-      final entries = await smb.listDirectory(source);
-      for (final entry in entries) {
-        if (entry.name == '.' || entry.name == '..') continue;
-        await _copySmbEntity(
-          smb,
-          _joinRemotePath(source, entry.name),
-          _joinRemotePath(destination, entry.name),
-        );
-      }
-      return;
-    }
-    await smb.writeFile(destination, await smb.readFile(source));
-  }
-
-  Future<void> _copyLocalEntityToSmb(
-    Smb2Pool smb,
-    String source,
-    String destination,
-  ) async {
-    final type = await FileSystemEntity.type(source, followLinks: false);
-    if (type == FileSystemEntityType.directory) {
-      await smb.mkdir(destination);
-      await for (final child in Directory(source).list(followLinks: false)) {
-        await _copyLocalEntityToSmb(
-          smb,
-          child.path,
-          _joinRemotePath(destination, p.basename(child.path)),
-        );
-      }
-      return;
-    }
-    await smb.writeFile(destination, await File(source).readAsBytes());
-  }
-
-  Future<void> _copySmbEntityToLocal(
-    Smb2Pool smb,
-    String source,
-    String destination,
-  ) async {
-    final stat = await smb.stat(source);
-    if (stat.isDirectory) {
-      await Directory(destination).create();
-      for (final entry in await smb.listDirectory(source)) {
-        if (entry.name == '.' || entry.name == '..') continue;
-        await _copySmbEntityToLocal(
-          smb,
-          _joinRemotePath(source, entry.name),
-          p.join(destination, entry.name),
-        );
-      }
-      return;
-    }
-    await File(destination).writeAsBytes(await smb.readFile(source));
-  }
-
-  Future<void> _deleteLocalEntity(String path) async {
-    final type = await FileSystemEntity.type(path, followLinks: false);
-    if (type == FileSystemEntityType.directory) {
-      await Directory(path).delete(recursive: true);
-    } else {
-      await File(path).delete();
-    }
-  }
-
-  Future<void> _deleteSmbEntity(Smb2Pool smb, String path) async {
-    final stat = await smb.stat(path);
-    if (stat.isDirectory) {
-      for (final entry in await smb.listDirectory(path)) {
-        if (entry.name == '.' || entry.name == '..') continue;
-        await _deleteSmbEntity(smb, _joinRemotePath(path, entry.name));
-      }
-      await smb.rmdir(path);
-    } else {
-      await smb.deleteFile(path);
     }
   }
 

@@ -146,7 +146,9 @@ class FileManagerEntryTile extends StatelessWidget {
                         value: 'extract',
                         child: _MenuAction(
                           icon: Icons.unarchive_outlined,
-                          label: AppLocalizations.of(context).fileManagerExtract,
+                          label: AppLocalizations.of(
+                            context,
+                          ).fileManagerExtract,
                         ),
                       ),
                     PopupMenuItem(
