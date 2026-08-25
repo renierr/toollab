@@ -8543,7 +8543,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String renphoPublishedHint(String ohms) {
-    return 'Peer-reviewed equations, as a cross-check. They are specified for 50 kHz resistance, which this scale does not measure; the 50 kHz column interpolates to $ohms ohm and is the weakest assumption here.';
+    return 'Peer-reviewed equations, as a cross-check. They are specified for 50 kHz resistance, which this scale does not measure; the 50 kHz column reconstructs $ohms ohm along the Cole dispersion and is the weakest assumption here.';
   }
 
   @override
@@ -8692,6 +8692,218 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get renphoRatingHigh => 'High';
+
+  @override
+  String get renphoAnalysisTitle => 'Independent analysis';
+
+  @override
+  String get renphoAnalysisAction => 'Recalculate from raw impedance';
+
+  @override
+  String get renphoAnalysisActionHint =>
+      'Rebuild this measurement from the ten raw segment impedances with published equations, then compare it against what the scale reported.';
+
+  @override
+  String get renphoAnalysisUnavailable =>
+      'This measurement carries no segment impedance, so there is nothing to recalculate.';
+
+  @override
+  String get renphoAnalysisOverall => 'Overall health status';
+
+  @override
+  String get renphoAnalysisScore => 'Composite score';
+
+  @override
+  String get renphoAnalysisScoreHint =>
+      'Not a published index: a roll-up of how many values below sit inside their reference range, weighted by how far outside the rest are.';
+
+  @override
+  String renphoAnalysisSummary(int inRange, int total) {
+    return '$inRange of $total values are inside their reference range.';
+  }
+
+  @override
+  String get renphoAnalysisFindings => 'Values against reference ranges';
+
+  @override
+  String get renphoAnalysisWholeBody => 'Whole body, recalculated';
+
+  @override
+  String get renphoAnalysisSegments => 'Arms, legs and trunk, recalculated';
+
+  @override
+  String get renphoAnalysisSegmentsHint =>
+      'Absolute mass comes from the whole-body equation; the split between segments follows the volume-conductor model, in which a segment\'s conducting volume goes with its path length squared over its impedance.';
+
+  @override
+  String get renphoAnalysisComparison => 'Where the scale differs';
+
+  @override
+  String get renphoAnalysisComparisonHint =>
+      'The scale reports skeletal muscle where this analysis reports lean tissue, so a positive difference there is expected. Fat and water differences are a genuine disagreement between two models of the same body.';
+
+  @override
+  String get renphoAnalysisFrequency => '50 kHz reconstruction';
+
+  @override
+  String get renphoAnalysisFrequencyHint =>
+      'Validated bioimpedance equations are specified for 50 kHz resistance, which this scale never measures. Between 20 and 100 kHz the magnitude falls along the Cole dispersion, close to linear in log frequency, so the value used is interpolated there.';
+
+  @override
+  String get renphoAnalysisZ50Cole => 'Cole reconstruction (used)';
+
+  @override
+  String get renphoAnalysisZ50Linear => 'Linear in frequency';
+
+  @override
+  String get renphoAnalysisMethod => 'Method and sources';
+
+  @override
+  String get renphoAnalysisMethodText =>
+      'Every figure here comes from a published, profile-independent equation applied to the reconstructed 50 kHz impedance. Two limits carry through all of them: the scale reports magnitude and no reactance, so there is no phase angle and no true extracellular/intracellular split, and magnitude runs a few percent above resistance, which biases lean estimates slightly low.';
+
+  @override
+  String get renphoAnalysisScaleColumn => 'Scale';
+
+  @override
+  String get renphoAnalysisOwnColumn => 'Recalculated';
+
+  @override
+  String get renphoAnalysisDeltaColumn => 'Difference';
+
+  @override
+  String get renphoAnalysisSegmentLean => 'Lean mass';
+
+  @override
+  String get renphoAnalysisSegmentFat => 'Fat mass';
+
+  @override
+  String get renphoAnalysisSegmentLength => 'Path length';
+
+  @override
+  String get renphoAnalysisZ50 => 'Z at 50 kHz';
+
+  @override
+  String get renphoAnalysisRatio => '100/20 kHz';
+
+  @override
+  String get renphoAnalysisVsScaleMuscle => 'vs. scale muscle';
+
+  @override
+  String get renphoMetricTotalBodyWater => 'Total body water';
+
+  @override
+  String get renphoMetricAppendicularLeanMass => 'Appendicular lean mass';
+
+  @override
+  String get renphoMetricAppendicularLeanIndex =>
+      'Appendicular lean mass index';
+
+  @override
+  String get renphoMetricFatFreeMassIndex => 'Fat-free mass index';
+
+  @override
+  String get renphoMetricFatMassIndex => 'Fat mass index';
+
+  @override
+  String get renphoMetricHydration => 'Hydration of lean mass';
+
+  @override
+  String get renphoFindingSegmentBalance => 'Left/right lean balance';
+
+  @override
+  String get renphoFindingConductionSpread => 'Segment conduction spread';
+
+  @override
+  String get renphoFindingAgreement => 'Agreement with the scale';
+
+  @override
+  String get renphoOverallExcellent => 'Excellent';
+
+  @override
+  String get renphoOverallGood => 'Good';
+
+  @override
+  String get renphoOverallFair => 'Mixed';
+
+  @override
+  String get renphoOverallAttention => 'Needs attention';
+
+  @override
+  String get renphoGuidanceBmi =>
+      'Weight against height, and nothing else. It says nothing about what the weight is made of, which is why a muscular body reads high and the fat figures below matter more.';
+
+  @override
+  String get renphoGuidanceBodyFat =>
+      'Fat as a share of body weight. Below the range costs hormone and immune function; above it is the figure most tied to metabolic risk.';
+
+  @override
+  String get renphoGuidanceFatMassIndex =>
+      'Fat mass normalised by height, the way BMI normalises weight. It separates a heavy, lean body from a heavy, fat one, which BMI cannot.';
+
+  @override
+  String get renphoGuidanceFatFreeMassIndex =>
+      'Everything that is not fat, normalised by height. It shows whether a change in weight moved muscle or fat, and is the figure to watch during a diet.';
+
+  @override
+  String get renphoGuidanceMuscleIndex =>
+      'Muscle in the arms and legs over height squared, the index sarcopenia is defined on. Falling below the cut-off is linked to weakness, falls and slower recovery.';
+
+  @override
+  String get renphoGuidanceVisceralFat =>
+      'The scale\'s own score for fat around the organs. It is the fat depot most tied to blood pressure, blood sugar and cardiovascular risk, and it responds well to activity.';
+
+  @override
+  String get renphoGuidanceHydration =>
+      'Water as a share of fat-free mass sits near a biological constant. Far off it usually means the day was unusual — a hard session, a salty meal, too little to drink — rather than the body changing.';
+
+  @override
+  String get renphoGuidanceSegmentBalance =>
+      'How far the two sides differ in lean mass. A persistent gap points at a training imbalance or an old injury; a one-off gap is often just how the handles were held.';
+
+  @override
+  String get renphoGuidanceConductionSpread =>
+      'How differently one segment conducts compared to the rest of the same body. A standing-out segment can mean local fluid retention, or simply poor contact with that electrode.';
+
+  @override
+  String get renphoReportSubtitle => 'Bioelectrical impedance analysis';
+
+  @override
+  String get renphoReportPerson => 'Person';
+
+  @override
+  String renphoReportPage(int page, int pages) {
+    return 'Page $page of $pages';
+  }
+
+  @override
+  String get renphoReportSummary => 'Summary';
+
+  @override
+  String get renphoReportKeyValues => 'Key values';
+
+  @override
+  String get renphoReportGuidance => 'How to read these values';
+
+  @override
+  String get renphoReportRangePosition => 'Position in range';
+
+  @override
+  String get renphoReportMethodology => 'Method and sources';
+
+  @override
+  String get renphoReportMethodologyText =>
+      'The scale measures weight and ten impedance magnitudes — five body segments at 20 and 100 kHz — and derives its own body composition from them. This report repeats that derivation independently, from the same raw impedances, with published equations, and prints both. Where the two disagree, neither is a reference measurement: bioimpedance estimates composition, it does not measure it.';
+
+  @override
+  String get renphoReportReferences => 'References';
+
+  @override
+  String get renphoReportNoImpedance =>
+      'This measurement carries no segment impedance, so the recalculated sections are omitted.';
+
+  @override
+  String get renphoReportScaleModel => 'Reported by the scale';
 
   @override
   String get treadmillHistoryDeleteTitle => 'Delete Workout?';

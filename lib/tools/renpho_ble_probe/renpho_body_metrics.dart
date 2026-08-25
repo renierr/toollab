@@ -202,14 +202,14 @@ class RenphoDerived {
 
   /// Peer-reviewed equations, for cross-checking only. All are specified for
   /// 50 kHz resistance; this scale measures 20 and 100 kHz magnitude and no
-  /// reactance, so the 50 kHz figure is a linear interpolation and the weakest
+  /// reactance, so the 50 kHz figure is reconstructed and the weakest
   /// assumption here.
   List<RenphoPublishedEstimate> get publishedEstimates {
     final h2 = measurement.profileHeightCm * measurement.profileHeightCm;
     final male = measurement.profileSex == 'male';
     final z20 = wholeBodyImpedance20;
     final z100 = wholeBodyImpedance100;
-    final z50 = z20 + (z100 - z20) * 30 / 80;
+    final z50 = interpolatedImpedance50;
     if (z20 <= 0 || z100 <= 0) return const [];
 
     double tbw(double z) => male
@@ -240,10 +240,19 @@ class RenphoDerived {
     ];
   }
 
-  /// The interpolated 50 kHz whole-body impedance the published equations use.
+  /// The reconstructed 50 kHz whole-body impedance the published equations use.
   double get interpolatedImpedance50 =>
-      wholeBodyImpedance20 +
-      (wholeBodyImpedance100 - wholeBodyImpedance20) * 30 / 80;
+      renphoImpedance50(wholeBodyImpedance20, wholeBodyImpedance100);
+}
+
+/// Cole-dispersion reconstruction of the 50 kHz magnitude from the two the
+/// scale reports. Between 20 and 100 kHz the magnitude falls close to linearly
+/// in log frequency, so the interpolation runs there; interpolating in plain
+/// frequency lands several ohm lower and reads as more lean mass than there is.
+double renphoImpedance50(double z20, double z100) {
+  if (z20 <= 0 || z100 <= 0) return 0;
+  const exponent = 0.5693; // ln(50/20) / ln(100/20)
+  return z20 * math.pow(z100 / z20, exponent);
 }
 
 enum RenphoSegment {

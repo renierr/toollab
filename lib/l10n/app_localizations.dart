@@ -15284,7 +15284,7 @@ abstract class AppLocalizations {
   /// No description provided for @renphoPublishedHint.
   ///
   /// In en, this message translates to:
-  /// **'Peer-reviewed equations, as a cross-check. They are specified for 50 kHz resistance, which this scale does not measure; the 50 kHz column interpolates to {ohms} ohm and is the weakest assumption here.'**
+  /// **'Peer-reviewed equations, as a cross-check. They are specified for 50 kHz resistance, which this scale does not measure; the 50 kHz column reconstructs {ohms} ohm along the Cole dispersion and is the weakest assumption here.'**
   String renphoPublishedHint(String ohms);
 
   /// No description provided for @renphoSectionRecord.
@@ -15574,6 +15574,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'High'**
   String get renphoRatingHigh;
+
+  /// No description provided for @renphoAnalysisTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Independent analysis'**
+  String get renphoAnalysisTitle;
+
+  /// No description provided for @renphoAnalysisAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculate from raw impedance'**
+  String get renphoAnalysisAction;
+
+  /// No description provided for @renphoAnalysisActionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Rebuild this measurement from the ten raw segment impedances with published equations, then compare it against what the scale reported.'**
+  String get renphoAnalysisActionHint;
+
+  /// No description provided for @renphoAnalysisUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This measurement carries no segment impedance, so there is nothing to recalculate.'**
+  String get renphoAnalysisUnavailable;
+
+  /// No description provided for @renphoAnalysisOverall.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall health status'**
+  String get renphoAnalysisOverall;
+
+  /// No description provided for @renphoAnalysisScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Composite score'**
+  String get renphoAnalysisScore;
+
+  /// No description provided for @renphoAnalysisScoreHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a published index: a roll-up of how many values below sit inside their reference range, weighted by how far outside the rest are.'**
+  String get renphoAnalysisScoreHint;
+
+  /// No description provided for @renphoAnalysisSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{inRange} of {total} values are inside their reference range.'**
+  String renphoAnalysisSummary(int inRange, int total);
+
+  /// No description provided for @renphoAnalysisFindings.
+  ///
+  /// In en, this message translates to:
+  /// **'Values against reference ranges'**
+  String get renphoAnalysisFindings;
+
+  /// No description provided for @renphoAnalysisWholeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole body, recalculated'**
+  String get renphoAnalysisWholeBody;
+
+  /// No description provided for @renphoAnalysisSegments.
+  ///
+  /// In en, this message translates to:
+  /// **'Arms, legs and trunk, recalculated'**
+  String get renphoAnalysisSegments;
+
+  /// No description provided for @renphoAnalysisSegmentsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Absolute mass comes from the whole-body equation; the split between segments follows the volume-conductor model, in which a segment\'s conducting volume goes with its path length squared over its impedance.'**
+  String get renphoAnalysisSegmentsHint;
+
+  /// No description provided for @renphoAnalysisComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Where the scale differs'**
+  String get renphoAnalysisComparison;
+
+  /// No description provided for @renphoAnalysisComparisonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The scale reports skeletal muscle where this analysis reports lean tissue, so a positive difference there is expected. Fat and water differences are a genuine disagreement between two models of the same body.'**
+  String get renphoAnalysisComparisonHint;
+
+  /// No description provided for @renphoAnalysisFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'50 kHz reconstruction'**
+  String get renphoAnalysisFrequency;
+
+  /// No description provided for @renphoAnalysisFrequencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Validated bioimpedance equations are specified for 50 kHz resistance, which this scale never measures. Between 20 and 100 kHz the magnitude falls along the Cole dispersion, close to linear in log frequency, so the value used is interpolated there.'**
+  String get renphoAnalysisFrequencyHint;
+
+  /// No description provided for @renphoAnalysisZ50Cole.
+  ///
+  /// In en, this message translates to:
+  /// **'Cole reconstruction (used)'**
+  String get renphoAnalysisZ50Cole;
+
+  /// No description provided for @renphoAnalysisZ50Linear.
+  ///
+  /// In en, this message translates to:
+  /// **'Linear in frequency'**
+  String get renphoAnalysisZ50Linear;
+
+  /// No description provided for @renphoAnalysisMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Method and sources'**
+  String get renphoAnalysisMethod;
+
+  /// No description provided for @renphoAnalysisMethodText.
+  ///
+  /// In en, this message translates to:
+  /// **'Every figure here comes from a published, profile-independent equation applied to the reconstructed 50 kHz impedance. Two limits carry through all of them: the scale reports magnitude and no reactance, so there is no phase angle and no true extracellular/intracellular split, and magnitude runs a few percent above resistance, which biases lean estimates slightly low.'**
+  String get renphoAnalysisMethodText;
+
+  /// No description provided for @renphoAnalysisScaleColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Scale'**
+  String get renphoAnalysisScaleColumn;
+
+  /// No description provided for @renphoAnalysisOwnColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculated'**
+  String get renphoAnalysisOwnColumn;
+
+  /// No description provided for @renphoAnalysisDeltaColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference'**
+  String get renphoAnalysisDeltaColumn;
+
+  /// No description provided for @renphoAnalysisSegmentLean.
+  ///
+  /// In en, this message translates to:
+  /// **'Lean mass'**
+  String get renphoAnalysisSegmentLean;
+
+  /// No description provided for @renphoAnalysisSegmentFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat mass'**
+  String get renphoAnalysisSegmentFat;
+
+  /// No description provided for @renphoAnalysisSegmentLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Path length'**
+  String get renphoAnalysisSegmentLength;
+
+  /// No description provided for @renphoAnalysisZ50.
+  ///
+  /// In en, this message translates to:
+  /// **'Z at 50 kHz'**
+  String get renphoAnalysisZ50;
+
+  /// No description provided for @renphoAnalysisRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'100/20 kHz'**
+  String get renphoAnalysisRatio;
+
+  /// No description provided for @renphoAnalysisVsScaleMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'vs. scale muscle'**
+  String get renphoAnalysisVsScaleMuscle;
+
+  /// No description provided for @renphoMetricTotalBodyWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Total body water'**
+  String get renphoMetricTotalBodyWater;
+
+  /// No description provided for @renphoMetricAppendicularLeanMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Appendicular lean mass'**
+  String get renphoMetricAppendicularLeanMass;
+
+  /// No description provided for @renphoMetricAppendicularLeanIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Appendicular lean mass index'**
+  String get renphoMetricAppendicularLeanIndex;
+
+  /// No description provided for @renphoMetricFatFreeMassIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat-free mass index'**
+  String get renphoMetricFatFreeMassIndex;
+
+  /// No description provided for @renphoMetricFatMassIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat mass index'**
+  String get renphoMetricFatMassIndex;
+
+  /// No description provided for @renphoMetricHydration.
+  ///
+  /// In en, this message translates to:
+  /// **'Hydration of lean mass'**
+  String get renphoMetricHydration;
+
+  /// No description provided for @renphoFindingSegmentBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Left/right lean balance'**
+  String get renphoFindingSegmentBalance;
+
+  /// No description provided for @renphoFindingConductionSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment conduction spread'**
+  String get renphoFindingConductionSpread;
+
+  /// No description provided for @renphoFindingAgreement.
+  ///
+  /// In en, this message translates to:
+  /// **'Agreement with the scale'**
+  String get renphoFindingAgreement;
+
+  /// No description provided for @renphoOverallExcellent.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent'**
+  String get renphoOverallExcellent;
+
+  /// No description provided for @renphoOverallGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get renphoOverallGood;
+
+  /// No description provided for @renphoOverallFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Mixed'**
+  String get renphoOverallFair;
+
+  /// No description provided for @renphoOverallAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get renphoOverallAttention;
+
+  /// No description provided for @renphoGuidanceBmi.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight against height, and nothing else. It says nothing about what the weight is made of, which is why a muscular body reads high and the fat figures below matter more.'**
+  String get renphoGuidanceBmi;
+
+  /// No description provided for @renphoGuidanceBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat as a share of body weight. Below the range costs hormone and immune function; above it is the figure most tied to metabolic risk.'**
+  String get renphoGuidanceBodyFat;
+
+  /// No description provided for @renphoGuidanceFatMassIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Fat mass normalised by height, the way BMI normalises weight. It separates a heavy, lean body from a heavy, fat one, which BMI cannot.'**
+  String get renphoGuidanceFatMassIndex;
+
+  /// No description provided for @renphoGuidanceFatFreeMassIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything that is not fat, normalised by height. It shows whether a change in weight moved muscle or fat, and is the figure to watch during a diet.'**
+  String get renphoGuidanceFatFreeMassIndex;
+
+  /// No description provided for @renphoGuidanceMuscleIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle in the arms and legs over height squared, the index sarcopenia is defined on. Falling below the cut-off is linked to weakness, falls and slower recovery.'**
+  String get renphoGuidanceMuscleIndex;
+
+  /// No description provided for @renphoGuidanceVisceralFat.
+  ///
+  /// In en, this message translates to:
+  /// **'The scale\'s own score for fat around the organs. It is the fat depot most tied to blood pressure, blood sugar and cardiovascular risk, and it responds well to activity.'**
+  String get renphoGuidanceVisceralFat;
+
+  /// No description provided for @renphoGuidanceHydration.
+  ///
+  /// In en, this message translates to:
+  /// **'Water as a share of fat-free mass sits near a biological constant. Far off it usually means the day was unusual — a hard session, a salty meal, too little to drink — rather than the body changing.'**
+  String get renphoGuidanceHydration;
+
+  /// No description provided for @renphoGuidanceSegmentBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'How far the two sides differ in lean mass. A persistent gap points at a training imbalance or an old injury; a one-off gap is often just how the handles were held.'**
+  String get renphoGuidanceSegmentBalance;
+
+  /// No description provided for @renphoGuidanceConductionSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'How differently one segment conducts compared to the rest of the same body. A standing-out segment can mean local fluid retention, or simply poor contact with that electrode.'**
+  String get renphoGuidanceConductionSpread;
+
+  /// No description provided for @renphoReportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bioelectrical impedance analysis'**
+  String get renphoReportSubtitle;
+
+  /// No description provided for @renphoReportPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Person'**
+  String get renphoReportPerson;
+
+  /// No description provided for @renphoReportPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {pages}'**
+  String renphoReportPage(int page, int pages);
+
+  /// No description provided for @renphoReportSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get renphoReportSummary;
+
+  /// No description provided for @renphoReportKeyValues.
+  ///
+  /// In en, this message translates to:
+  /// **'Key values'**
+  String get renphoReportKeyValues;
+
+  /// No description provided for @renphoReportGuidance.
+  ///
+  /// In en, this message translates to:
+  /// **'How to read these values'**
+  String get renphoReportGuidance;
+
+  /// No description provided for @renphoReportRangePosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Position in range'**
+  String get renphoReportRangePosition;
+
+  /// No description provided for @renphoReportMethodology.
+  ///
+  /// In en, this message translates to:
+  /// **'Method and sources'**
+  String get renphoReportMethodology;
+
+  /// No description provided for @renphoReportMethodologyText.
+  ///
+  /// In en, this message translates to:
+  /// **'The scale measures weight and ten impedance magnitudes — five body segments at 20 and 100 kHz — and derives its own body composition from them. This report repeats that derivation independently, from the same raw impedances, with published equations, and prints both. Where the two disagree, neither is a reference measurement: bioimpedance estimates composition, it does not measure it.'**
+  String get renphoReportMethodologyText;
+
+  /// No description provided for @renphoReportReferences.
+  ///
+  /// In en, this message translates to:
+  /// **'References'**
+  String get renphoReportReferences;
+
+  /// No description provided for @renphoReportNoImpedance.
+  ///
+  /// In en, this message translates to:
+  /// **'This measurement carries no segment impedance, so the recalculated sections are omitted.'**
+  String get renphoReportNoImpedance;
+
+  /// No description provided for @renphoReportScaleModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reported by the scale'**
+  String get renphoReportScaleModel;
 
   /// No description provided for @treadmillHistoryDeleteTitle.
   ///

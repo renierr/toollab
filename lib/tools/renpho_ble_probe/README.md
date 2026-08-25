@@ -281,13 +281,63 @@ details page keeps visually separate:
    (Mifflin-St Jeor, Katch-McArdle, Kushner-Schoeller, Sun, Janssen) at 100, 50
    and 20 kHz, shown for comparison.
 
+## Independent analysis
+
+`RenphoIndependentAnalysis` rebuilds one scan from its ten raw impedances alone,
+with published, profile-independent equations, so the scale's own composition
+can be held against a second opinion. It is reached from the measurement details
+page — the toolbar button and the card under the metrics grid both open it — and
+its results are printed in the report.
+
+Three assumptions carry the whole thing, and each is the weak point of a
+different part of the result:
+
+- **50 kHz is reconstructed, not measured.** Every validated BIA equation is
+  specified for 50 kHz resistance. `renphoImpedance50` interpolates between the
+  two measured magnitudes along the Cole dispersion — linear in *log* frequency,
+  not in frequency — and the page prints both readings side by side so the size
+  of the assumption is visible. The published-equation table uses the same
+  reconstruction.
+- **Magnitude stands in for resistance.** No reactance is reported, so there is
+  no phase angle and no true extracellular/intracellular split, and every lean
+  estimate is biased slightly low.
+- **Segment masses are a distribution, not five measurements.** The absolute
+  scale comes from the whole-body Sun equation; the split across arms, legs and
+  trunk follows the volume-conductor model, where a segment's conducting volume
+  goes with its path length squared over its impedance. Path lengths and segment
+  mass fractions are anthropometric fractions of standing height (Winter). No
+  per-segment resistivity constant is invented.
+
+From those it derives fat-free mass, total body water, skeletal muscle mass,
+appendicular lean mass and its index, the fat-free and fat mass indices, and per
+segment the lean mass, the fat mass and the 100/20 kHz ratio. Ten findings are
+rated against published bands (WHO, ACE, EWGSOP2, Schutz, Kelly) and rolled up
+into a composite score — not a published index, and labelled as such wherever it
+is printed. The last finding rates how far the two calculations disagree rather
+than the body, so it is left out of the score. `renphoReferenceList` holds the
+citations for every equation and band, and is printed in both the analysis page
+and the report.
+
 ## PDF report
 
-The toolbar's PDF button builds one A4 page for the latest reading: the profile
-and both timestamps, six key values, the segment figure with its callouts and
-table, the assessment, and the two seven-day charts. The figure is the same
-geometry as the on-screen map, rendered off-screen on a light background; the
-charts are vector charts from the `pdf` package.
+The toolbar's PDF button builds a three-page A4 record for the latest reading,
+laid out as a `MultiPage` with a running header and a footer carrying the
+disclaimer and the page number:
+
+1. Letterhead, the identification block, the overall status banner, six key
+   values, the assessment table with a band strip per row showing which way the
+   value left its reference range, and a glossary explaining what each rated
+   value means for health.
+2. The segment figure with its callouts, the scale's own segment table, the
+   recalculated segment table, and the two calculations compared metric by
+   metric with the size of each gap.
+3. The recalculated whole-body values, the frequency reconstruction, the rated
+   findings, the seven-day charts, and the method and reference list.
+
+The figure is the same geometry as the on-screen map, rendered off-screen on a
+light background; the charts are vector charts from the `pdf` package. A reading
+without segment impedance is still reported — the recalculated sections are
+dropped and the page says so.
 
 `renphoAssessment` rates seven values against population reference ranges — BMI
 against the WHO classes, body fat against the ACE ranges by sex, the visceral

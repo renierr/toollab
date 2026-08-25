@@ -4476,7 +4476,7 @@
   "renphoSectionEnergy": "Resting energy estimates",
   "renphoEnergyHint": "Resting-energy estimates, not measured metabolism.",
   "renphoSectionPublished": "Independent published equations",
-  "renphoPublishedHint": "Peer-reviewed equations, as a cross-check. They are specified for 50 kHz resistance, which this scale does not measure; the 50 kHz column interpolates to {ohms} ohm and is the weakest assumption here.",
+  "renphoPublishedHint": "Peer-reviewed equations, as a cross-check. They are specified for 50 kHz resistance, which this scale does not measure; the 50 kHz column reconstructs {ohms} ohm along the Cole dispersion and is the weakest assumption here.",
   "@renphoPublishedHint": {
     "placeholders": {
       "ohms": {
@@ -4532,6 +4532,89 @@
   "renphoRatingOptimal": "Optimal",
   "renphoRatingElevated": "Elevated",
   "renphoRatingHigh": "High",
+  "renphoAnalysisTitle": "Independent analysis",
+  "renphoAnalysisAction": "Recalculate from raw impedance",
+  "renphoAnalysisActionHint": "Rebuild this measurement from the ten raw segment impedances with published equations, then compare it against what the scale reported.",
+  "renphoAnalysisUnavailable": "This measurement carries no segment impedance, so there is nothing to recalculate.",
+  "renphoAnalysisOverall": "Overall health status",
+  "renphoAnalysisScore": "Composite score",
+  "renphoAnalysisScoreHint": "Not a published index: a roll-up of how many values below sit inside their reference range, weighted by how far outside the rest are.",
+  "renphoAnalysisSummary": "{inRange} of {total} values are inside their reference range.",
+  "@renphoAnalysisSummary": {
+    "placeholders": {
+      "inRange": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "renphoAnalysisFindings": "Values against reference ranges",
+  "renphoAnalysisWholeBody": "Whole body, recalculated",
+  "renphoAnalysisSegments": "Arms, legs and trunk, recalculated",
+  "renphoAnalysisSegmentsHint": "Absolute mass comes from the whole-body equation; the split between segments follows the volume-conductor model, in which a segment's conducting volume goes with its path length squared over its impedance.",
+  "renphoAnalysisComparison": "Where the scale differs",
+  "renphoAnalysisComparisonHint": "The scale reports skeletal muscle where this analysis reports lean tissue, so a positive difference there is expected. Fat and water differences are a genuine disagreement between two models of the same body.",
+  "renphoAnalysisFrequency": "50 kHz reconstruction",
+  "renphoAnalysisFrequencyHint": "Validated bioimpedance equations are specified for 50 kHz resistance, which this scale never measures. Between 20 and 100 kHz the magnitude falls along the Cole dispersion, close to linear in log frequency, so the value used is interpolated there.",
+  "renphoAnalysisZ50Cole": "Cole reconstruction (used)",
+  "renphoAnalysisZ50Linear": "Linear in frequency",
+  "renphoAnalysisMethod": "Method and sources",
+  "renphoAnalysisMethodText": "Every figure here comes from a published, profile-independent equation applied to the reconstructed 50 kHz impedance. Two limits carry through all of them: the scale reports magnitude and no reactance, so there is no phase angle and no true extracellular/intracellular split, and magnitude runs a few percent above resistance, which biases lean estimates slightly low.",
+  "renphoAnalysisScaleColumn": "Scale",
+  "renphoAnalysisOwnColumn": "Recalculated",
+  "renphoAnalysisDeltaColumn": "Difference",
+  "renphoAnalysisSegmentLean": "Lean mass",
+  "renphoAnalysisSegmentFat": "Fat mass",
+  "renphoAnalysisSegmentLength": "Path length",
+  "renphoAnalysisZ50": "Z at 50 kHz",
+  "renphoAnalysisRatio": "100/20 kHz",
+  "renphoAnalysisVsScaleMuscle": "vs. scale muscle",
+  "renphoMetricTotalBodyWater": "Total body water",
+  "renphoMetricAppendicularLeanMass": "Appendicular lean mass",
+  "renphoMetricAppendicularLeanIndex": "Appendicular lean mass index",
+  "renphoMetricFatFreeMassIndex": "Fat-free mass index",
+  "renphoMetricFatMassIndex": "Fat mass index",
+  "renphoMetricHydration": "Hydration of lean mass",
+  "renphoFindingSegmentBalance": "Left/right lean balance",
+  "renphoFindingConductionSpread": "Segment conduction spread",
+  "renphoFindingAgreement": "Agreement with the scale",
+  "renphoOverallExcellent": "Excellent",
+  "renphoOverallGood": "Good",
+  "renphoOverallFair": "Mixed",
+  "renphoOverallAttention": "Needs attention",
+  "renphoGuidanceBmi": "Weight against height, and nothing else. It says nothing about what the weight is made of, which is why a muscular body reads high and the fat figures below matter more.",
+  "renphoGuidanceBodyFat": "Fat as a share of body weight. Below the range costs hormone and immune function; above it is the figure most tied to metabolic risk.",
+  "renphoGuidanceFatMassIndex": "Fat mass normalised by height, the way BMI normalises weight. It separates a heavy, lean body from a heavy, fat one, which BMI cannot.",
+  "renphoGuidanceFatFreeMassIndex": "Everything that is not fat, normalised by height. It shows whether a change in weight moved muscle or fat, and is the figure to watch during a diet.",
+  "renphoGuidanceMuscleIndex": "Muscle in the arms and legs over height squared, the index sarcopenia is defined on. Falling below the cut-off is linked to weakness, falls and slower recovery.",
+  "renphoGuidanceVisceralFat": "The scale's own score for fat around the organs. It is the fat depot most tied to blood pressure, blood sugar and cardiovascular risk, and it responds well to activity.",
+  "renphoGuidanceHydration": "Water as a share of fat-free mass sits near a biological constant. Far off it usually means the day was unusual — a hard session, a salty meal, too little to drink — rather than the body changing.",
+  "renphoGuidanceSegmentBalance": "How far the two sides differ in lean mass. A persistent gap points at a training imbalance or an old injury; a one-off gap is often just how the handles were held.",
+  "renphoGuidanceConductionSpread": "How differently one segment conducts compared to the rest of the same body. A standing-out segment can mean local fluid retention, or simply poor contact with that electrode.",
+  "renphoReportSubtitle": "Bioelectrical impedance analysis",
+  "renphoReportPerson": "Person",
+  "renphoReportPage": "Page {page} of {pages}",
+  "@renphoReportPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "renphoReportSummary": "Summary",
+  "renphoReportKeyValues": "Key values",
+  "renphoReportGuidance": "How to read these values",
+  "renphoReportRangePosition": "Position in range",
+  "renphoReportMethodology": "Method and sources",
+  "renphoReportMethodologyText": "The scale measures weight and ten impedance magnitudes — five body segments at 20 and 100 kHz — and derives its own body composition from them. This report repeats that derivation independently, from the same raw impedances, with published equations, and prints both. Where the two disagree, neither is a reference measurement: bioimpedance estimates composition, it does not measure it.",
+  "renphoReportReferences": "References",
+  "renphoReportNoImpedance": "This measurement carries no segment impedance, so the recalculated sections are omitted.",
+  "renphoReportScaleModel": "Reported by the scale",
   "treadmillHistoryDeleteTitle": "Delete Workout?",
   "treadmillHistoryDeleteMessage": "Are you sure you want to delete this workout session permanently?",
   "treadmillHistoryExportEmpty": "No sessions to export",

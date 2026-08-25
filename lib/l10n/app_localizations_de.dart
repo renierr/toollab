@@ -8604,7 +8604,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String renphoPublishedHint(String ohms) {
-    return 'Peer-reviewte Formeln als Gegenprobe. Sie gelten für den 50-kHz-Widerstand, den diese Waage nicht misst; die 50-kHz-Spalte interpoliert auf $ohms Ohm und ist die schwächste Annahme hier.';
+    return 'Peer-reviewte Formeln als Gegenprobe. Sie gelten für den 50-kHz-Widerstand, den diese Waage nicht misst; die 50-kHz-Spalte rekonstruiert $ohms Ohm entlang der Cole-Dispersion und ist die schwächste Annahme hier.';
   }
 
   @override
@@ -8755,6 +8755,220 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get renphoRatingHigh => 'Hoch';
+
+  @override
+  String get renphoAnalysisTitle => 'Unabhängige Auswertung';
+
+  @override
+  String get renphoAnalysisAction => 'Aus Rohimpedanzen neu berechnen';
+
+  @override
+  String get renphoAnalysisActionHint =>
+      'Diese Messung aus den zehn rohen Segmentimpedanzen mit veröffentlichten Formeln neu aufbauen und mit dem vergleichen, was die Waage gemeldet hat.';
+
+  @override
+  String get renphoAnalysisUnavailable =>
+      'Diese Messung enthält keine Segmentimpedanz, es gibt also nichts neu zu berechnen.';
+
+  @override
+  String get renphoAnalysisOverall => 'Gesamtstatus';
+
+  @override
+  String get renphoAnalysisScore => 'Gesamtwert';
+
+  @override
+  String get renphoAnalysisScoreHint =>
+      'Kein veröffentlichter Index: eine Zusammenfassung, wie viele der Werte unten in ihrem Referenzbereich liegen, gewichtet danach, wie weit die übrigen davon entfernt sind.';
+
+  @override
+  String renphoAnalysisSummary(int inRange, int total) {
+    return '$inRange von $total Werten liegen im Referenzbereich.';
+  }
+
+  @override
+  String get renphoAnalysisFindings => 'Werte gegen Referenzbereiche';
+
+  @override
+  String get renphoAnalysisWholeBody => 'Ganzkörper, neu berechnet';
+
+  @override
+  String get renphoAnalysisSegments => 'Arme, Beine und Rumpf, neu berechnet';
+
+  @override
+  String get renphoAnalysisSegmentsHint =>
+      'Die absolute Masse stammt aus der Ganzkörperformel; die Aufteilung auf die Segmente folgt dem Volumenleitermodell, in dem das leitende Volumen eines Segments mit dem Quadrat seiner Pfadlänge geteilt durch seine Impedanz geht.';
+
+  @override
+  String get renphoAnalysisComparison => 'Wo die Waage abweicht';
+
+  @override
+  String get renphoAnalysisComparisonHint =>
+      'Die Waage meldet Skelettmuskel, diese Auswertung meldet fettfreies Gewebe — eine positive Differenz ist dort zu erwarten. Unterschiede bei Fett und Wasser sind eine echte Abweichung zwischen zwei Modellen desselben Körpers.';
+
+  @override
+  String get renphoAnalysisFrequency => '50-kHz-Rekonstruktion';
+
+  @override
+  String get renphoAnalysisFrequencyHint =>
+      'Validierte Bioimpedanzformeln gelten für den 50-kHz-Widerstand, den diese Waage nie misst. Zwischen 20 und 100 kHz fällt der Betrag entlang der Cole-Dispersion, nahezu linear über der logarithmierten Frequenz, dort wird interpoliert.';
+
+  @override
+  String get renphoAnalysisZ50Cole => 'Cole-Rekonstruktion (verwendet)';
+
+  @override
+  String get renphoAnalysisZ50Linear => 'Linear über der Frequenz';
+
+  @override
+  String get renphoAnalysisMethod => 'Methode und Quellen';
+
+  @override
+  String get renphoAnalysisMethodText =>
+      'Jeder Wert hier stammt aus einer veröffentlichten, profilunabhängigen Formel, angewandt auf die rekonstruierte 50-kHz-Impedanz. Zwei Grenzen gelten für alle: Die Waage meldet nur den Betrag und keine Reaktanz, es gibt also keinen Phasenwinkel und keine echte Trennung von Extra- und Intrazellulärwasser; und der Betrag liegt einige Prozent über dem Widerstand, was die Schätzungen des fettfreien Gewebes leicht nach unten verschiebt.';
+
+  @override
+  String get renphoAnalysisScaleColumn => 'Waage';
+
+  @override
+  String get renphoAnalysisOwnColumn => 'Neu berechnet';
+
+  @override
+  String get renphoAnalysisDeltaColumn => 'Differenz';
+
+  @override
+  String get renphoAnalysisSegmentLean => 'Fettfreie Masse';
+
+  @override
+  String get renphoAnalysisSegmentFat => 'Fettmasse';
+
+  @override
+  String get renphoAnalysisSegmentLength => 'Pfadlänge';
+
+  @override
+  String get renphoAnalysisZ50 => 'Z bei 50 kHz';
+
+  @override
+  String get renphoAnalysisRatio => '100/20 kHz';
+
+  @override
+  String get renphoAnalysisVsScaleMuscle => 'ggü. Muskel der Waage';
+
+  @override
+  String get renphoMetricTotalBodyWater => 'Gesamtkörperwasser';
+
+  @override
+  String get renphoMetricAppendicularLeanMass =>
+      'Appendikuläre fettfreie Masse';
+
+  @override
+  String get renphoMetricAppendicularLeanIndex =>
+      'Index der appendikulären Masse';
+
+  @override
+  String get renphoMetricFatFreeMassIndex => 'Fettfreie-Masse-Index';
+
+  @override
+  String get renphoMetricFatMassIndex => 'Fettmasse-Index';
+
+  @override
+  String get renphoMetricHydration => 'Hydratation der fettfreien Masse';
+
+  @override
+  String get renphoFindingSegmentBalance => 'Balance links/rechts';
+
+  @override
+  String get renphoFindingConductionSpread =>
+      'Streuung der Segmentleitfähigkeit';
+
+  @override
+  String get renphoFindingAgreement => 'Übereinstimmung mit der Waage';
+
+  @override
+  String get renphoOverallExcellent => 'Sehr gut';
+
+  @override
+  String get renphoOverallGood => 'Gut';
+
+  @override
+  String get renphoOverallFair => 'Gemischt';
+
+  @override
+  String get renphoOverallAttention => 'Beachtenswert';
+
+  @override
+  String get renphoGuidanceBmi =>
+      'Gewicht gegen Größe, mehr nicht. Er sagt nichts darüber, woraus das Gewicht besteht — deshalb liest ein muskulöser Körper hoch, und die Fettwerte unten wiegen schwerer.';
+
+  @override
+  String get renphoGuidanceBodyFat =>
+      'Fett als Anteil am Körpergewicht. Unterhalb des Bereichs leiden Hormon- und Immunfunktion; oberhalb ist es der Wert, der am stärksten mit dem Stoffwechselrisiko zusammenhängt.';
+
+  @override
+  String get renphoGuidanceFatMassIndex =>
+      'Fettmasse auf die Größe normiert, so wie der BMI das Gewicht normiert. Er trennt einen schweren, mageren Körper von einem schweren, fetten — was der BMI nicht kann.';
+
+  @override
+  String get renphoGuidanceFatFreeMassIndex =>
+      'Alles, was nicht Fett ist, auf die Größe normiert. Er zeigt, ob eine Gewichtsänderung Muskel oder Fett bewegt hat, und ist der Wert, den man während einer Diät verfolgt.';
+
+  @override
+  String get renphoGuidanceMuscleIndex =>
+      'Muskel in Armen und Beinen geteilt durch das Quadrat der Größe — der Index, über den Sarkopenie definiert ist. Unter dem Grenzwert steigen Schwäche, Sturz- und Erholungsrisiko.';
+
+  @override
+  String get renphoGuidanceVisceralFat =>
+      'Der eigene Score der Waage für Fett um die Organe. Dieses Depot hängt am stärksten mit Blutdruck, Blutzucker und Herz-Kreislauf-Risiko zusammen und reagiert gut auf Bewegung.';
+
+  @override
+  String get renphoGuidanceHydration =>
+      'Wasser als Anteil der fettfreien Masse liegt nahe an einer biologischen Konstante. Weit daneben heißt meist, dass der Tag ungewöhnlich war — hartes Training, salziges Essen, zu wenig getrunken — und nicht, dass sich der Körper verändert hat.';
+
+  @override
+  String get renphoGuidanceSegmentBalance =>
+      'Wie weit die beiden Seiten in der fettfreien Masse auseinanderliegen. Eine dauerhafte Lücke deutet auf ein Trainingsungleichgewicht oder eine alte Verletzung hin; eine einmalige liegt oft nur an der Handhaltung.';
+
+  @override
+  String get renphoGuidanceConductionSpread =>
+      'Wie stark ein Segment im Vergleich zum Rest desselben Körpers anders leitet. Ein herausstechendes Segment kann auf lokale Wassereinlagerung hindeuten — oder schlicht auf schlechten Kontakt an dieser Elektrode.';
+
+  @override
+  String get renphoReportSubtitle => 'Bioelektrische Impedanzanalyse';
+
+  @override
+  String get renphoReportPerson => 'Person';
+
+  @override
+  String renphoReportPage(int page, int pages) {
+    return 'Seite $page von $pages';
+  }
+
+  @override
+  String get renphoReportSummary => 'Zusammenfassung';
+
+  @override
+  String get renphoReportKeyValues => 'Kennwerte';
+
+  @override
+  String get renphoReportGuidance => 'Wie diese Werte zu lesen sind';
+
+  @override
+  String get renphoReportRangePosition => 'Lage im Bereich';
+
+  @override
+  String get renphoReportMethodology => 'Methode und Quellen';
+
+  @override
+  String get renphoReportMethodologyText =>
+      'Die Waage misst das Gewicht und zehn Impedanzbeträge — fünf Körpersegmente bei 20 und 100 kHz — und leitet daraus ihre eigene Körperzusammensetzung ab. Dieser Bericht wiederholt diese Ableitung unabhängig, aus denselben Rohimpedanzen, mit veröffentlichten Formeln, und druckt beides. Wo die beiden abweichen, ist keines eine Referenzmessung: Bioimpedanz schätzt die Zusammensetzung, sie misst sie nicht.';
+
+  @override
+  String get renphoReportReferences => 'Quellen';
+
+  @override
+  String get renphoReportNoImpedance =>
+      'Diese Messung enthält keine Segmentimpedanz, die neu berechneten Abschnitte entfallen daher.';
+
+  @override
+  String get renphoReportScaleModel => 'Von der Waage gemeldet';
 
   @override
   String get treadmillHistoryDeleteTitle => 'Workout löschen?';

@@ -13,6 +13,7 @@ import 'package:tool_lab/widgets/info_card.dart';
 import '../renpho_body_metrics.dart';
 import '../renpho_guest_export.dart';
 import '../renpho_measurement.dart';
+import 'renpho_analysis_page.dart';
 import 'renpho_body_map.dart';
 import 'renpho_metrics_grid.dart';
 import 'renpho_segment_table.dart';
@@ -50,6 +51,15 @@ class RenphoMeasurementDetailsPage extends StatelessWidget {
                 ).add_Hm().format(measurement.measuredAt.toLocal()),
         ),
         actions: [
+          IconButton(
+            tooltip: l10n.renphoAnalysisTitle,
+            icon: const Icon(Icons.science_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => RenphoAnalysisPage(measurement: measurement),
+              ),
+            ),
+          ),
           if (guest)
             IconButton(
               tooltip: l10n.renphoGuestExport,
@@ -95,6 +105,34 @@ class RenphoMeasurementDetailsPage extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           RenphoMetricsGrid(measurement: measurement),
+          const SizedBox(height: 16),
+          InfoCard(
+            icon: Icons.science_outlined,
+            title: l10n.renphoAnalysisTitle,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.renphoAnalysisActionHint,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: FilledButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            RenphoAnalysisPage(measurement: measurement),
+                      ),
+                    ),
+                    icon: const Icon(Icons.calculate_outlined),
+                    label: Text(l10n.renphoAnalysisAction),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
           InfoCard(
             icon: Icons.sensors,
