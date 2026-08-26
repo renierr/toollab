@@ -41,6 +41,7 @@ to Health Connect. No Renpho cloud account is involved at any point.
 | `renpho_assessment.dart` | Rates a measurement against published reference ranges. Pure logic, no strings. |
 | `renpho_independent_analysis.dart` | `RenphoIndependentAnalysis` — the second opinion: published whole-body equations, the segmental lean and fat split, ASMM/ASMI and the rated findings. |
 | `renpho_fluid_model.dart` | `RenphoFluidModel` — the dual-frequency route: Cole endpoints from the 20/100 kHz pair, then ECW/ICW/TBW and composition by hydration. No Flutter imports. |
+| `renpho_visceral_estimate.dart` | `RenphoVisceralEstimate` — visceral fat area and its 1–30 index, estimated from age, BMI and trunk fat. An index, not a measurement. |
 | `renpho_report_pdf.dart` | Builds the one-page PDF. |
 | `widgets/` | All presentation. Only the routed page uses `ToolLayout`; pushed sub-pages use a plain `Scaffold`, because `ToolBackButton` resolves a GoRouter state that a `MaterialPageRoute` does not have. |
 
@@ -346,6 +347,35 @@ EWGSOP2 sarcopenia cut-offs are rated against. Kim et al. 2002 then predicts
 whole-body skeletal muscle from ASMM, which reaches the same quantity as
 Janssen's whole-body equation by a different route — the gap between the two is
 a check on whether the limb split holds up.
+
+### Visceral fat estimate
+
+`RenphoVisceralEstimate` puts a number on deep abdominal fat, and the honest
+framing matters more than the number. The current crosses the trunk as one
+conductor; nothing in that path separates fat around the organs from fat under
+the skin, so **no consumer scale measures visceral tissue** — the device's own
+1–59 rating is an index, and so is this one.
+
+`area = 0.37·age + 3.78·BMI + 1.85·trunk_fat − 0.05·(H²/Z₅₀) − 55`, floored at
+10 cm², binned to a 1–30 rating at 10 cm² per point, banded 1–9 optimal /
+10–14 elevated / ≥15 high. The 100 cm² mark is the cardiometabolic threshold.
+
+Two things to know about it:
+
+- **The impedance index is whole-body, deliberately.** That coefficient is
+  sized for an `H²/Z` around 60, which is what the hand-to-foot path gives. Feed
+  it the trunk impedance instead — ~13 Ω, so `H²/Z` ≈ 2300 — and the term
+  becomes −115 cm², larger than every positive term put together. Checked
+  against 151 stored scans it drove the estimate onto its 10 cm² floor in
+  151 of them, and a synthetic BMI-40 body still rated 1. The whole-body form
+  produces a monotone gradient that crosses 100 cm² near BMI 29, where the
+  literature puts it.
+- **It is anthropometric in all but name.** The explicit impedance term moves
+  the result by about 3 cm² and barely varies between scans of one person.
+  Bioimpedance enters through the trunk fat mass, which comes from the
+  segmental split above. The estimate is displayed but deliberately kept out of
+  the rated findings and the composite score — the scale's own visceral rating
+  already sits there, and rating the same guess twice would double-count it.
 
 ### Dual-frequency fluid model
 

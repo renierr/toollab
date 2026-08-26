@@ -15761,6 +15761,24 @@ abstract class AppLocalizations {
   /// **'Appendicular lean mass'**
   String get renphoMetricAppendicularLeanMass;
 
+  /// No description provided for @renphoMetricVisceralArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Visceral fat area (estimated)'**
+  String get renphoMetricVisceralArea;
+
+  /// No description provided for @renphoMetricVisceralRatingOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'Visceral rating (own estimate, 1–30)'**
+  String get renphoMetricVisceralRatingOwn;
+
+  /// No description provided for @renphoAnalysisVisceralHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No consumer scale measures visceral fat: the current crosses the trunk as one conductor and cannot tell fat around the organs from fat under the skin. This estimate is an anthropometric regression on age, BMI and trunk fat mass, where only trunk fat carries any impedance signal, and its 1–30 index is not the scale\'s own 1–59 rating. Read the trend, not the number, and never as a diagnosis. 100 cm² is the threshold the cardiometabolic literature is written around.'**
+  String get renphoAnalysisVisceralHint;
+
   /// No description provided for @renphoAnalysisFluidModel.
   ///
   /// In en, this message translates to:

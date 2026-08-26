@@ -138,6 +138,23 @@ class RenphoAnalysisPage extends StatelessWidget {
                         value:
                             '${analysis.fatMassIndex.toStringAsFixed(1)} kg/m²',
                       ),
+                      if (analysis.visceralEstimate case final visceral?) ...[
+                        InfoRow(
+                          label: l10n.renphoMetricVisceralArea,
+                          value: '${visceral.areaCm2.toStringAsFixed(0)} cm²',
+                        ),
+                        InfoRow(
+                          label: l10n.renphoMetricVisceralRatingOwn,
+                          value:
+                              '${visceral.rating}  '
+                              '(${visceral.band.label(l10n)})',
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.renphoAnalysisVisceralHint,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
                     ],
                   ),
                 ),

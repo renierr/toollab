@@ -8860,6 +8860,17 @@ class AppLocalizationsDe extends AppLocalizations {
       'Appendikuläre fettfreie Masse';
 
   @override
+  String get renphoMetricVisceralArea => 'Viszerales Fettareal (geschätzt)';
+
+  @override
+  String get renphoMetricVisceralRatingOwn =>
+      'Viszeralwert (eigene Schätzung, 1–30)';
+
+  @override
+  String get renphoAnalysisVisceralHint =>
+      'Keine Verbraucherwaage misst viszerales Fett: Der Strom durchquert den Rumpf als einen einzigen Leiter und kann Fett um die Organe nicht von Fett unter der Haut unterscheiden. Diese Schätzung ist eine anthropometrische Regression über Alter, BMI und Rumpffettmasse, in der allein das Rumpffett ein Impedanzsignal trägt, und ihr Index 1–30 ist nicht der geräteeigene Wert 1–59. Der Verlauf zählt, nicht die Zahl, und niemals als Diagnose. 100 cm² ist die Schwelle, um die herum die kardiometabolische Literatur geschrieben ist.';
+
+  @override
   String get renphoAnalysisFluidModel =>
       'Zwei-Frequenz-Flüssigkeitsmodell (20/100 kHz)';
 

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'renpho_assessment.dart';
 import 'renpho_body_metrics.dart';
 import 'renpho_fluid_model.dart';
+import 'renpho_visceral_estimate.dart';
 
 /// A second opinion on one scan, computed from the raw segment impedances
 /// alone.
@@ -143,6 +144,25 @@ class RenphoIndependentAnalysis {
       (derived.wholeBodyImpedance100 - derived.wholeBodyImpedance20) * 30 / 80;
 
   double get _index => _heightCm * _heightCm / wholeBodyImpedance50;
+
+  /// Trunk fat as this analysis distributes it — the one per-scan input to the
+  /// visceral estimate that carries impedance rather than body size.
+  double get trunkFatMassKg => segments
+      .where((estimate) => estimate.segment == RenphoSegment.trunk)
+      .fold<double>(0, (sum, estimate) => sum + estimate.fatMassKg);
+
+  /// An estimate, not a measurement — see [RenphoVisceralEstimate]. Kept out of
+  /// the rated findings and the composite score: the scale's own visceral
+  /// rating already sits there, and the two are the same guess twice.
+  RenphoVisceralEstimate? get visceralEstimate => !usable
+      ? null
+      : RenphoVisceralEstimate.from(
+          age: _age,
+          bmi: derived.bmi,
+          trunkFatKg: trunkFatMassKg,
+          heightCm: _heightCm,
+          wholeBodyImpedance50: wholeBodyImpedance50,
+        );
 
   /// The same scan read as a dual-frequency measurement instead of a
   /// reconstructed single-frequency one. Null when the pair cannot carry the
@@ -630,6 +650,7 @@ const renphoReferenceList = <String>[
   'Kim J. et al., Am J Clin Nutr 2002 — skeletal muscle from appendicular lean soft tissue',
   'Cole K.S., J Gen Physiol 1940 — the dispersion the 20/100 kHz pair is resolved against',
   'De Lorenzo A. et al., J Appl Physiol 1997 — Hanai mixture model for extra- and intracellular water',
+  'Examination Committee of Criteria for Obesity Disease in Japan, Circ J 2002 — the 100 cm² visceral fat threshold',
   'Cruz-Jentoft A.J. et al., Age Ageing 2019 (EWGSOP2) — sarcopenia cut-offs for the muscle index',
   'Schutz Y. et al., Int J Obes 2002 — fat-free mass index reference bands',
   'Kelly T.L. et al., PLoS One 2009 — fat mass index bands and DXA regional fat distribution (NHANES)',

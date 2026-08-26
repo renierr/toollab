@@ -2,6 +2,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import 'renpho_assessment.dart';
 import 'renpho_independent_analysis.dart';
+import 'renpho_visceral_estimate.dart';
 
 extension RenphoFindingLabel on RenphoFindingKind {
   String label(AppLocalizations l10n) => switch (this) {
@@ -42,6 +43,14 @@ extension RenphoComparisonLabel on RenphoComparisonMetric {
       l10n.renphoMetricSkeletalMuscleMass,
     RenphoComparisonMetric.bodyWater => l10n.renphoMetricTotalBodyWater,
     RenphoComparisonMetric.muscleIndex => l10n.renphoMetricSmi,
+  };
+}
+
+extension RenphoVisceralBandLabel on RenphoVisceralBand {
+  String label(AppLocalizations l10n) => switch (this) {
+    RenphoVisceralBand.optimal => l10n.renphoRatingOptimal,
+    RenphoVisceralBand.elevated => l10n.renphoRatingElevated,
+    RenphoVisceralBand.high => l10n.renphoRatingHigh,
   };
 }
 

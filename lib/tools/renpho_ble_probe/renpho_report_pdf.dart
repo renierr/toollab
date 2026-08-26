@@ -147,6 +147,10 @@ Future<Uint8List> buildRenphoReportPdf({
           ),
           pw.SizedBox(height: 5),
           _note(l10n.renphoAnalysisFrequencyHint),
+          if (analysis.visceralEstimate != null) ...[
+            pw.SizedBox(height: 5),
+            _note(l10n.renphoAnalysisVisceralHint),
+          ],
           if (analysis.fluidModel case final fluid?) ...[
             pw.SizedBox(height: 12),
             _sectionTitle(l10n.renphoAnalysisFluidModel),
@@ -657,6 +661,16 @@ pw.Widget _wholeBodyTable(
     [
       l10n.renphoMetricFatMassIndex,
       '${analysis.fatMassIndex.toStringAsFixed(1)} kg/m²',
+    ],
+    if (analysis.visceralEstimate case final visceral?) ...[
+      [
+        l10n.renphoMetricVisceralArea,
+        '${visceral.areaCm2.toStringAsFixed(0)} cm²',
+      ],
+      [
+        l10n.renphoMetricVisceralRatingOwn,
+        '${visceral.rating} (${visceral.band.label(l10n)})',
+      ],
     ],
   ],
 );
