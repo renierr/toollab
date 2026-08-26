@@ -57,7 +57,7 @@ class _StringTransformerPageState extends State<StringTransformerPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isWide = MediaQuery.of(context).size.width >= 720;
+    final isWide = MediaQuery.sizeOf(context).width >= 720;
 
     final content = Column(
       children: [

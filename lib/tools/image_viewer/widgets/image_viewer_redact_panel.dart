@@ -538,8 +538,8 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                   w = w.clamp(1, _imageWidth - x);
                   h = h.clamp(1, _imageHeight - y);
 
-                  final double containerW = MediaQuery.of(context).size.width;
-                  final double containerH = MediaQuery.of(context).size.height;
+                  final double containerW = MediaQuery.sizeOf(context).width;
+                  final double containerH = MediaQuery.sizeOf(context).height;
                   final double imgRatio = _imageWidth / _imageHeight;
                   final double containerRatio = containerW / containerH;
                   final double dispW = imgRatio > containerRatio

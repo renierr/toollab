@@ -314,8 +314,8 @@ class _PdfExtractImagesPanelState extends State<PdfExtractImagesPanel> {
           ),
           content: ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.65,
-              maxWidth: MediaQuery.of(context).size.width * 0.8,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.65,
+              maxWidth: MediaQuery.sizeOf(context).width * 0.8,
             ),
             child: InteractiveViewer(
               maxScale: 5,

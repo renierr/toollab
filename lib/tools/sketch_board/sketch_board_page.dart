@@ -490,7 +490,7 @@ class _SketchBoardPageState extends State<SketchBoardPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isNarrow = MediaQuery.of(context).size.width < 480;
+    final isNarrow = MediaQuery.sizeOf(context).width < 480;
     final appState = context.watch<AppState>();
 
     return Selector<SketchBoardState, bool>(

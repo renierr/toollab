@@ -33,7 +33,7 @@ class ToolLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isShort = MediaQuery.of(context).size.height < 600;
+    final isShort = MediaQuery.sizeOf(context).height < 600;
     final appBarHeight = isShort ? 40.0 : 56.0;
 
     return Scaffold(

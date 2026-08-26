@@ -260,7 +260,7 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final isWideScreen = MediaQuery.of(context).size.width > 720;
+    final isWideScreen = MediaQuery.sizeOf(context).width > 720;
 
     return ListenableBuilder(
       listenable: _controller,

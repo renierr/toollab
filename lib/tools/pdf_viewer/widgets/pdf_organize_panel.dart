@@ -524,7 +524,7 @@ class _PageTile extends StatelessWidget {
   });
 
   void _showPreview(BuildContext context) {
-    final media = MediaQuery.of(context).size;
+    final media = MediaQuery.sizeOf(context);
     final l10n = AppLocalizations.of(context);
     final aspect = page.width / page.height;
     double w = media.width * 0.8;

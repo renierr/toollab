@@ -32,7 +32,7 @@ class ResponsiveAlertDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
     final isNarrow = size.width < 600;
 
     return AlertDialog(

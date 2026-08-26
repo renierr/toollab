@@ -65,7 +65,7 @@ class _HexEditorToolbarState extends State<HexEditorToolbar> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = context.watch<HexEditorState>();
-    final isWide = MediaQuery.of(context).size.width > 720;
+    final isWide = MediaQuery.sizeOf(context).width > 720;
 
     final infoPanel = Card(
       margin: EdgeInsets.zero,

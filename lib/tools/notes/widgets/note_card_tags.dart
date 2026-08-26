@@ -16,7 +16,7 @@ class NoteCardTags extends StatelessWidget {
 
     return ConstrainedBox(
       constraints: BoxConstraints(
-        maxWidth: MediaQuery.of(context).size.width - 40,
+        maxWidth: MediaQuery.sizeOf(context).width - 40,
       ),
       child: Wrap(
         spacing: 4,

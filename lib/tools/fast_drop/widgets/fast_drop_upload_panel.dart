@@ -30,7 +30,7 @@ class FastDropUploadPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isAndroid = Platform.isAndroid;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
     final useCompact = isAndroid || screenHeight < 700;
 
     return Column(

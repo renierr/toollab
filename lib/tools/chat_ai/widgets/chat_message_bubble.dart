@@ -20,7 +20,7 @@ class ChatMessageBubble extends StatelessWidget {
         alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
         child: Container(
           constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
+            maxWidth: MediaQuery.sizeOf(context).width * 0.8,
           ),
           decoration: BoxDecoration(
             color: isUser

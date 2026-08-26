@@ -272,11 +272,7 @@ class FileManagerExplorer extends StatelessWidget {
                     : ListView.builder(
                         controller: scrollController,
                         physics: const AlwaysScrollableScrollPhysics(),
-                        itemExtent:
-                            constraints.maxWidth <
-                                ResponsiveLayout.mobileBreakpoint
-                            ? 88
-                            : 72,
+                        itemExtent: constraints.isCompact ? 88 : 72,
                         itemCount: state.entries.length,
                         itemBuilder: (context, index) => FileManagerEntryTile(
                           entry: state.entries[index],

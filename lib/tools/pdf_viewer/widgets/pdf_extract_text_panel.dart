@@ -188,7 +188,7 @@ class _PdfExtractTextPanelState extends State<PdfExtractTextPanel> {
                   const Divider(height: 1),
                   ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.5,
+                      maxHeight: MediaQuery.sizeOf(context).height * 0.5,
                     ),
                     child: SingleChildScrollView(
                       child: PdfTextAiQa(documentText: _text),

@@ -6,6 +6,7 @@ import 'package:tool_lab/tools/notes/note_thread.dart';
 import 'package:tool_lab/tools/notes/note_thread_export.dart';
 import 'package:tool_lab/tools/notes/note_title.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/tools/notes/widgets/note_card.dart';
 import 'package:tool_lab/tools/notes/widgets/note_thread_tree.dart';
 
@@ -89,57 +90,63 @@ class _NotesListState extends State<NotesList> {
     }
 
     final groups = _groupEntries();
-    final isGrid = MediaQuery.sizeOf(context).width >= 600;
 
-    return CustomScrollView(
-      slivers: [
-        for (var index = 0; index < groups.length; index++) ...[
-          SliverToBoxAdapter(
-            child: _NotesArchiveHeader(
-              title: DateFormat.yMMMM(
-                l10n.localeName,
-              ).format(groups[index].date),
-              count: groups[index].entries.length,
-              expanded: _expandedGroups[groups[index].key] ?? index == 0,
-              onTap: () {
-                setState(() {
-                  _expandedGroups[groups[index].key] =
-                      !(_expandedGroups[groups[index].key] ?? index == 0);
-                });
-              },
-            ),
-          ),
-          if (_expandedGroups[groups[index].key] ?? index == 0)
-            if (isGrid)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 420,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    mainAxisExtent: 250,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, entryIndex) =>
-                        _buildCard(groups[index].entries[entryIndex]),
-                    childCount: groups[index].entries.length,
-                  ),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                sliver: SliverList.builder(
-                  itemCount: groups[index].entries.length,
-                  itemBuilder: (context, entryIndex) => _buildEntry(
-                    groups[index].entries[entryIndex],
-                    expandable: true,
-                  ),
+    // Branch on the width this list actually gets, not the window's.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isGrid = !constraints.isCompact;
+        return CustomScrollView(
+          slivers: [
+            for (var index = 0; index < groups.length; index++) ...[
+              SliverToBoxAdapter(
+                child: _NotesArchiveHeader(
+                  title: DateFormat.yMMMM(
+                    l10n.localeName,
+                  ).format(groups[index].date),
+                  count: groups[index].entries.length,
+                  expanded: _expandedGroups[groups[index].key] ?? index == 0,
+                  onTap: () {
+                    setState(() {
+                      _expandedGroups[groups[index].key] =
+                          !(_expandedGroups[groups[index].key] ?? index == 0);
+                    });
+                  },
                 ),
               ),
-        ],
-      ],
+              if (_expandedGroups[groups[index].key] ?? index == 0)
+                if (isGrid)
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 420,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            mainAxisExtent: 250,
+                          ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, entryIndex) =>
+                            _buildCard(groups[index].entries[entryIndex]),
+                        childCount: groups[index].entries.length,
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                    sliver: SliverList.builder(
+                      itemCount: groups[index].entries.length,
+                      itemBuilder: (context, entryIndex) => _buildEntry(
+                        groups[index].entries[entryIndex],
+                        expandable: true,
+                      ),
+                    ),
+                  ),
+            ],
+          ],
+        );
+      },
     );
   }
 

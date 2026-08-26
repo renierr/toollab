@@ -39,7 +39,7 @@ class ImagesToPdfPreview extends StatelessWidget {
         ),
         content: ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
+            maxHeight: MediaQuery.sizeOf(context).height * 0.6,
           ),
           child: InteractiveViewer(
             maxScale: 5,
@@ -50,7 +50,7 @@ class ImagesToPdfPreview extends StatelessWidget {
                 File(path),
                 fit: BoxFit.contain,
                 cacheWidth:
-                    (MediaQuery.of(context).size.width *
+                    (MediaQuery.sizeOf(context).width *
                             MediaQuery.of(context).devicePixelRatio *
                             2)
                         .round(),

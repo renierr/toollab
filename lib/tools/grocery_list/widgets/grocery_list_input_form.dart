@@ -5,6 +5,7 @@ import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import '../grocery_item.dart';
 import '../grocery_list_state.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 
 class GroceryListInputForm extends StatefulWidget {
   final GroceryItem? editingItem;
@@ -180,7 +181,7 @@ class _GroceryListInputFormState extends State<GroceryListInputForm>
             const SizedBox(height: 16),
             LayoutBuilder(
               builder: (context, constraints) {
-                final isCompact = constraints.maxWidth < 600;
+                final isCompact = constraints.isCompact;
 
                 final nameField = Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,

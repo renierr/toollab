@@ -30,6 +30,7 @@ import 'package:tool_lab/widgets/file_name_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 
 class FileManagerPage extends StatefulWidget {
   const FileManagerPage({super.key});
@@ -616,7 +617,7 @@ class _FileManagerPageState extends State<FileManagerPage>
                 scrollController: _scrollController,
               ),
             );
-            if (constraints.maxWidth < 720) {
+            if (!constraints.canSplit) {
               return Column(
                 children: [
                   locations,

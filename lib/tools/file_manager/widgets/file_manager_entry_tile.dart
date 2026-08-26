@@ -59,8 +59,7 @@ class FileManagerEntryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isCompact =
-            constraints.maxWidth < ResponsiveLayout.mobileBreakpoint;
+        final isCompact = constraints.isCompact;
         final iconSize = isCompact ? 40.0 : 48.0;
         return ListTile(
           contentPadding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 16),

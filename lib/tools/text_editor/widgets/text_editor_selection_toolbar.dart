@@ -56,7 +56,7 @@ class TextEditorSelectionToolbar implements SelectionToolbarController {
       context: context,
       position: RelativeRect.fromSize(
         anchors.primaryAnchor & const Size(180, double.infinity),
-        MediaQuery.of(context).size,
+        MediaQuery.sizeOf(context),
       ),
       items: [
         PopupMenuItem(

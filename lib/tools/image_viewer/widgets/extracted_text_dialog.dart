@@ -68,7 +68,7 @@ class ExtractedTextDialog extends StatelessWidget {
         child: SelectableTextView(
           text: trimmedText,
           emptyMessage: l10n.imgViewExtractTextNoText,
-          maxHeight: MediaQuery.of(context).size.height * 0.45,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.45,
         ),
       ),
       actions: [

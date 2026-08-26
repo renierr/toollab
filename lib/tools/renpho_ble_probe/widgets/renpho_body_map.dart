@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../renpho_body_metrics.dart';
 import 'renpho_body_map_stage.dart';
 import 'renpho_segment_detail.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 
 /// The segment breakdown as a body: every part carries its own callout, and
 /// touching or hovering one opens its full set of values beside it.
@@ -62,7 +63,7 @@ class _RenphoBodyMapState extends State<RenphoBodyMap> {
     );
 
     return LayoutBuilder(
-      builder: (context, constraints) => constraints.maxWidth >= 620
+      builder: (context, constraints) => constraints.canSplit
           ? Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

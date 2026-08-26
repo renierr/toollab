@@ -11,6 +11,7 @@ import 'package:tool_lab/tools/qr_code/qr_content_type.dart';
 import 'qr_create_form.dart';
 import 'qr_preview_panel.dart';
 import 'qr_type_chips.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 
 /// Create tab: pick a content type, fill the form, get a live QR preview that
 /// can be saved, copied, or shared.
@@ -78,7 +79,7 @@ class _QrCreateTabState extends State<QrCreateTab> with DisposeCleanup {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth >= 760) {
+        if (constraints.canSplit) {
           return Column(
             children: [
               chips,
