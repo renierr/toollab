@@ -7,6 +7,11 @@ import 'package:tool_lab/tools/file_manager/file_manager_state.dart';
 import 'package:tool_lab/tools/file_manager/widgets/file_manager_category_picker.dart';
 
 class FileManagerLocations extends StatelessWidget {
+  /// Horizontal strip instead of a sidebar. Set by the page, which owns the
+  /// split decision — in sidebar mode this pane is only 280 wide, so it cannot
+  /// read the mode off its own constraints.
+  final bool compact;
+
   final FileManagerState state;
   final ValueChanged<String> onOpenLocal;
   final ValueChanged<String> onOpenPath;
@@ -17,6 +22,7 @@ class FileManagerLocations extends StatelessWidget {
 
   const FileManagerLocations({
     super.key,
+    required this.compact,
     required this.state,
     required this.onOpenLocal,
     required this.onOpenPath,
@@ -29,7 +35,6 @@ class FileManagerLocations extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isNarrow = MediaQuery.sizeOf(context).width < 720;
     final recentPaths = [
       state.appFilesPath,
       state.downloadsPath,
@@ -38,7 +43,7 @@ class FileManagerLocations extends StatelessWidget {
       ),
     ].take(7).toList();
     return Material(
-      child: isNarrow
+      child: compact
           ? SizedBox(
               height: 76,
               child: ListView(

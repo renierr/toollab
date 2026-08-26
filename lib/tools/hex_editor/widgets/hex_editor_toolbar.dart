@@ -4,6 +4,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import '../hex_editor_state.dart';
 import 'strings_scan_dialog.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 
 class HexEditorToolbar extends StatefulWidget {
   final VoidCallback onReset;
@@ -65,7 +66,6 @@ class _HexEditorToolbarState extends State<HexEditorToolbar> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = context.watch<HexEditorState>();
-    final isWide = MediaQuery.sizeOf(context).width > 720;
 
     final infoPanel = Card(
       margin: EdgeInsets.zero,
@@ -200,33 +200,37 @@ class _HexEditorToolbarState extends State<HexEditorToolbar> {
       ),
     );
 
-    if (isWide) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Expanded(flex: 3, child: infoPanel),
-            const SizedBox(width: 16),
-            Expanded(flex: 4, child: searchPanel),
-            const SizedBox(width: 16),
-            Expanded(flex: 4, child: actionsWrap),
-          ],
-        ),
-      );
-    } else {
-      return Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            infoPanel,
-            const SizedBox(height: 8),
-            searchPanel,
-            const SizedBox(height: 8),
-            actionsWrap,
-          ],
-        ),
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.canSplit) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(flex: 3, child: infoPanel),
+                const SizedBox(width: 16),
+                Expanded(flex: 4, child: searchPanel),
+                const SizedBox(width: 16),
+                Expanded(flex: 4, child: actionsWrap),
+              ],
+            ),
+          );
+        } else {
+          return Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                infoPanel,
+                const SizedBox(height: 8),
+                searchPanel,
+                const SizedBox(height: 8),
+                actionsWrap,
+              ],
+            ),
+          );
+        }
+      },
+    );
   }
 }

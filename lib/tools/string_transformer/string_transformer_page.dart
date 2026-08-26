@@ -11,6 +11,7 @@ import 'string_transformer_state.dart';
 import 'widgets/string_transformer_input.dart';
 import 'widgets/string_transformer_output.dart';
 import 'widgets/string_transformer_toolbar.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 
 class StringTransformerPage extends StatefulWidget {
   final SharedData? sharedData;
@@ -57,30 +58,30 @@ class _StringTransformerPageState extends State<StringTransformerPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isWide = MediaQuery.sizeOf(context).width >= 720;
-
     final content = Column(
       children: [
         const StringTransformerToolbar(),
         const SizedBox(height: 12),
         Expanded(
-          child: isWide
-              ? const Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(child: StringTransformerInput()),
-                    SizedBox(width: 12),
-                    Expanded(child: StringTransformerOutput()),
-                  ],
-                )
-              : const Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(child: StringTransformerInput()),
-                    SizedBox(height: 12),
-                    Expanded(child: StringTransformerOutput()),
-                  ],
-                ),
+          child: LayoutBuilder(
+            builder: (context, constraints) => constraints.canSplit
+                ? const Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: StringTransformerInput()),
+                      SizedBox(width: 12),
+                      Expanded(child: StringTransformerOutput()),
+                    ],
+                  )
+                : const Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: StringTransformerInput()),
+                      SizedBox(height: 12),
+                      Expanded(child: StringTransformerOutput()),
+                    ],
+                  ),
+          ),
         ),
       ],
     );

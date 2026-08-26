@@ -35,82 +35,58 @@ class NfcScanStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final categoryColor = _getCategoryColor(profile.categoryId);
-    final isCompact = MediaQuery.sizeOf(context).width < 420;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final l10n = AppLocalizations.of(context);
+        final theme = Theme.of(context);
+        final categoryColor = _getCategoryColor(profile.categoryId);
+        final isCompact = constraints.maxWidth < 420;
 
-    final Widget actionWidget;
-    if (hasNfcSupport) {
-      actionWidget = isScanning
-          ? ElevatedButton.icon(
-              onPressed: onStopScan,
-              icon: const Icon(Icons.stop_rounded, size: 18),
-              label: Text(l10n.nfcStop),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.errorContainer,
-                foregroundColor: theme.colorScheme.onErrorContainer,
+        final Widget actionWidget;
+        if (hasNfcSupport) {
+          actionWidget = isScanning
+              ? ElevatedButton.icon(
+                  onPressed: onStopScan,
+                  icon: const Icon(Icons.stop_rounded, size: 18),
+                  label: Text(l10n.nfcStop),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.errorContainer,
+                    foregroundColor: theme.colorScheme.onErrorContainer,
+                  ),
+                )
+              : ElevatedButton.icon(
+                  onPressed: onStartScan,
+                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                  label: Text(l10n.nfcScan),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    foregroundColor: theme.colorScheme.onPrimaryContainer,
+                  ),
+                );
+        } else {
+          actionWidget = Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.error.withAlpha(30),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              l10n.nfcNoHardware,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.error,
+                fontWeight: FontWeight.bold,
               ),
-            )
-          : ElevatedButton.icon(
-              onPressed: onStartScan,
-              icon: const Icon(Icons.play_arrow_rounded, size: 18),
-              label: Text(l10n.nfcScan),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primaryContainer,
-                foregroundColor: theme.colorScheme.onPrimaryContainer,
-              ),
-            );
-    } else {
-      actionWidget = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.error.withAlpha(30),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          l10n.nfcNoHardware,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.error,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-    }
+            ),
+          );
+        }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (isCompact)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.nfcScannerTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isScanning
-                        ? l10n.nfcScanningPrompt
-                        : l10n.nfcScannerInactive,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withAlpha(140),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Align(alignment: Alignment.centerRight, child: actionWidget),
-                ],
-              )
-            else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isCompact)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -129,140 +105,179 @@ class NfcScanStatusCard extends StatelessWidget {
                           color: theme.colorScheme.onSurface.withAlpha(140),
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: actionWidget,
+                      ),
                     ],
-                  ),
-                  actionWidget,
-                ],
-              ),
-            const Divider(height: 24),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(isCompact ? 10 : 12),
-                  decoration: BoxDecoration(
-                    color: categoryColor.withAlpha(20),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: categoryColor.withAlpha(80),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Icon(
-                    _getCategoryIcon(profile.categoryId),
-                    size: isCompact ? 26 : 32,
-                    color: categoryColor,
-                  ),
-                ),
-                SizedBox(width: isCompact ? 12 : 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  )
+                else
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            profile.categoryLabel,
+                            l10n.nfcScannerTitle,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: categoryColor.withAlpha(30),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              profile.confidence.toUpperCase(),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: categoryColor,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 9,
-                              ),
+                          const SizedBox(height: 2),
+                          Text(
+                            isScanning
+                                ? l10n.nfcScanningPrompt
+                                : l10n.nfcScannerInactive,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withAlpha(140),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        profile.reason,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withAlpha(160),
-                        ),
-                      ),
+                      actionWidget,
                     ],
                   ),
-                ),
-              ],
-            ),
-            if (profile.isEmv) ...[
-              _PremiumCreditCard(profile: profile),
-              const SizedBox(height: 16),
-            ],
-            if (tagUid.isNotEmpty || tagTechs.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
+                const Divider(height: 24),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (profile.isEmv) ...[
-                      shared.InfoRow(
-                        label: l10n.nfcCardBrand,
-                        value: profile.cardBrand ?? '-',
+                    Container(
+                      padding: EdgeInsets.all(isCompact ? 10 : 12),
+                      decoration: BoxDecoration(
+                        color: categoryColor.withAlpha(20),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: categoryColor.withAlpha(80),
+                          width: 1.5,
+                        ),
                       ),
-                      const Divider(height: 12),
-                      shared.InfoRow(
-                        label: l10n.nfcCardNumber,
-                        value: profile.cardNumber ?? '-',
+                      child: Icon(
+                        _getCategoryIcon(profile.categoryId),
+                        size: isCompact ? 26 : 32,
+                        color: categoryColor,
                       ),
-                      const Divider(height: 12),
-                      shared.InfoRow(
-                        label: l10n.nfcCardholderName,
-                        value: profile.cardHolder ?? '-',
-                      ),
-                      const Divider(height: 12),
-                      shared.InfoRow(
-                        label: l10n.nfcExpirationDate,
-                        value: profile.cardExpiry ?? '-',
-                      ),
-                      const Divider(height: 12),
-                      shared.InfoRow(
-                        label: l10n.nfcApplicationAid,
-                        value: profile.cardAid ?? '-',
-                      ),
-                      const Divider(height: 12),
-                    ],
-                    shared.InfoRow(label: l10n.nfcUidSerial, value: tagUid),
-                    const Divider(height: 12),
-                    shared.InfoRow(
-                      label: l10n.nfcTechnologies,
-                      value: tagTechs,
                     ),
-                    const Divider(height: 12),
-                    shared.InfoRow(label: l10n.nfcCapacity, value: tagCapacity),
-                    const Divider(height: 12),
-                    shared.InfoRow(label: l10n.nfcWritable, value: tagWritable),
+                    SizedBox(width: isCompact ? 12 : 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                profile.categoryLabel,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: categoryColor.withAlpha(30),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  profile.confidence.toUpperCase(),
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: categoryColor,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            profile.reason,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withAlpha(160),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              if (techData != null) TagTechPanel(data: techData!),
-            ],
-          ],
-        ),
-      ),
+                if (profile.isEmv) ...[
+                  _PremiumCreditCard(profile: profile),
+                  const SizedBox(height: 16),
+                ],
+                if (tagUid.isNotEmpty || tagTechs.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.05,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      children: [
+                        if (profile.isEmv) ...[
+                          shared.InfoRow(
+                            label: l10n.nfcCardBrand,
+                            value: profile.cardBrand ?? '-',
+                          ),
+                          const Divider(height: 12),
+                          shared.InfoRow(
+                            label: l10n.nfcCardNumber,
+                            value: profile.cardNumber ?? '-',
+                          ),
+                          const Divider(height: 12),
+                          shared.InfoRow(
+                            label: l10n.nfcCardholderName,
+                            value: profile.cardHolder ?? '-',
+                          ),
+                          const Divider(height: 12),
+                          shared.InfoRow(
+                            label: l10n.nfcExpirationDate,
+                            value: profile.cardExpiry ?? '-',
+                          ),
+                          const Divider(height: 12),
+                          shared.InfoRow(
+                            label: l10n.nfcApplicationAid,
+                            value: profile.cardAid ?? '-',
+                          ),
+                          const Divider(height: 12),
+                        ],
+                        shared.InfoRow(label: l10n.nfcUidSerial, value: tagUid),
+                        const Divider(height: 12),
+                        shared.InfoRow(
+                          label: l10n.nfcTechnologies,
+                          value: tagTechs,
+                        ),
+                        const Divider(height: 12),
+                        shared.InfoRow(
+                          label: l10n.nfcCapacity,
+                          value: tagCapacity,
+                        ),
+                        const Divider(height: 12),
+                        shared.InfoRow(
+                          label: l10n.nfcWritable,
+                          value: tagWritable,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (techData != null) TagTechPanel(data: techData!),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -20,6 +20,11 @@ Welcome, AI Developer! This playbook provides the technical rules, architectural
 - **Resilience to Rejected Commands**: If a user rejects or stops a command execution, continue the task and provide the alternative results or plan. A rejected command must not abort the overall execution.
 - **State Management & Data Flow**: Always channel app state through providers. Global state goes in `lib/providers/app_state.dart`; tool-specific state goes in a standalone `ChangeNotifier` at `lib/tools/<name>/<name>_state.dart`. Never update local state variables in views for persistent data.
 - **Small Screen Fitting**: Always use responsive layouts (like `Wrap` instead of horizontal `Row` for actions, and scrollable/grid metrics) in dialogs/modals/cards to prevent overflow on mobile.
+- **Ask the Right Widget How Much Room There Is**: Three different questions look alike at the call site — pick the mechanism by the question, not by habit.
+  1. *"How much room do I have?"* — a widget choosing its own layout. Use `LayoutBuilder` plus the `BoxConstraints` extension in `lib/widgets/responsive_layout.dart`: `constraints.isCompact` / `isMedium` / `isExpanded` for device tiers, `constraints.canSplit` for "two panes side by side". Never `MediaQuery` here — inside a pane, drawer or split view the window is not the space available.
+  2. *"How big is the window?"* — chrome and overlays only: dialog max height, app bar height, whether a drawer button shows. Use `MediaQuery.sizeOf(context)` (never `MediaQuery.of(context).size`, which subscribes to every MediaQuery change) or the `ResponsiveLayout.isMobile/isTablet/isDesktop` statics.
+  3. *"Does my own content fit?"* — a toolbar, tile or chart row asking whether its own children still fit. Use `LayoutBuilder` with a local literal named for the reason (`cramped`, `isCompact`), not a device tier. A metric tile at `< 240` is not asking about phones.
+  When a child cannot answer (1) for itself because its parent already constrained it — a 280-wide sidebar that must know it is in sidebar mode — the parent passes the mode down as a parameter. Never re-derive it from `MediaQuery`.
 - **Cross-Platform Checks**: Check platform before using platform-specific APIs (sensors, battery, etc.).
 - **Prevent Duplicated UI/Dialog Code**: Extract custom dialogs, overlays, or recurring visual elements to `lib/widgets/` immediately. Never copy-paste presentation logic across views.
 - **Use Existing Custom Widgets**: Always reuse existing custom widgets in `lib/widgets/` (such as `ToolCard`, `ToolLayout`, `ResponsiveLayout`, `ResponsiveAlertDialog`, `InfoCard` — check the directory for other reusable options) rather than writing from scratch. Check the codebase for existing reusable options before writing presentation code.
@@ -149,7 +154,10 @@ For every tool added to the app, launcher entry points must be maintained:
 
 ### 2. Styling & Layouts
 - Theme variables from `AppTheme`: `background`, `surface`, `accentBlue`, `accentGreen`, `accentAmber`, `accentRed`.
-- Responsive layout container: `ResponsiveLayout` (`lib/widgets/responsive_layout.dart`).
+- Breakpoints and tiers live in `lib/widgets/responsive_layout.dart`: `mobileBreakpoint` (600), `tabletBreakpoint` (900), `splitBreakpoint` (720, the width at which two panes beat stacking), the `LayoutSizeClass` enum and the `BoxConstraints` extension. Never hardcode a device-tier number in a tool.
+- `ResponsiveLayout(mobile:, tablet:, desktop:)` is for the rare screen that genuinely needs three separate trees. Most tools want a `LayoutBuilder` branch instead — see the ALWAYS rule *Ask the Right Widget How Much Room There Is*.
+- `ResponsiveOrientationLayout` switches on the aspect ratio of the available box. Prefer it over a width tier for canvas/viewport tools (sketch board, image viewer, compass, level), where the question is which side the leftover room is on.
+- Tools with fixed geometry (calculator keypad) should scale, not reflow by tier. Do not force breakpoints on them.
 
 ### 3. Navigation
 - Standard: `go_router` for declarative routing.

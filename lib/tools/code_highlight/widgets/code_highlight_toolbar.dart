@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import '../code_highlight_state.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 
 class CodeHighlightToolbar extends StatelessWidget {
   final VoidCallback onReset;
@@ -14,7 +15,6 @@ class CodeHighlightToolbar extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = context.watch<CodeHighlightState>();
-    final isWide = MediaQuery.sizeOf(context).width > 720;
 
     final infoPanel = Card(
       margin: EdgeInsets.zero,
@@ -109,37 +109,41 @@ class CodeHighlightToolbar extends StatelessWidget {
       ],
     );
 
-    if (isWide) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Expanded(flex: 4, child: infoPanel),
-            const SizedBox(width: 16),
-            langDropdown,
-            const SizedBox(width: 16),
-            actionsWrap,
-          ],
-        ),
-      );
-    } else {
-      return Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            infoPanel,
-            const SizedBox(height: 8),
-            Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.canSplit) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
               children: [
-                Expanded(child: langDropdown),
-                const SizedBox(width: 8),
+                Expanded(flex: 4, child: infoPanel),
+                const SizedBox(width: 16),
+                langDropdown,
+                const SizedBox(width: 16),
                 actionsWrap,
               ],
             ),
-          ],
-        ),
-      );
-    }
+          );
+        } else {
+          return Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                infoPanel,
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(child: langDropdown),
+                    const SizedBox(width: 8),
+                    actionsWrap,
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+      },
+    );
   }
 }

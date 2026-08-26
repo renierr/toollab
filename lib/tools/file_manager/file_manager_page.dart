@@ -575,6 +575,7 @@ class _FileManagerPageState extends State<FileManagerPage>
         child: LayoutBuilder(
           builder: (context, constraints) {
             final locations = FileManagerLocations(
+              compact: !constraints.canSplit,
               state: state,
               onOpenLocal: _openLocal,
               onOpenPath: _openPath,
