@@ -3,6 +3,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
 import 'package:tool_lab/tools/notes/config.dart';
+import 'note.dart';
 import 'note_thread.dart';
 import 'notes_db_helper.dart';
 import 'notes_sync_delegate.dart';
@@ -10,19 +11,19 @@ import 'notes_sync_delegate.dart';
 class NotesState extends ChangeNotifier {
   static const String _sortSettingKey = 'thread_sort';
 
-  List<Map<String, dynamic>> _allNotes = [];
-  List<Map<String, dynamic>> _notes = [];
+  List<Note> _allNotes = [];
+  List<Note> _notes = [];
   NoteThread _thread = NoteThread.empty;
   NoteThreadSort _sort = NoteThreadSort.created;
   String _query = '';
   bool _isLoadingNotes = false;
 
   /// Notes matching the active search query.
-  List<Map<String, dynamic>> get notes => _notes;
+  List<Note> get notes => _notes;
 
   /// Every active note, regardless of the search query. The thread is built
   /// from this so parents of a search hit stay resolvable.
-  List<Map<String, dynamic>> get allNotes => _allNotes;
+  List<Note> get allNotes => _allNotes;
   NoteThread get thread => _thread;
   NoteThreadSort get sort => _sort;
   String get query => _query;
@@ -77,11 +78,7 @@ class NotesState extends ChangeNotifier {
     _notes = needle.isEmpty
         ? _allNotes
         : _allNotes
-              .where(
-                (n) => (n['content'] as String? ?? '').toLowerCase().contains(
-                  needle,
-                ),
-              )
+              .where((n) => n.content.toLowerCase().contains(needle))
               .toList();
     _rebuildThread();
   }

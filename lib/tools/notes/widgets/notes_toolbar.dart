@@ -141,22 +141,7 @@ class _NotesToolbarState extends State<NotesToolbar> {
   Future<void> _exportBackup() async {
     try {
       final dbNotes = await NotesDbHelper.instance.getActiveNotesWithTags();
-
-      // Map schema structure matching blueprint export
-      final notesList = dbNotes
-          .map(
-            (n) => {
-              'shortId': n['short_id'],
-              'content': n['content'],
-              'createdAt': n['created_at'],
-              'updatedAt': n['updated_at'],
-              if (n['tags'] is List && (n['tags'] as List).isNotEmpty)
-                'tags': n['tags'],
-              if (n['parent_short_id'] != null)
-                'parentShortId': n['parent_short_id'],
-            },
-          )
-          .toList();
+      final notesList = [for (final n in dbNotes) n.toBackupJson()];
 
       final backupData = {
         'generator': 'browser-toolkit-notes',

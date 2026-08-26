@@ -9,31 +9,17 @@ class NotesSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   Future<List<Map<String, dynamic>>> getLocalSyncRecords() async {
     final records = await NotesDbHelper.instance.getSyncRecords();
-    return records
-        .map(
-          (r) => {
-            'id': r['short_id'] as String,
-            'updatedAt': r['updated_at'] as int,
-            'deleted': (r['deleted'] as int) == 1,
-          },
-        )
-        .toList();
+    return [
+      for (final r in records)
+        {'id': r.shortId, 'updatedAt': r.updatedAt, 'deleted': r.deleted},
+    ];
   }
 
   @override
   Future<Map<String, dynamic>?> getLocalRecordData(String id) async {
     final note = await NotesDbHelper.instance.getNoteByShortId(id);
-    if (note == null || (note['deleted'] as int) == 1) return null;
-    final tags = (note['tags'] as List<dynamic>?)?.cast<String>() ?? [];
-    return {
-      'shortId': note['short_id'] as String,
-      'content': note['content'] as String,
-      'createdAt': note['created_at'] as int,
-      'updatedAt': note['updated_at'] as int,
-      if (tags.isNotEmpty) 'tags': tags,
-      if (note['parent_short_id'] != null)
-        'parentShortId': note['parent_short_id'] as String,
-    };
+    if (note == null || note.deleted) return null;
+    return note.toBackupJson();
   }
 
   @override

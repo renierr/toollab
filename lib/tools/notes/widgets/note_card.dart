@@ -9,10 +9,11 @@ import 'package:tool_lab/helpers/pdf_export_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/tools/notes/note.dart';
 import 'package:tool_lab/tools/notes/widgets/note_card_tags.dart';
 
 class NoteCard extends StatelessWidget {
-  final Map<String, dynamic> note;
+  final Note note;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -89,37 +90,34 @@ class NoteCard extends StatelessWidget {
   String _formatDate(int timestamp) => FormatHelper.epoch(timestamp);
 
   Future<void> _exportMarkdown(BuildContext context) async {
-    final content = note['content'] as String;
-    final shortId = note['short_id'] as String;
-    final bytes = Uint8List.fromList(utf8.encode(content));
+    final bytes = Uint8List.fromList(utf8.encode(note.content));
     await FileSaveHelper.saveFile(
       context: context,
-      suggestedName: 'note-$shortId.md',
+      suggestedName: 'note-${note.shortId}.md',
       bytes: bytes,
     );
   }
 
   Future<void> _exportPdf(BuildContext context) async {
-    final content = note['content'] as String;
-    final shortId = note['short_id'] as String;
     await PdfExportHelper.exportMarkdown(
       context: context,
-      markdown: content,
-      suggestedName: 'note-$shortId.pdf',
+      markdown: note.content,
+      suggestedName: 'note-${note.shortId}.pdf',
       title: _getTitle(
-        content,
+        note.content,
         untitledFallback: AppLocalizations.of(context).notesUntitledNote,
       ),
     );
   }
 
   Future<void> _shareNote(BuildContext context) async {
-    final content = note['content'] as String;
-    final shortId = note['short_id'] as String;
+    final content = note.content;
 
     if (Platform.isAndroid || Platform.isWindows) {
       try {
-        final tempPath = await TempFileManager.createFile('note-$shortId.md');
+        final tempPath = await TempFileManager.createFile(
+          'note-${note.shortId}.md',
+        );
         await File(tempPath).writeAsString(content);
         if (context.mounted) {
           await FileSaveHelper.showShareChooser(
@@ -140,10 +138,9 @@ class NoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final content = note['content'] as String? ?? '';
+    final content = note.content;
     final title = _getTitle(content, untitledFallback: l10n.notesUntitledNote);
     final bodyPreview = _getPreviewContent(content);
-    final updatedAt = note['updated_at'] as int? ?? 0;
 
     return Card(
       elevation: 2,
@@ -244,8 +241,7 @@ class NoteCard extends StatelessWidget {
                                 ],
                               ),
                             ),
-                          if (onAttach != null &&
-                              note['parent_short_id'] == null)
+                          if (onAttach != null && note.parentShortId == null)
                             PopupMenuItem(
                               value: 'attach',
                               child: Row(
@@ -259,8 +255,7 @@ class NoteCard extends StatelessWidget {
                                 ],
                               ),
                             ),
-                          if (onDetach != null &&
-                              note['parent_short_id'] != null)
+                          if (onDetach != null && note.parentShortId != null)
                             PopupMenuItem(
                               value: 'detach',
                               child: Row(
@@ -365,10 +360,7 @@ class NoteCard extends StatelessWidget {
                       ),
                     ),
                   const SizedBox(height: 8),
-                  NoteCardTags(
-                    tags:
-                        (note['tags'] as List<dynamic>?)?.cast<String>() ?? [],
-                  ),
+                  NoteCardTags(tags: note.tags),
                   if (isConstrained) const Spacer(),
                   const SizedBox(height: 4),
                   Row(
@@ -376,7 +368,7 @@ class NoteCard extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          l10n.notesUpdatedAt(_formatDate(updatedAt)),
+                          l10n.notesUpdatedAt(_formatDate(note.updatedAt)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -393,7 +385,7 @@ class NoteCard extends StatelessWidget {
                           onTap: onFollowUpsTap,
                         ),
                       const SizedBox(width: 8),
-                      if ((note['synced'] as int? ?? 0) == 1)
+                      if (note.synced)
                         Icon(
                           Icons.cloud_done_outlined,
                           size: 14,

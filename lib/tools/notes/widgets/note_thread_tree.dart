@@ -46,7 +46,7 @@ class NoteThreadTree extends StatelessWidget {
         for (final row in rows)
           _NoteThreadRow(
             row: row,
-            current: row.node.shortId == currentShortId,
+            current: row.node.note.shortId == currentShortId,
             accentColor: accentColor,
             dense: dense,
             onTap: () => onTap(row.node),
@@ -95,7 +95,7 @@ class _NoteThreadRow extends StatelessWidget {
     final textPadding = dense ? 7.0 : 9.0;
     final lineColor = theme.colorScheme.outline.withValues(alpha: 0.35);
     final title = noteTitle(
-      node.note['content'] as String? ?? '',
+      node.note.content,
       fallback: l10n.notesUntitledNote,
     );
 
@@ -184,7 +184,7 @@ class _NoteThreadRow extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 8),
                   child: Text(
                     FormatHelper.epoch(
-                      node.createdAt,
+                      node.note.createdAt,
                       style: DateStyle.dateOnly,
                     ),
                     style: theme.textTheme.labelSmall?.copyWith(

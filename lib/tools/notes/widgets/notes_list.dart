@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/tools/notes/note.dart';
 import 'package:tool_lab/tools/notes/note_thread.dart';
 import 'package:tool_lab/tools/notes/note_thread_export.dart';
 import 'package:tool_lab/tools/notes/note_title.dart';
@@ -10,18 +11,18 @@ import 'package:tool_lab/tools/notes/widgets/note_thread_tree.dart';
 
 class NotesList extends StatefulWidget {
   /// Flat, query-filtered notes — used while searching.
-  final List<Map<String, dynamic>> notes;
+  final List<Note> notes;
 
   /// Thread roots to render when not searching.
   final List<NoteThreadNode> roots;
   final NoteThread thread;
   final bool searchMode;
-  final ValueChanged<Map<String, dynamic>> onTap;
-  final ValueChanged<Map<String, dynamic>> onEdit;
-  final ValueChanged<Map<String, dynamic>> onDelete;
-  final ValueChanged<Map<String, dynamic>> onAddFollowUp;
-  final ValueChanged<Map<String, dynamic>> onAttach;
-  final ValueChanged<Map<String, dynamic>> onDetach;
+  final ValueChanged<Note> onTap;
+  final ValueChanged<Note> onEdit;
+  final ValueChanged<Note> onDelete;
+  final ValueChanged<Note> onAddFollowUp;
+  final ValueChanged<Note> onAttach;
+  final ValueChanged<Note> onDetach;
 
   const NotesList({
     super.key,
@@ -144,7 +145,8 @@ class _NotesListState extends State<NotesList> {
 
   Widget _buildEntry(_NoteEntry entry, {required bool expandable}) {
     final node = entry.node;
-    final expanded = node != null && _expandedThreads.contains(node.shortId);
+    final expanded =
+        node != null && _expandedThreads.contains(node.note.shortId);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -171,15 +173,15 @@ class _NotesListState extends State<NotesList> {
       breadcrumb: entry.breadcrumb,
       followUpCount: followUps,
       followUpsExpanded:
-          node != null && _expandedThreads.contains(node.shortId),
+          node != null && _expandedThreads.contains(node.note.shortId),
       // Cards in the grid have a fixed height, so there the thread opens in a
       // popover anchored to the badge instead of expanding in place.
       onFollowUpsTap: followUps == 0 || node == null
           ? null
           : expandable
           ? (_) => setState(() {
-              if (!_expandedThreads.remove(node.shortId)) {
-                _expandedThreads.add(node.shortId);
+              if (!_expandedThreads.remove(node.note.shortId)) {
+                _expandedThreads.add(node.note.shortId);
               }
             })
           : (badgeContext) => _showThreadPopover(badgeContext, node),
@@ -246,17 +248,17 @@ class _NotesListState extends State<NotesList> {
             for (final note in widget.notes)
               _NoteEntry(
                 note: note,
-                node: widget.thread.nodeForShortId(note['short_id'] as String?),
+                node: widget.thread.nodeForShortId(note.shortId),
                 breadcrumb: [
                   for (final ancestor in widget.thread.ancestorsOf(
-                    note['short_id'] as String? ?? '',
+                    note.shortId,
                   ))
                     noteTitle(
-                      ancestor.note['content'] as String? ?? '',
+                      ancestor.note.content,
                       fallback: l10n.notesUntitledNote,
                     ),
                 ],
-                timestamp: note['updated_at'] as int? ?? 0,
+                timestamp: note.updatedAt,
               ),
           ]
         : [
@@ -286,7 +288,7 @@ class _NotesListState extends State<NotesList> {
 }
 
 class _NoteEntry {
-  final Map<String, dynamic> note;
+  final Note note;
   final NoteThreadNode? node;
   final List<String> breadcrumb;
   final int timestamp;

@@ -145,10 +145,7 @@ class _Breadcrumb extends StatelessWidget {
             InkWell(
               onTap: () => onOpenNote(node),
               child: Text(
-                noteTitle(
-                  node.note['content'] as String? ?? '',
-                  fallback: l10n.notesUntitledNote,
-                ),
+                noteTitle(node.note.content, fallback: l10n.notesUntitledNote),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: accentColor,
                   fontWeight: FontWeight.w600,

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/notes/config.dart';
+import 'package:tool_lab/tools/notes/note.dart';
 
 class NotesDbHelper {
   static const String tableName = 'notes';
@@ -71,80 +72,71 @@ class NotesDbHelper {
   }
 
   /// Get all active (non-deleted) notes sorted by updated_at descending.
-  Future<List<Map<String, dynamic>>> getActiveNotes({String query = ''}) async {
+  Future<List<Note>> getActiveNotes({String query = ''}) async {
     final db = await _getDb();
-    if (query.trim().isEmpty) {
-      return await db.query(
-        tableName,
-        where: 'deleted = 0',
-        orderBy: 'updated_at DESC',
-      );
-    } else {
-      return await db.query(
-        tableName,
-        where: 'deleted = 0 AND content LIKE ?',
-        whereArgs: ['%${query.trim()}%'],
-        orderBy: 'updated_at DESC',
-      );
-    }
+    final rows = query.trim().isEmpty
+        ? await db.query(
+            tableName,
+            where: 'deleted = 0',
+            orderBy: 'updated_at DESC',
+          )
+        : await db.query(
+            tableName,
+            where: 'deleted = 0 AND content LIKE ?',
+            whereArgs: ['%${query.trim()}%'],
+            orderBy: 'updated_at DESC',
+          );
+    return rows.map(Note.fromMap).toList();
   }
 
   /// Gets active notes enriched with their tags.
-  Future<List<Map<String, dynamic>>> getActiveNotesWithTags({
-    String query = '',
-  }) async {
-    final rawNotes = await getActiveNotes(query: query);
-    if (rawNotes.isEmpty) return rawNotes;
-    final notes = rawNotes.map((m) => Map<String, dynamic>.from(m)).toList();
+  Future<List<Note>> getActiveNotesWithTags({String query = ''}) async {
+    final notes = await getActiveNotes(query: query);
+    if (notes.isEmpty) return notes;
     try {
-      final noteIds = notes.map((n) => n['id'] as int).toList();
-      final tagsMap = await getTagsForNotes(noteIds);
-      for (final note in notes) {
-        note['tags'] = tagsMap[note['id'] as int] ?? <String>[];
-      }
+      final tagsMap = await getTagsForNotes([for (final n in notes) n.id]);
+      return [
+        for (final note in notes)
+          note.copyWith(tags: tagsMap[note.id] ?? const []),
+      ];
     } catch (e) {
       errorLog('[NotesDbHelper] Failed to load tags: $e');
+      return notes;
     }
-    return notes;
   }
 
   /// Get all sync records (including deleted ones).
-  Future<List<Map<String, dynamic>>> getSyncRecords() async {
+  Future<List<NoteSyncRecord>> getSyncRecords() async {
     final db = await _getDb();
-    return await db.query(
+    final rows = await db.query(
       tableName,
       columns: ['short_id', 'updated_at', 'deleted'],
     );
+    return rows.map(NoteSyncRecord.fromMap).toList();
   }
 
   /// Get note content and details by short ID.
-  Future<Map<String, dynamic>?> getNoteByShortId(String shortId) async {
-    final db = await _getDb();
-    final rows = await db.query(
-      tableName,
-      where: 'short_id = ?',
-      whereArgs: [shortId],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    final note = Map<String, dynamic>.from(rows.first);
-    note['tags'] = await getTagsForNote(note['id'] as int);
-    return note;
-  }
+  Future<Note?> getNoteByShortId(String shortId) =>
+      _queryOne(where: 'short_id = ?', whereArgs: [shortId]);
 
   /// Get note details by integer ID.
-  Future<Map<String, dynamic>?> getNoteById(int id) async {
+  Future<Note?> getNoteById(int id) =>
+      _queryOne(where: 'id = ?', whereArgs: [id]);
+
+  Future<Note?> _queryOne({
+    required String where,
+    required List<Object?> whereArgs,
+  }) async {
     final db = await _getDb();
     final rows = await db.query(
       tableName,
-      where: 'id = ?',
-      whereArgs: [id],
+      where: where,
+      whereArgs: whereArgs,
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    final note = Map<String, dynamic>.from(rows.first);
-    note['tags'] = await getTagsForNote(note['id'] as int);
-    return note;
+    final note = Note.fromMap(rows.first);
+    return note.copyWith(tags: await getTagsForNote(note.id));
   }
 
   /// Save or update a note.
@@ -160,9 +152,8 @@ class NotesDbHelper {
 
     if (id != null) {
       final note = await getNoteById(id);
-      final noteShortId =
-          note?['short_id'] as String? ?? shortId ?? generateShortId();
-      final existingUpdatedAt = note?['updated_at'] as int? ?? 0;
+      final noteShortId = note?.shortId ?? shortId ?? generateShortId();
+      final existingUpdatedAt = note?.updatedAt ?? 0;
       final updateUpdatedAt = max(now, existingUpdatedAt + 1);
 
       await db.update(
@@ -206,7 +197,7 @@ class NotesDbHelper {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     final note = await getNoteById(id);
-    final existingUpdatedAt = note?['updated_at'] as int? ?? 0;
+    final existingUpdatedAt = note?.updatedAt ?? 0;
     final deleteUpdatedAt = max(now, existingUpdatedAt + 1);
 
     await db.update(
@@ -222,12 +213,15 @@ class NotesDbHelper {
     final db = await _getDb();
     final existing = await getNoteByShortId(shortId);
     if (existing != null) {
-      final noteId = existing['id'] as int;
-      await db.delete(tagTableName, where: 'note_id = ?', whereArgs: [noteId]);
+      await db.delete(
+        tagTableName,
+        where: 'note_id = ?',
+        whereArgs: [existing.id],
+      );
       // Never leave dangling children behind: lift them to the removed parent.
       await db.update(
         tableName,
-        {'parent_short_id': existing['parent_short_id'], 'synced': 0},
+        {'parent_short_id': existing.parentShortId, 'synced': 0},
         where: 'parent_short_id = ?',
         whereArgs: [shortId],
       );
@@ -278,7 +272,7 @@ class NotesDbHelper {
         whereArgs: [shortId],
       );
       if (tags != null) {
-        await setTagsForNote(existing['id'] as int, tags);
+        await setTagsForNote(existing.id, tags);
       }
     } else {
       final newId = await db.insert(tableName, {
@@ -313,14 +307,15 @@ class NotesDbHelper {
   }
 
   /// Direct children of a note, oldest first.
-  Future<List<Map<String, dynamic>>> getChildren(String parentShortId) async {
+  Future<List<Note>> getChildren(String parentShortId) async {
     final db = await _getDb();
-    return await db.query(
+    final rows = await db.query(
       tableName,
       where: 'deleted = 0 AND parent_short_id = ?',
       whereArgs: [parentShortId],
       orderBy: 'created_at ASC',
     );
+    return rows.map(Note.fromMap).toList();
   }
 
   /// All descendant short IDs of [shortId], depth first.
@@ -346,7 +341,7 @@ class NotesDbHelper {
   Future<bool> setParent(int id, String? parentShortId) async {
     final note = await getNoteById(id);
     if (note == null) return false;
-    final shortId = note['short_id'] as String;
+    final shortId = note.shortId;
     if (parentShortId == shortId) return false;
 
     if (parentShortId != null) {
@@ -362,7 +357,7 @@ class NotesDbHelper {
 
     final db = await _getDb();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final updatedAt = max(now, (note['updated_at'] as int? ?? 0) + 1);
+    final updatedAt = max(now, note.updatedAt + 1);
     await db.update(
       tableName,
       {'parent_short_id': parentShortId, 'updated_at': updatedAt, 'synced': 0},
@@ -377,11 +372,11 @@ class NotesDbHelper {
   Future<int> softDeleteSubtree(int id) async {
     final note = await getNoteById(id);
     if (note == null) return 0;
-    final descendants = await getDescendantShortIds(note['short_id'] as String);
+    final descendants = await getDescendantShortIds(note.shortId);
     await softDeleteNote(id);
     for (final shortId in descendants) {
       final child = await getNoteByShortId(shortId);
-      if (child != null) await softDeleteNote(child['id'] as int);
+      if (child != null) await softDeleteNote(child.id);
     }
     return descendants.length + 1;
   }
@@ -393,9 +388,9 @@ class NotesDbHelper {
     final db = await _getDb();
     await db.update(
       tableName,
-      {'parent_short_id': note['parent_short_id'], 'synced': 0},
+      {'parent_short_id': note.parentShortId, 'synced': 0},
       where: 'parent_short_id = ?',
-      whereArgs: [note['short_id'] as String],
+      whereArgs: [note.shortId],
     );
     await softDeleteNote(id);
   }

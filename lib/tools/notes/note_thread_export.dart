@@ -8,10 +8,7 @@ import 'package:tool_lab/tools/notes/note_title.dart';
 /// Exports a note and all of its follow-ups as a single PDF.
 Future<void> exportThreadPdf(BuildContext context, NoteThreadNode root) async {
   final l10n = AppLocalizations.of(context);
-  final title = noteTitle(
-    root.note['content'] as String? ?? '',
-    fallback: l10n.notesUntitledNote,
-  );
+  final title = noteTitle(root.note.content, fallback: l10n.notesUntitledNote);
   final markdown = buildThreadMarkdown(
     root,
     untitledFallback: l10n.notesUntitledNote,
@@ -20,7 +17,7 @@ Future<void> exportThreadPdf(BuildContext context, NoteThreadNode root) async {
   await PdfExportHelper.exportMarkdown(
     context: context,
     markdown: markdown,
-    suggestedName: 'note-thread-${root.shortId}.pdf',
+    suggestedName: 'note-thread-${root.note.shortId}.pdf',
     title: title,
   );
 }

@@ -6,6 +6,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/tools/notes/note.dart';
 import 'package:tool_lab/tools/notes/notes_state.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -149,9 +150,9 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     });
   }
 
-  void _openViewer(Map<String, dynamic> note) {
+  void _openViewer(Note note) {
     setState(() {
-      _viewingShortId = note['short_id'] as String?;
+      _viewingShortId = note.shortId;
     });
   }
 
@@ -161,28 +162,25 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     });
   }
 
-  void _addFollowUp(Map<String, dynamic> note) {
+  void _addFollowUp(Note note) {
     final l10n = AppLocalizations.of(context);
     _openEditor(
-      parentShortId: note['short_id'] as String?,
-      parentTitle: noteTitle(
-        note['content'] as String? ?? '',
-        fallback: l10n.notesUntitledNote,
-      ),
-      tags: (note['tags'] as List<dynamic>?)?.cast<String>() ?? const [],
+      parentShortId: note.shortId,
+      parentTitle: noteTitle(note.content, fallback: l10n.notesUntitledNote),
+      tags: note.tags,
     );
   }
 
-  Future<void> _attachNote(Map<String, dynamic> note) async {
+  Future<void> _attachNote(Note note) async {
     final notesState = context.read<NotesState>();
     final l10n = AppLocalizations.of(context);
     final parentShortId = await NoteParentPickerDialog.show(
       context: context,
       thread: notesState.thread,
-      shortId: note['short_id'] as String,
+      shortId: note.shortId,
     );
     if (parentShortId == null || !mounted) return;
-    final moved = await notesState.setParent(note['id'] as int, parentShortId);
+    final moved = await notesState.setParent(note.id, parentShortId);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -192,10 +190,10 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     );
   }
 
-  Future<void> _detachNote(Map<String, dynamic> note) async {
+  Future<void> _detachNote(Note note) async {
     final notesState = context.read<NotesState>();
     final l10n = AppLocalizations.of(context);
-    await notesState.setParent(note['id'] as int, null);
+    await notesState.setParent(note.id, null);
     if (!mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -346,17 +344,14 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     final notesState = context.watch<NotesState>();
     final notes = notesState.notes;
 
-    final allTags = <String>{};
-    for (final note in notesState.allNotes) {
-      final noteTags = note['tags'] as List<dynamic>? ?? [];
-      allTags.addAll(noteTags.cast<String>());
-    }
+    final allTags = <String>{
+      for (final note in notesState.allNotes) ...note.tags,
+    };
     final sortedAllTags = allTags.toList()..sort();
 
-    bool matchesTags(Map<String, dynamic> note) {
+    bool matchesTags(Note note) {
       if (_selectedFilterTags.isEmpty) return true;
-      final noteTags = (note['tags'] as List<dynamic>?)?.cast<String>() ?? [];
-      return _selectedFilterTags.every((t) => noteTags.contains(t));
+      return _selectedFilterTags.every((t) => note.tags.contains(t));
     }
 
     final filteredNotes = notes.where(matchesTags).toList();
@@ -382,9 +377,8 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     final viewingNode = notesState.thread.nodeForShortId(_viewingShortId);
     if (viewingNode != null) {
       final currentNote = viewingNode.note;
-      final content = currentNote['content'] as String? ?? '';
-      final updatedAt = currentNote['updated_at'] as int? ?? 0;
-      final shortId = viewingNode.shortId;
+      final content = currentNote.content;
+      final shortId = currentNote.shortId;
       return MarkdownViewerPage(
         content: content,
         config: MarkdownViewerConfig(
@@ -397,13 +391,13 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
             currentShortId: shortId,
             accentColor: AppTheme.accentTeal,
             onOpenNote: (node) =>
-                setState(() => _viewingShortId = node.shortId),
+                setState(() => _viewingShortId = node.note.shortId),
           ),
           footerSection: NoteFollowUpsSection(
             node: viewingNode,
             accentColor: AppTheme.accentTeal,
             onOpenNote: (node) =>
-                setState(() => _viewingShortId = node.shortId),
+                setState(() => _viewingShortId = node.note.shortId),
             onAddFollowUp: () => _addFollowUp(currentNote),
           ),
           extraActions: [
@@ -412,7 +406,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
               tooltip: l10n.notesAddFollowUp,
               onPressed: () => _addFollowUp(currentNote),
             ),
-            if (viewingNode.parentShortId == null)
+            if (currentNote.parentShortId == null)
               IconButton(
                 icon: const Icon(Icons.account_tree_outlined),
                 tooltip: l10n.notesAttachToNote,
@@ -427,18 +421,17 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
           ],
           onEdit: () {
             _openEditor(
-              id: currentNote['id'] as int,
+              id: currentNote.id,
               content: content,
-              tags:
-                  (currentNote['tags'] as List<dynamic>?)?.cast<String>() ?? [],
+              tags: currentNote.tags,
             );
           },
           onDelete: () {
-            _deleteNote(currentNote['id'] as int);
+            _deleteNote(currentNote.id);
           },
           onClose: _closeViewer,
           exportSuggestedName: 'note-$shortId.md',
-          updatedAt: updatedAt,
+          updatedAt: currentNote.updatedAt,
         ),
       );
     }
@@ -500,16 +493,13 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
                       onDetach: _detachNote,
                       onEdit: (note) {
                         _openEditor(
-                          id: note['id'] as int,
-                          content: note['content'] as String,
-                          tags:
-                              (note['tags'] as List<dynamic>?)
-                                  ?.cast<String>() ??
-                              [],
+                          id: note.id,
+                          content: note.content,
+                          tags: note.tags,
                         );
                       },
                       onDelete: (note) {
-                        _deleteNote(note['id'] as int);
+                        _deleteNote(note.id);
                       },
                     ),
             ),

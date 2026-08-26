@@ -17,11 +17,11 @@ String buildThreadMarkdown(
   buffer.writeln();
   for (final node in nodes) {
     final indent = '  ' * node.depth;
-    final title = noteTitle(
-      node.note['content'] as String? ?? '',
-      fallback: untitledFallback,
+    final title = noteTitle(node.note.content, fallback: untitledFallback);
+    final date = FormatHelper.epoch(
+      node.note.createdAt,
+      style: DateStyle.dateOnly,
     );
-    final date = FormatHelper.epoch(node.createdAt, style: DateStyle.dateOnly);
     buffer.writeln('$indent- $title — $date');
   }
 
@@ -37,7 +37,7 @@ String buildThreadMarkdown(
 }
 
 String _sectionFor(NoteThreadNode node, {required String untitledFallback}) {
-  final content = (node.note['content'] as String? ?? '').trim();
+  final content = node.note.content.trim();
   final shifted = _shiftHeadings(content, node.depth);
   final hasHeading = RegExp(r'^#{1,6}\s', multiLine: true).hasMatch(shifted);
   final title = noteTitle(content, fallback: untitledFallback);

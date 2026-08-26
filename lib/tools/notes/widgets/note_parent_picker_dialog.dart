@@ -44,22 +44,20 @@ class _NoteParentPickerDialogState extends State<NoteParentPickerDialog> {
     final node = widget.thread.byShortId[widget.shortId];
     final excluded = {
       widget.shortId,
-      ...?node?.flatten().map((n) => n.shortId),
+      ...?node?.flatten().map((n) => n.note.shortId),
     };
     final needle = _query.trim().toLowerCase();
 
     final candidates =
         widget.thread.byShortId.values
-            .where((n) => !excluded.contains(n.shortId))
+            .where((n) => !excluded.contains(n.note.shortId))
             .where(
               (n) =>
                   needle.isEmpty ||
-                  (n.note['content'] as String? ?? '').toLowerCase().contains(
-                    needle,
-                  ),
+                  n.note.content.toLowerCase().contains(needle),
             )
             .toList()
-          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          ..sort((a, b) => b.note.updatedAt.compareTo(a.note.updatedAt));
 
     return ResponsiveAlertDialog(
       title: Text(l10n.notesAttachPickerTitle),
@@ -95,7 +93,7 @@ class _NoteParentPickerDialogState extends State<NoteParentPickerDialog> {
                     ),
                     title: Text(
                       noteTitle(
-                        candidate.note['content'] as String? ?? '',
+                        candidate.note.content,
                         fallback: l10n.notesUntitledNote,
                       ),
                       maxLines: 1,
@@ -103,12 +101,13 @@ class _NoteParentPickerDialogState extends State<NoteParentPickerDialog> {
                     ),
                     subtitle: Text(
                       FormatHelper.epoch(
-                        candidate.updatedAt,
+                        candidate.note.updatedAt,
                         style: DateStyle.dateOnly,
                       ),
                       style: theme.textTheme.labelSmall,
                     ),
-                    onTap: () => Navigator.of(context).pop(candidate.shortId),
+                    onTap: () =>
+                        Navigator.of(context).pop(candidate.note.shortId),
                   );
                 },
               ),
