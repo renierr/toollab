@@ -27,7 +27,10 @@ import 'renpho_body_metrics.dart';
 ///    The absolute scale comes from the whole-body Sun 2003 equation; the split
 ///    between segments comes from the volume-conductor model, in which a
 ///    segment's conducting volume goes with its length squared over its
-///    impedance. No per-segment resistivity constant is invented.
+///    impedance, weighted per segment because trunk tissue does not conduct
+///    like limb muscle. Fat is distributed by its own anthropometric ratios,
+///    not by subtracting lean from a segment's assumed weight. Both splits sum
+///    back to the whole-body figure exactly.
 class RenphoIndependentAnalysis {
   final RenphoDerived derived;
 
@@ -46,16 +49,51 @@ class RenphoIndependentAnalysis {
   static const _legLengthFraction = 0.530;
   static const _trunkLengthFraction = 0.288;
 
-  /// Share of body mass carried by each segment, same source. The trunk share
-  /// includes the head, which carries little fat — one reason the trunk fat
-  /// figure is the softest number on the page.
-  static const _massFraction = <RenphoSegment, double>{
-    RenphoSegment.leftArm: 0.050,
-    RenphoSegment.rightArm: 0.050,
-    RenphoSegment.leftLeg: 0.161,
-    RenphoSegment.rightLeg: 0.161,
-    RenphoSegment.trunk: 0.578,
+  /// Weight on each segment's volume-conductor index. A limb is a long muscle
+  /// bundle in line with the current; the trunk is short, wide and full of
+  /// organs and fluid, so at ~12 Ω the raw L²/Z reads far more conducting
+  /// volume there than there is lean tissue. Dampening it keeps the trunk from
+  /// swallowing two thirds of the fat-free mass.
+  static const _leanIndexFactor = <RenphoSegment, double>{
+    RenphoSegment.leftArm: 1.0,
+    RenphoSegment.rightArm: 1.0,
+    RenphoSegment.leftLeg: 1.0,
+    RenphoSegment.rightLeg: 1.0,
+    RenphoSegment.trunk: 0.30,
   };
+
+  /// Where the trunk's share of fat-free mass is allowed to land. Trunk plus
+  /// head carries about half of it in DXA reference data, and no impedance
+  /// this low can be trusted to say otherwise, so the dampened index sets the
+  /// value inside the band and the band sets it outside.
+  static const _trunkLeanShareMin = 0.50;
+  static const _trunkLeanShareMax = 0.58;
+
+  /// Share of whole-body fat mass per segment, from DXA regional reference
+  /// distributions. Trunk includes the head. Both sets sum to 1, so segmental
+  /// fat adds back up to total fat by construction.
+  static const _fatFractionMale = <RenphoSegment, double>{
+    RenphoSegment.leftArm: 0.048,
+    RenphoSegment.rightArm: 0.048,
+    RenphoSegment.leftLeg: 0.152,
+    RenphoSegment.rightLeg: 0.152,
+    RenphoSegment.trunk: 0.600,
+  };
+  static const _fatFractionFemale = <RenphoSegment, double>{
+    RenphoSegment.leftArm: 0.055,
+    RenphoSegment.rightArm: 0.055,
+    RenphoSegment.leftLeg: 0.190,
+    RenphoSegment.rightLeg: 0.190,
+    RenphoSegment.trunk: 0.510,
+  };
+
+  /// How strongly a left/right lean difference tilts that pair's fat the other
+  /// way. Half strength: the sides differ in fat, but not by the full lean gap.
+  static const _fatAsymmetryCoupling = 0.5;
+
+  /// Non-muscle share of appendicular lean mass — limb bone mineral and skin.
+  /// What separates appendicular lean tissue from skeletal muscle.
+  static const _limbNonMuscleFraction = 0.067;
 
   static const _impedanceKey = <RenphoSegment, String>{
     RenphoSegment.leftArm: 'HandL',
@@ -143,23 +181,73 @@ class RenphoIndependentAnalysis {
 
   List<RenphoSegmentEstimate> get segments {
     if (!usable) return const [];
-    final volumeIndex = <RenphoSegment, double>{
-      for (final segment in RenphoSegment.values)
-        segment:
-            math.pow(segmentLengthCm(segment), 2) / segmentImpedance50(segment),
-    };
-    final total = volumeIndex.values.fold<double>(
-      0,
-      (sum, value) => sum + value,
-    );
+    final lean = _leanBySegment();
+    final fat = _fatBySegment(lean);
     return [
       for (final segment in RenphoSegment.values)
-        _estimate(segment, total <= 0 ? 0 : volumeIndex[segment]! / total),
+        _estimate(segment, lean[segment]!, fat[segment]!),
     ];
   }
 
-  RenphoSegmentEstimate _estimate(RenphoSegment segment, double share) {
-    final lean = fatFreeMassKg * share;
+  /// Whole-body fat-free mass split over the weighted volume-conductor index,
+  /// with the trunk held to its physiological band and the limbs sharing
+  /// whatever is left in proportion to their own indices. Sums to
+  /// [fatFreeMassKg] whichever way the band bites.
+  Map<RenphoSegment, double> _leanBySegment() {
+    final index = <RenphoSegment, double>{
+      for (final segment in RenphoSegment.values)
+        segment:
+            _leanIndexFactor[segment]! *
+            math.pow(segmentLengthCm(segment), 2) /
+            segmentImpedance50(segment),
+    };
+    final total = index.values.fold<double>(0, (sum, value) => sum + value);
+    final limbIndex = total - index[RenphoSegment.trunk]!;
+    if (total <= 0 || limbIndex <= 0) {
+      return {for (final segment in RenphoSegment.values) segment: 0};
+    }
+    final trunkShare = (index[RenphoSegment.trunk]! / total).clamp(
+      _trunkLeanShareMin,
+      _trunkLeanShareMax,
+    );
+    return {
+      for (final segment in RenphoSegment.values)
+        segment: segment == RenphoSegment.trunk
+            ? fatFreeMassKg * trunkShare
+            : fatFreeMassKg * (1 - trunkShare) * index[segment]! / limbIndex,
+    };
+  }
+
+  /// Whole-body fat mass spread over the anthropometric fat ratios, then tilted
+  /// within each limb pair so the leaner side carries the smaller share. Never
+  /// a subtraction: a segment's fat no longer depends on how much lean the
+  /// impedance model happened to put there.
+  Map<RenphoSegment, double> _fatBySegment(Map<RenphoSegment, double> lean) {
+    final fraction = _male ? _fatFractionMale : _fatFractionFemale;
+    final fat = <RenphoSegment, double>{
+      for (final segment in RenphoSegment.values)
+        segment: fatMassKg * fraction[segment]!,
+    };
+    for (final pair in const [
+      (RenphoSegment.leftArm, RenphoSegment.rightArm),
+      (RenphoSegment.leftLeg, RenphoSegment.rightLeg),
+    ]) {
+      final pairFat = fat[pair.$1]! + fat[pair.$2]!;
+      final pairLean = lean[pair.$1]! + lean[pair.$2]!;
+      if (pairFat <= 0 || pairLean <= 0) continue;
+      final leanShare = lean[pair.$1]! / pairLean;
+      final fatShare = 0.5 + _fatAsymmetryCoupling * (0.5 - leanShare);
+      fat[pair.$1] = pairFat * fatShare;
+      fat[pair.$2] = pairFat * (1 - fatShare);
+    }
+    return fat;
+  }
+
+  RenphoSegmentEstimate _estimate(
+    RenphoSegment segment,
+    double lean,
+    double fat,
+  ) {
     final scale = derived.segment(segment);
     return RenphoSegmentEstimate(
       segment: segment,
@@ -168,19 +256,36 @@ class RenphoIndependentAnalysis {
       impedance50: segmentImpedance50(segment),
       impedance100: segmentImpedance100(segment),
       leanMassKg: lean,
-      fatMassKg: math.max(_weight * _massFraction[segment]! - lean, 0),
+      fatMassKg: fat,
       scaleMuscleMassKg: scale.muscleMassKg,
       scaleFatMassKg: scale.fatMassKg,
     );
   }
 
+  /// Lean tissue in the four limbs, from limb impedances only — the trunk's
+  /// very low impedance never enters the ratio these four are split by.
   double get appendicularLeanMassKg => segments
       .where((estimate) => estimate.segment != RenphoSegment.trunk)
       .fold<double>(0, (sum, estimate) => sum + estimate.leanMassKg);
 
-  /// Appendicular lean mass over height squared — the EWGSOP2 sarcopenia index.
-  double get appendicularLeanMassIndex =>
-      appendicularLeanMassKg / (_heightM * _heightM);
+  /// Appendicular skeletal muscle mass: limb lean tissue less limb bone and
+  /// skin. This, not fat-free mass, is what a DXA sarcopenia report calls ASM.
+  double get appendicularSkeletalMuscleMassKg =>
+      appendicularLeanMassKg * (1 - _limbNonMuscleFraction);
+
+  /// ASMM over height squared — the EWGSOP2 sarcopenia index.
+  double get appendicularSkeletalMuscleIndex =>
+      appendicularSkeletalMuscleMassKg / (_heightM * _heightM);
+
+  /// Kim et al. 2002 — whole-body skeletal muscle predicted from appendicular
+  /// lean tissue. Reaches the same figure as Janssen by a different route, so
+  /// the gap between the two says whether the limb split holds up.
+  double get skeletalMuscleMassFromLimbsKg => !usable
+      ? 0
+      : 1.13 * appendicularSkeletalMuscleMassKg -
+            0.02 * _age +
+            (_male ? 0.61 : 0) +
+            0.97;
 
   /// Largest left/right lean difference, as a share of the stronger side.
   double get asymmetryPercent {
@@ -254,7 +359,7 @@ class RenphoIndependentAnalysis {
             metric: RenphoComparisonMetric.muscleIndex,
             unit: 'kg/m²',
             scaleValue: derived.skeletalMuscleIndex,
-            ownValue: appendicularLeanMassIndex,
+            ownValue: appendicularSkeletalMuscleIndex,
           ),
         ];
 
@@ -308,9 +413,9 @@ class RenphoIndependentAnalysis {
       ),
       RenphoFinding(
         kind: RenphoFindingKind.muscleIndex,
-        value: '${appendicularLeanMassIndex.toStringAsFixed(1)} kg/m²',
+        value: '${appendicularSkeletalMuscleIndex.toStringAsFixed(1)} kg/m²',
         reference: '≥ ${asmiFloor.toStringAsFixed(1)} kg/m²',
-        rating: appendicularLeanMassIndex < asmiFloor
+        rating: appendicularSkeletalMuscleIndex < asmiFloor
             ? RenphoRating.low
             : RenphoRating.optimal,
       ),
@@ -507,9 +612,10 @@ const renphoReferenceList = <String>[
   'Sun S.S. et al., Am J Clin Nutr 2003 — fat-free mass from bioimpedance (NHANES III)',
   'Kushner R.F., Schoeller D.A., Am J Clin Nutr 1986 — total body water from bioimpedance',
   'Janssen I. et al., J Appl Physiol 2000 — whole-body skeletal muscle from bioimpedance',
+  'Kim J. et al., Am J Clin Nutr 2002 — skeletal muscle from appendicular lean soft tissue',
   'Cruz-Jentoft A.J. et al., Age Ageing 2019 (EWGSOP2) — sarcopenia cut-offs for the muscle index',
   'Schutz Y. et al., Int J Obes 2002 — fat-free mass index reference bands',
-  'Kelly T.L. et al., PLoS One 2009 — fat mass index reference bands (NHANES)',
+  'Kelly T.L. et al., PLoS One 2009 — fat mass index bands and DXA regional fat distribution (NHANES)',
   'Winter D.A., Biomechanics and Motor Control of Human Movement — segment lengths and mass fractions',
   'Organ L.W. et al., J Appl Physiol 1994 — segmental volume-conductor model of bioimpedance',
   'WHO Technical Report Series 894 — BMI classification',

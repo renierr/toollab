@@ -15761,11 +15761,23 @@ abstract class AppLocalizations {
   /// **'Appendicular lean mass'**
   String get renphoMetricAppendicularLeanMass;
 
-  /// No description provided for @renphoMetricAppendicularLeanIndex.
+  /// No description provided for @renphoMetricAppendicularMuscleMass.
   ///
   /// In en, this message translates to:
-  /// **'Appendicular lean mass index'**
-  String get renphoMetricAppendicularLeanIndex;
+  /// **'Appendicular skeletal muscle mass'**
+  String get renphoMetricAppendicularMuscleMass;
+
+  /// No description provided for @renphoMetricAppendicularMuscleIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Appendicular skeletal muscle index'**
+  String get renphoMetricAppendicularMuscleIndex;
+
+  /// No description provided for @renphoMetricSkeletalMuscleFromLimbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Skeletal muscle mass (from limbs)'**
+  String get renphoMetricSkeletalMuscleFromLimbs;
 
   /// No description provided for @renphoMetricFatFreeMassIndex.
   ///

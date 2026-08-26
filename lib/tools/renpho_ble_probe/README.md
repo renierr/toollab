@@ -39,6 +39,7 @@ to Health Connect. No Renpho cloud account is involved at any point.
 | `renpho_body_geometry.dart` | The front-view figure in a normalised box: segment paths, callout rectangles, anchors, the value-to-colour rule. Drives the on-screen map and the printed one. |
 | `renpho_body_image.dart` | Renders that figure off-screen to a PNG for the report. |
 | `renpho_assessment.dart` | Rates a measurement against published reference ranges. Pure logic, no strings. |
+| `renpho_independent_analysis.dart` | `RenphoIndependentAnalysis` — the second opinion: published whole-body equations, the segmental lean and fat split, ASMM/ASMI and the rated findings. |
 | `renpho_report_pdf.dart` | Builds the one-page PDF. |
 | `widgets/` | All presentation. Only the routed page uses `ToolLayout`; pushed sub-pages use a plain `Scaffold`, because `ToolBackButton` resolves a GoRouter state that a `MaterialPageRoute` does not have. |
 
@@ -304,13 +305,51 @@ different part of the result:
 - **Segment masses are a distribution, not five measurements.** The absolute
   scale comes from the whole-body Sun equation; the split across arms, legs and
   trunk follows the volume-conductor model, where a segment's conducting volume
-  goes with its path length squared over its impedance. Path lengths and segment
-  mass fractions are anthropometric fractions of standing height (Winter). No
-  per-segment resistivity constant is invented.
+  goes with its path length squared over its impedance. Path lengths are
+  anthropometric fractions of standing height (Winter). The index is weighted
+  per segment and the trunk is held to a physiological band, both described
+  below.
 
-From those it derives fat-free mass, total body water, skeletal muscle mass,
-appendicular lean mass and its index, the fat-free and fat mass indices, and per
-segment the lean mass, the fat mass and the 100/20 kHz ratio. Ten findings are
+### Segmental split
+
+Fat-free mass and fat mass are distributed by two separate models, and each sums
+back to its whole-body figure exactly — no segment is a leftover of another.
+
+**Fat-free mass** follows a weighted volume-conductor index,
+`index = k × L² / Z₅₀`. The weight `k` exists because tissue does not conduct
+alike everywhere: a limb is a long muscle bundle in line with the current, while
+the trunk is short, wide, and full of organs and fluid. At the ~12 Ω the scale
+reports for the trunk, an unweighted `L²/Z` credits it with two thirds of the
+fat-free mass and leaves the limbs — legs read around 215 Ω — far too little.
+So `k` is 1.0 for both arms and both legs and 0.30 for the trunk. On top of
+that the trunk's resulting share is clamped into 50–58 %, the range DXA
+reference data puts trunk-plus-head lean tissue in; the limbs then share what is
+left in proportion to their own indices. The clamp is what actually decides the
+trunk on a normal scan — no impedance that low is trusted to say otherwise — and
+the weighting is what keeps the value sane when it is not.
+
+**Fat mass** is never derived by subtracting a segment's lean mass from an
+assumed segment weight. That older path made limb fat an error term of the lean
+split and could drive it negative. Instead whole-body fat mass is spread over
+DXA regional fat ratios by sex — male 60 % trunk, 15.2 % per leg, 4.8 % per arm;
+female 51 % trunk, 19 % per leg, 5.5 % per arm, trunk including the head — and
+each limb pair is then tilted at half strength by its own lean difference, so
+the leaner side carries the smaller share of that pair's fat.
+
+**Skeletal muscle** is kept apart from lean tissue. Appendicular lean mass is
+the sum of the four limbs, so it is built from limb impedances alone and the
+trunk's low impedance never enters the ratio the limbs are split by.
+Appendicular skeletal muscle mass (ASMM) is that figure less 6.7 % limb bone and
+skin, and the appendicular skeletal muscle index (ASMM / height²) is what the
+EWGSOP2 sarcopenia cut-offs are rated against. Kim et al. 2002 then predicts
+whole-body skeletal muscle from ASMM, which reaches the same quantity as
+Janssen's whole-body equation by a different route — the gap between the two is
+a check on whether the limb split holds up.
+
+From those it derives fat-free mass, total body water, skeletal muscle mass by
+both routes, appendicular lean mass, ASMM and ASMI, the fat-free and fat mass
+indices, and per segment the lean mass, the fat mass and the 100/20 kHz ratio.
+Ten findings are
 rated against published bands (WHO, ACE, EWGSOP2, Schutz, Kelly) and rolled up
 into a composite score — not a published index, and labelled as such wherever it
 is printed. The last finding rates how far the two calculations disagree rather
@@ -390,5 +429,6 @@ numbers that look real and are not.
 ## Keeping this current
 
 This file is part of the tool. When the frame layout, the setup sequence, the
-stored fields, the derived tiers, the report's reference ranges or the export
-behaviour change, change this file in the same commit.
+stored fields, the derived tiers, the segmental split's factors and bands, the
+report's reference ranges or the export behaviour change, change this file in
+the same commit.

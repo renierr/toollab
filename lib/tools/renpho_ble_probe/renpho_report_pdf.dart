@@ -626,12 +626,20 @@ pw.Widget _wholeBodyTable(
           '(${analysis.bodyWaterPercent.toStringAsFixed(1)} %)',
     ],
     [
+      l10n.renphoMetricSkeletalMuscleFromLimbs,
+      '${analysis.skeletalMuscleMassFromLimbsKg.toStringAsFixed(2)} kg',
+    ],
+    [
       l10n.renphoMetricAppendicularLeanMass,
       '${analysis.appendicularLeanMassKg.toStringAsFixed(2)} kg',
     ],
     [
-      l10n.renphoMetricAppendicularLeanIndex,
-      '${analysis.appendicularLeanMassIndex.toStringAsFixed(1)} kg/m²',
+      l10n.renphoMetricAppendicularMuscleMass,
+      '${analysis.appendicularSkeletalMuscleMassKg.toStringAsFixed(2)} kg',
+    ],
+    [
+      l10n.renphoMetricAppendicularMuscleIndex,
+      '${analysis.appendicularSkeletalMuscleIndex.toStringAsFixed(1)} kg/m²',
     ],
     [
       l10n.renphoMetricFatFreeMassIndex,

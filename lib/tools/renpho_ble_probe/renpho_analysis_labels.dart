@@ -9,7 +9,7 @@ extension RenphoFindingLabel on RenphoFindingKind {
     RenphoFindingKind.bodyFat => l10n.renphoMetricBodyFat,
     RenphoFindingKind.fatMassIndex => l10n.renphoMetricFatMassIndex,
     RenphoFindingKind.fatFreeMassIndex => l10n.renphoMetricFatFreeMassIndex,
-    RenphoFindingKind.muscleIndex => l10n.renphoMetricAppendicularLeanIndex,
+    RenphoFindingKind.muscleIndex => l10n.renphoMetricAppendicularMuscleIndex,
     RenphoFindingKind.visceralFat => l10n.renphoMetricVisceralFat,
     RenphoFindingKind.hydration => l10n.renphoMetricHydration,
     RenphoFindingKind.segmentBalance => l10n.renphoFindingSegmentBalance,

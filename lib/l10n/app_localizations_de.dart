@@ -8860,8 +8860,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Appendikuläre fettfreie Masse';
 
   @override
-  String get renphoMetricAppendicularLeanIndex =>
-      'Index der appendikulären Masse';
+  String get renphoMetricAppendicularMuscleMass =>
+      'Appendikuläre Skelettmuskelmasse';
+
+  @override
+  String get renphoMetricAppendicularMuscleIndex =>
+      'Appendikulärer Skelettmuskelindex';
+
+  @override
+  String get renphoMetricSkeletalMuscleFromLimbs =>
+      'Skelettmuskelmasse (aus Extremitäten)';
 
   @override
   String get renphoMetricFatFreeMassIndex => 'Fettfreie-Masse-Index';

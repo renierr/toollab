@@ -8796,8 +8796,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renphoMetricAppendicularLeanMass => 'Appendicular lean mass';
 
   @override
-  String get renphoMetricAppendicularLeanIndex =>
-      'Appendicular lean mass index';
+  String get renphoMetricAppendicularMuscleMass =>
+      'Appendicular skeletal muscle mass';
+
+  @override
+  String get renphoMetricAppendicularMuscleIndex =>
+      'Appendicular skeletal muscle index';
+
+  @override
+  String get renphoMetricSkeletalMuscleFromLimbs =>
+      'Skeletal muscle mass (from limbs)';
 
   @override
   String get renphoMetricFatFreeMassIndex => 'Fat-free mass index';

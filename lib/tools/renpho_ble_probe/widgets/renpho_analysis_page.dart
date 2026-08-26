@@ -108,14 +108,24 @@ class RenphoAnalysisPage extends StatelessWidget {
                             '(${analysis.bodyWaterPercent.toStringAsFixed(1)} %)',
                       ),
                       InfoRow(
+                        label: l10n.renphoMetricSkeletalMuscleFromLimbs,
+                        value:
+                            '${analysis.skeletalMuscleMassFromLimbsKg.toStringAsFixed(2)} kg',
+                      ),
+                      InfoRow(
                         label: l10n.renphoMetricAppendicularLeanMass,
                         value:
                             '${analysis.appendicularLeanMassKg.toStringAsFixed(2)} kg',
                       ),
                       InfoRow(
-                        label: l10n.renphoMetricAppendicularLeanIndex,
+                        label: l10n.renphoMetricAppendicularMuscleMass,
                         value:
-                            '${analysis.appendicularLeanMassIndex.toStringAsFixed(1)} kg/m²',
+                            '${analysis.appendicularSkeletalMuscleMassKg.toStringAsFixed(2)} kg',
+                      ),
+                      InfoRow(
+                        label: l10n.renphoMetricAppendicularMuscleIndex,
+                        value:
+                            '${analysis.appendicularSkeletalMuscleIndex.toStringAsFixed(1)} kg/m²',
                       ),
                       InfoRow(
                         label: l10n.renphoMetricFatFreeMassIndex,
