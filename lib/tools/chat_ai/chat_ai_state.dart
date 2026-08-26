@@ -8,12 +8,13 @@ import 'package:google_mlkit_genai_prompt/src/prompt.dart';
 import 'package:tool_lab/helpers/text_analysis_helper.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'chat_ai_db_helper.dart';
+import 'chat_models.dart';
 import 'config.dart';
 
 class ChatAiState extends ChangeNotifier {
-  List<Map<String, dynamic>> _sessions = [];
+  List<ChatSession> _sessions = [];
   int? _currentSessionId;
-  List<Map<String, dynamic>> _messages = [];
+  List<ChatMessage> _messages = [];
   FeatureStatus _featureStatus = FeatureStatus.unavailable;
   bool _isInitializing = false;
   bool _isGenerating = false;
@@ -33,9 +34,9 @@ class ChatAiState extends ChangeNotifier {
   String? _attachedFileContent;
   String? _modelError;
 
-  List<Map<String, dynamic>> get sessions => _sessions;
+  List<ChatSession> get sessions => _sessions;
   int? get currentSessionId => _currentSessionId;
-  List<Map<String, dynamic>> get messages => _messages;
+  List<ChatMessage> get messages => _messages;
   FeatureStatus get featureStatus => _featureStatus;
   bool get isInitializing => _isInitializing;
   bool get isGenerating => _isGenerating;
@@ -229,7 +230,7 @@ class ChatAiState extends ChangeNotifier {
     try {
       _sessions = await ChatAiDbHelper.instance.getSessions();
       if (_sessions.isNotEmpty && _currentSessionId == null) {
-        await selectSession(_sessions.first['id'] as int);
+        await selectSession(_sessions.first.id);
       } else if (_sessions.isEmpty) {
         _currentSessionId = null;
         _messages = [];
@@ -313,8 +314,10 @@ class ChatAiState extends ChangeNotifier {
       notifyListeners();
 
       // Update session title if default
-      final currentSession = _sessions.firstWhere((s) => s['id'] == sessionId);
-      if (currentSession['title'].startsWith('Chat ')) {
+      final currentSession = _sessions
+          .where((s) => s.id == sessionId)
+          .firstOrNull;
+      if (currentSession != null && currentSession.title.startsWith('Chat ')) {
         final titleSource = text.isNotEmpty ? text : (fileNameToSend ?? 'Chat');
         final newTitle = titleSource.length > 25
             ? '${titleSource.substring(0, 22)}...'
@@ -389,18 +392,17 @@ class ChatAiState extends ChangeNotifier {
         ? _messages.sublist(_messages.length - 10)
         : _messages;
     for (final msg in history) {
-      final roleName = msg['role'] == 'user' ? 'User' : 'Model';
-      buffer.write('$roleName: ');
-      if (msg['file_name'] != null && msg['file_content'] != null) {
-        final content = msg['file_content'] as String;
+      buffer.write('${msg.isUser ? 'User' : 'Model'}: ');
+      if (msg.hasAttachedFile) {
+        final content = msg.fileContent!;
         final truncatedContent = content.length > 2500
             ? '${content.substring(0, 2500)}... [Truncated]'
             : content;
-        buffer.writeln('[Attached File: ${msg['file_name']}]');
+        buffer.writeln('[Attached File: ${msg.fileName}]');
         buffer.writeln(truncatedContent);
         buffer.writeln('-----');
       }
-      buffer.writeln(msg['content']);
+      buffer.writeln(msg.content);
     }
     buffer.writeln('Model:');
     return buffer.toString();

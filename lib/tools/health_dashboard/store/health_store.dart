@@ -224,12 +224,27 @@ class HealthTypeState {
   final bool historyDone;
   final int count;
 
+  /// Window an interrupted full import was covering, null when none is pending.
+  final int? rangeStart;
+  final int? rangeEnd;
+
   const HealthTypeState({
     required this.type,
     required this.enabled,
     required this.historyDone,
     required this.count,
+    this.rangeStart,
+    this.rangeEnd,
   });
+
+  factory HealthTypeState.fromMap(Map<String, Object?> map) => HealthTypeState(
+    type: map['type'] as String? ?? '',
+    enabled: (map['enabled'] as int? ?? 0) == 1,
+    historyDone: (map['history_done'] as int? ?? 0) == 1,
+    count: (map['n'] as num?)?.toInt() ?? 0,
+    rangeStart: (map['range_start'] as num?)?.toInt(),
+    rangeEnd: (map['range_end'] as num?)?.toInt(),
+  );
 }
 
 /// What a [HealthStore.pruneUnused] pass removed.
@@ -1727,16 +1742,7 @@ class HealthStore {
   Future<List<HealthTypeState>> types() async {
     final db = await _db();
     final rows = await db.query(HealthSchema.type, orderBy: 'type ASC');
-    return rows
-        .map(
-          (row) => HealthTypeState(
-            type: row['type'] as String,
-            enabled: (row['enabled'] as int) == 1,
-            historyDone: (row['history_done'] as int) == 1,
-            count: (row['n'] as num?)?.toInt() ?? 0,
-          ),
-        )
-        .toList();
+    return rows.map(HealthTypeState.fromMap).toList();
   }
 
   Future<Set<String>> enabledTypes() async {
@@ -1797,7 +1803,7 @@ class HealthStore {
     );
   }
 
-  Future<Map<String, Object?>?> typeRow(String type) async {
+  Future<HealthTypeState?> typeRow(String type) async {
     final db = await _db();
     final rows = await db.query(
       HealthSchema.type,
@@ -1805,7 +1811,7 @@ class HealthStore {
       whereArgs: [type],
       limit: 1,
     );
-    return rows.isEmpty ? null : rows.single;
+    return rows.isEmpty ? null : HealthTypeState.fromMap(rows.single);
   }
 
   /// Upserts a discovered writer for a type. An already-known pair keeps its

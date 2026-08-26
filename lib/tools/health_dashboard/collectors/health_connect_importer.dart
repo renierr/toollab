@@ -72,17 +72,18 @@ class HealthConnectImporter {
       final typeId = HealthConnectTypes.idOf(readable);
       if (!enabled.contains(typeId)) continue;
       final row = await store.typeRow(typeId);
-      final historyDone = (row?['history_done'] as int? ?? 0) == 1;
-      if (historyDone && !restart) continue;
+      if ((row?.historyDone ?? false) && !restart) continue;
       attempted++;
 
-      final rangeStart = restart || row?['range_start'] == null
+      final pendingStart = restart ? null : row?.rangeStart;
+      final pendingEnd = restart ? null : row?.rangeEnd;
+      final rangeStart = pendingStart == null
           ? start
-          : DateTime.fromMillisecondsSinceEpoch(row!['range_start'] as int);
-      final rangeEnd = restart || row?['range_end'] == null
+          : DateTime.fromMillisecondsSinceEpoch(pendingStart);
+      final rangeEnd = pendingEnd == null
           ? now
-          : DateTime.fromMillisecondsSinceEpoch(row!['range_end'] as int);
-      var imported = restart ? 0 : (row?['n'] as num?)?.toInt() ?? 0;
+          : DateTime.fromMillisecondsSinceEpoch(pendingEnd);
+      var imported = restart ? 0 : (row?.count ?? 0);
 
       // Health Connect only understands dataOrigins as an allowlist, and the
       // list can only name writers discovery attributed to this type. Since

@@ -1,16 +1,16 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:tool_lab/widgets/markdown_view.dart';
+import '../chat_models.dart';
 import '../config.dart';
 
 class ChatMessageBubble extends StatelessWidget {
-  final Map<String, dynamic> message;
+  final ChatMessage message;
 
   const ChatMessageBubble({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
-    final isUser = message['role'] == 'user';
+    final isUser = message.isUser;
     final theme = Theme.of(context);
     final accentColor = ChatAiTool.config.accentColor;
 
@@ -50,17 +50,14 @@ class ChatMessageBubble extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4.0),
-              if (message['image_data'] != null) ...[
+              if (message.imageData != null) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12.0),
-                  child: Image.memory(
-                    message['image_data'] as Uint8List,
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.memory(message.imageData!, fit: BoxFit.cover),
                 ),
                 const SizedBox(height: 8.0),
               ],
-              if (message['file_name'] != null) ...[
+              if (message.fileName != null) ...[
                 Container(
                   padding: const EdgeInsets.all(10.0),
                   decoration: BoxDecoration(
@@ -90,7 +87,7 @@ class ChatMessageBubble extends StatelessWidget {
                       const SizedBox(width: 8.0),
                       Flexible(
                         child: Text(
-                          message['file_name'] as String,
+                          message.fileName!,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: isUser
                                 ? theme.colorScheme.onPrimaryContainer
@@ -107,14 +104,14 @@ class ChatMessageBubble extends StatelessWidget {
               ],
               if (isUser)
                 SelectableText(
-                  message['content'] as String,
+                  message.content,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onPrimaryContainer,
                   ),
                 )
               else
                 MarkdownView(
-                  data: message['content'] as String,
+                  data: message.content,
                   selectable: true,
                   accentColor: accentColor,
                 ),

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'chat_models.dart';
 import 'config.dart';
 
 class ChatAiDbHelper {
@@ -64,9 +65,10 @@ class ChatAiDbHelper {
   }
 
   /// Gets all chat sessions sorted by updated_at descending.
-  Future<List<Map<String, dynamic>>> getSessions() async {
+  Future<List<ChatSession>> getSessions() async {
     final db = await _getDb();
-    return await db.query(sessionTable, orderBy: 'updated_at DESC');
+    final rows = await db.query(sessionTable, orderBy: 'updated_at DESC');
+    return rows.map(ChatSession.fromMap).toList();
   }
 
   /// Creates a new chat session.
@@ -118,14 +120,15 @@ class ChatAiDbHelper {
   }
 
   /// Gets all messages in a chat session.
-  Future<List<Map<String, dynamic>>> getMessages(int sessionId) async {
+  Future<List<ChatMessage>> getMessages(int sessionId) async {
     final db = await _getDb();
-    return await db.query(
+    final rows = await db.query(
       messageTable,
       where: 'session_id = ?',
       whereArgs: [sessionId],
       orderBy: 'created_at ASC',
     );
+    return rows.map(ChatMessage.fromMap).toList();
   }
 
   /// Inserts a message into a chat session.

@@ -208,9 +208,15 @@ class GroceryListDbHelper {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getHistory() async {
+  /// Previously used item names, most frequent first.
+  Future<List<String>> getHistory() async {
     final db = await _getDb();
-    return await db.query(historyTableName, orderBy: 'count DESC');
+    final rows = await db.query(
+      historyTableName,
+      columns: ['name'],
+      orderBy: 'count DESC',
+    );
+    return [for (final row in rows) row['name'] as String];
   }
 
   Future<void> addToHistory(String name) async {

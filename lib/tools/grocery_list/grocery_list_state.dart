@@ -20,8 +20,7 @@ class GroceryListState extends ChangeNotifier {
     notifyListeners();
     try {
       _items = await GroceryListDbHelper.instance.getActiveItems();
-      final historyRows = await GroceryListDbHelper.instance.getHistory();
-      _history = historyRows.map((r) => r['name'] as String).toList();
+      _history = await GroceryListDbHelper.instance.getHistory();
     } catch (e) {
       errorLog('[GroceryListState] Failed to load grocery list items: $e');
     } finally {

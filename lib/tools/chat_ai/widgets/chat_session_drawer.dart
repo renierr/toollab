@@ -46,14 +46,13 @@ class ChatSessionDrawer extends StatelessWidget {
                 itemCount: state.sessions.length,
                 itemBuilder: (context, index) {
                   final session = state.sessions[index];
-                  final sessionId = session['id'] as int;
-                  final isSelected = sessionId == state.currentSessionId;
+                  final isSelected = session.id == state.currentSessionId;
 
                   return ListTile(
                     selected: isSelected,
                     leading: const Icon(Icons.chat_bubble_outline),
                     title: Text(
-                      session['title'] as String,
+                      session.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -91,13 +90,13 @@ class ChatSessionDrawer extends StatelessWidget {
                               );
 
                               if (confirm == true) {
-                                await state.deleteSession(sessionId);
+                                await state.deleteSession(session.id);
                               }
                             },
                           )
                         : null,
                     onTap: () {
-                      state.selectSession(sessionId);
+                      state.selectSession(session.id);
                       Navigator.of(context).pop(); // Close drawer
                     },
                   );
