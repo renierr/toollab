@@ -15761,6 +15761,60 @@ abstract class AppLocalizations {
   /// **'Appendicular lean mass'**
   String get renphoMetricAppendicularLeanMass;
 
+  /// No description provided for @renphoAnalysisFluidModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dual-frequency fluid model (20/100 kHz)'**
+  String get renphoAnalysisFluidModel;
+
+  /// No description provided for @renphoAnalysisFluidModelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Read straight from both measured frequencies: the 20/100 kHz pair fixes a Cole dispersion, its endpoints R₀ and R∞ feed the Hanai mixture model, and fat-free mass follows from the 73.2 % hydration of lean tissue instead of a population regression. The characteristic frequency and dispersion exponent are assumed, not measured — R₀ and extracellular water barely move with them, intracellular water does. The extracellular ratio is shown but not rated: |Z| standing in for resistance biases its level a few points high, so its trend carries more than its value.'**
+  String get renphoAnalysisFluidModelHint;
+
+  /// No description provided for @renphoAnalysisDualFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'20/100 kHz direct'**
+  String get renphoAnalysisDualFrequency;
+
+  /// No description provided for @renphoAnalysisSingleFrequency.
+  ///
+  /// In en, this message translates to:
+  /// **'50 kHz reconstructed'**
+  String get renphoAnalysisSingleFrequency;
+
+  /// No description provided for @renphoMetricExtracellularWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracellular water (ECW)'**
+  String get renphoMetricExtracellularWater;
+
+  /// No description provided for @renphoMetricIntracellularWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Intracellular water (ICW)'**
+  String get renphoMetricIntracellularWater;
+
+  /// No description provided for @renphoMetricEcwRatio.
+  ///
+  /// In en, this message translates to:
+  /// **'ECW / TBW'**
+  String get renphoMetricEcwRatio;
+
+  /// No description provided for @renphoMetricResistanceZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Resistance at 0 Hz (R₀)'**
+  String get renphoMetricResistanceZero;
+
+  /// No description provided for @renphoMetricResistanceInfinity.
+  ///
+  /// In en, this message translates to:
+  /// **'Resistance at ∞ (R∞)'**
+  String get renphoMetricResistanceInfinity;
+
   /// No description provided for @renphoMetricAppendicularMuscleMass.
   ///
   /// In en, this message translates to:

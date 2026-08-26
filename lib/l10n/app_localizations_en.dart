@@ -8796,6 +8796,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renphoMetricAppendicularLeanMass => 'Appendicular lean mass';
 
   @override
+  String get renphoAnalysisFluidModel =>
+      'Dual-frequency fluid model (20/100 kHz)';
+
+  @override
+  String get renphoAnalysisFluidModelHint =>
+      'Read straight from both measured frequencies: the 20/100 kHz pair fixes a Cole dispersion, its endpoints R₀ and R∞ feed the Hanai mixture model, and fat-free mass follows from the 73.2 % hydration of lean tissue instead of a population regression. The characteristic frequency and dispersion exponent are assumed, not measured — R₀ and extracellular water barely move with them, intracellular water does. The extracellular ratio is shown but not rated: |Z| standing in for resistance biases its level a few points high, so its trend carries more than its value.';
+
+  @override
+  String get renphoAnalysisDualFrequency => '20/100 kHz direct';
+
+  @override
+  String get renphoAnalysisSingleFrequency => '50 kHz reconstructed';
+
+  @override
+  String get renphoMetricExtracellularWater => 'Extracellular water (ECW)';
+
+  @override
+  String get renphoMetricIntracellularWater => 'Intracellular water (ICW)';
+
+  @override
+  String get renphoMetricEcwRatio => 'ECW / TBW';
+
+  @override
+  String get renphoMetricResistanceZero => 'Resistance at 0 Hz (R₀)';
+
+  @override
+  String get renphoMetricResistanceInfinity => 'Resistance at ∞ (R∞)';
+
+  @override
   String get renphoMetricAppendicularMuscleMass =>
       'Appendicular skeletal muscle mass';
 

@@ -12,6 +12,7 @@ import '../renpho_measurement.dart';
 import 'renpho_analysis_segment_table.dart';
 import 'renpho_comparison_table.dart';
 import 'renpho_finding_row.dart';
+import 'renpho_fluid_model_card.dart';
 
 /// The scan rebuilt from its raw impedances with published equations, and the
 /// places where that reading and the scale's own disagree.
@@ -140,6 +141,10 @@ class RenphoAnalysisPage extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (analysis.fluidModel case final fluid?) ...[
+                  const SizedBox(height: 12),
+                  RenphoFluidModelCard(analysis: analysis, model: fluid),
+                ],
                 const SizedBox(height: 12),
                 InfoCard(
                   icon: Icons.graphic_eq,

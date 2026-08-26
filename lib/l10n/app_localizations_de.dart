@@ -8860,6 +8860,35 @@ class AppLocalizationsDe extends AppLocalizations {
       'Appendikuläre fettfreie Masse';
 
   @override
+  String get renphoAnalysisFluidModel =>
+      'Zwei-Frequenz-Flüssigkeitsmodell (20/100 kHz)';
+
+  @override
+  String get renphoAnalysisFluidModelHint =>
+      'Direkt aus beiden gemessenen Frequenzen gelesen: Das Paar 20/100 kHz legt eine Cole-Dispersion fest, deren Endpunkte R₀ und R∞ speisen das Hanai-Mischungsmodell, und die fettfreie Masse folgt aus der Hydratation der fettfreien Masse von 73,2 % statt aus einer Populationsregression. Charakteristische Frequenz und Dispersionsexponent sind angenommen, nicht gemessen — R₀ und extrazelluläres Wasser reagieren kaum darauf, intrazelluläres Wasser schon. Das extrazelluläre Verhältnis wird gezeigt, aber nicht bewertet: Da der Betrag |Z| den Widerstand vertritt, liegt sein Niveau einige Punkte zu hoch, sein Verlauf sagt also mehr als sein Wert.';
+
+  @override
+  String get renphoAnalysisDualFrequency => '20/100 kHz direkt';
+
+  @override
+  String get renphoAnalysisSingleFrequency => '50 kHz rekonstruiert';
+
+  @override
+  String get renphoMetricExtracellularWater => 'Extrazelluläres Wasser (ECW)';
+
+  @override
+  String get renphoMetricIntracellularWater => 'Intrazelluläres Wasser (ICW)';
+
+  @override
+  String get renphoMetricEcwRatio => 'ECW / TBW';
+
+  @override
+  String get renphoMetricResistanceZero => 'Widerstand bei 0 Hz (R₀)';
+
+  @override
+  String get renphoMetricResistanceInfinity => 'Widerstand bei ∞ (R∞)';
+
+  @override
   String get renphoMetricAppendicularMuscleMass =>
       'Appendikuläre Skelettmuskelmasse';
 

@@ -40,6 +40,7 @@ to Health Connect. No Renpho cloud account is involved at any point.
 | `renpho_body_image.dart` | Renders that figure off-screen to a PNG for the report. |
 | `renpho_assessment.dart` | Rates a measurement against published reference ranges. Pure logic, no strings. |
 | `renpho_independent_analysis.dart` | `RenphoIndependentAnalysis` — the second opinion: published whole-body equations, the segmental lean and fat split, ASMM/ASMI and the rated findings. |
+| `renpho_fluid_model.dart` | `RenphoFluidModel` — the dual-frequency route: Cole endpoints from the 20/100 kHz pair, then ECW/ICW/TBW and composition by hydration. No Flutter imports. |
 | `renpho_report_pdf.dart` | Builds the one-page PDF. |
 | `widgets/` | All presentation. Only the routed page uses `ToolLayout`; pushed sub-pages use a plain `Scaffold`, because `ToolBackButton` resolves a GoRouter state that a `MaterialPageRoute` does not have. |
 
@@ -345,6 +346,40 @@ EWGSOP2 sarcopenia cut-offs are rated against. Kim et al. 2002 then predicts
 whole-body skeletal muscle from ASMM, which reaches the same quantity as
 Janssen's whole-body equation by a different route — the gap between the two is
 a check on whether the limb split holds up.
+
+### Dual-frequency fluid model
+
+`RenphoFluidModel` is a second, independent route that skips the 50 kHz
+reconstruction and the population regressions entirely. It reads the same scan
+as a dual-frequency fluid measurement, and the analysis page and the report show
+it side by side with the 50 kHz numbers.
+
+1. **Cole endpoints.** With the dispersion shape fixed — characteristic
+   frequency 50 kHz, exponent 0.65 — `Z(f) = R∞ + (R₀ − R∞)·G(f)` has two
+   unknowns and two measured magnitudes. Eliminating R∞ leaves one equation in
+   `D = R₀ − R∞`, and requiring `R∞ > 0` caps `D` at `sqrt(Q/P)`, where the
+   residual is negative while it is positive at `D → 0`. That bracket is
+   guaranteed, so the solve is a bisection and cannot wander off the physical
+   root. `magnitudeAt()` feeds the result back and returns the two inputs.
+2. **Hanai mixture model.** `ECW = k·(H²·√W / R₀)^(2/3)` with k = 0.306 male /
+   0.316 female, then `(1 + x)^2.5 = (R₀/R∞)·(1 + κx)` solved for the
+   intra/extracellular volume ratio x, with κ = 3.82 male / 3.40 female
+   (De Lorenzo 1997). TBW is the sum.
+3. **Composition by hydration.** `FFM = TBW / 0.732`, fat is the remainder. No
+   regression fitted on a population is involved at any step.
+
+Two assumptions carry it, both named as constants in the file. The Cole shape is
+assumed rather than fitted, because two magnitudes cannot resolve four Cole
+parameters; R₀ and ECW barely move when the characteristic frequency and
+exponent are varied across their literature range, R∞ and ICW do. And the same
+magnitude-for-resistance substitution applies as everywhere else here, which
+biases the extracellular ratio a few points high — so ECW/TBW is displayed with
+its 0.36 – 0.40 reference but deliberately **not** rated and **not** part of the
+composite score. Read its trend, not its level.
+
+Checked against 151 real scans of one profile: TBW tracks Kushner-Schoeller to
+within ±0.5 L (mean +0.07 L) and fat-free mass runs 1.5 ± 0.3 kg above Sun —
+two independent equations the model never sees.
 
 From those it derives fat-free mass, total body water, skeletal muscle mass by
 both routes, appendicular lean mass, ASMM and ASMI, the fat-free and fat mass

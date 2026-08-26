@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'renpho_assessment.dart';
 import 'renpho_body_metrics.dart';
+import 'renpho_fluid_model.dart';
 
 /// A second opinion on one scan, computed from the raw segment impedances
 /// alone.
@@ -142,6 +143,20 @@ class RenphoIndependentAnalysis {
       (derived.wholeBodyImpedance100 - derived.wholeBodyImpedance20) * 30 / 80;
 
   double get _index => _heightCm * _heightCm / wholeBodyImpedance50;
+
+  /// The same scan read as a dual-frequency measurement instead of a
+  /// reconstructed single-frequency one. Null when the pair cannot carry the
+  /// model. Everything else on this class stays on the 50 kHz route, so the
+  /// two can be printed side by side.
+  RenphoFluidModel? get fluidModel => !usable
+      ? null
+      : RenphoFluidModel.solve(
+          impedance20: derived.wholeBodyImpedance20,
+          impedance100: derived.wholeBodyImpedance100,
+          heightCm: _heightCm,
+          weightKg: _weight,
+          male: _male,
+        );
 
   /// Sun et al. 2003 — NHANES III, referenced against a four-compartment model.
   double get fatFreeMassKg {
@@ -613,6 +628,8 @@ const renphoReferenceList = <String>[
   'Kushner R.F., Schoeller D.A., Am J Clin Nutr 1986 — total body water from bioimpedance',
   'Janssen I. et al., J Appl Physiol 2000 — whole-body skeletal muscle from bioimpedance',
   'Kim J. et al., Am J Clin Nutr 2002 — skeletal muscle from appendicular lean soft tissue',
+  'Cole K.S., J Gen Physiol 1940 — the dispersion the 20/100 kHz pair is resolved against',
+  'De Lorenzo A. et al., J Appl Physiol 1997 — Hanai mixture model for extra- and intracellular water',
   'Cruz-Jentoft A.J. et al., Age Ageing 2019 (EWGSOP2) — sarcopenia cut-offs for the muscle index',
   'Schutz Y. et al., Int J Obes 2002 — fat-free mass index reference bands',
   'Kelly T.L. et al., PLoS One 2009 — fat mass index bands and DXA regional fat distribution (NHANES)',

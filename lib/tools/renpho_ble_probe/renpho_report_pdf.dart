@@ -10,6 +10,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'renpho_analysis_labels.dart';
 import 'renpho_assessment.dart';
 import 'renpho_body_metrics.dart';
+import 'renpho_fluid_model.dart';
 import 'renpho_independent_analysis.dart';
 import 'renpho_measurement.dart';
 import 'renpho_segment_labels.dart';
@@ -146,6 +147,14 @@ Future<Uint8List> buildRenphoReportPdf({
           ),
           pw.SizedBox(height: 5),
           _note(l10n.renphoAnalysisFrequencyHint),
+          if (analysis.fluidModel case final fluid?) ...[
+            pw.SizedBox(height: 12),
+            _sectionTitle(l10n.renphoAnalysisFluidModel),
+            pw.SizedBox(height: 6),
+            _fluidModelTable(analysis, fluid, l10n),
+            pw.SizedBox(height: 5),
+            _note(l10n.renphoAnalysisFluidModelHint),
+          ],
           pw.SizedBox(height: 12),
           _sectionTitle(l10n.renphoAnalysisFindings),
           pw.SizedBox(height: 6),
@@ -648,6 +657,80 @@ pw.Widget _wholeBodyTable(
     [
       l10n.renphoMetricFatMassIndex,
       '${analysis.fatMassIndex.toStringAsFixed(1)} kg/m²',
+    ],
+  ],
+);
+
+pw.Widget _fluidModelTable(
+  RenphoIndependentAnalysis analysis,
+  RenphoFluidModel fluid,
+  AppLocalizations l10n,
+) => _table(
+  widths: const [3.4, 2.4, 2.4, 2.4],
+  header: [
+    l10n.renphoReportMetric,
+    l10n.renphoAnalysisDualFrequency,
+    l10n.renphoAnalysisSingleFrequency,
+    l10n.renphoAnalysisDeltaColumn,
+  ],
+  rows: [
+    for (final row in <(String, double, double, String)>[
+      (
+        l10n.renphoMetricTotalBodyWater,
+        fluid.totalBodyWaterL,
+        analysis.totalBodyWaterL,
+        'L',
+      ),
+      (
+        l10n.renphoMetricFatFreeMass,
+        fluid.fatFreeMassKg,
+        analysis.fatFreeMassKg,
+        'kg',
+      ),
+      (l10n.renphoMetricFatMass, fluid.fatMassKg, analysis.fatMassKg, 'kg'),
+      (
+        l10n.renphoMetricBodyFat,
+        fluid.bodyFatPercent,
+        analysis.bodyFatPercent,
+        '%',
+      ),
+    ])
+      [
+        row.$1,
+        '${row.$2.toStringAsFixed(2)} ${row.$4}',
+        '${row.$3.toStringAsFixed(2)} ${row.$4}',
+        '${row.$2 - row.$3 >= 0 ? '+' : ''}'
+            '${(row.$2 - row.$3).toStringAsFixed(2)} ${row.$4}',
+      ],
+    [
+      l10n.renphoMetricExtracellularWater,
+      '${fluid.extracellularWaterL.toStringAsFixed(2)} L',
+      '',
+      '',
+    ],
+    [
+      l10n.renphoMetricIntracellularWater,
+      '${fluid.intracellularWaterL.toStringAsFixed(2)} L',
+      '',
+      '',
+    ],
+    [
+      l10n.renphoMetricEcwRatio,
+      fluid.extracellularRatio.toStringAsFixed(3),
+      '0.36 – 0.40',
+      '',
+    ],
+    [
+      l10n.renphoMetricResistanceZero,
+      '${fluid.resistanceAtZeroHz.toStringAsFixed(1)} Ω',
+      '',
+      '',
+    ],
+    [
+      l10n.renphoMetricResistanceInfinity,
+      '${fluid.resistanceAtInfinity.toStringAsFixed(1)} Ω',
+      '',
+      '',
     ],
   ],
 );
