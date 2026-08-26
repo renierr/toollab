@@ -16,6 +16,19 @@ class NoteCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback? onAddFollowUp;
+  final VoidCallback? onAttach;
+  final VoidCallback? onDetach;
+  final VoidCallback? onExportThreadPdf;
+
+  /// Number of follow-ups below this note; shows a badge when > 0.
+  final int followUpCount;
+  final bool followUpsExpanded;
+  final VoidCallback? onToggleFollowUps;
+
+  /// Titles of the parent chain, rendered when the card is shown detached
+  /// from its thread (search results).
+  final List<String> breadcrumb;
 
   const NoteCard({
     super.key,
@@ -23,6 +36,14 @@ class NoteCard extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    this.onAddFollowUp,
+    this.onAttach,
+    this.onDetach,
+    this.onExportThreadPdf,
+    this.followUpCount = 0,
+    this.followUpsExpanded = false,
+    this.onToggleFollowUps,
+    this.breadcrumb = const [],
   });
 
   String _getTitle(String content, {required String untitledFallback}) {
@@ -145,6 +166,30 @@ class NoteCard extends StatelessWidget {
                     ? MainAxisSize.max
                     : MainAxisSize.min,
                 children: [
+                  if (breadcrumb.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.subdirectory_arrow_right,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              breadcrumb.join(' › '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -172,9 +217,58 @@ class NoteCard extends StatelessWidget {
                             _exportPdf(context);
                           } else if (value == 'share') {
                             _shareNote(context);
+                          } else if (value == 'follow_up') {
+                            onAddFollowUp?.call();
+                          } else if (value == 'attach') {
+                            onAttach?.call();
+                          } else if (value == 'detach') {
+                            onDetach?.call();
+                          } else if (value == 'export_thread_pdf') {
+                            onExportThreadPdf?.call();
                           }
                         },
                         itemBuilder: (context) => [
+                          if (onAddFollowUp != null)
+                            PopupMenuItem(
+                              value: 'follow_up',
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.add_comment_outlined,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.notesAddFollowUp),
+                                ],
+                              ),
+                            ),
+                          if (onAttach != null &&
+                              note['parent_short_id'] == null)
+                            PopupMenuItem(
+                              value: 'attach',
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.account_tree_outlined,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.notesAttachToNote),
+                                ],
+                              ),
+                            ),
+                          if (onDetach != null &&
+                              note['parent_short_id'] != null)
+                            PopupMenuItem(
+                              value: 'detach',
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.link_off, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.notesDetachFromParent),
+                                ],
+                              ),
+                            ),
                           PopupMenuItem(
                             value: 'edit',
                             child: Row(
@@ -221,6 +315,20 @@ class NoteCard extends StatelessWidget {
                               ],
                             ),
                           ),
+                          if (onExportThreadPdf != null && followUpCount > 0)
+                            PopupMenuItem(
+                              value: 'export_thread_pdf',
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.picture_as_pdf_outlined,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(l10n.notesExportThreadPdf),
+                                ],
+                              ),
+                            ),
                           PopupMenuItem(
                             value: 'delete',
                             child: Row(
@@ -276,6 +384,13 @@ class NoteCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (followUpCount > 0)
+                        _FollowUpBadge(
+                          count: followUpCount,
+                          expanded: followUpsExpanded,
+                          onTap: onToggleFollowUps,
+                        ),
+                      const SizedBox(width: 8),
                       if ((note['synced'] as int? ?? 0) == 1)
                         Icon(
                           Icons.cloud_done_outlined,
@@ -297,6 +412,62 @@ class NoteCard extends StatelessWidget {
                 ],
               );
             },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FollowUpBadge extends StatelessWidget {
+  final int count;
+  final bool expanded;
+  final VoidCallback? onTap;
+
+  const _FollowUpBadge({
+    required this.count,
+    required this.expanded,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    return Tooltip(
+      message: l10n.notesFollowUpCount(count),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: AppTheme.accentTeal.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.account_tree_outlined,
+                size: 14,
+                color: AppTheme.accentTeal,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$count',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: AppTheme.accentTeal,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (onTap != null)
+                Icon(
+                  expanded ? Icons.expand_less : Icons.expand_more,
+                  size: 14,
+                  color: AppTheme.accentTeal,
+                ),
+            ],
           ),
         ),
       ),

@@ -19,7 +19,7 @@ class NotesDbHelper {
     );
     try {
       await _cachedDb!.migrate(
-        currentVersion: 2,
+        currentVersion: 3,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -42,6 +42,17 @@ class NotesDbHelper {
                 PRIMARY KEY (note_id, tag)
               )
             ''');
+          }
+          if (oldVersion < 3) {
+            // Threading key is short_id, not the local row id: a child pulled
+            // before its parent still resolves once the parent arrives.
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(tableName)} ADD COLUMN parent_short_id TEXT',
+            );
+            await txn.execute(
+              'CREATE INDEX IF NOT EXISTS idx_${txn.nameTable(tableName)}_parent '
+              'ON ${txn.nameTable(tableName)}(parent_short_id)',
+            );
           }
         },
       );
@@ -142,6 +153,7 @@ class NotesDbHelper {
     int? id,
     String? shortId,
     List<String>? tags,
+    String? parentShortId,
   }) async {
     final db = await _getDb();
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -178,6 +190,7 @@ class NotesDbHelper {
         'updated_at': now,
         'deleted': 0,
         'synced': 0,
+        'parent_short_id': parentShortId,
       });
 
       if (tags != null && tags.isNotEmpty) {
@@ -211,6 +224,13 @@ class NotesDbHelper {
     if (existing != null) {
       final noteId = existing['id'] as int;
       await db.delete(tagTableName, where: 'note_id = ?', whereArgs: [noteId]);
+      // Never leave dangling children behind: lift them to the removed parent.
+      await db.update(
+        tableName,
+        {'parent_short_id': existing['parent_short_id'], 'synced': 0},
+        where: 'parent_short_id = ?',
+        whereArgs: [shortId],
+      );
     }
     await db.delete(tableName, where: 'short_id = ?', whereArgs: [shortId]);
   }
@@ -234,6 +254,7 @@ class NotesDbHelper {
     required int updatedAt,
     required bool deleted,
     List<String>? tags,
+    String? parentShortId,
   }) async {
     final db = await _getDb();
     if (deleted) {
@@ -251,6 +272,7 @@ class NotesDbHelper {
           'updated_at': updatedAt,
           'deleted': 0,
           'synced': 1,
+          'parent_short_id': parentShortId,
         },
         where: 'short_id = ?',
         whereArgs: [shortId],
@@ -266,11 +288,116 @@ class NotesDbHelper {
         'updated_at': updatedAt,
         'deleted': 0,
         'synced': 1,
+        'parent_short_id': parentShortId,
       });
       if (tags != null && tags.isNotEmpty) {
         await setTagsForNote(newId, tags);
       }
     }
+  }
+
+  // ---- Threading ----
+
+  /// short_id → parent_short_id for every active note.
+  Future<Map<String, String?>> getParentLinks() async {
+    final db = await _getDb();
+    final rows = await db.query(
+      tableName,
+      columns: ['short_id', 'parent_short_id'],
+      where: 'deleted = 0',
+    );
+    return {
+      for (final r in rows)
+        r['short_id'] as String: r['parent_short_id'] as String?,
+    };
+  }
+
+  /// Direct children of a note, oldest first.
+  Future<List<Map<String, dynamic>>> getChildren(String parentShortId) async {
+    final db = await _getDb();
+    return await db.query(
+      tableName,
+      where: 'deleted = 0 AND parent_short_id = ?',
+      whereArgs: [parentShortId],
+      orderBy: 'created_at ASC',
+    );
+  }
+
+  /// All descendant short IDs of [shortId], depth first.
+  Future<List<String>> getDescendantShortIds(String shortId) async {
+    final links = await getParentLinks();
+    final childrenOf = <String, List<String>>{};
+    links.forEach((child, parent) {
+      if (parent != null) childrenOf.putIfAbsent(parent, () => []).add(child);
+    });
+    final result = <String>[];
+    final stack = [...?childrenOf[shortId]];
+    while (stack.isNotEmpty) {
+      final current = stack.removeLast();
+      if (result.contains(current)) continue;
+      result.add(current);
+      stack.addAll(childrenOf[current] ?? const []);
+    }
+    return result;
+  }
+
+  /// Re-parents a note. Passing null detaches it into a root note.
+  /// Refuses moves that would build a cycle.
+  Future<bool> setParent(int id, String? parentShortId) async {
+    final note = await getNoteById(id);
+    if (note == null) return false;
+    final shortId = note['short_id'] as String;
+    if (parentShortId == shortId) return false;
+
+    if (parentShortId != null) {
+      final links = await getParentLinks();
+      if (!links.containsKey(parentShortId)) return false;
+      String? cursor = parentShortId;
+      final seen = <String>{};
+      while (cursor != null && seen.add(cursor)) {
+        if (cursor == shortId) return false;
+        cursor = links[cursor];
+      }
+    }
+
+    final db = await _getDb();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final updatedAt = max(now, (note['updated_at'] as int? ?? 0) + 1);
+    await db.update(
+      tableName,
+      {'parent_short_id': parentShortId, 'updated_at': updatedAt, 'synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    return true;
+  }
+
+  /// Soft deletes a note together with its whole subtree.
+  /// Returns the number of deleted notes.
+  Future<int> softDeleteSubtree(int id) async {
+    final note = await getNoteById(id);
+    if (note == null) return 0;
+    final descendants = await getDescendantShortIds(note['short_id'] as String);
+    await softDeleteNote(id);
+    for (final shortId in descendants) {
+      final child = await getNoteByShortId(shortId);
+      if (child != null) await softDeleteNote(child['id'] as int);
+    }
+    return descendants.length + 1;
+  }
+
+  /// Soft deletes a note and lifts its direct children to its own parent.
+  Future<void> softDeleteAndPromoteChildren(int id) async {
+    final note = await getNoteById(id);
+    if (note == null) return;
+    final db = await _getDb();
+    await db.update(
+      tableName,
+      {'parent_short_id': note['parent_short_id'], 'synced': 0},
+      where: 'parent_short_id = ?',
+      whereArgs: [note['short_id'] as String],
+    );
+    await softDeleteNote(id);
   }
 
   // ---- Tag CRUD ----

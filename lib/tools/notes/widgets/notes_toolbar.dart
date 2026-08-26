@@ -9,6 +9,7 @@ import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/tool_back_button.dart';
 import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/tools/notes/note_thread.dart';
 import 'package:tool_lab/tools/notes/notes_state.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/tools/notes/config.dart';
@@ -22,6 +23,8 @@ class NotesToolbar extends StatefulWidget {
   final List<String> allTags;
   final List<String> selectedFilterTags;
   final ValueChanged<List<String>> onFilterTagsChanged;
+  final NoteThreadSort threadSort;
+  final ValueChanged<NoteThreadSort> onThreadSortChanged;
 
   const NotesToolbar({
     super.key,
@@ -31,6 +34,8 @@ class NotesToolbar extends StatefulWidget {
     this.allTags = const [],
     this.selectedFilterTags = const [],
     required this.onFilterTagsChanged,
+    required this.threadSort,
+    required this.onThreadSortChanged,
   });
 
   @override
@@ -147,6 +152,8 @@ class _NotesToolbarState extends State<NotesToolbar> {
               'updatedAt': n['updated_at'],
               if (n['tags'] is List && (n['tags'] as List).isNotEmpty)
                 'tags': n['tags'],
+              if (n['parent_short_id'] != null)
+                'parentShortId': n['parent_short_id'],
             },
           )
           .toList();
@@ -323,6 +330,10 @@ class _NotesToolbarState extends State<NotesToolbar> {
                     _importBackup();
                   } else if (value == 'export_backup') {
                     _exportBackup();
+                  } else if (value == 'sort_created') {
+                    widget.onThreadSortChanged(NoteThreadSort.created);
+                  } else if (value == 'sort_updated') {
+                    widget.onThreadSortChanged(NoteThreadSort.updated);
                   }
                 },
                 itemBuilder: (context) => [
@@ -355,6 +366,25 @@ class _NotesToolbarState extends State<NotesToolbar> {
                         Text(l10n.notesExportJsonBackup),
                       ],
                     ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    enabled: false,
+                    height: 32,
+                    child: Text(
+                      l10n.notesThreadSortTooltip,
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ),
+                  CheckedPopupMenuItem(
+                    value: 'sort_created',
+                    checked: widget.threadSort == NoteThreadSort.created,
+                    child: Text(l10n.notesThreadSortCreated),
+                  ),
+                  CheckedPopupMenuItem(
+                    value: 'sort_updated',
+                    checked: widget.threadSort == NoteThreadSort.updated,
+                    child: Text(l10n.notesThreadSortUpdated),
                   ),
                 ],
               ),

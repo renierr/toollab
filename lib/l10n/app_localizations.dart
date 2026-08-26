@@ -4127,6 +4127,138 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 note} other{{count} notes}}'**
   String notesArchiveEntryCount(int count);
 
+  /// No description provided for @notesThreadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Thread'**
+  String get notesThreadTitle;
+
+  /// No description provided for @notesThreadCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 note} other{{count} notes}}'**
+  String notesThreadCount(int count);
+
+  /// No description provided for @notesFollowUpsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow-ups'**
+  String get notesFollowUpsTitle;
+
+  /// No description provided for @notesFollowUpCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 follow-up} other{{count} follow-ups}}'**
+  String notesFollowUpCount(int count);
+
+  /// No description provided for @notesNoFollowUps.
+  ///
+  /// In en, this message translates to:
+  /// **'No follow-ups yet'**
+  String get notesNoFollowUps;
+
+  /// No description provided for @notesAddFollowUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add follow-up'**
+  String get notesAddFollowUp;
+
+  /// No description provided for @notesFollowUpOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow-up to \"{title}\"'**
+  String notesFollowUpOf(String title);
+
+  /// No description provided for @notesAttachToNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach to note...'**
+  String get notesAttachToNote;
+
+  /// No description provided for @notesAttachPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose parent note'**
+  String get notesAttachPickerTitle;
+
+  /// No description provided for @notesAttachSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search notes...'**
+  String get notesAttachSearchHint;
+
+  /// No description provided for @notesAttachFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot attach: that note is part of this thread'**
+  String get notesAttachFailed;
+
+  /// No description provided for @notesDetachFromParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Detach from parent'**
+  String get notesDetachFromParent;
+
+  /// No description provided for @notesDetached.
+  ///
+  /// In en, this message translates to:
+  /// **'Note detached'**
+  String get notesDetached;
+
+  /// No description provided for @notesAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Note attached'**
+  String get notesAttached;
+
+  /// No description provided for @notesOrphanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent note not available'**
+  String get notesOrphanHint;
+
+  /// No description provided for @notesDeleteWithFollowUpsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{This note has 1 follow-up. Delete it too?} other{This note has {count} follow-ups. Delete them too?}}'**
+  String notesDeleteWithFollowUpsMessage(int count);
+
+  /// No description provided for @notesDeleteWithFollowUps.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all'**
+  String get notesDeleteWithFollowUps;
+
+  /// No description provided for @notesDeleteKeepFollowUps.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep follow-ups'**
+  String get notesDeleteKeepFollowUps;
+
+  /// No description provided for @notesThreadSortTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow-up order'**
+  String get notesThreadSortTooltip;
+
+  /// No description provided for @notesThreadSortCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest first (created)'**
+  String get notesThreadSortCreated;
+
+  /// No description provided for @notesThreadSortUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently changed first'**
+  String get notesThreadSortUpdated;
+
+  /// No description provided for @notesExportThreadPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export thread as PDF'**
+  String get notesExportThreadPdf;
+
   /// No description provided for @notesSyncWithCloud.
   ///
   /// In en, this message translates to:

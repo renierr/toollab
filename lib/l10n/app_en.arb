@@ -1295,6 +1295,56 @@
       }
     }
   },
+  "notesThreadTitle": "Thread",
+  "notesThreadCount": "{count, plural, =1{1 note} other{{count} notes}}",
+  "@notesThreadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notesFollowUpsTitle": "Follow-ups",
+  "notesFollowUpCount": "{count, plural, =1{1 follow-up} other{{count} follow-ups}}",
+  "@notesFollowUpCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notesNoFollowUps": "No follow-ups yet",
+  "notesAddFollowUp": "Add follow-up",
+  "notesFollowUpOf": "Follow-up to \"{title}\"",
+  "@notesFollowUpOf": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notesAttachToNote": "Attach to note...",
+  "notesAttachPickerTitle": "Choose parent note",
+  "notesAttachSearchHint": "Search notes...",
+  "notesAttachFailed": "Cannot attach: that note is part of this thread",
+  "notesDetachFromParent": "Detach from parent",
+  "notesDetached": "Note detached",
+  "notesAttached": "Note attached",
+  "notesOrphanHint": "Parent note not available",
+  "notesDeleteWithFollowUpsMessage": "{count, plural, =1{This note has 1 follow-up. Delete it too?} other{This note has {count} follow-ups. Delete them too?}}",
+  "@notesDeleteWithFollowUpsMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notesDeleteWithFollowUps": "Delete all",
+  "notesDeleteKeepFollowUps": "Keep follow-ups",
+  "notesThreadSortTooltip": "Follow-up order",
+  "notesThreadSortCreated": "Oldest first (created)",
+  "notesThreadSortUpdated": "Recently changed first",
+  "notesExportThreadPdf": "Export thread as PDF",
   "notesSyncWithCloud": "Sync with Cloud",
   "notesImportMarkdownFile": "Import Markdown file",
   "notesImportJsonBackup": "Import JSON Backup",

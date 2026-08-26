@@ -42,6 +42,14 @@ class MarkdownViewerConfig {
   /// Renders a metadata card for YAML frontmatter when the document has one.
   final bool showFrontmatter;
 
+  /// Extra app bar actions, inserted before edit/delete.
+  final List<Widget> extraActions;
+
+  /// Optional content rendered above the document body (breadcrumbs, an
+  /// outline) and below it (related content, follow-ups).
+  final Widget? headerSection;
+  final Widget? footerSection;
+
   const MarkdownViewerConfig({
     this.accentColor = AppTheme.accentBlue,
     this.title = 'Markdown Viewer',
@@ -61,6 +69,9 @@ class MarkdownViewerConfig {
     this.updatedAt,
     this.sharedFile,
     this.showFrontmatter = true,
+    this.extraActions = const [],
+    this.headerSection,
+    this.footerSection,
   });
 }
 
@@ -273,6 +284,7 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                 tooltip: l10n.widgetMarkdownExportPdf,
                 onPressed: () => _exportPdf(context),
               ),
+            ...config.extraActions,
             if (config.showEdit && config.onEdit != null)
               IconButton(
                 icon: const Icon(Icons.edit_outlined),
@@ -299,6 +311,10 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (config.headerSection != null) ...[
+                    config.headerSection!,
+                    const SizedBox(height: 16),
+                  ],
                   Text(
                     title,
                     style: theme.textTheme.headlineMedium?.copyWith(
@@ -343,6 +359,10 @@ class _MarkdownViewerPageState extends State<MarkdownViewerPage> {
                       accentColor: config.accentColor,
                       scale: scale,
                     ),
+                  if (config.footerSection != null) ...[
+                    const SizedBox(height: 24),
+                    config.footerSection!,
+                  ],
                 ],
               ),
             ),

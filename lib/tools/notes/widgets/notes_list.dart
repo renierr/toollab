@@ -1,20 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/tools/notes/note_thread.dart';
+import 'package:tool_lab/tools/notes/note_thread_export.dart';
+import 'package:tool_lab/tools/notes/note_title.dart';
+import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/tools/notes/widgets/note_card.dart';
+import 'package:tool_lab/tools/notes/widgets/note_thread_tree.dart';
 
 class NotesList extends StatefulWidget {
+  /// Flat, query-filtered notes — used while searching.
   final List<Map<String, dynamic>> notes;
+
+  /// Thread roots to render when not searching.
+  final List<NoteThreadNode> roots;
+  final NoteThread thread;
+  final bool searchMode;
   final ValueChanged<Map<String, dynamic>> onTap;
   final ValueChanged<Map<String, dynamic>> onEdit;
   final ValueChanged<Map<String, dynamic>> onDelete;
+  final ValueChanged<Map<String, dynamic>> onAddFollowUp;
+  final ValueChanged<Map<String, dynamic>> onAttach;
+  final ValueChanged<Map<String, dynamic>> onDetach;
 
   const NotesList({
     super.key,
     required this.notes,
+    required this.roots,
+    required this.thread,
+    required this.searchMode,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    required this.onAddFollowUp,
+    required this.onAttach,
+    required this.onDetach,
   });
 
   @override
@@ -23,13 +43,17 @@ class NotesList extends StatefulWidget {
 
 class _NotesListState extends State<NotesList> {
   final Map<String, bool> _expandedGroups = {};
+  final Set<String> _expandedThreads = {};
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
-    if (widget.notes.isEmpty) {
+    final isEmpty = widget.searchMode
+        ? widget.notes.isEmpty
+        : widget.roots.isEmpty;
+    if (isEmpty) {
       return Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -63,7 +87,7 @@ class _NotesListState extends State<NotesList> {
       );
     }
 
-    final groups = _groupNotes();
+    final groups = _groupEntries();
     final isGrid = MediaQuery.sizeOf(context).width >= 600;
 
     return CustomScrollView(
@@ -74,7 +98,7 @@ class _NotesListState extends State<NotesList> {
               title: DateFormat.yMMMM(
                 l10n.localeName,
               ).format(groups[index].date),
-              count: groups[index].notes.length,
+              count: groups[index].entries.length,
               expanded: _expandedGroups[groups[index].key] ?? index == 0,
               onTap: () {
                 setState(() {
@@ -96,13 +120,9 @@ class _NotesListState extends State<NotesList> {
                     mainAxisExtent: 250,
                   ),
                   delegate: SliverChildBuilderDelegate(
-                    (context, noteIndex) => _NoteListCard(
-                      note: groups[index].notes[noteIndex],
-                      onTap: widget.onTap,
-                      onEdit: widget.onEdit,
-                      onDelete: widget.onDelete,
-                    ),
-                    childCount: groups[index].notes.length,
+                    (context, entryIndex) =>
+                        _buildCard(groups[index].entries[entryIndex]),
+                    childCount: groups[index].entries.length,
                   ),
                 ),
               )
@@ -110,12 +130,10 @@ class _NotesListState extends State<NotesList> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                 sliver: SliverList.builder(
-                  itemCount: groups[index].notes.length,
-                  itemBuilder: (context, noteIndex) => _NoteListCard(
-                    note: groups[index].notes[noteIndex],
-                    onTap: widget.onTap,
-                    onEdit: widget.onEdit,
-                    onDelete: widget.onDelete,
+                  itemCount: groups[index].entries.length,
+                  itemBuilder: (context, entryIndex) => _buildEntry(
+                    groups[index].entries[entryIndex],
+                    expandable: true,
                   ),
                 ),
               ),
@@ -124,33 +142,124 @@ class _NotesListState extends State<NotesList> {
     );
   }
 
-  List<_NotesArchiveGroup> _groupNotes() {
+  Widget _buildEntry(_NoteEntry entry, {required bool expandable}) {
+    final node = entry.node;
+    final expanded = node != null && _expandedThreads.contains(node.shortId);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildCard(entry, expandable: expandable),
+        if (expanded && node.children.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 12, 10),
+            child: NoteThreadTree(
+              nodes: node.children,
+              accentColor: AppTheme.accentTeal,
+              dense: true,
+              onTap: (child) => widget.onTap(child.note),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCard(_NoteEntry entry, {bool expandable = false}) {
+    final node = entry.node;
+    final followUps = node?.descendantCount ?? 0;
+    return NoteCard(
+      note: entry.note,
+      breadcrumb: entry.breadcrumb,
+      followUpCount: followUps,
+      followUpsExpanded:
+          node != null && _expandedThreads.contains(node.shortId),
+      onToggleFollowUps: expandable && followUps > 0 && node != null
+          ? () => setState(() {
+              if (!_expandedThreads.remove(node.shortId)) {
+                _expandedThreads.add(node.shortId);
+              }
+            })
+          : null,
+      onTap: () => widget.onTap(entry.note),
+      onEdit: () => widget.onEdit(entry.note),
+      onDelete: () => widget.onDelete(entry.note),
+      onExportThreadPdf: node == null
+          ? null
+          : () => exportThreadPdf(context, node),
+      onAddFollowUp: () => widget.onAddFollowUp(entry.note),
+      onAttach: () => widget.onAttach(entry.note),
+      onDetach: () => widget.onDetach(entry.note),
+    );
+  }
+
+  List<_NotesArchiveGroup> _groupEntries() {
+    final l10n = AppLocalizations.of(context);
+    final entries = widget.searchMode
+        ? [
+            for (final note in widget.notes)
+              _NoteEntry(
+                note: note,
+                node: widget.thread.nodeForShortId(note['short_id'] as String?),
+                breadcrumb: [
+                  for (final ancestor in widget.thread.ancestorsOf(
+                    note['short_id'] as String? ?? '',
+                  ))
+                    noteTitle(
+                      ancestor.note['content'] as String? ?? '',
+                      fallback: l10n.notesUntitledNote,
+                    ),
+                ],
+                timestamp: note['updated_at'] as int? ?? 0,
+              ),
+          ]
+        : [
+            for (final root in widget.roots)
+              _NoteEntry(
+                note: root.note,
+                node: root,
+                breadcrumb: const [],
+                timestamp: root.threadUpdatedAt,
+              ),
+          ];
+
     final grouped = <String, _NotesArchiveGroup>{};
-    for (final note in widget.notes) {
-      final updatedAt = note['updated_at'] as int? ?? 0;
-      final date = DateTime.fromMillisecondsSinceEpoch(updatedAt);
+    for (final entry in entries) {
+      final date = DateTime.fromMillisecondsSinceEpoch(entry.timestamp);
       final key = '${date.year}-${date.month.toString().padLeft(2, '0')}';
       grouped
           .putIfAbsent(
             key,
-            () => _NotesArchiveGroup(key: key, date: date, notes: []),
+            () => _NotesArchiveGroup(key: key, date: date, entries: []),
           )
-          .notes
-          .add(note);
+          .entries
+          .add(entry);
     }
     return grouped.values.toList();
   }
 }
 
+class _NoteEntry {
+  final Map<String, dynamic> note;
+  final NoteThreadNode? node;
+  final List<String> breadcrumb;
+  final int timestamp;
+
+  const _NoteEntry({
+    required this.note,
+    required this.node,
+    required this.breadcrumb,
+    required this.timestamp,
+  });
+}
+
 class _NotesArchiveGroup {
   final String key;
   final DateTime date;
-  final List<Map<String, dynamic>> notes;
+  final List<_NoteEntry> entries;
 
   const _NotesArchiveGroup({
     required this.key,
     required this.date,
-    required this.notes,
+    required this.entries,
   });
 }
 
@@ -209,30 +318,6 @@ class _NotesArchiveHeader extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _NoteListCard extends StatelessWidget {
-  final Map<String, dynamic> note;
-  final ValueChanged<Map<String, dynamic>> onTap;
-  final ValueChanged<Map<String, dynamic>> onEdit;
-  final ValueChanged<Map<String, dynamic>> onDelete;
-
-  const _NoteListCard({
-    required this.note,
-    required this.onTap,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return NoteCard(
-      note: note,
-      onTap: () => onTap(note),
-      onEdit: () => onEdit(note),
-      onDelete: () => onDelete(note),
     );
   }
 }

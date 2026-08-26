@@ -5,6 +5,9 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 class MarkdownToPdfConverter {
+  /// A line holding only this marker starts a new PDF page.
+  static const String pageBreakMarker = '<!-- pagebreak -->';
+
   static PdfPageFormat _pageFormat = PdfPageFormat.a4;
   static pw.Font? _bodyFont;
   static pw.Font? _boldFont;
@@ -39,7 +42,10 @@ class MarkdownToPdfConverter {
       encodeHtml: false,
       extensionSet: md.ExtensionSet.gitHubFlavored,
     );
-    final ast = parser.parse(markdown);
+    final sections = markdown
+        .split(pageBreakMarker)
+        .map((section) => parser.parse(section))
+        .toList();
 
     doc.addPage(
       pw.MultiPage(
@@ -74,7 +80,12 @@ class MarkdownToPdfConverter {
             ),
           ),
         ),
-        build: (_) => _buildBlocks(ast),
+        build: (_) => [
+          for (var i = 0; i < sections.length; i++) ...[
+            if (i > 0) pw.NewPage(),
+            ..._buildBlocks(sections[i]),
+          ],
+        ],
       ),
     );
 

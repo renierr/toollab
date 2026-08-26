@@ -821,6 +821,56 @@
       }
     }
   },
+  "notesThreadTitle": "Verlauf",
+  "notesThreadCount": "{count, plural, =1{1 Notiz} other{{count} Notizen}}",
+  "@notesThreadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notesFollowUpsTitle": "Folgenotizen",
+  "notesFollowUpCount": "{count, plural, =1{1 Folgenotiz} other{{count} Folgenotizen}}",
+  "@notesFollowUpCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notesNoFollowUps": "Noch keine Folgenotizen",
+  "notesAddFollowUp": "Folgenotiz hinzufügen",
+  "notesFollowUpOf": "Folgenotiz zu \"{title}\"",
+  "@notesFollowUpOf": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "notesAttachToNote": "An Notiz anhängen...",
+  "notesAttachPickerTitle": "Übergeordnete Notiz wählen",
+  "notesAttachSearchHint": "Notizen durchsuchen...",
+  "notesAttachFailed": "Nicht möglich: Diese Notiz gehört zum selben Verlauf",
+  "notesDetachFromParent": "Vom Verlauf lösen",
+  "notesDetached": "Notiz gelöst",
+  "notesAttached": "Notiz angehängt",
+  "notesOrphanHint": "Übergeordnete Notiz nicht verfügbar",
+  "notesDeleteWithFollowUpsMessage": "{count, plural, =1{Diese Notiz hat 1 Folgenotiz. Ebenfalls löschen?} other{Diese Notiz hat {count} Folgenotizen. Ebenfalls löschen?}}",
+  "@notesDeleteWithFollowUpsMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notesDeleteWithFollowUps": "Alle löschen",
+  "notesDeleteKeepFollowUps": "Folgenotizen behalten",
+  "notesThreadSortTooltip": "Reihenfolge der Folgenotizen",
+  "notesThreadSortCreated": "Älteste zuerst (erstellt)",
+  "notesThreadSortUpdated": "Zuletzt geändert zuerst",
+  "notesExportThreadPdf": "Verlauf als PDF exportieren",
   "notesSyncWithCloud": "Mit Cloud synchronisieren",
   "notesImportMarkdownFile": "Markdown-Datei importieren",
   "notesImportJsonBackup": "JSON-Sicherung importieren",

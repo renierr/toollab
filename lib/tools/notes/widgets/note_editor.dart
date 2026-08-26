@@ -25,6 +25,9 @@ class NoteEditor extends StatefulWidget {
   final String initialContent;
   final List<String> initialTags;
   final List<String> allTags;
+
+  /// Title of the note this one is a follow-up to, when creating inside a thread.
+  final String? parentTitle;
   final Function(String content, List<String> tags) onSave;
   final Future<bool> Function(String content, List<String> tags)?
   onSaveKeepEditing;
@@ -36,6 +39,7 @@ class NoteEditor extends StatefulWidget {
     required this.initialContent,
     this.initialTags = const [],
     this.allTags = const [],
+    this.parentTitle,
     required this.onSave,
     this.onSaveKeepEditing,
     required this.onCancel,
@@ -526,6 +530,30 @@ class _NoteEditorState extends State<NoteEditor> with DisposeCleanup {
                         ),
                       ),
                     ),
+                    if (widget.parentTitle != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.subdirectory_arrow_right,
+                              size: 16,
+                              color: AppTheme.accentTeal,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                l10n.notesFollowUpOf(widget.parentTitle!),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     const Divider(height: 1),
                     AnimatedCrossFade(
                       firstChild: Column(

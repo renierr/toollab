@@ -2299,6 +2299,99 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get notesThreadTitle => 'Thread';
+
+  @override
+  String notesThreadCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes',
+      one: '1 note',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesFollowUpsTitle => 'Follow-ups';
+
+  @override
+  String notesFollowUpCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count follow-ups',
+      one: '1 follow-up',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesNoFollowUps => 'No follow-ups yet';
+
+  @override
+  String get notesAddFollowUp => 'Add follow-up';
+
+  @override
+  String notesFollowUpOf(String title) {
+    return 'Follow-up to \"$title\"';
+  }
+
+  @override
+  String get notesAttachToNote => 'Attach to note...';
+
+  @override
+  String get notesAttachPickerTitle => 'Choose parent note';
+
+  @override
+  String get notesAttachSearchHint => 'Search notes...';
+
+  @override
+  String get notesAttachFailed =>
+      'Cannot attach: that note is part of this thread';
+
+  @override
+  String get notesDetachFromParent => 'Detach from parent';
+
+  @override
+  String get notesDetached => 'Note detached';
+
+  @override
+  String get notesAttached => 'Note attached';
+
+  @override
+  String get notesOrphanHint => 'Parent note not available';
+
+  @override
+  String notesDeleteWithFollowUpsMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'This note has $count follow-ups. Delete them too?',
+      one: 'This note has 1 follow-up. Delete it too?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesDeleteWithFollowUps => 'Delete all';
+
+  @override
+  String get notesDeleteKeepFollowUps => 'Keep follow-ups';
+
+  @override
+  String get notesThreadSortTooltip => 'Follow-up order';
+
+  @override
+  String get notesThreadSortCreated => 'Oldest first (created)';
+
+  @override
+  String get notesThreadSortUpdated => 'Recently changed first';
+
+  @override
+  String get notesExportThreadPdf => 'Export thread as PDF';
+
+  @override
   String get notesSyncWithCloud => 'Sync with Cloud';
 
   @override

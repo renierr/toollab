@@ -2322,6 +2322,99 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get notesThreadTitle => 'Verlauf';
+
+  @override
+  String notesThreadCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Notizen',
+      one: '1 Notiz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesFollowUpsTitle => 'Folgenotizen';
+
+  @override
+  String notesFollowUpCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Folgenotizen',
+      one: '1 Folgenotiz',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesNoFollowUps => 'Noch keine Folgenotizen';
+
+  @override
+  String get notesAddFollowUp => 'Folgenotiz hinzufügen';
+
+  @override
+  String notesFollowUpOf(String title) {
+    return 'Folgenotiz zu \"$title\"';
+  }
+
+  @override
+  String get notesAttachToNote => 'An Notiz anhängen...';
+
+  @override
+  String get notesAttachPickerTitle => 'Übergeordnete Notiz wählen';
+
+  @override
+  String get notesAttachSearchHint => 'Notizen durchsuchen...';
+
+  @override
+  String get notesAttachFailed =>
+      'Nicht möglich: Diese Notiz gehört zum selben Verlauf';
+
+  @override
+  String get notesDetachFromParent => 'Vom Verlauf lösen';
+
+  @override
+  String get notesDetached => 'Notiz gelöst';
+
+  @override
+  String get notesAttached => 'Notiz angehängt';
+
+  @override
+  String get notesOrphanHint => 'Übergeordnete Notiz nicht verfügbar';
+
+  @override
+  String notesDeleteWithFollowUpsMessage(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Diese Notiz hat $count Folgenotizen. Ebenfalls löschen?',
+      one: 'Diese Notiz hat 1 Folgenotiz. Ebenfalls löschen?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get notesDeleteWithFollowUps => 'Alle löschen';
+
+  @override
+  String get notesDeleteKeepFollowUps => 'Folgenotizen behalten';
+
+  @override
+  String get notesThreadSortTooltip => 'Reihenfolge der Folgenotizen';
+
+  @override
+  String get notesThreadSortCreated => 'Älteste zuerst (erstellt)';
+
+  @override
+  String get notesThreadSortUpdated => 'Zuletzt geändert zuerst';
+
+  @override
+  String get notesExportThreadPdf => 'Verlauf als PDF exportieren';
+
+  @override
   String get notesSyncWithCloud => 'Mit Cloud synchronisieren';
 
   @override

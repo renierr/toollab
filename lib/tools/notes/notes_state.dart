@@ -2,34 +2,92 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/sync_service.dart';
+import 'package:tool_lab/tools/notes/config.dart';
+import 'note_thread.dart';
 import 'notes_db_helper.dart';
 import 'notes_sync_delegate.dart';
 
 class NotesState extends ChangeNotifier {
+  static const String _sortSettingKey = 'thread_sort';
+
+  List<Map<String, dynamic>> _allNotes = [];
   List<Map<String, dynamic>> _notes = [];
+  NoteThread _thread = NoteThread.empty;
+  NoteThreadSort _sort = NoteThreadSort.created;
+  String _query = '';
   bool _isLoadingNotes = false;
 
+  /// Notes matching the active search query.
   List<Map<String, dynamic>> get notes => _notes;
+
+  /// Every active note, regardless of the search query. The thread is built
+  /// from this so parents of a search hit stay resolvable.
+  List<Map<String, dynamic>> get allNotes => _allNotes;
+  NoteThread get thread => _thread;
+  NoteThreadSort get sort => _sort;
+  String get query => _query;
   bool get isLoadingNotes => _isLoadingNotes;
 
-  Future<void> loadNotes({String query = ''}) async {
+  Future<void> loadSort() async {
+    final stored = await DatabaseService.instance.getSetting(
+      NotesTool.config.id,
+      _sortSettingKey,
+    );
+    if (stored == NoteThreadSort.updated.name) {
+      _sort = NoteThreadSort.updated;
+      _rebuildThread();
+      notifyListeners();
+    }
+  }
+
+  Future<void> setSort(NoteThreadSort sort) async {
+    if (_sort == sort) return;
+    _sort = sort;
+    _rebuildThread();
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      NotesTool.config.id,
+      _sortSettingKey,
+      sort.name,
+    );
+  }
+
+  Future<void> loadNotes({String? query}) async {
+    if (query != null) _query = query;
     _isLoadingNotes = true;
     notifyListeners();
     try {
-      _notes = await NotesDbHelper.instance.getActiveNotesWithTags(
-        query: query,
-      );
+      _allNotes = await NotesDbHelper.instance.getActiveNotesWithTags();
     } catch (e) {
       errorLog('[NotesState] Failed to load notes with tags: $e');
       try {
-        _notes = await NotesDbHelper.instance.getActiveNotes(query: query);
+        _allNotes = await NotesDbHelper.instance.getActiveNotes();
       } catch (e2) {
         errorLog('[NotesState] Failed to load notes (fallback): $e2');
       }
     } finally {
+      _applyQuery();
       _isLoadingNotes = false;
       notifyListeners();
     }
+  }
+
+  void _applyQuery() {
+    final needle = _query.trim().toLowerCase();
+    _notes = needle.isEmpty
+        ? _allNotes
+        : _allNotes
+              .where(
+                (n) => (n['content'] as String? ?? '').toLowerCase().contains(
+                  needle,
+                ),
+              )
+              .toList();
+    _rebuildThread();
+  }
+
+  void _rebuildThread() {
+    _thread = NoteThread.build(_allNotes, sort: _sort);
   }
 
   Future<int> saveNote(
@@ -37,20 +95,39 @@ class NotesState extends ChangeNotifier {
     int? id,
     String? shortId,
     List<String>? tags,
+    String? parentShortId,
   }) async {
     final savedId = await NotesDbHelper.instance.saveNote(
       content,
       id: id,
       shortId: shortId,
       tags: tags,
+      parentShortId: parentShortId,
     );
     await loadNotes();
     _backgroundSync();
     return savedId;
   }
 
-  Future<void> deleteNote(int id) async {
-    await NotesDbHelper.instance.softDeleteNote(id);
+  /// Attaches a note to [parentShortId], or detaches it when null.
+  /// Returns false when the move would create a cycle.
+  Future<bool> setParent(int id, String? parentShortId) async {
+    final moved = await NotesDbHelper.instance.setParent(id, parentShortId);
+    if (moved) {
+      await loadNotes();
+      _backgroundSync();
+    }
+    return moved;
+  }
+
+  /// Deletes a note. With [cascade] the whole subtree goes, otherwise the
+  /// direct children are lifted to the deleted note's parent.
+  Future<void> deleteNote(int id, {bool cascade = true}) async {
+    if (cascade) {
+      await NotesDbHelper.instance.softDeleteSubtree(id);
+    } else {
+      await NotesDbHelper.instance.softDeleteAndPromoteChildren(id);
+    }
     await loadNotes();
     _backgroundSync();
   }
@@ -75,6 +152,7 @@ class NotesState extends ChangeNotifier {
           updatedAt: updatedAt ?? DateTime.now().millisecondsSinceEpoch,
           deleted: false,
           tags: tags,
+          parentShortId: note['parentShortId'] as String?,
         );
       }
     }

@@ -16,6 +16,11 @@ import 'package:tool_lab/tools/notes/widgets/markdown_drop_zone.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_list.dart';
 import 'package:tool_lab/tools/notes/widgets/notes_toolbar.dart';
 import 'package:tool_lab/tools/notes/widgets/note_editor.dart';
+import 'package:tool_lab/tools/notes/note_title.dart';
+import 'package:tool_lab/tools/notes/widgets/note_delete_dialog.dart';
+import 'package:tool_lab/tools/notes/widgets/note_followups_section.dart';
+import 'package:tool_lab/tools/notes/widgets/note_parent_picker_dialog.dart';
+import 'package:tool_lab/tools/notes/widgets/note_thread_outline.dart';
 import 'package:tool_lab/widgets/markdown_viewer_page.dart';
 import 'package:tool_lab/tools/notes/notes_sync_delegate.dart';
 
@@ -33,8 +38,12 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
   int? _editingId;
   String _editingContent = '';
   List<String> _editingTags = [];
-  bool _isViewing = false;
-  Map<String, dynamic>? _viewingNote;
+  String? _editingParentShortId;
+  String? _editingParentTitle;
+  String? _viewingShortId;
+
+  /// Note to return to when the editor was opened from the viewer.
+  String? _returnToShortId;
   String _searchQuery = '';
   List<String> _selectedFilterTags = [];
 
@@ -46,6 +55,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     final notesState = context.read<NotesState>();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      notesState.loadSort();
       notesState.loadNotes();
 
       if (appState.syncEnabled &&
@@ -111,14 +121,18 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     int? id,
     String content = '',
     List<String> tags = const [],
+    String? parentShortId,
+    String? parentTitle,
   }) {
     setState(() {
       _isEditing = true;
       _editingId = id;
       _editingContent = content;
       _editingTags = tags;
-      _isViewing = false;
-      _viewingNote = null;
+      _editingParentShortId = parentShortId;
+      _editingParentTitle = parentTitle;
+      _returnToShortId = _viewingShortId;
+      _viewingShortId = null;
     });
   }
 
@@ -128,27 +142,75 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
       _editingId = null;
       _editingContent = '';
       _editingTags = [];
+      _editingParentShortId = null;
+      _editingParentTitle = null;
+      _viewingShortId = _returnToShortId;
+      _returnToShortId = null;
     });
   }
 
   void _openViewer(Map<String, dynamic> note) {
     setState(() {
-      _isViewing = true;
-      _viewingNote = note;
+      _viewingShortId = note['short_id'] as String?;
     });
   }
 
   void _closeViewer() {
     setState(() {
-      _isViewing = false;
-      _viewingNote = null;
+      _viewingShortId = null;
     });
+  }
+
+  void _addFollowUp(Map<String, dynamic> note) {
+    final l10n = AppLocalizations.of(context);
+    _openEditor(
+      parentShortId: note['short_id'] as String?,
+      parentTitle: noteTitle(
+        note['content'] as String? ?? '',
+        fallback: l10n.notesUntitledNote,
+      ),
+      tags: (note['tags'] as List<dynamic>?)?.cast<String>() ?? const [],
+    );
+  }
+
+  Future<void> _attachNote(Map<String, dynamic> note) async {
+    final notesState = context.read<NotesState>();
+    final l10n = AppLocalizations.of(context);
+    final parentShortId = await NoteParentPickerDialog.show(
+      context: context,
+      thread: notesState.thread,
+      shortId: note['short_id'] as String,
+    );
+    if (parentShortId == null || !mounted) return;
+    final moved = await notesState.setParent(note['id'] as int, parentShortId);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(moved ? l10n.notesAttached : l10n.notesAttachFailed),
+        backgroundColor: moved ? AppTheme.accentGreen : AppTheme.accentRed,
+      ),
+    );
+  }
+
+  Future<void> _detachNote(Map<String, dynamic> note) async {
+    final notesState = context.read<NotesState>();
+    final l10n = AppLocalizations.of(context);
+    await notesState.setParent(note['id'] as int, null);
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.notesDetached)));
   }
 
   Future<void> _saveNote(String content, List<String> tags) async {
     final notesState = context.read<NotesState>();
     try {
-      await notesState.saveNote(content, id: _editingId, tags: tags);
+      await notesState.saveNote(
+        content,
+        id: _editingId,
+        tags: tags,
+        parentShortId: _editingParentShortId,
+      );
       _closeEditor();
       if (mounted) {
         final l10n = AppLocalizations.of(context);
@@ -182,6 +244,7 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
         content,
         id: _editingId,
         tags: tags,
+        parentShortId: _editingParentShortId,
       );
       if (!mounted) return true;
       setState(() {
@@ -210,32 +273,42 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
 
   Future<void> _deleteNote(int id) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await ConfirmActionDialog.show(
-      context: context,
-      title: l10n.notesDeleteNoteTitle,
-      message: l10n.notesDeleteNoteMessage,
-      confirmLabel: l10n.commonDelete,
-    );
+    final notesState = context.read<NotesState>();
+    final followUps = notesState.thread.nodeForId(id)?.descendantCount ?? 0;
 
-    if (confirmed == true && mounted) {
-      final notesState = context.read<NotesState>();
-      try {
-        await notesState.deleteNote(id);
-        setState(() {
-          _isViewing = false;
-          _viewingNote = null;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.notesNoteDeleted)));
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.notesFailedToDeleteNote(e.toString()))),
-          );
-        }
+    bool cascade = true;
+    if (followUps > 0) {
+      final choice = await NoteDeleteDialog.show(
+        context: context,
+        followUpCount: followUps,
+      );
+      if (choice == null || !mounted) return;
+      cascade = choice == NoteDeleteChoice.cascade;
+    } else {
+      final confirmed = await ConfirmActionDialog.show(
+        context: context,
+        title: l10n.notesDeleteNoteTitle,
+        message: l10n.notesDeleteNoteMessage,
+        confirmLabel: l10n.commonDelete,
+      );
+      if (confirmed != true || !mounted) return;
+    }
+
+    try {
+      await notesState.deleteNote(id, cascade: cascade);
+      setState(() {
+        _viewingShortId = null;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.notesNoteDeleted)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.notesFailedToDeleteNote(e.toString()))),
+        );
       }
     }
   }
@@ -274,19 +347,24 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
     final notes = notesState.notes;
 
     final allTags = <String>{};
-    for (final note in notes) {
+    for (final note in notesState.allNotes) {
       final noteTags = note['tags'] as List<dynamic>? ?? [];
       allTags.addAll(noteTags.cast<String>());
     }
     final sortedAllTags = allTags.toList()..sort();
 
-    final filteredNotes = _selectedFilterTags.isEmpty
-        ? notes
-        : notes.where((n) {
-            final noteTags =
-                (n['tags'] as List<dynamic>?)?.cast<String>() ?? [];
-            return _selectedFilterTags.every((t) => noteTags.contains(t));
-          }).toList();
+    bool matchesTags(Map<String, dynamic> note) {
+      if (_selectedFilterTags.isEmpty) return true;
+      final noteTags = (note['tags'] as List<dynamic>?)?.cast<String>() ?? [];
+      return _selectedFilterTags.every((t) => noteTags.contains(t));
+    }
+
+    final filteredNotes = notes.where(matchesTags).toList();
+    // A thread stays visible as long as any note inside it matches.
+    final visibleRoots = notesState.thread.roots
+        .where((root) => root.flatten().any((n) => matchesTags(n.note)))
+        .toList();
+    final searchMode = _searchQuery.trim().isNotEmpty;
 
     if (_isEditing) {
       return NoteEditor(
@@ -294,17 +372,19 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
         initialContent: _editingContent,
         initialTags: _editingTags,
         allTags: sortedAllTags,
+        parentTitle: _editingParentTitle,
         onSave: _saveNote,
         onSaveKeepEditing: _saveNoteKeepEditing,
         onCancel: _closeEditor,
       );
     }
 
-    if (_isViewing && _viewingNote != null) {
-      final currentNote = _viewingNote!;
+    final viewingNode = notesState.thread.nodeForShortId(_viewingShortId);
+    if (viewingNode != null) {
+      final currentNote = viewingNode.note;
       final content = currentNote['content'] as String? ?? '';
       final updatedAt = currentNote['updated_at'] as int? ?? 0;
-      final shortId = currentNote['short_id'] as String? ?? 'note';
+      final shortId = viewingNode.shortId;
       return MarkdownViewerPage(
         content: content,
         config: MarkdownViewerConfig(
@@ -312,6 +392,39 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
           title: l10n.notesViewNoteTitle,
           showEdit: true,
           showDelete: true,
+          headerSection: NoteThreadOutline(
+            thread: notesState.thread,
+            currentShortId: shortId,
+            accentColor: AppTheme.accentTeal,
+            onOpenNote: (node) =>
+                setState(() => _viewingShortId = node.shortId),
+          ),
+          footerSection: NoteFollowUpsSection(
+            node: viewingNode,
+            accentColor: AppTheme.accentTeal,
+            onOpenNote: (node) =>
+                setState(() => _viewingShortId = node.shortId),
+            onAddFollowUp: () => _addFollowUp(currentNote),
+          ),
+          extraActions: [
+            IconButton(
+              icon: const Icon(Icons.add_comment_outlined),
+              tooltip: l10n.notesAddFollowUp,
+              onPressed: () => _addFollowUp(currentNote),
+            ),
+            if (viewingNode.parentShortId == null)
+              IconButton(
+                icon: const Icon(Icons.account_tree_outlined),
+                tooltip: l10n.notesAttachToNote,
+                onPressed: () => _attachNote(currentNote),
+              )
+            else
+              IconButton(
+                icon: const Icon(Icons.link_off),
+                tooltip: l10n.notesDetachFromParent,
+                onPressed: () => _detachNote(currentNote),
+              ),
+          ],
           onEdit: () {
             _openEditor(
               id: currentNote['id'] as int,
@@ -364,6 +477,8 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
               onFilterTagsChanged: (tags) {
                 setState(() => _selectedFilterTags = tags);
               },
+              threadSort: notesState.sort,
+              onThreadSortChanged: notesState.setSort,
             ),
             Expanded(
               child: notesState.isLoadingNotes
@@ -376,7 +491,13 @@ class _NotesPageState extends State<NotesPage> with DisposeCleanup {
                     )
                   : NotesList(
                       notes: filteredNotes,
+                      roots: visibleRoots,
+                      thread: notesState.thread,
+                      searchMode: searchMode,
                       onTap: _openViewer,
+                      onAddFollowUp: _addFollowUp,
+                      onAttach: _attachNote,
+                      onDetach: _detachNote,
                       onEdit: (note) {
                         _openEditor(
                           id: note['id'] as int,

@@ -31,6 +31,8 @@ class NotesSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
       'createdAt': note['created_at'] as int,
       'updatedAt': note['updated_at'] as int,
       if (tags.isNotEmpty) 'tags': tags,
+      if (note['parent_short_id'] != null)
+        'parentShortId': note['parent_short_id'] as String,
     };
   }
 
@@ -49,6 +51,7 @@ class NotesSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
       updatedAt: updatedAt,
       deleted: deleted,
       tags: tags,
+      parentShortId: data['parentShortId'] as String?,
     );
   }
 
