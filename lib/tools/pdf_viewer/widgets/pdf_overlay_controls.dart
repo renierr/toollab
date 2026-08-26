@@ -3,6 +3,7 @@ import 'package:pdfrx/pdfrx.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/layout_mode.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_viewer_mode.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_overlay_header.dart';
 
 class PdfOverlayControls extends StatelessWidget {
   final String fileName;
@@ -60,231 +61,13 @@ class PdfOverlayControls extends StatelessWidget {
     required this.onLayoutModeChanged,
   });
 
-  Widget _buildNormalHeader(
-    BuildContext context,
-    ThemeData theme,
-    double topPadding,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: EdgeInsets.only(
-        top: topPadding + 12,
-        bottom: 12,
-        left: 16,
-        right: 16,
-      ),
-      color: theme.colorScheme.surface.withValues(alpha: 0.95),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: onBack,
-            tooltip: l10n.commonBack,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              fileName,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.menu_book),
-            onPressed: onOpenBookmarks,
-            tooltip: l10n.pdfNavBookmarks,
-          ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: onToggleSearch,
-            tooltip: l10n.pdfNavSearchText,
-          ),
-          PopupMenuButton<PdfViewerMode>(
-            icon: Icon(
-              currentMode == PdfViewerMode.sign
-                  ? Icons.gesture
-                  : currentMode == PdfViewerMode.organize
-                  ? Icons.reorder
-                  : currentMode == PdfViewerMode.flatten
-                  ? Icons.photo_library_outlined
-                  : currentMode == PdfViewerMode.extractImages
-                  ? Icons.collections_outlined
-                  : currentMode == PdfViewerMode.extractText
-                  ? Icons.text_snippet_outlined
-                  : currentMode == PdfViewerMode.metadata
-                  ? Icons.info_outline
-                  : currentMode == PdfViewerMode.redact
-                  ? Icons.edit_note_outlined
-                  : Icons.more_vert,
-            ),
-            tooltip: l10n.pdfNavMore,
-            onSelected: onModeChanged,
-            itemBuilder: (context) {
-              final menuL10n = AppLocalizations.of(context);
-              return [
-                if (currentMode != PdfViewerMode.view)
-                  PopupMenuItem(
-                    value: PdfViewerMode.view,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.visibility_outlined),
-                        const SizedBox(width: 8),
-                        Text(menuL10n.pdfNavModeView),
-                      ],
-                    ),
-                  ),
-                if (currentMode != PdfViewerMode.sign)
-                  PopupMenuItem(
-                    value: PdfViewerMode.sign,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.gesture),
-                        const SizedBox(width: 8),
-                        Text(menuL10n.pdfNavModePlaceSignature),
-                      ],
-                    ),
-                  ),
-                if (currentMode != PdfViewerMode.organize)
-                  PopupMenuItem(
-                    value: PdfViewerMode.organize,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.reorder),
-                        const SizedBox(width: 8),
-                        Text(menuL10n.pdfNavModeOrganizePages),
-                      ],
-                    ),
-                  ),
-                if (currentMode != PdfViewerMode.flatten)
-                  PopupMenuItem(
-                    value: PdfViewerMode.flatten,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.photo_library_outlined),
-                        const SizedBox(width: 8),
-                        Text(menuL10n.pdfNavModeFlattenPdf),
-                      ],
-                    ),
-                  ),
-                if (currentMode != PdfViewerMode.extractImages)
-                  PopupMenuItem(
-                    value: PdfViewerMode.extractImages,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.collections_outlined),
-                        const SizedBox(width: 8),
-                        Text(menuL10n.pdfNavModeExtractImages),
-                      ],
-                    ),
-                  ),
-                if (currentMode != PdfViewerMode.extractText)
-                  PopupMenuItem(
-                    value: PdfViewerMode.extractText,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.text_snippet_outlined),
-                        const SizedBox(width: 8),
-                        Text(menuL10n.pdfNavModeExtractText),
-                      ],
-                    ),
-                  ),
-                if (currentMode != PdfViewerMode.metadata)
-                  PopupMenuItem(
-                    value: PdfViewerMode.metadata,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline),
-                        const SizedBox(width: 8),
-                        Text(menuL10n.pdfNavModeMetadata),
-                      ],
-                    ),
-                  ),
-                if (currentMode != PdfViewerMode.redact)
-                  PopupMenuItem(
-                    value: PdfViewerMode.redact,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.edit_note_outlined),
-                        const SizedBox(width: 8),
-                        Text(menuL10n.pdfNavModeRedact),
-                      ],
-                    ),
-                  ),
-              ];
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchHeader(
-    BuildContext context,
-    ThemeData theme,
-    double topPadding,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: EdgeInsets.only(
-        top: topPadding + 12,
-        bottom: 12,
-        left: 16,
-        right: 16,
-      ),
-      color: theme.colorScheme.surface.withValues(alpha: 0.95),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: onToggleSearch,
-            tooltip: l10n.pdfNavCloseSearch,
-          ),
-          Expanded(
-            child: TextField(
-              controller: searchTextController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: l10n.pdfNavSearchHint,
-                border: InputBorder.none,
-              ),
-              style: theme.textTheme.bodyMedium,
-              onSubmitted: (_) => onNextMatch(),
-            ),
-          ),
-          if (totalMatches > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                '${currentMatchIndex + 1}/$totalMatches',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          IconButton(
-            icon: const Icon(Icons.keyboard_arrow_up),
-            onPressed: totalMatches > 0 ? onPrevMatch : null,
-            tooltip: l10n.pdfNavPrevMatch,
-          ),
-          IconButton(
-            icon: const Icon(Icons.keyboard_arrow_down),
-            onPressed: totalMatches > 0 ? onNextMatch : null,
-            tooltip: l10n.pdfNavNextMatch,
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final topPadding = MediaQuery.of(context).padding.top;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final viewPadding = MediaQuery.paddingOf(context);
+    final topPadding = viewPadding.top;
+    final bottomPadding = viewPadding.bottom;
 
     return Stack(
       children: [
@@ -296,8 +79,24 @@ class PdfOverlayControls extends StatelessWidget {
           right: 0,
           child: RepaintBoundary(
             child: isSearchingText
-                ? _buildSearchHeader(context, theme, topPadding)
-                : _buildNormalHeader(context, theme, topPadding),
+                ? PdfOverlaySearchHeader(
+                    topPadding: topPadding,
+                    searchTextController: searchTextController,
+                    onToggleSearch: onToggleSearch,
+                    onPrevMatch: onPrevMatch,
+                    onNextMatch: onNextMatch,
+                    currentMatchIndex: currentMatchIndex,
+                    totalMatches: totalMatches,
+                  )
+                : PdfOverlayNormalHeader(
+                    fileName: fileName,
+                    topPadding: topPadding,
+                    currentMode: currentMode,
+                    onModeChanged: onModeChanged,
+                    onBack: onBack,
+                    onOpenBookmarks: onOpenBookmarks,
+                    onToggleSearch: onToggleSearch,
+                  ),
           ),
         ),
 

@@ -57,19 +57,113 @@ class _RememberChoiceCheckboxState extends State<_RememberChoiceCheckbox> {
 class _ToolChooserDialogState extends State<ToolChooserDialog> {
   bool _rememberChoice = false;
 
-  Widget _buildToolItem(
-    BuildContext context,
-    ThemeData theme,
-    AppLocalizations l10n,
-    ToolModel tool,
-  ) {
+  void _choose(ToolModel tool) {
+    context.read<AppState>().recordToolUsage(tool.id);
+    Navigator.of(context).pop((tool, _rememberChoice));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    final appState = context.read<AppState>();
+    final internalTools =
+        widget.tools
+            .where((t) => t.id != 'system-share' && t.id != 'system-default')
+            .toList()
+          ..sort(
+            (a, b) => appState
+                .getLastUsed(b.id)
+                .compareTo(appState.getLastUsed(a.id)),
+          );
+    final systemTools = widget.tools
+        .where((t) => t.id == 'system-share' || t.id == 'system-default')
+        .toList();
+
+    return ResponsiveAlertDialog(
+      title: Text(
+        l10n.widgetToolChooserOpenFile,
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l10n.widgetToolChooserChooseTool,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.fileName,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontStyle: FontStyle.italic,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    for (final tool in internalTools)
+                      _ToolChooserItem(tool: tool, onTap: () => _choose(tool)),
+                  ],
+                ),
+              ),
+            ),
+            if (systemTools.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              for (final tool in systemTools)
+                _ToolChooserItem(tool: tool, onTap: () => _choose(tool)),
+            ],
+            if (widget.showRememberChoice) ...[
+              const SizedBox(height: 12),
+              _RememberChoiceCheckbox(
+                value: _rememberChoice,
+                onChanged: (val) {
+                  setState(() {
+                    _rememberChoice = val ?? false;
+                  });
+                },
+                labelText: l10n.widgetToolChooserAlwaysUseTool,
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.commonCancel),
+        ),
+      ],
+    );
+  }
+}
+
+class _ToolChooserItem extends StatelessWidget {
+  final ToolModel tool;
+  final VoidCallback onTap;
+
+  const _ToolChooserItem({required this.tool, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: InkWell(
-        onTap: () {
-          context.read<AppState>().recordToolUsage(tool.id);
-          Navigator.of(context).pop((tool, _rememberChoice));
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -123,92 +217,6 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
           ),
         ),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    final appState = context.read<AppState>();
-    final internalTools =
-        widget.tools
-            .where((t) => t.id != 'system-share' && t.id != 'system-default')
-            .toList()
-          ..sort(
-            (a, b) => appState
-                .getLastUsed(b.id)
-                .compareTo(appState.getLastUsed(a.id)),
-          );
-    final systemTools = widget.tools
-        .where((t) => t.id == 'system-share' || t.id == 'system-default')
-        .toList();
-
-    return ResponsiveAlertDialog(
-      title: Text(
-        l10n.widgetToolChooserOpenFile,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      content: SizedBox(
-        width: 320,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.widgetToolChooserChooseTool,
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              widget.fileName,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontStyle: FontStyle.italic,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: internalTools.map((tool) {
-                    return _buildToolItem(context, theme, l10n, tool);
-                  }).toList(),
-                ),
-              ),
-            ),
-            if (systemTools.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              ...systemTools.map((tool) {
-                return _buildToolItem(context, theme, l10n, tool);
-              }),
-            ],
-            if (widget.showRememberChoice) ...[
-              const SizedBox(height: 12),
-              _RememberChoiceCheckbox(
-                value: _rememberChoice,
-                onChanged: (val) {
-                  setState(() {
-                    _rememberChoice = val ?? false;
-                  });
-                },
-                labelText: l10n.widgetToolChooserAlwaysUseTool,
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.commonCancel),
-        ),
-      ],
     );
   }
 }

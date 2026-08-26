@@ -73,7 +73,17 @@ class _ImageViewerRedactOverlayState extends State<ImageViewerRedactOverlay> {
           width: width,
           height: height,
           child: IgnorePointer(
-            child: ClipRect(child: _buildPreviewContent(context)),
+            child: ClipRect(
+              child: _RedactPreview(
+                redactType: widget.redactType,
+                solidColor: widget.solidColor,
+                decodedImage: widget.decodedImage,
+                redactRectNormalized: widget.redactRectNormalized,
+                intensity: widget.intensity,
+                isDragging: widget.isDragging,
+                relativePathPoints: widget.relativePathPoints,
+              ),
+            ),
           ),
         ),
 
@@ -274,77 +284,6 @@ class _ImageViewerRedactOverlayState extends State<ImageViewerRedactOverlay> {
     );
   }
 
-  Widget _buildPreviewContent(BuildContext context) {
-    final theme = Theme.of(context);
-    Widget content;
-
-    switch (widget.redactType) {
-      case 'solid':
-        content = Container(color: widget.solidColor);
-        break;
-      case 'pixelate':
-        if (widget.isDragging) {
-          content = Container(
-            color: theme.colorScheme.primary.withValues(alpha: 0.15),
-            child: const Center(
-              child: Icon(Icons.grid_on, color: Colors.white70, size: 24),
-            ),
-          );
-        } else if (widget.decodedImage == null) {
-          content = Container(
-            color: theme.colorScheme.primary.withValues(alpha: 0.25),
-            child: const Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          );
-        } else {
-          content = CustomPaint(
-            painter: PixelatePainter(
-              decodedImage: widget.decodedImage!,
-              normalizedRect: widget.redactRectNormalized,
-              blockSize: widget.intensity,
-            ),
-          );
-        }
-        break;
-      case 'blur':
-        if (widget.isDragging) {
-          content = Container(
-            color: theme.colorScheme.primary.withValues(alpha: 0.15),
-            child: const Center(
-              child: Icon(Icons.blur_on, color: Colors.white70, size: 24),
-            ),
-          );
-        } else {
-          content = ClipRect(
-            child: BackdropFilter(
-              filter: ui.ImageFilter.blur(
-                sigmaX: widget.intensity,
-                sigmaY: widget.intensity,
-              ),
-              child: Container(color: Colors.transparent),
-            ),
-          );
-        }
-        break;
-      default:
-        content = const SizedBox.shrink();
-    }
-
-    if (widget.relativePathPoints != null &&
-        widget.relativePathPoints!.isNotEmpty) {
-      return ClipPath(
-        clipper: PathClipper(widget.relativePathPoints!),
-        child: content,
-      );
-    }
-    return content;
-  }
-
   void _resizeRedactBox(
     double dx,
     double dy,
@@ -445,5 +384,93 @@ class _Handle extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _RedactPreview extends StatelessWidget {
+  final String redactType;
+  final Color solidColor;
+  final img.Image? decodedImage;
+  final Rect redactRectNormalized;
+  final double intensity;
+  final bool isDragging;
+  final List<Offset>? relativePathPoints;
+
+  const _RedactPreview({
+    required this.redactType,
+    required this.solidColor,
+    required this.decodedImage,
+    required this.redactRectNormalized,
+    required this.intensity,
+    required this.isDragging,
+    required this.relativePathPoints,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    Widget content;
+
+    switch (redactType) {
+      case 'solid':
+        content = Container(color: solidColor);
+        break;
+      case 'pixelate':
+        if (isDragging) {
+          content = Container(
+            color: theme.colorScheme.primary.withValues(alpha: 0.15),
+            child: const Center(
+              child: Icon(Icons.grid_on, color: Colors.white70, size: 24),
+            ),
+          );
+        } else if (decodedImage == null) {
+          content = Container(
+            color: theme.colorScheme.primary.withValues(alpha: 0.25),
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        } else {
+          content = CustomPaint(
+            painter: PixelatePainter(
+              decodedImage: decodedImage!,
+              normalizedRect: redactRectNormalized,
+              blockSize: intensity,
+            ),
+          );
+        }
+        break;
+      case 'blur':
+        if (isDragging) {
+          content = Container(
+            color: theme.colorScheme.primary.withValues(alpha: 0.15),
+            child: const Center(
+              child: Icon(Icons.blur_on, color: Colors.white70, size: 24),
+            ),
+          );
+        } else {
+          content = ClipRect(
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: intensity, sigmaY: intensity),
+              child: Container(color: Colors.transparent),
+            ),
+          );
+        }
+        break;
+      default:
+        content = const SizedBox.shrink();
+    }
+
+    if (relativePathPoints != null && relativePathPoints!.isNotEmpty) {
+      return ClipPath(
+        clipper: PathClipper(relativePathPoints!),
+        child: content,
+      );
+    }
+    return content;
   }
 }

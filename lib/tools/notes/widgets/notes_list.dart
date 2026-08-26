@@ -126,8 +126,10 @@ class _NotesListState extends State<NotesList> {
                             mainAxisExtent: 250,
                           ),
                       delegate: SliverChildBuilderDelegate(
-                        (context, entryIndex) =>
-                            _buildCard(groups[index].entries[entryIndex]),
+                        (context, entryIndex) => _entryCard(
+                          groups[index].entries[entryIndex],
+                          expandable: false,
+                        ),
                         childCount: groups[index].entries.length,
                       ),
                     ),
@@ -137,9 +139,16 @@ class _NotesListState extends State<NotesList> {
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                     sliver: SliverList.builder(
                       itemCount: groups[index].entries.length,
-                      itemBuilder: (context, entryIndex) => _buildEntry(
-                        groups[index].entries[entryIndex],
-                        expandable: true,
+                      itemBuilder: (context, entryIndex) => _NoteListEntry(
+                        entry: groups[index].entries[entryIndex],
+                        card: _entryCard(
+                          groups[index].entries[entryIndex],
+                          expandable: true,
+                        ),
+                        expanded: _isThreadExpanded(
+                          groups[index].entries[entryIndex],
+                        ),
+                        onTapChild: widget.onTap,
                       ),
                     ),
                   ),
@@ -150,39 +159,21 @@ class _NotesListState extends State<NotesList> {
     );
   }
 
-  Widget _buildEntry(_NoteEntry entry, {required bool expandable}) {
+  bool _isThreadExpanded(_NoteEntry entry) {
     final node = entry.node;
-    final expanded =
-        node != null && _expandedThreads.contains(node.note.shortId);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildCard(entry, expandable: expandable),
-        if (expanded && node.children.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 12, 10),
-            child: NoteThreadTree(
-              nodes: node.children,
-              accentColor: AppTheme.accentTeal,
-              dense: true,
-              onTap: (child) => widget.onTap(child.note),
-            ),
-          ),
-      ],
-    );
+    return node != null && _expandedThreads.contains(node.note.shortId);
   }
 
-  Widget _buildCard(_NoteEntry entry, {bool expandable = false}) {
+  /// Grid cells have a fixed height, so there the thread opens in a popover
+  /// anchored to the badge instead of expanding in place.
+  NoteCard _entryCard(_NoteEntry entry, {required bool expandable}) {
     final node = entry.node;
     final followUps = node?.descendantCount ?? 0;
     return NoteCard(
       note: entry.note,
       breadcrumb: entry.breadcrumb,
       followUpCount: followUps,
-      followUpsExpanded:
-          node != null && _expandedThreads.contains(node.note.shortId),
-      // Cards in the grid have a fixed height, so there the thread opens in a
-      // popover anchored to the badge instead of expanding in place.
+      followUpsExpanded: _isThreadExpanded(entry),
       onFollowUpsTap: followUps == 0 || node == null
           ? null
           : expandable
@@ -218,28 +209,31 @@ class _NotesListState extends State<NotesList> {
       box.size.bottomRight(Offset.zero),
       ancestor: overlay,
     );
-    final availableWidth = MediaQuery.sizeOf(badgeContext).width - 32;
-    final popupWidth = availableWidth.clamp(0.0, 520.0);
+    // Overlay sizing is a window question — the popup is not laid out inside
+    // the list. Grow with the window, but stay a popover rather than a dialog.
+    final windowWidth = MediaQuery.sizeOf(badgeContext).width;
+    final maxPopupWidth = (windowWidth * 0.6).clamp(520.0, 880.0);
+    final popupWidth = (windowWidth - 32).clamp(0.0, maxPopupWidth);
     final selected = await showMenu<NoteThreadNode>(
       context: badgeContext,
       position: RelativeRect.fromRect(
         Rect.fromPoints(topLeft, bottomRight),
         Offset.zero & overlay.size,
       ),
+      // Material caps a popup menu at 280 wide unless the route is told
+      // otherwise; sizing the child alone has no effect.
+      constraints: BoxConstraints.tightFor(width: popupWidth),
       items: [
         PopupMenuItem<NoteThreadNode>(
           enabled: false,
           padding: EdgeInsets.zero,
-          child: SizedBox(
-            width: popupWidth,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: NoteThreadTree(
-                nodes: node.children,
-                accentColor: AppTheme.accentTeal,
-                dense: true,
-                onTap: (child) => Navigator.of(badgeContext).pop(child),
-              ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: NoteThreadTree(
+              nodes: node.children,
+              accentColor: AppTheme.accentTeal,
+              dense: true,
+              onTap: (child) => Navigator.of(badgeContext).pop(child),
             ),
           ),
         ),
@@ -375,6 +369,43 @@ class _NotesArchiveHeader extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _NoteListEntry extends StatelessWidget {
+  final _NoteEntry entry;
+  final NoteCard card;
+  final bool expanded;
+  final ValueChanged<Note> onTapChild;
+
+  const _NoteListEntry({
+    required this.entry,
+    required this.card,
+    required this.expanded,
+    required this.onTapChild,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final node = entry.node;
+    final showChildren = expanded && node != null && node.children.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        card,
+        if (showChildren)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 12, 10),
+            child: NoteThreadTree(
+              nodes: node.children,
+              accentColor: AppTheme.accentTeal,
+              dense: true,
+              onTap: (child) => onTapChild(child.note),
+            ),
+          ),
+      ],
     );
   }
 }

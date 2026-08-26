@@ -9,6 +9,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/signature_library.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
 
+import 'pdf_result_view.dart';
 import 'pdf_signature_picker.dart';
 import 'pdf_signature_placement_overlay.dart';
 
@@ -221,7 +222,6 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
@@ -242,40 +242,85 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : switch (_phase) {
-              _Phase.place => _buildPlace(theme),
-              _Phase.processing => _buildProcessing(theme),
-              _Phase.done => _buildDone(theme),
+              _Phase.place => Column(
+                children: [
+                  PdfSignaturePicker(
+                    signatures: _signatures,
+                    selectedId: _placements[_pageIndex]?.signature.shortId,
+                    onSelect: _selectSignature,
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: _SignPageView(
+                      image: _pageImages[_pageIndex],
+                      pageAspect: _pageAspect(_pageIndex),
+                      placement: _placements[_pageIndex],
+                      heightFraction: (p) => _heightFraction(p, _pageIndex),
+                      onDrag: _drag,
+                      onResize: _resize,
+                      onRotate: (p, a) => setState(() => p.rotation = a),
+                      onRemove: _removeCurrent,
+                    ),
+                  ),
+                  _SignBottomBar(
+                    pageIndex: _pageIndex,
+                    pageCount: _pageCount,
+                    hasPlacement: _placements[_pageIndex] != null,
+                    hasSignatures: _signatures.isNotEmpty,
+                    onGoToPage: _goToPage,
+                  ),
+                ],
+              ),
+              _Phase.processing => const _SignProcessing(),
+              _Phase.done => PdfResultView(
+                title: l10n.pdfEditSignDoneTitle,
+                subtitle: l10n.pdfEditSignDoneSize(
+                  PdfResultView.formatSize(_resultSize),
+                ),
+                onDownload: _download,
+                onShare: _share,
+                onOpenInViewer: () =>
+                    widget.onComplete(_resultPath!, '${_baseName}_signed.pdf'),
+                onClose: widget.onCancel,
+              ),
             },
     );
   }
+}
 
-  Widget _buildPlace(ThemeData theme) {
-    return Column(
-      children: [
-        PdfSignaturePicker(
-          signatures: _signatures,
-          selectedId: _placements[_pageIndex]?.signature.shortId,
-          onSelect: _selectSignature,
-        ),
-        const Divider(height: 1),
-        Expanded(child: _buildPageView(theme)),
-        _buildBottomBar(theme),
-      ],
-    );
-  }
+class _SignPageView extends StatelessWidget {
+  final Uint8List? image;
+  final double pageAspect;
+  final _Placement? placement;
+  final double Function(_Placement p) heightFraction;
+  final void Function(Offset delta, double dispW, double dispH) onDrag;
+  final void Function(double deltaX, double dispW) onResize;
+  final void Function(_Placement p, double angle) onRotate;
+  final VoidCallback onRemove;
 
-  Widget _buildPageView(ThemeData theme) {
-    final image = _pageImages[_pageIndex];
-    if (image == null) {
+  const _SignPageView({
+    required this.image,
+    required this.pageAspect,
+    required this.placement,
+    required this.heightFraction,
+    required this.onDrag,
+    required this.onResize,
+    required this.onRotate,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = image;
+    if (bytes == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    final placement = _placements[_pageIndex];
+    final current = placement;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final areaW = constraints.maxWidth;
         final areaH = constraints.maxHeight;
-        final pageAspect = _pageAspect(_pageIndex);
         double dispW;
         double dispH;
         if (areaW / areaH > pageAspect) {
@@ -314,11 +359,22 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
                         ),
                       ],
                     ),
-                    child: Image.memory(image, fit: BoxFit.fill),
+                    child: Image.memory(bytes, fit: BoxFit.fill),
                   ),
                 ),
-                if (placement != null)
-                  _buildOverlay(placement, dispLeft, dispTop, dispW, dispH),
+                if (current != null)
+                  _PlacementOverlay(
+                    placement: current,
+                    heightFraction: heightFraction(current),
+                    dispLeft: dispLeft,
+                    dispTop: dispTop,
+                    dispW: dispW,
+                    dispH: dispH,
+                    onDrag: (d) => onDrag(d, dispW, dispH),
+                    onResize: (d) => onResize(d.dx, dispW),
+                    onRotate: (a) => onRotate(current, a),
+                    onRemove: onRemove,
+                  ),
               ],
             ),
           ),
@@ -326,18 +382,36 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
       },
     );
   }
+}
 
-  Widget _buildOverlay(
-    _Placement p,
-    double dispLeft,
-    double dispTop,
-    double dispW,
-    double dispH,
-  ) {
-    final fh = _heightFraction(p, _pageIndex);
-    final boxW = p.fw * dispW;
-    final boxH = fh * dispH;
-    final image = p.signature.image;
+class _PlacementOverlay extends StatelessWidget {
+  final _Placement placement;
+  final double heightFraction;
+  final double dispLeft;
+  final double dispTop;
+  final double dispW;
+  final double dispH;
+  final ValueChanged<Offset> onDrag;
+  final ValueChanged<Offset> onResize;
+  final ValueChanged<double> onRotate;
+  final VoidCallback onRemove;
+
+  const _PlacementOverlay({
+    required this.placement,
+    required this.heightFraction,
+    required this.dispLeft,
+    required this.dispTop,
+    required this.dispW,
+    required this.dispH,
+    required this.onDrag,
+    required this.onResize,
+    required this.onRotate,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final image = placement.signature.image;
     if (image == null) return const SizedBox.shrink();
 
     // Inflate the positioned box by the overlay margins so the handles render
@@ -345,8 +419,10 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
     // handle above the box).
     const side = PdfSignaturePlacementOverlay.sideMargin;
     const top = PdfSignaturePlacementOverlay.topMargin;
-    final boxLeft = dispLeft + (p.cx - p.fw / 2) * dispW;
-    final boxTop = dispTop + (p.cy - fh / 2) * dispH;
+    final boxW = placement.fw * dispW;
+    final boxH = heightFraction * dispH;
+    final boxLeft = dispLeft + (placement.cx - placement.fw / 2) * dispW;
+    final boxTop = dispTop + (placement.cy - heightFraction / 2) * dispH;
 
     return Positioned(
       left: boxLeft - side,
@@ -355,18 +431,36 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
       height: boxH + top + side,
       child: PdfSignaturePlacementOverlay(
         image: image,
-        rotation: p.rotation,
-        onDrag: (d) => _drag(d, dispW, dispH),
-        onResize: (d) => _resize(d.dx, dispW),
-        onRotate: (a) => setState(() => p.rotation = a),
-        onRemove: _removeCurrent,
+        rotation: placement.rotation,
+        onDrag: onDrag,
+        onResize: onResize,
+        onRotate: onRotate,
+        onRemove: onRemove,
       ),
     );
   }
+}
 
-  Widget _buildBottomBar(ThemeData theme) {
+class _SignBottomBar extends StatelessWidget {
+  final int pageIndex;
+  final int pageCount;
+  final bool hasPlacement;
+  final bool hasSignatures;
+  final ValueChanged<int> onGoToPage;
+
+  const _SignBottomBar({
+    required this.pageIndex,
+    required this.pageCount,
+    required this.hasPlacement,
+    required this.hasSignatures,
+    required this.onGoToPage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final hasPlacement = _placements[_pageIndex] != null;
+
     return SafeArea(
       top: false,
       child: Padding(
@@ -375,19 +469,17 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
           children: [
             IconButton(
               icon: const Icon(Icons.chevron_left),
-              onPressed: _pageIndex > 0
-                  ? () => _goToPage(_pageIndex - 1)
-                  : null,
+              onPressed: pageIndex > 0 ? () => onGoToPage(pageIndex - 1) : null,
               tooltip: l10n.pdfEditSignPrevPage,
             ),
             Text(
-              l10n.pdfEditSignPageOf(_pageIndex + 1, _pageCount),
+              l10n.pdfEditSignPageOf(pageIndex + 1, pageCount),
               style: theme.textTheme.bodyMedium,
             ),
             IconButton(
               icon: const Icon(Icons.chevron_right),
-              onPressed: _pageIndex < _pageCount - 1
-                  ? () => _goToPage(_pageIndex + 1)
+              onPressed: pageIndex < pageCount - 1
+                  ? () => onGoToPage(pageIndex + 1)
                   : null,
               tooltip: l10n.pdfEditSignNextPage,
             ),
@@ -396,7 +488,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
               child: Text(
                 hasPlacement
                     ? l10n.pdfEditSignDragHint
-                    : _signatures.isEmpty
+                    : !hasSignatures
                     ? ''
                     : l10n.pdfEditSignTapHint,
                 textAlign: TextAlign.end,
@@ -412,8 +504,14 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
       ),
     );
   }
+}
 
-  Widget _buildProcessing(ThemeData theme) {
+class _SignProcessing extends StatelessWidget {
+  const _SignProcessing();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
@@ -423,73 +521,6 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
           const SizedBox(height: 24),
           Text(l10n.pdfEditSignStamping, style: theme.textTheme.titleMedium),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDone(ThemeData theme) {
-    final l10n = AppLocalizations.of(context);
-    final size = _resultSize;
-    final sizeText = size > 1024 * 1024
-        ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
-        : size > 1024
-        ? '${(size / 1024).toStringAsFixed(1)} KB'
-        : '$size B';
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.check_circle,
-              size: 64,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.pdfEditSignDoneTitle,
-              style: theme.textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.pdfEditSignDoneSize(sizeText),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FilledButton.icon(
-                  onPressed: _download,
-                  icon: const Icon(Icons.download),
-                  label: Text(l10n.pdfEditDownload),
-                ),
-                const SizedBox(width: 12),
-                OutlinedButton.icon(
-                  onPressed: _share,
-                  icon: const Icon(Icons.share),
-                  label: Text(l10n.commonShare),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: () =>
-                  widget.onComplete(_resultPath!, '${_baseName}_signed.pdf'),
-              icon: const Icon(Icons.open_in_new),
-              label: Text(l10n.pdfEditOpenInViewer),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: widget.onCancel,
-              child: Text(l10n.commonClose),
-            ),
-          ],
-        ),
       ),
     );
   }

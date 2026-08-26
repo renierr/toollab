@@ -81,7 +81,6 @@ class _PdfRedactOverlayState extends State<PdfRedactOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -91,7 +90,7 @@ class _PdfRedactOverlayState extends State<PdfRedactOverlay> {
             onPanStart: _onPanStart,
             onPanUpdate: _onPanUpdate,
             onPanEnd: _onPanEnd,
-            child: SizedBox.expand(),
+            child: const SizedBox.expand(),
           ),
         Positioned.fill(
           child: IgnorePointer(
@@ -107,26 +106,51 @@ class _PdfRedactOverlayState extends State<PdfRedactOverlay> {
           ),
         ),
         for (int i = 0; i < widget.marks.length; i++)
-          _buildDeleteButton(i, widget.marks[i]),
-        if (_dragStart != null && _dragEnd != null) _buildDragRect(theme),
+          _MarkDeleteButton(
+            mark: widget.marks[i],
+            dispLeft: widget.dispLeft,
+            dispTop: widget.dispTop,
+            dispW: widget.dispW,
+            dispH: widget.dispH,
+            onDelete: () => widget.onDeleteMark(i),
+          ),
+        if (_dragStart != null && _dragEnd != null)
+          _DragRect(start: _dragStart!, end: _dragEnd!),
       ],
     );
   }
+}
 
-  Widget _buildDeleteButton(int index, Rect mark) {
-    const btnSize = 24.0;
-    final left = widget.dispLeft + mark.left * widget.dispW;
-    final top = widget.dispTop + mark.top * widget.dispH;
+class _MarkDeleteButton extends StatelessWidget {
+  static const _size = 24.0;
 
+  final Rect mark;
+  final double dispLeft;
+  final double dispTop;
+  final double dispW;
+  final double dispH;
+  final VoidCallback onDelete;
+
+  const _MarkDeleteButton({
+    required this.mark,
+    required this.dispLeft,
+    required this.dispTop,
+    required this.dispW,
+    required this.dispH,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Positioned(
-      left: left + mark.width * widget.dispW,
-      top: top - btnSize / 2,
-      width: btnSize,
-      height: btnSize,
+      left: dispLeft + mark.right * dispW,
+      top: dispTop + mark.top * dispH - _size / 2,
+      width: _size,
+      height: _size,
       child: Material(
         type: MaterialType.transparency,
         child: GestureDetector(
-          onTap: () => widget.onDeleteMark(index),
+          onTap: onDelete,
           child: Container(
             decoration: BoxDecoration(
               color: Colors.red,
@@ -139,20 +163,21 @@ class _PdfRedactOverlayState extends State<PdfRedactOverlay> {
       ),
     );
   }
+}
 
-  Widget _buildDragRect(ThemeData theme) {
-    final start = _dragStart!;
-    final end = _dragEnd!;
-    final left = start.dx < end.dx ? start.dx : end.dx;
-    final top = start.dy < end.dy ? start.dy : end.dy;
-    final w = (start.dx - end.dx).abs();
-    final h = (start.dy - end.dy).abs();
+class _DragRect extends StatelessWidget {
+  final Offset start;
+  final Offset end;
 
+  const _DragRect({required this.start, required this.end});
+
+  @override
+  Widget build(BuildContext context) {
     return Positioned(
-      left: left,
-      top: top,
-      width: w,
-      height: h,
+      left: start.dx < end.dx ? start.dx : end.dx,
+      top: start.dy < end.dy ? start.dy : end.dy,
+      width: (start.dx - end.dx).abs(),
+      height: (start.dy - end.dy).abs(),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.3),

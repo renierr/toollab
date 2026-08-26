@@ -117,7 +117,10 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
                   ),
                 ),
               if (_downloadFuture == null)
-                _buildNoPreview(context, theme, resolvedMimeType)
+                _NoPreviewPlaceholder(
+                  mimeType: resolvedMimeType,
+                  onOpen: _openExternally,
+                )
               else
                 FutureBuilder<String>(
                   future: _downloadFuture,
@@ -224,7 +227,10 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
                       );
                     }
 
-                    return _buildNoPreview(context, theme, resolvedMimeType);
+                    return _NoPreviewPlaceholder(
+                      mimeType: resolvedMimeType,
+                      onOpen: _openExternally,
+                    );
                   },
                 ),
             ],
@@ -264,12 +270,23 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
     );
   }
 
-  Widget _buildNoPreview(
-    BuildContext context,
-    ThemeData theme,
-    String resolvedMimeType,
-  ) {
+  void _openExternally() {
+    Navigator.of(context).pop();
+    widget.onOpen();
+  }
+}
+
+class _NoPreviewPlaceholder extends StatelessWidget {
+  final String mimeType;
+  final VoidCallback onOpen;
+
+  const _NoPreviewPlaceholder({required this.mimeType, required this.onOpen});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -286,17 +303,14 @@ class _FastDropPreviewDialogState extends State<FastDropPreviewDialog>
           ),
           const SizedBox(height: 8),
           Text(
-            resolvedMimeType,
+            mimeType,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 20),
           FilledButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              widget.onOpen();
-            },
+            onPressed: onOpen,
             icon: const Icon(Icons.open_in_new),
             label: Text(l10n.fastDropOpenWithApp),
             style: FilledButton.styleFrom(

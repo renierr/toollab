@@ -186,8 +186,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                             ),
                             title: Text(dev.name),
                             subtitle: Text('RSSI ${dev.rssi} | ${dev.id}'),
-                            trailing: _buildConnectButton(
-                              context: context,
+                            trailing: _ConnectButton(
                               isCurrent: isCurrent,
                               connectionState: state.treadmillConnection,
                               onConnect: () =>
@@ -237,8 +236,7 @@ class DeviceConnectionSheet extends StatelessWidget {
                             ),
                             title: Text(dev.name),
                             subtitle: Text('RSSI ${dev.rssi} | ${dev.id}'),
-                            trailing: _buildConnectButton(
-                              context: context,
+                            trailing: _ConnectButton(
                               isCurrent: isCurrent,
                               connectionState: state.hrmConnection,
                               onConnect: () =>
@@ -265,16 +263,26 @@ class DeviceConnectionSheet extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildConnectButton({
-    required BuildContext context,
-    required bool isCurrent,
-    required BleConnectionState connectionState,
-    required VoidCallback onConnect,
-    required VoidCallback onDisconnect,
-  }) {
+class _ConnectButton extends StatelessWidget {
+  final bool isCurrent;
+  final BleConnectionState connectionState;
+  final VoidCallback onConnect;
+  final VoidCallback onDisconnect;
+
+  const _ConnectButton({
+    required this.isCurrent,
+    required this.connectionState,
+    required this.onConnect,
+    required this.onDisconnect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+
     if (isCurrent) {
       if (connectionState == BleConnectionState.connecting) {
         return const SizedBox(

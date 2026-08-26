@@ -47,7 +47,14 @@ class GenAiStatusBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
         children: [
-          _buildDot(theme),
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: _statusColor,
+              shape: BoxShape.circle,
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -87,28 +94,12 @@ class GenAiStatusBanner extends StatelessWidget {
     );
   }
 
-  Widget _buildDot(ThemeData theme) {
-    final Color color;
-    switch (status) {
-      case FeatureStatus.available:
-        color = Colors.green;
-        break;
-      case FeatureStatus.downloading:
-        color = Colors.blue;
-        break;
-      case FeatureStatus.downloadable:
-        color = Colors.orange;
-        break;
-      case FeatureStatus.unavailable:
-        color = Colors.red;
-        break;
-    }
-    return Container(
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
+  Color get _statusColor => switch (status) {
+    FeatureStatus.available => Colors.green,
+    FeatureStatus.downloading => Colors.blue,
+    FeatureStatus.downloadable => Colors.orange,
+    FeatureStatus.unavailable => Colors.red,
+  };
 
   String _getStatusText(AppLocalizations l10n) {
     switch (status) {

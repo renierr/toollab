@@ -4,6 +4,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_result_view.dart';
 
 class PdfFlattenPanel extends StatefulWidget {
   final PdfOperationSession session;
@@ -119,7 +120,6 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -131,15 +131,54 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
         ),
       ),
       body: switch (_phase) {
-        _FlattenPhase.options => _buildOptions(theme),
-        _FlattenPhase.processing => _buildProgress(theme),
-        _FlattenPhase.done => _buildDone(theme),
+        _FlattenPhase.options => _FlattenOptions(
+          dpi: _dpi,
+          jpegQuality: _jpegQuality,
+          onDpiChanged: (v) => setState(() => _dpi = v),
+          onJpegQualityChanged: (v) => setState(() => _jpegQuality = v),
+          onStart: _execute,
+        ),
+        _FlattenPhase.processing => _FlattenProgress(
+          progress: _progress,
+          statusText: _statusText,
+          totalPages: _totalPages,
+        ),
+        _FlattenPhase.done => PdfResultView(
+          title: l10n.pdfEditFlattenDoneTitle,
+          subtitle: l10n.pdfEditFlattenDoneSize(
+            PdfResultView.formatSize(_resultSize),
+          ),
+          onDownload: _download,
+          onShare: _share,
+          onOpenInViewer: () =>
+              widget.onComplete(_resultPath!, '${_baseName}_flattened.pdf'),
+          onClose: widget.onCancel,
+        ),
       },
     );
   }
+}
 
-  Widget _buildOptions(ThemeData theme) {
+class _FlattenOptions extends StatelessWidget {
+  final int dpi;
+  final int jpegQuality;
+  final ValueChanged<int> onDpiChanged;
+  final ValueChanged<int> onJpegQualityChanged;
+  final VoidCallback onStart;
+
+  const _FlattenOptions({
+    required this.dpi,
+    required this.jpegQuality,
+    required this.onDpiChanged,
+    required this.onJpegQualityChanged,
+    required this.onStart,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -152,73 +191,30 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
           ),
         ),
         const SizedBox(height: 24),
-
-        // DPI
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.pdfEditFlattenDpi(_dpi),
-                  style: theme.textTheme.titleSmall,
-                ),
-                const SizedBox(height: 8),
-                Slider(
-                  value: _dpi.toDouble(),
-                  min: 100,
-                  max: 400,
-                  divisions: 6,
-                  label: '$_dpi DPI',
-                  onChanged: (v) => setState(() => _dpi = v.round()),
-                ),
-                Text(
-                  l10n.pdfEditFlattenDpiHint,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        _SliderCard(
+          label: l10n.pdfEditFlattenDpi(dpi),
+          hint: l10n.pdfEditFlattenDpiHint,
+          value: dpi.toDouble(),
+          min: 100,
+          max: 400,
+          divisions: 6,
+          sliderLabel: '$dpi DPI',
+          onChanged: (v) => onDpiChanged(v.round()),
         ),
         const SizedBox(height: 12),
-
-        // JPEG Quality
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.pdfEditFlattenJpegQuality(_jpegQuality),
-                  style: theme.textTheme.titleSmall,
-                ),
-                const SizedBox(height: 8),
-                Slider(
-                  value: _jpegQuality.toDouble(),
-                  min: 50,
-                  max: 100,
-                  divisions: 10,
-                  label: '$_jpegQuality%',
-                  onChanged: (v) => setState(() => _jpegQuality = v.round()),
-                ),
-                Text(
-                  l10n.pdfEditFlattenJpegQualityHint,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        _SliderCard(
+          label: l10n.pdfEditFlattenJpegQuality(jpegQuality),
+          hint: l10n.pdfEditFlattenJpegQualityHint,
+          value: jpegQuality.toDouble(),
+          min: 50,
+          max: 100,
+          divisions: 10,
+          sliderLabel: '$jpegQuality%',
+          onChanged: (v) => onJpegQualityChanged(v.round()),
         ),
         const SizedBox(height: 24),
-
         FilledButton.icon(
-          onPressed: _execute,
+          onPressed: onStart,
           icon: const Icon(Icons.photo_library),
           label: Text(l10n.pdfEditFlattenStart),
           style: FilledButton.styleFrom(
@@ -228,25 +224,50 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
       ],
     );
   }
+}
 
-  Widget _buildProgress(ThemeData theme) {
-    final l10n = AppLocalizations.of(context);
-    return Center(
+class _SliderCard extends StatelessWidget {
+  final String label;
+  final String hint;
+  final double value;
+  final double min;
+  final double max;
+  final int divisions;
+  final String sliderLabel;
+  final ValueChanged<double> onChanged;
+
+  const _SliderCard({
+    required this.label,
+    required this.hint,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.divisions,
+    required this.sliderLabel,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircularProgressIndicator(value: _progress > 0 ? _progress : null),
-            const SizedBox(height: 24),
-            Text(
-              _statusText,
-              style: theme.textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
+            Text(label, style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
+            Slider(
+              value: value,
+              min: min,
+              max: max,
+              divisions: divisions,
+              label: sliderLabel,
+              onChanged: onChanged,
+            ),
             Text(
-              l10n.pdfEditFlattenPagesTotal(_totalPages),
+              hint,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -256,15 +277,23 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
       ),
     );
   }
+}
 
-  Widget _buildDone(ThemeData theme) {
+class _FlattenProgress extends StatelessWidget {
+  final double progress;
+  final String statusText;
+  final int totalPages;
+
+  const _FlattenProgress({
+    required this.progress,
+    required this.statusText,
+    required this.totalPages,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final size = _resultSize;
-    final sizeText = size > 1024 * 1024
-        ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
-        : size > 1024
-        ? '${(size / 1024).toStringAsFixed(1)} KB'
-        : '$size B';
 
     return Center(
       child: Padding(
@@ -272,51 +301,19 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.check_circle,
-              size: 64,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
+            CircularProgressIndicator(value: progress > 0 ? progress : null),
+            const SizedBox(height: 24),
             Text(
-              l10n.pdfEditFlattenDoneTitle,
-              style: theme.textTheme.headlineSmall,
+              statusText,
+              style: theme.textTheme.titleMedium,
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              l10n.pdfEditFlattenDoneSize(sizeText),
-              style: theme.textTheme.bodyMedium?.copyWith(
+              l10n.pdfEditFlattenPagesTotal(totalPages),
+              style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FilledButton.icon(
-                  onPressed: _download,
-                  icon: const Icon(Icons.download),
-                  label: Text(l10n.pdfEditDownload),
-                ),
-                const SizedBox(width: 12),
-                OutlinedButton.icon(
-                  onPressed: _share,
-                  icon: const Icon(Icons.share),
-                  label: Text(l10n.commonShare),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: () =>
-                  widget.onComplete(_resultPath!, '${_baseName}_flattened.pdf'),
-              icon: const Icon(Icons.open_in_new),
-              label: Text(l10n.pdfEditOpenInViewer),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: widget.onCancel,
-              child: Text(l10n.commonClose),
             ),
           ],
         ),

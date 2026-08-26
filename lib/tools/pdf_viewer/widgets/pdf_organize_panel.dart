@@ -5,6 +5,7 @@ import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/pdf_viewer/pdf_operation_session.dart';
+import 'package:tool_lab/tools/pdf_viewer/widgets/pdf_result_view.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
@@ -330,7 +331,26 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
     }
 
     if (_phase == _OrganizePhase.done && _resultPath != null) {
-      return _buildDone(theme);
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.pdfNavOrganizeTitle(widget.session.fileName)),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: widget.onCancel,
+          ),
+        ),
+        body: PdfResultView(
+          title: l10n.pdfNavOrganizeComplete,
+          subtitle: l10n.pdfNavOrganizeNewSize(
+            PdfResultView.formatSize(_resultSize),
+          ),
+          onDownload: _download,
+          onShare: _share,
+          onOpenInViewer: () =>
+              widget.onComplete(_resultPath!, '${_baseName}_organized.pdf'),
+          onClose: widget.onCancel,
+        ),
+      );
     }
 
     return Scaffold(
@@ -414,88 +434,6 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
                 ),
               ],
             ),
-    );
-  }
-
-  Widget _buildDone(ThemeData theme) {
-    final size = _resultSize;
-    final sizeText = size > 1024 * 1024
-        ? '${(size / (1024 * 1024)).toStringAsFixed(1)} MB'
-        : size > 1024
-        ? '${(size / 1024).toStringAsFixed(1)} KB'
-        : '$size B';
-
-    return Builder(
-      builder: (context) {
-        final l10n = AppLocalizations.of(context);
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(l10n.pdfNavOrganizeTitle(widget.session.fileName)),
-            leading: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: widget.onCancel,
-            ),
-          ),
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    size: 64,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    l10n.pdfNavOrganizeComplete,
-                    style: theme.textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.pdfNavOrganizeNewSize(sizeText),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FilledButton.icon(
-                        onPressed: _download,
-                        icon: const Icon(Icons.download),
-                        label: Text(l10n.pdfNavDownload),
-                      ),
-                      const SizedBox(width: 12),
-                      OutlinedButton.icon(
-                        onPressed: _share,
-                        icon: const Icon(Icons.share),
-                        label: Text(l10n.commonShare),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton.icon(
-                    onPressed: () => widget.onComplete(
-                      _resultPath!,
-                      '${_baseName}_organized.pdf',
-                    ),
-                    icon: const Icon(Icons.open_in_new),
-                    label: Text(l10n.pdfNavOpenInViewer),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: widget.onCancel,
-                    child: Text(l10n.commonClose),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

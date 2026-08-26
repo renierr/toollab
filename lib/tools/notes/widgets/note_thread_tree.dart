@@ -5,6 +5,14 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/notes/note_thread.dart';
 import 'package:tool_lab/tools/notes/note_title.dart';
 
+/// Horizontal room one nesting level gets. The rail painter lays its guide
+/// lines out on the same grid, so the two must not drift apart.
+const double _railCell = 8.0;
+
+/// Gap between the rail column and the bullet. The elbow is drawn across it so
+/// the connector reaches the dot instead of stopping at the column edge.
+const double _bulletGap = 6.0;
+
 /// Renders a note thread as an indented tree with connector rails.
 /// Shared by the overview card expansion and the viewer's outline.
 class NoteThreadTree extends StatelessWidget {
@@ -90,7 +98,9 @@ class _NoteThreadRow extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final node = row.node;
-    final depth = node.depth;
+    // Nesting within what is displayed, not within the whole thread: a subtree
+    // view starts its own rails at zero, and the painter lays them out to match.
+    final depth = row.rails.length;
     final height = dense ? 30.0 : 38.0;
     final textPadding = dense ? 7.0 : 9.0;
     final lineColor = theme.colorScheme.outline.withValues(alpha: 0.35);
@@ -110,7 +120,7 @@ class _NoteThreadRow extends StatelessWidget {
             children: [
               if (depth > 0)
                 SizedBox(
-                  width: depth * 12.0,
+                  width: depth * _railCell,
                   child: CustomPaint(
                     painter: _ThreadRailPainter(
                       rails: row.rails,
@@ -125,7 +135,7 @@ class _NoteThreadRow extends StatelessWidget {
               _FirstLine(
                 height: height,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: _bulletGap),
                   child: Container(
                     width: current ? 10 : 8,
                     height: current ? 10 : 8,
@@ -237,20 +247,23 @@ class _ThreadRailPainter extends CustomPainter {
       ..color = color
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
-    const cell = 12.0;
     final mid = anchorY;
 
     // rails[i] marks an ancestor with further siblings; its guide line runs
     // through the full row. The last cell carries this node's own elbow.
     for (var i = 0; i < rails.length - 1; i++) {
       if (!rails[i]) continue;
-      final x = i * cell + cell / 2;
+      final x = i * _railCell + _railCell / 2;
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
 
-    final x = (rails.length - 1) * cell + cell / 2;
+    final x = (rails.length - 1) * _railCell + _railCell / 2;
     canvas.drawLine(Offset(x, 0), Offset(x, isLast ? mid : size.height), paint);
-    canvas.drawLine(Offset(x, mid), Offset(size.width, mid), paint);
+    canvas.drawLine(
+      Offset(x, mid),
+      Offset(size.width + _bulletGap, mid),
+      paint,
+    );
   }
 
   @override
