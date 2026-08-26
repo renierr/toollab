@@ -92,6 +92,7 @@ class _NoteThreadRow extends StatelessWidget {
     final node = row.node;
     final depth = node.depth;
     final height = dense ? 30.0 : 38.0;
+    final textPadding = dense ? 7.0 : 9.0;
     final lineColor = theme.colorScheme.outline.withValues(alpha: 0.35);
     final title = noteTitle(
       node.note['content'] as String? ?? '',
@@ -101,86 +102,133 @@ class _NoteThreadRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
-        height: height,
-        child: Row(
-          children: [
-            if (depth > 0)
-              CustomPaint(
-                size: Size(depth * 16.0, height),
-                painter: _ThreadRailPainter(
-                  rails: row.rails,
-                  isLast: row.isLast,
-                  color: lineColor,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: height),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (depth > 0)
+                SizedBox(
+                  width: depth * 16.0,
+                  child: CustomPaint(
+                    painter: _ThreadRailPainter(
+                      rails: row.rails,
+                      isLast: row.isLast,
+                      color: lineColor,
+                      // Rails meet the first text line, not the row centre, so
+                      // a two-line title keeps the elbow beside its bullet.
+                      anchorY: height / 2,
+                    ),
+                  ),
+                ),
+              _FirstLine(
+                height: height,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Container(
+                    width: current ? 10 : 8,
+                    height: current ? 10 : 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: current
+                          ? accentColor
+                          : accentColor.withValues(alpha: 0.35),
+                      border: current
+                          ? Border.all(
+                              color: accentColor.withValues(alpha: 0.4),
+                            )
+                          : null,
+                    ),
+                  ),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Container(
-                width: current ? 10 : 8,
-                height: current ? 10 : 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: current
-                      ? accentColor
-                      : accentColor.withValues(alpha: 0.35),
-                  border: current
-                      ? Border.all(color: accentColor.withValues(alpha: 0.4))
-                      : null,
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: textPadding),
+                  child: Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        (dense
+                                ? theme.textTheme.bodySmall
+                                : theme.textTheme.bodyMedium)
+                            ?.copyWith(
+                              fontWeight: current
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
+                              color: current
+                                  ? accentColor
+                                  : theme.colorScheme.onSurface,
+                            ),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style:
-                    (dense
-                            ? theme.textTheme.bodySmall
-                            : theme.textTheme.bodyMedium)
-                        ?.copyWith(
-                          fontWeight: current
-                              ? FontWeight.w700
-                              : FontWeight.w400,
-                          color: current
-                              ? accentColor
-                              : theme.colorScheme.onSurface,
-                        ),
-              ),
-            ),
-            if (node.children.isNotEmpty) ...[
-              const SizedBox(width: 6),
-              Text(
-                '${node.descendantCount}',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              if (node.children.isNotEmpty)
+                _FirstLine(
+                  height: height,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Text(
+                      '${node.descendantCount}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              _FirstLine(
+                height: height,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    FormatHelper.epoch(
+                      node.createdAt,
+                      style: DateStyle.dateOnly,
+                    ),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ),
             ],
-            const SizedBox(width: 8),
-            Text(
-              FormatHelper.epoch(node.createdAt, style: DateStyle.dateOnly),
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
+/// Keeps a row's trailing bits on the first text line when the title wraps.
+class _FirstLine extends StatelessWidget {
+  final double height;
+  final Widget child;
+
+  const _FirstLine({required this.height, required this.child});
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.topCenter,
+    child: SizedBox(
+      height: height,
+      child: Center(child: child),
+    ),
+  );
+}
+
 class _ThreadRailPainter extends CustomPainter {
   final List<bool> rails;
   final bool isLast;
   final Color color;
+  final double anchorY;
 
   const _ThreadRailPainter({
     required this.rails,
     required this.isLast,
     required this.color,
+    required this.anchorY,
   });
 
   @override
@@ -190,7 +238,7 @@ class _ThreadRailPainter extends CustomPainter {
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
     const cell = 16.0;
-    final mid = size.height / 2;
+    final mid = anchorY;
 
     // rails[i] marks an ancestor with further siblings; its guide line runs
     // through the full row. The last cell carries this node's own elbow.
@@ -209,5 +257,6 @@ class _ThreadRailPainter extends CustomPainter {
   bool shouldRepaint(_ThreadRailPainter oldDelegate) =>
       oldDelegate.isLast != isLast ||
       oldDelegate.color != color ||
+      oldDelegate.anchorY != anchorY ||
       !listEquals(oldDelegate.rails, rails);
 }
