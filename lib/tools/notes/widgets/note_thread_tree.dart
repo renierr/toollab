@@ -9,9 +9,17 @@ import 'package:tool_lab/tools/notes/note_title.dart';
 /// lines out on the same grid, so the two must not drift apart.
 const double _railCell = 8.0;
 
-/// Gap between the rail column and the bullet. The elbow is drawn across it so
-/// the connector reaches the dot instead of stopping at the column edge.
+/// Gap between the rail column and the bullet.
 const double _bulletGap = 6.0;
+
+/// Fixed box the bullet sits in, so the current note's larger dot does not
+/// shift its centre. Rails run through this centre, which is what makes a
+/// child's rail line up with its parent's dot.
+const double _dotSlot = 10.0;
+
+/// Horizontal centre of the bullet on a row at [depth], measured from the row
+/// start. Also where the rail for that row's children is drawn.
+double _dotCenterX(int depth) => depth * _railCell + _bulletGap + _dotSlot / 2;
 
 /// Renders a note thread as an indented tree with connector rails.
 /// Shared by the overview card expansion and the viewer's outline.
@@ -136,19 +144,25 @@ class _NoteThreadRow extends StatelessWidget {
                 height: height,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: _bulletGap),
-                  child: Container(
-                    width: current ? 10 : 8,
-                    height: current ? 10 : 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: current
-                          ? accentColor
-                          : accentColor.withValues(alpha: 0.35),
-                      border: current
-                          ? Border.all(
-                              color: accentColor.withValues(alpha: 0.4),
-                            )
-                          : null,
+                  child: SizedBox(
+                    width: _dotSlot,
+                    height: _dotSlot,
+                    child: Center(
+                      child: Container(
+                        width: current ? _dotSlot : 8,
+                        height: current ? _dotSlot : 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: current
+                              ? accentColor
+                              : accentColor.withValues(alpha: 0.35),
+                          border: current
+                              ? Border.all(
+                                  color: accentColor.withValues(alpha: 0.4),
+                                )
+                              : null,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -253,15 +267,16 @@ class _ThreadRailPainter extends CustomPainter {
     // through the full row. The last cell carries this node's own elbow.
     for (var i = 0; i < rails.length - 1; i++) {
       if (!rails[i]) continue;
-      final x = i * _railCell + _railCell / 2;
+      final x = _dotCenterX(i);
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
 
-    final x = (rails.length - 1) * _railCell + _railCell / 2;
+    final x = _dotCenterX(rails.length - 1);
     canvas.drawLine(Offset(x, 0), Offset(x, isLast ? mid : size.height), paint);
+    // Runs into this row's own bullet, which paints over the line end.
     canvas.drawLine(
       Offset(x, mid),
-      Offset(size.width + _bulletGap, mid),
+      Offset(_dotCenterX(rails.length), mid),
       paint,
     );
   }
