@@ -110,7 +110,7 @@ class _NoteThreadRow extends StatelessWidget {
             children: [
               if (depth > 0)
                 SizedBox(
-                  width: depth * 16.0,
+                  width: depth * 12.0,
                   child: CustomPaint(
                     painter: _ThreadRailPainter(
                       rails: row.rails,
@@ -237,7 +237,7 @@ class _ThreadRailPainter extends CustomPainter {
       ..color = color
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
-    const cell = 16.0;
+    const cell = 12.0;
     final mid = anchorY;
 
     // rails[i] marks an ancestor with further siblings; its guide line runs

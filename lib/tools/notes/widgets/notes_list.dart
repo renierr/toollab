@@ -209,6 +209,8 @@ class _NotesListState extends State<NotesList> {
       box.size.bottomRight(Offset.zero),
       ancestor: overlay,
     );
+    final availableWidth = MediaQuery.sizeOf(badgeContext).width - 32;
+    final popupWidth = availableWidth.clamp(0.0, 520.0);
     final selected = await showMenu<NoteThreadNode>(
       context: badgeContext,
       position: RelativeRect.fromRect(
@@ -220,7 +222,7 @@ class _NotesListState extends State<NotesList> {
           enabled: false,
           padding: EdgeInsets.zero,
           child: SizedBox(
-            width: 340,
+            width: popupWidth,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: NoteThreadTree(
