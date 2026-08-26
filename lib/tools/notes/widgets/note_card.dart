@@ -24,7 +24,9 @@ class NoteCard extends StatelessWidget {
   /// Number of follow-ups below this note; shows a badge when > 0.
   final int followUpCount;
   final bool followUpsExpanded;
-  final VoidCallback? onToggleFollowUps;
+
+  /// Receives the badge's own context so the caller can anchor an overlay to it.
+  final void Function(BuildContext badgeContext)? onFollowUpsTap;
 
   /// Titles of the parent chain, rendered when the card is shown detached
   /// from its thread (search results).
@@ -42,7 +44,7 @@ class NoteCard extends StatelessWidget {
     this.onExportThreadPdf,
     this.followUpCount = 0,
     this.followUpsExpanded = false,
-    this.onToggleFollowUps,
+    this.onFollowUpsTap,
     this.breadcrumb = const [],
   });
 
@@ -388,7 +390,7 @@ class NoteCard extends StatelessWidget {
                         _FollowUpBadge(
                           count: followUpCount,
                           expanded: followUpsExpanded,
-                          onTap: onToggleFollowUps,
+                          onTap: onFollowUpsTap,
                         ),
                       const SizedBox(width: 8),
                       if ((note['synced'] as int? ?? 0) == 1)
@@ -422,7 +424,7 @@ class NoteCard extends StatelessWidget {
 class _FollowUpBadge extends StatelessWidget {
   final int count;
   final bool expanded;
-  final VoidCallback? onTap;
+  final void Function(BuildContext badgeContext)? onTap;
 
   const _FollowUpBadge({
     required this.count,
@@ -437,7 +439,7 @@ class _FollowUpBadge extends StatelessWidget {
     return Tooltip(
       message: l10n.notesFollowUpCount(count),
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap == null ? null : () => onTap!(context),
         borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

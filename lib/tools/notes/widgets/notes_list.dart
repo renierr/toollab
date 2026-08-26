@@ -172,13 +172,17 @@ class _NotesListState extends State<NotesList> {
       followUpCount: followUps,
       followUpsExpanded:
           node != null && _expandedThreads.contains(node.shortId),
-      onToggleFollowUps: expandable && followUps > 0 && node != null
-          ? () => setState(() {
+      // Cards in the grid have a fixed height, so there the thread opens in a
+      // popover anchored to the badge instead of expanding in place.
+      onFollowUpsTap: followUps == 0 || node == null
+          ? null
+          : expandable
+          ? (_) => setState(() {
               if (!_expandedThreads.remove(node.shortId)) {
                 _expandedThreads.add(node.shortId);
               }
             })
-          : null,
+          : (badgeContext) => _showThreadPopover(badgeContext, node),
       onTap: () => widget.onTap(entry.note),
       onEdit: () => widget.onEdit(entry.note),
       onDelete: () => widget.onDelete(entry.note),
@@ -189,6 +193,48 @@ class _NotesListState extends State<NotesList> {
       onAttach: () => widget.onAttach(entry.note),
       onDetach: () => widget.onDetach(entry.note),
     );
+  }
+
+  Future<void> _showThreadPopover(
+    BuildContext badgeContext,
+    NoteThreadNode node,
+  ) async {
+    final box = badgeContext.findRenderObject() as RenderBox?;
+    final overlay =
+        Overlay.of(badgeContext).context.findRenderObject() as RenderBox?;
+    if (box == null || overlay == null) return;
+
+    final topLeft = box.localToGlobal(Offset.zero, ancestor: overlay);
+    final bottomRight = box.localToGlobal(
+      box.size.bottomRight(Offset.zero),
+      ancestor: overlay,
+    );
+    final selected = await showMenu<NoteThreadNode>(
+      context: badgeContext,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(topLeft, bottomRight),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        PopupMenuItem<NoteThreadNode>(
+          enabled: false,
+          padding: EdgeInsets.zero,
+          child: SizedBox(
+            width: 340,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: NoteThreadTree(
+                nodes: node.children,
+                accentColor: AppTheme.accentTeal,
+                dense: true,
+                onTap: (child) => Navigator.of(badgeContext).pop(child),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    if (selected != null) widget.onTap(selected.note);
   }
 
   List<_NotesArchiveGroup> _groupEntries() {
