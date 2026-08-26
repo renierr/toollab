@@ -490,208 +490,219 @@ class _SketchBoardPageState extends State<SketchBoardPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isNarrow = MediaQuery.sizeOf(context).width < 480;
     final appState = context.watch<AppState>();
 
-    return Selector<SketchBoardState, bool>(
-      selector: (_, s) => s.hasUnsavedChanges,
-      builder: (context, dirty, child) => PopScope(
-        canPop: !dirty,
-        onPopInvokedWithResult: (didPop, result) async {
-          if (didPop) return;
-          final navigator = Navigator.of(context);
-          final state = context.read<SketchBoardState>();
-          if (await _confirmDiscard() && mounted) {
-            state.discardChanges();
-            navigator.pop();
-          }
-        },
-        child: child!,
-      ),
-      child: ToolLayout(
-        scaffoldKey: _scaffoldKey,
-        title: SketchBoardTool.config.localizedName(l10n),
-        actions: [
-          if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty)
-            IconButton(
-              tooltip: l10n.chipSyncTooltip,
-              icon: appState.isSyncing
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.sync),
-              onPressed: appState.isSyncing ? null : _triggerSync,
-            ),
-          const SketchUndoButton(),
-          const SketchRedoButton(),
-          if (!isNarrow) ...[
-            IconButton(
-              tooltip: l10n.sketchInsertImage,
-              icon: const Icon(Icons.add_photo_alternate_outlined),
-              onPressed: _insertImage,
-            ),
-            IconButton(
-              tooltip: l10n.commonSave,
-              icon: const Icon(Icons.save_outlined),
-              onPressed: _save,
-            ),
-          ],
-          PopupMenuButton<String>(
-            onSelected: (v) {
-              switch (v) {
-                case 'insert-image':
-                  _insertImage();
-                case 'save':
-                  _save();
-                case 'paste-image':
-                  _pasteImage();
-                case 'export':
-                  _exportPng();
-                case 'copy':
-                  _copy();
-                case 'share':
-                  _share();
-                case 'background':
-                  _pickBackground();
-                case 'reset':
-                  context.read<SketchBoardState>().resetView();
-                case 'info':
-                  _showBoardInfo();
-                case 'clear':
-                  _confirmClear();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Whether the toolbar's own buttons still fit, not a device tier.
+        final cramped = constraints.maxWidth < 480;
+        return Selector<SketchBoardState, bool>(
+          selector: (_, s) => s.hasUnsavedChanges,
+          builder: (context, dirty, child) => PopScope(
+            canPop: !dirty,
+            onPopInvokedWithResult: (didPop, result) async {
+              if (didPop) return;
+              final navigator = Navigator.of(context);
+              final state = context.read<SketchBoardState>();
+              if (await _confirmDiscard() && mounted) {
+                state.discardChanges();
+                navigator.pop();
               }
             },
-            itemBuilder: (context) => [
-              if (isNarrow) ...[
-                PopupMenuItem(
-                  value: 'insert-image',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.add_photo_alternate_outlined, size: 20),
-                      const SizedBox(width: 10),
-                      Text(l10n.sketchInsertImage),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'save',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.save_outlined, size: 20),
-                      const SizedBox(width: 10),
-                      Text(l10n.commonSave),
-                    ],
-                  ),
-                ),
-                const PopupMenuDivider(),
-              ],
-              PopupMenuItem(
-                value: 'paste-image',
-                child: Row(
-                  children: [
-                    const Icon(Icons.content_paste_outlined, size: 20),
-                    const SizedBox(width: 10),
-                    Text(l10n.sketchPasteImage),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'export',
-                child: Row(
-                  children: [
-                    const Icon(Icons.file_download_outlined, size: 20),
-                    const SizedBox(width: 10),
-                    Text(l10n.commonExport),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'copy',
-                child: Row(
-                  children: [
-                    const Icon(Icons.content_copy_outlined, size: 20),
-                    const SizedBox(width: 10),
-                    Text(l10n.commonCopy),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'share',
-                child: Row(
-                  children: [
-                    const Icon(Icons.share_outlined, size: 20),
-                    const SizedBox(width: 10),
-                    Text(l10n.commonShare),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'background',
-                child: Row(
-                  children: [
-                    const Icon(Icons.grid_on_outlined, size: 20),
-                    const SizedBox(width: 10),
-                    Text(l10n.sketchMenuBackground),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'reset',
-                child: Row(
-                  children: [
-                    const Icon(Icons.zoom_out_map_outlined, size: 20),
-                    const SizedBox(width: 10),
-                    Text(l10n.sketchMenuResetView),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'info',
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, size: 20),
-                    const SizedBox(width: 10),
-                    Text(l10n.sketchMenuInfo),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'clear',
-                child: Row(
-                  children: [
-                    const Icon(Icons.delete_sweep_outlined, size: 20),
-                    const SizedBox(width: 10),
-                    Text(l10n.commonClear),
-                  ],
-                ),
-              ),
-            ],
+            child: child!,
           ),
-        ],
-        child: Column(
-          children: [
-            TabBar(
-              controller: _tabController,
-              tabs: [
-                Tab(text: l10n.sketchTabDraw),
-                Tab(text: l10n.sketchTabSaved),
+          child: ToolLayout(
+            scaffoldKey: _scaffoldKey,
+            title: SketchBoardTool.config.localizedName(l10n),
+            actions: [
+              if (appState.syncEnabled && appState.syncServerUrl.isNotEmpty)
+                IconButton(
+                  tooltip: l10n.chipSyncTooltip,
+                  icon: appState.isSyncing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.sync),
+                  onPressed: appState.isSyncing ? null : _triggerSync,
+                ),
+              const SketchUndoButton(),
+              const SketchRedoButton(),
+              if (!cramped) ...[
+                IconButton(
+                  tooltip: l10n.sketchInsertImage,
+                  icon: const Icon(Icons.add_photo_alternate_outlined),
+                  onPressed: _insertImage,
+                ),
+                IconButton(
+                  tooltip: l10n.commonSave,
+                  icon: const Icon(Icons.save_outlined),
+                  onPressed: _save,
+                ),
               ],
-            ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  const SketchDrawTab(),
-                  SketchGallery(onLoad: _loadRecord, onDelete: _deleteRecord),
+              PopupMenuButton<String>(
+                onSelected: (v) {
+                  switch (v) {
+                    case 'insert-image':
+                      _insertImage();
+                    case 'save':
+                      _save();
+                    case 'paste-image':
+                      _pasteImage();
+                    case 'export':
+                      _exportPng();
+                    case 'copy':
+                      _copy();
+                    case 'share':
+                      _share();
+                    case 'background':
+                      _pickBackground();
+                    case 'reset':
+                      context.read<SketchBoardState>().resetView();
+                    case 'info':
+                      _showBoardInfo();
+                    case 'clear':
+                      _confirmClear();
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (cramped) ...[
+                    PopupMenuItem(
+                      value: 'insert-image',
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.add_photo_alternate_outlined,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(l10n.sketchInsertImage),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'save',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.save_outlined, size: 20),
+                          const SizedBox(width: 10),
+                          Text(l10n.commonSave),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                  ],
+                  PopupMenuItem(
+                    value: 'paste-image',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.content_paste_outlined, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l10n.sketchPasteImage),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'export',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.file_download_outlined, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l10n.commonExport),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'copy',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.content_copy_outlined, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l10n.commonCopy),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'share',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.share_outlined, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l10n.commonShare),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'background',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.grid_on_outlined, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l10n.sketchMenuBackground),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'reset',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.zoom_out_map_outlined, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l10n.sketchMenuResetView),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'info',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l10n.sketchMenuInfo),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'clear',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete_sweep_outlined, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l10n.commonClear),
+                      ],
+                    ),
+                  ),
                 ],
               ),
+            ],
+            child: Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  tabs: [
+                    Tab(text: l10n.sketchTabDraw),
+                    Tab(text: l10n.sketchTabSaved),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      const SketchDrawTab(),
+                      SketchGallery(
+                        onLoad: _loadRecord,
+                        onDelete: _deleteRecord,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

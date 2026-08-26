@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'dart:io';
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -914,13 +913,6 @@ class ImageEditorController extends ChangeNotifier {
       _isProcessing = false;
       notifyListeners();
     }
-  }
-
-  String formatBytes(int bytes) {
-    if (bytes <= 0) return '0 B';
-    const suffixes = ['B', 'KB', 'MB', 'GB'];
-    final i = (math.log(bytes) / math.log(1024)).floor();
-    return '${(bytes / math.pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}';
   }
 
   Future<String> extractText() async {

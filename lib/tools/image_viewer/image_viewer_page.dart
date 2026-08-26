@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
 import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/clipboard_helper.dart';
@@ -10,6 +11,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/floating_back_button.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
@@ -260,42 +262,35 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final isWideScreen = MediaQuery.sizeOf(context).width > 720;
 
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, child) {
-        final displayWidget = _controller.uiImage != null
-            ? (_controller.isCropMode
-                  ? ImageViewerCropPanel(
-                      image: _controller.uiImage!,
-                      onCropApplied: (x, y, w, h) async {
-                        try {
-                          await _controller.cropImage(x, y, w, h);
-                          _onResetZoom();
-                        } catch (e) {
-                          _showError('Cropping failed: $e');
-                        }
-                      },
-                      onCropCancelled: () => _controller.setCropMode(false),
-                    )
-                  : (_controller.isRedactMode
-                        ? ImageViewerRedactPanel(
-                            image: _controller.uiImage!,
-                            decodedImage: _controller.decodedImage,
-                            onRedactApplied:
-                                (
-                                  x,
-                                  y,
-                                  w,
-                                  h,
-                                  redactType,
-                                  intensity,
-                                  color,
-                                  relativePathPoints,
-                                ) async {
-                                  try {
-                                    await _controller.redactImage(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Sidebar or drawer is a question about this page's own box: inside a
+        // pane the window says wide when there is no room for two columns.
+        final canSplit = constraints.canSplit;
+        return ListenableBuilder(
+          listenable: _controller,
+          builder: (context, child) {
+            final displayWidget = _controller.uiImage != null
+                ? (_controller.isCropMode
+                      ? ImageViewerCropPanel(
+                          image: _controller.uiImage!,
+                          onCropApplied: (x, y, w, h) async {
+                            try {
+                              await _controller.cropImage(x, y, w, h);
+                              _onResetZoom();
+                            } catch (e) {
+                              _showError('Cropping failed: $e');
+                            }
+                          },
+                          onCropCancelled: () => _controller.setCropMode(false),
+                        )
+                      : (_controller.isRedactMode
+                            ? ImageViewerRedactPanel(
+                                image: _controller.uiImage!,
+                                decodedImage: _controller.decodedImage,
+                                onRedactApplied:
+                                    (
                                       x,
                                       y,
                                       w,
@@ -304,439 +299,460 @@ class _ImageViewerPageState extends State<ImageViewerPage> with DisposeCleanup {
                                       intensity,
                                       color,
                                       relativePathPoints,
-                                    );
-                                    _onResetZoom();
-                                  } catch (e) {
-                                    _showError('Redaction failed: $e');
-                                  }
-                                },
-                            onRedactCancelled: () =>
-                                _controller.setRedactMode(false),
-                          )
-                        : ImageViewerDisplay(
-                            image: _controller.uiImage!,
-                            rawBytes: _controller.rawBytes,
-                            isAnimated: _controller.isAnimated,
-                            transformationController: _transformationController,
-                            onResetZoom: _onResetZoom,
-                            showSiblingNav: _controller.canBrowseSiblings,
-                            hasPrevSibling: _controller.hasPrevSibling,
-                            hasNextSibling: _controller.hasNextSibling,
-                            siblingLabel: _controller.canBrowseSiblings
-                                ? '${_controller.siblingIndex + 1} / ${_controller.siblingCount}'
-                                : null,
-                            onPrevImage: _prevImage,
-                            onNextImage: _nextImage,
-                          )))
-            : const SizedBox.shrink();
+                                    ) async {
+                                      try {
+                                        await _controller.redactImage(
+                                          x,
+                                          y,
+                                          w,
+                                          h,
+                                          redactType,
+                                          intensity,
+                                          color,
+                                          relativePathPoints,
+                                        );
+                                        _onResetZoom();
+                                      } catch (e) {
+                                        _showError('Redaction failed: $e');
+                                      }
+                                    },
+                                onRedactCancelled: () =>
+                                    _controller.setRedactMode(false),
+                              )
+                            : ImageViewerDisplay(
+                                image: _controller.uiImage!,
+                                rawBytes: _controller.rawBytes,
+                                isAnimated: _controller.isAnimated,
+                                transformationController:
+                                    _transformationController,
+                                onResetZoom: _onResetZoom,
+                                showSiblingNav: _controller.canBrowseSiblings,
+                                hasPrevSibling: _controller.hasPrevSibling,
+                                hasNextSibling: _controller.hasNextSibling,
+                                siblingLabel: _controller.canBrowseSiblings
+                                    ? '${_controller.siblingIndex + 1} / ${_controller.siblingCount}'
+                                    : null,
+                                onPrevImage: _prevImage,
+                                onNextImage: _nextImage,
+                              )))
+                : const SizedBox.shrink();
 
-        final editorWidget = _controller.uiImage != null
-            ? ImageViewerEditor(
-                widthController: _controller.widthController,
-                heightController: _controller.heightController,
-                keepAspectRatio: _controller.keepAspectRatio,
-                onKeepAspectRatioChanged: (val) =>
-                    _controller.setKeepAspectRatio(val),
-                selectedFormat: _controller.selectedFormat,
-                onFormatChanged: (val) => _controller.setSelectedFormat(val),
-                quality: _controller.quality,
-                onQualityChanged: (val) => _controller.setQuality(val),
-                onPreview: () async {
-                  try {
-                    await _controller.previewResize();
-                    _onResetZoom();
-                  } catch (e) {
-                    _showError(e.toString().replaceAll('Exception: ', ''));
-                  }
-                },
-                onSave: _exportImage,
-                onShare: _shareImage,
-                isProcessing: _controller.isProcessing,
-                originalDimensions:
-                    '${_controller.originalWidth}x${_controller.originalHeight} px',
-                originalSize: _controller.formatBytes(
-                  _controller.fileSizeBytes,
-                ),
-                metadata: _controller.metadata,
-                fileName: _controller.fileName ?? 'image.png',
-                preserveExif: _controller.preserveExif,
-                onPreserveExifChanged: (val) =>
-                    _controller.setPreserveExif(val),
-                onRotateLeft: () async {
-                  try {
-                    await _controller.rotateImage(270);
-                    _onResetZoom();
-                  } catch (e) {
-                    _showError('Rotation failed: $e');
-                  }
-                },
-                onRotateRight: () async {
-                  try {
-                    await _controller.rotateImage(90);
-                    _onResetZoom();
-                  } catch (e) {
-                    _showError('Rotation failed: $e');
-                  }
-                },
-                onFlipHorizontal: () async {
-                  try {
-                    await _controller.flipImage('horizontal');
-                    _onResetZoom();
-                  } catch (e) {
-                    _showError('Flipping failed: $e');
-                  }
-                },
-                onFlipVertical: () async {
-                  try {
-                    await _controller.flipImage('vertical');
-                    _onResetZoom();
-                  } catch (e) {
-                    _showError('Flipping failed: $e');
-                  }
-                },
-                onToggleCropMode: () {
-                  final enteringCrop = !_controller.isCropMode;
-                  _controller.setCropMode(enteringCrop);
-                  if (enteringCrop && !isWideScreen) {
-                    _scaffoldKey.currentState?.closeEndDrawer();
-                  }
-                },
-                isCropMode: _controller.isCropMode,
-                onToggleRedactMode: () {
-                  final enteringRedact = !_controller.isRedactMode;
-                  _controller.setRedactMode(enteringRedact);
-                  if (enteringRedact && !isWideScreen) {
-                    _scaffoldKey.currentState?.closeEndDrawer();
-                  }
-                },
-                isRedactMode: _controller.isRedactMode,
-                isWideScreen: isWideScreen,
-                onSegmentSubject:
-                    (Platform.isAndroid ||
-                        Platform.isWindows ||
-                        Platform.isLinux)
-                    ? () async {
-                        final l10n = AppLocalizations.of(context);
-                        if (!isWideScreen) {
-                          _scaffoldKey.currentState?.closeEndDrawer();
-                        }
-                        try {
-                          await _controller.segmentSubject();
-                          _onResetZoom();
-                        } catch (e) {
-                          final errorMsg = e.toString();
-                          if (errorMsg.contains("Waiting for") ||
-                              errorMsg.contains("download")) {
-                            _showError(l10n.imgViewSegmentSubjectDownloading);
-                          } else {
-                            _showError(
-                              l10n.imgViewSegmentSubjectFailed(errorMsg),
-                            );
-                          }
-                        }
-                      }
-                    : null,
-              )
-            : const SizedBox.shrink();
-
-        Widget mainContent;
-        if (_controller.uiImage == null && _unsupportedFile != null) {
-          final file = _unsupportedFile!;
-          mainContent = ImageViewerUnsupportedFormat(
-            fileName: file.name,
-            onOpenExternally: file.path.isEmpty
-                ? null
-                : () => FileSaveHelper.openFile(file.path, file.mimeType),
-            onShare: file.path.isEmpty
-                ? null
-                : () => FileSaveHelper.shareFile(file.path, file.mimeType),
-            onChooseAnother: () => setState(() => _unsupportedFile = null),
-          );
-        } else if (_controller.uiImage == null && _isLoadingIncoming) {
-          mainContent = const Center(child: CircularProgressIndicator());
-        } else if (_controller.uiImage == null) {
-          mainContent = Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: FileDropZone(
-              onFileSelected: _onFileSelected,
-              allowedExtensions: ImageViewerTool.config.fileExtensions,
-              typeLabel: l10n.imgViewTypeLabel,
-              accentColor: ImageViewerTool.config.accentColor,
-              title: l10n.imgViewDropZoneTitle,
-              subtitle: l10n.imgViewDropZoneSubtitle,
-              icon: Icons.image_outlined,
-              buttonLabel: l10n.imgViewBrowseFiles,
-              buttonIcon: Icons.folder_open,
-              extraButtons: [
-                const SizedBox(height: 16),
-                OutlinedButton.icon(
-                  onPressed: _pasteFromClipboard,
-                  icon: const Icon(Icons.paste_outlined),
-                  label: Text(l10n.imgViewPasteFromClipboard),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ImageViewerTool.config.accentColor,
-                    side: BorderSide(
-                      color: ImageViewerTool.config.accentColor.withValues(
-                        alpha: 0.5,
-                      ),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-                if (Platform.isAndroid) ...[
-                  const SizedBox(height: 16),
-                  AndroidPickerButtons(
-                    onPickFromGallery: _pickFromGallery,
-                    onTakePhoto: _takePhoto,
-                    accentColor: ImageViewerTool.config.accentColor,
-                  ),
-                ],
-              ],
-            ),
-          );
-        } else {
-          if (isWideScreen) {
-            mainContent = Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: displayWidget,
-                  ),
-                ),
-                if (_isEditorOpen)
-                  Container(
-                    width: 320,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        left: BorderSide(
-                          color: theme.colorScheme.outline.withValues(
-                            alpha: 0.15,
-                          ),
-                        ),
-                      ),
-                    ),
-                    child: editorWidget,
-                  ),
-              ],
-            );
-          } else {
-            mainContent = Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: displayWidget,
-            );
-          }
-        }
-
-        final List<Widget>? actions =
-            _controller.uiImage != null &&
-                !_controller.isCropMode &&
-                !_controller.isRedactMode
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.undo),
-                  onPressed: _controller.canUndo
-                      ? () async {
-                          try {
-                            await _controller.undo();
-                            _onResetZoom();
-                          } catch (e) {
-                            _showError('Undo failed: $e');
-                          }
-                        }
-                      : null,
-                  tooltip: l10n.imgViewUndo,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.redo),
-                  onPressed: _controller.canRedo
-                      ? () async {
-                          try {
-                            await _controller.redo();
-                            _onResetZoom();
-                          } catch (e) {
-                            _showError('Redo failed: $e');
-                          }
-                        }
-                      : null,
-                  tooltip: l10n.imgViewRedo,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.copy),
-                  onPressed: () async {
-                    try {
-                      await _controller.copyToClipboard();
-                      _showSuccess(l10n.imgViewImageCopied);
-                    } catch (e) {
-                      _showError(
-                        'Copy failed: ${e.toString().replaceAll('Exception: ', '')}',
-                      );
-                    }
-                  },
-                  tooltip: l10n.imgViewCopyToClipboard,
-                ),
-                if (Platform.isAndroid || Platform.isWindows)
-                  IconButton(
-                    icon: const Icon(Icons.text_fields),
-                    onPressed: () async {
+            final editorWidget = _controller.uiImage != null
+                ? ImageViewerEditor(
+                    widthController: _controller.widthController,
+                    heightController: _controller.heightController,
+                    keepAspectRatio: _controller.keepAspectRatio,
+                    onKeepAspectRatioChanged: (val) =>
+                        _controller.setKeepAspectRatio(val),
+                    selectedFormat: _controller.selectedFormat,
+                    onFormatChanged: (val) =>
+                        _controller.setSelectedFormat(val),
+                    quality: _controller.quality,
+                    onQualityChanged: (val) => _controller.setQuality(val),
+                    onPreview: () async {
                       try {
-                        final extractedText = await _controller.extractText();
-                        if (!context.mounted) return;
-                        ExtractedTextDialog.show(
-                          context: context,
-                          text: extractedText,
-                          fileName: _controller.fileName ?? 'image.png',
-                        );
+                        await _controller.previewResize();
+                        _onResetZoom();
                       } catch (e) {
-                        _showError(
-                          l10n.imgViewExtractTextFailed(
-                            e.toString().replaceAll('Exception: ', ''),
-                          ),
-                        );
+                        _showError(e.toString().replaceAll('Exception: ', ''));
                       }
                     },
-                    tooltip: l10n.imgViewExtractTextTooltip,
-                  ),
-                if (isWideScreen)
-                  IconButton(
-                    icon: Icon(
-                      _isEditorOpen
-                          ? Icons.view_sidebar
-                          : Icons.view_sidebar_outlined,
+                    onSave: _exportImage,
+                    onShare: _shareImage,
+                    isProcessing: _controller.isProcessing,
+                    originalDimensions:
+                        '${_controller.originalWidth}x${_controller.originalHeight} px',
+                    originalSize: FormatHelper.fileSize(
+                      _controller.fileSizeBytes,
                     ),
-                    onPressed: () {
-                      setState(() => _isEditorOpen = !_isEditorOpen);
-                      if (_isEditorOpen) {
-                        _controller.prepareForEditing();
+                    metadata: _controller.metadata,
+                    fileName: _controller.fileName ?? 'image.png',
+                    preserveExif: _controller.preserveExif,
+                    onPreserveExifChanged: (val) =>
+                        _controller.setPreserveExif(val),
+                    onRotateLeft: () async {
+                      try {
+                        await _controller.rotateImage(270);
+                        _onResetZoom();
+                      } catch (e) {
+                        _showError('Rotation failed: $e');
                       }
                     },
-                    tooltip: _isEditorOpen
-                        ? l10n.imgViewHideSettings
-                        : l10n.imgViewShowSettings,
-                  )
-                else
-                  IconButton(
-                    icon: const Icon(Icons.tune),
-                    onPressed: () {
-                      _scaffoldKey.currentState?.openEndDrawer();
-                      _controller.prepareForEditing();
+                    onRotateRight: () async {
+                      try {
+                        await _controller.rotateImage(90);
+                        _onResetZoom();
+                      } catch (e) {
+                        _showError('Rotation failed: $e');
+                      }
                     },
-                    tooltip: l10n.imgViewEditImageTooltip,
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: _onClose,
-                  tooltip: l10n.imgViewCloseImage,
-                ),
-              ]
-            : null;
+                    onFlipHorizontal: () async {
+                      try {
+                        await _controller.flipImage('horizontal');
+                        _onResetZoom();
+                      } catch (e) {
+                        _showError('Flipping failed: $e');
+                      }
+                    },
+                    onFlipVertical: () async {
+                      try {
+                        await _controller.flipImage('vertical');
+                        _onResetZoom();
+                      } catch (e) {
+                        _showError('Flipping failed: $e');
+                      }
+                    },
+                    onToggleCropMode: () {
+                      final enteringCrop = !_controller.isCropMode;
+                      _controller.setCropMode(enteringCrop);
+                      if (enteringCrop && !canSplit) {
+                        _scaffoldKey.currentState?.closeEndDrawer();
+                      }
+                    },
+                    isCropMode: _controller.isCropMode,
+                    onToggleRedactMode: () {
+                      final enteringRedact = !_controller.isRedactMode;
+                      _controller.setRedactMode(enteringRedact);
+                      if (enteringRedact && !canSplit) {
+                        _scaffoldKey.currentState?.closeEndDrawer();
+                      }
+                    },
+                    isRedactMode: _controller.isRedactMode,
+                    inSidebar: canSplit,
+                    onSegmentSubject:
+                        (Platform.isAndroid ||
+                            Platform.isWindows ||
+                            Platform.isLinux)
+                        ? () async {
+                            final l10n = AppLocalizations.of(context);
+                            if (!canSplit) {
+                              _scaffoldKey.currentState?.closeEndDrawer();
+                            }
+                            try {
+                              await _controller.segmentSubject();
+                              _onResetZoom();
+                            } catch (e) {
+                              final errorMsg = e.toString();
+                              if (errorMsg.contains("Waiting for") ||
+                                  errorMsg.contains("download")) {
+                                _showError(
+                                  l10n.imgViewSegmentSubjectDownloading,
+                                );
+                              } else {
+                                _showError(
+                                  l10n.imgViewSegmentSubjectFailed(errorMsg),
+                                );
+                              }
+                            }
+                          }
+                        : null,
+                  )
+                : const SizedBox.shrink();
 
-        final Widget bodyContent = Stack(
-          children: [
-            mainContent,
-            if (!_controller.isCropMode && !_controller.isRedactMode) ...[
-              if (_controller.uiImage == null)
-                const Positioned(left: 12, top: 12, child: FloatingBackButton())
-              else
-                Positioned(
-                  left: 12,
-                  top: 12,
-                  right: 12,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Material(
-                        color: theme.colorScheme.surface.withAlpha(200),
-                        shape: const CircleBorder(),
-                        elevation: 2,
-                        child: ToolBackButton(
-                          visualDensity: VisualDensity.compact,
-                          onConfirm: _confirmDiscardEdits,
+            Widget mainContent;
+            if (_controller.uiImage == null && _unsupportedFile != null) {
+              final file = _unsupportedFile!;
+              mainContent = ImageViewerUnsupportedFormat(
+                fileName: file.name,
+                onOpenExternally: file.path.isEmpty
+                    ? null
+                    : () => FileSaveHelper.openFile(file.path, file.mimeType),
+                onShare: file.path.isEmpty
+                    ? null
+                    : () => FileSaveHelper.shareFile(file.path, file.mimeType),
+                onChooseAnother: () => setState(() => _unsupportedFile = null),
+              );
+            } else if (_controller.uiImage == null && _isLoadingIncoming) {
+              mainContent = const Center(child: CircularProgressIndicator());
+            } else if (_controller.uiImage == null) {
+              mainContent = Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: FileDropZone(
+                  onFileSelected: _onFileSelected,
+                  allowedExtensions: ImageViewerTool.config.fileExtensions,
+                  typeLabel: l10n.imgViewTypeLabel,
+                  accentColor: ImageViewerTool.config.accentColor,
+                  title: l10n.imgViewDropZoneTitle,
+                  subtitle: l10n.imgViewDropZoneSubtitle,
+                  icon: Icons.image_outlined,
+                  buttonLabel: l10n.imgViewBrowseFiles,
+                  buttonIcon: Icons.folder_open,
+                  extraButtons: [
+                    const SizedBox(height: 16),
+                    OutlinedButton.icon(
+                      onPressed: _pasteFromClipboard,
+                      icon: const Icon(Icons.paste_outlined),
+                      label: Text(l10n.imgViewPasteFromClipboard),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: ImageViewerTool.config.accentColor,
+                        side: BorderSide(
+                          color: ImageViewerTool.config.accentColor.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      if (actions != null)
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.topRight,
-                            child: Wrap(
-                              spacing: 8.0,
-                              runSpacing: 8.0,
-                              alignment: WrapAlignment.end,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: actions.map((action) {
-                                return Material(
-                                  color: theme.colorScheme.surface.withAlpha(
-                                    200,
-                                  ),
-                                  shape: const CircleBorder(),
-                                  elevation: 2,
-                                  child: action,
-                                );
-                              }).toList(),
+                    ),
+                    if (Platform.isAndroid) ...[
+                      const SizedBox(height: 16),
+                      AndroidPickerButtons(
+                        onPickFromGallery: _pickFromGallery,
+                        onTakePhoto: _takePhoto,
+                        accentColor: ImageViewerTool.config.accentColor,
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            } else {
+              if (canSplit) {
+                mainContent = Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: displayWidget,
+                      ),
+                    ),
+                    if (_isEditorOpen)
+                      Container(
+                        width: 320,
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: theme.colorScheme.outline.withValues(
+                                alpha: 0.15,
+                              ),
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                ),
-            ],
-            ImageViewerLoadingOverlay(isVisible: _controller.isProcessing),
-          ],
-        );
+                        child: editorWidget,
+                      ),
+                  ],
+                );
+              } else {
+                mainContent = Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: displayWidget,
+                );
+              }
+            }
 
-        final Widget? fab = null;
+            final List<Widget>? actions =
+                _controller.uiImage != null &&
+                    !_controller.isCropMode &&
+                    !_controller.isRedactMode
+                ? [
+                    IconButton(
+                      icon: const Icon(Icons.undo),
+                      onPressed: _controller.canUndo
+                          ? () async {
+                              try {
+                                await _controller.undo();
+                                _onResetZoom();
+                              } catch (e) {
+                                _showError('Undo failed: $e');
+                              }
+                            }
+                          : null,
+                      tooltip: l10n.imgViewUndo,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.redo),
+                      onPressed: _controller.canRedo
+                          ? () async {
+                              try {
+                                await _controller.redo();
+                                _onResetZoom();
+                              } catch (e) {
+                                _showError('Redo failed: $e');
+                              }
+                            }
+                          : null,
+                      tooltip: l10n.imgViewRedo,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.copy),
+                      onPressed: () async {
+                        try {
+                          await _controller.copyToClipboard();
+                          _showSuccess(l10n.imgViewImageCopied);
+                        } catch (e) {
+                          _showError(
+                            'Copy failed: ${e.toString().replaceAll('Exception: ', '')}',
+                          );
+                        }
+                      },
+                      tooltip: l10n.imgViewCopyToClipboard,
+                    ),
+                    if (Platform.isAndroid || Platform.isWindows)
+                      IconButton(
+                        icon: const Icon(Icons.text_fields),
+                        onPressed: () async {
+                          try {
+                            final extractedText = await _controller
+                                .extractText();
+                            if (!context.mounted) return;
+                            ExtractedTextDialog.show(
+                              context: context,
+                              text: extractedText,
+                              fileName: _controller.fileName ?? 'image.png',
+                            );
+                          } catch (e) {
+                            _showError(
+                              l10n.imgViewExtractTextFailed(
+                                e.toString().replaceAll('Exception: ', ''),
+                              ),
+                            );
+                          }
+                        },
+                        tooltip: l10n.imgViewExtractTextTooltip,
+                      ),
+                    if (canSplit)
+                      IconButton(
+                        icon: Icon(
+                          _isEditorOpen
+                              ? Icons.view_sidebar
+                              : Icons.view_sidebar_outlined,
+                        ),
+                        onPressed: () {
+                          setState(() => _isEditorOpen = !_isEditorOpen);
+                          if (_isEditorOpen) {
+                            _controller.prepareForEditing();
+                          }
+                        },
+                        tooltip: _isEditorOpen
+                            ? l10n.imgViewHideSettings
+                            : l10n.imgViewShowSettings,
+                      )
+                    else
+                      IconButton(
+                        icon: const Icon(Icons.tune),
+                        onPressed: () {
+                          _scaffoldKey.currentState?.openEndDrawer();
+                          _controller.prepareForEditing();
+                        },
+                        tooltip: l10n.imgViewEditImageTooltip,
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: _onClose,
+                      tooltip: l10n.imgViewCloseImage,
+                    ),
+                  ]
+                : null;
 
-        final Widget? endDrawer = (_controller.uiImage != null && !isWideScreen)
-            ? Drawer(
-                child: SafeArea(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      AppBar(
-                        title: Text(l10n.imgViewEditImageDrawerTitle),
-                        automaticallyImplyLeading: false,
-                        actions: [
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.of(context).pop(),
+            final Widget bodyContent = Stack(
+              children: [
+                mainContent,
+                if (!_controller.isCropMode && !_controller.isRedactMode) ...[
+                  if (_controller.uiImage == null)
+                    const Positioned(
+                      left: 12,
+                      top: 12,
+                      child: FloatingBackButton(),
+                    )
+                  else
+                    Positioned(
+                      left: 12,
+                      top: 12,
+                      right: 12,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Material(
+                            color: theme.colorScheme.surface.withAlpha(200),
+                            shape: const CircleBorder(),
+                            elevation: 2,
+                            child: ToolBackButton(
+                              visualDensity: VisualDensity.compact,
+                              onConfirm: _confirmDiscardEdits,
+                            ),
                           ),
+                          if (actions != null)
+                            Expanded(
+                              child: Align(
+                                alignment: Alignment.topRight,
+                                child: Wrap(
+                                  spacing: 8.0,
+                                  runSpacing: 8.0,
+                                  alignment: WrapAlignment.end,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: actions.map((action) {
+                                    return Material(
+                                      color: theme.colorScheme.surface
+                                          .withAlpha(200),
+                                      shape: const CircleBorder(),
+                                      elevation: 2,
+                                      child: action,
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
-                      const Divider(height: 1),
-                      Expanded(child: editorWidget),
-                    ],
-                  ),
-                ),
-              )
-            : null;
+                    ),
+                ],
+                ImageViewerLoadingOverlay(isVisible: _controller.isProcessing),
+              ],
+            );
 
-        return PopScope(
-          canPop: !_controller.hasEdits,
-          onPopInvokedWithResult: (didPop, result) async {
-            if (didPop) return;
-            final navigator = Navigator.of(context);
-            final discard = await _confirmDiscardEdits();
-            if (!mounted || !discard) return;
-            navigator.pop();
+            final Widget? fab = null;
+
+            final Widget? endDrawer = (_controller.uiImage != null && !canSplit)
+                ? Drawer(
+                    child: SafeArea(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppBar(
+                            title: Text(l10n.imgViewEditImageDrawerTitle),
+                            automaticallyImplyLeading: false,
+                            actions: [
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 1),
+                          Expanded(child: editorWidget),
+                        ],
+                      ),
+                    ),
+                  )
+                : null;
+
+            return PopScope(
+              canPop: !_controller.hasEdits,
+              onPopInvokedWithResult: (didPop, result) async {
+                if (didPop) return;
+                final navigator = Navigator.of(context);
+                final discard = await _confirmDiscardEdits();
+                if (!mounted || !discard) return;
+                navigator.pop();
+              },
+              child: ToolLayout(
+                title: ImageViewerTool.config.localizedName(l10n),
+                fullscreen: true,
+                showFloatingBackButton: false,
+                scaffoldKey: _scaffoldKey,
+                actions: null,
+                floatingActionButton: fab,
+                endDrawer: endDrawer,
+                child: bodyContent,
+              ),
+            );
           },
-          child: ToolLayout(
-            title: ImageViewerTool.config.localizedName(l10n),
-            fullscreen: true,
-            showFloatingBackButton: false,
-            scaffoldKey: _scaffoldKey,
-            actions: null,
-            floatingActionButton: fab,
-            endDrawer: endDrawer,
-            child: bodyContent,
-          ),
         );
       },
     );

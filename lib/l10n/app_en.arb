@@ -1857,6 +1857,10 @@
   "pdfNavZoomOut": "Zoom Out",
   "pdfNavZoomReset": "Reset Zoom",
   "pdfNavZoomIn": "Zoom In",
+  "pdfNavPageLayout": "Page Layout",
+  "pdfNavLayoutVertical": "Continuous",
+  "pdfNavLayoutHorizontal": "Side by Side",
+  "pdfNavLayoutDoublePage": "Two Pages",
   "pdfNavOrganizeTitle": "Organize: {fileName}",
   "@pdfNavOrganizeTitle": {
     "placeholders": {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_selector/file_selector.dart' show XTypeGroup, openFile;
 import 'package:pdfrx/pdfrx.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -342,7 +343,7 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
         body: PdfResultView(
           title: l10n.pdfNavOrganizeComplete,
           subtitle: l10n.pdfNavOrganizeNewSize(
-            PdfResultView.formatSize(_resultSize),
+            FormatHelper.fileSize(_resultSize),
           ),
           onDownload: _download,
           onShare: _share,

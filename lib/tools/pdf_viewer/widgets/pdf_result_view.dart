@@ -21,14 +21,6 @@ class PdfResultView extends StatelessWidget {
     required this.onClose,
   });
 
-  static String formatSize(int bytes) {
-    if (bytes > 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    }
-    if (bytes > 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    return '$bytes B';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

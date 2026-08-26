@@ -33,7 +33,7 @@ class ImageViewerEditor extends StatelessWidget {
   final bool isCropMode;
   final VoidCallback onToggleRedactMode;
   final bool isRedactMode;
-  final bool isWideScreen;
+  final bool inSidebar;
   final VoidCallback? onSegmentSubject;
 
   const ImageViewerEditor({
@@ -64,7 +64,7 @@ class ImageViewerEditor extends StatelessWidget {
     required this.isCropMode,
     required this.onToggleRedactMode,
     required this.isRedactMode,
-    required this.isWideScreen,
+    required this.inSidebar,
     this.onSegmentSubject,
   });
 
@@ -85,7 +85,7 @@ class ImageViewerEditor extends StatelessWidget {
         left: 16.0,
         right: 16.0,
         bottom: 16.0,
-        top: isWideScreen ? 76.0 : 16.0,
+        top: inSidebar ? 76.0 : 16.0,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

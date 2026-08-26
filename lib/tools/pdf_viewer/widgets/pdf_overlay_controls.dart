@@ -33,7 +33,7 @@ class PdfOverlayControls extends StatelessWidget {
 
   // Layout mode
   final PdfLayoutMode currentLayoutMode;
-  final Function(PdfLayoutMode mode) onLayoutModeChanged;
+  final ValueChanged<PdfLayoutMode> onLayoutModeChanged;
 
   const PdfOverlayControls({
     super.key,
@@ -239,6 +239,11 @@ class PdfOverlayControls extends StatelessWidget {
                         ),
                       ],
                     ),
+
+                    _LayoutModeButton(
+                      currentLayoutMode: currentLayoutMode,
+                      onLayoutModeChanged: onLayoutModeChanged,
+                    ),
                   ],
                 ),
               ),
@@ -246,6 +251,59 @@ class PdfOverlayControls extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+IconData _layoutIcon(PdfLayoutMode mode) => switch (mode) {
+  PdfLayoutMode.vertical => Icons.view_day_outlined,
+  PdfLayoutMode.horizontal => Icons.view_column_outlined,
+  PdfLayoutMode.doublePage => Icons.import_contacts_outlined,
+};
+
+String _layoutLabel(PdfLayoutMode mode, AppLocalizations l10n) =>
+    switch (mode) {
+      PdfLayoutMode.vertical => l10n.pdfNavLayoutVertical,
+      PdfLayoutMode.horizontal => l10n.pdfNavLayoutHorizontal,
+      PdfLayoutMode.doublePage => l10n.pdfNavLayoutDoublePage,
+    };
+
+class _LayoutModeButton extends StatelessWidget {
+  final PdfLayoutMode currentLayoutMode;
+  final ValueChanged<PdfLayoutMode> onLayoutModeChanged;
+
+  const _LayoutModeButton({
+    required this.currentLayoutMode,
+    required this.onLayoutModeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return PopupMenuButton<PdfLayoutMode>(
+      tooltip: l10n.pdfNavPageLayout,
+      icon: Icon(_layoutIcon(currentLayoutMode)),
+      iconSize: 16,
+      padding: EdgeInsets.zero,
+      onSelected: onLayoutModeChanged,
+      itemBuilder: (context) {
+        final menuL10n = AppLocalizations.of(context);
+        return [
+          for (final mode in PdfLayoutMode.values)
+            CheckedPopupMenuItem(
+              value: mode,
+              checked: mode == currentLayoutMode,
+              child: Row(
+                children: [
+                  Icon(_layoutIcon(mode), size: 18),
+                  const SizedBox(width: 8),
+                  Text(_layoutLabel(mode, menuL10n)),
+                ],
+              ),
+            ),
+        ];
+      },
     );
   }
 }

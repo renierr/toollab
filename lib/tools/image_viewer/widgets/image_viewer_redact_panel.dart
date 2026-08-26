@@ -54,6 +54,11 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
   bool _isDrawingPath = false;
   List<Offset> _tempDrawingPoints = [];
 
+  // Width the image is actually drawn at in the preview. The applied blur
+  // radius / pixel block has to be scaled by it, and only the preview's own
+  // constraints know it.
+  double _previewDispW = 0;
+
   // Collapsible header state
   bool _isHeaderExpanded = true;
 
@@ -395,6 +400,7 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                 offsetX = (containerW - dispW) / 2;
                 offsetY = 0;
               }
+              _previewDispW = dispW;
 
               return Stack(
                 children: [
@@ -538,16 +544,11 @@ class _ImageViewerRedactPanelState extends State<ImageViewerRedactPanel> {
                   w = w.clamp(1, _imageWidth - x);
                   h = h.clamp(1, _imageHeight - y);
 
-                  final double containerW = MediaQuery.sizeOf(context).width;
-                  final double containerH = MediaQuery.sizeOf(context).height;
-                  final double imgRatio = _imageWidth / _imageHeight;
-                  final double containerRatio = containerW / containerH;
-                  final double dispW = imgRatio > containerRatio
-                      ? containerW
-                      : containerH * imgRatio;
-
-                  final double scaleRelation =
-                      _imageWidth / (dispW > 0 ? dispW : _imageWidth);
+                  // The slider is in preview pixels; the redaction runs on the
+                  // source image, so scale it by how far the preview shrank.
+                  final double scaleRelation = _previewDispW > 0
+                      ? _imageWidth / _previewDispW
+                      : 1.0;
                   final double scaledIntensity = _intensity * scaleRelation;
 
                   widget.onRedactApplied(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
@@ -24,15 +25,6 @@ class FastDropP2pSendIntentCard extends StatelessWidget {
   // user a rough expectation, not a precise measurement.
   static const int _lanBytesPerSecond = 8 * 1024 * 1024; // ~8 MB/s Wi-Fi
   static const int _bleBytesPerSecond = 15 * 1024; // ~15 KB/s BLE GATT
-
-  static String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    }
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
-  }
 
   static String _formatDuration(double seconds) {
     if (seconds < 1) return '<1s';
@@ -77,7 +69,7 @@ class FastDropP2pSendIntentCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        _formatBytes(fileSize),
+                        FormatHelper.fileSize(fileSize),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
                             alpha: 0.6,

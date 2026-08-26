@@ -388,7 +388,7 @@ class FileSaveHelper {
     }
 
     final systemDefaultTool = ToolModel(
-      id: 'system-default',
+      id: SystemToolIds.openDefault,
       name: 'System Default App',
       description: 'Open in the device\'s default viewer application',
       icon: Icons.open_in_new,
@@ -410,7 +410,7 @@ class FileSaveHelper {
 
     if (result != null) {
       final (selectedTool, remember) = result;
-      if (selectedTool.id == 'system-default') {
+      if (selectedTool.id == SystemToolIds.openDefault) {
         await openFile(path, mimeType);
       } else {
         if (remember) {
@@ -448,7 +448,7 @@ class FileSaveHelper {
     }
 
     final systemShareTool = ToolModel(
-      id: 'system-share',
+      id: SystemToolIds.share,
       name: 'System Share',
       description: 'Share file externally using the system share sheet',
       icon: Icons.share,
@@ -470,7 +470,7 @@ class FileSaveHelper {
 
     if (result != null) {
       final (selectedTool, remember) = result;
-      if (selectedTool.id == 'system-share') {
+      if (selectedTool.id == SystemToolIds.share) {
         await shareFile(path, mimeType);
       } else {
         if (remember) {

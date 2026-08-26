@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -146,7 +147,7 @@ class _PdfFlattenPanelState extends State<PdfFlattenPanel> {
         _FlattenPhase.done => PdfResultView(
           title: l10n.pdfEditFlattenDoneTitle,
           subtitle: l10n.pdfEditFlattenDoneSize(
-            PdfResultView.formatSize(_resultSize),
+            FormatHelper.fileSize(_resultSize),
           ),
           onDownload: _download,
           onShare: _share,

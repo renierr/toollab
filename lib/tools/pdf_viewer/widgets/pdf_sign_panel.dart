@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
@@ -275,7 +276,7 @@ class _PdfSignPanelState extends State<PdfSignPanel> with DisposeCleanup {
               _Phase.done => PdfResultView(
                 title: l10n.pdfEditSignDoneTitle,
                 subtitle: l10n.pdfEditSignDoneSize(
-                  PdfResultView.formatSize(_resultSize),
+                  FormatHelper.fileSize(_resultSize),
                 ),
                 onDownload: _download,
                 onShare: _share,

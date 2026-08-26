@@ -5453,6 +5453,30 @@ abstract class AppLocalizations {
   /// **'Zoom In'**
   String get pdfNavZoomIn;
 
+  /// No description provided for @pdfNavPageLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Page Layout'**
+  String get pdfNavPageLayout;
+
+  /// No description provided for @pdfNavLayoutVertical.
+  ///
+  /// In en, this message translates to:
+  /// **'Continuous'**
+  String get pdfNavLayoutVertical;
+
+  /// No description provided for @pdfNavLayoutHorizontal.
+  ///
+  /// In en, this message translates to:
+  /// **'Side by Side'**
+  String get pdfNavLayoutHorizontal;
+
+  /// No description provided for @pdfNavLayoutDoublePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Two Pages'**
+  String get pdfNavLayoutDoublePage;
+
   /// No description provided for @pdfNavOrganizeTitle.
   ///
   /// In en, this message translates to:

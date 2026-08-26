@@ -3087,6 +3087,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfNavZoomIn => 'Zoom In';
 
   @override
+  String get pdfNavPageLayout => 'Page Layout';
+
+  @override
+  String get pdfNavLayoutVertical => 'Continuous';
+
+  @override
+  String get pdfNavLayoutHorizontal => 'Side by Side';
+
+  @override
+  String get pdfNavLayoutDoublePage => 'Two Pages';
+
+  @override
   String pdfNavOrganizeTitle(String fileName) {
     return 'Organize: $fileName';
   }

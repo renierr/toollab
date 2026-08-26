@@ -19,6 +19,17 @@ class ShareTargetConfig {
   const ShareTargetConfig({required this.accept});
 }
 
+/// Ids of the two pseudo-tools the chooser synthesises for OS handoff. They
+/// have no `config.dart` to own their id, so it lives here.
+class SystemToolIds {
+  SystemToolIds._();
+
+  static const String openDefault = 'system-default';
+  static const String share = 'system-share';
+
+  static bool isSystem(String id) => id == openDefault || id == share;
+}
+
 class ToolModel {
   final String id;
   final String name;

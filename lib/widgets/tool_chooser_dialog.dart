@@ -69,16 +69,12 @@ class _ToolChooserDialogState extends State<ToolChooserDialog> {
 
     final appState = context.read<AppState>();
     final internalTools =
-        widget.tools
-            .where((t) => t.id != 'system-share' && t.id != 'system-default')
-            .toList()
-          ..sort(
-            (a, b) => appState
-                .getLastUsed(b.id)
-                .compareTo(appState.getLastUsed(a.id)),
-          );
+        widget.tools.where((t) => !SystemToolIds.isSystem(t.id)).toList()..sort(
+          (a, b) =>
+              appState.getLastUsed(b.id).compareTo(appState.getLastUsed(a.id)),
+        );
     final systemTools = widget.tools
-        .where((t) => t.id == 'system-share' || t.id == 'system-default')
+        .where((t) => SystemToolIds.isSystem(t.id))
         .toList();
 
     return ResponsiveAlertDialog(

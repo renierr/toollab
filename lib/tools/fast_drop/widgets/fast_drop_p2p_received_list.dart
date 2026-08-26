@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
@@ -20,12 +21,6 @@ class FastDropP2pReceivedList extends StatelessWidget {
     this.onDismiss,
   });
 
-  static String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -46,7 +41,7 @@ class FastDropP2pReceivedList extends StatelessWidget {
               color: AppTheme.statusGreen,
             ),
             title: Text(file.filename),
-            subtitle: Text(_formatBytes(file.size)),
+            subtitle: Text(FormatHelper.fileSize(file.size)),
             trailing: Wrap(
               spacing: 4,
               children: [
