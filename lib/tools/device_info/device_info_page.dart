@@ -12,6 +12,7 @@ import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/battery_details_service.dart';
 import 'package:tool_lab/services/system_specs_service.dart';
+import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/theme/theme.dart';
 
@@ -417,90 +418,95 @@ class _DeviceInfoPageState extends State<DeviceInfoPage>
       title: DeviceInfoTool.config.localizedName(l10n),
       child: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              children: [
-                SystemOverviewHeader(
-                  osName: _osName,
-                  osVersion: _osVersion,
-                  deviceName: _deviceName,
-                  modelName: _modelName,
+          : ReadableWidth(
+              child: ListView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                const SizedBox(height: 20),
-                if (_batteryLevel != null && _batteryState != null) ...[
-                  BatteryCard(
-                    level: _batteryLevel!,
-                    state: _batteryState!,
-                    isSaverMode: _isBatterySaver,
-                    details: _batteryDetails,
+                children: [
+                  SystemOverviewHeader(
+                    osName: _osName,
+                    osVersion: _osVersion,
+                    deviceName: _deviceName,
+                    modelName: _modelName,
                   ),
-                  const SizedBox(height: 12),
-                ],
-                InfoCard(
-                  title: l10n.miscDeviceInfoSystemOs,
-                  icon: Icons.settings_applications_outlined,
-                  accentColor: AppTheme.accentPurple,
-                  items: _systemInfo,
-                ),
-                const SizedBox(height: 12),
-                InfoCard(
-                  title: l10n.miscDeviceInfoHardwareSpecs,
-                  icon: Icons.memory_outlined,
-                  accentColor: AppTheme.accentBlue,
-                  items: _hardwareInfo,
-                ),
-                const SizedBox(height: 12),
-                InfoCard(
-                  title: l10n.miscDeviceInfoDisplayDetails,
-                  icon: Icons.screenshot_outlined,
-                  accentColor: AppTheme.accentTeal,
-                  items: _displayInfo,
-                ),
-                const SizedBox(height: 12),
-                InfoCard(
-                  title: l10n.miscDeviceInfoGeneralSettings,
-                  icon: Icons.public_outlined,
-                  accentColor: AppTheme.accentAmber,
-                  items: _generalInfo,
-                ),
-                if (_storageInfo.isNotEmpty) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
+                  if (_batteryLevel != null && _batteryState != null) ...[
+                    BatteryCard(
+                      level: _batteryLevel!,
+                      state: _batteryState!,
+                      isSaverMode: _isBatterySaver,
+                      details: _batteryDetails,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   InfoCard(
-                    title: l10n.miscDeviceInfoStorage,
-                    icon: Icons.storage_outlined,
-                    accentColor: AppTheme.accentBlue,
-                    items: _storageInfo,
-                  ),
-                ],
-                if (_networkInfo.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  InfoCard(
-                    title: l10n.miscDeviceInfoNetwork,
-                    icon: Icons.wifi_outlined,
-                    accentColor: AppTheme.accentGreen,
-                    items: _networkInfo,
-                  ),
-                ],
-                if (_sensorsInfo.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  InfoCard(
-                    title: l10n.miscDeviceInfoSensors,
-                    icon: Icons.sensors_outlined,
-                    accentColor: AppTheme.accentTeal,
-                    items: _sensorsInfo,
-                  ),
-                ],
-                if (_appInfo.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  InfoCard(
-                    title: l10n.miscDeviceInfoAppInfo,
-                    icon: Icons.info_outline,
+                    title: l10n.miscDeviceInfoSystemOs,
+                    icon: Icons.settings_applications_outlined,
                     accentColor: AppTheme.accentPurple,
-                    items: _appInfo,
+                    items: _systemInfo,
                   ),
+                  const SizedBox(height: 12),
+                  InfoCard(
+                    title: l10n.miscDeviceInfoHardwareSpecs,
+                    icon: Icons.memory_outlined,
+                    accentColor: AppTheme.accentBlue,
+                    items: _hardwareInfo,
+                  ),
+                  const SizedBox(height: 12),
+                  InfoCard(
+                    title: l10n.miscDeviceInfoDisplayDetails,
+                    icon: Icons.screenshot_outlined,
+                    accentColor: AppTheme.accentTeal,
+                    items: _displayInfo,
+                  ),
+                  const SizedBox(height: 12),
+                  InfoCard(
+                    title: l10n.miscDeviceInfoGeneralSettings,
+                    icon: Icons.public_outlined,
+                    accentColor: AppTheme.accentAmber,
+                    items: _generalInfo,
+                  ),
+                  if (_storageInfo.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    InfoCard(
+                      title: l10n.miscDeviceInfoStorage,
+                      icon: Icons.storage_outlined,
+                      accentColor: AppTheme.accentBlue,
+                      items: _storageInfo,
+                    ),
+                  ],
+                  if (_networkInfo.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    InfoCard(
+                      title: l10n.miscDeviceInfoNetwork,
+                      icon: Icons.wifi_outlined,
+                      accentColor: AppTheme.accentGreen,
+                      items: _networkInfo,
+                    ),
+                  ],
+                  if (_sensorsInfo.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    InfoCard(
+                      title: l10n.miscDeviceInfoSensors,
+                      icon: Icons.sensors_outlined,
+                      accentColor: AppTheme.accentTeal,
+                      items: _sensorsInfo,
+                    ),
+                  ],
+                  if (_appInfo.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    InfoCard(
+                      title: l10n.miscDeviceInfoAppInfo,
+                      icon: Icons.info_outline,
+                      accentColor: AppTheme.accentPurple,
+                      items: _appInfo,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
     );
   }

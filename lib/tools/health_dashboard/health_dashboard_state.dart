@@ -14,6 +14,7 @@ import 'collectors/health_connect_diff.dart';
 import 'collectors/health_connect_discovery.dart';
 import 'collectors/health_connect_importer.dart';
 import 'store/health_queries.dart';
+import 'store/health_models.dart';
 import 'store/health_store.dart';
 import '../treadmill_control/treadmill_health_connect_publisher.dart';
 import 'config.dart';

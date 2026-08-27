@@ -9,6 +9,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'chat_ai_state.dart';
@@ -244,38 +245,42 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
             onDownload: state.downloadModel,
           ),
           Expanded(
-            child: showSuggestions
-                ? ChatSuggestions(
-                    onSelectSuggestion: (text) {
-                      _textController.text = text;
-                      _handleSend(state);
-                    },
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    itemCount:
-                        state.messages.length + (state.isGenerating ? 1 : 0),
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    itemBuilder: (context, index) {
-                      if (index == state.messages.length) {
-                        return const ChatThinkingBubble();
-                      }
-                      final message = state.messages[index];
-                      return ChatMessageBubble(message: message);
-                    },
-                  ),
+            child: ReadableWidth(
+              child: showSuggestions
+                  ? ChatSuggestions(
+                      onSelectSuggestion: (text) {
+                        _textController.text = text;
+                        _handleSend(state);
+                      },
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      itemCount:
+                          state.messages.length + (state.isGenerating ? 1 : 0),
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      itemBuilder: (context, index) {
+                        if (index == state.messages.length) {
+                          return const ChatThinkingBubble();
+                        }
+                        final message = state.messages[index];
+                        return ChatMessageBubble(message: message);
+                      },
+                    ),
+            ),
           ),
-          ChatInputBar(
-            controller: _textController,
-            onSend: () => _handleSend(state),
-            isGenerating: state.isGenerating,
-            enabled: !state.isInitializing,
-            selectedImageBytes: state.selectedImageBytes,
-            onPickImage: () => _pickImage(state),
-            onRemoveImage: () => state.selectImage(null),
-            attachedFileName: state.attachedFileName,
-            onPickFile: () => _pickFile(state),
-            onRemoveFile: () => state.selectFile(null, null),
+          ReadableWidth(
+            child: ChatInputBar(
+              controller: _textController,
+              onSend: () => _handleSend(state),
+              isGenerating: state.isGenerating,
+              enabled: !state.isInitializing,
+              selectedImageBytes: state.selectedImageBytes,
+              onPickImage: () => _pickImage(state),
+              onRemoveImage: () => state.selectImage(null),
+              attachedFileName: state.attachedFileName,
+              onPickFile: () => _pickFile(state),
+              onRemoveFile: () => state.selectFile(null, null),
+            ),
           ),
         ],
       ),

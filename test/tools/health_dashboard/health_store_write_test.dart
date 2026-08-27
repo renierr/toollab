@@ -3,6 +3,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/health_dashboard/store/health_rows.dart';
 import 'package:tool_lab/tools/health_dashboard/store/health_schema.dart';
+import 'package:tool_lab/tools/health_dashboard/store/health_models.dart';
 import 'package:tool_lab/tools/health_dashboard/store/health_store.dart';
 
 /// The trailing safety pass re-reads a window on every sync, so what

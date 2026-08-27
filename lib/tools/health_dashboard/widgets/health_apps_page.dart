@@ -9,7 +9,7 @@ import 'package:tool_lab/widgets/settings_section_label.dart';
 import '../config.dart';
 import '../health_dashboard_state.dart';
 import '../health_source_apps.dart';
-import '../store/health_store.dart';
+import '../store/health_models.dart';
 import 'health_busy_dialog.dart';
 import 'health_delete_app_dialog.dart';
 

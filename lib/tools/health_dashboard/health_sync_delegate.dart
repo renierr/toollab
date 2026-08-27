@@ -4,6 +4,7 @@ import 'package:tool_lab/services/sync_service.dart';
 
 import 'collectors/health_connect_catch_up.dart';
 import 'config.dart';
+import 'store/health_models.dart';
 import 'store/health_store.dart';
 
 /// Backend sync for the health dashboard, one record per (UTC day, writer).

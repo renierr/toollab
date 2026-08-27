@@ -13,25 +13,21 @@ import 'package:tool_lab/helpers/mime_type_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
-import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/tools/fast_drop/fast_drop_p2p_state.dart';
 import 'package:tool_lab/tools/fast_drop/fast_drop_state.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
-import 'package:tool_lab/widgets/responsive_orientation_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
-import 'package:tool_lab/widgets/tool_back_button.dart';
 
 import 'config.dart';
 import 'fast_drop_model.dart';
 import 'p2p/p2p_models.dart';
+import 'widgets/fast_drop_cloud_view.dart';
+import 'widgets/fast_drop_header.dart';
 import 'widgets/fast_drop_incoming_request_dialog.dart';
 import 'widgets/fast_drop_mode_toggle.dart';
 import 'widgets/fast_drop_p2p_view.dart';
 import 'widgets/fast_drop_preview_dialog.dart';
-import 'widgets/fast_drop_upload_panel.dart';
 import 'widgets/fast_drop_status_banner.dart';
-import 'widgets/fast_drop_pending_card.dart';
-import 'widgets/fast_drop_list.dart';
 import 'widgets/fast_drop_transfer_progress.dart';
 import 'widgets/fast_drop_not_configured.dart';
 import 'widgets/fast_drop_edit_description_dialog.dart';
@@ -681,7 +677,6 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
           ),
         );
     final p2pState = context.watch<FastDropP2pState>();
-    final theme = Theme.of(context);
     final isConfigured = appState.syncServerUrl.isNotEmpty;
     final isActionsEnabled = appState.syncEnabled && isServerAvailable;
 
@@ -696,63 +691,12 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Row(
-              children: [
-                const ToolBackButton(),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.fastDropTitle,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        isConfigured
-                            ? (appState.syncEnabled
-                                  ? (isServerAvailable
-                                        ? l10n.fastDropStatusOnline
-                                        : l10n.fastDropStatusOffline)
-                                  : l10n.fastDropStatusSyncDisabled)
-                            : l10n.fastDropStatusNotConfigured,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isConfigured
-                              ? (appState.syncEnabled
-                                    ? (isServerAvailable
-                                          ? AppTheme.statusGreen
-                                          : AppTheme.statusRed)
-                                    : AppTheme.statusAmber)
-                              : theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.5,
-                                ),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isConfigured && appState.syncEnabled)
-                  IconButton(
-                    icon: isLoadingFastDrops
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppTheme.accentTeal,
-                            ),
-                          )
-                        : const Icon(Icons.refresh),
-                    tooltip: l10n.fastDropRefreshList,
-                    onPressed: () => fastDropState.loadFastDrops(),
-                  ),
-              ],
-            ),
+          FastDropHeader(
+            isConfigured: isConfigured,
+            syncEnabled: appState.syncEnabled,
+            isServerAvailable: isServerAvailable,
+            isLoading: isLoadingFastDrops,
+            onRefresh: () => fastDropState.loadFastDrops(),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -787,122 +731,25 @@ class _FastDropPageState extends State<FastDropPage> with DisposeCleanup {
                   )
                 : !isConfigured
                 ? const FastDropNotConfigured()
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      // The panels below scroll, so the viewport height has to
-                      // be measured out here where it is still bounded.
-                      final shortViewport = constraints.maxHeight < 700;
-                      return ResponsiveOrientationLayout(
-                        portrait: SingleChildScrollView(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (_pendingSharedFiles.isNotEmpty) ...[
-                                  FastDropPendingCard(
-                                    files: _pendingSharedFiles,
-                                    isUploading: _isUploadingPending,
-                                    isActionsEnabled: isActionsEnabled,
-                                    onUpload: _uploadPendingSharedFiles,
-                                    onDismiss: () {
-                                      setState(() {
-                                        _pendingSharedFiles.clear();
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
-                                FastDropUploadPanel(
-                                  retention: retention,
-                                  onRetentionChanged: _onRetentionChanged,
-                                  onFilesSelected: _onFilesSelected,
-                                  onPasteClipboard: _pasteFromClipboard,
-                                  isActionsEnabled: isActionsEnabled,
-                                  tempScope: _scope,
-                                  shortViewport: shortViewport,
-                                ),
-                                const SizedBox(height: 24),
-                                const Divider(height: 1),
-                                const SizedBox(height: 16),
-                                Text(
-                                  l10n.fastDropSectionTitle,
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.5),
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                FastDropList(
-                                  appState: fastDropState,
-                                  shrinkWrap: true,
-                                  onDelete: _onDelete,
-                                  onPreview: _onPreview,
-                                  onOpen: _onOpen,
-                                  onDownload: _onDownload,
-                                  onEditDescription: _onUpdateDescription,
-                                  onEditRetention: _onUpdateRetention,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        landscape: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              width: 320,
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    if (_pendingSharedFiles.isNotEmpty) ...[
-                                      FastDropPendingCard(
-                                        files: _pendingSharedFiles,
-                                        isUploading: _isUploadingPending,
-                                        isActionsEnabled: isActionsEnabled,
-                                        onUpload: _uploadPendingSharedFiles,
-                                        onDismiss: () {
-                                          setState(() {
-                                            _pendingSharedFiles.clear();
-                                          });
-                                        },
-                                      ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                    FastDropUploadPanel(
-                                      retention: retention,
-                                      onRetentionChanged: _onRetentionChanged,
-                                      onFilesSelected: _onFilesSelected,
-                                      onPasteClipboard: _pasteFromClipboard,
-                                      isActionsEnabled: isActionsEnabled,
-                                      tempScope: _scope,
-                                      shortViewport: shortViewport,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const VerticalDivider(width: 1),
-                            Expanded(
-                              child: FastDropList(
-                                appState: fastDropState,
-                                onDelete: _onDelete,
-                                onPreview: _onPreview,
-                                onOpen: _onOpen,
-                                onDownload: _onDownload,
-                                onEditDescription: _onUpdateDescription,
-                                onEditRetention: _onUpdateRetention,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                : FastDropCloudView(
+                    fastDropState: fastDropState,
+                    pendingFiles: _pendingSharedFiles,
+                    isUploadingPending: _isUploadingPending,
+                    isActionsEnabled: isActionsEnabled,
+                    onUploadPending: _uploadPendingSharedFiles,
+                    onDismissPending: () =>
+                        setState(() => _pendingSharedFiles.clear()),
+                    retention: retention,
+                    onRetentionChanged: _onRetentionChanged,
+                    onFilesSelected: _onFilesSelected,
+                    onPasteClipboard: _pasteFromClipboard,
+                    tempScope: _scope,
+                    onDelete: _onDelete,
+                    onPreview: _onPreview,
+                    onOpen: _onOpen,
+                    onDownload: _onDownload,
+                    onEditDescription: _onUpdateDescription,
+                    onEditRetention: _onUpdateRetention,
                   ),
           ),
         ],

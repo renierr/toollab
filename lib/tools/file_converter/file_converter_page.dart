@@ -5,6 +5,7 @@ import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
@@ -99,7 +100,7 @@ class _FileConverterPageState extends State<FileConverterPage>
           onPressed: _onClose,
         ),
       ],
-      child: ConversionPanel(scope: _scope),
+      child: ReadableWidth(child: ConversionPanel(scope: _scope)),
     );
   }
 }

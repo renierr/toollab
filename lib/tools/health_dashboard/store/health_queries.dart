@@ -8,6 +8,7 @@ import '../health_record_values.dart';
 import 'health_metric_catalog.dart';
 import 'health_metric_series.dart';
 import 'health_schema.dart';
+import 'health_models.dart';
 import 'health_store.dart';
 
 /// Reads the typed store and projects it into [HealthRecord] for the dashboard.

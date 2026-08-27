@@ -6,6 +6,7 @@ import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
+import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
@@ -148,30 +149,32 @@ class _GpsLocationStorePageState extends State<GpsLocationStorePage>
               onLocate: state.isLocatingCurrent ? null : _locate,
               isLocating: state.isLocatingCurrent,
             )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-              children: [
-                if (current != null) ...[
-                  CurrentLocationCard(
-                    fix: current,
-                    isLocating: state.isLocatingCurrent,
-                    onRefresh: _locate,
-                    onSave: () => _saveFix(current),
-                  ),
-                  const SizedBox(height: 16),
+          : ReadableWidth(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                children: [
+                  if (current != null) ...[
+                    CurrentLocationCard(
+                      fix: current,
+                      isLocating: state.isLocatingCurrent,
+                      onRefresh: _locate,
+                      onSave: () => _saveFix(current),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  if (last != null)
+                    LastLocationCard(location: last, currentPosition: current),
+                  if (history.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    LocationList(
+                      locations: history,
+                      currentPosition: current,
+                      onEditDescription: _editDescription,
+                      onDelete: _deleteLocation,
+                    ),
+                  ],
                 ],
-                if (last != null)
-                  LastLocationCard(location: last, currentPosition: current),
-                if (history.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  LocationList(
-                    locations: history,
-                    currentPosition: current,
-                    onEditDescription: _editDescription,
-                    onDelete: _deleteLocation,
-                  ),
-                ],
-              ],
+              ),
             ),
     );
   }

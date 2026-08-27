@@ -25,7 +25,7 @@ class ResponsiveOrientationLayout extends StatelessWidget {
     required this.portrait,
     required this.landscape,
     this.padding,
-    this.minLandscapeWidth = ResponsiveLayout.mobileBreakpoint,
+    this.minLandscapeWidth = Breakpoints.mobile,
   });
 
   @override

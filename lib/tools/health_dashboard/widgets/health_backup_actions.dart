@@ -10,6 +10,7 @@ import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../health_dashboard_state.dart';
+import '../store/health_models.dart';
 import '../store/health_store.dart';
 import 'health_import_progress_dialog.dart';
 import 'health_export_progress_dialog.dart';
