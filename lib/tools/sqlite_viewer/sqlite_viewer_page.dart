@@ -143,39 +143,46 @@ class _SqliteViewerPageState extends State<SqliteViewerPage>
       );
     }
 
-    final showDrawerButton = !ResponsiveLayout.isDesktop(context);
+    // The object list either sits beside the tabs or behind the drawer button;
+    // both decisions must come from the same measurement, so they are taken
+    // here and the mode is passed down.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final inlineObjectList = constraints.canSplit;
 
-    return ToolLayout(
-      title: state.displayName ?? title,
-      scaffoldKey: _scaffoldKey,
-      endDrawer: showDrawerButton ? const SqliteSchemaDrawer() : null,
-      actions: [
-        IconButton(
-          icon: Icon(state.editMode ? Icons.lock_open : Icons.lock_outline),
-          tooltip: state.editMode
-              ? l10n.sqliteViewerEditModeOn
-              : l10n.sqliteViewerEditModeOff,
-          onPressed: state.isBusy ? null : _toggleEditMode,
-        ),
-        if (state.hasEdits && state.isTempCopy)
-          IconButton(
-            icon: const Icon(Icons.save_alt),
-            tooltip: l10n.sqliteViewerSaveCopy,
-            onPressed: _saveCopy,
-          ),
-        if (showDrawerButton)
-          IconButton(
-            icon: const Icon(Icons.account_tree_outlined),
-            tooltip: l10n.sqliteViewerObjects,
-            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-          ),
-        IconButton(
-          icon: const Icon(Icons.close),
-          tooltip: l10n.commonClose,
-          onPressed: state.closeDb,
-        ),
-      ],
-      child: const SqliteWorkspace(),
+        return ToolLayout(
+          title: state.displayName ?? title,
+          scaffoldKey: _scaffoldKey,
+          endDrawer: inlineObjectList ? null : const SqliteSchemaDrawer(),
+          actions: [
+            IconButton(
+              icon: Icon(state.editMode ? Icons.lock_open : Icons.lock_outline),
+              tooltip: state.editMode
+                  ? l10n.sqliteViewerEditModeOn
+                  : l10n.sqliteViewerEditModeOff,
+              onPressed: state.isBusy ? null : _toggleEditMode,
+            ),
+            if (state.hasEdits && state.isTempCopy)
+              IconButton(
+                icon: const Icon(Icons.save_alt),
+                tooltip: l10n.sqliteViewerSaveCopy,
+                onPressed: _saveCopy,
+              ),
+            if (!inlineObjectList)
+              IconButton(
+                icon: const Icon(Icons.account_tree_outlined),
+                tooltip: l10n.sqliteViewerObjects,
+                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+              ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              tooltip: l10n.commonClose,
+              onPressed: state.closeDb,
+            ),
+          ],
+          child: SqliteWorkspace(showObjectList: inlineObjectList),
+        );
+      },
     );
   }
 }

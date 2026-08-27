@@ -8,8 +8,10 @@ import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/markdown_viewer_page.dart';
 import 'package:tool_lab/tools/markdown_viewer/config.dart';
 import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/widgets/file_drop_zone.dart';
+import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:file_selector/file_selector.dart' show XFile;
+
+import 'widgets/markdown_open_view.dart';
 
 class MarkdownViewerToolPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -177,18 +179,11 @@ class _MarkdownViewerToolPageState extends State<MarkdownViewerToolPage>
     final l10n = AppLocalizations.of(context);
 
     if (_fileContent == null) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(MarkdownViewerTool.config.localizedName(l10n)),
-        ),
-        body: FileDropZone(
-          onFileSelected: _onFileSelected,
-          allowedExtensions: MarkdownViewerTool.config.fileExtensions,
-          allowedMimeTypes: const ['text/markdown', 'text/plain'],
-          typeLabel: l10n.miscMarkdownTypeLabel,
+      return ToolLayout(
+        title: MarkdownViewerTool.config.localizedName(l10n),
+        child: MarkdownOpenView(
           accentColor: accent,
-          title: l10n.miscMarkdownOpenTitle,
-          subtitle: l10n.miscMarkdownDropSubtitle,
+          onFileSelected: _onFileSelected,
         ),
       );
     }

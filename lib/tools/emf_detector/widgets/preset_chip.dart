@@ -24,7 +24,7 @@ class PresetChip extends StatelessWidget {
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
-          color: isSelected ? EmfColors.darkBgDeep : Colors.grey[300],
+          color: isSelected ? EmfColors.darkBgDeep : EmfColors.inkChip,
         ),
       ),
       selected: isSelected,

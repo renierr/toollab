@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/theme/theme.dart';
@@ -29,7 +30,8 @@ class HealthAppsPage extends StatefulWidget {
   State<HealthAppsPage> createState() => _HealthAppsPageState();
 }
 
-class _HealthAppsPageState extends State<HealthAppsPage> {
+class _HealthAppsPageState extends State<HealthAppsPage>
+    with DisposeCleanup<HealthAppsPage> {
   @override
   void initState() {
     super.initState();

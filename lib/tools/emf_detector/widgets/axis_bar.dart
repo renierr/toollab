@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../emf_colors.dart';
+
 class AxisBar extends StatelessWidget {
   final String label;
   final double value;
@@ -37,7 +39,7 @@ class AxisBar extends StatelessWidget {
                 fontFamily: 'monospace',
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: isScanning ? activeColor : Colors.grey[600],
+                color: isScanning ? activeColor : EmfColors.inkDisabled,
               ),
             ),
           ),
@@ -84,7 +86,7 @@ class AxisBar extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isScanning
                                   ? activeColor
-                                  : Colors.grey[800],
+                                  : EmfColors.trackIdle,
                               borderRadius: BorderRadius.circular(3),
                               boxShadow: isScanning
                                   ? [
@@ -120,7 +122,7 @@ class AxisBar extends StatelessWidget {
                 fontFamily: 'monospace',
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isScanning ? Colors.grey[200] : Colors.grey[600],
+                color: isScanning ? EmfColors.inkBright : EmfColors.inkDisabled,
               ),
             ),
           ),

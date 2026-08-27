@@ -33,7 +33,7 @@ class CalibrationPanel extends StatelessWidget {
                 foregroundColor: EmfColors.darkBgDeep,
                 backgroundColor: EmfColors.neonEmerald,
                 disabledBackgroundColor: Colors.white.withValues(alpha: 0.04),
-                disabledForegroundColor: Colors.grey[600],
+                disabledForegroundColor: EmfColors.inkDisabled,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -51,7 +51,7 @@ class CalibrationPanel extends StatelessWidget {
                   : null,
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white,
-                disabledForegroundColor: Colors.grey[600],
+                disabledForegroundColor: EmfColors.inkDisabled,
                 side: BorderSide(
                   color: state.isScanning && state.isCalibrated
                       ? Colors.white.withValues(alpha: 0.3)
@@ -87,7 +87,7 @@ class CalibrationPanel extends StatelessWidget {
             fontSize: 10,
             color: state.isCalibrated
                 ? EmfColors.neonEmerald.withValues(alpha: 0.8)
-                : Colors.grey[600],
+                : EmfColors.inkDisabled,
           ),
         ),
       ],

@@ -13,4 +13,13 @@ class EmfColors {
   static const darkBg = Color(0xFF0F1019);
   static const darkBgWarm = Color(0xFF14120E);
   static const darkBgDeep = Color(0xFF07080D);
+
+  /// Greyscale steps of the neon-on-dark chrome, pinned to explicit values so
+  /// the palette cannot drift with the Material grey swatch.
+  static const inkBright = Color(0xFFEEEEEE);
+  static const inkChip = Color(0xFFE0E0E0);
+  static const inkMuted = Color(0xFFBDBDBD);
+  static const inkDim = Color(0xFF9E9E9E);
+  static const inkDisabled = Color(0xFF757575);
+  static const trackIdle = Color(0xFF424242);
 }

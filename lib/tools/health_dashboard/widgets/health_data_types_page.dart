@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../health_dashboard_state.dart';
@@ -16,7 +17,8 @@ class HealthDataTypesPage extends StatefulWidget {
   State<HealthDataTypesPage> createState() => _HealthDataTypesPageState();
 }
 
-class _HealthDataTypesPageState extends State<HealthDataTypesPage> {
+class _HealthDataTypesPageState extends State<HealthDataTypesPage>
+    with DisposeCleanup<HealthDataTypesPage> {
   @override
   void initState() {
     super.initState();

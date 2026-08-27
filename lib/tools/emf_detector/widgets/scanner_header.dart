@@ -71,7 +71,7 @@ class ScannerHeader extends StatelessWidget {
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.0,
-                color: Colors.grey[500],
+                color: EmfColors.inkDim,
               ),
             ),
           ],

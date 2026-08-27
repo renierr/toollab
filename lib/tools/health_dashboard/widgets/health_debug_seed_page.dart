@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
@@ -21,7 +22,8 @@ class HealthDebugSeedPage extends StatefulWidget {
   State<HealthDebugSeedPage> createState() => _HealthDebugSeedPageState();
 }
 
-class _HealthDebugSeedPageState extends State<HealthDebugSeedPage> {
+class _HealthDebugSeedPageState extends State<HealthDebugSeedPage>
+    with DisposeCleanup<HealthDebugSeedPage> {
   static const _ranges = [7, 30, 90, 180, 365];
 
   int _days = 90;

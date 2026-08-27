@@ -14,45 +14,40 @@ class NoteCardTags extends StatelessWidget {
     final visible = tags.take(maxVisible).toList();
     final remaining = tags.length - maxVisible;
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.sizeOf(context).width - 40,
-      ),
-      child: Wrap(
-        spacing: 4,
-        runSpacing: 4,
-        children: [
-          ...visible.map(
-            (tag) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppTheme.accentTeal.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                tag,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: AppTheme.accentTeal.withValues(alpha: 0.85),
-                ),
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        ...visible.map(
+          (tag) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppTheme.accentTeal.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              tag,
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.accentTeal.withValues(alpha: 0.85),
               ),
             ),
           ),
-          if (remaining > 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(
-                '+$remaining',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.4),
-                ),
+        ),
+        if (remaining > 0)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              '+$remaining',
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.4),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }

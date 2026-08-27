@@ -85,28 +85,9 @@ class _ModArchiveFetchDialogState extends State<ModArchiveFetchDialog> {
       icon: const Icon(Icons.casino_outlined, color: ChiptuneColors.accent),
       title: Text(l10n.chipRandomTitle),
       scrollable: true,
-      content: _buildContent(l10n),
+      content: _FetchContent(loading: _loading, error: _error, tune: _tune),
       actions: _buildActions(l10n),
     );
-  }
-
-  Widget _buildContent(AppLocalizations l10n) {
-    if (_loading) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: CircularProgressIndicator(color: ChiptuneColors.accent),
-          ),
-          Text(l10n.chipRandomFetching, textAlign: TextAlign.center),
-        ],
-      );
-    }
-    if (_error != null) {
-      return Text(l10n.chipRandomFetchFailed(_error!));
-    }
-    return ChiptuneModArchiveInfo(tune: _tune!, showCredits: true);
   }
 
   List<Widget> _buildActions(AppLocalizations l10n) {
@@ -138,5 +119,38 @@ class _ModArchiveFetchDialogState extends State<ModArchiveFetchDialog> {
         child: Text(l10n.chipPlayTooltip),
       ),
     ];
+  }
+}
+
+class _FetchContent extends StatelessWidget {
+  final bool loading;
+  final String? error;
+  final ModArchiveTune? tune;
+
+  const _FetchContent({
+    required this.loading,
+    required this.error,
+    required this.tune,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    if (loading) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: CircularProgressIndicator(color: ChiptuneColors.accent),
+          ),
+          Text(l10n.chipRandomFetching, textAlign: TextAlign.center),
+        ],
+      );
+    }
+    if (error != null) {
+      return Text(l10n.chipRandomFetchFailed(error!));
+    }
+    return ChiptuneModArchiveInfo(tune: tune!, showCredits: true);
   }
 }

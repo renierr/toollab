@@ -16,6 +16,10 @@ class FastDropUploadPanel extends StatelessWidget {
   final bool isActionsEnabled;
   final TempFileScope tempScope;
 
+  /// Whether the scroll viewport hosting this panel is too short for the tall
+  /// drop zone. The panel scrolls, so it cannot measure that itself.
+  final bool shortViewport;
+
   const FastDropUploadPanel({
     super.key,
     required this.retention,
@@ -24,14 +28,14 @@ class FastDropUploadPanel extends StatelessWidget {
     required this.onPasteClipboard,
     required this.isActionsEnabled,
     required this.tempScope,
+    required this.shortViewport,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isAndroid = Platform.isAndroid;
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final useCompact = isAndroid || screenHeight < 700;
+    final useCompact = isAndroid || shortViewport;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -53,24 +53,25 @@ class _UnitConverterPageState extends State<UnitConverterPage>
             child: CategorySelector(accent: accent),
           ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-              child: ResponsiveLayout(
-                mobile: Column(
-                  children: [
-                    ConversionCard(accent: accent),
-                    const SizedBox(height: 16),
-                    AllUnitsList(accent: accent),
-                  ],
-                ),
-                desktop: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: ConversionCard(accent: accent)),
-                    const SizedBox(width: 16),
-                    Expanded(child: AllUnitsList(accent: accent)),
-                  ],
-                ),
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                child: constraints.canSplit
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: ConversionCard(accent: accent)),
+                          const SizedBox(width: 16),
+                          Expanded(child: AllUnitsList(accent: accent)),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          ConversionCard(accent: accent),
+                          const SizedBox(height: 16),
+                          AllUnitsList(accent: accent),
+                        ],
+                      ),
               ),
             ),
           ),

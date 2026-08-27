@@ -42,7 +42,7 @@ class FeedbackButton extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 20,
-                color: active ? EmfColors.neonEmerald : Colors.grey[500],
+                color: active ? EmfColors.neonEmerald : EmfColors.inkDim,
               ),
             ),
             const SizedBox(height: 6),
@@ -52,7 +52,7 @@ class FeedbackButton extends StatelessWidget {
                 fontSize: 9,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
-                color: active ? Colors.white : Colors.grey[600],
+                color: active ? Colors.white : EmfColors.inkDisabled,
               ),
             ),
           ],

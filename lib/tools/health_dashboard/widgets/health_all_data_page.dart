@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:intl/intl.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -16,7 +17,8 @@ class HealthAllDataPage extends StatefulWidget {
   State<HealthAllDataPage> createState() => _HealthAllDataPageState();
 }
 
-class _HealthAllDataPageState extends State<HealthAllDataPage> {
+class _HealthAllDataPageState extends State<HealthAllDataPage>
+    with DisposeCleanup<HealthAllDataPage> {
   final _scrollController = ScrollController();
   final _records = <HealthRecord>[];
   var _isLoading = true;
@@ -28,14 +30,11 @@ class _HealthAllDataPageState extends State<HealthAllDataPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    onDispose(() {
+      _scrollController.removeListener(_onScroll);
+      _scrollController.dispose();
+    });
     _loadMore();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
   }
 
   void _onScroll() {

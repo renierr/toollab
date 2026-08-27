@@ -56,7 +56,7 @@ class CircularGauge extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       letterSpacing: -1,
                       color: !isScanning
-                          ? Colors.grey[600]
+                          ? EmfColors.inkDisabled
                           : isWarning
                           ? EmfColors.neonPink
                           : EmfColors.neonCyan,
@@ -80,7 +80,7 @@ class CircularGauge extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 2.0,
-                    color: Colors.grey[500],
+                    color: EmfColors.inkDim,
                   ),
                 ),
                 Text(
@@ -93,7 +93,7 @@ class CircularGauge extends StatelessWidget {
                         ? (isWarning
                               ? EmfColors.neonPink.withValues(alpha: 0.7)
                               : EmfColors.neonCyan.withValues(alpha: 0.7))
-                        : Colors.grey[600],
+                        : EmfColors.inkDisabled,
                   ),
                 ),
                 if (isScanning && isWarning) ...[

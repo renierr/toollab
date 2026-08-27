@@ -68,7 +68,7 @@ class CableDetectedBanner extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 10, color: Colors.grey[400]),
+                  style: TextStyle(fontSize: 10, color: EmfColors.inkMuted),
                 ),
               ],
             ),

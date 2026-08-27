@@ -54,7 +54,7 @@ class VectorReadoutCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: state.isScanning
                       ? EmfColors.neonCyan
-                      : Colors.grey[600],
+                      : EmfColors.inkDisabled,
                 ),
               ),
             ],

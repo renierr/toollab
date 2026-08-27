@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/widgets/responsive_layout.dart';
 
 import '../config.dart';
 import '../sqlite_viewer_state.dart';
@@ -14,7 +13,11 @@ import 'sqlite_sql_tab.dart';
 /// The tab index lives in the state rather than a [DefaultTabController] so the
 /// schema drawer — which sits outside this subtree — can switch tabs too.
 class SqliteWorkspace extends StatefulWidget {
-  const SqliteWorkspace({super.key});
+  /// Whether the object list sits beside the tabs; when false the page offers
+  /// it as a drawer instead. Decided by the page so both agree.
+  final bool showObjectList;
+
+  const SqliteWorkspace({super.key, required this.showObjectList});
 
   @override
   State<SqliteWorkspace> createState() => _SqliteWorkspaceState();
@@ -44,7 +47,6 @@ class _SqliteWorkspaceState extends State<SqliteWorkspace>
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = context.watch<SqliteViewerState>();
-    final isDesktop = ResponsiveLayout.isDesktop(context);
 
     if (_controller.index != state.tabIndex) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -80,7 +82,7 @@ class _SqliteWorkspaceState extends State<SqliteWorkspace>
               : null,
         ),
         Expanded(
-          child: isDesktop
+          child: widget.showObjectList
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

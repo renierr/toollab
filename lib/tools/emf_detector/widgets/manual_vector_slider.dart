@@ -23,7 +23,7 @@ class ManualVectorSlider extends StatelessWidget {
             width: 50,
             child: Text(
               label,
-              style: TextStyle(fontSize: 9, color: Colors.grey[400]),
+              style: const TextStyle(fontSize: 9, color: EmfColors.inkMuted),
             ),
           ),
           Expanded(
@@ -54,7 +54,7 @@ class ManualVectorSlider extends StatelessWidget {
                 fontFamily: 'monospace',
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[400],
+                color: EmfColors.inkMuted,
               ),
             ),
           ),

@@ -35,7 +35,7 @@ class SimulatorLabCard extends StatelessWidget {
                 letterSpacing: 0.5,
               ),
             ),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey[500]),
+            style: TextButton.styleFrom(foregroundColor: EmfColors.inkDim),
           ),
         ),
       );
@@ -91,7 +91,7 @@ class SimulatorLabCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[500],
+              color: EmfColors.inkDim,
             ),
           ),
           const SizedBox(height: 6),
@@ -136,7 +136,7 @@ class SimulatorLabCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[500],
+                  color: EmfColors.inkDim,
                 ),
               ),
               if (state.currentPreset == SimulationPreset.none)

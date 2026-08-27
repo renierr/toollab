@@ -145,7 +145,7 @@ class ScannerControlsCard extends StatelessWidget {
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.0,
-                      color: Colors.grey[400],
+                      color: EmfColors.inkMuted,
                     ),
                   ),
                   Text(
