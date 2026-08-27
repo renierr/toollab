@@ -12,6 +12,7 @@ import 'package:tool_lab/services/background_task_service.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/theme/theme.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,9 +43,13 @@ class _ToolLabBootstrapState extends State<ToolLabBootstrap> {
 
   Future<void> _bootstrap() async {
     try {
+      // The temp dir and the database are independent round trips to storage,
+      // so they run together instead of adding up.
+      final settingsFuture = DatabaseService.instance.database.then(
+        (_) => SettingsService.init(),
+      );
       await TempFileManager.init();
-      await DatabaseService.instance.database;
-      final settingsService = await SettingsService.init();
+      final settingsService = await settingsFuture;
       final toolProviders = ToolRegistry.all
           .map((t) => t.stateProviders)
           .where((f) => f != null)
@@ -66,18 +71,14 @@ class _ToolLabBootstrapState extends State<ToolLabBootstrap> {
   Widget build(BuildContext context) {
     final appState = _appState;
     if (appState == null) {
+      // The stored theme lives in the database that is still opening, so the
+      // splash follows the platform brightness — which is also the app default.
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          body: _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text('Startup failed: $_error'),
-                  ),
-                )
-              : const Center(child: CircularProgressIndicator()),
-        ),
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: ThemeMode.system,
+        home: _BootstrapSplash(error: _error),
       );
     }
     return MultiProvider(
@@ -86,6 +87,63 @@ class _ToolLabBootstrapState extends State<ToolLabBootstrap> {
         ...?_toolProviders,
       ],
       child: const ToolLabApp(),
+    );
+  }
+}
+
+/// Shown while startup I/O runs, and turned into the failure message if it
+/// throws. Cannot be localized — the locale is loaded by the work it waits on.
+class _BootstrapSplash extends StatelessWidget {
+  final Object? error;
+
+  const _BootstrapSplash({required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: error != null
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: theme.colorScheme.error,
+                      size: 40,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Startup failed: $error',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.science_outlined,
+                      size: 48,
+                      color: AppTheme.accentBlue,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: 120,
+                      child: LinearProgressIndicator(
+                        minHeight: 3,
+                        color: AppTheme.accentBlue,
+                        backgroundColor:
+                            theme.colorScheme.surfaceContainerHighest,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 }

@@ -111,13 +111,14 @@ class TempFileManager {
     final sessionId = DateTime.now().millisecondsSinceEpoch.toString();
     _sessionDir = Directory('${base.path}/$sessionId');
     await _sessionDir!.create(recursive: true);
-    _cleanupOrphans(base);
+    unawaited(_cleanupOrphans(base));
   }
 
-  static void _cleanupOrphans(Directory base) {
+  /// Async on purpose: this runs during startup, and a sync directory listing
+  /// would stall the first frames on whatever the temp dir happens to hold.
+  static Future<void> _cleanupOrphans(Directory base) async {
     try {
-      final entries = base.listSync();
-      for (final entry in entries) {
+      await for (final entry in base.list()) {
         if (entry is Directory && entry.path != _sessionDir?.path) {
           unawaited(entry.delete(recursive: true));
         }
