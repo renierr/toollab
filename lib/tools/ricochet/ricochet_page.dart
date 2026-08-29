@@ -139,9 +139,15 @@ class _RicochetPageState extends State<RicochetPage>
         ? 0.0
         : (elapsed - _lastTick).inMicroseconds / 1e6;
     _lastTick = elapsed;
-    _steerAim(dt);
+    final steeringAim = _steerAim(dt);
     // A frame longer than a fifth of a second is a stall, not slow motion.
     _engine.update(dt.clamp(0.0, 0.25));
+    if (!steeringAim && !_engine.needsFrame) _ticker.stop();
+  }
+
+  void _wakeTicker() {
+    _lastTick = Duration.zero;
+    if (!_ticker.isActive) _ticker.start();
   }
 
   // ------------------------------------------------------------- app lifecycle
@@ -150,8 +156,7 @@ class _RicochetPageState extends State<RicochetPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _stopBackgroundTicker();
-      _lastTick = Duration.zero;
-      if (!_ticker.isActive) _ticker.start();
+      _wakeTicker();
       if (context.read<RicochetState>().soundEnabled) {
         RicochetAudioService.instance.playLoop(RicochetSfx.bgm, volume: 0.10);
       }
@@ -178,8 +183,8 @@ class _RicochetPageState extends State<RicochetPage>
 
   // ------------------------------------------------------------------ keyboard
 
-  void _steerAim(double dt) {
-    if (!_focused || _engine.mode != GameMode.aiming) return;
+  bool _steerAim(double dt) {
+    if (!_focused || _engine.mode != GameMode.aiming) return false;
     final keys = HardwareKeyboard.instance;
     var turn = 0.0;
     if (keys.isLogicalKeyPressed(LogicalKeyboardKey.arrowLeft) ||
@@ -190,10 +195,11 @@ class _RicochetPageState extends State<RicochetPage>
         keys.isLogicalKeyPressed(LogicalKeyboardKey.keyD)) {
       turn += 1;
     }
-    if (turn == 0) return;
+    if (turn == 0) return false;
     _engine.rotateAim(
       turn * _aimSpeed * dt * (keys.isShiftPressed ? _fineAim : 1),
     );
+    return true;
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
@@ -205,6 +211,7 @@ class _RicochetPageState extends State<RicochetPage>
     if (key == LogicalKeyboardKey.space ||
         key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.numpadEnter) {
+      _wakeTicker();
       _engine.fireAimed();
       return KeyEventResult.handled;
     }
@@ -212,13 +219,16 @@ class _RicochetPageState extends State<RicochetPage>
       // Only while a shot is lined up, so Escape still means "leave" otherwise.
       if (!_engine.aiming) return KeyEventResult.ignored;
       _engine.cancelAim();
+      _wakeTicker();
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyR) {
+      _wakeTicker();
       _engine.recallBalls();
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.keyF) {
+      _wakeTicker();
       _engine.boostSpeed();
       return KeyEventResult.handled;
     }
@@ -228,6 +238,7 @@ class _RicochetPageState extends State<RicochetPage>
         key == LogicalKeyboardKey.arrowRight ||
         key == LogicalKeyboardKey.keyA ||
         key == LogicalKeyboardKey.keyD) {
+      _wakeTicker();
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
@@ -237,7 +248,10 @@ class _RicochetPageState extends State<RicochetPage>
 
   Future<void> _openPowerMenu() async {
     final power = await PowerMenuSheet.show(context, onHowToPlay: _showHelp);
-    if (power != null) _engine.usePower(power);
+    if (power != null) {
+      _wakeTicker();
+      _engine.usePower(power);
+    }
     // A sheet or a HUD button takes the focus with it; take it back so the
     // keyboard keeps playing without a click on the board first.
     if (mounted) _keyboard.requestFocus();
@@ -265,6 +279,7 @@ class _RicochetPageState extends State<RicochetPage>
   /// Restarts, then takes the keyboard back from the result panel's button so
   /// the next shot can be aimed without reaching for the mouse.
   Future<void> _restart(Future<void> Function() action) async {
+    _wakeTicker();
     await action();
     if (mounted) _keyboard.requestFocus();
   }
@@ -300,7 +315,7 @@ class _RicochetPageState extends State<RicochetPage>
             final board = Stack(
               fit: StackFit.passthrough,
               children: [
-                RicochetBoard(engine: _engine),
+                RicochetBoard(engine: _engine, onInteraction: _wakeTicker),
                 Positioned.fill(
                   child: AnimatedBuilder(
                     animation: _engine.hud,

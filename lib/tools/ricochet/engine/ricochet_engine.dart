@@ -189,6 +189,17 @@ class RicochetEngine {
       mode == GameMode.shifting ||
       mode == GameMode.between;
 
+  /// Whether time-based game state still needs another frame. Pointer events
+  /// repaint a stationary aim preview without keeping the ticker alive.
+  bool get needsFrame =>
+      turnInProgress ||
+      shake > 0 ||
+      bannerTimer > 0 ||
+      (_firedOnce && hintAlpha > 0) ||
+      particles.isNotEmpty ||
+      texts.isNotEmpty ||
+      rings.isNotEmpty;
+
   // ---------------------------------------------------------------- lifecycle
 
   /// Restores a saved run, or starts a fresh one when there is nothing to

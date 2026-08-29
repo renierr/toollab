@@ -14,8 +14,13 @@ import 'ricochet_board_painter.dart';
 /// lands where the player expects at every scale.
 class RicochetBoard extends StatelessWidget {
   final RicochetEngine engine;
+  final VoidCallback onInteraction;
 
-  const RicochetBoard({super.key, required this.engine});
+  const RicochetBoard({
+    super.key,
+    required this.engine,
+    required this.onInteraction,
+  });
 
   static Offset _toBoardSpace(Offset local, Size size) {
     final scale = math.min(
@@ -40,13 +45,22 @@ class RicochetBoard extends StatelessWidget {
           // touch-down, before any movement, so the preview appears instantly.
           return Listener(
             behavior: HitTestBehavior.opaque,
-            onPointerDown: (event) =>
-                engine.beginAim(_toBoardSpace(event.localPosition, size)),
-            onPointerMove: (event) =>
-                engine.updateAim(_toBoardSpace(event.localPosition, size)),
-            onPointerUp: (event) =>
-                engine.releaseAim(_toBoardSpace(event.localPosition, size)),
-            onPointerCancel: (_) => engine.cancelAim(),
+            onPointerDown: (event) {
+              onInteraction();
+              engine.beginAim(_toBoardSpace(event.localPosition, size));
+            },
+            onPointerMove: (event) {
+              onInteraction();
+              engine.updateAim(_toBoardSpace(event.localPosition, size));
+            },
+            onPointerUp: (event) {
+              onInteraction();
+              engine.releaseAim(_toBoardSpace(event.localPosition, size));
+            },
+            onPointerCancel: (_) {
+              engine.cancelAim();
+              onInteraction();
+            },
             child: CustomPaint(
               painter: RicochetBoardPainter(engine),
               size: Size.infinite,
