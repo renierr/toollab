@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import '../engine/ricochet_engine.dart';
 import '../ricochet_colors.dart';
+import '../ricochet_state.dart';
 
 /// The unlimited-use power-up menu.
 ///
@@ -9,15 +11,20 @@ import '../ricochet_colors.dart';
 /// the board share one vocabulary — whatever is banked shows as a chip above
 /// the launcher until the volley spends it.
 class PowerMenuSheet extends StatelessWidget {
-  const PowerMenuSheet({super.key});
+  final VoidCallback onHowToPlay;
+
+  const PowerMenuSheet({super.key, required this.onHowToPlay});
 
   /// Returns the chosen power, or null when the sheet was dismissed. The caller
   /// applies it, so the sheet never touches the engine.
-  static Future<PowerUp?> show(BuildContext context) {
+  static Future<PowerUp?> show(
+    BuildContext context, {
+    required VoidCallback onHowToPlay,
+  }) {
     return showModalBottomSheet<PowerUp>(
       context: context,
       isScrollControlled: true,
-      builder: (_) => const PowerMenuSheet(),
+      builder: (_) => PowerMenuSheet(onHowToPlay: onHowToPlay),
     );
   }
 
@@ -67,6 +74,38 @@ class PowerMenuSheet extends StatelessWidget {
                       ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                children: [
+                  Consumer<RicochetState>(
+                    builder: (context, state, _) => OutlinedButton.icon(
+                      onPressed: () =>
+                          state.setSoundEnabled(!state.soundEnabled),
+                      icon: Icon(
+                        state.soundEnabled
+                            ? Icons.volume_up_outlined
+                            : Icons.volume_off_outlined,
+                      ),
+                      label: Text(
+                        state.soundEnabled
+                            ? l10n.ricochetSoundOn
+                            : l10n.ricochetSoundOff,
+                      ),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      onHowToPlay();
+                    },
+                    icon: const Icon(Icons.help_outline),
+                    label: Text(l10n.ricochetHowToPlay),
+                  ),
+                ],
               ),
             ],
           ),

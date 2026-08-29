@@ -9559,4 +9559,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String ricochetPopupDoubled(int points) {
     return '+$points x2!';
   }
+
+  @override
+  String get ricochetSoundOn => 'Ton an';
+
+  @override
+  String get ricochetSoundOff => 'Ton aus';
+
+  @override
+  String get ricochetHowToPlay => 'Spielanleitung';
+
+  @override
+  String get ricochetHelpTitle => 'Ricochet spielen';
+
+  @override
+  String get ricochetHelpText =>
+      'Ziehe auf dem Spielfeld und lasse los, um zu zielen und zu feuern. Nach jeder Salve rücken die Steine eine Reihe nach unten. Räume alle Steine ab, bevor einer die rote Linie erreicht.\n\nSammle grüne (+)-Aufsammler für dauerhaft zusätzliche Bälle. Power-ups können Bälle hinzufügen, einen Durchschlag-Ball oder einen Explosiv-Ball aktivieren oder die unterste Reihe räumen.\n\nTastatur: Links/Rechts oder A/D zum Zielen, Leertaste oder Eingabe zum Feuern, R ruft Bälle zurück und F beschleunigt eine Salve.';
 }

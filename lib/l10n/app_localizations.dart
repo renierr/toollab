@@ -16984,6 +16984,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'+{points} x2!'**
   String ricochetPopupDoubled(int points);
+
+  /// No description provided for @ricochetSoundOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound on'**
+  String get ricochetSoundOn;
+
+  /// No description provided for @ricochetSoundOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound off'**
+  String get ricochetSoundOff;
+
+  /// No description provided for @ricochetHowToPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'How to play'**
+  String get ricochetHowToPlay;
+
+  /// No description provided for @ricochetHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to play Ricochet'**
+  String get ricochetHelpTitle;
+
+  /// No description provided for @ricochetHelpText.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag on the board and release to aim and fire. Each volley moves the bricks down one row. Clear every brick before one reaches the red line.\n\nCollect green (+) pickups for permanent extra balls. Power-ups can add balls, arm a piercing ball, arm an explosive ball, or clear the lowest row.\n\nKeyboard: Left/Right or A/D aim, Space or Enter fires, R recalls balls, and F speeds up a volley.'**
+  String get ricochetHelpText;
 }
 
 class _AppLocalizationsDelegate

@@ -9490,4 +9490,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String ricochetPopupDoubled(int points) {
     return '+$points x2!';
   }
+
+  @override
+  String get ricochetSoundOn => 'Sound on';
+
+  @override
+  String get ricochetSoundOff => 'Sound off';
+
+  @override
+  String get ricochetHowToPlay => 'How to play';
+
+  @override
+  String get ricochetHelpTitle => 'How to play Ricochet';
+
+  @override
+  String get ricochetHelpText =>
+      'Drag on the board and release to aim and fire. Each volley moves the bricks down one row. Clear every brick before one reaches the red line.\n\nCollect green (+) pickups for permanent extra balls. Power-ups can add balls, arm a piercing ball, arm an explosive ball, or clear the lowest row.\n\nKeyboard: Left/Right or A/D aim, Space or Enter fires, R recalls balls, and F speeds up a volley.';
 }

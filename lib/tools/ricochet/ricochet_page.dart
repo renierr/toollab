@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
@@ -14,6 +15,7 @@ import 'engine/ricochet_strings.dart';
 import 'config.dart';
 import 'ricochet_colors.dart';
 import 'ricochet_audio_service.dart';
+import 'ricochet_state.dart';
 import 'widgets/game_result_overlay.dart';
 import 'widgets/power_menu_sheet.dart';
 import 'widgets/ricochet_action_bar.dart';
@@ -92,10 +94,13 @@ class _RicochetPageState extends State<RicochetPage>
   }
 
   Future<void> _bootstrap() async {
+    await context.read<RicochetState>().restore();
     await RicochetSfx.load();
     await _engine.start();
     if (!mounted) return;
-    RicochetAudioService.instance.playLoop(RicochetSfx.bgm, volume: 0.10);
+    if (context.read<RicochetState>().soundEnabled) {
+      RicochetAudioService.instance.playLoop(RicochetSfx.bgm, volume: 0.10);
+    }
     _lastTick = Duration.zero;
     _ticker.start();
   }
@@ -147,7 +152,9 @@ class _RicochetPageState extends State<RicochetPage>
       _stopBackgroundTicker();
       _lastTick = Duration.zero;
       if (!_ticker.isActive) _ticker.start();
-      RicochetAudioService.instance.playLoop(RicochetSfx.bgm, volume: 0.10);
+      if (context.read<RicochetState>().soundEnabled) {
+        RicochetAudioService.instance.playLoop(RicochetSfx.bgm, volume: 0.10);
+      }
     } else {
       RicochetAudioService.instance.stopLoop();
       unawaited(_engine.saveNow());
@@ -229,11 +236,30 @@ class _RicochetPageState extends State<RicochetPage>
   // -------------------------------------------------------------------- intent
 
   Future<void> _openPowerMenu() async {
-    final power = await PowerMenuSheet.show(context);
+    final power = await PowerMenuSheet.show(context, onHowToPlay: _showHelp);
     if (power != null) _engine.usePower(power);
     // A sheet or a HUD button takes the focus with it; take it back so the
     // keyboard keeps playing without a click on the board first.
     if (mounted) _keyboard.requestFocus();
+  }
+
+  void _showHelp() {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.ricochetHelpTitle),
+          content: SingleChildScrollView(child: Text(l10n.ricochetHelpText)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.commonClose),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   /// Restarts, then takes the keyboard back from the result panel's button so
@@ -246,7 +272,8 @@ class _RicochetPageState extends State<RicochetPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    RicochetAudioService.instance.setMasterVolume(1);
+    final state = context.watch<RicochetState>();
+    RicochetAudioService.instance.setMasterVolume(state.soundEnabled ? 1 : 0);
 
     return ToolLayout(
       title: RicochetTool.config.localizedName(l10n),
