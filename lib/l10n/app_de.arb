@@ -3866,5 +3866,5 @@
   "ricochetSoundOff": "Ton aus",
   "ricochetHowToPlay": "Spielanleitung",
   "ricochetHelpTitle": "Ricochet spielen",
-  "ricochetHelpText": "Ziehe auf dem Spielfeld und lasse los, um zu zielen und zu feuern. Nach jeder Salve rücken die Steine eine Reihe nach unten. Räume alle Steine ab, bevor einer die rote Linie erreicht.\n\nSammle grüne (+)-Aufsammler für dauerhaft zusätzliche Bälle. Power-ups können Bälle hinzufügen, einen Durchschlag-Ball oder einen Explosiv-Ball aktivieren oder die unterste Reihe räumen.\n\nTastatur: Links/Rechts oder A/D zum Zielen, Leertaste oder Eingabe zum Feuern, R ruft Bälle zurück und F beschleunigt eine Salve."
+  "ricochetHelpText": "Ziehe auf dem Spielfeld und lasse los, um zu zielen und zu feuern. Nach jeder Salve rücken die Steine eine Reihe nach unten. Räume alle Steine ab, bevor einer die rote Linie erreicht.\n\nSammle grüne (+)-Aufsammler für dauerhaft zusätzliche Bälle. Rosa Teilungssteine erzeugen beim Zerstören einen temporären Ball mit abgewinkelter Flugbahn. Power-ups können Bälle hinzufügen, einen Durchschlag-Ball oder einen Explosiv-Ball aktivieren oder die unterste Reihe räumen.\n\nTastatur: Links/Rechts oder A/D zum Zielen, Leertaste oder Eingabe zum Feuern, R ruft Bälle zurück und F beschleunigt eine Salve."
 }

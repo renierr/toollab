@@ -9505,5 +9505,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ricochetHelpText =>
-      'Drag on the board and release to aim and fire. Each volley moves the bricks down one row. Clear every brick before one reaches the red line.\n\nCollect green (+) pickups for permanent extra balls. Power-ups can add balls, arm a piercing ball, arm an explosive ball, or clear the lowest row.\n\nKeyboard: Left/Right or A/D aim, Space or Enter fires, R recalls balls, and F speeds up a volley.';
+      'Drag on the board and release to aim and fire. Each volley moves the bricks down one row. Clear every brick before one reaches the red line.\n\nCollect green (+) pickups for permanent extra balls. Pink split tiles create one temporary angled ball when broken. Power-ups can add balls, arm a piercing ball, arm an explosive ball, or clear the lowest row.\n\nKeyboard: Left/Right or A/D aim, Space or Enter fires, R recalls balls, and F speeds up a volley.';
 }

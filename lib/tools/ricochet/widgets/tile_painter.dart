@@ -36,6 +36,7 @@ class TilePainter {
       case TileType.mult:
       case TileType.pierce:
       case TileType.blast:
+      case TileType.split:
         _paintPlate(canvas, brick, rect);
     }
   }
@@ -233,6 +234,9 @@ class TilePainter {
       case TileType.blast:
         _paintStarburst(canvas, mx, my - 4);
         _paintSmallHp(canvas, brick, mx, my + 11);
+      case TileType.split:
+        _paintSplit(canvas, mx, my - 4);
+        _paintSmallHp(canvas, brick, mx, my + 11);
       case TileType.normal:
       case TileType.bomb:
       case TileType.orb:
@@ -254,6 +258,17 @@ class TilePainter {
         Paint()..color = Colors.white.withValues(alpha: brick.flash * 0.8),
       );
     }
+  }
+
+  static void _paintSplit(Canvas canvas, double mx, double my) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.white;
+    canvas.drawLine(Offset(mx, my + 7), Offset(mx, my - 7), paint);
+    canvas.drawLine(Offset(mx, my - 7), Offset(mx - 7, my - 1), paint);
+    canvas.drawLine(Offset(mx, my - 7), Offset(mx + 7, my - 1), paint);
   }
 
   static void _paintSmallHp(Canvas canvas, Brick brick, double x, double y) {

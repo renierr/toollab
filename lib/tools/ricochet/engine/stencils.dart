@@ -53,16 +53,6 @@ const List<List<String>> stencils = [
     '###...#...###',
     '##XX#####XX##',
   ],
-  // Funnel — ramps steering balls into waiting orbs.
-  [
-    r'\.........../',
-    r'.\........./.',
-    r'..\......./..',
-    r'...\...../...',
-    r'....\.../....',
-    r'.....\O/.....',
-    r'......O......',
-  ],
   // Butterfly — blast-tile head.
   [
     '###.......###',
@@ -196,6 +186,73 @@ const List<List<String>> stencils = [
     '.#..#.#.#..#.',
     '#...#...#...#',
   ],
+  // Circuit — a wide board with two blast relays.
+  [
+    '#.#.#.#.#.#.#',
+    '.###########.',
+    '##.........##',
+    '##.###X###.##',
+    '##.#.....#.##',
+    '.###.....###.',
+    '#...........#',
+  ],
+  // Fortress — a layered wall with a gift vault.
+  [
+    '##.........##',
+    '###.......###',
+    '#####...#####',
+    '#############',
+    '###..G..###..',
+    '#############',
+    '.###.....###.',
+  ],
+  // Pinwheel — four arms around an orb hub.
+  [
+    '#....#.#....#',
+    '.#...#.#...#.',
+    '..#..#.#..#..',
+    '...###O###...',
+    '..#..#.#..#..',
+    '.#...#.#...#.',
+    '#....#.#....#',
+  ],
+  // Lattice — staggered lanes reward shots through the gaps.
+  [
+    '###...###...#',
+    '.###...###...',
+    '...###...###.',
+    '#...###...###',
+    '###...###...#',
+    '.###...###...',
+    '...###...###.',
+  ],
+];
+
+/// The first level at which each same-index [stencils] layout can appear.
+/// Shapes with hand-placed advanced tiles enter alongside their mechanic.
+const List<int> stencilMinimumLevels = [
+  1,
+  7,
+  1,
+  5,
+  3,
+  1,
+  1,
+  3,
+  7,
+  1,
+  3,
+  1,
+  7,
+  3,
+  5,
+  1,
+  1,
+  7,
+  3,
+  1,
+  7,
+  1,
 ];
 
 /// Stencil character to tile kind. `#` and `.` are handled by the generator
@@ -205,16 +262,16 @@ const Map<String, TileType> stencilChars = {
   'G': TileType.gift,
   'M': TileType.mult,
   'P': TileType.pierce,
+  'S': TileType.split,
   'X': TileType.blast,
   'O': TileType.orb,
   '/': TileType.rampA,
   r'\': TileType.rampB,
 };
 
-/// Stencil art alone leaves the exotic kinds far too rare — ramps live in a
-/// single stencil, pierce tiles in two — so every board also seeds them
-/// directly. A kind unlocks at [from], rolls [chance] once per board, and is
-/// skipped when the drawn art already supplies [cap] of it.
+/// Stencil art alone leaves some exotic kinds too rare, so every board also
+/// seeds them directly. A kind unlocks at [from], rolls [chance] once per
+/// board, and is skipped when the drawn art already supplies [cap] of it.
 class RareSeed {
   final TileType type;
   final int from;
@@ -237,6 +294,7 @@ const List<RareSeed> rareMix = [
   RareSeed(type: TileType.blast, from: 3, chance: 0.55, lo: 1, hi: 2, cap: 2),
   RareSeed(type: TileType.pierce, from: 5, chance: 0.5, lo: 1, hi: 2, cap: 2),
   RareSeed(type: TileType.orb, from: 7, chance: 0.5, lo: 1, hi: 3, cap: 3),
+  RareSeed(type: TileType.split, from: 7, chance: 0.4, lo: 1, hi: 2, cap: 2),
   // rampA stands in for both ramp variants; each converted tile picks a side.
   RareSeed(type: TileType.rampA, from: 10, chance: 0.45, lo: 2, hi: 4, cap: 4),
 ];

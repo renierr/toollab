@@ -10,6 +10,7 @@ enum TileType {
   mult,
   pierce,
   blast,
+  split,
   rampA,
   rampB,
   orb;

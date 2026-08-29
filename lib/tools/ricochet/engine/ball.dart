@@ -11,6 +11,7 @@ class Ball {
   double vy;
   final bool pierce;
   final bool bomb;
+  final bool canSplit;
 
   /// Bricks a piercing ball has already damaged, so drilling through a tile
   /// costs it exactly one HP however long the ball overlaps it.
@@ -35,6 +36,7 @@ class Ball {
     required this.vy,
     this.pierce = false,
     this.bomb = false,
+    this.canSplit = true,
     this.cd = 0,
     this.shapeCd = 0,
   });

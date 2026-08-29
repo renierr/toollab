@@ -22,9 +22,12 @@ class LevelLayout {
 class LevelGenerator {
   final math.Random _random;
   final int Function() _nextUid;
+  final List<int> _recentStencils = [];
 
   LevelGenerator(this._nextUid, {math.Random? random})
-    : _random = random ?? math.Random();
+    : _random = random ?? math.Random() {
+    assert(stencilMinimumLevels.length == stencils.length);
+  }
 
   /// Inclusive on both ends, like the browser original's `randInt`.
   int _randInt(int lo, int hi) => lo + _random.nextInt(hi - lo + 1);
@@ -42,17 +45,25 @@ class LevelGenerator {
     final maxRows = ((Board.dangerY - 3 * Board.cell - Board.cell) / Board.cell)
         .floor();
 
-    final arts = <int>[_randInt(0, stencils.length - 1)];
+    final arts = <int>[_pickStencil(level)];
     var used = stencils[arts[0]].length;
     // From level 8, two stencils usually stack into one bigger composition —
     // but only when the taller result still clears the launch area.
     if (level >= 8 && _random.nextDouble() < 0.65) {
-      final second = _randInt(0, stencils.length - 1);
+      final second = _pickStencil(level, excluding: arts[0]);
       if (second != arts[0] && used + 1 + stencils[second].length <= maxRows) {
         arts.add(second);
         used += 1 + stencils[second].length;
       }
     }
+
+    final tileCount = arts.fold<int>(
+      0,
+      (count, artIndex) =>
+          count + stencils[artIndex].join().replaceAll('.', '').length,
+    );
+    var remainingDurability = durabilityBudget(level, tileCount);
+    var remainingTiles = tileCount;
 
     // A tall composition may start up to 4 rows above the top edge and slide
     // into view one row per turn; at least one row is always visible.
@@ -90,6 +101,9 @@ class LevelGenerator {
 
           var hp = _randInt(lo, hi);
           if (_random.nextDouble() < 0.12) hp = (hp * 1.5).round();
+          hp = math.min(hp, (remainingDurability / remainingTiles).ceil());
+          remainingDurability -= hp;
+          remainingTiles--;
           bricks.add(
             Brick(
               uid: _nextUid(),
@@ -108,6 +122,20 @@ class LevelGenerator {
     _seedRares(bricks, level);
     _placePickups(bricks, pickups);
     return LevelLayout(bricks: bricks, pickups: pickups);
+  }
+
+  int _pickStencil(int level, {int? excluding}) {
+    final eligible = <int>[
+      for (var index = 0; index < stencils.length; index++)
+        if (stencilMinimumLevels[index] <= level && index != excluding) index,
+    ];
+    final fresh = eligible.where((index) => !_recentStencils.contains(index));
+    final choices = fresh.isEmpty ? eligible : fresh.toList();
+    final selected = choices[_random.nextInt(choices.length)];
+    _recentStencils
+      ..add(selected)
+      ..removeRange(0, math.max(0, _recentStencils.length - 4));
+    return selected;
   }
 
   void _seedRares(List<Brick> bricks, int level) {
@@ -130,11 +158,12 @@ class LevelGenerator {
     }
   }
 
-  /// Swaps 1–3 plain tiles for green (+) pickups. They replace a brick rather
-  /// than sitting on top of one, so the board's tile count stays honest.
+  /// Swaps plain tiles for green (+) pickups. They replace a brick rather than
+  /// sitting on top of one, so the board's tile count stays honest.
   void _placePickups(List<Brick> bricks, List<Pickup> pickups) {
     final pool = bricks.where((b) => b.type == TileType.normal).toList();
-    var remaining = _randInt(1, 3);
+    final minPickups = levelPickups(bricks.length);
+    var remaining = _randInt(minPickups, minPickups + 2);
     while (remaining-- > 0 && pool.isNotEmpty) {
       final brick = pool.removeAt(_randInt(0, pool.length - 1));
       if (!bricks.remove(brick)) continue;
@@ -147,4 +176,9 @@ class LevelGenerator {
       );
     }
   }
+
+  int levelPickups(int brickCount) => brickCount >= 3 ? 2 : 1;
+
+  int durabilityBudget(int level, int tileCount) =>
+      math.max(tileCount, 36 + level * 8);
 }

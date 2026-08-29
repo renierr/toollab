@@ -30,6 +30,7 @@ class RicochetColors {
   static const Color pierceLight = Color(0xFFA78BFA);
   static const Color blast = Color(0xFFEF4444);
   static const Color blastLight = Color(0xFFFB923C);
+  static const Color split = Color(0xFFEC4899);
   static const Color ramp = Color(0xFF22D3EE);
   static const Color orb = Color(0xFF94A3B8);
   static const Color pickup = Color(0xFF34D399);
@@ -62,6 +63,8 @@ class RicochetColors {
         return pierce;
       case TileType.blast:
         return blast;
+      case TileType.split:
+        return split;
       case TileType.rampA:
       case TileType.rampB:
         return ramp;

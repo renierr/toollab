@@ -58,6 +58,9 @@ class RicochetTuning {
 
   /// Most balls one volley fires, however large the stash.
   static const int volleyCap = 100;
+  static const int maxActiveBalls = 150;
+  static const double splitAngle = math.pi / 9;
+  static const double splitOffset = Board.ballRadius + 1;
 
   static const double shiftSeconds = 0.22;
   static const int speedBoostStep = 3;
@@ -107,6 +110,7 @@ class RicochetEngine {
   final List<Brick> bricks = [];
   final List<Pickup> pickups = [];
   final List<Ball> balls = [];
+  final List<Ball> _queuedBalls = [];
   final List<Particle> particles = [];
   final List<FloatingText> texts = [];
   final List<Ring> rings = [];
@@ -307,7 +311,7 @@ class RicochetEngine {
       if (withPierce) _pierceLeft--;
       if (withBomb) _bombLeft--;
       balls.add(
-        Ball(
+        _newBall(
           x: originX,
           y: Board.launchY - Board.ballRadius,
           vx: _volleyDirection.dx * RicochetTuning.ballSpeed,
@@ -331,6 +335,24 @@ class RicochetEngine {
       _startShift();
     }
   }
+
+  Ball _newBall({
+    required double x,
+    required double y,
+    required double vx,
+    required double vy,
+    bool pierce = false,
+    bool bomb = false,
+    bool canSplit = true,
+  }) => Ball(
+    x: x,
+    y: y,
+    vx: vx,
+    vy: vy,
+    pierce: pierce,
+    bomb: bomb,
+    canSplit: canSplit,
+  );
 
   // ------------------------------------------------------------------ physics
 
@@ -381,7 +403,15 @@ class RicochetEngine {
       ball.addTrail(Offset(ball.x, ball.y));
     }
 
-    if (_volleyElapsed > RicochetTuning.maxVolleySeconds) balls.clear();
+    if (_queuedBalls.isNotEmpty) {
+      balls.addAll(_queuedBalls);
+      _queuedBalls.clear();
+    }
+
+    if (_volleyElapsed > RicochetTuning.maxVolleySeconds) {
+      balls.clear();
+      _queuedBalls.clear();
+    }
   }
 
   void _collectPickups(Ball ball) {
@@ -474,7 +504,7 @@ class RicochetEngine {
         if (ball.shapeCd > 0) continue;
         if (!_hitRamp(ball, brick)) continue;
         ball.shapeCd = RicochetTuning.shapeCooldown;
-        _damage(brick, 1);
+        _damage(brick, 1, hitter: ball);
         return true;
       }
 
@@ -482,14 +512,14 @@ class RicochetEngine {
         if (ball.shapeCd > 0) continue;
         if (!_hitOrb(ball, brick)) continue;
         ball.shapeCd = RicochetTuning.shapeCooldown;
-        _damage(brick, 1);
+        _damage(brick, 1, hitter: ball);
         return true;
       }
 
       if (ball.pierce) {
         // Drills straight on, spending one HP per brick it passes through.
         if (ball.hit.add(brick.uid)) {
-          _damage(brick, 1);
+          _damage(brick, 1, hitter: ball);
           if (ball.bomb && ball.cd <= 0) {
             ball.cd = 0.06;
             explodeAt(ball.x, ball.y, RicochetTuning.bombChargeDamage);
@@ -526,7 +556,7 @@ class RicochetEngine {
         explodeAt(ball.x, ball.y, RicochetTuning.bombChargeDamage);
         return true;
       }
-      _damage(brick, 1);
+      _damage(brick, 1, hitter: ball);
       return true;
     }
     return false;
@@ -613,13 +643,13 @@ class RicochetEngine {
 
   // ------------------------------------------------------------------ damage
 
-  void _damage(Brick brick, int amount) {
+  void _damage(Brick brick, int amount, {Ball? hitter}) {
     if (brick.dead) return;
     brick.hp -= amount;
     brick.flash = 1;
     // A bomb goes off on any hit, however much HP its plate claims.
     if (brick.hp <= 0 || brick.type == TileType.bomb) {
-      _destroy(brick);
+      _destroy(brick, hitter: hitter);
     } else {
       // Gap matches the clip length so two ticks never overlap: voices sum
       // in the mixer, so a stacked volley would swell in volume purely
@@ -637,7 +667,7 @@ class RicochetEngine {
   /// [_collideBricks] — a piercing ball keeps scanning after a hit, and an
   /// explosion re-enters this method for every brick it chains through.
   /// Everything that reads the board already skips [Brick.dead].
-  void _destroy(Brick brick) {
+  void _destroy(Brick brick, {Ball? hitter}) {
     if (brick.dead) return;
     brick.dead = true;
 
@@ -678,6 +708,8 @@ class RicochetEngine {
       case TileType.blast:
         bombCharges++;
         _armToast(strings.bombArmed, RicochetColors.blastLight);
+      case TileType.split:
+        if (hitter != null && hitter.canSplit) _queueSplit(hitter);
       case TileType.normal:
       case TileType.mult:
       case TileType.rampA:
@@ -687,6 +719,29 @@ class RicochetEngine {
         shake = math.min(shake + 2, 6);
     }
     _markHudDirty();
+  }
+
+  void _queueSplit(Ball source) {
+    if (balls.length + _queuedBalls.length >= RicochetTuning.maxActiveBalls) {
+      return;
+    }
+    final angle = RicochetTuning.splitAngle * (_random.nextBool() ? 1 : -1);
+    final cos = math.cos(angle);
+    final sin = math.sin(angle);
+    final vx = source.vx * cos - source.vy * sin;
+    final vy = source.vx * sin + source.vy * cos;
+    final speed = math.sqrt(vx * vx + vy * vy);
+    _queuedBalls.add(
+      _newBall(
+        x: source.x + vx / speed * RicochetTuning.splitOffset,
+        y: source.y + vy / speed * RicochetTuning.splitOffset,
+        vx: vx,
+        vy: vy,
+        pierce: source.pierce,
+        bomb: source.bomb,
+        canSplit: false,
+      ),
+    );
   }
 
   /// Drops the bricks [_destroy] marked. Safe only outside a scan of [bricks],
@@ -807,6 +862,7 @@ class RicochetEngine {
       _burst(ball.x, ball.y, RicochetColors.ballTrail, 6);
     }
     balls.clear();
+    _queuedBalls.clear();
     _pendingShots = 0;
     _firstLandX = null;
     _addText(
@@ -926,6 +982,7 @@ class RicochetEngine {
     bricks.clear();
     pickups.clear();
     balls.clear();
+    _queuedBalls.clear();
     particles.clear();
     texts.clear();
     rings.clear();
@@ -1245,6 +1302,8 @@ class RicochetEngine {
     );
 
     bricks.clear();
+    balls.clear();
+    _queuedBalls.clear();
     for (final raw in (data['bricks'] as List?) ?? const []) {
       if (raw is! Map) continue;
       final x = (raw['x'] as num?)?.toDouble();
