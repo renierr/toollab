@@ -18,6 +18,11 @@ class RicochetBoardPainter extends CustomPainter {
   static const Rect _bounds = Rect.fromLTWH(0, 0, Board.width, Board.height);
 
   final math.Random _shakeRandom = math.Random();
+  final Paint _ballPaint = Paint();
+  final Paint _particlePaint = Paint();
+  final Paint _ringPaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -134,12 +139,12 @@ class RicochetBoardPainter extends CustomPainter {
       final trailColor = ball.pierce
           ? RicochetColors.pierceLight
           : RicochetColors.ballTrail;
-      for (var t = 0; t < ball.trail.length; t++) {
-        final fade = t / ball.trail.length;
+      for (var t = 0; t < ball.trailLength; t++) {
+        final fade = t / ball.trailLength;
         canvas.drawCircle(
-          ball.trail[t],
+          ball.trailAt(t),
           Board.ballRadius * fade * 0.8,
-          Paint()..color = trailColor.withValues(alpha: fade * 0.28),
+          _ballPaint..color = trailColor.withValues(alpha: fade * 0.28),
         );
       }
       final color = ball.pierce
@@ -148,7 +153,7 @@ class RicochetBoardPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(ball.x, ball.y),
         Board.ballRadius,
-        Paint()..color = color,
+        _ballPaint..color = color,
       );
     }
   }
@@ -255,9 +260,7 @@ class RicochetBoardPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(ring.x, ring.y),
         ring.radius,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
+        _ringPaint
           ..color = RicochetColors.blastLight.withValues(
             alpha: (ring.life * 0.7).clamp(0.0, 1.0),
           ),
@@ -270,7 +273,8 @@ class RicochetBoardPainter extends CustomPainter {
       canvas.drawCircle(
         Offset(particle.x, particle.y),
         particle.size,
-        Paint()..color = particle.color.withValues(alpha: particle.alpha),
+        _particlePaint
+          ..color = particle.color.withValues(alpha: particle.alpha),
       );
     }
   }

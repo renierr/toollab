@@ -23,7 +23,10 @@ class Ball {
   /// ball can ping-pong forever inside a cluster of round or angled tiles.
   double shapeCd;
 
-  final List<Offset> trail = [];
+  static const int trailCapacity = 9;
+  final List<Offset> _trail = List<Offset>.filled(trailCapacity, Offset.zero);
+  int _trailStart = 0;
+  int trailLength = 0;
 
   Ball({
     required this.x,
@@ -35,4 +38,16 @@ class Ball {
     this.cd = 0,
     this.shapeCd = 0,
   });
+
+  Offset trailAt(int index) => _trail[(_trailStart + index) % trailCapacity];
+
+  void addTrail(Offset point) {
+    if (trailLength < trailCapacity) {
+      _trail[(_trailStart + trailLength) % trailCapacity] = point;
+      trailLength++;
+      return;
+    }
+    _trail[_trailStart] = point;
+    _trailStart = (_trailStart + 1) % trailCapacity;
+  }
 }

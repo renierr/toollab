@@ -378,8 +378,7 @@ class RicochetEngine {
         }
       }
       if (returned) continue;
-      ball.trail.add(Offset(ball.x, ball.y));
-      if (ball.trail.length > 9) ball.trail.removeAt(0);
+      ball.addTrail(Offset(ball.x, ball.y));
     }
 
     if (_volleyElapsed > RicochetTuning.maxVolleySeconds) balls.clear();
