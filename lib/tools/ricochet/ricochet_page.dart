@@ -55,6 +55,9 @@ class _RicochetPageState extends State<RicochetPage>
   static const double _fineAim = 0.12;
 
   Timer? _backgroundTicker;
+  Timer? _idleTicker;
+
+  static const Duration _idleFrameInterval = Duration(milliseconds: 100);
 
   /// The game-over panel's primary button, so the run's end can hand the
   /// keyboard over and taking it back on restart is one call.
@@ -73,6 +76,7 @@ class _RicochetPageState extends State<RicochetPage>
     _engine.hud.addListener(_syncOverlayFocus);
     onDispose(() => _engine.hud.removeListener(_syncOverlayFocus));
     onDispose(_stopBackgroundTicker);
+    onDispose(_stopIdleTicker);
     onDispose(_engine.dispose);
     onDispose(RicochetAudioService.instance.stopLoop);
     onDispose(() => unawaited(RicochetAudioService.instance.releaseAll()));
@@ -142,10 +146,14 @@ class _RicochetPageState extends State<RicochetPage>
     final steeringAim = _steerAim(dt);
     // A frame longer than a fifth of a second is a stall, not slow motion.
     _engine.update(dt.clamp(0.0, 0.25));
-    if (!steeringAim && !_engine.needsFrame) _ticker.stop();
+    if (!steeringAim && !_engine.needsFrame) {
+      _ticker.stop();
+      _startIdleTicker();
+    }
   }
 
   void _wakeTicker() {
+    _stopIdleTicker();
     _lastTick = Duration.zero;
     if (!_ticker.isActive) _ticker.start();
   }
@@ -161,6 +169,7 @@ class _RicochetPageState extends State<RicochetPage>
         RicochetAudioService.instance.playLoop(RicochetSfx.bgm, volume: 0.10);
       }
     } else {
+      _stopIdleTicker();
       RicochetAudioService.instance.stopLoop();
       unawaited(_engine.saveNow());
       if (_engine.turnInProgress) _startBackgroundTicker();
@@ -179,6 +188,19 @@ class _RicochetPageState extends State<RicochetPage>
   void _stopBackgroundTicker() {
     _backgroundTicker?.cancel();
     _backgroundTicker = null;
+  }
+
+  void _startIdleTicker() {
+    if (!_engine.hasPickups || _idleTicker != null) return;
+    _idleTicker = Timer.periodic(_idleFrameInterval, (_) {
+      _engine.update(_idleFrameInterval.inMilliseconds / 1000);
+      if (!_engine.hasPickups || _engine.needsFrame) _stopIdleTicker();
+    });
+  }
+
+  void _stopIdleTicker() {
+    _idleTicker?.cancel();
+    _idleTicker = null;
   }
 
   // ------------------------------------------------------------------ keyboard

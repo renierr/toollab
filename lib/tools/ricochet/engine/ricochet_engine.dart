@@ -200,6 +200,8 @@ class RicochetEngine {
       texts.isNotEmpty ||
       rings.isNotEmpty;
 
+  bool get hasPickups => mode != GameMode.over && pickups.isNotEmpty;
+
   // ---------------------------------------------------------------- lifecycle
 
   /// Restores a saved run, or starts a fresh one when there is nothing to
