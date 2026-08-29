@@ -16750,6 +16750,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Crop previews to a square. Off shows the whole image, which also uses less memory.'**
   String get fileManagerCropPreviewsHint;
+
+  /// No description provided for @sectionTitleGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Games'**
+  String get sectionTitleGames;
+
+  /// No description provided for @toolNameRicochet.
+  ///
+  /// In en, this message translates to:
+  /// **'Ricochet'**
+  String get toolNameRicochet;
+
+  /// No description provided for @toolDescRicochet.
+  ///
+  /// In en, this message translates to:
+  /// **'Aim bouncing balls and destroy numbered bricks.'**
+  String get toolDescRicochet;
+
+  /// No description provided for @ricochetScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get ricochetScore;
+
+  /// No description provided for @ricochetBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get ricochetBest;
+
+  /// No description provided for @ricochetLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get ricochetLevel;
+
+  /// No description provided for @ricochetBalls.
+  ///
+  /// In en, this message translates to:
+  /// **'Balls'**
+  String get ricochetBalls;
+
+  /// No description provided for @ricochetPowerMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Power-ups'**
+  String get ricochetPowerMenu;
+
+  /// No description provided for @ricochetRestartLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay this level'**
+  String get ricochetRestartLevel;
+
+  /// No description provided for @ricochetRecall.
+  ///
+  /// In en, this message translates to:
+  /// **'Recall'**
+  String get ricochetRecall;
+
+  /// No description provided for @ricochetSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get ricochetSpeed;
+
+  /// No description provided for @ricochetSpeedActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed x{multiplier}'**
+  String ricochetSpeedActive(int multiplier);
+
+  /// No description provided for @ricochetGameOver.
+  ///
+  /// In en, this message translates to:
+  /// **'GAME OVER'**
+  String get ricochetGameOver;
+
+  /// No description provided for @ricochetNewBest.
+  ///
+  /// In en, this message translates to:
+  /// **'New best score!'**
+  String get ricochetNewBest;
+
+  /// No description provided for @ricochetBestScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Best: {best}'**
+  String ricochetBestScore(int best);
+
+  /// No description provided for @ricochetReachedLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached level {level}'**
+  String ricochetReachedLevel(int level);
+
+  /// No description provided for @ricochetRetryLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry level'**
+  String get ricochetRetryLevel;
+
+  /// No description provided for @ricochetStartOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over'**
+  String get ricochetStartOver;
+
+  /// No description provided for @ricochetPowerBalls.
+  ///
+  /// In en, this message translates to:
+  /// **'+10 Balls'**
+  String get ricochetPowerBalls;
+
+  /// No description provided for @ricochetPowerBallsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds 10 balls to your stash'**
+  String get ricochetPowerBallsDesc;
+
+  /// No description provided for @ricochetPowerPierce.
+  ///
+  /// In en, this message translates to:
+  /// **'Pierce volley'**
+  String get ricochetPowerPierce;
+
+  /// No description provided for @ricochetPowerPierceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'One ball drills straight through bricks'**
+  String get ricochetPowerPierceDesc;
+
+  /// No description provided for @ricochetPowerBomb.
+  ///
+  /// In en, this message translates to:
+  /// **'Bomb volley'**
+  String get ricochetPowerBomb;
+
+  /// No description provided for @ricochetPowerBombDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'One ball explodes on every impact'**
+  String get ricochetPowerBombDesc;
+
+  /// No description provided for @ricochetPowerClearRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear row'**
+  String get ricochetPowerClearRow;
+
+  /// No description provided for @ricochetPowerClearRowDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Wipes the lowest brick row'**
+  String get ricochetPowerClearRowDesc;
+
+  /// No description provided for @ricochetToastPierceArmed.
+  ///
+  /// In en, this message translates to:
+  /// **'PIERCE ARMED'**
+  String get ricochetToastPierceArmed;
+
+  /// No description provided for @ricochetToastBombArmed.
+  ///
+  /// In en, this message translates to:
+  /// **'BOMB ARMED'**
+  String get ricochetToastBombArmed;
+
+  /// No description provided for @ricochetToastRecalled.
+  ///
+  /// In en, this message translates to:
+  /// **'RECALLED'**
+  String get ricochetToastRecalled;
+
+  /// No description provided for @ricochetToastRowCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'ROW CLEARED'**
+  String get ricochetToastRowCleared;
+
+  /// No description provided for @ricochetToastPlusOneBall.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 BALL'**
+  String get ricochetToastPlusOneBall;
+
+  /// No description provided for @ricochetHintDragToAim.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag anywhere to aim'**
+  String get ricochetHintDragToAim;
+
+  /// No description provided for @ricochetChipPierce.
+  ///
+  /// In en, this message translates to:
+  /// **'PIERCE'**
+  String get ricochetChipPierce;
+
+  /// No description provided for @ricochetChipBomb.
+  ///
+  /// In en, this message translates to:
+  /// **'BOMB'**
+  String get ricochetChipBomb;
+
+  /// No description provided for @ricochetToastPlusBalls.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} BALLS'**
+  String ricochetToastPlusBalls(int count);
+
+  /// No description provided for @ricochetToastSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'SPEED x{multiplier}'**
+  String ricochetToastSpeed(int multiplier);
+
+  /// No description provided for @ricochetToastAutoSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'AUTO SPEED x{multiplier}'**
+  String ricochetToastAutoSpeed(int multiplier);
+
+  /// No description provided for @ricochetBannerLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'LEVEL {level}'**
+  String ricochetBannerLevel(int level);
+
+  /// No description provided for @ricochetPopupDoubled.
+  ///
+  /// In en, this message translates to:
+  /// **'+{points} x2!'**
+  String ricochetPopupDoubled(int points);
 }
 
 class _AppLocalizationsDelegate

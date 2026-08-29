@@ -9355,4 +9355,139 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fileManagerCropPreviewsHint =>
       'Crop previews to a square. Off shows the whole image, which also uses less memory.';
+
+  @override
+  String get sectionTitleGames => 'Games';
+
+  @override
+  String get toolNameRicochet => 'Ricochet';
+
+  @override
+  String get toolDescRicochet =>
+      'Aim bouncing balls and destroy numbered bricks.';
+
+  @override
+  String get ricochetScore => 'Score';
+
+  @override
+  String get ricochetBest => 'Best';
+
+  @override
+  String get ricochetLevel => 'Level';
+
+  @override
+  String get ricochetBalls => 'Balls';
+
+  @override
+  String get ricochetPowerMenu => 'Power-ups';
+
+  @override
+  String get ricochetRestartLevel => 'Replay this level';
+
+  @override
+  String get ricochetRecall => 'Recall';
+
+  @override
+  String get ricochetSpeed => 'Speed';
+
+  @override
+  String ricochetSpeedActive(int multiplier) {
+    return 'Speed x$multiplier';
+  }
+
+  @override
+  String get ricochetGameOver => 'GAME OVER';
+
+  @override
+  String get ricochetNewBest => 'New best score!';
+
+  @override
+  String ricochetBestScore(int best) {
+    return 'Best: $best';
+  }
+
+  @override
+  String ricochetReachedLevel(int level) {
+    return 'Reached level $level';
+  }
+
+  @override
+  String get ricochetRetryLevel => 'Retry level';
+
+  @override
+  String get ricochetStartOver => 'Start over';
+
+  @override
+  String get ricochetPowerBalls => '+10 Balls';
+
+  @override
+  String get ricochetPowerBallsDesc => 'Adds 10 balls to your stash';
+
+  @override
+  String get ricochetPowerPierce => 'Pierce volley';
+
+  @override
+  String get ricochetPowerPierceDesc =>
+      'One ball drills straight through bricks';
+
+  @override
+  String get ricochetPowerBomb => 'Bomb volley';
+
+  @override
+  String get ricochetPowerBombDesc => 'One ball explodes on every impact';
+
+  @override
+  String get ricochetPowerClearRow => 'Clear row';
+
+  @override
+  String get ricochetPowerClearRowDesc => 'Wipes the lowest brick row';
+
+  @override
+  String get ricochetToastPierceArmed => 'PIERCE ARMED';
+
+  @override
+  String get ricochetToastBombArmed => 'BOMB ARMED';
+
+  @override
+  String get ricochetToastRecalled => 'RECALLED';
+
+  @override
+  String get ricochetToastRowCleared => 'ROW CLEARED';
+
+  @override
+  String get ricochetToastPlusOneBall => '+1 BALL';
+
+  @override
+  String get ricochetHintDragToAim => 'Drag anywhere to aim';
+
+  @override
+  String get ricochetChipPierce => 'PIERCE';
+
+  @override
+  String get ricochetChipBomb => 'BOMB';
+
+  @override
+  String ricochetToastPlusBalls(int count) {
+    return '+$count BALLS';
+  }
+
+  @override
+  String ricochetToastSpeed(int multiplier) {
+    return 'SPEED x$multiplier';
+  }
+
+  @override
+  String ricochetToastAutoSpeed(int multiplier) {
+    return 'AUTO SPEED x$multiplier';
+  }
+
+  @override
+  String ricochetBannerLevel(int level) {
+    return 'LEVEL $level';
+  }
+
+  @override
+  String ricochetPopupDoubled(int points) {
+    return '+$points x2!';
+  }
 }

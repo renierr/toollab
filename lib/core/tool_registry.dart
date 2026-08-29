@@ -35,6 +35,7 @@ import 'package:tool_lab/tools/file_manager/config.dart';
 import 'package:tool_lab/tools/health_dashboard/config.dart';
 import 'package:tool_lab/tools/sqlite_viewer/config.dart';
 import 'package:tool_lab/tools/text_editor/config.dart';
+import 'package:tool_lab/tools/ricochet/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -56,6 +57,12 @@ class ToolRegistry {
       title: 'Information',
       icon: Icons.info_outline,
       titleL10n: (AppLocalizations l10n) => l10n.sectionTitleInfo,
+    ),
+    'games': ToolSection(
+      id: 'games',
+      title: 'Games',
+      icon: Icons.sports_esports_outlined,
+      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleGames,
     ),
   };
 
@@ -94,5 +101,6 @@ class ToolRegistry {
     HealthDashboardTool.config,
     FileManagerTool.config,
     TextEditorTool.config,
+    RicochetTool.config,
   ];
 }

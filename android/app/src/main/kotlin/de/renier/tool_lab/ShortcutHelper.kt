@@ -88,7 +88,7 @@ object ShortcutHelper {
     }
 
     private fun toolIdToActivityClassName(toolId: String): String {
-        val isolatedTools = setOf("calculator", "pdf-viewer", "file-manager", "text-editor")
+        val isolatedTools = setOf("calculator", "pdf-viewer", "file-manager", "text-editor", "ricochet")
         if (isolatedTools.contains(toolId)) {
             val parts = toolId.split("-").map { it.replaceFirstChar { c -> c.uppercase() } }
             return "de.renier.tool_lab.${parts.joinToString("")}Activity"

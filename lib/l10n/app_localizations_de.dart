@@ -9424,4 +9424,139 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fileManagerCropPreviewsHint =>
       'Vorschau quadratisch beschneiden. Aus zeigt das ganze Bild und braucht weniger Speicher.';
+
+  @override
+  String get sectionTitleGames => 'Spiele';
+
+  @override
+  String get toolNameRicochet => 'Ricochet';
+
+  @override
+  String get toolDescRicochet =>
+      'Ziele mit springenden Bällen und zerstöre nummerierte Steine.';
+
+  @override
+  String get ricochetScore => 'Punkte';
+
+  @override
+  String get ricochetBest => 'Rekord';
+
+  @override
+  String get ricochetLevel => 'Level';
+
+  @override
+  String get ricochetBalls => 'Bälle';
+
+  @override
+  String get ricochetPowerMenu => 'Power-ups';
+
+  @override
+  String get ricochetRestartLevel => 'Level wiederholen';
+
+  @override
+  String get ricochetRecall => 'Zurückrufen';
+
+  @override
+  String get ricochetSpeed => 'Tempo';
+
+  @override
+  String ricochetSpeedActive(int multiplier) {
+    return 'Tempo x$multiplier';
+  }
+
+  @override
+  String get ricochetGameOver => 'SPIEL VORBEI';
+
+  @override
+  String get ricochetNewBest => 'Neuer Rekord!';
+
+  @override
+  String ricochetBestScore(int best) {
+    return 'Rekord: $best';
+  }
+
+  @override
+  String ricochetReachedLevel(int level) {
+    return 'Level $level erreicht';
+  }
+
+  @override
+  String get ricochetRetryLevel => 'Level wiederholen';
+
+  @override
+  String get ricochetStartOver => 'Neu beginnen';
+
+  @override
+  String get ricochetPowerBalls => '+10 Bälle';
+
+  @override
+  String get ricochetPowerBallsDesc => 'Fügt deinem Vorrat 10 Bälle hinzu';
+
+  @override
+  String get ricochetPowerPierce => 'Durchschlag-Salve';
+
+  @override
+  String get ricochetPowerPierceDesc =>
+      'Ein Ball bohrt sich geradewegs durch Steine';
+
+  @override
+  String get ricochetPowerBomb => 'Bomben-Salve';
+
+  @override
+  String get ricochetPowerBombDesc => 'Ein Ball explodiert bei jedem Treffer';
+
+  @override
+  String get ricochetPowerClearRow => 'Reihe räumen';
+
+  @override
+  String get ricochetPowerClearRowDesc => 'Löscht die unterste Steinreihe';
+
+  @override
+  String get ricochetToastPierceArmed => 'DURCHSCHLAG BEREIT';
+
+  @override
+  String get ricochetToastBombArmed => 'BOMBE BEREIT';
+
+  @override
+  String get ricochetToastRecalled => 'ZURÜCKGERUFEN';
+
+  @override
+  String get ricochetToastRowCleared => 'REIHE GERÄUMT';
+
+  @override
+  String get ricochetToastPlusOneBall => '+1 BALL';
+
+  @override
+  String get ricochetHintDragToAim => 'Zum Zielen ziehen';
+
+  @override
+  String get ricochetChipPierce => 'DURCHSCHLAG';
+
+  @override
+  String get ricochetChipBomb => 'BOMBE';
+
+  @override
+  String ricochetToastPlusBalls(int count) {
+    return '+$count BÄLLE';
+  }
+
+  @override
+  String ricochetToastSpeed(int multiplier) {
+    return 'TEMPO x$multiplier';
+  }
+
+  @override
+  String ricochetToastAutoSpeed(int multiplier) {
+    return 'AUTO-TEMPO x$multiplier';
+  }
+
+  @override
+  String ricochetBannerLevel(int level) {
+    return 'LEVEL $level';
+  }
+
+  @override
+  String ricochetPopupDoubled(int points) {
+    return '+$points x2!';
+  }
 }
