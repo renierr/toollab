@@ -256,6 +256,22 @@
                 />
         </activity>
 
+        <activity
+            android:name="de.renier.tool_lab.Twenty48Activity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":twenty48"
+            android:taskAffinity="de.renier.tool_lab.twenty48"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"
+                />
+        </activity>
+
         <activity-alias
             android:name="de.renier.tool_lab.FileManagerAlias"
             android:targetActivity="de.renier.tool_lab.FileManagerActivity"
@@ -677,6 +693,19 @@
             android:targetActivity="de.renier.tool_lab.RicochetActivity"
             android:label="Ricochet"
             android:icon="@mipmap/ic_launcher_ricochet"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.Twenty48Alias"
+            android:targetActivity="de.renier.tool_lab.Twenty48Activity"
+            android:label="2048"
+            android:icon="@mipmap/ic_launcher_twenty48"
             android:enabled="false"
             android:exported="true">
             <intent-filter>

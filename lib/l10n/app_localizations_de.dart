@@ -9575,4 +9575,71 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get ricochetHelpText =>
       'Ziehe auf dem Spielfeld und lasse los, um zu zielen und zu feuern. Nach jeder Salve rücken die Steine eine Reihe nach unten. Räume alle Steine ab, bevor einer die rote Linie erreicht.\n\nSammle grüne (+)-Aufsammler für dauerhaft zusätzliche Bälle. Rosa Teilungssteine erzeugen beim Zerstören einen temporären Ball mit abgewinkelter Flugbahn. Power-ups können Bälle hinzufügen, einen Durchschlag-Ball oder einen Explosiv-Ball aktivieren oder die unterste Reihe räumen.\n\nTastatur: Links/Rechts oder A/D zum Zielen, Leertaste oder Eingabe zum Feuern, R ruft Bälle zurück und F beschleunigt eine Salve.';
+
+  @override
+  String get toolName2048 => '2048';
+
+  @override
+  String get toolDesc2048 =>
+      'Wische, um das Spielfeld zu verschieben, gleiche Kacheln zu verschmelzen und eine 2048 aus einem sich füllenden Raster zu holen.';
+
+  @override
+  String get twenty48Score => 'Punkte';
+
+  @override
+  String get twenty48Best => 'Rekord';
+
+  @override
+  String get twenty48Moves => 'Züge';
+
+  @override
+  String get twenty48Highest => 'Höchste';
+
+  @override
+  String get twenty48Undo => 'Rückgängig';
+
+  @override
+  String get twenty48NewGame => 'Neues Spiel';
+
+  @override
+  String get twenty48NoMovesLeft => 'KEINE ZÜGE MEHR';
+
+  @override
+  String twenty48ReachedTile(int value) {
+    return '$value erreicht';
+  }
+
+  @override
+  String get twenty48NewBest => 'Neuer Rekord!';
+
+  @override
+  String twenty48BestScore(int best) {
+    return 'Rekord: $best';
+  }
+
+  @override
+  String get twenty48YouWin => 'GEWONNEN!';
+
+  @override
+  String twenty48WinSubtitle(int score) {
+    return 'Punkte: $score';
+  }
+
+  @override
+  String get twenty48KeepPlaying => 'Weiterspielen';
+
+  @override
+  String get twenty48SettingsTitle => '2048-Einstellungen';
+
+  @override
+  String get twenty48Sound => 'Ton';
+
+  @override
+  String get twenty48SoundSubtitle => 'Toneffekte abspielen';
+
+  @override
+  String get twenty48Haptics => 'Haptik';
+
+  @override
+  String get twenty48HapticsSubtitle => 'Bei Verschmelzungen vibrieren';
 }

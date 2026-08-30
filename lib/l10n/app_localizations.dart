@@ -17014,6 +17014,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drag on the board and release to aim and fire. Each volley moves the bricks down one row. Clear every brick before one reaches the red line.\n\nCollect green (+) pickups for permanent extra balls. Pink split tiles create one temporary angled ball when broken. Power-ups can add balls, arm a piercing ball, arm an explosive ball, or clear the lowest row.\n\nKeyboard: Left/Right or A/D aim, Space or Enter fires, R recalls balls, and F speeds up a volley.'**
   String get ricochetHelpText;
+
+  /// No description provided for @toolName2048.
+  ///
+  /// In en, this message translates to:
+  /// **'2048'**
+  String get toolName2048;
+
+  /// No description provided for @toolDesc2048.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe to slide the board, merge equal tiles, and chase a single 2048 out of a grid that keeps filling up.'**
+  String get toolDesc2048;
+
+  /// No description provided for @twenty48Score.
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get twenty48Score;
+
+  /// No description provided for @twenty48Best.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get twenty48Best;
+
+  /// No description provided for @twenty48Moves.
+  ///
+  /// In en, this message translates to:
+  /// **'Moves'**
+  String get twenty48Moves;
+
+  /// No description provided for @twenty48Highest.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest'**
+  String get twenty48Highest;
+
+  /// No description provided for @twenty48Undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get twenty48Undo;
+
+  /// No description provided for @twenty48NewGame.
+  ///
+  /// In en, this message translates to:
+  /// **'New game'**
+  String get twenty48NewGame;
+
+  /// No description provided for @twenty48NoMovesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'NO MOVES LEFT'**
+  String get twenty48NoMovesLeft;
+
+  /// No description provided for @twenty48ReachedTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached {value}'**
+  String twenty48ReachedTile(int value);
+
+  /// No description provided for @twenty48NewBest.
+  ///
+  /// In en, this message translates to:
+  /// **'New best score!'**
+  String get twenty48NewBest;
+
+  /// No description provided for @twenty48BestScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Best: {best}'**
+  String twenty48BestScore(int best);
+
+  /// No description provided for @twenty48YouWin.
+  ///
+  /// In en, this message translates to:
+  /// **'YOU WIN!'**
+  String get twenty48YouWin;
+
+  /// No description provided for @twenty48WinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Score: {score}'**
+  String twenty48WinSubtitle(int score);
+
+  /// No description provided for @twenty48KeepPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep playing'**
+  String get twenty48KeepPlaying;
+
+  /// No description provided for @twenty48SettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'2048 Settings'**
+  String get twenty48SettingsTitle;
+
+  /// No description provided for @twenty48Sound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get twenty48Sound;
+
+  /// No description provided for @twenty48SoundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play sound effects'**
+  String get twenty48SoundSubtitle;
+
+  /// No description provided for @twenty48Haptics.
+  ///
+  /// In en, this message translates to:
+  /// **'Haptics'**
+  String get twenty48Haptics;
+
+  /// No description provided for @twenty48HapticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrate on merges'**
+  String get twenty48HapticsSubtitle;
 }
 
 class _AppLocalizationsDelegate

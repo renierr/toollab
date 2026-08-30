@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import '../wav_builder.dart';
+import 'package:tool_lab/helpers/wav_builder.dart';
 import '../ricochet_audio_service.dart';
 
 /// Ricochet's sound effects, synthesized once when the game page opens.

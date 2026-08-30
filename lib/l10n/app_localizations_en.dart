@@ -9506,4 +9506,71 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ricochetHelpText =>
       'Drag on the board and release to aim and fire. Each volley moves the bricks down one row. Clear every brick before one reaches the red line.\n\nCollect green (+) pickups for permanent extra balls. Pink split tiles create one temporary angled ball when broken. Power-ups can add balls, arm a piercing ball, arm an explosive ball, or clear the lowest row.\n\nKeyboard: Left/Right or A/D aim, Space or Enter fires, R recalls balls, and F speeds up a volley.';
+
+  @override
+  String get toolName2048 => '2048';
+
+  @override
+  String get toolDesc2048 =>
+      'Swipe to slide the board, merge equal tiles, and chase a single 2048 out of a grid that keeps filling up.';
+
+  @override
+  String get twenty48Score => 'Score';
+
+  @override
+  String get twenty48Best => 'Best';
+
+  @override
+  String get twenty48Moves => 'Moves';
+
+  @override
+  String get twenty48Highest => 'Highest';
+
+  @override
+  String get twenty48Undo => 'Undo';
+
+  @override
+  String get twenty48NewGame => 'New game';
+
+  @override
+  String get twenty48NoMovesLeft => 'NO MOVES LEFT';
+
+  @override
+  String twenty48ReachedTile(int value) {
+    return 'Reached $value';
+  }
+
+  @override
+  String get twenty48NewBest => 'New best score!';
+
+  @override
+  String twenty48BestScore(int best) {
+    return 'Best: $best';
+  }
+
+  @override
+  String get twenty48YouWin => 'YOU WIN!';
+
+  @override
+  String twenty48WinSubtitle(int score) {
+    return 'Score: $score';
+  }
+
+  @override
+  String get twenty48KeepPlaying => 'Keep playing';
+
+  @override
+  String get twenty48SettingsTitle => '2048 Settings';
+
+  @override
+  String get twenty48Sound => 'Sound';
+
+  @override
+  String get twenty48SoundSubtitle => 'Play sound effects';
+
+  @override
+  String get twenty48Haptics => 'Haptics';
+
+  @override
+  String get twenty48HapticsSubtitle => 'Vibrate on merges';
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'ricochet_game_stat.dart';
+import 'game_stat.dart';
 
 /// One control button in a [GameHud].
 class GameHudAction {

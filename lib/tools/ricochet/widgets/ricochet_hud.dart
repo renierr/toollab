@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'ricochet_game_hud.dart';
-import 'ricochet_game_stat.dart';
+import 'package:tool_lab/widgets/game_hud.dart';
+import 'package:tool_lab/widgets/game_stat.dart';
 import '../engine/ricochet_engine.dart';
 import '../ricochet_colors.dart';
 
