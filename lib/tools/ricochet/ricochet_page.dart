@@ -60,13 +60,22 @@ class _RicochetPageState extends State<RicochetPage>
 
   static const Duration _idleFrameInterval = Duration(milliseconds: 100);
 
+  /// Android's screen timeout clock isn't refreshed while a volley holds the
+  /// screen on with no touch input, so it can already be "overdue" the
+  /// instant the volley ends — releasing right then dims the screen in the
+  /// same frame the ball stops. Holding a little longer gives the player a
+  /// beat to see the result before that catch-up can happen.
+  static const Duration _wakeLockGrace = Duration(seconds: 3);
+  Timer? _wakeLockReleaseTimer;
+
   /// The game-over panel's primary button, so the run's end can hand the
   /// keyboard over and taking it back on restart is one call.
   final FocusNode _overlayFocus = FocusNode(debugLabel: 'ricochet-over');
   bool _wasOver = false;
 
-  /// Held only while a ball volley is actually in motion, so the screen can
-  /// still sleep while the player sits idle lining up a shot.
+  /// Held while a ball volley is in motion (plus a short grace period after,
+  /// see [_wakeLockGrace]), so the screen can still sleep while the player
+  /// sits idle lining up a shot.
   WakeLockLease? _wakeLock;
   bool _wakeLockWanted = false;
 
@@ -94,7 +103,10 @@ class _RicochetPageState extends State<RicochetPage>
     final wanted = _engine.turnInProgress;
     if (wanted == _wakeLockWanted) return;
     _wakeLockWanted = wanted;
+    _wakeLockReleaseTimer?.cancel();
+    _wakeLockReleaseTimer = null;
     if (wanted) {
+      if (_wakeLock != null) return;
       unawaited(
         PowerWakeLockService.acquireFull().then((lease) {
           if (mounted && _wakeLockWanted) {
@@ -105,9 +117,7 @@ class _RicochetPageState extends State<RicochetPage>
         }),
       );
     } else {
-      final lease = _wakeLock;
-      _wakeLock = null;
-      if (lease != null) unawaited(lease.release());
+      _wakeLockReleaseTimer = Timer(_wakeLockGrace, _releaseWakeLock);
     }
   }
 
@@ -209,6 +219,8 @@ class _RicochetPageState extends State<RicochetPage>
   }
 
   void _releaseWakeLock() {
+    _wakeLockReleaseTimer?.cancel();
+    _wakeLockReleaseTimer = null;
     _wakeLockWanted = false;
     final lease = _wakeLock;
     _wakeLock = null;
