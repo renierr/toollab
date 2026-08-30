@@ -42,22 +42,16 @@ class ToolRegistry {
   static final Map<String, ToolSection> sections = {
     'sensors': ToolSection(
       id: 'sensors',
-      title: 'Sensors',
+      title: 'Devices',
       icon: Icons.sensors,
-      description: 'Tools using device sensors',
-      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleSensors,
+      description: 'Tools using device sensors and system information',
+      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleDevices,
     ),
     'utilities': ToolSection(
       id: 'utilities',
       title: 'Utilities',
       icon: Icons.build_outlined,
       titleL10n: (AppLocalizations l10n) => l10n.sectionTitleUtilities,
-    ),
-    'info': ToolSection(
-      id: 'info',
-      title: 'Information',
-      icon: Icons.info_outline,
-      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleInfo,
     ),
     'games': ToolSection(
       id: 'games',

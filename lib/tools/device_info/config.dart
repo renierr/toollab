@@ -14,7 +14,7 @@ class DeviceInfoTool {
     icon: Icons.phone_android_outlined,
     route: '/device-info',
     accentColor: AppTheme.accentPurple,
-    sectionId: 'info',
+    sectionId: 'sensors',
     nameL10n: (l10n) => l10n.toolNameDeviceInfo,
     descriptionL10n: (l10n) => l10n.toolDescDeviceInfo,
     createPage: (_) => const DeviceInfoPage(),

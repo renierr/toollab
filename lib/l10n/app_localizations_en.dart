@@ -3377,13 +3377,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Show separate launcher icon in App Drawer';
 
   @override
-  String get sectionTitleSensors => 'Sensors';
+  String get sectionTitleDevices => 'Devices';
 
   @override
   String get sectionTitleUtilities => 'Utilities';
-
-  @override
-  String get sectionTitleInfo => 'Information';
 
   @override
   String get toolNameCalculator => 'Calculator';

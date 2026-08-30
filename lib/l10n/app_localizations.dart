@@ -5921,23 +5921,17 @@ abstract class AppLocalizations {
   /// **'Show separate launcher icon in App Drawer'**
   String get widgetShortcutDrawerSubtitle;
 
-  /// No description provided for @sectionTitleSensors.
+  /// No description provided for @sectionTitleDevices.
   ///
   /// In en, this message translates to:
-  /// **'Sensors'**
-  String get sectionTitleSensors;
+  /// **'Devices'**
+  String get sectionTitleDevices;
 
   /// No description provided for @sectionTitleUtilities.
   ///
   /// In en, this message translates to:
   /// **'Utilities'**
   String get sectionTitleUtilities;
-
-  /// No description provided for @sectionTitleInfo.
-  ///
-  /// In en, this message translates to:
-  /// **'Information'**
-  String get sectionTitleInfo;
 
   /// No description provided for @toolNameCalculator.
   ///

@@ -3405,13 +3405,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Separates Symbol im App-Drawer anzeigen';
 
   @override
-  String get sectionTitleSensors => 'Sensoren';
+  String get sectionTitleDevices => 'Geräte';
 
   @override
   String get sectionTitleUtilities => 'Werkzeuge';
-
-  @override
-  String get sectionTitleInfo => 'Information';
 
   @override
   String get toolNameCalculator => 'Rechner';
