@@ -274,6 +274,11 @@ The script creates legacy PNG fallbacks and Android 8+ adaptive-icon resources.
 The latter prevents Pixel Launcher from applying legacy-icon normalization that
 makes drawer icons look smaller.
 
+For every tool added to the app, launcher entry points must also be maintained:
+- **AndroidManifest.xml**: Define a corresponding `<activity-alias>` under `<application>` pointing to `.MainActivity`, named `de.renier.tool_lab.<ToolNamePascalCase>Alias`, marked `android:enabled="false"` (disabled by default) with standard launcher intent-filters.
+- **MainActivity.kt**: Map the alias class name to the tool's GoRouter route in `handleIntent` (e.g., `de.renier.tool_lab.CalculatorAlias` maps to `/calculator`).
+- **ShortcutHelper.kt**: Add the tool mapping in `setDrawerIconEnabled` to enable/disable the activity-alias component.
+
 ### Step 5: Verify & Clean
 Before committing, always run:
 ```bash

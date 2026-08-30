@@ -98,25 +98,7 @@ See the comprehensive guide at [`docs/creating-a-tool.md`](docs/creating-a-tool.
 - Step-by-step instructions for creating a new tool.
 
 ### 3. Tool Config Pattern
-```dart
-class MyNewTool {
-  MyNewTool._();
-  static const ToolModel config = ToolModel(
-    id: 'my-new-tool',
-    name: 'My New Tool',
-    description: 'What it does',
-    icon: Icons.star_outlined,
-    route: '/my-new-tool',
-    accentColor: AppTheme.accentTeal,
-    sectionId: 'utilities',
-    stateProviders: () => [ // optional: tool-specific ChangeNotifier
-      ChangeNotifierProvider<MyNewToolState>(
-        create: (_) => MyNewToolState(),
-      ),
-    ],
-  );
-}
-```
+See [`docs/creating-a-tool.md`](docs/creating-a-tool.md) Step 1 for the full `config.dart` pattern (state providers, l10n resolvers, sync/background hooks).
 
 ### 4. Routing
 Routes are auto-generated from `ToolRegistry.all` in `lib/app.dart`. Each tool's `route` field becomes a GoRouter path. Page creation uses `ToolModel.createPage` — no manual switch needed in `app.dart`.
@@ -136,15 +118,10 @@ Tool state providers declared via `stateProviders` are auto-collected into `main
 - Use `FileSaveHelper` (`lib/helpers/file_save_helper.dart`) to download/export files (such as database backups, reports, or JSON exports). For cross-platform file saving architecture, platform-specific providers, and implementation details, see [AGENTS.detail.md](AGENTS.detail.md#2-database-backup-export--file-downloading-specifications).
 
 ### 8. Launcher Shortcuts & App Drawer Icons (Android)
-For every tool added to the app, launcher entry points must be maintained:
-- **AndroidManifest.xml**: Define a corresponding `<activity-alias>` under `<application>` pointing to `.MainActivity`, named `de.renier.tool_lab.<ToolNamePascalCase>Alias`, marked `android:enabled="false"` (disabled by default) with standard launcher intent-filters.
-- **MainActivity.kt**: Map the alias class name to the tool's GoRouter route in `handleIntent` (e.g., `de.renier.tool_lab.CalculatorAlias` maps to `/calculator`).
-- **ShortcutHelper.kt**: Add the tool mapping in `setDrawerIconEnabled` to enable/disable the activity-alias component.
+For every tool added to the app, launcher entry points must be maintained. See [`docs/creating-a-tool.md`](docs/creating-a-tool.md) Step 4 for the `AndroidManifest.xml` activity-alias, `MainActivity.kt` and `ShortcutHelper.kt` wiring.
 
 ### 9. Background Tasks (Android)
-- Work that must happen while the app is closed goes through `BackgroundTaskService` (`lib/services/background_task_service.dart`). Declare a `BackgroundTask` and register it via `backgroundTasks` in the tool's `ToolModel` — never add a scheduler, plugin or timer of your own.
-- Expose it with the shared `BackgroundTaskTile` (`lib/widgets/background_task_tile.dart`), guarded by `BackgroundTaskService.isSupported`.
-- A scheduled run has no UI, no providers and no localizations, is a second isolate with its own database connection, and is killed after ten minutes: no permission requests, no `AppState`, no static run markers, incremental work only. See [creating-a-tool.md §9](docs/creating-a-tool.md).
+Work that must happen while the app is closed goes through `BackgroundTaskService` — never add a scheduler, plugin or timer of your own. See [`docs/creating-a-tool.md`](docs/creating-a-tool.md) §9 for the registration pattern and the constraints on a scheduled run.
 
 ---
 
@@ -162,9 +139,6 @@ For every tool added to the app, launcher entry points must be maintained:
 - `ResponsiveOrientationLayout` switches on the aspect ratio of the available box. Prefer it over a width tier for canvas/viewport tools (sketch board, image viewer, compass, level), where the question is which side the leftover room is on.
 - Tools with fixed geometry (calculator keypad) should scale, not reflow by tier. Do not force breakpoints on them.
 
-### 3. Navigation
-- Standard: `go_router` for declarative routing.
-
 ### 4. Localization (i18n)
 - The app supports **English (`en`)** and **German (`de`)** via Flutter's `gen_l10n` (`flutter_localizations` + `intl`). ARB sources live in `lib/l10n/app_en.arb` (template) and `lib/l10n/app_de.arb`; config is `l10n.yaml` at the project root.
 - **All new user-facing strings must be localized.** Never hardcode UI text (`Text('...')`, tooltips, hints, labels, snackbars, dialog titles). Add a key to **both** ARB files and read it via `AppLocalizations.of(context).<key>` (import `package:tool_lab/l10n/app_localizations.dart`). `en` is the template — every key added there must also exist in `de`.
@@ -174,15 +148,6 @@ For every tool added to the app, launcher entry points must be maintained:
 
 ---
 
-## Dependencies
-
-Dependencies in `pubspec.yaml`. Check there before adding new packages.
-
----
-
 ## Verification Procedures
 
 *Note: Formatting and static analysis are only required when Dart/source code files are changed. They are not necessary when only markdown documentation, images, or static assets are modified.*
-
-1. **Formatting**: `dart format ./lib`
-2. **Analysis**: `flutter analyze`
