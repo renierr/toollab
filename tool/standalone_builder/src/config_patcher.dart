@@ -447,6 +447,33 @@ $dataTags
             </intent-filter>''';
   }
 
+  /// Extracts the `static final Map<String, ToolSection> sections = {...};`
+  /// declaration verbatim from the real tool_registry.dart source, so the
+  /// generated single-tool registry always matches the live section list.
+  String _extractSectionsBlock(String content) {
+    const marker = 'static final Map<String, ToolSection> sections = ';
+    final startIdx = content.indexOf(marker);
+    if (startIdx == -1) {
+      throw StateError(
+        'Could not find "$marker" in lib/core/tool_registry.dart',
+      );
+    }
+
+    final braceStart = content.indexOf('{', startIdx);
+    var depth = 0;
+    var i = braceStart;
+    for (; i < content.length; i++) {
+      if (content[i] == '{') depth++;
+      if (content[i] == '}') {
+        depth--;
+        if (depth == 0) break;
+      }
+    }
+
+    final endIdx = content.indexOf(';', i) + 1;
+    return content.substring(startIdx, endIdx);
+  }
+
   /// Patches the global tool registry to only reference the target tool.
   Future<void> _patchToolRegistry() async {
     final registryFile = File('lib/core/tool_registry.dart');
@@ -460,7 +487,9 @@ $dataTags
     await backupFile.writeAsString(originalContent);
     await pathMappingFile.writeAsString(registryFile.path);
 
-    // Write single-tool registry
+    // Write single-tool registry, copying the real sections map verbatim so
+    // it can never drift out of sync with lib/core/tool_registry.dart.
+    final sectionsBlock = _extractSectionsBlock(originalContent);
     final singleRegistryContent =
         '''
 import 'package:flutter/material.dart';
@@ -469,26 +498,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/${tool.folderName}/config.dart';
 
 class ToolRegistry {
-  static final Map<String, ToolSection> sections = {
-    'sensors': ToolSection(
-      id: 'sensors',
-      title: 'Devices',
-      icon: Icons.sensors,
-      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleDevices,
-    ),
-    'utilities': ToolSection(
-      id: 'utilities',
-      title: 'Utilities',
-      icon: Icons.build_outlined,
-      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleUtilities,
-    ),
-    'games': ToolSection(
-      id: 'games',
-      title: 'Games',
-      icon: Icons.sports_esports_outlined,
-      titleL10n: (AppLocalizations l10n) => l10n.sectionTitleGames,
-    ),
-  };
+  $sectionsBlock
 
   static List<ToolModel> get all => [
     ${tool.className}.config,
