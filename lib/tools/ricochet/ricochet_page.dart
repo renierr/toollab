@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'engine/ricochet_audio.dart';
@@ -64,6 +65,11 @@ class _RicochetPageState extends State<RicochetPage>
   final FocusNode _overlayFocus = FocusNode(debugLabel: 'ricochet-over');
   bool _wasOver = false;
 
+  /// Held only while a ball volley is actually in motion, so the screen can
+  /// still sleep while the player sits idle lining up a shot.
+  WakeLockLease? _wakeLock;
+  bool _wakeLockWanted = false;
+
   @override
   void initState() {
     super.initState();
@@ -80,7 +86,29 @@ class _RicochetPageState extends State<RicochetPage>
     onDispose(_engine.dispose);
     onDispose(RicochetAudioService.instance.stopLoop);
     onDispose(() => unawaited(RicochetAudioService.instance.releaseAll()));
+    onDispose(_releaseWakeLock);
     unawaited(_bootstrap());
+  }
+
+  void _syncWakeLock() {
+    final wanted = _engine.turnInProgress;
+    if (wanted == _wakeLockWanted) return;
+    _wakeLockWanted = wanted;
+    if (wanted) {
+      unawaited(
+        PowerWakeLockService.acquireFull().then((lease) {
+          if (mounted && _wakeLockWanted) {
+            _wakeLock = lease;
+          } else {
+            unawaited(lease.release());
+          }
+        }),
+      );
+    } else {
+      final lease = _wakeLock;
+      _wakeLock = null;
+      if (lease != null) unawaited(lease.release());
+    }
   }
 
   /// Moves the keyboard between the board and the game-over panel. The panel
@@ -146,6 +174,7 @@ class _RicochetPageState extends State<RicochetPage>
     final steeringAim = _steerAim(dt);
     // A frame longer than a fifth of a second is a stall, not slow motion.
     _engine.update(dt.clamp(0.0, 0.25));
+    _syncWakeLock();
     if (!steeringAim && !_engine.needsFrame) {
       _ticker.stop();
       _startIdleTicker();
@@ -172,8 +201,18 @@ class _RicochetPageState extends State<RicochetPage>
       _stopIdleTicker();
       RicochetAudioService.instance.stopLoop();
       unawaited(_engine.saveNow());
+      // The screen is off or another app is shown either way, so the lock
+      // itself is moot here — but drop it so state stays truthful for resume.
+      _releaseWakeLock();
       if (_engine.turnInProgress) _startBackgroundTicker();
     }
+  }
+
+  void _releaseWakeLock() {
+    _wakeLockWanted = false;
+    final lease = _wakeLock;
+    _wakeLock = null;
+    if (lease != null) unawaited(lease.release());
   }
 
   void _startBackgroundTicker() {
