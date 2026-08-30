@@ -14,7 +14,7 @@ void main() {
   test('generated levels stay playable within their durability budget', () {
     for (var level = 1; level <= 100; level++) {
       for (var seed = 0; seed < 20; seed++) {
-        final layout = _generator(seed).generate(level);
+        final layout = _generator(seed).generate(level, ballCount: 1);
         final totalHp = layout.bricks.fold<int>(
           0,
           (total, brick) => total + brick.maxHp,
@@ -27,6 +27,7 @@ void main() {
             _generator(seed).durabilityBudget(
               level,
               layout.bricks.length + layout.pickups.length,
+              1,
             ),
           ),
         );
@@ -46,7 +47,7 @@ void main() {
 
   test('advanced tile mechanics remain locked at level one', () {
     for (var seed = 0; seed < 100; seed++) {
-      final layout = _generator(seed).generate(1);
+      final layout = _generator(seed).generate(1, ballCount: 1);
       expect(
         layout.bricks.any(
           (brick) =>
@@ -63,11 +64,21 @@ void main() {
 
   test('split tiles unlock at level seven and stay capped', () {
     for (var seed = 0; seed < 100; seed++) {
-      final layout = _generator(seed).generate(100);
+      final layout = _generator(seed).generate(100, ballCount: 1);
       expect(
         layout.bricks.where((brick) => brick.type == TileType.split).length,
         lessThanOrEqualTo(2),
       );
     }
+  });
+
+  test('large volleys receive a proportional durability budget', () {
+    final generator = _generator(0);
+
+    expect(
+      generator.durabilityBudget(30, 50, 100),
+      greaterThan(generator.durabilityBudget(30, 50, 1)),
+    );
+    expect(generator.durabilityBudget(30, 50, 100), 2200);
   });
 }

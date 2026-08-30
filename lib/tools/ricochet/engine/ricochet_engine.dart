@@ -1222,7 +1222,10 @@ class RicochetEngine {
   }
 
   void _generateLevel(int forLevel) {
-    final layout = _generator.generate(forLevel);
+    final layout = _generator.generate(
+      forLevel,
+      ballCount: math.min(totalBalls, RicochetTuning.volleyCap),
+    );
     bricks
       ..clear()
       ..addAll(layout.bricks);

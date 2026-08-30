@@ -32,7 +32,7 @@ class LevelGenerator {
   /// Inclusive on both ends, like the browser original's `randInt`.
   int _randInt(int lo, int hi) => lo + _random.nextInt(hi - lo + 1);
 
-  LevelLayout generate(int level) {
+  LevelLayout generate(int level, {required int ballCount}) {
     final bricks = <Brick>[];
     final pickups = <Pickup>[];
 
@@ -62,7 +62,7 @@ class LevelGenerator {
       (count, artIndex) =>
           count + stencils[artIndex].join().replaceAll('.', '').length,
     );
-    var remainingDurability = durabilityBudget(level, tileCount);
+    var remainingDurability = durabilityBudget(level, tileCount, ballCount);
     var remainingTiles = tileCount;
 
     // A tall composition may start up to 4 rows above the top edge and slide
@@ -179,6 +179,14 @@ class LevelGenerator {
 
   int levelPickups(int brickCount) => brickCount >= 3 ? 2 : 1;
 
-  int durabilityBudget(int level, int tileCount) =>
-      math.max(tileCount, 36 + level * 8);
+  int durabilityBudget(int level, int tileCount, int ballCount) {
+    final targetTileHp = math.max(
+      1,
+      (level * 0.8 + ballCount.clamp(1, 100) * 0.2).round(),
+    );
+    return math.max(
+      tileCount,
+      math.max(36 + level * 8, tileCount * targetTileHp),
+    );
+  }
 }
