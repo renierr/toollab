@@ -17128,6 +17128,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Vibrate on merges'**
   String get twenty48HapticsSubtitle;
+
+  /// No description provided for @toolNameChainDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Chain Drop'**
+  String get toolNameChainDrop;
+
+  /// No description provided for @toolDescChainDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop numbered discs into a 7x7 well, clear runs that match their value, and chase the chain reactions before the rising cracked discs bury you.'**
+  String get toolDescChainDrop;
+
+  /// No description provided for @chaindropScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get chaindropScore;
+
+  /// No description provided for @chaindropBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get chaindropBest;
+
+  /// No description provided for @chaindropLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get chaindropLevel;
+
+  /// No description provided for @chaindropNewGame.
+  ///
+  /// In en, this message translates to:
+  /// **'New game'**
+  String get chaindropNewGame;
+
+  /// No description provided for @chaindropGameOver.
+  ///
+  /// In en, this message translates to:
+  /// **'GAME OVER'**
+  String get chaindropGameOver;
+
+  /// No description provided for @chaindropNewBest.
+  ///
+  /// In en, this message translates to:
+  /// **'New best score!'**
+  String get chaindropNewBest;
+
+  /// No description provided for @chaindropBestScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Best: {best}'**
+  String chaindropBestScore(int best);
+
+  /// No description provided for @chaindropLevelReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached level {level}'**
+  String chaindropLevelReached(int level);
+
+  /// No description provided for @chaindropSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chain Drop Settings'**
+  String get chaindropSettingsTitle;
+
+  /// No description provided for @chaindropSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get chaindropSound;
+
+  /// No description provided for @chaindropSoundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play sound effects'**
+  String get chaindropSoundSubtitle;
+
+  /// No description provided for @chaindropHaptics.
+  ///
+  /// In en, this message translates to:
+  /// **'Haptics'**
+  String get chaindropHaptics;
+
+  /// No description provided for @chaindropHapticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrate on pops and breaks'**
+  String get chaindropHapticsSubtitle;
 }
 
 class _AppLocalizationsDelegate

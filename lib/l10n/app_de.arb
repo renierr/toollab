@@ -3888,5 +3888,22 @@
   "twenty48Sound": "Ton",
   "twenty48SoundSubtitle": "Toneffekte abspielen",
   "twenty48Haptics": "Haptik",
-  "twenty48HapticsSubtitle": "Bei Verschmelzungen vibrieren"
+  "twenty48HapticsSubtitle": "Bei Verschmelzungen vibrieren",
+  "toolNameChainDrop": "Chain Drop",
+  "toolDescChainDrop": "Wirf nummerierte Scheiben in einen 7x7-Schacht, löse Reihen auf, die ihrem Wert entsprechen, und jage Kettenreaktionen, bevor dich die aufsteigenden angeschlagenen Scheiben begraben.",
+  "chaindropScore": "Punkte",
+  "chaindropBest": "Rekord",
+  "chaindropLevel": "Level",
+  "chaindropNewGame": "Neues Spiel",
+  "chaindropGameOver": "SPIEL VORBEI",
+  "chaindropNewBest": "Neuer Rekord!",
+  "chaindropBestScore": "Rekord: {best}",
+  "@chaindropBestScore": {"placeholders": {"best": {"type": "int"}}},
+  "chaindropLevelReached": "Level {level} erreicht",
+  "@chaindropLevelReached": {"placeholders": {"level": {"type": "int"}}},
+  "chaindropSettingsTitle": "Chain-Drop-Einstellungen",
+  "chaindropSound": "Ton",
+  "chaindropSoundSubtitle": "Toneffekte abspielen",
+  "chaindropHaptics": "Haptik",
+  "chaindropHapticsSubtitle": "Bei Treffern und Brüchen vibrieren"
 }

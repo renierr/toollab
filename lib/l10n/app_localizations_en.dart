@@ -9570,4 +9570,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get twenty48HapticsSubtitle => 'Vibrate on merges';
+
+  @override
+  String get toolNameChainDrop => 'Chain Drop';
+
+  @override
+  String get toolDescChainDrop =>
+      'Drop numbered discs into a 7x7 well, clear runs that match their value, and chase the chain reactions before the rising cracked discs bury you.';
+
+  @override
+  String get chaindropScore => 'Score';
+
+  @override
+  String get chaindropBest => 'Best';
+
+  @override
+  String get chaindropLevel => 'Level';
+
+  @override
+  String get chaindropNewGame => 'New game';
+
+  @override
+  String get chaindropGameOver => 'GAME OVER';
+
+  @override
+  String get chaindropNewBest => 'New best score!';
+
+  @override
+  String chaindropBestScore(int best) {
+    return 'Best: $best';
+  }
+
+  @override
+  String chaindropLevelReached(int level) {
+    return 'Reached level $level';
+  }
+
+  @override
+  String get chaindropSettingsTitle => 'Chain Drop Settings';
+
+  @override
+  String get chaindropSound => 'Sound';
+
+  @override
+  String get chaindropSoundSubtitle => 'Play sound effects';
+
+  @override
+  String get chaindropHaptics => 'Haptics';
+
+  @override
+  String get chaindropHapticsSubtitle => 'Vibrate on pops and breaks';
 }

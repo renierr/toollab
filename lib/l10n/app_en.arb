@@ -4892,5 +4892,22 @@
   "twenty48Sound": "Sound",
   "twenty48SoundSubtitle": "Play sound effects",
   "twenty48Haptics": "Haptics",
-  "twenty48HapticsSubtitle": "Vibrate on merges"
+  "twenty48HapticsSubtitle": "Vibrate on merges",
+  "toolNameChainDrop": "Chain Drop",
+  "toolDescChainDrop": "Drop numbered discs into a 7x7 well, clear runs that match their value, and chase the chain reactions before the rising cracked discs bury you.",
+  "chaindropScore": "Score",
+  "chaindropBest": "Best",
+  "chaindropLevel": "Level",
+  "chaindropNewGame": "New game",
+  "chaindropGameOver": "GAME OVER",
+  "chaindropNewBest": "New best score!",
+  "chaindropBestScore": "Best: {best}",
+  "@chaindropBestScore": {"placeholders": {"best": {"type": "int"}}},
+  "chaindropLevelReached": "Reached level {level}",
+  "@chaindropLevelReached": {"placeholders": {"level": {"type": "int"}}},
+  "chaindropSettingsTitle": "Chain Drop Settings",
+  "chaindropSound": "Sound",
+  "chaindropSoundSubtitle": "Play sound effects",
+  "chaindropHaptics": "Haptics",
+  "chaindropHapticsSubtitle": "Vibrate on pops and breaks"
 }

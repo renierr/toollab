@@ -9639,4 +9639,54 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get twenty48HapticsSubtitle => 'Bei Verschmelzungen vibrieren';
+
+  @override
+  String get toolNameChainDrop => 'Chain Drop';
+
+  @override
+  String get toolDescChainDrop =>
+      'Wirf nummerierte Scheiben in einen 7x7-Schacht, löse Reihen auf, die ihrem Wert entsprechen, und jage Kettenreaktionen, bevor dich die aufsteigenden angeschlagenen Scheiben begraben.';
+
+  @override
+  String get chaindropScore => 'Punkte';
+
+  @override
+  String get chaindropBest => 'Rekord';
+
+  @override
+  String get chaindropLevel => 'Level';
+
+  @override
+  String get chaindropNewGame => 'Neues Spiel';
+
+  @override
+  String get chaindropGameOver => 'SPIEL VORBEI';
+
+  @override
+  String get chaindropNewBest => 'Neuer Rekord!';
+
+  @override
+  String chaindropBestScore(int best) {
+    return 'Rekord: $best';
+  }
+
+  @override
+  String chaindropLevelReached(int level) {
+    return 'Level $level erreicht';
+  }
+
+  @override
+  String get chaindropSettingsTitle => 'Chain-Drop-Einstellungen';
+
+  @override
+  String get chaindropSound => 'Ton';
+
+  @override
+  String get chaindropSoundSubtitle => 'Toneffekte abspielen';
+
+  @override
+  String get chaindropHaptics => 'Haptik';
+
+  @override
+  String get chaindropHapticsSubtitle => 'Bei Treffern und Brüchen vibrieren';
 }
