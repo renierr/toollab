@@ -59,7 +59,6 @@ class RicochetTuning {
   /// Most balls one volley fires, however large the stash.
   static const int volleyCap = 100;
   static const int maxActiveBalls = 150;
-  static const double splitAngle = math.pi / 9;
   static const double splitOffset = Board.ballRadius + 1;
 
   static const double shiftSeconds = 0.22;
@@ -721,24 +720,21 @@ class RicochetEngine {
     _markHudDirty();
   }
 
+  /// Fires a bomb ball straight up from the hit point rather than following
+  /// the hitting ball's own path — a split tile is a guaranteed strike on
+  /// whatever is above it, not a near-duplicate of the shot that found it.
   void _queueSplit(Ball source) {
     if (balls.length + _queuedBalls.length >= RicochetTuning.maxActiveBalls) {
       return;
     }
-    final angle = RicochetTuning.splitAngle * (_random.nextBool() ? 1 : -1);
-    final cos = math.cos(angle);
-    final sin = math.sin(angle);
-    final vx = source.vx * cos - source.vy * sin;
-    final vy = source.vx * sin + source.vy * cos;
-    final speed = math.sqrt(vx * vx + vy * vy);
     _queuedBalls.add(
       _newBall(
-        x: source.x + vx / speed * RicochetTuning.splitOffset,
-        y: source.y + vy / speed * RicochetTuning.splitOffset,
-        vx: vx,
-        vy: vy,
+        x: source.x,
+        y: source.y - RicochetTuning.splitOffset,
+        vx: 0,
+        vy: -RicochetTuning.ballSpeed,
         pierce: source.pierce,
-        bomb: source.bomb,
+        bomb: true,
         canSplit: false,
       ),
     );
