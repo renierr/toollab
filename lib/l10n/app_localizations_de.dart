@@ -9689,4 +9689,38 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get chaindropHapticsSubtitle => 'Bei Treffern und Brüchen vibrieren';
+
+  @override
+  String get chaindropUndo => 'Letzten Wurf rückgängig machen';
+
+  @override
+  String get chaindropPowerMenu => 'Power-ups';
+
+  @override
+  String get chaindropPowerClearColumn => 'Spalte leeren';
+
+  @override
+  String get chaindropPowerClearColumnDesc =>
+      'Leert die höchste Spalte auf dem Feld';
+
+  @override
+  String get chaindropPowerDefuse => 'Entschärfen';
+
+  @override
+  String get chaindropPowerDefuseDesc =>
+      'Entfernt die am stärksten angeschlagene Scheibe';
+
+  @override
+  String get chaindropPowerReroll => 'Warteschlange neu würfeln';
+
+  @override
+  String get chaindropPowerRerollDesc =>
+      'Würfelt alle 3 nächsten Scheiben neu aus';
+
+  @override
+  String get chaindropPowerWildDisc => 'Wilde Scheibe';
+
+  @override
+  String get chaindropPowerWildDiscDesc =>
+      'Deine nächste Scheibe übernimmt die Zahl eines Nachbarn';
 }

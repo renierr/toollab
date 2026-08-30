@@ -17218,6 +17218,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Vibrate on pops and breaks'**
   String get chaindropHapticsSubtitle;
+
+  /// No description provided for @chaindropUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo last drop'**
+  String get chaindropUndo;
+
+  /// No description provided for @chaindropPowerMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Power-ups'**
+  String get chaindropPowerMenu;
+
+  /// No description provided for @chaindropPowerClearColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear column'**
+  String get chaindropPowerClearColumn;
+
+  /// No description provided for @chaindropPowerClearColumnDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Empties the tallest column on the board'**
+  String get chaindropPowerClearColumnDesc;
+
+  /// No description provided for @chaindropPowerDefuse.
+  ///
+  /// In en, this message translates to:
+  /// **'Defuse'**
+  String get chaindropPowerDefuse;
+
+  /// No description provided for @chaindropPowerDefuseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes the most-damaged cracked disc'**
+  String get chaindropPowerDefuseDesc;
+
+  /// No description provided for @chaindropPowerReroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Reroll queue'**
+  String get chaindropPowerReroll;
+
+  /// No description provided for @chaindropPowerRerollDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Rerolls all 3 upcoming discs'**
+  String get chaindropPowerRerollDesc;
+
+  /// No description provided for @chaindropPowerWildDisc.
+  ///
+  /// In en, this message translates to:
+  /// **'Wild disc'**
+  String get chaindropPowerWildDisc;
+
+  /// No description provided for @chaindropPowerWildDiscDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your next disc copies a neighbor\'s number'**
+  String get chaindropPowerWildDiscDesc;
 }
 
 class _AppLocalizationsDelegate

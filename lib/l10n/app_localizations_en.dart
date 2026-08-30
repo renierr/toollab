@@ -9620,4 +9620,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chaindropHapticsSubtitle => 'Vibrate on pops and breaks';
+
+  @override
+  String get chaindropUndo => 'Undo last drop';
+
+  @override
+  String get chaindropPowerMenu => 'Power-ups';
+
+  @override
+  String get chaindropPowerClearColumn => 'Clear column';
+
+  @override
+  String get chaindropPowerClearColumnDesc =>
+      'Empties the tallest column on the board';
+
+  @override
+  String get chaindropPowerDefuse => 'Defuse';
+
+  @override
+  String get chaindropPowerDefuseDesc =>
+      'Removes the most-damaged cracked disc';
+
+  @override
+  String get chaindropPowerReroll => 'Reroll queue';
+
+  @override
+  String get chaindropPowerRerollDesc => 'Rerolls all 3 upcoming discs';
+
+  @override
+  String get chaindropPowerWildDisc => 'Wild disc';
+
+  @override
+  String get chaindropPowerWildDiscDesc =>
+      'Your next disc copies a neighbor\'s number';
 }

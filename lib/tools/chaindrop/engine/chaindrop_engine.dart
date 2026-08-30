@@ -13,8 +13,8 @@ class ChainDropGrid {
   static const int rows = 7;
   static const int cells = columns * rows;
 
-  /// Successful drops between garbage-row insertions.
-  static const int dropsPerGarbageRow = 6;
+  /// Successful drops between cracked-disc waves.
+  static const int dropsPerCrackWave = 6;
 }
 
 /// Sound/haptic event keys the engine fires mid-resolution. Kept as plain
@@ -26,9 +26,12 @@ class ChainDropSfxKeys {
   static const String pop = 'pop';
   static const String crackHit = 'crack_hit';
   static const String crackBreak = 'crack_break';
-  static const String garbageRow = 'garbage_row';
+  static const String crackWave = 'crack_wave';
   static const String gameOver = 'game_over';
 }
+
+/// The free, unlimited-use assists reachable from the power menu.
+enum ChainDropPower { clearColumn, defuse, reroll, wildDisc }
 
 /// One disc on the board.
 ///
@@ -60,7 +63,7 @@ class ChainDropDisc {
 }
 
 /// The clone's simulation: dropping, run-length matching, cracked discs and
-/// the escalating garbage rows.
+/// the escalating cracked-disc waves.
 ///
 /// A turn-based game, but a turn is not instantaneous — a drop can trigger a
 /// multi-round cascade, and the view should see each round land rather than
@@ -81,11 +84,14 @@ class ChainDropEngine extends ChangeNotifier {
   );
   final List<int> _queue = [];
 
+  final List<_Snapshot> _history = [];
+
   int _nextId = 1;
   int _score = 0;
   int _best = 0;
   int _level = 0;
   int _dropsSinceGarbage = 0;
+  int _wildCharges = 0;
   bool _resolving = false;
   bool _gameOver = false;
 
@@ -100,8 +106,10 @@ class ChainDropEngine extends ChangeNotifier {
   int get score => _score;
   int get best => _best;
   int get level => _level;
+  int get wildCharges => _wildCharges;
   bool get isResolving => _resolving;
   bool get isGameOver => _gameOver;
+  bool get canUndo => _history.isNotEmpty;
   List<int> get queue => List.unmodifiable(_queue);
   List<ChainDropDisc> get discs => _grid.whereType<ChainDropDisc>().toList();
 
@@ -132,8 +140,10 @@ class ChainDropEngine extends ChangeNotifier {
     _score = 0;
     _level = 0;
     _dropsSinceGarbage = 0;
+    _wildCharges = 0;
     _resolving = false;
     _gameOver = false;
+    _history.clear();
     _queue
       ..clear()
       ..addAll([_randomValue(), _randomValue(), _randomValue()]);
@@ -144,24 +154,32 @@ class ChainDropEngine extends ChangeNotifier {
   // ----------------------------------------------------------------------- play
 
   /// Drops the front of the queue into [column], then resolves every cascade
-  /// round it triggers (and a garbage row, if this drop crosses the counter).
-  /// Returns false without effect if the column is full, a drop is already
-  /// resolving, or the game has ended.
+  /// round it triggers (and a wave of cracked discs, if this drop crosses the
+  /// counter). Returns false without effect if the column is full, a drop is
+  /// already resolving, or the game has ended.
   Future<bool> dropDisc(int column) async {
     if (_gameOver || _resolving || isColumnFull(column)) return false;
 
+    _history.add(_capture());
     _resolving = true;
     _clearTransientFlags();
     final value = _queue.removeAt(0);
     _queue.add(_randomValue());
     final row = _columnHeight(column);
-    _grid[row * ChainDropGrid.columns + column] = ChainDropDisc(
+    final index = row * ChainDropGrid.columns + column;
+    final disc = ChainDropDisc(
       id: _nextId++,
       row: row,
       col: column,
       value: value,
       spawned: true,
     );
+    _grid[index] = disc;
+    if (_wildCharges > 0) {
+      _wildCharges--;
+      final matched = _matchingNeighborValue(index);
+      if (matched != null) disc.value = matched;
+    }
     _dropsSinceGarbage++;
     onSfx?.call(ChainDropSfxKeys.drop);
     notifyListeners();
@@ -169,18 +187,14 @@ class ChainDropEngine extends ChangeNotifier {
 
     await _resolveCascade();
 
-    if (!_gameOver && _dropsSinceGarbage >= ChainDropGrid.dropsPerGarbageRow) {
+    if (!_gameOver && _dropsSinceGarbage >= ChainDropGrid.dropsPerCrackWave) {
       _dropsSinceGarbage = 0;
       _clearTransientFlags();
-      final overflowed = _insertGarbageRow();
-      onSfx?.call(ChainDropSfxKeys.garbageRow);
+      _insertCrackedWave();
+      onSfx?.call(ChainDropSfxKeys.crackWave);
       notifyListeners();
-      if (overflowed) {
-        _endGame();
-      } else {
-        await Future.delayed(_dropDelay);
-        await _resolveCascade();
-      }
+      await Future.delayed(_dropDelay);
+      await _resolveCascade();
     }
 
     if (!_gameOver && _isFull) {
@@ -191,6 +205,107 @@ class ChainDropEngine extends ChangeNotifier {
     unawaited(_persist());
     notifyListeners();
     return true;
+  }
+
+  /// Reverts the board to how it looked before the last completed drop
+  /// (including any cascade and any cracked-disc wave it triggered).
+  void undoMove() {
+    if (_resolving || _history.isEmpty) return;
+    _restore(_history.removeLast());
+    _gameOver = false;
+    unawaited(_persist());
+    notifyListeners();
+  }
+
+  int? _matchingNeighborValue(int index) {
+    for (final neighbor in _neighbors(index)) {
+      final value = _grid[neighbor]?.value;
+      if (value != null) return value;
+    }
+    return null;
+  }
+
+  // --------------------------------------------------------------- power-ups
+
+  /// Applies a free, unlimited-use assist from the power menu. A no-op if the
+  /// board has nothing for it to act on (an empty board for [ChainDropPower.
+  /// clearColumn], no cracked discs for [ChainDropPower.defuse]).
+  Future<void> usePower(ChainDropPower power) async {
+    if (_gameOver || _resolving) return;
+    switch (power) {
+      case ChainDropPower.clearColumn:
+        await _useClearColumn();
+      case ChainDropPower.defuse:
+        await _useDefuse();
+      case ChainDropPower.reroll:
+        _useReroll();
+      case ChainDropPower.wildDisc:
+        _wildCharges++;
+        notifyListeners();
+    }
+    unawaited(_persist());
+  }
+
+  Future<void> _useClearColumn() async {
+    final column = _tallestColumn();
+    if (column == null) return;
+
+    _resolving = true;
+    _clearTransientFlags();
+    for (var row = 0; row < ChainDropGrid.rows; row++) {
+      _grid[row * ChainDropGrid.columns + column] = null;
+    }
+    notifyListeners();
+    await Future.delayed(_gravityDelay);
+    await _resolveCascade();
+    if (!_gameOver && _isFull) _endGame();
+    _resolving = false;
+    notifyListeners();
+  }
+
+  Future<void> _useDefuse() async {
+    int? target;
+    var bestStage = -1;
+    for (var i = 0; i < ChainDropGrid.cells; i++) {
+      final disc = _grid[i];
+      if (disc == null || disc.value != null) continue;
+      if (disc.crackStage > bestStage) {
+        bestStage = disc.crackStage;
+        target = i;
+      }
+    }
+    if (target == null) return;
+
+    _resolving = true;
+    _clearTransientFlags();
+    _grid[target] = null;
+    _applyGravity();
+    notifyListeners();
+    await Future.delayed(_gravityDelay);
+    await _resolveCascade();
+    if (!_gameOver && _isFull) _endGame();
+    _resolving = false;
+    notifyListeners();
+  }
+
+  void _useReroll() {
+    for (var i = 0; i < _queue.length; i++) {
+      _queue[i] = _randomValue();
+    }
+    notifyListeners();
+  }
+
+  int? _tallestColumn() {
+    var best = -1;
+    var bestHeight = 0;
+    for (var col = 0; col < ChainDropGrid.columns; col++) {
+      final height = _columnHeight(col);
+      if (height > bestHeight) {
+        bestHeight = height;
+        best = col;
+      }
+    }
+    return best == -1 ? null : best;
   }
 
   void _clearTransientFlags() {
@@ -363,30 +478,28 @@ class ChainDropEngine extends ChangeNotifier {
     }
   }
 
-  /// Shifts every column up one row and fills the bottom row with fresh
-  /// cracked discs. Returns true (and leaves the board untouched) if any
-  /// column was already full, which ends the game instead.
-  bool _insertGarbageRow() {
-    const cols = ChainDropGrid.columns;
-    const rows = ChainDropGrid.rows;
-    for (var col = 0; col < cols; col++) {
-      if (_grid[(rows - 1) * cols + col] != null) return true;
-    }
-    for (var col = 0; col < cols; col++) {
-      for (var row = rows - 1; row >= 1; row--) {
-        final disc = _grid[(row - 1) * cols + col];
-        if (disc != null) disc.row = row;
-        _grid[row * cols + col] = disc;
-      }
-      _grid[col] = ChainDropDisc(
+  /// Scatters fresh cracked discs into random columns that still have room,
+  /// one per column, dropped onto each column's current stack rather than
+  /// shoving the whole board up. The wave grows with [_level] — the Nth wave
+  /// wants N discs, capped by however many columns are actually free.
+  void _insertCrackedWave() {
+    _level++;
+    final available = <int>[
+      for (var col = 0; col < ChainDropGrid.columns; col++)
+        if (!isColumnFull(col)) col,
+    ];
+    available.shuffle(_random);
+    final count = math.min(_level, available.length);
+    for (var i = 0; i < count; i++) {
+      final col = available[i];
+      final row = _columnHeight(col);
+      _grid[row * ChainDropGrid.columns + col] = ChainDropDisc(
         id: _nextId++,
-        row: 0,
+        row: row,
         col: col,
         spawned: true,
       );
     }
-    _level++;
-    return false;
   }
 
   void _endGame() {
@@ -483,13 +596,15 @@ class ChainDropEngine extends ChangeNotifier {
     if (level is! int || level < 0) return false;
     if (dropsSinceGarbage is! int ||
         dropsSinceGarbage < 0 ||
-        dropsSinceGarbage >= ChainDropGrid.dropsPerGarbageRow) {
+        dropsSinceGarbage >= ChainDropGrid.dropsPerCrackWave) {
       return false;
     }
 
     _score = score;
     _level = level;
     _dropsSinceGarbage = dropsSinceGarbage;
+    _wildCharges = 0;
+    _history.clear();
     _queue
       ..clear()
       ..addAll(queue);
@@ -503,4 +618,73 @@ class ChainDropEngine extends ChangeNotifier {
   }
 
   Future<void> saveNow() => _persist();
+
+  // --------------------------------------------------------------------- undo
+
+  /// A cell packs to 0 (empty), a positive 1-7 (numbered disc), or a negative
+  /// `-(crackStage + 1)` (cracked disc) — one flat int list, no object graph.
+  _Snapshot _capture() => _Snapshot(
+    score: _score,
+    level: _level,
+    dropsSinceGarbage: _dropsSinceGarbage,
+    wildCharges: _wildCharges,
+    queue: List<int>.from(_queue),
+    cells: [
+      for (final disc in _grid)
+        if (disc == null)
+          0
+        else if (disc.value != null)
+          disc.value!
+        else
+          -(disc.crackStage + 1),
+    ],
+  );
+
+  void _restore(_Snapshot snapshot) {
+    _score = snapshot.score;
+    _level = snapshot.level;
+    _dropsSinceGarbage = snapshot.dropsSinceGarbage;
+    _wildCharges = snapshot.wildCharges;
+    _queue
+      ..clear()
+      ..addAll(snapshot.queue);
+    for (var i = 0; i < ChainDropGrid.cells; i++) {
+      final packed = snapshot.cells[i];
+      if (packed == 0) {
+        _grid[i] = null;
+      } else if (packed > 0) {
+        _grid[i] = ChainDropDisc(
+          id: _nextId++,
+          row: i ~/ ChainDropGrid.columns,
+          col: i % ChainDropGrid.columns,
+          value: packed,
+        );
+      } else {
+        _grid[i] = ChainDropDisc(
+          id: _nextId++,
+          row: i ~/ ChainDropGrid.columns,
+          col: i % ChainDropGrid.columns,
+          crackStage: -packed - 1,
+        );
+      }
+    }
+  }
+}
+
+class _Snapshot {
+  final int score;
+  final int level;
+  final int dropsSinceGarbage;
+  final int wildCharges;
+  final List<int> queue;
+  final List<int> cells;
+
+  const _Snapshot({
+    required this.score,
+    required this.level,
+    required this.dropsSinceGarbage,
+    required this.wildCharges,
+    required this.queue,
+    required this.cells,
+  });
 }

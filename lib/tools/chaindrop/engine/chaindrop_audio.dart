@@ -35,7 +35,7 @@ class ChainDropSfx {
         highPassHz: 600,
         decay: 4,
       ),
-      ChainDropSfxKeys.garbageRow: WavBuilder.sequence(
+      ChainDropSfxKeys.crackWave: WavBuilder.sequence(
         notes: const [
           ToneSpec(
             frequency: 220,

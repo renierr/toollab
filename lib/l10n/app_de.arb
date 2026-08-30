@@ -3905,5 +3905,15 @@
   "chaindropSound": "Ton",
   "chaindropSoundSubtitle": "Toneffekte abspielen",
   "chaindropHaptics": "Haptik",
-  "chaindropHapticsSubtitle": "Bei Treffern und Brüchen vibrieren"
+  "chaindropHapticsSubtitle": "Bei Treffern und Brüchen vibrieren",
+  "chaindropUndo": "Letzten Wurf rückgängig machen",
+  "chaindropPowerMenu": "Power-ups",
+  "chaindropPowerClearColumn": "Spalte leeren",
+  "chaindropPowerClearColumnDesc": "Leert die höchste Spalte auf dem Feld",
+  "chaindropPowerDefuse": "Entschärfen",
+  "chaindropPowerDefuseDesc": "Entfernt die am stärksten angeschlagene Scheibe",
+  "chaindropPowerReroll": "Warteschlange neu würfeln",
+  "chaindropPowerRerollDesc": "Würfelt alle 3 nächsten Scheiben neu aus",
+  "chaindropPowerWildDisc": "Wilde Scheibe",
+  "chaindropPowerWildDiscDesc": "Deine nächste Scheibe übernimmt die Zahl eines Nachbarn"
 }

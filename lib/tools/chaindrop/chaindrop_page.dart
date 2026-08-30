@@ -18,6 +18,7 @@ import 'config.dart';
 import 'engine/chaindrop_audio.dart';
 import 'engine/chaindrop_engine.dart';
 import 'widgets/chaindrop_board.dart';
+import 'widgets/chaindrop_power_menu_sheet.dart';
 import 'widgets/chaindrop_queue_bar.dart';
 import 'widgets/chaindrop_settings_sheet.dart';
 
@@ -55,7 +56,7 @@ class _ChainDropPageState extends State<ChainDropPage> with DisposeCleanup {
       case ChainDropSfxKeys.pop:
         HapticFeedback.selectionClick();
       case ChainDropSfxKeys.crackBreak:
-      case ChainDropSfxKeys.garbageRow:
+      case ChainDropSfxKeys.crackWave:
         HapticFeedback.mediumImpact();
       case ChainDropSfxKeys.gameOver:
         HapticFeedback.heavyImpact();
@@ -65,6 +66,13 @@ class _ChainDropPageState extends State<ChainDropPage> with DisposeCleanup {
   void _drop(int column) => unawaited(_engine.dropDisc(column));
 
   void _newGame() => _engine.newGame();
+
+  void _undo() => _engine.undoMove();
+
+  Future<void> _openPowerMenu() async {
+    final power = await ChainDropPowerMenuSheet.show(context);
+    if (power != null) unawaited(_engine.usePower(power));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +111,18 @@ class _ChainDropPageState extends State<ChainDropPage> with DisposeCleanup {
                 ),
               ],
               actions: [
+                GameHudAction(
+                  icon: Icons.undo_rounded,
+                  tooltip: l10n.chaindropUndo,
+                  onPressed: _engine.canUndo ? _undo : null,
+                ),
+                GameHudAction(
+                  icon: Icons.auto_awesome,
+                  tooltip: l10n.chaindropPowerMenu,
+                  onPressed: _engine.isResolving || _engine.isGameOver
+                      ? null
+                      : _openPowerMenu,
+                ),
                 GameHudAction(
                   icon: Icons.restart_alt_rounded,
                   tooltip: l10n.chaindropNewGame,
