@@ -180,6 +180,18 @@ class _CaptureRing extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: engine.captureBlocked
+                    ? Colors.redAccent.withValues(alpha: 0.8)
+                    : Colors.white.withValues(alpha: 0.32),
+                width: 2,
+              ),
+            ),
+            child: const SizedBox.expand(),
+          ),
           CircularProgressIndicator(
             value: engine.captureBlocked
                 ? null
@@ -189,6 +201,7 @@ class _CaptureRing extends StatelessWidget {
             color: engine.captureBlocked
                 ? Colors.redAccent.withValues(alpha: 0.85)
                 : Colors.white.withValues(alpha: 0.85),
+            backgroundColor: Colors.transparent,
             strokeWidth: 3,
           ),
           Text(

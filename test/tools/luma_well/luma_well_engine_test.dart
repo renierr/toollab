@@ -174,6 +174,22 @@ void main() {
     expect(engine.focusedCaptures, 3);
   });
 
+  test('capture uses the visible ring radius at orb centers', () async {
+    final engine = LumaWellEngine(
+      store: _MemoryStore()
+        ..save = _savedField([
+          {'mass': 1.0, 'kind': 0, 'x': 0.42, 'y': 0.0, 'drift': 0.0},
+          {'mass': 1.0, 'kind': 0, 'x': 0.66, 'y': 0.0, 'drift': 0.0},
+        ]),
+    );
+    await engine.start();
+
+    engine.beginCapture(0.42, 0);
+
+    expect(engine.capturedIds, isEmpty);
+    expect(engine.captureBlocked, isFalse);
+  });
+
   test('spawning slows as the field becomes crowded', () async {
     final engine = LumaWellEngine(store: _MemoryStore(), random: Random(1));
     await engine.start();

@@ -52,6 +52,8 @@ class LumaWellEngine extends ChangeNotifier {
   double _captureX = 0;
   double _captureY = 0;
   double _captureFor = 0;
+  double _activeCaptureRadius = 0.23;
+  double _activeCaptureTime = 1.5;
   double _persistFor = 0;
   int _expandedCaptures = 0;
   int _focusedCaptures = 0;
@@ -81,6 +83,8 @@ class LumaWellEngine extends ChangeNotifier {
   double get captureX => _captureX;
   double get captureY => _captureY;
   double get captureTime =>
+      isCapturing ? _activeCaptureTime : _configuredCaptureTime;
+  double get _configuredCaptureTime =>
       _baseCaptureTime() +
       (_expandedCaptures > 0
           ? 0.5
@@ -88,7 +92,9 @@ class LumaWellEngine extends ChangeNotifier {
           ? -0.35
           : 0);
   double get captureProgress => (_captureFor / captureTime).clamp(0, 1);
-  double get captureRadius => _expandedCaptures > 0
+  double get captureRadius =>
+      isCapturing ? _activeCaptureRadius : _configuredCaptureRadius;
+  double get _configuredCaptureRadius => _expandedCaptures > 0
       ? 0.31
       : _focusedCaptures > 0
       ? 0.17
@@ -141,6 +147,8 @@ class LumaWellEngine extends ChangeNotifier {
   void beginCapture(double x, double y) {
     _captureX = x;
     _captureY = y;
+    _activeCaptureRadius = _configuredCaptureRadius;
+    _activeCaptureTime = _configuredCaptureTime;
     _captureFor = 0.001;
     _updateCaptured();
     notifyListeners();
@@ -235,7 +243,7 @@ class LumaWellEngine extends ChangeNotifier {
     final candidates = _orbs.where((orb) {
       final dx = orb.x - _captureX;
       final dy = orb.y - _captureY;
-      return math.sqrt(dx * dx + dy * dy) < captureRadius;
+      return math.sqrt(dx * dx + dy * dy) <= _activeCaptureRadius;
     }).toList();
     if (candidates.isEmpty) {
       _capturedIds.clear();
@@ -300,6 +308,8 @@ class LumaWellEngine extends ChangeNotifier {
     _merges++;
     _absorb(captured, multiplier: captured.length);
     _captureFor = 0;
+    _activeCaptureRadius = _configuredCaptureRadius;
+    _activeCaptureTime = _configuredCaptureTime;
     _capturedIds.clear();
     _captureBlocked = false;
     if (_expandedCaptures > 0) _expandedCaptures--;
@@ -360,6 +370,8 @@ class LumaWellEngine extends ChangeNotifier {
     _powerCharges = 1;
     _planetMass = 4;
     _captureFor = 0;
+    _activeCaptureRadius = _configuredCaptureRadius;
+    _activeCaptureTime = _configuredCaptureTime;
     _expandedCaptures = 0;
     _focusedCaptures = 0;
     _captureBlocked = false;

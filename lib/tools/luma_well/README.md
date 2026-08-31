@@ -16,6 +16,14 @@ This document is the working gameplay specification for the playable game.
 
 An early release cancels the capture. The orbs remain in the field.
 
+The visible ring is the exact capture boundary. An orb is selected only when
+its center is inside the displayed ring; merely touching the ring edge does not
+count. Ring size and hold time lock when the touch begins, so a special orb can
+only modify later captures.
+
+The ring always renders as a complete circle. Its animated arc shows hold
+progress only and must never be the only visible boundary.
+
 ## Stages
 
 The planet starts small. Each stage raises the mass target for the next one.
