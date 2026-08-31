@@ -10,6 +10,7 @@ class LumaOrb {
   final double mass;
   final int kind;
   final bool isPower;
+  final LumaWellPower? power;
   double x;
   double y;
   double drift;
@@ -19,13 +20,16 @@ class LumaOrb {
     required this.mass,
     required this.kind,
     this.isPower = false,
+    this.power,
     required this.x,
     required this.y,
     required this.drift,
   });
 }
 
-enum LumaWellPower { pulse, stabilize, brightenNext }
+enum LumaWellPower { pulse, stabilize, expandField, focusField, thinField }
+
+enum LumaWellPowerOrbEffect { charge, expandField, focusField }
 
 class LumaWellEngine extends ChangeNotifier {
   final LumaWellStore _store;
@@ -35,6 +39,7 @@ class LumaWellEngine extends ChangeNotifier {
 
   bool Function() _usesEasyMode = () => false;
   bool Function() _usesUnlimitedPowers = () => false;
+  double Function() _baseCaptureTime = () => 1.5;
   int _nextId = 1;
   int _score = 0;
   int _best = 0;
@@ -48,13 +53,15 @@ class LumaWellEngine extends ChangeNotifier {
   double _captureY = 0;
   double _captureFor = 0;
   double _persistFor = 0;
-  int _wideCaptures = 0;
+  int _expandedCaptures = 0;
+  int _focusedCaptures = 0;
   bool _captureBlocked = false;
   int _mergeToken = 0;
   double _mergeX = 0;
   double _mergeY = 0;
   int _mergePoints = 0;
   int _powerCollectedToken = 0;
+  LumaWellPowerOrbEffect? _lastPowerOrbEffect;
 
   LumaWellEngine({LumaWellStore? store, math.Random? random})
     : _store = store ?? const LumaWellStore(),
@@ -73,15 +80,34 @@ class LumaWellEngine extends ChangeNotifier {
   bool get isCapturing => _captureFor > 0;
   double get captureX => _captureX;
   double get captureY => _captureY;
-  double get captureProgress => (_captureFor / 1.5).clamp(0, 1);
-  double get captureRadius => _wideCaptures > 0 ? 0.17 : 0.23;
+  double get captureTime =>
+      _baseCaptureTime() +
+      (_expandedCaptures > 0
+          ? 0.5
+          : _focusedCaptures > 0
+          ? -0.35
+          : 0);
+  double get captureProgress => (_captureFor / captureTime).clamp(0, 1);
+  double get captureRadius => _expandedCaptures > 0
+      ? 0.31
+      : _focusedCaptures > 0
+      ? 0.17
+      : 0.23;
+  double get spawnInterval {
+    final base = math.max(_usesEasyMode() ? 1.5 : 1.05, 2.1 - _stage * 0.16);
+    final crowding = math.max(0, _orbs.length - 48) * 0.12;
+    return math.min(3.0, base + crowding);
+  }
+
   bool get captureBlocked => _captureBlocked;
-  int get wideCaptures => _wideCaptures;
+  int get expandedCaptures => _expandedCaptures;
+  int get focusedCaptures => _focusedCaptures;
   int get mergeToken => _mergeToken;
   double get mergeX => _mergeX;
   double get mergeY => _mergeY;
   int get mergePoints => _mergePoints;
   int get powerCollectedToken => _powerCollectedToken;
+  LumaWellPowerOrbEffect? get lastPowerOrbEffect => _lastPowerOrbEffect;
 
   double radiusFor(LumaOrb orb) => 0.024 + math.sqrt(orb.mass) * 0.016;
   int get highestUnlockedNumber => math.min(6, _stage + 1);
@@ -92,6 +118,8 @@ class LumaWellEngine extends ChangeNotifier {
       _usesEasyMode = resolver;
   void setUnlimitedPowersResolver(bool Function() resolver) =>
       _usesUnlimitedPowers = resolver;
+  void setCaptureTimeResolver(double Function() resolver) =>
+      _baseCaptureTime = resolver;
 
   Future<void> start() async {
     _best = await _store.loadBest();
@@ -152,11 +180,7 @@ class LumaWellEngine extends ChangeNotifier {
       orb.y = math.sin(angle) * distance;
     }
     _spawnFor += dt;
-    final spawnEvery = math.max(
-      _usesEasyMode() ? 1.5 : 1.05,
-      2.1 - _stage * 0.16,
-    );
-    if (_spawnFor >= spawnEvery) {
+    if (_spawnFor >= spawnInterval) {
       _spawnFor = 0;
       _spawn();
     }
@@ -164,7 +188,7 @@ class LumaWellEngine extends ChangeNotifier {
       _updateCaptured();
       if (_capturedIds.length >= 2) {
         _captureFor += dt;
-        if (_captureFor >= 1.5) _completeCapture();
+        if (_captureFor >= captureTime) _completeCapture();
       } else {
         _captureFor = 0.001;
       }
@@ -188,8 +212,20 @@ class LumaWellEngine extends ChangeNotifier {
         }
       case LumaWellPower.stabilize:
         _stabilizedFor = 7;
-      case LumaWellPower.brightenNext:
-        _wideCaptures += 3;
+      case LumaWellPower.expandField:
+        _expandedCaptures += 3;
+        _focusedCaptures = 0;
+      case LumaWellPower.focusField:
+        _focusedCaptures += 3;
+        _expandedCaptures = 0;
+      case LumaWellPower.thinField:
+        final removeCount = (_orbs.length * 0.25).ceil();
+        _orbs.sort((a, b) {
+          final distanceA = a.x * a.x + a.y * a.y;
+          final distanceB = b.x * b.x + b.y * b.y;
+          return distanceB.compareTo(distanceA);
+        });
+        _orbs.removeRange(0, math.min(removeCount, _orbs.length));
     }
     notifyListeners();
     _save();
@@ -240,16 +276,34 @@ class LumaWellEngine extends ChangeNotifier {
       _captureBlocked = true;
       return;
     }
-    if (captured.any((orb) => orb.isPower)) {
-      _powerCharges++;
-      _powerCollectedToken++;
+    for (final orb in captured.where((orb) => orb.isPower)) {
+      switch (orb.power) {
+        case LumaWellPower.expandField:
+          _expandedCaptures += 3;
+          _focusedCaptures = 0;
+          _lastPowerOrbEffect = LumaWellPowerOrbEffect.expandField;
+          _powerCollectedToken++;
+        case LumaWellPower.focusField:
+          _focusedCaptures += 3;
+          _expandedCaptures = 0;
+          _lastPowerOrbEffect = LumaWellPowerOrbEffect.focusField;
+          _powerCollectedToken++;
+        case null:
+        case LumaWellPower.pulse:
+        case LumaWellPower.stabilize:
+        case LumaWellPower.thinField:
+          _powerCharges++;
+          _lastPowerOrbEffect = LumaWellPowerOrbEffect.charge;
+          _powerCollectedToken++;
+      }
     }
     _merges++;
     _absorb(captured, multiplier: captured.length);
     _captureFor = 0;
     _capturedIds.clear();
     _captureBlocked = false;
-    if (_wideCaptures > 0) _wideCaptures--;
+    if (_expandedCaptures > 0) _expandedCaptures--;
+    if (_focusedCaptures > 0) _focusedCaptures--;
   }
 
   bool _isValidCapture(List<LumaOrb> orbs) {
@@ -306,7 +360,8 @@ class LumaWellEngine extends ChangeNotifier {
     _powerCharges = 1;
     _planetMass = 4;
     _captureFor = 0;
-    _wideCaptures = 0;
+    _expandedCaptures = 0;
+    _focusedCaptures = 0;
     _captureBlocked = false;
     _spawnFor = 0;
     _persistFor = 0;
@@ -322,13 +377,15 @@ class LumaWellEngine extends ChangeNotifier {
     'stage': _stage,
     'charges': _powerCharges,
     'planetMass': _planetMass,
-    'wideCaptures': _wideCaptures,
+    'expandedCaptures': _expandedCaptures,
+    'focusedCaptures': _focusedCaptures,
     'orbs': [
       for (final orb in _orbs)
         {
           'mass': orb.mass,
           'kind': orb.kind,
           'power': orb.isPower,
+          'powerType': orb.power?.name,
           'x': orb.x,
           'y': orb.y,
           'drift': orb.drift,
@@ -352,6 +409,7 @@ class LumaWellEngine extends ChangeNotifier {
       final y = entry['y'];
       final drift = entry['drift'];
       final power = entry['power'];
+      final powerType = entry['powerType'];
       if (mass is! num ||
           kind is! int ||
           x is! num ||
@@ -369,6 +427,11 @@ class LumaWellEngine extends ChangeNotifier {
           mass: mass.toDouble(),
           kind: kind,
           isPower: power == true,
+          power: switch (powerType) {
+            'expandField' => LumaWellPower.expandField,
+            'focusField' => LumaWellPower.focusField,
+            _ => null,
+          },
           x: x.toDouble(),
           y: y.toDouble(),
           drift: drift.toDouble(),
@@ -400,8 +463,11 @@ class LumaWellEngine extends ChangeNotifier {
     _stage = stage;
     _powerCharges = charges;
     _planetMass = planetMass.toDouble();
-    _wideCaptures = data['wideCaptures'] is int
-        ? data['wideCaptures'] as int
+    _expandedCaptures = data['expandedCaptures'] is int
+        ? data['expandedCaptures'] as int
+        : 0;
+    _focusedCaptures = data['focusedCaptures'] is int
+        ? data['focusedCaptures'] as int
         : 0;
     return true;
   }
@@ -409,12 +475,19 @@ class LumaWellEngine extends ChangeNotifier {
   void _spawn() {
     final angle = _random.nextDouble() * math.pi * 2;
     final distance = 0.42 + _random.nextDouble() * 0.8;
+    final isPower = _random.nextInt(18) == 0;
+    final powerType = isPower ? _random.nextInt(3) : -1;
     _orbs.add(
       LumaOrb(
         id: _nextId++,
         mass: (1 + _random.nextInt(3)).toDouble(),
         kind: _random.nextInt(highestUnlockedNumber),
-        isPower: _random.nextInt(18) == 0,
+        isPower: isPower,
+        power: switch (powerType) {
+          1 => LumaWellPower.expandField,
+          2 => LumaWellPower.focusField,
+          _ => null,
+        },
         x: math.cos(angle) * distance,
         y: math.sin(angle) * distance,
         drift: (_random.nextDouble() - 0.5) * 0.16,

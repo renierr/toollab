@@ -3949,6 +3949,14 @@
   "lumaWellEasyModeSubtitle": "Startet mit weniger driftenden Kugeln",
   "lumaWellUnlimitedPowers": "Unbegrenzte Power-ups",
   "lumaWellUnlimitedPowersSubtitle": "Power-ups ohne Ladungen nutzen",
+  "lumaWellCaptureTime": "Fangzeit",
+  "lumaWellCaptureTimeSubtitle": "Wie lange ein gültiger Ring gehalten wird",
+  "lumaWellExpandField": "Feld erweitern",
+  "lumaWellExpandFieldSubtitle": "Nächste 3 Ringe sind größer, aber langsamer",
+  "lumaWellFocusField": "Fokusfeld",
+  "lumaWellFocusFieldSubtitle": "Nächste 3 Ringe sind kleiner, aber schneller",
+  "lumaWellThinField": "Feld ausdünnen",
+  "lumaWellThinFieldSubtitle": "Entfernt die äußersten 25 % der schwebenden Kugeln",
   "lumaWellGoal": "Verbinde passende Materie und nähre den wachsenden Planeten",
   "lumaWellHelpTitle": "Spielanleitung",
   "lumaWellHelpSubtitle": "Fangen, verbinden und wachsen",
@@ -3963,6 +3971,8 @@
   "lumaWellHelpValues": "Werte-Freischaltung",
   "lumaWellHelpValuesText": "Stufe 1 beginnt mit 1 und 2. Die Stufen 2, 3, 4 und 5 fügen 3, 4, 5 und 6 hinzu. Höher als 6 geht es nicht."
   ,"lumaWellHelpPowerOrb": "Power-Kugel",
-  "lumaWellHelpPowerOrbText": "Goldene Sternkugeln passen zu jedem Wertebereich, benötigen aber mindestens zwei normale Kugeln im Ring. Fange eine für eine zusätzliche Power-up-Ladung.",
-  "lumaWellPowerOrbCollected": "Power-Kugel gefangen: +1 Power-up-Ladung"
+  "lumaWellHelpPowerOrbText": "Sternkugeln passen zu jedem Wertebereich, benötigen aber mindestens zwei normale Kugeln im Ring. Gold gibt eine Ladung, Cyan erweitert die nächsten 3 Ringe und Violett fokussiert die nächsten 3 Ringe.",
+  "lumaWellPowerOrbCollected": "Power-Kugel gefangen: +1 Power-up-Ladung",
+  "lumaWellExpandOrbCollected": "Erweiterungs-Kugel gefangen: Nächste 3 Ringe sind größer und langsamer",
+  "lumaWellFocusOrbCollected": "Fokus-Kugel gefangen: Nächste 3 Ringe sind kleiner und schneller"
 }

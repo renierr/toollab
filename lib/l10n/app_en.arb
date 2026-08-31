@@ -4953,6 +4953,14 @@
   "lumaWellEasyModeSubtitle": "Begin with fewer drifting orbs",
   "lumaWellUnlimitedPowers": "Unlimited power-ups",
   "lumaWellUnlimitedPowersSubtitle": "Use power-ups without spending charges",
+  "lumaWellCaptureTime": "Capture time",
+  "lumaWellCaptureTimeSubtitle": "How long to hold a valid ring",
+  "lumaWellExpandField": "Expand field",
+  "lumaWellExpandFieldSubtitle": "Next 3 rings are wider but slower",
+  "lumaWellFocusField": "Focus field",
+  "lumaWellFocusFieldSubtitle": "Next 3 rings are smaller but faster",
+  "lumaWellThinField": "Thin field",
+  "lumaWellThinFieldSubtitle": "Remove the outermost 25% of floating orbs",
   "lumaWellGoal": "Merge compatible matter and feed the growing planet",
   "lumaWellHelpTitle": "How to play",
   "lumaWellHelpSubtitle": "Capture, merge, and grow",
@@ -4967,6 +4975,8 @@
   "lumaWellHelpValues": "Value releases",
   "lumaWellHelpValuesText": "Stage 1 starts with 1 and 2. Stages 2, 3, 4, and 5 add 3, 4, 5, and 6. Values stop at 6."
   ,"lumaWellHelpPowerOrb": "Power orb",
-  "lumaWellHelpPowerOrbText": "Gold star orbs fit any value range, but need at least two normal orbs in the ring. Capture one to gain an extra power charge.",
-  "lumaWellPowerOrbCollected": "Power orb collected: +1 power-up charge"
+  "lumaWellHelpPowerOrbText": "Star orbs fit any value range, but need at least two normal orbs in the ring. Gold grants a charge, cyan expands the next 3 rings, and violet focuses the next 3 rings.",
+  "lumaWellPowerOrbCollected": "Power orb collected: +1 power-up charge",
+  "lumaWellExpandOrbCollected": "Expand orb collected: next 3 rings are wider and slower",
+  "lumaWellFocusOrbCollected": "Focus orb collected: next 3 rings are smaller and faster"
 }

@@ -7,14 +7,17 @@ class LumaWellState extends ChangeNotifier {
   static const String _hapticsKey = 'haptics_enabled';
   static const String _easyModeKey = 'easy_mode';
   static const String _unlimitedPowersKey = 'unlimited_powers';
+  static const String _captureTimeKey = 'capture_time';
 
   bool _hapticsEnabled = true;
   bool _easyMode = false;
   bool _unlimitedPowers = false;
+  double _captureTime = 1.5;
 
   bool get hapticsEnabled => _hapticsEnabled;
   bool get easyMode => _easyMode;
   bool get unlimitedPowers => _unlimitedPowers;
+  double get captureTime => _captureTime;
 
   Future<void> restore() async {
     _hapticsEnabled =
@@ -35,6 +38,17 @@ class LumaWellState extends ChangeNotifier {
           _unlimitedPowersKey,
         )) ==
         'true';
+    final captureTime = double.tryParse(
+      await DatabaseService.instance.getSetting(
+            LumaWellTool.config.id,
+            _captureTimeKey,
+          ) ??
+          '',
+    );
+    _captureTime =
+        captureTime == 1.0 || captureTime == 1.5 || captureTime == 2.0
+        ? captureTime!
+        : 1.5;
     notifyListeners();
   }
 
@@ -67,6 +81,18 @@ class LumaWellState extends ChangeNotifier {
     await DatabaseService.instance.setSetting(
       LumaWellTool.config.id,
       _unlimitedPowersKey,
+      value.toString(),
+    );
+  }
+
+  Future<void> setCaptureTime(double value) async {
+    if (value != 1.0 && value != 1.5 && value != 2.0) return;
+    if (_captureTime == value) return;
+    _captureTime = value;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      LumaWellTool.config.id,
+      _captureTimeKey,
       value.toString(),
     );
   }

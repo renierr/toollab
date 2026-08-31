@@ -9,7 +9,7 @@ import '../engine/luma_well_engine.dart';
 class LumaWellBoard extends StatefulWidget {
   final LumaWellEngine engine;
   final bool isActive;
-  final ValueChanged<bool> onMerge;
+  final ValueChanged<LumaWellPowerOrbEffect?> onMerge;
 
   const LumaWellBoard({
     super.key,
@@ -53,7 +53,7 @@ class _LumaWellBoardState extends State<LumaWellBoard>
       final powerCollected =
           widget.engine.powerCollectedToken != _lastPowerCollectedToken;
       _lastPowerCollectedToken = widget.engine.powerCollectedToken;
-      widget.onMerge(powerCollected);
+      widget.onMerge(powerCollected ? widget.engine.lastPowerOrbEffect : null);
     }
   }
 
@@ -130,11 +130,8 @@ class _OrbView extends StatelessWidget {
             gradient: RadialGradient(
               center: const Alignment(-0.35, -0.4),
               colors: [
-                orb.isPower ? const Color(0xFFFFD26A) : _colorForKind(orb.kind),
-                (orb.isPower
-                        ? const Color(0xFFFFA52E)
-                        : _colorForKind(orb.kind))
-                    .withValues(alpha: 0.46),
+                _colorForOrb(orb),
+                _colorForOrb(orb).withValues(alpha: 0.46),
               ],
             ),
             border: Border.all(
@@ -145,11 +142,7 @@ class _OrbView extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color:
-                    (orb.isPower
-                            ? const Color(0xFFFFD26A)
-                            : _colorForKind(orb.kind))
-                        .withValues(alpha: 0.8),
+                color: _colorForOrb(orb).withValues(alpha: 0.8),
                 blurRadius: diameter * 0.8,
               ),
             ],
@@ -184,16 +177,28 @@ class _CaptureRing extends StatelessWidget {
       top: size.height / 2 + engine.captureY * scale - diameter / 2,
       width: diameter,
       height: diameter,
-      child: CircularProgressIndicator(
-        value: engine.captureBlocked
-            ? null
-            : engine.capturedIds.length >= 2
-            ? engine.captureProgress
-            : null,
-        color: engine.captureBlocked
-            ? Colors.redAccent.withValues(alpha: 0.85)
-            : Colors.white.withValues(alpha: 0.85),
-        strokeWidth: 3,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CircularProgressIndicator(
+            value: engine.captureBlocked
+                ? null
+                : engine.capturedIds.length >= 2
+                ? engine.captureProgress
+                : null,
+            color: engine.captureBlocked
+                ? Colors.redAccent.withValues(alpha: 0.85)
+                : Colors.white.withValues(alpha: 0.85),
+            strokeWidth: 3,
+          ),
+          Text(
+            '${engine.captureTime.toStringAsFixed(2)}s',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -270,6 +275,15 @@ Color _colorForKind(int kind) => switch (kind) {
   2 => const Color(0xFFE04E8A),
   _ => const Color(0xFFB464E8),
 };
+
+Color _colorForOrb(LumaOrb orb) {
+  if (!orb.isPower) return _colorForKind(orb.kind);
+  return switch (orb.power) {
+    LumaWellPower.expandField => const Color(0xFF52DDE6),
+    LumaWellPower.focusField => const Color(0xFFB464E8),
+    _ => const Color(0xFFFFD26A),
+  };
+}
 
 class _LumaFieldPainter extends CustomPainter {
   final LumaWellEngine engine;

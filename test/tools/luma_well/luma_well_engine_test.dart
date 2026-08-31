@@ -70,6 +70,7 @@ void main() {
 
     expect(engine.merges, 1);
     expect(engine.powerCharges, 1);
+    expect(engine.lastPowerOrbEffect, LumaWellPowerOrbEffect.charge);
   });
 
   test(
@@ -128,7 +129,8 @@ void main() {
           'stage': 5,
           'charges': 1,
           'planetMass': 116.0,
-          'wideCaptures': 0,
+          'expandedCaptures': 0,
+          'focusedCaptures': 0,
           'orbs': [
             {'mass': 1.0, 'kind': 5, 'x': 0.5, 'y': 0.0, 'drift': 0.0},
           ],
@@ -159,6 +161,41 @@ void main() {
     expect(engine.powerCharges, 1);
   });
 
+  test('capture field powers modify the next three rings', () async {
+    final engine = LumaWellEngine(store: _MemoryStore());
+    engine.setUnlimitedPowersResolver(() => true);
+    await engine.start();
+
+    engine.usePower(LumaWellPower.expandField);
+
+    expect(engine.expandedCaptures, 3);
+    expect(engine.captureRadius, 0.31);
+    engine.usePower(LumaWellPower.focusField);
+    expect(engine.focusedCaptures, 3);
+  });
+
+  test('spawning slows as the field becomes crowded', () async {
+    final engine = LumaWellEngine(store: _MemoryStore(), random: Random(1));
+    await engine.start();
+    final normalInterval = engine.spawnInterval;
+    for (var i = 0; i < 3000; i++) {
+      engine.advance(0.04);
+    }
+
+    expect(engine.spawnInterval, greaterThan(normalInterval));
+  });
+
+  test('thin field removes a quarter of floating orbs', () async {
+    final engine = LumaWellEngine(store: _MemoryStore(), random: Random(1));
+    engine.setUnlimitedPowersResolver(() => true);
+    await engine.start();
+    final before = engine.orbs.length;
+
+    engine.usePower(LumaWellPower.thinField);
+
+    expect(engine.orbs.length, before - (before * 0.25).ceil());
+  });
+
   test('planet visual radius is capped for endless play', () async {
     final engine = LumaWellEngine(
       store: _MemoryStore()
@@ -168,7 +205,8 @@ void main() {
           'stage': 20,
           'charges': 1,
           'planetMass': 100000.0,
-          'wideCaptures': 0,
+          'expandedCaptures': 0,
+          'focusedCaptures': 0,
           'orbs': [
             {'mass': 1.0, 'kind': 0, 'x': 0.5, 'y': 0.0, 'drift': 0.0},
           ],
@@ -187,7 +225,8 @@ void main() {
         'stage': 2,
         'charges': 1,
         'planetMass': 35.0,
-        'wideCaptures': 2,
+        'expandedCaptures': 2,
+        'focusedCaptures': 0,
         'orbs': [
           {'mass': 2.0, 'kind': 0, 'x': 0.5, 'y': 0.0, 'drift': 0.1},
         ],
@@ -238,7 +277,8 @@ Map<String, dynamic> _savedField(List<Map<String, dynamic>> orbs) => {
   'stage': 1,
   'charges': 1,
   'planetMass': 4.0,
-  'wideCaptures': 0,
+  'expandedCaptures': 0,
+  'focusedCaptures': 0,
   'orbs': orbs,
 };
 

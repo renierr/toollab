@@ -31,10 +31,22 @@ class LumaWellPowerSheet extends StatelessWidget {
         l10n.lumaWellStabilizeSubtitle,
       ),
       (
-        LumaWellPower.brightenNext,
-        Icons.wb_sunny_outlined,
-        l10n.lumaWellGrow,
-        l10n.lumaWellGrowSubtitle,
+        LumaWellPower.expandField,
+        Icons.open_in_full_rounded,
+        l10n.lumaWellExpandField,
+        l10n.lumaWellExpandFieldSubtitle,
+      ),
+      (
+        LumaWellPower.focusField,
+        Icons.center_focus_strong_rounded,
+        l10n.lumaWellFocusField,
+        l10n.lumaWellFocusFieldSubtitle,
+      ),
+      (
+        LumaWellPower.thinField,
+        Icons.filter_alt_off_outlined,
+        l10n.lumaWellThinField,
+        l10n.lumaWellThinFieldSubtitle,
       ),
     ];
     return SafeArea(

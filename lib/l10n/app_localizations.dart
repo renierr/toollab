@@ -17459,6 +17459,54 @@ abstract class AppLocalizations {
   /// **'Use power-ups without spending charges'**
   String get lumaWellUnlimitedPowersSubtitle;
 
+  /// No description provided for @lumaWellCaptureTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture time'**
+  String get lumaWellCaptureTime;
+
+  /// No description provided for @lumaWellCaptureTimeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How long to hold a valid ring'**
+  String get lumaWellCaptureTimeSubtitle;
+
+  /// No description provided for @lumaWellExpandField.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand field'**
+  String get lumaWellExpandField;
+
+  /// No description provided for @lumaWellExpandFieldSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Next 3 rings are wider but slower'**
+  String get lumaWellExpandFieldSubtitle;
+
+  /// No description provided for @lumaWellFocusField.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus field'**
+  String get lumaWellFocusField;
+
+  /// No description provided for @lumaWellFocusFieldSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Next 3 rings are smaller but faster'**
+  String get lumaWellFocusFieldSubtitle;
+
+  /// No description provided for @lumaWellThinField.
+  ///
+  /// In en, this message translates to:
+  /// **'Thin field'**
+  String get lumaWellThinField;
+
+  /// No description provided for @lumaWellThinFieldSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the outermost 25% of floating orbs'**
+  String get lumaWellThinFieldSubtitle;
+
   /// No description provided for @lumaWellGoal.
   ///
   /// In en, this message translates to:
@@ -17546,7 +17594,7 @@ abstract class AppLocalizations {
   /// No description provided for @lumaWellHelpPowerOrbText.
   ///
   /// In en, this message translates to:
-  /// **'Gold star orbs fit any value range, but need at least two normal orbs in the ring. Capture one to gain an extra power charge.'**
+  /// **'Star orbs fit any value range, but need at least two normal orbs in the ring. Gold grants a charge, cyan expands the next 3 rings, and violet focuses the next 3 rings.'**
   String get lumaWellHelpPowerOrbText;
 
   /// No description provided for @lumaWellPowerOrbCollected.
@@ -17554,6 +17602,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Power orb collected: +1 power-up charge'**
   String get lumaWellPowerOrbCollected;
+
+  /// No description provided for @lumaWellExpandOrbCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand orb collected: next 3 rings are wider and slower'**
+  String get lumaWellExpandOrbCollected;
+
+  /// No description provided for @lumaWellFocusOrbCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus orb collected: next 3 rings are smaller and faster'**
+  String get lumaWellFocusOrbCollected;
 }
 
 class _AppLocalizationsDelegate

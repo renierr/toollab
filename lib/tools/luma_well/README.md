@@ -42,15 +42,16 @@ rate slightly.
 
 ## Rewards
 
-Visible orb values (`1` through `4`) determine growth and score. Each orb adds
+Visible orb values (`1` through `6`) determine growth and score. Each orb adds
 its hidden mass multiplied by its visible value to the planet. A completed
 group is then multiplied by its orb count and a further squared group-size
 bonus. High-value, large groups are therefore much more rewarding than small
 low-value captures.
 
-Rare gold star power orbs are wildcards. They can join any valid value range,
-but a capture containing one still needs at least two normal orbs. Capturing a
-power orb awards one additional power-up charge.
+Rare star power orbs are wildcards. They can join any valid value range, but a
+capture containing one still needs at least two normal orbs. Gold stars award a
+power-up charge immediately. Cyan stars activate three expanded, slower capture
+rings. Violet stars activate three focused, faster capture rings.
 
 ## Challenge
 
@@ -63,6 +64,7 @@ gradual orbital saturation:
 - Small groups are safe but provide little growth.
 - Waiting for a large group gives better growth, but the field gets denser.
 - Large amounts of loose matter can make compatible groups difficult to find.
+- Spawning slows as the field exceeds 48 orbs, giving crowded runs breathing room.
 
 The score measures efficient planet growth. Stages are the primary long-term
 goal; after stage 5, all six values remain active and the run continues
@@ -79,7 +81,9 @@ play setting: power-ups remain available without consuming earned charges.
 | --- | --- |
 | Pulse | Pushes loose matter outward to make room near the planet. |
 | Stabilize | Slows drifting matter for a short period. |
-| Focus field | Makes the next three capture rings smaller. |
+| Expand field | Makes the next three capture rings wider and 0.5 seconds slower. |
+| Focus field | Makes the next three capture rings smaller and 0.35 seconds faster. |
+| Thin field | Removes the outermost 25% of loose orbs. |
 
 ## Current Game
 

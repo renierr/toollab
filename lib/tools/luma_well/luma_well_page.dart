@@ -57,19 +57,26 @@ class _LumaWellPageState extends State<LumaWellPage>
     _engine.setUnlimitedPowersResolver(
       () => context.read<LumaWellState>().unlimitedPowers,
     );
+    _engine.setCaptureTimeResolver(
+      () => context.read<LumaWellState>().captureTime,
+    );
     await _engine.start();
   }
 
-  void _onMerge(bool powerCollected) {
+  void _onMerge(LumaWellPowerOrbEffect? powerOrbEffect) {
     if (context.read<LumaWellState>().hapticsEnabled) {
       HapticFeedback.mediumImpact();
     }
-    if (powerCollected) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).lumaWellPowerOrbCollected),
-        ),
-      );
+    if (powerOrbEffect != null) {
+      final l10n = AppLocalizations.of(context);
+      final message = switch (powerOrbEffect) {
+        LumaWellPowerOrbEffect.charge => l10n.lumaWellPowerOrbCollected,
+        LumaWellPowerOrbEffect.expandField => l10n.lumaWellExpandOrbCollected,
+        LumaWellPowerOrbEffect.focusField => l10n.lumaWellFocusOrbCollected,
+      };
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 

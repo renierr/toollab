@@ -9756,6 +9756,32 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use power-ups without spending charges';
 
   @override
+  String get lumaWellCaptureTime => 'Capture time';
+
+  @override
+  String get lumaWellCaptureTimeSubtitle => 'How long to hold a valid ring';
+
+  @override
+  String get lumaWellExpandField => 'Expand field';
+
+  @override
+  String get lumaWellExpandFieldSubtitle => 'Next 3 rings are wider but slower';
+
+  @override
+  String get lumaWellFocusField => 'Focus field';
+
+  @override
+  String get lumaWellFocusFieldSubtitle =>
+      'Next 3 rings are smaller but faster';
+
+  @override
+  String get lumaWellThinField => 'Thin field';
+
+  @override
+  String get lumaWellThinFieldSubtitle =>
+      'Remove the outermost 25% of floating orbs';
+
+  @override
   String get lumaWellGoal =>
       'Merge compatible matter and feed the growing planet';
 
@@ -9805,9 +9831,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lumaWellHelpPowerOrbText =>
-      'Gold star orbs fit any value range, but need at least two normal orbs in the ring. Capture one to gain an extra power charge.';
+      'Star orbs fit any value range, but need at least two normal orbs in the ring. Gold grants a charge, cyan expands the next 3 rings, and violet focuses the next 3 rings.';
 
   @override
   String get lumaWellPowerOrbCollected =>
       'Power orb collected: +1 power-up charge';
+
+  @override
+  String get lumaWellExpandOrbCollected =>
+      'Expand orb collected: next 3 rings are wider and slower';
+
+  @override
+  String get lumaWellFocusOrbCollected =>
+      'Focus orb collected: next 3 rings are smaller and faster';
 }

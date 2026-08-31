@@ -77,6 +77,25 @@ class LumaWellSettingsSheet extends StatelessWidget {
                       onChanged: state.setEasyMode,
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
+                    ListTile(
+                      leading: const Icon(Icons.timer_outlined),
+                      title: Text(l10n.lumaWellCaptureTime),
+                      subtitle: Text(l10n.lumaWellCaptureTimeSubtitle),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: SegmentedButton<double>(
+                        segments: const [
+                          ButtonSegment(value: 1.0, label: Text('1.0s')),
+                          ButtonSegment(value: 1.5, label: Text('1.5s')),
+                          ButtonSegment(value: 2.0, label: Text('2.0s')),
+                        ],
+                        selected: {state.captureTime},
+                        onSelectionChanged: (value) =>
+                            state.setCaptureTime(value.first),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
                     SwitchListTile(
                       secondary: const Icon(Icons.all_inclusive),
                       title: Text(l10n.lumaWellUnlimitedPowers),

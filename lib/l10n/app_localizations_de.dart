@@ -9828,6 +9828,34 @@ class AppLocalizationsDe extends AppLocalizations {
       'Power-ups ohne Ladungen nutzen';
 
   @override
+  String get lumaWellCaptureTime => 'Fangzeit';
+
+  @override
+  String get lumaWellCaptureTimeSubtitle =>
+      'Wie lange ein gültiger Ring gehalten wird';
+
+  @override
+  String get lumaWellExpandField => 'Feld erweitern';
+
+  @override
+  String get lumaWellExpandFieldSubtitle =>
+      'Nächste 3 Ringe sind größer, aber langsamer';
+
+  @override
+  String get lumaWellFocusField => 'Fokusfeld';
+
+  @override
+  String get lumaWellFocusFieldSubtitle =>
+      'Nächste 3 Ringe sind kleiner, aber schneller';
+
+  @override
+  String get lumaWellThinField => 'Feld ausdünnen';
+
+  @override
+  String get lumaWellThinFieldSubtitle =>
+      'Entfernt die äußersten 25 % der schwebenden Kugeln';
+
+  @override
   String get lumaWellGoal =>
       'Verbinde passende Materie und nähre den wachsenden Planeten';
 
@@ -9877,9 +9905,17 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lumaWellHelpPowerOrbText =>
-      'Goldene Sternkugeln passen zu jedem Wertebereich, benötigen aber mindestens zwei normale Kugeln im Ring. Fange eine für eine zusätzliche Power-up-Ladung.';
+      'Sternkugeln passen zu jedem Wertebereich, benötigen aber mindestens zwei normale Kugeln im Ring. Gold gibt eine Ladung, Cyan erweitert die nächsten 3 Ringe und Violett fokussiert die nächsten 3 Ringe.';
 
   @override
   String get lumaWellPowerOrbCollected =>
       'Power-Kugel gefangen: +1 Power-up-Ladung';
+
+  @override
+  String get lumaWellExpandOrbCollected =>
+      'Erweiterungs-Kugel gefangen: Nächste 3 Ringe sind größer und langsamer';
+
+  @override
+  String get lumaWellFocusOrbCollected =>
+      'Fokus-Kugel gefangen: Nächste 3 Ringe sind kleiner und schneller';
 }
