@@ -5,6 +5,38 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../luma_well_state.dart';
 import 'luma_well_help_page.dart';
 
+IconData _directionIcon(LumaWellTouchOffsetDirection direction) =>
+    switch (direction) {
+      LumaWellTouchOffsetDirection.none => Icons.block,
+      LumaWellTouchOffsetDirection.north => Icons.north,
+      LumaWellTouchOffsetDirection.northEast => Icons.north_east,
+      LumaWellTouchOffsetDirection.east => Icons.east,
+      LumaWellTouchOffsetDirection.southEast => Icons.south_east,
+      LumaWellTouchOffsetDirection.south => Icons.south,
+      LumaWellTouchOffsetDirection.southWest => Icons.south_west,
+      LumaWellTouchOffsetDirection.west => Icons.west,
+      LumaWellTouchOffsetDirection.northWest => Icons.north_west,
+    };
+
+String _directionLabel(
+  AppLocalizations l10n,
+  LumaWellTouchOffsetDirection direction,
+) => switch (direction) {
+  LumaWellTouchOffsetDirection.none => l10n.lumaWellTouchOffsetDirectionNone,
+  LumaWellTouchOffsetDirection.north => l10n.lumaWellTouchOffsetDirectionNorth,
+  LumaWellTouchOffsetDirection.northEast =>
+    l10n.lumaWellTouchOffsetDirectionNorthEast,
+  LumaWellTouchOffsetDirection.east => l10n.lumaWellTouchOffsetDirectionEast,
+  LumaWellTouchOffsetDirection.southEast =>
+    l10n.lumaWellTouchOffsetDirectionSouthEast,
+  LumaWellTouchOffsetDirection.south => l10n.lumaWellTouchOffsetDirectionSouth,
+  LumaWellTouchOffsetDirection.southWest =>
+    l10n.lumaWellTouchOffsetDirectionSouthWest,
+  LumaWellTouchOffsetDirection.west => l10n.lumaWellTouchOffsetDirectionWest,
+  LumaWellTouchOffsetDirection.northWest =>
+    l10n.lumaWellTouchOffsetDirectionNorthWest,
+};
+
 class LumaWellSettingsSheet extends StatelessWidget {
   const LumaWellSettingsSheet({super.key});
 
@@ -101,6 +133,68 @@ class LumaWellSettingsSheet extends StatelessWidget {
                             state.setCaptureTime(value.first),
                       ),
                     ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    ListTile(
+                      leading: const Icon(Icons.pan_tool_alt_outlined),
+                      title: Text(l10n.lumaWellTouchOffset),
+                      subtitle: Text(l10n.lumaWellTouchOffsetSubtitle),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final direction
+                              in LumaWellTouchOffsetDirection.values)
+                            Tooltip(
+                              message: _directionLabel(l10n, direction),
+                              child: ChoiceChip(
+                                label: Icon(
+                                  _directionIcon(direction),
+                                  size: 18,
+                                ),
+                                selected:
+                                    state.touchOffsetDirection == direction,
+                                onSelected: (_) =>
+                                    state.setTouchOffsetDirection(direction),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (state.touchOffsetDirection !=
+                        LumaWellTouchOffsetDirection.none)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        child: Row(
+                          children: [
+                            Text(l10n.lumaWellTouchOffsetDistance),
+                            Expanded(
+                              child: Slider(
+                                value: state.touchOffsetDistance,
+                                min: 0,
+                                max: 120,
+                                divisions: 12,
+                                label: l10n.lumaWellTouchOffsetDistancePixels(
+                                  state.touchOffsetDistance.round(),
+                                ),
+                                onChanged: (value) =>
+                                    state.setTouchOffsetDistance(value),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 44,
+                              child: Text(
+                                l10n.lumaWellTouchOffsetDistancePixels(
+                                  state.touchOffsetDistance.round(),
+                                ),
+                                textAlign: TextAlign.end,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SwitchListTile(
                       secondary: const Icon(Icons.all_inclusive),

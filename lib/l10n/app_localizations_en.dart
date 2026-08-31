@@ -9767,6 +9767,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get lumaWellTouchOffset => 'Touch offset';
+
+  @override
+  String get lumaWellTouchOffsetSubtitle =>
+      'Shift the capture point away from your finger';
+
+  @override
+  String get lumaWellTouchOffsetDirectionNone => 'Off';
+
+  @override
+  String get lumaWellTouchOffsetDirectionNorth => 'Up';
+
+  @override
+  String get lumaWellTouchOffsetDirectionNorthEast => 'Up-right';
+
+  @override
+  String get lumaWellTouchOffsetDirectionEast => 'Right';
+
+  @override
+  String get lumaWellTouchOffsetDirectionSouthEast => 'Down-right';
+
+  @override
+  String get lumaWellTouchOffsetDirectionSouth => 'Down';
+
+  @override
+  String get lumaWellTouchOffsetDirectionSouthWest => 'Down-left';
+
+  @override
+  String get lumaWellTouchOffsetDirectionWest => 'Left';
+
+  @override
+  String get lumaWellTouchOffsetDirectionNorthWest => 'Up-left';
+
+  @override
+  String get lumaWellTouchOffsetDistance => 'Offset distance';
+
+  @override
+  String lumaWellTouchOffsetDistancePixels(int pixels) {
+    return '${pixels}px';
+  }
+
+  @override
   String get lumaWellExpandField => 'Expand field';
 
   @override

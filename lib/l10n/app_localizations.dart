@@ -17477,6 +17477,84 @@ abstract class AppLocalizations {
   /// **'{seconds}s'**
   String lumaWellCaptureTimeOptionSeconds(String seconds);
 
+  /// No description provided for @lumaWellTouchOffset.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch offset'**
+  String get lumaWellTouchOffset;
+
+  /// No description provided for @lumaWellTouchOffsetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift the capture point away from your finger'**
+  String get lumaWellTouchOffsetSubtitle;
+
+  /// No description provided for @lumaWellTouchOffsetDirectionNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get lumaWellTouchOffsetDirectionNone;
+
+  /// No description provided for @lumaWellTouchOffsetDirectionNorth.
+  ///
+  /// In en, this message translates to:
+  /// **'Up'**
+  String get lumaWellTouchOffsetDirectionNorth;
+
+  /// No description provided for @lumaWellTouchOffsetDirectionNorthEast.
+  ///
+  /// In en, this message translates to:
+  /// **'Up-right'**
+  String get lumaWellTouchOffsetDirectionNorthEast;
+
+  /// No description provided for @lumaWellTouchOffsetDirectionEast.
+  ///
+  /// In en, this message translates to:
+  /// **'Right'**
+  String get lumaWellTouchOffsetDirectionEast;
+
+  /// No description provided for @lumaWellTouchOffsetDirectionSouthEast.
+  ///
+  /// In en, this message translates to:
+  /// **'Down-right'**
+  String get lumaWellTouchOffsetDirectionSouthEast;
+
+  /// No description provided for @lumaWellTouchOffsetDirectionSouth.
+  ///
+  /// In en, this message translates to:
+  /// **'Down'**
+  String get lumaWellTouchOffsetDirectionSouth;
+
+  /// No description provided for @lumaWellTouchOffsetDirectionSouthWest.
+  ///
+  /// In en, this message translates to:
+  /// **'Down-left'**
+  String get lumaWellTouchOffsetDirectionSouthWest;
+
+  /// No description provided for @lumaWellTouchOffsetDirectionWest.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get lumaWellTouchOffsetDirectionWest;
+
+  /// No description provided for @lumaWellTouchOffsetDirectionNorthWest.
+  ///
+  /// In en, this message translates to:
+  /// **'Up-left'**
+  String get lumaWellTouchOffsetDirectionNorthWest;
+
+  /// No description provided for @lumaWellTouchOffsetDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Offset distance'**
+  String get lumaWellTouchOffsetDistance;
+
+  /// No description provided for @lumaWellTouchOffsetDistancePixels.
+  ///
+  /// In en, this message translates to:
+  /// **'{pixels}px'**
+  String lumaWellTouchOffsetDistancePixels(int pixels);
+
   /// No description provided for @lumaWellExpandField.
   ///
   /// In en, this message translates to:

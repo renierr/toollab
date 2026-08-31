@@ -2,10 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 
 import '../engine/luma_well_engine.dart';
 import '../luma_well_colors.dart';
+import '../luma_well_state.dart';
+
+const double _minOrbDiameter = 26;
 
 class LumaWellBoard extends StatefulWidget {
   final LumaWellEngine engine;
@@ -67,17 +71,30 @@ class _LumaWellBoardState extends State<LumaWellBoard>
     );
   }
 
+  Offset _touchAdjusted(Offset position) {
+    final settings = context.read<LumaWellState>();
+    final direction = settings.touchOffsetDirection;
+    if (direction == LumaWellTouchOffsetDirection.none) return position;
+    return position + direction.vector * settings.touchOffsetDistance;
+  }
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final size = constraints.biggest;
       return GestureDetector(
         onPanDown: (details) {
-          final point = _normalized(details.localPosition, size);
+          final point = _normalized(
+            _touchAdjusted(details.localPosition),
+            size,
+          );
           widget.engine.beginCapture(point.dx, point.dy);
         },
         onPanUpdate: (details) {
-          final point = _normalized(details.localPosition, size);
+          final point = _normalized(
+            _touchAdjusted(details.localPosition),
+            size,
+          );
           widget.engine.moveCapture(point.dx, point.dy);
         },
         onPanEnd: (_) => widget.engine.endCapture(),
@@ -120,7 +137,10 @@ class _OrbView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scale = size.shortestSide / 2;
-    final diameter = engine.radiusFor(orb) * scale * 2;
+    final diameter = math.max(
+      engine.radiusFor(orb) * scale * 2,
+      _minOrbDiameter,
+    );
     return Positioned(
       left: size.width / 2 + orb.x * scale - diameter / 2,
       top: size.height / 2 + orb.y * scale - diameter / 2,
@@ -153,11 +173,17 @@ class _OrbView extends StatelessWidget {
             ],
           ),
           child: Center(
-            child: Text(
-              orb.isPower ? '✦' : '${orb.kind + 1}',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: LumaWellColors.orbLabel,
-                fontWeight: FontWeight.w800,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  orb.isPower ? '✦' : '${orb.kind + 1}',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: LumaWellColors.orbLabel,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
             ),
           ),

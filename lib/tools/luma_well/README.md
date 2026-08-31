@@ -17,6 +17,10 @@ This document is the working gameplay specification for the playable game.
 
 An early release cancels the capture. The orbs remain in the field.
 
+An optional Settings offset shifts the effective capture point away from the
+raw touch position by a user-chosen compass direction and pixel distance, so
+the ring stays visible above or beside the finger holding it.
+
 The visible ring is the exact capture boundary. An orb is selected only when
 its center is inside the displayed ring; merely touching the ring edge does not
 count. Ring size and hold time lock when the touch begins, so a special orb can
