@@ -9660,4 +9660,88 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get chaindropPowerWildDiscDesc =>
       'Your next disc copies a neighbor\'s number';
+
+  @override
+  String get toolNameLumaWell => 'Luma Well';
+
+  @override
+  String get toolDescLumaWell =>
+      'Place glowing orbs around a turning well and combine equals into brighter forms.';
+
+  @override
+  String get lumaWellScore => 'Score';
+
+  @override
+  String get lumaWellBest => 'Best';
+
+  @override
+  String get lumaWellMerges => 'Merges';
+
+  @override
+  String get lumaWellStage => 'Stage';
+
+  @override
+  String get lumaWellNewGame => 'New game';
+
+  @override
+  String get lumaWellGameOver => 'WELL FULL';
+
+  @override
+  String get lumaWellNewBest => 'New best score!';
+
+  @override
+  String lumaWellBestScore(int best) {
+    return 'Best: $best';
+  }
+
+  @override
+  String lumaWellMergesMade(int merges) {
+    return '$merges merges made';
+  }
+
+  @override
+  String get lumaWellPowerMenu => 'Power-ups';
+
+  @override
+  String get lumaWellPulse => 'Pulse';
+
+  @override
+  String get lumaWellPulseSubtitle => 'Push loose matter away to clear a path';
+
+  @override
+  String get lumaWellStabilize => 'Stabilize';
+
+  @override
+  String get lumaWellStabilizeSubtitle =>
+      'Slow drifting matter for a short time';
+
+  @override
+  String get lumaWellGrow => 'Feed the planet';
+
+  @override
+  String get lumaWellGrowSubtitle =>
+      'Convert nearby small matter into planet mass';
+
+  @override
+  String lumaWellPowerMenuCharges(int charges) {
+    return 'Power-ups ($charges)';
+  }
+
+  @override
+  String get lumaWellSettingsTitle => 'Luma Well Settings';
+
+  @override
+  String get lumaWellHaptics => 'Haptics';
+
+  @override
+  String get lumaWellHapticsSubtitle => 'Vibrate when orbs combine';
+
+  @override
+  String get lumaWellEasyMode => 'Gentle start';
+
+  @override
+  String get lumaWellEasyModeSubtitle => 'Begin with fewer drifting orbs';
+
+  @override
+  String get lumaWellGoal => 'Merge matter and feed the growing planet';
 }

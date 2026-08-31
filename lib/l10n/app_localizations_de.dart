@@ -9730,4 +9730,91 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get chaindropPowerWildDiscDesc =>
       'Deine nächste Scheibe übernimmt die Zahl eines Nachbarn';
+
+  @override
+  String get toolNameLumaWell => 'Luma Well';
+
+  @override
+  String get toolDescLumaWell =>
+      'Platziere leuchtende Kugeln um einen drehenden Schacht und verbinde gleiche Kugeln zu stärkeren Formen.';
+
+  @override
+  String get lumaWellScore => 'Punkte';
+
+  @override
+  String get lumaWellBest => 'Bestwert';
+
+  @override
+  String get lumaWellMerges => 'Verbindungen';
+
+  @override
+  String get lumaWellStage => 'Stufe';
+
+  @override
+  String get lumaWellNewGame => 'Neues Spiel';
+
+  @override
+  String get lumaWellGameOver => 'SCHACHT VOLL';
+
+  @override
+  String get lumaWellNewBest => 'Neuer Bestwert!';
+
+  @override
+  String lumaWellBestScore(int best) {
+    return 'Bestwert: $best';
+  }
+
+  @override
+  String lumaWellMergesMade(int merges) {
+    return '$merges Verbindungen';
+  }
+
+  @override
+  String get lumaWellPowerMenu => 'Power-ups';
+
+  @override
+  String get lumaWellPulse => 'Impuls';
+
+  @override
+  String get lumaWellPulseSubtitle =>
+      'Drückt lose Materie weg und schafft Platz';
+
+  @override
+  String get lumaWellStabilize => 'Stabilisieren';
+
+  @override
+  String get lumaWellStabilizeSubtitle =>
+      'Verlangsamt driftende Materie kurzzeitig';
+
+  @override
+  String get lumaWellGrow => 'Planeten füttern';
+
+  @override
+  String get lumaWellGrowSubtitle =>
+      'Wandelt nahe kleine Materie in Planetenmasse um';
+
+  @override
+  String lumaWellPowerMenuCharges(int charges) {
+    return 'Power-ups ($charges)';
+  }
+
+  @override
+  String get lumaWellSettingsTitle => 'Luma-Well-Einstellungen';
+
+  @override
+  String get lumaWellHaptics => 'Haptik';
+
+  @override
+  String get lumaWellHapticsSubtitle => 'Vibriert beim Verbinden von Kugeln';
+
+  @override
+  String get lumaWellEasyMode => 'Sanfter Start';
+
+  @override
+  String get lumaWellEasyModeSubtitle =>
+      'Startet mit weniger driftenden Kugeln';
+
+  @override
+  String get lumaWellGoal =>
+      'Verbinde Materie und nähre den wachsenden Planeten';
 }

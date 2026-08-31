@@ -17290,6 +17290,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your next disc copies a neighbor\'s number'**
   String get chaindropPowerWildDiscDesc;
+
+  /// No description provided for @toolNameLumaWell.
+  ///
+  /// In en, this message translates to:
+  /// **'Luma Well'**
+  String get toolNameLumaWell;
+
+  /// No description provided for @toolDescLumaWell.
+  ///
+  /// In en, this message translates to:
+  /// **'Place glowing orbs around a turning well and combine equals into brighter forms.'**
+  String get toolDescLumaWell;
+
+  /// No description provided for @lumaWellScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get lumaWellScore;
+
+  /// No description provided for @lumaWellBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get lumaWellBest;
+
+  /// No description provided for @lumaWellMerges.
+  ///
+  /// In en, this message translates to:
+  /// **'Merges'**
+  String get lumaWellMerges;
+
+  /// No description provided for @lumaWellStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage'**
+  String get lumaWellStage;
+
+  /// No description provided for @lumaWellNewGame.
+  ///
+  /// In en, this message translates to:
+  /// **'New game'**
+  String get lumaWellNewGame;
+
+  /// No description provided for @lumaWellGameOver.
+  ///
+  /// In en, this message translates to:
+  /// **'WELL FULL'**
+  String get lumaWellGameOver;
+
+  /// No description provided for @lumaWellNewBest.
+  ///
+  /// In en, this message translates to:
+  /// **'New best score!'**
+  String get lumaWellNewBest;
+
+  /// No description provided for @lumaWellBestScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Best: {best}'**
+  String lumaWellBestScore(int best);
+
+  /// No description provided for @lumaWellMergesMade.
+  ///
+  /// In en, this message translates to:
+  /// **'{merges} merges made'**
+  String lumaWellMergesMade(int merges);
+
+  /// No description provided for @lumaWellPowerMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Power-ups'**
+  String get lumaWellPowerMenu;
+
+  /// No description provided for @lumaWellPulse.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse'**
+  String get lumaWellPulse;
+
+  /// No description provided for @lumaWellPulseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Push loose matter away to clear a path'**
+  String get lumaWellPulseSubtitle;
+
+  /// No description provided for @lumaWellStabilize.
+  ///
+  /// In en, this message translates to:
+  /// **'Stabilize'**
+  String get lumaWellStabilize;
+
+  /// No description provided for @lumaWellStabilizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow drifting matter for a short time'**
+  String get lumaWellStabilizeSubtitle;
+
+  /// No description provided for @lumaWellGrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed the planet'**
+  String get lumaWellGrow;
+
+  /// No description provided for @lumaWellGrowSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert nearby small matter into planet mass'**
+  String get lumaWellGrowSubtitle;
+
+  /// No description provided for @lumaWellPowerMenuCharges.
+  ///
+  /// In en, this message translates to:
+  /// **'Power-ups ({charges})'**
+  String lumaWellPowerMenuCharges(int charges);
+
+  /// No description provided for @lumaWellSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Luma Well Settings'**
+  String get lumaWellSettingsTitle;
+
+  /// No description provided for @lumaWellHaptics.
+  ///
+  /// In en, this message translates to:
+  /// **'Haptics'**
+  String get lumaWellHaptics;
+
+  /// No description provided for @lumaWellHapticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrate when orbs combine'**
+  String get lumaWellHapticsSubtitle;
+
+  /// No description provided for @lumaWellEasyMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle start'**
+  String get lumaWellEasyMode;
+
+  /// No description provided for @lumaWellEasyModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin with fewer drifting orbs'**
+  String get lumaWellEasyModeSubtitle;
+
+  /// No description provided for @lumaWellGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge matter and feed the growing planet'**
+  String get lumaWellGoal;
 }
 
 class _AppLocalizationsDelegate
