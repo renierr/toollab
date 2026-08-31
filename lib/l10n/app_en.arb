@@ -4951,6 +4951,8 @@
   "lumaWellHapticsSubtitle": "Vibrate when orbs combine",
   "lumaWellEasyMode": "Gentle start",
   "lumaWellEasyModeSubtitle": "Begin with fewer drifting orbs",
+  "lumaWellUnlimitedPowers": "Unlimited power-ups",
+  "lumaWellUnlimitedPowersSubtitle": "Use power-ups without spending charges",
   "lumaWellGoal": "Merge compatible matter and feed the growing planet",
   "lumaWellHelpTitle": "How to play",
   "lumaWellHelpSubtitle": "Capture, merge, and grow",

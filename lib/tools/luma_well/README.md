@@ -19,6 +19,8 @@ An early release cancels the capture. The orbs remain in the field.
 ## Stages
 
 The planet starts small. Each stage raises the mass target for the next one.
+Its visible radius is capped at 34% of the field half-width, so endless runs
+continue to leave room for drifting matter and capture rings.
 
 Stages unlock new visible matter values. Existing values remain in the field.
 A capture succeeds only if its highest and lowest values differ by no more than
@@ -69,6 +71,9 @@ indefinitely for score and planet growth.
 ## Power-Ups
 
 Power-ups consume one earned charge.
+
+The Settings sheet offers an optional Unlimited power-ups mode. It is a relaxed
+play setting: power-ups remain available without consuming earned charges.
 
 | Power | Effect |
 | --- | --- |

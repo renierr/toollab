@@ -54,6 +54,9 @@ class _LumaWellPageState extends State<LumaWellPage>
       return;
     }
     _engine.setEasyModeResolver(() => context.read<LumaWellState>().easyMode);
+    _engine.setUnlimitedPowersResolver(
+      () => context.read<LumaWellState>().unlimitedPowers,
+    );
     await _engine.start();
   }
 
@@ -144,7 +147,11 @@ class _LumaWellPageState extends State<LumaWellPage>
                 GameHudAction(
                   icon: Icons.auto_awesome_outlined,
                   tooltip: l10n.lumaWellPowerMenuCharges(_engine.powerCharges),
-                  onPressed: _engine.powerCharges == 0 ? null : _openPowers,
+                  onPressed:
+                      _engine.powerCharges == 0 &&
+                          !context.read<LumaWellState>().unlimitedPowers
+                      ? null
+                      : _openPowers,
                 ),
                 GameHudAction(
                   icon: Icons.restart_alt_rounded,

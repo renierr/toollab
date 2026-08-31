@@ -17447,6 +17447,18 @@ abstract class AppLocalizations {
   /// **'Begin with fewer drifting orbs'**
   String get lumaWellEasyModeSubtitle;
 
+  /// No description provided for @lumaWellUnlimitedPowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited power-ups'**
+  String get lumaWellUnlimitedPowers;
+
+  /// No description provided for @lumaWellUnlimitedPowersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use power-ups without spending charges'**
+  String get lumaWellUnlimitedPowersSubtitle;
+
   /// No description provided for @lumaWellGoal.
   ///
   /// In en, this message translates to:

@@ -34,6 +34,7 @@ class LumaWellEngine extends ChangeNotifier {
   final Set<int> _capturedIds = {};
 
   bool Function() _usesEasyMode = () => false;
+  bool Function() _usesUnlimitedPowers = () => false;
   int _nextId = 1;
   int _score = 0;
   int _best = 0;
@@ -66,7 +67,8 @@ class LumaWellEngine extends ChangeNotifier {
   int get merges => _merges;
   int get stage => _stage;
   int get powerCharges => _powerCharges;
-  double get planetRadius => 0.07 + math.sqrt(_planetMass) * 0.013;
+  double get planetRadius =>
+      math.min(0.34, 0.07 + math.sqrt(_planetMass) * 0.013);
   bool get isGameOver => false;
   bool get isCapturing => _captureFor > 0;
   double get captureX => _captureX;
@@ -88,6 +90,8 @@ class LumaWellEngine extends ChangeNotifier {
 
   void setEasyModeResolver(bool Function() resolver) =>
       _usesEasyMode = resolver;
+  void setUnlimitedPowersResolver(bool Function() resolver) =>
+      _usesUnlimitedPowers = resolver;
 
   Future<void> start() async {
     _best = await _store.loadBest();
@@ -174,8 +178,8 @@ class LumaWellEngine extends ChangeNotifier {
   }
 
   void usePower(LumaWellPower power) {
-    if (_powerCharges == 0) return;
-    _powerCharges--;
+    if (_powerCharges == 0 && !_usesUnlimitedPowers()) return;
+    if (!_usesUnlimitedPowers()) _powerCharges--;
     switch (power) {
       case LumaWellPower.pulse:
         for (final orb in _orbs) {

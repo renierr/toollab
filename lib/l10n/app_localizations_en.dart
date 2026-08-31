@@ -9749,6 +9749,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lumaWellEasyModeSubtitle => 'Begin with fewer drifting orbs';
 
   @override
+  String get lumaWellUnlimitedPowers => 'Unlimited power-ups';
+
+  @override
+  String get lumaWellUnlimitedPowersSubtitle =>
+      'Use power-ups without spending charges';
+
+  @override
   String get lumaWellGoal =>
       'Merge compatible matter and feed the growing planet';
 

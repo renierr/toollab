@@ -9821,6 +9821,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Startet mit weniger driftenden Kugeln';
 
   @override
+  String get lumaWellUnlimitedPowers => 'Unbegrenzte Power-ups';
+
+  @override
+  String get lumaWellUnlimitedPowersSubtitle =>
+      'Power-ups ohne Ladungen nutzen';
+
+  @override
   String get lumaWellGoal =>
       'Verbinde passende Materie und nähre den wachsenden Planeten';
 

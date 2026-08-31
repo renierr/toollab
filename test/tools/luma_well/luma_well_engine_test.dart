@@ -149,6 +149,36 @@ void main() {
     expect(engine.powerCharges, 0);
   });
 
+  test('unlimited powers do not consume a charge', () async {
+    final engine = LumaWellEngine(store: _MemoryStore());
+    engine.setUnlimitedPowersResolver(() => true);
+    await engine.start();
+
+    engine.usePower(LumaWellPower.stabilize);
+
+    expect(engine.powerCharges, 1);
+  });
+
+  test('planet visual radius is capped for endless play', () async {
+    final engine = LumaWellEngine(
+      store: _MemoryStore()
+        ..save = {
+          'score': 0,
+          'merges': 0,
+          'stage': 20,
+          'charges': 1,
+          'planetMass': 100000.0,
+          'wideCaptures': 0,
+          'orbs': [
+            {'mass': 1.0, 'kind': 0, 'x': 0.5, 'y': 0.0, 'drift': 0.0},
+          ],
+        },
+    );
+    await engine.start();
+
+    expect(engine.planetRadius, 0.34);
+  });
+
   test('restores a saved planet and its field', () async {
     final store = _MemoryStore()
       ..save = {
