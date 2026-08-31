@@ -33,6 +33,12 @@ class LumaWellHelpPage extends StatelessWidget {
         _HelpVisual.challenge,
       ),
       (
+        Icons.filter_6_outlined,
+        l10n.lumaWellHelpValues,
+        l10n.lumaWellHelpValuesText,
+        _HelpVisual.valueRelease,
+      ),
+      (
         Icons.star_rounded,
         l10n.lumaWellHelpPowerOrb,
         l10n.lumaWellHelpPowerOrbText,
@@ -91,7 +97,7 @@ class LumaWellHelpPage extends StatelessWidget {
   }
 }
 
-enum _HelpVisual { capture, hold, grow, challenge, power }
+enum _HelpVisual { capture, hold, grow, challenge, valueRelease, power }
 
 class _HelpDiagram extends StatelessWidget {
   final _HelpVisual type;
@@ -132,7 +138,10 @@ class _HelpDiagram extends StatelessWidget {
             const Positioned(
               right: 8,
               top: 22,
-              child: Text("2s", style: TextStyle(fontWeight: FontWeight.w800)),
+              child: Text(
+                "1.5s",
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
             ),
           if (type == _HelpVisual.grow) ...[
             const Positioned(
@@ -164,6 +173,13 @@ class _HelpDiagram extends StatelessWidget {
                 left: 20 + (index % 6) * 28.0,
                 top: 10 + (index ~/ 6) * 40.0,
                 child: _Dot(color: index.isEven ? color : Colors.orange),
+              ),
+          if (type == _HelpVisual.valueRelease)
+            for (var index = 0; index < 6; index++)
+              Positioned(
+                left: 12 + index * 30.0,
+                top: 28,
+                child: _ValueDot(value: index + 1),
               ),
           if (type == _HelpVisual.power) ...[
             const Positioned(
@@ -202,5 +218,30 @@ class _Dot extends StatelessWidget {
     width: 22,
     height: 22,
     decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+  );
+}
+
+class _ValueDot extends StatelessWidget {
+  final int value;
+
+  const _ValueDot({required this.value});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 24,
+    height: 24,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: value < 3
+          ? Colors.orange
+          : value < 5
+          ? Colors.pink
+          : Colors.deepPurple,
+    ),
+    child: Text(
+      '$value',
+      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+    ),
   );
 }

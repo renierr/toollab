@@ -3957,7 +3957,9 @@
   "lumaWellHelpGrow": "Planeten wachsen lassen",
   "lumaWellHelpGrowText": "Verbundene Materie fliegt zum Planeten. Erreiche jedes Massenziel für eine neue Stufe und eine Power-up-Ladung.",
   "lumaWellHelpChallenge": "Feld verwalten",
-  "lumaWellHelpChallengeText": "Neue Kugelarten und schnelleres Spawnen erschweren passende Gruppen. Nutze Power-ups bei einem vollen Feld."
+  "lumaWellHelpChallengeText": "Neue Kugelwerte und schnelleres Spawnen erschweren passende Gruppen. Nutze Power-ups bei einem vollen Feld.",
+  "lumaWellHelpValues": "Werte-Freischaltung",
+  "lumaWellHelpValuesText": "Stufe 1 beginnt mit 1 und 2. Die Stufen 2, 3, 4 und 5 fügen 3, 4, 5 und 6 hinzu. Höher als 6 geht es nicht."
   ,"lumaWellHelpPowerOrb": "Power-Kugel",
   "lumaWellHelpPowerOrbText": "Goldene Sternkugeln passen zu jedem Wertebereich, benötigen aber mindestens zwei normale Kugeln im Ring. Fange eine für eine zusätzliche Power-up-Ladung.",
   "lumaWellPowerOrbCollected": "Power-Kugel gefangen: +1 Power-up-Ladung"

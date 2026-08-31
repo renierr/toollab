@@ -82,6 +82,7 @@ class LumaWellEngine extends ChangeNotifier {
   int get powerCollectedToken => _powerCollectedToken;
 
   double radiusFor(LumaOrb orb) => 0.024 + math.sqrt(orb.mass) * 0.016;
+  int get highestUnlockedNumber => math.min(6, _stage + 1);
 
   double get _nextStageMass => 4 + _stage * 28;
 
@@ -269,13 +270,17 @@ class LumaWellEngine extends ChangeNotifier {
 
   void _absorb(List<LumaOrb> orbs, {int multiplier = 1}) {
     if (orbs.isEmpty) return;
-    final mass = orbs.fold<double>(0, (total, orb) => total + orb.mass);
+    final mass = orbs.fold<double>(
+      0,
+      (total, orb) => total + orb.mass * (orb.kind + 1),
+    );
     _mergeX = orbs.fold<double>(0, (total, orb) => total + orb.x) / orbs.length;
     _mergeY = orbs.fold<double>(0, (total, orb) => total + orb.y) / orbs.length;
     _orbs.removeWhere(orbs.contains);
     _planetMass += mass;
-    _score += mass.round() * multiplier;
-    _mergePoints = mass.round() * multiplier;
+    final groupBonus = orbs.length * orbs.length;
+    _score += mass.round() * multiplier * groupBonus;
+    _mergePoints = mass.round() * multiplier * groupBonus;
     _mergeToken++;
     if (_score > _best) {
       _best = _score;
@@ -350,7 +355,7 @@ class LumaWellEngine extends ChangeNotifier {
           drift is! num ||
           mass <= 0 ||
           kind < 0 ||
-          kind > 3 ||
+          kind > 5 ||
           (power != null && power is! bool)) {
         return false;
       }
@@ -404,7 +409,7 @@ class LumaWellEngine extends ChangeNotifier {
       LumaOrb(
         id: _nextId++,
         mass: (1 + _random.nextInt(3)).toDouble(),
-        kind: _random.nextInt(math.min(_stage, 4)),
+        kind: _random.nextInt(highestUnlockedNumber),
         isPower: _random.nextInt(18) == 0,
         x: math.cos(angle) * distance,
         y: math.sin(angle) * distance,

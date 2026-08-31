@@ -110,6 +110,36 @@ void main() {
     expect(engine.planetRadius, greaterThan(before));
   });
 
+  test('higher visible values earn more from the same group size', () async {
+    final low = await _capturePair(0);
+    final high = await _capturePair(3);
+
+    expect(high.score, greaterThan(low.score));
+  });
+
+  test('unlocks values through six by stage five', () async {
+    final first = LumaWellEngine(store: _MemoryStore());
+    await first.start();
+    final fifth = LumaWellEngine(
+      store: _MemoryStore()
+        ..save = {
+          'score': 0,
+          'merges': 0,
+          'stage': 5,
+          'charges': 1,
+          'planetMass': 116.0,
+          'wideCaptures': 0,
+          'orbs': [
+            {'mass': 1.0, 'kind': 5, 'x': 0.5, 'y': 0.0, 'drift': 0.0},
+          ],
+        },
+    );
+    await fifth.start();
+
+    expect(first.highestUnlockedNumber, 2);
+    expect(fifth.highestUnlockedNumber, 6);
+  });
+
   test('powers use an earned charge', () async {
     final engine = LumaWellEngine(store: _MemoryStore(), random: Random(1));
     await engine.start();
@@ -181,6 +211,22 @@ Map<String, dynamic> _savedField(List<Map<String, dynamic>> orbs) => {
   'wideCaptures': 0,
   'orbs': orbs,
 };
+
+Future<LumaWellEngine> _capturePair(int kind) async {
+  final engine = LumaWellEngine(
+    store: _MemoryStore()
+      ..save = _savedField([
+        {'mass': 1.0, 'kind': kind, 'x': 0.42, 'y': 0.0, 'drift': 0.0},
+        {'mass': 1.0, 'kind': kind, 'x': 0.44, 'y': 0.0, 'drift': 0.0},
+      ]),
+  );
+  await engine.start();
+  engine.beginCapture(0.42, 0);
+  for (var i = 0; i < 42; i++) {
+    engine.advance(0.04);
+  }
+  return engine;
+}
 
 class _FixedRandom implements Random {
   int _index = 0;

@@ -20,12 +20,31 @@ An early release cancels the capture. The orbs remain in the field.
 
 The planet starts small. Each stage raises the mass target for the next one.
 
-Stages add one new matter value, up to four values (`1` through `4`) total.
-Existing values remain in the field. A capture succeeds only if its highest and lowest values differ
-by no more than one: 1 and 2 work, while 1 and 3 fail.
+Stages unlock new visible matter values. Existing values remain in the field.
+A capture succeeds only if its highest and lowest values differ by no more than
+one: 1 and 2 work, while 1 and 3 fail.
+
+| Reached stage | Values released into the field |
+| --- | --- |
+| 1 | 1 and 2 |
+| 2 | 3 |
+| 3 | 4 |
+| 4 | 5 |
+| 5 | 6 |
+
+Values do not go above 6. Higher values give more planet mass and score, but
+their narrower compatible range makes them harder to group safely.
 
 Every completed stage grants one power-up charge and increases the orb spawn
 rate slightly.
+
+## Rewards
+
+Visible orb values (`1` through `4`) determine growth and score. Each orb adds
+its hidden mass multiplied by its visible value to the planet. A completed
+group is then multiplied by its orb count and a further squared group-size
+bonus. High-value, large groups are therefore much more rewarding than small
+low-value captures.
 
 Rare gold star power orbs are wildcards. They can join any valid value range,
 but a capture containing one still needs at least two normal orbs. Capturing a
@@ -44,7 +63,8 @@ gradual orbital saturation:
 - Large amounts of loose matter can make compatible groups difficult to find.
 
 The score measures efficient planet growth. Stages are the primary long-term
-goal; a run continues indefinitely after all planned visual planet stages.
+goal; after stage 5, all six values remain active and the run continues
+indefinitely for score and planet growth.
 
 ## Power-Ups
 

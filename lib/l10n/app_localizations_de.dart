@@ -9856,7 +9856,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lumaWellHelpChallengeText =>
-      'Neue Kugelarten und schnelleres Spawnen erschweren passende Gruppen. Nutze Power-ups bei einem vollen Feld.';
+      'Neue Kugelwerte und schnelleres Spawnen erschweren passende Gruppen. Nutze Power-ups bei einem vollen Feld.';
+
+  @override
+  String get lumaWellHelpValues => 'Werte-Freischaltung';
+
+  @override
+  String get lumaWellHelpValuesText =>
+      'Stufe 1 beginnt mit 1 und 2. Die Stufen 2, 3, 4 und 5 fügen 3, 4, 5 und 6 hinzu. Höher als 6 geht es nicht.';
 
   @override
   String get lumaWellHelpPowerOrb => 'Power-Kugel';

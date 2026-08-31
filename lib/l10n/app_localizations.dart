@@ -17510,8 +17510,20 @@ abstract class AppLocalizations {
   /// No description provided for @lumaWellHelpChallengeText.
   ///
   /// In en, this message translates to:
-  /// **'New orb kinds and faster spawning make compatible groups harder to find. Use power charges when the field gets crowded.'**
+  /// **'New orb values and faster spawning make compatible groups harder to find. Use power charges when the field gets crowded.'**
   String get lumaWellHelpChallengeText;
+
+  /// No description provided for @lumaWellHelpValues.
+  ///
+  /// In en, this message translates to:
+  /// **'Value releases'**
+  String get lumaWellHelpValues;
+
+  /// No description provided for @lumaWellHelpValuesText.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage 1 starts with 1 and 2. Stages 2, 3, 4, and 5 add 3, 4, 5, and 6. Values stop at 6.'**
+  String get lumaWellHelpValuesText;
 
   /// No description provided for @lumaWellHelpPowerOrb.
   ///

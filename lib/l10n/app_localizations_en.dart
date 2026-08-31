@@ -9784,7 +9784,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lumaWellHelpChallengeText =>
-      'New orb kinds and faster spawning make compatible groups harder to find. Use power charges when the field gets crowded.';
+      'New orb values and faster spawning make compatible groups harder to find. Use power charges when the field gets crowded.';
+
+  @override
+  String get lumaWellHelpValues => 'Value releases';
+
+  @override
+  String get lumaWellHelpValuesText =>
+      'Stage 1 starts with 1 and 2. Stages 2, 3, 4, and 5 add 3, 4, 5, and 6. Values stop at 6.';
 
   @override
   String get lumaWellHelpPowerOrb => 'Power orb';
