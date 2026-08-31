@@ -181,7 +181,7 @@ class LumaWellEngine extends ChangeNotifier {
         orb.y += (_captureY - orb.y) * dt * 2.2;
         continue;
       }
-      final speed = _stabilizedFor > 0 ? 0.1 : orb.drift;
+      final speed = _stabilizedFor > 0 ? orb.drift * 0.15 : orb.drift;
       final angle = math.atan2(orb.y, orb.x) + speed * dt;
       final distance = math.sqrt(orb.x * orb.x + orb.y * orb.y);
       orb.x = math.cos(angle) * distance;

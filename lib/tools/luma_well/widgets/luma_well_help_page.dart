@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+
+import '../luma_well_colors.dart';
+import '../luma_well_state.dart';
 
 class LumaWellHelpPage extends StatelessWidget {
   const LumaWellHelpPage({super.key});
@@ -7,6 +11,7 @@ class LumaWellHelpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final captureTime = context.watch<LumaWellState>().captureTime;
     final steps = [
       (
         Icons.touch_app_outlined,
@@ -84,7 +89,12 @@ class LumaWellHelpPage extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Center(child: _HelpDiagram(type: step.$4)),
+                    Center(
+                      child: _HelpDiagram(
+                        type: step.$4,
+                        captureTime: captureTime,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Text(step.$3),
                   ],
@@ -101,8 +111,9 @@ enum _HelpVisual { capture, hold, grow, challenge, valueRelease, power }
 
 class _HelpDiagram extends StatelessWidget {
   final _HelpVisual type;
+  final double captureTime;
 
-  const _HelpDiagram({required this.type});
+  const _HelpDiagram({required this.type, required this.captureTime});
 
   @override
   Widget build(BuildContext context) {
@@ -135,19 +146,19 @@ class _HelpDiagram extends StatelessWidget {
               child: _Dot(color: color),
             ),
           if (type == _HelpVisual.hold)
-            const Positioned(
+            Positioned(
               right: 8,
               top: 22,
               child: Text(
-                "1.5s",
-                style: TextStyle(fontWeight: FontWeight.w800),
+                '${captureTime.toStringAsFixed(1)}s',
+                style: const TextStyle(fontWeight: FontWeight.w800),
               ),
             ),
           if (type == _HelpVisual.grow) ...[
             const Positioned(
               left: 20,
               top: 30,
-              child: _Dot(color: Color(0xFFFFA52E)),
+              child: _Dot(color: LumaWellColors.mergeGlow),
             ),
             Positioned(
               left: 78,
@@ -172,7 +183,9 @@ class _HelpDiagram extends StatelessWidget {
               Positioned(
                 left: 20 + (index % 6) * 28.0,
                 top: 10 + (index ~/ 6) * 40.0,
-                child: _Dot(color: index.isEven ? color : Colors.orange),
+                child: _Dot(
+                  color: index.isEven ? color : LumaWellColors.orbKindLow,
+                ),
               ),
           if (type == _HelpVisual.valueRelease)
             for (var index = 0; index < 6; index++)
@@ -185,21 +198,21 @@ class _HelpDiagram extends StatelessWidget {
             const Positioned(
               left: 40,
               top: 28,
-              child: _Dot(color: Color(0xFFFFA52E)),
+              child: _Dot(color: LumaWellColors.mergeGlow),
             ),
             const Positioned(
               left: 90,
               top: 28,
               child: Icon(
                 Icons.star_rounded,
-                color: Color(0xFFFFD26A),
+                color: LumaWellColors.powerCharge,
                 size: 28,
               ),
             ),
             const Positioned(
               left: 138,
               top: 28,
-              child: _Dot(color: Color(0xFFE04E8A)),
+              child: _Dot(color: LumaWellColors.orbKindHigh),
             ),
           ],
         ],
@@ -234,14 +247,17 @@ class _ValueDot extends StatelessWidget {
     decoration: BoxDecoration(
       shape: BoxShape.circle,
       color: value < 3
-          ? Colors.orange
+          ? LumaWellColors.orbKindLow
           : value < 5
-          ? Colors.pink
-          : Colors.deepPurple,
+          ? LumaWellColors.orbKindHigh
+          : LumaWellColors.orbKindHighest,
     ),
     child: Text(
       '$value',
-      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+      style: const TextStyle(
+        color: LumaWellColors.orbLabel,
+        fontWeight: FontWeight.w800,
+      ),
     ),
   );
 }

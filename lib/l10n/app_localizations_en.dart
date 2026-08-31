@@ -9762,6 +9762,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lumaWellCaptureTimeSubtitle => 'How long to hold a valid ring';
 
   @override
+  String lumaWellCaptureTimeOptionSeconds(String seconds) {
+    return '${seconds}s';
+  }
+
+  @override
   String get lumaWellExpandField => 'Expand field';
 
   @override

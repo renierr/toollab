@@ -3951,6 +3951,8 @@
   "lumaWellUnlimitedPowersSubtitle": "Power-ups ohne Ladungen nutzen",
   "lumaWellCaptureTime": "Fangzeit",
   "lumaWellCaptureTimeSubtitle": "Wie lange ein gültiger Ring gehalten wird",
+  "lumaWellCaptureTimeOptionSeconds": "{seconds}s",
+  "@lumaWellCaptureTimeOptionSeconds": {"placeholders": {"seconds": {"type": "String"}}},
   "lumaWellExpandField": "Feld erweitern",
   "lumaWellExpandFieldSubtitle": "Nächste 3 Ringe sind größer, aber langsamer",
   "lumaWellFocusField": "Fokusfeld",

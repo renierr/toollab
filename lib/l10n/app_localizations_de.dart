@@ -9835,6 +9835,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wie lange ein gültiger Ring gehalten wird';
 
   @override
+  String lumaWellCaptureTimeOptionSeconds(String seconds) {
+    return '${seconds}s';
+  }
+
+  @override
   String get lumaWellExpandField => 'Feld erweitern';
 
   @override

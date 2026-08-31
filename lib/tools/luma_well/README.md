@@ -8,7 +8,8 @@ This document is the working gameplay specification for the playable game.
 
 1. Matter orbs spawn continuously around a small central planet.
 2. Orbs drift slowly across the full playfield.
-3. The player touches and holds a point to create a capture ring.
+3. The player touches and holds a point to create a capture ring, and may drag
+   to reposition it while holding.
 4. The ring selects nearby orbs whose visible values span no more than one.
 5. Holding a valid group for roughly 1.5 seconds combines it.
 6. The combined mass travels into the planet and grows it.

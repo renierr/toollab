@@ -4955,6 +4955,8 @@
   "lumaWellUnlimitedPowersSubtitle": "Use power-ups without spending charges",
   "lumaWellCaptureTime": "Capture time",
   "lumaWellCaptureTimeSubtitle": "How long to hold a valid ring",
+  "lumaWellCaptureTimeOptionSeconds": "{seconds}s",
+  "@lumaWellCaptureTimeOptionSeconds": {"placeholders": {"seconds": {"type": "String"}}},
   "lumaWellExpandField": "Expand field",
   "lumaWellExpandFieldSubtitle": "Next 3 rings are wider but slower",
   "lumaWellFocusField": "Focus field",

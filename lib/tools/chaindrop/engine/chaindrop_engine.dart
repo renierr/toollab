@@ -547,6 +547,7 @@ class ChainDropEngine extends ChangeNotifier {
     'score': _score,
     'level': _level,
     'dropsSinceGarbage': _dropsSinceGarbage,
+    'wildCharges': _wildCharges,
     'queue': List<int>.from(_queue),
     'discs': [
       for (final disc in _grid.whereType<ChainDropDisc>())
@@ -624,6 +625,7 @@ class ChainDropEngine extends ChangeNotifier {
     final score = data['score'];
     final level = data['level'];
     final dropsSinceGarbage = data['dropsSinceGarbage'];
+    final wildCharges = data['wildCharges'] ?? 0;
     if (score is! int || score < 0) return false;
     if (level is! int || level < 0) return false;
     if (dropsSinceGarbage is! int ||
@@ -631,11 +633,12 @@ class ChainDropEngine extends ChangeNotifier {
         dropsSinceGarbage >= ChainDropGrid.dropsPerCrackWave) {
       return false;
     }
+    if (wildCharges is! int || wildCharges < 0) return false;
 
     _score = score;
     _level = level;
     _dropsSinceGarbage = dropsSinceGarbage;
-    _wildCharges = 0;
+    _wildCharges = wildCharges;
     _history.clear();
     _queue
       ..clear()

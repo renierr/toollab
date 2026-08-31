@@ -17471,6 +17471,12 @@ abstract class AppLocalizations {
   /// **'How long to hold a valid ring'**
   String get lumaWellCaptureTimeSubtitle;
 
+  /// No description provided for @lumaWellCaptureTimeOptionSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String lumaWellCaptureTimeOptionSeconds(String seconds);
+
   /// No description provided for @lumaWellExpandField.
   ///
   /// In en, this message translates to:

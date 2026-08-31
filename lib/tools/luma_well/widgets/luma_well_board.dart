@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 
 import '../engine/luma_well_engine.dart';
+import '../luma_well_colors.dart';
 
 class LumaWellBoard extends StatefulWidget {
   final LumaWellEngine engine;
@@ -75,6 +76,10 @@ class _LumaWellBoardState extends State<LumaWellBoard>
           final point = _normalized(details.localPosition, size);
           widget.engine.beginCapture(point.dx, point.dy);
         },
+        onPanUpdate: (details) {
+          final point = _normalized(details.localPosition, size);
+          widget.engine.moveCapture(point.dx, point.dy);
+        },
         onPanEnd: (_) => widget.engine.endCapture(),
         onPanCancel: widget.engine.endCapture,
         child: CustomPaint(
@@ -136,8 +141,8 @@ class _OrbView extends StatelessWidget {
             ),
             border: Border.all(
               color: captured
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.5),
+                  ? LumaWellColors.orbBorder
+                  : LumaWellColors.orbBorder.withValues(alpha: 0.5),
               width: captured ? 2 : 1,
             ),
             boxShadow: [
@@ -151,7 +156,7 @@ class _OrbView extends StatelessWidget {
             child: Text(
               orb.isPower ? '✦' : '${orb.kind + 1}',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Colors.white,
+                color: LumaWellColors.orbLabel,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -185,8 +190,8 @@ class _CaptureRing extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(
                 color: engine.captureBlocked
-                    ? Colors.redAccent.withValues(alpha: 0.8)
-                    : Colors.white.withValues(alpha: 0.32),
+                    ? LumaWellColors.ringBlocked.withValues(alpha: 0.8)
+                    : LumaWellColors.ringNormal.withValues(alpha: 0.32),
                 width: 2,
               ),
             ),
@@ -199,15 +204,15 @@ class _CaptureRing extends StatelessWidget {
                 ? engine.captureProgress
                 : null,
             color: engine.captureBlocked
-                ? Colors.redAccent.withValues(alpha: 0.85)
-                : Colors.white.withValues(alpha: 0.85),
+                ? LumaWellColors.ringBlocked.withValues(alpha: 0.85)
+                : LumaWellColors.ringNormal.withValues(alpha: 0.85),
             backgroundColor: Colors.transparent,
             strokeWidth: 3,
           ),
           Text(
             '${engine.captureTime.toStringAsFixed(2)}s',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Colors.white,
+              color: LumaWellColors.ringNormal,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -248,10 +253,10 @@ class _MergeFlight extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFFFD26A),
+                    color: LumaWellColors.powerCharge,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFA52E).withValues(alpha: 0.8),
+                        color: LumaWellColors.mergeGlow.withValues(alpha: 0.8),
                         blurRadius: 16,
                       ),
                     ],
@@ -269,7 +274,7 @@ class _MergeFlight extends StatelessWidget {
                   '+${engine.mergePoints}',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: const Color(0xFFFFD26A),
+                    color: LumaWellColors.powerCharge,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -282,19 +287,12 @@ class _MergeFlight extends StatelessWidget {
   }
 }
 
-Color _colorForKind(int kind) => switch (kind) {
-  0 => const Color(0xFFFFAE3D),
-  1 => const Color(0xFFFF744B),
-  2 => const Color(0xFFE04E8A),
-  _ => const Color(0xFFB464E8),
-};
-
 Color _colorForOrb(LumaOrb orb) {
-  if (!orb.isPower) return _colorForKind(orb.kind);
+  if (!orb.isPower) return LumaWellColors.orbKindColor(orb.kind);
   return switch (orb.power) {
-    LumaWellPower.expandField => const Color(0xFF52DDE6),
-    LumaWellPower.focusField => const Color(0xFFB464E8),
-    _ => const Color(0xFFFFD26A),
+    LumaWellPower.expandField => LumaWellColors.powerExpand,
+    LumaWellPower.focusField => LumaWellColors.powerFocus,
+    _ => LumaWellColors.powerCharge,
   };
 }
 
@@ -309,9 +307,10 @@ class _LumaFieldPainter extends CustomPainter {
     final scale = size.shortestSide / 2;
     canvas.drawRect(
       Offset.zero & size,
-      Paint()..color = const Color(0xFF080A11),
+      Paint()..color = LumaWellColors.fieldBackground,
     );
-    final star = Paint()..color = Colors.white.withValues(alpha: 0.24);
+    final star = Paint()
+      ..color = LumaWellColors.starDust.withValues(alpha: 0.24);
     for (var i = 0; i < 90; i++) {
       canvas.drawCircle(
         Offset(
@@ -324,7 +323,7 @@ class _LumaFieldPainter extends CustomPainter {
     }
     final radius = engine.planetRadius * scale;
     final terrain = Paint()
-      ..color = const Color(0xFF1C2029)
+      ..color = LumaWellColors.terrain
       ..strokeWidth = 3;
     for (var i = 0; i < 56; i++) {
       final angle = i * math.pi * 2 / 56;
@@ -339,7 +338,7 @@ class _LumaFieldPainter extends CustomPainter {
       radius,
       Paint()
         ..shader = const RadialGradient(
-          colors: [Color(0xFF3A414B), Color(0xFF171A21)],
+          colors: [LumaWellColors.planetCore, LumaWellColors.planetShadow],
         ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
   }

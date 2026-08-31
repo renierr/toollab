@@ -85,10 +85,16 @@ class LumaWellSettingsSheet extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                       child: SegmentedButton<double>(
-                        segments: const [
-                          ButtonSegment(value: 1.0, label: Text('1.0s')),
-                          ButtonSegment(value: 1.5, label: Text('1.5s')),
-                          ButtonSegment(value: 2.0, label: Text('2.0s')),
+                        segments: [
+                          for (final option in const [1.0, 1.5, 2.0])
+                            ButtonSegment(
+                              value: option,
+                              label: Text(
+                                l10n.lumaWellCaptureTimeOptionSeconds(
+                                  option.toStringAsFixed(1),
+                                ),
+                              ),
+                            ),
                         ],
                         selected: {state.captureTime},
                         onSelectionChanged: (value) =>
