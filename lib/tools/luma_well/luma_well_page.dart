@@ -25,14 +25,27 @@ class LumaWellPage extends StatefulWidget {
   State<LumaWellPage> createState() => _LumaWellPageState();
 }
 
-class _LumaWellPageState extends State<LumaWellPage> with DisposeCleanup {
+class _LumaWellPageState extends State<LumaWellPage>
+    with DisposeCleanup, WidgetsBindingObserver {
   final LumaWellEngine _engine = LumaWellEngine();
 
   @override
   void initState() {
     super.initState();
-    onDispose(_engine.dispose);
+    WidgetsBinding.instance.addObserver(this);
+    onDispose(() => WidgetsBinding.instance.removeObserver(this));
+    onDispose(() async {
+      await _engine.saveNow();
+      _engine.dispose();
+    });
     unawaited(_bootstrap());
+  }
+
+  bool _isActive = true;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isActive = state == AppLifecycleState.resumed;
   }
 
   Future<void> _bootstrap() async {
@@ -44,9 +57,16 @@ class _LumaWellPageState extends State<LumaWellPage> with DisposeCleanup {
     await _engine.start();
   }
 
-  void _onMerge(bool merged) {
-    if (merged && context.read<LumaWellState>().hapticsEnabled) {
+  void _onMerge(bool powerCollected) {
+    if (context.read<LumaWellState>().hapticsEnabled) {
       HapticFeedback.mediumImpact();
+    }
+    if (powerCollected) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).lumaWellPowerOrbCollected),
+        ),
+      );
     }
   }
 
@@ -54,6 +74,30 @@ class _LumaWellPageState extends State<LumaWellPage> with DisposeCleanup {
     final power = await LumaWellPowerSheet.show(context);
     if (power != null) {
       _engine.usePower(power);
+    }
+  }
+
+  Future<void> _confirmNewGame() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.lumaWellNewGameConfirmTitle),
+        content: Text(l10n.lumaWellNewGameConfirmText),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.lumaWellNewGame),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      _engine.newGame();
     }
   }
 
@@ -105,7 +149,7 @@ class _LumaWellPageState extends State<LumaWellPage> with DisposeCleanup {
                 GameHudAction(
                   icon: Icons.restart_alt_rounded,
                   tooltip: l10n.lumaWellNewGame,
-                  onPressed: _engine.newGame,
+                  onPressed: _confirmNewGame,
                 ),
                 GameHudAction(
                   icon: Icons.settings_outlined,
@@ -114,11 +158,13 @@ class _LumaWellPageState extends State<LumaWellPage> with DisposeCleanup {
                 ),
               ],
             );
-            final board = Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Stack(
-                  children: [LumaWellBoard(engine: _engine, onMerge: _onMerge)],
+            final board = Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox.expand(
+                child: LumaWellBoard(
+                  engine: _engine,
+                  isActive: _isActive,
+                  onMerge: _onMerge,
                 ),
               ),
             );

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../luma_well_state.dart';
+import 'luma_well_help_page.dart';
 
 class LumaWellSettingsSheet extends StatelessWidget {
   const LumaWellSettingsSheet({super.key});
@@ -50,6 +51,20 @@ class LumaWellSettingsSheet extends StatelessWidget {
                       subtitle: Text(l10n.lumaWellHapticsSubtitle),
                       value: state.hapticsEnabled,
                       onChanged: state.setHapticsEnabled,
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    ListTile(
+                      leading: const Icon(Icons.help_outline),
+                      title: Text(l10n.lumaWellHelpTitle),
+                      subtitle: Text(l10n.lumaWellHelpSubtitle),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const LumaWellHelpPage(),
+                          ),
+                        );
+                      },
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     SwitchListTile(

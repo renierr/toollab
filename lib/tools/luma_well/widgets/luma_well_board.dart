@@ -8,9 +8,15 @@ import '../engine/luma_well_engine.dart';
 
 class LumaWellBoard extends StatefulWidget {
   final LumaWellEngine engine;
+  final bool isActive;
   final ValueChanged<bool> onMerge;
 
-  const LumaWellBoard({super.key, required this.engine, required this.onMerge});
+  const LumaWellBoard({
+    super.key,
+    required this.engine,
+    required this.isActive,
+    required this.onMerge,
+  });
 
   @override
   State<LumaWellBoard> createState() => _LumaWellBoardState();
@@ -20,6 +26,7 @@ class _LumaWellBoardState extends State<LumaWellBoard>
     with SingleTickerProviderStateMixin, DisposeCleanup {
   late final Ticker _ticker;
   Duration _last = Duration.zero;
+  int _lastPowerCollectedToken = 0;
 
   @override
   void initState() {
@@ -33,12 +40,21 @@ class _LumaWellBoardState extends State<LumaWellBoard>
       _last = elapsed;
       return;
     }
+    if (!widget.isActive) {
+      _last = elapsed;
+      return;
+    }
     final before = widget.engine.merges;
     widget.engine.advance(
       (elapsed - _last).inMicroseconds / Duration.microsecondsPerSecond,
     );
     _last = elapsed;
-    if (widget.engine.merges > before) widget.onMerge(true);
+    if (widget.engine.merges > before) {
+      final powerCollected =
+          widget.engine.powerCollectedToken != _lastPowerCollectedToken;
+      _lastPowerCollectedToken = widget.engine.powerCollectedToken;
+      widget.onMerge(powerCollected);
+    }
   }
 
   Offset _normalized(Offset position, Size size) {
@@ -50,11 +66,6 @@ class _LumaWellBoardState extends State<LumaWellBoard>
     );
   }
 
-  void _move(Offset position, Size size) {
-    final point = _normalized(position, size);
-    widget.engine.moveCapture(point.dx, point.dy);
-  }
-
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
@@ -64,7 +75,6 @@ class _LumaWellBoardState extends State<LumaWellBoard>
           final point = _normalized(details.localPosition, size);
           widget.engine.beginCapture(point.dx, point.dy);
         },
-        onPanUpdate: (details) => _move(details.localPosition, size),
         onPanEnd: (_) => widget.engine.endCapture(),
         onPanCancel: widget.engine.endCapture,
         child: CustomPaint(
@@ -80,6 +90,7 @@ class _LumaWellBoardState extends State<LumaWellBoard>
                 ),
               if (widget.engine.isCapturing)
                 _CaptureRing(engine: widget.engine, size: size),
+              _MergeFlight(engine: widget.engine, size: size),
             ],
           ),
         ),
@@ -119,8 +130,11 @@ class _OrbView extends StatelessWidget {
             gradient: RadialGradient(
               center: const Alignment(-0.35, -0.4),
               colors: [
-                _colorForMass(orb.mass),
-                _colorForMass(orb.mass).withValues(alpha: 0.46),
+                orb.isPower ? const Color(0xFFFFD26A) : _colorForKind(orb.kind),
+                (orb.isPower
+                        ? const Color(0xFFFFA52E)
+                        : _colorForKind(orb.kind))
+                    .withValues(alpha: 0.46),
               ],
             ),
             border: Border.all(
@@ -131,14 +145,18 @@ class _OrbView extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: _colorForMass(orb.mass).withValues(alpha: 0.55),
-                blurRadius: diameter * 0.5,
+                color:
+                    (orb.isPower
+                            ? const Color(0xFFFFD26A)
+                            : _colorForKind(orb.kind))
+                        .withValues(alpha: 0.8),
+                blurRadius: diameter * 0.8,
               ),
             ],
           ),
           child: Center(
             child: Text(
-              '${orb.mass.round()}',
+              orb.isPower ? '✦' : '${orb.kind + 1}',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
@@ -160,27 +178,98 @@ class _CaptureRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scale = size.shortestSide / 2;
-    final diameter = scale * 0.46;
+    final diameter = scale * engine.captureRadius * 2;
     return Positioned(
       left: size.width / 2 + engine.captureX * scale - diameter / 2,
       top: size.height / 2 + engine.captureY * scale - diameter / 2,
       width: diameter,
       height: diameter,
       child: CircularProgressIndicator(
-        value: engine.capturedIds.length >= 2 ? engine.captureProgress : null,
-        color: Colors.white.withValues(alpha: 0.85),
+        value: engine.captureBlocked
+            ? null
+            : engine.capturedIds.length >= 2
+            ? engine.captureProgress
+            : null,
+        color: engine.captureBlocked
+            ? Colors.redAccent.withValues(alpha: 0.85)
+            : Colors.white.withValues(alpha: 0.85),
         strokeWidth: 3,
       ),
     );
   }
 }
 
-Color _colorForMass(double mass) {
-  if (mass < 3) return const Color(0xFFFFAE3D);
-  if (mass < 7) return const Color(0xFFFF744B);
-  if (mass < 14) return const Color(0xFFE04E8A);
-  return const Color(0xFFB464E8);
+class _MergeFlight extends StatelessWidget {
+  final LumaWellEngine engine;
+  final Size size;
+
+  const _MergeFlight({required this.engine, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = size.shortestSide / 2;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(engine.mergeToken),
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 680),
+      curve: Curves.easeInCubic,
+      builder: (context, value, child) {
+        if (engine.mergeToken == 0) return const SizedBox.shrink();
+        final x = engine.mergeX * (1 - value);
+        final y = engine.mergeY * (1 - value);
+        final diameter = (26 - value * 16).clamp(8.0, 26.0);
+        return Stack(
+          children: [
+            Positioned(
+              left: size.width / 2 + x * scale - diameter / 2,
+              top: size.height / 2 + y * scale - diameter / 2,
+              width: diameter,
+              height: diameter,
+              child: Opacity(
+                opacity: 1 - value,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFFFD26A),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFA52E).withValues(alpha: 0.8),
+                        blurRadius: 16,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: size.width / 2 - 40,
+              top: size.height / 2 - 40 - value * 20,
+              width: 80,
+              child: Opacity(
+                opacity: 1 - value,
+                child: Text(
+                  '+${engine.mergePoints}',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: const Color(0xFFFFD26A),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
+
+Color _colorForKind(int kind) => switch (kind) {
+  0 => const Color(0xFFFFAE3D),
+  1 => const Color(0xFFFF744B),
+  2 => const Color(0xFFE04E8A),
+  _ => const Color(0xFFB464E8),
+};
 
 class _LumaFieldPainter extends CustomPainter {
   final LumaWellEngine engine;

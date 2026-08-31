@@ -9754,6 +9754,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lumaWellNewGame => 'Neues Spiel';
 
   @override
+  String get lumaWellNewGameConfirmTitle => 'Neues Spiel starten?';
+
+  @override
+  String get lumaWellNewGameConfirmText =>
+      'Dein aktueller Planet und Punktestand werden ersetzt.';
+
+  @override
   String get lumaWellGameOver => 'SCHACHT VOLL';
 
   @override
@@ -9787,11 +9794,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Verlangsamt driftende Materie kurzzeitig';
 
   @override
-  String get lumaWellGrow => 'Planeten füttern';
+  String get lumaWellGrow => 'Fokusfeld';
 
   @override
-  String get lumaWellGrowSubtitle =>
-      'Wandelt nahe kleine Materie in Planetenmasse um';
+  String get lumaWellGrowSubtitle => 'Macht die nächsten 3 Fangringe kleiner';
 
   @override
   String lumaWellPowerMenuCharges(int charges) {
@@ -9816,5 +9822,50 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lumaWellGoal =>
-      'Verbinde Materie und nähre den wachsenden Planeten';
+      'Verbinde passende Materie und nähre den wachsenden Planeten';
+
+  @override
+  String get lumaWellHelpTitle => 'Spielanleitung';
+
+  @override
+  String get lumaWellHelpSubtitle => 'Fangen, verbinden und wachsen';
+
+  @override
+  String get lumaWellHelpCapture => 'Gruppe fangen';
+
+  @override
+  String get lumaWellHelpCaptureText =>
+      'Halte zwei oder mehr nahe Kugeln gedrückt. Werte dürfen sich höchstens um eins unterscheiden: 1 und 2 funktionieren, 1 und 3 nicht.';
+
+  @override
+  String get lumaWellHelpHold => '1,5 Sekunden halten';
+
+  @override
+  String get lumaWellHelpHoldText =>
+      'Halte den Ring 1,5 Sekunden still. Unterscheiden sich höchster und niedrigster Wert um mehr als eins, scheitert die Verbindung.';
+
+  @override
+  String get lumaWellHelpGrow => 'Planeten wachsen lassen';
+
+  @override
+  String get lumaWellHelpGrowText =>
+      'Verbundene Materie fliegt zum Planeten. Erreiche jedes Massenziel für eine neue Stufe und eine Power-up-Ladung.';
+
+  @override
+  String get lumaWellHelpChallenge => 'Feld verwalten';
+
+  @override
+  String get lumaWellHelpChallengeText =>
+      'Neue Kugelarten und schnelleres Spawnen erschweren passende Gruppen. Nutze Power-ups bei einem vollen Feld.';
+
+  @override
+  String get lumaWellHelpPowerOrb => 'Power-Kugel';
+
+  @override
+  String get lumaWellHelpPowerOrbText =>
+      'Goldene Sternkugeln passen zu jedem Wertebereich, benötigen aber mindestens zwei normale Kugeln im Ring. Fange eine für eine zusätzliche Power-up-Ladung.';
+
+  @override
+  String get lumaWellPowerOrbCollected =>
+      'Power-Kugel gefangen: +1 Power-up-Ladung';
 }

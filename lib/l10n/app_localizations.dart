@@ -17333,6 +17333,18 @@ abstract class AppLocalizations {
   /// **'New game'**
   String get lumaWellNewGame;
 
+  /// No description provided for @lumaWellNewGameConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new game?'**
+  String get lumaWellNewGameConfirmTitle;
+
+  /// No description provided for @lumaWellNewGameConfirmText.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current planet and score will be replaced.'**
+  String get lumaWellNewGameConfirmText;
+
   /// No description provided for @lumaWellGameOver.
   ///
   /// In en, this message translates to:
@@ -17390,13 +17402,13 @@ abstract class AppLocalizations {
   /// No description provided for @lumaWellGrow.
   ///
   /// In en, this message translates to:
-  /// **'Feed the planet'**
+  /// **'Focus field'**
   String get lumaWellGrow;
 
   /// No description provided for @lumaWellGrowSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Convert nearby small matter into planet mass'**
+  /// **'Make the next 3 capture rings smaller'**
   String get lumaWellGrowSubtitle;
 
   /// No description provided for @lumaWellPowerMenuCharges.
@@ -17438,8 +17450,86 @@ abstract class AppLocalizations {
   /// No description provided for @lumaWellGoal.
   ///
   /// In en, this message translates to:
-  /// **'Merge matter and feed the growing planet'**
+  /// **'Merge compatible matter and feed the growing planet'**
   String get lumaWellGoal;
+
+  /// No description provided for @lumaWellHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to play'**
+  String get lumaWellHelpTitle;
+
+  /// No description provided for @lumaWellHelpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture, merge, and grow'**
+  String get lumaWellHelpSubtitle;
+
+  /// No description provided for @lumaWellHelpCapture.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture a group'**
+  String get lumaWellHelpCapture;
+
+  /// No description provided for @lumaWellHelpCaptureText.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold around two or more nearby orbs. Values may differ by one at most: 1 and 2 work; 1 and 3 do not.'**
+  String get lumaWellHelpCaptureText;
+
+  /// No description provided for @lumaWellHelpHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold for 1.5 seconds'**
+  String get lumaWellHelpHold;
+
+  /// No description provided for @lumaWellHelpHoldText.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep the ring still for 1.5 seconds. If the highest and lowest values differ by more than one, the merge fails.'**
+  String get lumaWellHelpHoldText;
+
+  /// No description provided for @lumaWellHelpGrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Grow the planet'**
+  String get lumaWellHelpGrow;
+
+  /// No description provided for @lumaWellHelpGrowText.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged matter flies into the planet. Reach each mass target to advance a stage and earn a power charge.'**
+  String get lumaWellHelpGrowText;
+
+  /// No description provided for @lumaWellHelpChallenge.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage the field'**
+  String get lumaWellHelpChallenge;
+
+  /// No description provided for @lumaWellHelpChallengeText.
+  ///
+  /// In en, this message translates to:
+  /// **'New orb kinds and faster spawning make compatible groups harder to find. Use power charges when the field gets crowded.'**
+  String get lumaWellHelpChallengeText;
+
+  /// No description provided for @lumaWellHelpPowerOrb.
+  ///
+  /// In en, this message translates to:
+  /// **'Power orb'**
+  String get lumaWellHelpPowerOrb;
+
+  /// No description provided for @lumaWellHelpPowerOrbText.
+  ///
+  /// In en, this message translates to:
+  /// **'Gold star orbs fit any value range, but need at least two normal orbs in the ring. Capture one to gain an extra power charge.'**
+  String get lumaWellHelpPowerOrbText;
+
+  /// No description provided for @lumaWellPowerOrbCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'Power orb collected: +1 power-up charge'**
+  String get lumaWellPowerOrbCollected;
 }
 
 class _AppLocalizationsDelegate

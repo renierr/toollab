@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
@@ -8,6 +9,7 @@ class LumaOrb {
   final int id;
   final double mass;
   final int kind;
+  final bool isPower;
   double x;
   double y;
   double drift;
@@ -16,6 +18,7 @@ class LumaOrb {
     required this.id,
     required this.mass,
     required this.kind,
+    this.isPower = false,
     required this.x,
     required this.y,
     required this.drift,
@@ -43,6 +46,14 @@ class LumaWellEngine extends ChangeNotifier {
   double _captureX = 0;
   double _captureY = 0;
   double _captureFor = 0;
+  double _persistFor = 0;
+  int _wideCaptures = 0;
+  bool _captureBlocked = false;
+  int _mergeToken = 0;
+  double _mergeX = 0;
+  double _mergeY = 0;
+  int _mergePoints = 0;
+  int _powerCollectedToken = 0;
 
   LumaWellEngine({LumaWellStore? store, math.Random? random})
     : _store = store ?? const LumaWellStore(),
@@ -60,7 +71,15 @@ class LumaWellEngine extends ChangeNotifier {
   bool get isCapturing => _captureFor > 0;
   double get captureX => _captureX;
   double get captureY => _captureY;
-  double get captureProgress => (_captureFor / 2.5).clamp(0, 1);
+  double get captureProgress => (_captureFor / 1.5).clamp(0, 1);
+  double get captureRadius => _wideCaptures > 0 ? 0.17 : 0.23;
+  bool get captureBlocked => _captureBlocked;
+  int get wideCaptures => _wideCaptures;
+  int get mergeToken => _mergeToken;
+  double get mergeX => _mergeX;
+  double get mergeY => _mergeY;
+  int get mergePoints => _mergePoints;
+  int get powerCollectedToken => _powerCollectedToken;
 
   double radiusFor(LumaOrb orb) => 0.024 + math.sqrt(orb.mass) * 0.016;
 
@@ -71,14 +90,20 @@ class LumaWellEngine extends ChangeNotifier {
 
   Future<void> start() async {
     _best = await _store.loadBest();
-    _deal();
+    final save = await _store.loadSave();
+    if (save == null || !_hydrate(save)) {
+      _deal();
+    }
     notifyListeners();
   }
 
   void newGame() {
     _deal();
+    unawaited(_store.clearSave());
     notifyListeners();
   }
+
+  Future<void> saveNow() => _store.writeSave(_serialized());
 
   void beginCapture(double x, double y) {
     _captureX = x;
@@ -100,7 +125,9 @@ class LumaWellEngine extends ChangeNotifier {
   void endCapture() {
     _captureFor = 0;
     _capturedIds.clear();
+    _captureBlocked = false;
     notifyListeners();
+    _save();
   }
 
   void advance(double seconds) {
@@ -108,6 +135,11 @@ class LumaWellEngine extends ChangeNotifier {
     final dt = seconds.clamp(0.0, 0.04);
     _stabilizedFor = math.max(0, _stabilizedFor - dt);
     for (final orb in _orbs) {
+      if (isCapturing && _capturedIds.contains(orb.id)) {
+        orb.x += (_captureX - orb.x) * dt * 2.2;
+        orb.y += (_captureY - orb.y) * dt * 2.2;
+        continue;
+      }
       final speed = _stabilizedFor > 0 ? 0.1 : orb.drift;
       final angle = math.atan2(orb.y, orb.x) + speed * dt;
       final distance = math.sqrt(orb.x * orb.x + orb.y * orb.y);
@@ -127,10 +159,15 @@ class LumaWellEngine extends ChangeNotifier {
       _updateCaptured();
       if (_capturedIds.length >= 2) {
         _captureFor += dt;
-        if (_captureFor >= 2.5) _completeCapture();
+        if (_captureFor >= 1.5) _completeCapture();
       } else {
         _captureFor = 0.001;
       }
+    }
+    _persistFor += dt;
+    if (_persistFor >= 2) {
+      _persistFor = 0;
+      _save();
     }
     notifyListeners();
   }
@@ -147,45 +184,44 @@ class LumaWellEngine extends ChangeNotifier {
       case LumaWellPower.stabilize:
         _stabilizedFor = 7;
       case LumaWellPower.brightenNext:
-        final nearby = _orbs
-            .where(
-              (orb) =>
-                  math.sqrt(orb.x * orb.x + orb.y * orb.y) <
-                  planetRadius + 0.27,
-            )
-            .take(8)
-            .toList();
-        _absorb(nearby);
+        _wideCaptures += 3;
     }
     notifyListeners();
+    _save();
   }
 
   void _updateCaptured() {
     final candidates = _orbs.where((orb) {
       final dx = orb.x - _captureX;
       final dy = orb.y - _captureY;
-      return math.sqrt(dx * dx + dy * dy) < 0.23;
+      return math.sqrt(dx * dx + dy * dy) < captureRadius;
     }).toList();
     if (candidates.isEmpty) {
       _capturedIds.clear();
+      _captureBlocked = false;
       return;
     }
-    final kind = candidates
-        .fold<LumaOrb>(
-          candidates.first,
-          (closest, orb) =>
-              (orb.x - _captureX) * (orb.x - _captureX) +
-                      (orb.y - _captureY) * (orb.y - _captureY) <
-                  (closest.x - _captureX) * (closest.x - _captureX) +
-                      (closest.y - _captureY) * (closest.y - _captureY)
-              ? orb
-              : closest,
-        )
-        .kind;
+    final normal = candidates.where((orb) => !orb.isPower).toList();
+    final powerCount = candidates.where((orb) => orb.isPower).length;
+    if (normal.length + powerCount < 2 ||
+        (powerCount > 0 && normal.length < 2)) {
+      _captureBlocked = false;
+      _capturedIds.clear();
+      return;
+    }
+    final lowestKind = normal.fold<int>(
+      normal.first.kind,
+      (lowest, orb) => math.min(lowest, orb.kind),
+    );
+    final highestKind = normal.fold<int>(
+      normal.first.kind,
+      (highest, orb) => math.max(highest, orb.kind),
+    );
+    _captureBlocked = highestKind - lowestKind > 1;
     _capturedIds
       ..clear()
       ..addAll(
-        candidates.where((orb) => orb.kind == kind).map((orb) => orb.id),
+        _captureBlocked ? const <int>[] : candidates.map((orb) => orb.id),
       );
   }
 
@@ -193,19 +229,54 @@ class LumaWellEngine extends ChangeNotifier {
     final captured = _orbs
         .where((orb) => _capturedIds.contains(orb.id))
         .toList();
-    if (captured.length < 2) return;
+    if (!_isValidCapture(captured)) {
+      _captureFor = 0.001;
+      _capturedIds.clear();
+      _captureBlocked = true;
+      return;
+    }
+    if (captured.any((orb) => orb.isPower)) {
+      _powerCharges++;
+      _powerCollectedToken++;
+    }
     _merges++;
     _absorb(captured, multiplier: captured.length);
     _captureFor = 0;
     _capturedIds.clear();
+    _captureBlocked = false;
+    if (_wideCaptures > 0) _wideCaptures--;
+  }
+
+  bool _isValidCapture(List<LumaOrb> orbs) {
+    final normal = orbs.where((orb) => !orb.isPower).toList();
+    if (normal.length + orbs.where((orb) => orb.isPower).length < 2) {
+      return false;
+    }
+    if (orbs.any((orb) => orb.isPower) && normal.length < 2) {
+      return false;
+    }
+    if (normal.isEmpty) return false;
+    final lowest = normal.fold<int>(
+      normal.first.kind,
+      (value, orb) => math.min(value, orb.kind),
+    );
+    final highest = normal.fold<int>(
+      normal.first.kind,
+      (value, orb) => math.max(value, orb.kind),
+    );
+    return highest - lowest <= 1;
   }
 
   void _absorb(List<LumaOrb> orbs, {int multiplier = 1}) {
     if (orbs.isEmpty) return;
     final mass = orbs.fold<double>(0, (total, orb) => total + orb.mass);
+    _mergeX = orbs.fold<double>(0, (total, orb) => total + orb.x) / orbs.length;
+    _mergeY = orbs.fold<double>(0, (total, orb) => total + orb.y) / orbs.length;
     _orbs.removeWhere(orbs.contains);
     _planetMass += mass;
     _score += mass.round() * multiplier;
+    _mergePoints = mass.round() * multiplier;
+    _mergeToken++;
     if (_score > _best) {
       _best = _score;
       _store.saveBest(_best);
@@ -226,11 +297,104 @@ class LumaWellEngine extends ChangeNotifier {
     _powerCharges = 1;
     _planetMass = 4;
     _captureFor = 0;
+    _wideCaptures = 0;
+    _captureBlocked = false;
     _spawnFor = 0;
+    _persistFor = 0;
     final count = _usesEasyMode() ? 14 : 18;
     for (var i = 0; i < count; i++) {
       _spawn();
     }
+  }
+
+  Map<String, dynamic> _serialized() => {
+    'score': _score,
+    'merges': _merges,
+    'stage': _stage,
+    'charges': _powerCharges,
+    'planetMass': _planetMass,
+    'wideCaptures': _wideCaptures,
+    'orbs': [
+      for (final orb in _orbs)
+        {
+          'mass': orb.mass,
+          'kind': orb.kind,
+          'power': orb.isPower,
+          'x': orb.x,
+          'y': orb.y,
+          'drift': orb.drift,
+        },
+    ],
+  };
+
+  void _save() => unawaited(_store.writeSave(_serialized()));
+
+  bool _hydrate(Map<String, dynamic> data) {
+    final rawOrbs = data['orbs'];
+    if (rawOrbs is! List || rawOrbs.isEmpty || rawOrbs.length > 250) {
+      return false;
+    }
+    final restored = <LumaOrb>[];
+    for (final entry in rawOrbs) {
+      if (entry is! Map) return false;
+      final mass = entry['mass'];
+      final kind = entry['kind'];
+      final x = entry['x'];
+      final y = entry['y'];
+      final drift = entry['drift'];
+      final power = entry['power'];
+      if (mass is! num ||
+          kind is! int ||
+          x is! num ||
+          y is! num ||
+          drift is! num ||
+          mass <= 0 ||
+          kind < 0 ||
+          kind > 3 ||
+          (power != null && power is! bool)) {
+        return false;
+      }
+      restored.add(
+        LumaOrb(
+          id: _nextId++,
+          mass: mass.toDouble(),
+          kind: kind,
+          isPower: power == true,
+          x: x.toDouble(),
+          y: y.toDouble(),
+          drift: drift.toDouble(),
+        ),
+      );
+    }
+    final score = data['score'];
+    final merges = data['merges'];
+    final stage = data['stage'];
+    final charges = data['charges'];
+    final planetMass = data['planetMass'];
+    if (score is! int ||
+        merges is! int ||
+        stage is! int ||
+        charges is! int ||
+        planetMass is! num ||
+        score < 0 ||
+        merges < 0 ||
+        stage < 1 ||
+        charges < 0 ||
+        planetMass < 4) {
+      return false;
+    }
+    _orbs
+      ..clear()
+      ..addAll(restored);
+    _score = score;
+    _merges = merges;
+    _stage = stage;
+    _powerCharges = charges;
+    _planetMass = planetMass.toDouble();
+    _wideCaptures = data['wideCaptures'] is int
+        ? data['wideCaptures'] as int
+        : 0;
+    return true;
   }
 
   void _spawn() {
@@ -241,6 +405,7 @@ class LumaWellEngine extends ChangeNotifier {
         id: _nextId++,
         mass: (1 + _random.nextInt(3)).toDouble(),
         kind: _random.nextInt(math.min(_stage, 4)),
+        isPower: _random.nextInt(18) == 0,
         x: math.cos(angle) * distance,
         y: math.sin(angle) * distance,
         drift: (_random.nextDouble() - 0.5) * 0.16,

@@ -9684,6 +9684,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lumaWellNewGame => 'New game';
 
   @override
+  String get lumaWellNewGameConfirmTitle => 'Start a new game?';
+
+  @override
+  String get lumaWellNewGameConfirmText =>
+      'Your current planet and score will be replaced.';
+
+  @override
   String get lumaWellGameOver => 'WELL FULL';
 
   @override
@@ -9716,11 +9723,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Slow drifting matter for a short time';
 
   @override
-  String get lumaWellGrow => 'Feed the planet';
+  String get lumaWellGrow => 'Focus field';
 
   @override
-  String get lumaWellGrowSubtitle =>
-      'Convert nearby small matter into planet mass';
+  String get lumaWellGrowSubtitle => 'Make the next 3 capture rings smaller';
 
   @override
   String lumaWellPowerMenuCharges(int charges) {
@@ -9743,5 +9749,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lumaWellEasyModeSubtitle => 'Begin with fewer drifting orbs';
 
   @override
-  String get lumaWellGoal => 'Merge matter and feed the growing planet';
+  String get lumaWellGoal =>
+      'Merge compatible matter and feed the growing planet';
+
+  @override
+  String get lumaWellHelpTitle => 'How to play';
+
+  @override
+  String get lumaWellHelpSubtitle => 'Capture, merge, and grow';
+
+  @override
+  String get lumaWellHelpCapture => 'Capture a group';
+
+  @override
+  String get lumaWellHelpCaptureText =>
+      'Touch and hold around two or more nearby orbs. Values may differ by one at most: 1 and 2 work; 1 and 3 do not.';
+
+  @override
+  String get lumaWellHelpHold => 'Hold for 1.5 seconds';
+
+  @override
+  String get lumaWellHelpHoldText =>
+      'Keep the ring still for 1.5 seconds. If the highest and lowest values differ by more than one, the merge fails.';
+
+  @override
+  String get lumaWellHelpGrow => 'Grow the planet';
+
+  @override
+  String get lumaWellHelpGrowText =>
+      'Merged matter flies into the planet. Reach each mass target to advance a stage and earn a power charge.';
+
+  @override
+  String get lumaWellHelpChallenge => 'Manage the field';
+
+  @override
+  String get lumaWellHelpChallengeText =>
+      'New orb kinds and faster spawning make compatible groups harder to find. Use power charges when the field gets crowded.';
+
+  @override
+  String get lumaWellHelpPowerOrb => 'Power orb';
+
+  @override
+  String get lumaWellHelpPowerOrbText =>
+      'Gold star orbs fit any value range, but need at least two normal orbs in the ring. Capture one to gain an extra power charge.';
+
+  @override
+  String get lumaWellPowerOrbCollected =>
+      'Power orb collected: +1 power-up charge';
 }
