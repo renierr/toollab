@@ -7,6 +7,7 @@ class ChainDropColors {
 
   static const Color page = Color(0xFF0B0D14);
   static const Color board = Color(0xFF171A26);
+  static const Color boardHighlight = Color(0xFF23283A);
   static const Color emptyCell = Color(0xFF20242F);
   static const Color score = Color(0xFFFBBF24);
   static const Color best = Color(0xFF34D399);

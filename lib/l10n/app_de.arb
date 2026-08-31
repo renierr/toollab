@@ -3906,6 +3906,8 @@
   "chaindropSoundSubtitle": "Toneffekte abspielen",
   "chaindropHaptics": "Haptik",
   "chaindropHapticsSubtitle": "Bei Treffern und Brüchen vibrieren",
+  "chaindropFaithfulRules": "Klassische Regeln",
+  "chaindropFaithfulRulesSubtitle": "Hebt eine volle untere Reihe an; der zweite Treffer zeigt Zahlen",
   "chaindropUndo": "Letzten Wurf rückgängig machen",
   "chaindropPowerMenu": "Power-ups",
   "chaindropPowerClearColumn": "Spalte leeren",

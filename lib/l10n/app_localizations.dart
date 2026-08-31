@@ -17219,6 +17219,18 @@ abstract class AppLocalizations {
   /// **'Vibrate on pops and breaks'**
   String get chaindropHapticsSubtitle;
 
+  /// No description provided for @chaindropFaithfulRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic rules'**
+  String get chaindropFaithfulRules;
+
+  /// No description provided for @chaindropFaithfulRulesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Raise a full bottom row; second hits reveal numbers'**
+  String get chaindropFaithfulRulesSubtitle;
+
   /// No description provided for @chaindropUndo.
   ///
   /// In en, this message translates to:

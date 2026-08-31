@@ -19,11 +19,22 @@ class ChainDropDiscView extends StatelessWidget {
         : (disc.crackStage == 0
               ? ChainDropColors.crackedStage0
               : ChainDropColors.crackedStage1);
+    final highlight = Color.lerp(color, Colors.white, 0.2)!;
+    final shade = Color.lerp(color, Colors.black, 0.24)!;
 
     Widget body = DecoratedBox(
       decoration: BoxDecoration(
-        color: color,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [highlight, color, shade],
+          stops: const [0, 0.58, 1],
+        ),
         shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.22),
+          width: size * 0.035,
+        ),
         boxShadow: disc.popping
             ? [
                 BoxShadow(
@@ -32,26 +43,48 @@ class ChainDropDiscView extends StatelessWidget {
                   spreadRadius: size * 0.04,
                 ),
               ]
-            : null,
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.28),
+                  blurRadius: size * 0.12,
+                  offset: Offset(0, size * 0.045),
+                ),
+              ],
       ),
-      child: Center(
-        child: value != null
-            ? FittedBox(
-                child: Padding(
-                  padding: EdgeInsets.all(size * 0.2),
-                  child: Text(
-                    '$value',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.1),
+            width: size * 0.022,
+          ),
+        ),
+        child: Center(
+          child: value != null
+              ? FittedBox(
+                  child: Padding(
+                    padding: EdgeInsets.all(size * 0.2),
+                    child: Text(
+                      '$value',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: size * 0.06,
+                            offset: Offset(0, size * 0.025),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                )
+              : CustomPaint(
+                  size: Size(size, size),
+                  painter: _CrackPainter(stage: disc.crackStage),
                 ),
-              )
-            : CustomPaint(
-                size: Size(size, size),
-                painter: _CrackPainter(stage: disc.crackStage),
-              ),
+        ),
       ),
     );
 

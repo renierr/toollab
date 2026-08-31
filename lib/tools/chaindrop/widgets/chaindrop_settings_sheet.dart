@@ -74,6 +74,17 @@ class ChainDropSettingsSheet extends StatelessWidget {
                       value: state.hapticsEnabled,
                       onChanged: state.setHapticsEnabled,
                     ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    SwitchListTile(
+                      secondary: Icon(
+                        Icons.grid_view_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
+                      title: Text(l10n.chaindropFaithfulRules),
+                      subtitle: Text(l10n.chaindropFaithfulRulesSubtitle),
+                      value: state.faithfulRules,
+                      onChanged: state.setFaithfulRules,
+                    ),
                   ],
                 ),
               ),

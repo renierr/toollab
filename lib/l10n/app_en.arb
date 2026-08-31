@@ -4910,6 +4910,8 @@
   "chaindropSoundSubtitle": "Play sound effects",
   "chaindropHaptics": "Haptics",
   "chaindropHapticsSubtitle": "Vibrate on pops and breaks",
+  "chaindropFaithfulRules": "Classic rules",
+  "chaindropFaithfulRulesSubtitle": "Raise a full bottom row; second hits reveal numbers",
   "chaindropUndo": "Undo last drop",
   "chaindropPowerMenu": "Power-ups",
   "chaindropPowerClearColumn": "Clear column",

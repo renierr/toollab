@@ -46,6 +46,9 @@ class _ChainDropPageState extends State<ChainDropPage> with DisposeCleanup {
     await context.read<ChainDropState>().restore();
     await ChainDropSfx.load();
     if (!mounted) return;
+    _engine.setFaithfulRulesResolver(
+      () => context.read<ChainDropState>().faithfulRules,
+    );
     _engine.onSfx = _handleSfx;
     await _engine.start();
   }
@@ -149,20 +152,29 @@ class _ChainDropPageState extends State<ChainDropPage> with DisposeCleanup {
                     maxHeight: 560,
                   ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       ChainDropQueueBar(queue: _engine.queue),
                       const SizedBox(height: 10),
-                      Stack(
-                        children: [
-                          ChainDropBoard(engine: _engine, onColumnTap: _drop),
-                          Positioned.fill(
-                            child: _Overlay(
-                              engine: _engine,
-                              onNewGame: _newGame,
+                      Expanded(
+                        child: Center(
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: Stack(
+                              children: [
+                                ChainDropBoard(
+                                  engine: _engine,
+                                  onColumnTap: _drop,
+                                ),
+                                Positioned.fill(
+                                  child: _Overlay(
+                                    engine: _engine,
+                                    onNewGame: _newGame,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),

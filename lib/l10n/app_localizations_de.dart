@@ -9691,6 +9691,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get chaindropHapticsSubtitle => 'Bei Treffern und Brüchen vibrieren';
 
   @override
+  String get chaindropFaithfulRules => 'Klassische Regeln';
+
+  @override
+  String get chaindropFaithfulRulesSubtitle =>
+      'Hebt eine volle untere Reihe an; der zweite Treffer zeigt Zahlen';
+
+  @override
   String get chaindropUndo => 'Letzten Wurf rückgängig machen';
 
   @override

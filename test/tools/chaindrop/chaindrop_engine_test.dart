@@ -38,10 +38,12 @@ Map<String, dynamic> _saveFor({
 Future<ChainDropEngine> _engineWith({
   required int level,
   required int dropsSinceGarbage,
+  bool faithfulRules = false,
 }) async {
   final store = _MemoryStore()
     ..save = _saveFor(level: level, dropsSinceGarbage: dropsSinceGarbage);
   final engine = ChainDropEngine(store: store, random: math.Random(7));
+  engine.setFaithfulRulesResolver(() => faithfulRules);
   await engine.start();
   return engine;
 }
@@ -78,5 +80,28 @@ void main() {
         reason: 'level ${testCase.level}',
       );
     }
+  });
+
+  test('softened crack waves insert their discs at the bottom', () async {
+    final engine = await _engineWith(level: 0, dropsSinceGarbage: 7);
+
+    await engine.dropDisc(0);
+
+    final crack = engine.discs.singleWhere((disc) => disc.value == null);
+    expect(crack.row, 0);
+  });
+
+  test('faithful rules insert a full cracked row at the bottom', () async {
+    final engine = await _engineWith(
+      level: 0,
+      dropsSinceGarbage: 7,
+      faithfulRules: true,
+    );
+
+    await engine.dropDisc(0);
+
+    final cracks = engine.discs.where((disc) => disc.value == null).toList();
+    expect(cracks, hasLength(7));
+    expect(cracks.map((disc) => disc.row), everyElement(0));
   });
 }

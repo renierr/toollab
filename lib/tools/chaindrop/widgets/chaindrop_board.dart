@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../chaindrop_colors.dart';
@@ -38,8 +40,23 @@ class ChainDropBoard extends StatelessWidget {
 
           return DecoratedBox(
             decoration: BoxDecoration(
-              color: ChainDropColors.board,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [ChainDropColors.boardHighlight, ChainDropColors.board],
+              ),
               borderRadius: BorderRadius.circular(extent * 0.04),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: math.max(1, extent * 0.004),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.32),
+                  blurRadius: extent * 0.09,
+                  offset: Offset(0, extent * 0.035),
+                ),
+              ],
             ),
             child: Stack(
               children: [
@@ -54,6 +71,16 @@ class ChainDropBoard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: ChainDropColors.emptyCell,
                           shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.035),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: cell * 0.08,
+                              offset: Offset(0, cell * 0.025),
+                            ),
+                          ],
                         ),
                       ),
                     ),

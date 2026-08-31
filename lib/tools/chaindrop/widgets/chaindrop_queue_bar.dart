@@ -10,15 +10,25 @@ class ChainDropQueueBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < queue.length; i++)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5),
-            child: _QueueDisc(value: queue[i], emphasized: i == 0),
-          ),
-      ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: ChainDropColors.board.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < queue.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                child: _QueueDisc(value: queue[i], emphasized: i == 0),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -37,11 +47,25 @@ class _QueueDisc extends StatelessWidget {
       height: size,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: ChainDropColors.forValue(value),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(ChainDropColors.forValue(value), Colors.white, 0.2)!,
+            ChainDropColors.forValue(value),
+          ],
+        ),
         shape: BoxShape.circle,
         border: emphasized
             ? Border.all(color: Colors.white.withValues(alpha: 0.85), width: 2)
-            : null,
+            : Border.all(color: Colors.white.withValues(alpha: 0.16)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
         '$value',

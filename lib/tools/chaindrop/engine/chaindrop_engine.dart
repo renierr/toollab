@@ -98,10 +98,15 @@ class ChainDropEngine extends ChangeNotifier {
   /// Fired at each meaningful step of a drop's resolution. The page maps keys
   /// from [ChainDropSfxKeys] to sound/haptics; the engine never plays audio.
   void Function(String key)? onSfx;
+  bool Function() _usesFaithfulRules = () => false;
 
   ChainDropEngine({ChainDropStore? store, math.Random? random})
     : _store = store ?? const ChainDropStore(),
       _random = random ?? math.Random();
+
+  void setFaithfulRulesResolver(bool Function() resolver) {
+    _usesFaithfulRules = resolver;
+  }
 
   int get score => _score;
   int get best => _best;
@@ -337,16 +342,20 @@ class ChainDropEngine extends ChangeNotifier {
 
       final crackedHit = <int>{};
       final crackedRemoved = <int>{};
+      final crackedRevealed = <int>{};
       for (final index in popped) {
         for (final neighbor in _neighbors(index)) {
           final disc = _grid[neighbor];
           if (disc == null || disc.value != null) continue;
           if (crackedHit.contains(neighbor) ||
-              crackedRemoved.contains(neighbor)) {
+              crackedRemoved.contains(neighbor) ||
+              crackedRevealed.contains(neighbor)) {
             continue;
           }
           if (disc.crackStage == 0) {
             crackedHit.add(neighbor);
+          } else if (_usesFaithfulRules()) {
+            crackedRevealed.add(neighbor);
           } else {
             crackedRemoved.add(neighbor);
           }
@@ -361,6 +370,9 @@ class ChainDropEngine extends ChangeNotifier {
       }
       for (final index in crackedHit) {
         _grid[index]!.crackStage = 1;
+      }
+      for (final index in crackedRevealed) {
+        _grid[index]!.value = _randomValue();
       }
 
       var points = 0;
@@ -480,12 +492,23 @@ class ChainDropEngine extends ChangeNotifier {
     }
   }
 
-  /// Scatters fresh cracked discs into random columns that still have room,
-  /// one per column, dropped onto each column's current stack rather than
-  /// shoving the whole board up. The first two waves place one disc; later
-  /// waves add one at a time, capped at three and by the free columns.
+  /// Inserts cracks at the bottom, shifting each selected column upward. The
+  /// softened rules insert a small random subset; faithful rules insert all 7.
   void _insertCrackedWave() {
     _level++;
+    if (_usesFaithfulRules()) {
+      if (List.generate(
+        ChainDropGrid.columns,
+        isColumnFull,
+      ).any((full) => full)) {
+        _endGame();
+        return;
+      }
+      for (var col = 0; col < ChainDropGrid.columns; col++) {
+        _insertCrackedDiscAtBottom(col);
+      }
+      return;
+    }
     final available = <int>[
       for (var col = 0; col < ChainDropGrid.columns; col++)
         if (!isColumnFull(col)) col,
@@ -496,15 +519,19 @@ class ChainDropEngine extends ChangeNotifier {
       available.length,
     );
     for (var i = 0; i < count; i++) {
-      final col = available[i];
-      final row = _columnHeight(col);
-      _grid[row * ChainDropGrid.columns + col] = ChainDropDisc(
-        id: _nextId++,
-        row: row,
-        col: col,
-        spawned: true,
-      );
+      _insertCrackedDiscAtBottom(available[i]);
     }
+  }
+
+  void _insertCrackedDiscAtBottom(int col) {
+    for (var row = ChainDropGrid.rows - 1; row > 0; row--) {
+      final index = row * ChainDropGrid.columns + col;
+      final belowIndex = (row - 1) * ChainDropGrid.columns + col;
+      final disc = _grid[belowIndex];
+      _grid[index] = disc;
+      if (disc != null) disc.row = row;
+    }
+    _grid[col] = ChainDropDisc(id: _nextId++, row: 0, col: col, spawned: true);
   }
 
   void _endGame() {

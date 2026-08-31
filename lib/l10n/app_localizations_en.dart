@@ -9622,6 +9622,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chaindropHapticsSubtitle => 'Vibrate on pops and breaks';
 
   @override
+  String get chaindropFaithfulRules => 'Classic rules';
+
+  @override
+  String get chaindropFaithfulRulesSubtitle =>
+      'Raise a full bottom row; second hits reveal numbers';
+
+  @override
   String get chaindropUndo => 'Undo last drop';
 
   @override

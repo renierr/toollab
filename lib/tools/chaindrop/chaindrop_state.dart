@@ -7,12 +7,15 @@ import 'config.dart';
 class ChainDropState extends ChangeNotifier {
   static const String _soundEnabledKey = 'sound_enabled';
   static const String _hapticsEnabledKey = 'haptics_enabled';
+  static const String _faithfulRulesKey = 'faithful_rules';
 
   bool _soundEnabled = true;
   bool _hapticsEnabled = true;
+  bool _faithfulRules = false;
 
   bool get soundEnabled => _soundEnabled;
   bool get hapticsEnabled => _hapticsEnabled;
+  bool get faithfulRules => _faithfulRules;
 
   Future<void> restore() async {
     _soundEnabled =
@@ -27,6 +30,12 @@ class ChainDropState extends ChangeNotifier {
           _hapticsEnabledKey,
         )) !=
         'false';
+    _faithfulRules =
+        (await DatabaseService.instance.getSetting(
+          ChainDropTool.config.id,
+          _faithfulRulesKey,
+        )) ==
+        'true';
     notifyListeners();
   }
 
@@ -48,6 +57,17 @@ class ChainDropState extends ChangeNotifier {
     await DatabaseService.instance.setSetting(
       ChainDropTool.config.id,
       _hapticsEnabledKey,
+      value.toString(),
+    );
+  }
+
+  Future<void> setFaithfulRules(bool value) async {
+    if (_faithfulRules == value) return;
+    _faithfulRules = value;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      ChainDropTool.config.id,
+      _faithfulRulesKey,
       value.toString(),
     );
   }
