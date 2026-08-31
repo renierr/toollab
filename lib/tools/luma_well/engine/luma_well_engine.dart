@@ -158,7 +158,6 @@ class LumaWellEngine extends ChangeNotifier {
     if (!isCapturing) return;
     _captureX = x;
     _captureY = y;
-    _captureFor = 0.001;
     _updateCaptured();
     notifyListeners();
   }
