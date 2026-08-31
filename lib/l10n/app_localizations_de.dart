@@ -9808,6 +9808,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lumaWellSettingsTitle => 'Luma-Well-Einstellungen';
 
   @override
+  String get lumaWellSound => 'Ton';
+
+  @override
+  String get lumaWellSoundSubtitle => 'Toneffekte abspielen';
+
+  @override
   String get lumaWellHaptics => 'Haptik';
 
   @override

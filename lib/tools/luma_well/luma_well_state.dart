@@ -31,6 +31,7 @@ enum LumaWellTouchOffsetDirection {
 
 class LumaWellState extends ChangeNotifier {
   static const String _hapticsKey = 'haptics_enabled';
+  static const String _soundEnabledKey = 'sound_enabled';
   static const String _easyModeKey = 'easy_mode';
   static const String _unlimitedPowersKey = 'unlimited_powers';
   static const String _captureTimeKey = 'capture_time';
@@ -39,6 +40,7 @@ class LumaWellState extends ChangeNotifier {
   static const double _defaultTouchOffsetDistance = 60;
 
   bool _hapticsEnabled = true;
+  bool _soundEnabled = true;
   bool _easyMode = false;
   bool _unlimitedPowers = false;
   double _captureTime = 1.5;
@@ -47,6 +49,7 @@ class LumaWellState extends ChangeNotifier {
   double _touchOffsetDistance = _defaultTouchOffsetDistance;
 
   bool get hapticsEnabled => _hapticsEnabled;
+  bool get soundEnabled => _soundEnabled;
   bool get easyMode => _easyMode;
   bool get unlimitedPowers => _unlimitedPowers;
   double get captureTime => _captureTime;
@@ -59,6 +62,12 @@ class LumaWellState extends ChangeNotifier {
         (await DatabaseService.instance.getSetting(
           LumaWellTool.config.id,
           _hapticsKey,
+        )) !=
+        'false';
+    _soundEnabled =
+        (await DatabaseService.instance.getSetting(
+          LumaWellTool.config.id,
+          _soundEnabledKey,
         )) !=
         'false';
     _easyMode =
@@ -115,6 +124,17 @@ class LumaWellState extends ChangeNotifier {
     await DatabaseService.instance.setSetting(
       LumaWellTool.config.id,
       _hapticsKey,
+      value.toString(),
+    );
+  }
+
+  Future<void> setSoundEnabled(bool value) async {
+    if (_soundEnabled == value) return;
+    _soundEnabled = value;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      LumaWellTool.config.id,
+      _soundEnabledKey,
       value.toString(),
     );
   }

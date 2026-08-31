@@ -14,7 +14,8 @@ const double _minOrbDiameter = 26;
 class LumaWellBoard extends StatefulWidget {
   final LumaWellEngine engine;
   final bool isActive;
-  final ValueChanged<LumaWellPowerOrbEffect?> onMerge;
+  final void Function(LumaWellPowerOrbEffect? powerOrbEffect, bool stageUp)
+  onMerge;
 
   const LumaWellBoard({
     super.key,
@@ -50,6 +51,7 @@ class _LumaWellBoardState extends State<LumaWellBoard>
       return;
     }
     final before = widget.engine.merges;
+    final beforeStage = widget.engine.stage;
     widget.engine.advance(
       (elapsed - _last).inMicroseconds / Duration.microsecondsPerSecond,
     );
@@ -58,7 +60,10 @@ class _LumaWellBoardState extends State<LumaWellBoard>
       final powerCollected =
           widget.engine.powerCollectedToken != _lastPowerCollectedToken;
       _lastPowerCollectedToken = widget.engine.powerCollectedToken;
-      widget.onMerge(powerCollected ? widget.engine.lastPowerOrbEffect : null);
+      widget.onMerge(
+        powerCollected ? widget.engine.lastPowerOrbEffect : null,
+        widget.engine.stage > beforeStage,
+      );
     }
   }
 

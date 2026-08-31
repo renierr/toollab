@@ -11,7 +11,9 @@ import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
+import 'engine/luma_well_audio.dart';
 import 'engine/luma_well_engine.dart';
+import 'luma_well_audio_service.dart';
 import 'luma_well_colors.dart';
 import 'luma_well_state.dart';
 import 'widgets/luma_well_board.dart';
@@ -38,6 +40,7 @@ class _LumaWellPageState extends State<LumaWellPage>
       await _engine.saveNow();
       _engine.dispose();
     });
+    onDispose(() => unawaited(LumaWellAudioService.instance.releaseAll()));
     unawaited(_bootstrap());
   }
 
@@ -60,14 +63,19 @@ class _LumaWellPageState extends State<LumaWellPage>
     _engine.setCaptureTimeResolver(
       () => context.read<LumaWellState>().captureTime,
     );
+    await LumaWellSfx.load();
     await _engine.start();
   }
 
-  void _onMerge(LumaWellPowerOrbEffect? powerOrbEffect) {
+  void _onMerge(LumaWellPowerOrbEffect? powerOrbEffect, bool stageUp) {
     if (context.read<LumaWellState>().hapticsEnabled) {
       HapticFeedback.mediumImpact();
     }
+    LumaWellAudioService.instance.play(
+      stageUp ? LumaWellSfx.stageUp : LumaWellSfx.merge(_engine.mergePoints),
+    );
     if (powerOrbEffect != null) {
+      LumaWellAudioService.instance.play(LumaWellSfx.orbCollected);
       final l10n = AppLocalizations.of(context);
       final message = switch (powerOrbEffect) {
         LumaWellPowerOrbEffect.charge => l10n.lumaWellPowerOrbCollected,
@@ -84,6 +92,7 @@ class _LumaWellPageState extends State<LumaWellPage>
     final power = await LumaWellPowerSheet.show(context);
     if (power != null) {
       _engine.usePower(power);
+      LumaWellAudioService.instance.play(LumaWellSfx.powerUse);
     }
   }
 
@@ -114,7 +123,10 @@ class _LumaWellPageState extends State<LumaWellPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    context.watch<LumaWellState>();
+    final settings = context.watch<LumaWellState>();
+    LumaWellAudioService.instance.setMasterVolume(
+      settings.soundEnabled ? 1 : 0,
+    );
     return ToolLayout(
       title: LumaWellTool.config.localizedName(l10n),
       backgroundColor: LumaWellColors.page,

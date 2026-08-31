@@ -78,6 +78,18 @@ class LumaWellSettingsSheet extends StatelessWidget {
                 child: Column(
                   children: [
                     SwitchListTile(
+                      secondary: Icon(
+                        state.soundEnabled
+                            ? Icons.volume_up_outlined
+                            : Icons.volume_off_outlined,
+                      ),
+                      title: Text(l10n.lumaWellSound),
+                      subtitle: Text(l10n.lumaWellSoundSubtitle),
+                      value: state.soundEnabled,
+                      onChanged: state.setSoundEnabled,
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    SwitchListTile(
                       secondary: const Icon(Icons.vibration),
                       title: Text(l10n.lumaWellHaptics),
                       subtitle: Text(l10n.lumaWellHapticsSubtitle),

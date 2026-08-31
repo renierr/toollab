@@ -3943,6 +3943,8 @@
   "lumaWellPowerMenuCharges": "Power-ups ({charges})",
   "@lumaWellPowerMenuCharges": {"placeholders": {"charges": {"type": "int"}}},
   "lumaWellSettingsTitle": "Luma-Well-Einstellungen",
+  "lumaWellSound": "Ton",
+  "lumaWellSoundSubtitle": "Toneffekte abspielen",
   "lumaWellHaptics": "Haptik",
   "lumaWellHapticsSubtitle": "Vibriert beim Verbinden von Kugeln",
   "lumaWellEasyMode": "Sanfter Start",

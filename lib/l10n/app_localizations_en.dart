@@ -9737,6 +9737,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lumaWellSettingsTitle => 'Luma Well Settings';
 
   @override
+  String get lumaWellSound => 'Sound';
+
+  @override
+  String get lumaWellSoundSubtitle => 'Play sound effects';
+
+  @override
   String get lumaWellHaptics => 'Haptics';
 
   @override

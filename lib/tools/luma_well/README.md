@@ -21,6 +21,9 @@ An optional Settings offset shifts the effective capture point away from the
 raw touch position by a user-chosen compass direction and pixel distance, so
 the ring stays visible above or beside the finger holding it.
 
+Merges, stage advances, collected power orbs and power-up activations each
+play a short synthesized chime. Settings can turn sound off entirely.
+
 The visible ring is the exact capture boundary. An orb is selected only when
 its center is inside the displayed ring; merely touching the ring edge does not
 count. Ring size and hold time lock when the touch begins, so a special orb can
@@ -110,6 +113,8 @@ Implemented:
 - Timed group absorption, stage thresholds, scores, and power-up charges.
 - A merge-flight animation and center score popup.
 - Run persistence and inactive-app simulation pause.
+- Synthesized sound effects for merges, stage advances and power-ups, with a
+  Settings toggle to disable them.
 
 ## Future Refinement
 

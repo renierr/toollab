@@ -17423,6 +17423,18 @@ abstract class AppLocalizations {
   /// **'Luma Well Settings'**
   String get lumaWellSettingsTitle;
 
+  /// No description provided for @lumaWellSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get lumaWellSound;
+
+  /// No description provided for @lumaWellSoundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play sound effects'**
+  String get lumaWellSoundSubtitle;
+
   /// No description provided for @lumaWellHaptics.
   ///
   /// In en, this message translates to:
