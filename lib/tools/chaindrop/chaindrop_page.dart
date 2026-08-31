@@ -45,6 +45,7 @@ class _ChainDropPageState extends State<ChainDropPage> with DisposeCleanup {
   Future<void> _bootstrap() async {
     await context.read<ChainDropState>().restore();
     await ChainDropSfx.load();
+    if (!mounted) return;
     _engine.onSfx = _handleSfx;
     await _engine.start();
   }

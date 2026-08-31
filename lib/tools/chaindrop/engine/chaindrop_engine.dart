@@ -14,7 +14,7 @@ class ChainDropGrid {
   static const int cells = columns * rows;
 
   /// Successful drops between cracked-disc waves.
-  static const int dropsPerCrackWave = 6;
+  static const int dropsPerCrackWave = 8;
 }
 
 /// Sound/haptic event keys the engine fires mid-resolution. Kept as plain
@@ -176,9 +176,11 @@ class ChainDropEngine extends ChangeNotifier {
     );
     _grid[index] = disc;
     if (_wildCharges > 0) {
-      _wildCharges--;
       final matched = _matchingNeighborValue(index);
-      if (matched != null) disc.value = matched;
+      if (matched != null) {
+        disc.value = matched;
+        _wildCharges--;
+      }
     }
     _dropsSinceGarbage++;
     onSfx?.call(ChainDropSfxKeys.drop);
@@ -480,8 +482,8 @@ class ChainDropEngine extends ChangeNotifier {
 
   /// Scatters fresh cracked discs into random columns that still have room,
   /// one per column, dropped onto each column's current stack rather than
-  /// shoving the whole board up. The wave grows with [_level] — the Nth wave
-  /// wants N discs, capped by however many columns are actually free.
+  /// shoving the whole board up. The first two waves place one disc; later
+  /// waves add one at a time, capped at three and by the free columns.
   void _insertCrackedWave() {
     _level++;
     final available = <int>[
@@ -489,7 +491,10 @@ class ChainDropEngine extends ChangeNotifier {
         if (!isColumnFull(col)) col,
     ];
     available.shuffle(_random);
-    final count = math.min(_level, available.length);
+    final count = math.min(
+      math.max(1, math.min(_level - 1, 3)),
+      available.length,
+    );
     for (var i = 0; i < count; i++) {
       final col = available[i];
       final row = _columnHeight(col);
