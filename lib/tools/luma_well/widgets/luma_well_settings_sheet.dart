@@ -130,7 +130,7 @@ class LumaWellSettingsSheet extends StatelessWidget {
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                       child: SegmentedButton<double>(
                         segments: [
-                          for (final option in const [1.0, 1.5, 2.0])
+                          for (final option in const [0.5, 1.0, 1.5, 2.0])
                             ButtonSegment(
                               value: option,
                               label: Text(

@@ -90,7 +90,10 @@ class LumaWellState extends ChangeNotifier {
           '',
     );
     _captureTime =
-        captureTime == 1.0 || captureTime == 1.5 || captureTime == 2.0
+        captureTime == 0.5 ||
+            captureTime == 1.0 ||
+            captureTime == 1.5 ||
+            captureTime == 2.0
         ? captureTime!
         : 1.5;
     final touchOffsetDirectionName = await DatabaseService.instance.getSetting(
@@ -162,7 +165,9 @@ class LumaWellState extends ChangeNotifier {
   }
 
   Future<void> setCaptureTime(double value) async {
-    if (value != 1.0 && value != 1.5 && value != 2.0) return;
+    if (value != 0.5 && value != 1.0 && value != 1.5 && value != 2.0) {
+      return;
+    }
     if (_captureTime == value) return;
     _captureTime = value;
     notifyListeners();
