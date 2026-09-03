@@ -10074,6 +10074,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceDistorterReRecord => 'Re-record';
 
   @override
+  String get voiceDistorterSaveClip => 'Save clip';
+
+  @override
+  String get voiceDistorterExporting => 'Rendering…';
+
+  @override
+  String get voiceDistorterExportFailed => 'Could not render the clip';
+
+  @override
   String get voiceDistorterPresetsTitle => 'Effects';
 
   @override

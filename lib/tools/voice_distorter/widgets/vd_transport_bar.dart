@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../voice_distorter_state.dart';
 import 'vd_record_button.dart';
+import 'vd_save_clip_button.dart';
 
 class VdTransportBar extends StatelessWidget {
   const VdTransportBar({super.key});
@@ -22,7 +23,9 @@ class VdTransportBar extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         FilledButton.icon(
-          onPressed: state.isPlaying
+          onPressed: state.isExporting
+              ? null
+              : state.isPlaying
               ? () => context.read<VoiceDistorterState>().stopPlayback()
               : () => context.read<VoiceDistorterState>().playCurrent(),
           icon: Icon(state.isPlaying ? Icons.stop : Icons.play_arrow),
@@ -34,10 +37,13 @@ class VdTransportBar extends StatelessWidget {
         // a plain tap here would start a recording with no easy way to stop it.
         if (state.mode == VoiceDistorterMode.clip)
           OutlinedButton.icon(
-            onPressed: () => startRecordingWithFeedback(context),
+            onPressed: state.isExporting
+                ? null
+                : () => startRecordingWithFeedback(context),
             icon: const Icon(Icons.mic_none_outlined),
             label: Text(l10n.voiceDistorterReRecord),
           ),
+        const VdSaveClipButton(),
       ],
     );
   }

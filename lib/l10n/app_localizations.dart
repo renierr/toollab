@@ -18029,6 +18029,24 @@ abstract class AppLocalizations {
   /// **'Re-record'**
   String get voiceDistorterReRecord;
 
+  /// No description provided for @voiceDistorterSaveClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Save clip'**
+  String get voiceDistorterSaveClip;
+
+  /// No description provided for @voiceDistorterExporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Rendering…'**
+  String get voiceDistorterExporting;
+
+  /// No description provided for @voiceDistorterExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not render the clip'**
+  String get voiceDistorterExportFailed;
+
   /// No description provided for @voiceDistorterPresetsTitle.
   ///
   /// In en, this message translates to:

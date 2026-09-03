@@ -17,8 +17,6 @@ class VoiceEffectParams {
     this.distortionAmount = 0,
   });
 
-  static const VoiceEffectParams neutral = VoiceEffectParams();
-
   VoiceEffectParams copyWith({
     double? pitchSemitones,
     double? robotAmount,
@@ -34,14 +32,6 @@ class VoiceEffectParams {
     lofiAmount: lofiAmount ?? this.lofiAmount,
     distortionAmount: distortionAmount ?? this.distortionAmount,
   );
-
-  bool sameKnobs(VoiceEffectParams other) =>
-      pitchSemitones == other.pitchSemitones &&
-      robotAmount == other.robotAmount &&
-      echoAmount == other.echoAmount &&
-      reverbAmount == other.reverbAmount &&
-      lofiAmount == other.lofiAmount &&
-      distortionAmount == other.distortionAmount;
 }
 
 /// A named, selectable effect: either one of the built-in [VoicePresets] or a

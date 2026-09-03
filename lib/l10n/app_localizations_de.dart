@@ -10150,6 +10150,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceDistorterReRecord => 'Neu aufnehmen';
 
   @override
+  String get voiceDistorterSaveClip => 'Clip speichern';
+
+  @override
+  String get voiceDistorterExporting => 'Wird gerendert…';
+
+  @override
+  String get voiceDistorterExportFailed => 'Clip konnte nicht gerendert werden';
+
+  @override
   String get voiceDistorterPresetsTitle => 'Effekte';
 
   @override

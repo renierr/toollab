@@ -5,14 +5,21 @@ import 'package:record/record.dart';
 
 import '../../../helpers/debug_log.dart';
 import '../../../helpers/temp_file_manager.dart';
+import 'wav_utils.dart';
 
 enum RecordStartResult { ok, denied, unavailable }
+
+/// A finished recording. [isStereo] is only true when the file is known to hold
+/// two channels — filters that require stereo must stay off otherwise.
+typedef VoiceClip = ({String path, bool isStereo});
 
 /// Records a short voice clip straight to a WAV file via [AudioRecorder],
 /// auto-stopping at [maxSeconds] so clips stay small.
 class VoiceRecorder {
   static const int sampleRate = 44100;
   static const int maxSeconds = 15;
+  static const String _clipFile = 'voice_clip.wav';
+  static const String _stereoFile = 'voice_clip_stereo.wav';
 
   final AudioRecorder _recorder = AudioRecorder();
   final TempFileScope _scope;
@@ -32,14 +39,6 @@ class VoiceRecorder {
   /// recording, for a live level indicator.
   final ValueNotifier<double> level = ValueNotifier(0);
 
-  Future<bool> hasPermission() async {
-    try {
-      return await _recorder.hasPermission();
-    } catch (_) {
-      return false;
-    }
-  }
-
   Future<RecordStartResult> start() async {
     if (_recording) return RecordStartResult.ok;
 
@@ -53,7 +52,7 @@ class VoiceRecorder {
     if (!granted) return RecordStartResult.denied;
 
     try {
-      final String path = await _scope.createFile('voice_clip.wav');
+      final String path = await _scope.createFile(_clipFile);
       await _recorder.start(
         const RecordConfig(
           encoder: AudioEncoder.wav,
@@ -83,9 +82,10 @@ class VoiceRecorder {
     }
   }
 
-  /// Stops recording and returns the recorded clip's file path, or `null` if
-  /// nothing was captured.
-  Future<String?> stop() async {
+  /// Stops recording and returns the captured clip, or `null` if nothing was
+  /// captured. Capture is mono for device compatibility; the returned clip is
+  /// widened to stereo so the reverb filter can run on it.
+  Future<VoiceClip?> stop() async {
     if (!_recording) return null;
     _recording = false;
     _limitTimer?.cancel();
@@ -93,12 +93,26 @@ class VoiceRecorder {
     await _amplitudeSub?.cancel();
     _amplitudeSub = null;
     level.value = 0;
+
+    String? path;
     try {
-      return await _recorder.stop();
+      path = await _recorder.stop();
     } catch (e) {
       errorLog('[VoiceRecorder] stop failed: $e');
       return null;
     }
+    if (path == null) return null;
+
+    try {
+      final stereo = widenWavToStereo(await _scope.readFile(_clipFile));
+      if (stereo != null) {
+        final String out = await _scope.createFile(_stereoFile, bytes: stereo);
+        return (path: out, isStereo: true);
+      }
+    } catch (e) {
+      errorLog('[VoiceRecorder] stereo conversion failed: $e');
+    }
+    return (path: path, isStereo: false);
   }
 
   Future<void> dispose() async {

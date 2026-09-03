@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/tool_page_state.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/readable_width.dart';
 import '../../widgets/tool_layout.dart';
@@ -12,8 +15,25 @@ import 'widgets/vd_preset_grid.dart';
 import 'widgets/vd_record_button.dart';
 import 'widgets/vd_transport_bar.dart';
 
-class VoiceDistorterPage extends StatelessWidget {
+class VoiceDistorterPage extends StatefulWidget {
   const VoiceDistorterPage({super.key});
+
+  @override
+  State<VoiceDistorterPage> createState() => _VoiceDistorterPageState();
+}
+
+class _VoiceDistorterPageState extends State<VoiceDistorterPage>
+    with DisposeCleanup<VoiceDistorterPage> {
+  @override
+  void initState() {
+    super.initState();
+    // The state provider is app-scoped, so leaving the page must silence it.
+    final state = context.read<VoiceDistorterState>();
+    onDispose(() {
+      unawaited(state.stopRecording());
+      unawaited(state.stopPlayback());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

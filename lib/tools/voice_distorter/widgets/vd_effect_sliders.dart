@@ -113,7 +113,7 @@ class _KnobSlider extends StatelessWidget {
     return Row(
       children: [
         SizedBox(
-          width: 76,
+          width: 96,
           child: Text(
             label,
             maxLines: 1,
