@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 
 import '../../../helpers/file_save_helper.dart';
 import '../../../l10n/app_localizations.dart';
+import '../engine/clip_export_format.dart';
 import '../voice_distorter_state.dart';
+import 'vd_export_format_dialog.dart';
 
 /// Renders the clip with the active effect and hands it to the platform save
 /// dialog. Rendering is real time and audible — the button shows a spinner and
@@ -15,9 +17,12 @@ class VdSaveClipButton extends StatelessWidget {
 
   Future<void> _save(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
+    final ClipExportFormat? format = await showExportFormatDialog(context);
+    if (format == null || !context.mounted) return;
+
     final Uint8List? bytes = await context
         .read<VoiceDistorterState>()
-        .renderCurrentClip();
+        .renderCurrentClip(format);
     if (!context.mounted) return;
     if (bytes == null) {
       ScaffoldMessenger.of(
@@ -27,7 +32,7 @@ class VdSaveClipButton extends StatelessWidget {
     }
     await FileSaveHelper.saveFile(
       context: context,
-      suggestedName: 'voice_clip.wav',
+      suggestedName: 'voice_clip.${format.extension}',
       bytes: bytes,
     );
   }

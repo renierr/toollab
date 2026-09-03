@@ -5,6 +5,7 @@ import 'package:flutter_soloud/flutter_soloud.dart';
 
 import '../../../helpers/debug_log.dart';
 import '../../../services/database_service.dart';
+import 'clip_export_format.dart';
 import 'voice_effect.dart';
 import 'voice_recorder.dart';
 import 'wav_utils.dart';
@@ -84,9 +85,12 @@ class VoiceEffectEngine {
   }
 
   /// Plays the clip once with [params] while capturing the mixer output, and
-  /// returns it as WAV bytes. SoLoud has no offline render, so this runs in
-  /// real time and is audible — a 10 s clip takes 10 s.
-  Future<Uint8List?> renderToWav(VoiceEffectParams params) async {
+  /// returns it encoded as [format]. SoLoud has no offline render, so this runs
+  /// in real time and is audible — a 10 s clip takes 10 s.
+  Future<Uint8List?> renderClip(
+    VoiceEffectParams params,
+    ClipExportFormat format,
+  ) async {
     final AudioSource? source = _source;
     if (source == null) return null;
     await stop();
@@ -99,10 +103,11 @@ class VoiceEffectEngine {
       // Mixer capture is the only way to get the filtered signal back out.
       // ignore: experimental_member_use
       final Stream<Uint8List> capture = SoLoud.instance.startMixerOutputStream(
-        format: MixerOutputFormat.pcmS16le,
+        format: format.mixerFormat,
         sampleRate: _renderSampleRate,
         channels: _renderChannels,
-        chunkPCMFrames: 2048,
+        // Fixed-size chunking is PCM only; the encoders emit whole pages.
+        chunkPCMFrames: format.isPcm ? 2048 : -1,
       );
       captureSub = capture.listen(chunks.add);
 
@@ -134,14 +139,16 @@ class VoiceEffectEngine {
     }
 
     if (chunks.isEmpty) return null;
-    final pcm = Uint8List(chunks.fold(0, (sum, c) => sum + c.length));
+    final bytes = Uint8List(chunks.fold(0, (sum, c) => sum + c.length));
     int offset = 0;
     for (final chunk in chunks) {
-      pcm.setRange(offset, offset + chunk.length, chunk);
+      bytes.setRange(offset, offset + chunk.length, chunk);
       offset += chunk.length;
     }
+    // The encoders already emit a finished container; raw PCM needs a header.
+    if (!format.isPcm) return bytes;
     return buildPcmWav(
-      pcm: pcm,
+      pcm: bytes,
       sampleRate: _renderSampleRate,
       channels: _renderChannels,
       bitsPerSample: 16,

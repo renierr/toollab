@@ -18047,6 +18047,30 @@ abstract class AppLocalizations {
   /// **'Save clip'**
   String get voiceDistorterSaveClip;
 
+  /// No description provided for @voiceDistorterExportFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as'**
+  String get voiceDistorterExportFormatTitle;
+
+  /// No description provided for @voiceDistorterFormatUncompressed.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncompressed, largest file'**
+  String get voiceDistorterFormatUncompressed;
+
+  /// No description provided for @voiceDistorterFormatCompressed.
+  ///
+  /// In en, this message translates to:
+  /// **'Compressed, small file'**
+  String get voiceDistorterFormatCompressed;
+
+  /// No description provided for @voiceDistorterFormatLossless.
+  ///
+  /// In en, this message translates to:
+  /// **'Lossless, compressed'**
+  String get voiceDistorterFormatLossless;
+
   /// No description provided for @voiceDistorterExporting.
   ///
   /// In en, this message translates to:

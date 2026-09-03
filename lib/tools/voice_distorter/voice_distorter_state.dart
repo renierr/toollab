@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../helpers/temp_file_manager.dart';
+import 'engine/clip_export_format.dart';
 import 'engine/voice_effect.dart';
 import 'engine/voice_effect_engine.dart';
 import 'engine/voice_recorder.dart';
@@ -111,14 +112,14 @@ class VoiceDistorterState extends ChangeNotifier {
 
   Future<void> stopPlayback() => _engine.stop();
 
-  /// Renders the clip with the active effect to WAV bytes. Audible and real
+  /// Renders the clip with the active effect into [format]. Audible and real
   /// time, so the UI shows [isExporting] while it runs.
-  Future<Uint8List?> renderCurrentClip() async {
+  Future<Uint8List?> renderCurrentClip(ClipExportFormat format) async {
     if (!hasClip || isExporting) return null;
     isExporting = true;
     notifyListeners();
     try {
-      return await _engine.renderToWav(params);
+      return await _engine.renderClip(params, format);
     } finally {
       isExporting = false;
       notifyListeners();

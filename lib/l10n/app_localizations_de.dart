@@ -10161,6 +10161,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceDistorterSaveClip => 'Clip speichern';
 
   @override
+  String get voiceDistorterExportFormatTitle => 'Speichern als';
+
+  @override
+  String get voiceDistorterFormatUncompressed => 'Unkomprimiert, größte Datei';
+
+  @override
+  String get voiceDistorterFormatCompressed => 'Komprimiert, kleine Datei';
+
+  @override
+  String get voiceDistorterFormatLossless => 'Verlustfrei, komprimiert';
+
+  @override
   String get voiceDistorterExporting => 'Wird gerendert…';
 
   @override

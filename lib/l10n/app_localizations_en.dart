@@ -10084,6 +10084,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceDistorterSaveClip => 'Save clip';
 
   @override
+  String get voiceDistorterExportFormatTitle => 'Save as';
+
+  @override
+  String get voiceDistorterFormatUncompressed => 'Uncompressed, largest file';
+
+  @override
+  String get voiceDistorterFormatCompressed => 'Compressed, small file';
+
+  @override
+  String get voiceDistorterFormatLossless => 'Lossless, compressed';
+
+  @override
   String get voiceDistorterExporting => 'Rendering…';
 
   @override
