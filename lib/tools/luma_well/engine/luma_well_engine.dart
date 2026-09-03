@@ -216,6 +216,12 @@ class LumaWellEngine extends ChangeNotifier {
         for (final orb in _orbs) {
           orb.x *= 1.18;
           orb.y *= 1.18;
+          final distSq = orb.x * orb.x + orb.y * orb.y;
+          if (distSq > 0.9025) {
+            final scale = 0.95 / math.sqrt(distSq);
+            orb.x *= scale;
+            orb.y *= scale;
+          }
         }
       case LumaWellPower.stabilize:
         _stabilizedFor = 7;
@@ -306,13 +312,14 @@ class LumaWellEngine extends ChangeNotifier {
     }
     _merges++;
     _absorb(captured, multiplier: captured.length);
-    _captureFor = 0;
     _activeCaptureRadius = _configuredCaptureRadius;
     _activeCaptureTime = _configuredCaptureTime;
-    _capturedIds.clear();
-    _captureBlocked = false;
     if (_expandedCaptures > 0) _expandedCaptures--;
     if (_focusedCaptures > 0) _focusedCaptures--;
+    _captureFor = 0.001;
+    _capturedIds.clear();
+    _captureBlocked = false;
+    _updateCaptured();
   }
 
   bool _isValidCapture(List<LumaOrb> orbs) {
@@ -339,7 +346,8 @@ class LumaWellEngine extends ChangeNotifier {
     if (orbs.isEmpty) return;
     final mass = orbs.fold<double>(
       0,
-      (total, orb) => total + orb.mass * (orb.kind + 1),
+      (total, orb) =>
+          total + (orb.isPower ? orb.mass : orb.mass * (orb.kind + 1)),
     );
     _mergeX = orbs.fold<double>(0, (total, orb) => total + orb.x) / orbs.length;
     _mergeY = orbs.fold<double>(0, (total, orb) => total + orb.y) / orbs.length;
@@ -376,6 +384,11 @@ class LumaWellEngine extends ChangeNotifier {
     _captureBlocked = false;
     _spawnFor = 0;
     _persistFor = 0;
+    _stabilizedFor = 0;
+    _mergeX = 0;
+    _mergeY = 0;
+    _mergePoints = 0;
+    _lastPowerOrbEffect = null;
     final count = _usesEasyMode() ? 14 : 18;
     for (var i = 0; i < count; i++) {
       _spawn();
@@ -432,22 +445,27 @@ class LumaWellEngine extends ChangeNotifier {
           (power != null && power is! bool)) {
         return false;
       }
-      restored.add(
-        LumaOrb(
-          id: _nextId++,
-          mass: mass.toDouble(),
-          kind: kind,
-          isPower: power == true,
-          power: switch (powerType) {
-            'expandField' => LumaWellPower.expandField,
-            'focusField' => LumaWellPower.focusField,
-            _ => null,
-          },
-          x: x.toDouble(),
-          y: y.toDouble(),
-          drift: drift.toDouble(),
-        ),
+      final orb = LumaOrb(
+        id: _nextId++,
+        mass: mass.toDouble(),
+        kind: kind,
+        isPower: power == true,
+        power: switch (powerType) {
+          'expandField' => LumaWellPower.expandField,
+          'focusField' => LumaWellPower.focusField,
+          _ => null,
+        },
+        x: x.toDouble(),
+        y: y.toDouble(),
+        drift: drift.toDouble(),
       );
+      final distSq = orb.x * orb.x + orb.y * orb.y;
+      if (distSq > 0.9025) {
+        final scale = 0.95 / math.sqrt(distSq);
+        orb.x *= scale;
+        orb.y *= scale;
+      }
+      restored.add(orb);
     }
     final score = data['score'];
     final merges = data['merges'];
@@ -480,12 +498,23 @@ class LumaWellEngine extends ChangeNotifier {
     _focusedCaptures = data['focusedCaptures'] is int
         ? data['focusedCaptures'] as int
         : 0;
+    _capturedIds.clear();
+    _captureFor = 0;
+    _captureBlocked = false;
+    _stabilizedFor = 0;
+    _spawnFor = 0;
+    _persistFor = 0;
+    _mergeX = 0;
+    _mergeY = 0;
+    _mergePoints = 0;
+    _lastPowerOrbEffect = null;
     return true;
   }
 
   void _spawn() {
+    if (_orbs.length >= 120) return;
     final angle = _random.nextDouble() * math.pi * 2;
-    final distance = 0.42 + _random.nextDouble() * 0.8;
+    final distance = 0.42 + _random.nextDouble() * 0.5;
     final isPower = _random.nextInt(18) == 0;
     final powerType = isPower ? _random.nextInt(3) : -1;
     _orbs.add(

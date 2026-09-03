@@ -105,11 +105,14 @@ class _LumaWellBoardState extends State<LumaWellBoard>
         onPanEnd: (_) => widget.engine.endCapture(),
         onPanCancel: widget.engine.endCapture,
         child: CustomPaint(
-          painter: _LumaFieldPainter(engine: widget.engine),
+          painter: _LumaFieldPainter(
+            planetRadius: widget.engine.planetRadius,
+          ),
           child: Stack(
             children: [
               for (final orb in widget.engine.orbs)
                 _OrbView(
+                  key: ValueKey(orb.id),
                   orb: orb,
                   engine: widget.engine,
                   size: size,
@@ -133,6 +136,7 @@ class _OrbView extends StatelessWidget {
   final bool captured;
 
   const _OrbView({
+    super.key,
     required this.orb,
     required this.engine,
     required this.size,
@@ -208,6 +212,7 @@ class _CaptureRing extends StatelessWidget {
   Widget build(BuildContext context) {
     final scale = size.shortestSide / 2;
     final diameter = scale * engine.captureRadius * 2;
+    final hasGroup = engine.capturedIds.length >= 2;
     return Positioned(
       left: size.width / 2 + engine.captureX * scale - diameter / 2,
       top: size.height / 2 + engine.captureY * scale - diameter / 2,
@@ -216,29 +221,21 @@ class _CaptureRing extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: engine.captureBlocked
+          SizedBox.expand(
+            child: CustomPaint(
+              painter: _CaptureRingPainter(
+                progress: engine.captureBlocked || !hasGroup
+                    ? 0
+                    : engine.captureProgress,
+                baseColor: engine.captureBlocked
                     ? LumaWellColors.ringBlocked.withValues(alpha: 0.8)
                     : LumaWellColors.ringNormal.withValues(alpha: 0.32),
-                width: 2,
+                progressColor: engine.captureBlocked
+                    ? LumaWellColors.ringBlocked.withValues(alpha: 0.85)
+                    : LumaWellColors.ringNormal.withValues(alpha: 0.9),
+                blocked: engine.captureBlocked,
               ),
             ),
-            child: const SizedBox.expand(),
-          ),
-          CircularProgressIndicator(
-            value: engine.captureBlocked
-                ? null
-                : engine.capturedIds.length >= 2
-                ? engine.captureProgress
-                : null,
-            color: engine.captureBlocked
-                ? LumaWellColors.ringBlocked.withValues(alpha: 0.85)
-                : LumaWellColors.ringNormal.withValues(alpha: 0.85),
-            backgroundColor: Colors.transparent,
-            strokeWidth: 3,
           ),
           Text(
             '${engine.captureTime.toStringAsFixed(2)}s',
@@ -251,6 +248,52 @@ class _CaptureRing extends StatelessWidget {
       ),
     );
   }
+}
+
+class _CaptureRingPainter extends CustomPainter {
+  final double progress;
+  final Color baseColor;
+  final Color progressColor;
+  final bool blocked;
+
+  const _CaptureRingPainter({
+    required this.progress,
+    required this.baseColor,
+    required this.progressColor,
+    required this.blocked,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.shortestSide / 2 - 4;
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = baseColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    if (blocked || progress <= 0) return;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      math.pi * 2 * progress.clamp(0.0, 1.0),
+      false,
+      Paint()
+        ..color = progressColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CaptureRingPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.blocked != blocked ||
+      oldDelegate.baseColor != baseColor;
 }
 
 class _MergeFlight extends StatelessWidget {
@@ -328,9 +371,9 @@ Color _colorForOrb(LumaOrb orb) {
 }
 
 class _LumaFieldPainter extends CustomPainter {
-  final LumaWellEngine engine;
+  final double planetRadius;
 
-  const _LumaFieldPainter({required this.engine});
+  const _LumaFieldPainter({required this.planetRadius});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -352,7 +395,7 @@ class _LumaFieldPainter extends CustomPainter {
         star,
       );
     }
-    final radius = engine.planetRadius * scale;
+    final radius = planetRadius * scale;
     final terrain = Paint()
       ..color = LumaWellColors.terrain
       ..strokeWidth = 3;
@@ -375,5 +418,6 @@ class _LumaFieldPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LumaFieldPainter oldDelegate) => true;
+  bool shouldRepaint(_LumaFieldPainter oldDelegate) =>
+      oldDelegate.planetRadius != planetRadius;
 }
