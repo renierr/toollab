@@ -39,6 +39,7 @@ import 'package:tool_lab/tools/ricochet/config.dart';
 import 'package:tool_lab/tools/twenty48/config.dart';
 import 'package:tool_lab/tools/chaindrop/config.dart';
 import 'package:tool_lab/tools/luma_well/config.dart';
+import 'package:tool_lab/tools/drift_bloom/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -102,5 +103,6 @@ class ToolRegistry {
     Twenty48Tool.config,
     ChainDropTool.config,
     LumaWellTool.config,
+    DriftBloomTool.config,
   ];
 }

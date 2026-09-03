@@ -304,6 +304,22 @@
                 />
         </activity>
 
+        <activity
+            android:name="de.renier.tool_lab.DriftBloomActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:process=":drift_bloom"
+            android:taskAffinity="de.renier.tool_lab.drift_bloom"
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"
+                />
+        </activity>
+
         <activity-alias
             android:name="de.renier.tool_lab.FileManagerAlias"
             android:targetActivity="de.renier.tool_lab.FileManagerActivity"
@@ -764,6 +780,19 @@
             android:targetActivity="de.renier.tool_lab.LumaWellActivity"
             android:label="Luma Well"
             android:icon="@mipmap/ic_launcher_luma_well"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name="de.renier.tool_lab.DriftBloomAlias"
+            android:targetActivity="de.renier.tool_lab.DriftBloomActivity"
+            android:label="Drift Bloom"
+            android:icon="@mipmap/ic_launcher_drift_bloom"
             android:enabled="false"
             android:exported="true">
             <intent-filter>

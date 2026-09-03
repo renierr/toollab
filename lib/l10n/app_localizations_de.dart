@@ -9739,6 +9739,99 @@ class AppLocalizationsDe extends AppLocalizations {
       'Platziere leuchtende Kugeln um einen drehenden Schacht und verbinde gleiche Kugeln zu stärkeren Formen.';
 
   @override
+  String get toolNameDriftBloom => 'Drift Bloom';
+
+  @override
+  String get toolDescDriftBloom =>
+      'Steuere einen treibenden Samen durch Windringe und bringe Blüten zum Blühen.';
+
+  @override
+  String get driftBloomScore => 'Punkte';
+
+  @override
+  String get driftBloomBest => 'Bestwert';
+
+  @override
+  String get driftBloomPetals => 'Blüten';
+
+  @override
+  String get driftBloomNewGame => 'Neues Spiel';
+
+  @override
+  String driftBloomCombo(int combo) {
+    return 'Serie x$combo';
+  }
+
+  @override
+  String get driftBloomCoachHint =>
+      'Ziehe, um den Samen durch die Ringe zu steuern';
+
+  @override
+  String get driftBloomSettingsTitle => 'Drift-Bloom-Einstellungen';
+
+  @override
+  String get driftBloomHaptics => 'Haptik';
+
+  @override
+  String get driftBloomHapticsSubtitle => 'Vibrieren, wenn eine Blüte aufblüht';
+
+  @override
+  String get driftBloomEasyMode => 'Sanfte Brise';
+
+  @override
+  String get driftBloomEasyModeSubtitle =>
+      'Langsamere Drift und weniger Windringe';
+
+  @override
+  String get driftBloomRingLife => 'Ringdauer';
+
+  @override
+  String get driftBloomRingLifeSubtitle => 'Wie lange Windringe offen bleiben';
+
+  @override
+  String driftBloomRingLifeOptionSeconds(String seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get driftBloomHelpTitle => 'Anleitung';
+
+  @override
+  String get driftBloomHelpSubtitle => 'Steuern, blühen und verketten';
+
+  @override
+  String get driftBloomGoal =>
+      'Führe den Samen durch Ringe und bringe eine volle Blüte zum Blühen';
+
+  @override
+  String get driftBloomHelpSteer => 'Samen steuern';
+
+  @override
+  String get driftBloomHelpSteerText =>
+      'Berühre und ziehe irgendwo. Der Samen treibt mit der Brise und folgt deinem Finger mit sanftem Zug.';
+
+  @override
+  String get driftBloomHelpRings => 'Windringe';
+
+  @override
+  String get driftBloomHelpRingsText =>
+      'Ringe verblassen mit der Zeit. Der Außenkreis streift nur; die kleine goldene Mitte lässt blühen.';
+
+  @override
+  String get driftBloomHelpBloom => 'Blütenblätter';
+
+  @override
+  String get driftBloomHelpBloomText =>
+      'Fliege durch eine goldene Mitte, um ein Blütenblatt zu öffnen. Geöffnete Blätter umkreisen deinen Samen.';
+
+  @override
+  String get driftBloomHelpCombo => 'Blüten verketten';
+
+  @override
+  String get driftBloomHelpComboText =>
+      'Blüten innerhalb von 5 Sekunden bilden eine Serie mit bis zu 5x Punkten. Lässt du einen frischen Ring verfallen, endet sie.';
+
+  @override
   String get lumaWellScore => 'Punkte';
 
   @override

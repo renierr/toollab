@@ -9669,6 +9669,97 @@ class AppLocalizationsEn extends AppLocalizations {
       'Place glowing orbs around a turning well and combine equals into brighter forms.';
 
   @override
+  String get toolNameDriftBloom => 'Drift Bloom';
+
+  @override
+  String get toolDescDriftBloom =>
+      'Steer a drifting seed through wind rings and bloom petals.';
+
+  @override
+  String get driftBloomScore => 'Score';
+
+  @override
+  String get driftBloomBest => 'Best';
+
+  @override
+  String get driftBloomPetals => 'Petals';
+
+  @override
+  String get driftBloomNewGame => 'New game';
+
+  @override
+  String driftBloomCombo(int combo) {
+    return 'Combo x$combo';
+  }
+
+  @override
+  String get driftBloomCoachHint => 'Drag to steer the seed through the rings';
+
+  @override
+  String get driftBloomSettingsTitle => 'Drift Bloom Settings';
+
+  @override
+  String get driftBloomHaptics => 'Haptics';
+
+  @override
+  String get driftBloomHapticsSubtitle => 'Vibrate when a petal blooms';
+
+  @override
+  String get driftBloomEasyMode => 'Gentle breeze';
+
+  @override
+  String get driftBloomEasyModeSubtitle => 'Slower drift and fewer wind rings';
+
+  @override
+  String get driftBloomRingLife => 'Ring lifetime';
+
+  @override
+  String get driftBloomRingLifeSubtitle => 'How long wind rings stay open';
+
+  @override
+  String driftBloomRingLifeOptionSeconds(String seconds) {
+    return '${seconds}s';
+  }
+
+  @override
+  String get driftBloomHelpTitle => 'How to play';
+
+  @override
+  String get driftBloomHelpSubtitle => 'Steer, bloom, and chain';
+
+  @override
+  String get driftBloomGoal =>
+      'Guide the seed through rings and bloom a full flower';
+
+  @override
+  String get driftBloomHelpSteer => 'Steer the seed';
+
+  @override
+  String get driftBloomHelpSteerText =>
+      'Touch and drag anywhere. The seed drifts with the breeze and follows your finger with a soft pull.';
+
+  @override
+  String get driftBloomHelpRings => 'Wind rings';
+
+  @override
+  String get driftBloomHelpRingsText =>
+      'Rings fade after a while. The outer circle only grazes; the small gold center blooms.';
+
+  @override
+  String get driftBloomHelpBloom => 'Bloom petals';
+
+  @override
+  String get driftBloomHelpBloomText =>
+      'Fly through a gold center to bloom a petal. Bloomed petals orbit your seed.';
+
+  @override
+  String get driftBloomHelpCombo => 'Chain blooms';
+
+  @override
+  String get driftBloomHelpComboText =>
+      'Blooms within 5 seconds chain a combo worth up to 5x points. Letting a fresh ring expire resets it.';
+
+  @override
   String get lumaWellScore => 'Score';
 
   @override

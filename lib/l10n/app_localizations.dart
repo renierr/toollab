@@ -17303,6 +17303,168 @@ abstract class AppLocalizations {
   /// **'Place glowing orbs around a turning well and combine equals into brighter forms.'**
   String get toolDescLumaWell;
 
+  /// No description provided for @toolNameDriftBloom.
+  ///
+  /// In en, this message translates to:
+  /// **'Drift Bloom'**
+  String get toolNameDriftBloom;
+
+  /// No description provided for @toolDescDriftBloom.
+  ///
+  /// In en, this message translates to:
+  /// **'Steer a drifting seed through wind rings and bloom petals.'**
+  String get toolDescDriftBloom;
+
+  /// No description provided for @driftBloomScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get driftBloomScore;
+
+  /// No description provided for @driftBloomBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get driftBloomBest;
+
+  /// No description provided for @driftBloomPetals.
+  ///
+  /// In en, this message translates to:
+  /// **'Petals'**
+  String get driftBloomPetals;
+
+  /// No description provided for @driftBloomNewGame.
+  ///
+  /// In en, this message translates to:
+  /// **'New game'**
+  String get driftBloomNewGame;
+
+  /// No description provided for @driftBloomCombo.
+  ///
+  /// In en, this message translates to:
+  /// **'Combo x{combo}'**
+  String driftBloomCombo(int combo);
+
+  /// No description provided for @driftBloomCoachHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to steer the seed through the rings'**
+  String get driftBloomCoachHint;
+
+  /// No description provided for @driftBloomSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drift Bloom Settings'**
+  String get driftBloomSettingsTitle;
+
+  /// No description provided for @driftBloomHaptics.
+  ///
+  /// In en, this message translates to:
+  /// **'Haptics'**
+  String get driftBloomHaptics;
+
+  /// No description provided for @driftBloomHapticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrate when a petal blooms'**
+  String get driftBloomHapticsSubtitle;
+
+  /// No description provided for @driftBloomEasyMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Gentle breeze'**
+  String get driftBloomEasyMode;
+
+  /// No description provided for @driftBloomEasyModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Slower drift and fewer wind rings'**
+  String get driftBloomEasyModeSubtitle;
+
+  /// No description provided for @driftBloomRingLife.
+  ///
+  /// In en, this message translates to:
+  /// **'Ring lifetime'**
+  String get driftBloomRingLife;
+
+  /// No description provided for @driftBloomRingLifeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How long wind rings stay open'**
+  String get driftBloomRingLifeSubtitle;
+
+  /// No description provided for @driftBloomRingLifeOptionSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s'**
+  String driftBloomRingLifeOptionSeconds(String seconds);
+
+  /// No description provided for @driftBloomHelpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to play'**
+  String get driftBloomHelpTitle;
+
+  /// No description provided for @driftBloomHelpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Steer, bloom, and chain'**
+  String get driftBloomHelpSubtitle;
+
+  /// No description provided for @driftBloomGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Guide the seed through rings and bloom a full flower'**
+  String get driftBloomGoal;
+
+  /// No description provided for @driftBloomHelpSteer.
+  ///
+  /// In en, this message translates to:
+  /// **'Steer the seed'**
+  String get driftBloomHelpSteer;
+
+  /// No description provided for @driftBloomHelpSteerText.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and drag anywhere. The seed drifts with the breeze and follows your finger with a soft pull.'**
+  String get driftBloomHelpSteerText;
+
+  /// No description provided for @driftBloomHelpRings.
+  ///
+  /// In en, this message translates to:
+  /// **'Wind rings'**
+  String get driftBloomHelpRings;
+
+  /// No description provided for @driftBloomHelpRingsText.
+  ///
+  /// In en, this message translates to:
+  /// **'Rings fade after a while. The outer circle only grazes; the small gold center blooms.'**
+  String get driftBloomHelpRingsText;
+
+  /// No description provided for @driftBloomHelpBloom.
+  ///
+  /// In en, this message translates to:
+  /// **'Bloom petals'**
+  String get driftBloomHelpBloom;
+
+  /// No description provided for @driftBloomHelpBloomText.
+  ///
+  /// In en, this message translates to:
+  /// **'Fly through a gold center to bloom a petal. Bloomed petals orbit your seed.'**
+  String get driftBloomHelpBloomText;
+
+  /// No description provided for @driftBloomHelpCombo.
+  ///
+  /// In en, this message translates to:
+  /// **'Chain blooms'**
+  String get driftBloomHelpCombo;
+
+  /// No description provided for @driftBloomHelpComboText.
+  ///
+  /// In en, this message translates to:
+  /// **'Blooms within 5 seconds chain a combo worth up to 5x points. Letting a fresh ring expire resets it.'**
+  String get driftBloomHelpComboText;
+
   /// No description provided for @lumaWellScore.
   ///
   /// In en, this message translates to:
