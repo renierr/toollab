@@ -71,6 +71,9 @@ class LumaWellEngine extends ChangeNotifier {
   double _comboFor = 0;
   int _attempts = 0;
   bool _lastMergeHadVolatile = false;
+  double _time = 0;
+  double _slowMoFor = 0;
+  double _stagePulse = 0;
 
   LumaWellEngine({LumaWellStore? store, math.Random? random})
     : _store = store ?? const LumaWellStore(),
@@ -130,6 +133,15 @@ class LumaWellEngine extends ChangeNotifier {
       : (_merges / _attempts).clamp(0.0, 1.0);
   static const double comboWindow = 6;
   double get driftFactor => math.min(2.0, 1 + (_stage - 1) * 0.12);
+  double get time => _time;
+  double get stagePulse => _stagePulse;
+  int get crowdLevel => _orbs.length >= 100
+      ? 3
+      : _orbs.length >= 80
+      ? 2
+      : _orbs.length >= 48
+      ? 1
+      : 0;
 
   double radiusFor(LumaOrb orb) => 0.024 + math.sqrt(orb.mass) * 0.016;
   int get highestUnlockedNumber => math.min(6, _stage + 1);
@@ -196,27 +208,31 @@ class LumaWellEngine extends ChangeNotifier {
   void advance(double seconds) {
     if (seconds <= 0) return;
     final dt = seconds.clamp(0.0, 0.04);
-    _stabilizedFor = math.max(0, _stabilizedFor - dt);
+    _time += dt;
+    _slowMoFor = math.max(0, _slowMoFor - dt);
+    _stagePulse = math.max(0, _stagePulse - dt * 2.5);
+    final simDt = _slowMoFor > 0 ? dt * 0.25 : dt;
+    _stabilizedFor = math.max(0, _stabilizedFor - simDt);
     if (_comboFor > 0) {
-      _comboFor = math.max(0, _comboFor - dt);
+      _comboFor = math.max(0, _comboFor - simDt);
       if (_comboFor == 0) _combo = 0;
     }
     for (final orb in _orbs) {
       if (isCapturing && _capturedIds.contains(orb.id)) {
-        orb.x += (_captureX - orb.x) * dt * 2.2;
-        orb.y += (_captureY - orb.y) * dt * 2.2;
+        orb.x += (_captureX - orb.x) * simDt * 2.2;
+        orb.y += (_captureY - orb.y) * simDt * 2.2;
         continue;
       }
       final speed =
           orb.drift *
           driftFactor *
           (_stabilizedFor > 0 ? 0.15 : 1);
-      final angle = math.atan2(orb.y, orb.x) + speed * dt;
+      final angle = math.atan2(orb.y, orb.x) + speed * simDt;
       final distance = math.sqrt(orb.x * orb.x + orb.y * orb.y);
       orb.x = math.cos(angle) * distance;
       orb.y = math.sin(angle) * distance;
     }
-    _spawnFor += dt;
+    _spawnFor += simDt;
     if (_spawnFor >= spawnInterval) {
       _spawnFor = 0;
       _spawn();
@@ -224,13 +240,13 @@ class LumaWellEngine extends ChangeNotifier {
     if (isCapturing) {
       _updateCaptured();
       if (_capturedIds.length >= 2) {
-        _captureFor += dt;
+        _captureFor += simDt;
         if (_captureFor >= captureTime) _completeCapture();
       } else {
         _captureFor = 0.001;
       }
     }
-    _persistFor += dt;
+    _persistFor += simDt;
     if (_persistFor >= 2) {
       _persistFor = 0;
       _save();
@@ -425,6 +441,8 @@ class LumaWellEngine extends ChangeNotifier {
     while (_planetMass >= _nextStageMass) {
       _stage++;
       _powerCharges++;
+      _stagePulse = 1;
+      _slowMoFor = 0.35;
     }
   }
 
@@ -455,6 +473,8 @@ class LumaWellEngine extends ChangeNotifier {
     _comboFor = 0;
     _attempts = 0;
     _lastMergeHadVolatile = false;
+    _slowMoFor = 0;
+    _stagePulse = 0;
     final count = _usesEasyMode() ? 14 : 18;
     for (var i = 0; i < count; i++) {
       _spawn();
@@ -583,6 +603,8 @@ class LumaWellEngine extends ChangeNotifier {
     _combo = 0;
     _comboFor = 0;
     _lastMergeHadVolatile = false;
+    _slowMoFor = 0;
+    _stagePulse = 0;
     _bestCombo = data['bestCombo'] is int
         ? (data['bestCombo'] as int).clamp(0, 1 << 30)
         : 0;

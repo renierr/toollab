@@ -17764,6 +17764,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Merges within 6 seconds chain a combo that multiplies score up to 5x. A volatile orb or a long pause resets it.'**
   String get lumaWellHelpComboText;
+
+  /// No description provided for @lumaWellCoachHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold a group of orbs'**
+  String get lumaWellCoachHint;
 }
 
 class _AppLocalizationsDelegate

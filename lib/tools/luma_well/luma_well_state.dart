@@ -37,6 +37,7 @@ class LumaWellState extends ChangeNotifier {
   static const String _captureTimeKey = 'capture_time';
   static const String _touchOffsetDirectionKey = 'touch_offset_direction';
   static const String _touchOffsetDistanceKey = 'touch_offset_distance';
+  static const String _coachSeenKey = 'coach_seen';
   static const double _defaultTouchOffsetDistance = 60;
 
   bool _hapticsEnabled = true;
@@ -47,6 +48,7 @@ class LumaWellState extends ChangeNotifier {
   LumaWellTouchOffsetDirection _touchOffsetDirection =
       LumaWellTouchOffsetDirection.none;
   double _touchOffsetDistance = _defaultTouchOffsetDistance;
+  bool _coachSeen = false;
 
   bool get hapticsEnabled => _hapticsEnabled;
   bool get soundEnabled => _soundEnabled;
@@ -56,6 +58,7 @@ class LumaWellState extends ChangeNotifier {
   LumaWellTouchOffsetDirection get touchOffsetDirection =>
       _touchOffsetDirection;
   double get touchOffsetDistance => _touchOffsetDistance;
+  bool get coachSeen => _coachSeen;
 
   Future<void> restore() async {
     _hapticsEnabled =
@@ -117,6 +120,12 @@ class LumaWellState extends ChangeNotifier {
             touchOffsetDistance <= 120
         ? touchOffsetDistance
         : _defaultTouchOffsetDistance;
+    _coachSeen =
+        (await DatabaseService.instance.getSetting(
+          LumaWellTool.config.id,
+          _coachSeenKey,
+        )) ==
+        'true';
     notifyListeners();
   }
 
@@ -200,6 +209,17 @@ class LumaWellState extends ChangeNotifier {
       LumaWellTool.config.id,
       _touchOffsetDistanceKey,
       clamped.toString(),
+    );
+  }
+
+  Future<void> setCoachSeen(bool value) async {
+    if (_coachSeen == value) return;
+    _coachSeen = value;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      LumaWellTool.config.id,
+      _coachSeenKey,
+      value.toString(),
     );
   }
 }

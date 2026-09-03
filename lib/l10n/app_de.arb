@@ -4001,5 +4001,6 @@
   "lumaWellHelpVolatile": "Volatile Materie",
   "lumaWellHelpVolatileText": "Dunkle ✕-Kugeln passen zu jedem Wertebereich, geben aber keine Planetenmasse, schmälern die Ausbeute und beenden deine Serie. Verschmelze schnell, bevor sie in deinen Ring treiben.",
   "lumaWellHelpCombo": "Serien-Bonus",
-  "lumaWellHelpComboText": "Verschmelzungen innerhalb von 6 Sekunden bilden eine Serie, die Punkte bis zu 5x multipliziert. Eine volatile Kugel oder eine lange Pause setzt sie zurück."
+  "lumaWellHelpComboText": "Verschmelzungen innerhalb von 6 Sekunden bilden eine Serie, die Punkte bis zu 5x multipliziert. Eine volatile Kugel oder eine lange Pause setzt sie zurück.",
+  "lumaWellCoachHint": "Berühre eine Kugelgruppe und halte"
 }

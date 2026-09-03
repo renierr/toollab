@@ -9927,4 +9927,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lumaWellHelpComboText =>
       'Merges within 6 seconds chain a combo that multiplies score up to 5x. A volatile orb or a long pause resets it.';
+
+  @override
+  String get lumaWellCoachHint => 'Touch and hold a group of orbs';
 }

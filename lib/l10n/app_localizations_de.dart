@@ -10001,4 +10001,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get lumaWellHelpComboText =>
       'Verschmelzungen innerhalb von 6 Sekunden bilden eine Serie, die Punkte bis zu 5x multipliziert. Eine volatile Kugel oder eine lange Pause setzt sie zurück.';
+
+  @override
+  String get lumaWellCoachHint => 'Berühre eine Kugelgruppe und halte';
 }

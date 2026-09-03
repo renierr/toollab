@@ -12,6 +12,7 @@ class LumaWellSfx {
   static const String stageUp = 'lw_stage_up';
   static const String orbCollected = 'lw_orb_collected';
   static const String powerUse = 'lw_power_use';
+  static const String padLoop = 'lw_pad';
 
   /// The variant for a completed merge: bigger point payouts ring higher,
   /// and an active combo streak lifts the pitch further.
@@ -79,6 +80,11 @@ class LumaWellSfx {
         lowPassHz: 900,
         decay: 3.0,
       ),
+      padLoop: WavBuilder.mix([
+        WavBuilder.tone(frequency: 110, seconds: 8, gain: 0.10, decay: 0),
+        WavBuilder.tone(frequency: 165, seconds: 8, gain: 0.07, decay: 0),
+        WavBuilder.tone(frequency: 220, seconds: 8, gain: 0.05, decay: 0),
+      ]),
     };
     await LumaWellAudioService.instance.registerAll(clips);
   }

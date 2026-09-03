@@ -126,6 +126,10 @@ Implemented:
   from stage 5.
 - Run stats (best combo, capture accuracy, attempts, merges) behind the
   chart button.
+- Game feel: capture ring heats toward white as the hold fills, progress
+  ticks on haptics, merge shockwave, twinkling starfield, red crowd
+  vignette past 48/80/100 orbs, rolling score counter, 0.35s slow-mo plus
+  planet pulse on stage advance, ambient pad drone, first-run coach hint.
 - Run persistence and inactive-app simulation pause.
 - Synthesized sound effects for merges, stage advances and power-ups, with a
   Settings toggle to disable them.

@@ -435,6 +435,73 @@ void main() {
     expect(engine.bestCombo, 3);
     expect(engine.attempts, 5);
   });
+
+  test('time advances and crowd level follows orb count', () async {
+    Map<String, dynamic> fieldWith(int count) => {
+      'score': 0,
+      'merges': 0,
+      'stage': 1,
+      'charges': 1,
+      'planetMass': 4.0,
+      'expandedCaptures': 0,
+      'focusedCaptures': 0,
+      'orbs': [
+        for (var i = 0; i < count; i++)
+          {'mass': 1.0, 'kind': 0, 'x': 0.5, 'y': 0.0, 'drift': 0.0},
+      ],
+    };
+    final calm = LumaWellEngine(
+      store: _MemoryStore()..save = fieldWith(10),
+    );
+    await calm.start();
+    expect(calm.crowdLevel, 0);
+    expect(calm.time, 0);
+    calm.advance(0.04);
+    expect(calm.time, greaterThan(0));
+
+    final busy = LumaWellEngine(
+      store: _MemoryStore()..save = fieldWith(85),
+    );
+    await busy.start();
+    expect(busy.crowdLevel, 2);
+
+    final packed = LumaWellEngine(
+      store: _MemoryStore()..save = fieldWith(110),
+    );
+    await packed.start();
+    expect(packed.crowdLevel, 3);
+  });
+
+  test('stage advance pulses the planet and slows time briefly', () async {
+    final engine = LumaWellEngine(
+      store: _MemoryStore()
+        ..save = {
+          'score': 0,
+          'merges': 0,
+          'stage': 1,
+          'charges': 1,
+          'planetMass': 31.0,
+          'expandedCaptures': 0,
+          'focusedCaptures': 0,
+          'orbs': [
+            {'mass': 1.0, 'kind': 0, 'x': 0.42, 'y': 0.0, 'drift': 0.0},
+            {'mass': 1.0, 'kind': 0, 'x': 0.44, 'y': 0.0, 'drift': 0.0},
+          ],
+        },
+      random: Random(1),
+    );
+    await engine.start();
+    expect(engine.stagePulse, 0);
+    engine.beginCapture(0.42, 0);
+    while (engine.merges < 1) {
+      engine.advance(0.04);
+    }
+
+    expect(engine.stage, 2);
+    expect(engine.stagePulse, greaterThan(0));
+    engine.advance(0.04);
+    expect(engine.stagePulse, lessThan(1));
+  });
 }
 
 class _MemoryStore extends LumaWellStore {

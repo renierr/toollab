@@ -5005,5 +5005,6 @@
   "lumaWellHelpVolatile": "Volatile matter",
   "lumaWellHelpVolatileText": "Dark ✕ orbs fit any value range but add no planet mass, shrink the payout, and break your combo. Merge quickly before they drift into your ring.",
   "lumaWellHelpCombo": "Combo streak",
-  "lumaWellHelpComboText": "Merges within 6 seconds chain a combo that multiplies score up to 5x. A volatile orb or a long pause resets it."
+  "lumaWellHelpComboText": "Merges within 6 seconds chain a combo that multiplies score up to 5x. A volatile orb or a long pause resets it.",
+  "lumaWellCoachHint": "Touch and hold a group of orbs"
 }

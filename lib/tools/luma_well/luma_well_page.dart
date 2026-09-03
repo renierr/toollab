@@ -41,6 +41,7 @@ class _LumaWellPageState extends State<LumaWellPage>
       await _engine.saveNow();
       _engine.dispose();
     });
+    onDispose(LumaWellAudioService.instance.stopLoop);
     onDispose(() => unawaited(LumaWellAudioService.instance.releaseAll()));
     unawaited(_bootstrap());
   }
@@ -65,6 +66,7 @@ class _LumaWellPageState extends State<LumaWellPage>
       () => context.read<LumaWellState>().captureTime,
     );
     await LumaWellSfx.load();
+    LumaWellAudioService.instance.playLoop(LumaWellSfx.padLoop);
     await _engine.start();
   }
 
@@ -76,6 +78,7 @@ class _LumaWellPageState extends State<LumaWellPage>
     if (context.read<LumaWellState>().hapticsEnabled) {
       HapticFeedback.mediumImpact();
     }
+    unawaited(context.read<LumaWellState>().setCoachSeen(true));
     LumaWellAudioService.instance.play(
       stageUp
           ? LumaWellSfx.stageUp
@@ -152,9 +155,10 @@ class _LumaWellPageState extends State<LumaWellPage>
             final hud = GameHud(
               vertical: constraints.canSplit,
               stats: [
-                GameStat(
+                _AnimatedGameStat(
                   label: l10n.lumaWellScore,
-                  value: '${_engine.score}',
+                  score: _engine.score,
+                  from: _engine.score - _engine.mergePoints,
                   color: LumaWellColors.score,
                   centered: true,
                 ),
@@ -227,6 +231,61 @@ class _LumaWellPageState extends State<LumaWellPage>
                   );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _AnimatedGameStat extends GameStat {
+  final int score;
+  final int from;
+
+  const _AnimatedGameStat({
+    required super.label,
+    required this.score,
+    required this.from,
+    super.color,
+    super.centered,
+  }) : super(value: '$score');
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: centered ? Alignment.center : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: centered
+            ? CrossAxisAlignment.center
+            : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label.toUpperCase(),
+            maxLines: 1,
+            style: theme.textTheme.labelSmall?.copyWith(
+              letterSpacing: 1.1,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+          TweenAnimationBuilder<double>(
+            tween: Tween(
+              begin: from.clamp(0, score).toDouble(),
+              end: score.toDouble(),
+            ),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOut,
+            builder: (context, animated, _) => Text(
+              '${animated.round()}',
+              maxLines: 1,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: color,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

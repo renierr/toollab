@@ -2,8 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../engine/luma_well_engine.dart';
 import '../luma_well_colors.dart';
@@ -37,6 +39,7 @@ class _LumaWellBoardState extends State<LumaWellBoard>
   late final Ticker _ticker;
   Duration _last = Duration.zero;
   int _lastPowerCollectedToken = 0;
+  int _lastTickBucket = 0;
 
   @override
   void initState() {
@@ -60,6 +63,16 @@ class _LumaWellBoardState extends State<LumaWellBoard>
       (elapsed - _last).inMicroseconds / Duration.microsecondsPerSecond,
     );
     _last = elapsed;
+    final ticking =
+        widget.engine.isCapturing && widget.engine.capturedIds.length >= 2;
+    final bucket = ticking
+        ? (widget.engine.captureProgress * 4).floor().clamp(0, 3)
+        : 0;
+    if (bucket > _lastTickBucket &&
+        context.read<LumaWellState>().hapticsEnabled) {
+      HapticFeedback.selectionClick();
+    }
+    _lastTickBucket = bucket;
     if (widget.engine.merges > before) {
       final powerCollected =
           widget.engine.powerCollectedToken != _lastPowerCollectedToken;
@@ -113,6 +126,8 @@ class _LumaWellBoardState extends State<LumaWellBoard>
           painter: _LumaFieldPainter(
             planetRadius: widget.engine.planetRadius,
             stage: widget.engine.stage,
+            time: widget.engine.time,
+            pulse: widget.engine.stagePulse,
           ),
           child: Stack(
             children: [
@@ -127,6 +142,9 @@ class _LumaWellBoardState extends State<LumaWellBoard>
               if (widget.engine.isCapturing)
                 _CaptureRing(engine: widget.engine, size: size),
               _MergeFlight(engine: widget.engine, size: size),
+              _MergeShockwave(engine: widget.engine, size: size),
+              _CrowdVignette(level: widget.engine.crowdLevel),
+              _CoachHint(engine: widget.engine),
             ],
           ),
         ),
@@ -288,15 +306,16 @@ class _CaptureRingPainter extends CustomPainter {
         ..strokeWidth = 2,
     );
     if (blocked || progress <= 0) return;
+    final heat = progress.clamp(0.0, 1.0);
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -math.pi / 2,
-      math.pi * 2 * progress.clamp(0.0, 1.0),
+      math.pi * 2 * heat,
       false,
       Paint()
-        ..color = progressColor
+        ..color = Color.lerp(progressColor, Colors.white, heat * 0.55)!
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 6
+        ..strokeWidth = 3 + 4 * heat
         ..strokeCap = StrokeCap.round,
     );
   }
@@ -387,6 +406,120 @@ class _MergeFlight extends StatelessWidget {
   }
 }
 
+class _MergeShockwave extends StatelessWidget {
+  final LumaWellEngine engine;
+  final Size size;
+
+  const _MergeShockwave({required this.engine, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = size.shortestSide / 2;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(engine.mergeToken),
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        if (engine.mergeToken == 0) return const SizedBox.shrink();
+        final diameter =
+            20 + (size.shortestSide * 0.5 - 20) * value.clamp(0.0, 1.0);
+        return Positioned(
+          left: size.width / 2 + engine.mergeX * scale - diameter / 2,
+          top: size.height / 2 + engine.mergeY * scale - diameter / 2,
+          width: diameter,
+          height: diameter,
+          child: Opacity(
+            opacity: (1 - value).clamp(0.0, 1.0),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CrowdVignette extends StatelessWidget {
+  final int level;
+
+  const _CrowdVignette({required this.level});
+
+  @override
+  Widget build(BuildContext context) {
+    if (level <= 0) return const SizedBox.shrink();
+    return IgnorePointer(
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 400),
+        opacity: [0.0, 0.18, 0.3, 0.45][level.clamp(0, 3)],
+        child: const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 0.75,
+              colors: [Colors.transparent, Color(0x66FF3B30)],
+              stops: [0.55, 1.0],
+            ),
+          ),
+          child: SizedBox.expand(),
+        ),
+      ),
+    );
+  }
+}
+
+class _CoachHint extends StatelessWidget {
+  final LumaWellEngine engine;
+
+  const _CoachHint({required this.engine});
+
+  @override
+  Widget build(BuildContext context) {
+    if (context.watch<LumaWellState>().coachSeen || engine.merges > 0) {
+      return const SizedBox.shrink();
+    }
+    return IgnorePointer(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: LumaWellColors.ringNormal.withValues(alpha: 0.4),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.touch_app_outlined,
+                color: Colors.white,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  AppLocalizations.of(context).lumaWellCoachHint,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 Color _colorForOrb(LumaOrb orb) {
   if (orb.isVolatile) return LumaWellColors.volatileOrb;
   if (!orb.isPower) return LumaWellColors.orbKindColor(orb.kind);
@@ -400,8 +533,15 @@ Color _colorForOrb(LumaOrb orb) {
 class _LumaFieldPainter extends CustomPainter {
   final double planetRadius;
   final int stage;
+  final double time;
+  final double pulse;
 
-  const _LumaFieldPainter({required this.planetRadius, required this.stage});
+  const _LumaFieldPainter({
+    required this.planetRadius,
+    required this.stage,
+    required this.time,
+    required this.pulse,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -411,19 +551,21 @@ class _LumaFieldPainter extends CustomPainter {
       Offset.zero & size,
       Paint()..color = LumaWellColors.fieldBackground,
     );
-    final star = Paint()
-      ..color = LumaWellColors.starDust.withValues(alpha: 0.24);
     for (var i = 0; i < 90; i++) {
+      final twinkle = 0.5 + 0.5 * math.sin(time * 1.4 + i * 1.7);
       canvas.drawCircle(
         Offset(
           (i * 71 % 997) / 997 * size.width,
           (i * 149 % 991) / 991 * size.height,
         ),
         i % 5 == 0 ? 1.1 : 0.6,
-        star,
+        Paint()
+          ..color = LumaWellColors.starDust.withValues(
+            alpha: 0.1 + 0.18 * twinkle,
+          ),
       );
     }
-    final radius = planetRadius * scale;
+    final radius = planetRadius * scale * (1 + 0.12 * pulse);
     final core = LumaWellColors.planetCoreForStage(stage);
     final shadow = LumaWellColors.planetShadowForStage(stage);
     if (stage >= 5) {
@@ -462,10 +604,19 @@ class _LumaFieldPainter extends CustomPainter {
           colors: [core, shadow],
         ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
+    if (pulse > 0) {
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()..color = Colors.white.withValues(alpha: 0.4 * pulse),
+      );
+    }
   }
 
   @override
   bool shouldRepaint(_LumaFieldPainter oldDelegate) =>
       oldDelegate.planetRadius != planetRadius ||
-      oldDelegate.stage != stage;
+      oldDelegate.stage != stage ||
+      oldDelegate.pulse != pulse ||
+      (time * 8).floor() != (oldDelegate.time * 8).floor();
 }
