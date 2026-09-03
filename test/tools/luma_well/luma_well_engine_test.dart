@@ -269,6 +269,172 @@ void main() {
     expect(restored.orbs.length, first.orbs.length);
     expect(restored.powerCharges, first.powerCharges);
   });
+
+  test('chained merges build a combo that multiplies score', () async {
+    final engine = LumaWellEngine(
+      store: _MemoryStore()
+        ..save = _savedField([
+          {'mass': 1.0, 'kind': 0, 'x': 0.42, 'y': 0.0, 'drift': 0.0},
+          {'mass': 1.0, 'kind': 0, 'x': 0.44, 'y': 0.0, 'drift': 0.0},
+          {'mass': 1.0, 'kind': 0, 'x': -0.42, 'y': 0.0, 'drift': 0.0},
+          {'mass': 1.0, 'kind': 0, 'x': -0.44, 'y': 0.0, 'drift': 0.0},
+        ]),
+      random: Random(1),
+    );
+    await engine.start();
+    engine.beginCapture(0.42, 0);
+    while (engine.merges < 1) {
+      engine.advance(0.04);
+    }
+    final firstPoints = engine.mergePoints;
+    expect(engine.combo, 1);
+
+    engine.moveCapture(-0.42, 0);
+    while (engine.merges < 2) {
+      engine.advance(0.04);
+    }
+
+    expect(engine.combo, 2);
+    expect(engine.bestCombo, 2);
+    expect(engine.mergePoints, greaterThan(firstPoints));
+  });
+
+  test('combo expires after the window', () async {
+    final engine = LumaWellEngine(
+      store: _MemoryStore()
+        ..save = _savedField([
+          {'mass': 1.0, 'kind': 0, 'x': 0.42, 'y': 0.0, 'drift': 0.0},
+          {'mass': 1.0, 'kind': 0, 'x': 0.44, 'y': 0.0, 'drift': 0.0},
+          {'mass': 1.0, 'kind': 0, 'x': -0.42, 'y': 0.0, 'drift': 0.0},
+          {'mass': 1.0, 'kind': 0, 'x': -0.44, 'y': 0.0, 'drift': 0.0},
+        ]),
+      random: Random(1),
+    );
+    await engine.start();
+    engine.beginCapture(0.42, 0);
+    while (engine.merges < 1) {
+      engine.advance(0.04);
+    }
+    expect(engine.combo, 1);
+    engine.endCapture();
+
+    for (var i = 0; i < 160; i++) {
+      engine.advance(0.04);
+    }
+    expect(engine.combo, 0);
+
+    engine.beginCapture(-0.42, 0);
+    while (engine.merges < 2) {
+      engine.advance(0.04);
+    }
+    expect(engine.combo, 1);
+  });
+
+  test('volatile orbs drain payout and break the combo', () async {
+    final engine = LumaWellEngine(
+      store: _MemoryStore()
+        ..save = _savedField([
+          {'mass': 1.0, 'kind': 0, 'x': 0.42, 'y': 0.0, 'drift': 0.0},
+          {'mass': 1.0, 'kind': 0, 'x': 0.44, 'y': 0.0, 'drift': 0.0},
+          {
+            'mass': 1.0,
+            'kind': 0,
+            'volatile': true,
+            'x': 0.46,
+            'y': 0.0,
+            'drift': 0.0,
+          },
+        ]),
+      random: Random(1),
+    );
+    await engine.start();
+    engine.beginCapture(0.42, 0);
+    while (engine.merges < 1) {
+      engine.advance(0.04);
+    }
+
+    expect(engine.lastMergeHadVolatile, isTrue);
+    expect(engine.combo, 0);
+    expect(engine.mergePoints, 41);
+    expect(engine.mergePoints, lessThan(54));
+  });
+
+  test('drift speeds up with stage', () async {
+    final first = LumaWellEngine(store: _MemoryStore());
+    await first.start();
+    final fifth = LumaWellEngine(
+      store: _MemoryStore()
+        ..save = {
+          'score': 0,
+          'merges': 0,
+          'stage': 5,
+          'charges': 1,
+          'planetMass': 116.0,
+          'expandedCaptures': 0,
+          'focusedCaptures': 0,
+          'orbs': [
+            {'mass': 1.0, 'kind': 5, 'x': 0.5, 'y': 0.0, 'drift': 0.0},
+          ],
+        },
+    );
+    await fifth.start();
+
+    expect(fifth.driftFactor, greaterThan(first.driftFactor));
+    expect(fifth.driftFactor, lessThanOrEqualTo(2.0));
+  });
+
+  test('capture attempts feed accuracy', () async {
+    final engine = LumaWellEngine(
+      store: _MemoryStore()
+        ..save = _savedField([
+          {'mass': 1.0, 'kind': 0, 'x': 0.42, 'y': 0.0, 'drift': 0.0},
+          {'mass': 1.0, 'kind': 0, 'x': 0.44, 'y': 0.0, 'drift': 0.0},
+        ]),
+      random: Random(1),
+    );
+    await engine.start();
+    engine.beginCapture(0.42, 0);
+    while (engine.merges < 1) {
+      engine.advance(0.04);
+    }
+    engine.endCapture();
+    engine.beginCapture(-0.9, -0.9);
+    engine.endCapture();
+
+    expect(engine.attempts, 2);
+    expect(engine.accuracy, 0.5);
+  });
+
+  test('save roundtrip preserves volatile, best combo, and attempts', () async {
+    final store = _MemoryStore()
+      ..save = {
+        'score': 10,
+        'merges': 2,
+        'stage': 1,
+        'charges': 1,
+        'planetMass': 8.0,
+        'expandedCaptures': 0,
+        'focusedCaptures': 0,
+        'bestCombo': 3,
+        'attempts': 5,
+        'orbs': [
+          {
+            'mass': 1.0,
+            'kind': 0,
+            'volatile': true,
+            'x': 0.5,
+            'y': 0.0,
+            'drift': 0.0,
+          },
+        ],
+      };
+    final engine = LumaWellEngine(store: store);
+    await engine.start();
+
+    expect(engine.orbs.single.isVolatile, isTrue);
+    expect(engine.bestCombo, 3);
+    expect(engine.attempts, 5);
+  });
 }
 
 class _MemoryStore extends LumaWellStore {

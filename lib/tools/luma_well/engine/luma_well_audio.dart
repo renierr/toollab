@@ -8,19 +8,21 @@ class LumaWellSfx {
   LumaWellSfx._();
 
   static const String _mergePrefix = 'lw_merge_';
-  static const int _mergeVariants = 4;
+  static const int _mergeVariants = 6;
   static const String stageUp = 'lw_stage_up';
   static const String orbCollected = 'lw_orb_collected';
   static const String powerUse = 'lw_power_use';
 
-  /// The variant for a completed merge: bigger point payouts ring a touch
-  /// higher, so a large group reads as more rewarding than a small one.
-  static String merge(int points) {
+  /// The variant for a completed merge: bigger point payouts ring higher,
+  /// and an active combo streak lifts the pitch further.
+  static String merge(int points, {int combo = 1}) {
     var step = 0;
     if (points >= 40) step = 1;
     if (points >= 120) step = 2;
     if (points >= 300) step = 3;
-    return '$_mergePrefix$step';
+    if (combo >= 3) step += 1;
+    if (combo >= 5) step += 1;
+    return '$_mergePrefix${step.clamp(0, _mergeVariants - 1)}';
   }
 
   static Future<void> load() async {

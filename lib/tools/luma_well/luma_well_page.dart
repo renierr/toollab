@@ -19,6 +19,7 @@ import 'luma_well_state.dart';
 import 'widgets/luma_well_board.dart';
 import 'widgets/luma_well_power_sheet.dart';
 import 'widgets/luma_well_settings_sheet.dart';
+import 'widgets/luma_well_stats_sheet.dart';
 
 class LumaWellPage extends StatefulWidget {
   const LumaWellPage({super.key});
@@ -67,12 +68,18 @@ class _LumaWellPageState extends State<LumaWellPage>
     await _engine.start();
   }
 
-  void _onMerge(LumaWellPowerOrbEffect? powerOrbEffect, bool stageUp) {
+  void _onMerge(
+    LumaWellPowerOrbEffect? powerOrbEffect,
+    bool stageUp,
+    bool volatileDrained,
+  ) {
     if (context.read<LumaWellState>().hapticsEnabled) {
       HapticFeedback.mediumImpact();
     }
     LumaWellAudioService.instance.play(
-      stageUp ? LumaWellSfx.stageUp : LumaWellSfx.merge(_engine.mergePoints),
+      stageUp
+          ? LumaWellSfx.stageUp
+          : LumaWellSfx.merge(_engine.mergePoints, combo: _engine.combo),
     );
     if (powerOrbEffect != null) {
       LumaWellAudioService.instance.play(LumaWellSfx.orbCollected);
@@ -85,6 +92,12 @@ class _LumaWellPageState extends State<LumaWellPage>
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
+    }
+    if (volatileDrained) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.lumaWellVolatileDrained)));
     }
   }
 
@@ -171,6 +184,11 @@ class _LumaWellPageState extends State<LumaWellPage>
                           !context.read<LumaWellState>().unlimitedPowers
                       ? null
                       : _openPowers,
+                ),
+                GameHudAction(
+                  icon: Icons.bar_chart_outlined,
+                  tooltip: l10n.lumaWellStatsTitle,
+                  onPressed: () => LumaWellStatsSheet.show(context, _engine),
                 ),
                 GameHudAction(
                   icon: Icons.restart_alt_rounded,

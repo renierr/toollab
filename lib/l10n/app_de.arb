@@ -3992,5 +3992,14 @@
   "lumaWellHelpPowerOrbText": "Sternkugeln passen zu jedem Wertebereich, benötigen aber mindestens zwei normale Kugeln im Ring. Gold gibt eine Ladung, Cyan erweitert die nächsten 3 Ringe und Violett fokussiert die nächsten 3 Ringe.",
   "lumaWellPowerOrbCollected": "Power-Kugel gefangen: +1 Power-up-Ladung",
   "lumaWellExpandOrbCollected": "Erweiterungs-Kugel gefangen: Nächste 3 Ringe sind größer und langsamer",
-  "lumaWellFocusOrbCollected": "Fokus-Kugel gefangen: Nächste 3 Ringe sind kleiner und schneller"
+  "lumaWellFocusOrbCollected": "Fokus-Kugel gefangen: Nächste 3 Ringe sind kleiner und schneller",
+  "lumaWellStatsTitle": "Lauf-Statistik",
+  "lumaWellBestCombo": "Beste Serie",
+  "lumaWellAccuracy": "Fanggenauigkeit",
+  "lumaWellAttempts": "Fangversuche",
+  "lumaWellVolatileDrained": "Volatile Materie hat die Verschmelzung entwertet und die Serie beendet",
+  "lumaWellHelpVolatile": "Volatile Materie",
+  "lumaWellHelpVolatileText": "Dunkle ✕-Kugeln passen zu jedem Wertebereich, geben aber keine Planetenmasse, schmälern die Ausbeute und beenden deine Serie. Verschmelze schnell, bevor sie in deinen Ring treiben.",
+  "lumaWellHelpCombo": "Serien-Bonus",
+  "lumaWellHelpComboText": "Verschmelzungen innerhalb von 6 Sekunden bilden eine Serie, die Punkte bis zu 5x multipliziert. Eine volatile Kugel oder eine lange Pause setzt sie zurück."
 }

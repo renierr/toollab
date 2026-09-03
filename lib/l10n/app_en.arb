@@ -4996,5 +4996,14 @@
   "lumaWellHelpPowerOrbText": "Star orbs fit any value range, but need at least two normal orbs in the ring. Gold grants a charge, cyan expands the next 3 rings, and violet focuses the next 3 rings.",
   "lumaWellPowerOrbCollected": "Power orb collected: +1 power-up charge",
   "lumaWellExpandOrbCollected": "Expand orb collected: next 3 rings are wider and slower",
-  "lumaWellFocusOrbCollected": "Focus orb collected: next 3 rings are smaller and faster"
+  "lumaWellFocusOrbCollected": "Focus orb collected: next 3 rings are smaller and faster",
+  "lumaWellStatsTitle": "Run stats",
+  "lumaWellBestCombo": "Best combo",
+  "lumaWellAccuracy": "Capture accuracy",
+  "lumaWellAttempts": "Capture attempts",
+  "lumaWellVolatileDrained": "Volatile matter drained the merge and broke the combo",
+  "lumaWellHelpVolatile": "Volatile matter",
+  "lumaWellHelpVolatileText": "Dark ✕ orbs fit any value range but add no planet mass, shrink the payout, and break your combo. Merge quickly before they drift into your ring.",
+  "lumaWellHelpCombo": "Combo streak",
+  "lumaWellHelpComboText": "Merges within 6 seconds chain a combo that multiplies score up to 5x. A volatile orb or a long pause resets it."
 }

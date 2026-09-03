@@ -27,6 +27,9 @@ class LumaWellColors {
   static const Color powerExpand = Color(0xFF52DDE6);
   static const Color powerFocus = Color(0xFFB464E8);
   static const Color mergeGlow = Color(0xFFFFA52E);
+  static const Color volatileOrb = Color(0xFF5A1620);
+  static const Color volatileLabel = Color(0xFFFF8A9B);
+  static const Color comboBadge = Color(0xFFFFD26A);
 
   static const Color ringNormal = Colors.white;
   static const Color ringBlocked = Colors.redAccent;
@@ -38,8 +41,31 @@ class LumaWellColors {
     _ => orbKindHighest,
   };
 
-  static const List<Color> _levels = [
-    Color(0xFF5CC8FF),
+  static const List<Color> _planetCores = [
+    Color(0xFF4A5A6A),
+    Color(0xFF2E8C83),
+    Color(0xFF7A5FD0),
+    Color(0xFFC04E8A),
+    Color(0xFFD97A3D),
+    Color(0xFFD9B23D),
+  ];
+
+  static const List<Color> _planetShadows = [
+    Color(0xFF171A21),
+    Color(0xFF0E2A28),
+    Color(0xFF241B45),
+    Color(0xFF3A1430),
+    Color(0xFF3A1E10),
+    Color(0xFF3A2E0E),
+  ];
+
+  static Color planetCoreForStage(int stage) =>
+      _planetCores[(stage - 1).clamp(0, _planetCores.length - 1)];
+
+  static Color planetShadowForStage(int stage) =>
+      _planetShadows[(stage - 1).clamp(0, _planetShadows.length - 1)];
+
+  static const List<Color> _levels = [    Color(0xFF5CC8FF),
     Color(0xFF789BFF),
     Color(0xFFA878EF),
     Color(0xFFE275BE),

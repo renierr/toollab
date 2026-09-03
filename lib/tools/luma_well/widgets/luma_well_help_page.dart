@@ -49,6 +49,18 @@ class LumaWellHelpPage extends StatelessWidget {
         l10n.lumaWellHelpPowerOrbText,
         _HelpVisual.power,
       ),
+      (
+        Icons.warning_amber_rounded,
+        l10n.lumaWellHelpVolatile,
+        l10n.lumaWellHelpVolatileText,
+        _HelpVisual.volatile,
+      ),
+      (
+        Icons.bolt_outlined,
+        l10n.lumaWellHelpCombo,
+        l10n.lumaWellHelpComboText,
+        _HelpVisual.combo,
+      ),
     ];
     return Scaffold(
       appBar: AppBar(
@@ -107,7 +119,7 @@ class LumaWellHelpPage extends StatelessWidget {
   }
 }
 
-enum _HelpVisual { capture, hold, grow, challenge, valueRelease, power }
+enum _HelpVisual { capture, hold, grow, challenge, valueRelease, power, volatile, combo }
 
 class _HelpDiagram extends StatelessWidget {
   final _HelpVisual type;
@@ -194,6 +206,26 @@ class _HelpDiagram extends StatelessWidget {
                 top: 28,
                 child: _ValueDot(value: index + 1),
               ),
+          if (type == _HelpVisual.volatile)
+            for (var index = 0; index < 3; index++)
+              Positioned(
+                left: 40 + index * 50.0,
+                top: 28,
+                child: _Dot(
+                  color: index == 1
+                      ? LumaWellColors.volatileOrb
+                      : LumaWellColors.orbKindLow,
+                ),
+              ),
+          if (type == _HelpVisual.combo)
+            const Positioned(
+              left: 81,
+              top: 27,
+              child: Text(
+                'x3',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 28),
+              ),
+            ),
           if (type == _HelpVisual.power) ...[
             const Positioned(
               left: 40,

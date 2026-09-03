@@ -9971,4 +9971,34 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get lumaWellFocusOrbCollected =>
       'Fokus-Kugel gefangen: Nächste 3 Ringe sind kleiner und schneller';
+
+  @override
+  String get lumaWellStatsTitle => 'Lauf-Statistik';
+
+  @override
+  String get lumaWellBestCombo => 'Beste Serie';
+
+  @override
+  String get lumaWellAccuracy => 'Fanggenauigkeit';
+
+  @override
+  String get lumaWellAttempts => 'Fangversuche';
+
+  @override
+  String get lumaWellVolatileDrained =>
+      'Volatile Materie hat die Verschmelzung entwertet und die Serie beendet';
+
+  @override
+  String get lumaWellHelpVolatile => 'Volatile Materie';
+
+  @override
+  String get lumaWellHelpVolatileText =>
+      'Dunkle ✕-Kugeln passen zu jedem Wertebereich, geben aber keine Planetenmasse, schmälern die Ausbeute und beenden deine Serie. Verschmelze schnell, bevor sie in deinen Ring treiben.';
+
+  @override
+  String get lumaWellHelpCombo => 'Serien-Bonus';
+
+  @override
+  String get lumaWellHelpComboText =>
+      'Verschmelzungen innerhalb von 6 Sekunden bilden eine Serie, die Punkte bis zu 5x multipliziert. Eine volatile Kugel oder eine lange Pause setzt sie zurück.';
 }

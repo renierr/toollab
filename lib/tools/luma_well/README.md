@@ -69,6 +69,13 @@ capture containing one still needs at least two normal orbs. Gold stars award a
 power-up charge immediately. Cyan stars activate three expanded, slower capture
 rings. Violet stars activate three focused, faster capture rings.
 
+Dark volatile orbs (✕) are also wildcards but add no planet mass, shrink the
+payout by 25% each (multiplicatively), and break the combo streak.
+
+Merges within 6 seconds chain a combo that multiplies the payout, up to 5x at
+x5 and beyond. A volatile orb or a pause longer than 6 seconds resets it. The
+merge chime rings higher with bigger payouts and hotter combos.
+
 ## Challenge
 
 There is no abrupt game-over condition. The challenge is efficiency under
@@ -76,7 +83,9 @@ gradual orbital saturation:
 
 - More matter arrives over time.
 - More matter kinds divide the field into smaller compatible groups.
-- Orbs drift, so useful groups form and separate naturally.
+- Orbs drift, so useful groups form and separate naturally. Drift speeds up
+  with each stage, up to 2x, so late runs never sit still.
+- Volatile orbs punish careless rings and break combos.
 - Small groups are safe but provide little growth.
 - Waiting for a large group gives better growth, but the field gets denser.
 - Large amounts of loose matter can make compatible groups difficult to find.
@@ -111,14 +120,18 @@ Implemented:
 - Touch-and-hold capture ring.
 - Visible-number range validation inside the ring.
 - Timed group absorption, stage thresholds, scores, and power-up charges.
-- A merge-flight animation and center score popup.
+- A merge-flight animation and center score popup, with a combo multiplier
+  badge on chained merges.
+- A per-stage planet identity: tinted core, orbit ring from stage 3, glow
+  from stage 5.
+- Run stats (best combo, capture accuracy, attempts, merges) behind the
+  chart button.
 - Run persistence and inactive-app simulation pause.
 - Synthesized sound effects for merges, stage advances and power-ups, with a
   Settings toggle to disable them.
 
 ## Future Refinement
 
-- The visual identity of each planet stage.
 - Whether loose matter needs soft cleanup mechanics at high density.
 
 ## Iteration Rules

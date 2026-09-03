@@ -9897,4 +9897,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lumaWellFocusOrbCollected =>
       'Focus orb collected: next 3 rings are smaller and faster';
+
+  @override
+  String get lumaWellStatsTitle => 'Run stats';
+
+  @override
+  String get lumaWellBestCombo => 'Best combo';
+
+  @override
+  String get lumaWellAccuracy => 'Capture accuracy';
+
+  @override
+  String get lumaWellAttempts => 'Capture attempts';
+
+  @override
+  String get lumaWellVolatileDrained =>
+      'Volatile matter drained the merge and broke the combo';
+
+  @override
+  String get lumaWellHelpVolatile => 'Volatile matter';
+
+  @override
+  String get lumaWellHelpVolatileText =>
+      'Dark ✕ orbs fit any value range but add no planet mass, shrink the payout, and break your combo. Merge quickly before they drift into your ring.';
+
+  @override
+  String get lumaWellHelpCombo => 'Combo streak';
+
+  @override
+  String get lumaWellHelpComboText =>
+      'Merges within 6 seconds chain a combo that multiplies score up to 5x. A volatile orb or a long pause resets it.';
 }

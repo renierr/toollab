@@ -17710,6 +17710,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Focus orb collected: next 3 rings are smaller and faster'**
   String get lumaWellFocusOrbCollected;
+
+  /// No description provided for @lumaWellStatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Run stats'**
+  String get lumaWellStatsTitle;
+
+  /// No description provided for @lumaWellBestCombo.
+  ///
+  /// In en, this message translates to:
+  /// **'Best combo'**
+  String get lumaWellBestCombo;
+
+  /// No description provided for @lumaWellAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture accuracy'**
+  String get lumaWellAccuracy;
+
+  /// No description provided for @lumaWellAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture attempts'**
+  String get lumaWellAttempts;
+
+  /// No description provided for @lumaWellVolatileDrained.
+  ///
+  /// In en, this message translates to:
+  /// **'Volatile matter drained the merge and broke the combo'**
+  String get lumaWellVolatileDrained;
+
+  /// No description provided for @lumaWellHelpVolatile.
+  ///
+  /// In en, this message translates to:
+  /// **'Volatile matter'**
+  String get lumaWellHelpVolatile;
+
+  /// No description provided for @lumaWellHelpVolatileText.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark ✕ orbs fit any value range but add no planet mass, shrink the payout, and break your combo. Merge quickly before they drift into your ring.'**
+  String get lumaWellHelpVolatileText;
+
+  /// No description provided for @lumaWellHelpCombo.
+  ///
+  /// In en, this message translates to:
+  /// **'Combo streak'**
+  String get lumaWellHelpCombo;
+
+  /// No description provided for @lumaWellHelpComboText.
+  ///
+  /// In en, this message translates to:
+  /// **'Merges within 6 seconds chain a combo that multiplies score up to 5x. A volatile orb or a long pause resets it.'**
+  String get lumaWellHelpComboText;
 }
 
 class _AppLocalizationsDelegate

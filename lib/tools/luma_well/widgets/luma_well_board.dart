@@ -14,7 +14,11 @@ const double _minOrbDiameter = 26;
 class LumaWellBoard extends StatefulWidget {
   final LumaWellEngine engine;
   final bool isActive;
-  final void Function(LumaWellPowerOrbEffect? powerOrbEffect, bool stageUp)
+  final void Function(
+    LumaWellPowerOrbEffect? powerOrbEffect,
+    bool stageUp,
+    bool volatileDrained,
+  )
   onMerge;
 
   const LumaWellBoard({
@@ -63,6 +67,7 @@ class _LumaWellBoardState extends State<LumaWellBoard>
       widget.onMerge(
         powerCollected ? widget.engine.lastPowerOrbEffect : null,
         widget.engine.stage > beforeStage,
+        widget.engine.lastMergeHadVolatile,
       );
     }
   }
@@ -107,6 +112,7 @@ class _LumaWellBoardState extends State<LumaWellBoard>
         child: CustomPaint(
           painter: _LumaFieldPainter(
             planetRadius: widget.engine.planetRadius,
+            stage: widget.engine.stage,
           ),
           child: Stack(
             children: [
@@ -187,9 +193,15 @@ class _OrbView extends StatelessWidget {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  orb.isPower ? '✦' : '${orb.kind + 1}',
+                  orb.isVolatile
+                      ? '✕'
+                      : orb.isPower
+                      ? '✦'
+                      : '${orb.kind + 1}',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: LumaWellColors.orbLabel,
+                    color: orb.isVolatile
+                        ? LumaWellColors.volatileLabel
+                        : LumaWellColors.orbLabel,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -344,13 +356,27 @@ class _MergeFlight extends StatelessWidget {
               width: 80,
               child: Opacity(
                 opacity: 1 - value,
-                child: Text(
-                  '+${engine.mergePoints}',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: LumaWellColors.powerCharge,
-                    fontWeight: FontWeight.w800,
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '+${engine.mergePoints}',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: LumaWellColors.powerCharge,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (engine.combo >= 2)
+                      Text(
+                        'x${engine.combo}',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: LumaWellColors.comboBadge,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -362,6 +388,7 @@ class _MergeFlight extends StatelessWidget {
 }
 
 Color _colorForOrb(LumaOrb orb) {
+  if (orb.isVolatile) return LumaWellColors.volatileOrb;
   if (!orb.isPower) return LumaWellColors.orbKindColor(orb.kind);
   return switch (orb.power) {
     LumaWellPower.expandField => LumaWellColors.powerExpand,
@@ -372,8 +399,9 @@ Color _colorForOrb(LumaOrb orb) {
 
 class _LumaFieldPainter extends CustomPainter {
   final double planetRadius;
+  final int stage;
 
-  const _LumaFieldPainter({required this.planetRadius});
+  const _LumaFieldPainter({required this.planetRadius, required this.stage});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -396,6 +424,25 @@ class _LumaFieldPainter extends CustomPainter {
       );
     }
     final radius = planetRadius * scale;
+    final core = LumaWellColors.planetCoreForStage(stage);
+    final shadow = LumaWellColors.planetShadowForStage(stage);
+    if (stage >= 5) {
+      canvas.drawCircle(
+        center,
+        radius * 1.35,
+        Paint()..color = core.withValues(alpha: 0.22),
+      );
+    }
+    if (stage >= 3) {
+      canvas.drawCircle(
+        center,
+        radius * 1.6,
+        Paint()
+          ..color = core.withValues(alpha: 0.5)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
     final terrain = Paint()
       ..color = LumaWellColors.terrain
       ..strokeWidth = 3;
@@ -411,13 +458,14 @@ class _LumaFieldPainter extends CustomPainter {
       center,
       radius,
       Paint()
-        ..shader = const RadialGradient(
-          colors: [LumaWellColors.planetCore, LumaWellColors.planetShadow],
+        ..shader = RadialGradient(
+          colors: [core, shadow],
         ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
   }
 
   @override
   bool shouldRepaint(_LumaFieldPainter oldDelegate) =>
-      oldDelegate.planetRadius != planetRadius;
+      oldDelegate.planetRadius != planetRadius ||
+      oldDelegate.stage != stage;
 }

@@ -10,6 +10,7 @@ class LumaOrb {
   final double mass;
   final int kind;
   final bool isPower;
+  final bool isVolatile;
   final LumaWellPower? power;
   double x;
   double y;
@@ -20,6 +21,7 @@ class LumaOrb {
     required this.mass,
     required this.kind,
     this.isPower = false,
+    this.isVolatile = false,
     this.power,
     required this.x,
     required this.y,
@@ -64,6 +66,11 @@ class LumaWellEngine extends ChangeNotifier {
   int _mergePoints = 0;
   int _powerCollectedToken = 0;
   LumaWellPowerOrbEffect? _lastPowerOrbEffect;
+  int _combo = 0;
+  int _bestCombo = 0;
+  double _comboFor = 0;
+  int _attempts = 0;
+  bool _lastMergeHadVolatile = false;
 
   LumaWellEngine({LumaWellStore? store, math.Random? random})
     : _store = store ?? const LumaWellStore(),
@@ -114,9 +121,24 @@ class LumaWellEngine extends ChangeNotifier {
   int get mergePoints => _mergePoints;
   int get powerCollectedToken => _powerCollectedToken;
   LumaWellPowerOrbEffect? get lastPowerOrbEffect => _lastPowerOrbEffect;
+  int get combo => _combo;
+  int get bestCombo => _bestCombo;
+  int get attempts => _attempts;
+  bool get lastMergeHadVolatile => _lastMergeHadVolatile;
+  double get accuracy => _attempts == 0
+      ? 0
+      : (_merges / _attempts).clamp(0.0, 1.0);
+  static const double comboWindow = 6;
+  double get driftFactor => math.min(2.0, 1 + (_stage - 1) * 0.12);
 
   double radiusFor(LumaOrb orb) => 0.024 + math.sqrt(orb.mass) * 0.016;
   int get highestUnlockedNumber => math.min(6, _stage + 1);
+
+  double _orbMass(LumaOrb orb) {
+    if (orb.isVolatile) return 0;
+    if (orb.isPower) return orb.mass;
+    return orb.mass * (orb.kind + 1);
+  }
 
   double get _nextStageMass => 4 + _stage * 28;
 
@@ -150,6 +172,7 @@ class LumaWellEngine extends ChangeNotifier {
     _activeCaptureRadius = _configuredCaptureRadius;
     _activeCaptureTime = _configuredCaptureTime;
     _captureFor = 0.001;
+    _attempts++;
     _updateCaptured();
     notifyListeners();
   }
@@ -174,13 +197,20 @@ class LumaWellEngine extends ChangeNotifier {
     if (seconds <= 0) return;
     final dt = seconds.clamp(0.0, 0.04);
     _stabilizedFor = math.max(0, _stabilizedFor - dt);
+    if (_comboFor > 0) {
+      _comboFor = math.max(0, _comboFor - dt);
+      if (_comboFor == 0) _combo = 0;
+    }
     for (final orb in _orbs) {
       if (isCapturing && _capturedIds.contains(orb.id)) {
         orb.x += (_captureX - orb.x) * dt * 2.2;
         orb.y += (_captureY - orb.y) * dt * 2.2;
         continue;
       }
-      final speed = _stabilizedFor > 0 ? orb.drift * 0.15 : orb.drift;
+      final speed =
+          orb.drift *
+          driftFactor *
+          (_stabilizedFor > 0 ? 0.15 : 1);
       final angle = math.atan2(orb.y, orb.x) + speed * dt;
       final distance = math.sqrt(orb.x * orb.x + orb.y * orb.y);
       orb.x = math.cos(angle) * distance;
@@ -255,10 +285,14 @@ class LumaWellEngine extends ChangeNotifier {
       _captureBlocked = false;
       return;
     }
-    final normal = candidates.where((orb) => !orb.isPower).toList();
-    final powerCount = candidates.where((orb) => orb.isPower).length;
-    if (normal.length + powerCount < 2 ||
-        (powerCount > 0 && normal.length < 2)) {
+    final normal = candidates
+        .where((orb) => !orb.isPower && !orb.isVolatile)
+        .toList();
+    final wildCount = candidates
+        .where((orb) => orb.isPower || orb.isVolatile)
+        .length;
+    if (normal.length + wildCount < 2 ||
+        (wildCount > 0 && normal.length < 2)) {
       _captureBlocked = false;
       _capturedIds.clear();
       return;
@@ -311,7 +345,25 @@ class LumaWellEngine extends ChangeNotifier {
       }
     }
     _merges++;
-    _absorb(captured, multiplier: captured.length);
+    final volatileCount = captured.where((orb) => orb.isVolatile).length;
+    _lastMergeHadVolatile = volatileCount > 0;
+    final int comboMult;
+    if (volatileCount > 0) {
+      _combo = 0;
+      _comboFor = 0;
+      comboMult = 1;
+    } else {
+      _combo = _comboFor > 0 ? _combo + 1 : 1;
+      _comboFor = comboWindow;
+      _bestCombo = math.max(_bestCombo, _combo);
+      comboMult = math.min(_combo, 5);
+    }
+    _absorb(
+      captured,
+      multiplier: captured.length,
+      comboMult: comboMult,
+      volatileCount: volatileCount,
+    );
     _activeCaptureRadius = _configuredCaptureRadius;
     _activeCaptureTime = _configuredCaptureTime;
     if (_expandedCaptures > 0) _expandedCaptures--;
@@ -323,11 +375,14 @@ class LumaWellEngine extends ChangeNotifier {
   }
 
   bool _isValidCapture(List<LumaOrb> orbs) {
-    final normal = orbs.where((orb) => !orb.isPower).toList();
-    if (normal.length + orbs.where((orb) => orb.isPower).length < 2) {
+    final normal = orbs
+        .where((orb) => !orb.isPower && !orb.isVolatile)
+        .toList();
+    final wild = orbs.where((orb) => orb.isPower || orb.isVolatile).length;
+    if (normal.length + wild < 2) {
       return false;
     }
-    if (orbs.any((orb) => orb.isPower) && normal.length < 2) {
+    if (wild > 0 && normal.length < 2) {
       return false;
     }
     if (normal.isEmpty) return false;
@@ -342,20 +397,26 @@ class LumaWellEngine extends ChangeNotifier {
     return highest - lowest <= 1;
   }
 
-  void _absorb(List<LumaOrb> orbs, {int multiplier = 1}) {
+  void _absorb(
+    List<LumaOrb> orbs, {
+    int multiplier = 1,
+    int comboMult = 1,
+    int volatileCount = 0,
+  }) {
     if (orbs.isEmpty) return;
     final mass = orbs.fold<double>(
       0,
-      (total, orb) =>
-          total + (orb.isPower ? orb.mass : orb.mass * (orb.kind + 1)),
+      (total, orb) => total + _orbMass(orb),
     );
     _mergeX = orbs.fold<double>(0, (total, orb) => total + orb.x) / orbs.length;
     _mergeY = orbs.fold<double>(0, (total, orb) => total + orb.y) / orbs.length;
     _orbs.removeWhere(orbs.contains);
     _planetMass += mass;
     final groupBonus = orbs.length * orbs.length;
-    _score += mass.round() * multiplier * groupBonus;
-    _mergePoints = mass.round() * multiplier * groupBonus;
+    final damp = math.pow(0.75, volatileCount);
+    final payout = (mass.round() * multiplier * groupBonus * damp).round();
+    _score += payout * comboMult;
+    _mergePoints = payout * comboMult;
     _mergeToken++;
     if (_score > _best) {
       _best = _score;
@@ -389,6 +450,11 @@ class LumaWellEngine extends ChangeNotifier {
     _mergeY = 0;
     _mergePoints = 0;
     _lastPowerOrbEffect = null;
+    _combo = 0;
+    _bestCombo = 0;
+    _comboFor = 0;
+    _attempts = 0;
+    _lastMergeHadVolatile = false;
     final count = _usesEasyMode() ? 14 : 18;
     for (var i = 0; i < count; i++) {
       _spawn();
@@ -403,6 +469,8 @@ class LumaWellEngine extends ChangeNotifier {
     'planetMass': _planetMass,
     'expandedCaptures': _expandedCaptures,
     'focusedCaptures': _focusedCaptures,
+    'bestCombo': _bestCombo,
+    'attempts': _attempts,
     'orbs': [
       for (final orb in _orbs)
         {
@@ -410,6 +478,7 @@ class LumaWellEngine extends ChangeNotifier {
           'kind': orb.kind,
           'power': orb.isPower,
           'powerType': orb.power?.name,
+          'volatile': orb.isVolatile,
           'x': orb.x,
           'y': orb.y,
           'drift': orb.drift,
@@ -434,6 +503,7 @@ class LumaWellEngine extends ChangeNotifier {
       final drift = entry['drift'];
       final power = entry['power'];
       final powerType = entry['powerType'];
+      final volatile = entry['volatile'];
       if (mass is! num ||
           kind is! int ||
           x is! num ||
@@ -442,7 +512,8 @@ class LumaWellEngine extends ChangeNotifier {
           mass <= 0 ||
           kind < 0 ||
           kind > 5 ||
-          (power != null && power is! bool)) {
+          (power != null && power is! bool) ||
+          (volatile != null && volatile is! bool)) {
         return false;
       }
       final orb = LumaOrb(
@@ -450,6 +521,7 @@ class LumaWellEngine extends ChangeNotifier {
         mass: mass.toDouble(),
         kind: kind,
         isPower: power == true,
+        isVolatile: volatile == true && power != true,
         power: switch (powerType) {
           'expandField' => LumaWellPower.expandField,
           'focusField' => LumaWellPower.focusField,
@@ -508,6 +580,15 @@ class LumaWellEngine extends ChangeNotifier {
     _mergeY = 0;
     _mergePoints = 0;
     _lastPowerOrbEffect = null;
+    _combo = 0;
+    _comboFor = 0;
+    _lastMergeHadVolatile = false;
+    _bestCombo = data['bestCombo'] is int
+        ? (data['bestCombo'] as int).clamp(0, 1 << 30)
+        : 0;
+    _attempts = data['attempts'] is int
+        ? (data['attempts'] as int).clamp(0, 1 << 30)
+        : 0;
     return true;
   }
 
@@ -517,12 +598,14 @@ class LumaWellEngine extends ChangeNotifier {
     final distance = 0.42 + _random.nextDouble() * 0.5;
     final isPower = _random.nextInt(18) == 0;
     final powerType = isPower ? _random.nextInt(3) : -1;
+    final id = _nextId++;
     _orbs.add(
       LumaOrb(
-        id: _nextId++,
+        id: id,
         mass: (1 + _random.nextInt(3)).toDouble(),
         kind: _random.nextInt(highestUnlockedNumber),
         isPower: isPower,
+        isVolatile: !isPower && id % 23 == 7,
         power: switch (powerType) {
           1 => LumaWellPower.expandField,
           2 => LumaWellPower.focusField,
