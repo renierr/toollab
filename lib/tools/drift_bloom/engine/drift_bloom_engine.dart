@@ -9,6 +9,7 @@ class WindRing {
   final double radius;
   double age;
   final double life;
+  final bool golden;
   bool grazed;
 
   WindRing({
@@ -18,6 +19,7 @@ class WindRing {
     required this.radius,
     this.age = 0,
     this.life = 10,
+    this.golden = false,
     this.grazed = false,
   });
 }
@@ -62,6 +64,7 @@ class DriftBloomEngine extends ChangeNotifier {
   double _bloomX = 0;
   double _bloomY = 0;
   int _bloomPoints = 0;
+  bool _lastBloomGolden = false;
   final List<math.Point<double>> _trail = [];
   final List<BloomParticle> _particles = [];
 
@@ -81,6 +84,8 @@ class DriftBloomEngine extends ChangeNotifier {
   double get bloomX => _bloomX;
   double get bloomY => _bloomY;
   int get bloomPoints => _bloomPoints;
+  bool get lastBloomGolden => _lastBloomGolden;
+  double get nightFactor => (_petals / 12).clamp(0.0, 1.0);
   double get time => _time;
   List<math.Point<double>> get trail => List.unmodifiable(_trail);
   List<BloomParticle> get particles => List.unmodifiable(_particles);
@@ -197,13 +202,14 @@ class DriftBloomEngine extends ChangeNotifier {
     _combo = _comboFor > 0 ? _combo + 1 : 1;
     _comboFor = comboWindow;
     _petals++;
-    final points = 10 * (_combo < 5 ? _combo : 5);
+    final points = (ring.golden ? 20 : 10) * (_combo < 5 ? _combo : 5);
     _addScore(points);
     _bloomX = ring.x;
     _bloomY = ring.y;
     _bloomPoints = points;
+    _lastBloomGolden = ring.golden;
     _bloomToken++;
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < (ring.golden ? 16 : 10); i++) {
       final angle = (i / 10) * math.pi * 2 + _random.nextDouble() * 0.5;
       final speed = 0.25 + _random.nextDouble() * 0.35;
       _particles.add(
@@ -233,6 +239,7 @@ class DriftBloomEngine extends ChangeNotifier {
         y: (_random.nextDouble() - 0.5) * 1.7,
         radius: 0.16 + _random.nextDouble() * 0.08,
         life: _ringLife(),
+        golden: _random.nextDouble() < 1 / 6,
       ),
     );
   }

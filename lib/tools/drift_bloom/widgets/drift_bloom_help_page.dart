@@ -29,6 +29,12 @@ class DriftBloomHelpPage extends StatelessWidget {
         _HelpVisual.bloom,
       ),
       (
+        Icons.stars_outlined,
+        l10n.driftBloomHelpGolden,
+        l10n.driftBloomHelpGoldenText,
+        _HelpVisual.golden,
+      ),
+      (
         Icons.bolt_outlined,
         l10n.driftBloomHelpCombo,
         l10n.driftBloomHelpComboText,
@@ -89,7 +95,7 @@ class DriftBloomHelpPage extends StatelessWidget {
   }
 }
 
-enum _HelpVisual { steer, rings, bloom, combo }
+enum _HelpVisual { steer, rings, bloom, golden, combo }
 
 class _HelpDiagram extends StatelessWidget {
   final _HelpVisual type;
@@ -165,6 +171,24 @@ class _HelpDiagram extends StatelessWidget {
               left: 84,
               top: 30,
               child: _Dot(color: DriftBloomColors.seed),
+            ),
+          if (type == _HelpVisual.golden)
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: DriftBloomColors.ringInner,
+                    width: 3.5,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          if (type == _HelpVisual.golden)
+            const Positioned(
+              left: 81,
+              top: 27,
+              child: _Dot(color: DriftBloomColors.ringInner),
             ),
           if (type == _HelpVisual.combo)
             const Positioned(

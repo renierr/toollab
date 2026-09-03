@@ -82,4 +82,38 @@ void main() {
     expect(engine.rings, isNotEmpty);
     expect(engine.rings.first.life, 8);
   });
+
+  test('golden rings bloom double points', () {
+    final engine = DriftBloomEngine(random: Random(1));
+    WindRing? golden;
+    for (var i = 0; i < 3000 && golden == null; i++) {
+      engine.advance(0.04);
+      for (final ring in engine.rings) {
+        if (ring.golden) golden = ring;
+      }
+    }
+    expect(golden, isNotNull);
+    engine.steer(golden!.x, golden.y);
+    for (var i = 0; i < 600 && !engine.lastBloomGolden; i++) {
+      engine.advance(0.04);
+    }
+
+    expect(engine.lastBloomGolden, isTrue);
+    expect(engine.bloomPoints, engine.combo * 20);
+  });
+
+  test('night falls as petals grow', () {
+    final engine = DriftBloomEngine(random: Random(1));
+    expect(engine.nightFactor, 0);
+    for (var i = 0; i < 60; i++) {
+      engine.advance(0.04);
+    }
+    final ring = engine.rings.first;
+    engine.steer(ring.x, ring.y);
+    for (var i = 0; i < 200 && engine.petals < 1; i++) {
+      engine.advance(0.04);
+    }
+
+    expect(engine.nightFactor, closeTo(1 / 12, 0.001));
+  });
 }

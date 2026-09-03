@@ -2,23 +2,22 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../drift_bloom_colors.dart';
-import '../drift_bloom_state.dart';
 import '../engine/drift_bloom_engine.dart';
 
 class DriftBloomBoard extends StatefulWidget {
   final DriftBloomEngine engine;
   final bool isActive;
+  final void Function(bool golden) onBloom;
 
   const DriftBloomBoard({
     super.key,
     required this.engine,
     required this.isActive,
+    required this.onBloom,
   });
 
   @override
@@ -53,9 +52,7 @@ class _DriftBloomBoardState extends State<DriftBloomBoard>
     _last = elapsed;
     if (widget.engine.bloomToken != _lastBloomToken) {
       _lastBloomToken = widget.engine.bloomToken;
-      if (context.read<DriftBloomState>().hapticsEnabled) {
-        HapticFeedback.mediumImpact();
-      }
+      widget.onBloom(widget.engine.lastBloomGolden);
     }
   }
 
@@ -176,31 +173,51 @@ class _DriftBloomPainter extends CustomPainter {
     Offset toPx(double x, double y) =>
         Offset(center.dx + x * scale, center.dy + y * scale);
 
+    final night = engine.nightFactor;
     canvas.drawRect(
       Offset.zero & size,
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [DriftBloomColors.skyTop, DriftBloomColors.fieldBackground],
+          colors: [
+            Color.lerp(
+              DriftBloomColors.skyTop,
+              DriftBloomColors.nightSkyTop,
+              night,
+            )!,
+            Color.lerp(
+              DriftBloomColors.fieldBackground,
+              DriftBloomColors.nightSkyBottom,
+              night,
+            )!,
+          ],
         ).createShader(Offset.zero & size),
     );
     canvas.drawCircle(
       Offset(size.width * 0.82, size.height * 0.16),
       size.shortestSide * 0.3,
-      Paint()..color = DriftBloomColors.skyGlow.withValues(alpha: 0.16),
+      Paint()
+        ..color = DriftBloomColors.skyGlow.withValues(
+          alpha: 0.16 * (1 - night),
+        ),
     );
     for (var i = 0; i < 24; i++) {
       final drift = (engine.time * (0.02 + (i % 5) * 0.008) + i * 0.37) % 1.4;
       final x = ((i * 311 % 1000) / 1000 * 2.4 - 1.2 + drift).clamp(-1.2, 1.2);
       final y = ((i * 197 % 1000) / 1000 * 2.4 - 1.2).clamp(-1.2, 1.2);
       final twinkle = 0.5 + 0.5 * math.sin(engine.time * 1.2 + i * 2.1);
+      final moteColor = Color.lerp(
+        DriftBloomColors.mote,
+        DriftBloomColors.star,
+        night,
+      )!;
       canvas.drawCircle(
         toPx(x, y),
         i % 4 == 0 ? 1.6 : 1.0,
         Paint()
-          ..color = DriftBloomColors.mote.withValues(
-            alpha: 0.08 + 0.14 * twinkle,
+          ..color = moteColor.withValues(
+            alpha: 0.08 + 0.14 * twinkle + night * 0.2,
           ),
       );
     }
@@ -220,13 +237,16 @@ class _DriftBloomPainter extends CustomPainter {
       final fade = 1 - (ring.age / ring.life).clamp(0.0, 1.0);
       final breathe = 1 + 0.05 * math.sin(engine.time * 2 + ring.id * 1.3);
       final pos = toPx(ring.x, ring.y);
+      final outer = ring.golden
+          ? DriftBloomColors.ringInner
+          : DriftBloomColors.ring;
       canvas.drawCircle(
         pos,
         ring.radius * breathe * scale,
         Paint()
-          ..color = DriftBloomColors.ring.withValues(alpha: 0.7 * fade)
+          ..color = outer.withValues(alpha: 0.7 * fade)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.5,
+          ..strokeWidth = ring.golden ? 3.5 : 2.5,
       );
       canvas.drawCircle(
         pos,

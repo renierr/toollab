@@ -9705,6 +9705,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get driftBloomHapticsSubtitle => 'Vibrate when a petal blooms';
 
   @override
+  String get driftBloomSound => 'Sound';
+
+  @override
+  String get driftBloomSoundSubtitle => 'Bloom chimes and ambient breeze';
+
+  @override
   String get driftBloomEasyMode => 'Gentle breeze';
 
   @override
@@ -9751,6 +9757,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get driftBloomHelpBloomText =>
       'Fly through a gold center to bloom a petal. Bloomed petals orbit your seed.';
+
+  @override
+  String get driftBloomHelpGolden => 'Golden rings';
+
+  @override
+  String get driftBloomHelpGoldenText =>
+      'Some rings glow gold all over. Their centers are worth double points and burst more sparks.';
 
   @override
   String get driftBloomHelpCombo => 'Chain blooms';

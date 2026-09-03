@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
@@ -10,8 +11,10 @@ import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
+import 'drift_bloom_audio_service.dart';
 import 'drift_bloom_colors.dart';
 import 'drift_bloom_state.dart';
+import 'engine/drift_bloom_audio.dart';
 import 'engine/drift_bloom_engine.dart';
 import 'widgets/drift_bloom_board.dart';
 import 'widgets/drift_bloom_settings_sheet.dart';
@@ -33,6 +36,8 @@ class _DriftBloomPageState extends State<DriftBloomPage>
     WidgetsBinding.instance.addObserver(this);
     onDispose(() => WidgetsBinding.instance.removeObserver(this));
     onDispose(_engine.dispose);
+    onDispose(DriftBloomAudioService.instance.stopLoop);
+    onDispose(() => unawaited(DriftBloomAudioService.instance.releaseAll()));
     unawaited(_bootstrap());
   }
 
@@ -50,15 +55,31 @@ class _DriftBloomPageState extends State<DriftBloomPage>
     _engine.setBest(settings.best);
     _engine.setEasyModeResolver(() => context.read<DriftBloomState>().easyMode);
     _engine.setRingLifeResolver(() => context.read<DriftBloomState>().ringLife);
+    await DriftBloomSfx.load();
+    DriftBloomAudioService.instance.playLoop(DriftBloomSfx.padLoop);
     _engine.onBest = (best) {
       if (!mounted) return;
       unawaited(context.read<DriftBloomState>().saveBest(best));
     };
   }
 
+  void _onBloom(bool golden) {
+    final settings = context.read<DriftBloomState>();
+    if (settings.hapticsEnabled) {
+      HapticFeedback.mediumImpact();
+    }
+    DriftBloomAudioService.instance.play(
+      golden ? DriftBloomSfx.goldenBloom : DriftBloomSfx.bloom(_engine.combo),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final settings = context.watch<DriftBloomState>();
+    DriftBloomAudioService.instance.setMasterVolume(
+      settings.soundEnabled ? 1 : 0,
+    );
     return ToolLayout(
       title: DriftBloomTool.config.localizedName(l10n),
       backgroundColor: DriftBloomColors.page,
@@ -105,7 +126,11 @@ class _DriftBloomPageState extends State<DriftBloomPage>
             final board = Padding(
               padding: const EdgeInsets.all(16),
               child: SizedBox.expand(
-                child: DriftBloomBoard(engine: _engine, isActive: _isActive),
+                child: DriftBloomBoard(
+                  engine: _engine,
+                  isActive: _isActive,
+                  onBloom: _onBloom,
+                ),
               ),
             );
             return constraints.canSplit

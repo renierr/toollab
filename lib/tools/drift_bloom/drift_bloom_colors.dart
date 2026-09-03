@@ -7,6 +7,9 @@ class DriftBloomColors {
   static const Color fieldBackground = Color(0xFF0A1622);
   static const Color skyTop = Color(0xFF16293D);
   static const Color skyGlow = Color(0xFF2A4A5E);
+  static const Color nightSkyTop = Color(0xFF060A18);
+  static const Color nightSkyBottom = Color(0xFF0B1030);
+  static const Color star = Color(0xFFE8F4FF);
   static const Color mote = Color(0xFFBFE3EA);
   static const Color streak = Color(0xFF4DD0E1);
   static const Color ring = Color(0xFF4DD0E1);

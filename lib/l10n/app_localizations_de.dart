@@ -9776,6 +9776,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get driftBloomHapticsSubtitle => 'Vibrieren, wenn eine Blüte aufblüht';
 
   @override
+  String get driftBloomSound => 'Ton';
+
+  @override
+  String get driftBloomSoundSubtitle => 'Blütenklänge und Umgebungsbrise';
+
+  @override
   String get driftBloomEasyMode => 'Sanfte Brise';
 
   @override
@@ -9823,6 +9829,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get driftBloomHelpBloomText =>
       'Fliege durch eine goldene Mitte, um ein Blütenblatt zu öffnen. Geöffnete Blätter umkreisen deinen Samen.';
+
+  @override
+  String get driftBloomHelpGolden => 'Goldene Ringe';
+
+  @override
+  String get driftBloomHelpGoldenText =>
+      'Manche Ringe leuchten ganz golden. Ihre Mitte gibt doppelte Punkte und sprüht mehr Funken.';
 
   @override
   String get driftBloomHelpCombo => 'Blüten verketten';

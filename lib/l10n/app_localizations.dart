@@ -17369,6 +17369,18 @@ abstract class AppLocalizations {
   /// **'Vibrate when a petal blooms'**
   String get driftBloomHapticsSubtitle;
 
+  /// No description provided for @driftBloomSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get driftBloomSound;
+
+  /// No description provided for @driftBloomSoundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bloom chimes and ambient breeze'**
+  String get driftBloomSoundSubtitle;
+
   /// No description provided for @driftBloomEasyMode.
   ///
   /// In en, this message translates to:
@@ -17452,6 +17464,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Fly through a gold center to bloom a petal. Bloomed petals orbit your seed.'**
   String get driftBloomHelpBloomText;
+
+  /// No description provided for @driftBloomHelpGolden.
+  ///
+  /// In en, this message translates to:
+  /// **'Golden rings'**
+  String get driftBloomHelpGolden;
+
+  /// No description provided for @driftBloomHelpGoldenText.
+  ///
+  /// In en, this message translates to:
+  /// **'Some rings glow gold all over. Their centers are worth double points and burst more sparks.'**
+  String get driftBloomHelpGoldenText;
 
   /// No description provided for @driftBloomHelpCombo.
   ///

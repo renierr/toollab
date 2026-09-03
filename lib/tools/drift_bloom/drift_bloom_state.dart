@@ -6,16 +6,19 @@ import 'config.dart';
 class DriftBloomState extends ChangeNotifier {
   static const String _bestKey = 'best';
   static const String _hapticsKey = 'haptics_enabled';
+  static const String _soundEnabledKey = 'sound_enabled';
   static const String _easyModeKey = 'easy_mode';
   static const String _ringLifeKey = 'ring_life';
 
   int _best = 0;
   bool _hapticsEnabled = true;
+  bool _soundEnabled = true;
   bool _easyMode = false;
   double _ringLife = 10;
 
   int get best => _best;
   bool get hapticsEnabled => _hapticsEnabled;
+  bool get soundEnabled => _soundEnabled;
   bool get easyMode => _easyMode;
   double get ringLife => _ringLife;
 
@@ -33,6 +36,12 @@ class DriftBloomState extends ChangeNotifier {
         (await DatabaseService.instance.getSetting(
           DriftBloomTool.config.id,
           _hapticsKey,
+        )) !=
+        'false';
+    _soundEnabled =
+        (await DatabaseService.instance.getSetting(
+          DriftBloomTool.config.id,
+          _soundEnabledKey,
         )) !=
         'false';
     _easyMode =
@@ -72,6 +81,17 @@ class DriftBloomState extends ChangeNotifier {
     await DatabaseService.instance.setSetting(
       DriftBloomTool.config.id,
       _hapticsKey,
+      value.toString(),
+    );
+  }
+
+  Future<void> setSoundEnabled(bool value) async {
+    if (_soundEnabled == value) return;
+    _soundEnabled = value;
+    notifyListeners();
+    await DatabaseService.instance.setSetting(
+      DriftBloomTool.config.id,
+      _soundEnabledKey,
       value.toString(),
     );
   }
