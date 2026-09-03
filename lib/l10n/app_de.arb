@@ -4060,6 +4060,7 @@
   "voiceDistorterPresetsTitle": "Effekte",
   "voiceDistorterCustomTitle": "Eigene Einstellungen",
   "voiceDistorterPitch": "Tonhöhe",
+  "voiceDistorterFormant": "Formant",
   "voiceDistorterRobot": "Roboter",
   "voiceDistorterEcho": "Echo",
   "voiceDistorterReverb": "Hall",

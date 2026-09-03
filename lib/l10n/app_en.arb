@@ -5064,6 +5064,7 @@
   "voiceDistorterPresetsTitle": "Effects",
   "voiceDistorterCustomTitle": "Custom",
   "voiceDistorterPitch": "Pitch",
+  "voiceDistorterFormant": "Formant",
   "voiceDistorterRobot": "Robot",
   "voiceDistorterEcho": "Echo",
   "voiceDistorterReverb": "Reverb",

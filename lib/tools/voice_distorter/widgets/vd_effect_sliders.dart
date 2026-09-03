@@ -46,6 +46,15 @@ class VdEffectSliders extends StatelessWidget {
           onChanged: (v) => update(p.copyWith(pitchSemitones: v)),
         ),
         _KnobSlider(
+          label: l10n.voiceDistorterFormant,
+          value: p.formantSemitones,
+          min: -12,
+          max: 12,
+          valueLabel:
+              '${p.formantSemitones >= 0 ? '+' : ''}${p.formantSemitones.round()}',
+          onChanged: (v) => update(p.copyWith(formantSemitones: v)),
+        ),
+        _KnobSlider(
           label: l10n.voiceDistorterRobot,
           value: p.robotAmount,
           min: 0,

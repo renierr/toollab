@@ -18101,6 +18101,12 @@ abstract class AppLocalizations {
   /// **'Pitch'**
   String get voiceDistorterPitch;
 
+  /// No description provided for @voiceDistorterFormant.
+  ///
+  /// In en, this message translates to:
+  /// **'Formant'**
+  String get voiceDistorterFormant;
+
   /// No description provided for @voiceDistorterRobot.
   ///
   /// In en, this message translates to:

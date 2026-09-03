@@ -10,8 +10,8 @@ import 'voice_effect.dart';
 import 'voice_recorder.dart';
 import 'wav_utils.dart';
 
-/// Loads a recorded clip once and re-applies the six [VoiceEffectParams] knobs
-/// as per-source SoLoud filters on every play — no reload needed to switch
+/// Loads a recorded clip once and re-applies the [VoiceEffectParams] knobs as
+/// per-source SoLoud filters on every play — no reload needed to switch
 /// presets. Filter parameters can only be set on a live [SoundHandle], so
 /// [play] starts paused, writes the values, then unpauses to avoid an audible
 /// jump at the start of playback.
@@ -69,7 +69,7 @@ class VoiceEffectEngine {
     await stop();
 
     final SoundHandle handle = SoLoud.instance.play(source, paused: true);
-    _applyFilters(source, handle, params);
+    _applyEffect(source, handle, params);
     SoLoud.instance.setPause(handle, false);
     _handle = handle;
     isPlaying.value = true;
@@ -112,7 +112,7 @@ class VoiceEffectEngine {
       captureSub = capture.listen(chunks.add);
 
       final SoundHandle handle = SoLoud.instance.play(source, paused: true);
-      _applyFilters(source, handle, params);
+      _applyEffect(source, handle, params);
       endSub = source.soundEvents.listen((event) {
         if (event.handle == handle &&
             event.event == SoundEventType.handleIsNoMoreValid &&
@@ -122,8 +122,12 @@ class VoiceEffectEngine {
       });
       SoLoud.instance.setPause(handle, false);
 
+      // A formant shift down slows playback, so the clip runs longer than it
+      // was recorded.
       await ended.future.timeout(
-        const Duration(seconds: VoiceRecorder.maxSeconds + 5),
+        Duration(
+          seconds: (VoiceRecorder.maxSeconds / params.playbackRate).ceil() + 5,
+        ),
         onTimeout: () => SoLoud.instance.stop(handle),
       );
       // Let the last mixer buffers reach the capture stream.
@@ -155,22 +159,27 @@ class VoiceEffectEngine {
     );
   }
 
-  void _applyFilters(
+  void _applyEffect(
     AudioSource source,
     SoundHandle handle,
     VoiceEffectParams p,
   ) {
     final filters = source.filters;
 
+    // Resampling moves pitch and formants together; the pitch filter then puts
+    // the pitch back where it belongs, leaving a pure formant shift. The clip
+    // stretches in time as a side effect — there is no time-stretch to undo it.
+    SoLoud.instance.setRelativePlaySpeed(handle, p.playbackRate);
+
     _setFilter(
       filters.pitchShiftFilter.isActive,
-      p.pitchSemitones.abs() > 0.01,
+      p.filterSemitones.abs() > 0.01,
       () => filters.pitchShiftFilter.activate(),
       () => filters.pitchShiftFilter.deactivate(),
       () {
         filters.pitchShiftFilter.wet(soundHandle: handle).value = 1;
         filters.pitchShiftFilter.semitones(soundHandle: handle).value =
-            p.pitchSemitones;
+            p.filterSemitones;
       },
     );
 

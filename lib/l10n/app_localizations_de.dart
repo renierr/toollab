@@ -10188,6 +10188,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceDistorterPitch => 'Tonhöhe';
 
   @override
+  String get voiceDistorterFormant => 'Formant';
+
+  @override
   String get voiceDistorterRobot => 'Roboter';
 
   @override

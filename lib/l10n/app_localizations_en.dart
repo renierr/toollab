@@ -10111,6 +10111,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceDistorterPitch => 'Pitch';
 
   @override
+  String get voiceDistorterFormant => 'Formant';
+
+  @override
   String get voiceDistorterRobot => 'Robot';
 
   @override

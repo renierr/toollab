@@ -17,7 +17,7 @@ class VoicePresetsDbHelper {
       VoiceDistorterTool.config.id,
     );
     await _cachedDb!.migrate(
-      currentVersion: 1,
+      currentVersion: 2,
       onMigrate: (txn, oldVersion, newVersion) async {
         if (oldVersion < 1) {
           await txn.execute('''
@@ -34,6 +34,12 @@ class VoicePresetsDbHelper {
             )
           ''');
         }
+        if (oldVersion < 2) {
+          await txn.execute(
+            'ALTER TABLE ${txn.nameTable(tableName)} '
+            'ADD COLUMN formant REAL NOT NULL DEFAULT 0',
+          );
+        }
       },
     );
     return _cachedDb!;
@@ -47,6 +53,7 @@ class VoicePresetsDbHelper {
       name: map['name'] as String? ?? '',
       params: VoiceEffectParams(
         pitchSemitones: (map['pitch'] as num?)?.toDouble() ?? 0,
+        formantSemitones: (map['formant'] as num?)?.toDouble() ?? 0,
         robotAmount: (map['robot'] as num?)?.toDouble() ?? 0,
         echoAmount: (map['echo'] as num?)?.toDouble() ?? 0,
         reverbAmount: (map['reverb'] as num?)?.toDouble() ?? 0,
@@ -67,6 +74,7 @@ class VoicePresetsDbHelper {
     final int id = await db.insert(tableName, {
       'name': name,
       'pitch': params.pitchSemitones,
+      'formant': params.formantSemitones,
       'robot': params.robotAmount,
       'echo': params.echoAmount,
       'reverb': params.reverbAmount,
