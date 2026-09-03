@@ -10110,4 +10110,125 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lumaWellCoachHint => 'Berühre eine Kugelgruppe und halte';
+
+  @override
+  String get toolNameVoiceDistorter => 'Stimmenverzerrer';
+
+  @override
+  String get toolDescVoiceDistorter =>
+      'Nimm einen Stimmclip auf und verfremde ihn mit lustigen Effekten';
+
+  @override
+  String get voiceDistorterModeClip => 'Clip';
+
+  @override
+  String get voiceDistorterModeLive => 'Live';
+
+  @override
+  String get voiceDistorterTapToRecord => 'Zum Aufnehmen tippen';
+
+  @override
+  String get voiceDistorterTapToStop => 'Zum Stoppen tippen';
+
+  @override
+  String get voiceDistorterHoldToTalk => 'Halten zum Sprechen';
+
+  @override
+  String get voiceDistorterRecording => 'Aufnahme läuft…';
+
+  @override
+  String get voiceDistorterNoClipHint =>
+      'Nimm einen kurzen Clip auf und probiere unten einen Effekt';
+
+  @override
+  String get voiceDistorterPlay => 'Abspielen';
+
+  @override
+  String get voiceDistorterStop => 'Stopp';
+
+  @override
+  String get voiceDistorterReRecord => 'Neu aufnehmen';
+
+  @override
+  String get voiceDistorterPresetsTitle => 'Effekte';
+
+  @override
+  String get voiceDistorterCustomTitle => 'Eigene Einstellungen';
+
+  @override
+  String get voiceDistorterPitch => 'Tonhöhe';
+
+  @override
+  String get voiceDistorterRobot => 'Roboter';
+
+  @override
+  String get voiceDistorterEcho => 'Echo';
+
+  @override
+  String get voiceDistorterReverb => 'Hall';
+
+  @override
+  String get voiceDistorterLofi => 'Lo-Fi';
+
+  @override
+  String get voiceDistorterDistortion => 'Verzerrung';
+
+  @override
+  String get voiceDistorterSaveAsPreset => 'Als Preset speichern';
+
+  @override
+  String get voiceDistorterSavePresetTitle => 'Preset speichern';
+
+  @override
+  String get voiceDistorterPresetNameLabel => 'Preset-Name';
+
+  @override
+  String get voiceDistorterDeletePresetTitle => 'Preset löschen?';
+
+  @override
+  String voiceDistorterDeletePresetMessage(String name) {
+    return '„$name“ löschen? Dies kann nicht rückgängig gemacht werden.';
+  }
+
+  @override
+  String get voiceDistorterMicDenied => 'Mikrofonzugriff verweigert';
+
+  @override
+  String get voiceDistorterMicUnavailable => 'Mikrofon nicht verfügbar';
+
+  @override
+  String get voiceDistorterPresetChipmunk => 'Streifenhörnchen';
+
+  @override
+  String get voiceDistorterPresetHelium => 'Helium';
+
+  @override
+  String get voiceDistorterPresetDeepVoice => 'Tiefe Stimme';
+
+  @override
+  String get voiceDistorterPresetGiant => 'Riese';
+
+  @override
+  String get voiceDistorterPresetRobot => 'Roboter';
+
+  @override
+  String get voiceDistorterPresetCyborg => 'Cyborg';
+
+  @override
+  String get voiceDistorterPresetAlien => 'Alien';
+
+  @override
+  String get voiceDistorterPresetTelephone => 'Telefon';
+
+  @override
+  String get voiceDistorterPresetRadio => 'Radio';
+
+  @override
+  String get voiceDistorterPresetGhost => 'Geist';
+
+  @override
+  String get voiceDistorterPresetMonster => 'Monster';
+
+  @override
+  String get voiceDistorterPresetDarkLord => 'Dunkler Lord';
 }

@@ -65,7 +65,8 @@ class LumaWellColors {
   static Color planetShadowForStage(int stage) =>
       _planetShadows[(stage - 1).clamp(0, _planetShadows.length - 1)];
 
-  static const List<Color> _levels = [    Color(0xFF5CC8FF),
+  static const List<Color> _levels = [
+    Color(0xFF5CC8FF),
     Color(0xFF789BFF),
     Color(0xFFA878EF),
     Color(0xFFE275BE),

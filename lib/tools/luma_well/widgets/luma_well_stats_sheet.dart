@@ -49,9 +49,8 @@ class LumaWellStatsSheet extends StatelessWidget {
                       title: Text(l10n.lumaWellBestCombo),
                       trailing: Text(
                         'x${engine.bestCombo}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
@@ -60,9 +59,8 @@ class LumaWellStatsSheet extends StatelessWidget {
                       title: Text(l10n.lumaWellAccuracy),
                       trailing: Text(
                         '${(engine.accuracy * 100).round()}%',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
@@ -71,9 +69,8 @@ class LumaWellStatsSheet extends StatelessWidget {
                       title: Text(l10n.lumaWellAttempts),
                       trailing: Text(
                         '${engine.attempts}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
@@ -82,9 +79,8 @@ class LumaWellStatsSheet extends StatelessWidget {
                       title: Text(l10n.lumaWellMerges),
                       trailing: Text(
                         '${engine.merges}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                   ],

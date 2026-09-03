@@ -17956,6 +17956,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Touch and hold a group of orbs'**
   String get lumaWellCoachHint;
+
+  /// No description provided for @toolNameVoiceDistorter.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Distorter'**
+  String get toolNameVoiceDistorter;
+
+  /// No description provided for @toolDescVoiceDistorter.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a voice clip and remix it with fun voice effects'**
+  String get toolDescVoiceDistorter;
+
+  /// No description provided for @voiceDistorterModeClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clip'**
+  String get voiceDistorterModeClip;
+
+  /// No description provided for @voiceDistorterModeLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get voiceDistorterModeLive;
+
+  /// No description provided for @voiceDistorterTapToRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to record'**
+  String get voiceDistorterTapToRecord;
+
+  /// No description provided for @voiceDistorterTapToStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to stop'**
+  String get voiceDistorterTapToStop;
+
+  /// No description provided for @voiceDistorterHoldToTalk.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to talk'**
+  String get voiceDistorterHoldToTalk;
+
+  /// No description provided for @voiceDistorterRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording…'**
+  String get voiceDistorterRecording;
+
+  /// No description provided for @voiceDistorterNoClipHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a short clip, then try an effect below'**
+  String get voiceDistorterNoClipHint;
+
+  /// No description provided for @voiceDistorterPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get voiceDistorterPlay;
+
+  /// No description provided for @voiceDistorterStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get voiceDistorterStop;
+
+  /// No description provided for @voiceDistorterReRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-record'**
+  String get voiceDistorterReRecord;
+
+  /// No description provided for @voiceDistorterPresetsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Effects'**
+  String get voiceDistorterPresetsTitle;
+
+  /// No description provided for @voiceDistorterCustomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get voiceDistorterCustomTitle;
+
+  /// No description provided for @voiceDistorterPitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Pitch'**
+  String get voiceDistorterPitch;
+
+  /// No description provided for @voiceDistorterRobot.
+  ///
+  /// In en, this message translates to:
+  /// **'Robot'**
+  String get voiceDistorterRobot;
+
+  /// No description provided for @voiceDistorterEcho.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo'**
+  String get voiceDistorterEcho;
+
+  /// No description provided for @voiceDistorterReverb.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverb'**
+  String get voiceDistorterReverb;
+
+  /// No description provided for @voiceDistorterLofi.
+  ///
+  /// In en, this message translates to:
+  /// **'Lo-Fi'**
+  String get voiceDistorterLofi;
+
+  /// No description provided for @voiceDistorterDistortion.
+  ///
+  /// In en, this message translates to:
+  /// **'Distortion'**
+  String get voiceDistorterDistortion;
+
+  /// No description provided for @voiceDistorterSaveAsPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as preset'**
+  String get voiceDistorterSaveAsPreset;
+
+  /// No description provided for @voiceDistorterSavePresetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save preset'**
+  String get voiceDistorterSavePresetTitle;
+
+  /// No description provided for @voiceDistorterPresetNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset name'**
+  String get voiceDistorterPresetNameLabel;
+
+  /// No description provided for @voiceDistorterDeletePresetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete preset?'**
+  String get voiceDistorterDeletePresetTitle;
+
+  /// No description provided for @voiceDistorterDeletePresetMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? This can\'t be undone.'**
+  String voiceDistorterDeletePresetMessage(String name);
+
+  /// No description provided for @voiceDistorterMicDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission denied'**
+  String get voiceDistorterMicDenied;
+
+  /// No description provided for @voiceDistorterMicUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone unavailable'**
+  String get voiceDistorterMicUnavailable;
+
+  /// No description provided for @voiceDistorterPresetChipmunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Chipmunk'**
+  String get voiceDistorterPresetChipmunk;
+
+  /// No description provided for @voiceDistorterPresetHelium.
+  ///
+  /// In en, this message translates to:
+  /// **'Helium'**
+  String get voiceDistorterPresetHelium;
+
+  /// No description provided for @voiceDistorterPresetDeepVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Voice'**
+  String get voiceDistorterPresetDeepVoice;
+
+  /// No description provided for @voiceDistorterPresetGiant.
+  ///
+  /// In en, this message translates to:
+  /// **'Giant'**
+  String get voiceDistorterPresetGiant;
+
+  /// No description provided for @voiceDistorterPresetRobot.
+  ///
+  /// In en, this message translates to:
+  /// **'Robot'**
+  String get voiceDistorterPresetRobot;
+
+  /// No description provided for @voiceDistorterPresetCyborg.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyborg'**
+  String get voiceDistorterPresetCyborg;
+
+  /// No description provided for @voiceDistorterPresetAlien.
+  ///
+  /// In en, this message translates to:
+  /// **'Alien'**
+  String get voiceDistorterPresetAlien;
+
+  /// No description provided for @voiceDistorterPresetTelephone.
+  ///
+  /// In en, this message translates to:
+  /// **'Telephone'**
+  String get voiceDistorterPresetTelephone;
+
+  /// No description provided for @voiceDistorterPresetRadio.
+  ///
+  /// In en, this message translates to:
+  /// **'Radio'**
+  String get voiceDistorterPresetRadio;
+
+  /// No description provided for @voiceDistorterPresetGhost.
+  ///
+  /// In en, this message translates to:
+  /// **'Ghost'**
+  String get voiceDistorterPresetGhost;
+
+  /// No description provided for @voiceDistorterPresetMonster.
+  ///
+  /// In en, this message translates to:
+  /// **'Monster'**
+  String get voiceDistorterPresetMonster;
+
+  /// No description provided for @voiceDistorterPresetDarkLord.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Lord'**
+  String get voiceDistorterPresetDarkLord;
 }
 
 class _AppLocalizationsDelegate

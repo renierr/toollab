@@ -10034,4 +10034,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lumaWellCoachHint => 'Touch and hold a group of orbs';
+
+  @override
+  String get toolNameVoiceDistorter => 'Voice Distorter';
+
+  @override
+  String get toolDescVoiceDistorter =>
+      'Record a voice clip and remix it with fun voice effects';
+
+  @override
+  String get voiceDistorterModeClip => 'Clip';
+
+  @override
+  String get voiceDistorterModeLive => 'Live';
+
+  @override
+  String get voiceDistorterTapToRecord => 'Tap to record';
+
+  @override
+  String get voiceDistorterTapToStop => 'Tap to stop';
+
+  @override
+  String get voiceDistorterHoldToTalk => 'Hold to talk';
+
+  @override
+  String get voiceDistorterRecording => 'Recording…';
+
+  @override
+  String get voiceDistorterNoClipHint =>
+      'Record a short clip, then try an effect below';
+
+  @override
+  String get voiceDistorterPlay => 'Play';
+
+  @override
+  String get voiceDistorterStop => 'Stop';
+
+  @override
+  String get voiceDistorterReRecord => 'Re-record';
+
+  @override
+  String get voiceDistorterPresetsTitle => 'Effects';
+
+  @override
+  String get voiceDistorterCustomTitle => 'Custom';
+
+  @override
+  String get voiceDistorterPitch => 'Pitch';
+
+  @override
+  String get voiceDistorterRobot => 'Robot';
+
+  @override
+  String get voiceDistorterEcho => 'Echo';
+
+  @override
+  String get voiceDistorterReverb => 'Reverb';
+
+  @override
+  String get voiceDistorterLofi => 'Lo-Fi';
+
+  @override
+  String get voiceDistorterDistortion => 'Distortion';
+
+  @override
+  String get voiceDistorterSaveAsPreset => 'Save as preset';
+
+  @override
+  String get voiceDistorterSavePresetTitle => 'Save preset';
+
+  @override
+  String get voiceDistorterPresetNameLabel => 'Preset name';
+
+  @override
+  String get voiceDistorterDeletePresetTitle => 'Delete preset?';
+
+  @override
+  String voiceDistorterDeletePresetMessage(String name) {
+    return 'Delete \"$name\"? This can\'t be undone.';
+  }
+
+  @override
+  String get voiceDistorterMicDenied => 'Microphone permission denied';
+
+  @override
+  String get voiceDistorterMicUnavailable => 'Microphone unavailable';
+
+  @override
+  String get voiceDistorterPresetChipmunk => 'Chipmunk';
+
+  @override
+  String get voiceDistorterPresetHelium => 'Helium';
+
+  @override
+  String get voiceDistorterPresetDeepVoice => 'Deep Voice';
+
+  @override
+  String get voiceDistorterPresetGiant => 'Giant';
+
+  @override
+  String get voiceDistorterPresetRobot => 'Robot';
+
+  @override
+  String get voiceDistorterPresetCyborg => 'Cyborg';
+
+  @override
+  String get voiceDistorterPresetAlien => 'Alien';
+
+  @override
+  String get voiceDistorterPresetTelephone => 'Telephone';
+
+  @override
+  String get voiceDistorterPresetRadio => 'Radio';
+
+  @override
+  String get voiceDistorterPresetGhost => 'Ghost';
+
+  @override
+  String get voiceDistorterPresetMonster => 'Monster';
+
+  @override
+  String get voiceDistorterPresetDarkLord => 'Dark Lord';
 }

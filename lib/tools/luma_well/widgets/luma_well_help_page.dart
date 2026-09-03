@@ -119,7 +119,16 @@ class LumaWellHelpPage extends StatelessWidget {
   }
 }
 
-enum _HelpVisual { capture, hold, grow, challenge, valueRelease, power, volatile, combo }
+enum _HelpVisual {
+  capture,
+  hold,
+  grow,
+  challenge,
+  valueRelease,
+  power,
+  volatile,
+  combo,
+}
 
 class _HelpDiagram extends StatelessWidget {
   final _HelpVisual type;
