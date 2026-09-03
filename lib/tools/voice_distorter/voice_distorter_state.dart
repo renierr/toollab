@@ -10,7 +10,12 @@ import 'presets_db_helper.dart';
 
 enum VoiceDistorterMode { clip, live }
 
+enum RecordStopResult { ok, tooShort, failed }
+
 class VoiceDistorterState extends ChangeNotifier {
+  /// Below this the capture has too few frames to be worth loading.
+  static const Duration minClipDuration = Duration(milliseconds: 150);
+
   final TempFileScope _scope = TempFileManager.createScope();
   late final VoiceRecorder _recorder = VoiceRecorder(_scope);
   final VoiceEffectEngine _engine = VoiceEffectEngine.instance;
@@ -65,24 +70,38 @@ class VoiceDistorterState extends ChangeNotifier {
     return result;
   }
 
-  Future<void> stopRecording() async {
+  Future<RecordStopResult> stopRecording() async {
     if (_starting) {
       _stopRequestedWhileStarting = true;
-      return;
+      return RecordStopResult.tooShort;
     }
-    await _finishRecording();
+    return _finishRecording();
   }
 
-  Future<void> _finishRecording() async {
+  Future<RecordStopResult> _finishRecording() async {
     final VoiceClip? clip = await _recorder.stop();
-    if (clip != null) {
-      await _engine.loadClip(clip.path, isStereo: clip.isStereo);
-      hasClip = true;
-      if (mode == VoiceDistorterMode.live) {
-        await _engine.play(params);
-      }
+    if (clip == null) {
+      notifyListeners();
+      return RecordStopResult.failed;
+    }
+    // A stabbed live-mode tap yields a WAV with no frames, which the decoder
+    // rejects outright.
+    final Duration? duration = clip.duration;
+    if (duration != null && duration < minClipDuration) {
+      notifyListeners();
+      return RecordStopResult.tooShort;
+    }
+
+    final bool loaded = await _engine.loadClip(
+      clip.path,
+      isStereo: clip.isStereo,
+    );
+    hasClip = loaded;
+    if (loaded && mode == VoiceDistorterMode.live) {
+      await _engine.play(params);
     }
     notifyListeners();
+    return loaded ? RecordStopResult.ok : RecordStopResult.failed;
   }
 
   Future<void> playCurrent() async {

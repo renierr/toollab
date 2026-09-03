@@ -42,8 +42,9 @@ class VoiceEffectEngine {
   }
 
   /// [isStereo] must only be true when the file is known to have two channels:
-  /// the reverb filter aborts natively on anything else.
-  Future<void> loadClip(String path, {required bool isStereo}) async {
+  /// the reverb filter aborts natively on anything else. Returns false when the
+  /// clip could not be decoded.
+  Future<bool> loadClip(String path, {required bool isStereo}) async {
     await _ensureInit();
     await stop();
     final AudioSource? old = _source;
@@ -52,7 +53,13 @@ class VoiceEffectEngine {
     // SoLoud would otherwise hand back the source it is still disposing.
     if (old != null) await SoLoud.instance.disposeSource(old);
     _stereoClip = isStereo;
-    _source = await SoLoud.instance.loadFile(path);
+    try {
+      _source = await SoLoud.instance.loadFile(path);
+      return true;
+    } catch (e) {
+      errorLog('[VoiceEffectEngine] loading clip failed: $e');
+      return false;
+    }
   }
 
   Future<void> play(VoiceEffectParams params) async {

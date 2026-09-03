@@ -10150,6 +10150,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceDistorterReRecord => 'Neu aufnehmen';
 
   @override
+  String get voiceDistorterClipTooShort =>
+      'Zu kurz — Taste beim Sprechen gedrückt halten';
+
+  @override
+  String get voiceDistorterClipFailed =>
+      'Die Aufnahme konnte nicht geladen werden';
+
+  @override
   String get voiceDistorterSaveClip => 'Clip speichern';
 
   @override

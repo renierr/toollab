@@ -53,5 +53,36 @@ void main() {
       );
       expect(widenWavToStereo(stereo), isNull, reason: 'already stereo');
     });
+
+    test('rejects a capture with no frames', () {
+      // What a stabbed live-mode tap produces; SoLoud cannot decode it.
+      expect(widenWavToStereo(_monoWav(const [])), isNull);
+    });
+  });
+
+  group('readWavInfo', () {
+    test('reports frame count and duration', () {
+      final info = readWavInfo(
+        _monoWav(List<int>.filled(4410, 0), sampleRate: 44100),
+      );
+      expect(info, isNotNull);
+      expect(info!.channels, 1);
+      expect(info.frames, 4410);
+      expect(info.duration, const Duration(milliseconds: 100));
+      expect(info.isPcm, isTrue);
+    });
+
+    test('falls back to the rest of the file on a placeholder data size', () {
+      final wav = _monoWav(const [1, 2, 3, 4]);
+      ByteData.sublistView(wav).setUint32(40, 0, Endian.little);
+
+      final info = readWavInfo(wav);
+      expect(info!.frames, 4);
+      expect(widenWavToStereo(wav), isNotNull);
+    });
+
+    test('returns null for a non-wav file', () {
+      expect(readWavInfo(Uint8List.fromList('nope'.codeUnits)), isNull);
+    });
   });
 }

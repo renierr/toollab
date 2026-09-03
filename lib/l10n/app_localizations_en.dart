@@ -10074,6 +10074,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceDistorterReRecord => 'Re-record';
 
   @override
+  String get voiceDistorterClipTooShort =>
+      'Too short — hold the button while you talk';
+
+  @override
+  String get voiceDistorterClipFailed => 'The recording could not be loaded';
+
+  @override
   String get voiceDistorterSaveClip => 'Save clip';
 
   @override

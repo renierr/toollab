@@ -4048,6 +4048,8 @@
   "voiceDistorterPlay": "Abspielen",
   "voiceDistorterStop": "Stopp",
   "voiceDistorterReRecord": "Neu aufnehmen",
+  "voiceDistorterClipTooShort": "Zu kurz — Taste beim Sprechen gedrückt halten",
+  "voiceDistorterClipFailed": "Die Aufnahme konnte nicht geladen werden",
   "voiceDistorterSaveClip": "Clip speichern",
   "voiceDistorterExporting": "Wird gerendert…",
   "voiceDistorterExportFailed": "Clip konnte nicht gerendert werden",

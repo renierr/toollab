@@ -5052,6 +5052,8 @@
   "voiceDistorterPlay": "Play",
   "voiceDistorterStop": "Stop",
   "voiceDistorterReRecord": "Re-record",
+  "voiceDistorterClipTooShort": "Too short — hold the button while you talk",
+  "voiceDistorterClipFailed": "The recording could not be loaded",
   "voiceDistorterSaveClip": "Save clip",
   "voiceDistorterExporting": "Rendering…",
   "voiceDistorterExportFailed": "Could not render the clip",

@@ -11,7 +11,8 @@ enum RecordStartResult { ok, denied, unavailable }
 
 /// A finished recording. [isStereo] is only true when the file is known to hold
 /// two channels — filters that require stereo must stay off otherwise.
-typedef VoiceClip = ({String path, bool isStereo});
+/// [duration] is null when the file's header could not be read.
+typedef VoiceClip = ({String path, bool isStereo, Duration? duration});
 
 /// Records a short voice clip straight to a WAV file via [AudioRecorder],
 /// auto-stopping at [maxSeconds] so clips stay small.
@@ -104,15 +105,23 @@ class VoiceRecorder {
     if (path == null) return null;
 
     try {
-      final stereo = widenWavToStereo(await _scope.readFile(_clipFile));
+      final Uint8List raw = await _scope.readFile(_clipFile);
+      final WavInfo? info = readWavInfo(raw);
+      final Duration? duration = info?.duration;
+      debugLog(
+        '[VoiceRecorder] captured ${raw.length} bytes, '
+        '${info?.channels}ch ${info?.frames} frames, $duration',
+      );
+      final Uint8List? stereo = widenWavToStereo(raw);
       if (stereo != null) {
         final String out = await _scope.createFile(_stereoFile, bytes: stereo);
-        return (path: out, isStereo: true);
+        return (path: out, isStereo: true, duration: duration);
       }
+      return (path: path, isStereo: false, duration: duration);
     } catch (e) {
       errorLog('[VoiceRecorder] stereo conversion failed: $e');
+      return (path: path, isStereo: false, duration: null);
     }
-    return (path: path, isStereo: false);
   }
 
   Future<void> dispose() async {

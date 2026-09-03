@@ -18029,6 +18029,18 @@ abstract class AppLocalizations {
   /// **'Re-record'**
   String get voiceDistorterReRecord;
 
+  /// No description provided for @voiceDistorterClipTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Too short — hold the button while you talk'**
+  String get voiceDistorterClipTooShort;
+
+  /// No description provided for @voiceDistorterClipFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The recording could not be loaded'**
+  String get voiceDistorterClipFailed;
+
   /// No description provided for @voiceDistorterSaveClip.
   ///
   /// In en, this message translates to:

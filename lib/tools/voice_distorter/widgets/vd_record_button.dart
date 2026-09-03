@@ -28,9 +28,19 @@ Future<void> startRecordingWithFeedback(BuildContext context) async {
 class VdRecordButton extends StatelessWidget {
   const VdRecordButton({super.key});
 
-  void _handleStop(BuildContext context) {
-    unawaited(context.read<VoiceDistorterState>().stopRecording());
+  Future<void> _stop(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final result = await context.read<VoiceDistorterState>().stopRecording();
+    if (!context.mounted || result == RecordStopResult.ok) return;
+    final message = result == RecordStopResult.tooShort
+        ? l10n.voiceDistorterClipTooShort
+        : l10n.voiceDistorterClipFailed;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
+
+  void _handleStop(BuildContext context) => unawaited(_stop(context));
 
   @override
   Widget build(BuildContext context) {

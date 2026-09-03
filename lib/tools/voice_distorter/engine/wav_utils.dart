@@ -30,12 +30,36 @@ Uint8List buildPcmWav({
   return out;
 }
 
-/// Widens a mono PCM WAV to stereo by duplicating every frame, because
-/// SoLoud's freeverb filter asserts on non-stereo input.
-///
-/// Returns `null` when [wav] is not a mono PCM WAV — the caller must then treat
-/// the clip as "channel count unknown" and skip the reverb filter.
-Uint8List? widenWavToStereo(Uint8List wav) {
+/// The parts of a WAV header this tool needs. [format] is 1 for integer PCM
+/// and 3 for IEEE float; anything else is compressed.
+class WavInfo {
+  final int format;
+  final int channels;
+  final int sampleRate;
+  final int blockAlign;
+  final int bitsPerSample;
+  final int dataOffset;
+  final int dataLength;
+
+  const WavInfo({
+    required this.format,
+    required this.channels,
+    required this.sampleRate,
+    required this.blockAlign,
+    required this.bitsPerSample,
+    required this.dataOffset,
+    required this.dataLength,
+  });
+
+  bool get isPcm => format == 1 || format == 3;
+  int get frames => blockAlign <= 0 ? 0 : dataLength ~/ blockAlign;
+  Duration get duration => sampleRate <= 0
+      ? Duration.zero
+      : Duration(microseconds: frames * 1000000 ~/ sampleRate);
+}
+
+/// Parses [wav]'s `fmt `/`data` chunks, or returns `null` when it is not a WAV.
+WavInfo? readWavInfo(Uint8List wav) {
   if (wav.length < 12) return null;
   if (String.fromCharCodes(wav, 0, 4) != 'RIFF') return null;
   if (String.fromCharCodes(wav, 8, 12) != 'WAVE') return null;
@@ -54,27 +78,46 @@ Uint8List? widenWavToStereo(Uint8List wav) {
       fmt = body;
     } else if (id == 'data') {
       data = body;
-      dataLength = size > wav.length - body ? wav.length - body : size;
+      final int rest = wav.length - body;
+      // A recorder that never finalized the header leaves a placeholder size;
+      // the audio is then everything that follows.
+      if (size == 0 || size > rest) {
+        dataLength = rest;
+        break;
+      }
+      dataLength = size;
     }
     pos = body + size + (size.isOdd ? 1 : 0);
   }
   if (fmt < 0 || fmt + 16 > wav.length || data < 0) return null;
 
-  final int format = view.getUint16(fmt, Endian.little);
-  final int channels = view.getUint16(fmt + 2, Endian.little);
-  final int sampleRate = view.getUint32(fmt + 4, Endian.little);
-  final int blockAlign = view.getUint16(fmt + 12, Endian.little);
-  final int bitsPerSample = view.getUint16(fmt + 14, Endian.little);
-  // 1 = PCM, 3 = IEEE float. Anything else is compressed, so frames are not
-  // independently copyable.
-  if (format != 1 && format != 3) return null;
-  if (channels != 1 || blockAlign <= 0) return null;
+  return WavInfo(
+    format: view.getUint16(fmt, Endian.little),
+    channels: view.getUint16(fmt + 2, Endian.little),
+    sampleRate: view.getUint32(fmt + 4, Endian.little),
+    blockAlign: view.getUint16(fmt + 12, Endian.little),
+    bitsPerSample: view.getUint16(fmt + 14, Endian.little),
+    dataOffset: data,
+    dataLength: dataLength,
+  );
+}
 
-  final int frames = dataLength ~/ blockAlign;
-  final pcm = Uint8List(frames * blockAlign * 2);
+/// Widens a mono PCM WAV to stereo by duplicating every frame, because
+/// SoLoud's freeverb filter asserts on non-stereo input.
+///
+/// Returns `null` when [wav] is not a mono PCM WAV or holds no frames — the
+/// caller must then treat the clip as "channel count unknown" and skip the
+/// reverb filter.
+Uint8List? widenWavToStereo(Uint8List wav) {
+  final WavInfo? info = readWavInfo(wav);
+  if (info == null || !info.isPcm) return null;
+  if (info.channels != 1 || info.frames == 0) return null;
+
+  final int blockAlign = info.blockAlign;
+  final pcm = Uint8List(info.frames * blockAlign * 2);
   int write = 0;
-  for (int f = 0; f < frames; f++) {
-    final int read = data + f * blockAlign;
+  for (int f = 0; f < info.frames; f++) {
+    final int read = info.dataOffset + f * blockAlign;
     pcm.setRange(write, write + blockAlign, wav, read);
     write += blockAlign;
     pcm.setRange(write, write + blockAlign, wav, read);
@@ -83,9 +126,9 @@ Uint8List? widenWavToStereo(Uint8List wav) {
 
   return buildPcmWav(
     pcm: pcm,
-    sampleRate: sampleRate,
+    sampleRate: info.sampleRate,
     channels: 2,
-    bitsPerSample: bitsPerSample,
-    format: format,
+    bitsPerSample: info.bitsPerSample,
+    format: info.format,
   );
 }
