@@ -34,7 +34,10 @@ dependencies:
   nfc_manager_ndef: ^1.1.0
   pdfrx: ^2.4.3
   pdfrx_engine: ^0.4.2
-  desktop_drop: ^0.8.0
+  # Local fork of desktop_drop 0.8.4: only android/build.gradle differs
+  # (AGP 9 built-in Kotlin fix, see note there). Re-check on upstream update.
+  desktop_drop:
+    path: ./packages/desktop_drop
   flutter_markdown_plus: ^1.0.7
   url_launcher: ^6.3.0
   package_info_plus: ^10.1.0

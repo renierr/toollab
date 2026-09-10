@@ -1,0 +1,58 @@
+group 'com.example.desktop_drop'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '2.2.0'
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'com.android.library'
+
+// Fork note: this app builds with AGP 9, which provides built-in Kotlin
+// (https://kotl.in/gradle/agp-built-in-kotlin). Upstream's AGP-version check
+// reads its own pinned AGP 7.4.2 classpath, so it wrongly applies the legacy
+// 'kotlin-android' plugin and the Kotlin sources silently compile to nothing.
+// Never apply 'kotlin-android' here; the 'kotlin' extension comes from AGP.
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+android {
+    // Conditional for compatibility with AGP <4.2.
+    if (project.android.hasProperty("namespace")) {
+        namespace 'one.mixin.desktop.drop'
+    }
+
+    compileSdk 36
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        minSdkVersion 16
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+    }
+}
