@@ -58,25 +58,28 @@ class DepotStatementParser {
     final grossMoney = AmountParser.gross(text);
     final totalMoney = AmountParser.total(text);
 
-    final fee = converter.convert(CostParser.fees(text)) ?? 0;
-    final tax = converter.convert(CostParser.taxes(text)) ?? 0;
+    final fee = converter.sum(CostParser.fees(text));
+    final tax = converter.sum(CostParser.taxes(text));
 
     final gross = converter.convert(grossMoney)?.abs();
-    var amount = converter.convert(totalMoney)?.abs();
+    final total = converter.convert(totalMoney)?.abs();
     var price = converter.convert(priceMoney)?.abs();
 
-    price ??= _derivePrice(gross ?? amount, shares);
-    if (price == null) issues.add(DepotParseIssue.missingPrice);
-
-    amount ??= _deriveAmount(gross, resolvedType, fee, tax);
+    final amount =
+        _grossFromTotal(total, resolvedType, fee, tax) ??
+        _product(price, shares) ??
+        gross;
     if (amount == null) issues.add(DepotParseIssue.missingAmount);
+
+    price ??= _derivePrice(amount, shares);
+    if (price == null) issues.add(DepotParseIssue.missingPrice);
 
     final sourceCurrency = _sourceCurrency([priceMoney, grossMoney]);
     if (sourceCurrency != 'EUR' && fx == null) {
       issues.add(DepotParseIssue.missingFxRate);
     }
 
-    if (_mismatches(resolvedType, price, shares, amount, fee, tax)) {
+    if (_mismatches(price, shares, amount)) {
       issues.add(DepotParseIssue.amountMismatch);
     }
 
@@ -108,17 +111,24 @@ class DepotStatementParser {
     return total / shares;
   }
 
-  static double? _deriveAmount(
-    double? gross,
+  /// Parqet's `amount` is the position value before costs, while the statement
+  /// books the money that moved: costs are added on a buy and withheld on a
+  /// payout. Rebuilding it from the booked total keeps the cents exact instead
+  /// of multiplying a rounded per-share rate.
+  static double? _grossFromTotal(
+    double? total,
     DepotActivityType type,
     double fee,
     double tax,
   ) {
-    if (gross == null) return null;
+    if (total == null) return null;
     return type == DepotActivityType.buy
-        ? gross + fee + tax
-        : gross - fee - tax;
+        ? total - fee - tax
+        : total + fee + tax;
   }
+
+  static double? _product(double? price, double? shares) =>
+      price == null || shares == null ? null : price * shares;
 
   static String _sourceCurrency(List<Money?> values) {
     for (final money in values) {
@@ -127,22 +137,12 @@ class DepotStatementParser {
     return 'EUR';
   }
 
-  /// Cross-check: the booked amount should be the position value plus or minus
-  /// the costs. A mismatch means a label was read from the wrong column.
-  static bool _mismatches(
-    DepotActivityType type,
-    double? price,
-    double? shares,
-    double? amount,
-    double fee,
-    double tax,
-  ) {
+  /// Cross-check: the gross amount should be the per-share rate times the
+  /// quantity. A mismatch means a label was read from the wrong column.
+  static bool _mismatches(double? price, double? shares, double? amount) {
     if (price == null || shares == null || amount == null) return false;
-    final expected = type == DepotActivityType.buy
-        ? price * shares + fee + tax
-        : price * shares - fee - tax;
     final tolerance = (amount.abs() * 0.01).clamp(0.05, 25.0);
-    return (expected - amount).abs() > tolerance;
+    return (price * shares - amount).abs() > tolerance;
   }
 }
 
@@ -158,5 +158,13 @@ class _EurConverter {
     if (money.currency == 'EUR') return money.value;
     if (fx == null) return null;
     return money.value / fx!.perEur(money.currency);
+  }
+
+  double sum(Iterable<Money> monies) {
+    double total = 0;
+    for (final money in monies) {
+      total += convert(money) ?? 0;
+    }
+    return total;
   }
 }

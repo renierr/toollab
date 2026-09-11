@@ -13,14 +13,30 @@ class StatementText {
     : lines = _split(raw),
       _lower = _split(raw).map((line) => line.toLowerCase()).toList();
 
+  /// DKB appends a "Nachrichtlich" overview of the running loss-offset and
+  /// withholding pots. Those are year-to-date balances, not this settlement's
+  /// figures, and they sit under headings ("Quellensteuer") the cost labels
+  /// match — so the statement ends where that appendix starts.
+  static const _appendixMarkers = [
+    'nachrichtlich',
+    'verrechnungstöpfe',
+    'verrechnungstopf',
+    'steuertopfsalden',
+  ];
+
   static List<String> _split(String raw) {
-    return raw
+    final lines = raw
         .replaceAll('\r\n', '\n')
         .replaceAll('\r', '\n')
         .split('\n')
         .map((line) => line.replaceAll(' ', ' ').trim())
         .where((line) => line.isNotEmpty)
         .toList();
+    final cut = lines.indexWhere((line) {
+      final lower = line.toLowerCase();
+      return _appendixMarkers.any(lower.contains);
+    });
+    return cut < 0 ? lines : lines.sublist(0, cut);
   }
 
   bool contains(String needle) =>
@@ -63,17 +79,24 @@ class StatementText {
     return null;
   }
 
+  /// The part of [line] that can still hold the value. When several labels hit
+  /// the same line the earliest cut that leaves a number wins, so ING's
+  /// "Nominale 50,00 Stück" keeps its quantity instead of losing it to the
+  /// trailing unit word.
   static String _afterLabel(String line, Iterable<String> labels) {
     final lower = line.toLowerCase();
-    int cut = -1;
+    final cuts = <int>[];
     for (final label in labels) {
       final at = lower.indexOf(label.toLowerCase());
-      if (at >= 0) {
-        final end = at + label.length;
-        if (end > cut) cut = end;
-      }
+      if (at >= 0) cuts.add(at + label.length);
     }
-    return cut < 0 ? line : line.substring(cut);
+    if (cuts.isEmpty) return line;
+    cuts.sort();
+    for (final cut in cuts) {
+      final tail = line.substring(cut);
+      if (GermanFormat.numberPattern.hasMatch(tail)) return tail;
+    }
+    return line.substring(cuts.last);
   }
 
   Money? moneyFor(
@@ -108,37 +131,46 @@ class StatementText {
     return null;
   }
 
+  /// Tried label by label, not line by line: ING prints the Ex-Tag above the
+  /// Zahltag, and a dividend books on the payout day whichever comes first.
   DateTime? dateFor(Iterable<String> labels) {
-    for (int i = 0; i < _lower.length; i++) {
-      if (!labels.any((label) => _lower[i].contains(label.toLowerCase()))) {
-        continue;
-      }
-      for (int offset = 0; offset <= 2 && i + offset < lines.length; offset++) {
-        final date = GermanFormat.parseDate(lines[i + offset]);
-        if (date != null) return date;
+    for (final label in labels) {
+      final needle = label.toLowerCase();
+      for (int i = 0; i < _lower.length; i++) {
+        if (!_lower[i].contains(needle)) continue;
+        for (
+          int offset = 0;
+          offset <= 2 && i + offset < lines.length;
+          offset++
+        ) {
+          final date = GermanFormat.parseDate(lines[i + offset]);
+          if (date != null) return date;
+        }
       }
     }
     return null;
   }
 
-  /// Sums every line carrying one of [labels]. Each line counts once, so a
-  /// statement listing both a per-item and a total row is not double counted
-  /// when the labels overlap.
-  double sumOf(
+  /// Every money on a line carrying one of [labels], each keeping the currency
+  /// of the line it came from: ING withholds a foreign tax in USD next to the
+  /// German ones in EUR, so a single shared currency would misprice the sum.
+  /// Each line counts once, so a statement listing both a per-item and a total
+  /// row is not double counted when the labels overlap.
+  List<Money> moniesOf(
     Iterable<String> labels, {
     Iterable<String> excluding = const [],
   }) {
     final seen = <int>{};
-    double total = 0;
+    final monies = <Money>[];
     for (int i = 0; i < _lower.length; i++) {
       final line = _lower[i];
       if (excluding.any((e) => line.contains(e.toLowerCase()))) continue;
       if (!labels.any((label) => line.contains(label.toLowerCase()))) continue;
       if (!seen.add(i)) continue;
-      final value = _valueNear(i, labels, seen);
-      if (value != null) total += value.value.abs();
+      final money = _valueNear(i, labels, seen);
+      if (money != null) monies.add(Money(money.value.abs(), money.currency));
     }
-    return total;
+    return monies;
   }
 
   /// The money belonging to the label on [index] — on the label line itself,
@@ -161,14 +193,5 @@ class StatementText {
       return GermanFormat.lastMoney(lines[next]);
     }
     return null;
-  }
-
-  /// Same as [sumOf] but keeps the currency of the first summed line, so a
-  /// foreign-currency fee block can be converted afterwards.
-  String currencyOf(Iterable<String> labels, {String fallback = 'EUR'}) {
-    final text = valueTextFor(labels);
-    if (text == null) return fallback;
-    return GermanFormat.lastMoney(text, fallbackCurrency: fallback)?.currency ??
-        fallback;
   }
 }

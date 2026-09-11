@@ -18,13 +18,19 @@ class PriceParser {
 
   static const _dividendGroups = [
     ['Dividende pro Stück', 'Dividende pro Anteil', 'Dividende je Aktie'],
-    ['Ertrag pro Stück', 'Ausschüttung pro Stück', 'Ertrag pro Anteil'],
-    ['pro Stück', 'je Stück', 'pro Anteil'],
+    ['Ertrag pro Stück', 'Ausschüttung pro Stück', 'Ausschüttung pro St.'],
+    ['Ertrag pro Anteil', 'Ertrag pro St.'],
+    ['Ertragsausschüttung per Stück', 'Ausschüttung per Stück'],
+    ['Zins-/Dividendensatz', 'Dividendensatz', 'Zinssatz'],
+    ['pro Stück', 'je Stück', 'per Stück', 'pro Anteil', 'pro St.'],
   ];
+
+  /// The rate after partial exemption is a tax figure, not what the fund paid.
+  static const _dividendExcluding = ['teilfreist'];
 
   static Money? parse(StatementText text, DepotActivityType type) {
     if (type == DepotActivityType.dividend) {
-      return text.firstMoneyOf(_dividendGroups);
+      return text.firstMoneyOf(_dividendGroups, excluding: _dividendExcluding);
     }
     return text.firstMoneyOf(_tradeGroups, excluding: _tradeExcluding);
   }

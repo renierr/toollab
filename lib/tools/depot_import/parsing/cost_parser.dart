@@ -32,6 +32,7 @@ class CostParser {
     'Depotgebühr',
   ];
   static const _feeExcluding = [
+    'keine',
     'rabatt',
     'ermäßigung',
     'erstattung',
@@ -52,23 +53,27 @@ class CostParser {
   ];
 
   /// Creditable or refundable withholding is not money the broker kept, and a
-  /// tax base line repeats an amount that is not itself a tax.
+  /// tax base line ("Berechnungsgrundlage für die Kapitalertragsteuer")
+  /// repeats an amount that is not itself a tax. The last group is prose —
+  /// "Keine Fondsausgangsquellensteuer" names a tax only to say none was
+  /// taken, and carries no amount for the lookahead to find on its line.
   static const _taxExcluding = [
     'anrechenbar',
+    'angerechn',
     'erstattungsfähig',
     'rückforderbar',
     'freistellungsauftrag',
-    'steuerpflichtig',
+    'steuerpfl',
     'bemessungsgrundlage',
+    'berechnungsgrundlage',
+    'keine',
+    'doppelbesteuerungsabkommen',
+    'bescheinigung',
   ];
 
-  static Money fees(StatementText text) => Money(
-    text.sumOf(_feeLabels, excluding: _feeExcluding),
-    text.currencyOf(_feeLabels),
-  );
+  static List<Money> fees(StatementText text) =>
+      text.moniesOf(_feeLabels, excluding: _feeExcluding);
 
-  static Money taxes(StatementText text) => Money(
-    text.sumOf(_taxLabels, excluding: _taxExcluding),
-    text.currencyOf(_taxLabels),
-  );
+  static List<Money> taxes(StatementText text) =>
+      text.moniesOf(_taxLabels, excluding: _taxExcluding);
 }

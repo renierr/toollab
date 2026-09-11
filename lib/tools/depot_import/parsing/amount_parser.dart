@@ -8,7 +8,7 @@ class AmountParser {
 
   static const _grossGroups = [
     ['Kurswert'],
-    ['Bruttobetrag', 'Bruttoertrag'],
+    ['Bruttobetrag', 'Bruttoertrag', 'Brutto'],
     ['Dividendengutschrift', 'Ertragsgutschrift'],
     ['Zwischensumme'],
   ];

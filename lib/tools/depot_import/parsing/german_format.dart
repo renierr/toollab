@@ -10,9 +10,13 @@ class GermanFormat {
   GermanFormat._();
 
   /// `1.234,56` / `1234,5678` / `12` — thousands dots optional, decimal comma
-  /// optional. A leading or trailing `-` marks a debit ("1.234,56-").
+  /// optional. A leading or trailing `-` marks a debit ("1.234,56-"). Letters
+  /// on either side disqualify the digits: `IE00B1234567` and `(A1B2C3)` are
+  /// identifiers, and reading a `2` out of them is never right. Digits count as
+  /// letters here, so skipping one character into an identifier does not let
+  /// the rest of it through.
   static final RegExp numberPattern = RegExp(
-    r'(-)?(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?(-)?',
+    r'(?<![A-Za-zÄÖÜäöüß0-9])(-)?(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?(-)?(?![A-Za-zÄÖÜäöüß0-9])',
   );
 
   static final RegExp datePattern = RegExp(r'\b(\d{2})\.(\d{2})\.(\d{4})\b');
