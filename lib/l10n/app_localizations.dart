@@ -18509,6 +18509,24 @@ abstract class AppLocalizations {
   /// **'Total does not match price x shares +/- costs'**
   String get depotImportIssueAmountMismatch;
 
+  /// No description provided for @depotImportExportIssuesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export with warnings?'**
+  String get depotImportExportIssuesTitle;
+
+  /// No description provided for @depotImportExportIssuesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of the selected activities have warnings (e.g. total does not match price x shares). The CSV will still be written.'**
+  String depotImportExportIssuesBody(int count);
+
+  /// No description provided for @depotImportExportAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Export anyway'**
+  String get depotImportExportAnyway;
+
   /// No description provided for @depotImportInvalidNumber.
   ///
   /// In en, this message translates to:

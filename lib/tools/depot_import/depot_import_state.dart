@@ -99,13 +99,14 @@ class DepotImportState extends ChangeNotifier {
   }
 
   void updateActivity(String id, DepotActivity activity) {
-    _replace(id, (s) {
-      final issues = s.issues
-          .where((i) => i != DepotParseIssue.missingIsin)
-          .toList();
-      if (activity.isin.isEmpty) issues.add(DepotParseIssue.missingIsin);
-      return s.copyWith(activity: activity, issues: issues, edited: true);
-    });
+    _replace(
+      id,
+      (s) => s.copyWith(
+        activity: activity,
+        issues: DepotStatementParser.revalidate(activity),
+        edited: true,
+      ),
+    );
   }
 
   void _replace(String id, ParsedStatement Function(ParsedStatement) update) {

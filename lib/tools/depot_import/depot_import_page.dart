@@ -12,6 +12,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
+import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
@@ -88,6 +89,31 @@ class _DepotImportPageState extends State<DepotImportPage> with DisposeCleanup {
       );
       return;
     }
+
+    final withIssues = state.exportable
+        .where((s) => s.issues.isNotEmpty)
+        .length;
+    if (withIssues > 0 && mounted) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => ResponsiveAlertDialog(
+          title: Text(l10n.depotImportExportIssuesTitle),
+          content: Text(l10n.depotImportExportIssuesBody(withIssues)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l10n.depotImportExportAnyway),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    if (!mounted) return;
 
     final bytes = utf8.encode(state.buildCsv());
     await FileSaveHelper.saveFile(

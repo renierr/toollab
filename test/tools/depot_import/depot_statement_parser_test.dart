@@ -421,4 +421,68 @@ void main() {
       expect(activity.date, DateTime(2026, 9, 3));
     });
   });
+
+  group('revalidate after manual edit', () {
+    DepotActivity activity({
+      double shares = 10,
+      double price = 32,
+      double amount = 320,
+      String isin = 'US1234567890',
+      DateTime? date,
+      String sourceCurrency = 'EUR',
+      double? fxRate,
+    }) => DepotActivity(
+      type: DepotActivityType.buy,
+      date: date ?? DateTime(2026, 9, 1),
+      isin: isin,
+      wkn: null,
+      securityName: 'Muster',
+      shares: shares,
+      price: price,
+      amount: amount,
+      tax: 0,
+      fee: 0,
+      sourceCurrency: sourceCurrency,
+      fxRate: fxRate,
+    );
+
+    test('clean activity has no issues', () {
+      expect(DepotStatementParser.revalidate(activity()), isEmpty);
+    });
+
+    test('flags a newly introduced total mismatch', () {
+      final issues = DepotStatementParser.revalidate(
+        activity(amount: 300),
+      );
+      expect(issues, contains(DepotParseIssue.amountMismatch));
+    });
+
+    test('tolerates cent rounding but not euro deviations', () {
+      expect(
+        DepotStatementParser.revalidate(activity(amount: 320.04)),
+        isEmpty,
+      );
+      expect(
+        DepotStatementParser.revalidate(activity(amount: 321)),
+        contains(DepotParseIssue.amountMismatch),
+      );
+    });
+
+    test('reports missing fields from zeroed values', () {
+      final issues = DepotStatementParser.revalidate(
+        activity(shares: 0, price: 0, amount: 0, isin: ''),
+      );
+      expect(issues, contains(DepotParseIssue.missingIsin));
+      expect(issues, contains(DepotParseIssue.missingShares));
+      expect(issues, contains(DepotParseIssue.missingPrice));
+      expect(issues, contains(DepotParseIssue.missingAmount));
+    });
+
+    test('flags a foreign currency without a rate', () {
+      final issues = DepotStatementParser.revalidate(
+        activity(sourceCurrency: 'USD'),
+      );
+      expect(issues, contains(DepotParseIssue.missingFxRate));
+    });
+  });
 }

@@ -106,6 +106,25 @@ class DepotStatementParser {
     );
   }
 
+  /// Re-checks a manually edited activity. The parser issues are derived
+  /// from the field values alone, so an edit can both clear stale issues
+  /// and surface a newly introduced mismatch.
+  static List<DepotParseIssue> revalidate(DepotActivity activity) {
+    final issues = <DepotParseIssue>[];
+    if (activity.isin.isEmpty) issues.add(DepotParseIssue.missingIsin);
+    if (activity.date == null) issues.add(DepotParseIssue.missingDate);
+    if (activity.shares == 0) issues.add(DepotParseIssue.missingShares);
+    if (activity.price == 0) issues.add(DepotParseIssue.missingPrice);
+    if (activity.amount == 0) issues.add(DepotParseIssue.missingAmount);
+    if (activity.isForeignCurrency && activity.fxRate == null) {
+      issues.add(DepotParseIssue.missingFxRate);
+    }
+    if (_mismatches(activity.price, activity.shares, activity.amount)) {
+      issues.add(DepotParseIssue.amountMismatch);
+    }
+    return issues;
+  }
+
   static double? _derivePrice(double? total, double? shares) {
     if (total == null || shares == null || shares == 0) return null;
     return total / shares;
@@ -139,9 +158,11 @@ class DepotStatementParser {
 
   /// Cross-check: the gross amount should be the per-share rate times the
   /// quantity. A mismatch means a label was read from the wrong column.
+  /// Tolerance covers cent rounding only: 5 ct floor, 0,2 % of the amount,
+  /// capped at 2 EUR so a large position cannot hide a misparse.
   static bool _mismatches(double? price, double? shares, double? amount) {
     if (price == null || shares == null || amount == null) return false;
-    final tolerance = (amount.abs() * 0.01).clamp(0.05, 25.0);
+    final tolerance = (amount.abs() * 0.002).clamp(0.05, 2.0);
     return (price * shares - amount).abs() > tolerance;
   }
 }

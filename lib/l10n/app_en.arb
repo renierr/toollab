@@ -5171,6 +5171,16 @@
   "depotImportIssueMissingAmount": "Total amount missing",
   "depotImportIssueMissingFxRate": "No exchange rate found for a foreign currency",
   "depotImportIssueAmountMismatch": "Total does not match price x shares +/- costs",
+  "depotImportExportIssuesTitle": "Export with warnings?",
+  "depotImportExportIssuesBody": "{count} of the selected activities have warnings (e.g. total does not match price x shares). The CSV will still be written.",
+  "@depotImportExportIssuesBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotImportExportAnyway": "Export anyway",
   "depotImportInvalidNumber": "Enter a number",
   "depotImportInvalidDate": "Use DD.MM.YYYY"
 }

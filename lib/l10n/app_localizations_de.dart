@@ -10409,6 +10409,17 @@ class AppLocalizationsDe extends AppLocalizations {
       'Betrag passt nicht zu Kurs x Stück +/- Kosten';
 
   @override
+  String get depotImportExportIssuesTitle => 'Mit Warnungen exportieren?';
+
+  @override
+  String depotImportExportIssuesBody(int count) {
+    return '$count der ausgewählten Aktivitäten haben Warnungen (z.B. Betrag passt nicht zu Kurs x Stück). Die CSV wird trotzdem geschrieben.';
+  }
+
+  @override
+  String get depotImportExportAnyway => 'Trotzdem exportieren';
+
+  @override
   String get depotImportInvalidNumber => 'Zahl eingeben';
 
   @override

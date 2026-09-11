@@ -10331,6 +10331,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Total does not match price x shares +/- costs';
 
   @override
+  String get depotImportExportIssuesTitle => 'Export with warnings?';
+
+  @override
+  String depotImportExportIssuesBody(int count) {
+    return '$count of the selected activities have warnings (e.g. total does not match price x shares). The CSV will still be written.';
+  }
+
+  @override
+  String get depotImportExportAnyway => 'Export anyway';
+
+  @override
   String get depotImportInvalidNumber => 'Enter a number';
 
   @override

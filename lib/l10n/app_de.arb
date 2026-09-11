@@ -4167,6 +4167,16 @@
   "depotImportIssueMissingAmount": "Gesamtbetrag fehlt",
   "depotImportIssueMissingFxRate": "Kein Devisenkurs für eine Fremdwährung gefunden",
   "depotImportIssueAmountMismatch": "Betrag passt nicht zu Kurs x Stück +/- Kosten",
+  "depotImportExportIssuesTitle": "Mit Warnungen exportieren?",
+  "depotImportExportIssuesBody": "{count} der ausgewählten Aktivitäten haben Warnungen (z.B. Betrag passt nicht zu Kurs x Stück). Die CSV wird trotzdem geschrieben.",
+  "@depotImportExportIssuesBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotImportExportAnyway": "Trotzdem exportieren",
   "depotImportInvalidNumber": "Zahl eingeben",
   "depotImportInvalidDate": "Format TT.MM.JJJJ"
 }
