@@ -18250,6 +18250,276 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark Lord'**
   String get voiceDistorterPresetDarkLord;
+
+  /// No description provided for @toolNameDepotImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Depot Import'**
+  String get toolNameDepotImport;
+
+  /// No description provided for @toolDescDepotImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn DKB and ING depot PDFs into a Parqet CSV import file'**
+  String get toolDescDepotImport;
+
+  /// No description provided for @depotImportTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF statements'**
+  String get depotImportTypeLabel;
+
+  /// No description provided for @depotImportOpenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add depot PDFs'**
+  String get depotImportOpenTitle;
+
+  /// No description provided for @depotImportDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop DKB or ING buy, sell and dividend statements here'**
+  String get depotImportDropSubtitle;
+
+  /// No description provided for @depotImportAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add PDFs'**
+  String get depotImportAdd;
+
+  /// No description provided for @depotImportClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get depotImportClear;
+
+  /// No description provided for @depotImportExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get depotImportExport;
+
+  /// No description provided for @depotImportReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading {current}/{total}'**
+  String depotImportReading(int current, int total);
+
+  /// No description provided for @depotImportActivityCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} activities ready'**
+  String depotImportActivityCount(int count);
+
+  /// No description provided for @depotImportIssueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} need attention'**
+  String depotImportIssueCount(int count);
+
+  /// No description provided for @depotImportNothingToExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one complete activity'**
+  String get depotImportNothingToExport;
+
+  /// No description provided for @depotImportExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Parqet CSV saved'**
+  String get depotImportExported;
+
+  /// No description provided for @depotImportRawTextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extracted text'**
+  String get depotImportRawTextTitle;
+
+  /// No description provided for @depotImportRawTextEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No text could be extracted from this PDF'**
+  String get depotImportRawTextEmpty;
+
+  /// No description provided for @depotImportRawTextTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Show extracted text'**
+  String get depotImportRawTextTooltip;
+
+  /// No description provided for @depotImportEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit activity'**
+  String get depotImportEditTitle;
+
+  /// No description provided for @depotImportEditTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get depotImportEditTooltip;
+
+  /// No description provided for @depotImportRemoveTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get depotImportRemoveTooltip;
+
+  /// No description provided for @depotImportNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing could be parsed from this file'**
+  String get depotImportNoData;
+
+  /// No description provided for @depotImportTypeBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get depotImportTypeBuy;
+
+  /// No description provided for @depotImportTypeSell.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get depotImportTypeSell;
+
+  /// No description provided for @depotImportTypeDividend.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend'**
+  String get depotImportTypeDividend;
+
+  /// No description provided for @depotImportFieldType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get depotImportFieldType;
+
+  /// No description provided for @depotImportFieldDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get depotImportFieldDate;
+
+  /// No description provided for @depotImportFieldIsin.
+  ///
+  /// In en, this message translates to:
+  /// **'ISIN'**
+  String get depotImportFieldIsin;
+
+  /// No description provided for @depotImportFieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get depotImportFieldName;
+
+  /// No description provided for @depotImportFieldShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares'**
+  String get depotImportFieldShares;
+
+  /// No description provided for @depotImportFieldPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price (EUR)'**
+  String get depotImportFieldPrice;
+
+  /// No description provided for @depotImportFieldAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (EUR)'**
+  String get depotImportFieldAmount;
+
+  /// No description provided for @depotImportFieldTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax (EUR)'**
+  String get depotImportFieldTax;
+
+  /// No description provided for @depotImportFieldFee.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee (EUR)'**
+  String get depotImportFieldFee;
+
+  /// No description provided for @depotImportFxNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted from {currency} at {rate} per EUR'**
+  String depotImportFxNote(String currency, String rate);
+
+  /// No description provided for @depotImportBankUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown bank'**
+  String get depotImportBankUnknown;
+
+  /// No description provided for @depotImportIssueNoText.
+  ///
+  /// In en, this message translates to:
+  /// **'No readable text (scanned PDF?)'**
+  String get depotImportIssueNoText;
+
+  /// No description provided for @depotImportIssueUnknownType.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity type unclear'**
+  String get depotImportIssueUnknownType;
+
+  /// No description provided for @depotImportIssueMissingIsin.
+  ///
+  /// In en, this message translates to:
+  /// **'ISIN missing'**
+  String get depotImportIssueMissingIsin;
+
+  /// No description provided for @depotImportIssueMissingDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date missing'**
+  String get depotImportIssueMissingDate;
+
+  /// No description provided for @depotImportIssueMissingShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Share count missing'**
+  String get depotImportIssueMissingShares;
+
+  /// No description provided for @depotImportIssueMissingPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price missing'**
+  String get depotImportIssueMissingPrice;
+
+  /// No description provided for @depotImportIssueMissingAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total amount missing'**
+  String get depotImportIssueMissingAmount;
+
+  /// No description provided for @depotImportIssueMissingFxRate.
+  ///
+  /// In en, this message translates to:
+  /// **'No exchange rate found for a foreign currency'**
+  String get depotImportIssueMissingFxRate;
+
+  /// No description provided for @depotImportIssueAmountMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Total does not match price x shares +/- costs'**
+  String get depotImportIssueAmountMismatch;
+
+  /// No description provided for @depotImportInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number'**
+  String get depotImportInvalidNumber;
+
+  /// No description provided for @depotImportInvalidDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Use DD.MM.YYYY'**
+  String get depotImportInvalidDate;
 }
 
 class _AppLocalizationsDelegate

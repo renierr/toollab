@@ -10186,4 +10186,153 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceDistorterPresetDarkLord => 'Dark Lord';
+
+  @override
+  String get toolNameDepotImport => 'Depot Import';
+
+  @override
+  String get toolDescDepotImport =>
+      'Turn DKB and ING depot PDFs into a Parqet CSV import file';
+
+  @override
+  String get depotImportTypeLabel => 'PDF statements';
+
+  @override
+  String get depotImportOpenTitle => 'Add depot PDFs';
+
+  @override
+  String get depotImportDropSubtitle =>
+      'Drop DKB or ING buy, sell and dividend statements here';
+
+  @override
+  String get depotImportAdd => 'Add PDFs';
+
+  @override
+  String get depotImportClear => 'Clear';
+
+  @override
+  String get depotImportExport => 'Export CSV';
+
+  @override
+  String depotImportReading(int current, int total) {
+    return 'Reading $current/$total';
+  }
+
+  @override
+  String depotImportActivityCount(int count) {
+    return '$count activities ready';
+  }
+
+  @override
+  String depotImportIssueCount(int count) {
+    return '$count need attention';
+  }
+
+  @override
+  String get depotImportNothingToExport =>
+      'Select at least one complete activity';
+
+  @override
+  String get depotImportExported => 'Parqet CSV saved';
+
+  @override
+  String get depotImportRawTextTitle => 'Extracted text';
+
+  @override
+  String get depotImportRawTextEmpty =>
+      'No text could be extracted from this PDF';
+
+  @override
+  String get depotImportRawTextTooltip => 'Show extracted text';
+
+  @override
+  String get depotImportEditTitle => 'Edit activity';
+
+  @override
+  String get depotImportEditTooltip => 'Edit';
+
+  @override
+  String get depotImportRemoveTooltip => 'Remove';
+
+  @override
+  String get depotImportNoData => 'Nothing could be parsed from this file';
+
+  @override
+  String get depotImportTypeBuy => 'Buy';
+
+  @override
+  String get depotImportTypeSell => 'Sell';
+
+  @override
+  String get depotImportTypeDividend => 'Dividend';
+
+  @override
+  String get depotImportFieldType => 'Type';
+
+  @override
+  String get depotImportFieldDate => 'Date';
+
+  @override
+  String get depotImportFieldIsin => 'ISIN';
+
+  @override
+  String get depotImportFieldName => 'Security';
+
+  @override
+  String get depotImportFieldShares => 'Shares';
+
+  @override
+  String get depotImportFieldPrice => 'Price (EUR)';
+
+  @override
+  String get depotImportFieldAmount => 'Amount (EUR)';
+
+  @override
+  String get depotImportFieldTax => 'Tax (EUR)';
+
+  @override
+  String get depotImportFieldFee => 'Fee (EUR)';
+
+  @override
+  String depotImportFxNote(String currency, String rate) {
+    return 'Converted from $currency at $rate per EUR';
+  }
+
+  @override
+  String get depotImportBankUnknown => 'Unknown bank';
+
+  @override
+  String get depotImportIssueNoText => 'No readable text (scanned PDF?)';
+
+  @override
+  String get depotImportIssueUnknownType => 'Activity type unclear';
+
+  @override
+  String get depotImportIssueMissingIsin => 'ISIN missing';
+
+  @override
+  String get depotImportIssueMissingDate => 'Date missing';
+
+  @override
+  String get depotImportIssueMissingShares => 'Share count missing';
+
+  @override
+  String get depotImportIssueMissingPrice => 'Price missing';
+
+  @override
+  String get depotImportIssueMissingAmount => 'Total amount missing';
+
+  @override
+  String get depotImportIssueMissingFxRate =>
+      'No exchange rate found for a foreign currency';
+
+  @override
+  String get depotImportIssueAmountMismatch =>
+      'Total does not match price x shares +/- costs';
+
+  @override
+  String get depotImportInvalidNumber => 'Enter a number';
+
+  @override
+  String get depotImportInvalidDate => 'Use DD.MM.YYYY';
 }

@@ -5093,5 +5093,84 @@
   "voiceDistorterPresetRadio": "Radio",
   "voiceDistorterPresetGhost": "Ghost",
   "voiceDistorterPresetMonster": "Monster",
-  "voiceDistorterPresetDarkLord": "Dark Lord"
+  "voiceDistorterPresetDarkLord": "Dark Lord",
+  "toolNameDepotImport": "Depot Import",
+  "toolDescDepotImport": "Turn DKB and ING depot PDFs into a Parqet CSV import file",
+  "depotImportTypeLabel": "PDF statements",
+  "depotImportOpenTitle": "Add depot PDFs",
+  "depotImportDropSubtitle": "Drop DKB or ING buy, sell and dividend statements here",
+  "depotImportAdd": "Add PDFs",
+  "depotImportClear": "Clear",
+  "depotImportExport": "Export CSV",
+  "depotImportReading": "Reading {current}/{total}",
+  "@depotImportReading": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "depotImportActivityCount": "{count} activities ready",
+  "@depotImportActivityCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotImportIssueCount": "{count} need attention",
+  "@depotImportIssueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotImportNothingToExport": "Select at least one complete activity",
+  "depotImportExported": "Parqet CSV saved",
+  "depotImportRawTextTitle": "Extracted text",
+  "depotImportRawTextEmpty": "No text could be extracted from this PDF",
+  "depotImportRawTextTooltip": "Show extracted text",
+  "depotImportEditTitle": "Edit activity",
+  "depotImportEditTooltip": "Edit",
+  "depotImportRemoveTooltip": "Remove",
+  "depotImportNoData": "Nothing could be parsed from this file",
+  "depotImportTypeBuy": "Buy",
+  "depotImportTypeSell": "Sell",
+  "depotImportTypeDividend": "Dividend",
+  "depotImportFieldType": "Type",
+  "depotImportFieldDate": "Date",
+  "depotImportFieldIsin": "ISIN",
+  "depotImportFieldName": "Security",
+  "depotImportFieldShares": "Shares",
+  "depotImportFieldPrice": "Price (EUR)",
+  "depotImportFieldAmount": "Amount (EUR)",
+  "depotImportFieldTax": "Tax (EUR)",
+  "depotImportFieldFee": "Fee (EUR)",
+  "depotImportFxNote": "Converted from {currency} at {rate} per EUR",
+  "@depotImportFxNote": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "depotImportBankUnknown": "Unknown bank",
+  "depotImportIssueNoText": "No readable text (scanned PDF?)",
+  "depotImportIssueUnknownType": "Activity type unclear",
+  "depotImportIssueMissingIsin": "ISIN missing",
+  "depotImportIssueMissingDate": "Date missing",
+  "depotImportIssueMissingShares": "Share count missing",
+  "depotImportIssueMissingPrice": "Price missing",
+  "depotImportIssueMissingAmount": "Total amount missing",
+  "depotImportIssueMissingFxRate": "No exchange rate found for a foreign currency",
+  "depotImportIssueAmountMismatch": "Total does not match price x shares +/- costs",
+  "depotImportInvalidNumber": "Enter a number",
+  "depotImportInvalidDate": "Use DD.MM.YYYY"
 }

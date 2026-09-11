@@ -10263,4 +10263,154 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get voiceDistorterPresetDarkLord => 'Dunkler Lord';
+
+  @override
+  String get toolNameDepotImport => 'Depot Import';
+
+  @override
+  String get toolDescDepotImport =>
+      'DKB- und ING-Depot-PDFs in eine Parqet-CSV umwandeln';
+
+  @override
+  String get depotImportTypeLabel => 'PDF-Abrechnungen';
+
+  @override
+  String get depotImportOpenTitle => 'Depot-PDFs hinzufügen';
+
+  @override
+  String get depotImportDropSubtitle =>
+      'Kauf-, Verkaufs- und Dividendenabrechnungen von DKB oder ING hier ablegen';
+
+  @override
+  String get depotImportAdd => 'PDFs hinzufügen';
+
+  @override
+  String get depotImportClear => 'Leeren';
+
+  @override
+  String get depotImportExport => 'CSV exportieren';
+
+  @override
+  String depotImportReading(int current, int total) {
+    return 'Lese $current/$total';
+  }
+
+  @override
+  String depotImportActivityCount(int count) {
+    return '$count Aktivitäten bereit';
+  }
+
+  @override
+  String depotImportIssueCount(int count) {
+    return '$count benötigen Aufmerksamkeit';
+  }
+
+  @override
+  String get depotImportNothingToExport =>
+      'Mindestens eine vollständige Aktivität auswählen';
+
+  @override
+  String get depotImportExported => 'Parqet-CSV gespeichert';
+
+  @override
+  String get depotImportRawTextTitle => 'Extrahierter Text';
+
+  @override
+  String get depotImportRawTextEmpty =>
+      'Aus diesem PDF konnte kein Text gelesen werden';
+
+  @override
+  String get depotImportRawTextTooltip => 'Extrahierten Text anzeigen';
+
+  @override
+  String get depotImportEditTitle => 'Aktivität bearbeiten';
+
+  @override
+  String get depotImportEditTooltip => 'Bearbeiten';
+
+  @override
+  String get depotImportRemoveTooltip => 'Entfernen';
+
+  @override
+  String get depotImportNoData =>
+      'Aus dieser Datei konnte nichts gelesen werden';
+
+  @override
+  String get depotImportTypeBuy => 'Kauf';
+
+  @override
+  String get depotImportTypeSell => 'Verkauf';
+
+  @override
+  String get depotImportTypeDividend => 'Dividende';
+
+  @override
+  String get depotImportFieldType => 'Art';
+
+  @override
+  String get depotImportFieldDate => 'Datum';
+
+  @override
+  String get depotImportFieldIsin => 'ISIN';
+
+  @override
+  String get depotImportFieldName => 'Wertpapier';
+
+  @override
+  String get depotImportFieldShares => 'Stück';
+
+  @override
+  String get depotImportFieldPrice => 'Kurs (EUR)';
+
+  @override
+  String get depotImportFieldAmount => 'Betrag (EUR)';
+
+  @override
+  String get depotImportFieldTax => 'Steuern (EUR)';
+
+  @override
+  String get depotImportFieldFee => 'Gebühren (EUR)';
+
+  @override
+  String depotImportFxNote(String currency, String rate) {
+    return 'Umgerechnet aus $currency mit $rate pro EUR';
+  }
+
+  @override
+  String get depotImportBankUnknown => 'Unbekannte Bank';
+
+  @override
+  String get depotImportIssueNoText => 'Kein lesbarer Text (gescanntes PDF?)';
+
+  @override
+  String get depotImportIssueUnknownType => 'Art der Aktivität unklar';
+
+  @override
+  String get depotImportIssueMissingIsin => 'ISIN fehlt';
+
+  @override
+  String get depotImportIssueMissingDate => 'Datum fehlt';
+
+  @override
+  String get depotImportIssueMissingShares => 'Stückzahl fehlt';
+
+  @override
+  String get depotImportIssueMissingPrice => 'Kurs fehlt';
+
+  @override
+  String get depotImportIssueMissingAmount => 'Gesamtbetrag fehlt';
+
+  @override
+  String get depotImportIssueMissingFxRate =>
+      'Kein Devisenkurs für eine Fremdwährung gefunden';
+
+  @override
+  String get depotImportIssueAmountMismatch =>
+      'Betrag passt nicht zu Kurs x Stück +/- Kosten';
+
+  @override
+  String get depotImportInvalidNumber => 'Zahl eingeben';
+
+  @override
+  String get depotImportInvalidDate => 'Format TT.MM.JJJJ';
 }

@@ -4089,5 +4089,84 @@
   "voiceDistorterPresetRadio": "Radio",
   "voiceDistorterPresetGhost": "Geist",
   "voiceDistorterPresetMonster": "Monster",
-  "voiceDistorterPresetDarkLord": "Dunkler Lord"
+  "voiceDistorterPresetDarkLord": "Dunkler Lord",
+  "toolNameDepotImport": "Depot Import",
+  "toolDescDepotImport": "DKB- und ING-Depot-PDFs in eine Parqet-CSV umwandeln",
+  "depotImportTypeLabel": "PDF-Abrechnungen",
+  "depotImportOpenTitle": "Depot-PDFs hinzufügen",
+  "depotImportDropSubtitle": "Kauf-, Verkaufs- und Dividendenabrechnungen von DKB oder ING hier ablegen",
+  "depotImportAdd": "PDFs hinzufügen",
+  "depotImportClear": "Leeren",
+  "depotImportExport": "CSV exportieren",
+  "depotImportReading": "Lese {current}/{total}",
+  "@depotImportReading": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "depotImportActivityCount": "{count} Aktivitäten bereit",
+  "@depotImportActivityCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotImportIssueCount": "{count} benötigen Aufmerksamkeit",
+  "@depotImportIssueCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotImportNothingToExport": "Mindestens eine vollständige Aktivität auswählen",
+  "depotImportExported": "Parqet-CSV gespeichert",
+  "depotImportRawTextTitle": "Extrahierter Text",
+  "depotImportRawTextEmpty": "Aus diesem PDF konnte kein Text gelesen werden",
+  "depotImportRawTextTooltip": "Extrahierten Text anzeigen",
+  "depotImportEditTitle": "Aktivität bearbeiten",
+  "depotImportEditTooltip": "Bearbeiten",
+  "depotImportRemoveTooltip": "Entfernen",
+  "depotImportNoData": "Aus dieser Datei konnte nichts gelesen werden",
+  "depotImportTypeBuy": "Kauf",
+  "depotImportTypeSell": "Verkauf",
+  "depotImportTypeDividend": "Dividende",
+  "depotImportFieldType": "Art",
+  "depotImportFieldDate": "Datum",
+  "depotImportFieldIsin": "ISIN",
+  "depotImportFieldName": "Wertpapier",
+  "depotImportFieldShares": "Stück",
+  "depotImportFieldPrice": "Kurs (EUR)",
+  "depotImportFieldAmount": "Betrag (EUR)",
+  "depotImportFieldTax": "Steuern (EUR)",
+  "depotImportFieldFee": "Gebühren (EUR)",
+  "depotImportFxNote": "Umgerechnet aus {currency} mit {rate} pro EUR",
+  "@depotImportFxNote": {
+    "placeholders": {
+      "currency": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "depotImportBankUnknown": "Unbekannte Bank",
+  "depotImportIssueNoText": "Kein lesbarer Text (gescanntes PDF?)",
+  "depotImportIssueUnknownType": "Art der Aktivität unklar",
+  "depotImportIssueMissingIsin": "ISIN fehlt",
+  "depotImportIssueMissingDate": "Datum fehlt",
+  "depotImportIssueMissingShares": "Stückzahl fehlt",
+  "depotImportIssueMissingPrice": "Kurs fehlt",
+  "depotImportIssueMissingAmount": "Gesamtbetrag fehlt",
+  "depotImportIssueMissingFxRate": "Kein Devisenkurs für eine Fremdwährung gefunden",
+  "depotImportIssueAmountMismatch": "Betrag passt nicht zu Kurs x Stück +/- Kosten",
+  "depotImportInvalidNumber": "Zahl eingeben",
+  "depotImportInvalidDate": "Format TT.MM.JJJJ"
 }
