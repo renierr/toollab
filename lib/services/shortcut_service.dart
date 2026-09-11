@@ -14,15 +14,30 @@ class ShortcutService {
     }
   }
 
-  final _routeStreamController = StreamController<String>.broadcast();
+  late final StreamController<String> _routeStreamController =
+      StreamController<String>.broadcast(onListen: _flushPendingRoute);
+
+  /// A broadcast stream drops events that arrive before the first listener, and
+  /// native may push a route while the app is still booting.
+  String? _pendingRoute;
 
   Stream<String> get onShortcutRoute => _routeStreamController.stream;
+
+  void _flushPendingRoute() {
+    final route = _pendingRoute;
+    if (route == null) return;
+    _pendingRoute = null;
+    scheduleMicrotask(() => _routeStreamController.add(route));
+  }
 
   Future<void> _handleMethodCall(MethodCall call) async {
     if (call.method == 'onShortcutRoute') {
       final route = call.arguments as String?;
-      if (route != null) {
+      if (route == null) return;
+      if (_routeStreamController.hasListener) {
         _routeStreamController.add(route);
+      } else {
+        _pendingRoute = route;
       }
     }
   }

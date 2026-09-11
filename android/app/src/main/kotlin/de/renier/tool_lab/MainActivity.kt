@@ -75,10 +75,23 @@ open class MainActivity : FlutterFragmentActivity() {
         resolveLaunchRoute(intent)
         SharingHelper.handleIntent(this, intent, messenger)
         
+        // Keep launchRoute until Dart acknowledges: a push that lands before the
+        // Dart handler is registered is dropped, and getLaunchRoute must still find it.
         launchRoute?.let { route ->
             if (messenger != null) {
-                MethodChannel(messenger, SHORTCUTS_CHANNEL).invokeMethod("onShortcutRoute", route)
-                launchRoute = null
+                MethodChannel(messenger, SHORTCUTS_CHANNEL).invokeMethod(
+                    "onShortcutRoute",
+                    route,
+                    object : MethodChannel.Result {
+                        override fun success(result: Any?) {
+                            if (launchRoute == route) launchRoute = null
+                        }
+
+                        override fun error(code: String, message: String?, details: Any?) {}
+
+                        override fun notImplemented() {}
+                    },
+                )
             }
         }
     }
@@ -176,6 +189,7 @@ open class MainActivity : FlutterFragmentActivity() {
             return
         }
         val aliasRoute = intent.component?.className?.let { aliasClassNameToRoute(it) }
+            ?: aliasClassNameToRoute(javaClass.name)
         if (aliasRoute != null) {
             launchRoute = aliasRoute
             return

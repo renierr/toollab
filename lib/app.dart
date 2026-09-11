@@ -134,11 +134,7 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   }
 
   Future<void> _initShortcuts() async {
-    final launchRoute = await ShortcutService.instance.getLaunchRoute();
-    if (launchRoute != null && launchRoute != '/' && mounted) {
-      _router.go(launchRoute);
-    }
-
+    // Listen before pulling, so a route pushed during boot cannot slip through.
     _shortcutSubscription = ShortcutService.instance.onShortcutRoute.listen((
       route,
     ) {
@@ -151,6 +147,14 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
         _router.go(route);
       }
     });
+
+    final launchRoute = await ShortcutService.instance.getLaunchRoute();
+    if (launchRoute != null &&
+        launchRoute != '/' &&
+        mounted &&
+        _router.state.matchedLocation != launchRoute) {
+      _router.go(launchRoute);
+    }
   }
 
   Future<void> _initSharing() async {
