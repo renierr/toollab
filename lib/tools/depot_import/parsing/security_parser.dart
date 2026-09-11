@@ -17,6 +17,10 @@ class SecurityParser {
     r'^\s*(Nominale\s+)?(Stück|Stk\.?|St\.|Nennwert|Anteile)\s+[\d.,]+\s*',
     caseSensitive: false,
   );
+  static final RegExp _leadingLabel = RegExp(
+    r'^\s*(Gattungsbezeichnung|Wertpapierbezeichnung|Bezeichnung|Wertpapier)\s+',
+    caseSensitive: false,
+  );
 
   static String isin(String rawText) =>
       _isin.firstMatch(rawText)?.group(1) ?? '';
@@ -29,15 +33,17 @@ class SecurityParser {
     if (isin.isEmpty) return '';
     for (int i = 0; i < text.lines.length; i++) {
       if (!text.lines[i].contains(isin)) continue;
-      final stripped = text.lines[i]
-          .replaceAll(isin, '')
-          .replaceAll(_identifierWords, '')
-          .replaceFirst(_leadingQuantity, '')
-          .replaceAll(RegExp(r'\s{2,}'), ' ')
-          .trim();
+      final stripped = _clean(text.lines[i].replaceAll(isin, ''));
       if (stripped.length > 3) return stripped;
-      return i > 0 ? text.lines[i - 1] : '';
+      return i > 0 ? _clean(text.lines[i - 1]) : '';
     }
     return '';
   }
+
+  static String _clean(String line) => line
+      .replaceAll(_identifierWords, '')
+      .replaceFirst(_leadingQuantity, '')
+      .replaceFirst(_leadingLabel, '')
+      .replaceAll(RegExp(r'\s{2,}'), ' ')
+      .trim();
 }
