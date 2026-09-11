@@ -10409,6 +10409,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Betrag passt nicht zu Kurs x Stück +/- Kosten';
 
   @override
+  String get depotImportIssueTotalMismatch =>
+      'Gebuchter Betrag passt nicht zu Brutto abzüglich Kosten';
+
+  @override
+  String get depotImportIssueDuplicate => 'Mögliches Doppel';
+
+  @override
+  String get depotImportIssueInvalidIsin => 'ISIN-Prüfziffer ungültig';
+
+  @override
   String get depotImportExportIssuesTitle => 'Mit Warnungen exportieren?';
 
   @override

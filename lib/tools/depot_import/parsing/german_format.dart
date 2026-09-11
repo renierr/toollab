@@ -10,13 +10,14 @@ class GermanFormat {
   GermanFormat._();
 
   /// `1.234,56` / `1234,5678` / `12` — thousands dots optional, decimal comma
-  /// optional. A leading or trailing `-` marks a debit ("1.234,56-"). Letters
-  /// on either side disqualify the digits: `IE00B1234567` and `(A1B2C3)` are
-  /// identifiers, and reading a `2` out of them is never right. Digits count as
-  /// letters here, so skipping one character into an identifier does not let
-  /// the rest of it through.
+  /// optional. A leading or trailing `-` marks a debit ("1.234,56-"), a
+  /// trailing `+` a credit ("8,00+ EUR"). Letters on either side disqualify
+  /// the digits: `IE00B1234567` and `(A1B2C3)` are identifiers, and reading a
+  /// `2` out of them is never right. Digits count as letters here, so
+  /// skipping one character into an identifier does not let the rest of it
+  /// through.
   static final RegExp numberPattern = RegExp(
-    r'(?<![A-Za-zÄÖÜäöüß0-9])(-)?(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?(-)?(?![A-Za-zÄÖÜäöüß0-9])',
+    r'(?<![A-Za-zÄÖÜäöüß0-9])(-)?(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d+))?([+-])?(?![A-Za-zÄÖÜäöüß0-9])',
   );
 
   static final RegExp datePattern = RegExp(r'\b(\d{2})\.(\d{2})\.(\d{4})\b');
@@ -45,7 +46,7 @@ class GermanFormat {
     final raw = fraction == null ? whole : '$whole.$fraction';
     final parsed = double.tryParse(raw);
     if (parsed == null) return null;
-    final negative = match.group(1) != null || match.group(4) != null;
+    final negative = match.group(1) == '-' || match.group(4) == '-';
     return negative ? -parsed : parsed;
   }
 
@@ -61,8 +62,20 @@ class GermanFormat {
 
   /// The last amount on [text] with the currency code standing next to it.
   /// German statements put the code either before ("EUR 1.234,56") or after
-  /// ("1.234,56 EUR") the number.
+  /// ("1.234,56 EUR", "5,96+ EUR") the number.
   static Money? lastMoney(String text, {String fallbackCurrency = 'EUR'}) {
+    final explicit = explicitMoney(text);
+    if (explicit != null) return explicit;
+    final matches = numberPattern.allMatches(text).toList();
+    if (matches.isEmpty) return null;
+    final value = _fromMatch(matches.last);
+    if (value == null) return null;
+    return Money(value, fallbackCurrency);
+  }
+
+  /// Like [lastMoney], but null when no currency code stands next to the
+  /// number — a bare quantity ("Stück 10") is not money.
+  static Money? explicitMoney(String text) {
     final matches = numberPattern.allMatches(text).toList();
     if (matches.isEmpty) return null;
     final match = matches.last;
@@ -85,7 +98,7 @@ class GermanFormat {
       }
     }
 
-    return Money(value, fallbackCurrency);
+    return null;
   }
 
   static DateTime? parseDate(String text) {

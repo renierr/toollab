@@ -5171,6 +5171,9 @@
   "depotImportIssueMissingAmount": "Total amount missing",
   "depotImportIssueMissingFxRate": "No exchange rate found for a foreign currency",
   "depotImportIssueAmountMismatch": "Total does not match price x shares +/- costs",
+  "depotImportIssueTotalMismatch": "Booked total does not match gross less costs",
+  "depotImportIssueDuplicate": "Possible duplicate import",
+  "depotImportIssueInvalidIsin": "ISIN checksum invalid",
   "depotImportExportIssuesTitle": "Export with warnings?",
   "depotImportExportIssuesBody": "{count} of the selected activities have warnings (e.g. total does not match price x shares). The CSV will still be written.",
   "@depotImportExportIssuesBody": {

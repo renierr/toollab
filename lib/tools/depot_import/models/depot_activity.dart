@@ -16,12 +16,15 @@ enum DepotParseIssue {
   noText,
   unknownType,
   missingIsin,
+  invalidIsin,
   missingDate,
   missingShares,
   missingPrice,
   missingAmount,
   missingFxRate,
   amountMismatch,
+  totalMismatch,
+  duplicate,
 }
 
 /// One Parqet activity, always in EUR. Foreign-currency documents are
@@ -44,6 +47,10 @@ class DepotActivity {
   /// Units of [sourceCurrency] per 1 EUR, as printed in the document.
   final double? fxRate;
 
+  /// Money that moved on the account, in EUR. Only used to cross-check the
+  /// gross amount against the booked total — never exported to Parqet.
+  final double? bookedTotal;
+
   const DepotActivity({
     required this.type,
     required this.date,
@@ -57,6 +64,7 @@ class DepotActivity {
     required this.fee,
     this.sourceCurrency = 'EUR',
     this.fxRate,
+    this.bookedTotal,
   });
 
   bool get isForeignCurrency => sourceCurrency != 'EUR';
@@ -74,6 +82,7 @@ class DepotActivity {
     double? fee,
     String? sourceCurrency,
     double? fxRate,
+    double? bookedTotal,
   }) {
     return DepotActivity(
       type: type ?? this.type,
@@ -88,6 +97,7 @@ class DepotActivity {
       fee: fee ?? this.fee,
       sourceCurrency: sourceCurrency ?? this.sourceCurrency,
       fxRate: fxRate ?? this.fxRate,
+      bookedTotal: bookedTotal ?? this.bookedTotal,
     );
   }
 }
@@ -118,6 +128,7 @@ class ParsedStatement {
   bool get isExportable =>
       activity != null &&
       !issues.contains(DepotParseIssue.missingIsin) &&
+      !issues.contains(DepotParseIssue.invalidIsin) &&
       activity!.date != null;
 
   ParsedStatement copyWith({

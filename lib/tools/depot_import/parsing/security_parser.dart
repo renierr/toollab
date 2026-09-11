@@ -30,6 +30,34 @@ class SecurityParser {
   static String isin(String rawText) =>
       _isin.firstMatch(rawText)?.group(1) ?? '';
 
+  static final RegExp _isinFormat = RegExp(r'^[A-Z]{2}[A-Z0-9]{9}[0-9]$');
+
+  /// ISO 6166 check digit: letters count as A=10 through Z=35, then the
+  /// digit string must pass Luhn. Catches a transposed or misread character
+  /// that still matches the ISIN shape.
+  static bool isValidIsin(String code) {
+    if (!_isinFormat.hasMatch(code)) return false;
+    final digits = StringBuffer();
+    for (final unit in code.codeUnits) {
+      if (unit >= 48 && unit <= 57) {
+        digits.writeCharCode(unit);
+      } else {
+        digits.write((unit - 55).toString());
+      }
+    }
+    var sum = 0;
+    final chars = digits.toString();
+    for (var i = 0; i < chars.length; i++) {
+      var n = chars.codeUnitAt(chars.length - 1 - i) - 48;
+      if (i.isOdd) {
+        n *= 2;
+        if (n > 9) n -= 9;
+      }
+      sum += n;
+    }
+    return sum % 10 == 0;
+  }
+
   static String? wkn(String rawText) {
     final labelled = _wkn.firstMatch(rawText)?.group(1);
     if (labelled != null) return labelled;

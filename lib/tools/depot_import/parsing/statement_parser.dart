@@ -41,7 +41,11 @@ class DepotStatementParser {
     final resolvedType = type ?? DepotActivityType.buy;
 
     final isin = SecurityParser.isin(rawText);
-    if (isin.isEmpty) issues.add(DepotParseIssue.missingIsin);
+    if (isin.isEmpty) {
+      issues.add(DepotParseIssue.missingIsin);
+    } else if (!SecurityParser.isValidIsin(isin)) {
+      issues.add(DepotParseIssue.invalidIsin);
+    }
 
     final date = StatementDateParser.parse(text, resolvedType);
     if (date == null) issues.add(DepotParseIssue.missingDate);
@@ -83,6 +87,18 @@ class DepotStatementParser {
       issues.add(DepotParseIssue.amountMismatch);
     }
 
+    if (_totalMismatches(
+      gross,
+      total,
+      resolvedType,
+      fee,
+      tax,
+      grossMoney != null,
+      totalMoney != null,
+    )) {
+      issues.add(DepotParseIssue.totalMismatch);
+    }
+
     return ParsedStatement(
       id: id,
       fileName: fileName,
@@ -100,6 +116,7 @@ class DepotStatementParser {
         fee: fee,
         sourceCurrency: sourceCurrency,
         fxRate: sourceCurrency == 'EUR' ? null : fx?.perEur(sourceCurrency),
+        bookedTotal: total,
       ),
       issues: issues,
       rawText: rawText,
@@ -111,7 +128,11 @@ class DepotStatementParser {
   /// and surface a newly introduced mismatch.
   static List<DepotParseIssue> revalidate(DepotActivity activity) {
     final issues = <DepotParseIssue>[];
-    if (activity.isin.isEmpty) issues.add(DepotParseIssue.missingIsin);
+    if (activity.isin.isEmpty) {
+      issues.add(DepotParseIssue.missingIsin);
+    } else if (!SecurityParser.isValidIsin(activity.isin)) {
+      issues.add(DepotParseIssue.invalidIsin);
+    }
     if (activity.date == null) issues.add(DepotParseIssue.missingDate);
     if (activity.shares == 0) issues.add(DepotParseIssue.missingShares);
     if (activity.price == 0) issues.add(DepotParseIssue.missingPrice);
@@ -121,6 +142,18 @@ class DepotStatementParser {
     }
     if (_mismatches(activity.price, activity.shares, activity.amount)) {
       issues.add(DepotParseIssue.amountMismatch);
+    }
+    if (activity.bookedTotal != null &&
+        _totalMismatches(
+          activity.amount,
+          activity.bookedTotal,
+          activity.type,
+          activity.fee,
+          activity.tax,
+          true,
+          true,
+        )) {
+      issues.add(DepotParseIssue.totalMismatch);
     }
     return issues;
   }
@@ -164,6 +197,30 @@ class DepotStatementParser {
     if (price == null || shares == null || amount == null) return false;
     final tolerance = (amount.abs() * 0.002).clamp(0.05, 2.0);
     return (price * shares - amount).abs() > tolerance;
+  }
+
+  /// Second cross-check: the booked total should be the gross amount plus
+  /// costs on a buy, or minus withheld costs on a payout. Only meaningful
+  /// when both totals were read independently — the gross `amount` is often
+  /// rebuilt from the booked total, which would compare against itself.
+  /// Slightly wider floor than [_mismatches]: several rounded summands.
+  static bool _totalMismatches(
+    double? gross,
+    double? total,
+    DepotActivityType type,
+    double fee,
+    double tax,
+    bool hasGross,
+    bool hasTotal,
+  ) {
+    if (!hasGross || !hasTotal || gross == null || total == null) {
+      return false;
+    }
+    final expected = type == DepotActivityType.buy
+        ? gross + fee + tax
+        : gross - fee - tax;
+    final tolerance = (expected.abs() * 0.002).clamp(0.10, 3.0);
+    return (total - expected).abs() > tolerance;
   }
 }
 

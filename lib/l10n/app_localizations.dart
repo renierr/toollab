@@ -18509,6 +18509,24 @@ abstract class AppLocalizations {
   /// **'Total does not match price x shares +/- costs'**
   String get depotImportIssueAmountMismatch;
 
+  /// No description provided for @depotImportIssueTotalMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked total does not match gross less costs'**
+  String get depotImportIssueTotalMismatch;
+
+  /// No description provided for @depotImportIssueDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Possible duplicate import'**
+  String get depotImportIssueDuplicate;
+
+  /// No description provided for @depotImportIssueInvalidIsin.
+  ///
+  /// In en, this message translates to:
+  /// **'ISIN checksum invalid'**
+  String get depotImportIssueInvalidIsin;
+
   /// No description provided for @depotImportExportIssuesTitle.
   ///
   /// In en, this message translates to:

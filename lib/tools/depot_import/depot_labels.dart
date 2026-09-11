@@ -12,12 +12,15 @@ class DepotLabels {
         DepotParseIssue.noText => l10n.depotImportIssueNoText,
         DepotParseIssue.unknownType => l10n.depotImportIssueUnknownType,
         DepotParseIssue.missingIsin => l10n.depotImportIssueMissingIsin,
+        DepotParseIssue.invalidIsin => l10n.depotImportIssueInvalidIsin,
         DepotParseIssue.missingDate => l10n.depotImportIssueMissingDate,
         DepotParseIssue.missingShares => l10n.depotImportIssueMissingShares,
         DepotParseIssue.missingPrice => l10n.depotImportIssueMissingPrice,
         DepotParseIssue.missingAmount => l10n.depotImportIssueMissingAmount,
         DepotParseIssue.missingFxRate => l10n.depotImportIssueMissingFxRate,
         DepotParseIssue.amountMismatch => l10n.depotImportIssueAmountMismatch,
+        DepotParseIssue.totalMismatch => l10n.depotImportIssueTotalMismatch,
+        DepotParseIssue.duplicate => l10n.depotImportIssueDuplicate,
       };
 
   static String type(AppLocalizations l10n, DepotActivityType type) =>

@@ -28,6 +28,49 @@ class DepotImportState extends ChangeNotifier {
       _statements.where((s) => s.selected && s.isExportable).toList()
         ..sort((a, b) => a.activity!.date!.compareTo(b.activity!.date!));
 
+  /// Groups imports of the same document twice: same type, ISIN, booking day
+  /// and gross amount. Only selected statements count, so deselecting one
+  /// copy resolves the warning.
+  static String duplicateKey(DepotActivity a) {
+    final d = a.date;
+    final dateKey = d == null
+        ? ''
+        : '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    return '${a.type.name}|${a.isin}|$dateKey|${a.amount.toStringAsFixed(2)}';
+  }
+
+  static Set<String> findDuplicateIds(List<ParsedStatement> statements) {
+    final groups = <String, List<String>>{};
+    for (final s in statements) {
+      final a = s.activity;
+      if (!s.selected || a == null || a.isin.isEmpty || a.date == null) {
+        continue;
+      }
+      groups.putIfAbsent(duplicateKey(a), () => []).add(s.id);
+    }
+    return {
+      for (final ids in groups.values)
+        if (ids.length > 1) ...ids,
+    };
+  }
+
+  void _refreshDuplicates() {
+    final dupIds = findDuplicateIds(_statements);
+    for (var i = 0; i < _statements.length; i++) {
+      final s = _statements[i];
+      final has = s.issues.contains(DepotParseIssue.duplicate);
+      final want = dupIds.contains(s.id);
+      if (has == want) continue;
+      final issues = s.issues.toList();
+      if (want) {
+        issues.add(DepotParseIssue.duplicate);
+      } else {
+        issues.remove(DepotParseIssue.duplicate);
+      }
+      _statements[i] = s.copyWith(issues: issues);
+    }
+  }
+
   Future<void> addFiles(List<({String path, String name})> files) async {
     if (files.isEmpty) return;
     _isImporting = true;
@@ -64,6 +107,7 @@ class DepotImportState extends ChangeNotifier {
     }
 
     _isImporting = false;
+    _refreshDuplicates();
     notifyListeners();
   }
 
@@ -84,6 +128,7 @@ class DepotImportState extends ChangeNotifier {
 
   void remove(String id) {
     _statements.removeWhere((s) => s.id == id);
+    _refreshDuplicates();
     notifyListeners();
   }
 
@@ -113,6 +158,7 @@ class DepotImportState extends ChangeNotifier {
     final index = _statements.indexWhere((s) => s.id == id);
     if (index < 0) return;
     _statements[index] = update(_statements[index]);
+    _refreshDuplicates();
     notifyListeners();
   }
 

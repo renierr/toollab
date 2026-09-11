@@ -4167,6 +4167,9 @@
   "depotImportIssueMissingAmount": "Gesamtbetrag fehlt",
   "depotImportIssueMissingFxRate": "Kein Devisenkurs für eine Fremdwährung gefunden",
   "depotImportIssueAmountMismatch": "Betrag passt nicht zu Kurs x Stück +/- Kosten",
+  "depotImportIssueTotalMismatch": "Gebuchter Betrag passt nicht zu Brutto abzüglich Kosten",
+  "depotImportIssueDuplicate": "Mögliches Doppel",
+  "depotImportIssueInvalidIsin": "ISIN-Prüfziffer ungültig",
   "depotImportExportIssuesTitle": "Mit Warnungen exportieren?",
   "depotImportExportIssuesBody": "{count} der ausgewählten Aktivitäten haben Warnungen (z.B. Betrag passt nicht zu Kurs x Stück). Die CSV wird trotzdem geschrieben.",
   "@depotImportExportIssuesBody": {

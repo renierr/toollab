@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tool_lab/tools/depot_import/depot_import_state.dart';
 import 'package:tool_lab/tools/depot_import/models/depot_activity.dart';
+import 'package:tool_lab/tools/depot_import/parsing/security_parser.dart';
 import 'package:tool_lab/tools/depot_import/parsing/statement_parser.dart';
 
 /// A synthetic DKB "Dividendengutschrift" in the layout their PDFs use, with
@@ -20,7 +22,7 @@ Deutsche Kreditbank AG
 Dividendengutschrift
 
 Nominale          Wertpapierbezeichnung        ISIN            (WKN)
-Stück 10          MUSTER CORP.                 US1234567890    (A1B2C3)
+Stück 10          MUSTER CORP.                 US1234567881    (A1B2C3)
                   REG. SHARES CLASS A DL -,0001
 
 Zahlbarkeitstag   01.09.2026        Dividende pro Stück       1,00     USD
@@ -77,7 +79,7 @@ ING-DiBa AG · 60628 Frankfurt am Main
 
 Ertragsgutschrift
 
-ISIN (WKN)                          IE00B1234567 (A1B2C3)
+ISIN (WKN)                          IE00B1234566 (A1B2C3)
 Wertpapierbezeichnung               Muster ETF Global Equity
                                     Reg. Shs 1D USD Dis. oN
 
@@ -96,7 +98,7 @@ Gesamtbetrag zu Ihren Gunsten       EUR                        32,62
 Valuta                              03.09.2026
 Keine Fondsausgangsquellensteuer
 
-ISIN (WKN) IE00B1234567 (A1B2C3)
+ISIN (WKN) IE00B1234566 (A1B2C3)
 
 Ausschüttung gem §2 Abs. 11 InvStG                40,00 EUR
 abzgl. Teilfreistellungsbetrag 30,00 %            12,00 EUR
@@ -204,7 +206,7 @@ ING-DiBa AG · 60628 Frankfurt am Main
 
 Wertpapierabrechnung                Kauf aus Sparplan
 Ordernummer                         100000001.001
-ISIN (WKN)                          IE00B7654321 (A3B4C5)
+ISIN (WKN)                          IE00B7654320 (A3B4C5)
 Wertpapierbezeichnung               Muster Develop.World U.ETF
                                     Registered Shares USD Dis.oN
 
@@ -235,7 +237,7 @@ Deutsche Kreditbank AG
 Ausschüttung Investmentfonds
 
 Nominale            Wertpapierbezeichnung          ISIN            (WKN)
-Stück 20            MUSTER INDEX FONDS             LU1234567890    (A0B1C2)
+Stück 20            MUSTER INDEX FONDS             LU1234567896    (A0B1C2)
                     INHABER-ANTEILE 1D O.N.
 
 Zahlbarkeitstag     03.09.2026      Ausschüttung pro St.      2,000000000   EUR
@@ -292,7 +294,7 @@ void main() {
         expect(parsed.bank, DepotBank.dkb);
         expect(activity.type, DepotActivityType.dividend);
         expect(activity.date, DateTime(2026, 9, 1));
-        expect(activity.isin, 'US1234567890');
+        expect(activity.isin, 'US1234567881');
         expect(activity.wkn, 'A1B2C3');
         expect(activity.securityName, 'MUSTER CORP.');
         expect(activity.shares, 10);
@@ -329,7 +331,7 @@ void main() {
       final activity = foreign.activity!;
 
       expect(foreign.bank, DepotBank.ing);
-      expect(activity.isin, 'IE00B1234567');
+      expect(activity.isin, 'IE00B1234566');
       expect(activity.wkn, 'A1B2C3');
       expect(activity.securityName, 'Muster ETF Global Equity');
     });
@@ -415,7 +417,7 @@ void main() {
 
       expect(activity.shares, 20);
       expect(activity.price, closeTo(2.00, 0.0001));
-      expect(activity.isin, 'LU1234567890');
+      expect(activity.isin, 'LU1234567896');
       expect(activity.wkn, 'A0B1C2');
       expect(activity.securityName, 'MUSTER INDEX FONDS');
       expect(activity.date, DateTime(2026, 9, 3));
@@ -427,10 +429,11 @@ void main() {
       double shares = 10,
       double price = 32,
       double amount = 320,
-      String isin = 'US1234567890',
+      String isin = 'US1234567881',
       DateTime? date,
       String sourceCurrency = 'EUR',
       double? fxRate,
+      double? bookedTotal,
     }) => DepotActivity(
       type: DepotActivityType.buy,
       date: date ?? DateTime(2026, 9, 1),
@@ -444,6 +447,7 @@ void main() {
       fee: 0,
       sourceCurrency: sourceCurrency,
       fxRate: fxRate,
+      bookedTotal: bookedTotal,
     );
 
     test('clean activity has no issues', () {
@@ -483,6 +487,110 @@ void main() {
         activity(sourceCurrency: 'USD'),
       );
       expect(issues, contains(DepotParseIssue.missingFxRate));
+    });
+
+    test('rejects an ISIN with a bad check digit', () {
+      final issues = DepotStatementParser.revalidate(
+        activity(isin: 'US1234567890'),
+      );
+      expect(issues, contains(DepotParseIssue.invalidIsin));
+    });
+
+    test('rechecks the booked total after an edit', () {
+      expect(
+        DepotStatementParser.revalidate(activity(bookedTotal: 320)),
+        isEmpty,
+      );
+      expect(
+        DepotStatementParser.revalidate(activity(bookedTotal: 300)),
+        contains(DepotParseIssue.totalMismatch),
+      );
+    });
+  });
+
+  group('ISIN checksum', () {
+    test('accepts check-digit-valid ISINs', () {
+      expect(SecurityParser.isValidIsin('US1234567881'), isTrue);
+      expect(SecurityParser.isValidIsin('NL0011111117'), isTrue);
+    });
+
+    test('rejects transposed digits and malformed codes', () {
+      expect(SecurityParser.isValidIsin('US1234567890'), isFalse);
+      expect(SecurityParser.isValidIsin(''), isFalse);
+      expect(SecurityParser.isValidIsin('DE000123'), isFalse);
+    });
+
+    test('flags an invalid ISIN on parse and blocks export', () {
+      final parsed = DepotStatementParser.parse(
+        id: 'i',
+        fileName: 'dividend.pdf',
+        rawText: _dividend.replaceAll('US1234567881', 'US1234567890'),
+      );
+      expect(parsed.issues, contains(DepotParseIssue.invalidIsin));
+      expect(parsed.isExportable, isFalse);
+    });
+  });
+
+  group('booked total reconciliation', () {
+    test('fires when gross and booked total disagree', () {
+      final tampered = _ingSavingsPlanBuy.replaceFirst(
+        'Endbetrag zu Ihren Lasten           EUR                        250,00',
+        'Endbetrag zu Ihren Lasten           EUR                        260,00',
+      );
+      final parsed = DepotStatementParser.parse(
+        id: 't',
+        fileName: 'abrechnung.pdf',
+        rawText: tampered,
+      );
+      expect(parsed.issues, contains(DepotParseIssue.totalMismatch));
+    });
+  });
+
+  group('duplicate detection', () {
+    ParsedStatement stmt(
+      String id, {
+      double amount = 320,
+      bool selected = true,
+    }) => ParsedStatement(
+      id: id,
+      fileName: '$id.pdf',
+      bank: DepotBank.ing,
+      activity: DepotActivity(
+        type: DepotActivityType.buy,
+        date: DateTime(2026, 9, 1),
+        isin: 'US1234567881',
+        wkn: null,
+        securityName: 'Muster',
+        shares: 10,
+        price: 32,
+        amount: amount,
+        tax: 0,
+        fee: 0,
+      ),
+      issues: const [],
+      rawText: '',
+      selected: selected,
+    );
+
+    test('flags the same import twice', () {
+      expect(
+        DepotImportState.findDuplicateIds([stmt('a'), stmt('b')]),
+        {'a', 'b'},
+      );
+    });
+
+    test('ignores deselected copies and different amounts', () {
+      expect(
+        DepotImportState.findDuplicateIds([
+          stmt('a'),
+          stmt('b', selected: false),
+        ]),
+        isEmpty,
+      );
+      expect(
+        DepotImportState.findDuplicateIds([stmt('a'), stmt('b', amount: 100)]),
+        isEmpty,
+      );
     });
   });
 }

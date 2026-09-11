@@ -10331,6 +10331,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Total does not match price x shares +/- costs';
 
   @override
+  String get depotImportIssueTotalMismatch =>
+      'Booked total does not match gross less costs';
+
+  @override
+  String get depotImportIssueDuplicate => 'Possible duplicate import';
+
+  @override
+  String get depotImportIssueInvalidIsin => 'ISIN checksum invalid';
+
+  @override
   String get depotImportExportIssuesTitle => 'Export with warnings?';
 
   @override

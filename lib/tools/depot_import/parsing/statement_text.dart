@@ -49,32 +49,53 @@ class StatementText {
     Iterable<String> labels, {
     Iterable<String> excluding = const [],
   }) {
+    final hits = indicesOf(labels, excluding: excluding);
+    return hits.isEmpty ? -1 : hits.first;
+  }
+
+  /// All lines carrying one of [labels], in order. A bare section heading
+  /// matches the same label as the value line further down, so callers try
+  /// each occurrence until one carries a usable value.
+  List<int> indicesOf(
+    Iterable<String> labels, {
+    Iterable<String> excluding = const [],
+  }) {
+    final hits = <int>[];
     for (int i = 0; i < _lower.length; i++) {
       final line = _lower[i];
       if (excluding.any((e) => line.contains(e.toLowerCase()))) continue;
-      if (labels.any((label) => line.contains(label.toLowerCase()))) return i;
+      if (labels.any((label) => line.contains(label.toLowerCase()))) {
+        hits.add(i);
+      }
     }
-    return -1;
+    return hits;
   }
 
   /// The text that should carry the value for [labels]: the label line itself,
   /// or the next lines when the label stands alone in its own column.
+  /// With [requireCurrency] a candidate only counts when a currency code
+  /// stands next to its number, so a quantity line ("Stück 10") never
+  /// answers a money lookup.
   String? valueTextFor(
     Iterable<String> labels, {
     Iterable<String> excluding = const [],
     int lookahead = 2,
+    bool requireCurrency = false,
   }) {
-    final index = indexOf(labels, excluding: excluding);
-    if (index < 0) return null;
+    bool accept(String text) =>
+        GermanFormat.numberPattern.hasMatch(text) &&
+        (!requireCurrency || GermanFormat.explicitMoney(text) != null);
 
-    final labelLine = lines[index];
-    final tail = _afterLabel(labelLine, labels);
-    if (GermanFormat.numberPattern.hasMatch(tail)) return tail;
+    for (final index in indicesOf(labels, excluding: excluding)) {
+      final labelLine = lines[index];
+      final tail = _afterLabel(labelLine, labels);
+      if (accept(tail)) return tail;
 
-    for (int offset = 1; offset <= lookahead; offset++) {
-      final next = index + offset;
-      if (next >= lines.length) break;
-      if (GermanFormat.numberPattern.hasMatch(lines[next])) return lines[next];
+      for (int offset = 1; offset <= lookahead; offset++) {
+        final next = index + offset;
+        if (next >= lines.length) break;
+        if (accept(lines[next])) return lines[next];
+      }
     }
     return null;
   }
@@ -103,8 +124,13 @@ class StatementText {
     Iterable<String> labels, {
     Iterable<String> excluding = const [],
     String fallbackCurrency = 'EUR',
+    bool requireCurrency = false,
   }) {
-    final text = valueTextFor(labels, excluding: excluding);
+    final text = valueTextFor(
+      labels,
+      excluding: excluding,
+      requireCurrency: requireCurrency,
+    );
     if (text == null) return null;
     return GermanFormat.lastMoney(text, fallbackCurrency: fallbackCurrency);
   }
@@ -123,9 +149,14 @@ class StatementText {
   Money? firstMoneyOf(
     List<List<String>> groups, {
     Iterable<String> excluding = const [],
+    bool requireCurrency = false,
   }) {
     for (final group in groups) {
-      final money = moneyFor(group, excluding: excluding);
+      final money = moneyFor(
+        group,
+        excluding: excluding,
+        requireCurrency: requireCurrency,
+      );
       if (money != null && money.value != 0) return money;
     }
     return null;
