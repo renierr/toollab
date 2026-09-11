@@ -260,7 +260,12 @@ class FileManagerExplorer extends StatelessWidget {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final itemExtent = constraints.isCompact ? 88.0 : 72.0;
-                  onItemExtentChanged?.call(itemExtent);
+                  final notifyExtent = onItemExtentChanged;
+                  if (notifyExtent != null) {
+                    WidgetsBinding.instance.addPostFrameCallback(
+                      (_) => notifyExtent(itemExtent),
+                    );
+                  }
                   return state.entries.isEmpty
                       ? ListView(
                           controller: scrollController,

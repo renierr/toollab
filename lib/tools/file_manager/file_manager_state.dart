@@ -103,6 +103,7 @@ class FileManagerState extends ChangeNotifier {
   int _metadataScan = 0;
   int _listing = 0;
   Set<String> _revealNames = {};
+  String _revealPath = '';
   bool _isScanningMetadata = false;
   FileManagerCategory _category = FileManagerCategory.none;
   double _imageTileSize = defaultImageTileSize;
@@ -142,10 +143,22 @@ class FileManagerState extends ChangeNotifier {
   /// refresh of the same folder apart from a plain rebuild.
   int get listingGeneration => _listing;
 
-  /// Names of entries a paste/drop just added here. The listing sorts them in
-  /// anywhere, so the saved scroll offset is meaningless afterwards and the
-  /// list jumps to the first of these instead.
+  /// Names of entries a paste/drop just added here, resolved to the actual
+  /// target names (a keepBoth conflict lands on `name (1).ext`, not the
+  /// original). The listing sorts them in anywhere, so the saved scroll offset
+  /// is meaningless afterwards and the list jumps to the first of these.
   Set<String> get revealNames => _revealNames;
+
+  /// Folder the pending reveal belongs to. Guards against scrolling a
+  /// different folder that happens to contain the same filename.
+  String get revealPath => _revealPath;
+
+  /// Whether a reveal scroll applies to the listing currently shown.
+  bool get hasPendingReveal => _revealNames.isNotEmpty && _revealPath == path;
+
+  bool revealsEntry(String name) =>
+      hasPendingReveal && _revealNames.contains(name);
+
   bool get isRemote => _locationType != FileManagerLocationType.local;
   bool get isArchiveBrowsing => _archivePath != null;
   bool get isReadOnly => isArchiveBrowsing;
@@ -913,6 +926,7 @@ class FileManagerState extends ChangeNotifier {
 
   void consumeReveal() {
     _revealNames = {};
+    _revealPath = '';
   }
 
   void clearClipboard() {
@@ -979,15 +993,22 @@ class FileManagerState extends ChangeNotifier {
         FileManagerConflictResolution.keepBoth,
   }) async {
     if (isArchiveBrowsing || !canPaste) return;
-    _revealNames = _archiveClipboardEntries.isNotEmpty
-        ? _archiveClipboardEntries.map((entry) => entry.name).toSet()
-        : _clipboardPaths.map(p.basename).toSet();
     if (_archiveClipboardEntries.isNotEmpty) {
+      _revealNames = _archiveClipboardEntries
+          .map((entry) => entry.name)
+          .toSet();
+      _revealPath = path;
       await _pasteArchiveEntries();
       return;
     }
     if (_clipboardLocationType == FileManagerLocationType.local &&
         _locationType == FileManagerLocationType.local) {
+      _revealNames = await _resolveLocalRevealNames(
+        _clipboardPaths,
+        _path,
+        resolution == FileManagerConflictResolution.overwrite,
+      );
+      _revealPath = path;
       await _runLocalOperation(
         _clipboardPaths,
         destination: _path,
@@ -997,14 +1018,22 @@ class FileManagerState extends ChangeNotifier {
     } else if (_clipboardLocationType == FileManagerLocationType.smb &&
         _locationType == FileManagerLocationType.smb &&
         _clipboardConnection?.id == _connection?.id) {
+      _revealNames = _clipboardPaths.map(p.basename).toSet();
+      _revealPath = path;
       await _pasteSmb();
     } else if (_clipboardLocationType == FileManagerLocationType.local &&
         _locationType == FileManagerLocationType.smb) {
+      _revealNames = _clipboardPaths.map(p.basename).toSet();
+      _revealPath = path;
       await _pasteLocalToSmb();
     } else if (_clipboardLocationType == FileManagerLocationType.smb &&
         _locationType == FileManagerLocationType.local) {
+      _revealNames = _clipboardPaths.map(p.basename).toSet();
+      _revealPath = path;
       await _pasteSmbToLocal();
     } else {
+      _revealNames = {};
+      _revealPath = '';
       return;
     }
     if (_clipboardIsCut && _error == null) {
@@ -1013,11 +1042,49 @@ class FileManagerState extends ChangeNotifier {
     if (_error == null) clearSelection();
   }
 
+  /// Predicts the basenames a local copy/move will actually create. Mirrors the
+  /// worker's keepBoth naming (`name (1).ext`), so the reveal scroll matches
+  /// the new file instead of the conflicting original.
+  Future<Set<String>> _resolveLocalRevealNames(
+    List<String> sources,
+    String destination,
+    bool overwrite,
+  ) async {
+    final names = <String>{};
+    for (final source in sources) {
+      var target = p.join(destination, p.basename(source));
+      if (!overwrite &&
+          await FileSystemEntity.type(target) !=
+              FileSystemEntityType.notFound) {
+        target = await _availableLocalTarget(target);
+      }
+      names.add(p.basename(target));
+    }
+    return names;
+  }
+
+  Future<String> _availableLocalTarget(String target) async {
+    final directory = p.dirname(target);
+    final extension = p.extension(target);
+    final name = p.basenameWithoutExtension(target);
+    for (var index = 1; ; index++) {
+      final candidate = p.join(directory, '$name ($index)$extension');
+      if (await FileSystemEntity.type(candidate) ==
+          FileSystemEntityType.notFound) {
+        return candidate;
+      }
+    }
+  }
+
   Future<void> importDroppedFiles(
     List<String> paths, {
     required bool move,
   }) async {
-    if (isReadOnly || _locationType != FileManagerLocationType.local) return;
+    if (isReadOnly || _locationType != FileManagerLocationType.local) {
+      _revealNames = {};
+      _revealPath = '';
+      return;
+    }
     final destination = p.normalize(_path);
     final sources = paths
         .map(p.normalize)
@@ -1030,7 +1097,13 @@ class FileManagerState extends ChangeNotifier {
         .where((source) => !p.isWithin(source, destination))
         .toSet()
         .toList();
-    _revealNames = sources.map(p.basename).toSet();
+    if (sources.isEmpty) {
+      _revealNames = {};
+      _revealPath = '';
+      return;
+    }
+    _revealNames = await _resolveLocalRevealNames(sources, destination, false);
+    _revealPath = path;
     await _runLocalOperation(sources, destination: destination, move: move);
   }
 

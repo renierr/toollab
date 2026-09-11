@@ -189,11 +189,11 @@ class _FileManagerPageState extends State<FileManagerPage>
     _revealScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _revealScheduled = false;
-      if (!mounted || state.revealNames.isEmpty) return;
+      if (!mounted || !state.hasPendingReveal) return;
       final settled = !state.isLoading && !state.isScanningMetadata;
       if (_scrollController.hasClients) {
         final index = state.entries.indexWhere(
-          (entry) => state.revealNames.contains(entry.name),
+          (entry) => state.revealsEntry(entry.name),
         );
         if (index != -1) {
           final target = (index * _itemExtent).clamp(
@@ -536,11 +536,11 @@ class _FileManagerPageState extends State<FileManagerPage>
     if (_lastPath != state.path || _lastListing != state.listingGeneration) {
       _lastPath = state.path;
       _lastListing = state.listingGeneration;
-      _pendingScrollOffset = state.revealNames.isEmpty
-          ? _scrollOffsets[state.path]
-          : null;
+      _pendingScrollOffset = state.hasPendingReveal
+          ? null
+          : _scrollOffsets[state.path];
     }
-    if (state.revealNames.isNotEmpty) {
+    if (state.hasPendingReveal) {
       _scheduleRevealScroll(state);
     } else if (_pendingScrollOffset != null) {
       _scheduleScrollRestore(state);
@@ -622,7 +622,7 @@ class _FileManagerPageState extends State<FileManagerPage>
             final explorer = NotificationListener<UserScrollNotification>(
               onNotification: (_) {
                 _pendingScrollOffset = null;
-                if (state.revealNames.isNotEmpty) state.consumeReveal();
+                if (state.hasPendingReveal) state.consumeReveal();
                 return false;
               },
               child: FileManagerExplorer(
@@ -652,7 +652,9 @@ class _FileManagerPageState extends State<FileManagerPage>
                 onDropFiles: _dropFiles,
                 onCloseCategory: state.closeCategory,
                 scrollController: _scrollController,
-                onItemExtentChanged: (extent) => _itemExtent = extent,
+                onItemExtentChanged: (extent) {
+                  if (_itemExtent != extent) _itemExtent = extent;
+                },
               ),
             );
             if (!constraints.canSplit) {
