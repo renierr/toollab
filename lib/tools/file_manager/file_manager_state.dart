@@ -102,6 +102,7 @@ class FileManagerState extends ChangeNotifier {
   final FileManagerEntryLoaders _entryLoaders = FileManagerEntryLoaders();
   int _metadataScan = 0;
   int _listing = 0;
+  Set<String> _revealNames = {};
   bool _isScanningMetadata = false;
   FileManagerCategory _category = FileManagerCategory.none;
   double _imageTileSize = defaultImageTileSize;
@@ -140,6 +141,11 @@ class FileManagerState extends ChangeNotifier {
   /// Bumped every time a local listing is (re)loaded, so the page can tell a
   /// refresh of the same folder apart from a plain rebuild.
   int get listingGeneration => _listing;
+
+  /// Names of entries a paste/drop just added here. The listing sorts them in
+  /// anywhere, so the saved scroll offset is meaningless afterwards and the
+  /// list jumps to the first of these instead.
+  Set<String> get revealNames => _revealNames;
   bool get isRemote => _locationType != FileManagerLocationType.local;
   bool get isArchiveBrowsing => _archivePath != null;
   bool get isReadOnly => isArchiveBrowsing;
@@ -905,6 +911,10 @@ class FileManagerState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void consumeReveal() {
+    _revealNames = {};
+  }
+
   void clearClipboard() {
     _clipboardPaths = [];
     _archiveClipboardEntries = [];
@@ -969,6 +979,9 @@ class FileManagerState extends ChangeNotifier {
         FileManagerConflictResolution.keepBoth,
   }) async {
     if (isArchiveBrowsing || !canPaste) return;
+    _revealNames = _archiveClipboardEntries.isNotEmpty
+        ? _archiveClipboardEntries.map((entry) => entry.name).toSet()
+        : _clipboardPaths.map(p.basename).toSet();
     if (_archiveClipboardEntries.isNotEmpty) {
       await _pasteArchiveEntries();
       return;
@@ -1017,6 +1030,7 @@ class FileManagerState extends ChangeNotifier {
         .where((source) => !p.isWithin(source, destination))
         .toSet()
         .toList();
+    _revealNames = sources.map(p.basename).toSet();
     await _runLocalOperation(sources, destination: destination, move: move);
   }
 

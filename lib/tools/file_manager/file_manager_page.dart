@@ -50,6 +50,8 @@ class _FileManagerPageState extends State<FileManagerPage>
   int? _lastListing;
   double? _pendingScrollOffset;
   bool _restoreScheduled = false;
+  double _itemExtent = 72;
+  bool _revealScheduled = false;
 
   @override
   void initState() {
@@ -175,6 +177,33 @@ class _FileManagerPageState extends State<FileManagerPage>
           (!state.isLoading && !state.isScanningMetadata)) {
         _pendingScrollOffset = null;
       }
+    });
+  }
+
+  /// Scrolls to the first entry just pasted/dropped here instead of restoring
+  /// the saved offset, which points at whatever used to be on screen before the
+  /// new files landed. Re-jumps every frame while the listing is still loading
+  /// or being re-sorted by metadata, since the target index can shift.
+  void _scheduleRevealScroll(FileManagerState state) {
+    if (_revealScheduled) return;
+    _revealScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _revealScheduled = false;
+      if (!mounted || state.revealNames.isEmpty) return;
+      final settled = !state.isLoading && !state.isScanningMetadata;
+      if (_scrollController.hasClients) {
+        final index = state.entries.indexWhere(
+          (entry) => state.revealNames.contains(entry.name),
+        );
+        if (index != -1) {
+          final target = (index * _itemExtent).clamp(
+            0.0,
+            _scrollController.position.maxScrollExtent,
+          );
+          _scrollController.jumpTo(target);
+        }
+      }
+      if (settled) state.consumeReveal();
     });
   }
 
@@ -507,9 +536,15 @@ class _FileManagerPageState extends State<FileManagerPage>
     if (_lastPath != state.path || _lastListing != state.listingGeneration) {
       _lastPath = state.path;
       _lastListing = state.listingGeneration;
-      _pendingScrollOffset = _scrollOffsets[state.path];
+      _pendingScrollOffset = state.revealNames.isEmpty
+          ? _scrollOffsets[state.path]
+          : null;
     }
-    if (_pendingScrollOffset != null) _scheduleScrollRestore(state);
+    if (state.revealNames.isNotEmpty) {
+      _scheduleRevealScroll(state);
+    } else if (_pendingScrollOffset != null) {
+      _scheduleScrollRestore(state);
+    }
     return PopScope(
       canPop: !state.canNavigateBack && !state.isBrowsingCategory,
       onPopInvokedWithResult: (didPop, _) {
@@ -587,6 +622,7 @@ class _FileManagerPageState extends State<FileManagerPage>
             final explorer = NotificationListener<UserScrollNotification>(
               onNotification: (_) {
                 _pendingScrollOffset = null;
+                if (state.revealNames.isNotEmpty) state.consumeReveal();
                 return false;
               },
               child: FileManagerExplorer(
@@ -616,6 +652,7 @@ class _FileManagerPageState extends State<FileManagerPage>
                 onDropFiles: _dropFiles,
                 onCloseCategory: state.closeCategory,
                 scrollController: _scrollController,
+                onItemExtentChanged: (extent) => _itemExtent = extent,
               ),
             );
             if (!constraints.canSplit) {

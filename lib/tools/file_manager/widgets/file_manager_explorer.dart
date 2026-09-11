@@ -40,6 +40,7 @@ class FileManagerExplorer extends StatelessWidget {
   onDropFiles;
   final ScrollController scrollController;
   final VoidCallback onCloseCategory;
+  final ValueChanged<double>? onItemExtentChanged;
   const FileManagerExplorer({
     super.key,
     required this.state,
@@ -68,6 +69,7 @@ class FileManagerExplorer extends StatelessWidget {
     required this.onDropFiles,
     required this.scrollController,
     required this.onCloseCategory,
+    this.onItemExtentChanged,
   });
 
   @override
@@ -256,53 +258,59 @@ class FileManagerExplorer extends StatelessWidget {
             child: RefreshIndicator(
               onRefresh: onRefresh,
               child: LayoutBuilder(
-                builder: (context, constraints) => state.entries.isEmpty
-                    ? ListView(
-                        controller: scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          SizedBox(
-                            height: constraints.maxHeight,
-                            child: Center(
-                              child: Text(l10n.fileManagerEmptyFolder),
+                builder: (context, constraints) {
+                  final itemExtent = constraints.isCompact ? 88.0 : 72.0;
+                  onItemExtentChanged?.call(itemExtent);
+                  return state.entries.isEmpty
+                      ? ListView(
+                          controller: scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            SizedBox(
+                              height: constraints.maxHeight,
+                              child: Center(
+                                child: Text(l10n.fileManagerEmptyFolder),
+                              ),
+                            ),
+                          ],
+                        )
+                      : ListView.builder(
+                          controller: scrollController,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemExtent: itemExtent,
+                          itemCount: state.entries.length,
+                          itemBuilder: (context, index) => FileManagerEntryTile(
+                            entry: state.entries[index],
+                            onOpen: onOpen,
+                            onOpenWithSystem: onOpenWithSystem,
+                            onShare: onShare,
+                            onDetails: onDetails,
+                            onRename: onRename,
+                            onDelete: onDelete,
+                            onCopy: onCopy,
+                            onCut: onCut,
+                            onExtract: onExtract,
+                            showClipboardActions:
+                                state.connection?.protocol !=
+                                FileManagerProtocol.ftp,
+                            selectionMode: state.isSelectionMode,
+                            selected: state.selectedPaths.contains(
+                              state.entries[index].path,
+                            ),
+                            onToggleSelection: onToggleSelection,
+                            isInClipboard: state.clipboardPaths.contains(
+                              state.entries[index].path,
+                            ),
+                            clipboardIsCut: state.clipboardIsCut,
+                            readOnly: state.isReadOnly,
+                            showImagePreviews: !state.isRemote,
+                            metadata: state.metadataFor(state.entries[index]),
+                            childCount: state.childCountFor(
+                              state.entries[index],
                             ),
                           ),
-                        ],
-                      )
-                    : ListView.builder(
-                        controller: scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        itemExtent: constraints.isCompact ? 88 : 72,
-                        itemCount: state.entries.length,
-                        itemBuilder: (context, index) => FileManagerEntryTile(
-                          entry: state.entries[index],
-                          onOpen: onOpen,
-                          onOpenWithSystem: onOpenWithSystem,
-                          onShare: onShare,
-                          onDetails: onDetails,
-                          onRename: onRename,
-                          onDelete: onDelete,
-                          onCopy: onCopy,
-                          onCut: onCut,
-                          onExtract: onExtract,
-                          showClipboardActions:
-                              state.connection?.protocol !=
-                              FileManagerProtocol.ftp,
-                          selectionMode: state.isSelectionMode,
-                          selected: state.selectedPaths.contains(
-                            state.entries[index].path,
-                          ),
-                          onToggleSelection: onToggleSelection,
-                          isInClipboard: state.clipboardPaths.contains(
-                            state.entries[index].path,
-                          ),
-                          clipboardIsCut: state.clipboardIsCut,
-                          readOnly: state.isReadOnly,
-                          showImagePreviews: !state.isRemote,
-                          metadata: state.metadataFor(state.entries[index]),
-                          childCount: state.childCountFor(state.entries[index]),
-                        ),
-                      ),
+                        );
+                },
               ),
             ),
           ),
