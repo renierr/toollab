@@ -34,6 +34,12 @@ class ChatInputBar extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final accentColor = ChatAiTool.config.accentColor;
+    final sendDisabled =
+        isGenerating ||
+        !enabled ||
+        (selectedImageBytes == null &&
+            attachedFileName == null &&
+            controller.text.trim().isEmpty);
 
     return Container(
       padding: const EdgeInsets.all(12.0),
@@ -246,24 +252,12 @@ class ChatInputBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Material(
-                  color:
-                      isGenerating ||
-                          (!enabled &&
-                              selectedImageBytes == null &&
-                              attachedFileName == null &&
-                              controller.text.trim().isEmpty)
+                  color: sendDisabled
                       ? theme.colorScheme.surfaceContainerHighest
                       : accentColor,
                   shape: const CircleBorder(),
                   child: InkWell(
-                    onTap:
-                        isGenerating ||
-                            (!enabled &&
-                                selectedImageBytes == null &&
-                                attachedFileName == null &&
-                                controller.text.trim().isEmpty)
-                        ? null
-                        : onSend,
+                    onTap: sendDisabled ? null : onSend,
                     customBorder: const CircleBorder(),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
@@ -280,12 +274,7 @@ class ChatInputBar extends StatelessWidget {
                             )
                           : Icon(
                               Icons.send_rounded,
-                              color:
-                                  isGenerating ||
-                                      (!enabled &&
-                                          selectedImageBytes == null &&
-                                          attachedFileName == null &&
-                                          controller.text.trim().isEmpty)
+                              color: sendDisabled
                                   ? theme.colorScheme.onSurface.withValues(
                                       alpha: 0.3,
                                     )

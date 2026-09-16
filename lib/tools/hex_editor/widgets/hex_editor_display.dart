@@ -72,8 +72,6 @@ class _HexEditorDisplayState extends State<HexEditorDisplay> {
         final val = int.parse(char, radix: 16);
         if (_highNibble == null) {
           _highNibble = val;
-          // Temporarily overlay value with high nibble only
-          state.setByte(selected, val << 4);
         } else {
           final finalVal = (_highNibble! << 4) | val;
           state.setByte(selected, finalVal);

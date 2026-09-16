@@ -111,6 +111,7 @@ class RenphoBleProbeState extends ChangeNotifier {
 
   // Discovery / connection
   bool _scanning = false;
+  bool _startPending = false;
   final _discovered = <String, RenphoDiscoveredScale>{};
   String? _deviceId;
   String? _deviceName;
@@ -433,48 +434,57 @@ class RenphoBleProbeState extends ChangeNotifier {
   }
 
   Future<void> startScan({bool keepGuest = false}) async {
-    if (_scanning || _phase == RenphoScanPhase.connecting) return;
-    if (!keepGuest) {
-      _guestProfile = null;
-      _guestResult = null;
+    if (_scanning || _startPending || _phase == RenphoScanPhase.connecting) {
+      return;
     }
-    // A session left open by the previous run keeps the link up, and a
-    // connected scale stops advertising — so it would never show up again.
-    if (_deviceId != null) await disconnect();
-    _error = null;
-    _errorDetail = null;
-    _importedStoredRecords = 0;
-    _liveWeightKg = null;
-    _step = RenphoMeasureStep.waiting;
-    _discovered.clear();
-    _phase = RenphoScanPhase.discovering;
-    notifyListeners();
-    // The user is standing in front of the scale from the moment they press
-    // search, so the screen stays on for the whole session, not just the part
-    // after a link is up.
-    _wakeLock ??= await PowerWakeLockService.acquireFull();
+    _startPending = true;
     try {
-      await UniversalBle.requestPermissions(withAndroidFineLocation: false);
-      if (await _connectSystemDevice()) return;
-      await _scanSubscription?.cancel();
-      _scanSubscription = UniversalBle.scanStream.listen(
-        _onDeviceFound,
-        onError: (Object e) => _fail(RenphoFailure.scanFailed, '$e'),
-      );
-      await UniversalBle.startScan(
-        platformConfig: PlatformConfig(
-          android: AndroidOptions(scanMode: AndroidScanMode.lowLatency),
-        ),
-      );
-      _scanning = true;
-      _armDiscoveryTimeout();
+      if (!keepGuest) {
+        _guestProfile = null;
+        _guestResult = null;
+      }
+      // A session left open by the previous run keeps the link up, and a
+      // connected scale stops advertising — so it would never show up again.
+      if (_deviceId != null) await disconnect();
+      _error = null;
+      _errorDetail = null;
+      _importedStoredRecords = 0;
+      _liveWeightKg = null;
+      _step = RenphoMeasureStep.waiting;
+      _discovered.clear();
+      _phase = RenphoScanPhase.discovering;
       notifyListeners();
-    } catch (e) {
-      await _scanSubscription?.cancel();
-      _scanSubscription = null;
-      _fail(RenphoFailure.bluetoothUnavailable, '$e');
-      _phase = RenphoScanPhase.idle;
-      notifyListeners();
+      // The user is standing in front of the scale from the moment they press
+      // search, so the screen stays on for the whole session, not just the part
+      // after a link is up.
+      _wakeLock ??= await PowerWakeLockService.acquireFull();
+      try {
+        await UniversalBle.requestPermissions(withAndroidFineLocation: false);
+        if (await _connectSystemDevice()) return;
+        await _scanSubscription?.cancel();
+        _scanSubscription = UniversalBle.scanStream.listen(
+          _onDeviceFound,
+          onError: (Object e) => _fail(RenphoFailure.scanFailed, '$e'),
+        );
+        await UniversalBle.startScan(
+          platformConfig: PlatformConfig(
+            android: AndroidOptions(scanMode: AndroidScanMode.lowLatency),
+          ),
+        );
+        _scanning = true;
+        _armDiscoveryTimeout();
+        notifyListeners();
+      } catch (e) {
+        await _scanSubscription?.cancel();
+        _scanSubscription = null;
+        _scanning = false;
+        await _releaseWakeLock();
+        _fail(RenphoFailure.bluetoothUnavailable, '$e');
+        _phase = RenphoScanPhase.idle;
+        notifyListeners();
+      }
+    } finally {
+      _startPending = false;
     }
   }
 

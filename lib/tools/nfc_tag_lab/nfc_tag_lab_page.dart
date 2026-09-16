@@ -259,24 +259,10 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
       );
       return;
     }
+    if (_isScanning) return;
 
-    final ndef = Ndef.from(_currentTag!);
-    if (ndef == null || !ndef.isWritable) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).nfcTagNotWritable)),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).nfcWritingToTag),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-
+    final NdefRecord record;
     try {
-      NdefRecord record;
       if (type == 'url') {
         record = NdefRecord(
           typeNameFormat: TypeNameFormat.wellKnown,
@@ -301,36 +287,107 @@ class _NfcTagLabPageState extends State<NfcTagLabPage> with DisposeCleanup {
       } else {
         throw Exception('Unsupported record type');
       }
-
-      final message = NdefMessage(records: [record]);
-      await ndef.write(message: message);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context).nfcWriteSuccess)),
-        );
-      }
-
-      final updatedDrecords = [
-        NdefCodec.decodeRawRecord(
-          record.typeNameFormat.index,
-          record.type,
-          record.payload,
-          0,
-        ),
-      ];
-      setState(() {
-        _scannedRecords = updatedDrecords;
-        _profile = ScanProfileClassifier.classify(
-          ScanContext(
-            source: 'reading',
-            serialNumber: _scannedUid,
-            records: updatedDrecords,
-          ),
-        );
-      });
     } catch (e) {
       if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).nfcWriteFailed(e.toString()),
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    final message = NdefMessage(records: [record]);
+
+    setState(() => _isScanning = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).nfcWritingToTag),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    try {
+      await NfcManager.instance.startSession(
+        pollingOptions: const {
+          NfcPollingOption.iso14443,
+          NfcPollingOption.iso15693,
+          NfcPollingOption.iso18092,
+        },
+        onSessionErrorIos: (error) {
+          errorLog('[NfcTagLab] Write session error: ${error.message}');
+          if (mounted) {
+            setState(() => _isScanning = false);
+          }
+        },
+        onDiscovered: (NfcTag tag) async {
+          try {
+            final ndef = Ndef.from(tag);
+            if (ndef == null || !ndef.isWritable) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      AppLocalizations.of(context).nfcTagNotWritable,
+                    ),
+                  ),
+                );
+              }
+              return;
+            }
+            await ndef.write(message: message);
+            if (!mounted) return;
+            final updatedDrecords = [
+              NdefCodec.decodeRawRecord(
+                record.typeNameFormat.index,
+                record.type,
+                record.payload,
+                0,
+              ),
+            ];
+            setState(() {
+              _currentTag = tag;
+              _scannedRecords = updatedDrecords;
+              _profile = ScanProfileClassifier.classify(
+                ScanContext(
+                  source: 'reading',
+                  serialNumber: _scannedUid,
+                  records: updatedDrecords,
+                ),
+              );
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(AppLocalizations.of(context).nfcWriteSuccess),
+              ),
+            );
+          } catch (e) {
+            errorLog('[NfcTagLab] Write error: $e');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    AppLocalizations.of(context).nfcWriteFailed(e.toString()),
+                  ),
+                ),
+              );
+            }
+          } finally {
+            try {
+              await NfcManager.instance.stopSession();
+            } catch (_) {}
+            if (mounted) {
+              setState(() => _isScanning = false);
+            }
+          }
+        },
+      );
+    } catch (e) {
+      errorLog('[NfcTagLab] Start write session error: $e');
+      if (mounted) {
+        setState(() => _isScanning = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

@@ -296,7 +296,7 @@ class SqliteInspector {
     final watch = Stopwatch()..start();
 
     if (kind == SqlStatementKind.read) {
-      final rows = await db.rawQuery(sql);
+      final rows = await db.rawQuery(_capReadSql(sql));
       watch.stop();
       final limited = rows.length > maxFreeQueryRows
           ? rows.sublist(0, maxFreeQueryRows)
@@ -330,6 +330,20 @@ class SqliteInspector {
   Future<int> _executeReturningZero(Database db, String sql) async {
     await db.execute(sql);
     return 0;
+  }
+
+  /// Caps a free-form read query so the engine stops after just over
+  /// [maxFreeQueryRows] instead of materializing an entire large table.
+  /// EXPLAIN/PRAGMA are left untouched; SELECT/WITH/VALUES are wrapped.
+  String _capReadSql(String sql) {
+    final inner = sql.trim().replaceAll(RegExp(r';+\s*$'), '');
+    final leading = stripSqlComments(inner).trim().toUpperCase();
+    if (!(leading.startsWith('SELECT') ||
+        leading.startsWith('WITH') ||
+        leading.startsWith('VALUES'))) {
+      return inner;
+    }
+    return 'SELECT * FROM ($inner) LIMIT ${maxFreeQueryRows + 1}';
   }
 
   Future<void> updateCell({

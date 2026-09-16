@@ -60,6 +60,10 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
       final doc = await widget.session.openDocument().timeout(
         const Duration(seconds: 30),
       );
+      if (!mounted) {
+        doc.dispose();
+        return;
+      }
       final pages = <_PageItem>[];
       for (int i = 0; i < doc.pages.length; i++) {
         pages.add(_PageItem(index: i, page: doc.pages[i]));
@@ -70,6 +74,8 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
           _pages = pages;
           _isLoading = false;
         });
+      } else {
+        doc.dispose();
       }
     } catch (e) {
       if (mounted) {
@@ -129,6 +135,8 @@ class _PdfOrganizePanelState extends State<PdfOrganizePanel> {
 
       if (mounted) {
         _showInsertDialog(srcPages, insertDoc, xFile.name);
+      } else {
+        insertDoc.dispose();
       }
     } catch (e) {
       if (mounted) {

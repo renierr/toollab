@@ -164,6 +164,7 @@ class _ChatAiPageState extends State<ChatAiPage> with DisposeCleanup {
   }
 
   void _handleSend(ChatAiState state) {
+    if (state.isInitializing || state.isGenerating) return;
     final text = _textController.text.trim();
     if (text.isNotEmpty ||
         state.selectedImageBytes != null ||

@@ -14,6 +14,7 @@ class DepotImportState extends ChangeNotifier {
   int _importTotal = 0;
   String? _error;
   int _idCounter = 0;
+  int _importGeneration = 0;
 
   List<ParsedStatement> get statements => List.unmodifiable(_statements);
   bool get isImporting => _isImporting;
@@ -73,6 +74,7 @@ class DepotImportState extends ChangeNotifier {
 
   Future<void> addFiles(List<({String path, String name})> files) async {
     if (files.isEmpty) return;
+    final generation = ++_importGeneration;
     _isImporting = true;
     _importDone = 0;
     _importTotal = files.length;
@@ -82,6 +84,7 @@ class DepotImportState extends ChangeNotifier {
     for (final file in files) {
       try {
         final text = await _extractText(file.path);
+        if (generation != _importGeneration) return;
         _statements.add(
           DepotStatementParser.parse(
             id: 'stmt-${_idCounter++}',
@@ -90,6 +93,7 @@ class DepotImportState extends ChangeNotifier {
           ),
         );
       } catch (e) {
+        if (generation != _importGeneration) return;
         errorLog('DepotImport: failed to read ${file.name}: $e');
         _statements.add(
           ParsedStatement(
@@ -106,6 +110,7 @@ class DepotImportState extends ChangeNotifier {
       notifyListeners();
     }
 
+    if (generation != _importGeneration) return;
     _isImporting = false;
     _refreshDuplicates();
     notifyListeners();
@@ -133,9 +138,13 @@ class DepotImportState extends ChangeNotifier {
   }
 
   void clear() {
-    if (_statements.isEmpty && _error == null) return;
+    if (_statements.isEmpty && _error == null && !_isImporting) return;
+    _importGeneration++;
     _statements.clear();
     _error = null;
+    _isImporting = false;
+    _importDone = 0;
+    _importTotal = 0;
     notifyListeners();
   }
 

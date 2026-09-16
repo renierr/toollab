@@ -249,16 +249,32 @@ class GroceryListDbHelper {
     final db = await _getDb();
     final existingItems = await getActiveItems();
     final existingShortIds = existingItems.map((i) => i.shortId).toSet();
+    final allRows = await db.query(tableName, columns: ['short_id']);
+    final allShortIds = allRows
+        .map((r) => r['short_id'] as String?)
+        .whereType<String>()
+        .toSet();
+
+    String uniqueShortId(String candidate) {
+      var id = candidate;
+      while (allShortIds.contains(id) || id.isEmpty) {
+        id = generateShortId();
+      }
+      return id;
+    }
 
     int imported = 0;
     int skipped = 0;
 
     await db.transaction((txn) async {
       for (final item in items) {
-        final shortId = item.shortId.isEmpty ? generateShortId() : item.shortId;
+        var shortId = item.shortId.isEmpty ? uniqueShortId('') : item.shortId;
         if (existingShortIds.contains(shortId)) {
           skipped++;
           continue;
+        }
+        if (allShortIds.contains(shortId)) {
+          shortId = uniqueShortId('');
         }
 
         final inserted = item.copyWith(
@@ -275,6 +291,7 @@ class GroceryListDbHelper {
 
         await txn.insert(tableName, inserted.toMap());
         existingShortIds.add(shortId);
+        allShortIds.add(shortId);
         imported++;
       }
     });

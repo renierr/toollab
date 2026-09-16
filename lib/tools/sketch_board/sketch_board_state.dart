@@ -391,6 +391,8 @@ class SketchBoardState extends ChangeNotifier {
   }
 
   /// Immediate tap (no drag): select in select-mode, place text in text-mode.
+  /// Freehand taps are committed by the gesture draft path
+  /// ([gestureStart]/[gestureEnd]); adding one here too would double every dot.
   void handleTap(Offset screen) {
     final world = screenToWorld(screen);
     if (_mode == ToolMode.select) {
@@ -403,19 +405,6 @@ class SketchBoardState extends ChangeNotifier {
       _pendingTextPos = SkPoint.fromOffset(world);
       _editingText = null;
       onRequestText?.call();
-    } else if (_mode == ToolMode.freehand) {
-      _history.push(_elements);
-      _elements.add(
-        FreehandElement(
-          id: _db.generateUuid(),
-          color: _strokeColor,
-          width: _strokeWidth,
-          brushStyle: _brushStyle.name,
-          points: [SkPoint.fromOffset(world)],
-        ),
-      );
-      _dirty = true;
-      notifyListeners();
     }
   }
 
