@@ -88,6 +88,29 @@ class FocusNoisePlayer {
   double get volume => _volume;
   FocusNoiseSound? get currentSound => _currentSound;
 
+  DateTime? _stopAt;
+  DateTime? get stopAt => _stopAt;
+  Timer? _stopTimer;
+
+  void setStopTimer(Duration duration) {
+    _stopTimer?.cancel();
+    _stopAt = DateTime.now().add(duration);
+    _stopTimer = Timer(duration, _fireStopTimer);
+  }
+
+  void cancelStopTimer() {
+    _stopTimer?.cancel();
+    _stopTimer = null;
+    _stopAt = null;
+  }
+
+  Future<void> _fireStopTimer() async {
+    _stopTimer = null;
+    _stopAt = null;
+    await stop();
+    onExternalStop?.call();
+  }
+
   Future<void> play(FocusNoiseSound sound) async {
     await _ensureInit();
     await stop();
@@ -166,6 +189,7 @@ class FocusNoisePlayer {
   }
 
   Future<void> stop() async {
+    cancelStopTimer();
     _isPlaying = false;
     _isPaused = false;
     _playGeneration++;

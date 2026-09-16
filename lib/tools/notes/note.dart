@@ -60,7 +60,7 @@ class Note {
     'content': content,
     'createdAt': createdAt,
     'updatedAt': updatedAt,
-    if (tags.isNotEmpty) 'tags': tags,
+    'tags': tags,
     if (parentShortId != null) 'parentShortId': parentShortId,
   };
 }

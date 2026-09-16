@@ -1359,11 +1359,12 @@ class FileManagerState extends ChangeNotifier {
     notifyListeners();
     final port = ReceivePort();
     try {
-      await Isolate.spawn(runZipOperation, {
+      final isolate = await Isolate.spawn(runZipOperation, {
         'sendPort': port.sendPort,
         'sources': sources,
         'destination': destination,
       });
+      isolate.addOnExitListener(port.sendPort, response: {'type': 'complete'});
       await for (final message in port) {
         final data = message as Map<Object?, Object?>;
         if (data['type'] == 'progress') {
@@ -1446,7 +1447,7 @@ class FileManagerState extends ChangeNotifier {
     final port = ReceivePort();
     String? operationError;
     try {
-      await Isolate.spawn(runFileManagerOperation, {
+      final isolate = await Isolate.spawn(runFileManagerOperation, {
         'sendPort': port.sendPort,
         'sources': sources,
         'destination': destination,
@@ -1455,6 +1456,7 @@ class FileManagerState extends ChangeNotifier {
         'overwrite':
             conflictResolution == FileManagerConflictResolution.overwrite,
       });
+      isolate.addOnExitListener(port.sendPort, response: {'type': 'complete'});
       await for (final message in port) {
         final data = message as Map<Object?, Object?>;
         if (data['type'] == 'progress') {

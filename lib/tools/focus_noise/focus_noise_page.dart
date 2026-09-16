@@ -44,6 +44,8 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     // Reuse the shared player and reflect any playback still running in the
     // background instead of tearing it down on page leave.
     _isPlaying = _player.isPlaying;
+    _timerTarget = _player.stopAt;
+    if (_timerTarget != null) _startTimerTicker();
     _player.onExternalStop = _onPlayerExternalStop;
     _player.onExternalStateChange = _onPlayerExternalStateChange;
     onDispose(() => _player.onExternalStop = null);
@@ -112,6 +114,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
     }
     _timerTarget = null;
     _timerTicker?.cancel();
+    _timerTicker = null;
     setState(() => _isPlaying = false);
   }
 
@@ -123,6 +126,7 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
       }
       _timerTarget = null;
       _timerTicker?.cancel();
+      _timerTicker = null;
       if (mounted) {
         setState(() => _isPlaying = false);
       }
@@ -145,30 +149,35 @@ class _FocusNoisePageState extends State<FocusNoisePage> with DisposeCleanup {
   void _setTimerMinutes(int minutes) {
     if (!_isPlaying) return;
     final int clamped = minutes.clamp(1, 1440);
+    _player.setStopTimer(Duration(minutes: clamped));
     setState(() {
-      _timerTarget = DateTime.now().add(Duration(minutes: clamped));
+      _timerTarget = _player.stopAt;
     });
     context.read<FocusNoiseState>().setCustomMinutes(clamped);
     _syncPlayerNotification();
+    _startTimerTicker();
+  }
 
+  void _startTimerTicker() {
     _timerTicker ??= Timer.periodic(const Duration(seconds: 1), (_) {
-      final target = _timerTarget;
+      final target = _player.stopAt ?? _timerTarget;
       if (target == null) return;
+      _timerTarget = target;
       final remaining = target.difference(DateTime.now());
-      if (remaining <= Duration.zero) {
-        _togglePlayback();
-      } else {
-        // Push the countdown into the notification once per minute; the UI
-        // label refreshes every tick.
-        if (remaining.inSeconds % 60 == 0) {
-          _syncPlayerNotification();
-        }
-        if (mounted) setState(() {});
+      if (remaining <= Duration.zero) return;
+      // Push the countdown into the notification once per minute; the UI
+      // label refreshes every tick.
+      if (remaining.inSeconds % 60 == 0) {
+        _syncPlayerNotification();
       }
+      if (mounted) setState(() {});
     });
   }
 
   void _cancelTimer() {
+    _player.cancelStopTimer();
+    _timerTicker?.cancel();
+    _timerTicker = null;
     setState(() => _timerTarget = null);
     _syncPlayerNotification();
   }

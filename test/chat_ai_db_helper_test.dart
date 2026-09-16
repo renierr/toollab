@@ -28,7 +28,7 @@ void main() {
 
       sessions = await dbHelper.getSessions();
       expect(sessions.length, 1);
-      expect(sessions.first['title'], 'Test Chat');
+      expect(sessions.first.title, 'Test Chat');
 
       // 3. Insert messages
       final userMsgId = await dbHelper.insertMessage(
@@ -47,15 +47,15 @@ void main() {
 
       final messages = await dbHelper.getMessages(sessionId);
       expect(messages.length, 2);
-      expect(messages[0]['role'], 'user');
-      expect(messages[0]['content'], 'Hello AI!');
-      expect(messages[1]['role'], 'model');
-      expect(messages[1]['content'], 'Hello User!');
+      expect(messages[0].role, 'user');
+      expect(messages[0].content, 'Hello AI!');
+      expect(messages[1].role, 'model');
+      expect(messages[1].content, 'Hello User!');
 
       // 4. Update session title
       await dbHelper.updateSessionTitle(sessionId, 'Updated Chat');
       sessions = await dbHelper.getSessions();
-      expect(sessions.first['title'], 'Updated Chat');
+      expect(sessions.first.title, 'Updated Chat');
 
       // 5. Delete session
       await dbHelper.deleteSession(sessionId);

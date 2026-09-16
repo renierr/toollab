@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:universal_ble/universal_ble.dart';
 import 'package:flutter_classic_bluetooth/flutter_classic_bluetooth.dart';
@@ -293,22 +294,17 @@ class BluetoothScannerState extends ChangeNotifier {
 
   Map<String, DeviceHistoryEntry> _parseHistoryJson(String raw) {
     try {
-      final map = Map<String, dynamic>.from(
-        Uri.splitQueryString(raw.substring(1, raw.length - 1)),
-      );
-      return map.map(
-        (k, v) =>
-            MapEntry(k, DeviceHistoryEntry.fromJson(v as Map<String, dynamic>)),
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      return Map<String, dynamic>.from(decoded).map(
+        (k, v) => MapEntry(
+          k,
+          DeviceHistoryEntry.fromJson(Map<String, dynamic>.from(v as Map)),
+        ),
       );
     } catch (_) {
-      try {
-        final decoded = Uri.tryParse(raw);
-        if (decoded != null) {
-          return {};
-        }
-      } catch (_) {}
+      return {};
     }
-    return {};
   }
 
   Future<void> _persistHistory() async {
@@ -317,7 +313,7 @@ class BluetoothScannerState extends ChangeNotifier {
       await DatabaseService.instance.setSetting(
         BluetoothScannerTool.config.id,
         'history',
-        json.toString(),
+        jsonEncode(json),
       );
     } catch (_) {}
   }

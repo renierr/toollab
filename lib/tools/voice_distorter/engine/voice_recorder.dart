@@ -34,7 +34,7 @@ class VoiceRecorder {
   StreamSubscription<Amplitude>? _amplitudeSub;
 
   /// Fires when recording auto-stops after [maxSeconds].
-  VoidCallback? onLimitReached;
+  void Function(VoiceClip? clip)? onLimitReached;
 
   /// Linear-ish amplitude (dBFS from `record`, normalized to 0..1) while
   /// recording, for a live level indicator.
@@ -73,8 +73,8 @@ class VoiceRecorder {
       _limitTimer?.cancel();
       _limitTimer = Timer(const Duration(seconds: maxSeconds), () async {
         if (!_recording) return;
-        await stop();
-        onLimitReached?.call();
+        final VoiceClip? clip = await stop();
+        onLimitReached?.call(clip);
       });
       return RecordStartResult.ok;
     } catch (e) {

@@ -89,6 +89,7 @@ void runFileManagerOperation(Map<String, Object> input) async {
     sendPort.send({'type': 'complete'});
   } catch (error) {
     sendPort.send({'type': 'error', 'message': error.toString()});
+    sendPort.send({'type': 'complete'});
   }
 }
 
@@ -105,7 +106,14 @@ void runZipOperation(Map<String, Object> input) async {
     }
     sendPort.send({'type': 'prepared', 'total': files.length});
     for (var index = 0; index < files.length; index++) {
-      await encoder.addFile(files[index]);
+      try {
+        await encoder.addFile(files[index]);
+      } catch (error) {
+        sendPort.send({
+          'type': 'error',
+          'message': '${p.basename(files[index].path)}: $error',
+        });
+      }
       sendPort.send({
         'type': 'progress',
         'completed': index + 1,
@@ -119,6 +127,7 @@ void runZipOperation(Map<String, Object> input) async {
       await encoder.close();
     } catch (_) {}
     sendPort.send({'type': 'error', 'message': error.toString()});
+    sendPort.send({'type': 'complete'});
   }
 }
 
@@ -137,12 +146,18 @@ Future<String> _availableTarget(String target) async {
 
 Future<FileSystemEntity> _entityFor(String path) async {
   final type = await FileSystemEntity.type(path, followLinks: false);
-  return type == FileSystemEntityType.directory ? Directory(path) : File(path);
+  if (type == FileSystemEntityType.directory) return Directory(path);
+  if (type == FileSystemEntityType.link) return Link(path);
+  return File(path);
 }
 
 Future<void> _collectFiles(FileSystemEntity entity, List<File> files) async {
   if (entity is File) {
     files.add(entity);
+    return;
+  }
+  if (entity is Link) {
+    files.add(File(entity.path));
     return;
   }
   if (entity is Directory) {
@@ -159,6 +174,12 @@ Future<void> _copyEntity(
 ) async {
   if (entity is File) {
     await entity.copy(target);
+    onFileCopied();
+    return;
+  }
+  if (entity is Link) {
+    final linkTarget = await entity.target();
+    await Link(target).create(linkTarget, recursive: true);
     onFileCopied();
     return;
   }

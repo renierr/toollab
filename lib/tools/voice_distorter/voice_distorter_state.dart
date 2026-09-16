@@ -37,8 +37,8 @@ class VoiceDistorterState extends ChangeNotifier {
 
   VoiceDistorterState() {
     _engine.isPlaying.addListener(notifyListeners);
-    _recorder.onLimitReached = () {
-      unawaited(_finishRecording());
+    _recorder.onLimitReached = (clip) {
+      unawaited(_loadClip(clip));
     };
     unawaited(_loadCustomPresets());
   }
@@ -81,6 +81,10 @@ class VoiceDistorterState extends ChangeNotifier {
 
   Future<RecordStopResult> _finishRecording() async {
     final VoiceClip? clip = await _recorder.stop();
+    return _loadClip(clip);
+  }
+
+  Future<RecordStopResult> _loadClip(VoiceClip? clip) async {
     if (clip == null) {
       notifyListeners();
       return RecordStopResult.failed;
