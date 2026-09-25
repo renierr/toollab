@@ -33,19 +33,65 @@ class MarkdownView extends StatefulWidget {
 
 class _MarkdownViewState extends State<MarkdownView>
     implements MarkdownBuilderDelegate {
+  static const String _anchorTag = 'heading-anchor';
+  static final RegExp _slugStrip = RegExp(r'[^\p{L}\p{N}\s_-]', unicode: true);
+
   List<Widget>? _children;
   final List<GestureRecognizer> _recognizers = <GestureRecognizer>[];
+  final Map<String, GlobalKey> _anchors = <String, GlobalKey>{};
 
   @override
   GestureRecognizer createLink(String text, String? href, String title) {
     final TapGestureRecognizer recognizer = TapGestureRecognizer()
       ..onTap = () {
-        if (href != null) {
+        if (href == null) return;
+        if (href.startsWith('#')) {
+          _jumpToAnchor(href.substring(1));
+        } else {
           launchUrl(Uri.parse(href));
         }
       };
     _recognizers.add(recognizer);
     return recognizer;
+  }
+
+  void _jumpToAnchor(String fragment) {
+    final String id = Uri.decodeComponent(fragment).toLowerCase();
+    final BuildContext? target =
+        (_anchors[id] ?? _anchors[_slugify(id)])?.currentContext;
+    if (target == null) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  /// GitHub-style heading slug: lowercase, punctuation dropped, spaces to `-`.
+  static String _slugify(String text) => text
+      .trim()
+      .toLowerCase()
+      .replaceAll(_slugStrip, '')
+      .replaceAll(RegExp(r'\s'), '-');
+
+  /// Prepends a zero-size anchor element to every heading, deduplicating
+  /// slugs the way GitHub does (`foo`, `foo-1`, ...).
+  void _insertHeadingAnchors(List<md.Node> nodes, Map<String, int> seen) {
+    for (final node in nodes) {
+      if (node is! md.Element) continue;
+      final children = node.children;
+      if (children == null) continue;
+      if (RegExp(r'^h[1-6]$').hasMatch(node.tag)) {
+        final String base = _slugify(node.textContent);
+        final int count = seen[base] ?? 0;
+        seen[base] = count + 1;
+        final String id = count == 0 ? base : '$base-$count';
+        _anchors[id] = GlobalKey();
+        children.insert(0, md.Element.empty(_anchorTag)..attributes['id'] = id);
+      } else {
+        _insertHeadingAnchors(children, seen);
+      }
+    }
   }
 
   @override
@@ -212,6 +258,8 @@ class _MarkdownViewState extends State<MarkdownView>
 
     // Preprocess AST to fix checkbox rendering inside loose lists
     _preprocessAST(astNodes);
+    _anchors.clear();
+    _insertHeadingAnchors(astNodes, <String, int>{});
 
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
@@ -318,7 +366,10 @@ class _MarkdownViewState extends State<MarkdownView>
       checkboxBuilder: (checked) =>
           MarkdownCheckbox(checked: checked, checkedColor: widget.accentColor),
       bulletBuilder: null,
-      builders: {'pre': MarkdownCodeBlockBuilder(scale: widget.scale)},
+      builders: {
+        'pre': MarkdownCodeBlockBuilder(scale: widget.scale),
+        _anchorTag: _HeadingAnchorBuilder(_anchors),
+      },
       paddingBuilders: const {},
       fitContent: true,
       listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.baseline,
@@ -361,5 +412,21 @@ class _MarkdownViewState extends State<MarkdownView>
     }
 
     return markdownWidget;
+  }
+}
+
+class _HeadingAnchorBuilder extends MarkdownElementBuilder {
+  final Map<String, GlobalKey> anchors;
+
+  _HeadingAnchorBuilder(this.anchors);
+
+  @override
+  Widget? visitElementAfterWithContext(
+    BuildContext context,
+    md.Element element,
+    TextStyle? preferredStyle,
+    TextStyle? parentStyle,
+  ) {
+    return SizedBox.shrink(key: anchors[element.attributes['id']]);
   }
 }
