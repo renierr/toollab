@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/tool_model.dart';
 import '../services/sharing_service.dart';
 import '../widgets/tool_chooser_dialog.dart';
@@ -344,7 +345,9 @@ class FileSaveHelper {
           'mimeType': mimeType,
         });
       } else if (Platform.isWindows) {
-        await Process.run('explorer.exe', [path]);
+        if (!await launchUrl(Uri.file(path, windows: true))) {
+          errorLog('Could not open file: $path');
+        }
       } else if (Platform.isMacOS) {
         await Process.run('open', [path]);
       } else if (Platform.isLinux) {
