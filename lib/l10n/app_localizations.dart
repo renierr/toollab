@@ -18556,6 +18556,546 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use DD.MM.YYYY'**
   String get depotImportInvalidDate;
+
+  /// No description provided for @toolNamePaperless.
+  ///
+  /// In en, this message translates to:
+  /// **'Paperless'**
+  String get toolNamePaperless;
+
+  /// No description provided for @toolDescPaperless.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse, search and upload documents on your Paperless server'**
+  String get toolDescPaperless;
+
+  /// No description provided for @paperlessTabDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get paperlessTabDocuments;
+
+  /// No description provided for @paperlessTabUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get paperlessTabUpload;
+
+  /// No description provided for @paperlessTabStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Stats'**
+  String get paperlessTabStats;
+
+  /// No description provided for @paperlessNotConfiguredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your Paperless server'**
+  String get paperlessNotConfiguredTitle;
+
+  /// No description provided for @paperlessNotConfiguredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the server address and an API token, or sign in once with your username and password. The token is stored securely on this device.'**
+  String get paperlessNotConfiguredBody;
+
+  /// No description provided for @paperlessConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get paperlessConnect;
+
+  /// No description provided for @paperlessSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paperless settings'**
+  String get paperlessSettingsTitle;
+
+  /// No description provided for @paperlessConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get paperlessConnected;
+
+  /// No description provided for @paperlessSignedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {username}'**
+  String paperlessSignedInAs(String username);
+
+  /// No description provided for @paperlessTestConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get paperlessTestConnection;
+
+  /// No description provided for @paperlessDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get paperlessDisconnect;
+
+  /// No description provided for @paperlessDisconnectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the stored API token from this device? The server address is kept.'**
+  String get paperlessDisconnectConfirm;
+
+  /// No description provided for @paperlessServerSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Server'**
+  String get paperlessServerSection;
+
+  /// No description provided for @paperlessServerSectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The address you open Paperless with in the browser.'**
+  String get paperlessServerSectionHint;
+
+  /// No description provided for @paperlessServerUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Server address'**
+  String get paperlessServerUrl;
+
+  /// No description provided for @paperlessAuthSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication'**
+  String get paperlessAuthSection;
+
+  /// No description provided for @paperlessAuthToken.
+  ///
+  /// In en, this message translates to:
+  /// **'API token'**
+  String get paperlessAuthToken;
+
+  /// No description provided for @paperlessAuthPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get paperlessAuthPassword;
+
+  /// No description provided for @paperlessApiToken.
+  ///
+  /// In en, this message translates to:
+  /// **'API token'**
+  String get paperlessApiToken;
+
+  /// No description provided for @paperlessTokenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Find it in Paperless under your profile, or in the Django admin under Auth Token.'**
+  String get paperlessTokenHint;
+
+  /// No description provided for @paperlessTokenKeepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to keep the stored token.'**
+  String get paperlessTokenKeepHint;
+
+  /// No description provided for @paperlessUsername.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get paperlessUsername;
+
+  /// No description provided for @paperlessPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get paperlessPassword;
+
+  /// No description provided for @paperlessPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Used once to request an API token. The password is not stored.'**
+  String get paperlessPasswordHint;
+
+  /// No description provided for @paperlessSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get paperlessSignIn;
+
+  /// No description provided for @paperlessInvalidUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a full address starting with http:// or https://'**
+  String get paperlessInvalidUrl;
+
+  /// No description provided for @paperlessCredentialsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter username and password'**
+  String get paperlessCredentialsRequired;
+
+  /// No description provided for @paperlessTokenRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an API token'**
+  String get paperlessTokenRequired;
+
+  /// No description provided for @paperlessConnectionOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected · {count} documents'**
+  String paperlessConnectionOk(int count);
+
+  /// No description provided for @paperlessConnectionOkVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected · {count} documents · version {version}'**
+  String paperlessConnectionOkVersion(int count, String version);
+
+  /// No description provided for @paperlessConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed: {error}'**
+  String paperlessConnectionFailed(String error);
+
+  /// No description provided for @paperlessSavedButUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved, but the server could not be reached: {error}'**
+  String paperlessSavedButUnreachable(String error);
+
+  /// No description provided for @paperlessErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Server not reachable ({detail})'**
+  String paperlessErrorNetwork(String detail);
+
+  /// No description provided for @paperlessErrorUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'The API token was rejected. Check it in the settings.'**
+  String get paperlessErrorUnauthorized;
+
+  /// No description provided for @paperlessErrorInvalidCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong username or password'**
+  String get paperlessErrorInvalidCredentials;
+
+  /// No description provided for @paperlessErrorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Not found on the server. Check the server address.'**
+  String get paperlessErrorNotFound;
+
+  /// No description provided for @paperlessErrorRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Paperless rejected the file: {detail}'**
+  String paperlessErrorRejected(String detail);
+
+  /// No description provided for @paperlessErrorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Server error ({detail})'**
+  String paperlessErrorServer(String detail);
+
+  /// No description provided for @paperlessErrorInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not answer like Paperless. Is the address right, or is a login proxy in between?'**
+  String get paperlessErrorInvalidResponse;
+
+  /// No description provided for @paperlessSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search title and content'**
+  String get paperlessSearchHint;
+
+  /// No description provided for @paperlessSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get paperlessSort;
+
+  /// No description provided for @paperlessSortAddedNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Added, newest first'**
+  String get paperlessSortAddedNewest;
+
+  /// No description provided for @paperlessSortAddedOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Added, oldest first'**
+  String get paperlessSortAddedOldest;
+
+  /// No description provided for @paperlessSortCreatedNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Document date, newest first'**
+  String get paperlessSortCreatedNewest;
+
+  /// No description provided for @paperlessSortCreatedOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Document date, oldest first'**
+  String get paperlessSortCreatedOldest;
+
+  /// No description provided for @paperlessSortModifiedNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Modified, newest first'**
+  String get paperlessSortModifiedNewest;
+
+  /// No description provided for @paperlessSortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title A–Z'**
+  String get paperlessSortTitle;
+
+  /// No description provided for @paperlessFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get paperlessFilters;
+
+  /// No description provided for @paperlessAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get paperlessAny;
+
+  /// No description provided for @paperlessAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get paperlessAutomatic;
+
+  /// No description provided for @paperlessInboxOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbox only'**
+  String get paperlessInboxOnly;
+
+  /// No description provided for @paperlessTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get paperlessTags;
+
+  /// No description provided for @paperlessNoTags.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags'**
+  String get paperlessNoTags;
+
+  /// No description provided for @paperlessCorrespondent.
+  ///
+  /// In en, this message translates to:
+  /// **'Correspondent'**
+  String get paperlessCorrespondent;
+
+  /// No description provided for @paperlessDocumentType.
+  ///
+  /// In en, this message translates to:
+  /// **'Document type'**
+  String get paperlessDocumentType;
+
+  /// No description provided for @paperlessDocumentCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 document} other{{count} documents}}'**
+  String paperlessDocumentCount(int count);
+
+  /// No description provided for @paperlessNoDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'No documents found'**
+  String get paperlessNoDocuments;
+
+  /// No description provided for @paperlessCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Document date'**
+  String get paperlessCreated;
+
+  /// No description provided for @paperlessAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get paperlessAdded;
+
+  /// No description provided for @paperlessArchiveNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive serial number'**
+  String get paperlessArchiveNumber;
+
+  /// No description provided for @paperlessOriginalFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Original file'**
+  String get paperlessOriginalFile;
+
+  /// No description provided for @paperlessOpenInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser'**
+  String get paperlessOpenInBrowser;
+
+  /// No description provided for @paperlessDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed: {error}'**
+  String paperlessDownloadFailed(String error);
+
+  /// No description provided for @paperlessUploadTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get paperlessUploadTypeLabel;
+
+  /// No description provided for @paperlessUploadDropTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload to Paperless'**
+  String get paperlessUploadDropTitle;
+
+  /// No description provided for @paperlessUploadDropSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PDFs and images. Share from other tools to land here.'**
+  String get paperlessUploadDropSubtitle;
+
+  /// No description provided for @paperlessUploadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get paperlessUploadTitle;
+
+  /// No description provided for @paperlessUploadClearFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear finished'**
+  String get paperlessUploadClearFinished;
+
+  /// No description provided for @paperlessUploadNeedsConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a server to upload'**
+  String get paperlessUploadNeedsConnection;
+
+  /// No description provided for @paperlessUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get paperlessUploading;
+
+  /// No description provided for @paperlessUploadCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Upload 1 file} other{Upload {count} files}}'**
+  String paperlessUploadCount(int count);
+
+  /// No description provided for @paperlessUploadOptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to all uploads'**
+  String get paperlessUploadOptionsTitle;
+
+  /// No description provided for @paperlessUploadOptionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave on Automatic to let Paperless match them itself.'**
+  String get paperlessUploadOptionsHint;
+
+  /// No description provided for @paperlessUploadStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready to upload'**
+  String get paperlessUploadStatusPending;
+
+  /// No description provided for @paperlessUploadStatusUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading {percent}%'**
+  String paperlessUploadStatusUploading(int percent);
+
+  /// No description provided for @paperlessUploadStatusProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Paperless is processing it…'**
+  String get paperlessUploadStatusProcessing;
+
+  /// No description provided for @paperlessUploadStatusQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent · Paperless will consume it shortly'**
+  String get paperlessUploadStatusQueued;
+
+  /// No description provided for @paperlessUploadStatusDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to Paperless'**
+  String get paperlessUploadStatusDone;
+
+  /// No description provided for @paperlessStatDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get paperlessStatDocuments;
+
+  /// No description provided for @paperlessStatInbox.
+  ///
+  /// In en, this message translates to:
+  /// **'In inbox'**
+  String get paperlessStatInbox;
+
+  /// No description provided for @paperlessStatCorrespondents.
+  ///
+  /// In en, this message translates to:
+  /// **'Correspondents'**
+  String get paperlessStatCorrespondents;
+
+  /// No description provided for @paperlessStatDocumentTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Document types'**
+  String get paperlessStatDocumentTypes;
+
+  /// No description provided for @paperlessStatTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get paperlessStatTags;
+
+  /// No description provided for @paperlessStatCharacters.
+  ///
+  /// In en, this message translates to:
+  /// **'Characters'**
+  String get paperlessStatCharacters;
+
+  /// No description provided for @paperlessStatFileTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'File types'**
+  String get paperlessStatFileTypes;
+
+  /// No description provided for @paperlessStatTopCorrespondents.
+  ///
+  /// In en, this message translates to:
+  /// **'Top correspondents'**
+  String get paperlessStatTopCorrespondents;
+
+  /// No description provided for @paperlessStatTopDocumentTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Top document types'**
+  String get paperlessStatTopDocumentTypes;
+
+  /// No description provided for @paperlessStatTopTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Top tags'**
+  String get paperlessStatTopTags;
 }
 
 class _AppLocalizationsDelegate

@@ -10356,4 +10356,323 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotImportInvalidDate => 'Use DD.MM.YYYY';
+
+  @override
+  String get toolNamePaperless => 'Paperless';
+
+  @override
+  String get toolDescPaperless =>
+      'Browse, search and upload documents on your Paperless server';
+
+  @override
+  String get paperlessTabDocuments => 'Documents';
+
+  @override
+  String get paperlessTabUpload => 'Upload';
+
+  @override
+  String get paperlessTabStats => 'Stats';
+
+  @override
+  String get paperlessNotConfiguredTitle => 'Connect your Paperless server';
+
+  @override
+  String get paperlessNotConfiguredBody =>
+      'Enter the server address and an API token, or sign in once with your username and password. The token is stored securely on this device.';
+
+  @override
+  String get paperlessConnect => 'Connect';
+
+  @override
+  String get paperlessSettingsTitle => 'Paperless settings';
+
+  @override
+  String get paperlessConnected => 'Connected';
+
+  @override
+  String paperlessSignedInAs(String username) {
+    return 'Signed in as $username';
+  }
+
+  @override
+  String get paperlessTestConnection => 'Test connection';
+
+  @override
+  String get paperlessDisconnect => 'Disconnect';
+
+  @override
+  String get paperlessDisconnectConfirm =>
+      'Remove the stored API token from this device? The server address is kept.';
+
+  @override
+  String get paperlessServerSection => 'Server';
+
+  @override
+  String get paperlessServerSectionHint =>
+      'The address you open Paperless with in the browser.';
+
+  @override
+  String get paperlessServerUrl => 'Server address';
+
+  @override
+  String get paperlessAuthSection => 'Authentication';
+
+  @override
+  String get paperlessAuthToken => 'API token';
+
+  @override
+  String get paperlessAuthPassword => 'Password';
+
+  @override
+  String get paperlessApiToken => 'API token';
+
+  @override
+  String get paperlessTokenHint =>
+      'Find it in Paperless under your profile, or in the Django admin under Auth Token.';
+
+  @override
+  String get paperlessTokenKeepHint => 'Leave empty to keep the stored token.';
+
+  @override
+  String get paperlessUsername => 'Username';
+
+  @override
+  String get paperlessPassword => 'Password';
+
+  @override
+  String get paperlessPasswordHint =>
+      'Used once to request an API token. The password is not stored.';
+
+  @override
+  String get paperlessSignIn => 'Sign in';
+
+  @override
+  String get paperlessInvalidUrl =>
+      'Enter a full address starting with http:// or https://';
+
+  @override
+  String get paperlessCredentialsRequired => 'Enter username and password';
+
+  @override
+  String get paperlessTokenRequired => 'Enter an API token';
+
+  @override
+  String paperlessConnectionOk(int count) {
+    return 'Connected · $count documents';
+  }
+
+  @override
+  String paperlessConnectionOkVersion(int count, String version) {
+    return 'Connected · $count documents · version $version';
+  }
+
+  @override
+  String paperlessConnectionFailed(String error) {
+    return 'Connection failed: $error';
+  }
+
+  @override
+  String paperlessSavedButUnreachable(String error) {
+    return 'Saved, but the server could not be reached: $error';
+  }
+
+  @override
+  String paperlessErrorNetwork(String detail) {
+    return 'Server not reachable ($detail)';
+  }
+
+  @override
+  String get paperlessErrorUnauthorized =>
+      'The API token was rejected. Check it in the settings.';
+
+  @override
+  String get paperlessErrorInvalidCredentials => 'Wrong username or password';
+
+  @override
+  String get paperlessErrorNotFound =>
+      'Not found on the server. Check the server address.';
+
+  @override
+  String paperlessErrorRejected(String detail) {
+    return 'Paperless rejected the file: $detail';
+  }
+
+  @override
+  String paperlessErrorServer(String detail) {
+    return 'Server error ($detail)';
+  }
+
+  @override
+  String get paperlessErrorInvalidResponse =>
+      'The server did not answer like Paperless. Is the address right, or is a login proxy in between?';
+
+  @override
+  String get paperlessSearchHint => 'Search title and content';
+
+  @override
+  String get paperlessSort => 'Sort';
+
+  @override
+  String get paperlessSortAddedNewest => 'Added, newest first';
+
+  @override
+  String get paperlessSortAddedOldest => 'Added, oldest first';
+
+  @override
+  String get paperlessSortCreatedNewest => 'Document date, newest first';
+
+  @override
+  String get paperlessSortCreatedOldest => 'Document date, oldest first';
+
+  @override
+  String get paperlessSortModifiedNewest => 'Modified, newest first';
+
+  @override
+  String get paperlessSortTitle => 'Title A–Z';
+
+  @override
+  String get paperlessFilters => 'Filters';
+
+  @override
+  String get paperlessAny => 'Any';
+
+  @override
+  String get paperlessAutomatic => 'Automatic';
+
+  @override
+  String get paperlessInboxOnly => 'Inbox only';
+
+  @override
+  String get paperlessTags => 'Tags';
+
+  @override
+  String get paperlessNoTags => 'No tags';
+
+  @override
+  String get paperlessCorrespondent => 'Correspondent';
+
+  @override
+  String get paperlessDocumentType => 'Document type';
+
+  @override
+  String paperlessDocumentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count documents',
+      one: '1 document',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get paperlessNoDocuments => 'No documents found';
+
+  @override
+  String get paperlessCreated => 'Document date';
+
+  @override
+  String get paperlessAdded => 'Added';
+
+  @override
+  String get paperlessArchiveNumber => 'Archive serial number';
+
+  @override
+  String get paperlessOriginalFile => 'Original file';
+
+  @override
+  String get paperlessOpenInBrowser => 'Browser';
+
+  @override
+  String paperlessDownloadFailed(String error) {
+    return 'Download failed: $error';
+  }
+
+  @override
+  String get paperlessUploadTypeLabel => 'Documents';
+
+  @override
+  String get paperlessUploadDropTitle => 'Upload to Paperless';
+
+  @override
+  String get paperlessUploadDropSubtitle =>
+      'PDFs and images. Share from other tools to land here.';
+
+  @override
+  String get paperlessUploadTitle => 'Title';
+
+  @override
+  String get paperlessUploadClearFinished => 'Clear finished';
+
+  @override
+  String get paperlessUploadNeedsConnection => 'Connect a server to upload';
+
+  @override
+  String get paperlessUploading => 'Uploading…';
+
+  @override
+  String paperlessUploadCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Upload $count files',
+      one: 'Upload 1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get paperlessUploadOptionsTitle => 'Apply to all uploads';
+
+  @override
+  String get paperlessUploadOptionsHint =>
+      'Leave on Automatic to let Paperless match them itself.';
+
+  @override
+  String get paperlessUploadStatusPending => 'Ready to upload';
+
+  @override
+  String paperlessUploadStatusUploading(int percent) {
+    return 'Uploading $percent%';
+  }
+
+  @override
+  String get paperlessUploadStatusProcessing => 'Paperless is processing it…';
+
+  @override
+  String get paperlessUploadStatusQueued =>
+      'Sent · Paperless will consume it shortly';
+
+  @override
+  String get paperlessUploadStatusDone => 'Added to Paperless';
+
+  @override
+  String get paperlessStatDocuments => 'Documents';
+
+  @override
+  String get paperlessStatInbox => 'In inbox';
+
+  @override
+  String get paperlessStatCorrespondents => 'Correspondents';
+
+  @override
+  String get paperlessStatDocumentTypes => 'Document types';
+
+  @override
+  String get paperlessStatTags => 'Tags';
+
+  @override
+  String get paperlessStatCharacters => 'Characters';
+
+  @override
+  String get paperlessStatFileTypes => 'File types';
+
+  @override
+  String get paperlessStatTopCorrespondents => 'Top correspondents';
+
+  @override
+  String get paperlessStatTopDocumentTypes => 'Top document types';
+
+  @override
+  String get paperlessStatTopTags => 'Top tags';
 }

@@ -42,6 +42,7 @@ import 'package:tool_lab/tools/luma_well/config.dart';
 import 'package:tool_lab/tools/drift_bloom/config.dart';
 import 'package:tool_lab/tools/voice_distorter/config.dart';
 import 'package:tool_lab/tools/depot_import/config.dart';
+import 'package:tool_lab/tools/paperless/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -108,5 +109,6 @@ class ToolRegistry {
     DriftBloomTool.config,
     VoiceDistorterTool.config,
     DepotImportTool.config,
+    PaperlessTool.config,
   ];
 }

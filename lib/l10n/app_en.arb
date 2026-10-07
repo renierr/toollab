@@ -5185,5 +5185,182 @@
   },
   "depotImportExportAnyway": "Export anyway",
   "depotImportInvalidNumber": "Enter a number",
-  "depotImportInvalidDate": "Use DD.MM.YYYY"
+  "depotImportInvalidDate": "Use DD.MM.YYYY",
+  "toolNamePaperless": "Paperless",
+  "toolDescPaperless": "Browse, search and upload documents on your Paperless server",
+  "paperlessTabDocuments": "Documents",
+  "paperlessTabUpload": "Upload",
+  "paperlessTabStats": "Stats",
+  "paperlessNotConfiguredTitle": "Connect your Paperless server",
+  "paperlessNotConfiguredBody": "Enter the server address and an API token, or sign in once with your username and password. The token is stored securely on this device.",
+  "paperlessConnect": "Connect",
+  "paperlessSettingsTitle": "Paperless settings",
+  "paperlessConnected": "Connected",
+  "paperlessSignedInAs": "Signed in as {username}",
+  "@paperlessSignedInAs": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessTestConnection": "Test connection",
+  "paperlessDisconnect": "Disconnect",
+  "paperlessDisconnectConfirm": "Remove the stored API token from this device? The server address is kept.",
+  "paperlessServerSection": "Server",
+  "paperlessServerSectionHint": "The address you open Paperless with in the browser.",
+  "paperlessServerUrl": "Server address",
+  "paperlessAuthSection": "Authentication",
+  "paperlessAuthToken": "API token",
+  "paperlessAuthPassword": "Password",
+  "paperlessApiToken": "API token",
+  "paperlessTokenHint": "Find it in Paperless under your profile, or in the Django admin under Auth Token.",
+  "paperlessTokenKeepHint": "Leave empty to keep the stored token.",
+  "paperlessUsername": "Username",
+  "paperlessPassword": "Password",
+  "paperlessPasswordHint": "Used once to request an API token. The password is not stored.",
+  "paperlessSignIn": "Sign in",
+  "paperlessInvalidUrl": "Enter a full address starting with http:// or https://",
+  "paperlessCredentialsRequired": "Enter username and password",
+  "paperlessTokenRequired": "Enter an API token",
+  "paperlessConnectionOk": "Connected · {count} documents",
+  "@paperlessConnectionOk": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paperlessConnectionOkVersion": "Connected · {count} documents · version {version}",
+  "@paperlessConnectionOkVersion": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessConnectionFailed": "Connection failed: {error}",
+  "@paperlessConnectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessSavedButUnreachable": "Saved, but the server could not be reached: {error}",
+  "@paperlessSavedButUnreachable": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessErrorNetwork": "Server not reachable ({detail})",
+  "@paperlessErrorNetwork": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessErrorUnauthorized": "The API token was rejected. Check it in the settings.",
+  "paperlessErrorInvalidCredentials": "Wrong username or password",
+  "paperlessErrorNotFound": "Not found on the server. Check the server address.",
+  "paperlessErrorRejected": "Paperless rejected the file: {detail}",
+  "@paperlessErrorRejected": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessErrorServer": "Server error ({detail})",
+  "@paperlessErrorServer": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessErrorInvalidResponse": "The server did not answer like Paperless. Is the address right, or is a login proxy in between?",
+  "paperlessSearchHint": "Search title and content",
+  "paperlessSort": "Sort",
+  "paperlessSortAddedNewest": "Added, newest first",
+  "paperlessSortAddedOldest": "Added, oldest first",
+  "paperlessSortCreatedNewest": "Document date, newest first",
+  "paperlessSortCreatedOldest": "Document date, oldest first",
+  "paperlessSortModifiedNewest": "Modified, newest first",
+  "paperlessSortTitle": "Title A–Z",
+  "paperlessFilters": "Filters",
+  "paperlessAny": "Any",
+  "paperlessAutomatic": "Automatic",
+  "paperlessInboxOnly": "Inbox only",
+  "paperlessTags": "Tags",
+  "paperlessNoTags": "No tags",
+  "paperlessCorrespondent": "Correspondent",
+  "paperlessDocumentType": "Document type",
+  "paperlessDocumentCount": "{count, plural, =1{1 document} other{{count} documents}}",
+  "@paperlessDocumentCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paperlessNoDocuments": "No documents found",
+  "paperlessCreated": "Document date",
+  "paperlessAdded": "Added",
+  "paperlessArchiveNumber": "Archive serial number",
+  "paperlessOriginalFile": "Original file",
+  "paperlessOpenInBrowser": "Browser",
+  "paperlessDownloadFailed": "Download failed: {error}",
+  "@paperlessDownloadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessUploadTypeLabel": "Documents",
+  "paperlessUploadDropTitle": "Upload to Paperless",
+  "paperlessUploadDropSubtitle": "PDFs and images. Share from other tools to land here.",
+  "paperlessUploadTitle": "Title",
+  "paperlessUploadClearFinished": "Clear finished",
+  "paperlessUploadNeedsConnection": "Connect a server to upload",
+  "paperlessUploading": "Uploading…",
+  "paperlessUploadCount": "{count, plural, =1{Upload 1 file} other{Upload {count} files}}",
+  "@paperlessUploadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paperlessUploadOptionsTitle": "Apply to all uploads",
+  "paperlessUploadOptionsHint": "Leave on Automatic to let Paperless match them itself.",
+  "paperlessUploadStatusPending": "Ready to upload",
+  "paperlessUploadStatusUploading": "Uploading {percent}%",
+  "@paperlessUploadStatusUploading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "paperlessUploadStatusProcessing": "Paperless is processing it…",
+  "paperlessUploadStatusQueued": "Sent · Paperless will consume it shortly",
+  "paperlessUploadStatusDone": "Added to Paperless",
+  "paperlessStatDocuments": "Documents",
+  "paperlessStatInbox": "In inbox",
+  "paperlessStatCorrespondents": "Correspondents",
+  "paperlessStatDocumentTypes": "Document types",
+  "paperlessStatTags": "Tags",
+  "paperlessStatCharacters": "Characters",
+  "paperlessStatFileTypes": "File types",
+  "paperlessStatTopCorrespondents": "Top correspondents",
+  "paperlessStatTopDocumentTypes": "Top document types",
+  "paperlessStatTopTags": "Top tags"
 }
