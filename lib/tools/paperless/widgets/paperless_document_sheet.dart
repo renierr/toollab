@@ -72,6 +72,8 @@ class PaperlessDocumentSheet extends StatelessWidget {
                   documentId: document.id,
                   width: 72,
                   height: 96,
+                  tapToPreview: true,
+                  label: document.title,
                 ),
                 const SizedBox(width: 16),
                 Expanded(

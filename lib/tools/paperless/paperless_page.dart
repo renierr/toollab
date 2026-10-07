@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
@@ -9,6 +11,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/sharing_service.dart';
+import 'package:tool_lab/tools/pdf_viewer/config.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -127,11 +130,7 @@ class _PaperlessPageState extends State<PaperlessPage>
           mimeType: file.mimeType,
         );
       } else {
-        await FileSaveHelper.showOpenChooser(
-          context: context,
-          path: file.path,
-          mimeType: file.mimeType,
-        );
+        await _open(file.path, file.mimeType);
       }
     } catch (e) {
       errorLog('[PaperlessPage] Download of ${document.id} failed: $e');
@@ -146,6 +145,19 @@ class _PaperlessPageState extends State<PaperlessPage>
     } finally {
       if (mounted) setState(() => _isDownloading = false);
     }
+  }
+
+  Future<void> _open(String path, String mimeType) async {
+    final file = SharedFile(
+      path: path,
+      name: p.basename(path),
+      mimeType: mimeType,
+    );
+    if (file.mimeType == 'application/pdf') {
+      context.push(PdfViewerTool.config.route, extra: SharedData.single(file));
+      return;
+    }
+    await FileSaveHelper.openFile(file.path, file.mimeType);
   }
 
   Future<void> _openInBrowser(PaperlessDocument document) async {

@@ -39,7 +39,11 @@ class PaperlessDocumentTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PaperlessThumbnail(documentId: document.id),
+            PaperlessThumbnail(
+              documentId: document.id,
+              tapToPreview: true,
+              label: document.title,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
