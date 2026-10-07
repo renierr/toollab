@@ -28,10 +28,18 @@ class PaperlessException implements Exception {
   final PaperlessErrorKind kind;
   final String detail;
 
-  const PaperlessException(this.kind, [this.detail = '']);
+  /// Existing document id when the server rejected the file as a duplicate.
+  final int? duplicateDocumentId;
+
+  const PaperlessException(
+    this.kind, [
+    this.detail = '',
+    this.duplicateDocumentId,
+  ]);
 
   @override
-  String toString() => 'PaperlessException(${kind.name}): $detail';
+  String toString() =>
+      'PaperlessException(${kind.name}): $detail${duplicateDocumentId == null ? '' : ' (#$duplicateDocumentId)'}';
 }
 
 class PaperlessServerInfo {
@@ -355,12 +363,35 @@ class PaperlessApi {
         : '';
     final decoded = _tryDecode(text);
     if (decoded is Map) {
-      return decoded.values
-          .expand((v) => v is List ? v : [v])
-          .map((v) => '$v')
-          .join(' ');
+      final parts = <String>[];
+      for (final entry in decoded.entries) {
+        final values = entry.value is List
+            ? entry.value as List
+            : [entry.value];
+        for (final value in values) {
+          final message = '$value'.trim();
+          if (message.isEmpty) continue;
+          // DRF nests the offending field as the key
+          // ({"document": ["No file was submitted."]}); keep it so the
+          // message says *what* was rejected instead of just *that* it was.
+          parts.add('${entry.key}: $message');
+        }
+      }
+      if (parts.isNotEmpty) return parts.join(' ');
     }
-    return text;
+    if (decoded is List) {
+      final parts = decoded
+          .map((v) => '$v'.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+      if (parts.isNotEmpty) return parts.join(' ');
+    }
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return '';
+    // An auth proxy answering with HTML is not a Paperless reason; don't
+    // paste a page of markup into the upload list.
+    if (trimmed.startsWith('<')) return '';
+    return trimmed.length > 500 ? '${trimmed.substring(0, 500)}…' : trimmed;
   }
 
   static String? _header(List<(String, String)> headers, String name) {

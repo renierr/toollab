@@ -543,6 +543,7 @@ class PaperlessState extends ChangeNotifier {
               error: () => PaperlessException(
                 PaperlessErrorKind.rejected,
                 task.result ?? '',
+                task.duplicateDocumentId,
               ),
             ),
           );

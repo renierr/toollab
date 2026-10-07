@@ -18791,6 +18791,30 @@ abstract class AppLocalizations {
   /// **'Paperless rejected the file: {detail}'**
   String paperlessErrorRejected(String detail);
 
+  /// No description provided for @paperlessErrorRejectedNoDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Paperless rejected the file without giving a reason.'**
+  String get paperlessErrorRejectedNoDetail;
+
+  /// No description provided for @paperlessErrorDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate: {detail}'**
+  String paperlessErrorDuplicate(String detail);
+
+  /// No description provided for @paperlessErrorDuplicateWithId.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate of document #{id}: {detail}'**
+  String paperlessErrorDuplicateWithId(int id, String detail);
+
+  /// No description provided for @paperlessErrorDuplicateNoDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate of document #{id}: already in Paperless.'**
+  String paperlessErrorDuplicateNoDetail(int id);
+
   /// No description provided for @paperlessErrorServer.
   ///
   /// In en, this message translates to:

@@ -5277,6 +5277,34 @@
       }
     }
   },
+  "paperlessErrorRejectedNoDetail": "Paperless rejected the file without giving a reason.",
+  "paperlessErrorDuplicate": "Duplicate: {detail}",
+  "@paperlessErrorDuplicate": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessErrorDuplicateWithId": "Duplicate of document #{id}: {detail}",
+  "@paperlessErrorDuplicateWithId": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "paperlessErrorDuplicateNoDetail": "Duplicate of document #{id}: already in Paperless.",
+  "@paperlessErrorDuplicateNoDetail": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
   "paperlessErrorServer": "Server error ({detail})",
   "@paperlessErrorServer": {
     "placeholders": {

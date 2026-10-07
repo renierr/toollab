@@ -10579,6 +10579,25 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get paperlessErrorRejectedNoDetail =>
+      'Paperless hat die Datei ohne Begründung abgelehnt.';
+
+  @override
+  String paperlessErrorDuplicate(String detail) {
+    return 'Duplikat: $detail';
+  }
+
+  @override
+  String paperlessErrorDuplicateWithId(int id, String detail) {
+    return 'Duplikat von Dokument #$id: $detail';
+  }
+
+  @override
+  String paperlessErrorDuplicateNoDetail(int id) {
+    return 'Duplikat von Dokument #$id: bereits in Paperless.';
+  }
+
+  @override
   String paperlessErrorServer(String detail) {
     return 'Serverfehler ($detail)';
   }
