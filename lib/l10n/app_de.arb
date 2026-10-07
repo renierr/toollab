@@ -4237,6 +4237,8 @@
   "paperlessInboxOnly": "Nur Posteingang",
   "paperlessTags": "Tags",
   "paperlessNoTags": "Keine Tags",
+  "paperlessFilterTags": "Tags filtern",
+  "paperlessNoMatchingTags": "Keine passenden Tags",
   "paperlessCorrespondent": "Korrespondent",
   "paperlessDocumentType": "Dokumenttyp",
   "paperlessDocumentCount": "{count, plural, =1{1 Dokument} other{{count} Dokumente}}",

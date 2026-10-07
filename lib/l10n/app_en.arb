@@ -5300,6 +5300,8 @@
   "paperlessInboxOnly": "Inbox only",
   "paperlessTags": "Tags",
   "paperlessNoTags": "No tags",
+  "paperlessFilterTags": "Filter tags",
+  "paperlessNoMatchingTags": "No matching tags",
   "paperlessCorrespondent": "Correspondent",
   "paperlessDocumentType": "Document type",
   "paperlessDocumentCount": "{count, plural, =1{1 document} other{{count} documents}}",

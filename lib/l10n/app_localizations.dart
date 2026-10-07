@@ -18887,6 +18887,18 @@ abstract class AppLocalizations {
   /// **'No tags'**
   String get paperlessNoTags;
 
+  /// No description provided for @paperlessFilterTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter tags'**
+  String get paperlessFilterTags;
+
+  /// No description provided for @paperlessNoMatchingTags.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching tags'**
+  String get paperlessNoMatchingTags;
+
   /// No description provided for @paperlessCorrespondent.
   ///
   /// In en, this message translates to:

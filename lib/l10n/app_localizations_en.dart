@@ -10549,6 +10549,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paperlessNoTags => 'No tags';
 
   @override
+  String get paperlessFilterTags => 'Filter tags';
+
+  @override
+  String get paperlessNoMatchingTags => 'No matching tags';
+
+  @override
   String get paperlessCorrespondent => 'Correspondent';
 
   @override

@@ -10630,6 +10630,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get paperlessNoTags => 'Keine Tags';
 
   @override
+  String get paperlessFilterTags => 'Tags filtern';
+
+  @override
+  String get paperlessNoMatchingTags => 'Keine passenden Tags';
+
+  @override
   String get paperlessCorrespondent => 'Korrespondent';
 
   @override
