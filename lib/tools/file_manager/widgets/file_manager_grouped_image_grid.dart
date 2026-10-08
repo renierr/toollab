@@ -5,6 +5,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_date_groups.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_entry.dart';
 import 'package:tool_lab/tools/file_manager/file_manager_path_labels.dart';
+import 'package:tool_lab/tools/file_manager/widgets/file_manager_file_name.dart';
 
 const int _maxColumns = 16;
 const double _coverOversample = 1.5;
@@ -339,13 +340,11 @@ class _ImageTile extends StatelessWidget {
               child: Container(
                 color: Colors.black.withValues(alpha: 0.45),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                child: Text(
-                  entry.name,
+                child: FileManagerFileName(
+                  name: entry.name,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: Colors.white,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),

@@ -76,8 +76,11 @@ class FileManagerEntryTile extends StatelessWidget {
           ),
           selected: selected,
           title: isCompact
-              ? FileManagerFileName(name: entry.name)
-              : Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              ? FileManagerFileName(
+                  name: entry.name,
+                  style: Theme.of(context).textTheme.titleMedium,
+                )
+              : FileManagerFileName(name: entry.name, maxLines: 1),
           subtitle: Row(
             children: [
               Expanded(

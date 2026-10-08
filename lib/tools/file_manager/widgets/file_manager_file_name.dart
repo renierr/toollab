@@ -1,50 +1,82 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
+/// Shortens a name in the middle so its start and its extension stay visible.
 class FileManagerFileName extends StatelessWidget {
-  final String name;
+  static const String _ellipsis = '…';
+  static const int _maxExtensionLength = 10;
 
-  const FileManagerFileName({super.key, required this.name});
+  final String name;
+  final TextStyle? style;
+  final int maxLines;
+
+  const FileManagerFileName({
+    super.key,
+    required this.name,
+    this.style,
+    this.maxLines = 2,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.titleMedium ?? const TextStyle();
+    // Measure with the exact style, scaler and direction Text renders with.
+    final effectiveStyle = DefaultTextStyle.of(context).style.merge(style);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final textDirection = Directionality.of(context);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final displayName = _truncate(name, style, constraints.maxWidth);
-        return Text(displayName, style: style, maxLines: 2);
+        bool fits(String value) {
+          final painter = TextPainter(
+            text: TextSpan(text: value, style: effectiveStyle),
+            maxLines: maxLines,
+            textDirection: textDirection,
+            textScaler: textScaler,
+          )..layout(maxWidth: constraints.maxWidth);
+          final exceeded = painter.didExceedMaxLines;
+          painter.dispose();
+          return !exceeded;
+        }
+
+        return Text(
+          _shorten(name, fits),
+          style: effectiveStyle,
+          maxLines: maxLines,
+          overflow: TextOverflow.ellipsis,
+        );
       },
     );
   }
 
-  String _truncate(String value, TextStyle style, double maxWidth) {
-    if (_fits(value, style, maxWidth)) return value;
+  String _shorten(String value, bool Function(String) fits) {
+    if (fits(value)) return value;
 
+    final chars = value.characters.toList();
     final dotIndex = value.lastIndexOf('.');
-    if (dotIndex <= 0 || dotIndex == value.length - 1) return value;
+    final extensionLength = dotIndex > 0
+        ? value.substring(dotIndex).characters.length
+        : 0;
+    final minTail = extensionLength > _maxExtensionLength
+        ? 4
+        : extensionLength + 4;
 
-    final base = value.substring(0, dotIndex).runes.toList();
-    final extension = value.substring(dotIndex);
+    String candidate(int keep) {
+      final tail = math.min(keep, math.max(keep ~/ 3, minTail));
+      final head = keep - tail;
+      return '${chars.take(head).join()}$_ellipsis'
+          '${chars.skip(chars.length - tail).join()}';
+    }
+
     var low = 0;
-    var high = base.length;
+    var high = chars.length - 1;
     while (low < high) {
       final middle = (low + high + 1) ~/ 2;
-      final candidate =
-          '${String.fromCharCodes(base.take(middle))}...$extension';
-      if (_fits(candidate, style, maxWidth)) {
+      if (fits(candidate(middle))) {
         low = middle;
       } else {
         high = middle - 1;
       }
     }
-    return '${String.fromCharCodes(base.take(low))}...$extension';
-  }
-
-  bool _fits(String value, TextStyle style, double maxWidth) {
-    final painter = TextPainter(
-      text: TextSpan(text: value, style: style),
-      maxLines: 2,
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: maxWidth);
-    return !painter.didExceedMaxLines;
+    return candidate(low);
   }
 }
