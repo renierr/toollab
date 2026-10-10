@@ -1,10 +1,12 @@
 package de.renier.tool_lab
 
 import android.app.Activity
+import android.graphics.Color
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
-import android.view.ViewGroup
+import android.view.Gravity
+import android.widget.FrameLayout
 import android.widget.MediaController
 import android.widget.VideoView
 
@@ -21,9 +23,10 @@ class NativeMediaPlayerActivity : Activity() {
         }
 
         val videoView = VideoView(this).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER,
             )
             setVideoURI(uri)
             setMediaController(MediaController(this@NativeMediaPlayerActivity).also {
@@ -36,6 +39,10 @@ class NativeMediaPlayerActivity : Activity() {
                 true
             }
         }
-        setContentView(videoView)
+        val frame = FrameLayout(this).apply {
+            setBackgroundColor(Color.BLACK)
+            addView(videoView)
+        }
+        setContentView(frame)
     }
 }
