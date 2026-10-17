@@ -19217,6 +19217,18 @@ abstract class AppLocalizations {
   /// **'Map Wi-Fi signal strength across a space'**
   String get toolDescWifiHeatmap;
 
+  /// No description provided for @toolNameTotpAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'TOTP Authenticator'**
+  String get toolNameTotpAuth;
+
+  /// No description provided for @toolDescTotpAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor authentication codes'**
+  String get toolDescTotpAuth;
+
   /// No description provided for @emfMapScanner.
   ///
   /// In en, this message translates to:

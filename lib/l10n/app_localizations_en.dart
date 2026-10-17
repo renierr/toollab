@@ -10744,6 +10744,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toolDescWifiHeatmap => 'Map Wi-Fi signal strength across a space';
 
   @override
+  String get toolNameTotpAuth => 'TOTP Authenticator';
+
+  @override
+  String get toolDescTotpAuth => 'Two-factor authentication codes';
+
+  @override
   String get emfMapScanner => 'Scanner';
 
   @override

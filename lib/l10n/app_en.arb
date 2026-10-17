@@ -5407,6 +5407,8 @@
   "paperlessStatTopTags": "Top tags",
   "toolNameWifiHeatmap": "WiFi Signal Heatmap",
   "toolDescWifiHeatmap": "Map Wi-Fi signal strength across a space",
+  "toolNameTotpAuth": "TOTP Authenticator",
+  "toolDescTotpAuth": "Two-factor authentication codes",
   "emfMapScanner": "Scanner",
   "emfMapAnomaly": "Anomaly Map",
   "emfMapRoom": "Room",

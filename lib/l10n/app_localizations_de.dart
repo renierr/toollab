@@ -10827,6 +10827,12 @@ class AppLocalizationsDe extends AppLocalizations {
       'Wi-Fi-Signalstärke über einen Raum kartieren';
 
   @override
+  String get toolNameTotpAuth => 'TOTP Authenticator';
+
+  @override
+  String get toolDescTotpAuth => 'Zwei-Faktor-Authentifizierungscodes';
+
+  @override
   String get emfMapScanner => 'Scanner';
 
   @override
