@@ -133,7 +133,7 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                       const Spacer(),
                       if (state.isRecording)
                         Text(
-                          '${_mmss(state.recordedSeconds)} / ${_mmss(SoundFinderState.maxRecordSeconds.toDouble())}',
+                          '${_mmss(state.recordedSeconds)} / ${_mmss(state.maxRecordSeconds.toDouble())}',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
@@ -168,6 +168,33 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
               const Padding(
                 padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: SfGainControl(),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.timer_outlined, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(l10n.sfMaxRecordLength),
+                    ),
+                    DropdownButton<int>(
+                      value: state.maxRecordSeconds,
+                      items: const [
+                        DropdownMenuItem(value: 60, child: Text('1 min')),
+                        DropdownMenuItem(value: 300, child: Text('5 min')),
+                        DropdownMenuItem(value: 600, child: Text('10 min')),
+                        DropdownMenuItem(value: 1800, child: Text('30 min')),
+                        DropdownMenuItem(value: 0, child: Text('Unlimited')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) {
+                          context.read<SoundFinderState>().setMaxRecordSeconds(v);
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

@@ -2431,6 +2431,7 @@
   },
   "sfTitleMorse": "Morsecode",
   "sfTitleRecordings": "Aufnahmen",
+  "sfMaxRecordLength": "Maximale Aufnahmelänge",
   "sfMorseGenTab": "Senden",
   "sfMorseAnalTab": "Empfangen",
   "sfMorseWpm": "Geschwindigkeit",

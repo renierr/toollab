@@ -44,6 +44,7 @@ class SoundFinderState extends ChangeNotifier {
   static const String _kCtrNoise = 'ctr_noise';
   static const String _kMicDevice = 'mic_device';
   static const String _kMicGain = 'mic_gain';
+  static const String _kMaxRecordSeconds = 'max_record_seconds';
   static const String _kSpectrumRes = 'spectrum_res';
 
   static const double maxMicGain = 20;
@@ -60,6 +61,7 @@ class SoundFinderState extends ChangeNotifier {
   InputDevice? _selectedDevice;
   String? _pendingDeviceId; // restored id, matched once devices are listed
   double _micGain = 1.0;
+  int _maxRecordSeconds = MicAnalyzer.defaultMaxRecordSeconds;
 
   // Smoothed live analysis.
   MicAnalysis _analysis = MicAnalysis.zero();
@@ -149,10 +151,10 @@ class SoundFinderState extends ChangeNotifier {
   List<InputDevice> get inputDevices => _inputDevices;
   InputDevice? get selectedDevice => _selectedDevice;
   double get micGain => _micGain;
+  int get maxRecordSeconds => _maxRecordSeconds;
   SpectrumResolution get spectrumResolution => _mic.resolution;
   bool get isRecording => _mic.isRecording;
   double get recordedSeconds => _mic.recordedSeconds;
-  static int get maxRecordSeconds => MicAnalyzer.maxRecordSeconds;
   MicAnalysis get analysis => _analysis;
   double get smoothDb => _smoothDb;
   double get smoothPeakHz => _smoothPeakHz;
@@ -275,6 +277,15 @@ class SoundFinderState extends ChangeNotifier {
     _micGain = clamped;
     _mic.gain = clamped;
     _save(_kMicGain, clamped.toStringAsFixed(2));
+    notifyListeners();
+  }
+
+  void setMaxRecordSeconds(int seconds) {
+    final int clamped = seconds < 0 ? 0 : seconds;
+    if (clamped == _maxRecordSeconds) return;
+    _maxRecordSeconds = clamped;
+    _mic.maxRecordSeconds = clamped;
+    _save(_kMaxRecordSeconds, clamped.toString());
     notifyListeners();
   }
 
@@ -1034,6 +1045,9 @@ class SoundFinderState extends ChangeNotifier {
         : null;
     _micGain = double.tryParse(micGain ?? '')?.clamp(1.0, maxMicGain) ?? 1.0;
     _mic.gain = _micGain;
+    final maxRec = await db.getSetting(_toolId, _kMaxRecordSeconds);
+    _maxRecordSeconds = int.tryParse(maxRec ?? '') ?? MicAnalyzer.defaultMaxRecordSeconds;
+    _mic.maxRecordSeconds = _maxRecordSeconds;
 
     _genFreq = double.tryParse(genFreq ?? '')?.clamp(20, 20000) ?? 440;
     _genWave = _waveFromName(genWave) ?? ToneWaveform.sine;

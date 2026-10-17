@@ -11099,6 +11099,12 @@ abstract class AppLocalizations {
   /// **'Recordings'**
   String get sfTitleRecordings;
 
+  /// No description provided for @sfMaxRecordLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Max recording length'**
+  String get sfMaxRecordLength;
+
   /// No description provided for @sfMorseGenTab.
   ///
   /// In en, this message translates to:

@@ -64,8 +64,11 @@ class MicAnalyzer {
   static const int sampleRate = 44100;
   static const double _minFreqHz = 20;
 
-  /// Longest clip that can be captured into memory before recording auto-stops.
-  static const int maxRecordSeconds = 60;
+  /// Default longest clip that can be captured into memory before recording auto-stops.
+  static const int defaultMaxRecordSeconds = 60;
+
+  /// Configurable capture cap. 0 means no cap (record until stopped manually).
+  int maxRecordSeconds = defaultMaxRecordSeconds;
 
   final AudioRecorder _recorder = AudioRecorder();
   StreamSubscription<Uint8List>? _sub;
@@ -94,7 +97,8 @@ class MicAnalyzer {
 
   // Clip recording: gained samples are accumulated in chunks and concatenated
   // on stop, capped at [maxRecordSeconds].
-  static final int _maxRecordFrames = sampleRate * maxRecordSeconds;
+  int get _maxRecordFrames =>
+      maxRecordSeconds <= 0 ? 0 : sampleRate * maxRecordSeconds;
   final List<Float32List> _recChunks = [];
   int _recFrames = 0;
   bool _recording = false;
@@ -129,8 +133,17 @@ class MicAnalyzer {
   }
 
   void _appendRecording(Float32List chunk) {
+    if (maxRecordSeconds <= 0) {
+      _recChunks.add(chunk);
+      _recFrames += chunk.length;
+      return;
+    }
     final int room = _maxRecordFrames - _recFrames;
-    if (room <= 0) return;
+    if (room <= 0) {
+      _recording = false;
+      onRecordLimitReached?.call();
+      return;
+    }
     if (chunk.length <= room) {
       _recChunks.add(chunk);
       _recFrames += chunk.length;

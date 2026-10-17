@@ -117,13 +117,38 @@ class _SoundFinderPageState extends State<SoundFinderPage>
                 context: context,
                 builder: (context) => ResponsiveAlertDialog(
                   title: Text(l10n.sfInputSettings),
-                  content: const Column(
+                  content: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SfMicSelector(),
-                      SizedBox(height: 16),
-                      SfGainControl(),
+                      const SfMicSelector(),
+                      const SizedBox(height: 16),
+                      const SfGainControl(),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Icon(Icons.timer_outlined, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(l10n.sfMaxRecordLength),
+                          ),
+                          DropdownButton<int>(
+                            value: context.watch<SoundFinderState>().maxRecordSeconds,
+                            items: const [
+                              DropdownMenuItem(value: 60, child: Text('1 min')),
+                              DropdownMenuItem(value: 300, child: Text('5 min')),
+                              DropdownMenuItem(value: 600, child: Text('10 min')),
+                              DropdownMenuItem(value: 1800, child: Text('30 min')),
+                              DropdownMenuItem(value: 0, child: Text('Unlimited')),
+                            ],
+                            onChanged: (v) {
+                              if (v != null) {
+                                context.read<SoundFinderState>().setMaxRecordSeconds(v);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   actions: [
