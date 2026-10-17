@@ -37,9 +37,9 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
   Future<void> _toggleRecording() async {
     final state = context.read<SoundFinderState>();
     if (state.isRecording) {
-      await state.stopRecordingAndStore();
+      await state.stopNormalRecordingAndStore();
     } else {
-      state.startRecording();
+      state.startNormalRecording();
     }
   }
 

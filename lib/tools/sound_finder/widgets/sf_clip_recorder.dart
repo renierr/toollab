@@ -109,7 +109,7 @@ class SfClipRecorder extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               '${_mmss(state.recordedSeconds)} / '
-              '${_mmss(SoundFinderState.maxRecordSeconds.toDouble())}',
+              '${_mmss(state.maxRecordSeconds.toDouble())}',
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
