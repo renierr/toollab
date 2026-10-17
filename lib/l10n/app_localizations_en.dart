@@ -5879,6 +5879,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfStop => 'Stop';
 
   @override
+  String get sfPlaybackSpeed => 'Playback speed';
+
+  @override
   String get sfPlayTone => 'Play tone';
 
   @override
@@ -6130,6 +6133,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfStopRecording => 'Stop recording';
 
   @override
+  String get sfPauseRecording => 'Pause recording';
+
+  @override
+  String get sfResumeRecording => 'Resume recording';
+
+  @override
   String get sfRecordingLabel => 'REC';
 
   @override
@@ -6159,7 +6168,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfPlayClip => 'Play clip';
 
   @override
+  String get sfTrimClip => 'Trim clip';
+
+  @override
+  String get sfNormalizeClip => 'Normalize';
+
+  @override
   String get sfMaxRecordLength => 'Max recording length';
+
+  @override
+  String get sfSampleRate => 'Sample rate';
+
+  @override
+  String get sfNoiseSuppress => 'Noise suppression';
+
+  @override
+  String get sfEchoCancel => 'Echo cancellation';
+
+  @override
+  String get sfAutoGain => 'Auto gain';
 
   @override
   String get sfMorseGenTab => 'Generate';

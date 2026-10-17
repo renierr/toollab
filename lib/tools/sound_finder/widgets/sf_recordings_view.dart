@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
@@ -36,7 +37,7 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
 
   Future<void> _toggleRecording() async {
     final state = context.read<SoundFinderState>();
-    if (state.isRecording) {
+    if (state.isRecording || state.isPaused) {
       await state.stopNormalRecordingAndStore();
     } else {
       state.startNormalRecording();
@@ -85,6 +86,53 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
       context: context,
       suggestedName: 'recording-$stamp.${format.extension}',
       bytes: bytes,
+    );
+  }
+
+  Future<void> _trimClip(BuildContext context, RecordingClip clip) async {
+    final state = context.read<SoundFinderState>();
+    final duration = clip.durationSeconds;
+    double start = 0;
+    double end = duration;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(AppLocalizations.of(context).sfTrimClip),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Start: ${start.toStringAsFixed(1)}s'),
+              Slider(
+                value: start.clamp(0, duration),
+                min: 0,
+                max: duration,
+                onChanged: (v) => setState(() => start = v.clamp(0, end)),
+              ),
+              Text('End: ${end.toStringAsFixed(1)}s'),
+              Slider(
+                value: end.clamp(0, duration),
+                min: 0,
+                max: duration,
+                onChanged: (v) => setState(() => end = v.clamp(start, duration)),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(AppLocalizations.of(context).commonCancel),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                unawaited(state.trimRecording(clip.path, start, end));
+              },
+              child: Text(AppLocalizations.of(context).commonOk),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -162,6 +210,18 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                           : l10n.sfRecordClip,
                     ),
                   ),
+                  if (state.isRecording)
+                    OutlinedButton.icon(
+                      onPressed: () => state.isPaused
+                          ? state.resumeNormalRecording()
+                          : state.pauseNormalRecording(),
+                      icon: Icon(
+                        state.isPaused ? Icons.play_arrow : Icons.pause,
+                      ),
+                      label: Text(
+                        state.isPaused ? l10n.sfResumeRecording : l10n.sfPauseRecording,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -178,6 +238,52 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
               const Padding(
                 padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: SfGainControl(),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.speed, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(l10n.sfSampleRate)),
+                    DropdownButton<int>(
+                      value: state.sampleRate,
+                      items: const [
+                        DropdownMenuItem(value: 16000, child: Text('16 kHz')),
+                        DropdownMenuItem(value: 22050, child: Text('22.05 kHz')),
+                        DropdownMenuItem(value: 44100, child: Text('44.1 kHz')),
+                        DropdownMenuItem(value: 48000, child: Text('48 kHz')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) state.setSampleRate(v);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+                child: SwitchListTile(
+                  title: Text(l10n.sfNoiseSuppress),
+                  value: state.noiseSuppress,
+                  onChanged: state.setNoiseSuppress,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+                child: SwitchListTile(
+                  title: Text(l10n.sfEchoCancel),
+                  value: state.echoCancel,
+                  onChanged: state.setEchoCancel,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: SwitchListTile(
+                  title: Text(l10n.sfAutoGain),
+                  value: state.autoGain,
+                  onChanged: state.setAutoGain,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -209,6 +315,29 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
             ],
           ),
           const SizedBox(height: 12),
+          // Playback speed
+          Row(
+            children: [
+              const Icon(Icons.speed, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text(l10n.sfPlaybackSpeed)),
+              DropdownButton<double>(
+                value: state.playbackSpeed,
+                items: const [
+                  DropdownMenuItem(value: 0.5, child: Text('0.5x')),
+                  DropdownMenuItem(value: 0.75, child: Text('0.75x')),
+                  DropdownMenuItem(value: 1.0, child: Text('1x')),
+                  DropdownMenuItem(value: 1.25, child: Text('1.25x')),
+                  DropdownMenuItem(value: 1.5, child: Text('1.5x')),
+                  DropdownMenuItem(value: 2.0, child: Text('2x')),
+                ],
+                onChanged: (v) {
+                  if (v != null) state.setPlaybackSpeed(v);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           // Stored clips
           Text(l10n.sfSaveClipButton, style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
@@ -227,10 +356,13 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                     ? state.stopRecordingPlayback()
                     : state.playRecording(clip.path),
                 onExport: () => _export(context, clip.path),
-                onShare: () => FileSaveHelper.shareFile(
-                  clip.path,
-                  'audio/wav',
+                onShare: () => FileSaveHelper.showShareChooser(
+                  context: context,
+                  path: clip.path,
+                  mimeType: 'audio/wav',
                 ),
+                onTrim: () => _trimClip(context, clip),
+                onNormalize: () => state.normalizeRecording(clip.path),
                 onDelete: () => state.deleteRecording(clip.path),
               ),
         ],
@@ -246,6 +378,8 @@ class _RecordingTile extends StatelessWidget {
   final VoidCallback onPlay;
   final VoidCallback onExport;
   final VoidCallback onShare;
+  final VoidCallback onTrim;
+  final VoidCallback onNormalize;
   final VoidCallback onDelete;
 
   const _RecordingTile({
@@ -255,6 +389,8 @@ class _RecordingTile extends StatelessWidget {
     required this.onPlay,
     required this.onExport,
     required this.onShare,
+    required this.onTrim,
+    required this.onNormalize,
     required this.onDelete,
   });
 
@@ -268,6 +404,7 @@ class _RecordingTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final state = context.watch<SoundFinderState>();
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -302,6 +439,31 @@ class _RecordingTile extends StatelessWidget {
                 ),
               ],
             ),
+            if (isPlaying) ...[
+              const SizedBox(height: 8),
+              Slider(
+                value: state.playbackPosition.inMilliseconds
+                    .clamp(0, (clip.durationSeconds * 1000).round())
+                    .toDouble(),
+                min: 0,
+                max: (clip.durationSeconds * 1000).clamp(1, double.infinity),
+                onChanged: (v) =>
+                    state.seekPlayback(Duration(milliseconds: v.round())),
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.volume_up, size: 18),
+                  Expanded(
+                    child: Slider(
+                      value: state.playbackVolume,
+                      min: 0,
+                      max: 1,
+                      onChanged: state.setPlaybackVolume,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 8),
             Wrap(
               spacing: 4,
@@ -321,6 +483,16 @@ class _RecordingTile extends StatelessWidget {
                   icon: const Icon(Icons.share_outlined),
                   tooltip: l10n.commonShare,
                   onPressed: onShare,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.content_cut),
+                  tooltip: l10n.sfTrimClip,
+                  onPressed: onTrim,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.auto_fix_high),
+                  tooltip: l10n.sfNormalizeClip,
+                  onPressed: onNormalize,
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline),

@@ -61,7 +61,10 @@ class MicAnalysis {
 /// spectrum from it. Auto-gain / echo / noise suppression are disabled so the
 /// mic stays as sensitive and unprocessed as possible.
 class MicAnalyzer {
-  static const int sampleRate = 44100;
+  static int sampleRate = 44100;
+  static bool noiseSuppress = false;
+  static bool echoCancel = false;
+  static bool autoGain = false;
   static const double _minFreqHz = 20;
 
   /// Default longest clip that can be captured into memory before recording auto-stops.
@@ -102,8 +105,11 @@ class MicAnalyzer {
   final List<Float32List> _recChunks = [];
   int _recFrames = 0;
   bool _recording = false;
+  bool _paused = false;
 
-  bool get isRecording => _recording;
+  bool get isRecording => _recording && !_paused;
+  bool get isPaused => _paused;
+  bool get isRecordingSession => _recording;
   int get recordedFrames => _recFrames;
   double get recordedSeconds => _recFrames / sampleRate;
 
@@ -115,12 +121,30 @@ class MicAnalyzer {
     _recChunks.clear();
     _recFrames = 0;
     _recording = true;
+    _paused = false;
+  }
+
+  Future<void> pauseRecording() async {
+    if (!_recording || _paused) return;
+    try {
+      await _recorder.pause();
+    } catch (_) {}
+    _paused = true;
+  }
+
+  Future<void> resumeRecording() async {
+    if (!_recording || !_paused) return;
+    try {
+      await _recorder.resume();
+    } catch (_) {}
+    _paused = false;
   }
 
   /// Stops recording and returns the captured mono samples (empty if nothing
   /// was captured). Safe to call when not recording.
   Float32List stopRecording() {
     _recording = false;
+    _paused = false;
     final Float32List out = Float32List(_recFrames);
     int offset = 0;
     for (final Float32List chunk in _recChunks) {
@@ -133,6 +157,7 @@ class MicAnalyzer {
   }
 
   void _appendRecording(Float32List chunk) {
+    if (_paused) return;
     if (maxRecordSeconds <= 0) {
       _recChunks.add(chunk);
       _recFrames += chunk.length;
@@ -214,9 +239,9 @@ class MicAnalyzer {
           sampleRate: sampleRate,
           numChannels: 1,
           device: device,
-          autoGain: false,
-          echoCancel: false,
-          noiseSuppress: false,
+          autoGain: autoGain,
+          echoCancel: echoCancel,
+          noiseSuppress: noiseSuppress,
         ),
       );
       _filled = 0;
@@ -240,7 +265,7 @@ class MicAnalyzer {
     );
     final double g = gain;
     final bool pcmListeners = _pcmController.hasListener;
-    final Float32List? rec = (_recording || pcmListeners)
+    final Float32List? rec = ((_recording && !_paused) || pcmListeners)
         ? Float32List(count)
         : null;
     for (int i = 0; i < count; i++) {
@@ -257,8 +282,8 @@ class MicAnalyzer {
       }
     }
     if (rec != null) {
-      if (_recording) _appendRecording(rec);
-      if (pcmListeners) { debugLog('[MicAnalyzer] pcm emit count=$count'); _pcmController.add(rec); }
+      if (_recording && !_paused) _appendRecording(rec);
+      if (pcmListeners && !_paused) { debugLog('[MicAnalyzer] pcm emit count=$count'); _pcmController.add(rec); }
     }
   }
 
@@ -313,6 +338,7 @@ class MicAnalyzer {
   Future<void> stop() async {
     _running = false;
     _recording = false;
+    _paused = false;
     _recChunks.clear();
     _recFrames = 0;
     await _sub?.cancel();

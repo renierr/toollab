@@ -10571,6 +10571,12 @@ abstract class AppLocalizations {
   /// **'Stop'**
   String get sfStop;
 
+  /// No description provided for @sfPlaybackSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get sfPlaybackSpeed;
+
   /// No description provided for @sfPlayTone.
   ///
   /// In en, this message translates to:
@@ -11051,6 +11057,18 @@ abstract class AppLocalizations {
   /// **'Stop recording'**
   String get sfStopRecording;
 
+  /// No description provided for @sfPauseRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause recording'**
+  String get sfPauseRecording;
+
+  /// No description provided for @sfResumeRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume recording'**
+  String get sfResumeRecording;
+
   /// No description provided for @sfRecordingLabel.
   ///
   /// In en, this message translates to:
@@ -11105,11 +11123,47 @@ abstract class AppLocalizations {
   /// **'Play clip'**
   String get sfPlayClip;
 
+  /// No description provided for @sfTrimClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Trim clip'**
+  String get sfTrimClip;
+
+  /// No description provided for @sfNormalizeClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Normalize'**
+  String get sfNormalizeClip;
+
   /// No description provided for @sfMaxRecordLength.
   ///
   /// In en, this message translates to:
   /// **'Max recording length'**
   String get sfMaxRecordLength;
+
+  /// No description provided for @sfSampleRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample rate'**
+  String get sfSampleRate;
+
+  /// No description provided for @sfNoiseSuppress.
+  ///
+  /// In en, this message translates to:
+  /// **'Noise suppression'**
+  String get sfNoiseSuppress;
+
+  /// No description provided for @sfEchoCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo cancellation'**
+  String get sfEchoCancel;
+
+  /// No description provided for @sfAutoGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto gain'**
+  String get sfAutoGain;
 
   /// No description provided for @sfMorseGenTab.
   ///

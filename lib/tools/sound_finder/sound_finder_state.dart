@@ -62,6 +62,10 @@ class SoundFinderState extends ChangeNotifier {
   String? _pendingDeviceId; // restored id, matched once devices are listed
   double _micGain = 1.0;
   int _maxRecordSeconds = MicAnalyzer.defaultMaxRecordSeconds;
+  int _sampleRate = MicAnalyzer.sampleRate;
+  bool _noiseSuppress = false;
+  bool _echoCancel = false;
+  bool _autoGain = false;
 
   // Smoothed live analysis.
   MicAnalysis _analysis = MicAnalysis.zero();
@@ -98,12 +102,17 @@ class SoundFinderState extends ChangeNotifier {
   StreamSubscription<Float32List>? _diskWaveformSub;
   final List<double> _diskWaveform = List<double>.filled(2048, 0);
   int _diskWaveformPos = 0;
+  DateTime? _normalRecStart;
+  double _playbackSpeed = 1.0;
 
   // Playback of stored clips.
   String? _playingRecordingPath;
   SoundHandle? _playingHandle;
   AudioSource? _playingSource;
   StreamSubscription<StreamSoundEvent>? _playingEndSub;
+  Timer? _playbackTimer;
+  Duration _playbackPosition = Duration.zero;
+  double _playbackVolume = 1.0;
 
   // Normal recordings (stored clips).
   List<RecordingClip> _recordings = const [];
@@ -166,8 +175,13 @@ class SoundFinderState extends ChangeNotifier {
   InputDevice? get selectedDevice => _selectedDevice;
   double get micGain => _micGain;
   int get maxRecordSeconds => _maxRecordSeconds;
+  int get sampleRate => _sampleRate;
+  bool get noiseSuppress => _noiseSuppress;
+  bool get echoCancel => _echoCancel;
+  bool get autoGain => _autoGain;
   SpectrumResolution get spectrumResolution => _mic.resolution;
   bool get isRecording => _mic.isRecording || _diskRecording;
+  bool get isPaused => _diskRecording && _mic.isPaused;
   double get recordedSeconds => _mic.recordedSeconds;
   MicAnalysis get analysis => _analysis;
   double get smoothDb => _smoothDb;
@@ -193,6 +207,9 @@ class SoundFinderState extends ChangeNotifier {
   bool get recordingsExporting => _recordingsExporting;
   List<double> get diskWaveform => _diskWaveform;
   String? get playingRecordingPath => _playingRecordingPath;
+  double get playbackSpeed => _playbackSpeed;
+  Duration get playbackPosition => _playbackPosition;
+  double get playbackVolume => _playbackVolume;
 
   bool get tonePlaying => _tonePlaying;
   SfMode? get toneOwner => _toneOwner;
@@ -251,6 +268,7 @@ class SoundFinderState extends ChangeNotifier {
 
   Future<void> ensureMic() async {
     if (_micStatus == MicStatus.running) return;
+    _syncMicConfig();
     final MicStartResult result = await _mic.start();
     _micStatus = switch (result) {
       MicStartResult.ok => MicStatus.running,
@@ -302,6 +320,47 @@ class SoundFinderState extends ChangeNotifier {
     _maxRecordSeconds = clamped;
     _mic.maxRecordSeconds = clamped;
     _save(_kMaxRecordSeconds, clamped.toString());
+    notifyListeners();
+  }
+
+  void setSampleRate(int rate) {
+    if (rate == _sampleRate) return;
+    _sampleRate = rate;
+    MicAnalyzer.sampleRate = rate;
+    _save('sf_sample_rate', rate.toString());
+    if (_micStatus == MicStatus.running) {
+      unawaited(_restartMic());
+    }
+    notifyListeners();
+  }
+
+  void setNoiseSuppress(bool value) {
+    if (value == _noiseSuppress) return;
+    _noiseSuppress = value;
+    _save('sf_noise_suppress', value.toString());
+    if (_micStatus == MicStatus.running) {
+      unawaited(_restartMic());
+    }
+    notifyListeners();
+  }
+
+  void setEchoCancel(bool value) {
+    if (value == _echoCancel) return;
+    _echoCancel = value;
+    _save('sf_echo_cancel', value.toString());
+    if (_micStatus == MicStatus.running) {
+      unawaited(_restartMic());
+    }
+    notifyListeners();
+  }
+
+  void setAutoGain(bool value) {
+    if (value == _autoGain) return;
+    _autoGain = value;
+    _save('sf_auto_gain', value.toString());
+    if (_micStatus == MicStatus.running) {
+      unawaited(_restartMic());
+    }
     notifyListeners();
   }
 
@@ -450,6 +509,68 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> trimRecording(String path, double startSec, double endSec) async {
+    try {
+      final bytes = await File(path).readAsBytes();
+      final info = readWavInfo(bytes);
+      if (info == null || !info.isPcm) return;
+      final blockAlign = info.blockAlign;
+      final sampleRate = info.sampleRate;
+      final startFrame = (startSec * sampleRate).round().clamp(0, info.frames);
+      final endFrame = (endSec * sampleRate).round().clamp(startFrame, info.frames);
+      if (endFrame <= startFrame) return;
+      final startByte = info.dataOffset + startFrame * blockAlign;
+      final endByte = info.dataOffset + endFrame * blockAlign;
+      final pcm = Uint8List.sublistView(bytes, startByte, endByte);
+      final out = buildPcmWav(
+        pcm: pcm,
+        sampleRate: sampleRate,
+        channels: info.channels,
+        bitsPerSample: info.bitsPerSample,
+      );
+      await File(path).writeAsBytes(out);
+      await refreshRecordings();
+      notifyListeners();
+    } catch (e) {
+      errorLog('[SoundFinderState] trim failed: $e');
+    }
+  }
+
+  Future<void> normalizeRecording(String path) async {
+    try {
+      final bytes = await File(path).readAsBytes();
+      final info = readWavInfo(bytes);
+      if (info == null || !info.isPcm || info.bitsPerSample != 16) return;
+      final pcmBytes = bytes.sublist(info.dataOffset, info.dataOffset + info.dataLength);
+      final bd = ByteData.sublistView(Uint8List.fromList(pcmBytes));
+      int peak = 0;
+      final sampleCount = info.dataLength ~/ 2;
+      for (int i = 0; i < sampleCount; i++) {
+        final v = bd.getInt16(i * 2, Endian.little).abs();
+        if (v > peak) peak = v;
+      }
+      if (peak == 0) return;
+      final scale = 32767.0 / peak * 0.95;
+      final outPcm = Uint8List(info.dataLength);
+      final outBd = ByteData.sublistView(outPcm);
+      for (int i = 0; i < sampleCount; i++) {
+        final v = (bd.getInt16(i * 2, Endian.little) * scale).round().clamp(-32768, 32767);
+        outBd.setInt16(i * 2, v, Endian.little);
+      }
+      final out = buildPcmWav(
+        pcm: outPcm,
+        sampleRate: info.sampleRate,
+        channels: info.channels,
+        bitsPerSample: info.bitsPerSample,
+      );
+      await File(path).writeAsBytes(out);
+      await refreshRecordings();
+      notifyListeners();
+    } catch (e) {
+      errorLog('[SoundFinderState] normalize failed: $e');
+    }
+  }
+
   Future<void> deleteRecording(String path) async {
     try {
       final f = File(path);
@@ -538,6 +659,7 @@ class SoundFinderState extends ChangeNotifier {
       errorLog('[SF] startNormalRecording: mic not running');
       return;
     }
+    _normalRecStart = DateTime.now();
     _mic.startRecording();
     _diskRecording = true;
     _diskWaveformSub = _mic.pcmStream.listen((chunk) {
@@ -558,6 +680,18 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> pauseNormalRecording() async {
+    if (!_diskRecording) return;
+    await _mic.pauseRecording();
+    notifyListeners();
+  }
+
+  Future<void> resumeNormalRecording() async {
+    if (!_diskRecording) return;
+    await _mic.resumeRecording();
+    notifyListeners();
+  }
+
   Future<void> stopNormalRecordingAndStore() async {
     errorLog('[SF] stopNormalRecordingAndStore');
     if (!_diskRecording) return;
@@ -573,10 +707,22 @@ class SoundFinderState extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    int captureRate = MicAnalyzer.sampleRate;
+    final start = _normalRecStart;
+    if (start != null) {
+      final elapsedMs = DateTime.now().difference(start).inMilliseconds;
+      if (elapsedMs > 0) {
+        final computed = (samples.length * 1000 / elapsedMs).round();
+        if (computed >= 8000 && computed <= 192000) {
+          captureRate = computed;
+        }
+      }
+    }
+    _normalRecStart = null;
     final wavBytes = WavPcm16Encoder.encode(
       samples,
       frames: samples.length,
-      sampleRate: MicAnalyzer.sampleRate,
+      sampleRate: captureRate,
       channels: 1,
     );
     final dirPath = await _recordingsDir();
@@ -606,8 +752,20 @@ class SoundFinderState extends ChangeNotifier {
     try {
       final source = await SoLoud.instance.loadFile(path);
       final handle = SoLoud.instance.play(source);
+      SoLoud.instance.setRelativePlaySpeed(handle, _playbackSpeed);
+      SoLoud.instance.setVolume(handle, _playbackVolume);
       _playingSource = source;
       _playingHandle = handle;
+      _playbackPosition = Duration.zero;
+      _playbackTimer?.cancel();
+      _playbackTimer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+        final h = _playingHandle;
+        if (h == null) return;
+        try {
+          _playbackPosition = SoLoud.instance.getPosition(h);
+          notifyListeners();
+        } catch (_) {}
+      });
       _playingRecordingPath = path;
       _playingEndSub = source.soundEvents.listen((event) {
         if (event.handle == handle &&
@@ -621,7 +779,35 @@ class SoundFinderState extends ChangeNotifier {
     }
   }
 
+  void setPlaybackSpeed(double speed) {
+    _playbackSpeed = speed;
+    final handle = _playingHandle;
+    if (handle != null) {
+      SoLoud.instance.setRelativePlaySpeed(handle, speed);
+    }
+    notifyListeners();
+  }
+
+  void setPlaybackVolume(double volume) {
+    _playbackVolume = volume.clamp(0.0, 1.0);
+    final handle = _playingHandle;
+    if (handle != null) {
+      SoLoud.instance.setVolume(handle, _playbackVolume);
+    }
+    notifyListeners();
+  }
+
+  void seekPlayback(Duration position) {
+    final handle = _playingHandle;
+    if (handle == null) return;
+    SoLoud.instance.seek(handle, position);
+    _playbackPosition = position;
+    notifyListeners();
+  }
+
   Future<void> stopRecordingPlayback() async {
+    _playbackTimer?.cancel();
+    _playbackTimer = null;
     await _playingEndSub?.cancel();
     _playingEndSub = null;
     final handle = _playingHandle;
@@ -629,6 +815,7 @@ class SoundFinderState extends ChangeNotifier {
     _playingHandle = null;
     _playingSource = null;
     _playingRecordingPath = null;
+    _playbackPosition = Duration.zero;
     if (handle != null) {
       await SoLoud.instance.stop(handle);
     }
@@ -645,6 +832,7 @@ class SoundFinderState extends ChangeNotifier {
     _diskWaveformSub?.cancel();
     _diskWaveformSub = null;
     _mic.stopRecording();
+    _normalRecStart = null;
     _diskRecording = false;
     notifyListeners();
   }
@@ -668,9 +856,17 @@ class SoundFinderState extends ChangeNotifier {
     return null;
   }
 
+  void _syncMicConfig() {
+    MicAnalyzer.sampleRate = _sampleRate;
+    MicAnalyzer.noiseSuppress = _noiseSuppress;
+    MicAnalyzer.echoCancel = _echoCancel;
+    MicAnalyzer.autoGain = _autoGain;
+  }
+
   Future<void> _restartMic() async {
     await _mic.stop();
     _micStatus = MicStatus.idle;
+    _syncMicConfig();
     final MicStartResult result = await _mic.start();
     _micStatus = switch (result) {
       MicStartResult.ok => MicStatus.running,
@@ -872,7 +1068,8 @@ class SoundFinderState extends ChangeNotifier {
     if (!_suspended) return;
     _suspended = false;
     if (_mode != SfMode.generator) {
-      final MicStartResult result = await _mic.start();
+      _syncMicConfig();
+    final MicStartResult result = await _mic.start();
       if (result != MicStartResult.ok) {
         _micStatus = switch (result) {
           MicStartResult.denied => MicStatus.denied,
@@ -1050,6 +1247,7 @@ class SoundFinderState extends ChangeNotifier {
       return;
     }
 
+    _syncMicConfig();
     final startRes = await _mic.start();
     if (startRes != MicStartResult.ok) {
       _micStatus = startRes == MicStartResult.denied
@@ -1079,7 +1277,7 @@ class SoundFinderState extends ChangeNotifier {
         notifyListeners();
       }
 
-      const int maxSamples = MicAnalyzer.sampleRate * 60;
+      final int maxSamples = MicAnalyzer.sampleRate * 60;
       int currentSamples = _morseChunks.fold(
         0,
         (sum, element) => sum + element.length,
@@ -1188,6 +1386,19 @@ class SoundFinderState extends ChangeNotifier {
     _maxRecordSeconds = int.tryParse(maxRec ?? '') ?? MicAnalyzer.defaultMaxRecordSeconds;
     _mic.maxRecordSeconds = _maxRecordSeconds;
 
+    final sr = await db.getSetting(_toolId, 'sf_sample_rate');
+    _sampleRate = int.tryParse(sr ?? '') ?? 44100;
+    MicAnalyzer.sampleRate = _sampleRate;
+    final ns = await db.getSetting(_toolId, 'sf_noise_suppress');
+    _noiseSuppress = ns == 'true';
+    MicAnalyzer.noiseSuppress = _noiseSuppress;
+    final ec = await db.getSetting(_toolId, 'sf_echo_cancel');
+    _echoCancel = ec == 'true';
+    MicAnalyzer.echoCancel = _echoCancel;
+    final ag = await db.getSetting(_toolId, 'sf_auto_gain');
+    _autoGain = ag == 'true';
+    MicAnalyzer.autoGain = _autoGain;
+
     _genFreq = double.tryParse(genFreq ?? '')?.clamp(20, 20000) ?? 440;
     _genWave = _waveFromName(genWave) ?? ToneWaveform.sine;
     _genVol = double.tryParse(genVol ?? '')?.clamp(0.0, 1.0) ?? 0.4;
@@ -1222,6 +1433,7 @@ class SoundFinderState extends ChangeNotifier {
   @override
   void dispose() {
     _diskRecTimer?.cancel();
+    _playbackTimer?.cancel();
     _diskWaveformSub?.cancel();
     _diskRecSink?.close();
     _playingEndSub?.cancel();
