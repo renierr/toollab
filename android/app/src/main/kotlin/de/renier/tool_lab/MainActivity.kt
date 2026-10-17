@@ -493,12 +493,14 @@ open class MainActivity : FlutterFragmentActivity() {
                             result.error("INVALID_ARGS", "uri required", null)
                             return@setMethodCallHandler
                         }
-                        try {
-                            FileSaveHelper.openFile(this, uriString, mimeType)
-                            result.success(true)
-                        } catch (e: Exception) {
-                            result.error("OPEN_ERROR", e.message, null)
-                        }
+                        Thread {
+                            try {
+                                FileSaveHelper.openFile(this, uriString, mimeType)
+                                runOnUiThread { result.success(true) }
+                            } catch (e: Exception) {
+                                runOnUiThread { result.error("OPEN_ERROR", e.message, null) }
+                            }
+                        }.start()
                     }
                     "showSystemNotification" -> {
                         val fileName = call.argument<String>("fileName")
