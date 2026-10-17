@@ -2,6 +2,7 @@ package de.renier.tool_lab
 
 import android.Manifest
 import android.app.PendingIntent
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.ClipData
 import android.content.Context
@@ -9,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.OpenableColumns
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
@@ -17,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 
 object FileSaveHelper {
 
@@ -166,8 +169,63 @@ object FileSaveHelper {
         }
     }
 
+    private fun resolveSourceFile(context: Context, uriString: String): File? {
+        return try {
+            if (!uriString.startsWith("content://")) {
+                val file = File(uriString)
+                if (file.exists()) file else null
+            } else {
+                val uri = Uri.parse(uriString)
+                var name = "tool_lab_${System.currentTimeMillis()}.apk"
+                context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) name = cursor.getString(0) ?: name
+                }
+                val outFile = File(context.cacheDir, name)
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(outFile).use { output -> input.copyTo(output) }
+                } ?: return null
+                if (outFile.exists()) outFile else null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun apkPackageName(context: Context, sourceFile: File): String? {
+        return try {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageArchiveInfo(sourceFile.absolutePath, 0)?.packageName
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun findExistingDownloadsUri(context: Context, fileName: String): Uri? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        return try {
+            val projection = arrayOf(MediaStore.Downloads._ID)
+            val selection = "${MediaStore.Downloads.DISPLAY_NAME} = ?"
+            context.contentResolver.query(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                arrayOf(fileName),
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    ContentUris.withAppendedId(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        cursor.getLong(0),
+                    )
+                } else null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     fun openFile(context: Context, uriString: String, mimeType: String) {
-        val uri = getUriForPath(context, uriString)
+        // Unknown-sources gate for APK installs.
         if (mimeType == "application/vnd.android.package-archive" &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             !context.packageManager.canRequestPackageInstalls()
@@ -178,6 +236,47 @@ object FileSaveHelper {
             })
             return
         }
+
+        var uri = getUriForPath(context, uriString)
+
+        // Self-update mitigation: an APK whose package matches ToolLab's own must
+        // be served by the system MediaProvider (survives process death) instead
+        // of this app's FileProvider, otherwise the installer loses access when
+        // the app process is killed mid-install.
+        if (mimeType == "application/vnd.android.package-archive") {
+            val sourceFile = resolveSourceFile(context, uriString)
+            if (sourceFile != null && apkPackageName(context, sourceFile) == context.packageName) {
+                uri = when {
+                    uriString.startsWith("content://") && uriString.contains("media") -> Uri.parse(uriString)
+                    else -> {
+                        val existing = findExistingDownloadsUri(context, sourceFile.name)
+                        if (existing != null) {
+                            existing
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            try {
+                                val saved = saveToDownloadsFromPath(
+                                    context,
+                                    sourceFile.absolutePath,
+                                    sourceFile.name,
+                                    mimeType,
+                                )
+                                val savedUri = saved["uri"]
+                                if (!savedUri.isNullOrEmpty() && savedUri.startsWith("content://")) {
+                                    Uri.parse(savedUri)
+                                } else {
+                                    uri
+                                }
+                            } catch (e: Exception) {
+                                uri
+                            }
+                        } else {
+                            uri
+                        }
+                    }
+                }
+            }
+        }
+
         val intent = Intent(
             if (mimeType == "application/vnd.android.package-archive") {
                 Intent.ACTION_INSTALL_PACKAGE
@@ -190,10 +289,16 @@ object FileSaveHelper {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        val chooser = Intent.createChooser(intent, "Open File").apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        // Install intents must go straight to the system package installer;
+        // wrapping them in a chooser can hang/crash on some devices.
+        if (mimeType == "application/vnd.android.package-archive") {
+            context.startActivity(intent)
+        } else {
+            val chooser = Intent.createChooser(intent, "Open File").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(chooser)
         }
-        context.startActivity(chooser)
     }
 
     fun showSystemNotification(context: Context, activity: MainActivity, fileName: String, uriString: String, mimeType: String) {
