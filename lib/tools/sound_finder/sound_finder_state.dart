@@ -93,11 +93,9 @@ class SoundFinderState extends ChangeNotifier {
 
   // Disk-streamed normal recordings.
   bool _diskRecording = false;
-  StreamSubscription<Float32List>? _diskRecSub;
   IOSink? _diskRecSink;
-  String? _diskRecPath;
-  int _diskRecFrames = 0;
   Timer? _diskRecTimer;
+  StreamSubscription<Float32List>? _diskWaveformSub;
   final List<double> _diskWaveform = List<double>.filled(2048, 0);
   int _diskWaveformPos = 0;
 
@@ -534,40 +532,23 @@ class SoundFinderState extends ChangeNotifier {
   }
 
   Future<void> startNormalRecording() async {
+    errorLog('[SF] startNormalRecording called, diskRecording=$_diskRecording, micRunning=${_mic.isRunning}, status=$_micStatus');
     if (_diskRecording) return;
-    if (_micStatus != MicStatus.running) return;
-    final dirPath = await _recordingsDir();
-    final DateTime now = DateTime.now();
-    final String stamp =
-        '${now.year}${now.month.toString().padLeft(2, '0')}'
-        '${now.day.toString().padLeft(2, '0')}-'
-        '${now.hour.toString().padLeft(2, '0')}'
-        '${now.minute.toString().padLeft(2, '0')}'
-        '${now.second.toString().padLeft(2, '0')}';
-    final path = '$dirPath/recording-$stamp.wav';
-    final file = File(path);
-    final sink = file.openWrite();
-    // 44-byte placeholder header; patched on stop.
-    sink.add(Uint8List(44));
-    _diskRecSink = sink;
-    _diskRecPath = path;
-    _diskRecFrames = 0;
-    _diskWaveform.fillRange(0, _diskWaveform.length, 0);
-    _diskWaveformPos = 0;
+    if (_micStatus != MicStatus.running) {
+      errorLog('[SF] startNormalRecording: mic not running');
+      return;
+    }
+    _mic.startRecording();
     _diskRecording = true;
-    _diskRecSub = _mic.pcmStream.listen((chunk) {
-      final bytes = Uint8List(chunk.length * 2);
-      final bd = ByteData.sublistView(bytes);
+    _diskWaveformSub = _mic.pcmStream.listen((chunk) {
       for (int i = 0; i < chunk.length; i++) {
-        final double sample = chunk[i].clamp(-1.0, 1.0);
-        bd.setInt16(i * 2, (sample * 32767).round(), Endian.little);
-        _diskWaveform[_diskWaveformPos % _diskWaveform.length] = sample;
+        _diskWaveform[_diskWaveformPos % _diskWaveform.length] = chunk[i];
         _diskWaveformPos++;
       }
-      sink.add(bytes);
-      _diskRecFrames += chunk.length;
       notifyListeners();
     });
+    _diskWaveform.fillRange(0, _diskWaveform.length, 0);
+    _diskWaveformPos = 0;
     if (_maxRecordSeconds > 0) {
       _diskRecTimer = Timer(
         Duration(seconds: _maxRecordSeconds),
@@ -578,64 +559,39 @@ class SoundFinderState extends ChangeNotifier {
   }
 
   Future<void> stopNormalRecordingAndStore() async {
+    errorLog('[SF] stopNormalRecordingAndStore');
     if (!_diskRecording) return;
     _diskRecTimer?.cancel();
     _diskRecTimer = null;
-    await _diskRecSub?.cancel();
-    _diskRecSub = null;
-    final sink = _diskRecSink;
-    _diskRecSink = null;
-    if (sink != null) {
-      await sink.flush();
-      await sink.close();
-    }
-    final path = _diskRecPath;
-    _diskRecPath = null;
+    _diskWaveformSub?.cancel();
+    _diskWaveformSub = null;
+    final samples = _mic.stopRecording();
     _diskRecording = false;
-    if (path != null) {
-      // Patch WAV header.
-      final file = File(path);
-      final header = Uint8List(44);
-      final bd = ByteData.sublistView(header);
-      final int dataBytes = _diskRecFrames * 2;
-      _writeWavHeader(bd, dataBytes, MicAnalyzer.sampleRate, 1);
-      final raf = await file.open(mode: FileMode.write);
-      await raf.setPosition(0);
-      await raf.writeFrom(header);
-      await raf.close();
+    if (samples.isEmpty) {
+      errorLog('[SF] no samples captured');
+      await refreshRecordings();
+      notifyListeners();
+      return;
     }
-    _diskRecFrames = 0;
+    final wavBytes = WavPcm16Encoder.encode(
+      samples,
+      frames: samples.length,
+      sampleRate: MicAnalyzer.sampleRate,
+      channels: 1,
+    );
+    final dirPath = await _recordingsDir();
+    final DateTime now = DateTime.now();
+    final String stamp =
+        '${now.year}${now.month.toString().padLeft(2, '0')}'
+        '${now.day.toString().padLeft(2, '0')}-'
+        '${now.hour.toString().padLeft(2, '0')}'
+        '${now.minute.toString().padLeft(2, '0')}'
+        '${now.second.toString().padLeft(2, '0')}';
+    final file = File('$dirPath/recording-$stamp.wav');
+    await file.writeAsBytes(wavBytes);
+    errorLog('[SF] saved ${samples.length} samples to ${file.path}');
     await refreshRecordings();
     notifyListeners();
-  }
-
-  void _writeWavHeader(ByteData bd, int dataBytes, int sampleRate, int channels) {
-    // RIFF
-    bd.setUint8(0, 0x52); // R
-    bd.setUint8(1, 0x49); // I
-    bd.setUint8(2, 0x46); // F
-    bd.setUint8(3, 0x46); // F
-    bd.setUint32(4, 36 + dataBytes, Endian.little);
-    bd.setUint8(8, 0x57); // W
-    bd.setUint8(9, 0x41); // A
-    bd.setUint8(10, 0x56); // V
-    bd.setUint8(11, 0x45); // E
-    bd.setUint8(12, 0x66); // f
-    bd.setUint8(13, 0x6D); // m
-    bd.setUint8(14, 0x74); // t
-    bd.setUint8(15, 0x20); // (space)
-    bd.setUint32(16, 16, Endian.little);
-    bd.setUint16(20, 1, Endian.little); // PCM
-    bd.setUint16(22, channels, Endian.little);
-    bd.setUint32(24, sampleRate, Endian.little);
-    bd.setUint32(28, sampleRate * channels * 2, Endian.little);
-    bd.setUint16(32, channels * 2, Endian.little);
-    bd.setUint16(34, 16, Endian.little);
-    bd.setUint8(36, 0x64); // d
-    bd.setUint8(37, 0x61); // a
-    bd.setUint8(38, 0x74); // t
-    bd.setUint8(39, 0x61); // a
-    bd.setUint32(40, dataBytes, Endian.little);
   }
 
   Future<void> playRecording(String path) async {
@@ -686,24 +642,14 @@ class SoundFinderState extends ChangeNotifier {
     if (!_diskRecording) return;
     _diskRecTimer?.cancel();
     _diskRecTimer = null;
-    await _diskRecSub?.cancel();
-    _diskRecSub = null;
-    final sink = _diskRecSink;
-    _diskRecSink = null;
-    if (sink != null) {
-      await sink.close();
-    }
-    final path = _diskRecPath;
-    _diskRecPath = null;
+    _diskWaveformSub?.cancel();
+    _diskWaveformSub = null;
+    _mic.stopRecording();
     _diskRecording = false;
-    _diskRecFrames = 0;
-    if (path != null) {
-      try {
-        await File(path).delete();
-      } catch (_) {}
-    }
     notifyListeners();
   }
+
+
 
   Future<void> selectInputDevice(InputDevice? device) async {
     if (device?.id == _selectedDevice?.id) return;
@@ -1276,7 +1222,7 @@ class SoundFinderState extends ChangeNotifier {
   @override
   void dispose() {
     _diskRecTimer?.cancel();
-    _diskRecSub?.cancel();
+    _diskWaveformSub?.cancel();
     _diskRecSink?.close();
     _playingEndSub?.cancel();
     _micSub?.cancel();

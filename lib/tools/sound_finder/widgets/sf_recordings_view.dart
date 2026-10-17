@@ -133,7 +133,7 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                       const Spacer(),
                       if (state.isRecording)
                         Text(
-                          '${_mmss(state.recordedSeconds)} / ${_mmss(state.maxRecordSeconds.toDouble())}',
+                          '${_mmss(state.recordedSeconds)} / ${state.maxRecordSeconds > 0 ? _mmss(state.maxRecordSeconds.toDouble()) : '∞'}',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
