@@ -39,6 +39,11 @@ class SfModeTabs extends StatelessWidget {
           icon: const Icon(Icons.code_outlined),
           tooltip: l10n.sfTitleMorse,
         ),
+        ButtonSegment(
+          value: SfMode.recordings,
+          icon: const Icon(Icons.mic_outlined),
+          tooltip: l10n.sfTitleRecordings,
+        ),
       ],
       selected: {state.mode},
       showSelectedIcon: false,

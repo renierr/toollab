@@ -6153,6 +6153,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfTitleMorse => 'Morse Code';
 
   @override
+  String get sfTitleRecordings => 'Recordings';
+
+  @override
   String get sfMorseGenTab => 'Generate';
 
   @override

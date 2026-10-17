@@ -1,12 +1,17 @@
 import 'dart:async';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:record/record.dart';
 
 import '../../helpers/temp_file_manager.dart';
+import '../voice_distorter/engine/wav_utils.dart';
+import 'recording_clip.dart';
+import 'sf_recording_format.dart';
 import '../../helpers/wav_decoder.dart';
 import '../../helpers/wav_pcm16_encoder.dart';
 import '../../services/database_service.dart';
@@ -18,7 +23,7 @@ import 'morse/morse_audio_renderer.dart';
 import 'morse/morse_converter.dart';
 import 'morse/morse_decoder.dart';
 
-enum SfMode { tracker, counter, generator, doppler, morse }
+enum SfMode { tracker, counter, generator, doppler, morse, recordings }
 
 enum MicStatus { idle, running, denied, unavailable }
 
@@ -84,6 +89,11 @@ class SoundFinderState extends ChangeNotifier {
   DopplerResult? _dopplerResult;
   String? _tempWavPath;
 
+  // Normal recordings (stored clips).
+  List<RecordingClip> _recordings = const [];
+  bool _recordingsExporting = false;
+  String? _recordingsDirPath;
+
   bool _tonePlaying = false;
   SfMode? _toneOwner;
 
@@ -117,7 +127,13 @@ class SoundFinderState extends ChangeNotifier {
   SoundFinderState() {
     _micSub = _mic.stream.listen(_onAnalysis);
     _tone.onExternalStop = _onToneExternalStop;
-    _mic.onRecordLimitReached = notifyListeners;
+    _mic.onRecordLimitReached = () {
+      if (_mode == SfMode.recordings) {
+        unawaited(stopRecordingAndStore());
+      } else {
+        notifyListeners();
+      }
+    };
     _restore();
   }
 
@@ -156,6 +172,9 @@ class SoundFinderState extends ChangeNotifier {
   Float32List? get dopplerSamples => _dopplerSamples;
   DopplerResult? get dopplerResult => _dopplerResult;
   String? get tempWavPath => _tempWavPath;
+
+  List<RecordingClip> get recordings => _recordings;
+  bool get recordingsExporting => _recordingsExporting;
 
   bool get tonePlaying => _tonePlaying;
   SfMode? get toneOwner => _toneOwner;
@@ -328,6 +347,161 @@ class SoundFinderState extends ChangeNotifier {
     _dopplerSamples = null;
     _dopplerResult = null;
     notifyListeners();
+  }
+
+  /// Persistent directory holding stored mic recordings.
+  Future<String> _recordingsDir() async {
+    if (_recordingsDirPath != null) return _recordingsDirPath!;
+    final base = await getApplicationDocumentsDirectory();
+    final dir = Directory('${base.path}/audio_recordings');
+    if (!await dir.exists()) await dir.create(recursive: true);
+    _recordingsDirPath = dir.path;
+    return dir.path;
+  }
+
+  Future<void> refreshRecordings() async {
+    final dirPath = await _recordingsDir();
+    final dir = Directory(dirPath);
+    if (!await dir.exists()) {
+      _recordings = const [];
+      notifyListeners();
+      return;
+    }
+    final files = dir
+        .listSync()
+        .whereType<File>()
+        .where((f) {
+          final ext = f.path.split('.').last.toLowerCase();
+          return ext == 'wav' ||
+              ext == 'm4a' ||
+              ext == 'mp3' ||
+              ext == 'ogg' ||
+              ext == 'opus' ||
+              ext == 'flac' ||
+              ext == 'aac' ||
+              ext == '3gp';
+        })
+        .map(RecordingClip.fromFile)
+        .toList()
+      ..sort((a, b) => b.modified.compareTo(a.modified));
+    _recordings = files;
+    notifyListeners();
+  }
+
+  /// Records the current mic clip (gained PCM) into the persistent store.
+  Future<void> storeRecording() async {
+    if (_mic.isRecording) return;
+    // Reuse the existing gained-PCM capture path.
+    _mic.startRecording();
+    notifyListeners();
+  }
+
+  Future<void> stopRecordingAndStore() async {
+    if (!_mic.isRecording) return;
+    final samples = _mic.stopRecording();
+    if (samples.isEmpty) {
+      notifyListeners();
+      return;
+    }
+    final wavBytes = WavPcm16Encoder.encode(
+      samples,
+      frames: samples.length,
+      sampleRate: MicAnalyzer.sampleRate,
+      channels: 1,
+    );
+    final dirPath = await _recordingsDir();
+    final DateTime now = DateTime.now();
+    final String stamp =
+        '${now.year}${now.month.toString().padLeft(2, '0')}'
+        '${now.day.toString().padLeft(2, '0')}-'
+        '${now.hour.toString().padLeft(2, '0')}'
+        '${now.minute.toString().padLeft(2, '0')}'
+        '${now.second.toString().padLeft(2, '0')}';
+    final file = File('$dirPath/recording-$stamp.wav');
+    await file.writeAsBytes(wavBytes);
+    await refreshRecordings();
+    notifyListeners();
+  }
+
+  Future<void> deleteRecording(String path) async {
+    try {
+      final f = File(path);
+      if (await f.exists()) await f.delete();
+    } catch (_) {}
+    await refreshRecordings();
+  }
+
+  Future<Uint8List?> exportRecording(String path, SfRecordingFormat format) async {
+    if (_recordingsExporting) return null;
+    _recordingsExporting = true;
+    notifyListeners();
+    try {
+      if (!SoLoud.instance.isInitialized) {
+        await SoLoud.instance.init();
+      }
+      final source = await SoLoud.instance.loadFile(path);
+      final chunks = <Uint8List>[];
+      final ended = Completer<void>();
+      StreamSubscription<Uint8List>? captureSub;
+      StreamSubscription<StreamSoundEvent>? endSub;
+      try {
+        final stream = SoLoud.instance.startMixerOutputStream(
+          format: format.mixerFormat,
+          sampleRate: 44100,
+          channels: 2,
+          chunkPCMFrames: format.isPcm ? 2048 : -1,
+        );
+        captureSub = stream.listen(chunks.add);
+        final handle = SoLoud.instance.play(source, paused: true);
+        endSub = source.soundEvents.listen((event) {
+          if (event.handle == handle &&
+              event.event == SoundEventType.handleIsNoMoreValid &&
+              !ended.isCompleted) {
+            ended.complete();
+          }
+        });
+        SoLoud.instance.setPause(handle, false);
+        // Estimate duration from file size (~44.1k 16-bit mono).
+        double seconds = 5;
+        try {
+          final bytes = await File(path).readAsBytes();
+          final info = readWavInfo(bytes);
+          if (info != null && info.sampleRate > 0) {
+            seconds = info.duration.inMilliseconds / 1000.0;
+          }
+        } catch (_) {}
+        await ended.future.timeout(
+          Duration(seconds: seconds.ceil() + 5),
+          onTimeout: () => SoLoud.instance.stop(handle),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      } finally {
+        await endSub?.cancel();
+        SoLoud.instance.stopMixerOutputStream();
+        await captureSub?.cancel();
+        await SoLoud.instance.disposeSource(source);
+      }
+      if (chunks.isEmpty) return null;
+      final bytes = Uint8List(chunks.fold(0, (sum, c) => sum + c.length));
+      int offset = 0;
+      for (final chunk in chunks) {
+        bytes.setRange(offset, offset + chunk.length, chunk);
+        offset += chunk.length;
+      }
+      if (!format.isPcm) return bytes;
+      return buildPcmWav(
+        pcm: bytes,
+        sampleRate: 44100,
+        channels: 2,
+        bitsPerSample: 16,
+      );
+    } catch (e) {
+      errorLog('[SoundFinderState] export recording failed: $e');
+      return null;
+    } finally {
+      _recordingsExporting = false;
+      notifyListeners();
+    }
   }
 
   Future<void> selectInputDevice(InputDevice? device) async {

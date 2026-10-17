@@ -18,6 +18,7 @@ import 'widgets/sf_mode_tabs.dart';
 import 'widgets/sf_tracker_view.dart';
 import 'widgets/sf_doppler_view.dart';
 import 'widgets/sf_morse_view.dart';
+import 'widgets/sf_recordings_view.dart';
 
 class SoundFinderPage extends StatefulWidget {
   const SoundFinderPage({super.key});
@@ -92,6 +93,7 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       SfMode.generator => const SfGeneratorView(),
       SfMode.doppler => const SfDopplerView(),
       SfMode.morse => const SfMorseView(),
+      SfMode.recordings => const SfRecordingsView(),
     };
 
     final String title = switch (mode) {
@@ -100,6 +102,7 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       SfMode.generator => l10n.sfTitleGenerator,
       SfMode.doppler => l10n.sfTitleDoppler,
       SfMode.morse => l10n.sfTitleMorse,
+      SfMode.recordings => l10n.sfTitleRecordings,
     };
 
     return ToolLayout(
@@ -140,7 +143,10 @@ class _SoundFinderPageState extends State<SoundFinderPage>
             padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: SfModeTabs(),
           ),
-          if (mode != SfMode.generator && mode != SfMode.morse && isMicRunning)
+          if (mode != SfMode.generator &&
+              mode != SfMode.morse &&
+              mode != SfMode.recordings &&
+              isMicRunning)
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
               child: SfClipRecorder(),

@@ -11093,6 +11093,12 @@ abstract class AppLocalizations {
   /// **'Morse Code'**
   String get sfTitleMorse;
 
+  /// No description provided for @sfTitleRecordings.
+  ///
+  /// In en, this message translates to:
+  /// **'Recordings'**
+  String get sfTitleRecordings;
+
   /// No description provided for @sfMorseGenTab.
   ///
   /// In en, this message translates to:

@@ -2430,6 +2430,7 @@
     }
   },
   "sfTitleMorse": "Morsecode",
+  "sfTitleRecordings": "Aufnahmen",
   "sfMorseGenTab": "Senden",
   "sfMorseAnalTab": "Empfangen",
   "sfMorseWpm": "Geschwindigkeit",
