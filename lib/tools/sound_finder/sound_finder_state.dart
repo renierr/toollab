@@ -131,12 +131,14 @@ class SoundFinderState extends ChangeNotifier {
   double _sleepThreshold = 0.005;
   double _sleepLiveDb = -90;
   DateTime? _sleepLastEvent;
+  double _sleepLastMaxAbs = 0;
   final List<String> _sleepSessionFiles = [];
   List<String> get sleepSessionFiles => List.unmodifiable(_sleepSessionFiles);
   String? get sleepError => _sleepError;
   double get sleepThreshold => _sleepThreshold;
   double get sleepLiveDb => _sleepLiveDb;
   DateTime? get sleepLastEvent => _sleepLastEvent;
+  double get sleepLastMaxAbs => _sleepLastMaxAbs;
   Timer? _sleepTimeout;
   Timer? _sleepChunkTimer;
   WakeLockLease? _sleepWakeLock;
@@ -950,7 +952,7 @@ class SoundFinderState extends ChangeNotifier {
 
   void _scheduleSleepChunk() {
     _sleepChunkTimer?.cancel();
-    _sleepChunkTimer = Timer(const Duration(seconds: 60), () async {
+    _sleepChunkTimer = Timer(const Duration(seconds: 15), () async {
       if (!_sleepActive) return;
       await _processSleepChunk();
       if (_sleepActive) {
@@ -971,7 +973,8 @@ class SoundFinderState extends ChangeNotifier {
       final a = s.abs();
       if (a > maxAbs) maxAbs = a;
     }
-    errorLog('[Sleep] chunk samples=${samples.length} maxAbs=$maxAbs');
+    _sleepLastMaxAbs = maxAbs;
+    errorLog('[Sleep] chunk samples=${samples.length} maxAbs=$maxAbs threshold=$_sleepThreshold');
     // Keep chunk only if it contains meaningful sound.
     if (maxAbs < _sleepThreshold) return;
     final dirPath = _sleepSessionDir ?? await _sleepDir();

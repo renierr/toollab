@@ -125,6 +125,11 @@ class SfSleepView extends StatelessWidget {
           Text('Recording… elapsed ${_fmt(state.sleepElapsed)}'),
           const SizedBox(height: 4),
           Text('Saved chunks: ${state.sleepChunksKept}'),
+          Text(
+            'Last chunk peak: ${state.sleepLastMaxAbs.toStringAsFixed(4)} '
+            '(threshold ${state.sleepThreshold.toStringAsFixed(4)})',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           if (state.sleepSessionFiles.isNotEmpty) ...[
             const SizedBox(height: 4),
             ...state.sleepSessionFiles.map(
