@@ -126,10 +126,17 @@ class SoundFinderState extends ChangeNotifier {
   DateTime? _sleepStart;
   int _sleepChunksKept = 0;
   String? _sleepDirPath;
+  String? _sleepSessionDir;
   String? _sleepError;
+  double _sleepThreshold = 0.005;
+  double _sleepLiveDb = -90;
+  DateTime? _sleepLastEvent;
   final List<String> _sleepSessionFiles = [];
   List<String> get sleepSessionFiles => List.unmodifiable(_sleepSessionFiles);
   String? get sleepError => _sleepError;
+  double get sleepThreshold => _sleepThreshold;
+  double get sleepLiveDb => _sleepLiveDb;
+  DateTime? get sleepLastEvent => _sleepLastEvent;
   Timer? _sleepTimeout;
   Timer? _sleepChunkTimer;
   WakeLockLease? _sleepWakeLock;
@@ -880,6 +887,12 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSleepThreshold(double value) {
+    _sleepThreshold = value.clamp(0.0005, 0.2);
+    _save('sf_sleep_threshold', _sleepThreshold.toStringAsFixed(5));
+    notifyListeners();
+  }
+
   Future<void> startSleep() async {
     if (_sleepActive) return;
     _sleepError = null;
@@ -908,6 +921,17 @@ class SoundFinderState extends ChangeNotifier {
     _sleepActive = true;
     _sleepStart = DateTime.now();
     _sleepChunksKept = 0;
+    _sleepSessionFiles.clear();
+    _sleepLastEvent = null;
+    final base = await getApplicationDocumentsDirectory();
+    final stamp =
+        '${DateTime.now().year}${DateTime.now().month.toString().padLeft(2, '0')}'
+        '${DateTime.now().day.toString().padLeft(2, '0')}-'
+        '${DateTime.now().hour.toString().padLeft(2, '0')}'
+        '${DateTime.now().minute.toString().padLeft(2, '0')}'
+        '${DateTime.now().second.toString().padLeft(2, '0')}';
+    _sleepSessionDir = '${base.path}/sleep_recordings/session-$stamp';
+    await Directory(_sleepSessionDir!).create(recursive: true);
 
     // Keep CPU awake but let the screen turn off.
     await PowerWakeLockService.releaseAll();
@@ -949,8 +973,8 @@ class SoundFinderState extends ChangeNotifier {
     }
     errorLog('[Sleep] chunk samples=${samples.length} maxAbs=$maxAbs');
     // Keep chunk only if it contains meaningful sound.
-    if (maxAbs < 0.005) return;
-    final dirPath = await _sleepDir();
+    if (maxAbs < _sleepThreshold) return;
+    final dirPath = _sleepSessionDir ?? await _sleepDir();
     final now = DateTime.now();
     final stamp =
         '${now.year}${now.month.toString().padLeft(2, '0')}'
@@ -968,6 +992,7 @@ class SoundFinderState extends ChangeNotifier {
     await file.writeAsBytes(wavBytes);
     _sleepChunksKept++;
     _sleepSessionFiles.add(file.path);
+    _sleepLastEvent = DateTime.now();
     notifyListeners();
   }
 
@@ -1030,6 +1055,7 @@ class SoundFinderState extends ChangeNotifier {
 
   void _onAnalysis(MicAnalysis a) {
     _analysis = a;
+    if (_sleepActive) _sleepLiveDb = a.db;
     const double k = 0.3;
     _smoothDb = _smoothDb + k * (a.db - _smoothDb);
     if (a.peakLevel > 1e-6) {
@@ -1555,6 +1581,9 @@ class SoundFinderState extends ChangeNotifier {
     _autoGain = ag == 'true';
     MicAnalyzer.autoGain = _autoGain;
 
+    final st = await db.getSetting(_toolId, 'sf_sleep_threshold');
+    _sleepThreshold = double.tryParse(st ?? '') ?? 0.005;
+
     _genFreq = double.tryParse(genFreq ?? '')?.clamp(20, 20000) ?? 440;
     _genWave = _waveFromName(genWave) ?? ToneWaveform.sine;
     _genVol = double.tryParse(genVol ?? '')?.clamp(0.0, 1.0) ?? 0.4;
@@ -1586,6 +1615,35 @@ class SoundFinderState extends ChangeNotifier {
     DatabaseService.instance.setSetting(_toolId, key, value);
   }
 
+  static Future<List<SleepSession>> listSleepSessions() async {
+    final base = await getApplicationDocumentsDirectory();
+    final root = Directory('${base.path}/sleep_recordings');
+    if (!await root.exists()) return const [];
+    final sessions = <SleepSession>[];
+    for (final entity in root.listSync()) {
+      if (entity is Directory) {
+        final chunks = entity
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.toLowerCase().endsWith('.wav'))
+            .toList()
+          ..sort((a, b) => a.path.compareTo(b.path));
+        if (chunks.isNotEmpty) {
+          sessions.add(SleepSession(path: entity.path, chunks: chunks));
+        }
+      }
+    }
+    sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return sessions;
+  }
+
+  static Future<void> deleteSleepSession(String path) async {
+    final dir = Directory(path);
+    if (await dir.exists()) {
+      await dir.delete(recursive: true);
+    }
+  }
+
   @override
   void dispose() {
     _diskRecTimer?.cancel();
@@ -1599,5 +1657,46 @@ class SoundFinderState extends ChangeNotifier {
     _mic.dispose();
     _tone.dispose();
     super.dispose();
+  }
+}
+
+class SleepSession {
+  SleepSession({required this.path, required this.chunks});
+
+  final String path;
+  final List<File> chunks;
+
+  String get name => path.split(Platform.pathSeparator).last;
+
+  DateTime get createdAt {
+    final parts = name.split('-');
+    // session-YYYYMMDD-HHMMSS
+    if (parts.length >= 3) {
+      final d = parts[1];
+      final t = parts[2];
+      if (d.length == 8 && t.length == 6) {
+        try {
+          return DateTime(
+            int.parse(d.substring(0, 4)),
+            int.parse(d.substring(4, 6)),
+            int.parse(d.substring(6, 8)),
+            int.parse(t.substring(0, 2)),
+            int.parse(t.substring(2, 4)),
+            int.parse(t.substring(4, 6)),
+          );
+        } catch (_) {}
+      }
+    }
+    return DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  Duration get totalDuration {
+    // Estimate from file sizes at 16-bit mono default 44.1k (approx).
+    int bytes = 0;
+    for (final f in chunks) {
+      bytes += f.lengthSync();
+    }
+    final samples = (bytes - chunks.length * 44) ~/ 2;
+    return Duration(seconds: (samples / 44100).round());
   }
 }
