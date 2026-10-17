@@ -19,6 +19,7 @@ import 'widgets/sf_tracker_view.dart';
 import 'widgets/sf_doppler_view.dart';
 import 'widgets/sf_morse_view.dart';
 import 'widgets/sf_recordings_view.dart';
+import 'widgets/sf_sleep_view.dart';
 
 class SoundFinderPage extends StatefulWidget {
   const SoundFinderPage({super.key});
@@ -94,6 +95,7 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       SfMode.doppler => const SfDopplerView(),
       SfMode.morse => const SfMorseView(),
       SfMode.recordings => const SfRecordingsView(),
+      SfMode.sleep => const SfSleepView(),
     };
 
     final String title = switch (mode) {
@@ -103,6 +105,7 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       SfMode.doppler => l10n.sfTitleDoppler,
       SfMode.morse => l10n.sfTitleMorse,
       SfMode.recordings => l10n.sfTitleRecordings,
+      SfMode.sleep => 'Sleep',
     };
 
     return ToolLayout(
@@ -171,6 +174,7 @@ class _SoundFinderPageState extends State<SoundFinderPage>
           if (mode != SfMode.generator &&
               mode != SfMode.morse &&
               mode != SfMode.recordings &&
+              mode != SfMode.sleep &&
               isMicRunning)
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 4, 16, 4),

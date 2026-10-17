@@ -44,6 +44,11 @@ class SfModeTabs extends StatelessWidget {
           icon: const Icon(Icons.mic_outlined),
           tooltip: l10n.sfTitleRecordings,
         ),
+        ButtonSegment(
+          value: SfMode.sleep,
+          icon: const Icon(Icons.bedtime_outlined),
+          tooltip: 'Sleep',
+        ),
       ],
       selected: {state.mode},
       showSelectedIcon: false,

@@ -15,6 +15,7 @@ import 'sf_recording_format.dart';
 import '../../helpers/wav_decoder.dart';
 import '../../helpers/wav_pcm16_encoder.dart';
 import '../../services/database_service.dart';
+import '../../services/power_wake_lock_service.dart';
 import 'audio/doppler_analyzer.dart';
 import 'audio/mic_analyzer.dart';
 import 'audio/tone_generator.dart';
@@ -23,7 +24,7 @@ import 'morse/morse_audio_renderer.dart';
 import 'morse/morse_converter.dart';
 import 'morse/morse_decoder.dart';
 
-enum SfMode { tracker, counter, generator, doppler, morse, recordings }
+enum SfMode { tracker, counter, generator, doppler, morse, recordings, sleep }
 
 enum MicStatus { idle, running, denied, unavailable }
 
@@ -119,6 +120,16 @@ class SoundFinderState extends ChangeNotifier {
   bool _recordingsExporting = false;
   String? _recordingsDirPath;
 
+  // Sleep sound recorder.
+  bool _sleepActive = false;
+  int _sleepDurationMinutes = 480;
+  DateTime? _sleepStart;
+  int _sleepChunksKept = 0;
+  String? _sleepDirPath;
+  Timer? _sleepTimeout;
+  Timer? _sleepChunkTimer;
+  WakeLockLease? _sleepWakeLock;
+
   bool _tonePlaying = false;
   SfMode? _toneOwner;
 
@@ -205,6 +216,14 @@ class SoundFinderState extends ChangeNotifier {
 
   List<RecordingClip> get recordings => _recordings;
   bool get recordingsExporting => _recordingsExporting;
+
+  bool get sleepActive => _sleepActive;
+  int get sleepDurationMinutes => _sleepDurationMinutes;
+  DateTime? get sleepStart => _sleepStart;
+  int get sleepChunksKept => _sleepChunksKept;
+  Duration get sleepElapsed => _sleepStart == null
+      ? Duration.zero
+      : DateTime.now().difference(_sleepStart!);
   List<double> get diskWaveform => _diskWaveform;
   String? get playingRecordingPath => _playingRecordingPath;
   double get playbackSpeed => _playbackSpeed;
@@ -252,6 +271,9 @@ class SoundFinderState extends ChangeNotifier {
 
   Future<void> setMode(SfMode mode) async {
     if (_mode == mode) return;
+    if (_mode == SfMode.sleep && _sleepActive) {
+      await stopSleep();
+    }
     _mode = mode;
     // Stop any tone when switching context to avoid surprise playback.
     if (_tonePlaying) await _stopTone();
@@ -837,6 +859,125 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // --- Sleep sound recorder ---
+
+  Future<String> _sleepDir() async {
+    if (_sleepDirPath != null) return _sleepDirPath!;
+    final base = await getApplicationDocumentsDirectory();
+    final dir = Directory('${base.path}/sleep_recordings');
+    if (!await dir.exists()) await dir.create(recursive: true);
+    _sleepDirPath = dir.path;
+    return dir.path;
+  }
+
+  void setSleepDurationMinutes(int minutes) {
+    if (_sleepActive) return;
+    _sleepDurationMinutes = minutes.clamp(30, 720);
+    notifyListeners();
+  }
+
+  Future<void> startSleep() async {
+    if (_sleepActive) return;
+    // Force capture settings suited to overnight recording:
+    // low sample rate, no noise suppression / echo cancel / auto gain.
+    _sampleRate = 16000;
+    MicAnalyzer.sampleRate = 16000;
+    _noiseSuppress = false;
+    _echoCancel = false;
+    _autoGain = false;
+    MicAnalyzer.noiseSuppress = false;
+    MicAnalyzer.echoCancel = false;
+    MicAnalyzer.autoGain = false;
+    _micGain = 1.0;
+    _mic.gain = 1.0;
+
+    if (_micStatus != MicStatus.running) {
+      await ensureMic();
+    } else {
+      await _restartMic();
+    }
+    if (_micStatus != MicStatus.running) return;
+
+    _sleepActive = true;
+    _sleepStart = DateTime.now();
+    _sleepChunksKept = 0;
+
+    // Keep CPU awake but let the screen turn off.
+    await PowerWakeLockService.releaseAll();
+    _sleepWakeLock = await PowerWakeLockService.acquirePartial();
+
+    _sleepTimeout = Timer(
+      Duration(minutes: _sleepDurationMinutes),
+      () => unawaited(stopSleep()),
+    );
+
+    _mic.startRecording();
+    _scheduleSleepChunk();
+    notifyListeners();
+  }
+
+  void _scheduleSleepChunk() {
+    _sleepChunkTimer?.cancel();
+    _sleepChunkTimer = Timer(const Duration(seconds: 60), () async {
+      if (!_sleepActive) return;
+      await _processSleepChunk();
+      if (_sleepActive) {
+        _mic.startRecording();
+        _scheduleSleepChunk();
+      }
+    });
+  }
+
+  Future<void> _processSleepChunk() async {
+    if (!_mic.isRecording) return;
+    final samples = _mic.stopRecording();
+    if (samples.isEmpty) return;
+    double maxAbs = 0;
+    for (final s in samples) {
+      final a = s.abs();
+      if (a > maxAbs) maxAbs = a;
+    }
+    // Keep chunk only if it contains meaningful sound.
+    if (maxAbs < 0.02) return;
+    final dirPath = await _sleepDir();
+    final now = DateTime.now();
+    final stamp =
+        '${now.year}${now.month.toString().padLeft(2, '0')}'
+        '${now.day.toString().padLeft(2, '0')}-'
+        '${now.hour.toString().padLeft(2, '0')}'
+        '${now.minute.toString().padLeft(2, '0')}'
+        '${now.second.toString().padLeft(2, '0')}';
+    final file = File('$dirPath/chunk-$stamp.wav');
+    final wavBytes = WavPcm16Encoder.encode(
+      samples,
+      frames: samples.length,
+      sampleRate: 16000,
+      channels: 1,
+    );
+    await file.writeAsBytes(wavBytes);
+    _sleepChunksKept++;
+    notifyListeners();
+  }
+
+  Future<void> stopSleep() async {
+    if (!_sleepActive) return;
+    _sleepActive = false;
+    _sleepTimeout?.cancel();
+    _sleepTimeout = null;
+    _sleepChunkTimer?.cancel();
+    _sleepChunkTimer = null;
+    if (_mic.isRecording) {
+      await _processSleepChunk();
+    }
+    _sleepStart = null;
+    final lease = _sleepWakeLock;
+    _sleepWakeLock = null;
+    if (lease != null) await lease.release();
+    // Restore screen-on wake lock.
+    await PowerWakeLockService.acquireFull();
+    notifyListeners();
+  }
+
 
 
   Future<void> selectInputDevice(InputDevice? device) async {
@@ -1037,6 +1178,7 @@ class SoundFinderState extends ChangeNotifier {
   /// stopped from the notification's stop action or when playback is toggled
   /// off again in the tool.
   Future<void> onPageLeave() async {
+    if (_sleepActive) return;
     await cancelNormalRecording();
     await stopRecordingPlayback();
     await _stopMic();
@@ -1058,6 +1200,7 @@ class SoundFinderState extends ChangeNotifier {
   /// App went to background — suspend the mic and all graph visualizations to
   /// reduce CPU. Will resume on foreground.
   Future<void> onAppBackgrounded() async {
+    if (_sleepActive) return; // keep recording
     if (_micStatus != MicStatus.running) return;
     await _mic.stop();
     _suspended = true;
@@ -1065,6 +1208,7 @@ class SoundFinderState extends ChangeNotifier {
 
   /// App returned to foreground — resume the mic if it was suspended.
   Future<void> onAppForegrounded() async {
+    if (_sleepActive) return;
     if (!_suspended) return;
     _suspended = false;
     if (_mode != SfMode.generator) {
