@@ -247,6 +247,25 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
                       ],
                     ),
                     const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        _state.isCalibrated
+                            ? 'Calibrated. Current delta: ${_state.currentReading?.deltaMagnitude.toStringAsFixed(1) ?? '0.0'} uT'
+                            : 'Not calibrated. Calibrate in Scanner mode first for meaningful deviations.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'Move the phone to a spot, then tap the matching cell to record.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontStyle: FontStyle.italic,
+                            ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     if (!_state.isScanning)
                       Padding(
                         padding: const EdgeInsets.all(12),

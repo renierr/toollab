@@ -117,12 +117,24 @@ class _EmfMapPainter extends CustomPainter {
 
   double? _interpolate(double gx, double gy) {
     if (samples.isEmpty) return null;
+    // Only interpolate near actual samples; otherwise leave cells neutral
+    // so a single reading does not paint the whole grid one color.
+    double minDist = double.infinity;
+    for (final s in samples) {
+      final dx = gx - (s.x + 0.5);
+      final dy = gy - (s.y + 0.5);
+      final dist = math.sqrt(dx * dx + dy * dy);
+      if (dist < minDist) minDist = dist;
+    }
+    if (minDist > 2.2) return null;
+
     double num = 0;
     double den = 0;
     for (final s in samples) {
       final dx = gx - (s.x + 0.5);
       final dy = gy - (s.y + 0.5);
       final dist = math.sqrt(dx * dx + dy * dy);
+      if (dist > 3.0) continue;
       final w = 1.0 / (dist * dist + 0.5);
       num += w * s.value;
       den += w;
