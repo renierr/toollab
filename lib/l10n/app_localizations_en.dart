@@ -10706,4 +10706,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolDescWifiHeatmap => 'Map Wi-Fi signal strength across a space';
+
+  @override
+  String get emfMapScanner => 'Scanner';
+
+  @override
+  String get emfMapAnomaly => 'Anomaly Map';
+
+  @override
+  String get emfMapRoom => 'Room';
+
+  @override
+  String get emfMapWall => 'Wall';
+
+  @override
+  String get emfMapStartScanning =>
+      'Start scanning to sample the magnetic field.';
+
+  @override
+  String emfMapSamples(int count) {
+    return 'Samples: $count';
+  }
+
+  @override
+  String get emfMapClear => 'Clear';
 }

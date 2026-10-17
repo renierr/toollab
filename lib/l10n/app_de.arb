@@ -4279,5 +4279,17 @@
   "paperlessStatTopDocumentTypes": "Top-Dokumenttypen",
   "paperlessStatTopTags": "Top-Tags",
   "toolNameWifiHeatmap": "WiFi Signal Heatmap",
-  "toolDescWifiHeatmap": "Wi-Fi-Signalstärke über einen Raum kartieren"
+  "toolDescWifiHeatmap": "Wi-Fi-Signalstärke über einen Raum kartieren",
+  "emfMapScanner": "Scanner",
+  "emfMapAnomaly": "Anomalie-Karte",
+  "emfMapRoom": "Raum",
+  "emfMapWall": "Wand",
+  "emfMapStartScanning": "Scannen starten, um das Magnetfeld zu erfassen.",
+  "emfMapSamples": "Messungen: {count}",
+  "@emfMapSamples": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "emfMapClear": "Leeren"
 }

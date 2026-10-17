@@ -19144,6 +19144,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Map Wi-Fi signal strength across a space'**
   String get toolDescWifiHeatmap;
+
+  /// No description provided for @emfMapScanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanner'**
+  String get emfMapScanner;
+
+  /// No description provided for @emfMapAnomaly.
+  ///
+  /// In en, this message translates to:
+  /// **'Anomaly Map'**
+  String get emfMapAnomaly;
+
+  /// No description provided for @emfMapRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Room'**
+  String get emfMapRoom;
+
+  /// No description provided for @emfMapWall.
+  ///
+  /// In en, this message translates to:
+  /// **'Wall'**
+  String get emfMapWall;
+
+  /// No description provided for @emfMapStartScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Start scanning to sample the magnetic field.'**
+  String get emfMapStartScanning;
+
+  /// No description provided for @emfMapSamples.
+  ///
+  /// In en, this message translates to:
+  /// **'Samples: {count}'**
+  String emfMapSamples(int count);
+
+  /// No description provided for @emfMapClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get emfMapClear;
 }
 
 class _AppLocalizationsDelegate

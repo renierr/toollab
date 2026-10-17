@@ -17,6 +17,7 @@ import 'widgets/calibration_panel.dart';
 import 'widgets/oscilloscope_header.dart';
 import 'widgets/scanner_controls_card.dart';
 import 'widgets/simulator_lab_card.dart';
+import 'widgets/emf_map_grid.dart';
 
 class EmfDetectorPage extends StatefulWidget {
   const EmfDetectorPage({super.key});
@@ -31,6 +32,13 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
   bool _wakeLockActive = false;
   bool _automaticallyTurnedOnWakelock = false;
   WakeLockLease? _fullWakeLock;
+
+  // Magnetic anomaly map mode
+  bool _mapMode = false;
+  String _mapType = 'room';
+  int _mapCols = 10;
+  int _mapRows = 8;
+  final List<EmfMapSample> _mapSamples = [];
 
   @override
   void initState() {
@@ -150,6 +158,25 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Mode toggle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ChoiceChip(
+                          label: Text(l10n.emfMapScanner),
+                          selected: !_mapMode,
+                          onSelected: (_) => setState(() => _mapMode = false),
+                        ),
+                        const SizedBox(width: 8),
+                        ChoiceChip(
+                          label: Text(l10n.emfMapAnomaly),
+                          selected: _mapMode,
+                          onSelected: (_) => setState(() => _mapMode = true),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (!_mapMode) ...[
                     ScannerHeader(state: _state),
                     const SizedBox(height: 24),
 
@@ -191,7 +218,85 @@ class _EmfDetectorPageState extends State<EmfDetectorPage>
                     SimulatorLabCard(state: _state),
                     const SizedBox(height: 20),
                   ],
-                ),
+                  if (_mapMode) ...[
+                    // Map type selector
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ChoiceChip(
+                          label: Text(l10n.emfMapRoom),
+                          selected: _mapType == 'room',
+                          onSelected: (_) => setState(() {
+                            _mapType = 'room';
+                            _mapCols = 10;
+                            _mapRows = 8;
+                            _mapSamples.clear();
+                          }),
+                        ),
+                        const SizedBox(width: 8),
+                        ChoiceChip(
+                          label: Text(l10n.emfMapWall),
+                          selected: _mapType == 'wall',
+                          onSelected: (_) => setState(() {
+                            _mapType = 'wall';
+                            _mapCols = 6;
+                            _mapRows = 10;
+                            _mapSamples.clear();
+                          }),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (!_state.isScanning)
+                      Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          l10n.emfMapStartScanning,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    SizedBox(
+                      height: 320,
+                      child: EmfMapGrid(
+                        cols: _mapCols,
+                        rows: _mapRows,
+                        samples: _mapSamples,
+                        threshold: _state.warningThreshold <= 0
+                            ? 45.0
+                            : _state.warningThreshold,
+                        onTap: (x, y) {
+                          final reading = _state.currentReading;
+                          final value =
+                              reading?.deltaMagnitude ?? 0.0;
+                          setState(() {
+                            _mapSamples.removeWhere(
+                              (s) => s.x == x && s.y == y,
+                            );
+                            _mapSamples.add(
+                              EmfMapSample(x: x, y: y, value: value),
+                            );
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(l10n.emfMapSamples(_mapSamples.length)),
+                        const SizedBox(width: 16),
+                        TextButton(
+                          onPressed: _mapSamples.isEmpty
+                              ? null
+                              : () => setState(_mapSamples.clear),
+                          child: Text(l10n.emfMapClear),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ],
+              ),
               ),
             ],
           );
