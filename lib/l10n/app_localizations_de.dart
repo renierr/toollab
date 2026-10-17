@@ -10782,4 +10782,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get paperlessStatTopTags => 'Top-Tags';
+
+  @override
+  String get toolNameWifiHeatmap => 'WiFi Signal Heatmap';
+
+  @override
+  String get toolDescWifiHeatmap =>
+      'Wi-Fi-Signalstärke über einen Raum kartieren';
 }

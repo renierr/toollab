@@ -75,7 +75,7 @@ dependencies:
   health_connector: ^3.9.4
   health_connector_core: ^3.9.2
   workmanager: ^0.10.7
-
+  wifi_scan: ^0.5.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

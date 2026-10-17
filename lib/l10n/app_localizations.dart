@@ -19132,6 +19132,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Top tags'**
   String get paperlessStatTopTags;
+
+  /// No description provided for @toolNameWifiHeatmap.
+  ///
+  /// In en, this message translates to:
+  /// **'WiFi Signal Heatmap'**
+  String get toolNameWifiHeatmap;
+
+  /// No description provided for @toolDescWifiHeatmap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map Wi-Fi signal strength across a space'**
+  String get toolDescWifiHeatmap;
 }
 
 class _AppLocalizationsDelegate

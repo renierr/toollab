@@ -4277,5 +4277,7 @@
   "paperlessStatFileTypes": "Dateitypen",
   "paperlessStatTopCorrespondents": "Top-Korrespondenten",
   "paperlessStatTopDocumentTypes": "Top-Dokumenttypen",
-  "paperlessStatTopTags": "Top-Tags"
+  "paperlessStatTopTags": "Top-Tags",
+  "toolNameWifiHeatmap": "WiFi Signal Heatmap",
+  "toolDescWifiHeatmap": "Wi-Fi-Signalstärke über einen Raum kartieren"
 }

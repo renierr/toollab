@@ -43,6 +43,7 @@ import 'package:tool_lab/tools/drift_bloom/config.dart';
 import 'package:tool_lab/tools/voice_distorter/config.dart';
 import 'package:tool_lab/tools/depot_import/config.dart';
 import 'package:tool_lab/tools/paperless/config.dart';
+import 'package:tool_lab/tools/wifi_heatmap/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -110,5 +111,6 @@ class ToolRegistry {
     VoiceDistorterTool.config,
     DepotImportTool.config,
     PaperlessTool.config,
+    WifiHeatmapTool.config,
   ];
 }

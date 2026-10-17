@@ -10700,4 +10700,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paperlessStatTopTags => 'Top tags';
+
+  @override
+  String get toolNameWifiHeatmap => 'WiFi Signal Heatmap';
+
+  @override
+  String get toolDescWifiHeatmap => 'Map Wi-Fi signal strength across a space';
 }
