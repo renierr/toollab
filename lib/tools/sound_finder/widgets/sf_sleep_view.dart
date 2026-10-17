@@ -125,6 +125,15 @@ class SfSleepView extends StatelessWidget {
           Text('Recording… elapsed ${_fmt(state.sleepElapsed)}'),
           const SizedBox(height: 4),
           Text('Saved chunks: ${state.sleepChunksKept}'),
+          if (state.sleepSessionFiles.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            ...state.sleepSessionFiles.map(
+              (p) => Text(
+                p.split('/').last,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           ElevatedButton.icon(
             icon: const Icon(Icons.stop_outlined),

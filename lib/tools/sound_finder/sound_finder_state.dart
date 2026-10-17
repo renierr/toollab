@@ -906,6 +906,7 @@ class SoundFinderState extends ChangeNotifier {
     MicAnalyzer.autoGain = false;
     _micGain = 1.0;
     _mic.gain = 1.0;
+    _mic.maxRecordSeconds = 0;
 
     if (_micStatus != MicStatus.running) {
       await ensureMic();
@@ -960,7 +961,6 @@ class SoundFinderState extends ChangeNotifier {
   }
 
   Future<void> _processSleepChunk() async {
-    if (!_mic.isRecording) return;
     final samples = _mic.stopRecording();
     if (samples.isEmpty) {
       errorLog('[Sleep] chunk empty');
@@ -1003,10 +1003,9 @@ class SoundFinderState extends ChangeNotifier {
     _sleepTimeout = null;
     _sleepChunkTimer?.cancel();
     _sleepChunkTimer = null;
-    if (_mic.isRecording) {
-      await _processSleepChunk();
-    }
+    await _processSleepChunk();
     _sleepStart = null;
+    _mic.maxRecordSeconds = _maxRecordSeconds;
     final lease = _sleepWakeLock;
     _sleepWakeLock = null;
     if (lease != null) await lease.release();
