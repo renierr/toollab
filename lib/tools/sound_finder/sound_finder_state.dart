@@ -895,6 +895,23 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> calibrateSleepThreshold() async {
+    if (_sleepActive) return;
+    if (_micStatus != MicStatus.running) await ensureMic();
+    if (_micStatus != MicStatus.running) return;
+    _mic.startRecording();
+    await Future.delayed(const Duration(seconds: 3));
+    final samples = _mic.stopRecording();
+    double maxAbs = 0;
+    for (final s in samples) {
+      final a = s.abs();
+      if (a > maxAbs) maxAbs = a;
+    }
+    if (maxAbs > 0) {
+      setSleepThreshold((maxAbs * 2).clamp(0.0005, 0.2));
+    }
+  }
+
   Future<void> startSleep() async {
     if (_sleepActive) return;
     _sleepError = null;

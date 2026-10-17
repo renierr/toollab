@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -83,14 +85,30 @@ class SfSleepView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text('Threshold: ${state.sleepThreshold.toStringAsFixed(4)}'),
+          Text(
+            'Threshold: ${_ampToDb(state.sleepThreshold).toStringAsFixed(1)} dB '
+            '(${state.sleepThreshold.toStringAsFixed(4)})',
+          ),
           Slider(
-            value: state.sleepThreshold,
-            min: 0.0005,
-            max: 0.1,
-            divisions: 40,
-            label: state.sleepThreshold.toStringAsFixed(4),
-            onChanged: (v) => state.setSleepThreshold(v),
+            value: _ampToDb(state.sleepThreshold),
+            min: -60,
+            max: -10,
+            divisions: 50,
+            label: '${_ampToDb(state.sleepThreshold).toStringAsFixed(1)} dB',
+            onChanged: (v) => state.setSleepThreshold(_dbToAmp(v)),
+          ),
+          Text(
+            'Last chunk peak: ${_ampToDb(state.sleepLastMaxAbs).toStringAsFixed(1)} dB '
+            '(${state.sleepLastMaxAbs.toStringAsFixed(4)})',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.auto_fix_high_outlined),
+            label: const Text('Calibrate to ambient noise'),
+            onPressed: state.sleepActive
+                ? null
+                : () => state.calibrateSleepThreshold(),
           ),
           Text(
             'Noise suppression, echo cancellation and auto-gain are disabled '
@@ -169,6 +187,15 @@ class SfSleepView extends StatelessWidget {
     return '${h.toString().padLeft(2, '0')}:'
         '${m.toString().padLeft(2, '0')}:'
         '${s.toString().padLeft(2, '0')}';
+  }
+
+  double _ampToDb(double amp) {
+    if (amp <= 0) return -60;
+    return (20 * math.log(amp) / math.ln10).clamp(-60.0, 0.0);
+  }
+
+  double _dbToAmp(double db) {
+    return math.pow(10, db / 20).toDouble().clamp(0.0005, 0.2);
   }
 
   String _fmtTime(DateTime dt) {
