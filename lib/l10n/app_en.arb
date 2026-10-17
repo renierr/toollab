@@ -3326,6 +3326,7 @@
   },
   "sfTitleMorse": "Morse Code",
   "sfTitleRecordings": "Recordings",
+  "sfPlayClip": "Play clip",
   "sfMaxRecordLength": "Max recording length",
   "sfMorseGenTab": "Generate",
   "sfMorseAnalTab": "Analyze",

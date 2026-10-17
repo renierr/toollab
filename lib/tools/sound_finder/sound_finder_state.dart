@@ -98,6 +98,14 @@ class SoundFinderState extends ChangeNotifier {
   String? _diskRecPath;
   int _diskRecFrames = 0;
   Timer? _diskRecTimer;
+  final List<double> _diskWaveform = List<double>.filled(2048, 0);
+  int _diskWaveformPos = 0;
+
+  // Playback of stored clips.
+  String? _playingRecordingPath;
+  SoundHandle? _playingHandle;
+  AudioSource? _playingSource;
+  StreamSubscription<StreamSoundEvent>? _playingEndSub;
 
   // Normal recordings (stored clips).
   List<RecordingClip> _recordings = const [];
@@ -185,6 +193,8 @@ class SoundFinderState extends ChangeNotifier {
 
   List<RecordingClip> get recordings => _recordings;
   bool get recordingsExporting => _recordingsExporting;
+  List<double> get diskWaveform => _diskWaveform;
+  String? get playingRecordingPath => _playingRecordingPath;
 
   bool get tonePlaying => _tonePlaying;
   SfMode? get toneOwner => _toneOwner;
@@ -542,6 +552,8 @@ class SoundFinderState extends ChangeNotifier {
     _diskRecSink = sink;
     _diskRecPath = path;
     _diskRecFrames = 0;
+    _diskWaveform.fillRange(0, _diskWaveform.length, 0);
+    _diskWaveformPos = 0;
     _diskRecording = true;
     _diskRecSub = _mic.pcmStream.listen((chunk) {
       final bytes = Uint8List(chunk.length * 2);
@@ -549,9 +561,12 @@ class SoundFinderState extends ChangeNotifier {
       for (int i = 0; i < chunk.length; i++) {
         final double sample = chunk[i].clamp(-1.0, 1.0);
         bd.setInt16(i * 2, (sample * 32767).round(), Endian.little);
+        _diskWaveform[_diskWaveformPos % _diskWaveform.length] = sample;
+        _diskWaveformPos++;
       }
       sink.add(bytes);
       _diskRecFrames += chunk.length;
+      notifyListeners();
     });
     if (_maxRecordSeconds > 0) {
       _diskRecTimer = Timer(
@@ -621,6 +636,50 @@ class SoundFinderState extends ChangeNotifier {
     bd.setUint8(38, 0x74); // t
     bd.setUint8(39, 0x61); // a
     bd.setUint32(40, dataBytes, Endian.little);
+  }
+
+  Future<void> playRecording(String path) async {
+    if (_playingRecordingPath == path && _playingHandle != null) {
+      await stopRecordingPlayback();
+      return;
+    }
+    await stopRecordingPlayback();
+    if (!SoLoud.instance.isInitialized) {
+      await SoLoud.instance.init();
+    }
+    try {
+      final source = await SoLoud.instance.loadFile(path);
+      final handle = SoLoud.instance.play(source);
+      _playingSource = source;
+      _playingHandle = handle;
+      _playingRecordingPath = path;
+      _playingEndSub = source.soundEvents.listen((event) {
+        if (event.handle == handle &&
+            event.event == SoundEventType.handleIsNoMoreValid) {
+          unawaited(stopRecordingPlayback());
+        }
+      });
+      notifyListeners();
+    } catch (e) {
+      errorLog('[SoundFinderState] play recording failed: $e');
+    }
+  }
+
+  Future<void> stopRecordingPlayback() async {
+    await _playingEndSub?.cancel();
+    _playingEndSub = null;
+    final handle = _playingHandle;
+    final source = _playingSource;
+    _playingHandle = null;
+    _playingSource = null;
+    _playingRecordingPath = null;
+    if (handle != null) {
+      await SoLoud.instance.stop(handle);
+    }
+    if (source != null) {
+      await SoLoud.instance.disposeSource(source);
+    }
+    notifyListeners();
   }
 
   Future<void> cancelNormalRecording() async {
@@ -837,6 +896,7 @@ class SoundFinderState extends ChangeNotifier {
   /// off again in the tool.
   Future<void> onPageLeave() async {
     await cancelNormalRecording();
+    await stopRecordingPlayback();
     await _stopMic();
     await stopMorsePlayback();
     await stopMorseListening();
@@ -1218,6 +1278,7 @@ class SoundFinderState extends ChangeNotifier {
     _diskRecTimer?.cancel();
     _diskRecSub?.cancel();
     _diskRecSink?.close();
+    _playingEndSub?.cancel();
     _micSub?.cancel();
     _morsePcmSub?.cancel();
     _morseDecodeTimer?.cancel();

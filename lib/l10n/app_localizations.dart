@@ -11099,6 +11099,12 @@ abstract class AppLocalizations {
   /// **'Recordings'**
   String get sfTitleRecordings;
 
+  /// No description provided for @sfPlayClip.
+  ///
+  /// In en, this message translates to:
+  /// **'Play clip'**
+  String get sfPlayClip;
+
   /// No description provided for @sfMaxRecordLength.
   ///
   /// In en, this message translates to:

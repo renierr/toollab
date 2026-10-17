@@ -140,6 +140,16 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                         ),
                     ],
                   ),
+                  if (state.isRecording) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: 48,
+                      child: CustomPaint(
+                        painter: _WaveformPainter(state.diskWaveform),
+                        size: Size.infinite,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   FilledButton.icon(
                     onPressed: _toggleRecording,
@@ -212,6 +222,10 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
               _RecordingTile(
                 clip: clip,
                 exporting: state.recordingsExporting,
+                isPlaying: state.playingRecordingPath == clip.path,
+                onPlay: () => state.playingRecordingPath == clip.path
+                    ? state.stopRecordingPlayback()
+                    : state.playRecording(clip.path),
                 onExport: () => _export(context, clip.path),
                 onShare: () => FileSaveHelper.shareFile(
                   clip.path,
@@ -228,6 +242,8 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
 class _RecordingTile extends StatelessWidget {
   final RecordingClip clip;
   final bool exporting;
+  final bool isPlaying;
+  final VoidCallback onPlay;
   final VoidCallback onExport;
   final VoidCallback onShare;
   final VoidCallback onDelete;
@@ -235,6 +251,8 @@ class _RecordingTile extends StatelessWidget {
   const _RecordingTile({
     required this.clip,
     required this.exporting,
+    required this.isPlaying,
+    required this.onPlay,
     required this.onExport,
     required this.onShare,
     required this.onDelete,
@@ -252,33 +270,104 @@ class _RecordingTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: const Icon(Icons.audio_file_outlined),
-        title: Text(clip.name, overflow: TextOverflow.ellipsis),
-        subtitle: Text(
-          '${_mmss(clip.durationSeconds)} · ${(clip.sizeBytes / 1024).toStringAsFixed(1)} KB',
-        ),
-        trailing: Wrap(
-          spacing: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            IconButton(
-              icon: const Icon(Icons.download_outlined),
-              tooltip: l10n.commonExport,
-              onPressed: exporting ? null : onExport,
+            Row(
+              children: [
+                Icon(
+                  isPlaying ? Icons.graphic_eq : Icons.audio_file_outlined,
+                  color: isPlaying ? AppTheme.statusGreen : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        clip.name,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        '${_mmss(clip.durationSeconds)} · ${(clip.sizeBytes / 1024).toStringAsFixed(1)} KB',
+                        style: Theme.of(context).textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.share_outlined),
-              tooltip: l10n.commonShare,
-              onPressed: onShare,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: l10n.commonDelete,
-              onPressed: onDelete,
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                IconButton(
+                  icon: Icon(isPlaying ? Icons.stop : Icons.play_arrow),
+                  tooltip: isPlaying ? l10n.sfStop : l10n.sfPlayClip,
+                  onPressed: onPlay,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.download_outlined),
+                  tooltip: l10n.commonExport,
+                  onPressed: exporting ? null : onExport,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.share_outlined),
+                  tooltip: l10n.commonShare,
+                  onPressed: onShare,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: l10n.commonDelete,
+                  onPressed: onDelete,
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
+}
+
+class _WaveformPainter extends CustomPainter {
+  final List<double> samples;
+  _WaveformPainter(this.samples);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.redAccent
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+    final mid = size.height / 2;
+    final step = size.width / (samples.length - 1);
+    final path = Path();
+    for (int i = 0; i < samples.length; i++) {
+      final x = i * step;
+      final y = mid - (samples[i] * mid * 0.9);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(path, paint);
+    canvas.drawLine(
+      Offset(0, mid),
+      Offset(size.width, mid),
+      Paint()
+        ..color = Colors.grey.withValues(alpha: 0.3)
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _WaveformPainter oldDelegate) => true;
 }

@@ -6196,6 +6196,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfTitleRecordings => 'Aufnahmen';
 
   @override
+  String get sfPlayClip => 'Clip abspielen';
+
+  @override
   String get sfMaxRecordLength => 'Maximale Aufnahmelänge';
 
   @override

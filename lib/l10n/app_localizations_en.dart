@@ -6156,6 +6156,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfTitleRecordings => 'Recordings';
 
   @override
+  String get sfPlayClip => 'Play clip';
+
+  @override
   String get sfMaxRecordLength => 'Max recording length';
 
   @override

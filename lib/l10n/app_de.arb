@@ -2431,6 +2431,7 @@
   },
   "sfTitleMorse": "Morsecode",
   "sfTitleRecordings": "Aufnahmen",
+  "sfPlayClip": "Clip abspielen",
   "sfMaxRecordLength": "Maximale Aufnahmelänge",
   "sfMorseGenTab": "Senden",
   "sfMorseAnalTab": "Empfangen",
