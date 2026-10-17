@@ -6,6 +6,7 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.ClipData
 import android.content.Context
+import android.media.MediaScannerConnection
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -200,16 +201,37 @@ object FileSaveHelper {
         }
     }
 
-    private fun findExistingDownloadsUri(context: Context, fileName: String): Uri? {
+    private fun findExistingDownloadsUri(context: Context, sourceFile: File): Uri? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
-        return try {
-            val projection = arrayOf(MediaStore.Downloads._ID)
-            val selection = "${MediaStore.Downloads.DISPLAY_NAME} = ?"
-            context.contentResolver.query(
+        val resolver = context.contentResolver
+        val projection = arrayOf(MediaStore.Downloads._ID)
+        // Prefer an exact filesystem-path match so we reuse the entry for a
+        // file that is already in public Downloads instead of creating a copy.
+        try {
+            resolver.query(
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                 projection,
-                selection,
-                arrayOf(fileName),
+                "_data = ?",
+                arrayOf(sourceFile.absolutePath),
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    return ContentUris.withAppendedId(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        cursor.getLong(0),
+                    )
+                }
+            }
+        } catch (_: Exception) {
+            // _DATA may be unavailable on some providers; fall through.
+        }
+        // Fall back to display name (handles files scanned by MediaStore).
+        return try {
+            resolver.query(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                projection,
+                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
+                arrayOf(sourceFile.name),
                 null,
             )?.use { cursor ->
                 if (cursor.moveToFirst()) {
@@ -249,7 +271,22 @@ object FileSaveHelper {
                 uri = when {
                     uriString.startsWith("content://") && uriString.contains("media") -> Uri.parse(uriString)
                     else -> {
-                        val existing = findExistingDownloadsUri(context, sourceFile.name)
+                        var existing = findExistingDownloadsUri(context, sourceFile)
+                        // If the file is already in public Downloads but not yet
+                        // indexed by MediaStore, scan it once and retry.
+                        if (existing == null && sourceFile.absolutePath.contains("/Download/")) {
+                            try {
+                                val latch = java.util.concurrent.CountDownLatch(1)
+                                MediaScannerConnection.scanFile(
+                                    context,
+                                    arrayOf(sourceFile.absolutePath),
+                                    arrayOf(mimeType),
+                                ) { _, _ -> latch.countDown() }
+                                latch.await(2, java.util.concurrent.TimeUnit.SECONDS)
+                                existing = findExistingDownloadsUri(context, sourceFile)
+                            } catch (_: Exception) {
+                            }
+                        }
                         if (existing != null) {
                             existing
                         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
