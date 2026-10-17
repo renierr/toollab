@@ -24,6 +24,16 @@ class SfSleepView extends StatelessWidget {
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 12),
+        if (state.sleepError != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              state.sleepError!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+            ),
+          ),
         if (!state.sleepActive) ...[
           Row(
             children: [
@@ -47,7 +57,7 @@ class SfSleepView extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Noise suppression, echo cancellation and auto-gain are disabled '
-            'for capture. Sample rate 16 kHz.',
+            'for capture.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontStyle: FontStyle.italic,
                 ),
@@ -58,6 +68,17 @@ class SfSleepView extends StatelessWidget {
             label: const Text('Start sleep recording'),
             onPressed: () => state.startSleep(),
           ),
+          if (state.sleepSessionFiles.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text('Last session: ${state.sleepSessionFiles.length} chunks'),
+            const SizedBox(height: 4),
+            ...state.sleepSessionFiles.map(
+              (p) => Text(
+                p.split('/').last,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
         ] else ...[
           Text('Recording… elapsed ${_fmt(state.sleepElapsed)}'),
           const SizedBox(height: 4),
@@ -68,6 +89,15 @@ class SfSleepView extends StatelessWidget {
             label: const Text('Stop'),
             onPressed: () => state.stopSleep(),
           ),
+          if (state.sleepSessionFiles.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ...state.sleepSessionFiles.map(
+              (p) => Text(
+                p.split('/').last,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+          ],
         ],
       ],
     );

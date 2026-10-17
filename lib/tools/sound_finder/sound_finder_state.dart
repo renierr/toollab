@@ -126,6 +126,10 @@ class SoundFinderState extends ChangeNotifier {
   DateTime? _sleepStart;
   int _sleepChunksKept = 0;
   String? _sleepDirPath;
+  String? _sleepError;
+  final List<String> _sleepSessionFiles = [];
+  List<String> get sleepSessionFiles => List.unmodifiable(_sleepSessionFiles);
+  String? get sleepError => _sleepError;
   Timer? _sleepTimeout;
   Timer? _sleepChunkTimer;
   WakeLockLease? _sleepWakeLock;
@@ -878,10 +882,9 @@ class SoundFinderState extends ChangeNotifier {
 
   Future<void> startSleep() async {
     if (_sleepActive) return;
-    // Force capture settings suited to overnight recording:
-    // low sample rate, no noise suppression / echo cancel / auto gain.
-    _sampleRate = 16000;
-    MicAnalyzer.sampleRate = 16000;
+    _sleepError = null;
+    _sleepSessionFiles.clear();
+    // Disable processing effects for faithful capture.
     _noiseSuppress = false;
     _echoCancel = false;
     _autoGain = false;
@@ -896,7 +899,11 @@ class SoundFinderState extends ChangeNotifier {
     } else {
       await _restartMic();
     }
-    if (_micStatus != MicStatus.running) return;
+    if (_micStatus != MicStatus.running) {
+      _sleepError = 'Microphone not available.';
+      notifyListeners();
+      return;
+    }
 
     _sleepActive = true;
     _sleepStart = DateTime.now();
@@ -931,14 +938,18 @@ class SoundFinderState extends ChangeNotifier {
   Future<void> _processSleepChunk() async {
     if (!_mic.isRecording) return;
     final samples = _mic.stopRecording();
-    if (samples.isEmpty) return;
+    if (samples.isEmpty) {
+      errorLog('[Sleep] chunk empty');
+      return;
+    }
     double maxAbs = 0;
     for (final s in samples) {
       final a = s.abs();
       if (a > maxAbs) maxAbs = a;
     }
+    errorLog('[Sleep] chunk samples=${samples.length} maxAbs=$maxAbs');
     // Keep chunk only if it contains meaningful sound.
-    if (maxAbs < 0.02) return;
+    if (maxAbs < 0.005) return;
     final dirPath = await _sleepDir();
     final now = DateTime.now();
     final stamp =
@@ -951,11 +962,12 @@ class SoundFinderState extends ChangeNotifier {
     final wavBytes = WavPcm16Encoder.encode(
       samples,
       frames: samples.length,
-      sampleRate: 16000,
+      sampleRate: _sampleRate,
       channels: 1,
     );
     await file.writeAsBytes(wavBytes);
     _sleepChunksKept++;
+    _sleepSessionFiles.add(file.path);
     notifyListeners();
   }
 
