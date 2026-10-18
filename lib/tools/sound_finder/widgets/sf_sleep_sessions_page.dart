@@ -10,6 +10,8 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 
 import '../sleep_session_data.dart';
 import '../sound_finder_state.dart';
+import '../../health_dashboard/store/health_store.dart';
+import '../../health_dashboard/store/health_schema.dart';
 
 class SfSleepSessionsPage extends StatefulWidget {
   const SfSleepSessionsPage({super.key});
@@ -141,37 +143,46 @@ class _SfSleepSessionsPageState extends State<SfSleepSessionsPage> {
   }
 
   Future<void> _loadHealthStages(SleepSession session) async {
-    if (!Platform.isAndroid) return;
     setState(() => _healthLoading.add(session.path));
+    final start = session.createdAt;
+    final end = session.data?.endedAt ?? start.add(const Duration(hours: 12));
+    final bands = <_StageBand>[];
+    // Prefer the already-synced Health Dashboard store (no extra permissions).
     try {
-      final connector = await hc.HealthConnector.create();
-      await connector.requestPermissions([
-        hc.HealthDataType.sleepSession.readPermission,
-      ]);
-      final start = session.createdAt;
-      final end = session.data?.endedAt ?? start.add(const Duration(hours: 12));
-      final req = hc.HealthDataType.sleepSession.readInTimeRange(
-        startTime: start,
-        endTime: end,
+      final sessions = await HealthStore.instance.sessions(
+        kind: HealthSchema.sessionKindSleep,
+        from: start.millisecondsSinceEpoch,
+        to: end.millisecondsSinceEpoch,
       );
-      final resp = await connector.readRecords(req);
-      final bands = <_StageBand>[];
-      for (final r in (resp.records as List).cast<hc.HealthRecord>()) {
-        // Best-effort: treat record interval as a band.
-        final s = r is hc.IntervalHealthRecord ? r.startTime : start;
-        final e = r is hc.IntervalHealthRecord ? r.endTime : end;
-        bands.add(_StageBand(start: s, end: e, label: 'sleep'));
+      for (final s in sessions) {
+        bands.add(_StageBand(
+          start: DateTime.fromMillisecondsSinceEpoch(s.t0),
+          end: DateTime.fromMillisecondsSinceEpoch(s.t1),
+          label: 'sleep',
+        ));
       }
-      if (mounted) {
-        setState(() {
-          _healthStages[session.path] = bands;
-          _healthLoading.remove(session.path);
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _healthLoading.remove(session.path));
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Health Connect unavailable: $e')));
+    } catch (_) {}
+    // Fallback to Health Connect if the local store is empty.
+    if (bands.isEmpty && Platform.isAndroid) {
+      try {
+        final connector = await hc.HealthConnector.create();
+        await connector.requestPermissions([hc.HealthDataType.sleepSession.readPermission]);
+        final req = hc.HealthDataType.sleepSession.readInTimeRange(startTime: start, endTime: end);
+        final resp = await connector.readRecords(req);
+        for (final r in (resp.records as List).cast<hc.HealthRecord>()) {
+          final s = r is hc.IntervalHealthRecord ? r.startTime : start;
+          final e = r is hc.IntervalHealthRecord ? r.endTime : end;
+          bands.add(_StageBand(start: s, end: e, label: 'sleep'));
+        }
+      } catch (_) {}
+    }
+    if (mounted) {
+      setState(() {
+        _healthStages[session.path] = bands;
+        _healthLoading.remove(session.path);
+      });
+      if (bands.isEmpty && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No sleep stages found.')));
       }
     }
   }
@@ -201,13 +212,18 @@ class _SfSleepSessionsPageState extends State<SfSleepSessionsPage> {
         file: f.path,
         startedAt: start,
         endedAt: start.add(const Duration(seconds: 15)),
-        peakAmplitude: 0,
+        peakAmplitude: 0.03,
+        classification: 'unknown',
       ));
     }
+    final start = events.isEmpty ? session.createdAt : events.first.startedAt;
+    final end = events.isEmpty
+        ? start.add(session.totalDuration)
+        : events.last.endedAt;
     return SleepSessionData(
       path: session.path,
-      startedAt: session.createdAt,
-      endedAt: session.createdAt.add(session.totalDuration),
+      startedAt: start,
+      endedAt: end.isAfter(start) ? end : start.add(const Duration(minutes: 1)),
       targetMinutes: 0,
       threshold: 0.005,
       adaptiveThreshold: false,
@@ -255,6 +271,7 @@ class _SfSleepSessionsPageState extends State<SfSleepSessionsPage> {
                 painter: _BarChartPainter(
                   values: _sessions.reversed.map((s) => s.chunks.length.toDouble()).toList(),
                   labels: _sessions.reversed.map((s) => '${s.createdAt.month}/${s.createdAt.day}').toList(),
+                  labelColor: Theme.of(context).colorScheme.onSurface,
                 ),
                 size: Size.infinite,
               ),
@@ -385,12 +402,26 @@ class _SfSleepSessionsPageState extends State<SfSleepSessionsPage> {
                       data: data,
                       health: _healthStages[session.path] ?? const [],
                       selectedIndex: sel,
+                      labelColor: Theme.of(context).colorScheme.onSurface,
                     ),
                     size: Size(constraints.maxWidth, 160),
                   ),
                 ),
               );
             },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 4),
+          child: Wrap(
+            spacing: 12,
+            children: const [
+              _LegendDot(color: Colors.red, label: 'loud'),
+              _LegendDot(color: Colors.orange, label: 'sound'),
+              _LegendDot(color: Colors.grey, label: 'faint'),
+              _LegendDot(color: Colors.blue, label: 'health stage'),
+              _LegendDot(color: Colors.grey, label: 'silence'),
+            ],
           ),
         ),
         if (selected != null)
@@ -440,6 +471,23 @@ class _SfSleepSessionsPageState extends State<SfSleepSessionsPage> {
   }
 }
 
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.color, required this.label});
+  final Color color;
+  final String label;
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 10, height: 10, color: color.withValues(alpha: 0.8)),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 10)),
+      ],
+    );
+  }
+}
+
 class _StageBand {
   _StageBand({required this.start, required this.end, required this.label});
   final DateTime start;
@@ -448,18 +496,19 @@ class _StageBand {
 }
 
 class _TimelinePainter extends CustomPainter {
-  _TimelinePainter({required this.session, required this.data, required this.health, this.selectedIndex});
+  _TimelinePainter({required this.session, required this.data, required this.health, this.selectedIndex, this.labelColor = Colors.black87});
   final SleepSession session;
   final SleepSessionData data;
   final List<_StageBand> health;
   final int? selectedIndex;
+  final Color labelColor;
 
   @override
   void paint(Canvas canvas, Size size) {
     final start = data.startedAt;
     final total = data.endedAt.difference(start).inSeconds.toDouble().clamp(1, double.infinity);
     final leftPad = 34.0;
-    final bottomPad = 18.0;
+    final bottomPad = 26.0;
     final plotW = size.width - leftPad;
     final plotH = size.height - bottomPad;
 
@@ -469,7 +518,7 @@ class _TimelinePainter extends CustomPainter {
     for (int db = -60; db <= 0; db += 15) {
       final y = plotH - ((db + 60) / 60) * (plotH - 4);
       canvas.drawLine(Offset(leftPad, y), Offset(size.width, y), gridPaint);
-      tp.text = TextSpan(text: '$db', style: const TextStyle(fontSize: 9, color: Colors.black54));
+      tp.text = TextSpan(text: '$db', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: labelColor));
       tp.layout();
       tp.paint(canvas, Offset(2, y - 6));
     }
@@ -520,18 +569,68 @@ class _TimelinePainter extends CustomPainter {
     final basePaint = Paint()..color = Colors.grey.withValues(alpha: 0.4);
     canvas.drawLine(Offset(leftPad, plotH), Offset(size.width, plotH), basePaint);
 
-    // Time ticks every 15 min (or hour if long).
-    final stepMin = total > 6 * 3600 ? 60 : 15;
-    for (int m = 0; m <= data.endedAt.difference(start).inMinutes; m += stepMin) {
-      final x = leftPad + (m * 60 / total).clamp(0.0, 1.0) * plotW;
-      canvas.drawLine(Offset(x, plotH - 4), Offset(x, plotH), basePaint);
-      if (m % (stepMin * (total > 6 * 3600 ? 1 : 2)) == 0) {
-        final hh = m ~/ 60;
-        final mm = m % 60;
-        tp.text = TextSpan(text: '${hh.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 8, color: Colors.black54));
-        tp.layout();
-        tp.paint(canvas, Offset(x + 1, plotH + 2));
-      }
+    // Axis titles.
+    tp.text = TextSpan(text: 'dB', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: labelColor));
+    tp.layout();
+    tp.paint(canvas, Offset(2, 0));
+    tp.text = TextSpan(text: 'time', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: labelColor));
+    tp.layout();
+    tp.paint(canvas, Offset(size.width - 34, plotH + 2));
+
+    // Selected cursor.
+    if (selectedIndex != null && selectedIndex! >= 0 && selectedIndex! < data.events.length) {
+      final e = data.events[selectedIndex!];
+      final x = leftPad + (e.startedAt.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+      final cursorPaint = Paint()
+        ..color = labelColor.withValues(alpha: 0.6)
+        ..strokeWidth = 1;
+      canvas.drawLine(Offset(x, 0), Offset(x, plotH), cursorPaint);
+    }
+
+    // Dynamic time ticks based on total duration.
+    int stepSec;
+    if (total <= 600) {
+      stepSec = 60;
+    } else if (total <= 3600) {
+      stepSec = 300;
+    } else if (total <= 4 * 3600) {
+      stepSec = 900;
+    } else if (total <= 12 * 3600) {
+      stepSec = 1800;
+    } else {
+      stepSec = 3600;
+    }
+    for (int s = 0; s <= total; s += stepSec) {
+      final x = leftPad + (s / total).clamp(0.0, 1.0) * plotW;
+      canvas.drawLine(Offset(x, plotH - 6), Offset(x, plotH), basePaint);
+      final hh = s ~/ 3600;
+      final mm = (s % 3600) ~/ 60;
+      tp.text = TextSpan(
+        text: '${hh.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')}',
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: labelColor),
+      );
+      tp.layout();
+      tp.paint(canvas, Offset(x + 1, plotH + 2));
+    }
+    // Start/end clock labels.
+    tp.text = TextSpan(
+      text: '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}',
+      style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: labelColor),
+    );
+    tp.layout();
+    tp.paint(canvas, Offset(leftPad, plotH + 12));
+    final end = data.endedAt;
+    tp.text = TextSpan(
+      text: '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}',
+      style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: labelColor),
+    );
+    tp.layout();
+    tp.paint(canvas, Offset(size.width - tp.width - 2, plotH + 12));
+    // Minor ticks at each chunk boundary.
+    final minorPaint = Paint()..color = Colors.grey.withValues(alpha: 0.25);
+    for (final e in data.events) {
+      final x = leftPad + (e.startedAt.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+      canvas.drawLine(Offset(x, plotH - 3), Offset(x, plotH), minorPaint);
     }
 
     // Events as bars spanning chunk duration.
@@ -551,7 +650,7 @@ class _TimelinePainter extends CustomPainter {
       canvas.drawRect(Rect.fromLTWH(x0, plotH - h, barW, h), paint);
       // chunk boundary dotted lines
       final dotPaint = Paint()
-        ..color = Colors.black26
+        ..color = labelColor.withValues(alpha: 0.3)
         ..strokeWidth = 0.8;
       double yy = 0;
       while (yy < plotH) {
@@ -560,7 +659,7 @@ class _TimelinePainter extends CustomPainter {
       }
       if (i == selectedIndex) {
         final selPaint = Paint()
-          ..color = Colors.black
+          ..color = labelColor
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5;
         canvas.drawRect(Rect.fromLTWH(x0 - 1, plotH - h - 1, barW + 2, h + 2), selPaint);
@@ -573,9 +672,10 @@ class _TimelinePainter extends CustomPainter {
 }
 
 class _BarChartPainter extends CustomPainter {
-  _BarChartPainter({required this.values, required this.labels});
+  _BarChartPainter({required this.values, required this.labels, this.labelColor = Colors.black87});
   final List<double> values;
   final List<String> labels;
+  final Color labelColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -587,7 +687,7 @@ class _BarChartPainter extends CustomPainter {
       final paint = Paint()..color = Colors.indigo;
       canvas.drawRect(Rect.fromLTWH(i * barW + 2, size.height - h, barW - 4, h), paint);
       final tp = TextPainter(
-        text: TextSpan(text: labels[i], style: const TextStyle(fontSize: 9, color: Colors.black54)),
+        text: TextSpan(text: labels[i], style: TextStyle(fontSize: 9, color: labelColor)),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, Offset(i * barW + 2, size.height - 14));

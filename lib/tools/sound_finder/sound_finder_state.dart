@@ -1733,6 +1733,26 @@ class SoundFinderState extends ChangeNotifier {
     final base = await getApplicationDocumentsDirectory();
     final root = Directory('${base.path}/sleep_recordings');
     if (!await root.exists()) return const [];
+    // Migrate loose chunks from older versions into a legacy session dir.
+    final loose = root
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.path.toLowerCase().endsWith('.wav'))
+        .toList();
+    if (loose.isNotEmpty) {
+      final legacy = Directory('${root.path}/session-legacy');
+      if (!await legacy.exists()) await legacy.create(recursive: true);
+      for (final f in loose) {
+        final target = File('${legacy.path}/${f.uri.pathSegments.last}');
+        try {
+          if (await target.exists()) {
+            await f.delete();
+          } else {
+            await f.rename(target.path);
+          }
+        } catch (_) {}
+      }
+    }
     final sessions = <SleepSession>[];
     for (final entity in root.listSync()) {
       if (entity is Directory) {
