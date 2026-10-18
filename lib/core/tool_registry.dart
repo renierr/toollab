@@ -45,6 +45,7 @@ import 'package:tool_lab/tools/depot_import/config.dart';
 import 'package:tool_lab/tools/paperless/config.dart';
 import 'package:tool_lab/tools/totp_auth/config.dart';
 import 'package:tool_lab/tools/wifi_heatmap/config.dart';
+import 'package:tool_lab/tools/sudoku/config.dart';
 
 class ToolRegistry {
   static final Map<String, ToolSection> sections = {
@@ -114,5 +115,6 @@ class ToolRegistry {
     PaperlessTool.config,
     WifiHeatmapTool.config,
     TotpAuthTool.config,
+    SudokuTool.config,
   ];
 }

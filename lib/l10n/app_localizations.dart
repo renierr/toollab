@@ -19282,6 +19282,438 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear'**
   String get emfMapClear;
+
+  /// No description provided for @toolNameSudoku.
+  ///
+  /// In en, this message translates to:
+  /// **'Sudoku'**
+  String get toolNameSudoku;
+
+  /// No description provided for @toolDescSudoku.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic 9x9 Sudoku with endless puzzles and difficulty levels'**
+  String get toolDescSudoku;
+
+  /// No description provided for @sudokuNewGame.
+  ///
+  /// In en, this message translates to:
+  /// **'New game'**
+  String get sudokuNewGame;
+
+  /// No description provided for @sudokuDifficulty.
+  ///
+  /// In en, this message translates to:
+  /// **'Difficulty'**
+  String get sudokuDifficulty;
+
+  /// No description provided for @sudokuDifficultyEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get sudokuDifficultyEasy;
+
+  /// No description provided for @sudokuDifficultyMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get sudokuDifficultyMedium;
+
+  /// No description provided for @sudokuDifficultyHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get sudokuDifficultyHard;
+
+  /// No description provided for @sudokuDifficultyExpert.
+  ///
+  /// In en, this message translates to:
+  /// **'Expert'**
+  String get sudokuDifficultyExpert;
+
+  /// No description provided for @sudokuNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get sudokuNotes;
+
+  /// No description provided for @sudokuNotesOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes on'**
+  String get sudokuNotesOn;
+
+  /// No description provided for @sudokuNotesOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes off'**
+  String get sudokuNotesOff;
+
+  /// No description provided for @sudokuHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint'**
+  String get sudokuHint;
+
+  /// No description provided for @sudokuErase.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase'**
+  String get sudokuErase;
+
+  /// No description provided for @sudokuUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get sudokuUndo;
+
+  /// No description provided for @sudokuPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get sudokuPause;
+
+  /// No description provided for @sudokuResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get sudokuResume;
+
+  /// No description provided for @sudokuCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Puzzle complete!'**
+  String get sudokuCompleted;
+
+  /// No description provided for @sudokuMistakes.
+  ///
+  /// In en, this message translates to:
+  /// **'Mistakes'**
+  String get sudokuMistakes;
+
+  /// No description provided for @sudokuTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get sudokuTime;
+
+  /// No description provided for @sudokuBestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Best: {time}'**
+  String sudokuBestTime(String time);
+
+  /// No description provided for @sudokuHintsUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hints used: {count}'**
+  String sudokuHintsUsed(int count);
+
+  /// No description provided for @sudokuNoHintsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'No hints left'**
+  String get sudokuNoHintsLeft;
+
+  /// No description provided for @sudokuGameOver.
+  ///
+  /// In en, this message translates to:
+  /// **'GAME OVER'**
+  String get sudokuGameOver;
+
+  /// No description provided for @sudokuGameOverSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many mistakes'**
+  String get sudokuGameOverSubtitle;
+
+  /// No description provided for @sudokuNewBest.
+  ///
+  /// In en, this message translates to:
+  /// **'New best time!'**
+  String get sudokuNewBest;
+
+  /// No description provided for @sudokuStartGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Start game'**
+  String get sudokuStartGame;
+
+  /// No description provided for @sudokuSelectDifficulty.
+  ///
+  /// In en, this message translates to:
+  /// **'Select difficulty'**
+  String get sudokuSelectDifficulty;
+
+  /// No description provided for @sudokuSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sudoku Settings'**
+  String get sudokuSettingsTitle;
+
+  /// No description provided for @sudokuSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get sudokuSound;
+
+  /// No description provided for @sudokuSoundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Play sound effects'**
+  String get sudokuSoundSubtitle;
+
+  /// No description provided for @sudokuHaptics.
+  ///
+  /// In en, this message translates to:
+  /// **'Haptics'**
+  String get sudokuHaptics;
+
+  /// No description provided for @sudokuHapticsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibrate on input'**
+  String get sudokuHapticsSubtitle;
+
+  /// No description provided for @sudokuHighlightConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight conflicts'**
+  String get sudokuHighlightConflicts;
+
+  /// No description provided for @sudokuHighlightSameNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight same number'**
+  String get sudokuHighlightSameNumber;
+
+  /// No description provided for @sudokuShowTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Show timer'**
+  String get sudokuShowTimer;
+
+  /// No description provided for @sudokuAutoCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-check mistakes'**
+  String get sudokuAutoCheck;
+
+  /// No description provided for @sudokuMaxMistakes.
+  ///
+  /// In en, this message translates to:
+  /// **'Max mistakes'**
+  String get sudokuMaxMistakes;
+
+  /// No description provided for @sudokuMaxMistakesUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get sudokuMaxMistakesUnlimited;
+
+  /// No description provided for @sudokuAutoNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto notes'**
+  String get sudokuAutoNotes;
+
+  /// No description provided for @sudokuClearNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear notes'**
+  String get sudokuClearNotes;
+
+  /// No description provided for @sudokuStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get sudokuStats;
+
+  /// No description provided for @sudokuGamesPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Played'**
+  String get sudokuGamesPlayed;
+
+  /// No description provided for @sudokuGamesWon.
+  ///
+  /// In en, this message translates to:
+  /// **'Won'**
+  String get sudokuGamesWon;
+
+  /// No description provided for @sudokuWinRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Win rate'**
+  String get sudokuWinRate;
+
+  /// No description provided for @sudokuBestTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Best times'**
+  String get sudokuBestTimes;
+
+  /// No description provided for @sudokuCurrentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current streak'**
+  String get sudokuCurrentStreak;
+
+  /// No description provided for @sudokuBestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Best streak'**
+  String get sudokuBestStreak;
+
+  /// No description provided for @sudokuResetStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset statistics'**
+  String get sudokuResetStats;
+
+  /// No description provided for @sudokuConfirmReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all Sudoku statistics?'**
+  String get sudokuConfirmReset;
+
+  /// No description provided for @sudokuGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating puzzle…'**
+  String get sudokuGenerating;
+
+  /// No description provided for @sudokuCongratulations.
+  ///
+  /// In en, this message translates to:
+  /// **'Congratulations!'**
+  String get sudokuCongratulations;
+
+  /// No description provided for @sudokuPerfectGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Perfect — no mistakes or hints!'**
+  String get sudokuPerfectGame;
+
+  /// No description provided for @sudokuPlayAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get sudokuPlayAgain;
+
+  /// No description provided for @sudokuChangeDifficulty.
+  ///
+  /// In en, this message translates to:
+  /// **'Change difficulty'**
+  String get sudokuChangeDifficulty;
+
+  /// No description provided for @sudokuInvalidMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid move'**
+  String get sudokuInvalidMove;
+
+  /// No description provided for @sudokuAllCellsFilled.
+  ///
+  /// In en, this message translates to:
+  /// **'All cells filled'**
+  String get sudokuAllCellsFilled;
+
+  /// No description provided for @sudokuErrorsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} errors found'**
+  String sudokuErrorsFound(int count);
+
+  /// No description provided for @sudokuHintRevealed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint revealed'**
+  String get sudokuHintRevealed;
+
+  /// No description provided for @sudokuNotesMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes mode'**
+  String get sudokuNotesMode;
+
+  /// No description provided for @sudokuGiven.
+  ///
+  /// In en, this message translates to:
+  /// **'Given'**
+  String get sudokuGiven;
+
+  /// No description provided for @sudokuEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty'**
+  String get sudokuEmpty;
+
+  /// No description provided for @sudokuSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get sudokuSelected;
+
+  /// No description provided for @sudokuConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict'**
+  String get sudokuConflict;
+
+  /// No description provided for @sudokuSameNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Same number'**
+  String get sudokuSameNumber;
+
+  /// No description provided for @sudokuPeer.
+  ///
+  /// In en, this message translates to:
+  /// **'Peer'**
+  String get sudokuPeer;
+
+  /// No description provided for @sudokuProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress: {percent}%'**
+  String sudokuProgress(int percent);
+
+  /// No description provided for @sudokuContinueGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue game'**
+  String get sudokuContinueGame;
+
+  /// No description provided for @sudokuAbandonGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandon game'**
+  String get sudokuAbandonGame;
+
+  /// No description provided for @sudokuAbandonConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandon the current puzzle?'**
+  String get sudokuAbandonConfirm;
+
+  /// No description provided for @sudokuNoSavedGame.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved game'**
+  String get sudokuNoSavedGame;
+
+  /// No description provided for @sudokuPausedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'PAUSED'**
+  String get sudokuPausedTitle;
+
+  /// No description provided for @sudokuTapToResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to resume'**
+  String get sudokuTapToResume;
 }
 
 class _AppLocalizationsDelegate

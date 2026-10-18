@@ -10861,4 +10861,229 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get emfMapClear => 'Leeren';
+
+  @override
+  String get toolNameSudoku => 'Sudoku';
+
+  @override
+  String get toolDescSudoku =>
+      'Klassisches 9x9 Sudoku mit endlosen Rätseln und Schwierigkeitsstufen';
+
+  @override
+  String get sudokuNewGame => 'Neues Spiel';
+
+  @override
+  String get sudokuDifficulty => 'Schwierigkeit';
+
+  @override
+  String get sudokuDifficultyEasy => 'Leicht';
+
+  @override
+  String get sudokuDifficultyMedium => 'Mittel';
+
+  @override
+  String get sudokuDifficultyHard => 'Schwer';
+
+  @override
+  String get sudokuDifficultyExpert => 'Experte';
+
+  @override
+  String get sudokuNotes => 'Notizen';
+
+  @override
+  String get sudokuNotesOn => 'Notizen an';
+
+  @override
+  String get sudokuNotesOff => 'Notizen aus';
+
+  @override
+  String get sudokuHint => 'Hinweis';
+
+  @override
+  String get sudokuErase => 'Löschen';
+
+  @override
+  String get sudokuUndo => 'Rückgängig';
+
+  @override
+  String get sudokuPause => 'Pause';
+
+  @override
+  String get sudokuResume => 'Fortsetzen';
+
+  @override
+  String get sudokuCompleted => 'Rätsel gelöst!';
+
+  @override
+  String get sudokuMistakes => 'Fehler';
+
+  @override
+  String get sudokuTime => 'Zeit';
+
+  @override
+  String sudokuBestTime(String time) {
+    return 'Beste: $time';
+  }
+
+  @override
+  String sudokuHintsUsed(int count) {
+    return 'Hinweise: $count';
+  }
+
+  @override
+  String get sudokuNoHintsLeft => 'Keine Hinweise mehr';
+
+  @override
+  String get sudokuGameOver => 'SPIEL VORBEI';
+
+  @override
+  String get sudokuGameOverSubtitle => 'Zu viele Fehler';
+
+  @override
+  String get sudokuNewBest => 'Neue Bestzeit!';
+
+  @override
+  String get sudokuStartGame => 'Spiel starten';
+
+  @override
+  String get sudokuSelectDifficulty => 'Schwierigkeit wählen';
+
+  @override
+  String get sudokuSettingsTitle => 'Sudoku-Einstellungen';
+
+  @override
+  String get sudokuSound => 'Ton';
+
+  @override
+  String get sudokuSoundSubtitle => 'Soundeffekte abspielen';
+
+  @override
+  String get sudokuHaptics => 'Haptik';
+
+  @override
+  String get sudokuHapticsSubtitle => 'Vibration bei Eingabe';
+
+  @override
+  String get sudokuHighlightConflicts => 'Konflikte hervorheben';
+
+  @override
+  String get sudokuHighlightSameNumber => 'Gleiche Zahl hervorheben';
+
+  @override
+  String get sudokuShowTimer => 'Timer anzeigen';
+
+  @override
+  String get sudokuAutoCheck => 'Fehler automatisch prüfen';
+
+  @override
+  String get sudokuMaxMistakes => 'Max. Fehler';
+
+  @override
+  String get sudokuMaxMistakesUnlimited => 'Unbegrenzt';
+
+  @override
+  String get sudokuAutoNotes => 'Auto-Notizen';
+
+  @override
+  String get sudokuClearNotes => 'Notizen löschen';
+
+  @override
+  String get sudokuStats => 'Statistik';
+
+  @override
+  String get sudokuGamesPlayed => 'Gespielt';
+
+  @override
+  String get sudokuGamesWon => 'Gewonnen';
+
+  @override
+  String get sudokuWinRate => 'Gewinnrate';
+
+  @override
+  String get sudokuBestTimes => 'Bestzeiten';
+
+  @override
+  String get sudokuCurrentStreak => 'Aktuelle Serie';
+
+  @override
+  String get sudokuBestStreak => 'Beste Serie';
+
+  @override
+  String get sudokuResetStats => 'Statistik zurücksetzen';
+
+  @override
+  String get sudokuConfirmReset => 'Alle Sudoku-Statistiken zurücksetzen?';
+
+  @override
+  String get sudokuGenerating => 'Rätsel wird erstellt…';
+
+  @override
+  String get sudokuCongratulations => 'Glückwunsch!';
+
+  @override
+  String get sudokuPerfectGame => 'Perfekt — keine Fehler oder Hinweise!';
+
+  @override
+  String get sudokuPlayAgain => 'Nochmal spielen';
+
+  @override
+  String get sudokuChangeDifficulty => 'Schwierigkeit ändern';
+
+  @override
+  String get sudokuInvalidMove => 'Ungültiger Zug';
+
+  @override
+  String get sudokuAllCellsFilled => 'Alle Zellen gefüllt';
+
+  @override
+  String sudokuErrorsFound(int count) {
+    return '$count Fehler gefunden';
+  }
+
+  @override
+  String get sudokuHintRevealed => 'Hinweis aufgedeckt';
+
+  @override
+  String get sudokuNotesMode => 'Notizen-Modus';
+
+  @override
+  String get sudokuGiven => 'Vorgegeben';
+
+  @override
+  String get sudokuEmpty => 'Leer';
+
+  @override
+  String get sudokuSelected => 'Ausgewählt';
+
+  @override
+  String get sudokuConflict => 'Konflikt';
+
+  @override
+  String get sudokuSameNumber => 'Gleiche Zahl';
+
+  @override
+  String get sudokuPeer => 'Nachbar';
+
+  @override
+  String sudokuProgress(int percent) {
+    return 'Fortschritt: $percent%';
+  }
+
+  @override
+  String get sudokuContinueGame => 'Spiel fortsetzen';
+
+  @override
+  String get sudokuAbandonGame => 'Spiel aufgeben';
+
+  @override
+  String get sudokuAbandonConfirm => 'Aktuelles Rätsel aufgeben?';
+
+  @override
+  String get sudokuNoSavedGame => 'Kein gespeichertes Spiel';
+
+  @override
+  String get sudokuPausedTitle => 'PAUSIERT';
+
+  @override
+  String get sudokuTapToResume => 'Zum Fortsetzen tippen';
 }
