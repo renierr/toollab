@@ -110,6 +110,11 @@ class SfSleepView extends StatelessWidget {
                 ? null
                 : () => state.calibrateSleepThreshold(),
           ),
+          SwitchListTile(
+            title: const Text('Adaptive threshold'),
+            value: state.sleepAdaptiveThreshold,
+            onChanged: state.sleepActive ? null : state.setSleepAdaptiveThreshold,
+          ),
           Text(
             'Noise suppression, echo cancellation and auto-gain are disabled '
             'for capture.',

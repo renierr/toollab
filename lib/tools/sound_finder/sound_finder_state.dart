@@ -11,6 +11,7 @@ import 'package:record/record.dart';
 import '../../helpers/temp_file_manager.dart';
 import '../voice_distorter/engine/wav_utils.dart';
 import 'recording_clip.dart';
+import 'sleep_session_data.dart';
 import 'sf_recording_format.dart';
 import '../../helpers/wav_decoder.dart';
 import '../../helpers/wav_pcm16_encoder.dart';
@@ -135,6 +136,12 @@ class SoundFinderState extends ChangeNotifier {
   double _sleepLastMaxAbs = 0;
   final List<String> _sleepSessionFiles = [];
   List<String> get sleepSessionFiles => List.unmodifiable(_sleepSessionFiles);
+  final List<SleepEvent> _sleepEvents = [];
+  List<SleepEvent> get sleepEvents => List.unmodifiable(_sleepEvents);
+  bool _sleepAdaptiveThreshold = false;
+  bool get sleepAdaptiveThreshold => _sleepAdaptiveThreshold;
+  DateTime? _sleepChunkStart;
+  double _sleepAmbientMax = 0;
   String? get sleepError => _sleepError;
   double get sleepThreshold => _sleepThreshold;
   double get sleepLiveDb => _sleepLiveDb;
@@ -898,6 +905,12 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSleepAdaptiveThreshold(bool value) {
+    _sleepAdaptiveThreshold = value;
+    _save('sf_sleep_adaptive', value.toString());
+    notifyListeners();
+  }
+
   void setSleepNotificationText({required String title, required String text}) {
     _sleepNotificationTitle = title;
     _sleepNotificationText = text;
@@ -950,7 +963,9 @@ class SoundFinderState extends ChangeNotifier {
     _sleepStart = DateTime.now();
     _sleepChunksKept = 0;
     _sleepSessionFiles.clear();
+    _sleepEvents.clear();
     _sleepLastEvent = null;
+    _sleepAmbientMax = 0;
     final base = await getApplicationDocumentsDirectory();
     final stamp =
         '${DateTime.now().year}${DateTime.now().month.toString().padLeft(2, '0')}'
@@ -980,6 +995,7 @@ class SoundFinderState extends ChangeNotifier {
       () => unawaited(stopSleep()),
     );
 
+    _sleepChunkStart = DateTime.now();
     _mic.startRecording();
     _scheduleSleepChunk();
     notifyListeners();
@@ -989,18 +1005,25 @@ class SoundFinderState extends ChangeNotifier {
     _sleepChunkTimer?.cancel();
     _sleepChunkTimer = Timer(const Duration(seconds: 15), () async {
       if (!_sleepActive) return;
-      await _processSleepChunk();
+      final start = _sleepChunkStart ?? DateTime.now();
+      await _processSleepChunk(start);
       if (_sleepActive) {
+        _sleepChunkStart = DateTime.now();
         _mic.startRecording();
         _scheduleSleepChunk();
       }
     });
   }
 
-  Future<void> _processSleepChunk() async {
+  Future<void> _processSleepChunk(DateTime chunkStart) async {
     final samples = _mic.stopRecording();
+    final endedAt = DateTime.now();
     if (samples.isEmpty) {
       errorLog('[Sleep] chunk empty');
+      if (_sleepAdaptiveThreshold) {
+        // Track ambient on silence.
+        if (_sleepAmbientMax == 0) _sleepAmbientMax = 0;
+      }
       return;
     }
     double maxAbs = 0;
@@ -1010,10 +1033,21 @@ class SoundFinderState extends ChangeNotifier {
     }
     _sleepLastMaxAbs = maxAbs;
     errorLog('[Sleep] chunk samples=${samples.length} maxAbs=$maxAbs threshold=$_sleepThreshold');
+    // Adaptive threshold: follow ambient noise floor.
+    if (_sleepAdaptiveThreshold) {
+      if (maxAbs < _sleepThreshold) {
+        if (maxAbs > _sleepAmbientMax) _sleepAmbientMax = maxAbs;
+      } else {
+        // Keep ambient estimate from quieter chunks only.
+      }
+      if (_sleepAmbientMax > 0) {
+        _sleepThreshold = (_sleepAmbientMax * 2).clamp(0.0005, 0.2);
+      }
+    }
     // Keep chunk only if it contains meaningful sound.
     if (maxAbs < _sleepThreshold) return;
     final dirPath = _sleepSessionDir ?? await _sleepDir();
-    final now = DateTime.now();
+    final now = endedAt;
     final stamp =
         '${now.year}${now.month.toString().padLeft(2, '0')}'
         '${now.day.toString().padLeft(2, '0')}-'
@@ -1031,11 +1065,26 @@ class SoundFinderState extends ChangeNotifier {
     _sleepChunksKept++;
     _sleepSessionFiles.add(file.path);
     _sleepLastEvent = DateTime.now();
+    final classification = _classifySleepEvent(maxAbs);
+    _sleepEvents.add(SleepEvent(
+      file: file.path,
+      startedAt: chunkStart,
+      endedAt: endedAt,
+      peakAmplitude: maxAbs,
+      classification: classification,
+    ));
     unawaited(
       _sleepWork?.update('Saved chunks: $_sleepChunksKept') ??
           Future<void>.value(),
     );
     notifyListeners();
+  }
+
+  String _classifySleepEvent(double peak) {
+    final db = 20 * math.log(peak.clamp(1e-9, 1)) / math.ln10;
+    if (db >= -10) return 'loud';
+    if (db >= -25) return 'sound';
+    return 'faint';
   }
 
   Future<void> stopSleep() async {
@@ -1045,9 +1094,28 @@ class SoundFinderState extends ChangeNotifier {
     _sleepTimeout = null;
     _sleepChunkTimer?.cancel();
     _sleepChunkTimer = null;
-    await _processSleepChunk();
+    final chunkStart = _sleepChunkStart;
+    final sessionStart = _sleepStart ?? DateTime.now();
+    if (chunkStart != null) {
+      await _processSleepChunk(chunkStart);
+    } else {
+      await _processSleepChunk(DateTime.now());
+    }
     _sleepStart = null;
     _mic.maxRecordSeconds = _maxRecordSeconds;
+    // Persist session metadata.
+    if (_sleepSessionDir != null) {
+      final data = SleepSessionData(
+        path: _sleepSessionDir!,
+        startedAt: sessionStart,
+        endedAt: DateTime.now(),
+        targetMinutes: _sleepDurationMinutes,
+        threshold: _sleepThreshold,
+        adaptiveThreshold: _sleepAdaptiveThreshold,
+        events: List.of(_sleepEvents),
+      );
+      unawaited(data.save());
+    }
     final work = _sleepWork;
     _sleepWork = null;
     if (work != null) {
@@ -1627,6 +1695,8 @@ class SoundFinderState extends ChangeNotifier {
 
     final st = await db.getSetting(_toolId, 'sf_sleep_threshold');
     _sleepThreshold = double.tryParse(st ?? '') ?? 0.005;
+    final ad = await db.getSetting(_toolId, 'sf_sleep_adaptive');
+    _sleepAdaptiveThreshold = ad == 'true';
 
     _genFreq = double.tryParse(genFreq ?? '')?.clamp(20, 20000) ?? 440;
     _genWave = _waveFromName(genWave) ?? ToneWaveform.sine;
@@ -1673,7 +1743,8 @@ class SoundFinderState extends ChangeNotifier {
             .toList()
           ..sort((a, b) => a.path.compareTo(b.path));
         if (chunks.isNotEmpty) {
-          sessions.add(SleepSession(path: entity.path, chunks: chunks));
+          final data = await SleepSessionData.load(entity.path);
+          sessions.add(SleepSession(path: entity.path, chunks: chunks, data: data));
         }
       }
     }
@@ -1705,10 +1776,11 @@ class SoundFinderState extends ChangeNotifier {
 }
 
 class SleepSession {
-  SleepSession({required this.path, required this.chunks});
+  SleepSession({required this.path, required this.chunks, this.data});
 
   final String path;
   final List<File> chunks;
+  final SleepSessionData? data;
 
   String get name => path.split(Platform.pathSeparator).last;
 
