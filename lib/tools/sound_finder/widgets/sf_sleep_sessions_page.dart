@@ -458,50 +458,112 @@ class _TimelinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final start = data.startedAt;
     final total = data.endedAt.difference(start).inSeconds.toDouble().clamp(1, double.infinity);
-    // Grid lines for dB.
-    final gridPaint = Paint()..color = Colors.grey.withValues(alpha: 0.15);
+    final leftPad = 34.0;
+    final bottomPad = 18.0;
+    final plotW = size.width - leftPad;
+    final plotH = size.height - bottomPad;
+
+    // dB grid + labels.
+    final gridPaint = Paint()..color = Colors.grey.withValues(alpha: 0.18);
+    final tp = TextPainter(textDirection: TextDirection.ltr);
     for (int db = -60; db <= 0; db += 15) {
-      final y = size.height - ((db + 60) / 60) * (size.height - 4);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+      final y = plotH - ((db + 60) / 60) * (plotH - 4);
+      canvas.drawLine(Offset(leftPad, y), Offset(size.width, y), gridPaint);
+      tp.text = TextSpan(text: '$db', style: const TextStyle(fontSize: 9, color: Colors.black54));
+      tp.layout();
+      tp.paint(canvas, Offset(2, y - 6));
     }
+    // Threshold line.
+    final thrDb = 20 * math.log(data.threshold.clamp(1e-9, 1)) / math.ln10;
+    final thrY = plotH - ((thrDb + 60) / 60) * (plotH - 4);
+    final thrPaint = Paint()
+      ..color = Colors.purple.withValues(alpha: 0.7)
+      ..strokeWidth = 1.2;
+    // dashed
+    double dx = leftPad;
+    while (dx < size.width) {
+      canvas.drawLine(Offset(dx, thrY), Offset(math.min(dx + 6, size.width), thrY), thrPaint);
+      dx += 10;
+    }
+    tp.text = TextSpan(text: 'thr', style: const TextStyle(fontSize: 9, color: Colors.purple));
+    tp.layout();
+    tp.paint(canvas, Offset(leftPad + 2, thrY - 12));
+
     // Health bands.
     for (final b in health) {
-      final x0 = (b.start.difference(start).inSeconds / total).clamp(0.0, 1.0) * size.width;
-      final x1 = (b.end.difference(start).inSeconds / total).clamp(0.0, 1.0) * size.width;
-      final paint = Paint()..color = Colors.blue.withValues(alpha: 0.12);
-      canvas.drawRect(Rect.fromLTRB(x0, 0, x1, size.height), paint);
+      final x0 = leftPad + (b.start.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+      final x1 = leftPad + (b.end.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+      final paint = Paint()..color = Colors.blue.withValues(alpha: 0.10);
+      canvas.drawRect(Rect.fromLTRB(x0, 0, x1, plotH), paint);
     }
+
+    // Silence gaps (periods between events longer than 30s).
+    final gapPaint = Paint()..color = Colors.grey.withValues(alpha: 0.08);
+    if (data.events.isNotEmpty) {
+      DateTime cursor = start;
+      for (final e in data.events) {
+        if (e.startedAt.difference(cursor).inSeconds > 30) {
+          final x0 = leftPad + (cursor.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+          final x1 = leftPad + (e.startedAt.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+          canvas.drawRect(Rect.fromLTRB(x0, 0, x1, plotH), gapPaint);
+        }
+        cursor = e.endedAt;
+      }
+      if (data.endedAt.difference(cursor).inSeconds > 30) {
+        final x0 = leftPad + (cursor.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+        final x1 = leftPad + (data.endedAt.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+        canvas.drawRect(Rect.fromLTRB(x0, 0, x1, plotH), gapPaint);
+      }
+    }
+
     // Baseline.
     final basePaint = Paint()..color = Colors.grey.withValues(alpha: 0.4);
-    canvas.drawLine(Offset(0, size.height - 1), Offset(size.width, size.height - 1), basePaint);
-    // Time ticks every hour.
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
-    for (int h = 0; h <= data.endedAt.difference(start).inHours; h++) {
-      final x = (h * 3600 / total).clamp(0.0, 1.0) * size.width;
-      canvas.drawLine(Offset(x, size.height - 6), Offset(x, size.height), basePaint);
-      textPainter.text = TextSpan(text: '${h}h', style: const TextStyle(fontSize: 9, color: Colors.black54));
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(x + 2, size.height - 14));
+    canvas.drawLine(Offset(leftPad, plotH), Offset(size.width, plotH), basePaint);
+
+    // Time ticks every 15 min (or hour if long).
+    final stepMin = total > 6 * 3600 ? 60 : 15;
+    for (int m = 0; m <= data.endedAt.difference(start).inMinutes; m += stepMin) {
+      final x = leftPad + (m * 60 / total).clamp(0.0, 1.0) * plotW;
+      canvas.drawLine(Offset(x, plotH - 4), Offset(x, plotH), basePaint);
+      if (m % (stepMin * (total > 6 * 3600 ? 1 : 2)) == 0) {
+        final hh = m ~/ 60;
+        final mm = m % 60;
+        tp.text = TextSpan(text: '${hh.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 8, color: Colors.black54));
+        tp.layout();
+        tp.paint(canvas, Offset(x + 1, plotH + 2));
+      }
     }
-    // Events.
+
+    // Events as bars spanning chunk duration.
     for (int i = 0; i < data.events.length; i++) {
       final e = data.events[i];
-      final x = (e.startedAt.difference(start).inSeconds / total).clamp(0.0, 1.0) * size.width;
+      final x0 = leftPad + (e.startedAt.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+      final x1 = leftPad + (e.endedAt.difference(start).inSeconds / total).clamp(0.0, 1.0) * plotW;
+      final barW = math.max(2.0, x1 - x0);
       final db = e.peakDb.clamp(-60.0, 0.0);
-      final h = (1 - (db + 60) / 60) * (size.height - 4);
+      final h = (1 - (db + 60) / 60) * (plotH - 4);
       final color = e.classification == 'loud'
           ? Colors.red
           : e.classification == 'sound'
               ? Colors.orange
               : Colors.grey;
-      final paint = Paint()..color = i == selectedIndex ? color : color.withValues(alpha: 0.85);
-      canvas.drawRect(Rect.fromLTWH(x - 3, size.height - h, 6, h), paint);
+      final paint = Paint()..color = i == selectedIndex ? color : color.withValues(alpha: 0.8);
+      canvas.drawRect(Rect.fromLTWH(x0, plotH - h, barW, h), paint);
+      // chunk boundary dotted lines
+      final dotPaint = Paint()
+        ..color = Colors.black26
+        ..strokeWidth = 0.8;
+      double yy = 0;
+      while (yy < plotH) {
+        canvas.drawLine(Offset(x0, yy), Offset(x0, math.min(yy + 3, plotH)), dotPaint);
+        yy += 6;
+      }
       if (i == selectedIndex) {
         final selPaint = Paint()
           ..color = Colors.black
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5;
-        canvas.drawRect(Rect.fromLTWH(x - 5, size.height - h - 2, 10, h + 4), selPaint);
+        canvas.drawRect(Rect.fromLTWH(x0 - 1, plotH - h - 1, barW + 2, h + 2), selPaint);
       }
     }
   }
