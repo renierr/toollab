@@ -201,6 +201,41 @@ object FileSaveHelper {
         }
     }
 
+    private fun apkVersionCode(context: Context, sourceFile: File): Long {
+        return try {
+            @Suppress("DEPRECATION")
+            val info = context.packageManager.getPackageArchiveInfo(sourceFile.absolutePath, 0)
+                ?: return 0L
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                info.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                info.versionCode.toLong()
+            }
+        } catch (_: Exception) {
+            0L
+        }
+    }
+
+    private fun readApkPackageAndVersion(context: Context, uri: Uri, displayName: String?): Pair<String?, Long> {
+        val cacheName = "scan_${System.currentTimeMillis()}_${displayName ?: "apk"}"
+        val outFile = File(context.cacheDir, cacheName)
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(outFile).use { output -> input.copyTo(output) }
+            } ?: return Pair(null, 0L)
+            if (!outFile.exists()) return Pair(null, 0L)
+            Pair(apkPackageName(context, outFile), apkVersionCode(context, outFile))
+        } catch (_: Exception) {
+            Pair(null, 0L)
+        } finally {
+            try {
+                if (outFile.exists()) outFile.delete()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     private fun findExistingDownloadsUri(context: Context, sourceFile: File): Uri? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
         val resolver = context.contentResolver
@@ -226,7 +261,7 @@ object FileSaveHelper {
             // _DATA may be unavailable on some providers; fall through.
         }
         // Fall back to display name (handles files scanned by MediaStore).
-        return try {
+        try {
             resolver.query(
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                 projection,
@@ -235,15 +270,75 @@ object FileSaveHelper {
                 null,
             )?.use { cursor ->
                 if (cursor.moveToFirst()) {
-                    ContentUris.withAppendedId(
+                    return ContentUris.withAppendedId(
                         MediaStore.Downloads.EXTERNAL_CONTENT_URI,
                         cursor.getLong(0),
                     )
-                } else null
+                }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
+            // Fall through.
+        }
+        // Self-update reuse: an APK whose package/version matches ToolLab's
+        // own may already live in public Downloads under a different file name
+        // (e.g. a prior "Download" saved it). Scan MediaStore entries and
+        // reuse the matching one instead of creating a second copy.
+        val sourcePackage = apkPackageName(context, sourceFile) ?: return null
+        if (sourcePackage != context.packageName) return null
+        val sourceVersion = apkVersionCode(context, sourceFile)
+        if (sourceVersion == 0L) return null
+        return try {
+            resolver.query(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                arrayOf(
+                    MediaStore.Downloads._ID,
+                    MediaStore.Downloads.DISPLAY_NAME,
+                    MediaStore.Downloads.SIZE,
+                ),
+                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                arrayOf("%.apk"),
+                null,
+            )?.use { cursor ->
+                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
+                val nameCol = cursor.getColumnIndex(MediaStore.Downloads.DISPLAY_NAME)
+                val sizeCol = cursor.getColumnIndex(MediaStore.Downloads.SIZE)
+                val sourceSize = try { sourceFile.length() } catch (_: Exception) { 0L }
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(idCol)
+                    val displayName = if (nameCol >= 0) cursor.getString(nameCol) else null
+                    val entrySize = if (sizeCol >= 0) cursor.getLong(sizeCol) else 0L
+                    if (sourceSize > 0 && entrySize > 0 && entrySize != sourceSize) {
+                        continue
+                    }
+                    val entryUri = ContentUris.withAppendedId(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        id,
+                    )
+                    val (pkg, ver) = readApkPackageAndVersion(context, entryUri, displayName)
+                    if (pkg == context.packageName && ver == sourceVersion) {
+                        return entryUri
+                    }
+                }
+                null
+            }
+        } catch (_: Exception) {
             null
         }
+    }
+
+    private fun deriveApkName(name: String): String {
+        val patterns = listOf(
+            Regex("^fast_drop_open_[A-Za-z0-9-]+_(.+)$"),
+            Regex("^fast_drop_save_[A-Za-z0-9-]+_(.+)$"),
+            Regex("^p2p_received_\\d+_(.+)$"),
+            Regex("^file_manager_share_(.+)$"),
+            Regex("^file_manager_(.+)$"),
+        )
+        for (pattern in patterns) {
+            val match = pattern.matchEntire(name)
+            if (match != null) return match.groupValues[1]
+        }
+        return name
     }
 
     fun openFile(context: Context, uriString: String, mimeType: String) {
@@ -294,7 +389,7 @@ object FileSaveHelper {
                                 val saved = saveToDownloadsFromPath(
                                     context,
                                     sourceFile.absolutePath,
-                                    sourceFile.name,
+                                    deriveApkName(sourceFile.name),
                                     mimeType,
                                 )
                                 val savedUri = saved["uri"]
