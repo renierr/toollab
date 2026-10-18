@@ -28,6 +28,7 @@ class _SfSleepSessionsPageState extends State<SfSleepSessionsPage> {
   // Health Connect overlay state per session path.
   final Map<String, List<_StageBand>> _healthStages = {};
   final Set<String> _healthLoading = {};
+  final Map<String, int> _selectedEvent = {};
 
   @override
   void initState() {
@@ -277,17 +278,7 @@ class _SfSleepSessionsPageState extends State<SfSleepSessionsPage> {
             children: [
               _buildReport(session, data),
               const SizedBox(height: 8),
-              SizedBox(
-                height: 140,
-                child: CustomPaint(
-                  painter: _TimelinePainter(
-                    session: session,
-                    data: data,
-                    health: _healthStages[session.path] ?? const [],
-                  ),
-                  size: Size.infinite,
-                ),
-              ),
+              _buildInteractiveTimeline(session, data),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -352,6 +343,83 @@ class _SfSleepSessionsPageState extends State<SfSleepSessionsPage> {
     );
   }
 
+  Widget _buildInteractiveTimeline(SleepSession session, SleepSessionData data) {
+    final total = data.endedAt.difference(data.startedAt).inSeconds.toDouble().clamp(1, double.infinity);
+    final sel = _selectedEvent[session.path];
+    final SleepEvent? selected = (sel != null && sel >= 0 && sel < data.events.length)
+        ? data.events[sel]
+        : null;
+
+    void pick(double dx, double width) {
+      if (data.events.isEmpty) return;
+      final t = (dx / width * total).clamp(0.0, total);
+      int best = -1;
+      double bestDist = double.infinity;
+      for (int i = 0; i < data.events.length; i++) {
+        final ex = data.events[i].startedAt.difference(data.startedAt).inSeconds.toDouble();
+        final d = (ex - t).abs();
+        if (d < bestDist) {
+          bestDist = d;
+          best = i;
+        }
+      }
+      if (best >= 0 && bestDist <= 30) {
+        setState(() => _selectedEvent[session.path] = best);
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 160,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return MouseRegion(
+                onHover: (e) => pick(e.localPosition.dx, constraints.maxWidth),
+                child: GestureDetector(
+                  onTapDown: (d) => pick(d.localPosition.dx, constraints.maxWidth),
+                  child: CustomPaint(
+                    painter: _TimelinePainter(
+                      session: session,
+                      data: data,
+                      health: _healthStages[session.path] ?? const [],
+                      selectedIndex: sel,
+                    ),
+                    size: Size(constraints.maxWidth, 160),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (selected != null)
+          Card(
+            margin: const EdgeInsets.only(top: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${selected.classification.toUpperCase()} • ${selected.peakDb.toStringAsFixed(1)} dB • '
+                      '${selected.startedAt.hour.toString().padLeft(2, '0')}:${selected.startedAt.minute.toString().padLeft(2, '0')}:${selected.startedAt.second.toString().padLeft(2, '0')} • '
+                      '${selected.endedAt.difference(selected.startedAt).inSeconds}s'
+                      '${selected.annotation == null ? '' : ' • ${selected.annotation}'}',
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(_playingPath == selected.file ? Icons.stop_outlined : Icons.play_arrow_outlined),
+                    onPressed: () => _play(selected.file),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildReport(SleepSession session, SleepSessionData data) {
     final duration = session.totalDuration;
     final counts = <String, int>{};
@@ -380,27 +448,44 @@ class _StageBand {
 }
 
 class _TimelinePainter extends CustomPainter {
-  _TimelinePainter({required this.session, required this.data, required this.health});
+  _TimelinePainter({required this.session, required this.data, required this.health, this.selectedIndex});
   final SleepSession session;
   final SleepSessionData data;
   final List<_StageBand> health;
+  final int? selectedIndex;
 
   @override
   void paint(Canvas canvas, Size size) {
     final start = data.startedAt;
     final total = data.endedAt.difference(start).inSeconds.toDouble().clamp(1, double.infinity);
+    // Grid lines for dB.
+    final gridPaint = Paint()..color = Colors.grey.withValues(alpha: 0.15);
+    for (int db = -60; db <= 0; db += 15) {
+      final y = size.height - ((db + 60) / 60) * (size.height - 4);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
     // Health bands.
     for (final b in health) {
       final x0 = (b.start.difference(start).inSeconds / total).clamp(0.0, 1.0) * size.width;
       final x1 = (b.end.difference(start).inSeconds / total).clamp(0.0, 1.0) * size.width;
-      final paint = Paint()..color = Colors.blue.withValues(alpha: 0.15);
+      final paint = Paint()..color = Colors.blue.withValues(alpha: 0.12);
       canvas.drawRect(Rect.fromLTRB(x0, 0, x1, size.height), paint);
     }
     // Baseline.
-    final basePaint = Paint()..color = Colors.grey.withValues(alpha: 0.3);
+    final basePaint = Paint()..color = Colors.grey.withValues(alpha: 0.4);
     canvas.drawLine(Offset(0, size.height - 1), Offset(size.width, size.height - 1), basePaint);
+    // Time ticks every hour.
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+    for (int h = 0; h <= data.endedAt.difference(start).inHours; h++) {
+      final x = (h * 3600 / total).clamp(0.0, 1.0) * size.width;
+      canvas.drawLine(Offset(x, size.height - 6), Offset(x, size.height), basePaint);
+      textPainter.text = TextSpan(text: '${h}h', style: const TextStyle(fontSize: 9, color: Colors.black54));
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x + 2, size.height - 14));
+    }
     // Events.
-    for (final e in data.events) {
+    for (int i = 0; i < data.events.length; i++) {
+      final e = data.events[i];
       final x = (e.startedAt.difference(start).inSeconds / total).clamp(0.0, 1.0) * size.width;
       final db = e.peakDb.clamp(-60.0, 0.0);
       final h = (1 - (db + 60) / 60) * (size.height - 4);
@@ -409,8 +494,15 @@ class _TimelinePainter extends CustomPainter {
           : e.classification == 'sound'
               ? Colors.orange
               : Colors.grey;
-      final paint = Paint()..color = color;
-      canvas.drawRect(Rect.fromLTWH(x - 2, size.height - h, 4, h), paint);
+      final paint = Paint()..color = i == selectedIndex ? color : color.withValues(alpha: 0.85);
+      canvas.drawRect(Rect.fromLTWH(x - 3, size.height - h, 6, h), paint);
+      if (i == selectedIndex) {
+        final selPaint = Paint()
+          ..color = Colors.black
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5;
+        canvas.drawRect(Rect.fromLTWH(x - 5, size.height - h - 2, 10, h + 4), selPaint);
+      }
     }
   }
 
