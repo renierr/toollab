@@ -15,6 +15,7 @@ import 'sf_recording_format.dart';
 import '../../helpers/wav_decoder.dart';
 import '../../helpers/wav_pcm16_encoder.dart';
 import '../../services/database_service.dart';
+import '../../services/background_work_lease.dart';
 import '../../services/power_wake_lock_service.dart';
 import 'audio/doppler_analyzer.dart';
 import 'audio/mic_analyzer.dart';
@@ -141,7 +142,9 @@ class SoundFinderState extends ChangeNotifier {
   double get sleepLastMaxAbs => _sleepLastMaxAbs;
   Timer? _sleepTimeout;
   Timer? _sleepChunkTimer;
-  WakeLockLease? _sleepWakeLock;
+  BackgroundWorkLease? _sleepWork;
+  String _sleepNotificationTitle = 'Sleep sound recorder';
+  String _sleepNotificationText = 'Recording sleep sounds';
 
   bool _tonePlaying = false;
   SfMode? _toneOwner;
@@ -895,6 +898,11 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSleepNotificationText({required String title, required String text}) {
+    _sleepNotificationTitle = title;
+    _sleepNotificationText = text;
+  }
+
   Future<void> calibrateSleepThreshold() async {
     if (_sleepActive) return;
     if (_micStatus != MicStatus.running) await ensureMic();
@@ -953,9 +961,19 @@ class SoundFinderState extends ChangeNotifier {
     _sleepSessionDir = '${base.path}/sleep_recordings/session-$stamp';
     await Directory(_sleepSessionDir!).create(recursive: true);
 
-    // Keep CPU awake but let the screen turn off.
+    // Keep CPU awake but let the screen turn off; run as a foreground service
+    // with a notification so Android does not suspend the mic capture.
     await PowerWakeLockService.releaseAll();
-    _sleepWakeLock = await PowerWakeLockService.acquirePartial();
+    _sleepWork = await BackgroundWorkLease.acquire(
+      title: _sleepNotificationTitle,
+      text: _sleepNotificationText,
+      logPrefix: 'SoundFinderSleep',
+      actions: const ['stop'],
+      chronometerSinceMs: _sleepStart!.millisecondsSinceEpoch,
+    );
+    _sleepWork!.addActionListener((action) {
+      if (action == 'stop') unawaited(stopSleep());
+    });
 
     _sleepTimeout = Timer(
       Duration(minutes: _sleepDurationMinutes),
@@ -1013,6 +1031,10 @@ class SoundFinderState extends ChangeNotifier {
     _sleepChunksKept++;
     _sleepSessionFiles.add(file.path);
     _sleepLastEvent = DateTime.now();
+    unawaited(
+      _sleepWork?.update('Saved chunks: $_sleepChunksKept') ??
+          Future<void>.value(),
+    );
     notifyListeners();
   }
 
@@ -1026,9 +1048,12 @@ class SoundFinderState extends ChangeNotifier {
     await _processSleepChunk();
     _sleepStart = null;
     _mic.maxRecordSeconds = _maxRecordSeconds;
-    final lease = _sleepWakeLock;
-    _sleepWakeLock = null;
-    if (lease != null) await lease.release();
+    final work = _sleepWork;
+    _sleepWork = null;
+    if (work != null) {
+      work.removeActionListener();
+      await work.release();
+    }
     // Restore screen-on wake lock.
     await PowerWakeLockService.acquireFull();
     notifyListeners();

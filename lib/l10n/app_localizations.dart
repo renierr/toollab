@@ -10925,6 +10925,18 @@ abstract class AppLocalizations {
   /// **'ToolLab is generating a tone'**
   String get sfToneNotificationText;
 
+  /// No description provided for @sfSleepNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep sound recorder'**
+  String get sfSleepNotificationTitle;
+
+  /// No description provided for @sfSleepNotificationText.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording sleep sounds'**
+  String get sfSleepNotificationText;
+
   /// No description provided for @sfMicDefault.
   ///
   /// In en, this message translates to:

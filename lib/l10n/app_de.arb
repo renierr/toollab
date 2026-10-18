@@ -2388,6 +2388,8 @@
   "sfWaveSawtooth": "Sägezahn",
   "sfToneNotificationTitle": "Ton aktiv",
   "sfToneNotificationText": "ToolLab erzeugt einen Ton",
+  "sfSleepNotificationTitle": "Schlaf-Soundrekorder",
+  "sfSleepNotificationText": "Nimmt Schlafgeräusche auf",
   "sfMicDefault": "Standardmikrofon",
   "sfRefreshMics": "Mikrofone neu suchen",
   "sfMicGain": "Mikrofonverstärkung",

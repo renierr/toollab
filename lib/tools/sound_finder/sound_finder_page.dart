@@ -78,6 +78,10 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       title: l10n.sfToneNotificationTitle,
       text: l10n.sfToneNotificationText,
     );
+    context.read<SoundFinderState>().setSleepNotificationText(
+      title: l10n.sfSleepNotificationTitle,
+      text: l10n.sfSleepNotificationText,
+    );
   }
 
   @override

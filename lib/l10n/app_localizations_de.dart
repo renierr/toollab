@@ -6105,6 +6105,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfToneNotificationText => 'ToolLab erzeugt einen Ton';
 
   @override
+  String get sfSleepNotificationTitle => 'Schlaf-Soundrekorder';
+
+  @override
+  String get sfSleepNotificationText => 'Nimmt Schlafgeräusche auf';
+
+  @override
   String get sfMicDefault => 'Standardmikrofon';
 
   @override
