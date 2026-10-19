@@ -11163,9 +11163,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sudokuNewGame => 'Neues Spiel';
 
   @override
-  String get sudokuDifficulty => 'Schwierigkeit';
-
-  @override
   String get sudokuDifficultyEasy => 'Leicht';
 
   @override
@@ -11176,9 +11173,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sudokuDifficultyExpert => 'Experte';
-
-  @override
-  String get sudokuNotes => 'Notizen';
 
   @override
   String get sudokuNotesOn => 'Notizen an';
@@ -11205,47 +11199,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sudokuCompleted => 'Rätsel gelöst!';
 
   @override
-  String get sudokuMistakes => 'Fehler';
-
-  @override
-  String get sudokuTime => 'Zeit';
-
-  @override
-  String sudokuBestTime(String time) {
-    return 'Beste: $time';
-  }
-
-  @override
   String sudokuHintsUsed(int count) {
     return 'Hinweise: $count';
   }
-
-  @override
-  String get sudokuNoHintsLeft => 'Keine Hinweise mehr';
-
-  @override
-  String get sudokuGameOver => 'SPIEL VORBEI';
-
-  @override
-  String get sudokuGameOverSubtitle => 'Zu viele Fehler';
-
-  @override
-  String get sudokuNewBest => 'Neue Bestzeit!';
-
-  @override
-  String get sudokuStartGame => 'Spiel starten';
 
   @override
   String get sudokuSelectDifficulty => 'Schwierigkeit wählen';
 
   @override
   String get sudokuSettingsTitle => 'Sudoku-Einstellungen';
-
-  @override
-  String get sudokuSound => 'Ton';
-
-  @override
-  String get sudokuSoundSubtitle => 'Soundeffekte abspielen';
 
   @override
   String get sudokuHaptics => 'Haptik';
@@ -11266,12 +11228,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sudokuAutoCheck => 'Fehler automatisch prüfen';
 
   @override
-  String get sudokuMaxMistakes => 'Max. Fehler';
-
-  @override
-  String get sudokuMaxMistakesUnlimited => 'Unbegrenzt';
-
-  @override
   String get sudokuAutoNotes => 'Auto-Notizen';
 
   @override
@@ -11287,9 +11243,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sudokuGamesWon => 'Gewonnen';
 
   @override
-  String get sudokuWinRate => 'Gewinnrate';
-
-  @override
   String get sudokuBestTimes => 'Bestzeiten';
 
   @override
@@ -11299,18 +11252,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sudokuBestStreak => 'Beste Serie';
 
   @override
-  String get sudokuResetStats => 'Statistik zurücksetzen';
-
-  @override
-  String get sudokuConfirmReset => 'Alle Sudoku-Statistiken zurücksetzen?';
-
-  @override
-  String get sudokuGenerating => 'Rätsel wird erstellt…';
-
-  @override
-  String get sudokuCongratulations => 'Glückwunsch!';
-
-  @override
   String get sudokuPerfectGame => 'Perfekt — keine Fehler oder Hinweise!';
 
   @override
@@ -11318,58 +11259,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get sudokuChangeDifficulty => 'Schwierigkeit ändern';
-
-  @override
-  String get sudokuInvalidMove => 'Ungültiger Zug';
-
-  @override
-  String get sudokuAllCellsFilled => 'Alle Zellen gefüllt';
-
-  @override
-  String sudokuErrorsFound(int count) {
-    return '$count Fehler gefunden';
-  }
-
-  @override
-  String get sudokuHintRevealed => 'Hinweis aufgedeckt';
-
-  @override
-  String get sudokuNotesMode => 'Notizen-Modus';
-
-  @override
-  String get sudokuGiven => 'Vorgegeben';
-
-  @override
-  String get sudokuEmpty => 'Leer';
-
-  @override
-  String get sudokuSelected => 'Ausgewählt';
-
-  @override
-  String get sudokuConflict => 'Konflikt';
-
-  @override
-  String get sudokuSameNumber => 'Gleiche Zahl';
-
-  @override
-  String get sudokuPeer => 'Nachbar';
-
-  @override
-  String sudokuProgress(int percent) {
-    return 'Fortschritt: $percent%';
-  }
-
-  @override
-  String get sudokuContinueGame => 'Spiel fortsetzen';
-
-  @override
-  String get sudokuAbandonGame => 'Spiel aufgeben';
-
-  @override
-  String get sudokuAbandonConfirm => 'Aktuelles Rätsel aufgeben?';
-
-  @override
-  String get sudokuNoSavedGame => 'Kein gespeichertes Spiel';
 
   @override
   String get sudokuPausedTitle => 'PAUSIERT';

@@ -11080,9 +11080,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sudokuNewGame => 'New game';
 
   @override
-  String get sudokuDifficulty => 'Difficulty';
-
-  @override
   String get sudokuDifficultyEasy => 'Easy';
 
   @override
@@ -11093,9 +11090,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sudokuDifficultyExpert => 'Expert';
-
-  @override
-  String get sudokuNotes => 'Notes';
 
   @override
   String get sudokuNotesOn => 'Notes on';
@@ -11122,47 +11116,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sudokuCompleted => 'Puzzle complete!';
 
   @override
-  String get sudokuMistakes => 'Mistakes';
-
-  @override
-  String get sudokuTime => 'Time';
-
-  @override
-  String sudokuBestTime(String time) {
-    return 'Best: $time';
-  }
-
-  @override
   String sudokuHintsUsed(int count) {
     return 'Hints used: $count';
   }
-
-  @override
-  String get sudokuNoHintsLeft => 'No hints left';
-
-  @override
-  String get sudokuGameOver => 'GAME OVER';
-
-  @override
-  String get sudokuGameOverSubtitle => 'Too many mistakes';
-
-  @override
-  String get sudokuNewBest => 'New best time!';
-
-  @override
-  String get sudokuStartGame => 'Start game';
 
   @override
   String get sudokuSelectDifficulty => 'Select difficulty';
 
   @override
   String get sudokuSettingsTitle => 'Sudoku Settings';
-
-  @override
-  String get sudokuSound => 'Sound';
-
-  @override
-  String get sudokuSoundSubtitle => 'Play sound effects';
 
   @override
   String get sudokuHaptics => 'Haptics';
@@ -11183,12 +11145,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sudokuAutoCheck => 'Auto-check mistakes';
 
   @override
-  String get sudokuMaxMistakes => 'Max mistakes';
-
-  @override
-  String get sudokuMaxMistakesUnlimited => 'Unlimited';
-
-  @override
   String get sudokuAutoNotes => 'Auto notes';
 
   @override
@@ -11204,9 +11160,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sudokuGamesWon => 'Won';
 
   @override
-  String get sudokuWinRate => 'Win rate';
-
-  @override
   String get sudokuBestTimes => 'Best times';
 
   @override
@@ -11216,18 +11169,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sudokuBestStreak => 'Best streak';
 
   @override
-  String get sudokuResetStats => 'Reset statistics';
-
-  @override
-  String get sudokuConfirmReset => 'Reset all Sudoku statistics?';
-
-  @override
-  String get sudokuGenerating => 'Generating puzzle…';
-
-  @override
-  String get sudokuCongratulations => 'Congratulations!';
-
-  @override
   String get sudokuPerfectGame => 'Perfect — no mistakes or hints!';
 
   @override
@@ -11235,58 +11176,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sudokuChangeDifficulty => 'Change difficulty';
-
-  @override
-  String get sudokuInvalidMove => 'Invalid move';
-
-  @override
-  String get sudokuAllCellsFilled => 'All cells filled';
-
-  @override
-  String sudokuErrorsFound(int count) {
-    return '$count errors found';
-  }
-
-  @override
-  String get sudokuHintRevealed => 'Hint revealed';
-
-  @override
-  String get sudokuNotesMode => 'Notes mode';
-
-  @override
-  String get sudokuGiven => 'Given';
-
-  @override
-  String get sudokuEmpty => 'Empty';
-
-  @override
-  String get sudokuSelected => 'Selected';
-
-  @override
-  String get sudokuConflict => 'Conflict';
-
-  @override
-  String get sudokuSameNumber => 'Same number';
-
-  @override
-  String get sudokuPeer => 'Peer';
-
-  @override
-  String sudokuProgress(int percent) {
-    return 'Progress: $percent%';
-  }
-
-  @override
-  String get sudokuContinueGame => 'Continue game';
-
-  @override
-  String get sudokuAbandonGame => 'Abandon game';
-
-  @override
-  String get sudokuAbandonConfirm => 'Abandon the current puzzle?';
-
-  @override
-  String get sudokuNoSavedGame => 'No saved game';
 
   @override
   String get sudokuPausedTitle => 'PAUSED';

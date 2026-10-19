@@ -4,6 +4,8 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import '../config.dart';
+import 'sudoku_generator.dart';
+import 'sudoku_stats.dart';
 
 class SudokuStore {
   static const String _keySave = 'save';
@@ -29,28 +31,34 @@ class SudokuStore {
 
   Future<void> clearSave() => _delete(_keySave);
 
-  Future<int?> loadBestTime(String difficulty) async {
-    final raw = await _read('$_keyBestPrefix$difficulty');
-    return int.tryParse(raw ?? '');
+  Future<void> saveBestTime(SudokuDifficulty difficulty, int seconds) =>
+      _write('$_keyBestPrefix${difficulty.name}', seconds.toString());
+
+  Future<SudokuStats> loadStats() async {
+    final stats = _decodeStats(await _read(_keyStats));
+    for (final d in SudokuDifficulty.values) {
+      stats[d].bestTime = int.tryParse(
+        await _read('$_keyBestPrefix${d.name}') ?? '',
+      );
+    }
+    return stats;
   }
 
-  Future<void> saveBestTime(String difficulty, int seconds) =>
-      _write('$_keyBestPrefix$difficulty', seconds.toString());
-
-  Future<Map<String, dynamic>> loadStats() async {
-    final raw = await _read(_keyStats);
-    if (raw == null || raw.isEmpty) return {};
+  SudokuStats _decodeStats(String? raw) {
+    if (raw == null || raw.isEmpty) return SudokuStats();
     try {
       final decoded = jsonDecode(raw);
-      return decoded is Map<String, dynamic> ? decoded : {};
+      return decoded is Map<String, dynamic>
+          ? SudokuStats.fromJson(decoded)
+          : SudokuStats();
     } catch (e) {
       errorLog('[Sudoku] Discarding unreadable stats: $e');
-      return {};
+      return SudokuStats();
     }
   }
 
-  Future<void> saveStats(Map<String, dynamic> data) =>
-      _write(_keyStats, jsonEncode(data));
+  Future<void> saveStats(SudokuStats stats) =>
+      _write(_keyStats, jsonEncode(stats.toJson()));
 
   Future<String?> _read(String key) async {
     try {

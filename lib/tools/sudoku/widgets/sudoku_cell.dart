@@ -10,11 +10,10 @@ class SudokuCell extends StatelessWidget {
   final bool peer;
   final bool sameNumber;
   final bool conflict;
-  final bool hinted;
-  final VoidCallback? onTap;
   final double size;
-  final bool thickRight;
-  final bool thickBottom;
+  final bool lineRight;
+  final bool lineBottom;
+  final VoidCallback? onTap;
 
   const SudokuCell({
     super.key,
@@ -25,45 +24,29 @@ class SudokuCell extends StatelessWidget {
     required this.peer,
     required this.sameNumber,
     required this.conflict,
-    this.hinted = false,
+    required this.size,
+    this.lineRight = false,
+    this.lineBottom = false,
     this.onTap,
-    this.size = 40,
-    this.thickRight = false,
-    this.thickBottom = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    Color bg = given ? SudokuColors.cellAlt : SudokuColors.cell;
+    final colors = SudokuColors.of(context);
+    final Color bg;
     if (selected) {
-      bg = SudokuColors.selected.withValues(alpha: 0.35);
+      bg = colors.selected.withValues(alpha: 0.35);
     } else if (conflict) {
-      bg = SudokuColors.conflict.withValues(alpha: 0.18);
-    } else if (sameNumber && value != 0) {
-      bg = SudokuColors.sameNumber;
+      bg = colors.conflict.withValues(alpha: 0.18);
+    } else if (sameNumber) {
+      bg = colors.sameNumber;
     } else if (peer) {
-      bg = SudokuColors.peer;
+      bg = colors.peer;
+    } else {
+      bg = given ? colors.cellAlt : colors.cell;
     }
 
-    Widget content;
-    if (value != 0) {
-      content = Text(
-        '$value',
-        style: TextStyle(
-          fontSize: size * 0.52,
-          fontWeight: given ? FontWeight.w600 : FontWeight.w500,
-          color: conflict
-              ? SudokuColors.conflict
-              : (given
-                    ? SudokuColors.given
-                    : (hinted ? SudokuColors.hint : SudokuColors.user)),
-        ),
-      );
-    } else if (notes.isNotEmpty) {
-      content = _NotesGrid(notes: notes, size: size);
-    } else {
-      content = const SizedBox.shrink();
-    }
+    final line = BorderSide(color: colors.cellLine, width: 0.5);
 
     return GestureDetector(
       onTap: onTap,
@@ -72,20 +55,25 @@ class SudokuCell extends StatelessWidget {
         decoration: BoxDecoration(
           color: bg,
           border: Border(
-            right: BorderSide(
-              color: SudokuColors.board,
-              width: thickRight ? 2.0 : 0.5,
-            ),
-            bottom: BorderSide(
-              color: SudokuColors.board,
-              width: thickBottom ? 2.0 : 0.5,
-            ),
-            left: const BorderSide(color: SudokuColors.board, width: 0.5),
-            top: const BorderSide(color: SudokuColors.board, width: 0.5),
+            right: lineRight ? line : BorderSide.none,
+            bottom: lineBottom ? line : BorderSide.none,
           ),
         ),
         alignment: Alignment.center,
-        child: content,
+        child: value != 0
+            ? Text(
+                '$value',
+                style: TextStyle(
+                  fontSize: size * 0.52,
+                  fontWeight: given ? FontWeight.w600 : FontWeight.w500,
+                  color: conflict
+                      ? colors.conflict
+                      : (given ? colors.given : colors.user),
+                ),
+              )
+            : notes.isEmpty
+            ? null
+            : _NotesGrid(notes: notes, size: size, color: colors.note),
       ),
     );
   }
@@ -94,11 +82,21 @@ class SudokuCell extends StatelessWidget {
 class _NotesGrid extends StatelessWidget {
   final Set<int> notes;
   final double size;
-  const _NotesGrid({required this.notes, required this.size});
+  final Color color;
+  const _NotesGrid({
+    required this.notes,
+    required this.size,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final fs = size * 0.26;
+    final style = TextStyle(
+      fontSize: size * 0.26,
+      color: color,
+      fontWeight: FontWeight.w500,
+      height: 1,
+    );
     return Padding(
       padding: EdgeInsets.all(size * 0.06),
       child: Column(
@@ -114,12 +112,7 @@ class _NotesGrid extends StatelessWidget {
                     child: Text(
                       notes.contains(r * 3 + c + 1) ? '${r * 3 + c + 1}' : '',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: fs,
-                        color: SudokuColors.note,
-                        fontWeight: FontWeight.w500,
-                        height: 1,
-                      ),
+                      style: style,
                     ),
                   ),
               ],

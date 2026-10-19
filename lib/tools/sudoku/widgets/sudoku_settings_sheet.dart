@@ -7,110 +7,99 @@ import '../sudoku_colors.dart';
 import '../sudoku_state.dart';
 
 class SudokuSettingsSheet {
-  static Future<void> show(BuildContext context) async {
-    final state = context.read<SudokuState>();
-    await showModalBottomSheet<void>(
+  SudokuSettingsSheet._();
+
+  static Future<void> show(BuildContext context) {
+    return showModalBottomSheet<void>(
       context: context,
-      backgroundColor: SudokuColors.board,
+      backgroundColor: SudokuColors.of(context).board,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (ctx) => _Sheet(state: state),
+      builder: (_) => const _SettingsSheet(),
     );
   }
 }
 
-class _Sheet extends StatefulWidget {
-  final SudokuState state;
-  const _Sheet({required this.state});
+class _SettingsSheet extends StatelessWidget {
+  const _SettingsSheet();
 
-  @override
-  State<_Sheet> createState() => _SheetState();
-}
-
-class _SheetState extends State<_Sheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final s = widget.state;
-    return Padding(
+    final colors = SudokuColors.of(context);
+    final s = context.watch<SudokuState>();
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Text(
             l10n.sudokuSettingsTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: SudokuColors.given,
+              color: colors.given,
             ),
           ),
           const SizedBox(height: 12),
-          SwitchListTile(
-            value: s.soundEnabled,
-            onChanged: (v) => setState(() => s.setSoundEnabled(v)),
-            title: Text(
-              l10n.sudokuSound,
-              style: const TextStyle(color: SudokuColors.given),
-            ),
-            subtitle: Text(
-              l10n.sudokuSoundSubtitle,
-              style: const TextStyle(color: SudokuColors.note),
-            ),
-          ),
-          SwitchListTile(
+          _SettingSwitch(
+            title: l10n.sudokuHaptics,
+            subtitle: l10n.sudokuHapticsSubtitle,
             value: s.hapticsEnabled,
-            onChanged: (v) => setState(() => s.setHapticsEnabled(v)),
-            title: Text(
-              l10n.sudokuHaptics,
-              style: const TextStyle(color: SudokuColors.given),
-            ),
-            subtitle: Text(
-              l10n.sudokuHapticsSubtitle,
-              style: const TextStyle(color: SudokuColors.note),
-            ),
+            onChanged: s.setHapticsEnabled,
           ),
-          SwitchListTile(
+          _SettingSwitch(
+            title: l10n.sudokuAutoCheck,
             value: s.autoCheck,
-            onChanged: (v) => setState(() => s.setAutoCheck(v)),
-            title: Text(
-              l10n.sudokuAutoCheck,
-              style: const TextStyle(color: SudokuColors.given),
-            ),
+            onChanged: s.setAutoCheck,
           ),
-          SwitchListTile(
+          _SettingSwitch(
+            title: l10n.sudokuHighlightConflicts,
             value: s.highlightConflicts,
-            onChanged: (v) => setState(() => s.setHighlightConflicts(v)),
-            title: Text(
-              l10n.sudokuHighlightConflicts,
-              style: const TextStyle(color: SudokuColors.given),
-            ),
+            onChanged: s.setHighlightConflicts,
           ),
-          SwitchListTile(
+          _SettingSwitch(
+            title: l10n.sudokuHighlightSameNumber,
             value: s.highlightSameNumber,
-            onChanged: (v) => setState(() => s.setHighlightSameNumber(v)),
-            title: Text(
-              l10n.sudokuHighlightSameNumber,
-              style: const TextStyle(color: SudokuColors.given),
-            ),
+            onChanged: s.setHighlightSameNumber,
           ),
-          SwitchListTile(
+          _SettingSwitch(
+            title: l10n.sudokuShowTimer,
             value: s.showTimer,
-            onChanged: (v) => setState(() => s.setShowTimer(v)),
-            title: Text(
-              l10n.sudokuShowTimer,
-              style: const TextStyle(color: SudokuColors.given),
-            ),
+            onChanged: s.setShowTimer,
           ),
-          // Mistakes are unlimited (casual mode).
-          // Hints are unlimited.
         ],
       ),
-      ),
+    );
+  }
+}
+
+class _SettingSwitch extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SettingSwitch({
+    required this.title,
+    this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = SudokuColors.of(context);
+    return SwitchListTile(
+      value: value,
+      onChanged: onChanged,
+      title: Text(title, style: TextStyle(color: colors.given)),
+      subtitle: subtitle == null
+          ? null
+          : Text(subtitle!, style: TextStyle(color: colors.note)),
     );
   }
 }

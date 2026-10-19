@@ -6,6 +6,8 @@ import '../sudoku_colors.dart';
 import 'sudoku_cell.dart';
 
 class SudokuBoard extends StatelessWidget {
+  static const double _boxLineWidth = 2;
+
   final SudokuEngine engine;
   final bool highlightConflicts;
   final bool highlightSameNumber;
@@ -23,115 +25,105 @@ class SudokuBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = SudokuColors.of(context);
     final grid = engine.grid;
     final given = engine.given;
     final notes = engine.notes;
     final selected = engine.selected;
     final selectedValue = selected >= 0 ? grid[selected] : 0;
+    final conflicts = highlightConflicts
+        ? engine.conflicts(includeWrong: autoCheck)
+        : const <int>{};
 
-    // Precompute conflict set.
-    final conflicts = <int>{};
-    if (highlightConflicts) {
-      for (int i = 0; i < 81; i++) {
-        final v = grid[i];
-        if (v == 0) continue;
-        // check peers
-        bool dup = false;
-        // row
-        final r = SudokuSolver.rowOf(i);
-        final c = SudokuSolver.colOf(i);
-        for (int k = 0; k < 9; k++) {
-          final ri = r * 9 + k;
-          final ci = k * 9 + c;
-          if (ri != i && grid[ri] == v) dup = true;
-          if (ci != i && grid[ci] == v) dup = true;
-        }
-        // box
-        final br = (r ~/ 3) * 3;
-        final bc = (c ~/ 3) * 3;
-        for (int dr = 0; dr < 3; dr++) {
-          for (int dc = 0; dc < 3; dc++) {
-            final bi = (br + dr) * 9 + (bc + dc);
-            if (bi != i && grid[bi] == v) dup = true;
-          }
-        }
-        if (dup) conflicts.add(i);
-        // auto-check wrong value
-        if (autoCheck && v != engine.solution[i]) conflicts.add(i);
-      }
-    }
-
-    return AspectRatio(
-      aspectRatio: 1,
-      child: Container(
-        decoration: BoxDecoration(
-          color: SudokuColors.board,
-          border: Border.all(color: SudokuColors.board, width: 2),
-        ),
-        child: Column(
-          children: [
-            for (int row = 0; row < 9; row++)
-              Expanded(
-                child: Row(
-                  children: [
-                    for (int col = 0; col < 9; col++) ...[
-                      Expanded(
-                        child: _buildCell(
-                          row * 9 + col,
-                          grid,
-                          given,
-                          notes,
-                          selected,
-                          selectedValue,
-                          conflicts,
-                          row,
-                          col,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCell(
-    int idx,
-    List<int> grid,
-    List<bool> given,
-    List<Set<int>> notes,
-    int selected,
-    int selectedValue,
-    Set<int> conflicts,
-    int row,
-    int col,
-  ) {
-    final isPeer =
+    bool isPeer(int idx) =>
         selected >= 0 &&
-        (SudokuSolver.rowOf(selected) == row ||
-            SudokuSolver.colOf(selected) == col ||
+        idx != selected &&
+        (SudokuSolver.rowOf(selected) == SudokuSolver.rowOf(idx) ||
+            SudokuSolver.colOf(selected) == SudokuSolver.colOf(idx) ||
             SudokuSolver.boxOf(selected) == SudokuSolver.boxOf(idx));
 
-    final isSame =
-        highlightSameNumber && selectedValue != 0 && grid[idx] == selectedValue;
-
-    final hinted = false;
-
-    return SudokuCell(
+    Widget cell(int idx, double size) => SudokuCell(
       value: grid[idx],
       given: given[idx],
       notes: notes[idx],
       selected: selected == idx,
-      peer: selected >= 0 && selected != idx && isPeer,
-      sameNumber: isSame && selected != idx,
+      peer: isPeer(idx),
+      sameNumber:
+          highlightSameNumber &&
+          selectedValue != 0 &&
+          idx != selected &&
+          grid[idx] == selectedValue,
       conflict: conflicts.contains(idx),
-      hinted: hinted,
+      size: size,
+      lineRight: SudokuSolver.colOf(idx) < 8,
+      lineBottom: SudokuSolver.rowOf(idx) < 8,
       onTap: () => onCellTap(idx),
-      thickRight: (col + 1) % 3 == 0 && col < 8,
-      thickBottom: (row + 1) % 3 == 0 && row < 8,
+    );
+
+    return AspectRatio(
+      aspectRatio: 1,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.board,
+          border: Border.all(color: colors.boxLine, width: _boxLineWidth),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final cellSize = constraints.maxWidth / 9;
+            return Stack(
+              children: [
+                Column(
+                  children: [
+                    for (int row = 0; row < 9; row++)
+                      Expanded(
+                        child: Row(
+                          children: [
+                            for (int col = 0; col < 9; col++)
+                              Expanded(child: cell(row * 9 + col, cellSize)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _BoxLinesPainter(
+                        color: colors.boxLine,
+                        width: _boxLineWidth,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
+}
+
+class _BoxLinesPainter extends CustomPainter {
+  final Color color;
+  final double width;
+
+  const _BoxLinesPainter({required this.color, required this.width});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = width;
+    for (int i = 1; i < 3; i++) {
+      final x = size.width * i / 3;
+      final y = size.height * i / 3;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BoxLinesPainter old) =>
+      old.color != color || old.width != width;
 }

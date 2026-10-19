@@ -4,16 +4,20 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../engine/sudoku_generator.dart';
 import '../sudoku_colors.dart';
+import '../sudoku_labels.dart';
 
 class SudokuDifficultySheet {
+  SudokuDifficultySheet._();
+
   static Future<SudokuDifficulty?> show(
     BuildContext context, {
     SudokuDifficulty? current,
-  }) async {
+  }) {
     final l10n = AppLocalizations.of(context);
+    final colors = SudokuColors.of(context);
     return showModalBottomSheet<SudokuDifficulty>(
       context: context,
-      backgroundColor: SudokuColors.board,
+      backgroundColor: colors.board,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -25,21 +29,21 @@ class SudokuDifficultySheet {
           children: [
             Text(
               l10n.sudokuSelectDifficulty,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: SudokuColors.given,
+                color: colors.given,
               ),
             ),
             const SizedBox(height: 12),
             for (final d in SudokuDifficulty.values)
               ListTile(
                 title: Text(
-                  _label(d, l10n),
-                  style: const TextStyle(color: SudokuColors.given),
+                  d.label(l10n),
+                  style: TextStyle(color: colors.given),
                 ),
                 trailing: current == d
-                    ? const Icon(Icons.check, color: SudokuColors.success)
+                    ? Icon(Icons.check, color: colors.success)
                     : null,
                 onTap: () => Navigator.of(ctx).pop(d),
               ),
@@ -47,18 +51,5 @@ class SudokuDifficultySheet {
         ),
       ),
     );
-  }
-
-  static String _label(SudokuDifficulty d, AppLocalizations l10n) {
-    switch (d) {
-      case SudokuDifficulty.easy:
-        return l10n.sudokuDifficultyEasy;
-      case SudokuDifficulty.medium:
-        return l10n.sudokuDifficultyMedium;
-      case SudokuDifficulty.hard:
-        return l10n.sudokuDifficultyHard;
-      case SudokuDifficulty.expert:
-        return l10n.sudokuDifficultyExpert;
-    }
   }
 }

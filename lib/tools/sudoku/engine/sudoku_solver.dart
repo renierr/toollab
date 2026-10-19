@@ -45,20 +45,6 @@ class SudokuSolver {
     return result;
   }
 
-  /// Solves [grid] in place. Returns true if a solution exists.
-  /// [grid] is modified to contain the solution on success.
-  static bool solve(List<int> grid) {
-    final idx = _firstEmpty(grid);
-    if (idx == -1) return true;
-    final cands = candidates(grid, idx).toList()..sort();
-    for (final v in cands) {
-      grid[idx] = v;
-      if (solve(grid)) return true;
-    }
-    grid[idx] = 0;
-    return false;
-  }
-
   /// Counts solutions up to [limit] without mutating the input.
   static int countSolutions(List<int> grid, {int limit = 2}) {
     final copy = List<int>.from(grid);
@@ -88,15 +74,5 @@ class SudokuSolver {
       if (grid[i] == 0) return i;
     }
     return -1;
-  }
-
-  static bool isComplete(List<int> grid) => _firstEmpty(grid) == -1;
-
-  /// Validates that every filled cell matches the solution.
-  static bool matchesSolution(List<int> grid, List<int> solution) {
-    for (int i = 0; i < grid.length; i++) {
-      if (grid[i] != 0 && grid[i] != solution[i]) return false;
-    }
-    return true;
   }
 }
