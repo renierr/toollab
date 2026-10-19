@@ -495,8 +495,12 @@ open class MainActivity : FlutterFragmentActivity() {
                         }
                         Thread {
                             try {
-                                FileSaveHelper.openFile(this, uriString, mimeType)
-                                runOnUiThread { result.success(true) }
+                                val selfUpdate = FileSaveHelper.openFile(this, uriString, mimeType)
+                                runOnUiThread {
+                                    result.success(true)
+                                    // A Flutter surface still visible when the update kills us hangs Pixel 10.
+                                    if (selfUpdate) finishAndRemoveTask()
+                                }
                             } catch (e: Exception) {
                                 runOnUiThread { result.error("OPEN_ERROR", e.message, null) }
                             }

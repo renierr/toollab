@@ -8,10 +8,10 @@ import android.content.ClipData
 import android.content.Context
 import android.media.MediaScannerConnection
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.provider.OpenableColumns
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
@@ -20,9 +20,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 object FileSaveHelper {
+
+    private const val APK_MIME = "application/vnd.android.package-archive"
 
     private fun splitBaseAndExtension(fileName: String): Pair<String, String> {
         val dotIndex = fileName.lastIndexOf('.')
@@ -170,157 +173,101 @@ object FileSaveHelper {
         }
     }
 
-    private fun resolveSourceFile(context: Context, uriString: String): File? {
+    // Content URIs are parsed through their fd path, so the APK is never copied out first.
+    private fun apkInfo(context: Context, uriString: String): PackageInfo? {
         return try {
-            if (!uriString.startsWith("content://")) {
-                val file = File(uriString)
-                if (file.exists()) file else null
-            } else {
-                val uri = Uri.parse(uriString)
-                var name = "tool_lab_${System.currentTimeMillis()}.apk"
-                context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
-                    if (cursor.moveToFirst()) name = cursor.getString(0) ?: name
+            if (uriString.startsWith("content://")) {
+                context.contentResolver.openFileDescriptor(Uri.parse(uriString), "r")?.use { pfd ->
+                    apkInfoAtPath(context, "/proc/self/fd/${pfd.fd}")
                 }
-                val outFile = File(context.cacheDir, name)
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    FileOutputStream(outFile).use { output -> input.copyTo(output) }
-                } ?: return null
-                if (outFile.exists()) outFile else null
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun apkPackageName(context: Context, sourceFile: File): String? {
-        return try {
-            @Suppress("DEPRECATION")
-            context.packageManager.getPackageArchiveInfo(sourceFile.absolutePath, 0)?.packageName
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun apkVersionCode(context: Context, sourceFile: File): Long {
-        return try {
-            @Suppress("DEPRECATION")
-            val info = context.packageManager.getPackageArchiveInfo(sourceFile.absolutePath, 0)
-                ?: return 0L
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                info.longVersionCode
             } else {
-                @Suppress("DEPRECATION")
-                info.versionCode.toLong()
+                apkInfoAtPath(context, uriString)
             }
         } catch (_: Exception) {
-            0L
+            null
         }
     }
 
-    private fun readApkPackageAndVersion(context: Context, uri: Uri, displayName: String?): Pair<String?, Long> {
-        val cacheName = "scan_${System.currentTimeMillis()}_${displayName ?: "apk"}"
-        val outFile = File(context.cacheDir, cacheName)
+    @Suppress("DEPRECATION")
+    private fun apkInfoAtPath(context: Context, path: String): PackageInfo? =
+        context.packageManager.getPackageArchiveInfo(path, 0)
+
+    private fun PackageInfo.versionCodeCompat(): Long =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            longVersionCode
+        } else {
+            @Suppress("DEPRECATION")
+            versionCode.toLong()
+        }
+
+    private fun downloadsUri(id: Long): Uri =
+        ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, id)
+
+    private fun findDownloadsUriByPath(context: Context, file: File): Uri? {
         return try {
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(outFile).use { output -> input.copyTo(output) }
-            } ?: return Pair(null, 0L)
-            if (!outFile.exists()) return Pair(null, 0L)
-            Pair(apkPackageName(context, outFile), apkVersionCode(context, outFile))
-        } catch (_: Exception) {
-            Pair(null, 0L)
-        } finally {
-            try {
-                if (outFile.exists()) outFile.delete()
-            } catch (_: Exception) {
-            }
-        }
-    }
-
-    private fun findExistingDownloadsUri(context: Context, sourceFile: File): Uri? {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
-        val resolver = context.contentResolver
-        val projection = arrayOf(MediaStore.Downloads._ID)
-        // Prefer an exact filesystem-path match so we reuse the entry for a
-        // file that is already in public Downloads instead of creating a copy.
-        try {
-            resolver.query(
+            context.contentResolver.query(
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                projection,
+                arrayOf(MediaStore.Downloads._ID),
                 "_data = ?",
-                arrayOf(sourceFile.absolutePath),
+                arrayOf(file.absolutePath),
                 null,
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    return ContentUris.withAppendedId(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                        cursor.getLong(0),
-                    )
-                }
-            }
+            )?.use { cursor -> if (cursor.moveToFirst()) downloadsUri(cursor.getLong(0)) else null }
         } catch (_: Exception) {
-            // _DATA may be unavailable on some providers; fall through.
+            // _data may be unavailable on some providers.
+            null
         }
-        // Fall back to display name (handles files scanned by MediaStore).
-        try {
-            resolver.query(
-                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                projection,
-                "${MediaStore.Downloads.DISPLAY_NAME} = ?",
-                arrayOf(sourceFile.name),
-                null,
-            )?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    return ContentUris.withAppendedId(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                        cursor.getLong(0),
-                    )
-                }
-            }
-        } catch (_: Exception) {
-            // Fall through.
-        }
-        // Self-update reuse: an APK whose package/version matches ToolLab's
-        // own may already live in public Downloads under a different file name
-        // (e.g. a prior "Download" saved it). Scan MediaStore entries and
-        // reuse the matching one instead of creating a second copy.
-        val sourcePackage = apkPackageName(context, sourceFile) ?: return null
-        if (sourcePackage != context.packageName) return null
-        val sourceVersion = apkVersionCode(context, sourceFile)
-        if (sourceVersion == 0L) return null
+    }
+
+    // A prior self-update may have saved the same build under another name.
+    private fun findDownloadsUriByBuild(context: Context, file: File, info: PackageInfo): Uri? {
         return try {
-            resolver.query(
+            context.contentResolver.query(
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                arrayOf(
-                    MediaStore.Downloads._ID,
-                    MediaStore.Downloads.DISPLAY_NAME,
-                    MediaStore.Downloads.SIZE,
-                ),
-                "${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
-                arrayOf("%.apk"),
+                arrayOf(MediaStore.Downloads._ID),
+                "${MediaStore.Downloads.SIZE} = ? AND ${MediaStore.Downloads.DISPLAY_NAME} LIKE ?",
+                arrayOf(file.length().toString(), "%.apk"),
                 null,
             )?.use { cursor ->
-                val idCol = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
-                val nameCol = cursor.getColumnIndex(MediaStore.Downloads.DISPLAY_NAME)
-                val sizeCol = cursor.getColumnIndex(MediaStore.Downloads.SIZE)
-                val sourceSize = try { sourceFile.length() } catch (_: Exception) { 0L }
                 while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idCol)
-                    val displayName = if (nameCol >= 0) cursor.getString(nameCol) else null
-                    val entrySize = if (sizeCol >= 0) cursor.getLong(sizeCol) else 0L
-                    if (sourceSize > 0 && entrySize > 0 && entrySize != sourceSize) {
-                        continue
-                    }
-                    val entryUri = ContentUris.withAppendedId(
-                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
-                        id,
-                    )
-                    val (pkg, ver) = readApkPackageAndVersion(context, entryUri, displayName)
-                    if (pkg == context.packageName && ver == sourceVersion) {
-                        return entryUri
+                    val uri = downloadsUri(cursor.getLong(0))
+                    val entry = apkInfo(context, uri.toString()) ?: continue
+                    if (entry.packageName == info.packageName &&
+                        entry.versionCodeCompat() == info.versionCodeCompat()
+                    ) {
+                        return uri
                     }
                 }
                 null
             }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun scanIntoMediaStore(context: Context, file: File): Uri? {
+        var scanned: Uri? = null
+        val latch = CountDownLatch(1)
+        MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), arrayOf(APK_MIME)) { _, uri ->
+            scanned = uri
+            latch.countDown()
+        }
+        latch.await(2, TimeUnit.SECONDS)
+        return findDownloadsUriByPath(context, file) ?: scanned
+    }
+
+    // ToolLab's own APK must be served by MediaProvider: this app's FileProvider
+    // dies with the process the install replaces.
+    private fun selfUpdateUri(context: Context, file: File, info: PackageInfo): Uri? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        findDownloadsUriByPath(context, file)?.let { return it }
+        findDownloadsUriByBuild(context, file, info)?.let { return it }
+        if (file.absolutePath.contains("/Download/")) {
+            scanIntoMediaStore(context, file)?.let { return it }
+        }
+        return try {
+            saveToDownloadsFromPath(context, file.absolutePath, deriveApkName(file.name), APK_MIME)["uri"]
+                ?.takeIf { it.startsWith("content://") }
+                ?.let(Uri::parse)
         } catch (_: Exception) {
             null
         }
@@ -341,96 +288,45 @@ object FileSaveHelper {
         return name
     }
 
-    fun openFile(context: Context, uriString: String, mimeType: String) {
-        // Unknown-sources gate for APK installs.
-        if (mimeType == "application/vnd.android.package-archive" &&
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+    private fun grantedIntent(action: String, uri: Uri, mimeType: String): Intent =
+        Intent(action).apply {
+            setDataAndType(uri, mimeType)
+            clipData = ClipData.newRawUri("package", uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+    /** Returns true when the launched install replaces ToolLab itself. */
+    fun openFile(context: Context, uriString: String, mimeType: String): Boolean {
+        if (mimeType != APK_MIME) {
+            val intent = grantedIntent(Intent.ACTION_VIEW, getUriForPath(context, uriString), mimeType)
+            context.startActivity(Intent.createChooser(intent, "Open File").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            })
+            return false
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             !context.packageManager.canRequestPackageInstalls()
         ) {
             context.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                 data = Uri.parse("package:${context.packageName}")
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             })
-            return
+            return false
         }
 
-        var uri = getUriForPath(context, uriString)
-
-        // Self-update mitigation: an APK whose package matches ToolLab's own must
-        // be served by the system MediaProvider (survives process death) instead
-        // of this app's FileProvider, otherwise the installer loses access when
-        // the app process is killed mid-install.
-        if (mimeType == "application/vnd.android.package-archive") {
-            val sourceFile = resolveSourceFile(context, uriString)
-            if (sourceFile != null && apkPackageName(context, sourceFile) == context.packageName) {
-                uri = when {
-                    uriString.startsWith("content://") && uriString.contains("media") -> Uri.parse(uriString)
-                    else -> {
-                        var existing = findExistingDownloadsUri(context, sourceFile)
-                        // If the file is already in public Downloads but not yet
-                        // indexed by MediaStore, scan it once and retry.
-                        if (existing == null && sourceFile.absolutePath.contains("/Download/")) {
-                            try {
-                                val latch = java.util.concurrent.CountDownLatch(1)
-                                MediaScannerConnection.scanFile(
-                                    context,
-                                    arrayOf(sourceFile.absolutePath),
-                                    arrayOf(mimeType),
-                                ) { _, _ -> latch.countDown() }
-                                latch.await(2, java.util.concurrent.TimeUnit.SECONDS)
-                                existing = findExistingDownloadsUri(context, sourceFile)
-                            } catch (_: Exception) {
-                            }
-                        }
-                        if (existing != null) {
-                            existing
-                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            try {
-                                val saved = saveToDownloadsFromPath(
-                                    context,
-                                    sourceFile.absolutePath,
-                                    deriveApkName(sourceFile.name),
-                                    mimeType,
-                                )
-                                val savedUri = saved["uri"]
-                                if (!savedUri.isNullOrEmpty() && savedUri.startsWith("content://")) {
-                                    Uri.parse(savedUri)
-                                } else {
-                                    uri
-                                }
-                            } catch (e: Exception) {
-                                uri
-                            }
-                        } else {
-                            uri
-                        }
-                    }
-                }
-            }
-        }
-
-        val intent = Intent(
-            if (mimeType == "application/vnd.android.package-archive") {
-                Intent.ACTION_INSTALL_PACKAGE
-            } else {
-                Intent.ACTION_VIEW
-            },
-        ).apply {
-            setDataAndType(uri, mimeType)
-            clipData = ClipData.newRawUri("package", uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val selfInfo = apkInfo(context, uriString)?.takeIf { it.packageName == context.packageName }
+        // Foreign content URIs outlive this process already; only file paths need MediaStore.
+        val uri = if (selfInfo != null && !uriString.startsWith("content://")) {
+            selfUpdateUri(context, File(uriString), selfInfo) ?: getUriForPath(context, uriString)
+        } else {
+            getUriForPath(context, uriString)
         }
         // Install intents must go straight to the system package installer;
         // wrapping them in a chooser can hang/crash on some devices.
-        if (mimeType == "application/vnd.android.package-archive") {
-            context.startActivity(intent)
-        } else {
-            val chooser = Intent.createChooser(intent, "Open File").apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(chooser)
-        }
+        context.startActivity(grantedIntent(Intent.ACTION_INSTALL_PACKAGE, uri, mimeType))
+        return selfInfo != null
     }
 
     fun showSystemNotification(context: Context, activity: MainActivity, fileName: String, uriString: String, mimeType: String) {
