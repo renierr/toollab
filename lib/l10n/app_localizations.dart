@@ -11663,6 +11663,282 @@ abstract class AppLocalizations {
   /// **'Auto gain'**
   String get sfAutoGain;
 
+  /// No description provided for @sfMemoReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get sfMemoReady;
+
+  /// No description provided for @sfMemoRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording'**
+  String get sfMemoRecording;
+
+  /// No description provided for @sfMemoPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get sfMemoPaused;
+
+  /// No description provided for @sfMemoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Records straight to a lossless file. Keeps recording with the screen off.'**
+  String get sfMemoHint;
+
+  /// No description provided for @sfMemoDeniedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant microphone access to record memos.'**
+  String get sfMemoDeniedBody;
+
+  /// No description provided for @sfMemoStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t start recording. Check the selected microphone and format.'**
+  String get sfMemoStartFailed;
+
+  /// No description provided for @sfMemoSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String sfMemoSaved(String name);
+
+  /// No description provided for @sfMemoDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get sfMemoDiscard;
+
+  /// No description provided for @sfMemoDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard recording?'**
+  String get sfMemoDiscardTitle;
+
+  /// No description provided for @sfMemoDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The current recording will be deleted.'**
+  String get sfMemoDiscardBody;
+
+  /// No description provided for @sfMemoPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak {db} dB'**
+  String sfMemoPeak(String db);
+
+  /// No description provided for @sfMemoClipping.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipping — move the mic away'**
+  String get sfMemoClipping;
+
+  /// No description provided for @sfMemoSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording quality'**
+  String get sfMemoSettingsTitle;
+
+  /// No description provided for @sfMemoSettingsNextRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes apply to the next recording.'**
+  String get sfMemoSettingsNextRecording;
+
+  /// No description provided for @sfMemoFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get sfMemoFormat;
+
+  /// No description provided for @sfMemoFormatWavHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lossless and editable (trim, normalize).'**
+  String get sfMemoFormatWavHint;
+
+  /// No description provided for @sfMemoFormatFlacHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Lossless at about half the size. Not editable.'**
+  String get sfMemoFormatFlacHint;
+
+  /// No description provided for @sfMemoChannels.
+  ///
+  /// In en, this message translates to:
+  /// **'Channels'**
+  String get sfMemoChannels;
+
+  /// No description provided for @sfMemoMono.
+  ///
+  /// In en, this message translates to:
+  /// **'Mono'**
+  String get sfMemoMono;
+
+  /// No description provided for @sfMemoStereo.
+  ///
+  /// In en, this message translates to:
+  /// **'Stereo'**
+  String get sfMemoStereo;
+
+  /// No description provided for @sfMemoSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone mode'**
+  String get sfMemoSource;
+
+  /// No description provided for @sfMemoSourceStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get sfMemoSourceStandard;
+
+  /// No description provided for @sfMemoSourceCamcorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Camcorder'**
+  String get sfMemoSourceCamcorder;
+
+  /// No description provided for @sfMemoSourceVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice'**
+  String get sfMemoSourceVoice;
+
+  /// No description provided for @sfMemoSourceRaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Raw (unprocessed)'**
+  String get sfMemoSourceRaw;
+
+  /// No description provided for @sfMemoUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get sfMemoUnlimited;
+
+  /// No description provided for @sfMemoMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String sfMemoMinutes(int count);
+
+  /// No description provided for @sfMemoProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing'**
+  String get sfMemoProcessing;
+
+  /// No description provided for @sfMemoProcessingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave these off for the most natural sound.'**
+  String get sfMemoProcessingHint;
+
+  /// No description provided for @sfMemoNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice memo'**
+  String get sfMemoNotificationTitle;
+
+  /// No description provided for @sfMemoNotificationRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording…'**
+  String get sfMemoNotificationRecording;
+
+  /// No description provided for @sfMemoNotificationPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused'**
+  String get sfMemoNotificationPaused;
+
+  /// No description provided for @sfMemoListSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 recording} other{{count} recordings}} · {size}'**
+  String sfMemoListSummary(int count, String size);
+
+  /// No description provided for @sfMemoEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No recordings yet.'**
+  String get sfMemoEmpty;
+
+  /// No description provided for @sfMemoRenameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename recording'**
+  String get sfMemoRenameTitle;
+
+  /// No description provided for @sfMemoSaveTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to…'**
+  String get sfMemoSaveTo;
+
+  /// No description provided for @sfMemoEditFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change the recording'**
+  String get sfMemoEditFailed;
+
+  /// No description provided for @sfMemoNormalized.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording normalized'**
+  String get sfMemoNormalized;
+
+  /// No description provided for @sfMemoDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete recording?'**
+  String get sfMemoDeleteTitle;
+
+  /// No description provided for @sfMemoDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" will be permanently deleted.'**
+  String sfMemoDeleteBody(String name);
+
+  /// No description provided for @sfMemoPausePlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get sfMemoPausePlayback;
+
+  /// No description provided for @sfMemoSkipBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back 5 s'**
+  String get sfMemoSkipBack;
+
+  /// No description provided for @sfMemoSkipForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward 5 s'**
+  String get sfMemoSkipForward;
+
+  /// No description provided for @sfMemoTrimSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end} ({length})'**
+  String sfMemoTrimSelection(String start, String end, String length);
+
+  /// No description provided for @sfMemoTrimReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get sfMemoTrimReplace;
+
+  /// No description provided for @sfMemoTrimSaveCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save as copy'**
+  String get sfMemoTrimSaveCopy;
+
   /// No description provided for @sfMorseGenTab.
   ///
   /// In en, this message translates to:

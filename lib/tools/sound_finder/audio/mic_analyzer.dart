@@ -62,9 +62,6 @@ class MicAnalysis {
 /// mic stays as sensitive and unprocessed as possible.
 class MicAnalyzer {
   static int sampleRate = 44100;
-  static bool noiseSuppress = false;
-  static bool echoCancel = false;
-  static bool autoGain = false;
   static const double _minFreqHz = 20;
 
   /// Default longest clip that can be captured into memory before recording auto-stops.
@@ -239,9 +236,9 @@ class MicAnalyzer {
           sampleRate: sampleRate,
           numChannels: 1,
           device: device,
-          autoGain: autoGain,
-          echoCancel: echoCancel,
-          noiseSuppress: noiseSuppress,
+          androidConfig: AndroidRecordConfig(
+            manageBluetooth: device?.type == InputDeviceType.bluetoothSco,
+          ),
         ),
       );
       _filled = 0;
@@ -283,10 +280,7 @@ class MicAnalyzer {
     }
     if (rec != null) {
       if (_recording && !_paused) _appendRecording(rec);
-      if (pcmListeners && !_paused) {
-        debugLog('[MicAnalyzer] pcm emit count=$count');
-        _pcmController.add(rec);
-      }
+      if (pcmListeners && !_paused) _pcmController.add(rec);
     }
   }
 

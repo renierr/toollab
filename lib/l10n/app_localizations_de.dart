@@ -6525,6 +6525,169 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfAutoGain => 'Automatische Verstärkung';
 
   @override
+  String get sfMemoReady => 'Bereit';
+
+  @override
+  String get sfMemoRecording => 'Aufnahme';
+
+  @override
+  String get sfMemoPaused => 'Pausiert';
+
+  @override
+  String get sfMemoHint =>
+      'Nimmt direkt verlustfrei in eine Datei auf. Läuft auch bei ausgeschaltetem Bildschirm weiter.';
+
+  @override
+  String get sfMemoDeniedBody =>
+      'Erlaube den Mikrofonzugriff, um Memos aufzunehmen.';
+
+  @override
+  String get sfMemoStartFailed =>
+      'Aufnahme konnte nicht starten. Prüfe Mikrofon und Format.';
+
+  @override
+  String sfMemoSaved(String name) {
+    return '$name gespeichert';
+  }
+
+  @override
+  String get sfMemoDiscard => 'Verwerfen';
+
+  @override
+  String get sfMemoDiscardTitle => 'Aufnahme verwerfen?';
+
+  @override
+  String get sfMemoDiscardBody => 'Die laufende Aufnahme wird gelöscht.';
+
+  @override
+  String sfMemoPeak(String db) {
+    return 'Spitze $db dB';
+  }
+
+  @override
+  String get sfMemoClipping => 'Übersteuert – Mikrofon weiter weg';
+
+  @override
+  String get sfMemoSettingsTitle => 'Aufnahmequalität';
+
+  @override
+  String get sfMemoSettingsNextRecording =>
+      'Änderungen gelten ab der nächsten Aufnahme.';
+
+  @override
+  String get sfMemoFormat => 'Format';
+
+  @override
+  String get sfMemoFormatWavHint =>
+      'Verlustfrei und bearbeitbar (Kürzen, Normalisieren).';
+
+  @override
+  String get sfMemoFormatFlacHint =>
+      'Verlustfrei bei etwa halber Größe. Nicht bearbeitbar.';
+
+  @override
+  String get sfMemoChannels => 'Kanäle';
+
+  @override
+  String get sfMemoMono => 'Mono';
+
+  @override
+  String get sfMemoStereo => 'Stereo';
+
+  @override
+  String get sfMemoSource => 'Mikrofonmodus';
+
+  @override
+  String get sfMemoSourceStandard => 'Standard';
+
+  @override
+  String get sfMemoSourceCamcorder => 'Camcorder';
+
+  @override
+  String get sfMemoSourceVoice => 'Sprache';
+
+  @override
+  String get sfMemoSourceRaw => 'Roh (unbearbeitet)';
+
+  @override
+  String get sfMemoUnlimited => 'Unbegrenzt';
+
+  @override
+  String sfMemoMinutes(int count) {
+    return '$count Min.';
+  }
+
+  @override
+  String get sfMemoProcessing => 'Verarbeitung';
+
+  @override
+  String get sfMemoProcessingHint =>
+      'Für den natürlichsten Klang ausgeschaltet lassen.';
+
+  @override
+  String get sfMemoNotificationTitle => 'Sprachmemo';
+
+  @override
+  String get sfMemoNotificationRecording => 'Aufnahme läuft…';
+
+  @override
+  String get sfMemoNotificationPaused => 'Pausiert';
+
+  @override
+  String sfMemoListSummary(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Aufnahmen',
+      one: '1 Aufnahme',
+    );
+    return '$_temp0 · $size';
+  }
+
+  @override
+  String get sfMemoEmpty => 'Noch keine Aufnahmen.';
+
+  @override
+  String get sfMemoRenameTitle => 'Aufnahme umbenennen';
+
+  @override
+  String get sfMemoSaveTo => 'Speichern unter…';
+
+  @override
+  String get sfMemoEditFailed => 'Aufnahme konnte nicht geändert werden';
+
+  @override
+  String get sfMemoNormalized => 'Aufnahme normalisiert';
+
+  @override
+  String get sfMemoDeleteTitle => 'Aufnahme löschen?';
+
+  @override
+  String sfMemoDeleteBody(String name) {
+    return '„$name“ wird endgültig gelöscht.';
+  }
+
+  @override
+  String get sfMemoPausePlayback => 'Pause';
+
+  @override
+  String get sfMemoSkipBack => '5 s zurück';
+
+  @override
+  String get sfMemoSkipForward => '5 s vor';
+
+  @override
+  String sfMemoTrimSelection(String start, String end, String length) {
+    return '$start – $end ($length)';
+  }
+
+  @override
+  String get sfMemoTrimReplace => 'Ersetzen';
+
+  @override
+  String get sfMemoTrimSaveCopy => 'Als Kopie speichern';
+
+  @override
   String get sfMorseGenTab => 'Senden';
 
   @override

@@ -3427,6 +3427,103 @@
   "sfNoiseSuppress": "Noise suppression",
   "sfEchoCancel": "Echo cancellation",
   "sfAutoGain": "Auto gain",
+  "sfMemoReady": "Ready",
+  "sfMemoRecording": "Recording",
+  "sfMemoPaused": "Paused",
+  "sfMemoHint": "Records straight to a lossless file. Keeps recording with the screen off.",
+  "sfMemoDeniedBody": "Grant microphone access to record memos.",
+  "sfMemoStartFailed": "Couldn't start recording. Check the selected microphone and format.",
+  "sfMemoSaved": "Saved {name}",
+  "@sfMemoSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sfMemoDiscard": "Discard",
+  "sfMemoDiscardTitle": "Discard recording?",
+  "sfMemoDiscardBody": "The current recording will be deleted.",
+  "sfMemoPeak": "Peak {db} dB",
+  "@sfMemoPeak": {
+    "placeholders": {
+      "db": {
+        "type": "String"
+      }
+    }
+  },
+  "sfMemoClipping": "Clipping — move the mic away",
+  "sfMemoSettingsTitle": "Recording quality",
+  "sfMemoSettingsNextRecording": "Changes apply to the next recording.",
+  "sfMemoFormat": "Format",
+  "sfMemoFormatWavHint": "Lossless and editable (trim, normalize).",
+  "sfMemoFormatFlacHint": "Lossless at about half the size. Not editable.",
+  "sfMemoChannels": "Channels",
+  "sfMemoMono": "Mono",
+  "sfMemoStereo": "Stereo",
+  "sfMemoSource": "Microphone mode",
+  "sfMemoSourceStandard": "Standard",
+  "sfMemoSourceCamcorder": "Camcorder",
+  "sfMemoSourceVoice": "Voice",
+  "sfMemoSourceRaw": "Raw (unprocessed)",
+  "sfMemoUnlimited": "Unlimited",
+  "sfMemoMinutes": "{count} min",
+  "@sfMemoMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sfMemoProcessing": "Processing",
+  "sfMemoProcessingHint": "Leave these off for the most natural sound.",
+  "sfMemoNotificationTitle": "Voice memo",
+  "sfMemoNotificationRecording": "Recording…",
+  "sfMemoNotificationPaused": "Paused",
+  "sfMemoListSummary": "{count, plural, =1{1 recording} other{{count} recordings}} · {size}",
+  "@sfMemoListSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "sfMemoEmpty": "No recordings yet.",
+  "sfMemoRenameTitle": "Rename recording",
+  "sfMemoSaveTo": "Save to…",
+  "sfMemoEditFailed": "Couldn't change the recording",
+  "sfMemoNormalized": "Recording normalized",
+  "sfMemoDeleteTitle": "Delete recording?",
+  "sfMemoDeleteBody": "\"{name}\" will be permanently deleted.",
+  "@sfMemoDeleteBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sfMemoPausePlayback": "Pause",
+  "sfMemoSkipBack": "Back 5 s",
+  "sfMemoSkipForward": "Forward 5 s",
+  "sfMemoTrimSelection": "{start} – {end} ({length})",
+  "@sfMemoTrimSelection": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "sfMemoTrimReplace": "Replace",
+  "sfMemoTrimSaveCopy": "Save as copy",
   "sfMorseGenTab": "Generate",
   "sfMorseAnalTab": "Analyze",
   "sfMorseWpm": "Morse Speed",

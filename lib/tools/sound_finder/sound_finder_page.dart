@@ -5,15 +5,15 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/power_wake_lock_service.dart';
-import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
+import 'memo/memo_recorder.dart';
 import 'sound_finder_state.dart';
 import 'widgets/sf_clip_recorder.dart';
 import 'widgets/sf_counter_view.dart';
-import 'widgets/sf_gain_control.dart';
 import 'widgets/sf_generator_view.dart';
-import 'widgets/sf_mic_selector.dart';
+import 'widgets/sf_input_settings_dialog.dart';
+import 'widgets/sf_memo_settings_dialog.dart';
 import 'widgets/sf_mode_tabs.dart';
 import 'widgets/sf_tracker_view.dart';
 import 'widgets/sf_doppler_view.dart';
@@ -60,13 +60,19 @@ class _SoundFinderPageState extends State<SoundFinderPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final bool active = state == AppLifecycleState.resumed;
     if (!mounted) return;
     final sfState = context.read<SoundFinderState>();
-    if (active) {
-      unawaited(sfState.onAppForegrounded());
-    } else {
-      unawaited(sfState.onAppBackgrounded());
+    // `inactive` alone is a dialog, a share sheet or a lost window focus; the
+    // mic must keep running through those.
+    switch (state) {
+      case AppLifecycleState.resumed:
+        unawaited(sfState.onAppForegrounded());
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+        unawaited(sfState.onAppBackgrounded());
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        break;
     }
   }
 
@@ -82,6 +88,11 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       title: l10n.sfSleepNotificationTitle,
       text: l10n.sfSleepNotificationText,
       savedChunks: l10n.sfSleepSavedChunks,
+    );
+    context.read<MemoRecorder>().setNotificationText(
+      title: l10n.sfMemoNotificationTitle,
+      recording: l10n.sfMemoNotificationRecording,
+      paused: l10n.sfMemoNotificationPaused,
     );
   }
 
@@ -116,72 +127,25 @@ class _SoundFinderPageState extends State<SoundFinderPage>
     return ToolLayout(
       title: title,
       actions: [
-        if (mode != SfMode.generator && mode != SfMode.morse && isMicRunning)
+        if (mode == SfMode.recordings)
+          IconButton(
+            icon: const Icon(Icons.tune_outlined),
+            tooltip: l10n.sfMemoSettingsTitle,
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => const SfMemoSettingsDialog(),
+            ),
+          )
+        else if (mode != SfMode.generator &&
+            mode != SfMode.morse &&
+            isMicRunning)
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: l10n.sfInputSettings,
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => ResponsiveAlertDialog(
-                  title: Text(l10n.sfInputSettings),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SfMicSelector(),
-                      const SizedBox(height: 16),
-                      const SfGainControl(),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          const Icon(Icons.timer_outlined, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(l10n.sfMaxRecordLength)),
-                          DropdownButton<int>(
-                            value: context
-                                .watch<SoundFinderState>()
-                                .maxRecordSeconds,
-                            items: const [
-                              DropdownMenuItem(value: 60, child: Text('1 min')),
-                              DropdownMenuItem(
-                                value: 300,
-                                child: Text('5 min'),
-                              ),
-                              DropdownMenuItem(
-                                value: 600,
-                                child: Text('10 min'),
-                              ),
-                              DropdownMenuItem(
-                                value: 1800,
-                                child: Text('30 min'),
-                              ),
-                              DropdownMenuItem(
-                                value: 0,
-                                child: Text('Unlimited'),
-                              ),
-                            ],
-                            onChanged: (v) {
-                              if (v != null) {
-                                context
-                                    .read<SoundFinderState>()
-                                    .setMaxRecordSeconds(v);
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.commonClose),
-                    ),
-                  ],
-                ),
-              );
-            },
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => const SfInputSettingsDialog(),
+            ),
           ),
       ],
       child: Column(
@@ -200,10 +164,13 @@ class _SoundFinderPageState extends State<SoundFinderPage>
               child: SfClipRecorder(),
             ),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              child: view,
-            ),
+            // The memo list scrolls lazily on its own.
+            child: mode == SfMode.recordings
+                ? view
+                : SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                    child: view,
+                  ),
           ),
         ],
       ),
