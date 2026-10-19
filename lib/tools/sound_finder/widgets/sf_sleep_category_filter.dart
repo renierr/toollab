@@ -18,8 +18,10 @@ class SfSleepCategoryFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.watch<SleepSessionsState>();
-    final filter = state.filter(session.id);
+    final state = context.read<SleepSessionsState>();
+    final filter = context.select<SleepSessionsState, Set<SleepSoundCategory?>>(
+      (s) => s.filter(session.id),
+    );
 
     final counts = <SleepSoundCategory?, int>{};
     final activeMs = <SleepSoundCategory?, int>{};

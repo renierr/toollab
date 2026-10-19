@@ -283,7 +283,10 @@ class MicAnalyzer {
     }
     if (rec != null) {
       if (_recording && !_paused) _appendRecording(rec);
-      if (pcmListeners && !_paused) { debugLog('[MicAnalyzer] pcm emit count=$count'); _pcmController.add(rec); }
+      if (pcmListeners && !_paused) {
+        debugLog('[MicAnalyzer] pcm emit count=$count');
+        _pcmController.add(rec);
+      }
     }
   }
 

@@ -78,9 +78,10 @@ class _SoundFinderPageState extends State<SoundFinderPage>
       title: l10n.sfToneNotificationTitle,
       text: l10n.sfToneNotificationText,
     );
-    context.read<SoundFinderState>().setSleepNotificationText(
+    context.read<SoundFinderState>().sleep.setNotificationText(
       title: l10n.sfSleepNotificationTitle,
       text: l10n.sfSleepNotificationText,
+      savedChunks: l10n.sfSleepSavedChunks,
     );
   }
 
@@ -136,21 +137,35 @@ class _SoundFinderPageState extends State<SoundFinderPage>
                         children: [
                           const Icon(Icons.timer_outlined, size: 20),
                           const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(l10n.sfMaxRecordLength),
-                          ),
+                          Expanded(child: Text(l10n.sfMaxRecordLength)),
                           DropdownButton<int>(
-                            value: context.watch<SoundFinderState>().maxRecordSeconds,
+                            value: context
+                                .watch<SoundFinderState>()
+                                .maxRecordSeconds,
                             items: const [
                               DropdownMenuItem(value: 60, child: Text('1 min')),
-                              DropdownMenuItem(value: 300, child: Text('5 min')),
-                              DropdownMenuItem(value: 600, child: Text('10 min')),
-                              DropdownMenuItem(value: 1800, child: Text('30 min')),
-                              DropdownMenuItem(value: 0, child: Text('Unlimited')),
+                              DropdownMenuItem(
+                                value: 300,
+                                child: Text('5 min'),
+                              ),
+                              DropdownMenuItem(
+                                value: 600,
+                                child: Text('10 min'),
+                              ),
+                              DropdownMenuItem(
+                                value: 1800,
+                                child: Text('30 min'),
+                              ),
+                              DropdownMenuItem(
+                                value: 0,
+                                child: Text('Unlimited'),
+                              ),
                             ],
                             onChanged: (v) {
                               if (v != null) {
-                                context.read<SoundFinderState>().setMaxRecordSeconds(v);
+                                context
+                                    .read<SoundFinderState>()
+                                    .setMaxRecordSeconds(v);
                               }
                             },
                           ),

@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../audio/db_scale.dart';
 import '../audio/sleep_chunk_analyzer.dart';
 import '../sleep_labels.dart';
+import '../sleep_player.dart';
 import '../sleep_session_data.dart';
 import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
@@ -27,10 +29,24 @@ class SfSleepTimeline extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.watch<SleepSessionsState>();
+    final state = context.read<SleepSessionsState>();
     final data = session.data;
+    final (_, health, selected) = context
+        .select<
+          SleepSessionsState,
+          (Set<SleepSoundCategory?>, List<SleepStageBand>, int?)
+        >(
+          (s) => (
+            s.filter(session.id),
+            s.healthStages(session.id),
+            s.selectedIndex(session.id),
+          ),
+        );
     final visible = state.visibleIndices(session);
-    final playingHere = state.playingSessionId == session.id;
+    final player = context.read<SleepPlayer>();
+    final playingHere = context.select<SleepPlayer, bool>(
+      (p) => p.sessionId == session.id,
+    );
 
     void pick(double dx, double width) {
       final index = _nearest(data, visible, dx, width);
@@ -61,9 +77,9 @@ class SfSleepTimeline extends StatelessWidget {
                     painter: _TimelinePainter(
                       data: data,
                       visible: visible.toSet(),
-                      health: state.healthStages(session.id),
-                      selectedIndex: state.selectedIndex(session.id),
-                      playhead: playingHere ? state.playhead : null,
+                      health: health,
+                      selectedIndex: selected,
+                      playhead: playingHere ? player.playhead : null,
                       labelColor: theme.colorScheme.onSurface,
                       playheadColor: theme.colorScheme.primary,
                       thresholdLabel: l10n.sfSleepThresholdShort,
@@ -82,7 +98,7 @@ class SfSleepTimeline extends StatelessWidget {
             for (final c in [...SleepSoundCategory.values, null])
               if (categories.contains(c))
                 _LegendDot(color: c.color, label: c.label(l10n)),
-            if (state.healthStages(session.id).isNotEmpty)
+            if (health.isNotEmpty)
               _LegendDot(
                 color: SoundFinderColors.sleepHealthBand,
                 label: l10n.sfSleepLegendHealth,
@@ -226,7 +242,7 @@ class _TimelinePainter extends CustomPainter {
       if (e != null) cursor = e.endedAt;
     }
 
-    final thrDb = 20 * math.log(data.threshold.clamp(1e-9, 1)) / math.ln10;
+    final thrDb = ampToDb(data.threshold);
     final thrY = yOf(thrDb);
     final thrPaint = Paint()
       ..color = SoundFinderColors.sleepThreshold.withValues(alpha: 0.7)

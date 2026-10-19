@@ -114,7 +114,8 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                 value: end.clamp(0, duration),
                 min: 0,
                 max: duration,
-                onChanged: (v) => setState(() => end = v.clamp(start, duration)),
+                onChanged: (v) =>
+                    setState(() => end = v.clamp(start, duration)),
               ),
             ],
           ),
@@ -202,7 +203,9 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                   FilledButton.icon(
                     onPressed: _toggleRecording,
                     icon: Icon(
-                      state.isRecording ? Icons.stop : Icons.fiber_manual_record,
+                      state.isRecording
+                          ? Icons.stop
+                          : Icons.fiber_manual_record,
                     ),
                     label: Text(
                       state.isRecording
@@ -219,7 +222,9 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                         state.isPaused ? Icons.play_arrow : Icons.pause,
                       ),
                       label: Text(
-                        state.isPaused ? l10n.sfResumeRecording : l10n.sfPauseRecording,
+                        state.isPaused
+                            ? l10n.sfResumeRecording
+                            : l10n.sfPauseRecording,
                       ),
                     ),
                 ],
@@ -250,7 +255,10 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                       value: state.sampleRate,
                       items: const [
                         DropdownMenuItem(value: 16000, child: Text('16 kHz')),
-                        DropdownMenuItem(value: 22050, child: Text('22.05 kHz')),
+                        DropdownMenuItem(
+                          value: 22050,
+                          child: Text('22.05 kHz'),
+                        ),
                         DropdownMenuItem(value: 44100, child: Text('44.1 kHz')),
                         DropdownMenuItem(value: 48000, child: Text('48 kHz')),
                       ],
@@ -291,9 +299,7 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                   children: [
                     const Icon(Icons.timer_outlined, size: 20),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(l10n.sfMaxRecordLength),
-                    ),
+                    Expanded(child: Text(l10n.sfMaxRecordLength)),
                     DropdownButton<int>(
                       value: state.maxRecordSeconds,
                       items: const [
@@ -305,7 +311,9 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
                       ],
                       onChanged: (v) {
                         if (v != null) {
-                          context.read<SoundFinderState>().setMaxRecordSeconds(v);
+                          context.read<SoundFinderState>().setMaxRecordSeconds(
+                            v,
+                          );
                         }
                       },
                     ),
@@ -342,10 +350,7 @@ class _SfRecordingsViewState extends State<SfRecordingsView> {
           Text(l10n.sfSaveClipButton, style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           if (state.recordings.isEmpty)
-            Text(
-              l10n.sfDopplerStatusNoData,
-              style: theme.textTheme.bodySmall,
-            )
+            Text(l10n.sfDopplerStatusNoData, style: theme.textTheme.bodySmall)
           else
             for (final clip in state.recordings)
               _RecordingTile(

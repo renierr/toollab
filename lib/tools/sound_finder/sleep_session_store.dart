@@ -74,12 +74,10 @@ class SleepSessionStore {
   static Future<List<SleepSession>> list() async {
     final rootDir = await root();
     await _migrateLooseChunks(rootDir);
-    final sessions = <SleepSession>[];
-    for (final entity in rootDir.listSync()) {
-      if (entity is! Directory) continue;
-      final session = await _read(entity);
-      if (session != null) sessions.add(session);
-    }
+    final dirs = await rootDir.list().where((e) => e is Directory).toList();
+    final sessions = (await Future.wait(
+      dirs.map((d) => _read(d as Directory)),
+    )).nonNulls.toList();
     sessions.sort((a, b) => b.startedAt.compareTo(a.startedAt));
     return sessions;
   }
@@ -92,9 +90,9 @@ class SleepSessionStore {
 
   static Future<SleepSession?> _read(Directory dir) async {
     final sizes = <String, int>{};
-    for (final f in dir.listSync().whereType<File>()) {
-      if (f.path.toLowerCase().endsWith('.wav')) {
-        sizes[f.uri.pathSegments.last] = f.lengthSync();
+    await for (final f in dir.list()) {
+      if (f is File && f.path.toLowerCase().endsWith('.wav')) {
+        sizes[f.uri.pathSegments.last] = await f.length();
       }
     }
     final data = await SleepSessionData.load(dir.path);
@@ -263,10 +261,10 @@ class SleepSessionStore {
   }
 
   static Future<void> _migrateLooseChunks(Directory rootDir) async {
-    final loose = rootDir
-        .listSync()
-        .whereType<File>()
-        .where((f) => f.path.toLowerCase().endsWith('.wav'))
+    final loose = await rootDir
+        .list()
+        .where((f) => f is File && f.path.toLowerCase().endsWith('.wav'))
+        .cast<File>()
         .toList();
     if (loose.isEmpty) return;
     final legacy = Directory('${rootDir.path}/session-legacy');

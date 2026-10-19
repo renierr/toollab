@@ -6071,6 +6071,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfSleepNotificationText => 'Recording sleep sounds';
 
   @override
+  String get sfSleepRecorderTitle => 'Sleep Sound Recorder';
+
+  @override
+  String get sfSleepRecorderIntro =>
+      'Records only chunks with sound and discards silence to save space. Place the phone near the bed, plug in the charger, then turn off the screen.';
+
+  @override
+  String get sfSleepMicUnavailable => 'Microphone not available.';
+
+  @override
+  String sfSleepLiveActive(Object db, Object last) {
+    return 'Live: $db dB · Last sound: $last';
+  }
+
+  @override
+  String sfSleepLiveIdle(Object db) {
+    return 'Idle · live level $db dB';
+  }
+
+  @override
+  String get sfSleepNone => 'none';
+
+  @override
+  String get sfSleepDurationLabel => 'Duration:';
+
+  @override
+  String sfSleepThresholdLabel(Object amp, Object db) {
+    return 'Threshold: $db dB ($amp)';
+  }
+
+  @override
+  String sfSleepLastPeak(Object amp, Object db) {
+    return 'Last chunk peak: $db dB ($amp)';
+  }
+
+  @override
+  String sfSleepPeakVsThreshold(Object peak, Object threshold) {
+    return 'Last chunk peak: $peak (threshold $threshold)';
+  }
+
+  @override
+  String get sfSleepCalibrate => 'Calibrate to ambient noise';
+
+  @override
+  String get sfSleepAdaptive => 'Adaptive threshold';
+
+  @override
+  String get sfSleepCaptureNote =>
+      'Noise suppression, echo cancellation and auto-gain are disabled for capture.';
+
+  @override
+  String get sfSleepStart => 'Start sleep recording';
+
+  @override
+  String get sfSleepViewSessions => 'View sessions';
+
+  @override
+  String sfSleepElapsed(Object time) {
+    return 'Recording… elapsed $time';
+  }
+
+  @override
+  String sfSleepSavedChunks(int count) {
+    return 'Saved chunks: $count';
+  }
+
+  @override
   String get sfSleepCatSnore => 'Snoring';
 
   @override

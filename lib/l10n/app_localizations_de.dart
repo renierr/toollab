@@ -6111,6 +6111,73 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfSleepNotificationText => 'Nimmt Schlafgeräusche auf';
 
   @override
+  String get sfSleepRecorderTitle => 'Schlafgeräusch-Recorder';
+
+  @override
+  String get sfSleepRecorderIntro =>
+      'Speichert nur Abschnitte mit Geräuschen und verwirft Stille, um Platz zu sparen. Lege das Handy neben das Bett, schließe das Ladegerät an und schalte dann den Bildschirm aus.';
+
+  @override
+  String get sfSleepMicUnavailable => 'Mikrofon nicht verfügbar.';
+
+  @override
+  String sfSleepLiveActive(Object db, Object last) {
+    return 'Live: $db dB · Letztes Geräusch: $last';
+  }
+
+  @override
+  String sfSleepLiveIdle(Object db) {
+    return 'Bereit · Live-Pegel $db dB';
+  }
+
+  @override
+  String get sfSleepNone => 'keins';
+
+  @override
+  String get sfSleepDurationLabel => 'Dauer:';
+
+  @override
+  String sfSleepThresholdLabel(Object amp, Object db) {
+    return 'Schwelle: $db dB ($amp)';
+  }
+
+  @override
+  String sfSleepLastPeak(Object amp, Object db) {
+    return 'Spitze letzter Abschnitt: $db dB ($amp)';
+  }
+
+  @override
+  String sfSleepPeakVsThreshold(Object peak, Object threshold) {
+    return 'Spitze letzter Abschnitt: $peak (Schwelle $threshold)';
+  }
+
+  @override
+  String get sfSleepCalibrate => 'Auf Umgebungsgeräusch kalibrieren';
+
+  @override
+  String get sfSleepAdaptive => 'Adaptive Schwelle';
+
+  @override
+  String get sfSleepCaptureNote =>
+      'Rauschunterdrückung, Echounterdrückung und automatische Verstärkung sind bei der Aufnahme deaktiviert.';
+
+  @override
+  String get sfSleepStart => 'Schlafaufnahme starten';
+
+  @override
+  String get sfSleepViewSessions => 'Sitzungen anzeigen';
+
+  @override
+  String sfSleepElapsed(Object time) {
+    return 'Aufnahme… seit $time';
+  }
+
+  @override
+  String sfSleepSavedChunks(int count) {
+    return 'Gespeicherte Abschnitte: $count';
+  }
+
+  @override
   String get sfSleepCatSnore => 'Schnarchen';
 
   @override

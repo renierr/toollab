@@ -11,14 +11,11 @@ import 'package:record/record.dart';
 import '../../helpers/temp_file_manager.dart';
 import '../voice_distorter/engine/wav_utils.dart';
 import 'recording_clip.dart';
-import 'sleep_session_data.dart';
-import 'sleep_session_store.dart';
+import 'sleep_recorder.dart';
 import 'sf_recording_format.dart';
 import '../../helpers/wav_decoder.dart';
 import '../../helpers/wav_pcm16_encoder.dart';
 import '../../services/database_service.dart';
-import '../../services/background_work_lease.dart';
-import '../../services/power_wake_lock_service.dart';
 import 'audio/doppler_analyzer.dart';
 import 'audio/mic_analyzer.dart';
 import 'audio/tone_generator.dart';
@@ -36,7 +33,7 @@ enum TrackerTrend { hotter, colder, steady, silent }
 /// Coordinates microphone analysis and tone synthesis for the three tool modes:
 /// locating an unwanted sound, generating a counter/masking tone, and a plain
 /// frequency generator.
-class SoundFinderState extends ChangeNotifier {
+class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
   static String get _toolId => SoundFinderTool.config.id;
 
   static const String _kGenFreq = 'gen_freq';
@@ -123,35 +120,8 @@ class SoundFinderState extends ChangeNotifier {
   bool _recordingsExporting = false;
   String? _recordingsDirPath;
 
-  // Sleep sound recorder.
-  bool _sleepActive = false;
-  int _sleepDurationMinutes = 480;
-  DateTime? _sleepStart;
-  int _sleepChunksKept = 0;
-  String? _sleepSessionDir;
-  String? _sleepError;
-  double _sleepThreshold = 0.005;
-  double _sleepLiveDb = -90;
-  DateTime? _sleepLastEvent;
-  double _sleepLastMaxAbs = 0;
-  final List<String> _sleepSessionFiles = [];
-  List<String> get sleepSessionFiles => List.unmodifiable(_sleepSessionFiles);
-  final List<SleepEvent> _sleepEvents = [];
-  List<SleepEvent> get sleepEvents => List.unmodifiable(_sleepEvents);
-  bool _sleepAdaptiveThreshold = false;
-  bool get sleepAdaptiveThreshold => _sleepAdaptiveThreshold;
-  DateTime? _sleepChunkStart;
-  double _sleepAmbientMax = 0;
-  String? get sleepError => _sleepError;
-  double get sleepThreshold => _sleepThreshold;
-  double get sleepLiveDb => _sleepLiveDb;
-  DateTime? get sleepLastEvent => _sleepLastEvent;
-  double get sleepLastMaxAbs => _sleepLastMaxAbs;
-  Timer? _sleepTimeout;
-  Timer? _sleepChunkTimer;
-  BackgroundWorkLease? _sleepWork;
-  String _sleepNotificationTitle = 'Sleep sound recorder';
-  String _sleepNotificationText = 'Recording sleep sounds';
+  late final SleepRecorder sleep = SleepRecorder(this)
+    ..addListener(notifyListeners);
 
   bool _tonePlaying = false;
   SfMode? _toneOwner;
@@ -209,6 +179,7 @@ class SoundFinderState extends ChangeNotifier {
   InputDevice? get selectedDevice => _selectedDevice;
   double get micGain => _micGain;
   int get maxRecordSeconds => _maxRecordSeconds;
+  @override
   int get sampleRate => _sampleRate;
   bool get noiseSuppress => _noiseSuppress;
   bool get echoCancel => _echoCancel;
@@ -240,13 +211,6 @@ class SoundFinderState extends ChangeNotifier {
   List<RecordingClip> get recordings => _recordings;
   bool get recordingsExporting => _recordingsExporting;
 
-  bool get sleepActive => _sleepActive;
-  int get sleepDurationMinutes => _sleepDurationMinutes;
-  DateTime? get sleepStart => _sleepStart;
-  int get sleepChunksKept => _sleepChunksKept;
-  Duration get sleepElapsed => _sleepStart == null
-      ? Duration.zero
-      : DateTime.now().difference(_sleepStart!);
   List<double> get diskWaveform => _diskWaveform;
   String? get playingRecordingPath => _playingRecordingPath;
   double get playbackSpeed => _playbackSpeed;
@@ -294,9 +258,7 @@ class SoundFinderState extends ChangeNotifier {
 
   Future<void> setMode(SfMode mode) async {
     if (_mode == mode) return;
-    if (_mode == SfMode.sleep && _sleepActive) {
-      await stopSleep();
-    }
+    if (_mode == SfMode.sleep && sleep.active) await sleep.stop();
     _mode = mode;
     // Stop any tone when switching context to avoid surprise playback.
     if (_tonePlaying) await _stopTone();
@@ -901,53 +863,16 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- Sleep sound recorder ---
+  // --- Sleep recorder host ---
 
-  void setSleepDurationMinutes(int minutes) {
-    if (_sleepActive) return;
-    _sleepDurationMinutes = minutes.clamp(30, 720);
-    notifyListeners();
+  @override
+  Future<bool> ensureMicRunning() async {
+    await ensureMic();
+    return _micStatus == MicStatus.running;
   }
 
-  void setSleepThreshold(double value) {
-    _sleepThreshold = value.clamp(0.0005, 0.2);
-    _save('sf_sleep_threshold', _sleepThreshold.toStringAsFixed(5));
-    notifyListeners();
-  }
-
-  void setSleepAdaptiveThreshold(bool value) {
-    _sleepAdaptiveThreshold = value;
-    _save('sf_sleep_adaptive', value.toString());
-    notifyListeners();
-  }
-
-  void setSleepNotificationText({required String title, required String text}) {
-    _sleepNotificationTitle = title;
-    _sleepNotificationText = text;
-  }
-
-  Future<void> calibrateSleepThreshold() async {
-    if (_sleepActive) return;
-    if (_micStatus != MicStatus.running) await ensureMic();
-    if (_micStatus != MicStatus.running) return;
-    _mic.startRecording();
-    await Future.delayed(const Duration(seconds: 3));
-    final samples = _mic.stopRecording();
-    double maxAbs = 0;
-    for (final s in samples) {
-      final a = s.abs();
-      if (a > maxAbs) maxAbs = a;
-    }
-    if (maxAbs > 0) {
-      setSleepThreshold((maxAbs * 2).clamp(0.0005, 0.2));
-    }
-  }
-
-  Future<void> startSleep() async {
-    if (_sleepActive) return;
-    _sleepError = null;
-    _sleepSessionFiles.clear();
-    // Disable processing effects for faithful capture.
+  @override
+  Future<bool> prepareFaithfulCapture() async {
     _noiseSuppress = false;
     _echoCancel = false;
     _autoGain = false;
@@ -957,191 +882,22 @@ class SoundFinderState extends ChangeNotifier {
     _micGain = 1.0;
     _mic.gain = 1.0;
     _mic.maxRecordSeconds = 0;
-
     if (_micStatus != MicStatus.running) {
       await ensureMic();
     } else {
       await _restartMic();
     }
-    if (_micStatus != MicStatus.running) {
-      _sleepError = 'Microphone not available.';
-      notifyListeners();
-      return;
-    }
-
-    _sleepActive = true;
-    _sleepStart = DateTime.now();
-    _sleepChunksKept = 0;
-    _sleepSessionFiles.clear();
-    _sleepEvents.clear();
-    _sleepLastEvent = null;
-    _sleepAmbientMax = 0;
-    final stamp =
-        '${DateTime.now().year}${DateTime.now().month.toString().padLeft(2, '0')}'
-        '${DateTime.now().day.toString().padLeft(2, '0')}-'
-        '${DateTime.now().hour.toString().padLeft(2, '0')}'
-        '${DateTime.now().minute.toString().padLeft(2, '0')}'
-        '${DateTime.now().second.toString().padLeft(2, '0')}';
-    _sleepSessionDir = await SleepSessionStore.sessionPath('session-$stamp');
-    await Directory(_sleepSessionDir!).create(recursive: true);
-
-    // Keep CPU awake but let the screen turn off; run as a foreground service
-    // with a notification so Android does not suspend the mic capture.
-    await PowerWakeLockService.releaseAll();
-    _sleepWork = await BackgroundWorkLease.acquire(
-      title: _sleepNotificationTitle,
-      text: _sleepNotificationText,
-      logPrefix: 'SoundFinderSleep',
-      actions: const ['stop'],
-      chronometerSinceMs: _sleepStart!.millisecondsSinceEpoch,
-    );
-    _sleepWork!.addActionListener((action) {
-      if (action == 'stop') unawaited(stopSleep());
-    });
-
-    _sleepTimeout = Timer(
-      Duration(minutes: _sleepDurationMinutes),
-      () => unawaited(stopSleep()),
-    );
-
-    _sleepChunkStart = DateTime.now();
-    _mic.startRecording();
-    _scheduleSleepChunk();
-    notifyListeners();
+    return _micStatus == MicStatus.running;
   }
 
-  void _scheduleSleepChunk() {
-    _sleepChunkTimer?.cancel();
-    _sleepChunkTimer = Timer(const Duration(seconds: 15), () async {
-      if (!_sleepActive) return;
-      final start = _sleepChunkStart ?? DateTime.now();
-      await _processSleepChunk(start);
-      if (_sleepActive) {
-        _sleepChunkStart = DateTime.now();
-        _mic.startRecording();
-        _scheduleSleepChunk();
-      }
-    });
-  }
+  @override
+  void restoreRecordLimit() => _mic.maxRecordSeconds = _maxRecordSeconds;
 
-  Future<void> _processSleepChunk(DateTime chunkStart) async {
-    final samples = _mic.stopRecording();
-    final endedAt = DateTime.now();
-    if (samples.isEmpty) {
-      errorLog('[Sleep] chunk empty');
-      if (_sleepAdaptiveThreshold) {
-        // Track ambient on silence.
-        if (_sleepAmbientMax == 0) _sleepAmbientMax = 0;
-      }
-      return;
-    }
-    double maxAbs = 0;
-    for (final s in samples) {
-      final a = s.abs();
-      if (a > maxAbs) maxAbs = a;
-    }
-    _sleepLastMaxAbs = maxAbs;
-    errorLog(
-      '[Sleep] chunk samples=${samples.length} maxAbs=$maxAbs threshold=$_sleepThreshold',
-    );
-    // Adaptive threshold: follow ambient noise floor.
-    if (_sleepAdaptiveThreshold) {
-      if (maxAbs < _sleepThreshold) {
-        if (maxAbs > _sleepAmbientMax) _sleepAmbientMax = maxAbs;
-      } else {
-        // Keep ambient estimate from quieter chunks only.
-      }
-      if (_sleepAmbientMax > 0) {
-        _sleepThreshold = (_sleepAmbientMax * 2).clamp(0.0005, 0.2);
-      }
-    }
-    // Keep chunk only if it contains meaningful sound.
-    if (maxAbs < _sleepThreshold) return;
-    final dirPath = _sleepSessionDir ?? (await SleepSessionStore.root()).path;
-    final now = endedAt;
-    final stamp =
-        '${now.year}${now.month.toString().padLeft(2, '0')}'
-        '${now.day.toString().padLeft(2, '0')}-'
-        '${now.hour.toString().padLeft(2, '0')}'
-        '${now.minute.toString().padLeft(2, '0')}'
-        '${now.second.toString().padLeft(2, '0')}';
-    final file = File('$dirPath/chunk-$stamp.wav');
-    final wavBytes = WavPcm16Encoder.encode(
-      samples,
-      frames: samples.length,
-      sampleRate: _sampleRate,
-      channels: 1,
-    );
-    await file.writeAsBytes(wavBytes);
-    _sleepChunksKept++;
-    _sleepSessionFiles.add(file.path);
-    _sleepLastEvent = DateTime.now();
-    final classification = _classifySleepEvent(maxAbs);
-    _sleepEvents.add(
-      SleepEvent(
-        fileName: 'chunk-$stamp.wav',
-        startedAt: chunkStart,
-        endedAt: endedAt,
-        peakAmplitude: maxAbs,
-        classification: classification,
-      ),
-    );
-    unawaited(
-      _sleepWork?.update('Saved chunks: $_sleepChunksKept') ??
-          Future<void>.value(),
-    );
-    notifyListeners();
-  }
+  @override
+  void startCapture() => _mic.startRecording();
 
-  String _classifySleepEvent(double peak) {
-    final db = 20 * math.log(peak.clamp(1e-9, 1)) / math.ln10;
-    if (db >= -10) return 'loud';
-    if (db >= -25) return 'sound';
-    return 'faint';
-  }
-
-  Future<void> stopSleep() async {
-    if (!_sleepActive) return;
-    _sleepActive = false;
-    _sleepTimeout?.cancel();
-    _sleepTimeout = null;
-    _sleepChunkTimer?.cancel();
-    _sleepChunkTimer = null;
-    final chunkStart = _sleepChunkStart;
-    final sessionStart = _sleepStart ?? DateTime.now();
-    if (chunkStart != null) {
-      await _processSleepChunk(chunkStart);
-    } else {
-      await _processSleepChunk(DateTime.now());
-    }
-    _sleepStart = null;
-    _mic.maxRecordSeconds = _maxRecordSeconds;
-    // Persist session metadata.
-    if (_sleepSessionDir != null) {
-      final data = SleepSessionData(
-        path: _sleepSessionDir!,
-        startedAt: sessionStart,
-        endedAt: DateTime.now(),
-        targetMinutes: _sleepDurationMinutes,
-        threshold: _sleepThreshold,
-        adaptiveThreshold: _sleepAdaptiveThreshold,
-        events: List.of(_sleepEvents),
-      );
-      await data.save();
-      SleepSessionStore.notifyChanged();
-      final session = await SleepSessionStore.byId(data.id);
-      if (session != null) unawaited(SleepSessionStore.analyze(session));
-    }
-    final work = _sleepWork;
-    _sleepWork = null;
-    if (work != null) {
-      work.removeActionListener();
-      await work.release();
-    }
-    // Restore screen-on wake lock.
-    await PowerWakeLockService.acquireFull();
-    notifyListeners();
-  }
+  @override
+  Float32List stopCapture() => _mic.stopRecording();
 
   Future<void> selectInputDevice(InputDevice? device) async {
     if (device?.id == _selectedDevice?.id) return;
@@ -1181,7 +937,6 @@ class SoundFinderState extends ChangeNotifier {
 
   void _onAnalysis(MicAnalysis a) {
     _analysis = a;
-    if (_sleepActive) _sleepLiveDb = a.db;
     const double k = 0.3;
     _smoothDb = _smoothDb + k * (a.db - _smoothDb);
     if (a.peakLevel > 1e-6) {
@@ -1342,7 +1097,7 @@ class SoundFinderState extends ChangeNotifier {
   /// stopped from the notification's stop action or when playback is toggled
   /// off again in the tool.
   Future<void> onPageLeave() async {
-    if (_sleepActive) return;
+    if (sleep.active) return;
     await cancelNormalRecording();
     await stopRecordingPlayback();
     await _stopMic();
@@ -1364,7 +1119,7 @@ class SoundFinderState extends ChangeNotifier {
   /// App went to background — suspend the mic and all graph visualizations to
   /// reduce CPU. Will resume on foreground.
   Future<void> onAppBackgrounded() async {
-    if (_sleepActive) return; // keep recording
+    if (sleep.active) return; // keep recording
     if (_micStatus != MicStatus.running) return;
     await _mic.stop();
     _suspended = true;
@@ -1372,7 +1127,7 @@ class SoundFinderState extends ChangeNotifier {
 
   /// App returned to foreground — resume the mic if it was suspended.
   Future<void> onAppForegrounded() async {
-    if (_sleepActive) return;
+    if (sleep.active) return;
     if (!_suspended) return;
     _suspended = false;
     if (_mode != SfMode.generator) {
@@ -1708,10 +1463,7 @@ class SoundFinderState extends ChangeNotifier {
     _autoGain = ag == 'true';
     MicAnalyzer.autoGain = _autoGain;
 
-    final st = await db.getSetting(_toolId, 'sf_sleep_threshold');
-    _sleepThreshold = double.tryParse(st ?? '') ?? 0.005;
-    final ad = await db.getSetting(_toolId, 'sf_sleep_adaptive');
-    _sleepAdaptiveThreshold = ad == 'true';
+    await sleep.loadSettings();
 
     _genFreq = double.tryParse(genFreq ?? '')?.clamp(20, 20000) ?? 440;
     _genWave = _waveFromName(genWave) ?? ToneWaveform.sine;
@@ -1756,6 +1508,7 @@ class SoundFinderState extends ChangeNotifier {
     _morseDecodeTimer?.cancel();
     _mic.dispose();
     _tone.dispose();
+    sleep.dispose();
     super.dispose();
   }
 }

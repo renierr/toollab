@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../audio/sleep_chunk_analyzer.dart';
 import '../sleep_labels.dart';
+import '../sleep_player.dart';
 import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
 
@@ -18,10 +20,23 @@ class SfSleepPlayerBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.watch<SleepSessionsState>();
-    final queueActive =
-        state.playingSessionId == session.id && state.continuous;
+    final state = context.read<SleepSessionsState>();
+    final player = context.read<SleepPlayer>();
+    context.select<SleepSessionsState, Set<SleepSoundCategory?>>(
+      (s) => s.filter(session.id),
+    );
     final count = state.visibleIndices(session).length;
+    final (queueActive, paused, speed, skipQuiet, pos, len) = context
+        .select<SleepPlayer, (bool, bool, double, bool, int, int)>(
+          (p) => (
+            p.isQueueActive(session.id),
+            p.paused,
+            p.speed,
+            p.skipQuiet,
+            p.queuePosition,
+            p.queueLength,
+          ),
+        );
 
     return Wrap(
       spacing: 4,
@@ -43,29 +58,29 @@ class SfSleepPlayerBar extends StatelessWidget {
           IconButton(
             tooltip: l10n.sfSleepPrevChunk,
             icon: const Icon(Icons.skip_previous),
-            onPressed: state.previous,
+            onPressed: player.previous,
           ),
           IconButton.filled(
-            tooltip: state.paused ? l10n.sfSleepResume : l10n.sfSleepPause,
-            icon: Icon(state.paused ? Icons.play_arrow : Icons.pause),
-            onPressed: state.togglePause,
+            tooltip: paused ? l10n.sfSleepResume : l10n.sfSleepPause,
+            icon: Icon(paused ? Icons.play_arrow : Icons.pause),
+            onPressed: player.togglePause,
           ),
           IconButton(
             tooltip: l10n.sfSleepNextChunk,
             icon: const Icon(Icons.skip_next),
-            onPressed: state.next,
+            onPressed: player.next,
           ),
           IconButton(
             tooltip: l10n.sfSleepStopPlayback,
             icon: const Icon(Icons.stop),
-            onPressed: state.stop,
+            onPressed: player.stop,
           ),
           ValueListenableBuilder<DateTime?>(
-            valueListenable: state.playhead,
+            valueListenable: player.playhead,
             builder: (context, head, _) => Text(
               l10n.sfSleepPlaybackStatus(
-                state.queuePosition + 1,
-                state.queueLength,
+                pos + 1,
+                len,
                 head == null ? '--:--:--' : sleepClock(head),
               ),
               style: theme.textTheme.bodySmall?.copyWith(
@@ -76,8 +91,8 @@ class SfSleepPlayerBar extends StatelessWidget {
         ],
         PopupMenuButton<double>(
           tooltip: l10n.sfSleepSpeed,
-          initialValue: state.speed,
-          onSelected: state.setSpeed,
+          initialValue: speed,
+          onSelected: player.setSpeed,
           itemBuilder: (_) => [
             for (final s in _speeds)
               PopupMenuItem(value: s, child: Text('${_fmtSpeed(s)}×')),
@@ -85,15 +100,15 @@ class SfSleepPlayerBar extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             child: Text(
-              '${_fmtSpeed(state.speed)}×',
+              '${_fmtSpeed(speed)}×',
               style: theme.textTheme.labelLarge,
             ),
           ),
         ),
         FilterChip(
           label: Text(l10n.sfSleepSkipQuiet),
-          selected: state.skipQuiet,
-          onSelected: state.setSkipQuiet,
+          selected: skipQuiet,
+          onSelected: player.setSkipQuiet,
         ),
       ],
     );

@@ -14,8 +14,9 @@ class SfSleepAnalysisBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.watch<SleepSessionsState>();
-    final progress = state.analysisProgress(session.id);
+    final progress = context.select<SleepSessionsState, double?>(
+      (s) => s.analysisProgress(session.id),
+    );
     if (progress != null) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 8),
@@ -44,7 +45,8 @@ class SfSleepAnalysisBar extends StatelessWidget {
           FilledButton.tonalIcon(
             icon: const Icon(Icons.auto_awesome_outlined),
             label: Text(l10n.sfSleepAnalyze),
-            onPressed: () => state.analyze(session),
+            onPressed: () =>
+                context.read<SleepSessionsState>().analyze(session),
           ),
         ],
       ),

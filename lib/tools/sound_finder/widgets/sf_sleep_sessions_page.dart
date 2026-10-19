@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
+import '../sleep_player.dart';
+import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
 import 'sf_sleep_overview_card.dart';
 import 'sf_sleep_session_tile.dart';
@@ -13,8 +15,13 @@ class SfSleepSessionsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SleepSessionsState(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SleepPlayer()),
+        ChangeNotifierProvider(
+          create: (context) => SleepSessionsState(context.read<SleepPlayer>()),
+        ),
+      ],
       child: const _SleepSessionsScaffold(),
     );
   }
@@ -26,14 +33,16 @@ class _SleepSessionsScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = context.watch<SleepSessionsState>();
-    final sessions = state.sessions;
+    final (loading, sessions) = context
+        .select<SleepSessionsState, (bool, List<SleepSession>)>(
+          (s) => (s.loading, s.sessions),
+        );
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.sfSleepSessionsTitle),
         actions: const [SfSleepSyncButton()],
       ),
-      body: state.loading
+      body: loading
           ? const Center(child: CircularProgressIndicator())
           : sessions.isEmpty
           ? Center(child: Text(l10n.sfSleepNoSessions))

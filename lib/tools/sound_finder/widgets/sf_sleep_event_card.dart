@@ -6,6 +6,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../sleep_labels.dart';
 import '../sleep_session_store.dart';
+import '../sleep_player.dart';
 import '../sleep_sessions_state.dart';
 import 'sf_sleep_annotation_dialog.dart';
 
@@ -19,15 +20,20 @@ class SfSleepEventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.watch<SleepSessionsState>();
+    final state = context.read<SleepSessionsState>();
+    final player = context.read<SleepPlayer>();
     final events = session.data.events;
-    final index = state.selectedIndex(session.id);
+    final index = context.select<SleepSessionsState, int?>(
+      (s) => s.selectedIndex(session.id),
+    );
+    final playing = context.select<SleepPlayer, bool>(
+      (p) => index != null && p.isPlayingChunk(session.id, index),
+    );
     if (index == null || index >= events.length) return const SizedBox.shrink();
     final e = events[index];
     final a = e.analysis;
     final category = a?.category;
     final hasFile = session.hasFile(e);
-    final playing = state.isPlayingChunk(session.id, index);
     final size = session.sizeOf(e);
 
     final facts = <String>[
@@ -123,7 +129,7 @@ class SfSleepEventCard extends StatelessWidget {
                       : l10n.sfSleepPlayChunk,
                   icon: Icon(playing ? Icons.stop : Icons.play_arrow),
                   onPressed: hasFile
-                      ? () => state.playChunk(session, index)
+                      ? () => player.playChunk(session, index)
                       : null,
                 ),
                 IconButton(

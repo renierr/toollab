@@ -66,8 +66,14 @@ class SfSleepSessionActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = context.watch<SleepSessionsState>();
-    final analyzing = state.analysisProgress(session.id) != null;
+    final state = context.read<SleepSessionsState>();
+    final (
+      analyzing,
+      healthLoading,
+    ) = context.select<SleepSessionsState, (bool, bool)>(
+      (s) =>
+          (s.analysisProgress(session.id) != null, s.healthLoading(session.id)),
+    );
     return Wrap(
       spacing: 8,
       runSpacing: 4,
@@ -75,9 +81,7 @@ class SfSleepSessionActions extends StatelessWidget {
         OutlinedButton.icon(
           icon: const Icon(Icons.monitor_heart_outlined),
           label: Text(l10n.sfSleepLoadStages),
-          onPressed: state.healthLoading(session.id)
-              ? null
-              : () => _loadStages(context),
+          onPressed: healthLoading ? null : () => _loadStages(context),
         ),
         if (session.data.isAnalyzed && session.data.events.isNotEmpty)
           OutlinedButton.icon(

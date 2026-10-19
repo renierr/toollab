@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'audio/db_scale.dart';
 import 'audio/sleep_chunk_analyzer.dart';
 
 // UTC on disk keeps chunk sync clocks equal across device time zones; older
@@ -35,10 +36,7 @@ class SleepEvent {
 
   Duration get duration => endedAt.difference(startedAt);
 
-  double get peakDb {
-    if (peakAmplitude <= 0) return -90;
-    return 20 * math.log(peakAmplitude) / math.ln10;
-  }
+  double get peakDb => ampToDb(peakAmplitude);
 
   Map<String, dynamic> toJson() => {
     'file': fileName,
@@ -107,13 +105,13 @@ class SleepSessionData {
       events.fold(Duration.zero, (a, e) => a + e.duration);
 
   double get avgPeakDb {
-    if (events.isEmpty) return -90;
+    if (events.isEmpty) return silenceDb;
     final sum = events.fold<double>(0, (a, e) => a + e.peakDb);
     return sum / events.length;
   }
 
   double get loudestDb {
-    if (events.isEmpty) return -90;
+    if (events.isEmpty) return silenceDb;
     return events.map((e) => e.peakDb).reduce(math.max);
   }
 

@@ -6,6 +6,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import '../sleep_labels.dart';
 import '../sleep_session_store.dart';
+import '../sleep_player.dart';
 import '../sleep_sessions_state.dart';
 import 'sf_sleep_analysis_bar.dart';
 import 'sf_sleep_category_filter.dart';
@@ -25,11 +26,18 @@ class SfSleepSessionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.watch<SleepSessionsState>();
     final data = session.data;
     final locale = Localizations.localeOf(context).toString();
-    final progress = state.analysisProgress(session.id);
-    final playingHere = state.playingSessionId == session.id;
+    final (
+      progress,
+      hasSelection,
+    ) = context.select<SleepSessionsState, (double?, bool)>(
+      (s) =>
+          (s.analysisProgress(session.id), s.selectedIndex(session.id) != null),
+    );
+    final playingHere = context.select<SleepPlayer, bool>(
+      (p) => p.sessionId == session.id,
+    );
 
     return ExpansionTile(
       leading: Icon(
@@ -68,8 +76,7 @@ class SfSleepSessionTile extends StatelessWidget {
         SfSleepTimeline(session: session),
         const SizedBox(height: 4),
         SfSleepPlayerBar(session: session),
-        if (state.selectedIndex(session.id) != null)
-          SfSleepEventCard(session: session),
+        if (hasSelection) SfSleepEventCard(session: session),
         const SizedBox(height: 8),
         SfSleepSessionActions(session: session),
         const SizedBox(height: 8),

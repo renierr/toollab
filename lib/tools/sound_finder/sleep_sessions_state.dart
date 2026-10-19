@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:health_connector/health_connector.dart' as hc;
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import '../health_dashboard/store/health_schema.dart';
 import '../health_dashboard/store/health_store.dart';
 import 'audio/sleep_chunk_analyzer.dart';
+import 'sleep_player.dart';
 import 'sleep_session_data.dart';
 import 'sleep_session_store.dart';
 
@@ -19,21 +18,27 @@ class SleepStageBand {
   final DateTime end;
 }
 
-/// Backs the sleep sessions page: the session list, per-session selection and
-/// category filter, and one shared player for single chunks and play-all.
+/// Backs the sleep sessions page: the session list plus per-session
+/// selection, category filter and Health sleep bands. Audio lives in
+/// [SleepPlayer]; this state only steers it.
 class SleepSessionsState extends ChangeNotifier {
-  SleepSessionsState() {
+  SleepSessionsState(this._player) {
+    _player.onChunkStarted = _onChunkStarted;
     SleepSessionStore.revision.addListener(_onStoreChanged);
     SleepSessionStore.analysisProgress.addListener(notifyListeners);
     load();
   }
 
   static const _logPrefix = '[SleepSessions]';
-  static const _quietPadMs = 300;
 
+  /// A sync pull bumps the store once per chunk; coalesce into one reload.
+  static const _reloadDebounce = Duration(milliseconds: 400);
+
+  final SleepPlayer _player;
   List<SleepSession> _sessions = const [];
   bool _loading = true;
   bool _disposed = false;
+  Timer? _reloadTimer;
   final Map<String, int> _selected = {};
   final Map<String, Set<SleepSoundCategory?>> _filters = {};
   final Map<String, List<SleepStageBand>> _healthStages = {};
@@ -41,8 +46,6 @@ class SleepSessionsState extends ChangeNotifier {
 
   List<SleepSession> get sessions => _sessions;
   bool get loading => _loading;
-  int get totalWavBytes => _sessions.fold(0, (a, s) => a + s.wavBytes);
-  int get totalJsonBytes => _sessions.fold(0, (a, s) => a + s.jsonBytes);
 
   double? analysisProgress(String id) =>
       SleepSessionStore.analysisProgress.value[id];
@@ -50,22 +53,26 @@ class SleepSessionsState extends ChangeNotifier {
   List<SleepStageBand> healthStages(String id) => _healthStages[id] ?? const [];
   bool healthLoading(String id) => _healthLoading.contains(id);
 
-  SleepSession? _byId(String id) {
-    for (final s in _sessions) {
-      if (s.id == id) return s;
-    }
-    return null;
-  }
-
   Future<void> load() async {
     final list = await SleepSessionStore.list();
     if (_disposed) return;
     _sessions = list;
     _loading = false;
+    for (final s in list) {
+      _player.updateSession(s);
+    }
     notifyListeners();
   }
 
-  void _onStoreChanged() => unawaited(load());
+  void _onStoreChanged() {
+    _reloadTimer?.cancel();
+    _reloadTimer = Timer(_reloadDebounce, () => unawaited(load()));
+  }
+
+  void _onChunkStarted(String sessionId, int index) {
+    _selected[sessionId] = index;
+    notifyListeners();
+  }
 
   // --- Selection & filter ---
 
@@ -73,17 +80,12 @@ class SleepSessionsState extends ChangeNotifier {
 
   void select(SleepSession session, int index) {
     if (index < 0 || index >= session.data.events.length) return;
-    final playingHere = _playSessionId == session.id && _continuous;
-    if (_selected[session.id] == index && !playingHere) return;
-    _selected[session.id] = index;
-    if (playingHere) {
-      final pos = _queue.indexOf(index);
-      if (pos >= 0) {
-        unawaited(_startAt(pos));
-      } else {
-        unawaited(playAll(session, from: index));
-      }
+    if (_player.isQueueActive(session.id)) {
+      if (!_player.jumpTo(index)) unawaited(playAll(session, from: index));
+      return;
     }
+    if (_selected[session.id] == index) return;
+    _selected[session.id] = index;
     notifyListeners();
   }
 
@@ -112,219 +114,20 @@ class SleepSessionsState extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool matches(SleepSession session, SleepEvent e) {
+  List<int> visibleIndices(SleepSession session) {
     final f = filter(session.id);
-    return f.isEmpty || f.contains(e.analysis?.category);
-  }
-
-  List<int> visibleIndices(SleepSession session) => [
-    for (var i = 0; i < session.data.events.length; i++)
-      if (matches(session, session.data.events[i])) i,
-  ];
-
-  // --- Playback ---
-
-  String? _playSessionId;
-  List<int> _queue = const [];
-  int _queuePos = 0;
-  bool _continuous = false;
-  bool _paused = false;
-  double _speed = 1;
-  bool _skipQuiet = false;
-  AudioSource? _source;
-  SoundHandle? _handle;
-  StreamSubscription<dynamic>? _soundEventsSub;
-  Timer? _ticker;
-  Duration? _chunkEnd;
-  int _generation = 0;
-  final ValueNotifier<DateTime?> _playhead = ValueNotifier(null);
-
-  /// Wall-clock moment of the night currently audible, for the timeline.
-  ValueListenable<DateTime?> get playhead => _playhead;
-  String? get playingSessionId => _playSessionId;
-  bool get continuous => _continuous;
-  bool get paused => _paused;
-  double get speed => _speed;
-  bool get skipQuiet => _skipQuiet;
-  int get queueLength => _queue.length;
-  int get queuePosition => _queuePos;
-
-  int? playingIndex(String id) =>
-      _playSessionId == id && _queuePos < _queue.length
-      ? _queue[_queuePos]
-      : null;
-
-  bool isPlayingChunk(String id, int index) =>
-      !_continuous && playingIndex(id) == index;
-
-  Future<void> playChunk(SleepSession session, int index) async {
-    if (isPlayingChunk(session.id, index)) {
-      await stop();
-      return;
-    }
-    _selected[session.id] = index;
-    _begin(session.id, [index], continuous: false);
-    await _startAt(0);
+    final events = session.data.events;
+    return [
+      for (var i = 0; i < events.length; i++)
+        if (f.isEmpty || f.contains(events[i].analysis?.category)) i,
+    ];
   }
 
   Future<void> playAll(SleepSession session, {int? from}) async {
     final queue = visibleIndices(session);
     if (queue.isEmpty) return;
-    var pos = 0;
-    if (from != null) {
-      pos = queue.indexWhere((i) => i >= from);
-      if (pos < 0) pos = 0;
-    }
-    _begin(session.id, queue, continuous: true);
-    await _startAt(pos);
-  }
-
-  void _begin(String id, List<int> queue, {required bool continuous}) {
-    _playSessionId = id;
-    _queue = queue;
-    _continuous = continuous;
-    _paused = false;
-  }
-
-  Future<void> _startAt(int pos) async {
-    final gen = ++_generation;
-    await _releaseVoice();
-    if (_disposed || gen != _generation) return;
-    final session = _playSessionId == null ? null : _byId(_playSessionId!);
-    if (session == null || pos < 0 || pos >= _queue.length) {
-      await stop();
-      return;
-    }
-    _queuePos = pos;
-    final index = _queue[pos];
-    final event = session.data.events[index];
-    _selected[session.id] = index;
-    notifyListeners();
-
-    final file = session.data.fileFor(event);
-    if (!session.hasFile(event) || !await file.exists()) {
-      if (_continuous) {
-        await _startAt(pos + 1);
-      } else {
-        await stop();
-      }
-      return;
-    }
-    try {
-      if (!SoLoud.instance.isInitialized) await SoLoud.instance.init();
-      final source = await SoLoud.instance.loadFile(file.path);
-      if (gen != _generation) {
-        unawaited(SoLoud.instance.disposeSource(source));
-        return;
-      }
-      final handle = SoLoud.instance.play(source, paused: true);
-      SoLoud.instance.setRelativePlaySpeed(handle, _speed);
-      final analysis = event.analysis;
-      _chunkEnd = null;
-      if (_skipQuiet && analysis != null && analysis.bursts > 0) {
-        final from = math.max(0, analysis.firstActiveMs - _quietPadMs);
-        if (from > 0) {
-          SoLoud.instance.seek(handle, Duration(milliseconds: from));
-        }
-        _chunkEnd = Duration(milliseconds: analysis.lastActiveMs + _quietPadMs);
-      }
-      SoLoud.instance.setPause(handle, _paused);
-      _source = source;
-      _handle = handle;
-      _soundEventsSub = source.soundEvents.listen((e) {
-        if (e.handle == handle &&
-            e.event == SoundEventType.handleIsNoMoreValid &&
-            gen == _generation) {
-          unawaited(_advance());
-        }
-      });
-      _ticker = Timer.periodic(
-        const Duration(milliseconds: 100),
-        (_) => _tick(gen, session.data, event),
-      );
-      _tick(gen, session.data, event);
-    } catch (e) {
-      errorLog('$_logPrefix play ${event.fileName}: $e');
-      await stop();
-    }
-  }
-
-  void _tick(int gen, SleepSessionData data, SleepEvent event) {
-    final handle = _handle;
-    if (gen != _generation || handle == null) return;
-    if (!SoLoud.instance.getIsValidVoiceHandle(handle)) return;
-    final pos = SoLoud.instance.getPosition(handle);
-    _playhead.value = event.startedAt.add(pos);
-    final end = _chunkEnd;
-    if (end != null && pos >= end) unawaited(_advance());
-  }
-
-  Future<void> _advance() async {
-    if (_continuous && _queuePos + 1 < _queue.length) {
-      await _startAt(_queuePos + 1);
-    } else {
-      await stop();
-    }
-  }
-
-  Future<void> next() async {
-    if (_playSessionId == null) return;
-    await _startAt(math.min(_queuePos + 1, _queue.length - 1));
-  }
-
-  Future<void> previous() async {
-    if (_playSessionId == null) return;
-    await _startAt(math.max(0, _queuePos - 1));
-  }
-
-  void togglePause() {
-    final handle = _handle;
-    if (handle == null) return;
-    _paused = !_paused;
-    SoLoud.instance.setPause(handle, _paused);
-    notifyListeners();
-  }
-
-  void setSpeed(double value) {
-    _speed = value;
-    final handle = _handle;
-    if (handle != null) SoLoud.instance.setRelativePlaySpeed(handle, value);
-    notifyListeners();
-  }
-
-  void setSkipQuiet(bool value) {
-    _skipQuiet = value;
-    notifyListeners();
-  }
-
-  Future<void> stop() async {
-    _generation++;
-    await _releaseVoice();
-    _playSessionId = null;
-    _queue = const [];
-    _queuePos = 0;
-    _paused = false;
-    _playhead.value = null;
-    if (!_disposed) notifyListeners();
-  }
-
-  Future<void> _releaseVoice() async {
-    _ticker?.cancel();
-    _ticker = null;
-    await _soundEventsSub?.cancel();
-    _soundEventsSub = null;
-    final h = _handle;
-    final s = _source;
-    _handle = null;
-    _source = null;
-    try {
-      if (h != null && SoLoud.instance.getIsValidVoiceHandle(h)) {
-        await SoLoud.instance.stop(h);
-      }
-      if (s != null) await SoLoud.instance.disposeSource(s);
-    } catch (e) {
-      errorLog('$_logPrefix release: $e');
-    }
+    final start = from == null ? 0 : queue.indexWhere((i) => i >= from);
+    await _player.play(session, queue, startPos: start < 0 ? 0 : start);
   }
 
   // --- Edits ---
@@ -342,7 +145,7 @@ class SleepSessionsState extends ChangeNotifier {
       SleepSessionStore.analyze(session);
 
   Future<void> delete(SleepSession session) async {
-    if (_playSessionId == session.id) await stop();
+    if (_player.sessionId == session.id) await _player.stop();
     _selected.remove(session.id);
     _filters.remove(session.id);
     await SleepSessionStore.delete(session);
@@ -403,11 +206,10 @@ class SleepSessionsState extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _reloadTimer?.cancel();
+    _player.onChunkStarted = null;
     SleepSessionStore.revision.removeListener(_onStoreChanged);
     SleepSessionStore.analysisProgress.removeListener(notifyListeners);
-    _generation++;
-    unawaited(_releaseVoice());
-    _playhead.dispose();
     super.dispose();
   }
 }

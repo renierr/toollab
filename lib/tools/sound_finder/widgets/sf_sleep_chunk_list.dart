@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../audio/sleep_chunk_analyzer.dart';
 import '../sleep_labels.dart';
+import '../sleep_player.dart';
 import '../sleep_session_data.dart';
 import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
@@ -27,12 +29,16 @@ class _SfSleepChunkListState extends State<SfSleepChunkList> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.watch<SleepSessionsState>();
     final session = widget.session;
-    final visible = state.visibleIndices(session);
+    final (_, selected) = context
+        .select<SleepSessionsState, (Set<SleepSoundCategory?>, int?)>(
+          (s) => (s.filter(session.id), s.selectedIndex(session.id)),
+        );
+    final (playing, queueActive) = context.select<SleepPlayer, (int?, bool)>(
+      (p) => (p.playingIndex(session.id), p.isQueueActive(session.id)),
+    );
+    final visible = context.read<SleepSessionsState>().visibleIndices(session);
     final shown = visible.take(_limit).toList();
-    final selected = state.selectedIndex(session.id);
-    final playing = state.playingIndex(session.id);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,6 +75,7 @@ class _SfSleepChunkListState extends State<SfSleepChunkList> {
               event: session.data.events[i],
               selected: i == selected,
               playing: i == playing,
+              playingSingle: i == playing && !queueActive,
             ),
           if (visible.length > shown.length)
             Center(
@@ -94,6 +101,7 @@ class _ChunkRow extends StatelessWidget {
     required this.event,
     required this.selected,
     required this.playing,
+    required this.playingSingle,
   });
 
   final SleepSession session;
@@ -102,11 +110,13 @@ class _ChunkRow extends StatelessWidget {
   final bool selected;
   final bool playing;
 
+  /// Played on its own via the row button, so the button stops it.
+  final bool playingSingle;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.read<SleepSessionsState>();
     final category = event.analysis?.category;
     final details = [
       category.label(l10n),
@@ -114,7 +124,6 @@ class _ChunkRow extends StatelessWidget {
       sleepDuration(event.duration),
       if (event.annotation != null) event.annotation!,
     ].join(' · ');
-    final playingThis = state.isPlayingChunk(session.id, index);
 
     return ListTile(
       dense: true,
@@ -134,13 +143,15 @@ class _ChunkRow extends StatelessWidget {
       ),
       subtitle: Text(details, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: IconButton(
-        tooltip: playingThis ? l10n.sfSleepStopPlayback : l10n.sfSleepPlayChunk,
-        icon: Icon(playingThis ? Icons.stop : Icons.play_arrow),
+        tooltip: playingSingle
+            ? l10n.sfSleepStopPlayback
+            : l10n.sfSleepPlayChunk,
+        icon: Icon(playingSingle ? Icons.stop : Icons.play_arrow),
         onPressed: session.hasFile(event)
-            ? () => state.playChunk(session, index)
+            ? () => context.read<SleepPlayer>().playChunk(session, index)
             : null,
       ),
-      onTap: () => state.select(session, index),
+      onTap: () => context.read<SleepSessionsState>().select(session, index),
     );
   }
 }

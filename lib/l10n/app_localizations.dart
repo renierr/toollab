@@ -10937,6 +10937,108 @@ abstract class AppLocalizations {
   /// **'Recording sleep sounds'**
   String get sfSleepNotificationText;
 
+  /// No description provided for @sfSleepRecorderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Sound Recorder'**
+  String get sfSleepRecorderTitle;
+
+  /// No description provided for @sfSleepRecorderIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Records only chunks with sound and discards silence to save space. Place the phone near the bed, plug in the charger, then turn off the screen.'**
+  String get sfSleepRecorderIntro;
+
+  /// No description provided for @sfSleepMicUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone not available.'**
+  String get sfSleepMicUnavailable;
+
+  /// No description provided for @sfSleepLiveActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live: {db} dB · Last sound: {last}'**
+  String sfSleepLiveActive(Object db, Object last);
+
+  /// No description provided for @sfSleepLiveIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle · live level {db} dB'**
+  String sfSleepLiveIdle(Object db);
+
+  /// No description provided for @sfSleepNone.
+  ///
+  /// In en, this message translates to:
+  /// **'none'**
+  String get sfSleepNone;
+
+  /// No description provided for @sfSleepDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration:'**
+  String get sfSleepDurationLabel;
+
+  /// No description provided for @sfSleepThresholdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Threshold: {db} dB ({amp})'**
+  String sfSleepThresholdLabel(Object amp, Object db);
+
+  /// No description provided for @sfSleepLastPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Last chunk peak: {db} dB ({amp})'**
+  String sfSleepLastPeak(Object amp, Object db);
+
+  /// No description provided for @sfSleepPeakVsThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Last chunk peak: {peak} (threshold {threshold})'**
+  String sfSleepPeakVsThreshold(Object peak, Object threshold);
+
+  /// No description provided for @sfSleepCalibrate.
+  ///
+  /// In en, this message translates to:
+  /// **'Calibrate to ambient noise'**
+  String get sfSleepCalibrate;
+
+  /// No description provided for @sfSleepAdaptive.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive threshold'**
+  String get sfSleepAdaptive;
+
+  /// No description provided for @sfSleepCaptureNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Noise suppression, echo cancellation and auto-gain are disabled for capture.'**
+  String get sfSleepCaptureNote;
+
+  /// No description provided for @sfSleepStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start sleep recording'**
+  String get sfSleepStart;
+
+  /// No description provided for @sfSleepViewSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'View sessions'**
+  String get sfSleepViewSessions;
+
+  /// No description provided for @sfSleepElapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording… elapsed {time}'**
+  String sfSleepElapsed(Object time);
+
+  /// No description provided for @sfSleepSavedChunks.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved chunks: {count}'**
+  String sfSleepSavedChunks(int count);
+
   /// No description provided for @sfSleepCatSnore.
   ///
   /// In en, this message translates to:

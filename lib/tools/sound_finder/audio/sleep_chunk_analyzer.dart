@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import '../../../helpers/wav_decoder.dart';
+import 'db_scale.dart';
 import 'fft.dart';
 
 enum SleepSoundCategory { snore, speech, impulse, movement, steady, other }
@@ -124,7 +125,7 @@ class SleepChunkAnalyzer {
         sum += samples[i] * samples[i];
       }
       final rms = math.sqrt(sum / math.max(1, end - start));
-      db[f] = 20 * math.log(math.max(rms, 1e-9)) / math.ln10;
+      db[f] = ampToDb(rms, floor: -180);
     }
 
     final sorted = Float64List.fromList(db)..sort();

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
 import '../sound_finder_colors.dart';
 
@@ -15,10 +16,12 @@ class SfSleepOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final state = context.watch<SleepSessionsState>();
-    final sessions = state.sessions.reversed.toList();
-    final wav = state.totalWavBytes;
-    final json = state.totalJsonBytes;
+    final sessions = context
+        .select<SleepSessionsState, List<SleepSession>>((s) => s.sessions)
+        .reversed
+        .toList();
+    final wav = sessions.fold(0, (a, s) => a + s.wavBytes);
+    final json = sessions.fold(0, (a, s) => a + s.jsonBytes);
     return Card(
       margin: const EdgeInsets.all(8),
       child: Padding(
