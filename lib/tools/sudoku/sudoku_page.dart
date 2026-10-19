@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/game_result_overlay.dart';
 import 'package:tool_lab/widgets/responsive_layout.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
@@ -36,8 +37,14 @@ class _SudokuPageState extends State<SudokuPage> with DisposeCleanup {
     maxHeight: 520,
   );
 
+  // A puzzle left untouched this long counts as abandoned, so the screen may sleep.
+  static const Duration _idleScreenOff = Duration(minutes: 5);
+
   late final SudokuEngine _engine;
   late final SudokuState _settings;
+  WakeLockLease? _screenOn;
+  bool _screenOnWanted = false;
+  Timer? _idleTimer;
 
   @override
   void initState() {
@@ -45,9 +52,43 @@ class _SudokuPageState extends State<SudokuPage> with DisposeCleanup {
     _engine = SudokuEngine();
     _settings = context.read<SudokuState>();
     _settings.addListener(_syncSettings);
+    _engine.addListener(_syncScreenOn);
     onDispose(() => _settings.removeListener(_syncSettings));
+    onDispose(() => _engine.removeListener(_syncScreenOn));
+    onDispose(() => _idleTimer?.cancel());
+    onDispose(() => _setScreenOn(false));
     onDispose(_engine.dispose);
     unawaited(_bootstrap());
+  }
+
+  // Engine notifies on every move (the clock ticks separately), so each call also restarts the idle window.
+  void _syncScreenOn() {
+    final playing = !_engine.paused && !_engine.completed;
+    _idleTimer?.cancel();
+    _idleTimer = playing
+        ? Timer(_idleScreenOff, () => _setScreenOn(false))
+        : null;
+    _setScreenOn(playing);
+  }
+
+  void _setScreenOn(bool wanted) {
+    if (wanted == _screenOnWanted) return;
+    _screenOnWanted = wanted;
+    if (!wanted) {
+      final lease = _screenOn;
+      _screenOn = null;
+      if (lease != null) unawaited(lease.release());
+      return;
+    }
+    unawaited(
+      PowerWakeLockService.acquireFull().then((lease) {
+        if (mounted && _screenOnWanted && _screenOn == null) {
+          _screenOn = lease;
+        } else {
+          unawaited(lease.release());
+        }
+      }),
+    );
   }
 
   Future<void> _bootstrap() async {
