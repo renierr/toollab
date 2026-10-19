@@ -10937,6 +10937,390 @@ abstract class AppLocalizations {
   /// **'Recording sleep sounds'**
   String get sfSleepNotificationText;
 
+  /// No description provided for @sfSleepCatSnore.
+  ///
+  /// In en, this message translates to:
+  /// **'Snoring'**
+  String get sfSleepCatSnore;
+
+  /// No description provided for @sfSleepCatSpeech.
+  ///
+  /// In en, this message translates to:
+  /// **'Talking'**
+  String get sfSleepCatSpeech;
+
+  /// No description provided for @sfSleepCatImpulse.
+  ///
+  /// In en, this message translates to:
+  /// **'Cough / knock'**
+  String get sfSleepCatImpulse;
+
+  /// No description provided for @sfSleepCatMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement / rustle'**
+  String get sfSleepCatMovement;
+
+  /// No description provided for @sfSleepCatSteady.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady noise'**
+  String get sfSleepCatSteady;
+
+  /// No description provided for @sfSleepCatOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get sfSleepCatOther;
+
+  /// No description provided for @sfSleepCatUnanalyzed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not analyzed'**
+  String get sfSleepCatUnanalyzed;
+
+  /// No description provided for @sfSleepSessionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Sessions'**
+  String get sfSleepSessionsTitle;
+
+  /// No description provided for @sfSleepNoSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions yet.'**
+  String get sfSleepNoSessions;
+
+  /// No description provided for @sfSleepSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync sessions'**
+  String get sfSleepSync;
+
+  /// No description provided for @sfSleepSyncedResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced: {pulled} pulled, {pushed} pushed'**
+  String sfSleepSyncedResult(Object pulled, Object pushed);
+
+  /// No description provided for @sfSleepSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed: {error}'**
+  String sfSleepSyncFailed(Object error);
+
+  /// No description provided for @sfSleepOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get sfSleepOverviewTitle;
+
+  /// No description provided for @sfSleepOverviewSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions: {count}'**
+  String sfSleepOverviewSessions(Object count);
+
+  /// No description provided for @sfSleepStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get sfSleepStorage;
+
+  /// No description provided for @sfSleepStorageDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio (WAV) {wav} · Metadata (JSON) {json}'**
+  String sfSleepStorageDetail(Object json, Object wav);
+
+  /// No description provided for @sfSleepTrendTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chunks per night'**
+  String get sfSleepTrendTitle;
+
+  /// No description provided for @sfSleepSessionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{chunks} chunks · {duration} · {size}'**
+  String sfSleepSessionSubtitle(Object chunks, Object duration, Object size);
+
+  /// No description provided for @sfSleepDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get sfSleepDuration;
+
+  /// No description provided for @sfSleepRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded audio'**
+  String get sfSleepRecorded;
+
+  /// No description provided for @sfSleepChunks.
+  ///
+  /// In en, this message translates to:
+  /// **'Chunks'**
+  String get sfSleepChunks;
+
+  /// No description provided for @sfSleepLoudest.
+  ///
+  /// In en, this message translates to:
+  /// **'Loudest'**
+  String get sfSleepLoudest;
+
+  /// No description provided for @sfSleepAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get sfSleepAverage;
+
+  /// No description provided for @sfSleepFirstEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'First sound'**
+  String get sfSleepFirstEvent;
+
+  /// No description provided for @sfSleepLastEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sound'**
+  String get sfSleepLastEvent;
+
+  /// No description provided for @sfSleepAudioData.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio (WAV)'**
+  String get sfSleepAudioData;
+
+  /// No description provided for @sfSleepJsonData.
+  ///
+  /// In en, this message translates to:
+  /// **'Metadata (JSON)'**
+  String get sfSleepJsonData;
+
+  /// No description provided for @sfSleepTotalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Total size'**
+  String get sfSleepTotalData;
+
+  /// No description provided for @sfSleepAnalyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing chunks… {percent}%'**
+  String sfSleepAnalyzing(Object percent);
+
+  /// No description provided for @sfSleepAnalysisHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Chunks are not classified yet.'**
+  String get sfSleepAnalysisHint;
+
+  /// No description provided for @sfSleepAnalyze.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyze chunks'**
+  String get sfSleepAnalyze;
+
+  /// No description provided for @sfSleepReanalyze.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-analyze'**
+  String get sfSleepReanalyze;
+
+  /// No description provided for @sfSleepSoundsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sounds (tap to filter)'**
+  String get sfSleepSoundsTitle;
+
+  /// No description provided for @sfSleepAllSounds.
+  ///
+  /// In en, this message translates to:
+  /// **'All {count}'**
+  String sfSleepAllSounds(Object count);
+
+  /// No description provided for @sfSleepThresholdShort.
+  ///
+  /// In en, this message translates to:
+  /// **'thr'**
+  String get sfSleepThresholdShort;
+
+  /// No description provided for @sfSleepLegendHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health sleep'**
+  String get sfSleepLegendHealth;
+
+  /// No description provided for @sfSleepPlayAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Play all ({count})'**
+  String sfSleepPlayAll(Object count);
+
+  /// No description provided for @sfSleepPrevChunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous chunk'**
+  String get sfSleepPrevChunk;
+
+  /// No description provided for @sfSleepNextChunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Next chunk'**
+  String get sfSleepNextChunk;
+
+  /// No description provided for @sfSleepResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get sfSleepResume;
+
+  /// No description provided for @sfSleepPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get sfSleepPause;
+
+  /// No description provided for @sfSleepStopPlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get sfSleepStopPlayback;
+
+  /// No description provided for @sfSleepPlaybackStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'{index}/{total} · {time}'**
+  String sfSleepPlaybackStatus(Object index, Object time, Object total);
+
+  /// No description provided for @sfSleepSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get sfSleepSpeed;
+
+  /// No description provided for @sfSleepSkipQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip quiet parts'**
+  String get sfSleepSkipQuiet;
+
+  /// No description provided for @sfSleepAnnotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Annotate'**
+  String get sfSleepAnnotate;
+
+  /// No description provided for @sfSleepPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak'**
+  String get sfSleepPeak;
+
+  /// No description provided for @sfSleepActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get sfSleepActive;
+
+  /// No description provided for @sfSleepBursts.
+  ///
+  /// In en, this message translates to:
+  /// **'Bursts'**
+  String get sfSleepBursts;
+
+  /// No description provided for @sfSleepDominant.
+  ///
+  /// In en, this message translates to:
+  /// **'Dominant'**
+  String get sfSleepDominant;
+
+  /// No description provided for @sfSleepRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Rhythm {seconds} s'**
+  String sfSleepRhythm(Object seconds);
+
+  /// No description provided for @sfSleepConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% match'**
+  String sfSleepConfidence(Object percent);
+
+  /// No description provided for @sfSleepChunkOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Chunk {index} of {total}'**
+  String sfSleepChunkOf(Object index, Object total);
+
+  /// No description provided for @sfSleepFileMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio is not on this device yet. Sync to download it.'**
+  String get sfSleepFileMissing;
+
+  /// No description provided for @sfSleepPlayChunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Play chunk'**
+  String get sfSleepPlayChunk;
+
+  /// No description provided for @sfSleepPlayFromHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Play from here'**
+  String get sfSleepPlayFromHere;
+
+  /// No description provided for @sfSleepSaveChunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Save WAV'**
+  String get sfSleepSaveChunk;
+
+  /// No description provided for @sfSleepChunkList.
+  ///
+  /// In en, this message translates to:
+  /// **'Chunks ({count})'**
+  String sfSleepChunkList(Object count);
+
+  /// No description provided for @sfSleepShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show {count} more'**
+  String sfSleepShowMore(Object count);
+
+  /// No description provided for @sfSleepLoadStages.
+  ///
+  /// In en, this message translates to:
+  /// **'Load sleep stages'**
+  String get sfSleepLoadStages;
+
+  /// No description provided for @sfSleepNoStages.
+  ///
+  /// In en, this message translates to:
+  /// **'No sleep stages found.'**
+  String get sfSleepNoStages;
+
+  /// No description provided for @sfSleepExportReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export report'**
+  String get sfSleepExportReport;
+
+  /// No description provided for @sfSleepDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete session?'**
+  String get sfSleepDeleteTitle;
+
+  /// No description provided for @sfSleepDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this session and its {count} chunks? Synced copies are removed on the next sync.'**
+  String sfSleepDeleteBody(Object count);
+
   /// No description provided for @sfMicDefault.
   ///
   /// In en, this message translates to:

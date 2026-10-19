@@ -12,6 +12,7 @@ import '../../helpers/temp_file_manager.dart';
 import '../voice_distorter/engine/wav_utils.dart';
 import 'recording_clip.dart';
 import 'sleep_session_data.dart';
+import 'sleep_session_store.dart';
 import 'sf_recording_format.dart';
 import '../../helpers/wav_decoder.dart';
 import '../../helpers/wav_pcm16_encoder.dart';
@@ -127,7 +128,6 @@ class SoundFinderState extends ChangeNotifier {
   int _sleepDurationMinutes = 480;
   DateTime? _sleepStart;
   int _sleepChunksKept = 0;
-  String? _sleepDirPath;
   String? _sleepSessionDir;
   String? _sleepError;
   double _sleepThreshold = 0.005;
@@ -498,23 +498,24 @@ class SoundFinderState extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final files = dir
-        .listSync()
-        .whereType<File>()
-        .where((f) {
-          final ext = f.path.split('.').last.toLowerCase();
-          return ext == 'wav' ||
-              ext == 'm4a' ||
-              ext == 'mp3' ||
-              ext == 'ogg' ||
-              ext == 'opus' ||
-              ext == 'flac' ||
-              ext == 'aac' ||
-              ext == '3gp';
-        })
-        .map(RecordingClip.fromFile)
-        .toList()
-      ..sort((a, b) => b.modified.compareTo(a.modified));
+    final files =
+        dir
+            .listSync()
+            .whereType<File>()
+            .where((f) {
+              final ext = f.path.split('.').last.toLowerCase();
+              return ext == 'wav' ||
+                  ext == 'm4a' ||
+                  ext == 'mp3' ||
+                  ext == 'ogg' ||
+                  ext == 'opus' ||
+                  ext == 'flac' ||
+                  ext == 'aac' ||
+                  ext == '3gp';
+            })
+            .map(RecordingClip.fromFile)
+            .toList()
+          ..sort((a, b) => b.modified.compareTo(a.modified));
     _recordings = files;
     notifyListeners();
   }
@@ -554,7 +555,11 @@ class SoundFinderState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> trimRecording(String path, double startSec, double endSec) async {
+  Future<void> trimRecording(
+    String path,
+    double startSec,
+    double endSec,
+  ) async {
     try {
       final bytes = await File(path).readAsBytes();
       final info = readWavInfo(bytes);
@@ -562,7 +567,10 @@ class SoundFinderState extends ChangeNotifier {
       final blockAlign = info.blockAlign;
       final sampleRate = info.sampleRate;
       final startFrame = (startSec * sampleRate).round().clamp(0, info.frames);
-      final endFrame = (endSec * sampleRate).round().clamp(startFrame, info.frames);
+      final endFrame = (endSec * sampleRate).round().clamp(
+        startFrame,
+        info.frames,
+      );
       if (endFrame <= startFrame) return;
       final startByte = info.dataOffset + startFrame * blockAlign;
       final endByte = info.dataOffset + endFrame * blockAlign;
@@ -586,7 +594,10 @@ class SoundFinderState extends ChangeNotifier {
       final bytes = await File(path).readAsBytes();
       final info = readWavInfo(bytes);
       if (info == null || !info.isPcm || info.bitsPerSample != 16) return;
-      final pcmBytes = bytes.sublist(info.dataOffset, info.dataOffset + info.dataLength);
+      final pcmBytes = bytes.sublist(
+        info.dataOffset,
+        info.dataOffset + info.dataLength,
+      );
       final bd = ByteData.sublistView(Uint8List.fromList(pcmBytes));
       int peak = 0;
       final sampleCount = info.dataLength ~/ 2;
@@ -599,7 +610,10 @@ class SoundFinderState extends ChangeNotifier {
       final outPcm = Uint8List(info.dataLength);
       final outBd = ByteData.sublistView(outPcm);
       for (int i = 0; i < sampleCount; i++) {
-        final v = (bd.getInt16(i * 2, Endian.little) * scale).round().clamp(-32768, 32767);
+        final v = (bd.getInt16(i * 2, Endian.little) * scale).round().clamp(
+          -32768,
+          32767,
+        );
         outBd.setInt16(i * 2, v, Endian.little);
       }
       final out = buildPcmWav(
@@ -624,7 +638,10 @@ class SoundFinderState extends ChangeNotifier {
     await refreshRecordings();
   }
 
-  Future<Uint8List?> exportRecording(String path, SfRecordingFormat format) async {
+  Future<Uint8List?> exportRecording(
+    String path,
+    SfRecordingFormat format,
+  ) async {
     if (_recordingsExporting) return null;
     _recordingsExporting = true;
     notifyListeners();
@@ -698,7 +715,9 @@ class SoundFinderState extends ChangeNotifier {
   }
 
   Future<void> startNormalRecording() async {
-    errorLog('[SF] startNormalRecording called, diskRecording=$_diskRecording, micRunning=${_mic.isRunning}, status=$_micStatus');
+    errorLog(
+      '[SF] startNormalRecording called, diskRecording=$_diskRecording, micRunning=${_mic.isRunning}, status=$_micStatus',
+    );
     if (_diskRecording) return;
     if (_micStatus != MicStatus.running) {
       errorLog('[SF] startNormalRecording: mic not running');
@@ -884,15 +903,6 @@ class SoundFinderState extends ChangeNotifier {
 
   // --- Sleep sound recorder ---
 
-  Future<String> _sleepDir() async {
-    if (_sleepDirPath != null) return _sleepDirPath!;
-    final base = await getApplicationDocumentsDirectory();
-    final dir = Directory('${base.path}/sleep_recordings');
-    if (!await dir.exists()) await dir.create(recursive: true);
-    _sleepDirPath = dir.path;
-    return dir.path;
-  }
-
   void setSleepDurationMinutes(int minutes) {
     if (_sleepActive) return;
     _sleepDurationMinutes = minutes.clamp(30, 720);
@@ -966,14 +976,13 @@ class SoundFinderState extends ChangeNotifier {
     _sleepEvents.clear();
     _sleepLastEvent = null;
     _sleepAmbientMax = 0;
-    final base = await getApplicationDocumentsDirectory();
     final stamp =
         '${DateTime.now().year}${DateTime.now().month.toString().padLeft(2, '0')}'
         '${DateTime.now().day.toString().padLeft(2, '0')}-'
         '${DateTime.now().hour.toString().padLeft(2, '0')}'
         '${DateTime.now().minute.toString().padLeft(2, '0')}'
         '${DateTime.now().second.toString().padLeft(2, '0')}';
-    _sleepSessionDir = '${base.path}/sleep_recordings/session-$stamp';
+    _sleepSessionDir = await SleepSessionStore.sessionPath('session-$stamp');
     await Directory(_sleepSessionDir!).create(recursive: true);
 
     // Keep CPU awake but let the screen turn off; run as a foreground service
@@ -1032,7 +1041,9 @@ class SoundFinderState extends ChangeNotifier {
       if (a > maxAbs) maxAbs = a;
     }
     _sleepLastMaxAbs = maxAbs;
-    errorLog('[Sleep] chunk samples=${samples.length} maxAbs=$maxAbs threshold=$_sleepThreshold');
+    errorLog(
+      '[Sleep] chunk samples=${samples.length} maxAbs=$maxAbs threshold=$_sleepThreshold',
+    );
     // Adaptive threshold: follow ambient noise floor.
     if (_sleepAdaptiveThreshold) {
       if (maxAbs < _sleepThreshold) {
@@ -1046,7 +1057,7 @@ class SoundFinderState extends ChangeNotifier {
     }
     // Keep chunk only if it contains meaningful sound.
     if (maxAbs < _sleepThreshold) return;
-    final dirPath = _sleepSessionDir ?? await _sleepDir();
+    final dirPath = _sleepSessionDir ?? (await SleepSessionStore.root()).path;
     final now = endedAt;
     final stamp =
         '${now.year}${now.month.toString().padLeft(2, '0')}'
@@ -1066,13 +1077,15 @@ class SoundFinderState extends ChangeNotifier {
     _sleepSessionFiles.add(file.path);
     _sleepLastEvent = DateTime.now();
     final classification = _classifySleepEvent(maxAbs);
-    _sleepEvents.add(SleepEvent(
-      file: file.path,
-      startedAt: chunkStart,
-      endedAt: endedAt,
-      peakAmplitude: maxAbs,
-      classification: classification,
-    ));
+    _sleepEvents.add(
+      SleepEvent(
+        fileName: 'chunk-$stamp.wav',
+        startedAt: chunkStart,
+        endedAt: endedAt,
+        peakAmplitude: maxAbs,
+        classification: classification,
+      ),
+    );
     unawaited(
       _sleepWork?.update('Saved chunks: $_sleepChunksKept') ??
           Future<void>.value(),
@@ -1114,7 +1127,10 @@ class SoundFinderState extends ChangeNotifier {
         adaptiveThreshold: _sleepAdaptiveThreshold,
         events: List.of(_sleepEvents),
       );
-      unawaited(data.save());
+      await data.save();
+      SleepSessionStore.notifyChanged();
+      final session = await SleepSessionStore.byId(data.id);
+      if (session != null) unawaited(SleepSessionStore.analyze(session));
     }
     final work = _sleepWork;
     _sleepWork = null;
@@ -1126,8 +1142,6 @@ class SoundFinderState extends ChangeNotifier {
     await PowerWakeLockService.acquireFull();
     notifyListeners();
   }
-
-
 
   Future<void> selectInputDevice(InputDevice? device) async {
     if (device?.id == _selectedDevice?.id) return;
@@ -1363,7 +1377,7 @@ class SoundFinderState extends ChangeNotifier {
     _suspended = false;
     if (_mode != SfMode.generator) {
       _syncMicConfig();
-    final MicStartResult result = await _mic.start();
+      final MicStartResult result = await _mic.start();
       if (result != MicStartResult.ok) {
         _micStatus = switch (result) {
           MicStartResult.denied => MicStatus.denied,
@@ -1677,7 +1691,8 @@ class SoundFinderState extends ChangeNotifier {
     _micGain = double.tryParse(micGain ?? '')?.clamp(1.0, maxMicGain) ?? 1.0;
     _mic.gain = _micGain;
     final maxRec = await db.getSetting(_toolId, _kMaxRecordSeconds);
-    _maxRecordSeconds = int.tryParse(maxRec ?? '') ?? MicAnalyzer.defaultMaxRecordSeconds;
+    _maxRecordSeconds =
+        int.tryParse(maxRec ?? '') ?? MicAnalyzer.defaultMaxRecordSeconds;
     _mic.maxRecordSeconds = _maxRecordSeconds;
 
     final sr = await db.getSetting(_toolId, 'sf_sample_rate');
@@ -1729,56 +1744,6 @@ class SoundFinderState extends ChangeNotifier {
     DatabaseService.instance.setSetting(_toolId, key, value);
   }
 
-  static Future<List<SleepSession>> listSleepSessions() async {
-    final base = await getApplicationDocumentsDirectory();
-    final root = Directory('${base.path}/sleep_recordings');
-    if (!await root.exists()) return const [];
-    // Migrate loose chunks from older versions into a legacy session dir.
-    final loose = root
-        .listSync()
-        .whereType<File>()
-        .where((f) => f.path.toLowerCase().endsWith('.wav'))
-        .toList();
-    if (loose.isNotEmpty) {
-      final legacy = Directory('${root.path}/session-legacy');
-      if (!await legacy.exists()) await legacy.create(recursive: true);
-      for (final f in loose) {
-        final target = File('${legacy.path}/${f.uri.pathSegments.last}');
-        try {
-          if (await target.exists()) {
-            await f.delete();
-          } else {
-            await f.rename(target.path);
-          }
-        } catch (_) {}
-      }
-    }
-    final sessions = <SleepSession>[];
-    for (final entity in root.listSync()) {
-      if (entity is Directory) {
-        final chunks = entity
-            .listSync()
-            .whereType<File>()
-            .where((f) => f.path.toLowerCase().endsWith('.wav'))
-            .toList()
-          ..sort((a, b) => a.path.compareTo(b.path));
-        if (chunks.isNotEmpty) {
-          final data = await SleepSessionData.load(entity.path);
-          sessions.add(SleepSession(path: entity.path, chunks: chunks, data: data));
-        }
-      }
-    }
-    sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return sessions;
-  }
-
-  static Future<void> deleteSleepSession(String path) async {
-    final dir = Directory(path);
-    if (await dir.exists()) {
-      await dir.delete(recursive: true);
-    }
-  }
-
   @override
   void dispose() {
     _diskRecTimer?.cancel();
@@ -1792,47 +1757,5 @@ class SoundFinderState extends ChangeNotifier {
     _mic.dispose();
     _tone.dispose();
     super.dispose();
-  }
-}
-
-class SleepSession {
-  SleepSession({required this.path, required this.chunks, this.data});
-
-  final String path;
-  final List<File> chunks;
-  final SleepSessionData? data;
-
-  String get name => path.split(Platform.pathSeparator).last;
-
-  DateTime get createdAt {
-    final parts = name.split('-');
-    // session-YYYYMMDD-HHMMSS
-    if (parts.length >= 3) {
-      final d = parts[1];
-      final t = parts[2];
-      if (d.length == 8 && t.length == 6) {
-        try {
-          return DateTime(
-            int.parse(d.substring(0, 4)),
-            int.parse(d.substring(4, 6)),
-            int.parse(d.substring(6, 8)),
-            int.parse(t.substring(0, 2)),
-            int.parse(t.substring(2, 4)),
-            int.parse(t.substring(4, 6)),
-          );
-        } catch (_) {}
-      }
-    }
-    return DateTime.fromMillisecondsSinceEpoch(0);
-  }
-
-  Duration get totalDuration {
-    // Estimate from file sizes at 16-bit mono default 44.1k (approx).
-    int bytes = 0;
-    for (final f in chunks) {
-      bytes += f.lengthSync();
-    }
-    final samples = (bytes - chunks.length * 44) ~/ 2;
-    return Duration(seconds: (samples / 44100).round());
   }
 }

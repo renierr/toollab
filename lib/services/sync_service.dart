@@ -29,6 +29,13 @@ abstract class SyncDelegate {
 
   Future<void> finalizeLocalSync(String id, bool wasDeleted);
 
+  /// Records per pull request. Tools whose records carry large blobs lower it
+  /// so one response stays within memory and [syncRequestTimeout].
+  int get syncPullBatchSize;
+
+  /// Timeout of a single pull or push request.
+  Duration get syncRequestTimeout;
+
   /// Runs after the backend sync, for tools that also push their records into
   /// Health Connect. Device-local and independent of the backend, so it runs
   /// even when the tool takes no part in sync.
@@ -52,6 +59,12 @@ mixin DefaultSyncDelegate implements SyncDelegate {
 
   @override
   Future<void> saveSyncCursor(String syncId, String cursor) async {}
+
+  @override
+  int get syncPullBatchSize => SyncService._syncBatchSize;
+
+  @override
+  Duration get syncRequestTimeout => const Duration(seconds: 10);
 
   @override
   Future<void> publishToHealthConnect() async {}
@@ -236,7 +249,7 @@ class SyncService {
 
     final client = await _client;
 
-    const httpTimeout = Duration(seconds: 10);
+    final httpTimeout = delegate.syncRequestTimeout;
 
     final metadataUri = Uri.parse('$sanitizedUrl/api/sync/$toolId/metadata');
     final cursor = await delegate.getSyncCursor(toolId);
@@ -363,7 +376,7 @@ class SyncService {
 
     if (toPullIds.isNotEmpty) {
       final pullUri = Uri.parse('$sanitizedUrl/api/sync/$toolId/pull');
-      for (final ids in _batches(toPullIds, _syncBatchSize)) {
+      for (final ids in _batches(toPullIds, delegate.syncPullBatchSize)) {
         final pullResponse = await client
             .post(
               pullUri,

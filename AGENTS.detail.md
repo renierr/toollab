@@ -50,6 +50,8 @@ abstract class SyncDelegate {
 }
 ```
 
+`DefaultSyncDelegate` also supplies `syncPullBatchSize` (records per pull request) and `syncRequestTimeout` (per pull/push request). Override both in a delegate whose records carry large blobs — the Audio Lab sleep delegate pulls a couple of WAV chunks per request with a long timeout — so one response stays within memory and the timeout. Push batches are already capped by encoded size.
+
 ### 1.2. Sync Protocol Flow (`SyncService.sync`)
 
 Synchronization is executed asynchronously inside `AppState` across all active delegates:

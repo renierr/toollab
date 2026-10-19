@@ -6111,6 +6111,229 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfSleepNotificationText => 'Nimmt Schlafgeräusche auf';
 
   @override
+  String get sfSleepCatSnore => 'Schnarchen';
+
+  @override
+  String get sfSleepCatSpeech => 'Sprechen';
+
+  @override
+  String get sfSleepCatImpulse => 'Husten / Klopfen';
+
+  @override
+  String get sfSleepCatMovement => 'Bewegung / Rascheln';
+
+  @override
+  String get sfSleepCatSteady => 'Gleichmäßiges Rauschen';
+
+  @override
+  String get sfSleepCatOther => 'Sonstiges';
+
+  @override
+  String get sfSleepCatUnanalyzed => 'Nicht analysiert';
+
+  @override
+  String get sfSleepSessionsTitle => 'Schlafsitzungen';
+
+  @override
+  String get sfSleepNoSessions => 'Noch keine Sitzungen.';
+
+  @override
+  String get sfSleepSync => 'Sitzungen synchronisieren';
+
+  @override
+  String sfSleepSyncedResult(Object pulled, Object pushed) {
+    return 'Synchronisiert: $pulled geladen, $pushed hochgeladen';
+  }
+
+  @override
+  String sfSleepSyncFailed(Object error) {
+    return 'Synchronisierung fehlgeschlagen: $error';
+  }
+
+  @override
+  String get sfSleepOverviewTitle => 'Übersicht';
+
+  @override
+  String sfSleepOverviewSessions(Object count) {
+    return 'Sitzungen: $count';
+  }
+
+  @override
+  String get sfSleepStorage => 'Speicher';
+
+  @override
+  String sfSleepStorageDetail(Object json, Object wav) {
+    return 'Audio (WAV) $wav · Metadaten (JSON) $json';
+  }
+
+  @override
+  String get sfSleepTrendTitle => 'Abschnitte pro Nacht';
+
+  @override
+  String sfSleepSessionSubtitle(Object chunks, Object duration, Object size) {
+    return '$chunks Abschnitte · $duration · $size';
+  }
+
+  @override
+  String get sfSleepDuration => 'Dauer';
+
+  @override
+  String get sfSleepRecorded => 'Aufgenommen';
+
+  @override
+  String get sfSleepChunks => 'Abschnitte';
+
+  @override
+  String get sfSleepLoudest => 'Am lautesten';
+
+  @override
+  String get sfSleepAverage => 'Durchschnitt';
+
+  @override
+  String get sfSleepFirstEvent => 'Erstes Geräusch';
+
+  @override
+  String get sfSleepLastEvent => 'Letztes Geräusch';
+
+  @override
+  String get sfSleepAudioData => 'Audio (WAV)';
+
+  @override
+  String get sfSleepJsonData => 'Metadaten (JSON)';
+
+  @override
+  String get sfSleepTotalData => 'Gesamtgröße';
+
+  @override
+  String sfSleepAnalyzing(Object percent) {
+    return 'Analysiere Abschnitte… $percent %';
+  }
+
+  @override
+  String get sfSleepAnalysisHint => 'Abschnitte sind noch nicht klassifiziert.';
+
+  @override
+  String get sfSleepAnalyze => 'Abschnitte analysieren';
+
+  @override
+  String get sfSleepReanalyze => 'Neu analysieren';
+
+  @override
+  String get sfSleepSoundsTitle => 'Geräusche (zum Filtern tippen)';
+
+  @override
+  String sfSleepAllSounds(Object count) {
+    return 'Alle $count';
+  }
+
+  @override
+  String get sfSleepThresholdShort => 'Schw.';
+
+  @override
+  String get sfSleepLegendHealth => 'Health-Schlaf';
+
+  @override
+  String sfSleepPlayAll(Object count) {
+    return 'Alle abspielen ($count)';
+  }
+
+  @override
+  String get sfSleepPrevChunk => 'Vorheriger Abschnitt';
+
+  @override
+  String get sfSleepNextChunk => 'Nächster Abschnitt';
+
+  @override
+  String get sfSleepResume => 'Fortsetzen';
+
+  @override
+  String get sfSleepPause => 'Pause';
+
+  @override
+  String get sfSleepStopPlayback => 'Stopp';
+
+  @override
+  String sfSleepPlaybackStatus(Object index, Object time, Object total) {
+    return '$index/$total · $time';
+  }
+
+  @override
+  String get sfSleepSpeed => 'Wiedergabegeschwindigkeit';
+
+  @override
+  String get sfSleepSkipQuiet => 'Leise Stellen überspringen';
+
+  @override
+  String get sfSleepAnnotate => 'Notiz';
+
+  @override
+  String get sfSleepPeak => 'Spitze';
+
+  @override
+  String get sfSleepActive => 'Aktiv';
+
+  @override
+  String get sfSleepBursts => 'Ausbrüche';
+
+  @override
+  String get sfSleepDominant => 'Dominant';
+
+  @override
+  String sfSleepRhythm(Object seconds) {
+    return 'Rhythmus $seconds s';
+  }
+
+  @override
+  String sfSleepConfidence(Object percent) {
+    return '$percent % Übereinstimmung';
+  }
+
+  @override
+  String sfSleepChunkOf(Object index, Object total) {
+    return 'Abschnitt $index von $total';
+  }
+
+  @override
+  String get sfSleepFileMissing =>
+      'Audio ist noch nicht auf diesem Gerät. Zum Herunterladen synchronisieren.';
+
+  @override
+  String get sfSleepPlayChunk => 'Abschnitt abspielen';
+
+  @override
+  String get sfSleepPlayFromHere => 'Ab hier abspielen';
+
+  @override
+  String get sfSleepSaveChunk => 'WAV speichern';
+
+  @override
+  String sfSleepChunkList(Object count) {
+    return 'Abschnitte ($count)';
+  }
+
+  @override
+  String sfSleepShowMore(Object count) {
+    return '$count weitere anzeigen';
+  }
+
+  @override
+  String get sfSleepLoadStages => 'Schlafphasen laden';
+
+  @override
+  String get sfSleepNoStages => 'Keine Schlafphasen gefunden.';
+
+  @override
+  String get sfSleepExportReport => 'Bericht exportieren';
+
+  @override
+  String get sfSleepDeleteTitle => 'Sitzung löschen?';
+
+  @override
+  String sfSleepDeleteBody(Object count) {
+    return 'Diese Sitzung und ihre $count Abschnitte löschen? Synchronisierte Kopien werden bei der nächsten Synchronisierung entfernt.';
+  }
+
+  @override
   String get sfMicDefault => 'Standardmikrofon';
 
   @override

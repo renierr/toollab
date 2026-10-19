@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'sleep_sync_delegate.dart';
 import 'sound_finder_page.dart';
 import 'sound_finder_state.dart';
 
@@ -24,6 +25,7 @@ class SoundFinderTool {
         create: (_) => SoundFinderState(),
       ),
     ],
+    syncDelegateFactory: () => SleepSyncDelegate(),
     createPage: (_) => const SoundFinderPage(),
   );
 }

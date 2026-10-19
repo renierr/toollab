@@ -2,23 +2,38 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'audio/sleep_chunk_analyzer.dart';
+
+// UTC on disk keeps chunk sync clocks equal across device time zones; older
+// files without a zone suffix still parse as local time.
+String _iso(DateTime t) => t.toUtc().toIso8601String();
+DateTime _parse(Object? raw) => DateTime.parse(raw as String).toLocal();
+
 /// A single captured chunk inside a sleep session.
 class SleepEvent {
   SleepEvent({
-    required this.file,
+    required this.fileName,
     required this.startedAt,
     required this.endedAt,
     required this.peakAmplitude,
     this.classification = 'sound',
     this.annotation,
+    this.analysis,
   });
 
-  final String file;
+  /// Bare file name; the session directory resolves it, so a session pulled
+  /// onto another device keeps working.
+  final String fileName;
   final DateTime startedAt;
   final DateTime endedAt;
   final double peakAmplitude;
+
+  /// Level bucket assigned while recording: loud, sound or faint.
   final String classification;
   String? annotation;
+  SleepChunkAnalysis? analysis;
+
+  Duration get duration => endedAt.difference(startedAt);
 
   double get peakDb {
     if (peakAmplitude <= 0) return -90;
@@ -26,22 +41,29 @@ class SleepEvent {
   }
 
   Map<String, dynamic> toJson() => {
-        'file': file,
-        'startedAt': startedAt.toIso8601String(),
-        'endedAt': endedAt.toIso8601String(),
-        'peakAmplitude': peakAmplitude,
-        'classification': classification,
-        'annotation': annotation,
-      };
+    'file': fileName,
+    'startedAt': _iso(startedAt),
+    'endedAt': _iso(endedAt),
+    'peakAmplitude': peakAmplitude,
+    'classification': classification,
+    'annotation': annotation,
+    if (analysis != null) 'analysis': analysis!.toJson(),
+  };
 
-  factory SleepEvent.fromJson(Map<String, dynamic> json) => SleepEvent(
-        file: json['file'] as String,
-        startedAt: DateTime.parse(json['startedAt'] as String),
-        endedAt: DateTime.parse(json['endedAt'] as String),
-        peakAmplitude: (json['peakAmplitude'] as num).toDouble(),
-        classification: json['classification'] as String? ?? 'sound',
-        annotation: json['annotation'] as String?,
-      );
+  factory SleepEvent.fromJson(Map<String, dynamic> json) {
+    final raw = json['analysis'];
+    return SleepEvent(
+      fileName: (json['file'] as String).split(RegExp(r'[\\/]')).last,
+      startedAt: _parse(json['startedAt']),
+      endedAt: _parse(json['endedAt']),
+      peakAmplitude: (json['peakAmplitude'] as num).toDouble(),
+      classification: json['classification'] as String? ?? 'sound',
+      annotation: json['annotation'] as String?,
+      analysis: raw is Map<String, dynamic>
+          ? SleepChunkAnalysis.fromJson(raw)
+          : null,
+    );
+  }
 }
 
 /// Aggregate metadata for one sleep session.
@@ -54,7 +76,9 @@ class SleepSessionData {
     required this.threshold,
     required this.adaptiveThreshold,
     required this.events,
-  });
+    int? updatedAt,
+    this.analysisVersion = 0,
+  }) : updatedAt = updatedAt ?? endedAt.millisecondsSinceEpoch;
 
   final String path;
   final DateTime startedAt;
@@ -64,58 +88,85 @@ class SleepSessionData {
   final bool adaptiveThreshold;
   final List<SleepEvent> events;
 
-  int get chunkCount => events.length;
+  /// Sync clock in epoch milliseconds; bumped on every local edit.
+  int updatedAt;
+
+  /// [SleepChunkAnalyzer.version] the events were last analyzed with.
+  int analysisVersion;
+
+  String get id => path.split(RegExp(r'[\\/]')).last;
+
+  bool get isAnalyzed =>
+      events.isEmpty || analysisVersion >= SleepChunkAnalyzer.version;
+
+  File fileFor(SleepEvent event) => File('$path/${event.fileName}');
+
+  Duration get duration => endedAt.difference(startedAt);
+
+  Duration get recordedDuration =>
+      events.fold(Duration.zero, (a, e) => a + e.duration);
+
   double get avgPeakDb {
     if (events.isEmpty) return -90;
-    final sum = events.fold<double>(0, (a, e) => a + _ampToDb(e.peakAmplitude));
+    final sum = events.fold<double>(0, (a, e) => a + e.peakDb);
     return sum / events.length;
   }
 
   double get loudestDb {
     if (events.isEmpty) return -90;
-    return events
-        .map((e) => _ampToDb(e.peakAmplitude))
-        .reduce((a, b) => a > b ? a : b);
+    return events.map((e) => e.peakDb).reduce(math.max);
   }
 
   File get jsonFile => File('$path/session.json');
 
-  Future<void> save() async {
-    final data = {
-      'startedAt': startedAt.toIso8601String(),
-      'endedAt': endedAt.toIso8601String(),
-      'targetMinutes': targetMinutes,
-      'threshold': threshold,
-      'adaptiveThreshold': adaptiveThreshold,
-      'events': events.map((e) => e.toJson()).toList(),
-    };
-    await jsonFile.writeAsString(const JsonEncoder.withIndent('  ').convert(data));
+  Map<String, dynamic> toJson() => {
+    'startedAt': _iso(startedAt),
+    'endedAt': _iso(endedAt),
+    'targetMinutes': targetMinutes,
+    'threshold': threshold,
+    'adaptiveThreshold': adaptiveThreshold,
+    'updatedAt': updatedAt,
+    'analysisVersion': analysisVersion,
+    'events': events.map((e) => e.toJson()).toList(),
+  };
+
+  /// Persists the session; [touch] advances [updatedAt] so sync pushes it.
+  Future<void> save({bool touch = true}) async {
+    if (touch) updatedAt = DateTime.now().millisecondsSinceEpoch;
+    await Directory(path).create(recursive: true);
+    await jsonFile.writeAsString(
+      const JsonEncoder.withIndent('  ').convert(toJson()),
+    );
+  }
+
+  static SleepSessionData fromJson(String path, Map<String, dynamic> json) {
+    final events =
+        (json['events'] as List? ?? [])
+            .map((e) => SleepEvent.fromJson(e as Map<String, dynamic>))
+            .toList()
+          ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
+    return SleepSessionData(
+      path: path,
+      startedAt: _parse(json['startedAt']),
+      endedAt: _parse(json['endedAt']),
+      targetMinutes: (json['targetMinutes'] as num?)?.toInt() ?? 0,
+      threshold: (json['threshold'] as num?)?.toDouble() ?? 0.005,
+      adaptiveThreshold: json['adaptiveThreshold'] as bool? ?? false,
+      events: events,
+      updatedAt: (json['updatedAt'] as num?)?.toInt(),
+      analysisVersion: (json['analysisVersion'] as num?)?.toInt() ?? 0,
+    );
   }
 
   static Future<SleepSessionData?> load(String path) async {
     final file = File('$path/session.json');
     if (!await file.exists()) return null;
     try {
-      final json = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-      final events = (json['events'] as List? ?? [])
-          .map((e) => SleepEvent.fromJson(e as Map<String, dynamic>))
-          .toList();
-      return SleepSessionData(
-        path: path,
-        startedAt: DateTime.parse(json['startedAt'] as String),
-        endedAt: DateTime.parse(json['endedAt'] as String),
-        targetMinutes: json['targetMinutes'] as int? ?? 0,
-        threshold: (json['threshold'] as num?)?.toDouble() ?? 0.005,
-        adaptiveThreshold: json['adaptiveThreshold'] as bool? ?? false,
-        events: events,
-      );
+      final json =
+          jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      return fromJson(path, json);
     } catch (_) {
       return null;
     }
-  }
-
-  static double _ampToDb(double amp) {
-    if (amp <= 0) return -90;
-    return 20 * math.log(amp) / math.ln10;
   }
 }
