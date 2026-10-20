@@ -27,7 +27,10 @@ class SleepEvent {
   final String fileName;
   final DateTime startedAt;
   final DateTime endedAt;
-  final double peakAmplitude;
+
+  /// Set while recording; analysis re-measures it from the file, which also
+  /// repairs sessions rebuilt from file names alone.
+  double peakAmplitude;
 
   /// Level bucket assigned while recording: loud, sound or faint.
   final String classification;

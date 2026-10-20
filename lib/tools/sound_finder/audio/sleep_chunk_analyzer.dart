@@ -6,7 +6,16 @@ import '../../../helpers/wav_decoder.dart';
 import 'db_scale.dart';
 import 'fft.dart';
 
-enum SleepSoundCategory { snore, speech, impulse, movement, steady, other }
+/// [impulse] is a knock or bang; coughs have their own [cough].
+enum SleepSoundCategory {
+  snore,
+  speech,
+  cough,
+  impulse,
+  movement,
+  steady,
+  other,
+}
 
 /// Acoustic features of one sleep chunk plus the heuristic category they
 /// point to. Offsets are milliseconds from the start of the chunk.
@@ -27,6 +36,10 @@ class SleepChunkAnalysis {
     required this.flatness,
     required this.periodicity,
     required this.periodSec,
+    this.highRatio = 0,
+    this.harmonicity = 0,
+    this.attackMs = 0,
+    this.peakAmplitude = 0,
   });
 
   final SleepSoundCategory category;
@@ -45,6 +58,18 @@ class SleepChunkAnalysis {
   final double periodicity;
   final double periodSec;
 
+  /// Share of power above 2 kHz.
+  final double highRatio;
+
+  /// Pitch strength 0..1: voiced snoring and talking score high, rustling low.
+  final double harmonicity;
+
+  /// Fastest burst onset; coughs and knocks jump, snores swell.
+  final int attackMs;
+
+  /// Largest absolute sample in the file.
+  final double peakAmplitude;
+
   Map<String, dynamic> toJson() => {
     'category': category.name,
     'confidence': _round(confidence, 100),
@@ -58,7 +83,11 @@ class SleepChunkAnalysis {
     'centroidHz': centroidHz.round(),
     'dominantHz': dominantHz.round(),
     'lowRatio': _round(lowRatio, 100),
+    'highRatio': _round(highRatio, 100),
     'flatness': _round(flatness, 100),
+    'harmonicity': _round(harmonicity, 100),
+    'attackMs': attackMs,
+    'peakAmplitude': _round(peakAmplitude, 100000),
     'periodicity': _round(periodicity, 100),
     'periodSec': _round(periodSec, 10),
   };
@@ -82,7 +111,11 @@ class SleepChunkAnalysis {
       centroidHz: d('centroidHz'),
       dominantHz: d('dominantHz'),
       lowRatio: d('lowRatio'),
+      highRatio: d('highRatio'),
       flatness: d('flatness'),
+      harmonicity: d('harmonicity'),
+      attackMs: i('attackMs'),
+      peakAmplitude: d('peakAmplitude'),
       periodicity: d('periodicity'),
       periodSec: d('periodSec'),
     );
@@ -91,14 +124,21 @@ class SleepChunkAnalysis {
   static double _round(double v, int f) => (v * f).roundToDouble() / f;
 }
 
-/// Offline, dependency-free classifier. The thresholds are heuristics tuned
-/// for a phone near the bed, not a trained model, so the confidence is a
-/// relative score rather than a probability.
+/// Offline, dependency-free classifier. Each burst is scored on its own, then
+/// the scores are pooled by loudness and topped up by chunk-wide rhythm. The
+/// thresholds are heuristics for a phone near the bed, not a trained model, so
+/// the confidence is a relative score rather than a probability.
 class SleepChunkAnalyzer {
   SleepChunkAnalyzer._();
 
   /// Bump when the features or thresholds change so old results get redone.
-  static const int version = 1;
+  static const int version = 2;
+
+  /// Frames this quiet are digital silence (mic restart), not the room.
+  static const double _silentDb = -140;
+  static const int _framesPerBurst = 6;
+  static const int _pitchFramesPerBurst = 3;
+  static const int _maxBursts = 40;
 
   static SleepChunkAnalysis? analyzeFile(String path) {
     final file = File(path);
@@ -128,14 +168,22 @@ class SleepChunkAnalyzer {
       db[f] = ampToDb(rms, floor: -180);
     }
 
-    final sorted = Float64List.fromList(db)..sort();
-    final floorDb = sorted[(sorted.length * 0.2).floor()];
-    final peakDb = sorted.last;
+    final audible = [
+      for (final v in db)
+        if (v > _silentDb) v,
+    ]..sort();
+    final floorDb = audible.isEmpty
+        ? -180.0
+        : audible[(audible.length * 0.2).floor()];
+    final peakDb = audible.isEmpty ? -180.0 : audible.last;
     final contrast = peakDb - floorDb;
     final activeThr = math.max(floorDb + 8, peakDb - 30);
 
     final active = List<bool>.generate(frameCount, (f) => db[f] >= activeThr);
-    final segments = _segments(active, (150 / hopMs).ceil());
+    final segments = [
+      for (final s in _segments(active, (150 / hopMs).ceil()))
+        ..._splitOnsets(db, s),
+    ];
 
     var loudest = 0;
     for (var f = 1; f < frameCount; f++) {
@@ -148,33 +196,43 @@ class SleepChunkAnalyzer {
     }
     final levelDb = activeFrames == 0 ? peakDb : levelSum / activeFrames;
 
-    final spectrum = _spectrum(samples, sampleRate, frame, hop, active, db);
     final (periodicity, periodSec) = _periodicity(db, floorDb, hopMs, 1.2, 7.0);
     final (syllabic, _) = _periodicity(db, floorDb, hopMs, 0.12, 0.4);
+
+    final ranked = [...segments]
+      ..sort((a, b) => _peak(db, b).compareTo(_peak(db, a)));
+    final picked = ranked.take(_maxBursts).toSet();
+    final total = Float64List(frame ~/ 2);
+    final bursts = <_Burst>[
+      for (final s in segments)
+        if (picked.contains(s))
+          _burst(samples, sampleRate, frame, hop, hopMs, db, floorDb, s, total),
+    ];
+    final spectrum = _features(total, sampleRate / frame);
 
     final totalMs = samples.length * 1000 / sampleRate;
     final activeMs = activeFrames * hopMs;
     final activeRatio = totalMs <= 0 ? 0.0 : activeMs / totalMs;
-    final meanBurstSec = segments.isEmpty
-        ? 0.0
-        : segments.fold<int>(0, (a, s) => a + s.$2 - s.$1 + 1) *
-              hopMs /
-              segments.length /
-              1000;
 
     final (category, confidence) = _classify(
-      bursts: segments.length,
+      bursts: bursts,
       activeRatio: activeRatio,
       contrast: contrast,
-      meanBurstSec: meanBurstSec,
-      centroid: spectrum.centroid,
-      dominant: spectrum.dominant,
-      lowRatio: spectrum.lowRatio,
-      flatness: spectrum.flatness,
       periodicity: periodicity,
       periodSec: periodSec,
       syllabic: syllabic,
     );
+
+    final weights = [for (final b in bursts) b.weight(peakDb)];
+    final weightSum = weights.fold(0.0, (a, w) => a + w);
+    double pooled(double Function(_Burst b) pick) {
+      if (weightSum <= 0) return 0;
+      var acc = 0.0;
+      for (var i = 0; i < bursts.length; i++) {
+        acc += pick(bursts[i]) * weights[i];
+      }
+      return acc / weightSum;
+    }
 
     return SleepChunkAnalysis(
       category: category,
@@ -191,7 +249,13 @@ class SleepChunkAnalyzer {
       centroidHz: spectrum.centroid,
       dominantHz: spectrum.dominant,
       lowRatio: spectrum.lowRatio,
+      highRatio: spectrum.highRatio,
       flatness: spectrum.flatness,
+      harmonicity: pooled((b) => b.harmonicity),
+      attackMs: bursts.isEmpty
+          ? 0
+          : (bursts.map((b) => b.attackSec).reduce(math.min) * 1000).round(),
+      peakAmplitude: samples.fold(0.0, (a, v) => math.max(a, v.abs())),
       periodicity: periodicity,
       periodSec: periodSec,
     );
@@ -215,29 +279,89 @@ class SleepChunkAnalyzer {
     return out;
   }
 
-  static _Spectrum _spectrum(
+  /// Splits a run where the level dips and jumps back sharply, so a fit of
+  /// coughs or a series of knocks counts as separate bursts.
+  static List<(int, int)> _splitOnsets(Float64List db, (int, int) s) {
+    final out = <(int, int)>[];
+    var start = s.$1;
+    var low = db[start];
+    var high = db[start];
+    for (var f = start + 1; f <= s.$2; f++) {
+      if (high - low >= 10 && db[f] - low >= 10 && db[f] - db[f - 1] >= 6) {
+        out.add((start, f - 1));
+        start = f;
+        high = db[f];
+        low = db[f];
+        continue;
+      }
+      if (db[f] > high) {
+        high = db[f];
+        low = db[f];
+      } else {
+        low = math.min(low, db[f]);
+      }
+    }
+    out.add((start, s.$2));
+    return out;
+  }
+
+  static double _peak(Float64List db, (int, int) s) {
+    var best = db[s.$1];
+    for (var f = s.$1 + 1; f <= s.$2; f++) {
+      best = math.max(best, db[f]);
+    }
+    return best;
+  }
+
+  /// Shape and spectrum of one burst; its frame spectra also go into [total].
+  static _Burst _burst(
     Float32List samples,
     int sampleRate,
     int frame,
     int hop,
-    List<bool> active,
+    double hopMs,
     Float64List db,
+    double floorDb,
+    (int, int) s,
+    Float64List total,
   ) {
-    final picks = <int>[
-      for (var f = 0; f < active.length; f++)
-        if (active[f]) f,
-    ];
-    if (picks.isEmpty) {
-      picks.addAll(List.generate(active.length, (f) => f));
+    final (a, b) = s;
+    var peakFrame = a;
+    for (var f = a + 1; f <= b; f++) {
+      if (db[f] > db[peakFrame]) peakFrame = f;
     }
-    // Loudest frames carry the character of the sound; cap them for cost.
-    picks.sort((a, b) => db[b].compareTo(db[a]));
-    final use = picks.take(48);
+    final peakDb = db[peakFrame];
 
+    // Time from 20 dB below the peak to 3 dB below it: a cough or knock gets
+    // there within a frame or two, a snore or rustle swells over many.
+    var from = a;
+    while (from < peakFrame && db[from] < peakDb - 20) {
+      from++;
+    }
+    var to = from;
+    while (to < peakFrame && db[to] < peakDb - 3) {
+      to++;
+    }
+    final attackSec = (to - from) * hopMs / 1000;
+
+    var decayEnd = peakFrame;
+    while (decayEnd < b && db[decayEnd] > peakDb - 15) {
+      decayEnd++;
+    }
+
+    final frames = [for (var f = a; f <= b; f++) f]
+      ..sort((x, y) => db[y].compareTo(db[x]));
     final power = Float64List(frame ~/ 2);
     final buf = Float64List(frame);
     var binHz = sampleRate / frame;
-    for (final f in use) {
+    final pitch = <double>[];
+    final strength = <double>[];
+    for (final f in frames.take(_pitchFramesPerBurst)) {
+      final (r, hz) = _pitch(samples, f * hop, frame * 2, sampleRate);
+      strength.add(r);
+      if (r > 0) pitch.add(hz);
+    }
+    for (final f in frames.take(_framesPerBurst)) {
       final start = f * hop;
       for (var i = 0; i < frame; i++) {
         final idx = start + i;
@@ -246,13 +370,32 @@ class SleepChunkAnalyzer {
       final spec = Fft.magnitudeSpectrum(buf, sampleRate);
       binHz = spec.binHz;
       for (var i = 0; i < power.length; i++) {
-        power[i] += spec.magnitudes[i] * spec.magnitudes[i];
+        final p = spec.magnitudes[i] * spec.magnitudes[i];
+        power[i] += p;
+        total[i] += p;
       }
     }
+    strength.sort();
+    pitch.sort();
+    final spectrum = _features(power, binHz);
+    return _Burst(
+      durSec: ((b - a + 1) * hopMs + hopMs) / 1000,
+      attackSec: attackSec,
+      decaySec: (decayEnd - peakFrame) * hopMs / 1000,
+      reachedDecay: db[decayEnd] <= peakDb - 15,
+      peakDb: peakDb,
+      centroid: spectrum.centroid,
+      highRatio: spectrum.highRatio,
+      flatness: spectrum.flatness,
+      harmonicity: strength.isEmpty ? 0 : strength[strength.length ~/ 2],
+      pitchHz: pitch.isEmpty ? 0 : pitch[pitch.length ~/ 2],
+    );
+  }
 
+  static _Spectrum _features(Float64List power, double binHz) {
     final lo = (50 / binHz).ceil();
     final hi = math.min(power.length - 1, (8000 / binHz).floor());
-    var total = 0.0, weighted = 0.0, low = 0.0, best = 0.0;
+    var total = 0.0, weighted = 0.0, low = 0.0, high = 0.0, best = 0.0;
     var dominant = 0.0;
     var logSum = 0.0, flatSum = 0.0;
     var flatBins = 0;
@@ -262,6 +405,7 @@ class SleepChunkAnalyzer {
       total += p;
       weighted += p * hz;
       if (hz < 400) low += p;
+      if (hz >= 2000) high += p;
       if (p > best) {
         best = p;
         dominant = hz;
@@ -272,11 +416,71 @@ class SleepChunkAnalyzer {
         flatBins++;
       }
     }
-    if (total <= 0) return const _Spectrum(0, 0, 0, 0);
+    if (total <= 0) return const _Spectrum(0, 0, 0, 0, 0);
     final flatness = flatBins == 0 || flatSum <= 0
         ? 0.0
         : math.exp(logSum / flatBins) / (flatSum / flatBins);
-    return _Spectrum(weighted / total, dominant, low / total, flatness);
+    return _Spectrum(
+      weighted / total,
+      dominant,
+      low / total,
+      high / total,
+      flatness,
+    );
+  }
+
+  /// Pitch strength and frequency between 30 and 500 Hz (palate flutter up to
+  /// voice) from the normalized autocorrelation of a decimated,
+  /// pre-emphasized window. Only a peak that rises clearly above the dip
+  /// before it counts: low-passed noise such as rustling bedding correlates at
+  /// short lags too, but never forms a peak.
+  static (double, double) _pitch(
+    Float32List samples,
+    int start,
+    int length,
+    int sampleRate,
+  ) {
+    final step = math.max(1, sampleRate ~/ 11025);
+    final rate = sampleRate / step;
+    final n = length ~/ step;
+    final y = Float64List(n);
+    for (var i = 0; i < n; i++) {
+      var acc = 0.0;
+      for (var k = 0; k < step; k++) {
+        final idx = start + i * step + k;
+        if (idx < samples.length) acc += samples[idx];
+      }
+      y[i] = acc / step;
+    }
+    for (var i = n - 1; i > 0; i--) {
+      y[i] -= 0.9 * y[i - 1];
+    }
+    final minLag = (rate / 500).floor();
+    final maxLag = math.min(n * 2 ~/ 3, (rate / 30).ceil());
+    final r = Float64List(maxLag + 2);
+    for (var lag = 1; lag <= maxLag + 1; lag++) {
+      var xy = 0.0, xx = 0.0, yy = 0.0;
+      for (var i = 0; i + lag < n; i++) {
+        xy += y[i] * y[i + lag];
+        xx += y[i] * y[i];
+        yy += y[i + lag] * y[i + lag];
+      }
+      r[lag] = xx <= 0 || yy <= 0 ? 0 : xy / math.sqrt(xx * yy);
+    }
+    final peaks = <int>[];
+    var dip = r[1];
+    for (var lag = 2; lag <= maxLag; lag++) {
+      dip = math.min(dip, r[lag]);
+      if (lag < minLag) continue;
+      final isPeak = r[lag] >= r[lag - 1] && r[lag] >= r[lag + 1];
+      if (isPeak && r[lag] - dip >= 0.3) peaks.add(lag);
+    }
+    if (peaks.isEmpty) return (0, 0);
+    final best = peaks.map((l) => r[l]).reduce(math.max);
+    // Multiples of the period correlate as well; the shortest strong one is
+    // the pitch.
+    final lag = peaks.firstWhere((l) => r[l] >= 0.85 * best);
+    return (best.clamp(0.0, 1.0), rate / lag);
   }
 
   /// Strongest normalized autocorrelation of the level envelope between
@@ -322,66 +526,165 @@ class SleepChunkAnalyzer {
   }
 
   static (SleepSoundCategory, double) _classify({
-    required int bursts,
+    required List<_Burst> bursts,
     required double activeRatio,
     required double contrast,
-    required double meanBurstSec,
-    required double centroid,
-    required double dominant,
-    required double lowRatio,
-    required double flatness,
     required double periodicity,
     required double periodSec,
     required double syllabic,
   }) {
-    if (bursts == 0 || (activeRatio > 0.8 && contrast < 15)) {
+    if (bursts.isEmpty || (activeRatio > 0.8 && contrast < 15)) {
       return (SleepSoundCategory.steady, contrast < 10 ? 0.8 : 0.6);
     }
 
-    var snore = 0.0;
-    if (lowRatio > 0.5) {
-      snore += 0.35;
-    } else if (dominant < 400) {
-      snore += 0.15;
+    final loudest = bursts.fold(-180.0, (a, b) => math.max(a, b.peakDb));
+    final scores = <SleepSoundCategory, double>{};
+    var weightSum = 0.0;
+    var coughLike = 0;
+    for (final b in bursts) {
+      final w = b.weight(loudest);
+      weightSum += w;
+      final burst = _scoreBurst(b);
+      if ((burst[SleepSoundCategory.cough] ?? 0) >= 0.6) coughLike++;
+      burst.forEach((c, v) => scores[c] = (scores[c] ?? 0) + v * w);
     }
-    if (centroid < 900) snore += 0.15;
-    if (periodicity > 0.35 && periodSec >= 1.5 && periodSec <= 7) snore += 0.3;
-    if (bursts >= 2 && meanBurstSec >= 0.3 && meanBurstSec <= 3) snore += 0.2;
+    scores.updateAll((_, v) => weightSum <= 0 ? 0 : v / weightSum);
 
-    var speech = 0.0;
-    if (centroid >= 400 && centroid <= 2500) speech += 0.25;
-    if (syllabic > 0.25) speech += 0.3;
-    if (flatness < 0.3) speech += 0.15;
-    if (bursts >= 2 && meanBurstSec < 2.5) speech += 0.15;
-    if (lowRatio < 0.5) speech += 0.1;
+    void boost(SleepSoundCategory c, double by) =>
+        scores[c] = (scores[c] ?? 0) + by;
+    final rhythmic =
+        periodicity > 0.35 &&
+        periodSec >= 1.5 &&
+        periodSec <= 7 &&
+        bursts.length >= 2;
+    // Breathing rhythm only confirms snoring when the bursts are also voiced,
+    // otherwise heavy breathing or rhythmic rustling would pass for it.
+    if (rhythmic && (scores[SleepSoundCategory.snore] ?? 0) >= 0.3) {
+      boost(SleepSoundCategory.snore, 0.25);
+    }
+    if (syllabic > 0.25) boost(SleepSoundCategory.speech, 0.2);
+    if (coughLike >= 2) boost(SleepSoundCategory.cough, 0.1);
+    if (!rhythmic) boost(SleepSoundCategory.movement, 0.05);
+
+    final best = scores.entries.reduce((a, b) => b.value > a.value ? b : a);
+    if (best.value < 0.45) return (SleepSoundCategory.other, best.value);
+    return (best.key, best.value.clamp(0.0, 1.0));
+  }
+
+  static Map<SleepSoundCategory, double> _scoreBurst(_Burst b) {
+    final explosive = b.attackSec <= 0.05;
+    final swelling = b.attackSec >= 0.15;
+    final noisy = b.harmonicity < 0.3;
+    final voiced = b.harmonicity >= 0.5;
+    final bright = b.highRatio >= 0.08 || b.centroid >= 900;
 
     var impulse = 0.0;
-    if (meanBurstSec < 0.35 && bursts <= 6) impulse += 0.45;
-    if (contrast > 20) impulse += 0.25;
-    if (activeRatio < 0.15) impulse += 0.2;
+    if (b.durSec <= 0.15) {
+      impulse += 0.45;
+    } else if (b.durSec <= 0.22) {
+      impulse += 0.2;
+    }
+    if (explosive) impulse += 0.25;
+    if (b.reachedDecay && b.decaySec <= 0.1) impulse += 0.2;
+
+    var cough = 0.0;
+    if (b.durSec > 0.15 && b.durSec <= 1.0) cough += 0.3;
+    if (explosive) cough += 0.3;
+    if (bright) cough += 0.2;
+    if (b.reachedDecay) cough += 0.1;
+    // A cough is a burst of air, mostly noise; voiced onsets are syllables.
+    if (b.harmonicity < 0.4) {
+      cough += 0.1;
+    } else if (voiced) {
+      cough -= 0.35;
+    }
+
+    var snore = 0.0;
+    if (voiced) {
+      snore += 0.35;
+    } else if (b.harmonicity >= 0.35) {
+      snore += 0.15;
+    } else if (b.harmonicity < 0.2) {
+      snore -= 0.15;
+    }
+    if (b.centroid < 900 && b.highRatio < 0.06) snore += 0.2;
+    if (b.durSec >= 0.4 && b.durSec <= 3.5) snore += 0.15;
+    if (swelling) snore += 0.15;
+    if (explosive) snore -= 0.2;
 
     var movement = 0.0;
-    if (flatness > 0.35) movement += 0.35;
-    if (centroid > 1500) movement += 0.25;
-    if (periodicity < 0.3) movement += 0.1;
-    if (meanBurstSec > 0.5) movement += 0.15;
+    if (b.harmonicity < 0.15) {
+      movement += 0.4;
+    } else if (noisy) {
+      movement += 0.3;
+    }
+    if (b.highRatio >= 0.1 || b.flatness >= 0.2) {
+      movement += 0.2;
+    } else if (b.flatness >= 0.07) {
+      // Bedding close to the mic is mostly low-pitched yet still noise-like.
+      movement += 0.1;
+    }
+    if (b.durSec >= 0.4) movement += 0.15;
+    if (!explosive) movement += 0.1;
 
-    final scores = {
-      SleepSoundCategory.snore: snore,
-      SleepSoundCategory.speech: speech,
+    var speech = 0.0;
+    if (voiced) speech += 0.25;
+    if (b.centroid >= 350 && b.centroid <= 3000) speech += 0.15;
+    if (b.pitchHz >= 75 && b.pitchHz <= 350) speech += 0.1;
+    if (b.durSec >= 0.3) speech += 0.05;
+
+    return {
       SleepSoundCategory.impulse: impulse,
+      SleepSoundCategory.cough: cough,
+      SleepSoundCategory.snore: snore,
       SleepSoundCategory.movement: movement,
+      SleepSoundCategory.speech: speech,
     };
-    final best = scores.entries.reduce((a, b) => b.value > a.value ? b : a);
-    if (best.value < 0.4) return (SleepSoundCategory.other, best.value);
-    return (best.key, best.value.clamp(0.0, 1.0));
   }
 }
 
+class _Burst {
+  const _Burst({
+    required this.durSec,
+    required this.attackSec,
+    required this.decaySec,
+    required this.reachedDecay,
+    required this.peakDb,
+    required this.centroid,
+    required this.highRatio,
+    required this.flatness,
+    required this.harmonicity,
+    required this.pitchHz,
+  });
+
+  final double durSec;
+  final double attackSec;
+  final double decaySec;
+  final bool reachedDecay;
+  final double peakDb;
+  final double centroid;
+  final double highRatio;
+  final double flatness;
+  final double harmonicity;
+  final double pitchHz;
+
+  /// Louder and longer bursts speak for the chunk; a faint tail does not.
+  double weight(double loudestDb) =>
+      math.sqrt(durSec.clamp(0.05, 3.0)) *
+      math.pow(10, (peakDb - loudestDb) / 20);
+}
+
 class _Spectrum {
-  const _Spectrum(this.centroid, this.dominant, this.lowRatio, this.flatness);
+  const _Spectrum(
+    this.centroid,
+    this.dominant,
+    this.lowRatio,
+    this.highRatio,
+    this.flatness,
+  );
   final double centroid;
   final double dominant;
   final double lowRatio;
+  final double highRatio;
   final double flatness;
 }

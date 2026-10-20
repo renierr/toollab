@@ -4,12 +4,14 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:health_connector/health_connector.dart' as hc;
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/sleep_stage_style.dart';
 
 import '../health_dashboard/store/health_schema.dart';
 import '../health_dashboard/store/health_store.dart';
 import 'audio/sleep_chunk_analyzer.dart';
 import 'sleep_player.dart';
+import 'sleep_report_pdf.dart';
 import 'sleep_session_data.dart';
 import 'sleep_session_store.dart';
 
@@ -49,6 +51,7 @@ class SleepSessionsState extends ChangeNotifier {
   final Map<String, Set<SleepSoundCategory?>> _filters = {};
   final Map<String, List<SleepStageBand>> _healthStages = {};
   final Set<String> _healthLoading = {};
+  final Set<String> _reportBusy = {};
 
   List<SleepSession> get sessions => _sessions;
   bool get loading => _loading;
@@ -58,6 +61,32 @@ class SleepSessionsState extends ChangeNotifier {
 
   List<SleepStageBand> healthStages(String id) => _healthStages[id] ?? const [];
   bool healthLoading(String id) => _healthLoading.contains(id);
+  bool reportBusy(String id) => _reportBusy.contains(id);
+
+  /// Loads the Health stages first when none are shown yet, so the report
+  /// carries them without an extra tap.
+  Future<Uint8List> reportPdf(
+    SleepSession session,
+    AppLocalizations l10n,
+    String locale,
+  ) async {
+    _reportBusy.add(session.id);
+    notifyListeners();
+    try {
+      if (!_healthStages.containsKey(session.id)) {
+        await loadHealthStages(session);
+      }
+      return await buildSleepReportPdf(
+        session: session,
+        stages: healthStages(session.id),
+        l10n: l10n,
+        locale: locale,
+      );
+    } finally {
+      _reportBusy.remove(session.id);
+      if (!_disposed) notifyListeners();
+    }
+  }
 
   Future<void> load() async {
     final list = await SleepSessionStore.list();

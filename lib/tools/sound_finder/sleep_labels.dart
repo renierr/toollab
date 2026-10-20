@@ -8,6 +8,7 @@ extension SleepSoundCategoryStyle on SleepSoundCategory? {
   String label(AppLocalizations l10n) => switch (this) {
     SleepSoundCategory.snore => l10n.sfSleepCatSnore,
     SleepSoundCategory.speech => l10n.sfSleepCatSpeech,
+    SleepSoundCategory.cough => l10n.sfSleepCatCough,
     SleepSoundCategory.impulse => l10n.sfSleepCatImpulse,
     SleepSoundCategory.movement => l10n.sfSleepCatMovement,
     SleepSoundCategory.steady => l10n.sfSleepCatSteady,
@@ -18,6 +19,7 @@ extension SleepSoundCategoryStyle on SleepSoundCategory? {
   Color get color => switch (this) {
     SleepSoundCategory.snore => SoundFinderColors.sleepSnore,
     SleepSoundCategory.speech => SoundFinderColors.sleepSpeech,
+    SleepSoundCategory.cough => SoundFinderColors.sleepCough,
     SleepSoundCategory.impulse => SoundFinderColors.sleepImpulse,
     SleepSoundCategory.movement => SoundFinderColors.sleepMovement,
     SleepSoundCategory.steady => SoundFinderColors.sleepSteady,
@@ -28,6 +30,7 @@ extension SleepSoundCategoryStyle on SleepSoundCategory? {
   IconData get icon => switch (this) {
     SleepSoundCategory.snore => Icons.airline_seat_flat_outlined,
     SleepSoundCategory.speech => Icons.record_voice_over_outlined,
+    SleepSoundCategory.cough => Icons.sick_outlined,
     SleepSoundCategory.impulse => Icons.flash_on_outlined,
     SleepSoundCategory.movement => Icons.waves_outlined,
     SleepSoundCategory.steady => Icons.air_outlined,

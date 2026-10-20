@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/confirm_action_dialog.dart';
@@ -50,6 +51,28 @@ class SfSleepSessionActions extends StatelessWidget {
     );
   }
 
+  Future<void> _pdf(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final bytes = await context.read<SleepSessionsState>().reportPdf(
+        session,
+        l10n,
+        locale,
+      );
+      if (!context.mounted) return;
+      await FileSaveHelper.saveFile(
+        context: context,
+        suggestedName: '${session.id}_report.pdf',
+        bytes: bytes,
+      );
+    } catch (e) {
+      errorLog('SfSleepSessionActions: pdf report failed: $e');
+      messenger.showSnackBar(SnackBar(content: Text(l10n.sfSleepPdfFailed)));
+    }
+  }
+
   Future<void> _delete(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final state = context.read<SleepSessionsState>();
@@ -67,13 +90,14 @@ class SfSleepSessionActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.read<SleepSessionsState>();
-    final (
-      analyzing,
-      healthLoading,
-    ) = context.select<SleepSessionsState, (bool, bool)>(
-      (s) =>
-          (s.analysisProgress(session.id) != null, s.healthLoading(session.id)),
-    );
+    final (analyzing, healthLoading, reportBusy) = context
+        .select<SleepSessionsState, (bool, bool, bool)>(
+          (s) => (
+            s.analysisProgress(session.id) != null,
+            s.healthLoading(session.id),
+            s.reportBusy(session.id),
+          ),
+        );
     return Wrap(
       spacing: 8,
       runSpacing: 4,
@@ -89,6 +113,11 @@ class SfSleepSessionActions extends StatelessWidget {
             label: Text(l10n.sfSleepReanalyze),
             onPressed: analyzing ? null : () => state.analyze(session),
           ),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.picture_as_pdf_outlined),
+          label: Text(l10n.sfSleepPdfReport),
+          onPressed: reportBusy ? null : () => _pdf(context),
+        ),
         OutlinedButton.icon(
           icon: const Icon(Icons.save_alt_outlined),
           label: Text(l10n.sfSleepExportReport),

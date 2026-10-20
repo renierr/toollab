@@ -6179,7 +6179,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfSleepCatSpeech => 'Talking';
 
   @override
-  String get sfSleepCatImpulse => 'Cough / knock';
+  String get sfSleepCatCough => 'Coughing';
+
+  @override
+  String get sfSleepCatImpulse => 'Knock / bang';
 
   @override
   String get sfSleepCatMovement => 'Movement / rustle';
@@ -6383,6 +6386,94 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sfSleepExportReport => 'Export report';
+
+  @override
+  String get sfSleepPdfReport => 'PDF report';
+
+  @override
+  String get sfSleepPdfFailed => 'Could not create the PDF report.';
+
+  @override
+  String get sfSleepPdfTitle => 'Sleep sound report';
+
+  @override
+  String get sfSleepPdfTimeline => 'Night timeline';
+
+  @override
+  String get sfSleepPdfSummary => 'Summary';
+
+  @override
+  String get sfSleepPdfCategories => 'Sound categories';
+
+  @override
+  String get sfSleepPdfStages => 'Sleep stages';
+
+  @override
+  String get sfSleepPdfEvents => 'All sound events';
+
+  @override
+  String get sfSleepPdfColTime => 'Time';
+
+  @override
+  String get sfSleepPdfColCategory => 'Category';
+
+  @override
+  String get sfSleepPdfColConfidence => 'Confidence';
+
+  @override
+  String get sfSleepPdfColPeak => 'Peak';
+
+  @override
+  String get sfSleepPdfColStage => 'Sleep stage';
+
+  @override
+  String get sfSleepPdfColNote => 'Note';
+
+  @override
+  String get sfSleepPdfColCount => 'Events';
+
+  @override
+  String get sfSleepPdfColShare => 'Share';
+
+  @override
+  String get sfSleepPdfColDuration => 'Duration';
+
+  @override
+  String sfSleepPdfSummaryEvents(int count, String duration, String recorded) {
+    return '$count sound events over $duration of recording ($recorded of audio kept).';
+  }
+
+  @override
+  String sfSleepPdfSummaryTop(String category, int count, int share) {
+    return 'Most frequent: $category ($count×, $share %).';
+  }
+
+  @override
+  String sfSleepPdfSummaryLoudest(String time, String db, String category) {
+    return 'Loudest at $time: $db dB ($category).';
+  }
+
+  @override
+  String sfSleepPdfSummaryStages(String duration, String stage, int count) {
+    return 'Health sleep stages cover $duration; most sounds fell into $stage ($count).';
+  }
+
+  @override
+  String get sfSleepPdfNoStages =>
+      'No Health sleep stages were found for this night.';
+
+  @override
+  String get sfSleepPdfNoEvents =>
+      'No sound crossed the recording threshold this night.';
+
+  @override
+  String get sfSleepPdfDisclaimer =>
+      'Sound categories come from an on-device heuristic, not a trained model, and are no medical diagnosis.';
+
+  @override
+  String sfSleepPdfPage(int page, int pages) {
+    return 'Page $page of $pages';
+  }
 
   @override
   String get sfSleepDeleteTitle => 'Delete session?';

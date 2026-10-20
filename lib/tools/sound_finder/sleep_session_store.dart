@@ -174,7 +174,10 @@ class SleepSessionStore {
       }
       await update(session.path, (data) {
         for (final e in data.events) {
-          e.analysis = results[e.fileName] ?? e.analysis;
+          final r = results[e.fileName];
+          if (r == null) continue;
+          e.analysis = r;
+          if (r.peakAmplitude > 0) e.peakAmplitude = r.peakAmplitude;
         }
         data.analysisVersion = SleepChunkAnalyzer.version;
       });

@@ -11105,10 +11105,16 @@ abstract class AppLocalizations {
   /// **'Talking'**
   String get sfSleepCatSpeech;
 
+  /// No description provided for @sfSleepCatCough.
+  ///
+  /// In en, this message translates to:
+  /// **'Coughing'**
+  String get sfSleepCatCough;
+
   /// No description provided for @sfSleepCatImpulse.
   ///
   /// In en, this message translates to:
-  /// **'Cough / knock'**
+  /// **'Knock / bang'**
   String get sfSleepCatImpulse;
 
   /// No description provided for @sfSleepCatMovement.
@@ -11458,6 +11464,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export report'**
   String get sfSleepExportReport;
+
+  /// No description provided for @sfSleepPdfReport.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF report'**
+  String get sfSleepPdfReport;
+
+  /// No description provided for @sfSleepPdfFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the PDF report.'**
+  String get sfSleepPdfFailed;
+
+  /// No description provided for @sfSleepPdfTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep sound report'**
+  String get sfSleepPdfTitle;
+
+  /// No description provided for @sfSleepPdfTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Night timeline'**
+  String get sfSleepPdfTimeline;
+
+  /// No description provided for @sfSleepPdfSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get sfSleepPdfSummary;
+
+  /// No description provided for @sfSleepPdfCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound categories'**
+  String get sfSleepPdfCategories;
+
+  /// No description provided for @sfSleepPdfStages.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep stages'**
+  String get sfSleepPdfStages;
+
+  /// No description provided for @sfSleepPdfEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'All sound events'**
+  String get sfSleepPdfEvents;
+
+  /// No description provided for @sfSleepPdfColTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get sfSleepPdfColTime;
+
+  /// No description provided for @sfSleepPdfColCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get sfSleepPdfColCategory;
+
+  /// No description provided for @sfSleepPdfColConfidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence'**
+  String get sfSleepPdfColConfidence;
+
+  /// No description provided for @sfSleepPdfColPeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak'**
+  String get sfSleepPdfColPeak;
+
+  /// No description provided for @sfSleepPdfColStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep stage'**
+  String get sfSleepPdfColStage;
+
+  /// No description provided for @sfSleepPdfColNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get sfSleepPdfColNote;
+
+  /// No description provided for @sfSleepPdfColCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Events'**
+  String get sfSleepPdfColCount;
+
+  /// No description provided for @sfSleepPdfColShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get sfSleepPdfColShare;
+
+  /// No description provided for @sfSleepPdfColDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get sfSleepPdfColDuration;
+
+  /// No description provided for @sfSleepPdfSummaryEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sound events over {duration} of recording ({recorded} of audio kept).'**
+  String sfSleepPdfSummaryEvents(int count, String duration, String recorded);
+
+  /// No description provided for @sfSleepPdfSummaryTop.
+  ///
+  /// In en, this message translates to:
+  /// **'Most frequent: {category} ({count}×, {share} %).'**
+  String sfSleepPdfSummaryTop(String category, int count, int share);
+
+  /// No description provided for @sfSleepPdfSummaryLoudest.
+  ///
+  /// In en, this message translates to:
+  /// **'Loudest at {time}: {db} dB ({category}).'**
+  String sfSleepPdfSummaryLoudest(String time, String db, String category);
+
+  /// No description provided for @sfSleepPdfSummaryStages.
+  ///
+  /// In en, this message translates to:
+  /// **'Health sleep stages cover {duration}; most sounds fell into {stage} ({count}).'**
+  String sfSleepPdfSummaryStages(String duration, String stage, int count);
+
+  /// No description provided for @sfSleepPdfNoStages.
+  ///
+  /// In en, this message translates to:
+  /// **'No Health sleep stages were found for this night.'**
+  String get sfSleepPdfNoStages;
+
+  /// No description provided for @sfSleepPdfNoEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No sound crossed the recording threshold this night.'**
+  String get sfSleepPdfNoEvents;
+
+  /// No description provided for @sfSleepPdfDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound categories come from an on-device heuristic, not a trained model, and are no medical diagnosis.'**
+  String get sfSleepPdfDisclaimer;
+
+  /// No description provided for @sfSleepPdfPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {pages}'**
+  String sfSleepPdfPage(int page, int pages);
 
   /// No description provided for @sfSleepDeleteTitle.
   ///

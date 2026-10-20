@@ -3344,7 +3344,8 @@
   },
   "sfSleepCatSnore": "Snoring",
   "sfSleepCatSpeech": "Talking",
-  "sfSleepCatImpulse": "Cough / knock",
+  "sfSleepCatCough": "Coughing",
+  "sfSleepCatImpulse": "Knock / bang",
   "sfSleepCatMovement": "Movement / rustle",
   "sfSleepCatSteady": "Steady noise",
   "sfSleepCatOther": "Other",
@@ -3403,6 +3404,65 @@
   "sfSleepLoadStages": "Load sleep stages",
   "sfSleepNoStages": "No sleep stages found.",
   "sfSleepExportReport": "Export report",
+  "sfSleepPdfReport": "PDF report",
+  "sfSleepPdfFailed": "Could not create the PDF report.",
+  "sfSleepPdfTitle": "Sleep sound report",
+  "sfSleepPdfTimeline": "Night timeline",
+  "sfSleepPdfSummary": "Summary",
+  "sfSleepPdfCategories": "Sound categories",
+  "sfSleepPdfStages": "Sleep stages",
+  "sfSleepPdfEvents": "All sound events",
+  "sfSleepPdfColTime": "Time",
+  "sfSleepPdfColCategory": "Category",
+  "sfSleepPdfColConfidence": "Confidence",
+  "sfSleepPdfColPeak": "Peak",
+  "sfSleepPdfColStage": "Sleep stage",
+  "sfSleepPdfColNote": "Note",
+  "sfSleepPdfColCount": "Events",
+  "sfSleepPdfColShare": "Share",
+  "sfSleepPdfColDuration": "Duration",
+  "sfSleepPdfSummaryEvents": "{count} sound events over {duration} of recording ({recorded} of audio kept).",
+  "@sfSleepPdfSummaryEvents": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "duration": {"type": "String"},
+      "recorded": {"type": "String"}
+    }
+  },
+  "sfSleepPdfSummaryTop": "Most frequent: {category} ({count}×, {share} %).",
+  "@sfSleepPdfSummaryTop": {
+    "placeholders": {
+      "category": {"type": "String"},
+      "count": {"type": "int"},
+      "share": {"type": "int"}
+    }
+  },
+  "sfSleepPdfSummaryLoudest": "Loudest at {time}: {db} dB ({category}).",
+  "@sfSleepPdfSummaryLoudest": {
+    "placeholders": {
+      "time": {"type": "String"},
+      "db": {"type": "String"},
+      "category": {"type": "String"}
+    }
+  },
+  "sfSleepPdfSummaryStages": "Health sleep stages cover {duration}; most sounds fell into {stage} ({count}).",
+  "@sfSleepPdfSummaryStages": {
+    "placeholders": {
+      "duration": {"type": "String"},
+      "stage": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "sfSleepPdfNoStages": "No Health sleep stages were found for this night.",
+  "sfSleepPdfNoEvents": "No sound crossed the recording threshold this night.",
+  "sfSleepPdfDisclaimer": "Sound categories come from an on-device heuristic, not a trained model, and are no medical diagnosis.",
+  "sfSleepPdfPage": "Page {page} of {pages}",
+  "@sfSleepPdfPage": {
+    "placeholders": {
+      "page": {"type": "int"},
+      "pages": {"type": "int"}
+    }
+  },
   "sfSleepDeleteTitle": "Delete session?",
   "sfSleepDeleteBody": "Delete this session and its {count} chunks? Synced copies are removed on the next sync.",
   "sfMicDefault": "Default microphone",

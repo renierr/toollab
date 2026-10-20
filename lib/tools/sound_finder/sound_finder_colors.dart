@@ -12,6 +12,7 @@ class SoundFinderColors {
 
   static const Color sleepSnore = Color(0xFFEF5350);
   static const Color sleepSpeech = Color(0xFF42A5F5);
+  static const Color sleepCough = Color(0xFF26C6DA);
   static const Color sleepImpulse = Color(0xFFFFA726);
   static const Color sleepMovement = Color(0xFF66BB6A);
   static const Color sleepSteady = Color(0xFF8D6E63);

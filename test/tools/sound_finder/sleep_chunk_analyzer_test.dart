@@ -46,6 +46,37 @@ void main() {
     expect(a.firstActiveMs, closeTo(5000, 100));
   });
 
+  test('explosive noise bursts in a fit are coughing', () {
+    final a = SleepChunkAnalyzer.analyze(
+      _chunk((t, rnd) {
+        for (final s in [4.0, 4.55, 5.1]) {
+          final d = t - s;
+          if (d >= 0 && d < 0.4) {
+            return (rnd.nextDouble() - 0.5) * 0.8 * math.exp(-d / 0.12);
+          }
+        }
+        return 0;
+      }),
+      _sr,
+    );
+    expect(a.category, SleepSoundCategory.cough);
+    expect(a.bursts, 3);
+  });
+
+  test('low rumbling noise without pitch is movement, not snoring', () {
+    var brown = 0.0;
+    final a = SleepChunkAnalyzer.analyze(
+      _chunk((t, rnd) {
+        brown = (brown + (rnd.nextDouble() - 0.5) * 0.05) * 0.995;
+        final env = t % 4 < 1.6 ? math.sin(math.pi * (t % 4) / 1.6) : 0.0;
+        return brown * env;
+      }),
+      _sr,
+    );
+    expect(a.category, SleepSoundCategory.movement);
+    expect(a.harmonicity, lessThan(0.3));
+  });
+
   test('broadband noise burst is movement', () {
     final a = SleepChunkAnalyzer.analyze(
       _chunk((t, rnd) => t > 3 && t < 9 ? (rnd.nextDouble() - 0.5) * 0.3 : 0),

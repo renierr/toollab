@@ -244,7 +244,28 @@ class SleepRecorder extends ChangeNotifier {
       _work?.update(_savedChunksText(_events.length)) ?? Future<void>.value(),
     );
     notifyListeners();
+    // Without this, a night the OS kills before stop() loses every peak and
+    // time and comes back rebuilt from file names only.
+    final start = _start;
+    if (_sessionDir != null && start != null) {
+      try {
+        await _snapshot(_sessionDir!, start, endedAt).save(touch: false);
+      } catch (e) {
+        errorLog('$_logPrefix progress save: $e');
+      }
+    }
   }
+
+  SleepSessionData _snapshot(String dir, DateTime start, DateTime end) =>
+      SleepSessionData(
+        path: dir,
+        startedAt: start,
+        endedAt: end,
+        targetMinutes: _durationMinutes,
+        threshold: _threshold,
+        adaptiveThreshold: _adaptive,
+        events: List.of(_events),
+      );
 
   Future<void> stop() async {
     if (!_active) return;
@@ -264,15 +285,7 @@ class SleepRecorder extends ChangeNotifier {
     _sessionDir = null;
     SleepSessionData? data;
     if (dir != null) {
-      data = SleepSessionData(
-        path: dir,
-        startedAt: sessionStart,
-        endedAt: DateTime.now(),
-        targetMinutes: _durationMinutes,
-        threshold: _threshold,
-        adaptiveThreshold: _adaptive,
-        events: List.of(_events),
-      );
+      data = _snapshot(dir, sessionStart, DateTime.now());
       await data.save();
       SleepSessionStore.notifyChanged();
     }
