@@ -6097,6 +6097,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfSleepDurationLabel => 'Duration:';
 
   @override
+  String sfSleepTimerHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String sfSleepTimerMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String sfSleepTimerHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String get sfSleepTimerCustom => 'Custom…';
+
+  @override
+  String get sfSleepTimerCustomTitle => 'Recording duration';
+
+  @override
+  String get sfSleepTimerHoursLabel => 'Hours';
+
+  @override
+  String get sfSleepTimerMinutesLabel => 'Minutes';
+
+  @override
+  String sfSleepEndsAt(Object time) {
+    return 'Stops at $time';
+  }
+
+  @override
+  String get sfSleepFinishing => 'Saving and syncing the session…';
+
+  @override
   String sfSleepThresholdLabel(Object amp, Object db) {
     return 'Threshold: $db dB ($amp)';
   }

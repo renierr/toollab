@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import 'memo/memo_recorder.dart';
@@ -24,8 +25,19 @@ class SoundFinderTool {
     stateProviders: () => [
       ChangeNotifierProvider<MemoRecorder>(create: (_) => MemoRecorder()),
       ChangeNotifierProvider<SoundFinderState>(
-        create: (context) =>
-            SoundFinderState(memo: context.read<MemoRecorder>()),
+        create: (context) {
+          final appState = context.read<AppState>();
+          return SoundFinderState(
+            memo: context.read<MemoRecorder>(),
+            syncSleepSessions: () async {
+              if (!appState.syncEnabled ||
+                  !appState.syncsTool(SoundFinderTool.config.id)) {
+                return;
+              }
+              await appState.syncWithBackend([SleepSyncDelegate()]);
+            },
+          );
+        },
       ),
     ],
     syncDelegateFactory: () => SleepSyncDelegate(),

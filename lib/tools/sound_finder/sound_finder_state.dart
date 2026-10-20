@@ -94,8 +94,16 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
   // Mic start/stop calls run one at a time; lifecycle events can overlap.
   Future<void> _micOp = Future.value();
 
-  late final SleepRecorder sleep = SleepRecorder(this)
-    ..addListener(notifyListeners);
+  late final SleepRecorder sleep = SleepRecorder(
+    this,
+    syncSessions: _syncSleepSessions,
+  )..addListener(notifyListeners);
+  final Future<void> Function()? _syncSleepSessions;
+
+  // A sleep session keeps the mic past the page and the foreground; when it
+  // ends, these decide whether the mic goes too.
+  bool _pageActive = false;
+  bool _inBackground = false;
 
   bool _tonePlaying = false;
   SfMode? _toneOwner;
@@ -127,7 +135,7 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
   static const String _kMorsePlayMode = 'morse_play_mode';
   static const String _kMorseVolume = 'morse_volume';
 
-  SoundFinderState({required this.memo}) {
+  SoundFinderState({required this.memo, this._syncSleepSessions}) {
     _micSub = _mic.stream.listen(_onAnalysis);
     _tone.onExternalStop = _onToneExternalStop;
     _mic.onRecordLimitReached = () => unawaited(stopRecordingAndSaveTemp());
@@ -391,7 +399,14 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
   }
 
   @override
-  void restoreRecordLimit() => _mic.maxRecordSeconds = _maxRecordSeconds;
+  Future<void> releaseCapture() async {
+    _mic.maxRecordSeconds = _maxRecordSeconds;
+    if (!_pageActive) {
+      await _stopMic();
+    } else if (_inBackground) {
+      await onAppBackgrounded();
+    }
+  }
 
   @override
   void startCapture() => _mic.startRecording();
@@ -580,6 +595,7 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
   /// Called when the tool page becomes active. Starts the mic for the modes
   /// that need it.
   Future<void> onPageEnter() async {
+    _pageActive = true;
     if (_modeUsesAnalyzer(_mode)) await ensureMic();
   }
 
@@ -588,6 +604,7 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
   /// stopped from the notification's stop action or when playback is toggled
   /// off again in the tool.
   Future<void> onPageLeave() async {
+    _pageActive = false;
     if (sleep.active) return;
     if (_mic.isRecordingSession) _mic.stopRecording();
     await _stopMic();
@@ -609,6 +626,7 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
   /// App went to background — suspend the mic and all graph visualizations to
   /// reduce CPU. Will resume on foreground.
   Future<void> onAppBackgrounded() async {
+    _inBackground = true;
     if (sleep.active) return; // keep recording
     if (_micStatus != MicStatus.running || _suspended) return;
     // Set before awaiting: a resume can arrive while the stop is in flight.
@@ -619,6 +637,7 @@ class SoundFinderState extends ChangeNotifier implements SleepCaptureHost {
 
   /// App returned to foreground — resume the mic if it was suspended.
   Future<void> onAppForegrounded() async {
+    _inBackground = false;
     if (sleep.active) return;
     if (!_suspended) return;
     _suspended = false;

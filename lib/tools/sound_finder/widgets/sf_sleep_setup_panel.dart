@@ -5,11 +5,11 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import '../audio/db_scale.dart';
 import '../sleep_recorder.dart';
 import '../sound_finder_state.dart';
+import 'sf_sleep_duration_picker.dart';
 
 class SfSleepSetupPanel extends StatelessWidget {
   const SfSleepSetupPanel({super.key});
 
-  static const _durations = [60, 120, 240, 480, 720];
   static const double _minDb = -60;
   static const double _maxDb = -10;
 
@@ -24,23 +24,7 @@ class SfSleepSetupPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          spacing: 8,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text(l10n.sfSleepDurationLabel),
-            DropdownButton<int>(
-              value: sleep.durationMinutes,
-              items: [
-                for (final m in _durations)
-                  DropdownMenuItem(value: m, child: Text('${m ~/ 60} h')),
-              ],
-              onChanged: (v) {
-                if (v != null) sleep.setDurationMinutes(v);
-              },
-            ),
-          ],
-        ),
+        const SfSleepDurationPicker(),
         const SizedBox(height: 8),
         Text(
           l10n.sfSleepThresholdLabel(

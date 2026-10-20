@@ -18,6 +18,7 @@ import 'package:tool_lab/pages/appearance_settings_page.dart';
 import 'package:tool_lab/pages/sync_stats_page.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/services/shortcut_service.dart';
+import 'package:tool_lab/services/foreground_runtime_service.dart';
 import 'package:tool_lab/core/app_route_observer.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_chooser_dialog.dart';
@@ -250,7 +251,10 @@ class _ToolLabAppState extends State<ToolLabApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkPendingSharing();
-    } else if (state == AppLifecycleState.detached) {
+    } else if (state == AppLifecycleState.detached &&
+        !ForegroundRuntimeService.isActive) {
+      // Background work keeps this engine alive past its activity, and that
+      // work may still read its temp files.
       TempFileManager.cleanSession();
     }
   }

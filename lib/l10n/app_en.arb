@@ -3292,6 +3292,39 @@
   "sfSleepLiveIdle": "Idle · live level {db} dB",
   "sfSleepNone": "none",
   "sfSleepDurationLabel": "Duration:",
+  "sfSleepTimerHours": "{hours} h",
+  "@sfSleepTimerHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "sfSleepTimerMinutes": "{minutes} min",
+  "@sfSleepTimerMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sfSleepTimerHoursMinutes": "{hours} h {minutes} min",
+  "@sfSleepTimerHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sfSleepTimerCustom": "Custom…",
+  "sfSleepTimerCustomTitle": "Recording duration",
+  "sfSleepTimerHoursLabel": "Hours",
+  "sfSleepTimerMinutesLabel": "Minutes",
+  "sfSleepEndsAt": "Stops at {time}",
+  "sfSleepFinishing": "Saving and syncing the session…",
   "sfSleepThresholdLabel": "Threshold: {db} dB ({amp})",
   "sfSleepLastPeak": "Last chunk peak: {db} dB ({amp})",
   "sfSleepPeakVsThreshold": "Last chunk peak: {peak} (threshold {threshold})",

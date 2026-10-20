@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/providers/app_state.dart';
 
@@ -15,6 +16,19 @@ class SfSleepSyncButton extends StatefulWidget {
 
 class _SfSleepSyncButtonState extends State<SfSleepSyncButton> {
   bool _syncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Catches up on a session whose sync after recording failed, e.g. offline.
+    final appState = context.read<AppState>();
+    if (appState.syncEnabled && appState.syncsTool(SoundFinderTool.config.id)) {
+      appState.syncWithBackend([SleepSyncDelegate()]).catchError((Object e) {
+        errorLog('[SfSleepSyncButton] Auto-sync on open failed: $e');
+        return null;
+      });
+    }
+  }
 
   Future<void> _sync() async {
     final l10n = AppLocalizations.of(context);

@@ -842,6 +842,11 @@
             android:name=".ToolLabForegroundService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback|dataSync|microphone" />
+        <service
+            android:name=".FileManagerForegroundService"
+            android:exported="false"
+            android:process=":file_manager"
+            android:foregroundServiceType="mediaPlayback|dataSync|microphone" />
         <!-- ML Kit Document Scanner module — fetched from Google Play at install/run
              time so scanDocument() doesn't fail with a null/PlatformException on
              first use on real devices. -->

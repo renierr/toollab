@@ -1,5 +1,6 @@
 package de.renier.tool_lab
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
@@ -11,6 +12,7 @@ import android.provider.OpenableColumns
 import androidx.core.app.ActivityCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileOutputStream
@@ -26,15 +28,28 @@ open class MainActivity : FlutterFragmentActivity() {
     private val NATIVE_MEDIA_PLAYER_CHANNEL = "de.renier.tool_lab/native_media_player"
 
     private var gpsInfoHelper: GpsInfoHelper? = null
-    private var systemAudioPlayerHelper: SystemAudioPlayerHelper? = null
-    private var multicastLock: WifiManager.MulticastLock? = null
     private var launchRoute: String? = null
     private var filePickerResult: MethodChannel.Result? = null
     private var filePickerTargetDir: String? = null
 
+    /**
+     * The foreground service living in this activity's process. Tool activities
+     * that run in a process of their own have none unless they declare one.
+     */
+    protected open val foregroundServiceClass: Class<out ToolLabForegroundService>?
+        get() = if (javaClass == MainActivity::class.java) ToolLabForegroundService::class.java else null
+
+    // Every tool activity runs in its own process, so these statics hold one
+    // engine and its engine-scoped helpers per process. The engine outlives the
+    // activity while it owns background work, so a relaunch shows that work.
     companion object {
         var channel: MethodChannel? = null
+        private var retainedEngine: FlutterEngine? = null
+        private var systemAudioPlayerHelper: SystemAudioPlayerHelper? = null
+        private var wakeLockHelper: WakeLockHelper? = null
+        private var multicastLock: WifiManager.MulticastLock? = null
 
+        const val EXTRA_FROM_NOTIFICATION = "de.renier.tool_lab.fromNotification"
         private const val FILE_PICKER_REQUEST_CODE = 7412
         private const val ALIAS_PREFIX = "de.renier.tool_lab."
         private const val ALIAS_SUFFIX = "Alias"
@@ -61,11 +76,14 @@ open class MainActivity : FlutterFragmentActivity() {
         SharingHelper.handleIntent(this, intent, null)
     }
 
+    override fun provideFlutterEngine(context: Context): FlutterEngine =
+        retainedEngine ?: FlutterEngine(context.applicationContext).also { retainedEngine = it }
+
     override fun onNewIntent(intent: Intent) {
         val isMainLauncherIntent = intent.action == Intent.ACTION_MAIN &&
                 intent.hasCategory(Intent.CATEGORY_LAUNCHER) &&
                 intent.component?.className == "de.renier.tool_lab.MainActivity"
-        if (isMainLauncherIntent) {
+        if (isMainLauncherIntent || intent.getBooleanExtra(EXTRA_FROM_NOTIFICATION, false)) {
             return
         }
 
@@ -74,26 +92,26 @@ open class MainActivity : FlutterFragmentActivity() {
         val messenger = flutterEngine?.dartExecutor?.binaryMessenger
         resolveLaunchRoute(intent)
         SharingHelper.handleIntent(this, intent, messenger)
-        
-        // Keep launchRoute until Dart acknowledges: a push that lands before the
-        // Dart handler is registered is dropped, and getLaunchRoute must still find it.
-        launchRoute?.let { route ->
-            if (messenger != null) {
-                MethodChannel(messenger, SHORTCUTS_CHANNEL).invokeMethod(
-                    "onShortcutRoute",
-                    route,
-                    object : MethodChannel.Result {
-                        override fun success(result: Any?) {
-                            if (launchRoute == route) launchRoute = null
-                        }
+        if (messenger != null) pushLaunchRoute(messenger)
+    }
 
-                        override fun error(code: String, message: String?, details: Any?) {}
+    // Keep launchRoute until Dart acknowledges: a push that lands before the
+    // Dart handler is registered is dropped, and getLaunchRoute must still find it.
+    private fun pushLaunchRoute(messenger: BinaryMessenger) {
+        val route = launchRoute ?: return
+        MethodChannel(messenger, SHORTCUTS_CHANNEL).invokeMethod(
+            "onShortcutRoute",
+            route,
+            object : MethodChannel.Result {
+                override fun success(result: Any?) {
+                    if (launchRoute == route) launchRoute = null
+                }
 
-                        override fun notImplemented() {}
-                    },
-                )
-            }
-        }
+                override fun error(code: String, message: String?, details: Any?) {}
+
+                override fun notImplemented() {}
+            },
+        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -172,18 +190,37 @@ open class MainActivity : FlutterFragmentActivity() {
         return "${match.groupValues[1]} (${match.groupValues[3]})${match.groupValues[2]}"
     }
 
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        super.cleanUpFlutterEngine(flutterEngine)
+        systemAudioPlayerHelper?.activity = null
+        wakeLockHelper?.detach()
+    }
+
     override fun onDestroy() {
+        gpsInfoHelper?.stopGpsInfoUpdates()
+        gpsInfoHelper = null
+        super.onDestroy()
+        if (!isChangingConfigurations && !ToolLabForegroundService.isActive) releaseEngine()
+    }
+
+    private fun releaseEngine() {
         channel = null
         systemAudioPlayerHelper?.releasePlayer()
         systemAudioPlayerHelper = null
-        multicastLock?.release()
+        wakeLockHelper?.releasePartial()
+        wakeLockHelper = null
+        multicastLock?.takeIf { it.isHeld }?.release()
         multicastLock = null
-        gpsInfoHelper?.stopGpsInfoUpdates()
-        super.onDestroy()
+        retainedEngine?.destroy()
+        retainedEngine = null
     }
 
     private fun resolveLaunchRoute(intent: Intent?) {
         if (intent == null) return
+        if (intent.getBooleanExtra(EXTRA_FROM_NOTIFICATION, false)) {
+            launchRoute = null
+            return
+        }
         if (intent.hasExtra("route")) {
             launchRoute = intent.getStringExtra("route")
             return
@@ -299,15 +336,23 @@ open class MainActivity : FlutterFragmentActivity() {
             }
         }
 
-        val systemAudio = SystemAudioPlayerHelper(this)
-        systemAudioPlayerHelper = systemAudio
-        systemAudio.register(messenger)
+        // Engine-scoped helpers register once; a reattaching activity only rebinds.
+        val systemAudio = systemAudioPlayerHelper
+            ?: SystemAudioPlayerHelper(applicationContext).also {
+                systemAudioPlayerHelper = it
+                it.register(messenger)
+            }
+        systemAudio.activity = this
 
         // Register custom helpers
         SharingHelper.registerChannel(messenger)
-        
-        val wakeLockHelper = WakeLockHelper(this)
-        wakeLockHelper.registerChannel(messenger)
+
+        val wakeLock = wakeLockHelper
+            ?: WakeLockHelper(applicationContext).also {
+                wakeLockHelper = it
+                it.registerChannel(messenger)
+            }
+        wakeLock.attach(this)
 
         val gps = GpsInfoHelper(this)
         gpsInfoHelper = gps
@@ -318,7 +363,16 @@ open class MainActivity : FlutterFragmentActivity() {
         // Foreground Runtime MethodChannel
         val channelInstance = MethodChannel(messenger, FOREGROUND_RUNTIME_CHANNEL)
         channel = channelInstance
+        val serviceClass = foregroundServiceClass
         channelInstance.setMethodCallHandler { call, result ->
+            // The handler outlives this activity while the engine is retained,
+            // so service calls go through the application context.
+            val context = applicationContext
+            if (serviceClass == null && call.method != "requestNotificationPermission") {
+                android.util.Log.w("ToolLabFGS", "No foreground service in this process: ${call.method}")
+                result.success(false)
+                return@setMethodCallHandler
+            }
             when (call.method) {
                 "start" -> {
                     val title = call.argument<String>("title") ?: "ToolLab active"
@@ -326,7 +380,8 @@ open class MainActivity : FlutterFragmentActivity() {
                     val actions = call.argument<List<String>>("actions")
                     val media = call.argument<Map<String, Any?>>("media")
                     ToolLabForegroundService.start(
-                        this,
+                        context,
+                        serviceClass!!,
                         title,
                         text,
                         actions,
@@ -343,7 +398,8 @@ open class MainActivity : FlutterFragmentActivity() {
                     val actions = call.argument<List<String>>("actions")
                     val media = call.argument<Map<String, Any?>>("media")
                     ToolLabForegroundService.update(
-                        this,
+                        context,
+                        serviceClass!!,
                         title,
                         text,
                         actions,
@@ -357,15 +413,15 @@ open class MainActivity : FlutterFragmentActivity() {
                 "playbackState" -> {
                     val positionMs = (call.argument<Number>("positionMs") ?: 0).toLong()
                     val playing = call.argument<Boolean>("playing") ?: false
-                    ToolLabForegroundService.updatePlayback(this, positionMs, playing)
+                    ToolLabForegroundService.updatePlayback(context, serviceClass!!, positionMs, playing)
                     result.success(true)
                 }
                 "stop" -> {
-                    ToolLabForegroundService.stop(this)
+                    ToolLabForegroundService.stop(context, serviceClass!!)
                     result.success(true)
                 }
                 "requestNotificationPermission" -> {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isDestroyed) {
                         if (checkSelfPermission(
                                 android.Manifest.permission.POST_NOTIFICATIONS,
                             ) != PackageManager.PERMISSION_GRANTED
@@ -427,6 +483,10 @@ open class MainActivity : FlutterFragmentActivity() {
                     }
                 }
             }
+
+        // A retained engine asked for its launch route long ago, so a relaunch
+        // into it has to push the new one.
+        if (flutterEngine.dartExecutor.isExecutingDart) pushLaunchRoute(messenger)
 
         // File Save MethodChannel
         MethodChannel(messenger, FILE_SAVE_CHANNEL)
@@ -531,7 +591,10 @@ open class MainActivity : FlutterFragmentActivity() {
 
 class CalculatorActivity : MainActivity()
 class PdfViewerActivity : MainActivity()
-class FileManagerActivity : MainActivity()
+class FileManagerActivity : MainActivity() {
+    override val foregroundServiceClass: Class<out ToolLabForegroundService>
+        get() = FileManagerForegroundService::class.java
+}
 class TextEditorActivity : MainActivity()
 class RicochetActivity : MainActivity()
 class Twenty48Activity : MainActivity()

@@ -2,6 +2,7 @@ package de.renier.tool_lab
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager
 import android.media.audiofx.Visualizer
 import android.os.Handler
@@ -25,9 +26,14 @@ import io.flutter.plugin.common.MethodChannel
  *
  * Position, end-of-stream and (when RECORD_AUDIO is granted) waveform/FFT capture
  * are pushed to Dart over an event channel so the Dart side needs no polling.
+ *
+ * Bound to the engine, not the activity, so playback survives the activity
+ * being destroyed; [activity] is only needed to ask for a permission.
  */
-class SystemAudioPlayerHelper(private val activity: Activity) :
+class SystemAudioPlayerHelper(private val context: Context) :
     MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
+
+    var activity: Activity? = null
 
     companion object {
         private const val METHOD_CHANNEL = "de.renier.tool_lab/system_audio"
@@ -116,9 +122,10 @@ class SystemAudioPlayerHelper(private val activity: Activity) :
             }
             "hasCapturePermission" -> result.success(hasCapturePermission())
             "requestCapturePermission" -> {
-                if (!hasCapturePermission()) {
+                val current = activity
+                if (!hasCapturePermission() && current != null) {
                     ActivityCompat.requestPermissions(
-                        activity,
+                        current,
                         arrayOf(Manifest.permission.RECORD_AUDIO),
                         PERMISSION_REQUEST_CODE,
                     )
@@ -138,7 +145,7 @@ class SystemAudioPlayerHelper(private val activity: Activity) :
         }
         releasePlayer()
         try {
-            val created = ExoPlayer.Builder(activity).build()
+            val created = ExoPlayer.Builder(context).build()
             created.apply {
                 setAudioAttributes(
                     AudioAttributes.Builder()
@@ -216,7 +223,7 @@ class SystemAudioPlayerHelper(private val activity: Activity) :
     }
 
     private fun hasCapturePermission(): Boolean =
-        ActivityCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO) ==
+        ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
             PackageManager.PERMISSION_GRANTED
 
     private fun startTicking() {

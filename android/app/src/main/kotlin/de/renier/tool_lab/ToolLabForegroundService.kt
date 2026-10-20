@@ -17,12 +17,21 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.media.app.NotificationCompat as MediaNotificationCompat
 
-class ToolLabForegroundService : Service() {
+/**
+ * Foreground service for the Flutter engine of the process it runs in. Every
+ * process that hosts a tool engine with background work needs its own
+ * subclass declared in that process: the state below is per-process, and only
+ * a service in the engine's own process keeps that process alive.
+ */
+open class ToolLabForegroundService : Service() {
     companion object {
         private const val CHANNEL_ID = "toollab_foreground_runtime"
         private const val CHANNEL_NAME = "Active Runtime"
         private const val CHANNEL_DESCRIPTION = "Playback and long-running tool tasks"
-        private const val NOTIFICATION_ID = 42001
+
+        /** Whether this process's engine currently holds background work. */
+        var isActive: Boolean = false
+            private set
 
         private const val ACTION_START = "de.renier.tool_lab.foreground.START"
         private const val ACTION_UPDATE = "de.renier.tool_lab.foreground.UPDATE"
@@ -62,6 +71,7 @@ class ToolLabForegroundService : Service() {
 
         fun start(
             context: Context,
+            serviceClass: Class<out ToolLabForegroundService>,
             title: String,
             text: String,
             actions: List<String>?,
@@ -71,14 +81,16 @@ class ToolLabForegroundService : Service() {
             progressMax: Int?,
         ) {
             applyState(title, text, actions, media, chronometerSinceMs, progress, progressMax)
+            isActive = true
             ContextCompat.startForegroundService(
                 context,
-                serviceIntent(context, ACTION_START),
+                serviceIntent(context, serviceClass, ACTION_START),
             )
         }
 
         fun update(
             context: Context,
+            serviceClass: Class<out ToolLabForegroundService>,
             title: String,
             text: String,
             actions: List<String>?,
@@ -88,22 +100,27 @@ class ToolLabForegroundService : Service() {
             progressMax: Int?,
         ) {
             applyState(title, text, actions, media, chronometerSinceMs, progress, progressMax)
-            context.startService(serviceIntent(context, ACTION_UPDATE))
+            context.startService(serviceIntent(context, serviceClass, ACTION_UPDATE))
         }
 
-        fun updatePlayback(context: Context, positionMs: Long, playing: Boolean) {
+        fun updatePlayback(
+            context: Context,
+            serviceClass: Class<out ToolLabForegroundService>,
+            positionMs: Long,
+            playing: Boolean,
+        ) {
             lastPositionMs = positionMs
             lastPlaying = playing
             if (lastMediaTitle == null) return
-            val intent = Intent(context, ToolLabForegroundService::class.java).apply {
-                action = ACTION_PLAYBACK_STATE
+            val intent = serviceIntent(context, serviceClass, ACTION_PLAYBACK_STATE).apply {
                 putExtra(EXTRA_POSITION_MS, positionMs)
                 putExtra(EXTRA_PLAYING, playing)
             }
             context.startService(intent)
         }
 
-        fun stop(context: Context) {
+        fun stop(context: Context, serviceClass: Class<out ToolLabForegroundService>) {
+            isActive = false
             lastTitle = "ToolLab active"
             lastText = "Running in background"
             lastActions = null
@@ -115,10 +132,7 @@ class ToolLabForegroundService : Service() {
             lastChronometerSinceMs = null
             lastProgress = null
             lastProgressMax = null
-            val intent = Intent(context, ToolLabForegroundService::class.java).apply {
-                action = ACTION_STOP
-            }
-            context.startService(intent)
+            context.startService(serviceIntent(context, serviceClass, ACTION_STOP))
         }
 
         private fun applyState(
@@ -154,9 +168,17 @@ class ToolLabForegroundService : Service() {
             lastChronometerSinceMs = if (media == null) chronometerSinceMs else null
         }
 
-        private fun serviceIntent(context: Context, action: String): Intent =
-            Intent(context, ToolLabForegroundService::class.java).apply { this.action = action }
+        private fun serviceIntent(
+            context: Context,
+            serviceClass: Class<out ToolLabForegroundService>,
+            action: String,
+        ): Intent = Intent(context, serviceClass).apply { this.action = action }
     }
+
+    protected open val notificationId: Int = 42001
+
+    /** Activity a tap on the notification brings back: the one hosting this process's engine. */
+    protected open val activityClass: Class<out MainActivity> = MainActivity::class.java
 
     private var mediaSession: MediaSessionCompat? = null
 
@@ -166,16 +188,18 @@ class ToolLabForegroundService : Service() {
         try {
             ensureChannel()
 
+            // A null intent is a restart after the process died, and the Dart
+            // work that owned the notification died with it.
             if (intent == null) {
-                startForegroundSafely(buildNotification())
-                return START_STICKY
+                stopOrphan()
+                return START_NOT_STICKY
             }
 
             val action = intent.action
             if (action != null && action.startsWith("de.renier.tool_lab.foreground.action.")) {
                 val actionName = action.removePrefix("de.renier.tool_lab.foreground.action.")
                 sendActionToFlutter(actionName)
-                return START_STICKY
+                return START_NOT_STICKY
             }
 
             when (action) {
@@ -207,13 +231,13 @@ class ToolLabForegroundService : Service() {
             }
         }
 
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun startForegroundSafely(notification: Notification) {
         ServiceCompat.startForeground(
             this,
-            NOTIFICATION_ID,
+            notificationId,
             notification,
             android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK or
                 android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or
@@ -223,16 +247,27 @@ class ToolLabForegroundService : Service() {
 
     private fun notify(notification: Notification) {
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(NOTIFICATION_ID, notification)
+        manager.notify(notificationId, notification)
     }
 
     private fun sendActionToFlutter(actionName: String) {
         val channel = MainActivity.channel
-        if (channel != null) {
-            android.os.Handler(android.os.Looper.getMainLooper()).post {
-                channel.invokeMethod("onAction", actionName)
-            }
+        if (channel == null || !isActive) {
+            // Nothing is listening any more, so the notification would be a
+            // dead control; drop it instead.
+            stopOrphan()
+            return
         }
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            channel.invokeMethod("onAction", actionName)
+        }
+    }
+
+    private fun stopOrphan() {
+        isActive = false
+        releaseSession()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     // ---- Media session ----
@@ -303,7 +338,8 @@ class ToolLabForegroundService : Service() {
     // ---- Notification building ----
 
     private fun buildNotification(): Notification {
-        val openIntent = Intent(this, MainActivity::class.java)
+        val openIntent = Intent(this, activityClass)
+            .putExtra(MainActivity.EXTRA_FROM_NOTIFICATION, true)
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,
@@ -387,7 +423,7 @@ class ToolLabForegroundService : Service() {
     }
 
     private fun actionPendingIntent(name: String): PendingIntent {
-        val actionIntent = Intent(this, ToolLabForegroundService::class.java).apply {
+        val actionIntent = Intent(this, javaClass).apply {
             this.action = "de.renier.tool_lab.foreground.action.$name"
         }
         return PendingIntent.getService(
@@ -411,4 +447,10 @@ class ToolLabForegroundService : Service() {
         }
         manager.createNotificationChannel(channel)
     }
+}
+
+/** Runs in the `:file_manager` process, where files opened from the file manager play. */
+class FileManagerForegroundService : ToolLabForegroundService() {
+    override val notificationId: Int = 42002
+    override val activityClass: Class<out MainActivity> = FileManagerActivity::class.java
 }

@@ -18,6 +18,7 @@ class SfSleepRecordingPanel extends StatelessWidget {
     final events = sleep.events;
     final recent = events.reversed.take(_recentCount);
     final elapsed = sleep.elapsed;
+    final endsAt = sleep.endsAt;
     String two(int v) => v.toString().padLeft(2, '0');
 
     return Column(
@@ -29,6 +30,8 @@ class SfSleepRecordingPanel extends StatelessWidget {
             '${two(elapsed.inSeconds.remainder(60))}',
           ),
         ),
+        if (endsAt != null)
+          Text(l10n.sfSleepEndsAt(sleepClock(endsAt, seconds: false))),
         const SizedBox(height: 4),
         Text(l10n.sfSleepSavedChunks(events.length)),
         Text(

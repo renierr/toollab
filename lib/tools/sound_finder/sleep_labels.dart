@@ -42,6 +42,14 @@ String sleepClock(DateTime t, {bool seconds = true}) {
   return seconds ? '$hm:${two(t.second)}' : hm;
 }
 
+String sleepTimerLabel(AppLocalizations l10n, int minutes) {
+  final h = minutes ~/ 60;
+  final m = minutes % 60;
+  if (m == 0) return l10n.sfSleepTimerHours(h);
+  if (h == 0) return l10n.sfSleepTimerMinutes(m);
+  return l10n.sfSleepTimerHoursMinutes(h, m);
+}
+
 String sleepDuration(Duration d) {
   if (d.inHours > 0) return '${d.inHours}h ${d.inMinutes.remainder(60)}m';
   if (d.inMinutes > 0) return '${d.inMinutes}m ${d.inSeconds.remainder(60)}s';

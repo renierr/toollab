@@ -15,9 +15,9 @@ class SfSleepView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final (active, micUnavailable) = context
-        .select<SoundFinderState, (bool, bool)>(
-          (s) => (s.sleep.active, s.sleep.micUnavailable),
+    final (active, micUnavailable, finishing) = context
+        .select<SoundFinderState, (bool, bool, bool)>(
+          (s) => (s.sleep.active, s.sleep.micUnavailable, s.sleep.finishing),
         );
 
     return Column(
@@ -38,6 +38,26 @@ class SfSleepView extends StatelessWidget {
             ),
           ),
         const SfSleepLiveStatus(),
+        if (finishing)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.sfSleepFinishing,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ),
         const SizedBox(height: 12),
         active ? const SfSleepRecordingPanel() : const SfSleepSetupPanel(),
         const SizedBox(height: 8),

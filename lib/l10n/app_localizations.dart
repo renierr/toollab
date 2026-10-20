@@ -10979,6 +10979,60 @@ abstract class AppLocalizations {
   /// **'Duration:'**
   String get sfSleepDurationLabel;
 
+  /// No description provided for @sfSleepTimerHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String sfSleepTimerHours(int hours);
+
+  /// No description provided for @sfSleepTimerMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String sfSleepTimerMinutes(int minutes);
+
+  /// No description provided for @sfSleepTimerHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String sfSleepTimerHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @sfSleepTimerCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom…'**
+  String get sfSleepTimerCustom;
+
+  /// No description provided for @sfSleepTimerCustomTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording duration'**
+  String get sfSleepTimerCustomTitle;
+
+  /// No description provided for @sfSleepTimerHoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get sfSleepTimerHoursLabel;
+
+  /// No description provided for @sfSleepTimerMinutesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get sfSleepTimerMinutesLabel;
+
+  /// No description provided for @sfSleepEndsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops at {time}'**
+  String sfSleepEndsAt(Object time);
+
+  /// No description provided for @sfSleepFinishing.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving and syncing the session…'**
+  String get sfSleepFinishing;
+
   /// No description provided for @sfSleepThresholdLabel.
   ///
   /// In en, this message translates to:
