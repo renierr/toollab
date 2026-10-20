@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:tool_lab/widgets/sleep_stage_style.dart';
+
 /// Overall verdict for a night.
 enum SleepRating { good, fair, poor }
 
@@ -48,8 +50,6 @@ class SleepQuality {
     required this.findings,
   });
 
-  static const _awakeStages = {'awake', 'out_of_bed', 'awake_in_bed'};
-
   static SleepQuality? from({
     required List<Map<String, dynamic>> stages,
     required int startTime,
@@ -65,19 +65,21 @@ class SleepQuality {
     var stagedMs = 0;
     var awakenings = 0;
     for (final stage in stages) {
-      final type = (stage['type'] as String?)?.toLowerCase();
+      final type = stage['type'] as String?;
       final from = (stage['startTime'] as num?)?.toInt();
       final to = (stage['endTime'] as num?)?.toInt();
       if (type == null || from == null || to == null || to <= from) continue;
       final span = to - from;
       stagedMs += span;
-      if (_awakeStages.contains(type)) {
-        awakeMs += span;
-        awakenings++;
-      } else if (type == 'deep') {
-        deepMs += span;
-      } else if (type == 'rem') {
-        remMs += span;
+      switch (SleepStageKind.fromName(type)) {
+        case SleepStageKind.awake:
+          awakeMs += span;
+          awakenings++;
+        case SleepStageKind.deep:
+          deepMs += span;
+        case SleepStageKind.rem:
+          remMs += span;
+        default:
       }
     }
 

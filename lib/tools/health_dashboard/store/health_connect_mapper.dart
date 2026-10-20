@@ -300,10 +300,15 @@ class HealthConnectMapper {
   /// which keeps "no data" distinct from "zero minutes asleep".
   static int? _asleepMinutes(List<hc.SleepStageSample> stages) {
     if (stages.isEmpty) return null;
-    const awake = {'awake', 'awakeInBed', 'outOfBed', 'unknown'};
+    const awake = {
+      hc.SleepStage.awake,
+      hc.SleepStage.inBed,
+      hc.SleepStage.outOfBed,
+      hc.SleepStage.unknown,
+    };
     var millis = 0;
     for (final stage in stages) {
-      if (awake.contains(stage.stageType.name)) continue;
+      if (awake.contains(stage.stageType)) continue;
       millis += stage.endTime.difference(stage.startTime).inMilliseconds;
     }
     return millis ~/ Duration.millisecondsPerMinute;

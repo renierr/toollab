@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/sleep_stage_style.dart';
 
 import '../audio/db_scale.dart';
 import '../audio/sleep_chunk_analyzer.dart';
@@ -54,6 +55,7 @@ class SfSleepTimeline extends StatelessWidget {
     }
 
     final categories = {for (final e in data.events) e.analysis?.category};
+    final stages = {for (final b in health) b.kind};
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -98,11 +100,9 @@ class SfSleepTimeline extends StatelessWidget {
             for (final c in [...SleepSoundCategory.values, null])
               if (categories.contains(c))
                 _LegendDot(color: c.color, label: c.label(l10n)),
-            if (health.isNotEmpty)
-              _LegendDot(
-                color: SoundFinderColors.sleepHealthBand,
-                label: l10n.sfSleepLegendHealth,
-              ),
+            for (final k in SleepStageKind.values)
+              if (stages.contains(k))
+                _LegendDot(color: k.color, label: k.label(l10n)),
           ],
         ),
       ],
@@ -177,6 +177,7 @@ class _TimelinePainter extends CustomPainter {
 
   static const double _bottomPad = 26;
   static const int _minDb = -60;
+  static const double _stageStrip = 5;
 
   final SleepSessionData data;
   final Set<int> visible;
@@ -222,10 +223,15 @@ class _TimelinePainter extends CustomPainter {
     }
 
     for (final b in health) {
+      final x0 = xOf(b.start);
+      final x1 = xOf(b.end);
       canvas.drawRect(
-        Rect.fromLTRB(xOf(b.start), 0, xOf(b.end), plotH),
-        Paint()
-          ..color = SoundFinderColors.sleepHealthBand.withValues(alpha: 0.12),
+        Rect.fromLTRB(x0, 0, x1, plotH),
+        Paint()..color = b.kind.color.withValues(alpha: 0.16),
+      );
+      canvas.drawRect(
+        Rect.fromLTRB(x0, 0, x1, _stageStrip),
+        Paint()..color = b.kind.color,
       );
     }
 

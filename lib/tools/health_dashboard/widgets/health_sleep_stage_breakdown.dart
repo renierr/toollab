@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/sleep_stage_style.dart';
 
 /// One row per sleep stage: colour, name, a bar the width of its share, then
 /// the duration, how often it occurred and what percentage of the night it was.
@@ -19,13 +20,6 @@ class HealthSleepStageBreakdown extends StatelessWidget {
 
   static const _order = ['deep', 'rem', 'light', 'awake'];
 
-  static const _colors = {
-    'awake': Colors.amber,
-    'rem': Colors.purple,
-    'light': Colors.lightBlue,
-    'deep': Colors.indigo,
-  };
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -42,8 +36,8 @@ class HealthSleepStageBreakdown extends StatelessWidget {
       children: [
         for (final (stage, duration) in present)
           _StageRow(
-            color: _colors[stage] ?? Colors.blueGrey,
-            label: _label(l10n, stage),
+            color: SleepStageKind.fromName(stage)?.color ?? Colors.blueGrey,
+            label: SleepStageKind.fromName(stage)?.label(l10n) ?? stage,
             duration: duration,
             occurrences: occurrences[stage] ?? 0,
             share: total == 0 ? 0 : duration.inSeconds / total,
@@ -51,14 +45,6 @@ class HealthSleepStageBreakdown extends StatelessWidget {
       ],
     );
   }
-
-  static String _label(AppLocalizations l10n, String stage) => switch (stage) {
-    'awake' => l10n.healthDashboardSleepAwake,
-    'rem' => l10n.healthDashboardSleepRem,
-    'light' => l10n.healthDashboardSleepLight,
-    'deep' => l10n.healthDashboardSleepDeep,
-    _ => stage,
-  };
 }
 
 class _StageRow extends StatelessWidget {

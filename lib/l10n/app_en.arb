@@ -3377,7 +3377,6 @@
   "sfSleepSoundsTitle": "Sounds (tap to filter)",
   "sfSleepAllSounds": "All {count}",
   "sfSleepThresholdShort": "thr",
-  "sfSleepLegendHealth": "Health sleep",
   "sfSleepPlayAll": "Play all ({count})",
   "sfSleepPrevChunk": "Previous chunk",
   "sfSleepNextChunk": "Next chunk",

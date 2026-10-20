@@ -2451,7 +2451,6 @@
   "sfSleepSoundsTitle": "Geräusche (zum Filtern tippen)",
   "sfSleepAllSounds": "Alle {count}",
   "sfSleepThresholdShort": "Schw.",
-  "sfSleepLegendHealth": "Health-Schlaf",
   "sfSleepPlayAll": "Alle abspielen ({count})",
   "sfSleepPrevChunk": "Vorheriger Abschnitt",
   "sfSleepNextChunk": "Nächster Abschnitt",

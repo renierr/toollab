@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
 import 'package:tool_lab/widgets/health_chart_tooltip.dart';
+import 'package:tool_lab/widgets/sleep_stage_style.dart';
 import 'health_session_overlay.dart';
 
 export 'health_session_overlay.dart';
@@ -196,30 +197,19 @@ class _TimelineTooltip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final stageLabel = switch (stage) {
-      'awake' => l10n.healthDashboardSleepAwake,
-      'rem' => l10n.healthDashboardSleepRem,
-      'light' => l10n.healthDashboardSleepLight,
-      'deep' => l10n.healthDashboardSleepDeep,
-      _ => null,
-    };
+    final kind = SleepStageKind.fromName(stage);
     return HealthChartTooltip(
       title: time,
-      titleTag: stageLabel == null
+      titleTag: kind == null
           ? null
-          : (color: _stageColor(stage!), text: stageLabel),
+          : (color: kind.color, text: kind.label(l10n)),
       readings: readings,
     );
   }
 }
 
-Color _stageColor(String type) => switch (type) {
-  'awake' => Colors.amber,
-  'rem' => Colors.purple,
-  'light' => Colors.lightBlue,
-  'deep' => Colors.indigo,
-  _ => Colors.blueGrey,
-};
+Color _stageColor(String type) =>
+    SleepStageKind.fromName(type)?.color ?? Colors.blueGrey;
 
 class _SessionTimelinePainter extends CustomPainter {
   final List<Map<String, dynamic>> stages;

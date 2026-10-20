@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:health_connector/health_connector.dart' as hc;
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/widgets/sleep_stage_style.dart';
 
 import '../health_dashboard/store/health_schema.dart';
 import '../health_dashboard/store/health_store.dart';
@@ -13,13 +14,18 @@ import 'sleep_session_data.dart';
 import 'sleep_session_store.dart';
 
 class SleepStageBand {
-  const SleepStageBand({required this.start, required this.end});
+  const SleepStageBand({
+    required this.kind,
+    required this.start,
+    required this.end,
+  });
+  final SleepStageKind kind;
   final DateTime start;
   final DateTime end;
 }
 
 /// Backs the sleep sessions page: the session list plus per-session
-/// selection, category filter and Health sleep bands. Audio lives in
+/// selection, category filter and Health sleep stages. Audio lives in
 /// [SleepPlayer]; this state only steers it.
 class SleepSessionsState extends ChangeNotifier {
   SleepSessionsState(this._player) {
@@ -158,20 +164,44 @@ class SleepSessionsState extends ChangeNotifier {
     final start = session.data.startedAt;
     final end = session.data.endedAt;
     final bands = <SleepStageBand>[];
+    // Clipped to the recording so a night that began earlier lines up with it.
+    void addBand(SleepStageKind? kind, DateTime t0, DateTime t1) {
+      final s = t0.isBefore(start) ? start : t0;
+      final e = t1.isAfter(end) ? end : t1;
+      if (kind == null || !e.isAfter(s)) return;
+      bands.add(SleepStageBand(kind: kind, start: s, end: e));
+    }
+
     // Prefer the already-synced Health Dashboard store (no extra permissions).
     try {
-      final sessions = await HealthStore.instance.sessions(
+      final store = HealthStore.instance;
+      final sessions = await store.sessions(
         kind: HealthSchema.sessionKindSleep,
         from: start.millisecondsSinceEpoch,
         to: end.millisecondsSinceEpoch,
       );
       for (final s in sessions) {
-        bands.add(
-          SleepStageBand(
-            start: DateTime.fromMillisecondsSinceEpoch(s.t0),
-            end: DateTime.fromMillisecondsSinceEpoch(s.t1),
-          ),
-        );
+        final stages = [
+          for (final p in await store.sessionParts(s.id))
+            if (p.kind == HealthSchema.partKindSleepStage &&
+                p.t0 != null &&
+                p.t1 != null)
+              p,
+        ];
+        if (stages.isEmpty) {
+          addBand(
+            SleepStageKind.asleep,
+            DateTime.fromMillisecondsSinceEpoch(s.t0),
+            DateTime.fromMillisecondsSinceEpoch(s.t1),
+          );
+        }
+        for (final p in stages) {
+          addBand(
+            SleepStageKind.fromName(p.part),
+            DateTime.fromMillisecondsSinceEpoch(p.t0!),
+            DateTime.fromMillisecondsSinceEpoch(p.t1!),
+          );
+        }
       }
     } catch (e) {
       errorLog('$_logPrefix health store: $e');
@@ -188,8 +218,16 @@ class SleepSessionsState extends ChangeNotifier {
         );
         final resp = await connector.readRecords(req);
         for (final r in (resp.records as List).cast<hc.HealthRecord>()) {
-          if (r is hc.IntervalHealthRecord) {
-            bands.add(SleepStageBand(start: r.startTime, end: r.endTime));
+          if (r is! hc.SleepSessionRecord) continue;
+          if (r.samples.isEmpty) {
+            addBand(SleepStageKind.asleep, r.startTime, r.endTime);
+          }
+          for (final stage in r.samples) {
+            addBand(
+              SleepStageKind.fromName(stage.stageType.name),
+              stage.startTime,
+              stage.endTime,
+            );
           }
         }
       } catch (e) {
@@ -197,6 +235,7 @@ class SleepSessionsState extends ChangeNotifier {
       }
     }
     if (_disposed) return bands.isNotEmpty;
+    bands.sort((a, b) => a.start.compareTo(b.start));
     _healthStages[session.id] = bands;
     _healthLoading.remove(session.id);
     notifyListeners();

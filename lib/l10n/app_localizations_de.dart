@@ -6332,9 +6332,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfSleepThresholdShort => 'Schw.';
 
   @override
-  String get sfSleepLegendHealth => 'Health-Schlaf';
-
-  @override
   String sfSleepPlayAll(Object count) {
     return 'Alle abspielen ($count)';
   }

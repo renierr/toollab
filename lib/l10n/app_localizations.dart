@@ -11303,12 +11303,6 @@ abstract class AppLocalizations {
   /// **'thr'**
   String get sfSleepThresholdShort;
 
-  /// No description provided for @sfSleepLegendHealth.
-  ///
-  /// In en, this message translates to:
-  /// **'Health sleep'**
-  String get sfSleepLegendHealth;
-
   /// No description provided for @sfSleepPlayAll.
   ///
   /// In en, this message translates to:

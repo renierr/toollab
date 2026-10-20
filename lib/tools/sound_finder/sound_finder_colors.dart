@@ -18,5 +18,4 @@ class SoundFinderColors {
   static const Color sleepOther = Color(0xFFAB47BC);
   static const Color sleepUnanalyzed = Color(0xFF9E9E9E);
   static const Color sleepThreshold = Color(0xFF7E57C2);
-  static const Color sleepHealthBand = Color(0xFF29B6F6);
 }
