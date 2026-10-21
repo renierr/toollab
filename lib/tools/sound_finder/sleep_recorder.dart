@@ -414,7 +414,12 @@ class SleepRecorder extends ChangeNotifier {
     _chunkTimer?.cancel();
     _chunkTimer = null;
     final sessionStart = _start ?? DateTime.now();
-    await _processChunk(_chunkStart ?? DateTime.now());
+    // Every step below may throw; none may skip _finish, which frees the lease.
+    try {
+      await _processChunk(_chunkStart ?? DateTime.now());
+    } catch (e) {
+      errorLog('$_logPrefix last chunk: $e');
+    }
     _start = null;
     final work = _work;
     _work = null;
@@ -425,10 +430,18 @@ class SleepRecorder extends ChangeNotifier {
     SleepSessionData? data;
     if (dir != null) {
       data = _snapshot(dir, sessionStart, DateTime.now());
-      await data.save();
+      try {
+        await data.save();
+      } catch (e) {
+        errorLog('$_logPrefix save session: $e');
+      }
       SleepSessionStore.notifyChanged();
     }
-    await _host.releaseCapture();
+    try {
+      await _host.releaseCapture();
+    } catch (e) {
+      errorLog('$_logPrefix release capture: $e');
+    }
     _finishing = true;
     notifyListeners();
     unawaited(_finish(data, work));
@@ -465,13 +478,15 @@ class SleepRecorder extends ChangeNotifier {
   ) async {
     // Acquired before the recording lease goes, so the notification swaps
     // over to one without the now dead stop action instead of flickering.
-    final work = await BackgroundWorkLease.acquire(
-      title: _notificationTitle,
-      text: _finishingText,
-      logPrefix: 'SoundFinderSleep',
-    );
-    await recording?.release();
+    BackgroundWorkLease? work;
     try {
+      work = await BackgroundWorkLease.acquire(
+        title: _notificationTitle,
+        text: _finishingText,
+        logPrefix: 'SoundFinderSleep',
+      );
+      await recording?.release();
+      recording = null;
       final session = data == null
           ? null
           : await SleepSessionStore.byId(data.id);
@@ -480,9 +495,15 @@ class SleepRecorder extends ChangeNotifier {
     } catch (e) {
       errorLog('$_logPrefix finishing session failed: $e');
     } finally {
-      await work.release();
       _finishing = false;
       notifyListeners();
+      for (final lease in [recording, work]) {
+        try {
+          await lease?.release();
+        } catch (e) {
+          errorLog('$_logPrefix release lease: $e');
+        }
+      }
     }
   }
 
