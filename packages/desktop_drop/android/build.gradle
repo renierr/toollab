@@ -2,7 +2,7 @@ group 'com.example.desktop_drop'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '2.2.0'
+    ext.kotlin_version = '2.3.20'
     repositories {
         google()
         mavenCentral()
@@ -15,12 +15,9 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
-
-// Fork note: this app builds with AGP 9, which provides built-in Kotlin
-// (https://kotl.in/gradle/agp-built-in-kotlin). Upstream's AGP-version check
-// reads its own pinned AGP 7.4.2 classpath, so it wrongly applies the legacy
-// 'kotlin-android' plugin and the Kotlin sources silently compile to nothing.
-// Never apply 'kotlin-android' here; the 'kotlin' extension comes from AGP.
+// The app sets android.builtInKotlin=false (Flutter template), so Kotlin must
+// come from KGP. Keep this version aligned with the app's KGP.
+apply plugin: 'org.jetbrains.kotlin.android'
 
 rootProject.allprojects {
     repositories {
