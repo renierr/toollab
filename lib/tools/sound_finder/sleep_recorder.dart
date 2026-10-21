@@ -185,6 +185,10 @@ class SleepRecorder extends ChangeNotifier {
     notifyListeners();
     try {
       await _prepareAndStart();
+    } catch (e) {
+      errorLog('$_logPrefix start: $e');
+      _startFailed = true;
+      if (waiting) await _abortStart();
     } finally {
       _starting = false;
       notifyListeners();
@@ -257,15 +261,15 @@ class SleepRecorder extends ChangeNotifier {
     final (dir, created) = folder;
     if (session != _session || !waiting) {
       // Stopped meanwhile; a pre-existing folder may belong to a newer session.
-      if (created) await Directory(dir).delete(recursive: true);
+      if (created) await _deleteDir(dir);
       return;
     }
     try {
       _host.startCapture();
     } catch (e) {
       errorLog('$_logPrefix start capture: $e');
-      if (created) await Directory(dir).delete(recursive: true);
       await _failStart();
+      if (created) await _deleteDir(dir);
       return;
     }
     _start = now;
@@ -296,6 +300,14 @@ class SleepRecorder extends ChangeNotifier {
     final created = !await dir.exists();
     await dir.create(recursive: true);
     return (dir.path, created);
+  }
+
+  static Future<void> _deleteDir(String dir) async {
+    try {
+      await Directory(dir).delete(recursive: true);
+    } catch (e) {
+      errorLog('$_logPrefix delete empty session: $e');
+    }
   }
 
   Future<void> _failStart() async {
@@ -432,9 +444,17 @@ class SleepRecorder extends ChangeNotifier {
     final work = _work;
     _work = null;
     work?.removeActionListener();
-    await work?.release();
-    await _host.releaseCapture();
     notifyListeners();
+    try {
+      await work?.release();
+    } catch (e) {
+      errorLog('$_logPrefix release lease: $e');
+    }
+    try {
+      await _host.releaseCapture();
+    } catch (e) {
+      errorLog('$_logPrefix release capture: $e');
+    }
   }
 
   /// Analyzes and syncs the stopped session under a foreground lease of its
