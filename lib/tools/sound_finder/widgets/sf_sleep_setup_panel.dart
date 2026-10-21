@@ -27,7 +27,8 @@ class SfSleepSetupPanel extends StatelessWidget {
       children: [
         const SfSleepDurationPicker(),
         const SfSleepGracePicker(),
-        Text(l10n.sfSleepGraceHint, style: theme.textTheme.bodySmall),
+        if (sleep.graceMinutes > 0)
+          Text(l10n.sfSleepGraceHint, style: theme.textTheme.bodySmall),
         const SizedBox(height: 8),
         Text(
           l10n.sfSleepThresholdLabel(
@@ -75,7 +76,7 @@ class SfSleepSetupPanel extends StatelessWidget {
         ElevatedButton.icon(
           icon: const Icon(Icons.bedtime_outlined),
           label: Text(l10n.sfSleepStart),
-          onPressed: sleep.start,
+          onPressed: sleep.starting ? null : sleep.start,
         ),
       ],
     );

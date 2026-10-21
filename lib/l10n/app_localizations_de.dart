@@ -6121,6 +6121,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfSleepMicUnavailable => 'Mikrofon nicht verfügbar.';
 
   @override
+  String get sfSleepStartFailed => 'Aufnahme konnte nicht gestartet werden.';
+
+  @override
   String sfSleepLiveActive(Object db, Object last) {
     return 'Live: $db dB · Letztes Geräusch: $last';
   }

@@ -2393,6 +2393,7 @@
   "sfSleepRecorderTitle": "Schlafgeräusch-Recorder",
   "sfSleepRecorderIntro": "Speichert nur Abschnitte mit Geräuschen und verwirft Stille, um Platz zu sparen. Lege das Handy neben das Bett, schließe das Ladegerät an und schalte dann den Bildschirm aus.",
   "sfSleepMicUnavailable": "Mikrofon nicht verfügbar.",
+  "sfSleepStartFailed": "Aufnahme konnte nicht gestartet werden.",
   "sfSleepLiveActive": "Live: {db} dB · Letztes Geräusch: {last}",
   "sfSleepLiveIdle": "Bereit · Live-Pegel {db} dB",
   "sfSleepNone": "keins",

@@ -10955,6 +10955,12 @@ abstract class AppLocalizations {
   /// **'Microphone not available.'**
   String get sfSleepMicUnavailable;
 
+  /// No description provided for @sfSleepStartFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording could not be started.'**
+  String get sfSleepStartFailed;
+
   /// No description provided for @sfSleepLiveActive.
   ///
   /// In en, this message translates to:

@@ -52,8 +52,12 @@ class SleepRecorder extends ChangeNotifier {
   final Future<void> Function()? _syncSessions;
 
   bool _active = false;
+  bool _starting = false;
   bool _finishing = false;
   bool _micUnavailable = false;
+  bool _startFailed = false;
+  // Bumped on start and stop so a stale await cannot touch a newer session.
+  int _session = 0;
   int _durationMinutes = 480;
   int _graceMinutes = 5;
   double _threshold = 0.005;
@@ -84,7 +88,9 @@ class SleepRecorder extends ChangeNotifier {
 
   /// The stopped session is still being analyzed and synced.
   bool get finishing => _finishing;
+  bool get starting => _starting;
   bool get micUnavailable => _micUnavailable;
+  bool get startFailed => _startFailed;
   int get durationMinutes => _durationMinutes;
   int get graceMinutes => _graceMinutes;
   double get threshold => _threshold;
@@ -172,14 +178,26 @@ class SleepRecorder extends ChangeNotifier {
   }
 
   Future<void> start() async {
-    if (_active) return;
+    if (_active || _starting) return;
+    _starting = true;
     _micUnavailable = false;
+    _startFailed = false;
+    notifyListeners();
+    try {
+      await _prepareAndStart();
+    } finally {
+      _starting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _prepareAndStart() async {
     if (!await _host.prepareFaithfulCapture()) {
       _micUnavailable = true;
-      notifyListeners();
       return;
     }
 
+    final session = ++_session;
     _active = true;
     _start = null;
     _events.clear();
@@ -202,7 +220,7 @@ class SleepRecorder extends ChangeNotifier {
       logPrefix: 'SoundFinderSleep',
       actions: const ['stop'],
     );
-    if (!_active) {
+    if (session != _session) {
       await work.release();
       return;
     }
@@ -212,9 +230,9 @@ class SleepRecorder extends ChangeNotifier {
     });
 
     if (grace == Duration.zero) {
-      await _beginRecording();
+      await _beginRecording(session);
     } else {
-      _graceTimer = Timer(grace, () => unawaited(_beginRecording()));
+      _graceTimer = Timer(grace, () => unawaited(_beginRecording(session)));
     }
   }
 
@@ -222,17 +240,32 @@ class SleepRecorder extends ChangeNotifier {
   Future<void> skipGrace() async {
     if (!waiting || _graceTimer == null) return;
     _graceTimer?.cancel();
-    await _beginRecording();
+    await _beginRecording(_session);
   }
 
-  Future<void> _beginRecording() async {
+  Future<void> _beginRecording(int session) async {
     _graceTimer = null;
     final now = DateTime.now();
-    final dir = await SleepSessionStore.sessionPath('session-${_stamp(now)}');
-    await Directory(dir).create(recursive: true);
-    if (!waiting) {
-      // Stopped while the folder was being made; leave no empty session.
-      await Directory(dir).delete(recursive: true);
+    final (String, bool) folder;
+    try {
+      folder = await _createSessionDir(now);
+    } catch (e) {
+      errorLog('$_logPrefix session folder: $e');
+      if (session == _session) await _failStart();
+      return;
+    }
+    final (dir, created) = folder;
+    if (session != _session || !waiting) {
+      // Stopped meanwhile; a pre-existing folder may belong to a newer session.
+      if (created) await Directory(dir).delete(recursive: true);
+      return;
+    }
+    try {
+      _host.startCapture();
+    } catch (e) {
+      errorLog('$_logPrefix start capture: $e');
+      if (created) await Directory(dir).delete(recursive: true);
+      await _failStart();
       return;
     }
     _start = now;
@@ -243,7 +276,6 @@ class SleepRecorder extends ChangeNotifier {
       () => unawaited(stop()),
     );
     _chunkStart = DateTime.now();
-    _host.startCapture();
     _scheduleChunk();
     unawaited(
       _work?.update(
@@ -254,6 +286,21 @@ class SleepRecorder extends ChangeNotifier {
           Future<void>.value(),
     );
     notifyListeners();
+  }
+
+  /// Returns the folder path and whether this call created it.
+  static Future<(String, bool)> _createSessionDir(DateTime now) async {
+    final dir = Directory(
+      await SleepSessionStore.sessionPath('session-${_stamp(now)}'),
+    );
+    final created = !await dir.exists();
+    await dir.create(recursive: true);
+    return (dir.path, created);
+  }
+
+  Future<void> _failStart() async {
+    _startFailed = true;
+    await _abortStart();
   }
 
   void _scheduleChunk() {
@@ -346,7 +393,8 @@ class SleepRecorder extends ChangeNotifier {
 
   Future<void> stop() async {
     if (!_active) return;
-    if (waiting) return _cancelWaiting();
+    if (waiting) return _abortStart();
+    _session++;
     _active = false;
     _recordsAt = null;
     _timeout?.cancel();
@@ -375,7 +423,8 @@ class SleepRecorder extends ChangeNotifier {
   }
 
   /// Nothing was recorded yet, so there is no session to save or sync.
-  Future<void> _cancelWaiting() async {
+  Future<void> _abortStart() async {
+    _session++;
     _active = false;
     _recordsAt = null;
     _graceTimer?.cancel();

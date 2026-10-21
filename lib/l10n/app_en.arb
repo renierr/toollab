@@ -3288,6 +3288,7 @@
   "sfSleepRecorderTitle": "Sleep Sound Recorder",
   "sfSleepRecorderIntro": "Records only chunks with sound and discards silence to save space. Place the phone near the bed, plug in the charger, then turn off the screen.",
   "sfSleepMicUnavailable": "Microphone not available.",
+  "sfSleepStartFailed": "Recording could not be started.",
   "sfSleepLiveActive": "Live: {db} dB · Last sound: {last}",
   "sfSleepLiveIdle": "Idle · live level {db} dB",
   "sfSleepNone": "none",
