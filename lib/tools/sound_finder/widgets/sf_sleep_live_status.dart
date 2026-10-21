@@ -17,6 +17,7 @@ class SfSleepLiveStatus extends StatelessWidget {
     final sleep = state.sleep;
     final db = state.smoothDb.toStringAsFixed(1);
     final last = sleep.lastEvent;
+    final recording = sleep.active && !sleep.waiting;
 
     return Container(
       padding: const EdgeInsets.all(8),
@@ -28,14 +29,16 @@ class SfSleepLiveStatus extends StatelessWidget {
         children: [
           Icon(
             Icons.mic_outlined,
-            color: sleep.active
+            color: recording
                 ? AppTheme.statusRed
+                : sleep.waiting
+                ? AppTheme.statusAmber
                 : theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              sleep.active
+              recording
                   ? l10n.sfSleepLiveActive(
                       db,
                       last == null ? l10n.sfSleepNone : sleepClock(last),

@@ -6,6 +6,7 @@ import '../audio/db_scale.dart';
 import '../sleep_recorder.dart';
 import '../sound_finder_state.dart';
 import 'sf_sleep_duration_picker.dart';
+import 'sf_sleep_grace_picker.dart';
 
 class SfSleepSetupPanel extends StatelessWidget {
   const SfSleepSetupPanel({super.key});
@@ -25,6 +26,8 @@ class SfSleepSetupPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SfSleepDurationPicker(),
+        const SfSleepGracePicker(),
+        Text(l10n.sfSleepGraceHint, style: theme.textTheme.bodySmall),
         const SizedBox(height: 8),
         Text(
           l10n.sfSleepThresholdLabel(

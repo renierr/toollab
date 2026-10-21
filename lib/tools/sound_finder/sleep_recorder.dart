@@ -41,10 +41,12 @@ class SleepRecorder extends ChangeNotifier {
   static const _kThreshold = 'sf_sleep_threshold';
   static const _kAdaptive = 'sf_sleep_adaptive';
   static const _kDuration = 'sf_sleep_duration';
+  static const _kGrace = 'sf_sleep_grace';
   static const double minThreshold = 0.0005;
   static const double maxThreshold = 0.2;
   static const int minDurationMinutes = 15;
   static const int maxDurationMinutes = 16 * 60;
+  static const int maxGraceMinutes = 120;
 
   final SleepCaptureHost _host;
   final Future<void> Function()? _syncSessions;
@@ -53,29 +55,38 @@ class SleepRecorder extends ChangeNotifier {
   bool _finishing = false;
   bool _micUnavailable = false;
   int _durationMinutes = 480;
+  int _graceMinutes = 5;
   double _threshold = 0.005;
   bool _adaptive = false;
   double _lastMaxAbs = 0;
+  DateTime? _recordsAt;
   DateTime? _start;
   DateTime? _chunkStart;
   DateTime? _lastEvent;
   double _ambientMax = 0;
   String? _sessionDir;
   final List<SleepEvent> _events = [];
+  Timer? _graceTimer;
   Timer? _timeout;
   Timer? _chunkTimer;
   BackgroundWorkLease? _work;
   String _notificationTitle = 'Sleep sound recorder';
   String _notificationText = 'Recording sleep sounds';
+  String Function(DateTime at) _waitingText = (at) => '$at';
   String _finishingText = 'Saving and syncing the session';
   String Function(int count) _savedChunksText = (count) => '$count';
 
+  /// A session is running, in its grace period or recording.
   bool get active => _active;
+
+  /// The session runs but the grace period has not passed yet.
+  bool get waiting => _active && _start == null;
 
   /// The stopped session is still being analyzed and synced.
   bool get finishing => _finishing;
   bool get micUnavailable => _micUnavailable;
   int get durationMinutes => _durationMinutes;
+  int get graceMinutes => _graceMinutes;
   double get threshold => _threshold;
   bool get adaptive => _adaptive;
   double get lastMaxAbs => _lastMaxAbs;
@@ -83,7 +94,9 @@ class SleepRecorder extends ChangeNotifier {
   List<SleepEvent> get events => List.unmodifiable(_events);
   Duration get elapsed =>
       _start == null ? Duration.zero : DateTime.now().difference(_start!);
-  DateTime? get endsAt => _start?.add(Duration(minutes: _durationMinutes));
+  DateTime? get recordsAt => _recordsAt;
+  DateTime? get endsAt =>
+      (_start ?? _recordsAt)?.add(Duration(minutes: _durationMinutes));
 
   Future<void> loadSettings() async {
     final db = DatabaseService.instance;
@@ -92,8 +105,15 @@ class SleepRecorder extends ChangeNotifier {
         double.tryParse(await db.getSetting(id, _kThreshold) ?? '') ?? 0.005;
     _adaptive = await db.getSetting(id, _kAdaptive) == 'true';
     final duration = int.tryParse(await db.getSetting(id, _kDuration) ?? '');
-    if (duration != null && !_active) {
-      _durationMinutes = duration.clamp(minDurationMinutes, maxDurationMinutes);
+    final grace = int.tryParse(await db.getSetting(id, _kGrace) ?? '');
+    if (!_active) {
+      if (duration != null) {
+        _durationMinutes = duration.clamp(
+          minDurationMinutes,
+          maxDurationMinutes,
+        );
+      }
+      if (grace != null) _graceMinutes = grace.clamp(0, maxGraceMinutes);
     }
   }
 
@@ -106,11 +126,13 @@ class SleepRecorder extends ChangeNotifier {
   void setNotificationText({
     required String title,
     required String text,
+    required String Function(DateTime at) waiting,
     required String finishing,
     required String Function(int count) savedChunks,
   }) {
     _notificationTitle = title;
     _notificationText = text;
+    _waitingText = waiting;
     _finishingText = finishing;
     _savedChunksText = savedChunks;
   }
@@ -119,6 +141,13 @@ class SleepRecorder extends ChangeNotifier {
     if (_active) return;
     _durationMinutes = minutes.clamp(minDurationMinutes, maxDurationMinutes);
     _save(_kDuration, _durationMinutes.toString());
+    notifyListeners();
+  }
+
+  void setGraceMinutes(int minutes) {
+    if (_active) return;
+    _graceMinutes = minutes.clamp(0, maxGraceMinutes);
+    _save(_kGrace, _graceMinutes.toString());
     notifyListeners();
   }
 
@@ -152,27 +181,63 @@ class SleepRecorder extends ChangeNotifier {
     }
 
     _active = true;
-    final now = DateTime.now();
-    _start = now;
+    _start = null;
     _events.clear();
     _lastEvent = null;
     _ambientMax = 0;
-    _sessionDir = await SleepSessionStore.sessionPath('session-${_stamp(now)}');
-    await Directory(_sessionDir!).create(recursive: true);
+    final grace = Duration(minutes: _graceMinutes);
+    final recordsAt = DateTime.now().add(grace);
+    _recordsAt = recordsAt;
+    notifyListeners();
 
     // Keep CPU awake and run as a foreground service with a notification so
     // Android does not suspend the mic capture; the page lets the screen off.
-    _work = await BackgroundWorkLease.acquire(
+    // Taken before the grace period: the mic must already be open while the
+    // app is in the foreground, Android refuses to open it from background.
+    final work = await BackgroundWorkLease.acquire(
       title: _notificationTitle,
-      text: _notificationText,
+      text: grace == Duration.zero
+          ? _notificationText
+          : _waitingText(recordsAt),
       logPrefix: 'SoundFinderSleep',
       actions: const ['stop'],
-      chronometerSinceMs: now.millisecondsSinceEpoch,
     );
-    _work!.addActionListener((action) {
+    if (!_active) {
+      await work.release();
+      return;
+    }
+    _work = work;
+    work.addActionListener((action) {
       if (action == 'stop') unawaited(stop());
     });
 
+    if (grace == Duration.zero) {
+      await _beginRecording();
+    } else {
+      _graceTimer = Timer(grace, () => unawaited(_beginRecording()));
+    }
+  }
+
+  /// Ends the grace period early and starts recording right away.
+  Future<void> skipGrace() async {
+    if (!waiting || _graceTimer == null) return;
+    _graceTimer?.cancel();
+    await _beginRecording();
+  }
+
+  Future<void> _beginRecording() async {
+    _graceTimer = null;
+    final now = DateTime.now();
+    final dir = await SleepSessionStore.sessionPath('session-${_stamp(now)}');
+    await Directory(dir).create(recursive: true);
+    if (!waiting) {
+      // Stopped while the folder was being made; leave no empty session.
+      await Directory(dir).delete(recursive: true);
+      return;
+    }
+    _start = now;
+    _recordsAt = now;
+    _sessionDir = dir;
     _timeout = Timer(
       Duration(minutes: _durationMinutes),
       () => unawaited(stop()),
@@ -180,6 +245,14 @@ class SleepRecorder extends ChangeNotifier {
     _chunkStart = DateTime.now();
     _host.startCapture();
     _scheduleChunk();
+    unawaited(
+      _work?.update(
+            _notificationText,
+            minIntervalMs: 0,
+            chronometerSinceMs: now.millisecondsSinceEpoch,
+          ) ??
+          Future<void>.value(),
+    );
     notifyListeners();
   }
 
@@ -241,7 +314,11 @@ class SleepRecorder extends ChangeNotifier {
       ),
     );
     unawaited(
-      _work?.update(_savedChunksText(_events.length)) ?? Future<void>.value(),
+      _work?.update(
+            _savedChunksText(_events.length),
+            chronometerSinceMs: _start?.millisecondsSinceEpoch,
+          ) ??
+          Future<void>.value(),
     );
     notifyListeners();
     // Without this, a night the OS kills before stop() loses every peak and
@@ -269,7 +346,9 @@ class SleepRecorder extends ChangeNotifier {
 
   Future<void> stop() async {
     if (!_active) return;
+    if (waiting) return _cancelWaiting();
     _active = false;
+    _recordsAt = null;
     _timeout?.cancel();
     _timeout = null;
     _chunkTimer?.cancel();
@@ -293,6 +372,20 @@ class SleepRecorder extends ChangeNotifier {
     _finishing = true;
     notifyListeners();
     unawaited(_finish(data, work));
+  }
+
+  /// Nothing was recorded yet, so there is no session to save or sync.
+  Future<void> _cancelWaiting() async {
+    _active = false;
+    _recordsAt = null;
+    _graceTimer?.cancel();
+    _graceTimer = null;
+    final work = _work;
+    _work = null;
+    work?.removeActionListener();
+    await work?.release();
+    await _host.releaseCapture();
+    notifyListeners();
   }
 
   /// Analyzes and syncs the stopped session under a foreground lease of its
@@ -348,6 +441,7 @@ class SleepRecorder extends ChangeNotifier {
 
   @override
   void dispose() {
+    _graceTimer?.cancel();
     _timeout?.cancel();
     _chunkTimer?.cancel();
     super.dispose();

@@ -11027,6 +11027,42 @@ abstract class AppLocalizations {
   /// **'Stops at {time}'**
   String sfSleepEndsAt(Object time);
 
+  /// No description provided for @sfSleepGraceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Grace period:'**
+  String get sfSleepGraceLabel;
+
+  /// No description provided for @sfSleepGraceOff.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get sfSleepGraceOff;
+
+  /// No description provided for @sfSleepGraceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording starts only after the grace period, so the sounds of falling asleep are not recorded.'**
+  String get sfSleepGraceHint;
+
+  /// No description provided for @sfSleepGraceCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording starts in {time} (at {at})'**
+  String sfSleepGraceCountdown(Object at, Object time);
+
+  /// No description provided for @sfSleepGraceSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Start recording now'**
+  String get sfSleepGraceSkip;
+
+  /// No description provided for @sfSleepNotificationWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording starts at {time}'**
+  String sfSleepNotificationWaiting(Object time);
+
   /// No description provided for @sfSleepFinishing.
   ///
   /// In en, this message translates to:

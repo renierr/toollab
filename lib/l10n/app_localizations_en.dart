@@ -6129,6 +6129,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get sfSleepGraceLabel => 'Grace period:';
+
+  @override
+  String get sfSleepGraceOff => 'None';
+
+  @override
+  String get sfSleepGraceHint =>
+      'Recording starts only after the grace period, so the sounds of falling asleep are not recorded.';
+
+  @override
+  String sfSleepGraceCountdown(Object at, Object time) {
+    return 'Recording starts in $time (at $at)';
+  }
+
+  @override
+  String get sfSleepGraceSkip => 'Start recording now';
+
+  @override
+  String sfSleepNotificationWaiting(Object time) {
+    return 'Recording starts at $time';
+  }
+
+  @override
   String get sfSleepFinishing => 'Saving and syncing the session…';
 
   @override

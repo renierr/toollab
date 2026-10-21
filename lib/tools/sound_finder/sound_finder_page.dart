@@ -8,6 +8,7 @@ import 'package:tool_lab/services/power_wake_lock_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'memo/memo_recorder.dart';
+import 'sleep_labels.dart';
 import 'sound_finder_state.dart';
 import 'widgets/sf_clip_recorder.dart';
 import 'widgets/sf_counter_view.dart';
@@ -103,6 +104,8 @@ class _SoundFinderPageState extends State<SoundFinderPage>
     context.read<SoundFinderState>().sleep.setNotificationText(
       title: l10n.sfSleepNotificationTitle,
       text: l10n.sfSleepNotificationText,
+      waiting: (at) =>
+          l10n.sfSleepNotificationWaiting(sleepClock(at, seconds: false)),
       finishing: l10n.sfSleepFinishing,
       savedChunks: l10n.sfSleepSavedChunks,
     );

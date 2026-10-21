@@ -6169,6 +6169,29 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get sfSleepGraceLabel => 'Vorlaufzeit:';
+
+  @override
+  String get sfSleepGraceOff => 'Keine';
+
+  @override
+  String get sfSleepGraceHint =>
+      'Die Aufnahme beginnt erst nach der Vorlaufzeit, damit die Geräusche beim Einschlafen nicht aufgenommen werden.';
+
+  @override
+  String sfSleepGraceCountdown(Object at, Object time) {
+    return 'Aufnahme beginnt in $time (um $at)';
+  }
+
+  @override
+  String get sfSleepGraceSkip => 'Jetzt aufnehmen';
+
+  @override
+  String sfSleepNotificationWaiting(Object time) {
+    return 'Aufnahme beginnt um $time';
+  }
+
+  @override
   String get sfSleepFinishing => 'Sitzung wird gespeichert und synchronisiert…';
 
   @override
