@@ -6,6 +6,7 @@ import 'package:record/record.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 
 import '../../../services/background_work_lease.dart';
+import '../../../services/foreground_runtime_service.dart';
 import 'memo_settings.dart';
 import 'memo_store.dart';
 
@@ -228,6 +229,7 @@ class MemoRecorder extends ChangeNotifier {
       logPrefix: 'MemoRecorder',
       actions: const ['stop'],
       chronometerSinceMs: DateTime.now().millisecondsSinceEpoch,
+      types: const {ForegroundServiceType.microphone},
     );
     if (!isActive) {
       await work.release();

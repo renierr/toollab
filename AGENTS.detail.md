@@ -340,6 +340,7 @@ Wraps the shared foreground service (native handler: `ToolLabForegroundService.k
 - **Lease model**: `acquire(...)` returns a `ForegroundRuntimeLease`; the service starts on the first lease and stops when the last one is released.
 - **Notification content**: `title`/`text`, optional `actions` (labels; taps arrive via `addActionListener`), optional ticking chronometer (`chronometerSinceMs`) and/or determinate progress bar (`progress`/`progressMax`).
 - **Media mode**: pass a `MediaNotificationData` to render a MediaStyle notification with metadata, seek support and a system-extrapolated progress bar (`durationMs: null` = endless audio, no seek bar). Use `lease.updatePlayback(positionMs:, playing:)` for position/state refreshes — it updates the media session without rebuilding the notification.
+- **Service types**: `types` names the Android foreground-service types a lease needs (`dataSync` by default, `mediaPlayback` implied by media data, `microphone` for capture). The live leases' types are unioned. Never carry `dataSync` through hours of work: Android 15+ stops it after 6 h per 24 h and kills the process. Long recordings pass `{ForegroundServiceType.microphone}`, playback passes media data.
 - **Lifecycle**: release via `lease.release()` in `onDispose`. `releaseAll()` is the nuclear stop (maintenance page). Notification permission is requested implicitly by `acquire`.
 - No-ops on non-Android platforms — safe to call unconditionally.
 

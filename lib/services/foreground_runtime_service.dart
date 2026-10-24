@@ -2,6 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:flutter/services.dart';
 
+/// Android foreground-service types a lease can need. The live leases share one
+/// service, so its type set is their union and must stay as narrow as the work
+/// allows: Android 15+ stops `dataSync` work after 6 h per 24 h, which would cut
+/// a night of sleep recording short.
+enum ForegroundServiceType { dataSync, mediaPlayback, microphone }
+
 /// Media-session payload for a lease. When set, the Android notification is
 /// rendered as a MediaStyle notification with metadata, a live progress bar
 /// (extrapolated from position + playing) and seek support.
@@ -40,15 +46,17 @@ typedef _LeaseSnapshot = ({
   String text,
   List<String>? actions,
   MediaNotificationData? media,
+  Set<ForegroundServiceType> types,
   int? chronometerSinceMs,
   int? progress,
   int? progressMax,
 });
 
 class ForegroundRuntimeLease {
-  ForegroundRuntimeLease._(this._id);
+  ForegroundRuntimeLease._(this._id, this._types);
 
   final int _id;
+  final Set<ForegroundServiceType> _types;
   bool _released = false;
 
   Future<void> release() async {
@@ -76,6 +84,7 @@ class ForegroundRuntimeLease {
       text: text,
       actions: actions,
       media: media,
+      types: _types,
       chronometerSinceMs: chronometerSinceMs,
       progress: progress,
       progressMax: progressMax,
@@ -166,6 +175,7 @@ class ForegroundRuntimeService {
     required String text,
     List<String>? actions,
     MediaNotificationData? media,
+    Set<ForegroundServiceType>? types,
     int? chronometerSinceMs,
     int? progress,
     int? progressMax,
@@ -173,11 +183,17 @@ class ForegroundRuntimeService {
     await requestNotificationPermission();
     final int leaseId = _nextLeaseId++;
     final bool wasInactive = _activeLeases.isEmpty;
+    final leaseTypes =
+        types ??
+        (media != null
+            ? const {ForegroundServiceType.mediaPlayback}
+            : const {ForegroundServiceType.dataSync});
     final snapshot = (
       title: title,
       text: text,
       actions: actions,
       media: media,
+      types: leaseTypes,
       chronometerSinceMs: chronometerSinceMs,
       progress: progress,
       progressMax: progressMax,
@@ -186,7 +202,7 @@ class ForegroundRuntimeService {
       ..remove(leaseId)
       ..[leaseId] = snapshot;
     await _invoke(wasInactive ? 'start' : 'update', _snapshotArgs(snapshot));
-    return ForegroundRuntimeLease._(leaseId);
+    return ForegroundRuntimeLease._(leaseId, leaseTypes);
   }
 
   /// Position/state-only refresh of the active media session (no notification
@@ -218,10 +234,21 @@ class ForegroundRuntimeService {
     'text': s.text,
     'actions': s.actions,
     'media': s.media?.toMap(),
+    'serviceTypes': _activeServiceTypes,
     'chronometerSinceMs': s.chronometerSinceMs,
     'progress': s.progress,
     'progressMax': s.progressMax,
   };
+
+  /// The union of the live leases' types, which is what the single foreground
+  /// service running in this process declares.
+  static List<String> get _activeServiceTypes {
+    final types = <ForegroundServiceType>{};
+    for (final lease in _activeLeases.values) {
+      types.addAll(lease.types);
+    }
+    return [for (final type in types) type.name];
+  }
 
   static Future<void> _updateLease(
     int leaseId, {
@@ -229,6 +256,7 @@ class ForegroundRuntimeService {
     required String text,
     List<String>? actions,
     MediaNotificationData? media,
+    required Set<ForegroundServiceType> types,
     int? chronometerSinceMs,
     int? progress,
     int? progressMax,
@@ -239,6 +267,7 @@ class ForegroundRuntimeService {
       text: text,
       actions: actions,
       media: media,
+      types: types,
       chronometerSinceMs: chronometerSinceMs,
       progress: progress,
       progressMax: progressMax,

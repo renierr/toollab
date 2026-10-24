@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
@@ -45,6 +46,7 @@ open class ToolLabForegroundService : Service() {
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_TEXT = "text"
         private const val EXTRA_ACTIONS = "actions"
+        private const val EXTRA_SERVICE_TYPES = "serviceTypes"
         private const val EXTRA_MEDIA_TITLE = "mediaTitle"
         private const val EXTRA_MEDIA_ARTIST = "mediaArtist"
         private const val EXTRA_DURATION_MS = "durationMs"
@@ -69,6 +71,9 @@ open class ToolLabForegroundService : Service() {
         private var lastProgress: Int? = null
         private var lastProgressMax: Int? = null
 
+        // Foreground service types the live Dart leases asked for, as a union.
+        private var serviceTypes: Int = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+
         fun start(
             context: Context,
             serviceClass: Class<out ToolLabForegroundService>,
@@ -76,6 +81,7 @@ open class ToolLabForegroundService : Service() {
             text: String,
             actions: List<String>?,
             media: Map<String, Any?>?,
+            serviceTypeNames: List<String>?,
             chronometerSinceMs: Long?,
             progress: Int?,
             progressMax: Int?,
@@ -84,7 +90,7 @@ open class ToolLabForegroundService : Service() {
             isActive = true
             ContextCompat.startForegroundService(
                 context,
-                serviceIntent(context, serviceClass, ACTION_START),
+                serviceIntent(context, serviceClass, ACTION_START, serviceTypeNames),
             )
         }
 
@@ -95,12 +101,15 @@ open class ToolLabForegroundService : Service() {
             text: String,
             actions: List<String>?,
             media: Map<String, Any?>?,
+            serviceTypeNames: List<String>?,
             chronometerSinceMs: Long?,
             progress: Int?,
             progressMax: Int?,
         ) {
             applyState(title, text, actions, media, chronometerSinceMs, progress, progressMax)
-            context.startService(serviceIntent(context, serviceClass, ACTION_UPDATE))
+            context.startService(
+                serviceIntent(context, serviceClass, ACTION_UPDATE, serviceTypeNames),
+            )
         }
 
         fun updatePlayback(
@@ -132,6 +141,7 @@ open class ToolLabForegroundService : Service() {
             lastChronometerSinceMs = null
             lastProgress = null
             lastProgressMax = null
+            serviceTypes = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
             context.startService(serviceIntent(context, serviceClass, ACTION_STOP))
         }
 
@@ -172,7 +182,35 @@ open class ToolLabForegroundService : Service() {
             context: Context,
             serviceClass: Class<out ToolLabForegroundService>,
             action: String,
-        ): Intent = Intent(context, serviceClass).apply { this.action = action }
+            serviceTypeNames: List<String>? = null,
+        ): Intent = Intent(context, serviceClass).apply {
+            this.action = action
+            if (serviceTypeNames != null) {
+                putStringArrayListExtra(EXTRA_SERVICE_TYPES, ArrayList(serviceTypeNames))
+            }
+        }
+
+        /**
+         * Adopts the service types the live Dart leases asked for. Anything
+         * unrecognised or empty falls back to playback, which has no runtime
+         * cap, instead of dataSync, which Android 15+ stops after 6 hours.
+         */
+        private fun applyServiceTypes(intent: Intent): Boolean {
+            val names = intent.getStringArrayListExtra(EXTRA_SERVICE_TYPES).orEmpty()
+            var resolved = 0
+            for (name in names) {
+                resolved = resolved or when (name) {
+                    "mediaPlayback" -> ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+                    "dataSync" -> ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                    "microphone" -> ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                    else -> 0
+                }
+            }
+            if (resolved == 0) resolved = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            val changed = resolved != serviceTypes
+            serviceTypes = resolved
+            return changed
+        }
     }
 
     protected open val notificationId: Int = 42001
@@ -203,8 +241,15 @@ open class ToolLabForegroundService : Service() {
             }
 
             when (action) {
-                ACTION_START -> startForegroundSafely(buildNotification())
-                ACTION_UPDATE -> notify(buildNotification())
+                ACTION_START -> {
+                    applyServiceTypes(intent)
+                    startForegroundSafely(buildNotification())
+                }
+                ACTION_UPDATE -> {
+                    val typesChanged = applyServiceTypes(intent)
+                    val notification = buildNotification()
+                    if (typesChanged) startForegroundSafely(notification) else notify(notification)
+                }
                 ACTION_PLAYBACK_STATE -> {
                     lastPositionMs = intent.getLongExtra(EXTRA_POSITION_MS, 0)
                     lastPlaying = intent.getBooleanExtra(EXTRA_PLAYING, false)
@@ -235,14 +280,17 @@ open class ToolLabForegroundService : Service() {
     }
 
     private fun startForegroundSafely(notification: Notification) {
-        ServiceCompat.startForeground(
-            this,
-            notificationId,
-            notification,
-            android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK or
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or
-                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE,
-        )
+        ServiceCompat.startForeground(this, notificationId, notification, serviceTypes)
+    }
+
+    /**
+     * Android 15+ calls this when a capped type (`dataSync`) outlives its
+     * allowance; staying up would crash the process. Stop the service instead
+     * so whatever the lease is doing keeps running under the wake lock.
+     */
+    override fun onTimeout(startId: Int) {
+        android.util.Log.w("ToolLabFGS", "Foreground service timeout, stopping service")
+        stopOrphan()
     }
 
     private fun notify(notification: Notification) {

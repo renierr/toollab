@@ -7,6 +7,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import '../../helpers/wav_pcm16_encoder.dart';
 import '../../services/background_work_lease.dart';
 import '../../services/database_service.dart';
+import '../../services/foreground_runtime_service.dart';
 import 'audio/db_scale.dart';
 import 'config.dart';
 import 'sleep_session_data.dart';
@@ -223,6 +224,9 @@ class SleepRecorder extends ChangeNotifier {
           : _waitingText(recordsAt),
       logPrefix: 'SoundFinderSleep',
       actions: const ['stop'],
+      // Microphone only: Android 15+ stops dataSync work after 6 h per 24 h,
+      // which used to cut every long night short.
+      types: const {ForegroundServiceType.microphone},
     );
     if (session != _session) {
       await work.release();
