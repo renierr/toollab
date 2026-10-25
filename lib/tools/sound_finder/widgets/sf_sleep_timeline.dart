@@ -54,7 +54,16 @@ class SfSleepTimeline extends StatelessWidget {
       if (index != null) state.select(session, index);
     }
 
-    final categories = {for (final e in data.events) e.analysis?.category};
+    final categories = <SleepSoundCategory?>{
+      for (final e in data.events)
+        if (e.analysis == null)
+          null
+        else if (e.analysis!.subEvents.isEmpty)
+          e.analysis!.category
+        else
+          for (final s in e.analysis!.subEvents) s.category,
+    };
+    final dense = data.soundSpans.length > 80;
     final stages = {for (final b in health) b.kind};
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,6 +94,8 @@ class SfSleepTimeline extends StatelessWidget {
                       labelColor: theme.colorScheme.onSurface,
                       playheadColor: theme.colorScheme.primary,
                       thresholdLabel: l10n.sfSleepThresholdShort,
+                      levels: data.levels,
+                      dense: dense,
                     ),
                   ),
                 ),
@@ -173,6 +184,8 @@ class _TimelinePainter extends CustomPainter {
     required this.labelColor,
     required this.playheadColor,
     required this.thresholdLabel,
+    required this.levels,
+    required this.dense,
   }) : super(repaint: playhead);
 
   static const double _bottomPad = 26;
@@ -187,6 +200,8 @@ class _TimelinePainter extends CustomPainter {
   final Color labelColor;
   final Color playheadColor;
   final String thresholdLabel;
+  final List<SleepLevelSample> levels;
+  final bool dense;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -305,29 +320,63 @@ class _TimelinePainter extends CustomPainter {
     tp.layout();
     tp.paint(canvas, Offset(size.width - tp.width - 2, plotH + 13));
 
-    final dense = data.events.length > 60;
+    if (levels.length > 1) {
+      final levelPath = Path();
+      var started = false;
+      for (final level in levels) {
+        final x = xOf(level.at);
+        final y = yOf(level.rmsDb.clamp(_minDb.toDouble(), 0));
+        if (started) {
+          levelPath.lineTo(x, y);
+        } else {
+          levelPath.moveTo(x, y);
+          started = true;
+        }
+      }
+      canvas.drawPath(
+        levelPath,
+        Paint()
+          ..color = labelColor.withValues(alpha: 0.35)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+    }
+
     final dotPaint = Paint()
       ..color = labelColor.withValues(alpha: 0.25)
       ..strokeWidth = 0.8;
     for (var i = 0; i < data.events.length; i++) {
       final e = data.events[i];
-      final x0 = xOf(e.startedAt);
-      final w = math.max(2.0, xOf(e.endedAt) - x0);
-      final top = yOf(e.peakDb.clamp(_minDb.toDouble(), 0));
+      final a = e.analysis;
       final shown = visible.contains(i);
-      final color = (e.analysis?.category).color;
-      canvas.drawRect(
-        Rect.fromLTRB(x0, top, x0 + w, plotH),
-        Paint()..color = color.withValues(alpha: shown ? 0.85 : 0.15),
-      );
-      if (!dense && shown) {
-        for (var y = 0.0; y < top; y += 6) {
-          canvas.drawLine(
-            Offset(x0, y),
-            Offset(x0, math.min(y + 3, top)),
-            dotPaint,
-          );
-        }
+      final alpha = shown ? 0.85 : 0.15;
+      final subs = a?.subEvents ?? const <SleepSubEvent>[];
+      if (subs.isEmpty) {
+        final from = e.startedAt.add(
+          Duration(milliseconds: a?.firstActiveMs ?? 0),
+        );
+        final to = e.startedAt.add(
+          Duration(milliseconds: a?.lastActiveMs ?? e.duration.inMilliseconds),
+        );
+        final x0 = xOf(from);
+        final w = math.max(2.0, xOf(to) - x0);
+        final top = yOf(e.peakDb.clamp(_minDb.toDouble(), 0));
+        canvas.drawRect(
+          Rect.fromLTRB(x0, top, x0 + w, plotH),
+          Paint()..color = (a?.category).color.withValues(alpha: alpha),
+        );
+        if (!dense && shown) _dots(canvas, dotPaint, x0, top);
+        continue;
+      }
+      for (final sub in subs) {
+        final x0 = xOf(e.startedAt.add(Duration(milliseconds: sub.startMs)));
+        final x1 = xOf(e.startedAt.add(Duration(milliseconds: sub.endMs)));
+        final top = yOf(sub.peakDb.clamp(_minDb.toDouble(), 0));
+        canvas.drawRect(
+          Rect.fromLTRB(x0, top, math.max(x0 + 2, x1), plotH),
+          Paint()..color = sub.category.color.withValues(alpha: alpha),
+        );
+        if (!dense && shown) _dots(canvas, dotPaint, x0, top);
       }
     }
 
@@ -371,6 +420,12 @@ class _TimelinePainter extends CustomPainter {
     }
   }
 
+  static void _dots(Canvas canvas, Paint paint, double x, double top) {
+    for (var y = 0.0; y < top; y += 6) {
+      canvas.drawLine(Offset(x, y), Offset(x, math.min(y + 3, top)), paint);
+    }
+  }
+
   @override
   bool shouldRepaint(covariant _TimelinePainter old) =>
       old.data != data ||
@@ -378,5 +433,7 @@ class _TimelinePainter extends CustomPainter {
       old.health != health ||
       old.selectedIndex != selectedIndex ||
       old.playhead != playhead ||
-      old.labelColor != labelColor;
+      old.labelColor != labelColor ||
+      old.levels != levels ||
+      old.dense != dense;
 }

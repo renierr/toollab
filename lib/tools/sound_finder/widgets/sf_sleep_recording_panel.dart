@@ -42,6 +42,11 @@ class SfSleepRecordingPanel extends StatelessWidget {
           Text(l10n.sfSleepElapsed(hms(elapsed))),
         if (endsAt != null)
           Text(l10n.sfSleepEndsAt(sleepClock(endsAt, seconds: false))),
+        Text(
+          '${l10n.sfSleepChunkLabel} '
+          '${l10n.sfSleepChunkSeconds(sleep.chunkSeconds)}',
+          style: theme.textTheme.bodySmall,
+        ),
         if (!waiting) ...[
           const SizedBox(height: 4),
           Text(l10n.sfSleepSavedChunks(events.length)),

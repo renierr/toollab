@@ -6150,6 +6150,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfSleepGraceSkip => 'Start recording now';
 
   @override
+  String get sfSleepChunkLabel => 'Chunk length:';
+
+  @override
+  String sfSleepChunkSeconds(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String get sfSleepChunkHint =>
+      'Shorter chunks place sounds more precisely; longer chunks create fewer files.';
+
+  @override
   String sfSleepNotificationWaiting(Object time) {
     return 'Recording starts at $time';
   }
@@ -6364,6 +6376,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfSleepBursts => 'Bursts';
 
   @override
+  String get sfSleepFloor => 'Noise floor';
+
+  @override
+  String get sfSleepMixed => 'mixed sounds';
+
+  @override
+  String sfSleepMixShare(int percent) {
+    return 'main sound $percent% of the time';
+  }
+
+  @override
   String get sfSleepDominant => 'Dominant';
 
   @override
@@ -6482,6 +6505,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String sfSleepPdfSummaryStages(String duration, String stage, int count) {
     return 'Health sleep stages cover $duration; most sounds fell into $stage ($count).';
+  }
+
+  @override
+  String sfSleepPdfSummaryTime(String category, String duration, int share) {
+    return 'Longest share: $category ($duration, $share % of all sound).';
   }
 
   @override

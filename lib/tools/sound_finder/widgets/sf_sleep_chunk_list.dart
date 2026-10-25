@@ -120,6 +120,7 @@ class _ChunkRow extends StatelessWidget {
     final category = event.analysis?.category;
     final details = [
       category.label(l10n),
+      if (event.analysis?.mixed == true) l10n.sfSleepMixed,
       '${event.peakDb.toStringAsFixed(1)} dB',
       sleepDuration(event.duration),
       if (event.annotation != null) event.annotation!,

@@ -104,4 +104,45 @@ class WavDecoder {
     }
     return String.fromCharCodes(units);
   }
+
+  /// Duration from the header alone, so a session rebuilt from file names can
+  /// time its chunks without decoding megabytes of audio each.
+  static double? durationSeconds(Uint8List bytes) {
+    if (bytes.length < 44) return null;
+    final bd = ByteData.sublistView(bytes);
+    if (_readAscii(bd, 0, 4) != 'RIFF' || _readAscii(bd, 8, 4) != 'WAVE') {
+      return null;
+    }
+
+    var offset = 12;
+    int? sampleRate;
+    int? channels;
+    int? bitsPerSample;
+    int? dataSize;
+    while (offset + 8 <= bytes.length) {
+      final chunkId = _readAscii(bd, offset, 4);
+      final chunkSize = bd.getUint32(offset + 4, Endian.little);
+      if (chunkId == 'fmt ' && offset + 24 <= bytes.length) {
+        channels = bd.getUint16(offset + 10, Endian.little);
+        sampleRate = bd.getUint32(offset + 12, Endian.little);
+        bitsPerSample = bd.getUint16(offset + 22, Endian.little);
+      } else if (chunkId == 'data') {
+        dataSize = chunkSize;
+        break;
+      }
+      offset += 8 + chunkSize;
+    }
+    if (sampleRate == null ||
+        channels == null ||
+        bitsPerSample == null ||
+        dataSize == null ||
+        sampleRate <= 0 ||
+        channels <= 0 ||
+        bitsPerSample <= 0) {
+      return null;
+    }
+    final frameBytes = channels * (bitsPerSample ~/ 8);
+    if (frameBytes <= 0) return null;
+    return dataSize / frameBytes / sampleRate;
+  }
 }

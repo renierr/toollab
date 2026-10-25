@@ -92,13 +92,26 @@ class _Night {
   _Night(this.data, this.stages)
     : events = data.events,
       categoryCounts = {for (final e in data.events) e.analysis?.category: 0},
+      soundTime = {},
       stageTime = {},
       stageEvents = {} {
     for (final e in events) {
-      final c = e.analysis?.category;
-      categoryCounts[c] = categoryCounts[c]! + 1;
+      final a = e.analysis;
+      if (a == null) {
+        categoryCounts[null] = (categoryCounts[null] ?? 0) + 1;
+      } else if (a.subEvents.isEmpty) {
+        categoryCounts[a.category] = (categoryCounts[a.category] ?? 0) + 1;
+      } else {
+        for (final c in {for (final s in a.subEvents) s.category}) {
+          categoryCounts[c] = (categoryCounts[c] ?? 0) + 1;
+        }
+      }
       final stage = stageAt(e);
       if (stage != null) stageEvents[stage] = (stageEvents[stage] ?? 0) + 1;
+    }
+    for (final entry in data.soundDurations.entries) {
+      soundTime[entry.key] = entry.value;
+      categoryCounts.putIfAbsent(entry.key, () => 0);
     }
     for (final b in stages) {
       stageTime[b.kind] =
@@ -110,8 +123,12 @@ class _Night {
   final List<SleepStageBand> stages;
   final List<SleepEvent> events;
   final Map<SleepSoundCategory?, int> categoryCounts;
+  final Map<SleepSoundCategory, Duration> soundTime;
   final Map<SleepStageKind, Duration> stageTime;
   final Map<SleepStageKind, int> stageEvents;
+
+  Duration get soundDuration =>
+      soundTime.values.fold(Duration.zero, (a, d) => a + d);
 
   Duration get stagedTime =>
       stageTime.values.fold(Duration.zero, (a, d) => a + d);
@@ -328,14 +345,53 @@ class _NightChart extends pw.StatelessWidget {
               }
               canvas.strokePath();
 
-              for (final e in night.events) {
-                final x0 = xOf(e.startedAt);
-                final w = math.max(1.2, xOf(e.endedAt) - x0);
-                final top = yOf(e.peakDb.clamp(_minDb.toDouble(), 0));
+              final levels = data.levels;
+              if (levels.length > 1) {
                 canvas
-                  ..setFillColor(_pdf((e.analysis?.category).color))
-                  ..drawRect(x0, _axis, w, top - _axis)
-                  ..fillPath();
+                  ..setStrokeColor(_muted)
+                  ..setLineWidth(.6)
+                  ..moveTo(xOf(levels.first.at), yOf(levels.first.rmsDb));
+                for (final level in levels.skip(1)) {
+                  canvas.lineTo(xOf(level.at), yOf(level.rmsDb));
+                }
+                canvas.strokePath();
+              }
+
+              for (final e in night.events) {
+                final a = e.analysis;
+                final subs = a?.subEvents ?? const <SleepSubEvent>[];
+                if (subs.isEmpty) {
+                  final from = e.startedAt.add(
+                    Duration(milliseconds: a?.firstActiveMs ?? 0),
+                  );
+                  final to = e.startedAt.add(
+                    Duration(
+                      milliseconds:
+                          a?.lastActiveMs ?? e.duration.inMilliseconds,
+                    ),
+                  );
+                  final x0 = xOf(from);
+                  final w = math.max(1.2, xOf(to) - x0);
+                  final top = yOf(e.peakDb.clamp(_minDb.toDouble(), 0));
+                  canvas
+                    ..setFillColor(_pdf((a?.category).color))
+                    ..drawRect(x0, _axis, w, top - _axis)
+                    ..fillPath();
+                  continue;
+                }
+                for (final sub in subs) {
+                  final x0 = xOf(
+                    e.startedAt.add(Duration(milliseconds: sub.startMs)),
+                  );
+                  final x1 = xOf(
+                    e.startedAt.add(Duration(milliseconds: sub.endMs)),
+                  );
+                  final top = yOf(sub.peakDb.clamp(_minDb.toDouble(), 0));
+                  canvas
+                    ..setFillColor(_pdf(sub.category.color))
+                    ..drawRect(x0, _axis, math.max(1.2, x1 - x0), top - _axis)
+                    ..fillPath();
+                }
               }
 
               final thrY = yOf(ampToDb(data.threshold));
@@ -446,9 +502,12 @@ pw.Widget _summary(_Night night, AppLocalizations l10n) {
         sleepDuration(data.recordedDuration),
       ),
     );
-    final top = night.categoryCounts.entries.reduce(
-      (a, b) => b.value > a.value ? b : a,
-    );
+    final primary = <SleepSoundCategory?, int>{};
+    for (final e in night.events) {
+      final c = e.analysis?.category;
+      primary[c] = (primary[c] ?? 0) + 1;
+    }
+    final top = primary.entries.reduce((a, b) => b.value > a.value ? b : a);
     lines.add(
       l10n.sfSleepPdfSummaryTop(
         top.key.label(l10n),
@@ -456,6 +515,23 @@ pw.Widget _summary(_Night night, AppLocalizations l10n) {
         (top.value * 100 / night.events.length).round(),
       ),
     );
+    if (night.soundDuration > Duration.zero) {
+      final topTime = night.soundTime.entries.reduce(
+        (a, b) => b.value > a.value ? b : a,
+      );
+      final share =
+          (topTime.value.inMilliseconds *
+                  100 /
+                  night.soundDuration.inMilliseconds)
+              .round();
+      lines.add(
+        l10n.sfSleepPdfSummaryTime(
+          topTime.key.label(l10n),
+          sleepDuration(topTime.value),
+          share,
+        ),
+      );
+    }
     final loudest = night.events.reduce((a, b) => b.peakDb > a.peakDb ? b : a);
     lines.add(
       l10n.sfSleepPdfSummaryLoudest(
@@ -548,6 +624,7 @@ pw.Widget _labelled(PdfColor color, String label) => pw.Row(
 
 pw.Widget _categoryTable(_Night night, AppLocalizations l10n) {
   final total = night.events.length;
+  final totalMs = night.soundDuration.inMilliseconds;
   final entries = night.categoryCounts.entries.toList()
     ..sort((a, b) => b.value.compareTo(a.value));
   return pw.Column(
@@ -571,7 +648,12 @@ pw.Widget _categoryTable(_Night night, AppLocalizations l10n) {
             [
               _labelled(_pdf(e.key.color), e.key.label(l10n)),
               _text('${e.value}', right: true),
-              _text('${(e.value * 100 / total).round()} %', right: true),
+              _text(
+                totalMs <= 0
+                    ? '${(e.value * 100 / total).round()} %'
+                    : '${((night.soundTime[e.key]?.inMilliseconds ?? 0) * 100 / totalMs).round()} %',
+                right: true,
+              ),
             ],
         ],
       ),
@@ -648,7 +730,8 @@ pw.Widget _eventTable(_Night night, AppLocalizations l10n) => _table(
         _text(
           e.analysis == null
               ? '–'
-              : '${(e.analysis!.confidence * 100).round()} %',
+              : '${(e.analysis!.confidence * 100).round()} %'
+                    '${e.analysis!.mixed ? ' · ${l10n.sfSleepMixed}' : ''}',
           right: true,
         ),
         _text('${e.peakDb.toStringAsFixed(1)} dB', right: true),

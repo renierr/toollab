@@ -3330,6 +3330,14 @@
   "sfSleepGraceHint": "Recording starts only after the grace period, so the sounds of falling asleep are not recorded.",
   "sfSleepGraceCountdown": "Recording starts in {time} (at {at})",
   "sfSleepGraceSkip": "Start recording now",
+  "sfSleepChunkLabel": "Chunk length:",
+  "sfSleepChunkSeconds": "{seconds} s",
+  "@sfSleepChunkSeconds": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "sfSleepChunkHint": "Shorter chunks place sounds more precisely; longer chunks create fewer files.",
   "sfSleepNotificationWaiting": "Recording starts at {time}",
   "sfSleepFinishing": "Saving and syncing the session…",
   "sfSleepThresholdLabel": "Threshold: {db} dB ({amp})",
@@ -3398,6 +3406,14 @@
   "sfSleepPeak": "Peak",
   "sfSleepActive": "Active",
   "sfSleepBursts": "Bursts",
+  "sfSleepFloor": "Noise floor",
+  "sfSleepMixed": "mixed sounds",
+  "sfSleepMixShare": "main sound {percent}% of the time",
+  "@sfSleepMixShare": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
   "sfSleepDominant": "Dominant",
   "sfSleepRhythm": "Rhythm {seconds} s",
   "sfSleepConfidence": "{percent}% match",
@@ -3458,6 +3474,14 @@
       "duration": {"type": "String"},
       "stage": {"type": "String"},
       "count": {"type": "int"}
+    }
+  },
+  "sfSleepPdfSummaryTime": "Longest share: {category} ({duration}, {share} % of all sound).",
+  "@sfSleepPdfSummaryTime": {
+    "placeholders": {
+      "category": {"type": "String"},
+      "duration": {"type": "String"},
+      "share": {"type": "int"}
     }
   },
   "sfSleepPdfNoStages": "No Health sleep stages were found for this night.",

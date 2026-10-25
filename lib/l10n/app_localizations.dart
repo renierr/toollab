@@ -11063,6 +11063,24 @@ abstract class AppLocalizations {
   /// **'Start recording now'**
   String get sfSleepGraceSkip;
 
+  /// No description provided for @sfSleepChunkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Chunk length:'**
+  String get sfSleepChunkLabel;
+
+  /// No description provided for @sfSleepChunkSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds} s'**
+  String sfSleepChunkSeconds(int seconds);
+
+  /// No description provided for @sfSleepChunkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shorter chunks place sounds more precisely; longer chunks create fewer files.'**
+  String get sfSleepChunkHint;
+
   /// No description provided for @sfSleepNotificationWaiting.
   ///
   /// In en, this message translates to:
@@ -11429,6 +11447,24 @@ abstract class AppLocalizations {
   /// **'Bursts'**
   String get sfSleepBursts;
 
+  /// No description provided for @sfSleepFloor.
+  ///
+  /// In en, this message translates to:
+  /// **'Noise floor'**
+  String get sfSleepFloor;
+
+  /// No description provided for @sfSleepMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'mixed sounds'**
+  String get sfSleepMixed;
+
+  /// No description provided for @sfSleepMixShare.
+  ///
+  /// In en, this message translates to:
+  /// **'main sound {percent}% of the time'**
+  String sfSleepMixShare(int percent);
+
   /// No description provided for @sfSleepDominant.
   ///
   /// In en, this message translates to:
@@ -11632,6 +11668,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health sleep stages cover {duration}; most sounds fell into {stage} ({count}).'**
   String sfSleepPdfSummaryStages(String duration, String stage, int count);
+
+  /// No description provided for @sfSleepPdfSummaryTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest share: {category} ({duration}, {share} % of all sound).'**
+  String sfSleepPdfSummaryTime(String category, String duration, int share);
 
   /// No description provided for @sfSleepPdfNoStages.
   ///

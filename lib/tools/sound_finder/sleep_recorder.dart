@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
@@ -33,21 +34,25 @@ abstract interface class SleepCaptureHost {
   Float32List stopCapture();
 }
 
-/// Records a night in 15 s chunks, keeping only chunks above the threshold.
+/// Records a night in fixed-length chunks, keeping only those above the
+/// threshold.
 class SleepRecorder extends ChangeNotifier {
   SleepRecorder(this._host, {this._syncSessions});
 
   static const _logPrefix = '[SleepRecorder]';
-  static const _chunkLength = Duration(seconds: 15);
   static const _kThreshold = 'sf_sleep_threshold';
   static const _kAdaptive = 'sf_sleep_adaptive';
   static const _kDuration = 'sf_sleep_duration';
   static const _kGrace = 'sf_sleep_grace';
+  static const _kChunkSeconds = 'sf_sleep_chunk_seconds';
   static const double minThreshold = 0.0005;
   static const double maxThreshold = 0.2;
   static const int minDurationMinutes = 15;
   static const int maxDurationMinutes = 16 * 60;
   static const int maxGraceMinutes = 120;
+  static const int minChunkSeconds = 5;
+  static const int maxChunkSeconds = 60;
+  static const int defaultChunkSeconds = 15;
 
   final SleepCaptureHost _host;
   final Future<void> Function()? _syncSessions;
@@ -61,6 +66,7 @@ class SleepRecorder extends ChangeNotifier {
   int _session = 0;
   int _durationMinutes = 480;
   int _graceMinutes = 5;
+  int _chunkSeconds = defaultChunkSeconds;
   double _threshold = 0.005;
   bool _adaptive = false;
   double _lastMaxAbs = 0;
@@ -71,6 +77,8 @@ class SleepRecorder extends ChangeNotifier {
   double _ambientMax = 0;
   String? _sessionDir;
   final List<SleepEvent> _events = [];
+  final List<SleepLevelSample> _levels = [];
+  int _quietSinceSnapshot = 0;
   Timer? _graceTimer;
   Timer? _timeout;
   Timer? _chunkTimer;
@@ -94,11 +102,13 @@ class SleepRecorder extends ChangeNotifier {
   bool get startFailed => _startFailed;
   int get durationMinutes => _durationMinutes;
   int get graceMinutes => _graceMinutes;
+  int get chunkSeconds => _chunkSeconds;
   double get threshold => _threshold;
   bool get adaptive => _adaptive;
   double get lastMaxAbs => _lastMaxAbs;
   DateTime? get lastEvent => _lastEvent;
   List<SleepEvent> get events => List.unmodifiable(_events);
+  List<SleepLevelSample> get levels => List.unmodifiable(_levels);
   Duration get elapsed =>
       _start == null ? Duration.zero : DateTime.now().difference(_start!);
   DateTime? get recordsAt => _recordsAt;
@@ -113,6 +123,7 @@ class SleepRecorder extends ChangeNotifier {
     _adaptive = await db.getSetting(id, _kAdaptive) == 'true';
     final duration = int.tryParse(await db.getSetting(id, _kDuration) ?? '');
     final grace = int.tryParse(await db.getSetting(id, _kGrace) ?? '');
+    final chunk = int.tryParse(await db.getSetting(id, _kChunkSeconds) ?? '');
     if (!_active) {
       if (duration != null) {
         _durationMinutes = duration.clamp(
@@ -121,6 +132,9 @@ class SleepRecorder extends ChangeNotifier {
         );
       }
       if (grace != null) _graceMinutes = grace.clamp(0, maxGraceMinutes);
+      if (chunk != null) {
+        _chunkSeconds = chunk.clamp(minChunkSeconds, maxChunkSeconds);
+      }
     }
   }
 
@@ -155,6 +169,13 @@ class SleepRecorder extends ChangeNotifier {
     if (_active) return;
     _graceMinutes = minutes.clamp(0, maxGraceMinutes);
     _save(_kGrace, _graceMinutes.toString());
+    notifyListeners();
+  }
+
+  void setChunkSeconds(int seconds) {
+    if (_active) return;
+    _chunkSeconds = seconds.clamp(minChunkSeconds, maxChunkSeconds);
+    _save(_kChunkSeconds, _chunkSeconds.toString());
     notifyListeners();
   }
 
@@ -206,6 +227,8 @@ class SleepRecorder extends ChangeNotifier {
     _active = true;
     _start = null;
     _events.clear();
+    _levels.clear();
+    _quietSinceSnapshot = 0;
     _lastEvent = null;
     _ambientMax = 0;
     final grace = Duration(minutes: _graceMinutes);
@@ -321,7 +344,7 @@ class SleepRecorder extends ChangeNotifier {
 
   void _scheduleChunk() {
     _chunkTimer?.cancel();
-    _chunkTimer = Timer(_chunkLength, () async {
+    _chunkTimer = Timer(Duration(seconds: _chunkSeconds), () async {
       if (!_active) return;
       await _processChunk(_chunkStart ?? DateTime.now());
       if (_active) {
@@ -340,7 +363,19 @@ class SleepRecorder extends ChangeNotifier {
       return;
     }
     final maxAbs = _peak(samples);
+    var sumSquares = 0.0;
+    for (final s in samples) {
+      sumSquares += s * s;
+    }
+    final rms = math.sqrt(sumSquares / samples.length);
     _lastMaxAbs = maxAbs;
+    _levels.add(
+      SleepLevelSample(
+        at: endedAt,
+        peakDb: ampToDb(maxAbs),
+        rmsDb: ampToDb(rms),
+      ),
+    );
     if (kDebugMode) {
       debugLog(
         '$_logPrefix chunk samples=${samples.length} maxAbs=$maxAbs '
@@ -354,7 +389,22 @@ class SleepRecorder extends ChangeNotifier {
         _threshold = (_ambientMax * 2).clamp(minThreshold, maxThreshold);
       }
     }
-    if (maxAbs < _threshold) return;
+    if (maxAbs < _threshold) {
+      // Quiet levels still belong in the night curve and the floor prior.
+      // Save periodically so an interrupted night does not lose them.
+      _quietSinceSnapshot++;
+      final start = _start;
+      if (_sessionDir != null && start != null && _quietSinceSnapshot >= 20) {
+        _quietSinceSnapshot = 0;
+        try {
+          await _snapshot(_sessionDir!, start, endedAt).save(touch: false);
+        } catch (e) {
+          errorLog('$_logPrefix progress save: $e');
+        }
+      }
+      return;
+    }
+    _quietSinceSnapshot = 0;
 
     final dirPath = _sessionDir ?? (await SleepSessionStore.root()).path;
     final fileName = 'chunk-${_stamp(endedAt)}.wav';
@@ -405,6 +455,7 @@ class SleepRecorder extends ChangeNotifier {
         threshold: _threshold,
         adaptiveThreshold: _adaptive,
         events: List.of(_events),
+        levels: List.of(_levels),
       );
 
   Future<void> stop() async {

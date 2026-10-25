@@ -4,6 +4,7 @@ import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/format_helper.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import '../audio/sleep_chunk_analyzer.dart';
 import '../sleep_labels.dart';
 import '../sleep_session_store.dart';
 import '../sleep_player.dart';
@@ -36,12 +37,28 @@ class SfSleepEventCard extends StatelessWidget {
     final hasFile = session.hasFile(e);
     final size = session.sizeOf(e);
 
+    final parts = a == null
+        ? const <SleepSubEvent>[]
+        : a.subEvents.where((s) => s.durationMs >= 200).toList();
+    var mainPercent = 0;
+    if (a != null && a.subEvents.isNotEmpty) {
+      final totalMs = a.subEvents.fold(0, (sum, s) => sum + s.durationMs);
+      if (totalMs > 0) {
+        final mainMs = a.subEvents
+            .where((s) => s.category == a.category)
+            .fold(0, (sum, s) => sum + s.durationMs);
+        mainPercent = (mainMs * 100 / totalMs).round();
+      }
+    }
+
     final facts = <String>[
       '${l10n.sfSleepPeak} ${e.peakDb.toStringAsFixed(1)} dB',
       if (a != null) ...[
         '${l10n.sfSleepActive} ${(a.activeMs / 1000).toStringAsFixed(1)} s',
         '${l10n.sfSleepBursts} ${a.bursts}',
         '${l10n.sfSleepDominant} ${a.dominantHz.round()} Hz',
+        '${l10n.sfSleepFloor} ${a.floorDb.toStringAsFixed(0)} dB',
+        if (a.mixed) l10n.sfSleepMixShare(mainPercent),
         if (a.periodicity > 0.35)
           l10n.sfSleepRhythm(a.periodSec.toStringAsFixed(1)),
       ],
@@ -68,7 +85,8 @@ class SfSleepEventCard extends StatelessWidget {
                     a == null
                         ? category.label(l10n)
                         : '${category.label(l10n)} · '
-                              '${l10n.sfSleepConfidence((a.confidence * 100).round())}',
+                              '${l10n.sfSleepConfidence((a.confidence * 100).round())}'
+                              '${a.mixed ? ' · ${l10n.sfSleepMixed}' : ''}',
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
@@ -87,6 +105,22 @@ class SfSleepEventCard extends StatelessWidget {
               ),
             ),
             Text(facts.join(' · '), style: theme.textTheme.bodySmall),
+            if (parts.length > 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  parts
+                      .map(
+                        (s) =>
+                            '${s.category.label(l10n)} '
+                            '${sleepDuration(Duration(milliseconds: s.durationMs))}',
+                      )
+                      .join(' · '),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
             Text(
               e.fileName,
               style: theme.textTheme.labelSmall?.copyWith(

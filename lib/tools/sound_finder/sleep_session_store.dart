@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/wav_decoder.dart';
 
 import 'audio/sleep_chunk_analyzer.dart';
 import 'sleep_session_data.dart';
@@ -105,12 +107,37 @@ class SleepSessionStore {
       );
     }
     if (sizes.isEmpty) return null;
+    final files = sizes.keys.toList()..sort();
+    final durations = <String, Duration>{};
+    for (final name in files) {
+      final duration = await _wavDuration(File('${dir.path}/$name'));
+      if (duration != null) durations[name] = duration;
+    }
     return SleepSession(
-      data: _synthesize(dir.path, sizes.keys.toList()..sort()),
+      data: _synthesize(dir.path, files, durations),
       fileSizes: sizes,
       jsonBytes: 0,
       synthetic: true,
     );
+  }
+
+  /// Chunk length from a WAV header, so sessions rebuilt from file names keep
+  /// their real timing after the chunk length became configurable.
+  static Future<Duration?> _wavDuration(File file) async {
+    try {
+      final handle = await file.open();
+      try {
+        final header = await handle.read(4096);
+        final seconds = WavDecoder.durationSeconds(header);
+        if (seconds == null) return null;
+        return Duration(milliseconds: (seconds * 1000).round());
+      } finally {
+        await handle.close();
+      }
+    } catch (e) {
+      errorLog('$_logPrefix wav duration ${file.path}: $e');
+      return null;
+    }
   }
 
   /// Loads fresh from disk, applies [mutate] and saves, serialized per session
@@ -151,8 +178,8 @@ class SleepSessionStore {
     });
   }
 
-  /// Classifies every chunk off the UI isolate. Skips a session that is
-  /// already being analyzed.
+  /// Classifies every chunk off the UI isolate, in batches, with the session's
+  /// quiet-room floor as a prior. Skips a session already being analyzed.
   static Future<void> analyze(SleepSession session) async {
     final id = session.id;
     if (analysisProgress.value.containsKey(id)) return;
@@ -160,17 +187,30 @@ class SleepSessionStore {
     try {
       final events = session.data.events;
       final results = <String, SleepChunkAnalysis>{};
-      for (var i = 0; i < events.length; i++) {
-        final path = session.data.fileFor(events[i]).path;
+      final noiseFloorDb = session.data.noiseFloorDb;
+      const batchSize = 8;
+      for (var start = 0; start < events.length; start += batchSize) {
+        final end = math.min(start + batchSize, events.length);
+        final slice = events.sublist(start, end);
+        final paths = [for (final e in slice) session.data.fileFor(e).path];
+        final names = [for (final e in slice) e.fileName];
         try {
-          final r = await Isolate.run(
-            () => SleepChunkAnalyzer.analyzeFile(path),
-          );
-          if (r != null) results[events[i].fileName] = r;
+          final batch = await Isolate.run(() {
+            final out = <String, SleepChunkAnalysis>{};
+            for (var i = 0; i < paths.length; i++) {
+              final analysis = SleepChunkAnalyzer.analyzeFile(
+                paths[i],
+                noiseFloorDb: noiseFloorDb,
+              );
+              if (analysis != null) out[names[i]] = analysis;
+            }
+            return out;
+          });
+          results.addAll(batch);
         } catch (e) {
-          errorLog('$_logPrefix analyze ${events[i].fileName}: $e');
+          errorLog('$_logPrefix analyze batch $start-$end: $e');
         }
-        _setProgress(id, (i + 1) / events.length);
+        _setProgress(id, end / events.length);
       }
       await update(session.path, (data) {
         for (final e in data.events) {
@@ -302,8 +342,12 @@ class SleepSessionStore {
     );
   }
 
-  static SleepSessionData _synthesize(String path, List<String> files) {
-    const chunk = Duration(seconds: 15);
+  static SleepSessionData _synthesize(
+    String path,
+    List<String> files,
+    Map<String, Duration> durations,
+  ) {
+    const fallback = Duration(seconds: 15);
     final sessionStart =
         _parseStamp(_sessionStamp, path.split(RegExp(r'[\\/]')).last) ??
         DateTime.fromMillisecondsSinceEpoch(0);
@@ -311,10 +355,12 @@ class SleepSessionStore {
     final events = [
       for (final name in files)
         () {
-          final end = _parseStamp(_chunkStamp, name) ?? sessionStart.add(chunk);
+          final end =
+              _parseStamp(_chunkStamp, name) ?? sessionStart.add(fallback);
+          final length = durations[name] ?? fallback;
           return SleepEvent(
             fileName: name,
-            startedAt: end.subtract(chunk),
+            startedAt: end.subtract(length),
             endedAt: end,
             peakAmplitude: 0.03,
             classification: 'unknown',

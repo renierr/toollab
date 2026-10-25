@@ -17,9 +17,10 @@ class SleepSyncDelegate with DefaultSyncDelegate implements SyncDelegate {
   @override
   String get toolId => SoundFinderTool.config.id;
 
-  // A 15 s chunk is ~1.3 MB of WAV, ~1.8 MB as base64.
+  // One chunk can be up to 60 s (~5 MB WAV, ~7 MB base64), so pull one at a
+  // time to stay inside a single request.
   @override
-  int get syncPullBatchSize => 2;
+  int get syncPullBatchSize => 1;
 
   @override
   Duration get syncRequestTimeout => const Duration(seconds: 90);

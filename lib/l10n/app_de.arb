@@ -2411,6 +2411,14 @@
   "sfSleepGraceHint": "Die Aufnahme beginnt erst nach der Vorlaufzeit, damit die Geräusche beim Einschlafen nicht aufgenommen werden.",
   "sfSleepGraceCountdown": "Aufnahme beginnt in {time} (um {at})",
   "sfSleepGraceSkip": "Jetzt aufnehmen",
+  "sfSleepChunkLabel": "Chunk-Länge:",
+  "sfSleepChunkSeconds": "{seconds} s",
+  "@sfSleepChunkSeconds": {
+    "placeholders": {
+      "seconds": {"type": "int"}
+    }
+  },
+  "sfSleepChunkHint": "Kürzere Chunks verorten Geräusche genauer; längere erzeugen weniger Dateien.",
   "sfSleepNotificationWaiting": "Aufnahme beginnt um {time}",
   "sfSleepFinishing": "Sitzung wird gespeichert und synchronisiert…",
   "sfSleepThresholdLabel": "Schwelle: {db} dB ({amp})",
@@ -2472,6 +2480,9 @@
   "sfSleepPeak": "Spitze",
   "sfSleepActive": "Aktiv",
   "sfSleepBursts": "Ausbrüche",
+  "sfSleepFloor": "Grundrauschen",
+  "sfSleepMixed": "gemischte Laute",
+  "sfSleepMixShare": "Hauptgeräusch {percent} % der Zeit",
   "sfSleepDominant": "Dominant",
   "sfSleepRhythm": "Rhythmus {seconds} s",
   "sfSleepConfidence": "{percent} % Übereinstimmung",
@@ -2506,6 +2517,7 @@
   "sfSleepPdfSummaryTop": "Am häufigsten: {category} ({count}×, {share} %).",
   "sfSleepPdfSummaryLoudest": "Am lautesten um {time}: {db} dB ({category}).",
   "sfSleepPdfSummaryStages": "Health-Schlafphasen decken {duration} ab; die meisten Geräusche fielen in {stage} ({count}).",
+  "sfSleepPdfSummaryTime": "Größter Anteil: {category} ({duration}, {share} % aller Geräusche).",
   "sfSleepPdfNoStages": "Für diese Nacht wurden keine Health-Schlafphasen gefunden.",
   "sfSleepPdfNoEvents": "In dieser Nacht hat kein Geräusch die Aufnahmeschwelle überschritten.",
   "sfSleepPdfDisclaimer": "Die Geräuschkategorien stammen aus einer Heuristik auf dem Gerät, nicht aus einem trainierten Modell, und sind keine medizinische Diagnose.",

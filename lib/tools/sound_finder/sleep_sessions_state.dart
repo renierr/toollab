@@ -152,10 +152,19 @@ class SleepSessionsState extends ChangeNotifier {
   List<int> visibleIndices(SleepSession session) {
     final f = filter(session.id);
     final events = session.data.events;
+    if (f.isEmpty) return List.generate(events.length, (i) => i);
     return [
       for (var i = 0; i < events.length; i++)
-        if (f.isEmpty || f.contains(events[i].analysis?.category)) i,
+        if (_matchesFilter(events[i], f)) i,
     ];
+  }
+
+  /// A mixed chunk stays visible when any of its sounds is selected.
+  static bool _matchesFilter(SleepEvent e, Set<SleepSoundCategory?> f) {
+    final a = e.analysis;
+    if (a == null) return f.contains(null);
+    if (a.subEvents.isEmpty) return f.contains(a.category);
+    return a.subEvents.any((s) => f.contains(s.category));
   }
 
   Future<void> playAll(SleepSession session, {int? from}) async {
