@@ -1,18 +1,25 @@
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:tool_lab/helpers/wav_decoder.dart';
 
-import '../sleep_player.dart';
-import '../sleep_session_store.dart';
+import '../sleep_session_data.dart';
 
 /// Compact envelope for the chunk currently playing in a sleep session.
 class SfSleepPlaybackWaveform extends StatefulWidget {
-  const SfSleepPlaybackWaveform({super.key, required this.session});
+  const SfSleepPlaybackWaveform({
+    super.key,
+    required this.event,
+    required this.file,
+    required this.playhead,
+  });
 
-  final SleepSession session;
+  final SleepEvent event;
+  final File file;
+  final ValueListenable<DateTime?> playhead;
 
   @override
   State<SfSleepPlaybackWaveform> createState() =>
@@ -23,45 +30,46 @@ class _SfSleepPlaybackWaveformState extends State<SfSleepPlaybackWaveform> {
   static const int _columns = 120;
 
   Float32List? _peaks;
-  String? _fileName;
+  int _loadId = 0;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final player = context.read<SleepPlayer>();
-    player.addListener(_loadPlayingChunk);
-    _loadPlayingChunk();
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(SfSleepPlaybackWaveform oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.file.path != widget.file.path) {
+      _peaks = null;
+      _load();
+    }
   }
 
   @override
   void dispose() {
-    context.read<SleepPlayer>().removeListener(_loadPlayingChunk);
+    _loadId++;
     super.dispose();
   }
 
-  void _loadPlayingChunk() {
-    final player = context.read<SleepPlayer>();
-    final index = player.playingIndex(widget.session.id);
-    if (index == null || index >= widget.session.data.events.length) return;
-    final event = widget.session.data.events[index];
-    if (_fileName == event.fileName) return;
-    _fileName = event.fileName;
-    _load(widget.session.data.fileFor(event), event.fileName);
-  }
-
-  Future<void> _load(File file, String fileName) async {
+  Future<void> _load() async {
+    final id = ++_loadId;
+    final path = widget.file.path;
     try {
-      final bytes = await file.readAsBytes();
-      final audio = WavDecoder.decode(bytes);
-      final peaks = audio == null ? null : _envelope(audio.samples);
-      if (mounted && _fileName == fileName) setState(() => _peaks = peaks);
+      final peaks = await Isolate.run(() {
+        final audio = WavDecoder.decode(File(path).readAsBytesSync());
+        return audio == null ? null : _envelope(audio.samples);
+      });
+      if (mounted && id == _loadId) setState(() => _peaks = peaks);
     } catch (_) {
-      if (mounted && _fileName == fileName) setState(() => _peaks = null);
+      if (mounted && id == _loadId) setState(() => _peaks = null);
     }
   }
 
-  Float32List _envelope(Float32List samples) {
+  static Float32List _envelope(Float32List samples) {
     final out = Float32List(_columns);
+    var loudest = 0.0;
     for (var column = 0; column < _columns; column++) {
       final start = samples.length * column ~/ _columns;
       final end = samples.length * (column + 1) ~/ _columns;
@@ -71,28 +79,31 @@ class _SfSleepPlaybackWaveformState extends State<SfSleepPlaybackWaveform> {
         if (value > peak) peak = value;
       }
       out[column] = peak;
+      if (peak > loudest) loudest = peak;
+    }
+    if (loudest > 0) {
+      for (var i = 0; i < out.length; i++) {
+        out[i] = math.sqrt(out[i] / loudest);
+      }
     }
     return out;
   }
 
   @override
   Widget build(BuildContext context) {
-    final player = context.read<SleepPlayer>();
-    final index = player.playingIndex(widget.session.id);
-    if (index == null) return const SizedBox.shrink();
-    final event = widget.session.data.events[index];
     final scheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: SizedBox(
+        width: double.infinity,
         height: 32,
         child: CustomPaint(
           painter: _SleepPlaybackWaveformPainter(
             peaks: _peaks,
-            playhead: player.playhead,
-            startedAt: event.startedAt,
-            length: event.duration,
+            playhead: widget.playhead,
+            startedAt: widget.event.startedAt,
+            length: widget.event.duration,
             active: scheme.primary,
             inactive: scheme.onSurfaceVariant.withValues(alpha: 0.38),
           ),

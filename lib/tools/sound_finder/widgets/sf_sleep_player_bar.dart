@@ -27,10 +27,23 @@ class SfSleepPlayerBar extends StatelessWidget {
       (s) => s.filter(session.id),
     );
     final count = state.visibleIndices(session).length;
-    final (queueActive, paused, speed, gain, skipQuiet, pos, len) = context
-        .select<SleepPlayer, (bool, bool, double, double, bool, int, int)>(
+    final (
+      queueActive,
+      playingIndex,
+      paused,
+      speed,
+      gain,
+      skipQuiet,
+      pos,
+      len,
+    ) = context
+        .select<
+          SleepPlayer,
+          (bool, int?, bool, double, double, bool, int, int)
+        >(
           (p) => (
             p.isQueueActive(session.id),
+            p.playingIndex(session.id),
             p.paused,
             p.speed,
             p.gain,
@@ -149,7 +162,12 @@ class SfSleepPlayerBar extends StatelessWidget {
             ),
           ],
         ),
-        if (queueActive) SfSleepPlaybackWaveform(session: session),
+        if (playingIndex != null && playingIndex < session.data.events.length)
+          SfSleepPlaybackWaveform(
+            event: session.data.events[playingIndex],
+            file: session.data.fileFor(session.data.events[playingIndex]),
+            playhead: player.playhead,
+          ),
       ],
     );
   }

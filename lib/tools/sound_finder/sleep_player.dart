@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/helpers/wav_decoder.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
+import 'audio/sleep_playback_ranges.dart';
 import 'sleep_session_data.dart';
 import 'sleep_session_store.dart';
 
@@ -17,7 +21,6 @@ class SleepPlayer extends ChangeNotifier {
     loadSettings();
   }
   static const _logPrefix = '[SleepPlayer]';
-  static const _quietPadMs = 300;
   static const _kPlaybackGain = 'sf_sleep_playback_gain';
   static const List<double> playbackGains = [1, 1.5, 2, 3, 4];
 
@@ -32,12 +35,14 @@ class SleepPlayer extends ChangeNotifier {
   double _speed = 1;
   bool _skipQuiet = false;
   double _gain = 1;
+  bool _gainTouched = false;
+  double _playingPeak = 1;
   bool _disposed = false;
   AudioSource? _source;
   SoundHandle? _handle;
   StreamSubscription<dynamic>? _soundEventsSub;
   Timer? _ticker;
-  Duration? _chunkEnd;
+  List<(Duration, Duration)> _audibleRanges = const [];
   int _generation = 0;
   final ValueNotifier<DateTime?> _playhead = ValueNotifier(null);
 
@@ -65,8 +70,9 @@ class SleepPlayer extends ChangeNotifier {
     );
     final gain = double.tryParse(raw ?? '');
     if (gain == null || !playbackGains.contains(gain)) return;
-    if (_disposed) return;
+    if (_disposed || _gainTouched) return;
     _gain = gain;
+    _applyGain();
     notifyListeners();
   }
 
@@ -142,15 +148,24 @@ class SleepPlayer extends ChangeNotifier {
       }
       final handle = SoLoud.instance.play(source, paused: true);
       SoLoud.instance.setRelativePlaySpeed(handle, _speed);
-      SoLoud.instance.setVolume(handle, _gain);
-      final analysis = event.analysis;
-      _chunkEnd = null;
-      if (_skipQuiet && analysis != null && analysis.bursts > 0) {
-        final from = math.max(0, analysis.firstActiveMs - _quietPadMs);
-        if (from > 0) {
-          SoLoud.instance.seek(handle, Duration(milliseconds: from));
-        }
-        _chunkEnd = Duration(milliseconds: analysis.lastActiveMs + _quietPadMs);
+      final measuredPeak = event.analysis?.peakAmplitude ?? 0;
+      _playingPeak = measuredPeak > 0
+          ? measuredPeak
+          : session.synthetic || event.classification == 'unknown'
+          ? 1
+          : event.peakAmplitude > 0
+          ? event.peakAmplitude
+          : 1;
+      SoLoud.instance.setVolume(
+        handle,
+        safeSleepPlaybackGain(_gain, _playingPeak),
+      );
+      _audibleRanges = _skipQuiet
+          ? sleepPlaybackRanges(event.analysis, event.duration)
+          : const [];
+      if (_audibleRanges.isNotEmpty &&
+          _audibleRanges.first.$1 > Duration.zero) {
+        SoLoud.instance.seek(handle, _audibleRanges.first.$1);
       }
       SoLoud.instance.setPause(handle, _paused);
       _source = source;
@@ -167,9 +182,32 @@ class SleepPlayer extends ChangeNotifier {
         (_) => _tick(gen, event),
       );
       _tick(gen, event);
+      if (_playingPeak == 1 && _gain > 1) {
+        unawaited(_measurePeak(file.path, gen));
+      }
     } catch (e) {
       errorLog('$_logPrefix play ${event.fileName}: $e');
       await stop();
+    }
+  }
+
+  Future<void> _measurePeak(String path, int gen) async {
+    try {
+      final peak = await Isolate.run(() {
+        final audio = WavDecoder.decode(File(path).readAsBytesSync());
+        if (audio == null) return 1.0;
+        var max = 0.0;
+        for (final sample in audio.samples) {
+          if (sample.abs() > max) max = sample.abs();
+        }
+        return max;
+      });
+      if (!_disposed && gen == _generation) {
+        _playingPeak = peak;
+        _applyGain();
+      }
+    } catch (e) {
+      errorLog('$_logPrefix peak scan $path: $e');
     }
   }
 
@@ -179,8 +217,14 @@ class SleepPlayer extends ChangeNotifier {
     if (!SoLoud.instance.getIsValidVoiceHandle(handle)) return;
     final pos = SoLoud.instance.getPosition(handle);
     _playhead.value = event.startedAt.add(pos);
-    final end = _chunkEnd;
-    if (end != null && pos >= end) unawaited(_advance());
+    if (!_paused && _audibleRanges.isNotEmpty) {
+      final next = nextSleepPlaybackPosition(_audibleRanges, pos);
+      if (next == null) {
+        unawaited(_advance());
+      } else if (next > pos) {
+        SoLoud.instance.seek(handle, next);
+      }
+    }
   }
 
   Future<void> _advance() async {
@@ -218,22 +262,48 @@ class SleepPlayer extends ChangeNotifier {
 
   void setSkipQuiet(bool value) {
     _skipQuiet = value;
+    final handle = _handle;
+    final session = _session;
+    if (handle != null &&
+        session != null &&
+        SoLoud.instance.getIsValidVoiceHandle(handle)) {
+      final event = session.data.events[_queue[_queuePos]];
+      _audibleRanges = value
+          ? sleepPlaybackRanges(event.analysis, event.duration)
+          : const [];
+      _tick(_generation, event);
+    }
     notifyListeners();
   }
 
   void setGain(double value) {
     if (!playbackGains.contains(value)) return;
+    _gainTouched = true;
     _gain = value;
-    final handle = _handle;
-    if (handle != null && SoLoud.instance.getIsValidVoiceHandle(handle)) {
-      SoLoud.instance.setVolume(handle, value);
+    final session = _session;
+    if (value > 1 && _playingPeak == 1 && session != null && _handle != null) {
+      final event = session.data.events[_queue[_queuePos]];
+      unawaited(_measurePeak(session.data.fileFor(event).path, _generation));
     }
-    DatabaseService.instance.setSetting(
-      SoundFinderTool.config.id,
-      _kPlaybackGain,
-      value.toString(),
+    _applyGain();
+    unawaited(
+      DatabaseService.instance.setSetting(
+        SoundFinderTool.config.id,
+        _kPlaybackGain,
+        value.toString(),
+      ),
     );
     notifyListeners();
+  }
+
+  void _applyGain() {
+    final handle = _handle;
+    if (handle != null && SoLoud.instance.getIsValidVoiceHandle(handle)) {
+      SoLoud.instance.setVolume(
+        handle,
+        safeSleepPlaybackGain(_gain, _playingPeak),
+      );
+    }
   }
 
   Future<void> stop() async {
@@ -258,6 +328,7 @@ class SleepPlayer extends ChangeNotifier {
     final s = _source;
     _handle = null;
     _source = null;
+    _audibleRanges = const [];
     try {
       if (h != null && SoLoud.instance.getIsValidVoiceHandle(h)) {
         await SoLoud.instance.stop(h);
