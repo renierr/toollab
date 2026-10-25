@@ -6401,6 +6401,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfSleepSpeed => 'Wiedergabegeschwindigkeit';
 
   @override
+  String get sfSleepPlaybackGain => 'Wiedergabe verstärken';
+
+  @override
+  String sfSleepGainValue(String gain) {
+    return '$gain× Verstärkung';
+  }
+
+  @override
   String get sfSleepSkipQuiet => 'Leises überspringen';
 
   @override

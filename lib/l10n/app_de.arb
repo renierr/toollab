@@ -2475,6 +2475,8 @@
   "sfSleepStopPlayback": "Stopp",
   "sfSleepPlaybackStatus": "{index}/{total} · {time}",
   "sfSleepSpeed": "Wiedergabegeschwindigkeit",
+  "sfSleepPlaybackGain": "Wiedergabe verstärken",
+  "sfSleepGainValue": "{gain}× Verstärkung",
   "sfSleepSkipQuiet": "Leises überspringen",
   "sfSleepAnnotate": "Notiz",
   "sfSleepPeak": "Spitze",

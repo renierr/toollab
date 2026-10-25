@@ -27,12 +27,13 @@ class SfSleepPlayerBar extends StatelessWidget {
       (s) => s.filter(session.id),
     );
     final count = state.visibleIndices(session).length;
-    final (queueActive, paused, speed, skipQuiet, pos, len) = context
-        .select<SleepPlayer, (bool, bool, double, bool, int, int)>(
+    final (queueActive, paused, speed, gain, skipQuiet, pos, len) = context
+        .select<SleepPlayer, (bool, bool, double, double, bool, int, int)>(
           (p) => (
             p.isQueueActive(session.id),
             p.paused,
             p.speed,
+            p.gain,
             p.skipQuiet,
             p.queuePosition,
             p.queueLength,
@@ -109,6 +110,35 @@ class SfSleepPlayerBar extends StatelessWidget {
                 child: Text(
                   '${_fmtSpeed(speed)}×',
                   style: theme.textTheme.labelLarge,
+                ),
+              ),
+            ),
+            PopupMenuButton<double>(
+              tooltip: l10n.sfSleepPlaybackGain,
+              initialValue: gain,
+              onSelected: player.setGain,
+              itemBuilder: (_) => [
+                for (final gain in SleepPlayer.playbackGains)
+                  PopupMenuItem(
+                    value: gain,
+                    child: Text(l10n.sfSleepGainValue(_fmtSpeed(gain))),
+                  ),
+              ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.volume_up_outlined, size: 18),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${_fmtSpeed(gain)}×',
+                      style: theme.textTheme.labelLarge,
+                    ),
+                  ],
                 ),
               ),
             ),

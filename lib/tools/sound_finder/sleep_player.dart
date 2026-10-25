@@ -4,15 +4,22 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
+import 'package:tool_lab/services/database_service.dart';
 
+import 'config.dart';
 import 'sleep_session_data.dart';
 import 'sleep_session_store.dart';
 
 /// Plays one chunk or a queue of chunks of a sleep session back to back and
 /// publishes the audible moment of the night as [playhead].
 class SleepPlayer extends ChangeNotifier {
+  SleepPlayer() {
+    loadSettings();
+  }
   static const _logPrefix = '[SleepPlayer]';
   static const _quietPadMs = 300;
+  static const _kPlaybackGain = 'sf_sleep_playback_gain';
+  static const List<double> playbackGains = [1, 1.5, 2, 3, 4];
 
   /// Called whenever a chunk starts, so the selection can follow playback.
   void Function(String sessionId, int index)? onChunkStarted;
@@ -24,6 +31,7 @@ class SleepPlayer extends ChangeNotifier {
   bool _paused = false;
   double _speed = 1;
   bool _skipQuiet = false;
+  double _gain = 1;
   bool _disposed = false;
   AudioSource? _source;
   SoundHandle? _handle;
@@ -38,6 +46,7 @@ class SleepPlayer extends ChangeNotifier {
   bool get paused => _paused;
   double get speed => _speed;
   bool get skipQuiet => _skipQuiet;
+  double get gain => _gain;
   int get queueLength => _queue.length;
   int get queuePosition => _queuePos;
 
@@ -48,6 +57,18 @@ class SleepPlayer extends ChangeNotifier {
 
   bool isPlayingChunk(String id, int index) =>
       !_continuous && playingIndex(id) == index;
+
+  Future<void> loadSettings() async {
+    final raw = await DatabaseService.instance.getSetting(
+      SoundFinderTool.config.id,
+      _kPlaybackGain,
+    );
+    final gain = double.tryParse(raw ?? '');
+    if (gain == null || !playbackGains.contains(gain)) return;
+    if (_disposed) return;
+    _gain = gain;
+    notifyListeners();
+  }
 
   /// Swaps in a reloaded copy of the playing session.
   void updateSession(SleepSession session) {
@@ -121,6 +142,7 @@ class SleepPlayer extends ChangeNotifier {
       }
       final handle = SoLoud.instance.play(source, paused: true);
       SoLoud.instance.setRelativePlaySpeed(handle, _speed);
+      SoLoud.instance.setVolume(handle, _gain);
       final analysis = event.analysis;
       _chunkEnd = null;
       if (_skipQuiet && analysis != null && analysis.bursts > 0) {
@@ -196,6 +218,21 @@ class SleepPlayer extends ChangeNotifier {
 
   void setSkipQuiet(bool value) {
     _skipQuiet = value;
+    notifyListeners();
+  }
+
+  void setGain(double value) {
+    if (!playbackGains.contains(value)) return;
+    _gain = value;
+    final handle = _handle;
+    if (handle != null && SoLoud.instance.getIsValidVoiceHandle(handle)) {
+      SoLoud.instance.setVolume(handle, value);
+    }
+    DatabaseService.instance.setSetting(
+      SoundFinderTool.config.id,
+      _kPlaybackGain,
+      value.toString(),
+    );
     notifyListeners();
   }
 

@@ -3401,6 +3401,13 @@
   "sfSleepStopPlayback": "Stop",
   "sfSleepPlaybackStatus": "{index}/{total} · {time}",
   "sfSleepSpeed": "Playback speed",
+  "sfSleepPlaybackGain": "Playback boost",
+  "sfSleepGainValue": "{gain}× boost",
+  "@sfSleepGainValue": {
+    "placeholders": {
+      "gain": {"type": "String"}
+    }
+  },
   "sfSleepSkipQuiet": "Skip quiet parts",
   "sfSleepAnnotate": "Annotate",
   "sfSleepPeak": "Peak",

@@ -11417,6 +11417,18 @@ abstract class AppLocalizations {
   /// **'Playback speed'**
   String get sfSleepSpeed;
 
+  /// No description provided for @sfSleepPlaybackGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback boost'**
+  String get sfSleepPlaybackGain;
+
+  /// No description provided for @sfSleepGainValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{gain}× boost'**
+  String sfSleepGainValue(String gain);
+
   /// No description provided for @sfSleepSkipQuiet.
   ///
   /// In en, this message translates to:

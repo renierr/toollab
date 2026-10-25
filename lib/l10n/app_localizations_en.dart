@@ -6361,6 +6361,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sfSleepSpeed => 'Playback speed';
 
   @override
+  String get sfSleepPlaybackGain => 'Playback boost';
+
+  @override
+  String sfSleepGainValue(String gain) {
+    return '$gain× boost';
+  }
+
+  @override
   String get sfSleepSkipQuiet => 'Skip quiet parts';
 
   @override
