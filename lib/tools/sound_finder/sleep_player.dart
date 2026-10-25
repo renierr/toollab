@@ -1,16 +1,14 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:isolate';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
-import 'package:tool_lab/helpers/wav_decoder.dart';
 import 'package:tool_lab/services/database_service.dart';
 
-import 'config.dart';
+import 'audio/sleep_playback_peak.dart';
 import 'audio/sleep_playback_ranges.dart';
+import 'config.dart';
 import 'sleep_session_data.dart';
 import 'sleep_session_store.dart';
 
@@ -193,15 +191,7 @@ class SleepPlayer extends ChangeNotifier {
 
   Future<void> _measurePeak(String path, int gen) async {
     try {
-      final peak = await Isolate.run(() {
-        final audio = WavDecoder.decode(File(path).readAsBytesSync());
-        if (audio == null) return 1.0;
-        var max = 0.0;
-        for (final sample in audio.samples) {
-          if (sample.abs() > max) max = sample.abs();
-        }
-        return max;
-      });
+      final peak = await compute(sleepPlaybackPeak, path);
       if (!_disposed && gen == _generation) {
         _playingPeak = peak;
         _applyGain();

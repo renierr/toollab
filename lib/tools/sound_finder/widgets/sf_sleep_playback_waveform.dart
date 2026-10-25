@@ -1,11 +1,10 @@
 import 'dart:io';
-import 'dart:isolate';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:tool_lab/helpers/wav_decoder.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 
+import '../audio/sleep_waveform_envelope.dart';
 import '../sleep_session_data.dart';
 
 /// Compact envelope for the chunk currently playing in a sleep session.
@@ -27,8 +26,6 @@ class SfSleepPlaybackWaveform extends StatefulWidget {
 }
 
 class _SfSleepPlaybackWaveformState extends State<SfSleepPlaybackWaveform> {
-  static const int _columns = 120;
-
   Float32List? _peaks;
   int _loadId = 0;
 
@@ -57,36 +54,13 @@ class _SfSleepPlaybackWaveformState extends State<SfSleepPlaybackWaveform> {
     final id = ++_loadId;
     final path = widget.file.path;
     try {
-      final peaks = await Isolate.run(() {
-        final audio = WavDecoder.decode(File(path).readAsBytesSync());
-        return audio == null ? null : _envelope(audio.samples);
-      });
+      final peaks = await compute(sleepWaveformEnvelope, path);
+      if (peaks == null) debugLog('[SleepPlaybackWaveform] no WAV data: $path');
       if (mounted && id == _loadId) setState(() => _peaks = peaks);
-    } catch (_) {
+    } catch (e) {
+      errorLog('[SleepPlaybackWaveform] load $path: $e');
       if (mounted && id == _loadId) setState(() => _peaks = null);
     }
-  }
-
-  static Float32List _envelope(Float32List samples) {
-    final out = Float32List(_columns);
-    var loudest = 0.0;
-    for (var column = 0; column < _columns; column++) {
-      final start = samples.length * column ~/ _columns;
-      final end = samples.length * (column + 1) ~/ _columns;
-      var peak = 0.0;
-      for (var i = start; i < end; i++) {
-        final value = samples[i].abs();
-        if (value > peak) peak = value;
-      }
-      out[column] = peak;
-      if (peak > loudest) loudest = peak;
-    }
-    if (loudest > 0) {
-      for (var i = 0; i < out.length; i++) {
-        out[i] = math.sqrt(out[i] / loudest);
-      }
-    }
-    return out;
   }
 
   @override
@@ -95,17 +69,26 @@ class _SfSleepPlaybackWaveformState extends State<SfSleepPlaybackWaveform> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
-      child: SizedBox(
-        width: double.infinity,
-        height: 32,
-        child: CustomPaint(
-          painter: _SleepPlaybackWaveformPainter(
-            peaks: _peaks,
-            playhead: widget.playhead,
-            startedAt: widget.event.startedAt,
-            length: widget.event.duration,
-            active: scheme.primary,
-            inactive: scheme.onSurfaceVariant.withValues(alpha: 0.38),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHigh.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: CustomPaint(
+              painter: _SleepPlaybackWaveformPainter(
+                peaks: _peaks,
+                playhead: widget.playhead,
+                startedAt: widget.event.startedAt,
+                length: widget.event.duration,
+                active: scheme.primary,
+                inactive: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ),
           ),
         ),
       ),
