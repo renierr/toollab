@@ -7,6 +7,7 @@ import '../sleep_labels.dart';
 import '../sleep_player.dart';
 import '../sleep_session_store.dart';
 import '../sleep_sessions_state.dart';
+import 'sf_sleep_playback_waveform.dart';
 
 /// Play-all controls; the playhead itself is drawn by the timeline.
 class SfSleepPlayerBar extends StatelessWidget {
@@ -38,78 +39,87 @@ class SfSleepPlayerBar extends StatelessWidget {
           ),
         );
 
-    return Wrap(
-      spacing: 4,
-      runSpacing: 4,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!queueActive)
-          FilledButton.icon(
-            icon: const Icon(Icons.playlist_play),
-            label: Text(l10n.sfSleepPlayAll(count)),
-            onPressed: count == 0
-                ? null
-                : () => state.playAll(
-                    session,
-                    from: state.selectedIndex(session.id),
+        Wrap(
+          spacing: 4,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            if (!queueActive)
+              FilledButton.icon(
+                icon: const Icon(Icons.playlist_play),
+                label: Text(l10n.sfSleepPlayAll(count)),
+                onPressed: count == 0
+                    ? null
+                    : () => state.playAll(
+                        session,
+                        from: state.selectedIndex(session.id),
+                      ),
+              )
+            else ...[
+              IconButton(
+                tooltip: l10n.sfSleepPrevChunk,
+                icon: const Icon(Icons.skip_previous),
+                onPressed: player.previous,
+              ),
+              IconButton.filled(
+                tooltip: paused ? l10n.sfSleepResume : l10n.sfSleepPause,
+                icon: Icon(paused ? Icons.play_arrow : Icons.pause),
+                onPressed: player.togglePause,
+              ),
+              IconButton(
+                tooltip: l10n.sfSleepNextChunk,
+                icon: const Icon(Icons.skip_next),
+                onPressed: player.next,
+              ),
+              IconButton(
+                tooltip: l10n.sfSleepStopPlayback,
+                icon: const Icon(Icons.stop),
+                onPressed: player.stop,
+              ),
+              ValueListenableBuilder<DateTime?>(
+                valueListenable: player.playhead,
+                builder: (context, head, _) => Text(
+                  l10n.sfSleepPlaybackStatus(
+                    pos + 1,
+                    len,
+                    head == null ? '--:--:--' : sleepClock(head),
                   ),
-          )
-        else ...[
-          IconButton(
-            tooltip: l10n.sfSleepPrevChunk,
-            icon: const Icon(Icons.skip_previous),
-            onPressed: player.previous,
-          ),
-          IconButton.filled(
-            tooltip: paused ? l10n.sfSleepResume : l10n.sfSleepPause,
-            icon: Icon(paused ? Icons.play_arrow : Icons.pause),
-            onPressed: player.togglePause,
-          ),
-          IconButton(
-            tooltip: l10n.sfSleepNextChunk,
-            icon: const Icon(Icons.skip_next),
-            onPressed: player.next,
-          ),
-          IconButton(
-            tooltip: l10n.sfSleepStopPlayback,
-            icon: const Icon(Icons.stop),
-            onPressed: player.stop,
-          ),
-          ValueListenableBuilder<DateTime?>(
-            valueListenable: player.playhead,
-            builder: (context, head, _) => Text(
-              l10n.sfSleepPlaybackStatus(
-                pos + 1,
-                len,
-                head == null ? '--:--:--' : sleepClock(head),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
               ),
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontFeatures: const [FontFeature.tabularFigures()],
+            ],
+            PopupMenuButton<double>(
+              tooltip: l10n.sfSleepSpeed,
+              initialValue: speed,
+              onSelected: player.setSpeed,
+              itemBuilder: (_) => [
+                for (final s in _speeds)
+                  PopupMenuItem(value: s, child: Text('${_fmtSpeed(s)}×')),
+              ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 10,
+                ),
+                child: Text(
+                  '${_fmtSpeed(speed)}×',
+                  style: theme.textTheme.labelLarge,
+                ),
               ),
             ),
-          ),
-        ],
-        PopupMenuButton<double>(
-          tooltip: l10n.sfSleepSpeed,
-          initialValue: speed,
-          onSelected: player.setSpeed,
-          itemBuilder: (_) => [
-            for (final s in _speeds)
-              PopupMenuItem(value: s, child: Text('${_fmtSpeed(s)}×')),
+            FilterChip(
+              label: Text(l10n.sfSleepSkipQuiet),
+              selected: skipQuiet,
+              onSelected: player.setSkipQuiet,
+            ),
           ],
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-            child: Text(
-              '${_fmtSpeed(speed)}×',
-              style: theme.textTheme.labelLarge,
-            ),
-          ),
         ),
-        FilterChip(
-          label: Text(l10n.sfSleepSkipQuiet),
-          selected: skipQuiet,
-          onSelected: player.setSkipQuiet,
-        ),
+        if (queueActive) SfSleepPlaybackWaveform(session: session),
       ],
     );
   }

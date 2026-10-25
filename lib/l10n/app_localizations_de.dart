@@ -6401,7 +6401,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sfSleepSpeed => 'Wiedergabegeschwindigkeit';
 
   @override
-  String get sfSleepSkipQuiet => 'Leise Stellen überspringen';
+  String get sfSleepSkipQuiet => 'Leises überspringen';
 
   @override
   String get sfSleepAnnotate => 'Notiz';
