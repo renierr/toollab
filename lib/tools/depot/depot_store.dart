@@ -11,8 +11,7 @@ import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
 import 'models/depot_transaction.dart';
 
-/// Local mirror of the Parqet data. Parqet is the source of truth, so a sync
-/// replaces everything instead of merging.
+/// Local Parqet mirror, with performance cached independently per period.
 class DepotStore {
   DepotStore._();
   static final DepotStore instance = DepotStore._();
@@ -242,24 +241,6 @@ class DepotStore {
     return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
   }
 
-  /// When the activity list was last read to the end. Until then a routine
-  /// sync only fetched what was newer than the watermark.
-  Future<DateTime?> activityFullSyncAt() async {
-    final stored = await DatabaseService.instance.getSetting(
-      _toolId,
-      _activityFullSyncKey,
-    );
-    final ms = int.tryParse(stored ?? '');
-    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
-  }
-
-  Future<void> setActivityFullSyncAt(DateTime at) =>
-      DatabaseService.instance.setSetting(
-        _toolId,
-        _activityFullSyncKey,
-        '${at.millisecondsSinceEpoch}',
-      );
-
   /// Newest stored booking of [portfolioId], the watermark an incremental
   /// activity sync starts from.
   Future<DateTime?> newestTransactionAt(String portfolioId) async {
@@ -358,10 +339,7 @@ class DepotStore {
     return rows.map(DepotChartPoint.fromMap).toList();
   }
 
-  /// Swaps the whole mirror in one transaction, so a reader never sees half
-  /// of a sync. [completeActivityPortfolios] names the portfolios whose
-  /// activity list was read to the end; their rows are replaced, the others
-  /// are merged into what an earlier sync already stored.
+  /// Commits holdings and activities without discarding unrequested periods.
   Future<void> replaceAll({
     required List<DepotPortfolio> portfolios,
     required List<DepotHolding> holdings,
@@ -373,25 +351,14 @@ class DepotStore {
   }) async {
     final db = await _getDb();
     await db.transaction((txn) async {
-      for (final table in _tables) {
-        await txn.delete(table);
-      }
+      await _replacePortfolios(txn, portfolios);
+      await txn.delete(_holdings);
       await _pruneTransactions(txn, portfolios, completeActivityPortfolios);
       final batch = txn.batch();
-      for (final p in portfolios) {
-        batch.insert(_portfolios, p.toMap());
-      }
       for (final h in holdings) {
         batch.insert(
           _holdings,
           h.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
-      }
-      for (final p in holdingPerformance) {
-        batch.insert(
-          _holdingPerformance,
-          p.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
@@ -402,25 +369,117 @@ class DepotStore {
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
-      for (final s in summaries) {
-        batch.insert(_summaries, s.toMap());
-      }
-      for (final entry in charts.entries) {
-        for (final point in entry.value) {
-          batch.insert(
-            _chartPoints,
-            point.toMap(entry.key),
-            conflictAlgorithm: ConflictAlgorithm.replace,
-          );
-        }
-      }
       await batch.commit(noResult: true);
+      await _writePerformance(txn, summaries, charts, holdingPerformance);
     });
     await DatabaseService.instance.setSetting(
       _toolId,
       _lastSyncKey,
       '${DateTime.now().millisecondsSinceEpoch}',
     );
+  }
+
+  Future<void> savePerformance({
+    List<DepotPortfolio>? portfolios,
+    List<DepotHolding>? holdings,
+    required List<DepotSummary> summaries,
+    required Map<DepotPeriodKey, List<DepotChartPoint>> charts,
+    required List<DepotHoldingPerformance> holdingPerformance,
+  }) async {
+    final db = await _getDb();
+    await db.transaction((txn) async {
+      if (portfolios != null) await _replacePortfolios(txn, portfolios);
+      if (holdings != null) {
+        await txn.delete(_holdings);
+        final batch = txn.batch();
+        for (final holding in holdings) {
+          batch.insert(
+            _holdings,
+            holding.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        await batch.commit(noResult: true);
+      }
+      await _writePerformance(txn, summaries, charts, holdingPerformance);
+    });
+  }
+
+  static Future<void> _writePerformance(
+    ToolDatabaseExecutor txn,
+    List<DepotSummary> summaries,
+    Map<DepotPeriodKey, List<DepotChartPoint>> charts,
+    List<DepotHoldingPerformance> holdingPerformance,
+  ) async {
+    for (final summary in summaries) {
+      for (final table in [_summaries, _chartPoints]) {
+        await txn.delete(
+          table,
+          where: 'scope = ? AND period = ?',
+          whereArgs: [summary.scope, summary.period.wire],
+        );
+      }
+      if (summary.scope != allScope) {
+        await txn.delete(
+          _holdingPerformance,
+          where: 'portfolio_id = ? AND period = ?',
+          whereArgs: [summary.scope, summary.period.wire],
+        );
+      }
+    }
+    final batch = txn.batch();
+    for (final summary in summaries) {
+      batch.insert(_summaries, summary.toMap());
+    }
+    for (final entry in charts.entries) {
+      for (final point in entry.value) {
+        batch.insert(
+          _chartPoints,
+          point.toMap(entry.key),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+    for (final performance in holdingPerformance) {
+      batch.insert(_holdingPerformance, performance.toMap());
+    }
+    await batch.commit(noResult: true);
+  }
+
+  static Future<void> _replacePortfolios(
+    ToolDatabaseExecutor txn,
+    List<DepotPortfolio> portfolios,
+  ) async {
+    final previous = await txn.query(_portfolios, columns: ['id']);
+    final ids = portfolios.map((p) => p.id).toSet();
+    final changed =
+        previous.length != ids.length ||
+        previous.any((row) => !ids.contains(row['id']));
+    await txn.delete(_portfolios);
+    final batch = txn.batch();
+    for (final portfolio in portfolios) {
+      batch.insert(_portfolios, portfolio.toMap());
+    }
+    await batch.commit(noResult: true);
+    for (final table in [
+      _summaries,
+      _chartPoints,
+      _holdingPerformance,
+      _holdings,
+      _transactions,
+    ]) {
+      final column = table == _summaries || table == _chartPoints
+          ? 'scope'
+          : 'portfolio_id';
+      final keep = [if (column == 'scope' && !changed) allScope, ...ids];
+      await txn.delete(
+        table,
+        where: keep.isEmpty
+            ? null
+            : '$column NOT IN (${_placeholders(keep.length)})',
+        whereArgs: keep.isEmpty ? null : keep,
+      );
+    }
   }
 
   /// Drops bookings of portfolios that no longer exist and, for the ones read
