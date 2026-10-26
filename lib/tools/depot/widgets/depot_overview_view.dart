@@ -5,14 +5,14 @@ import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../depot_format.dart';
 import '../depot_portfolio_state.dart';
-import 'depot_allocation_card.dart';
+import '../models/depot_period.dart';
 import 'depot_connect_card.dart';
 import 'depot_holding_filter_bar.dart';
 import 'depot_holding_tile.dart';
 import 'depot_kpi_grid.dart';
 import 'depot_period_selector.dart';
 import 'depot_sync_header.dart';
-import 'depot_value_chart.dart';
+import 'depot_value_card.dart';
 
 class DepotOverviewView extends StatelessWidget {
   const DepotOverviewView({super.key});
@@ -66,14 +66,12 @@ class DepotOverviewView extends StatelessWidget {
                         valueTrend: [for (final p in state.chart) p.value],
                       ),
                     const SizedBox(height: 12),
-                    DepotValueChart(
+                    DepotValueCard(
                       points: state.chart,
                       change: state.rangeChange,
-                      format: format,
-                    ),
-                    DepotAllocationCard(
                       allocation: state.allocation,
                       format: format,
+                      collapseChart: state.period == DepotPeriod.today,
                     ),
                     const SizedBox(height: 16),
                     const DepotHoldingFilterBar(),

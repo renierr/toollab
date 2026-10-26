@@ -19697,6 +19697,18 @@ abstract class AppLocalizations {
   /// **'Performance'**
   String get depotChartGain;
 
+  /// No description provided for @depotChartShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show chart'**
+  String get depotChartShow;
+
+  /// No description provided for @depotChartHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide chart'**
+  String get depotChartHide;
+
   /// No description provided for @depotRangeToday.
   ///
   /// In en, this message translates to:

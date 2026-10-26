@@ -11105,6 +11105,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotChartGain => 'Performance';
 
   @override
+  String get depotChartShow => 'Diagramm anzeigen';
+
+  @override
+  String get depotChartHide => 'Diagramm ausblenden';
+
+  @override
   String get depotRangeToday => 'Heute';
 
   @override
