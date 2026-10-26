@@ -19397,17 +19397,41 @@ abstract class AppLocalizations {
   /// **'Dark Lord'**
   String get voiceDistorterPresetDarkLord;
 
-  /// No description provided for @toolNameDepotImport.
+  /// No description provided for @toolNameDepot.
   ///
   /// In en, this message translates to:
-  /// **'Depot Import'**
-  String get toolNameDepotImport;
+  /// **'Depot'**
+  String get toolNameDepot;
 
-  /// No description provided for @toolDescDepotImport.
+  /// No description provided for @toolDescDepot.
   ///
   /// In en, this message translates to:
-  /// **'Turn DKB and ING depot PDFs into a Parqet CSV import file'**
-  String get toolDescDepotImport;
+  /// **'Portfolio overview and broker PDF import for Parqet'**
+  String get toolDescDepot;
+
+  /// No description provided for @depotTabOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get depotTabOverview;
+
+  /// No description provided for @depotTabImport.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Import'**
+  String get depotTabImport;
+
+  /// No description provided for @depotOverviewEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No portfolio data yet'**
+  String get depotOverviewEmptyTitle;
+
+  /// No description provided for @depotOverviewEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your holdings from Parqet will show up here once the connection is set up.'**
+  String get depotOverviewEmptyBody;
 
   /// No description provided for @depotImportTypeLabel.
   ///

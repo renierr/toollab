@@ -3,26 +3,28 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
-import 'depot_import_page.dart';
 import 'depot_import_state.dart';
+import 'depot_page.dart';
+import 'depot_state.dart';
 
-class DepotImportTool {
-  DepotImportTool._();
+class DepotTool {
+  DepotTool._();
 
   static ToolModel get config => ToolModel(
-    id: 'depot-import',
-    name: 'Depot Import',
-    description: 'Turn DKB and ING depot PDFs into a Parqet CSV import file',
+    id: 'depot',
+    name: 'Depot',
+    description: 'Portfolio overview and broker PDF import for Parqet',
     icon: Icons.account_balance_outlined,
-    route: '/depot-import',
+    route: '/depot',
     accentColor: AppTheme.accentGreen,
     sectionId: 'utilities',
-    nameL10n: (l10n) => l10n.toolNameDepotImport,
-    descriptionL10n: (l10n) => l10n.toolDescDepotImport,
+    nameL10n: (l10n) => l10n.toolNameDepot,
+    descriptionL10n: (l10n) => l10n.toolDescDepot,
     fileExtensions: const ['pdf'],
     shareTarget: const ShareTargetConfig(accept: ['application/pdf']),
-    createPage: (sd) => DepotImportPage(sharedFile: sd?.firstFile),
+    createPage: (sd) => DepotPage(sharedFile: sd?.firstFile),
     stateProviders: () => [
+      ChangeNotifierProvider<DepotState>(create: (_) => DepotState()),
       ChangeNotifierProvider<DepotImportState>(
         create: (_) => DepotImportState(),
       ),

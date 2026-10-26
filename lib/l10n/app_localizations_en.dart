@@ -10866,11 +10866,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceDistorterPresetDarkLord => 'Dark Lord';
 
   @override
-  String get toolNameDepotImport => 'Depot Import';
+  String get toolNameDepot => 'Depot';
 
   @override
-  String get toolDescDepotImport =>
-      'Turn DKB and ING depot PDFs into a Parqet CSV import file';
+  String get toolDescDepot =>
+      'Portfolio overview and broker PDF import for Parqet';
+
+  @override
+  String get depotTabOverview => 'Overview';
+
+  @override
+  String get depotTabImport => 'PDF Import';
+
+  @override
+  String get depotOverviewEmptyTitle => 'No portfolio data yet';
+
+  @override
+  String get depotOverviewEmptyBody =>
+      'Your holdings from Parqet will show up here once the connection is set up.';
 
   @override
   String get depotImportTypeLabel => 'PDF statements';

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tool_lab/tools/depot_import/depot_import_state.dart';
-import 'package:tool_lab/tools/depot_import/models/depot_activity.dart';
-import 'package:tool_lab/tools/depot_import/parsing/security_parser.dart';
-import 'package:tool_lab/tools/depot_import/parsing/statement_parser.dart';
+import 'package:tool_lab/tools/depot/depot_import_state.dart';
+import 'package:tool_lab/tools/depot/models/depot_activity.dart';
+import 'package:tool_lab/tools/depot/parsing/security_parser.dart';
+import 'package:tool_lab/tools/depot/parsing/statement_parser.dart';
 
 /// A synthetic DKB "Dividendengutschrift" in the layout their PDFs use, with
 /// invented figures. It carries the two traps that broke the tax column: a
@@ -455,9 +455,7 @@ void main() {
     });
 
     test('flags a newly introduced total mismatch', () {
-      final issues = DepotStatementParser.revalidate(
-        activity(amount: 300),
-      );
+      final issues = DepotStatementParser.revalidate(activity(amount: 300));
       expect(issues, contains(DepotParseIssue.amountMismatch));
     });
 
@@ -573,10 +571,10 @@ void main() {
     );
 
     test('flags the same import twice', () {
-      expect(
-        DepotImportState.findDuplicateIds([stmt('a'), stmt('b')]),
-        {'a', 'b'},
-      );
+      expect(DepotImportState.findDuplicateIds([stmt('a'), stmt('b')]), {
+        'a',
+        'b',
+      });
     });
 
     test('ignores deselected copies and different amounts', () {
