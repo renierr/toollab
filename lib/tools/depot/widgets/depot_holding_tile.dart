@@ -91,13 +91,29 @@ class DepotHoldingTile extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (returnPercent != null)
-            Text(
-              format.percent(returnPercent),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: DepotFormat.gainColor(returnPercent),
-                fontWeight: FontWeight.w600,
+          if (returnPercent != null || holding.currentPrice != 0)
+            Text.rich(
+              TextSpan(
+                children: [
+                  if (returnPercent != null)
+                    TextSpan(
+                      text: format.percent(returnPercent),
+                      style: TextStyle(
+                        color: DepotFormat.gainColor(returnPercent),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  if (holding.currentPrice != 0)
+                    TextSpan(
+                      text:
+                          '${returnPercent == null ? '' : '  '}'
+                          '${format.money(holding.currentPrice)}',
+                      style: TextStyle(color: theme.hintColor),
+                    ),
+                ],
               ),
+              maxLines: 1,
+              style: theme.textTheme.bodySmall,
             ),
         ],
       ),

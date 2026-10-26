@@ -9,7 +9,6 @@ import 'depot_allocation_card.dart';
 import 'depot_connect_card.dart';
 import 'depot_holding_filter_bar.dart';
 import 'depot_holding_tile.dart';
-import 'depot_income_chart.dart';
 import 'depot_kpi_grid.dart';
 import 'depot_period_selector.dart';
 import 'depot_sync_header.dart';
@@ -74,10 +73,6 @@ class DepotOverviewView extends StatelessWidget {
                     ),
                     DepotAllocationCard(
                       allocation: state.allocation,
-                      format: format,
-                    ),
-                    DepotIncomeChart(
-                      months: state.incomeByMonth(),
                       format: format,
                     ),
                     const SizedBox(height: 16),

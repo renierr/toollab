@@ -14,6 +14,7 @@ import 'depot_dividend_missing_card.dart';
 import 'depot_dividend_positions_card.dart';
 import 'depot_dividend_source_bar.dart';
 import 'depot_dividend_year_chart.dart';
+import 'depot_income_chart.dart';
 import 'depot_sync_header.dart';
 
 class DepotDividendsView extends StatefulWidget {
@@ -108,6 +109,10 @@ class _DepotDividendsViewState extends State<DepotDividendsView> {
               ),
               DepotDividendCalendarCard(calendar: calendar, format: format),
               DepotDividendYearChart(calendar: calendar, format: format),
+              DepotIncomeChart(
+                months: portfolio.incomeByMonth(),
+                format: format,
+              ),
               DepotDividendPositionsCard(
                 positions: calendar.positions,
                 format: format,
