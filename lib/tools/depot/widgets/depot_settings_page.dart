@@ -15,9 +15,11 @@ import 'package:tool_lab/widgets/settings_section_label.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../depot_background_sync.dart';
+import '../depot_logo_state.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../parqet/parqet_auth.dart';
+import 'depot_logo_settings.dart';
 
 /// Pushed with a `MaterialPageRoute`, so a plain `Scaffold` instead of
 /// `ToolLayout`, whose back button needs a GoRouter state.
@@ -84,7 +86,9 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
       confirmLabel: l10n.depotSettingsDisconnect,
     );
     if (confirmed == true && mounted) {
+      final logos = context.read<DepotLogoState>();
       await context.read<DepotPortfolioState>().disconnect();
+      logos.reset();
     }
   }
 
@@ -219,6 +223,7 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
                 ],
               ),
             ),
+            const DepotLogoSettings(),
             if (state.isConnected) ...[
               SettingsSectionLabel(title: l10n.depotSettingsSectionSync),
               ListTile(

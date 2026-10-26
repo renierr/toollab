@@ -19583,6 +19583,48 @@ abstract class AppLocalizations {
   /// **'Sync'**
   String get depotSettingsSectionSync;
 
+  /// No description provided for @depotLogosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Holding logos'**
+  String get depotLogosTitle;
+
+  /// No description provided for @depotLogosDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Parqet logos once for offline use. Only this button downloads images; normal sync and scrolling never fetch them.'**
+  String get depotLogosDescription;
+
+  /// No description provided for @depotLogosDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download missing logos'**
+  String get depotLogosDownload;
+
+  /// No description provided for @depotLogosCached.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 logo saved on this device} other{{count} logos saved on this device}}'**
+  String depotLogosCached(int count);
+
+  /// No description provided for @depotLogosProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed {completed} of {total}'**
+  String depotLogosProgress(int completed, int total);
+
+  /// No description provided for @depotLogosFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} logos could not be downloaded. Tap to retry missing logos.'**
+  String depotLogosFailed(int count);
+
+  /// No description provided for @depotLogosCacheError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read or save the logo cache. Tap to retry.'**
+  String get depotLogosCacheError;
+
   /// No description provided for @depotSyncAllTitle.
   ///
   /// In en, this message translates to:

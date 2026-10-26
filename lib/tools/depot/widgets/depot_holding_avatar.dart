@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../depot_colors.dart';
+import '../depot_logo_state.dart';
 
-/// Rounded initials badge, colored per holding.
 class DepotHoldingAvatar extends StatelessWidget {
   final String name;
   final String colorSeed;
@@ -12,7 +15,51 @@ class DepotHoldingAvatar extends StatelessWidget {
     super.key,
     required this.name,
     required this.colorSeed,
-    this.size = 32,
+    this.size = 36,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = context.select<DepotLogoState, Uint8List?>(
+      (state) => state.bytesFor(colorSeed),
+    );
+    final fallback = _InitialsBadge(
+      name: name,
+      colorSeed: colorSeed,
+      size: size,
+    );
+    if (bytes == null) return fallback;
+    return Container(
+      width: size,
+      height: size,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(size / 4),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: Image.memory(
+          bytes,
+          fit: BoxFit.contain,
+          cacheWidth: 96,
+          excludeFromSemantics: true,
+          errorBuilder: (context, error, stackTrace) => fallback,
+        ),
+      ),
+    );
+  }
+}
+
+class _InitialsBadge extends StatelessWidget {
+  final String name;
+  final String colorSeed;
+  final double size;
+
+  const _InitialsBadge({
+    required this.name,
+    required this.colorSeed,
+    required this.size,
   });
 
   static String _initials(String name) {

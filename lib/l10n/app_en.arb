@@ -5461,6 +5461,25 @@
   "depotSettingsAccessReadWrite": "Read and write",
   "depotSettingsAccessReadOnly": "Read only - reconnect to allow uploads",
   "depotSettingsSectionSync": "Sync",
+  "depotLogosTitle": "Holding logos",
+  "depotLogosDescription": "Download Parqet logos once for offline use. Only this button downloads images; normal sync and scrolling never fetch them.",
+  "depotLogosDownload": "Download missing logos",
+  "depotLogosCached": "{count, plural, =1{1 logo saved on this device} other{{count} logos saved on this device}}",
+  "@depotLogosCached": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "depotLogosProgress": "Processed {completed} of {total}",
+  "@depotLogosProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "depotLogosFailed": "{count} logos could not be downloaded. Tap to retry missing logos.",
+  "@depotLogosFailed": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "depotLogosCacheError": "Could not read or save the logo cache. Tap to retry.",
   "depotSyncAllTitle": "Sync all data again",
   "depotSyncAllSubtitle": "Re-read every activity from Parqet, for example after deleting bookings there",
   "depotSettingsBackgroundTitle": "Background sync",

@@ -6,6 +6,7 @@ import 'config.dart';
 import 'models/depot_dividend.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
+import 'models/depot_holding_logo.dart';
 import 'models/depot_period.dart';
 import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
@@ -25,6 +26,7 @@ class DepotStore {
   static const _summaries = 'summaries';
   static const _chartPoints = 'chart_points';
   static const _holdingPerformance = 'holding_performance';
+  static const _holdingLogos = 'holding_logos';
 
   static const _dividendAssets = 'dividend_assets';
   static const _dividendEvents = 'dividend_events';
@@ -53,7 +55,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 4,
+        currentVersion: 5,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -209,13 +211,24 @@ class DepotStore {
               )
             ''');
           }
-          // A schema change empties tables the last sync filled, so the
-          // next opening must sync again regardless of how recent it was.
-          await txn.executor.delete(
-            'tool_settings',
-            where: 'tool_id = ? AND key = ?',
-            whereArgs: [_toolId, _lastSyncKey],
-          );
+          if (oldVersion < 5) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_holdingLogos)} (
+                asset_key TEXT PRIMARY KEY,
+                source_url TEXT NOT NULL,
+                data BLOB NOT NULL,
+                fetched_at INTEGER NOT NULL
+              )
+            ''');
+          }
+          // Only migrations that rebuild performance tables invalidate sync.
+          if (oldVersion < 3) {
+            await txn.executor.delete(
+              'tool_settings',
+              where: 'tool_id = ? AND key = ?',
+              whereArgs: [_toolId, _lastSyncKey],
+            );
+          }
         },
       );
     } catch (e) {
@@ -270,6 +283,21 @@ class DepotStore {
       orderBy: 'current_value DESC',
     );
     return rows.map(DepotHolding.fromMap).toList();
+  }
+
+  Future<List<DepotHoldingLogo>> holdingLogos() async {
+    final db = await _getDb();
+    final rows = await db.query(_holdingLogos);
+    return rows.map(DepotHoldingLogo.fromMap).toList();
+  }
+
+  Future<void> saveHoldingLogo(DepotHoldingLogo logo) async {
+    final db = await _getDb();
+    await db.insert(
+      _holdingLogos,
+      logo.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<DepotTransaction>> transactions({String? portfolioId}) async {
@@ -563,6 +591,7 @@ class DepotStore {
         _transactions,
         _dividendAssets,
         _dividendEvents,
+        _holdingLogos,
       ]) {
         await txn.delete(table);
       }

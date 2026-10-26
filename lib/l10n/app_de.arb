@@ -4324,6 +4324,25 @@
   "depotSettingsAccessReadWrite": "Lesen und Schreiben",
   "depotSettingsAccessReadOnly": "Nur Lesen – zum Hochladen neu verbinden",
   "depotSettingsSectionSync": "Synchronisierung",
+  "depotLogosTitle": "Logos der Positionen",
+  "depotLogosDescription": "Parqet-Logos einmalig zur Offline-Nutzung herunterladen. Nur diese Schaltfläche lädt Bilder herunter; normale Synchronisierung und Scrollen tun dies nie.",
+  "depotLogosDownload": "Fehlende Logos herunterladen",
+  "depotLogosCached": "{count, plural, =1{1 Logo auf diesem Gerät gespeichert} other{{count} Logos auf diesem Gerät gespeichert}}",
+  "@depotLogosCached": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "depotLogosProgress": "{completed} von {total} bearbeitet",
+  "@depotLogosProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "depotLogosFailed": "{count} Logos konnten nicht heruntergeladen werden. Tippen, um fehlende Logos erneut zu laden.",
+  "@depotLogosFailed": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "depotLogosCacheError": "Der Logo-Cache konnte nicht gelesen oder gespeichert werden. Zum Wiederholen tippen.",
   "depotSyncAllTitle": "Alle Daten neu synchronisieren",
   "depotSyncAllSubtitle": "Liest alle Aktivitäten erneut aus Parqet, etwa nachdem dort Buchungen gelöscht wurden",
   "depotSettingsBackgroundTitle": "Hintergrund-Sync",

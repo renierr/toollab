@@ -130,22 +130,6 @@ class _DepotIncomePlotState extends State<DepotIncomePlot> with DisposeCleanup {
                                       color: theme.colorScheme.outlineVariant,
                                     ),
                                   ),
-                                Positioned.fill(
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      for (final month in widget.months)
-                                        Expanded(
-                                          child: _IncomeBar(
-                                            month: month,
-                                            maximum: maximum,
-                                            format: widget.format,
-                                            labelStyle: labelStyle,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
                                 Positioned(
                                   left: 0,
                                   right: 0,
@@ -171,6 +155,22 @@ class _DepotIncomePlotState extends State<DepotIncomePlot> with DisposeCleanup {
                                         ),
                                       ),
                                     ),
+                                  ),
+                                ),
+                                Positioned.fill(
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      for (final month in widget.months)
+                                        Expanded(
+                                          child: _IncomeBar(
+                                            month: month,
+                                            maximum: maximum,
+                                            format: widget.format,
+                                            labelStyle: labelStyle,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ],

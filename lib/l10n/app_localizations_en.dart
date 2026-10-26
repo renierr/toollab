@@ -10966,6 +10966,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotSettingsSectionSync => 'Sync';
 
   @override
+  String get depotLogosTitle => 'Holding logos';
+
+  @override
+  String get depotLogosDescription =>
+      'Download Parqet logos once for offline use. Only this button downloads images; normal sync and scrolling never fetch them.';
+
+  @override
+  String get depotLogosDownload => 'Download missing logos';
+
+  @override
+  String depotLogosCached(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count logos saved on this device',
+      one: '1 logo saved on this device',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String depotLogosProgress(int completed, int total) {
+    return 'Processed $completed of $total';
+  }
+
+  @override
+  String depotLogosFailed(int count) {
+    return '$count logos could not be downloaded. Tap to retry missing logos.';
+  }
+
+  @override
+  String get depotLogosCacheError =>
+      'Could not read or save the logo cache. Tap to retry.';
+
+  @override
   String get depotSyncAllTitle => 'Sync all data again';
 
   @override
