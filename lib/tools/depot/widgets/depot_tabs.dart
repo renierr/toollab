@@ -14,7 +14,8 @@ class DepotTabs extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Four labelled segments stop fitting on narrow phones.
+        // Segments share the width equally, so below this even one label
+        // wraps; the app bar title already names the tab.
         final cramped = constraints.maxWidth < 520;
         ButtonSegment<DepotTab> segment(
           DepotTab value,
@@ -23,7 +24,7 @@ class DepotTabs extends StatelessWidget {
         ) => ButtonSegment(
           value: value,
           icon: Icon(icon),
-          label: cramped && value != tab ? null : Text(label),
+          label: cramped ? null : Text(label),
           tooltip: label,
         );
 
