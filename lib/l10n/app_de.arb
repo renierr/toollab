@@ -4290,8 +4290,138 @@
   "toolDescDepot": "Depotübersicht und Broker-PDF-Import für Parqet",
   "depotTabOverview": "Übersicht",
   "depotTabImport": "PDF-Import",
-  "depotOverviewEmptyTitle": "Noch keine Depotdaten",
-  "depotOverviewEmptyBody": "Deine Positionen aus Parqet erscheinen hier, sobald die Verbindung eingerichtet ist.",
+  "depotTabActivities": "Aktivitäten",
+  "depotConnectTitle": "Parqet verbinden",
+  "depotConnectBody": "Melde dich mit deinem Parqet-Konto an, um Depots, Positionen und Aktivitäten auf diesem Gerät zu spiegeln.",
+  "depotConnectAction": "Einrichten",
+  "depotNoDataYet": "Noch keine Daten synchronisiert",
+  "depotAllPortfolios": "Alle Depots",
+  "depotLastSync": "Synchronisiert {time}",
+  "@depotLastSync": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "depotNeverSynced": "Noch nie synchronisiert",
+  "depotSyncNow": "Jetzt synchronisieren",
+  "depotSettingsTitle": "Parqet-Verbindung",
+  "depotSettingsSectionParqet": "Parqet-Integration",
+  "depotSettingsIntro": "Lege in der Parqet-Entwicklerkonsole eine private Integration mit Lesezugriff an, trage die Redirect-URL unten ein und füge hier ihre Client-ID ein.",
+  "depotSettingsOpenConsole": "Entwicklerkonsole öffnen",
+  "depotSettingsClientId": "Client-ID",
+  "depotSettingsRedirectUri": "Redirect-URL",
+  "depotSettingsCopied": "Kopiert",
+  "depotSettingsConnect": "Mit Parqet verbinden",
+  "depotSettingsReconnect": "Neu verbinden",
+  "depotSettingsConnecting": "Warte auf die Anmeldung im Browser…",
+  "depotSettingsDisconnect": "Trennen",
+  "depotSettingsDisconnectConfirm": "Parqet-Anmeldung und alle synchronisierten Daten von diesem Gerät entfernen?",
+  "depotSettingsConnected": "Verbunden",
+  "depotSettingsNotConnected": "Nicht verbunden",
+  "depotSettingsSectionSync": "Synchronisierung",
+  "depotSettingsBackgroundTitle": "Hintergrund-Sync",
+  "depotSettingsBackgroundSubtitle": "Depotwerte aus Parqet abrufen, während die App geschlossen ist",
+  "depotLoginBrowserTitle": "Parqet verbunden",
+  "depotLoginBrowserBody": "Du kannst diesen Tab schließen und zu ToolLab zurückkehren.",
+  "depotKpiValue": "Wert",
+  "depotKpiTotalGain": "Gesamtgewinn",
+  "depotKpiUnrealized": "Unrealisierte Rendite",
+  "depotKpiRealized": "Realisierte Gewinne",
+  "depotKpiDividends": "Dividenden",
+  "depotKpiXirr": "IZF (p.a.)",
+  "depotKpiTtwror": "TTWROR",
+  "depotKpiCosts": "Gebühren & Steuern",
+  "depotChartTitle": "Depotwert",
+  "depotChartValue": "Wert",
+  "depotChartInvested": "Investiert",
+  "depotChartChange": "Veränderung",
+  "depotChartGain": "Performance",
+  "depotRange1m": "1M",
+  "depotRange3m": "3M",
+  "depotRangeYtd": "YTD",
+  "depotRange1y": "1J",
+  "depotRange3y": "3J",
+  "depotRangeMax": "Max",
+  "depotAllocationTitle": "Aufteilung",
+  "depotIncomeTitle": "Dividenden & Zinsen (12 Monate)",
+  "depotIncomeTotal": "Summe {amount}",
+  "@depotIncomeTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotHoldingsTitle": "Positionen ({count})",
+  "@depotHoldingsTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotHoldingsSearch": "Name oder ISIN suchen",
+  "depotHoldingsShowSold": "Verkauft",
+  "depotHoldingsSort": "Sortieren",
+  "depotHoldingsEmpty": "Keine Positionen passen zum Filter",
+  "depotHoldingShares": "{shares} Stück",
+  "@depotHoldingShares": {
+    "placeholders": {
+      "shares": {
+        "type": "String"
+      }
+    }
+  },
+  "depotHoldingSold": "Verkauft",
+  "depotSortValue": "Wert",
+  "depotSortGain": "Gewinn",
+  "depotSortGainPercent": "Rendite %",
+  "depotSortName": "Name",
+  "depotAssetSecurity": "Wertpapiere",
+  "depotAssetCrypto": "Krypto",
+  "depotAssetCommodity": "Rohstoffe",
+  "depotAssetCash": "Cash",
+  "depotAssetCustom": "Sonstige",
+  "depotAssetInsurance": "Versicherungen",
+  "depotAssetP2p": "P2P-Kredite",
+  "depotAssetRealEstate": "Immobilien",
+  "depotActivitiesSearch": "Position oder Broker suchen",
+  "depotActivitiesEmpty": "Keine Aktivitäten passen zum Filter",
+  "depotActivitiesCount": "{count} Aktivitäten",
+  "@depotActivitiesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotTxBuy": "Kauf",
+  "depotTxSell": "Verkauf",
+  "depotTxDividend": "Dividende",
+  "depotTxInterest": "Zinsen",
+  "depotTxTransferIn": "Einbuchung",
+  "depotTxTransferOut": "Ausbuchung",
+  "depotTxFeesTaxes": "Gebühren & Steuern",
+  "depotTxDeposit": "Einzahlung",
+  "depotTxWithdrawal": "Auszahlung",
+  "depotErrorNotConnected": "Nicht mit Parqet verbunden",
+  "depotErrorUnauthorized": "Die Parqet-Anmeldung ist abgelaufen, bitte neu verbinden",
+  "depotErrorDenied": "Der Zugriff wurde in Parqet nicht erlaubt",
+  "depotErrorPortBusy": "Port {port} ist belegt. Schließe andere Apps, die ihn nutzen, und versuche es erneut.",
+  "@depotErrorPortBusy": {
+    "placeholders": {
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "depotErrorTimeout": "Die Anmeldung im Browser ist abgelaufen",
+  "depotErrorNetwork": "Parqet ist nicht erreichbar",
+  "depotErrorRateLimited": "Zu viele Anfragen, bitte später erneut versuchen",
+  "depotErrorServer": "Parqet hat einen Fehler gemeldet",
+  "depotErrorInvalidResponse": "Unerwartete Antwort von Parqet",
   "depotImportTypeLabel": "PDF-Abrechnungen",
   "depotImportOpenTitle": "Depot-PDFs hinzufügen",
   "depotImportDropSubtitle": "Kauf-, Verkaufs- und Dividendenabrechnungen von DKB oder ING hier ablegen",

@@ -9,9 +9,12 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
 import 'depot_import_state.dart';
+import 'depot_portfolio_state.dart';
 import 'depot_state.dart';
+import 'widgets/depot_activities_view.dart';
 import 'widgets/depot_import_view.dart';
 import 'widgets/depot_overview_view.dart';
+import 'widgets/depot_settings_page.dart';
 import 'widgets/depot_tabs.dart';
 
 class DepotPage extends StatefulWidget {
@@ -37,9 +40,11 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     final importState = context.read<DepotImportState>();
     onDispose(() => Future.microtask(importState.clear));
 
+    final portfolioState = context.read<DepotPortfolioState>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final shared = widget.sharedFile;
       if (shared != null) _loadSharedFile(shared);
+      portfolioState.syncIfStale();
     });
 
     final sharingSub = SharingService.instance.onSharedFile.listen(
@@ -63,8 +68,17 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     return ToolLayout(
       title: switch (tab) {
         DepotTab.overview => DepotTool.config.localizedName(l10n),
+        DepotTab.activities => l10n.depotTabActivities,
         DepotTab.pdfImport => l10n.depotTabImport,
       },
+      actions: [
+        if (tab != DepotTab.pdfImport)
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.depotSettingsTitle,
+            onPressed: () => DepotSettingsPage.open(context),
+          ),
+      ],
       child: Column(
         children: [
           const Padding(
@@ -74,6 +88,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
           Expanded(
             child: switch (tab) {
               DepotTab.overview => const DepotOverviewView(),
+              DepotTab.activities => const DepotActivitiesView(),
               DepotTab.pdfImport => DepotImportView(tempScope: _scope),
             },
           ),

@@ -19421,17 +19421,545 @@ abstract class AppLocalizations {
   /// **'PDF Import'**
   String get depotTabImport;
 
-  /// No description provided for @depotOverviewEmptyTitle.
+  /// No description provided for @depotTabActivities.
   ///
   /// In en, this message translates to:
-  /// **'No portfolio data yet'**
-  String get depotOverviewEmptyTitle;
+  /// **'Activities'**
+  String get depotTabActivities;
 
-  /// No description provided for @depotOverviewEmptyBody.
+  /// No description provided for @depotConnectTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your holdings from Parqet will show up here once the connection is set up.'**
-  String get depotOverviewEmptyBody;
+  /// **'Connect Parqet'**
+  String get depotConnectTitle;
+
+  /// No description provided for @depotConnectBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your Parqet account to mirror your portfolios, holdings and activities on this device.'**
+  String get depotConnectBody;
+
+  /// No description provided for @depotConnectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up'**
+  String get depotConnectAction;
+
+  /// No description provided for @depotNoDataYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No data synced yet'**
+  String get depotNoDataYet;
+
+  /// No description provided for @depotAllPortfolios.
+  ///
+  /// In en, this message translates to:
+  /// **'All portfolios'**
+  String get depotAllPortfolios;
+
+  /// No description provided for @depotLastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {time}'**
+  String depotLastSync(String time);
+
+  /// No description provided for @depotNeverSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Never synced'**
+  String get depotNeverSynced;
+
+  /// No description provided for @depotSyncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get depotSyncNow;
+
+  /// No description provided for @depotSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parqet connection'**
+  String get depotSettingsTitle;
+
+  /// No description provided for @depotSettingsSectionParqet.
+  ///
+  /// In en, this message translates to:
+  /// **'Parqet integration'**
+  String get depotSettingsSectionParqet;
+
+  /// No description provided for @depotSettingsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a private integration with read access in the Parqet developer console, register the redirect URL below and paste its client ID here.'**
+  String get depotSettingsIntro;
+
+  /// No description provided for @depotSettingsOpenConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'Open developer console'**
+  String get depotSettingsOpenConsole;
+
+  /// No description provided for @depotSettingsClientId.
+  ///
+  /// In en, this message translates to:
+  /// **'Client ID'**
+  String get depotSettingsClientId;
+
+  /// No description provided for @depotSettingsRedirectUri.
+  ///
+  /// In en, this message translates to:
+  /// **'Redirect URL'**
+  String get depotSettingsRedirectUri;
+
+  /// No description provided for @depotSettingsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get depotSettingsCopied;
+
+  /// No description provided for @depotSettingsConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with Parqet'**
+  String get depotSettingsConnect;
+
+  /// No description provided for @depotSettingsReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get depotSettingsReconnect;
+
+  /// No description provided for @depotSettingsConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the browser login…'**
+  String get depotSettingsConnecting;
+
+  /// No description provided for @depotSettingsDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get depotSettingsDisconnect;
+
+  /// No description provided for @depotSettingsDisconnectConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the Parqet login and all synced data from this device?'**
+  String get depotSettingsDisconnectConfirm;
+
+  /// No description provided for @depotSettingsConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get depotSettingsConnected;
+
+  /// No description provided for @depotSettingsNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get depotSettingsNotConnected;
+
+  /// No description provided for @depotSettingsSectionSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get depotSettingsSectionSync;
+
+  /// No description provided for @depotSettingsBackgroundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background sync'**
+  String get depotSettingsBackgroundTitle;
+
+  /// No description provided for @depotSettingsBackgroundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull portfolio values from Parqet while the app is closed'**
+  String get depotSettingsBackgroundSubtitle;
+
+  /// No description provided for @depotLoginBrowserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parqet connected'**
+  String get depotLoginBrowserTitle;
+
+  /// No description provided for @depotLoginBrowserBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can close this tab and return to ToolLab.'**
+  String get depotLoginBrowserBody;
+
+  /// No description provided for @depotKpiValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get depotKpiValue;
+
+  /// No description provided for @depotKpiTotalGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Total gain'**
+  String get depotKpiTotalGain;
+
+  /// No description provided for @depotKpiUnrealized.
+  ///
+  /// In en, this message translates to:
+  /// **'Unrealized return'**
+  String get depotKpiUnrealized;
+
+  /// No description provided for @depotKpiRealized.
+  ///
+  /// In en, this message translates to:
+  /// **'Realized gains'**
+  String get depotKpiRealized;
+
+  /// No description provided for @depotKpiDividends.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividends'**
+  String get depotKpiDividends;
+
+  /// No description provided for @depotKpiXirr.
+  ///
+  /// In en, this message translates to:
+  /// **'IRR (p.a.)'**
+  String get depotKpiXirr;
+
+  /// No description provided for @depotKpiTtwror.
+  ///
+  /// In en, this message translates to:
+  /// **'TTWROR'**
+  String get depotKpiTtwror;
+
+  /// No description provided for @depotKpiCosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Fees & taxes'**
+  String get depotKpiCosts;
+
+  /// No description provided for @depotChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio value'**
+  String get depotChartTitle;
+
+  /// No description provided for @depotChartValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get depotChartValue;
+
+  /// No description provided for @depotChartInvested.
+  ///
+  /// In en, this message translates to:
+  /// **'Invested'**
+  String get depotChartInvested;
+
+  /// No description provided for @depotChartChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get depotChartChange;
+
+  /// No description provided for @depotChartGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance'**
+  String get depotChartGain;
+
+  /// No description provided for @depotRange1m.
+  ///
+  /// In en, this message translates to:
+  /// **'1M'**
+  String get depotRange1m;
+
+  /// No description provided for @depotRange3m.
+  ///
+  /// In en, this message translates to:
+  /// **'3M'**
+  String get depotRange3m;
+
+  /// No description provided for @depotRangeYtd.
+  ///
+  /// In en, this message translates to:
+  /// **'YTD'**
+  String get depotRangeYtd;
+
+  /// No description provided for @depotRange1y.
+  ///
+  /// In en, this message translates to:
+  /// **'1Y'**
+  String get depotRange1y;
+
+  /// No description provided for @depotRange3y.
+  ///
+  /// In en, this message translates to:
+  /// **'3Y'**
+  String get depotRange3y;
+
+  /// No description provided for @depotRangeMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get depotRangeMax;
+
+  /// No description provided for @depotAllocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocation'**
+  String get depotAllocationTitle;
+
+  /// No description provided for @depotIncomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividends & interest (12 months)'**
+  String get depotIncomeTitle;
+
+  /// No description provided for @depotIncomeTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {amount}'**
+  String depotIncomeTotal(String amount);
+
+  /// No description provided for @depotHoldingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Holdings ({count})'**
+  String depotHoldingsTitle(int count);
+
+  /// No description provided for @depotHoldingsSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search name or ISIN'**
+  String get depotHoldingsSearch;
+
+  /// No description provided for @depotHoldingsShowSold.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold'**
+  String get depotHoldingsShowSold;
+
+  /// No description provided for @depotHoldingsSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get depotHoldingsSort;
+
+  /// No description provided for @depotHoldingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No holdings match the filter'**
+  String get depotHoldingsEmpty;
+
+  /// No description provided for @depotHoldingShares.
+  ///
+  /// In en, this message translates to:
+  /// **'{shares} shares'**
+  String depotHoldingShares(String shares);
+
+  /// No description provided for @depotHoldingSold.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold'**
+  String get depotHoldingSold;
+
+  /// No description provided for @depotSortValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get depotSortValue;
+
+  /// No description provided for @depotSortGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain'**
+  String get depotSortGain;
+
+  /// No description provided for @depotSortGainPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Return %'**
+  String get depotSortGainPercent;
+
+  /// No description provided for @depotSortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get depotSortName;
+
+  /// No description provided for @depotAssetSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Securities'**
+  String get depotAssetSecurity;
+
+  /// No description provided for @depotAssetCrypto.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get depotAssetCrypto;
+
+  /// No description provided for @depotAssetCommodity.
+  ///
+  /// In en, this message translates to:
+  /// **'Commodities'**
+  String get depotAssetCommodity;
+
+  /// No description provided for @depotAssetCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get depotAssetCash;
+
+  /// No description provided for @depotAssetCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get depotAssetCustom;
+
+  /// No description provided for @depotAssetInsurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Insurance'**
+  String get depotAssetInsurance;
+
+  /// No description provided for @depotAssetP2p.
+  ///
+  /// In en, this message translates to:
+  /// **'P2P loans'**
+  String get depotAssetP2p;
+
+  /// No description provided for @depotAssetRealEstate.
+  ///
+  /// In en, this message translates to:
+  /// **'Real estate'**
+  String get depotAssetRealEstate;
+
+  /// No description provided for @depotActivitiesSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search holding or broker'**
+  String get depotActivitiesSearch;
+
+  /// No description provided for @depotActivitiesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activities match the filter'**
+  String get depotActivitiesEmpty;
+
+  /// No description provided for @depotActivitiesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} activities'**
+  String depotActivitiesCount(int count);
+
+  /// No description provided for @depotTxBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy'**
+  String get depotTxBuy;
+
+  /// No description provided for @depotTxSell.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get depotTxSell;
+
+  /// No description provided for @depotTxDividend.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend'**
+  String get depotTxDividend;
+
+  /// No description provided for @depotTxInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest'**
+  String get depotTxInterest;
+
+  /// No description provided for @depotTxTransferIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer in'**
+  String get depotTxTransferIn;
+
+  /// No description provided for @depotTxTransferOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer out'**
+  String get depotTxTransferOut;
+
+  /// No description provided for @depotTxFeesTaxes.
+  ///
+  /// In en, this message translates to:
+  /// **'Fees & taxes'**
+  String get depotTxFeesTaxes;
+
+  /// No description provided for @depotTxDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get depotTxDeposit;
+
+  /// No description provided for @depotTxWithdrawal.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawal'**
+  String get depotTxWithdrawal;
+
+  /// No description provided for @depotErrorNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected to Parqet'**
+  String get depotErrorNotConnected;
+
+  /// No description provided for @depotErrorUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'The Parqet login expired, please reconnect'**
+  String get depotErrorUnauthorized;
+
+  /// No description provided for @depotErrorDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Access was not granted in Parqet'**
+  String get depotErrorDenied;
+
+  /// No description provided for @depotErrorPortBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Port {port} is in use. Close other apps using it and try again.'**
+  String depotErrorPortBusy(int port);
+
+  /// No description provided for @depotErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The browser login timed out'**
+  String get depotErrorTimeout;
+
+  /// No description provided for @depotErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Parqet is not reachable'**
+  String get depotErrorNetwork;
+
+  /// No description provided for @depotErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests, try again later'**
+  String get depotErrorRateLimited;
+
+  /// No description provided for @depotErrorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Parqet reported an error'**
+  String get depotErrorServer;
+
+  /// No description provided for @depotErrorInvalidResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Unexpected answer from Parqet'**
+  String get depotErrorInvalidResponse;
 
   /// No description provided for @depotImportTypeLabel.
   ///

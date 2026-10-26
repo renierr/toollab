@@ -5427,8 +5427,138 @@
   "toolDescDepot": "Portfolio overview and broker PDF import for Parqet",
   "depotTabOverview": "Overview",
   "depotTabImport": "PDF Import",
-  "depotOverviewEmptyTitle": "No portfolio data yet",
-  "depotOverviewEmptyBody": "Your holdings from Parqet will show up here once the connection is set up.",
+  "depotTabActivities": "Activities",
+  "depotConnectTitle": "Connect Parqet",
+  "depotConnectBody": "Sign in with your Parqet account to mirror your portfolios, holdings and activities on this device.",
+  "depotConnectAction": "Set up",
+  "depotNoDataYet": "No data synced yet",
+  "depotAllPortfolios": "All portfolios",
+  "depotLastSync": "Synced {time}",
+  "@depotLastSync": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "depotNeverSynced": "Never synced",
+  "depotSyncNow": "Sync now",
+  "depotSettingsTitle": "Parqet connection",
+  "depotSettingsSectionParqet": "Parqet integration",
+  "depotSettingsIntro": "Create a private integration with read access in the Parqet developer console, register the redirect URL below and paste its client ID here.",
+  "depotSettingsOpenConsole": "Open developer console",
+  "depotSettingsClientId": "Client ID",
+  "depotSettingsRedirectUri": "Redirect URL",
+  "depotSettingsCopied": "Copied",
+  "depotSettingsConnect": "Connect with Parqet",
+  "depotSettingsReconnect": "Reconnect",
+  "depotSettingsConnecting": "Waiting for the browser login…",
+  "depotSettingsDisconnect": "Disconnect",
+  "depotSettingsDisconnectConfirm": "Remove the Parqet login and all synced data from this device?",
+  "depotSettingsConnected": "Connected",
+  "depotSettingsNotConnected": "Not connected",
+  "depotSettingsSectionSync": "Sync",
+  "depotSettingsBackgroundTitle": "Background sync",
+  "depotSettingsBackgroundSubtitle": "Pull portfolio values from Parqet while the app is closed",
+  "depotLoginBrowserTitle": "Parqet connected",
+  "depotLoginBrowserBody": "You can close this tab and return to ToolLab.",
+  "depotKpiValue": "Value",
+  "depotKpiTotalGain": "Total gain",
+  "depotKpiUnrealized": "Unrealized return",
+  "depotKpiRealized": "Realized gains",
+  "depotKpiDividends": "Dividends",
+  "depotKpiXirr": "IRR (p.a.)",
+  "depotKpiTtwror": "TTWROR",
+  "depotKpiCosts": "Fees & taxes",
+  "depotChartTitle": "Portfolio value",
+  "depotChartValue": "Value",
+  "depotChartInvested": "Invested",
+  "depotChartChange": "Change",
+  "depotChartGain": "Performance",
+  "depotRange1m": "1M",
+  "depotRange3m": "3M",
+  "depotRangeYtd": "YTD",
+  "depotRange1y": "1Y",
+  "depotRange3y": "3Y",
+  "depotRangeMax": "Max",
+  "depotAllocationTitle": "Allocation",
+  "depotIncomeTitle": "Dividends & interest (12 months)",
+  "depotIncomeTotal": "Total {amount}",
+  "@depotIncomeTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotHoldingsTitle": "Holdings ({count})",
+  "@depotHoldingsTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotHoldingsSearch": "Search name or ISIN",
+  "depotHoldingsShowSold": "Sold",
+  "depotHoldingsSort": "Sort",
+  "depotHoldingsEmpty": "No holdings match the filter",
+  "depotHoldingShares": "{shares} shares",
+  "@depotHoldingShares": {
+    "placeholders": {
+      "shares": {
+        "type": "String"
+      }
+    }
+  },
+  "depotHoldingSold": "Sold",
+  "depotSortValue": "Value",
+  "depotSortGain": "Gain",
+  "depotSortGainPercent": "Return %",
+  "depotSortName": "Name",
+  "depotAssetSecurity": "Securities",
+  "depotAssetCrypto": "Crypto",
+  "depotAssetCommodity": "Commodities",
+  "depotAssetCash": "Cash",
+  "depotAssetCustom": "Other",
+  "depotAssetInsurance": "Insurance",
+  "depotAssetP2p": "P2P loans",
+  "depotAssetRealEstate": "Real estate",
+  "depotActivitiesSearch": "Search holding or broker",
+  "depotActivitiesEmpty": "No activities match the filter",
+  "depotActivitiesCount": "{count} activities",
+  "@depotActivitiesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotTxBuy": "Buy",
+  "depotTxSell": "Sell",
+  "depotTxDividend": "Dividend",
+  "depotTxInterest": "Interest",
+  "depotTxTransferIn": "Transfer in",
+  "depotTxTransferOut": "Transfer out",
+  "depotTxFeesTaxes": "Fees & taxes",
+  "depotTxDeposit": "Deposit",
+  "depotTxWithdrawal": "Withdrawal",
+  "depotErrorNotConnected": "Not connected to Parqet",
+  "depotErrorUnauthorized": "The Parqet login expired, please reconnect",
+  "depotErrorDenied": "Access was not granted in Parqet",
+  "depotErrorPortBusy": "Port {port} is in use. Close other apps using it and try again.",
+  "@depotErrorPortBusy": {
+    "placeholders": {
+      "port": {
+        "type": "int"
+      }
+    }
+  },
+  "depotErrorTimeout": "The browser login timed out",
+  "depotErrorNetwork": "Parqet is not reachable",
+  "depotErrorRateLimited": "Too many requests, try again later",
+  "depotErrorServer": "Parqet reported an error",
+  "depotErrorInvalidResponse": "Unexpected answer from Parqet",
   "depotImportTypeLabel": "PDF statements",
   "depotImportOpenTitle": "Add depot PDFs",
   "depotImportDropSubtitle": "Drop DKB or ING buy, sell and dividend statements here",

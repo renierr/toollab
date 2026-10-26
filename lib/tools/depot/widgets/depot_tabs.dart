@@ -12,23 +12,45 @@ class DepotTabs extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final tab = context.select<DepotState, DepotTab>((s) => s.tab);
 
-    return SegmentedButton<DepotTab>(
-      segments: [
-        ButtonSegment(
-          value: DepotTab.overview,
-          icon: const Icon(Icons.pie_chart_outline),
-          label: Text(l10n.depotTabOverview),
-        ),
-        ButtonSegment(
-          value: DepotTab.pdfImport,
-          icon: const Icon(Icons.picture_as_pdf_outlined),
-          label: Text(l10n.depotTabImport),
-        ),
-      ],
-      selected: {tab},
-      showSelectedIcon: false,
-      onSelectionChanged: (selection) =>
-          context.read<DepotState>().setTab(selection.first),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Three labelled segments stop fitting on narrow phones.
+        final cramped = constraints.maxWidth < 420;
+        ButtonSegment<DepotTab> segment(
+          DepotTab value,
+          IconData icon,
+          String label,
+        ) => ButtonSegment(
+          value: value,
+          icon: Icon(icon),
+          label: cramped && value != tab ? null : Text(label),
+          tooltip: label,
+        );
+
+        return SegmentedButton<DepotTab>(
+          segments: [
+            segment(
+              DepotTab.overview,
+              Icons.pie_chart_outline,
+              l10n.depotTabOverview,
+            ),
+            segment(
+              DepotTab.activities,
+              Icons.receipt_long_outlined,
+              l10n.depotTabActivities,
+            ),
+            segment(
+              DepotTab.pdfImport,
+              Icons.picture_as_pdf_outlined,
+              l10n.depotTabImport,
+            ),
+          ],
+          selected: {tab},
+          showSelectedIcon: false,
+          onSelectionChanged: (selection) =>
+              context.read<DepotState>().setTab(selection.first),
+        );
+      },
     );
   }
 }

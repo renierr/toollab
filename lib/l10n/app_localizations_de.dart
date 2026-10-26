@@ -10958,11 +10958,293 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotTabImport => 'PDF-Import';
 
   @override
-  String get depotOverviewEmptyTitle => 'Noch keine Depotdaten';
+  String get depotTabActivities => 'Aktivitäten';
 
   @override
-  String get depotOverviewEmptyBody =>
-      'Deine Positionen aus Parqet erscheinen hier, sobald die Verbindung eingerichtet ist.';
+  String get depotConnectTitle => 'Parqet verbinden';
+
+  @override
+  String get depotConnectBody =>
+      'Melde dich mit deinem Parqet-Konto an, um Depots, Positionen und Aktivitäten auf diesem Gerät zu spiegeln.';
+
+  @override
+  String get depotConnectAction => 'Einrichten';
+
+  @override
+  String get depotNoDataYet => 'Noch keine Daten synchronisiert';
+
+  @override
+  String get depotAllPortfolios => 'Alle Depots';
+
+  @override
+  String depotLastSync(String time) {
+    return 'Synchronisiert $time';
+  }
+
+  @override
+  String get depotNeverSynced => 'Noch nie synchronisiert';
+
+  @override
+  String get depotSyncNow => 'Jetzt synchronisieren';
+
+  @override
+  String get depotSettingsTitle => 'Parqet-Verbindung';
+
+  @override
+  String get depotSettingsSectionParqet => 'Parqet-Integration';
+
+  @override
+  String get depotSettingsIntro =>
+      'Lege in der Parqet-Entwicklerkonsole eine private Integration mit Lesezugriff an, trage die Redirect-URL unten ein und füge hier ihre Client-ID ein.';
+
+  @override
+  String get depotSettingsOpenConsole => 'Entwicklerkonsole öffnen';
+
+  @override
+  String get depotSettingsClientId => 'Client-ID';
+
+  @override
+  String get depotSettingsRedirectUri => 'Redirect-URL';
+
+  @override
+  String get depotSettingsCopied => 'Kopiert';
+
+  @override
+  String get depotSettingsConnect => 'Mit Parqet verbinden';
+
+  @override
+  String get depotSettingsReconnect => 'Neu verbinden';
+
+  @override
+  String get depotSettingsConnecting => 'Warte auf die Anmeldung im Browser…';
+
+  @override
+  String get depotSettingsDisconnect => 'Trennen';
+
+  @override
+  String get depotSettingsDisconnectConfirm =>
+      'Parqet-Anmeldung und alle synchronisierten Daten von diesem Gerät entfernen?';
+
+  @override
+  String get depotSettingsConnected => 'Verbunden';
+
+  @override
+  String get depotSettingsNotConnected => 'Nicht verbunden';
+
+  @override
+  String get depotSettingsSectionSync => 'Synchronisierung';
+
+  @override
+  String get depotSettingsBackgroundTitle => 'Hintergrund-Sync';
+
+  @override
+  String get depotSettingsBackgroundSubtitle =>
+      'Depotwerte aus Parqet abrufen, während die App geschlossen ist';
+
+  @override
+  String get depotLoginBrowserTitle => 'Parqet verbunden';
+
+  @override
+  String get depotLoginBrowserBody =>
+      'Du kannst diesen Tab schließen und zu ToolLab zurückkehren.';
+
+  @override
+  String get depotKpiValue => 'Wert';
+
+  @override
+  String get depotKpiTotalGain => 'Gesamtgewinn';
+
+  @override
+  String get depotKpiUnrealized => 'Unrealisierte Rendite';
+
+  @override
+  String get depotKpiRealized => 'Realisierte Gewinne';
+
+  @override
+  String get depotKpiDividends => 'Dividenden';
+
+  @override
+  String get depotKpiXirr => 'IZF (p.a.)';
+
+  @override
+  String get depotKpiTtwror => 'TTWROR';
+
+  @override
+  String get depotKpiCosts => 'Gebühren & Steuern';
+
+  @override
+  String get depotChartTitle => 'Depotwert';
+
+  @override
+  String get depotChartValue => 'Wert';
+
+  @override
+  String get depotChartInvested => 'Investiert';
+
+  @override
+  String get depotChartChange => 'Veränderung';
+
+  @override
+  String get depotChartGain => 'Performance';
+
+  @override
+  String get depotRange1m => '1M';
+
+  @override
+  String get depotRange3m => '3M';
+
+  @override
+  String get depotRangeYtd => 'YTD';
+
+  @override
+  String get depotRange1y => '1J';
+
+  @override
+  String get depotRange3y => '3J';
+
+  @override
+  String get depotRangeMax => 'Max';
+
+  @override
+  String get depotAllocationTitle => 'Aufteilung';
+
+  @override
+  String get depotIncomeTitle => 'Dividenden & Zinsen (12 Monate)';
+
+  @override
+  String depotIncomeTotal(String amount) {
+    return 'Summe $amount';
+  }
+
+  @override
+  String depotHoldingsTitle(int count) {
+    return 'Positionen ($count)';
+  }
+
+  @override
+  String get depotHoldingsSearch => 'Name oder ISIN suchen';
+
+  @override
+  String get depotHoldingsShowSold => 'Verkauft';
+
+  @override
+  String get depotHoldingsSort => 'Sortieren';
+
+  @override
+  String get depotHoldingsEmpty => 'Keine Positionen passen zum Filter';
+
+  @override
+  String depotHoldingShares(String shares) {
+    return '$shares Stück';
+  }
+
+  @override
+  String get depotHoldingSold => 'Verkauft';
+
+  @override
+  String get depotSortValue => 'Wert';
+
+  @override
+  String get depotSortGain => 'Gewinn';
+
+  @override
+  String get depotSortGainPercent => 'Rendite %';
+
+  @override
+  String get depotSortName => 'Name';
+
+  @override
+  String get depotAssetSecurity => 'Wertpapiere';
+
+  @override
+  String get depotAssetCrypto => 'Krypto';
+
+  @override
+  String get depotAssetCommodity => 'Rohstoffe';
+
+  @override
+  String get depotAssetCash => 'Cash';
+
+  @override
+  String get depotAssetCustom => 'Sonstige';
+
+  @override
+  String get depotAssetInsurance => 'Versicherungen';
+
+  @override
+  String get depotAssetP2p => 'P2P-Kredite';
+
+  @override
+  String get depotAssetRealEstate => 'Immobilien';
+
+  @override
+  String get depotActivitiesSearch => 'Position oder Broker suchen';
+
+  @override
+  String get depotActivitiesEmpty => 'Keine Aktivitäten passen zum Filter';
+
+  @override
+  String depotActivitiesCount(int count) {
+    return '$count Aktivitäten';
+  }
+
+  @override
+  String get depotTxBuy => 'Kauf';
+
+  @override
+  String get depotTxSell => 'Verkauf';
+
+  @override
+  String get depotTxDividend => 'Dividende';
+
+  @override
+  String get depotTxInterest => 'Zinsen';
+
+  @override
+  String get depotTxTransferIn => 'Einbuchung';
+
+  @override
+  String get depotTxTransferOut => 'Ausbuchung';
+
+  @override
+  String get depotTxFeesTaxes => 'Gebühren & Steuern';
+
+  @override
+  String get depotTxDeposit => 'Einzahlung';
+
+  @override
+  String get depotTxWithdrawal => 'Auszahlung';
+
+  @override
+  String get depotErrorNotConnected => 'Nicht mit Parqet verbunden';
+
+  @override
+  String get depotErrorUnauthorized =>
+      'Die Parqet-Anmeldung ist abgelaufen, bitte neu verbinden';
+
+  @override
+  String get depotErrorDenied => 'Der Zugriff wurde in Parqet nicht erlaubt';
+
+  @override
+  String depotErrorPortBusy(int port) {
+    return 'Port $port ist belegt. Schließe andere Apps, die ihn nutzen, und versuche es erneut.';
+  }
+
+  @override
+  String get depotErrorTimeout => 'Die Anmeldung im Browser ist abgelaufen';
+
+  @override
+  String get depotErrorNetwork => 'Parqet ist nicht erreichbar';
+
+  @override
+  String get depotErrorRateLimited =>
+      'Zu viele Anfragen, bitte später erneut versuchen';
+
+  @override
+  String get depotErrorServer => 'Parqet hat einen Fehler gemeldet';
+
+  @override
+  String get depotErrorInvalidResponse => 'Unerwartete Antwort von Parqet';
 
   @override
   String get depotImportTypeLabel => 'PDF-Abrechnungen';

@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/tool_model.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'depot_background_sync.dart';
 import 'depot_import_state.dart';
 import 'depot_page.dart';
+import 'depot_portfolio_state.dart';
 import 'depot_state.dart';
 
 class DepotTool {
@@ -25,9 +27,13 @@ class DepotTool {
     createPage: (sd) => DepotPage(sharedFile: sd?.firstFile),
     stateProviders: () => [
       ChangeNotifierProvider<DepotState>(create: (_) => DepotState()),
+      ChangeNotifierProvider<DepotPortfolioState>(
+        create: (_) => DepotPortfolioState(),
+      ),
       ChangeNotifierProvider<DepotImportState>(
         create: (_) => DepotImportState(),
       ),
     ],
+    backgroundTasks: () => [DepotBackgroundSync.task],
   );
 }
