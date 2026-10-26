@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import 'dividends/depot_dividend_calendar.dart';
 import 'models/depot_holding.dart';
 
 class DepotColors {
@@ -17,6 +18,17 @@ class DepotColors {
     DepotHoldingKind.p2p => AppTheme.accentRed,
     DepotHoldingKind.realEstate => AppTheme.statusRed,
     DepotHoldingKind.other => AppTheme.statusBlue,
+  };
+
+  static const Color dividendBooked = AppTheme.accentTeal;
+  static const Color dividendMissing = AppTheme.accentAmber;
+  static const Color dividendExpected = AppTheme.accentBlue;
+
+  static Color dividend(DepotDividendStatus status) => switch (status) {
+    DepotDividendStatus.booked => dividendBooked,
+    DepotDividendStatus.missing => dividendMissing,
+    DepotDividendStatus.upcoming ||
+    DepotDividendStatus.projected => dividendExpected,
   };
 
   /// A stable color per holding, spread around the hue circle so neighbours

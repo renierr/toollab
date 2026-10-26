@@ -4434,6 +4434,129 @@
       }
     }
   },
+  "depotTabDividends": "Dividenden",
+  "depotDividendSource": "Dividendendaten: Yahoo Finance · {date}",
+  "@depotDividendSource": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendSourceNever": "Dividendendaten noch nicht geladen",
+  "depotDividendRefresh": "Dividendendaten neu laden",
+  "depotDividendFailed": "{count, plural, =1{1 Position konnte nicht geladen werden} other{{count} Positionen konnten nicht geladen werden}}",
+  "@depotDividendFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotDividendLoading": "Lade Dividendendaten…",
+  "depotDividendNone": "Noch keine Dividenden. Buchungen kommen aus Parqet, künftige Termine von Yahoo Finance.",
+  "depotDividendDisclaimer": "Verbuchte Beträge stammen aus Parqet. Angekündigte, prognostizierte und fehlende Zahlungen sind aus Yahoo-Finance-Daten geschätzt: Betrag je Stück × gehaltene Stücke, zum heutigen Wechselkurs, netto nach deiner bisherigen Steuerquote, gezahlt mit dem üblichen Abstand deines Brokers zum Ex-Tag.",
+  "depotDividendReceived12m": "Erhalten (12 Mon.)",
+  "depotDividendReceivedYear": "Erhalten {year}",
+  "@depotDividendReceivedYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendExpected12m": "Erwartet (12 Mon.)",
+  "depotDividendYield": "Erwartete Rendite",
+  "depotDividendStatusBooked": "Verbucht",
+  "depotDividendStatusMissing": "Nicht verbucht",
+  "depotDividendStatusUpcoming": "Angekündigt",
+  "depotDividendStatusProjected": "Prognose",
+  "depotDividendMissingTitle": "Gezahlt, aber nicht verbucht",
+  "depotDividendMissingHint": "Am Ex-Tag waren Stücke im Depot und der übliche Zahltag ist vorbei, aber in Parqet fehlt die Buchung.",
+  "depotDividendCalendarTitle": "Dividendenkalender",
+  "depotDividendPrevYear": "Vorheriges Jahr",
+  "depotDividendNextYear": "Nächstes Jahr",
+  "depotDividendYearTotal": "Jahressumme (netto) {amount}",
+  "@depotDividendYearTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendMonthEmpty": "Keine Dividenden in diesem Monat",
+  "depotDividendYearsTitle": "Dividenden pro Jahr (netto)",
+  "depotDividendExpectedLegend": "Erwartet",
+  "depotDividendPositionsTitle": "Dividenden je Position",
+  "depotDividendNext": "nächste {date}",
+  "@depotDividendNext": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendLastPerShare": "zuletzt {amount}/Stück",
+  "@depotDividendLastPerShare": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendYieldShort": "Rendite {value}",
+  "@depotDividendYieldShort": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendPerYear": "{amount}/Jahr",
+  "@depotDividendPerYear": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendReceivedShort": "{amount} erhalten",
+  "@depotDividendReceivedShort": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendGross": "brutto {amount}",
+  "@depotDividendGross": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendExDate": "Ex {date}",
+  "@depotDividendExDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendFreqMonthly": "monatlich",
+  "depotDividendFreqQuarterly": "quartalsweise",
+  "depotDividendFreqSemiannual": "halbjährlich",
+  "depotDividendFreqAnnual": "jährlich",
+  "depotDividendFreqIrregular": "unregelmäßig",
+  "depotTxNet": "netto {amount}",
+  "@depotTxNet": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "depotTxBuy": "Kauf",
   "depotTxSell": "Verkauf",
   "depotTxDividend": "Dividende",

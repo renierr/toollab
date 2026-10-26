@@ -43,6 +43,7 @@ class DepotTransactionTile extends StatelessWidget {
     final (icon, color) = _style(t.type);
     final typeLabel = DepotPortfolioLabels.transactionType(l10n, t.type);
     final realized = t.realizedGain;
+    final showNet = t.amountNet != t.amount;
     final subtitle = [
       FormatHelper.dateTime(t.datetime, style: DateStyle.dateOnly),
       if (t.holdingName.isNotEmpty) typeLabel,
@@ -72,12 +73,27 @@ class DepotTransactionTile extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (realized != null)
-            Text(
-              format.money(realized, signed: true),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: DepotFormat.gainColor(realized),
+          // One line for both: ListTile caps the trailing height at two.
+          if (showNet || realized != null)
+            Text.rich(
+              TextSpan(
+                children: [
+                  if (showNet)
+                    TextSpan(
+                      text: l10n.depotTxNet(format.money(t.amountNet)),
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  if (showNet && realized != null) const TextSpan(text: ' · '),
+                  if (realized != null)
+                    TextSpan(
+                      text: format.money(realized, signed: true),
+                      style: TextStyle(color: DepotFormat.gainColor(realized)),
+                    ),
+                ],
               ),
+              style: theme.textTheme.bodySmall,
             ),
         ],
       ),

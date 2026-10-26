@@ -19991,6 +19991,240 @@ abstract class AppLocalizations {
   /// **'{count} activities'**
   String depotActivitiesCount(int count);
 
+  /// No description provided for @depotTabDividends.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividends'**
+  String get depotTabDividends;
+
+  /// No description provided for @depotDividendSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend data: Yahoo Finance · {date}'**
+  String depotDividendSource(String date);
+
+  /// No description provided for @depotDividendSourceNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend data not loaded yet'**
+  String get depotDividendSourceNever;
+
+  /// No description provided for @depotDividendRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload dividend data'**
+  String get depotDividendRefresh;
+
+  /// No description provided for @depotDividendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 position could not be loaded} other{{count} positions could not be loaded}}'**
+  String depotDividendFailed(int count);
+
+  /// No description provided for @depotDividendLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading dividend data…'**
+  String get depotDividendLoading;
+
+  /// No description provided for @depotDividendNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No dividends yet. Bookings come from Parqet, upcoming dates from Yahoo Finance.'**
+  String get depotDividendNone;
+
+  /// No description provided for @depotDividendDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked amounts come from Parqet. Upcoming, projected and missing payments are estimated from Yahoo Finance data: per-share amount × shares held, converted at today\'s exchange rate, net after your past tax ratio, paid at your broker\'s usual delay after the ex-date.'**
+  String get depotDividendDisclaimer;
+
+  /// No description provided for @depotDividendReceived12m.
+  ///
+  /// In en, this message translates to:
+  /// **'Received (12 mo.)'**
+  String get depotDividendReceived12m;
+
+  /// No description provided for @depotDividendReceivedYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Received {year}'**
+  String depotDividendReceivedYear(String year);
+
+  /// No description provided for @depotDividendExpected12m.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected (12 mo.)'**
+  String get depotDividendExpected12m;
+
+  /// No description provided for @depotDividendYield.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward yield'**
+  String get depotDividendYield;
+
+  /// No description provided for @depotDividendStatusBooked.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked'**
+  String get depotDividendStatusBooked;
+
+  /// No description provided for @depotDividendStatusMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Not booked'**
+  String get depotDividendStatusMissing;
+
+  /// No description provided for @depotDividendStatusUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Announced'**
+  String get depotDividendStatusUpcoming;
+
+  /// No description provided for @depotDividendStatusProjected.
+  ///
+  /// In en, this message translates to:
+  /// **'Projected'**
+  String get depotDividendStatusProjected;
+
+  /// No description provided for @depotDividendMissingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid but not booked'**
+  String get depotDividendMissingTitle;
+
+  /// No description provided for @depotDividendMissingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You held shares on the ex-date and the usual payment date has passed, but Parqet has no booking.'**
+  String get depotDividendMissingHint;
+
+  /// No description provided for @depotDividendCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividend calendar'**
+  String get depotDividendCalendarTitle;
+
+  /// No description provided for @depotDividendPrevYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous year'**
+  String get depotDividendPrevYear;
+
+  /// No description provided for @depotDividendNextYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Next year'**
+  String get depotDividendNextYear;
+
+  /// No description provided for @depotDividendYearTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Year total (net) {amount}'**
+  String depotDividendYearTotal(String amount);
+
+  /// No description provided for @depotDividendMonthEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No dividends this month'**
+  String get depotDividendMonthEmpty;
+
+  /// No description provided for @depotDividendYearsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividends per year (net)'**
+  String get depotDividendYearsTitle;
+
+  /// No description provided for @depotDividendExpectedLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected'**
+  String get depotDividendExpectedLegend;
+
+  /// No description provided for @depotDividendPositionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividends per position'**
+  String get depotDividendPositionsTitle;
+
+  /// No description provided for @depotDividendNext.
+  ///
+  /// In en, this message translates to:
+  /// **'next {date}'**
+  String depotDividendNext(String date);
+
+  /// No description provided for @depotDividendLastPerShare.
+  ///
+  /// In en, this message translates to:
+  /// **'last {amount}/share'**
+  String depotDividendLastPerShare(String amount);
+
+  /// No description provided for @depotDividendYieldShort.
+  ///
+  /// In en, this message translates to:
+  /// **'yield {value}'**
+  String depotDividendYieldShort(String value);
+
+  /// No description provided for @depotDividendPerYear.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount}/yr'**
+  String depotDividendPerYear(String amount);
+
+  /// No description provided for @depotDividendReceivedShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} received'**
+  String depotDividendReceivedShort(String amount);
+
+  /// No description provided for @depotDividendGross.
+  ///
+  /// In en, this message translates to:
+  /// **'gross {amount}'**
+  String depotDividendGross(String amount);
+
+  /// No description provided for @depotDividendExDate.
+  ///
+  /// In en, this message translates to:
+  /// **'ex {date}'**
+  String depotDividendExDate(String date);
+
+  /// No description provided for @depotDividendFreqMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'monthly'**
+  String get depotDividendFreqMonthly;
+
+  /// No description provided for @depotDividendFreqQuarterly.
+  ///
+  /// In en, this message translates to:
+  /// **'quarterly'**
+  String get depotDividendFreqQuarterly;
+
+  /// No description provided for @depotDividendFreqSemiannual.
+  ///
+  /// In en, this message translates to:
+  /// **'semi-annual'**
+  String get depotDividendFreqSemiannual;
+
+  /// No description provided for @depotDividendFreqAnnual.
+  ///
+  /// In en, this message translates to:
+  /// **'annual'**
+  String get depotDividendFreqAnnual;
+
+  /// No description provided for @depotDividendFreqIrregular.
+  ///
+  /// In en, this message translates to:
+  /// **'irregular'**
+  String get depotDividendFreqIrregular;
+
+  /// No description provided for @depotTxNet.
+  ///
+  /// In en, this message translates to:
+  /// **'net {amount}'**
+  String depotTxNet(String amount);
+
   /// No description provided for @depotTxBuy.
   ///
   /// In en, this message translates to:

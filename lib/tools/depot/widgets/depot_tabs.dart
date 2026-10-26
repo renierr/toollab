@@ -14,8 +14,8 @@ class DepotTabs extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Three labelled segments stop fitting on narrow phones.
-        final cramped = constraints.maxWidth < 420;
+        // Four labelled segments stop fitting on narrow phones.
+        final cramped = constraints.maxWidth < 520;
         ButtonSegment<DepotTab> segment(
           DepotTab value,
           IconData icon,
@@ -33,6 +33,11 @@ class DepotTabs extends StatelessWidget {
               DepotTab.overview,
               Icons.pie_chart_outline,
               l10n.depotTabOverview,
+            ),
+            segment(
+              DepotTab.dividends,
+              Icons.payments_outlined,
+              l10n.depotTabDividends,
             ),
             segment(
               DepotTab.activities,

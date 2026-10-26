@@ -3,6 +3,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
+import 'models/depot_dividend.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
 import 'models/depot_period.dart';
@@ -26,6 +27,10 @@ class DepotStore {
   static const _chartPoints = 'chart_points';
   static const _holdingPerformance = 'holding_performance';
 
+  static const _dividendAssets = 'dividend_assets';
+  static const _dividendEvents = 'dividend_events';
+
+  /// Parqet mirror only; the dividend cache survives a sync.
   static const _tables = [
     _portfolios,
     _holdings,
@@ -49,7 +54,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 3,
+        currentVersion: 4,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -180,6 +185,28 @@ class DepotStore {
                 gain REAL NOT NULL,
                 return_percent REAL,
                 PRIMARY KEY (portfolio_id, holding_id, period)
+              )
+            ''');
+          }
+          if (oldVersion < 4) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_dividendAssets)} (
+                key TEXT PRIMARY KEY,
+                symbol TEXT,
+                currency TEXT NOT NULL,
+                fx_currency TEXT NOT NULL,
+                fx_rate REAL NOT NULL,
+                next_ex_date INTEGER,
+                next_pay_date INTEGER,
+                fetched_at INTEGER NOT NULL
+              )
+            ''');
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_dividendEvents)} (
+                asset_key TEXT NOT NULL,
+                ex_date INTEGER NOT NULL,
+                amount REAL NOT NULL,
+                PRIMARY KEY (asset_key, ex_date)
               )
             ''');
           }
@@ -361,10 +388,55 @@ class DepotStore {
     );
   }
 
+  /// Keyed by [DepotDividendAsset.key].
+  Future<Map<String, DepotDividendAsset>> dividendAssets() async {
+    final db = await _getDb();
+    final events = <String, List<DepotDividendEvent>>{};
+    final eventRows = await db.query(_dividendEvents, orderBy: 'ex_date ASC');
+    for (final row in eventRows) {
+      events
+          .putIfAbsent(row['asset_key'] as String, () => [])
+          .add(DepotDividendEvent.fromMap(row));
+    }
+    final rows = await db.query(_dividendAssets);
+    return {
+      for (final row in rows)
+        row['key'] as String: DepotDividendAsset.fromMap(
+          row,
+          events[row['key']] ?? const [],
+        ),
+    };
+  }
+
+  Future<void> saveDividendAsset(DepotDividendAsset asset) async {
+    final db = await _getDb();
+    await db.transaction((txn) async {
+      await txn.delete(
+        _dividendEvents,
+        where: 'asset_key = ?',
+        whereArgs: [asset.key],
+      );
+      final batch = txn.batch();
+      batch.insert(
+        _dividendAssets,
+        asset.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      for (final event in asset.events) {
+        batch.insert(
+          _dividendEvents,
+          event.toMap(asset.key),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await batch.commit(noResult: true);
+    });
+  }
+
   Future<void> clear() async {
     final db = await _getDb();
     await db.transaction((txn) async {
-      for (final table in _tables) {
+      for (final table in [..._tables, _dividendAssets, _dividendEvents]) {
         await txn.delete(table);
       }
     });

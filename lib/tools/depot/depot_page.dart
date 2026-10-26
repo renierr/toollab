@@ -12,6 +12,7 @@ import 'depot_import_state.dart';
 import 'depot_portfolio_state.dart';
 import 'depot_state.dart';
 import 'widgets/depot_activities_view.dart';
+import 'widgets/depot_dividends_view.dart';
 import 'widgets/depot_import_view.dart';
 import 'widgets/depot_overview_view.dart';
 import 'widgets/depot_settings_page.dart';
@@ -68,6 +69,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     return ToolLayout(
       title: switch (tab) {
         DepotTab.overview => DepotTool.config.localizedName(l10n),
+        DepotTab.dividends => l10n.depotTabDividends,
         DepotTab.activities => l10n.depotTabActivities,
         DepotTab.pdfImport => l10n.depotTabImport,
       },
@@ -88,6 +90,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
           Expanded(
             child: switch (tab) {
               DepotTab.overview => const DepotOverviewView(),
+              DepotTab.dividends => const DepotDividendsView(),
               DepotTab.activities => const DepotActivitiesView(),
               DepotTab.pdfImport => DepotImportView(tempScope: _scope),
             },

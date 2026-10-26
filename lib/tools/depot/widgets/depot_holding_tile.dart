@@ -6,6 +6,7 @@ import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../models/depot_holding.dart';
 import '../models/depot_period.dart';
+import 'depot_holding_avatar.dart';
 import 'depot_holding_details.dart';
 
 class DepotHoldingTile extends StatelessWidget {
@@ -48,9 +49,9 @@ class DepotHoldingTile extends StatelessWidget {
       shape: const Border(),
       collapsedShape: const Border(),
       dense: true,
-      leading: _HoldingAvatar(
+      leading: DepotHoldingAvatar(
         name: name,
-        color: DepotColors.holding(holding.identifier ?? holding.id),
+        colorSeed: holding.identifier ?? holding.id,
       ),
       title: Text(
         name,
@@ -111,38 +112,4 @@ class DepotHoldingTile extends StatelessWidget {
       ],
     );
   }
-}
-
-class _HoldingAvatar extends StatelessWidget {
-  final String name;
-  final Color color;
-
-  const _HoldingAvatar({required this.name, required this.color});
-
-  static String _initials(String name) {
-    final words = name
-        .split(RegExp(r'[\s\-&.,/]+'))
-        .where((w) => w.isNotEmpty)
-        .toList();
-    if (words.isEmpty) return '?';
-    final first = words.first.characters.first;
-    if (words.length == 1) return first.toUpperCase();
-    return (first + words[1].characters.first).toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 32,
-    height: 32,
-    alignment: Alignment.center,
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.18),
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: color.withValues(alpha: 0.6)),
-    ),
-    child: Text(
-      _initials(name),
-      style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
-    ),
-  );
 }

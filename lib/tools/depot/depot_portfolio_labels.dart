@@ -1,5 +1,7 @@
 import 'package:tool_lab/l10n/app_localizations.dart';
 
+import 'dividends/depot_dividend_calendar.dart';
+import 'models/depot_dividend.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
 import 'models/depot_period.dart';
@@ -67,6 +69,27 @@ class DepotPortfolioLabels {
         DepotHoldingSort.returnPercent => l10n.depotSortGainPercent,
         DepotHoldingSort.name => l10n.depotSortName,
       };
+
+  static String dividendStatus(
+    AppLocalizations l10n,
+    DepotDividendStatus status,
+  ) => switch (status) {
+    DepotDividendStatus.booked => l10n.depotDividendStatusBooked,
+    DepotDividendStatus.missing => l10n.depotDividendStatusMissing,
+    DepotDividendStatus.upcoming => l10n.depotDividendStatusUpcoming,
+    DepotDividendStatus.projected => l10n.depotDividendStatusProjected,
+  };
+
+  static String frequency(
+    AppLocalizations l10n,
+    DepotDividendFrequency frequency,
+  ) => switch (frequency) {
+    DepotDividendFrequency.monthly => l10n.depotDividendFreqMonthly,
+    DepotDividendFrequency.quarterly => l10n.depotDividendFreqQuarterly,
+    DepotDividendFrequency.semiannual => l10n.depotDividendFreqSemiannual,
+    DepotDividendFrequency.annual => l10n.depotDividendFreqAnnual,
+    DepotDividendFrequency.irregular => l10n.depotDividendFreqIrregular,
+  };
 
   static String error(AppLocalizations l10n, ParqetException error) =>
       switch (error.kind) {

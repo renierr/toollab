@@ -11262,6 +11262,156 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get depotTabDividends => 'Dividenden';
+
+  @override
+  String depotDividendSource(String date) {
+    return 'Dividendendaten: Yahoo Finance · $date';
+  }
+
+  @override
+  String get depotDividendSourceNever => 'Dividendendaten noch nicht geladen';
+
+  @override
+  String get depotDividendRefresh => 'Dividendendaten neu laden';
+
+  @override
+  String depotDividendFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Positionen konnten nicht geladen werden',
+      one: '1 Position konnte nicht geladen werden',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotDividendLoading => 'Lade Dividendendaten…';
+
+  @override
+  String get depotDividendNone =>
+      'Noch keine Dividenden. Buchungen kommen aus Parqet, künftige Termine von Yahoo Finance.';
+
+  @override
+  String get depotDividendDisclaimer =>
+      'Verbuchte Beträge stammen aus Parqet. Angekündigte, prognostizierte und fehlende Zahlungen sind aus Yahoo-Finance-Daten geschätzt: Betrag je Stück × gehaltene Stücke, zum heutigen Wechselkurs, netto nach deiner bisherigen Steuerquote, gezahlt mit dem üblichen Abstand deines Brokers zum Ex-Tag.';
+
+  @override
+  String get depotDividendReceived12m => 'Erhalten (12 Mon.)';
+
+  @override
+  String depotDividendReceivedYear(String year) {
+    return 'Erhalten $year';
+  }
+
+  @override
+  String get depotDividendExpected12m => 'Erwartet (12 Mon.)';
+
+  @override
+  String get depotDividendYield => 'Erwartete Rendite';
+
+  @override
+  String get depotDividendStatusBooked => 'Verbucht';
+
+  @override
+  String get depotDividendStatusMissing => 'Nicht verbucht';
+
+  @override
+  String get depotDividendStatusUpcoming => 'Angekündigt';
+
+  @override
+  String get depotDividendStatusProjected => 'Prognose';
+
+  @override
+  String get depotDividendMissingTitle => 'Gezahlt, aber nicht verbucht';
+
+  @override
+  String get depotDividendMissingHint =>
+      'Am Ex-Tag waren Stücke im Depot und der übliche Zahltag ist vorbei, aber in Parqet fehlt die Buchung.';
+
+  @override
+  String get depotDividendCalendarTitle => 'Dividendenkalender';
+
+  @override
+  String get depotDividendPrevYear => 'Vorheriges Jahr';
+
+  @override
+  String get depotDividendNextYear => 'Nächstes Jahr';
+
+  @override
+  String depotDividendYearTotal(String amount) {
+    return 'Jahressumme (netto) $amount';
+  }
+
+  @override
+  String get depotDividendMonthEmpty => 'Keine Dividenden in diesem Monat';
+
+  @override
+  String get depotDividendYearsTitle => 'Dividenden pro Jahr (netto)';
+
+  @override
+  String get depotDividendExpectedLegend => 'Erwartet';
+
+  @override
+  String get depotDividendPositionsTitle => 'Dividenden je Position';
+
+  @override
+  String depotDividendNext(String date) {
+    return 'nächste $date';
+  }
+
+  @override
+  String depotDividendLastPerShare(String amount) {
+    return 'zuletzt $amount/Stück';
+  }
+
+  @override
+  String depotDividendYieldShort(String value) {
+    return 'Rendite $value';
+  }
+
+  @override
+  String depotDividendPerYear(String amount) {
+    return '$amount/Jahr';
+  }
+
+  @override
+  String depotDividendReceivedShort(String amount) {
+    return '$amount erhalten';
+  }
+
+  @override
+  String depotDividendGross(String amount) {
+    return 'brutto $amount';
+  }
+
+  @override
+  String depotDividendExDate(String date) {
+    return 'Ex $date';
+  }
+
+  @override
+  String get depotDividendFreqMonthly => 'monatlich';
+
+  @override
+  String get depotDividendFreqQuarterly => 'quartalsweise';
+
+  @override
+  String get depotDividendFreqSemiannual => 'halbjährlich';
+
+  @override
+  String get depotDividendFreqAnnual => 'jährlich';
+
+  @override
+  String get depotDividendFreqIrregular => 'unregelmäßig';
+
+  @override
+  String depotTxNet(String amount) {
+    return 'netto $amount';
+  }
+
+  @override
   String get depotTxBuy => 'Kauf';
 
   @override
