@@ -6,9 +6,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
 import '../depot_format.dart';
-import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
-import '../models/depot_filters.dart';
 import '../models/depot_summary.dart';
 
 /// An intraday chart needs the time; a longer one only the date.
@@ -20,17 +18,13 @@ DateStyle _dateStyle(List<DepotChartPoint> points) =>
 class DepotValueChart extends StatelessWidget {
   final List<DepotChartPoint> points;
   final DepotRangeChange? change;
-  final DepotChartRange range;
   final DepotFormat format;
-  final ValueChanged<DepotChartRange> onRangeChanged;
 
   const DepotValueChart({
     super.key,
     required this.points,
     required this.change,
-    required this.range,
     required this.format,
-    required this.onRangeChanged,
   });
 
   @override
@@ -46,20 +40,6 @@ class DepotValueChart extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l10n.depotChartTitle, style: theme.textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final r in DepotChartRange.values)
-                  ChoiceChip(
-                    label: Text(DepotPortfolioLabels.range(l10n, r)),
-                    selected: r == range,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (_) => onRangeChanged(r),
-                  ),
-              ],
-            ),
             if (change != null) ...[
               const SizedBox(height: 8),
               Wrap(

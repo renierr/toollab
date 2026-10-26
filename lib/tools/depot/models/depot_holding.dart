@@ -1,3 +1,4 @@
+import 'depot_period.dart';
 import 'parqet_json.dart';
 
 enum DepotAssetType {
@@ -172,5 +173,75 @@ class DepotHolding {
     'ttwror': ttwror,
     'earliest_activity': earliestActivity?.millisecondsSinceEpoch,
     'quote_at': quoteAt?.millisecondsSinceEpoch,
+  };
+}
+
+/// How one holding did within one period.
+class DepotHoldingPerformance {
+  final String portfolioId;
+  final String holdingId;
+  final DepotPeriod period;
+
+  /// Unrealized and realized gains plus dividends, net, within the period.
+  final double gain;
+
+  /// Time-weighted return in percent; null when Parqet has none, e.g. for a
+  /// position that did not exist during the period.
+  final double? returnPercent;
+
+  const DepotHoldingPerformance({
+    required this.portfolioId,
+    required this.holdingId,
+    required this.period,
+    required this.gain,
+    this.returnPercent,
+  });
+
+  static String keyOf(String portfolioId, String holdingId) =>
+      '$portfolioId/$holdingId';
+
+  String get key => keyOf(portfolioId, holdingId);
+
+  factory DepotHoldingPerformance.fromJson(
+    String portfolioId,
+    DepotPeriod period,
+    Map<String, dynamic> json,
+  ) {
+    final performance = ParqetJson.object(json['performance']);
+    final unrealized = ParqetJson.inInterval(performance, 'unrealizedGains');
+    final kpis = ParqetJson.inInterval(performance, 'kpis');
+    return DepotHoldingPerformance(
+      portfolioId: portfolioId,
+      holdingId: json['id'] as String,
+      period: period,
+      gain:
+          ParqetJson.number(unrealized['gainNet']) +
+          ParqetJson.number(
+            ParqetJson.inInterval(performance, 'realizedGains')['gainNet'],
+          ) +
+          ParqetJson.number(
+            ParqetJson.inInterval(performance, 'dividends')['gainNet'],
+          ),
+      returnPercent:
+          ParqetJson.numberOrNull(kpis['ttwror']) ??
+          ParqetJson.numberOrNull(unrealized['returnNet']),
+    );
+  }
+
+  factory DepotHoldingPerformance.fromMap(Map<String, Object?> map) =>
+      DepotHoldingPerformance(
+        portfolioId: map['portfolio_id'] as String,
+        holdingId: map['holding_id'] as String,
+        period: DepotPeriod.fromWire(map['period']),
+        gain: map['gain'] as double,
+        returnPercent: map['return_percent'] as double?,
+      );
+
+  Map<String, Object?> toMap() => {
+    'portfolio_id': portfolioId,
+    'holding_id': holdingId,
+    'period': period.wire,
+    'gain': gain,
+    'return_percent': returnPercent,
   };
 }

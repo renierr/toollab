@@ -3,7 +3,9 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
 
 import 'config.dart';
+import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
+import 'models/depot_period.dart';
 import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
 import 'models/depot_transaction.dart';
@@ -22,9 +24,20 @@ class DepotStore {
   static const _transactions = 'transactions';
   static const _summaries = 'summaries';
   static const _chartPoints = 'chart_points';
+  static const _holdingPerformance = 'holding_performance';
+
+  static const _tables = [
+    _portfolios,
+    _holdings,
+    _holdingPerformance,
+    _transactions,
+    _summaries,
+    _chartPoints,
+  ];
 
   static const _clientIdKey = 'parqet_client_id';
   static const _lastSyncKey = 'parqet_last_sync_at';
+  static const _holdingSortKey = 'holding_sort';
 
   String get _toolId => DepotTool.config.id;
 
@@ -36,7 +49,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 2,
+        currentVersion: 3,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -135,12 +148,48 @@ class DepotStore {
                 PRIMARY KEY (scope, period, date)
               )
             ''');
-            await txn.executor.delete(
-              'tool_settings',
-              where: 'tool_id = ? AND key = ?',
-              whereArgs: [_toolId, _lastSyncKey],
-            );
           }
+          if (oldVersion < 3) {
+            await txn.execute(
+              'DROP TABLE IF EXISTS ${txn.nameTable(_summaries)}',
+            );
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_summaries)} (
+                scope TEXT NOT NULL,
+                period TEXT NOT NULL,
+                currency TEXT NOT NULL,
+                value_start REAL NOT NULL,
+                value_end REAL NOT NULL,
+                xirr REAL,
+                ttwror REAL,
+                unrealized_gain REAL NOT NULL,
+                unrealized_return REAL NOT NULL,
+                realized_gain REAL NOT NULL,
+                dividends REAL NOT NULL,
+                fees REAL NOT NULL,
+                taxes REAL NOT NULL,
+                synced_at INTEGER NOT NULL,
+                PRIMARY KEY (scope, period)
+              )
+            ''');
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_holdingPerformance)} (
+                portfolio_id TEXT NOT NULL,
+                holding_id TEXT NOT NULL,
+                period TEXT NOT NULL,
+                gain REAL NOT NULL,
+                return_percent REAL,
+                PRIMARY KEY (portfolio_id, holding_id, period)
+              )
+            ''');
+          }
+          // A schema change empties tables the last sync filled, so the
+          // next opening must sync again regardless of how recent it was.
+          await txn.executor.delete(
+            'tool_settings',
+            where: 'tool_id = ? AND key = ?',
+            whereArgs: [_toolId, _lastSyncKey],
+          );
         },
       );
     } catch (e) {
@@ -198,18 +247,49 @@ class DepotStore {
     return rows.map(DepotTransaction.fromMap).toList();
   }
 
-  Future<DepotSummary?> summary(String scope) async {
+  /// Keyed by [DepotHoldingPerformance.key].
+  Future<Map<String, DepotHoldingPerformance>> holdingPerformance(
+    DepotPeriod period, {
+    String? portfolioId,
+  }) async {
+    final db = await _getDb();
+    final rows = await db.query(
+      _holdingPerformance,
+      where: portfolioId == null
+          ? 'period = ?'
+          : 'period = ? AND portfolio_id = ?',
+      whereArgs: [period.wire, ?portfolioId],
+    );
+    final performance = rows.map(DepotHoldingPerformance.fromMap);
+    return {for (final p in performance) p.key: p};
+  }
+
+  Future<DepotSummary?> summary(DepotPeriodKey key) async {
     final db = await _getDb();
     final rows = await db.query(
       _summaries,
-      where: 'scope = ?',
-      whereArgs: [scope],
+      where: 'scope = ? AND period = ?',
+      whereArgs: [key.scope, key.period.wire],
       limit: 1,
     );
     return rows.isEmpty ? null : DepotSummary.fromMap(rows.first);
   }
 
-  Future<List<DepotChartPoint>> chart(DepotChartKey key) async {
+  Future<DepotHoldingSort> holdingSort() async {
+    final stored = await DatabaseService.instance.getSetting(
+      _toolId,
+      _holdingSortKey,
+    );
+    return DepotHoldingSort.values.firstWhere(
+      (s) => s.name == stored,
+      orElse: () => DepotHoldingSort.returnPercent,
+    );
+  }
+
+  Future<void> setHoldingSort(DepotHoldingSort sort) =>
+      DatabaseService.instance.setSetting(_toolId, _holdingSortKey, sort.name);
+
+  Future<List<DepotChartPoint>> chart(DepotPeriodKey key) async {
     final db = await _getDb();
     final rows = await db.query(
       _chartPoints,
@@ -225,19 +305,14 @@ class DepotStore {
   Future<void> replaceAll({
     required List<DepotPortfolio> portfolios,
     required List<DepotHolding> holdings,
+    required List<DepotHoldingPerformance> holdingPerformance,
     required List<DepotTransaction> transactions,
     required List<DepotSummary> summaries,
-    required Map<DepotChartKey, List<DepotChartPoint>> charts,
+    required Map<DepotPeriodKey, List<DepotChartPoint>> charts,
   }) async {
     final db = await _getDb();
     await db.transaction((txn) async {
-      for (final table in [
-        _portfolios,
-        _holdings,
-        _transactions,
-        _summaries,
-        _chartPoints,
-      ]) {
+      for (final table in _tables) {
         await txn.delete(table);
       }
       final batch = txn.batch();
@@ -248,6 +323,13 @@ class DepotStore {
         batch.insert(
           _holdings,
           h.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      for (final p in holdingPerformance) {
+        batch.insert(
+          _holdingPerformance,
+          p.toMap(),
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
       }
@@ -282,13 +364,7 @@ class DepotStore {
   Future<void> clear() async {
     final db = await _getDb();
     await db.transaction((txn) async {
-      for (final table in [
-        _portfolios,
-        _holdings,
-        _transactions,
-        _summaries,
-        _chartPoints,
-      ]) {
+      for (final table in _tables) {
         await txn.delete(table);
       }
     });

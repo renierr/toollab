@@ -8,6 +8,9 @@ import '../models/depot_holding.dart';
 
 class DepotHoldingTile extends StatelessWidget {
   final DepotHolding holding;
+
+  /// Figures for the selected period; null when Parqet had none.
+  final DepotHoldingPerformance? performance;
   final DepotFormat format;
 
   /// Share of the scope's open value, in percent.
@@ -16,6 +19,7 @@ class DepotHoldingTile extends StatelessWidget {
   const DepotHoldingTile({
     super.key,
     required this.holding,
+    required this.performance,
     required this.format,
     required this.weight,
   });
@@ -35,7 +39,12 @@ class DepotHoldingTile extends StatelessWidget {
       if (holding.isSold) l10n.depotHoldingSold,
       if (!holding.isSold && weight > 0) format.percent(weight, signed: false),
     ].join(' · ');
-    final gain = holding.isSold ? holding.totalGain : holding.unrealizedGain;
+    final gain = performance?.gain;
+    final returnPercent = performance?.returnPercent;
+    final change = [
+      if (gain != null) format.money(gain, signed: true),
+      if (returnPercent != null) format.percent(returnPercent),
+    ].join('  ');
 
     return ListTile(
       leading: CircleAvatar(
@@ -57,15 +66,13 @@ class DepotHoldingTile extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          Text(
-            holding.isSold
-                ? format.money(gain, signed: true)
-                : '${format.money(gain, signed: true)}  '
-                      '${format.percent(holding.unrealizedReturn)}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: DepotFormat.gainColor(gain),
+          if (change.isNotEmpty)
+            Text(
+              change,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: DepotFormat.gainColor(returnPercent ?? gain ?? 0),
+              ),
             ),
-          ),
         ],
       ),
     );

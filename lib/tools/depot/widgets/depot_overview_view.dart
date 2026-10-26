@@ -11,6 +11,7 @@ import 'depot_holding_filter_bar.dart';
 import 'depot_holding_tile.dart';
 import 'depot_income_chart.dart';
 import 'depot_kpi_grid.dart';
+import 'depot_period_selector.dart';
 import 'depot_sync_header.dart';
 import 'depot_value_chart.dart';
 
@@ -46,7 +47,7 @@ class DepotOverviewView extends StatelessWidget {
               sliver: SliverList.list(
                 children: [
                   const DepotSyncHeader(),
-                  if (summary == null)
+                  if (!state.hasData)
                     Padding(
                       padding: const EdgeInsets.all(32),
                       child: Text(
@@ -56,19 +57,20 @@ class DepotOverviewView extends StatelessWidget {
                       ),
                     )
                   else ...[
-                    const SizedBox(height: 8),
-                    DepotKpiGrid(
-                      summary: summary,
-                      format: format,
-                      valueTrend: [for (final p in state.chartInRange) p.value],
-                    ),
+                    const SizedBox(height: 4),
+                    const DepotPeriodSelector(),
+                    const SizedBox(height: 12),
+                    if (summary != null)
+                      DepotKpiGrid(
+                        summary: summary,
+                        format: format,
+                        valueTrend: [for (final p in state.chart) p.value],
+                      ),
                     const SizedBox(height: 12),
                     DepotValueChart(
-                      points: state.chartInRange,
+                      points: state.chart,
                       change: state.rangeChange,
-                      range: state.range,
                       format: format,
-                      onRangeChanged: state.setRange,
                     ),
                     DepotAllocationCard(
                       allocation: state.allocation,
@@ -84,7 +86,7 @@ class DepotOverviewView extends StatelessWidget {
                 ],
               ),
             ),
-            if (summary != null && holdings.isEmpty)
+            if (state.hasData && holdings.isEmpty)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -95,7 +97,7 @@ class DepotOverviewView extends StatelessWidget {
                   ),
                 ),
               ),
-            if (summary != null)
+            if (state.hasData)
               SliverPadding(
                 padding: const EdgeInsets.only(bottom: 24),
                 sliver: SliverList.builder(
@@ -104,6 +106,7 @@ class DepotOverviewView extends StatelessWidget {
                     final holding = holdings[index];
                     return DepotHoldingTile(
                       holding: holding,
+                      performance: state.performanceOf(holding),
                       format: format,
                       weight: openValue <= 0
                           ? 0

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:tool_lab/services/app_http_client.dart';
 
 import '../models/depot_holding.dart';
+import '../models/depot_period.dart';
 import '../models/depot_portfolio.dart';
 import '../models/depot_summary.dart';
 import '../models/depot_transaction.dart';
@@ -14,11 +15,13 @@ import 'parqet_exception.dart';
 class ParqetPerformance {
   final DepotSummary summary;
   final List<DepotHolding> holdings;
+  final List<DepotHoldingPerformance> holdingPerformance;
   final List<DepotChartPoint> chart;
 
   const ParqetPerformance({
     required this.summary,
     required this.holdings,
+    required this.holdingPerformance,
     required this.chart,
   });
 }
@@ -41,14 +44,13 @@ class ParqetApi {
     ];
   }
 
-  /// Performance of [portfolioIds] combined over [period], tagged as [scope].
-  /// Holdings are only attributable when a single portfolio is requested,
-  /// so they carry [scope] as their portfolio id.
+  /// Performance of [portfolioIds] combined over `key.period`, tagged with
+  /// `key.scope`. Holdings are only attributable when a single portfolio is
+  /// requested, so they carry the scope as their portfolio id.
   Future<ParqetPerformance> performance({
-    required String scope,
+    required DepotPeriodKey key,
     required List<String> portfolioIds,
     required String currency,
-    DepotChartPeriod period = DepotChartPeriod.max,
   }) async {
     final json = await _send(
       'POST',
@@ -56,20 +58,27 @@ class ParqetApi {
       body: {
         'portfolioIds': portfolioIds,
         'currency': currency,
-        'interval': {'type': 'relative', 'value': period.wire},
+        'interval': {'type': 'relative', 'value': key.period.wire},
       },
     );
     final syncedAt = DateTime.now();
+    final holdings = [
+      for (final item in json['holdings'] as List? ?? const [])
+        item as Map<String, dynamic>,
+    ];
     return ParqetPerformance(
       summary: DepotSummary.fromJson(
-        scope: scope,
+        key: key,
         currency: currency,
         performance: json['performance'] as Map<String, dynamic>? ?? const {},
         syncedAt: syncedAt,
       ),
       holdings: [
-        for (final item in json['holdings'] as List? ?? const [])
-          DepotHolding.fromJson(scope, item as Map<String, dynamic>),
+        for (final item in holdings) DepotHolding.fromJson(key.scope, item),
+      ],
+      holdingPerformance: [
+        for (final item in holdings)
+          DepotHoldingPerformance.fromJson(key.scope, key.period, item),
       ],
       chart: [
         for (final item in json['charts'] as List? ?? const [])

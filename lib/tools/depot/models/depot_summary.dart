@@ -1,9 +1,11 @@
+import 'depot_period.dart';
 import 'parqet_json.dart';
 
-/// Portfolio-level performance for one scope: a single portfolio, or all of
-/// them combined.
+/// Portfolio-level performance for one scope, a single portfolio or all of
+/// them combined, over one period.
 class DepotSummary {
   final String scope;
+  final DepotPeriod period;
   final String currency;
   final double valueStart;
   final double valueEnd;
@@ -21,6 +23,7 @@ class DepotSummary {
 
   const DepotSummary({
     required this.scope,
+    required this.period,
     required this.currency,
     required this.valueStart,
     required this.valueEnd,
@@ -39,6 +42,7 @@ class DepotSummary {
 
   DepotSummary withScope(String scope) => DepotSummary(
     scope: scope,
+    period: period,
     currency: currency,
     valueStart: valueStart,
     valueEnd: valueEnd,
@@ -54,7 +58,7 @@ class DepotSummary {
   );
 
   factory DepotSummary.fromJson({
-    required String scope,
+    required DepotPeriodKey key,
     required String currency,
     required Map<String, dynamic> performance,
     required DateTime syncedAt,
@@ -63,7 +67,8 @@ class DepotSummary {
     final unrealized = ParqetJson.inInterval(performance, 'unrealizedGains');
     final kpis = ParqetJson.inInterval(performance, 'kpis');
     return DepotSummary(
-      scope: scope,
+      scope: key.scope,
+      period: key.period,
       currency: currency,
       valueStart: ParqetJson.number(valuation['atIntervalStart']),
       valueEnd: ParqetJson.number(valuation['atIntervalEnd']),
@@ -89,6 +94,7 @@ class DepotSummary {
 
   factory DepotSummary.fromMap(Map<String, Object?> map) => DepotSummary(
     scope: map['scope'] as String,
+    period: DepotPeriod.fromWire(map['period']),
     currency: map['currency'] as String,
     valueStart: map['value_start'] as double,
     valueEnd: map['value_end'] as double,
@@ -105,6 +111,7 @@ class DepotSummary {
 
   Map<String, Object?> toMap() => {
     'scope': scope,
+    'period': period.wire,
     'currency': currency,
     'value_start': valueStart,
     'value_end': valueEnd,
@@ -119,20 +126,6 @@ class DepotSummary {
     'synced_at': syncedAt.millisecondsSinceEpoch,
   };
 }
-
-/// Parqet's relative interval a chart was requested with.
-enum DepotChartPeriod {
-  max('max'),
-
-  /// Intraday points of the current trading day.
-  day('1d');
-
-  final String wire;
-
-  const DepotChartPeriod(this.wire);
-}
-
-typedef DepotChartKey = ({String scope, DepotChartPeriod period});
 
 class DepotChartPoint {
   final DateTime date;
@@ -168,7 +161,7 @@ class DepotChartPoint {
     drawdown: map['drawdown'] as double,
   );
 
-  Map<String, Object?> toMap(DepotChartKey key) => {
+  Map<String, Object?> toMap(DepotPeriodKey key) => {
     'scope': key.scope,
     'period': key.period.wire,
     'date': date.millisecondsSinceEpoch,

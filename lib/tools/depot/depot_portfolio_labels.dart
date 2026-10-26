@@ -2,6 +2,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
+import 'models/depot_period.dart';
 import 'models/depot_transaction.dart';
 import 'parqet/parqet_auth.dart';
 import 'parqet/parqet_exception.dart';
@@ -36,22 +37,22 @@ class DepotPortfolioLabels {
     DepotTransactionType.withdrawal => l10n.depotTxWithdrawal,
   };
 
-  static String range(AppLocalizations l10n, DepotChartRange range) =>
-      switch (range) {
-        DepotChartRange.today => l10n.depotRangeToday,
-        DepotChartRange.month1 => l10n.depotRange1m,
-        DepotChartRange.month3 => l10n.depotRange3m,
-        DepotChartRange.ytd => l10n.depotRangeYtd,
-        DepotChartRange.year1 => l10n.depotRange1y,
-        DepotChartRange.year3 => l10n.depotRange3y,
-        DepotChartRange.max => l10n.depotRangeMax,
+  static String period(AppLocalizations l10n, DepotPeriod period) =>
+      switch (period) {
+        DepotPeriod.today => l10n.depotRangeToday,
+        DepotPeriod.month1 => l10n.depotRange1m,
+        DepotPeriod.month3 => l10n.depotRange3m,
+        DepotPeriod.ytd => l10n.depotRangeYtd,
+        DepotPeriod.year1 => l10n.depotRange1y,
+        DepotPeriod.year3 => l10n.depotRange3y,
+        DepotPeriod.max => l10n.depotRangeMax,
       };
 
   static String sort(AppLocalizations l10n, DepotHoldingSort sort) =>
       switch (sort) {
         DepotHoldingSort.value => l10n.depotSortValue,
         DepotHoldingSort.gain => l10n.depotSortGain,
-        DepotHoldingSort.gainPercent => l10n.depotSortGainPercent,
+        DepotHoldingSort.returnPercent => l10n.depotSortGainPercent,
         DepotHoldingSort.name => l10n.depotSortName,
       };
 

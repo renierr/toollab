@@ -5,6 +5,7 @@ import 'depot_parqet_sync.dart';
 import 'depot_store.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
+import 'models/depot_period.dart';
 import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
 import 'models/depot_transaction.dart';
@@ -37,19 +38,22 @@ class DepotPortfolioState extends ChangeNotifier {
 
   List<DepotPortfolio> _portfolios = const [];
   String _scope = DepotStore.allScope;
+  DepotPeriod _period = DepotPeriod.today;
   DepotSummary? _summary;
   List<DepotChartPoint> _chart = const [];
-  List<DepotChartPoint> _intradayChart = const [];
+  DepotRangeChange? _rangeChange;
   List<DepotHolding> _holdings = const [];
+  Map<String, DepotHoldingPerformance> _holdingPerformance = const {};
   List<DepotTransaction> _transactions = const [];
 
-  DepotChartRange _range = DepotChartRange.today;
+  /// Bumped per period load, so a slow read for an earlier selection cannot
+  /// overwrite the current one.
+  int _periodLoad = 0;
+
   DepotHoldingFilter _holdingFilter = const DepotHoldingFilter();
   DepotActivityFilter _activityFilter = const DepotActivityFilter();
   List<DepotHolding> _visibleHoldings = const [];
   List<DepotTransaction> _visibleTransactions = const [];
-  List<DepotChartPoint> _chartInRange = const [];
-  DepotRangeChange? _rangeChange;
 
   bool get isLoaded => _isLoaded;
   String get clientId => _clientId;
@@ -58,7 +62,7 @@ class DepotPortfolioState extends ChangeNotifier {
   bool get isConnecting => _isConnecting;
   ParqetException? get error => _error;
   DateTime? get lastSyncAt => _lastSyncAt;
-  bool get hasData => _summary != null;
+  bool get hasData => _holdings.isNotEmpty || _summary != null;
 
   /// Every holding and summary figure is synced in this currency.
   String get currency =>
@@ -67,15 +71,26 @@ class DepotPortfolioState extends ChangeNotifier {
 
   List<DepotPortfolio> get portfolios => _portfolios;
   String get scope => _scope;
+  DepotPeriod get period => _period;
   DepotSummary? get summary => _summary;
+  List<DepotChartPoint> get chart => _chart;
+  DepotRangeChange? get rangeChange => _rangeChange;
   List<DepotHolding> get holdings => _holdings;
   List<DepotTransaction> get transactions => _transactions;
 
-  DepotChartRange get range => _range;
   DepotHoldingFilter get holdingFilter => _holdingFilter;
   DepotActivityFilter get activityFilter => _activityFilter;
   List<DepotHolding> get visibleHoldings => _visibleHoldings;
   List<DepotTransaction> get visibleTransactions => _visibleTransactions;
+
+  /// The selected period's figures for [holding], if Parqet had any.
+  DepotHoldingPerformance? performanceOf(DepotHolding holding) =>
+      _holdingPerformance[DepotHoldingPerformance.keyOf(
+        holding.portfolioId,
+        holding.id,
+      )];
+
+  String? get _portfolioId => _scope == DepotStore.allScope ? null : _scope;
 
   Future<void> ensureLoaded() => _loading ??= _load();
 
@@ -84,6 +99,9 @@ class DepotPortfolioState extends ChangeNotifier {
       _clientId = await _store.clientId() ?? '';
       _isConnected = await DepotParqetSync.isConnected();
       _lastSyncAt = await _store.lastSyncAt();
+      _holdingFilter = _holdingFilter.copyWith(
+        sort: await _store.holdingSort(),
+      );
       await _reload();
     } catch (e) {
       errorLog('[DepotPortfolioState] Loading failed: $e');
@@ -98,18 +116,38 @@ class DepotPortfolioState extends ChangeNotifier {
         !_portfolios.any((p) => p.id == _scope)) {
       _scope = DepotStore.allScope;
     }
-    final portfolioId = _scope == DepotStore.allScope ? null : _scope;
-    _summary = await _store.summary(_scope);
-    _chart = await _store.chart((scope: _scope, period: DepotChartPeriod.max));
-    _intradayChart = await _store.chart((
-      scope: _scope,
-      period: DepotChartPeriod.day,
-    ));
-    _holdings = await _store.holdings(portfolioId: portfolioId);
-    _transactions = await _store.transactions(portfolioId: portfolioId);
-    _refilterHoldings();
+    _holdings = await _store.holdings(portfolioId: _portfolioId);
+    _transactions = await _store.transactions(portfolioId: _portfolioId);
     _refilterTransactions();
-    _refilterChart();
+    await _loadPeriod();
+  }
+
+  Future<void> _loadPeriod() async {
+    final load = ++_periodLoad;
+    final key = (scope: _scope, period: _period);
+    final summary = await _store.summary(key);
+    final chart = await _store.chart(key);
+    final performance = await _store.holdingPerformance(
+      _period,
+      portfolioId: _portfolioId,
+    );
+    if (load != _periodLoad) return;
+    _summary = summary;
+    _chart = chart;
+    _holdingPerformance = performance;
+    _rangeChange = _changeOf(chart);
+    _refilterHoldings();
+  }
+
+  static DepotRangeChange? _changeOf(List<DepotChartPoint> points) {
+    if (points.length < 2) return null;
+    final first = points.first;
+    final last = points.last;
+    final valueChange = last.value - first.value;
+    return DepotRangeChange(
+      valueChange: valueChange,
+      gain: valueChange - (last.capital - first.capital),
+    );
   }
 
   /// Also picks up what a scheduled background run stored meanwhile.
@@ -193,14 +231,18 @@ class DepotPortfolioState extends ChangeNotifier {
     _notify();
   }
 
-  void setRange(DepotChartRange range) {
-    if (range == _range) return;
-    _range = range;
-    _refilterChart();
+  Future<void> setPeriod(DepotPeriod period) async {
+    if (period == _period) return;
+    _period = period;
+    _notify();
+    await _loadPeriod();
     _notify();
   }
 
   void setHoldingFilter(DepotHoldingFilter filter) {
+    if (filter.sort != _holdingFilter.sort) {
+      _store.setHoldingSort(filter.sort);
+    }
     _holdingFilter = filter;
     _refilterHoldings();
     _notify();
@@ -214,50 +256,13 @@ class DepotPortfolioState extends ChangeNotifier {
 
   void _refilterHoldings() {
     _visibleHoldings = _holdings.where(_holdingFilter.matches).toList()
-      ..sort(_holdingFilter.compare);
+      ..sort((a, b) => _holdingFilter.compare(a, b, performanceOf));
   }
 
   void _refilterTransactions() {
     _visibleTransactions = _transactions
         .where(_activityFilter.matches)
         .toList();
-  }
-
-  List<DepotChartPoint> get chartInRange => _chartInRange;
-
-  DepotRangeChange? get rangeChange => _rangeChange;
-
-  void _refilterChart() {
-    _chartInRange = _sliceChart();
-    final points = _chartInRange;
-    if (points.length < 2) {
-      _rangeChange = null;
-      return;
-    }
-    final first = points.first;
-    final last = points.last;
-    final valueChange = last.value - first.value;
-    _rangeChange = DepotRangeChange(
-      valueChange: valueChange,
-      gain: valueChange - (last.capital - first.capital),
-    );
-  }
-
-  List<DepotChartPoint> _sliceChart() {
-    if (_range == DepotChartRange.today) return _intradayChart;
-    if (_chart.isEmpty) return _chart;
-    final end = _chart.last.date;
-    final DateTime? start = switch (_range) {
-      DepotChartRange.today => null,
-      DepotChartRange.month1 => DateTime(end.year, end.month - 1, end.day),
-      DepotChartRange.month3 => DateTime(end.year, end.month - 3, end.day),
-      DepotChartRange.ytd => DateTime(end.year),
-      DepotChartRange.year1 => DateTime(end.year - 1, end.month, end.day),
-      DepotChartRange.year3 => DateTime(end.year - 3, end.month, end.day),
-      DepotChartRange.max => null,
-    };
-    if (start == null) return _chart;
-    return _chart.where((p) => !p.date.isBefore(start)).toList();
   }
 
   /// Current value per asset type, open positions only.

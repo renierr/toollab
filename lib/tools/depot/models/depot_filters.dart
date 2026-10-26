@@ -1,9 +1,8 @@
 import 'depot_holding.dart';
 import 'depot_transaction.dart';
 
-enum DepotHoldingSort { value, gain, gainPercent, name }
-
-enum DepotChartRange { today, month1, month3, ytd, year1, year3, max }
+/// Gain and return sort by the selected period's figures.
+enum DepotHoldingSort { returnPercent, gain, value, name }
 
 class DepotHoldingFilter {
   final String query;
@@ -17,7 +16,7 @@ class DepotHoldingFilter {
     this.query = '',
     this.assetTypes = const {},
     this.showSold = false,
-    this.sort = DepotHoldingSort.value,
+    this.sort = DepotHoldingSort.returnPercent,
   });
 
   DepotHoldingFilter copyWith({
@@ -40,16 +39,31 @@ class DepotHoldingFilter {
     return _matchesQuery(query, [h.name, h.isin, h.symbol]);
   }
 
-  int compare(DepotHolding a, DepotHolding b) => switch (sort) {
-    DepotHoldingSort.value => b.currentValue.compareTo(a.currentValue),
-    DepotHoldingSort.gain => b.totalGain.compareTo(a.totalGain),
-    DepotHoldingSort.gainPercent => b.unrealizedReturn.compareTo(
-      a.unrealizedReturn,
+  /// Holdings without figures for the period sort last.
+  int compare(
+    DepotHolding a,
+    DepotHolding b,
+    DepotHoldingPerformance? Function(DepotHolding) performanceOf,
+  ) => switch (sort) {
+    DepotHoldingSort.returnPercent => _descending(
+      performanceOf(a)?.returnPercent,
+      performanceOf(b)?.returnPercent,
     ),
+    DepotHoldingSort.gain => _descending(
+      performanceOf(a)?.gain,
+      performanceOf(b)?.gain,
+    ),
+    DepotHoldingSort.value => b.currentValue.compareTo(a.currentValue),
     DepotHoldingSort.name => a.name.toLowerCase().compareTo(
       b.name.toLowerCase(),
     ),
   };
+
+  static int _descending(double? a, double? b) {
+    if (a == null) return b == null ? 0 : 1;
+    if (b == null) return -1;
+    return b.compareTo(a);
+  }
 }
 
 class DepotActivityFilter {
