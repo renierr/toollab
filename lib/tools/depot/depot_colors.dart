@@ -20,9 +20,11 @@ class DepotColors {
     DepotHoldingKind.other => AppTheme.statusBlue,
   };
 
-  static const Color dividendBooked = AppTheme.accentTeal;
+  // Green, amber and purple sit far apart in hue, so a stacked bar stays
+  // readable at four pixels of height.
+  static const Color dividendBooked = AppTheme.accentGreen;
   static const Color dividendMissing = AppTheme.accentAmber;
-  static const Color dividendExpected = AppTheme.accentBlue;
+  static const Color dividendExpected = AppTheme.accentPurple;
 
   static Color dividend(DepotDividendStatus status) => switch (status) {
     DepotDividendStatus.booked => dividendBooked,

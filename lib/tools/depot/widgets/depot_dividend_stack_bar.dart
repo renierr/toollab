@@ -27,7 +27,7 @@ class DepotDividendStackBar extends StatelessWidget {
     final parts = [
       (totals.booked, DepotColors.dividendBooked),
       (totals.missing, DepotColors.dividendMissing),
-      (totals.expected, DepotColors.dividendExpected.withValues(alpha: 0.55)),
+      (totals.expected, DepotColors.dividendExpected),
     ];
     final filled = maxTotal <= 0 ? 0.0 : (totals.total / maxTotal).clamp(0, 1);
     final segments = [
@@ -53,9 +53,17 @@ class DepotDividendStackBar extends StatelessWidget {
             widthFactor: horizontal ? filled.toDouble() : 1,
             heightFactor: horizontal ? 1 : filled.toDouble(),
             child: horizontal
-                ? Row(children: segments)
+                ? Row(
+                    // Without the stretch the segments get a loose cross
+                    // axis and collapse to zero thickness.
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: segments,
+                  )
                 // Booked at the bottom, expected on top.
-                : Column(children: segments.reversed.toList()),
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: segments.reversed.toList(),
+                  ),
           ),
         ),
       ),
