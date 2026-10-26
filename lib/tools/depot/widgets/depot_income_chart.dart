@@ -1,14 +1,15 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 
+import '../depot_colors.dart';
 import '../depot_format.dart';
+import '../models/depot_income_month.dart';
+import 'depot_income_plot.dart';
+import 'depot_legend_dot.dart';
 
 class DepotIncomeChart extends StatelessWidget {
-  final List<({DateTime month, double amount})> months;
+  final List<DepotIncomeMonth> months;
   final DepotFormat format;
 
   const DepotIncomeChart({
@@ -21,81 +22,70 @@ class DepotIncomeChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final total = months.fold<double>(0, (sum, m) => sum + m.amount);
-    final maxAmount = months.fold<double>(0, (m, e) => math.max(m, e.amount));
-    final monthFormat = DateFormat.MMM(
-      Localizations.localeOf(context).toString(),
-    );
+    final total = months.fold<double>(0, (sum, m) => sum + m.total);
+    final hasInterest = months.any((m) => m.interest > 0);
+    final average = months.isEmpty ? 0.0 : total / months.length;
+    final median = DepotIncomeMonth.medianTotal(months);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(l10n.depotIncomeTitle, style: theme.textTheme.titleSmall),
+            const SizedBox(height: 8),
             Wrap(
-              spacing: 12,
+              spacing: 16,
+              runSpacing: 4,
               crossAxisAlignment: WrapCrossAlignment.center,
-              alignment: WrapAlignment.spaceBetween,
               children: [
-                Text(l10n.depotIncomeTitle, style: theme.textTheme.titleSmall),
                 Text(
                   l10n.depotIncomeTotal(format.money(total)),
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.accentTeal,
                     fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  l10n.depotIncomeAverage(format.money(average)),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  l10n.depotIncomeMedian(format.money(median)),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.accentAmber,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 120,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+            if (hasInterest) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 16,
+                runSpacing: 4,
                 children: [
-                  for (final m in months)
-                    Expanded(
-                      child: Tooltip(
-                        message: format.money(m.amount),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Flexible(
-                                child: FractionallySizedBox(
-                                  alignment: Alignment.bottomCenter,
-                                  heightFactor: maxAmount <= 0
-                                      ? 0
-                                      : (m.amount / maxAmount).clamp(0, 1),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.accentTeal,
-                                      borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(3),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              FittedBox(
-                                child: Text(
-                                  monthFormat.format(m.month),
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.hintColor,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                  DepotLegendDot(
+                    color: DepotColors.dividendBooked,
+                    label: l10n.depotKpiDividends,
+                  ),
+                  DepotLegendDot(
+                    color: AppTheme.accentPurple,
+                    label: l10n.depotTxInterest,
+                  ),
                 ],
               ),
-            ),
+            ],
+            const SizedBox(height: 20),
+            if (total <= 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(l10n.depotNoDataYet),
+              )
+            else
+              DepotIncomePlot(months: months, format: format, median: median),
           ],
         ),
       ),

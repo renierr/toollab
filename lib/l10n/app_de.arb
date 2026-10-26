@@ -4362,6 +4362,22 @@
       }
     }
   },
+  "depotIncomeMedian": "Median {amount}",
+  "@depotIncomeMedian": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotIncomeAverage": "Ø {amount}",
+  "@depotIncomeAverage": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "depotHoldingsTitle": "Positionen ({count})",
   "@depotHoldingsTitle": {
     "placeholders": {

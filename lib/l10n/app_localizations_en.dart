@@ -11064,6 +11064,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String depotIncomeMedian(String amount) {
+    return 'Median $amount';
+  }
+
+  @override
+  String depotIncomeAverage(String amount) {
+    return 'Avg. $amount';
+  }
+
+  @override
   String depotHoldingsTitle(int count) {
     return 'Holdings ($count)';
   }

@@ -5,6 +5,7 @@ import 'depot_parqet_sync.dart';
 import 'depot_store.dart';
 import 'models/depot_filters.dart';
 import 'models/depot_holding.dart';
+import 'models/depot_income_month.dart';
 import 'models/depot_period.dart';
 import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
@@ -284,29 +285,33 @@ class DepotPortfolioState extends ChangeNotifier {
   }
 
   /// Net dividends and interest per month, oldest first, for the last [months].
-  List<({DateTime month, double amount})> incomeByMonth({int months = 12}) {
+  List<DepotIncomeMonth> incomeByMonth({int months = 12}) {
     final now = DateTime.now();
-    final buckets = [
-      for (var i = months - 1; i >= 0; i--)
-        (month: DateTime(now.year, now.month - i), amount: 0.0),
-    ];
-    final first = buckets.first.month;
+    final first = DateTime(now.year, now.month - months + 1);
+    final dividends = List<double>.filled(months, 0);
+    final interest = List<double>.filled(months, 0);
     for (final t in _transactions) {
-      if (t.type != DepotTransactionType.dividend &&
-          t.type != DepotTransactionType.interest) {
-        continue;
-      }
       if (t.datetime.isBefore(first)) continue;
       final index =
           (t.datetime.year - first.year) * 12 + t.datetime.month - first.month;
-      if (index < 0 || index >= buckets.length) continue;
-      final bucket = buckets[index];
-      buckets[index] = (
-        month: bucket.month,
-        amount: bucket.amount + t.amountNet,
-      );
+      if (index < 0 || index >= months) continue;
+      switch (t.type) {
+        case DepotTransactionType.dividend:
+          dividends[index] += t.amountNet;
+        case DepotTransactionType.interest:
+          interest[index] += t.amountNet;
+        default:
+          break;
+      }
     }
-    return buckets;
+    return [
+      for (var i = 0; i < months; i++)
+        DepotIncomeMonth(
+          month: DateTime(first.year, first.month + i),
+          dividends: dividends[i],
+          interest: interest[i],
+        ),
+    ];
   }
 
   void _notify() {

@@ -19769,6 +19769,18 @@ abstract class AppLocalizations {
   /// **'Total {amount}'**
   String depotIncomeTotal(String amount);
 
+  /// No description provided for @depotIncomeMedian.
+  ///
+  /// In en, this message translates to:
+  /// **'Median {amount}'**
+  String depotIncomeMedian(String amount);
+
+  /// No description provided for @depotIncomeAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. {amount}'**
+  String depotIncomeAverage(String amount);
+
   /// No description provided for @depotHoldingsTitle.
   ///
   /// In en, this message translates to:

@@ -5,6 +5,7 @@ import '../depot_colors.dart';
 import '../depot_format.dart';
 import '../dividends/depot_dividend_calendar.dart';
 import 'depot_dividend_stack_bar.dart';
+import 'depot_legend_dot.dart';
 
 class DepotDividendYearChart extends StatelessWidget {
   final DepotDividendCalendar calendar;
@@ -48,15 +49,15 @@ class DepotDividendYearChart extends StatelessWidget {
               spacing: 12,
               runSpacing: 4,
               children: [
-                _Legend(
+                DepotLegendDot(
                   color: DepotColors.dividendBooked,
                   label: l10n.depotDividendStatusBooked,
                 ),
-                _Legend(
+                DepotLegendDot(
                   color: DepotColors.dividendMissing,
                   label: l10n.depotDividendStatusMissing,
                 ),
-                _Legend(
+                DepotLegendDot(
                   color: DepotColors.dividendExpected,
                   label: l10n.depotDividendExpectedLegend,
                 ),
@@ -129,25 +130,4 @@ class DepotDividendYearChart extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Legend extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _Legend({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-      const SizedBox(width: 6),
-      Text(label, style: Theme.of(context).textTheme.bodySmall),
-    ],
-  );
 }

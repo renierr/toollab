@@ -10,6 +10,7 @@ import 'package:tool_lab/services/sync_service.dart';
 import 'totp.dart';
 import 'totp_account.dart';
 import 'totp_crypto.dart';
+import 'config.dart';
 
 class TotpAuthState extends ChangeNotifier with DefaultSyncDelegate {
   TotpAuthState() {
@@ -18,6 +19,7 @@ class TotpAuthState extends ChangeNotifier with DefaultSyncDelegate {
 
   final _storage = const FlutterSecureStorage();
   static const _pwKey = 'totp_sync_password';
+  static const _table = 'accounts';
 
   final List<TotpAccount> _accounts = [];
   List<TotpAccount> get accounts => List.unmodifiable(_accounts);
@@ -33,17 +35,23 @@ class TotpAuthState extends ChangeNotifier with DefaultSyncDelegate {
     await _migrateDb();
     await _load();
     _syncPassword = await _storage.read(key: _pwKey);
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) => notifyListeners());
+    _ticker = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => notifyListeners(),
+    );
     notifyListeners();
   }
 
   Future<void> _migrateDb() async {
-    final toolDb = await DatabaseService.instance.getToolDatabase('totp-auth');
+    final toolDb = await DatabaseService.instance.getToolDatabase(
+      TotpAuthTool.config.id,
+    );
     await toolDb.migrate(
-      currentVersion: 1,
+      currentVersion: 2,
       onMigrate: (db, oldV, newV) async {
+        final table = db.nameTable(_table);
         await db.execute('''
-          CREATE TABLE IF NOT EXISTS accounts (
+          CREATE TABLE IF NOT EXISTS $table (
             id TEXT PRIMARY KEY,
             issuer TEXT NOT NULL,
             account_name TEXT NOT NULL,
@@ -56,48 +64,91 @@ class TotpAuthState extends ChangeNotifier with DefaultSyncDelegate {
             deleted INTEGER NOT NULL DEFAULT 0
           )
         ''');
+        if (oldV < 2) await _adoptLegacyTable(db, table);
       },
     );
   }
 
+  // Version 1 created an unprefixed table; preserve any legacy rows.
+  Future<void> _adoptLegacyTable(ToolDatabaseExecutor db, String table) async {
+    final legacy = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+      [_table],
+    );
+    if (legacy.isEmpty) return;
+    const columns =
+        'id, issuer, account_name, secret, algorithm, digits, period, '
+        'created_at, updated_at, deleted';
+    await db.rawInsert(
+      'INSERT OR IGNORE INTO $table ($columns) '
+      'SELECT $columns FROM $_table',
+    );
+  }
+
   Future<void> _load() async {
-    final toolDb = await DatabaseService.instance.getToolDatabase('totp-auth');
+    final toolDb = await DatabaseService.instance.getToolDatabase(
+      TotpAuthTool.config.id,
+    );
     final rows = await toolDb.query('accounts');
     _accounts
       ..clear()
-      ..addAll(rows.map((r) => TotpAccount.fromMap(Map<String, dynamic>.from(r))));
+      ..addAll(
+        rows.map((r) => TotpAccount.fromMap(Map<String, dynamic>.from(r))),
+      );
     notifyListeners();
   }
 
   Future<void> addAccount(TotpAccount acc) async {
-    final toolDb = await DatabaseService.instance.getToolDatabase('totp-auth');
-    await toolDb.insert('accounts', acc.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    final toolDb = await DatabaseService.instance.getToolDatabase(
+      TotpAuthTool.config.id,
+    );
+    await toolDb.insert(
+      'accounts',
+      acc.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
     _accounts.add(acc);
     notifyListeners();
   }
 
   Future<void> updateAccount(TotpAccount acc) async {
     acc.updatedAt = DateTime.now();
-    final toolDb = await DatabaseService.instance.getToolDatabase('totp-auth');
-    await toolDb.update('accounts', acc.toMap(), where: 'id = ?', whereArgs: [acc.id]);
+    final toolDb = await DatabaseService.instance.getToolDatabase(
+      TotpAuthTool.config.id,
+    );
+    await toolDb.update(
+      'accounts',
+      acc.toMap(),
+      where: 'id = ?',
+      whereArgs: [acc.id],
+    );
     final idx = _accounts.indexWhere((a) => a.id == acc.id);
     if (idx >= 0) _accounts[idx] = acc;
     notifyListeners();
   }
 
   Future<void> deleteAccount(String id) async {
-    final toolDb = await DatabaseService.instance.getToolDatabase('totp-auth');
+    final toolDb = await DatabaseService.instance.getToolDatabase(
+      TotpAuthTool.config.id,
+    );
     final idx = _accounts.indexWhere((a) => a.id == id);
     if (idx >= 0) {
       _accounts[idx].deleted = true;
       _accounts[idx].updatedAt = DateTime.now();
-      await toolDb.update('accounts', _accounts[idx].toMap(), where: 'id = ?', whereArgs: [id]);
+      await toolDb.update(
+        'accounts',
+        _accounts[idx].toMap(),
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     }
     notifyListeners();
   }
 
   Future<void> purgeDeleted() async {
-    final toolDb = await DatabaseService.instance.getToolDatabase('totp-auth');
+    final toolDb = await DatabaseService.instance.getToolDatabase(
+      TotpAuthTool.config.id,
+    );
     await toolDb.delete('accounts', where: 'deleted = ?', whereArgs: [1]);
     _accounts.removeWhere((a) => a.deleted);
     notifyListeners();
@@ -144,12 +195,18 @@ class TotpAuthState extends ChangeNotifier with DefaultSyncDelegate {
 
   // --- SyncDelegate (DefaultSyncDelegate) ---
   @override
-  String get toolId => 'totp-auth';
+  String get toolId => TotpAuthTool.config.id;
 
   @override
   Future<List<Map<String, dynamic>>> getLocalSyncRecords() async {
     return _accounts
-        .map((a) => {'id': a.id, 'updatedAt': a.updatedAt.millisecondsSinceEpoch, 'deleted': a.deleted})
+        .map(
+          (a) => {
+            'id': a.id,
+            'updatedAt': a.updatedAt.millisecondsSinceEpoch,
+            'deleted': a.deleted,
+          },
+        )
         .toList();
   }
 
@@ -173,20 +230,36 @@ class TotpAuthState extends ChangeNotifier with DefaultSyncDelegate {
     required bool deleted,
   }) async {
     Map<String, dynamic> d = Map<String, dynamic>.from(data);
-    if (d['encrypted'] == true && _syncPassword != null && _syncPassword!.isNotEmpty) {
-      d['secret'] = await TotpCrypto.decrypt(d['secret'] as String, _syncPassword!);
+    if (d['encrypted'] == true &&
+        _syncPassword != null &&
+        _syncPassword!.isNotEmpty) {
+      d['secret'] = await TotpCrypto.decrypt(
+        d['secret'] as String,
+        _syncPassword!,
+      );
       d['encrypted'] = false;
     }
     final acc = TotpAccount.fromMap(d);
     acc.updatedAt = DateTime.fromMillisecondsSinceEpoch(updatedAt);
     acc.deleted = deleted;
-    final toolDb = await DatabaseService.instance.getToolDatabase('totp-auth');
+    final toolDb = await DatabaseService.instance.getToolDatabase(
+      TotpAuthTool.config.id,
+    );
     final existing = _accounts.indexWhere((a) => a.id == id);
     if (existing >= 0) {
-      await toolDb.update('accounts', acc.toMap(), where: 'id = ?', whereArgs: [id]);
+      await toolDb.update(
+        'accounts',
+        acc.toMap(),
+        where: 'id = ?',
+        whereArgs: [id],
+      );
       _accounts[existing] = acc;
     } else {
-      await toolDb.insert('accounts', acc.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+      await toolDb.insert(
+        'accounts',
+        acc.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
       _accounts.add(acc);
     }
     notifyListeners();
@@ -199,7 +272,10 @@ class TotpAuthState extends ChangeNotifier with DefaultSyncDelegate {
 
   // --- Export / Import ---
   Future<String> exportEncrypted(String password) async {
-    final list = _accounts.where((a) => !a.deleted).map((a) => a.toMap()).toList();
+    final list = _accounts
+        .where((a) => !a.deleted)
+        .map((a) => a.toMap())
+        .toList();
     final json = jsonEncode(list);
     return TotpCrypto.encrypt(json, password);
   }

@@ -7,6 +7,7 @@ import 'package:tool_lab/theme/theme.dart';
 
 import '../depot_format.dart';
 import '../models/depot_summary.dart';
+import 'depot_legend_dot.dart';
 
 /// An intraday chart needs the time; a longer one only the date.
 DateStyle _dateStyle(List<DepotChartPoint> points) =>
@@ -48,37 +49,19 @@ class DepotValueChart extends StatelessWidget {
         Wrap(
           spacing: 16,
           children: [
-            _LegendDot(
+            DepotLegendDot(
               color: AppTheme.accentGreen,
               label: l10n.depotChartValue,
             ),
-            _LegendDot(color: theme.hintColor, label: l10n.depotChartInvested),
+            DepotLegendDot(
+              color: theme.hintColor,
+              label: l10n.depotChartInvested,
+            ),
           ],
         ),
       ],
     );
   }
-}
-
-class _LegendDot extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendDot({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      ),
-      const SizedBox(width: 4),
-      Text(label, style: Theme.of(context).textTheme.bodySmall),
-    ],
-  );
 }
 
 class _InteractiveChart extends StatefulWidget {
