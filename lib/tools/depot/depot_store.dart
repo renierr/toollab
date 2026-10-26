@@ -35,13 +35,13 @@ class DepotStore {
     _portfolios,
     _holdings,
     _holdingPerformance,
-    _transactions,
     _summaries,
     _chartPoints,
   ];
 
   static const _clientIdKey = 'parqet_client_id';
   static const _lastSyncKey = 'parqet_last_sync_at';
+  static const _activityFullSyncKey = 'parqet_activity_full_sync_at';
   static const _holdingSortKey = 'holding_sort';
 
   String get _toolId => DepotTool.config.id;
@@ -242,6 +242,37 @@ class DepotStore {
     return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
   }
 
+  /// When the activity list was last read to the end. Until then a routine
+  /// sync only fetched what was newer than the watermark.
+  Future<DateTime?> activityFullSyncAt() async {
+    final stored = await DatabaseService.instance.getSetting(
+      _toolId,
+      _activityFullSyncKey,
+    );
+    final ms = int.tryParse(stored ?? '');
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  Future<void> setActivityFullSyncAt(DateTime at) =>
+      DatabaseService.instance.setSetting(
+        _toolId,
+        _activityFullSyncKey,
+        '${at.millisecondsSinceEpoch}',
+      );
+
+  /// Newest stored booking of [portfolioId], the watermark an incremental
+  /// activity sync starts from.
+  Future<DateTime?> newestTransactionAt(String portfolioId) async {
+    final db = await _getDb();
+    final rows = await db.rawQuery(
+      'SELECT MAX(datetime) AS newest FROM ${db.nameTable(_transactions)} '
+      'WHERE portfolio_id = ?',
+      [portfolioId],
+    );
+    final newest = rows.first['newest'] as int?;
+    return newest == null ? null : DateTime.fromMillisecondsSinceEpoch(newest);
+  }
+
   Future<List<DepotPortfolio>> portfolios() async {
     final db = await _getDb();
     final rows = await db.query(_portfolios, orderBy: 'name COLLATE NOCASE');
@@ -328,7 +359,9 @@ class DepotStore {
   }
 
   /// Swaps the whole mirror in one transaction, so a reader never sees half
-  /// of a sync.
+  /// of a sync. [completeActivityPortfolios] names the portfolios whose
+  /// activity list was read to the end; their rows are replaced, the others
+  /// are merged into what an earlier sync already stored.
   Future<void> replaceAll({
     required List<DepotPortfolio> portfolios,
     required List<DepotHolding> holdings,
@@ -336,12 +369,14 @@ class DepotStore {
     required List<DepotTransaction> transactions,
     required List<DepotSummary> summaries,
     required Map<DepotPeriodKey, List<DepotChartPoint>> charts,
+    required Set<String> completeActivityPortfolios,
   }) async {
     final db = await _getDb();
     await db.transaction((txn) async {
       for (final table in _tables) {
         await txn.delete(table);
       }
+      await _pruneTransactions(txn, portfolios, completeActivityPortfolios);
       final batch = txn.batch();
       for (final p in portfolios) {
         batch.insert(_portfolios, p.toMap());
@@ -387,6 +422,34 @@ class DepotStore {
       '${DateTime.now().millisecondsSinceEpoch}',
     );
   }
+
+  /// Drops bookings of portfolios that no longer exist and, for the ones read
+  /// to the end, everything a fresh read is about to restore.
+  static Future<void> _pruneTransactions(
+    ToolDatabaseExecutor txn,
+    List<DepotPortfolio> portfolios,
+    Set<String> complete,
+  ) async {
+    if (portfolios.isEmpty) {
+      await txn.delete(_transactions);
+      return;
+    }
+    final ids = [for (final p in portfolios) p.id];
+    await txn.delete(
+      _transactions,
+      where: 'portfolio_id NOT IN (${_placeholders(ids.length)})',
+      whereArgs: ids,
+    );
+    if (complete.isEmpty) return;
+    final replaced = complete.toList();
+    await txn.delete(
+      _transactions,
+      where: 'portfolio_id IN (${_placeholders(replaced.length)})',
+      whereArgs: replaced,
+    );
+  }
+
+  static String _placeholders(int count) => List.filled(count, '?').join(',');
 
   /// Keyed by [DepotDividendAsset.key].
   Future<Map<String, DepotDividendAsset>> dividendAssets() async {
@@ -436,10 +499,16 @@ class DepotStore {
   Future<void> clear() async {
     final db = await _getDb();
     await db.transaction((txn) async {
-      for (final table in [..._tables, _dividendAssets, _dividendEvents]) {
+      for (final table in [
+        ..._tables,
+        _transactions,
+        _dividendAssets,
+        _dividendEvents,
+      ]) {
         await txn.delete(table);
       }
     });
     await DatabaseService.instance.deleteSetting(_toolId, _lastSyncKey);
+    await DatabaseService.instance.deleteSetting(_toolId, _activityFullSyncKey);
   }
 }

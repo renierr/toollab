@@ -10966,6 +10966,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotSettingsSectionSync => 'Sync';
 
   @override
+  String get depotSyncAllTitle => 'Sync all data again';
+
+  @override
+  String get depotSyncAllSubtitle =>
+      'Re-read every activity from Parqet, for example after deleting bookings there';
+
+  @override
   String get depotSettingsBackgroundTitle => 'Background sync';
 
   @override

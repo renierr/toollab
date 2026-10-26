@@ -19583,6 +19583,18 @@ abstract class AppLocalizations {
   /// **'Sync'**
   String get depotSettingsSectionSync;
 
+  /// No description provided for @depotSyncAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync all data again'**
+  String get depotSyncAllTitle;
+
+  /// No description provided for @depotSyncAllSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-read every activity from Parqet, for example after deleting bookings there'**
+  String get depotSyncAllSubtitle;
+
   /// No description provided for @depotSettingsBackgroundTitle.
   ///
   /// In en, this message translates to:

@@ -11045,6 +11045,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotSettingsSectionSync => 'Synchronisierung';
 
   @override
+  String get depotSyncAllTitle => 'Alle Daten neu synchronisieren';
+
+  @override
+  String get depotSyncAllSubtitle =>
+      'Liest alle Aktivitäten erneut aus Parqet, etwa nachdem dort Buchungen gelöscht wurden';
+
+  @override
   String get depotSettingsBackgroundTitle => 'Hintergrund-Sync';
 
   @override

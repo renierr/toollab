@@ -4324,6 +4324,8 @@
   "depotSettingsAccessReadWrite": "Lesen und Schreiben",
   "depotSettingsAccessReadOnly": "Nur Lesen – zum Hochladen neu verbinden",
   "depotSettingsSectionSync": "Synchronisierung",
+  "depotSyncAllTitle": "Alle Daten neu synchronisieren",
+  "depotSyncAllSubtitle": "Liest alle Aktivitäten erneut aus Parqet, etwa nachdem dort Buchungen gelöscht wurden",
   "depotSettingsBackgroundTitle": "Hintergrund-Sync",
   "depotSettingsBackgroundSubtitle": "Depotwerte aus Parqet abrufen, während die App geschlossen ist",
   "depotLoginBrowserTitle": "Parqet verbunden",

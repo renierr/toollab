@@ -5461,6 +5461,8 @@
   "depotSettingsAccessReadWrite": "Read and write",
   "depotSettingsAccessReadOnly": "Read only - reconnect to allow uploads",
   "depotSettingsSectionSync": "Sync",
+  "depotSyncAllTitle": "Sync all data again",
+  "depotSyncAllSubtitle": "Re-read every activity from Parqet, for example after deleting bookings there",
   "depotSettingsBackgroundTitle": "Background sync",
   "depotSettingsBackgroundSubtitle": "Pull portfolio values from Parqet while the app is closed",
   "depotLoginBrowserTitle": "Parqet connected",

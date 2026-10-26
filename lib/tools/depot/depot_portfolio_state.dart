@@ -166,13 +166,15 @@ class DepotPortfolioState extends ChangeNotifier {
     }
   }
 
-  Future<void> sync() async {
+  /// [full] re-reads every activity instead of only what is newer than the
+  /// stored watermark.
+  Future<void> sync({bool full = false}) async {
     if (_isSyncing || !_isConnected) return;
     _isSyncing = true;
     _error = null;
     _notify();
     try {
-      await DepotParqetSync.run();
+      await DepotParqetSync.run(full: full);
       _lastSyncAt = await _store.lastSyncAt();
       await _reload();
     } on ParqetException catch (e) {

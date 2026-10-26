@@ -219,15 +219,32 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
                 ],
               ),
             ),
-            if (BackgroundTaskService.isSupported && state.isConnected) ...[
+            if (state.isConnected) ...[
               SettingsSectionLabel(title: l10n.depotSettingsSectionSync),
-              BackgroundTaskTile(
-                task: DepotBackgroundSync.task,
-                icon: Icons.sync_outlined,
-                title: l10n.depotSettingsBackgroundTitle,
-                description: l10n.depotSettingsBackgroundSubtitle,
-                onRunFinished: state.syncIfStale,
+              ListTile(
+                leading: const Icon(Icons.cloud_download_outlined),
+                title: Text(l10n.depotSyncAllTitle),
+                subtitle: Text(l10n.depotSyncAllSubtitle),
+                trailing: state.isSyncing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : null,
+                onTap: state.isSyncing
+                    ? null
+                    : () =>
+                          context.read<DepotPortfolioState>().sync(full: true),
               ),
+              if (BackgroundTaskService.isSupported)
+                BackgroundTaskTile(
+                  task: DepotBackgroundSync.task,
+                  icon: Icons.sync_outlined,
+                  title: l10n.depotSettingsBackgroundTitle,
+                  description: l10n.depotSettingsBackgroundSubtitle,
+                  onRunFinished: state.syncIfStale,
+                ),
             ],
           ],
         ),

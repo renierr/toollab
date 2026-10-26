@@ -21,14 +21,23 @@ class DepotParqetSync {
   /// to serialize 30 independent requests behind each other either.
   static const _maxConcurrent = 4;
 
+  /// Re-reads a few days before the newest stored booking, so a backdated
+  /// activity is still picked up.
+  static const _activityOverlap = Duration(days: 3);
+
+  /// Every activity is re-read this often, which also drops bookings that
+  /// were deleted in Parqet.
+  static const _fullActivitySyncAfter = Duration(hours: 24);
+
   static Future<bool> isConnected() async {
     final clientId = await DepotStore.instance.clientId();
     if (clientId == null || clientId.isEmpty) return false;
     return await ParqetAuth.readTokens() != null;
   }
 
-  /// Returns a short diagnostic line; throws [ParqetException].
-  static Future<String> run() async {
+  /// Returns a short diagnostic line; throws [ParqetException]. [full] ignores
+  /// the activity watermark and reads every booking again.
+  static Future<String> run({bool full = false}) async {
     final store = DepotStore.instance;
     final clientId = await store.clientId();
     if (clientId == null || clientId.isEmpty) {
@@ -42,6 +51,16 @@ class DepotParqetSync {
     final transactions = <DepotTransaction>[];
     final summaries = <DepotSummary>[];
     final charts = <DepotPeriodKey, List<DepotChartPoint>>{};
+    final completeActivities = <String>{};
+
+    final fullActivities = full || await _activitiesAreStale(store);
+    final watermarks = <String, DateTime?>{
+      if (!fullActivities)
+        for (final p in portfolios)
+          p.id: (await store.newestTransactionAt(
+            p.id,
+          ))?.subtract(_activityOverlap),
+    };
 
     // One currency for every request keeps the per-portfolio figures summable.
     final currency = portfolios.isEmpty ? 'EUR' : portfolios.first.currency;
@@ -71,7 +90,14 @@ class DepotParqetSync {
       for (final portfolio in portfolios) ...[
         for (final period in DepotPeriod.values)
           () => loadPeriod(portfolio.id, period, [portfolio.id]),
-        () async => transactions.addAll(await api.activities(portfolio.id)),
+        () async {
+          final activities = await api.activities(
+            portfolio.id,
+            since: watermarks[portfolio.id],
+          );
+          transactions.addAll(activities.items);
+          if (activities.complete) completeActivities.add(portfolio.id);
+        },
       ],
       if (portfolios.length > 1)
         for (final period in DepotPeriod.values)
@@ -99,13 +125,25 @@ class DepotParqetSync {
       transactions: transactions,
       summaries: summaries,
       charts: charts,
+      completeActivityPortfolios: fullActivities
+          ? {for (final p in portfolios) p.id}
+          : completeActivities,
     );
+    if (fullActivities) {
+      await store.setActivityFullSyncAt(DateTime.now());
+    }
 
     final detail =
         '${portfolios.length} portfolios, ${holdings.length} holdings, '
         '${transactions.length} activities';
     debugLog('[DepotParqetSync] $detail');
     return detail;
+  }
+
+  static Future<bool> _activitiesAreStale(DepotStore store) async {
+    final last = await store.activityFullSyncAt();
+    return last == null ||
+        DateTime.now().difference(last) > _fullActivitySyncAfter;
   }
 
   /// Runs [jobs] with at most [_maxConcurrent] in flight and rethrows the

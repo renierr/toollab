@@ -27,6 +27,16 @@ class ParqetPerformance {
   });
 }
 
+class ParqetActivities {
+  final List<DepotTransaction> items;
+
+  /// False when paging stopped at the sync watermark, so older stored
+  /// activities are still the only copy and must be kept.
+  final bool complete;
+
+  const ParqetActivities({required this.items, required this.complete});
+}
+
 /// Read-only client for the Parqet Connect REST API.
 class ParqetApi {
   final String clientId;
@@ -89,26 +99,48 @@ class ParqetApi {
     );
   }
 
-  Future<List<DepotTransaction>> activities(String portfolioId) async {
+  /// Activities of [portfolioId], newest page first. With [since] the walk
+  /// stops once a page runs past it, so a routine sync only downloads what
+  /// was added. That needs the feed to be newest first; if it is not, every
+  /// page is read and [ParqetActivities.complete] stays true.
+  Future<ParqetActivities> activities(
+    String portfolioId, {
+    DateTime? since,
+  }) async {
     final result = <DepotTransaction>[];
     String? cursor;
+    var complete = true;
     do {
       final json = await _send(
         'GET',
         '/portfolios/$portfolioId/activities',
         query: {'limit': '$_activityPageSize', 'cursor': ?cursor},
       );
+      final page = <DepotTransaction>[];
       for (final item in json['activities'] as List? ?? const []) {
         final activity = DepotTransaction.fromJson(
           portfolioId,
           item as Map<String, dynamic>,
         );
-        if (activity != null) result.add(activity);
+        if (activity != null) page.add(activity);
+      }
+      result.addAll(page);
+      if (since != null && _isBehind(page, since)) {
+        complete = false;
+        break;
       }
       final next = json['cursor'] as String?;
       cursor = next == null || next.isEmpty || next == cursor ? null : next;
     } while (cursor != null);
-    return result;
+    return ParqetActivities(items: result, complete: complete);
+  }
+
+  /// A page that runs newest first and whose oldest entry predates [since]
+  /// means everything further back is already stored.
+  static bool _isBehind(List<DepotTransaction> page, DateTime since) {
+    if (page.length < 2) return false;
+    if (!page.first.datetime.isAfter(page.last.datetime)) return false;
+    return page.last.datetime.isBefore(since);
   }
 
   /// Creates [activities] in [portfolioId] and returns Parqet's reason for
