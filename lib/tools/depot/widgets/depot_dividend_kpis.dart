@@ -5,6 +5,7 @@ import 'package:tool_lab/widgets/metric_tile.dart';
 import '../depot_colors.dart';
 import '../depot_format.dart';
 import '../dividends/depot_dividend_calendar.dart';
+import 'depot_dividend_list_dialog.dart';
 
 class DepotDividendKpis extends StatelessWidget {
   final DepotDividendCalendar calendar;
@@ -21,6 +22,20 @@ class DepotDividendKpis extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final forwardYield = calendar.forwardYield;
     final missing = calendar.missingNet;
+    final receivedYearLabel = l10n.depotDividendReceivedYear(
+      '${calendar.today.year}',
+    );
+    void list(
+      String title,
+      List<DepotDividendEntry> entries, {
+      bool newestFirst = true,
+    }) => DepotDividendListDialog.show(
+      context,
+      title: title,
+      entries: entries,
+      format: format,
+      newestFirst: newestFirst,
+    );
 
     return MetricGrid(
       children: [
@@ -30,13 +45,16 @@ class DepotDividendKpis extends StatelessWidget {
           icon: Icons.payments_outlined,
           color: DepotColors.dividendBooked,
           compact: true,
+          onTap: () =>
+              list(l10n.depotDividendReceived12m, calendar.received12m),
         ),
         MetricTile(
-          label: l10n.depotDividendReceivedYear('${calendar.today.year}'),
+          label: receivedYearLabel,
           value: format.money(calendar.receivedNetThisYear),
           icon: Icons.event_available_outlined,
           color: DepotColors.dividendBooked,
           compact: true,
+          onTap: () => list(receivedYearLabel, calendar.receivedThisYear),
         ),
         MetricTile(
           label: l10n.depotDividendExpected12m,
@@ -44,6 +62,11 @@ class DepotDividendKpis extends StatelessWidget {
           icon: Icons.upcoming_outlined,
           color: DepotColors.dividendExpected,
           compact: true,
+          onTap: () => list(
+            l10n.depotDividendExpected12m,
+            calendar.expected12m,
+            newestFirst: false,
+          ),
         ),
         if (forwardYield != null)
           MetricTile(
@@ -60,6 +83,8 @@ class DepotDividendKpis extends StatelessWidget {
             icon: Icons.report_outlined,
             color: DepotColors.dividendMissing,
             compact: true,
+            onTap: () =>
+                list(l10n.depotDividendStatusMissing, calendar.missing),
           ),
       ],
     );

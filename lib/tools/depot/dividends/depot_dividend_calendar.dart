@@ -142,21 +142,29 @@ class DepotDividendCalendar {
   DateTime get _yearAgo => DateTime(today.year - 1, today.month, today.day);
   DateTime get _yearAhead => DateTime(today.year + 1, today.month, today.day);
 
-  List<DepotDividendEntry> get missing => [
-    for (final e in entries)
-      if (e.status == DepotDividendStatus.missing) e,
-  ];
+  List<DepotDividendEntry> get missing => _where(_isMissing);
+  List<DepotDividendEntry> get received12m => _where(_isReceived12m);
+  List<DepotDividendEntry> get receivedThisYear => _where(_isReceivedThisYear);
+  List<DepotDividendEntry> get expected12m => _where(_isExpected12m);
 
-  double get receivedNet12m => _sum(
-    (e) => e.isBooked && !e.date.isBefore(_yearAgo) && !e.date.isAfter(today),
-  );
-
-  double get receivedNetThisYear =>
-      _sum((e) => e.isBooked && e.date.year == today.year);
-
+  double get receivedNet12m => _sum(_isReceived12m);
+  double get receivedNetThisYear => _sum(_isReceivedThisYear);
   double get expectedNet12m => _sum(_isExpected12m);
+  double get missingNet => _sum(_isMissing);
 
-  double get missingNet => _sum((e) => e.status == DepotDividendStatus.missing);
+  bool _isMissing(DepotDividendEntry e) =>
+      e.status == DepotDividendStatus.missing;
+
+  bool _isReceived12m(DepotDividendEntry e) =>
+      e.isBooked && !e.date.isBefore(_yearAgo) && !e.date.isAfter(today);
+
+  bool _isReceivedThisYear(DepotDividendEntry e) =>
+      e.isBooked && e.date.year == today.year;
+
+  List<DepotDividendEntry> _where(bool Function(DepotDividendEntry) test) => [
+    for (final e in entries)
+      if (test(e)) e,
+  ];
 
   /// Expected gross payout of the next twelve months against the open value.
   double? get forwardYield {

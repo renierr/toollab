@@ -6,6 +6,7 @@ import '../depot_colors.dart';
 import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../dividends/depot_dividend_calendar.dart';
+import 'depot_dividend_detail_dialog.dart';
 import 'depot_holding_avatar.dart';
 
 class DepotDividendEntryTile extends StatelessWidget {
@@ -42,6 +43,7 @@ class DepotDividendEntryTile extends StatelessWidget {
 
     return ListTile(
       dense: true,
+      onTap: () => DepotDividendDetailDialog.show(context, e, format),
       contentPadding: const EdgeInsets.symmetric(horizontal: 8),
       leading: DepotHoldingAvatar(name: e.name, colorSeed: e.colorSeed),
       title: Text(

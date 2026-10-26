@@ -12,6 +12,9 @@ class MetricTile extends StatelessWidget {
   /// Recent readings of this metric, drawn as a trend line behind the value.
   final List<double?>? trend;
 
+  /// Opens details; the tile then shows a chevron.
+  final VoidCallback? onTap;
+
   const MetricTile({
     super.key,
     required this.label,
@@ -21,6 +24,7 @@ class MetricTile extends StatelessWidget {
     this.unit,
     this.compact = false,
     this.trend,
+    this.onTap,
   });
 
   @override
@@ -29,62 +33,76 @@ class MetricTile extends StatelessWidget {
     final trend = this.trend;
     return Card(
       clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          if (trend != null)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: compact ? 42 : 52,
-              child: Sparkline(values: trend, color: color),
-            ),
-          Padding(
-            padding: EdgeInsets.all(compact ? 12 : 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, color: color, size: compact ? 18 : 24),
-                SizedBox(height: compact ? 8 : 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        value,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style:
-                            (compact
-                                    ? theme.textTheme.titleMedium
-                                    : theme.textTheme.titleLarge)
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    if (unit != null) ...[
-                      const SizedBox(width: 3),
-                      Text(
-                        unit!,
-                        style: theme.textTheme.bodySmall?.copyWith(
+      child: InkWell(
+        onTap: onTap,
+        child: Stack(
+          children: [
+            if (trend != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: compact ? 42 : 52,
+                child: Sparkline(values: trend, color: color),
+              ),
+            Padding(
+              padding: EdgeInsets.all(compact ? 12 : 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(icon, color: color, size: compact ? 18 : 24),
+                      const Spacer(),
+                      if (onTap != null)
+                        Icon(
+                          Icons.chevron_right,
+                          size: compact ? 18 : 22,
                           color: theme.hintColor,
                         ),
-                      ),
                     ],
-                  ],
-                ),
-                Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.hintColor,
                   ),
-                ),
-              ],
+                  SizedBox(height: compact ? 8 : 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              (compact
+                                      ? theme.textTheme.titleMedium
+                                      : theme.textTheme.titleLarge)
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      if (unit != null) ...[
+                        const SizedBox(width: 3),
+                        Text(
+                          unit!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.hintColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

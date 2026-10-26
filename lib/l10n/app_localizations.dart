@@ -20219,6 +20219,96 @@ abstract class AppLocalizations {
   /// **'irregular'**
   String get depotDividendFreqIrregular;
 
+  /// No description provided for @depotDividendDetailStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get depotDividendDetailStatus;
+
+  /// No description provided for @depotDividendDetailBookedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Booked on'**
+  String get depotDividendDetailBookedOn;
+
+  /// No description provided for @depotDividendDetailPayDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment date'**
+  String get depotDividendDetailPayDate;
+
+  /// No description provided for @depotDividendDetailExDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Ex-date'**
+  String get depotDividendDetailExDate;
+
+  /// No description provided for @depotDividendDetailPerShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Per share'**
+  String get depotDividendDetailPerShare;
+
+  /// No description provided for @depotDividendDetailGross.
+  ///
+  /// In en, this message translates to:
+  /// **'Gross'**
+  String get depotDividendDetailGross;
+
+  /// No description provided for @depotDividendDetailDeductions.
+  ///
+  /// In en, this message translates to:
+  /// **'Taxes & fees'**
+  String get depotDividendDetailDeductions;
+
+  /// No description provided for @depotDividendDetailNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get depotDividendDetailNet;
+
+  /// No description provided for @depotDividendNoteMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'On the ex-date {exDate} you held {shares} shares, but Parqet has no dividend booking for this position from 5 days before to 75 days after it.'**
+  String depotDividendNoteMissing(String exDate, String shares);
+
+  /// No description provided for @depotDividendNoteUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Ex-date from Yahoo Finance; the payment date is estimated from your broker\'s usual delay.'**
+  String get depotDividendNoteUpcoming;
+
+  /// No description provided for @depotDividendNoteProjected.
+  ///
+  /// In en, this message translates to:
+  /// **'Extrapolated from the payment rhythm; date and amount are estimates.'**
+  String get depotDividendNoteProjected;
+
+  /// No description provided for @depotDividendNoteEstimatedAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount per share taken from an earlier payment.'**
+  String get depotDividendNoteEstimatedAmount;
+
+  /// No description provided for @depotDividendNoteNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Gross converted at today\'s exchange rate, net after your past tax ratio.'**
+  String get depotDividendNoteNet;
+
+  /// No description provided for @depotDividendListSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment} other{{count} payments}} · net {amount}'**
+  String depotDividendListSummary(int count, String amount);
+
+  /// No description provided for @depotDividendListEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments'**
+  String get depotDividendListEmpty;
+
   /// No description provided for @depotUploadAction.
   ///
   /// In en, this message translates to:

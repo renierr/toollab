@@ -4549,6 +4549,41 @@
   "depotDividendFreqSemiannual": "halbjährlich",
   "depotDividendFreqAnnual": "jährlich",
   "depotDividendFreqIrregular": "unregelmäßig",
+  "depotDividendDetailStatus": "Status",
+  "depotDividendDetailBookedOn": "Gebucht am",
+  "depotDividendDetailPayDate": "Zahltag",
+  "depotDividendDetailExDate": "Ex-Tag",
+  "depotDividendDetailPerShare": "Je Stück",
+  "depotDividendDetailGross": "Brutto",
+  "depotDividendDetailDeductions": "Steuern & Gebühren",
+  "depotDividendDetailNet": "Netto",
+  "depotDividendNoteMissing": "Am Ex-Tag {exDate} lagen {shares} Stück im Depot, aber Parqet hat von 5 Tagen davor bis 75 Tage danach keine Dividendenbuchung für diese Position.",
+  "@depotDividendNoteMissing": {
+    "placeholders": {
+      "exDate": {
+        "type": "String"
+      },
+      "shares": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendNoteUpcoming": "Ex-Tag laut Yahoo Finance; der Zahltag ist aus dem üblichen Abstand deines Brokers geschätzt.",
+  "depotDividendNoteProjected": "Aus dem Zahlungsrhythmus hochgerechnet; Datum und Betrag sind geschätzt.",
+  "depotDividendNoteEstimatedAmount": "Betrag je Stück aus einer früheren Zahlung übernommen.",
+  "depotDividendNoteNet": "Brutto zum heutigen Wechselkurs, netto nach deiner bisherigen Steuerquote.",
+  "depotDividendListSummary": "{count, plural, =1{1 Zahlung} other{{count} Zahlungen}} · netto {amount}",
+  "@depotDividendListSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendListEmpty": "Keine Zahlungen",
   "depotUploadAction": "An Parqet senden",
   "depotUploadTitle": "An Parqet senden",
   "depotUploadPortfolio": "Depot",

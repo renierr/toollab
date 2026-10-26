@@ -11328,6 +11328,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotDividendFreqIrregular => 'irregular';
 
   @override
+  String get depotDividendDetailStatus => 'Status';
+
+  @override
+  String get depotDividendDetailBookedOn => 'Booked on';
+
+  @override
+  String get depotDividendDetailPayDate => 'Payment date';
+
+  @override
+  String get depotDividendDetailExDate => 'Ex-date';
+
+  @override
+  String get depotDividendDetailPerShare => 'Per share';
+
+  @override
+  String get depotDividendDetailGross => 'Gross';
+
+  @override
+  String get depotDividendDetailDeductions => 'Taxes & fees';
+
+  @override
+  String get depotDividendDetailNet => 'Net';
+
+  @override
+  String depotDividendNoteMissing(String exDate, String shares) {
+    return 'On the ex-date $exDate you held $shares shares, but Parqet has no dividend booking for this position from 5 days before to 75 days after it.';
+  }
+
+  @override
+  String get depotDividendNoteUpcoming =>
+      'Ex-date from Yahoo Finance; the payment date is estimated from your broker\'s usual delay.';
+
+  @override
+  String get depotDividendNoteProjected =>
+      'Extrapolated from the payment rhythm; date and amount are estimates.';
+
+  @override
+  String get depotDividendNoteEstimatedAmount =>
+      'Amount per share taken from an earlier payment.';
+
+  @override
+  String get depotDividendNoteNet =>
+      'Gross converted at today\'s exchange rate, net after your past tax ratio.';
+
+  @override
+  String depotDividendListSummary(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments',
+      one: '1 payment',
+    );
+    return '$_temp0 · net $amount';
+  }
+
+  @override
+  String get depotDividendListEmpty => 'No payments';
+
+  @override
   String get depotUploadAction => 'Send to Parqet';
 
   @override

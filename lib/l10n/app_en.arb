@@ -5686,6 +5686,41 @@
   "depotDividendFreqSemiannual": "semi-annual",
   "depotDividendFreqAnnual": "annual",
   "depotDividendFreqIrregular": "irregular",
+  "depotDividendDetailStatus": "Status",
+  "depotDividendDetailBookedOn": "Booked on",
+  "depotDividendDetailPayDate": "Payment date",
+  "depotDividendDetailExDate": "Ex-date",
+  "depotDividendDetailPerShare": "Per share",
+  "depotDividendDetailGross": "Gross",
+  "depotDividendDetailDeductions": "Taxes & fees",
+  "depotDividendDetailNet": "Net",
+  "depotDividendNoteMissing": "On the ex-date {exDate} you held {shares} shares, but Parqet has no dividend booking for this position from 5 days before to 75 days after it.",
+  "@depotDividendNoteMissing": {
+    "placeholders": {
+      "exDate": {
+        "type": "String"
+      },
+      "shares": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendNoteUpcoming": "Ex-date from Yahoo Finance; the payment date is estimated from your broker's usual delay.",
+  "depotDividendNoteProjected": "Extrapolated from the payment rhythm; date and amount are estimates.",
+  "depotDividendNoteEstimatedAmount": "Amount per share taken from an earlier payment.",
+  "depotDividendNoteNet": "Gross converted at today's exchange rate, net after your past tax ratio.",
+  "depotDividendListSummary": "{count, plural, =1{1 payment} other{{count} payments}} · net {amount}",
+  "@depotDividendListSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDividendListEmpty": "No payments",
   "depotUploadAction": "Send to Parqet",
   "depotUploadTitle": "Send to Parqet",
   "depotUploadPortfolio": "Portfolio",
