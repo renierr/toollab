@@ -96,6 +96,7 @@ class DepotPortfolioLabels {
         ParqetErrorKind.notConnected => l10n.depotErrorNotConnected,
         ParqetErrorKind.unauthorized => l10n.depotErrorUnauthorized,
         ParqetErrorKind.denied => l10n.depotErrorDenied,
+        ParqetErrorKind.scopeNotAllowed => l10n.depotErrorScopeNotAllowed,
         ParqetErrorKind.portBusy => l10n.depotErrorPortBusy(
           ParqetAuth.redirectPort,
         ),

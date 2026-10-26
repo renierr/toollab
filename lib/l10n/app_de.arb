@@ -4308,7 +4308,7 @@
   "depotSyncNow": "Jetzt synchronisieren",
   "depotSettingsTitle": "Parqet-Verbindung",
   "depotSettingsSectionParqet": "Parqet-Integration",
-  "depotSettingsIntro": "Lege in der Parqet-Entwicklerkonsole eine private Integration mit Lesezugriff an, trage die Redirect-URL unten ein und füge hier ihre Client-ID ein.",
+  "depotSettingsIntro": "Lege in der Parqet-Entwicklerkonsole eine private Integration mit Lese- und Schreibzugriff an (Schreiben dient zum Hochladen importierter PDFs), trage die Redirect-URL unten ein und füge hier ihre Client-ID ein.",
   "depotSettingsOpenConsole": "Entwicklerkonsole öffnen",
   "depotSettingsClientId": "Client-ID",
   "depotSettingsRedirectUri": "Redirect-URL",
@@ -4549,6 +4549,56 @@
   "depotDividendFreqSemiannual": "halbjährlich",
   "depotDividendFreqAnnual": "jährlich",
   "depotDividendFreqIrregular": "unregelmäßig",
+  "depotUploadAction": "An Parqet senden",
+  "depotUploadTitle": "An Parqet senden",
+  "depotUploadPortfolio": "Depot",
+  "depotUploadSinglePortfolio": "Depot: {name}",
+  "@depotUploadSinglePortfolio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "depotUploadCount": "{count, plural, =0{Nichts Neues zu senden} =1{1 Buchung wird angelegt} other{{count} Buchungen werden angelegt}}",
+  "@depotUploadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotUploadExisting": "{count, plural, =1{1 ist schon in Parqet und wird übersprungen} other{{count} sind schon in Parqet und werden übersprungen}}",
+  "@depotUploadExisting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotUploadHint": "Jede Buchung trägt eine aus dem Dokument gebildete ID, daher erzeugt dasselbe PDF zweimal gesendet keine Doppelbuchung.",
+  "depotUploadConfirm": "Senden",
+  "depotUploadDone": "Gesendet: {uploaded} · schon in Parqet: {existing} · abgelehnt: {rejected}",
+  "@depotUploadDone": {
+    "placeholders": {
+      "uploaded": {
+        "type": "int"
+      },
+      "existing": {
+        "type": "int"
+      },
+      "rejected": {
+        "type": "int"
+      }
+    }
+  },
+  "depotUploadNeedsWriteTitle": "Schreibzugriff nötig",
+  "depotUploadNeedsWrite": "Die aktuelle Parqet-Anmeldung darf nur lesen. Erlaube der Integration in der Parqet-Entwicklerkonsole Schreibzugriff und verbinde dich danach in den Einstellungen neu.",
+  "depotUploadNotConnected": "Verbinde dich zuerst in den Einstellungen mit Parqet, inklusive Schreibzugriff.",
+  "depotUploadNoPortfolio": "Kein Parqet-Depot gefunden. Bitte zuerst synchronisieren.",
+  "depotUploadStatusSent": "An Parqet gesendet",
+  "depotUploadStatusExisting": "Schon in Parqet",
+  "depotUploadStatusRejected": "Von Parqet abgelehnt",
   "depotTxNet": "netto {amount}",
   "@depotTxNet": {
     "placeholders": {
@@ -4569,6 +4619,7 @@
   "depotErrorNotConnected": "Nicht mit Parqet verbunden",
   "depotErrorUnauthorized": "Die Parqet-Anmeldung ist abgelaufen, bitte neu verbinden",
   "depotErrorDenied": "Der Zugriff wurde in Parqet nicht erlaubt",
+  "depotErrorScopeNotAllowed": "Die Parqet-Integration erlaubt keinen Schreibzugriff. Aktiviere ihn in der Entwicklerkonsole und verbinde dich neu.",
   "depotErrorPortBusy": "Port {port} ist belegt. Schließe andere Apps, die ihn nutzen, und versuche es erneut.",
   "@depotErrorPortBusy": {
     "placeholders": {

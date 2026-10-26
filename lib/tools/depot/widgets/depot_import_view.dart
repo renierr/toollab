@@ -4,19 +4,29 @@ import 'package:file_selector/file_selector.dart'
     show XFile, XTypeGroup, openFiles;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/file_save_helper.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/widgets/confirm_action_dialog.dart';
+import 'package:tool_lab/widgets/custom_notification.dart';
 import 'package:tool_lab/widgets/file_drop_zone.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 import 'package:tool_lab/widgets/responsive_alert_dialog.dart';
 
 import '../config.dart';
 import '../depot_import_state.dart';
+import '../depot_portfolio_labels.dart';
+import '../depot_portfolio_state.dart';
+import '../parqet/parqet_api.dart';
+import '../parqet/parqet_auth.dart';
+import '../parqet/parqet_exception.dart';
 import 'depot_activity_edit_dialog.dart';
 import 'depot_import_toolbar.dart';
 import 'depot_raw_text_dialog.dart';
+import 'depot_settings_page.dart';
 import 'depot_statement_card.dart';
+import 'depot_upload_dialog.dart';
 
 class DepotImportView extends StatefulWidget {
   final TempFileScope tempScope;
@@ -94,6 +104,84 @@ class _DepotImportViewState extends State<DepotImportView> {
     );
   }
 
+  Future<void> _upload() async {
+    final l10n = AppLocalizations.of(context);
+    final importState = context.read<DepotImportState>();
+    final portfolio = context.read<DepotPortfolioState>();
+    await portfolio.ensureLoaded();
+    final canWrite = portfolio.isConnected && await ParqetAuth.canWrite();
+    if (!mounted) return;
+
+    if (!canWrite) {
+      final reconnect = await ConfirmActionDialog.show(
+        context: context,
+        title: l10n.depotUploadNeedsWriteTitle,
+        message: portfolio.isConnected
+            ? l10n.depotUploadNeedsWrite
+            : l10n.depotUploadNotConnected,
+        cancelLabel: l10n.commonCancel,
+        confirmLabel: l10n.depotSettingsTitle,
+        confirmColor: Theme.of(context).colorScheme.primary,
+      );
+      if (reconnect == true && mounted) await DepotSettingsPage.open(context);
+      return;
+    }
+    if (importState.exportable.isEmpty) {
+      showNotificationDialog(
+        context,
+        l10n.depotImportNothingToExport,
+        isError: true,
+      );
+      return;
+    }
+    if (portfolio.portfolios.isEmpty) {
+      showNotificationDialog(
+        context,
+        l10n.depotUploadNoPortfolio,
+        isError: true,
+      );
+      return;
+    }
+
+    final portfolios = portfolio.portfolios;
+    final target = await DepotUploadDialog.show(
+      context,
+      portfolios: portfolios,
+      initialPortfolioId: portfolios.any((p) => p.id == portfolio.scope)
+          ? portfolio.scope
+          : portfolios.first.id,
+      statements: importState.exportable,
+    );
+    if (target == null || !mounted) return;
+
+    try {
+      final summary = await importState.uploadToParqet(
+        api: ParqetApi(clientId: portfolio.clientId),
+        portfolioId: target.portfolioId,
+        existing: target.existing,
+      );
+      if (!mounted) return;
+      showNotificationDialog(
+        context,
+        l10n.depotUploadDone(
+          summary.uploaded,
+          summary.existing,
+          summary.rejected,
+        ),
+        isError: summary.rejected > 0,
+      );
+      if (summary.uploaded > 0) await portfolio.sync();
+    } on ParqetException catch (e) {
+      errorLog('[DepotImportView] Upload failed: $e');
+      if (!mounted) return;
+      showNotificationDialog(
+        context,
+        DepotPortfolioLabels.error(l10n, e),
+        isError: true,
+      );
+    }
+  }
+
   Future<void> _edit(String id) async {
     final state = context.read<DepotImportState>();
     final statement = state.statements.firstWhere((s) => s.id == id);
@@ -139,6 +227,8 @@ class _DepotImportViewState extends State<DepotImportView> {
           onAdd: _pickMore,
           onClear: state.clear,
           onExport: _export,
+          onUpload: _upload,
+          isUploading: state.isUploading,
         ),
         if (state.isImporting) const LinearProgressIndicator(),
         Expanded(
@@ -150,6 +240,7 @@ class _DepotImportViewState extends State<DepotImportView> {
                 final statement = state.statements[index];
                 return DepotStatementCard(
                   statement: statement,
+                  upload: state.uploadOf(statement.id),
                   onToggle: () => state.toggleSelected(statement.id),
                   onEdit: () => _edit(statement.id),
                   onRemove: () => state.remove(statement.id),

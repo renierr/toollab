@@ -9,6 +9,7 @@ import '../models/depot_period.dart';
 import '../models/depot_portfolio.dart';
 import '../models/depot_summary.dart';
 import '../models/depot_transaction.dart';
+import '../models/parqet_json.dart';
 import 'parqet_auth.dart';
 import 'parqet_exception.dart';
 
@@ -35,6 +36,7 @@ class ParqetApi {
   static final Uri _baseUri = Uri.parse('https://connect.parqet.com');
   static const _timeout = Duration(seconds: 30);
   static const _activityPageSize = 500;
+  static const _createBatchSize = 100;
 
   Future<List<DepotPortfolio>> portfolios() async {
     final json = await _send('GET', '/portfolios');
@@ -107,6 +109,31 @@ class ParqetApi {
       cursor = next == null || next.isEmpty || next == cursor ? null : next;
     } while (cursor != null);
     return result;
+  }
+
+  /// Creates [activities] in [portfolioId] and returns Parqet's reason for
+  /// every one it rejected, keyed by its index in [activities].
+  Future<Map<int, String>> createActivities(
+    String portfolioId,
+    List<Map<String, Object?>> activities,
+  ) async {
+    final rejected = <int, String>{};
+    for (var start = 0; start < activities.length; start += _createBatchSize) {
+      final batch = activities.skip(start).take(_createBatchSize).toList();
+      final json = await _send(
+        'POST',
+        '/portfolios/$portfolioId/activities',
+        body: {'activities': batch},
+      );
+      for (final item in json['notCreatedActivities'] as List? ?? const []) {
+        final error = ParqetJson.object((item as Map)['error']);
+        final index = (error['originalIndex'] as num?)?.toInt();
+        if (index == null) continue;
+        rejected[start + index] =
+            error['message'] as String? ?? error['code'] as String? ?? '';
+      }
+    }
+    return rejected;
   }
 
   Future<Map<String, dynamic>> _send(

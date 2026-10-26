@@ -5445,7 +5445,7 @@
   "depotSyncNow": "Sync now",
   "depotSettingsTitle": "Parqet connection",
   "depotSettingsSectionParqet": "Parqet integration",
-  "depotSettingsIntro": "Create a private integration with read access in the Parqet developer console, register the redirect URL below and paste its client ID here.",
+  "depotSettingsIntro": "Create a private integration with read and write access in the Parqet developer console (write is used to upload imported PDFs), register the redirect URL below and paste its client ID here.",
   "depotSettingsOpenConsole": "Open developer console",
   "depotSettingsClientId": "Client ID",
   "depotSettingsRedirectUri": "Redirect URL",
@@ -5686,6 +5686,56 @@
   "depotDividendFreqSemiannual": "semi-annual",
   "depotDividendFreqAnnual": "annual",
   "depotDividendFreqIrregular": "irregular",
+  "depotUploadAction": "Send to Parqet",
+  "depotUploadTitle": "Send to Parqet",
+  "depotUploadPortfolio": "Portfolio",
+  "depotUploadSinglePortfolio": "Portfolio: {name}",
+  "@depotUploadSinglePortfolio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "depotUploadCount": "{count, plural, =0{Nothing new to send} =1{1 activity will be created} other{{count} activities will be created}}",
+  "@depotUploadCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotUploadExisting": "{count, plural, =1{1 is already in Parqet and will be skipped} other{{count} are already in Parqet and will be skipped}}",
+  "@depotUploadExisting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "depotUploadHint": "Each activity carries an ID derived from the document, so sending the same PDF twice does not create a duplicate.",
+  "depotUploadConfirm": "Send",
+  "depotUploadDone": "Sent: {uploaded} · already in Parqet: {existing} · rejected: {rejected}",
+  "@depotUploadDone": {
+    "placeholders": {
+      "uploaded": {
+        "type": "int"
+      },
+      "existing": {
+        "type": "int"
+      },
+      "rejected": {
+        "type": "int"
+      }
+    }
+  },
+  "depotUploadNeedsWriteTitle": "Write access needed",
+  "depotUploadNeedsWrite": "The current Parqet login can only read. Allow write access for the integration in the Parqet developer console, then reconnect in the settings.",
+  "depotUploadNotConnected": "Connect to Parqet with write access in the settings first.",
+  "depotUploadNoPortfolio": "No Parqet portfolio found. Sync first.",
+  "depotUploadStatusSent": "Sent to Parqet",
+  "depotUploadStatusExisting": "Already in Parqet",
+  "depotUploadStatusRejected": "Rejected by Parqet",
   "depotTxNet": "net {amount}",
   "@depotTxNet": {
     "placeholders": {
@@ -5706,6 +5756,7 @@
   "depotErrorNotConnected": "Not connected to Parqet",
   "depotErrorUnauthorized": "The Parqet login expired, please reconnect",
   "depotErrorDenied": "Access was not granted in Parqet",
+  "depotErrorScopeNotAllowed": "The Parqet integration does not allow write access. Enable it in the developer console and connect again.",
   "depotErrorPortBusy": "Port {port} is in use. Close other apps using it and try again.",
   "@depotErrorPortBusy": {
     "placeholders": {

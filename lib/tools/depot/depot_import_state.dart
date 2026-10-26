@@ -4,11 +4,28 @@ import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/helpers/pdf_engine_helper.dart';
 
 import 'models/depot_activity.dart';
+import 'parqet/parqet_activity_upload.dart';
+import 'parqet/parqet_api.dart';
 import 'parqet_csv.dart';
 import 'parsing/statement_parser.dart';
 
+enum DepotUploadStatus { uploaded, rejected, existing }
+
+class DepotUploadResult {
+  final DepotUploadStatus status;
+
+  /// Parqet's reason for a rejection.
+  final String? message;
+
+  const DepotUploadResult(this.status, [this.message]);
+}
+
+typedef DepotUploadSummary = ({int uploaded, int rejected, int existing});
+
 class DepotImportState extends ChangeNotifier {
   final List<ParsedStatement> _statements = [];
+  final Map<String, DepotUploadResult> _uploads = {};
+  bool _isUploading = false;
   bool _isImporting = false;
   int _importDone = 0;
   int _importTotal = 0;
@@ -22,6 +39,9 @@ class DepotImportState extends ChangeNotifier {
   int get importTotal => _importTotal;
   String? get error => _error;
   bool get isEmpty => _statements.isEmpty;
+  bool get isUploading => _isUploading;
+
+  DepotUploadResult? uploadOf(String id) => _uploads[id];
 
   int get issueCount => _statements.where((s) => s.issues.isNotEmpty).length;
 
@@ -133,6 +153,7 @@ class DepotImportState extends ChangeNotifier {
 
   void remove(String id) {
     _statements.removeWhere((s) => s.id == id);
+    _uploads.remove(id);
     _refreshDuplicates();
     notifyListeners();
   }
@@ -141,6 +162,7 @@ class DepotImportState extends ChangeNotifier {
     if (_statements.isEmpty && _error == null && !_isImporting) return;
     _importGeneration++;
     _statements.clear();
+    _uploads.clear();
     _error = null;
     _isImporting = false;
     _importDone = 0;
@@ -169,6 +191,62 @@ class DepotImportState extends ChangeNotifier {
     _statements[index] = update(_statements[index]);
     _refreshDuplicates();
     notifyListeners();
+  }
+
+  /// Sends the selected statements to [portfolioId], skipping those in
+  /// [existing]. Sent and skipped ones are deselected, so a second upload or
+  /// a CSV export does not repeat them.
+  Future<DepotUploadSummary> uploadToParqet({
+    required ParqetApi api,
+    required String portfolioId,
+    required Set<String> existing,
+  }) async {
+    if (_isUploading) return (uploaded: 0, rejected: 0, existing: 0);
+    final targets = exportable;
+    final toSend = [
+      for (final s in targets)
+        if (!existing.contains(s.id)) s,
+    ];
+    _isUploading = true;
+    notifyListeners();
+    try {
+      final rejected = toSend.isEmpty
+          ? const <int, String>{}
+          : await api.createActivities(portfolioId, [
+              for (final s in toSend) ParqetActivityUpload.body(s),
+            ]);
+      for (var i = 0; i < toSend.length; i++) {
+        final message = rejected[i];
+        _uploads[toSend[i].id] = message == null
+            ? const DepotUploadResult(DepotUploadStatus.uploaded)
+            : DepotUploadResult(DepotUploadStatus.rejected, message);
+      }
+      for (final s in targets) {
+        if (existing.contains(s.id)) {
+          _uploads[s.id] = const DepotUploadResult(DepotUploadStatus.existing);
+        }
+      }
+      for (var i = 0; i < _statements.length; i++) {
+        final status = _uploads[_statements[i].id]?.status;
+        if (status == DepotUploadStatus.uploaded ||
+            status == DepotUploadStatus.existing) {
+          _statements[i] = _statements[i].copyWith(selected: false);
+        }
+      }
+      _refreshDuplicates();
+      debugLog(
+        'DepotImport: uploaded ${toSend.length - rejected.length}, '
+        'rejected ${rejected.length}, skipped ${targets.length - toSend.length}',
+      );
+      return (
+        uploaded: toSend.length - rejected.length,
+        rejected: rejected.length,
+        existing: targets.length - toSend.length,
+      );
+    } finally {
+      _isUploading = false;
+      notifyListeners();
+    }
   }
 
   String buildCsv() {

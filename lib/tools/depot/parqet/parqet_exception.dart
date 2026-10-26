@@ -2,6 +2,9 @@ enum ParqetErrorKind {
   notConnected,
   unauthorized,
   denied,
+
+  /// The integration lacks a requested scope; fixed in the developer console.
+  scopeNotAllowed,
   portBusy,
   timeout,
   network,

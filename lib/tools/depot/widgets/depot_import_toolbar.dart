@@ -12,6 +12,8 @@ class DepotImportToolbar extends StatelessWidget {
   final VoidCallback onAdd;
   final VoidCallback onClear;
   final VoidCallback onExport;
+  final VoidCallback onUpload;
+  final bool isUploading;
 
   const DepotImportToolbar({
     super.key,
@@ -23,6 +25,8 @@ class DepotImportToolbar extends StatelessWidget {
     required this.onAdd,
     required this.onClear,
     required this.onExport,
+    required this.onUpload,
+    required this.isUploading,
   });
 
   @override
@@ -54,6 +58,17 @@ class DepotImportToolbar extends StatelessWidget {
               ),
             ),
           ToolChip(icon: Icons.add, label: l10n.depotImportAdd, onTap: onAdd),
+          isUploading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : ToolChip(
+                  icon: Icons.cloud_upload_outlined,
+                  label: l10n.depotUploadAction,
+                  onTap: onUpload,
+                ),
           ToolChip(
             icon: Icons.file_download_outlined,
             label: l10n.depotImportExport,

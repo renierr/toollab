@@ -3,6 +3,7 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/theme/theme.dart';
 import 'package:tool_lab/widgets/status_badge.dart';
 
+import '../depot_import_state.dart';
 import '../depot_labels.dart';
 import '../models/depot_activity.dart';
 import 'depot_activity_fields.dart';
@@ -10,6 +11,7 @@ import 'depot_statement_header.dart';
 
 class DepotStatementCard extends StatelessWidget {
   final ParsedStatement statement;
+  final DepotUploadResult? upload;
   final VoidCallback onToggle;
   final VoidCallback onEdit;
   final VoidCallback onRemove;
@@ -19,6 +21,7 @@ class DepotStatementCard extends StatelessWidget {
     super.key,
     required this.statement,
     required this.onToggle,
+    this.upload,
     required this.onEdit,
     required this.onRemove,
     required this.onShowText,
@@ -64,6 +67,42 @@ class DepotStatementCard extends StatelessWidget {
                     )
                   : DepotActivityFields(activity: activity),
             ),
+            if (upload case final upload?) ...[
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: StatusBadge(
+                    label: switch (upload.status) {
+                      DepotUploadStatus.uploaded => l10n.depotUploadStatusSent,
+                      DepotUploadStatus.existing =>
+                        l10n.depotUploadStatusExisting,
+                      DepotUploadStatus.rejected =>
+                        l10n.depotUploadStatusRejected,
+                    },
+                    color: upload.status == DepotUploadStatus.rejected
+                        ? AppTheme.statusRed
+                        : AppTheme.statusGreen,
+                    icon: switch (upload.status) {
+                      DepotUploadStatus.uploaded => Icons.cloud_done_outlined,
+                      DepotUploadStatus.existing => Icons.done_all,
+                      DepotUploadStatus.rejected => Icons.cloud_off_outlined,
+                    },
+                  ),
+                ),
+              ),
+              if (upload.message case final message? when message.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                  child: Text(
+                    message,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.statusRed,
+                    ),
+                  ),
+                ),
+            ],
             if (hasIssues) ...[
               const SizedBox(height: 10),
               Padding(

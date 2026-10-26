@@ -17,10 +17,14 @@ class ParqetTokens {
   final String refreshToken;
   final DateTime expiresAt;
 
+  /// Granted scopes, when the token response names them.
+  final String? scope;
+
   const ParqetTokens({
     required this.accessToken,
     required this.refreshToken,
     required this.expiresAt,
+    this.scope,
   });
 
   bool get isExpiring =>
@@ -38,7 +42,8 @@ class ParqetAuth {
   static final Uri _tokenUri = Uri.parse(
     'https://connect.parqet.com/oauth2/token',
   );
-  static const String scope = 'portfolio:read';
+  static const String writeScope = 'portfolio:write';
+  static const String scope = 'portfolio:read $writeScope';
 
   /// Fixed because the redirect URI must match the one registered with the
   /// integration exactly. A loopback listener works on Android and Windows
@@ -53,6 +58,19 @@ class ParqetAuth {
   static const _accessKey = 'depot_parqet_access_token';
   static const _refreshKey = 'depot_parqet_refresh_token';
   static const _expiresKey = 'depot_parqet_expires_at';
+  static const _scopeKey = 'depot_parqet_scope';
+
+  /// Whether the stored grant may create activities. Tokens from before
+  /// write access was requested carry no stored scope and cannot.
+  static Future<bool> canWrite() async {
+    try {
+      final granted = await _storage.read(key: _scopeKey) ?? '';
+      return granted.split(' ').contains(writeScope);
+    } catch (e) {
+      errorLog('[ParqetAuth] Reading scope failed: $e');
+      return false;
+    }
+  }
 
   static Future<ParqetTokens?> readTokens() async {
     try {
@@ -81,7 +99,7 @@ class ParqetAuth {
   }
 
   static Future<void> clearTokens() async {
-    for (final key in [_accessKey, _refreshKey, _expiresKey]) {
+    for (final key in [_accessKey, _refreshKey, _expiresKey, _scopeKey]) {
       await _storage.delete(key: key);
     }
   }
@@ -135,6 +153,12 @@ class ParqetAuth {
       }
 
       final error = callback.queryParameters['error'];
+      if (error == 'invalid_scope') {
+        throw const ParqetException(
+          ParqetErrorKind.scopeNotAllowed,
+          'invalid_scope',
+        );
+      }
       if (error != null) throw ParqetException(ParqetErrorKind.denied, error);
       if (callback.queryParameters['state'] != state) {
         throw const ParqetException(
@@ -158,6 +182,7 @@ class ParqetAuth {
         'code_verifier': verifier,
       });
       await _saveTokens(tokens);
+      await _storage.write(key: _scopeKey, value: tokens.scope ?? scope);
     } finally {
       await server.close(force: true);
     }
@@ -255,6 +280,7 @@ class ParqetAuth {
         accessToken: access,
         refreshToken: refresh,
         expiresAt: DateTime.now().add(Duration(seconds: expiresIn)),
+        scope: json['scope'] as String?,
       );
     } catch (e) {
       throw ParqetException(ParqetErrorKind.invalidResponse, '$e');

@@ -10995,7 +10995,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotSettingsIntro =>
-      'Lege in der Parqet-Entwicklerkonsole eine private Integration mit Lesezugriff an, trage die Redirect-URL unten ein und füge hier ihre Client-ID ein.';
+      'Lege in der Parqet-Entwicklerkonsole eine private Integration mit Lese- und Schreibzugriff an (Schreiben dient zum Hochladen importierter PDFs), trage die Redirect-URL unten ein und füge hier ihre Client-ID ein.';
 
   @override
   String get depotSettingsOpenConsole => 'Entwicklerkonsole öffnen';
@@ -11407,6 +11407,79 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotDividendFreqIrregular => 'unregelmäßig';
 
   @override
+  String get depotUploadAction => 'An Parqet senden';
+
+  @override
+  String get depotUploadTitle => 'An Parqet senden';
+
+  @override
+  String get depotUploadPortfolio => 'Depot';
+
+  @override
+  String depotUploadSinglePortfolio(String name) {
+    return 'Depot: $name';
+  }
+
+  @override
+  String depotUploadCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Buchungen werden angelegt',
+      one: '1 Buchung wird angelegt',
+      zero: 'Nichts Neues zu senden',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String depotUploadExisting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sind schon in Parqet und werden übersprungen',
+      one: '1 ist schon in Parqet und wird übersprungen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get depotUploadHint =>
+      'Jede Buchung trägt eine aus dem Dokument gebildete ID, daher erzeugt dasselbe PDF zweimal gesendet keine Doppelbuchung.';
+
+  @override
+  String get depotUploadConfirm => 'Senden';
+
+  @override
+  String depotUploadDone(int uploaded, int existing, int rejected) {
+    return 'Gesendet: $uploaded · schon in Parqet: $existing · abgelehnt: $rejected';
+  }
+
+  @override
+  String get depotUploadNeedsWriteTitle => 'Schreibzugriff nötig';
+
+  @override
+  String get depotUploadNeedsWrite =>
+      'Die aktuelle Parqet-Anmeldung darf nur lesen. Erlaube der Integration in der Parqet-Entwicklerkonsole Schreibzugriff und verbinde dich danach in den Einstellungen neu.';
+
+  @override
+  String get depotUploadNotConnected =>
+      'Verbinde dich zuerst in den Einstellungen mit Parqet, inklusive Schreibzugriff.';
+
+  @override
+  String get depotUploadNoPortfolio =>
+      'Kein Parqet-Depot gefunden. Bitte zuerst synchronisieren.';
+
+  @override
+  String get depotUploadStatusSent => 'An Parqet gesendet';
+
+  @override
+  String get depotUploadStatusExisting => 'Schon in Parqet';
+
+  @override
+  String get depotUploadStatusRejected => 'Von Parqet abgelehnt';
+
+  @override
   String depotTxNet(String amount) {
     return 'netto $amount';
   }
@@ -11447,6 +11520,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get depotErrorDenied => 'Der Zugriff wurde in Parqet nicht erlaubt';
+
+  @override
+  String get depotErrorScopeNotAllowed =>
+      'Die Parqet-Integration erlaubt keinen Schreibzugriff. Aktiviere ihn in der Entwicklerkonsole und verbinde dich neu.';
 
   @override
   String depotErrorPortBusy(int port) {

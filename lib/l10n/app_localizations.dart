@@ -19490,7 +19490,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotSettingsIntro.
   ///
   /// In en, this message translates to:
-  /// **'Create a private integration with read access in the Parqet developer console, register the redirect URL below and paste its client ID here.'**
+  /// **'Create a private integration with read and write access in the Parqet developer console (write is used to upload imported PDFs), register the redirect URL below and paste its client ID here.'**
   String get depotSettingsIntro;
 
   /// No description provided for @depotSettingsOpenConsole.
@@ -20219,6 +20219,102 @@ abstract class AppLocalizations {
   /// **'irregular'**
   String get depotDividendFreqIrregular;
 
+  /// No description provided for @depotUploadAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Parqet'**
+  String get depotUploadAction;
+
+  /// No description provided for @depotUploadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Parqet'**
+  String get depotUploadTitle;
+
+  /// No description provided for @depotUploadPortfolio.
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio'**
+  String get depotUploadPortfolio;
+
+  /// No description provided for @depotUploadSinglePortfolio.
+  ///
+  /// In en, this message translates to:
+  /// **'Portfolio: {name}'**
+  String depotUploadSinglePortfolio(String name);
+
+  /// No description provided for @depotUploadCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing new to send} =1{1 activity will be created} other{{count} activities will be created}}'**
+  String depotUploadCount(int count);
+
+  /// No description provided for @depotUploadExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 is already in Parqet and will be skipped} other{{count} are already in Parqet and will be skipped}}'**
+  String depotUploadExisting(int count);
+
+  /// No description provided for @depotUploadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each activity carries an ID derived from the document, so sending the same PDF twice does not create a duplicate.'**
+  String get depotUploadHint;
+
+  /// No description provided for @depotUploadConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get depotUploadConfirm;
+
+  /// No description provided for @depotUploadDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent: {uploaded} · already in Parqet: {existing} · rejected: {rejected}'**
+  String depotUploadDone(int uploaded, int existing, int rejected);
+
+  /// No description provided for @depotUploadNeedsWriteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write access needed'**
+  String get depotUploadNeedsWriteTitle;
+
+  /// No description provided for @depotUploadNeedsWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'The current Parqet login can only read. Allow write access for the integration in the Parqet developer console, then reconnect in the settings.'**
+  String get depotUploadNeedsWrite;
+
+  /// No description provided for @depotUploadNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Parqet with write access in the settings first.'**
+  String get depotUploadNotConnected;
+
+  /// No description provided for @depotUploadNoPortfolio.
+  ///
+  /// In en, this message translates to:
+  /// **'No Parqet portfolio found. Sync first.'**
+  String get depotUploadNoPortfolio;
+
+  /// No description provided for @depotUploadStatusSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to Parqet'**
+  String get depotUploadStatusSent;
+
+  /// No description provided for @depotUploadStatusExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in Parqet'**
+  String get depotUploadStatusExisting;
+
+  /// No description provided for @depotUploadStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected by Parqet'**
+  String get depotUploadStatusRejected;
+
   /// No description provided for @depotTxNet.
   ///
   /// In en, this message translates to:
@@ -20296,6 +20392,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Access was not granted in Parqet'**
   String get depotErrorDenied;
+
+  /// No description provided for @depotErrorScopeNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'The Parqet integration does not allow write access. Enable it in the developer console and connect again.'**
+  String get depotErrorScopeNotAllowed;
 
   /// No description provided for @depotErrorPortBusy.
   ///
