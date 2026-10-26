@@ -11009,6 +11009,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotChartGain => 'Performance';
 
   @override
+  String get depotRangeToday => 'Today';
+
+  @override
   String get depotRange1m => '1M';
 
   @override

@@ -5475,6 +5475,7 @@
   "depotChartInvested": "Invested",
   "depotChartChange": "Change",
   "depotChartGain": "Performance",
+  "depotRangeToday": "Today",
   "depotRange1m": "1M",
   "depotRange3m": "3M",
   "depotRangeYtd": "YTD",

@@ -11,6 +11,12 @@ import '../depot_portfolio_state.dart';
 import '../models/depot_filters.dart';
 import '../models/depot_summary.dart';
 
+/// An intraday chart needs the time; a longer one only the date.
+DateStyle _dateStyle(List<DepotChartPoint> points) =>
+    points.last.date.difference(points.first.date) < const Duration(days: 2)
+    ? DateStyle.dateAndTime
+    : DateStyle.dateOnly;
+
 class DepotValueChart extends StatelessWidget {
   final List<DepotChartPoint> points;
   final DepotRangeChange? change;
@@ -233,7 +239,7 @@ class _InteractiveChartState extends State<_InteractiveChart> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          '${FormatHelper.dateTime(point.date, style: DateStyle.dateOnly)}  '
+                          '${FormatHelper.dateTime(point.date, style: _dateStyle(widget.points))}  '
                           '${widget.format.money(point.value)} / '
                           '${widget.format.money(point.capital)}',
                           style: theme.textTheme.labelSmall,
@@ -367,14 +373,15 @@ class _ChartPainter extends CustomPainter {
       format.compactMoney(minY + pad),
       Offset(4, chart.bottom - 14),
     );
+    final dateStyle = _dateStyle(points);
     _text(
       canvas,
-      FormatHelper.dateTime(points.first.date, style: DateStyle.dateOnly),
+      FormatHelper.dateTime(points.first.date, style: dateStyle),
       Offset(chart.left, chart.bottom + 2),
     );
     _text(
       canvas,
-      FormatHelper.dateTime(points.last.date, style: DateStyle.dateOnly),
+      FormatHelper.dateTime(points.last.date, style: dateStyle),
       Offset(chart.right, chart.bottom + 2),
       alignRight: true,
     );

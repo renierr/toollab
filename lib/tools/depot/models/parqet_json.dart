@@ -8,7 +8,7 @@ class ParqetJson {
   static double? numberOrNull(Object? value) => (value as num?)?.toDouble();
 
   static DateTime? date(Object? value) =>
-      value is String ? DateTime.tryParse(value) : null;
+      value is String ? DateTime.tryParse(value)?.toLocal() : null;
 
   static DateTime? fromEpoch(Object? value) =>
       value is int ? DateTime.fromMillisecondsSinceEpoch(value) : null;

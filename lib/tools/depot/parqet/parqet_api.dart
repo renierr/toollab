@@ -41,13 +41,14 @@ class ParqetApi {
     ];
   }
 
-  /// All-time performance of [portfolioIds] combined, tagged as [scope].
+  /// Performance of [portfolioIds] combined over [period], tagged as [scope].
   /// Holdings are only attributable when a single portfolio is requested,
   /// so they carry [scope] as their portfolio id.
   Future<ParqetPerformance> performance({
     required String scope,
     required List<String> portfolioIds,
     required String currency,
+    DepotChartPeriod period = DepotChartPeriod.max,
   }) async {
     final json = await _send(
       'POST',
@@ -55,7 +56,7 @@ class ParqetApi {
       body: {
         'portfolioIds': portfolioIds,
         'currency': currency,
-        'interval': {'type': 'relative', 'value': 'max'},
+        'interval': {'type': 'relative', 'value': period.wire},
       },
     );
     final syncedAt = DateTime.now();

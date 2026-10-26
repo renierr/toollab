@@ -39,10 +39,11 @@ class DepotPortfolioState extends ChangeNotifier {
   String _scope = DepotStore.allScope;
   DepotSummary? _summary;
   List<DepotChartPoint> _chart = const [];
+  List<DepotChartPoint> _intradayChart = const [];
   List<DepotHolding> _holdings = const [];
   List<DepotTransaction> _transactions = const [];
 
-  DepotChartRange _range = DepotChartRange.year1;
+  DepotChartRange _range = DepotChartRange.today;
   DepotHoldingFilter _holdingFilter = const DepotHoldingFilter();
   DepotActivityFilter _activityFilter = const DepotActivityFilter();
   List<DepotHolding> _visibleHoldings = const [];
@@ -99,7 +100,11 @@ class DepotPortfolioState extends ChangeNotifier {
     }
     final portfolioId = _scope == DepotStore.allScope ? null : _scope;
     _summary = await _store.summary(_scope);
-    _chart = await _store.chart(_scope);
+    _chart = await _store.chart((scope: _scope, period: DepotChartPeriod.max));
+    _intradayChart = await _store.chart((
+      scope: _scope,
+      period: DepotChartPeriod.day,
+    ));
     _holdings = await _store.holdings(portfolioId: portfolioId);
     _transactions = await _store.transactions(portfolioId: portfolioId);
     _refilterHoldings();
@@ -239,9 +244,11 @@ class DepotPortfolioState extends ChangeNotifier {
   }
 
   List<DepotChartPoint> _sliceChart() {
+    if (_range == DepotChartRange.today) return _intradayChart;
     if (_chart.isEmpty) return _chart;
     final end = _chart.last.date;
     final DateTime? start = switch (_range) {
+      DepotChartRange.today => null,
       DepotChartRange.month1 => DateTime(end.year, end.month - 1, end.day),
       DepotChartRange.month3 => DateTime(end.year, end.month - 3, end.day),
       DepotChartRange.ytd => DateTime(end.year),

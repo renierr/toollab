@@ -35,10 +35,23 @@ class DepotParqetSync {
     final holdings = <DepotHolding>[];
     final transactions = <DepotTransaction>[];
     final summaries = <DepotSummary>[];
-    final charts = <String, List<DepotChartPoint>>{};
+    final charts = <DepotChartKey, List<DepotChartPoint>>{};
 
     // One currency for every request keeps the per-portfolio figures summable.
     final currency = portfolios.isEmpty ? 'EUR' : portfolios.first.currency;
+
+    Future<List<DepotChartPoint>> intraday(
+      String scope,
+      List<String> portfolioIds,
+    ) async {
+      final day = await api.performance(
+        scope: scope,
+        portfolioIds: portfolioIds,
+        currency: currency,
+        period: DepotChartPeriod.day,
+      );
+      return day.chart;
+    }
 
     // Sequential on purpose: Parqet documents no rate limit, so stay gentle.
     for (final portfolio in portfolios) {
@@ -49,21 +62,32 @@ class DepotParqetSync {
       );
       holdings.addAll(performance.holdings);
       summaries.add(performance.summary);
-      charts[portfolio.id] = performance.chart;
+      charts[(scope: portfolio.id, period: DepotChartPeriod.max)] =
+          performance.chart;
+      charts[(scope: portfolio.id, period: DepotChartPeriod.day)] =
+          await intraday(portfolio.id, [portfolio.id]);
       transactions.addAll(await api.activities(portfolio.id));
     }
 
     if (portfolios.length == 1) {
+      final only = portfolios.first.id;
       summaries.add(summaries.first.withScope(DepotStore.allScope));
-      charts[DepotStore.allScope] = charts[portfolios.first.id]!;
+      for (final period in DepotChartPeriod.values) {
+        charts[(scope: DepotStore.allScope, period: period)] =
+            charts[(scope: only, period: period)]!;
+      }
     } else if (portfolios.length > 1) {
+      final ids = [for (final p in portfolios.take(_maxCombined)) p.id];
       final combined = await api.performance(
         scope: DepotStore.allScope,
-        portfolioIds: [for (final p in portfolios.take(_maxCombined)) p.id],
+        portfolioIds: ids,
         currency: currency,
       );
       summaries.add(combined.summary);
-      charts[DepotStore.allScope] = combined.chart;
+      charts[(scope: DepotStore.allScope, period: DepotChartPeriod.max)] =
+          combined.chart;
+      charts[(scope: DepotStore.allScope, period: DepotChartPeriod.day)] =
+          await intraday(DepotStore.allScope, ids);
     }
 
     await store.replaceAll(

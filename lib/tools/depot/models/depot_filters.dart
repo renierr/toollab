@@ -3,7 +3,7 @@ import 'depot_transaction.dart';
 
 enum DepotHoldingSort { value, gain, gainPercent, name }
 
-enum DepotChartRange { month1, month3, ytd, year1, year3, max }
+enum DepotChartRange { today, month1, month3, ytd, year1, year3, max }
 
 class DepotHoldingFilter {
   final String query;

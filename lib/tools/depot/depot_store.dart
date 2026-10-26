@@ -36,7 +36,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 1,
+        currentVersion: 2,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -117,16 +117,29 @@ class DepotStore {
                 synced_at INTEGER NOT NULL
               )
             ''');
+          }
+          if (oldVersion < 2) {
+            // Only a mirror of Parqet, so the old table is dropped instead of
+            // migrated, and the next sync refills it.
+            await txn.execute(
+              'DROP TABLE IF EXISTS ${txn.nameTable(_chartPoints)}',
+            );
             await txn.execute('''
               CREATE TABLE ${txn.nameTable(_chartPoints)} (
                 scope TEXT NOT NULL,
+                period TEXT NOT NULL,
                 date INTEGER NOT NULL,
                 value REAL NOT NULL,
                 capital REAL NOT NULL,
                 drawdown REAL NOT NULL,
-                PRIMARY KEY (scope, date)
+                PRIMARY KEY (scope, period, date)
               )
             ''');
+            await txn.executor.delete(
+              'tool_settings',
+              where: 'tool_id = ? AND key = ?',
+              whereArgs: [_toolId, _lastSyncKey],
+            );
           }
         },
       );
@@ -196,12 +209,12 @@ class DepotStore {
     return rows.isEmpty ? null : DepotSummary.fromMap(rows.first);
   }
 
-  Future<List<DepotChartPoint>> chart(String scope) async {
+  Future<List<DepotChartPoint>> chart(DepotChartKey key) async {
     final db = await _getDb();
     final rows = await db.query(
       _chartPoints,
-      where: 'scope = ?',
-      whereArgs: [scope],
+      where: 'scope = ? AND period = ?',
+      whereArgs: [key.scope, key.period.wire],
       orderBy: 'date ASC',
     );
     return rows.map(DepotChartPoint.fromMap).toList();
@@ -214,7 +227,7 @@ class DepotStore {
     required List<DepotHolding> holdings,
     required List<DepotTransaction> transactions,
     required List<DepotSummary> summaries,
-    required Map<String, List<DepotChartPoint>> charts,
+    required Map<DepotChartKey, List<DepotChartPoint>> charts,
   }) async {
     final db = await _getDb();
     await db.transaction((txn) async {

@@ -120,6 +120,20 @@ class DepotSummary {
   };
 }
 
+/// Parqet's relative interval a chart was requested with.
+enum DepotChartPeriod {
+  max('max'),
+
+  /// Intraday points of the current trading day.
+  day('1d');
+
+  final String wire;
+
+  const DepotChartPeriod(this.wire);
+}
+
+typedef DepotChartKey = ({String scope, DepotChartPeriod period});
+
 class DepotChartPoint {
   final DateTime date;
   final double value;
@@ -154,8 +168,9 @@ class DepotChartPoint {
     drawdown: map['drawdown'] as double,
   );
 
-  Map<String, Object?> toMap(String scope) => {
-    'scope': scope,
+  Map<String, Object?> toMap(DepotChartKey key) => {
+    'scope': key.scope,
+    'period': key.period.wire,
     'date': date.millisecondsSinceEpoch,
     'value': value,
     'capital': capital,

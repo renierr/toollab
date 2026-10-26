@@ -38,6 +38,7 @@ class DepotPortfolioLabels {
 
   static String range(AppLocalizations l10n, DepotChartRange range) =>
       switch (range) {
+        DepotChartRange.today => l10n.depotRangeToday,
         DepotChartRange.month1 => l10n.depotRange1m,
         DepotChartRange.month3 => l10n.depotRange3m,
         DepotChartRange.ytd => l10n.depotRangeYtd,
