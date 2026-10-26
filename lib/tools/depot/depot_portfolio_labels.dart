@@ -10,16 +10,28 @@ import 'parqet/parqet_exception.dart';
 class DepotPortfolioLabels {
   DepotPortfolioLabels._();
 
-  static String assetType(AppLocalizations l10n, DepotAssetType type) =>
-      switch (type) {
-        DepotAssetType.security => l10n.depotAssetSecurity,
-        DepotAssetType.crypto => l10n.depotAssetCrypto,
-        DepotAssetType.commodity => l10n.depotAssetCommodity,
-        DepotAssetType.cash => l10n.depotAssetCash,
-        DepotAssetType.custom => l10n.depotAssetCustom,
-        DepotAssetType.insurance => l10n.depotAssetInsurance,
-        DepotAssetType.p2p => l10n.depotAssetP2p,
-        DepotAssetType.realEstate => l10n.depotAssetRealEstate,
+  /// Plural, for filter chips and the allocation legend.
+  static String kinds(AppLocalizations l10n, DepotHoldingKind kind) =>
+      switch (kind) {
+        DepotHoldingKind.stock => l10n.depotKindStocks,
+        DepotHoldingKind.etf => l10n.depotKindEtfs,
+        DepotHoldingKind.fund => l10n.depotKindFunds,
+        DepotHoldingKind.crypto => l10n.depotAssetCrypto,
+        DepotHoldingKind.commodity => l10n.depotAssetCommodity,
+        DepotHoldingKind.cash => l10n.depotAssetCash,
+        DepotHoldingKind.insurance => l10n.depotAssetInsurance,
+        DepotHoldingKind.p2p => l10n.depotAssetP2p,
+        DepotHoldingKind.realEstate => l10n.depotAssetRealEstate,
+        DepotHoldingKind.other => l10n.depotAssetCustom,
+      };
+
+  /// Singular, for the badge on one holding.
+  static String kind(AppLocalizations l10n, DepotHoldingKind kind) =>
+      switch (kind) {
+        DepotHoldingKind.stock => l10n.depotKindStock,
+        DepotHoldingKind.etf => l10n.depotKindEtf,
+        DepotHoldingKind.fund => l10n.depotKindFund,
+        _ => kinds(l10n, kind),
       };
 
   static String transactionType(

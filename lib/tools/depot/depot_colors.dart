@@ -6,14 +6,28 @@ import 'models/depot_holding.dart';
 class DepotColors {
   DepotColors._();
 
-  static Color assetType(DepotAssetType type) => switch (type) {
-    DepotAssetType.security => AppTheme.accentGreen,
-    DepotAssetType.crypto => AppTheme.accentAmber,
-    DepotAssetType.commodity => AppTheme.accentAmberLight,
-    DepotAssetType.cash => AppTheme.accentBlue,
-    DepotAssetType.custom => AppTheme.accentPurple,
-    DepotAssetType.insurance => AppTheme.accentTeal,
-    DepotAssetType.p2p => AppTheme.accentRed,
-    DepotAssetType.realEstate => AppTheme.statusOrange,
+  static Color kind(DepotHoldingKind kind) => switch (kind) {
+    DepotHoldingKind.stock => AppTheme.accentGreen,
+    DepotHoldingKind.etf => AppTheme.accentBlue,
+    DepotHoldingKind.fund => AppTheme.accentTeal,
+    DepotHoldingKind.crypto => AppTheme.accentAmber,
+    DepotHoldingKind.commodity => AppTheme.accentAmberLight,
+    DepotHoldingKind.cash => AppTheme.statusOrange,
+    DepotHoldingKind.insurance => AppTheme.accentPurple,
+    DepotHoldingKind.p2p => AppTheme.accentRed,
+    DepotHoldingKind.realEstate => AppTheme.statusRed,
+    DepotHoldingKind.other => AppTheme.statusBlue,
   };
+
+  /// A stable color per holding, spread around the hue circle so neighbours
+  /// in the list rarely look alike.
+  static Color holding(String seed) {
+    var hash = 0;
+    for (final unit in seed.codeUnits) {
+      hash = (hash * 31 + unit) & 0x7fffffff;
+    }
+    // Golden-angle steps keep consecutive hashes far apart in hue.
+    final hue = (hash * 137.508) % 360;
+    return HSLColor.fromAHSL(1, hue, 0.55, 0.58).toColor();
+  }
 }

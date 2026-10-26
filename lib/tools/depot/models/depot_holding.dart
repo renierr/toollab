@@ -21,6 +21,44 @@ enum DepotAssetType {
   );
 }
 
+/// What a holding is, with securities split further. Parqet only reports
+/// "security", so stock, ETF and fund are told apart by the name.
+enum DepotHoldingKind {
+  stock,
+  etf,
+  fund,
+  crypto,
+  commodity,
+  cash,
+  insurance,
+  p2p,
+  realEstate,
+  other;
+
+  static final _etf = RegExp(r'\b(ETF|ETC|ETN)\b', caseSensitive: false);
+  static final _fund = RegExp(
+    r'\b(Fonds|Funds?|SICAV|UCITS|Investmentfonds)\b',
+    caseSensitive: false,
+  );
+
+  static DepotHoldingKind of(DepotAssetType type, String name) =>
+      switch (type) {
+        DepotAssetType.security =>
+          _etf.hasMatch(name)
+              ? etf
+              : _fund.hasMatch(name)
+              ? fund
+              : stock,
+        DepotAssetType.crypto => crypto,
+        DepotAssetType.commodity => commodity,
+        DepotAssetType.cash => cash,
+        DepotAssetType.insurance => insurance,
+        DepotAssetType.p2p => p2p,
+        DepotAssetType.realEstate => realEstate,
+        DepotAssetType.custom => other,
+      };
+}
+
 class DepotHolding {
   final String id;
   final String portfolioId;
@@ -75,6 +113,8 @@ class DepotHolding {
   });
 
   double get totalGain => unrealizedGain + realizedGain + dividends;
+
+  DepotHoldingKind get kind => DepotHoldingKind.of(assetType, name);
 
   /// ISIN or crypto symbol, whichever identifies the asset.
   String? get identifier => isin ?? symbol;

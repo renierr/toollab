@@ -265,13 +265,13 @@ class DepotPortfolioState extends ChangeNotifier {
         .toList();
   }
 
-  /// Current value per asset type, open positions only.
-  Map<DepotAssetType, double> get allocation {
-    final result = <DepotAssetType, double>{};
+  /// Current value per holding kind, open positions only.
+  Map<DepotHoldingKind, double> get allocation {
+    final result = <DepotHoldingKind, double>{};
     for (final h in _holdings) {
       if (h.isSold || h.currentValue <= 0) continue;
       result.update(
-        h.assetType,
+        h.kind,
         (v) => v + h.currentValue,
         ifAbsent: () => h.currentValue,
       );

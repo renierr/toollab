@@ -7,7 +7,7 @@ import '../depot_portfolio_labels.dart';
 import '../models/depot_holding.dart';
 
 class DepotAllocationCard extends StatelessWidget {
-  final Map<DepotAssetType, double> allocation;
+  final Map<DepotHoldingKind, double> allocation;
   final DepotFormat format;
 
   const DepotAllocationCard({
@@ -43,9 +43,7 @@ class DepotAllocationCard extends StatelessWidget {
                           1,
                           1000,
                         ),
-                        child: ColoredBox(
-                          color: DepotColors.assetType(entry.key),
-                        ),
+                        child: ColoredBox(color: DepotColors.kind(entry.key)),
                       ),
                   ],
                 ),
@@ -61,14 +59,14 @@ class DepotAllocationCard extends StatelessWidget {
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                        color: DepotColors.assetType(entry.key),
+                        color: DepotColors.kind(entry.key),
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        DepotPortfolioLabels.assetType(l10n, entry.key),
+                        DepotPortfolioLabels.kinds(l10n, entry.key),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),

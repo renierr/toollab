@@ -7,35 +7,33 @@ enum DepotHoldingSort { returnPercent, gain, value, name }
 class DepotHoldingFilter {
   final String query;
 
-  /// Empty means every type.
-  final Set<DepotAssetType> assetTypes;
+  /// Empty means every kind.
+  final Set<DepotHoldingKind> kinds;
   final bool showSold;
   final DepotHoldingSort sort;
 
   const DepotHoldingFilter({
     this.query = '',
-    this.assetTypes = const {},
+    this.kinds = const {},
     this.showSold = false,
     this.sort = DepotHoldingSort.returnPercent,
   });
 
   DepotHoldingFilter copyWith({
     String? query,
-    Set<DepotAssetType>? assetTypes,
+    Set<DepotHoldingKind>? kinds,
     bool? showSold,
     DepotHoldingSort? sort,
   }) => DepotHoldingFilter(
     query: query ?? this.query,
-    assetTypes: assetTypes ?? this.assetTypes,
+    kinds: kinds ?? this.kinds,
     showSold: showSold ?? this.showSold,
     sort: sort ?? this.sort,
   );
 
   bool matches(DepotHolding h) {
     if (!showSold && h.isSold) return false;
-    if (assetTypes.isNotEmpty && !assetTypes.contains(h.assetType)) {
-      return false;
-    }
+    if (kinds.isNotEmpty && !kinds.contains(h.kind)) return false;
     return _matchesQuery(query, [h.name, h.isin, h.symbol]);
   }
 

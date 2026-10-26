@@ -5517,6 +5517,42 @@
   "depotSortGain": "Gain",
   "depotSortGainPercent": "Return %",
   "depotSortName": "Name",
+  "depotKindStock": "Stock",
+  "depotKindStocks": "Stocks",
+  "depotKindEtf": "ETF",
+  "depotKindEtfs": "ETFs",
+  "depotKindFund": "Fund",
+  "depotKindFunds": "Funds",
+  "depotDetailType": "Type",
+  "depotDetailIsin": "ISIN",
+  "depotDetailSymbol": "Symbol",
+  "depotDetailShares": "Shares",
+  "depotDetailPurchasePrice": "Avg. buy price",
+  "depotDetailCurrentPrice": "Current price",
+  "depotDetailQuoteAt": "Quote from",
+  "depotDetailPurchaseValue": "Cost basis",
+  "depotDetailCurrentValue": "Current value",
+  "depotDetailWeight": "Weight",
+  "depotDetailPeriodGain": "Gain ({period})",
+  "@depotDetailPeriodGain": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDetailPeriodReturn": "Return ({period})",
+  "@depotDetailPeriodReturn": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDetailUnrealized": "Unrealized (total)",
+  "depotDetailRealized": "Realized (total)",
+  "depotDetailDividends": "Dividends (total)",
+  "depotDetailFirstActivity": "First activity",
   "depotAssetSecurity": "Securities",
   "depotAssetCrypto": "Crypto",
   "depotAssetCommodity": "Commodities",

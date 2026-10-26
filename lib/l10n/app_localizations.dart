@@ -19793,6 +19793,138 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get depotSortName;
 
+  /// No description provided for @depotKindStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get depotKindStock;
+
+  /// No description provided for @depotKindStocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Stocks'**
+  String get depotKindStocks;
+
+  /// No description provided for @depotKindEtf.
+  ///
+  /// In en, this message translates to:
+  /// **'ETF'**
+  String get depotKindEtf;
+
+  /// No description provided for @depotKindEtfs.
+  ///
+  /// In en, this message translates to:
+  /// **'ETFs'**
+  String get depotKindEtfs;
+
+  /// No description provided for @depotKindFund.
+  ///
+  /// In en, this message translates to:
+  /// **'Fund'**
+  String get depotKindFund;
+
+  /// No description provided for @depotKindFunds.
+  ///
+  /// In en, this message translates to:
+  /// **'Funds'**
+  String get depotKindFunds;
+
+  /// No description provided for @depotDetailType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get depotDetailType;
+
+  /// No description provided for @depotDetailIsin.
+  ///
+  /// In en, this message translates to:
+  /// **'ISIN'**
+  String get depotDetailIsin;
+
+  /// No description provided for @depotDetailSymbol.
+  ///
+  /// In en, this message translates to:
+  /// **'Symbol'**
+  String get depotDetailSymbol;
+
+  /// No description provided for @depotDetailShares.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares'**
+  String get depotDetailShares;
+
+  /// No description provided for @depotDetailPurchasePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg. buy price'**
+  String get depotDetailPurchasePrice;
+
+  /// No description provided for @depotDetailCurrentPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Current price'**
+  String get depotDetailCurrentPrice;
+
+  /// No description provided for @depotDetailQuoteAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote from'**
+  String get depotDetailQuoteAt;
+
+  /// No description provided for @depotDetailPurchaseValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost basis'**
+  String get depotDetailPurchaseValue;
+
+  /// No description provided for @depotDetailCurrentValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Current value'**
+  String get depotDetailCurrentValue;
+
+  /// No description provided for @depotDetailWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get depotDetailWeight;
+
+  /// No description provided for @depotDetailPeriodGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Gain ({period})'**
+  String depotDetailPeriodGain(String period);
+
+  /// No description provided for @depotDetailPeriodReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Return ({period})'**
+  String depotDetailPeriodReturn(String period);
+
+  /// No description provided for @depotDetailUnrealized.
+  ///
+  /// In en, this message translates to:
+  /// **'Unrealized (total)'**
+  String get depotDetailUnrealized;
+
+  /// No description provided for @depotDetailRealized.
+  ///
+  /// In en, this message translates to:
+  /// **'Realized (total)'**
+  String get depotDetailRealized;
+
+  /// No description provided for @depotDetailDividends.
+  ///
+  /// In en, this message translates to:
+  /// **'Dividends (total)'**
+  String get depotDetailDividends;
+
+  /// No description provided for @depotDetailFirstActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'First activity'**
+  String get depotDetailFirstActivity;
+
   /// No description provided for @depotAssetSecurity.
   ///
   /// In en, this message translates to:

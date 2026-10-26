@@ -107,6 +107,7 @@ class DepotOverviewView extends StatelessWidget {
                     return DepotHoldingTile(
                       holding: holding,
                       performance: state.performanceOf(holding),
+                      period: state.period,
                       format: format,
                       weight: openValue <= 0
                           ? 0

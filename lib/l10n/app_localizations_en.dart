@@ -11078,6 +11078,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotSortName => 'Name';
 
   @override
+  String get depotKindStock => 'Stock';
+
+  @override
+  String get depotKindStocks => 'Stocks';
+
+  @override
+  String get depotKindEtf => 'ETF';
+
+  @override
+  String get depotKindEtfs => 'ETFs';
+
+  @override
+  String get depotKindFund => 'Fund';
+
+  @override
+  String get depotKindFunds => 'Funds';
+
+  @override
+  String get depotDetailType => 'Type';
+
+  @override
+  String get depotDetailIsin => 'ISIN';
+
+  @override
+  String get depotDetailSymbol => 'Symbol';
+
+  @override
+  String get depotDetailShares => 'Shares';
+
+  @override
+  String get depotDetailPurchasePrice => 'Avg. buy price';
+
+  @override
+  String get depotDetailCurrentPrice => 'Current price';
+
+  @override
+  String get depotDetailQuoteAt => 'Quote from';
+
+  @override
+  String get depotDetailPurchaseValue => 'Cost basis';
+
+  @override
+  String get depotDetailCurrentValue => 'Current value';
+
+  @override
+  String get depotDetailWeight => 'Weight';
+
+  @override
+  String depotDetailPeriodGain(String period) {
+    return 'Gain ($period)';
+  }
+
+  @override
+  String depotDetailPeriodReturn(String period) {
+    return 'Return ($period)';
+  }
+
+  @override
+  String get depotDetailUnrealized => 'Unrealized (total)';
+
+  @override
+  String get depotDetailRealized => 'Realized (total)';
+
+  @override
+  String get depotDetailDividends => 'Dividends (total)';
+
+  @override
+  String get depotDetailFirstActivity => 'First activity';
+
+  @override
   String get depotAssetSecurity => 'Securities';
 
   @override

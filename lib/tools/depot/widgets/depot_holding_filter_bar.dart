@@ -17,7 +17,7 @@ class DepotHoldingFilterBar extends StatelessWidget {
     final theme = Theme.of(context);
     final state = context.watch<DepotPortfolioState>();
     final filter = state.holdingFilter;
-    final presentTypes = {for (final h in state.holdings) h.assetType};
+    final presentKinds = {for (final h in state.holdings) h.kind};
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,20 +68,22 @@ class DepotHoldingFilterBar extends StatelessWidget {
           spacing: 6,
           runSpacing: 6,
           children: [
-            for (final type in DepotAssetType.values)
-              if (presentTypes.contains(type))
-                FilterChip(
-                  label: Text(DepotPortfolioLabels.assetType(l10n, type)),
-                  selected: filter.assetTypes.contains(type),
-                  visualDensity: VisualDensity.compact,
-                  onSelected: (on) => state.setHoldingFilter(
-                    filter.copyWith(
-                      assetTypes: on
-                          ? {...filter.assetTypes, type}
-                          : ({...filter.assetTypes}..remove(type)),
+            // A single kind has nothing to filter against.
+            if (presentKinds.length > 1)
+              for (final kind in DepotHoldingKind.values)
+                if (presentKinds.contains(kind))
+                  FilterChip(
+                    label: Text(DepotPortfolioLabels.kinds(l10n, kind)),
+                    selected: filter.kinds.contains(kind),
+                    visualDensity: VisualDensity.compact,
+                    onSelected: (on) => state.setHoldingFilter(
+                      filter.copyWith(
+                        kinds: on
+                            ? {...filter.kinds, kind}
+                            : ({...filter.kinds}..remove(kind)),
+                      ),
                     ),
                   ),
-                ),
             FilterChip(
               label: Text(l10n.depotHoldingsShowSold),
               avatar: const Icon(Icons.history, size: 16),

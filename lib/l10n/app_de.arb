@@ -4380,6 +4380,42 @@
   "depotSortGain": "Gewinn",
   "depotSortGainPercent": "Rendite %",
   "depotSortName": "Name",
+  "depotKindStock": "Aktie",
+  "depotKindStocks": "Aktien",
+  "depotKindEtf": "ETF",
+  "depotKindEtfs": "ETFs",
+  "depotKindFund": "Fonds",
+  "depotKindFunds": "Fonds",
+  "depotDetailType": "Typ",
+  "depotDetailIsin": "ISIN",
+  "depotDetailSymbol": "Symbol",
+  "depotDetailShares": "Anteile",
+  "depotDetailPurchasePrice": "Ø Kaufkurs",
+  "depotDetailCurrentPrice": "Aktueller Kurs",
+  "depotDetailQuoteAt": "Kurs vom",
+  "depotDetailPurchaseValue": "Einstandswert",
+  "depotDetailCurrentValue": "Aktueller Wert",
+  "depotDetailWeight": "Gewichtung",
+  "depotDetailPeriodGain": "Gewinn ({period})",
+  "@depotDetailPeriodGain": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDetailPeriodReturn": "Rendite ({period})",
+  "@depotDetailPeriodReturn": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "depotDetailUnrealized": "Unrealisiert (gesamt)",
+  "depotDetailRealized": "Realisiert (gesamt)",
+  "depotDetailDividends": "Dividenden (gesamt)",
+  "depotDetailFirstActivity": "Erste Aktivität",
   "depotAssetSecurity": "Wertpapiere",
   "depotAssetCrypto": "Krypto",
   "depotAssetCommodity": "Rohstoffe",
