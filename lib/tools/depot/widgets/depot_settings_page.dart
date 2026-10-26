@@ -39,6 +39,7 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
   );
 
   late final TextEditingController _clientId;
+  Set<String> _scopes = const {};
 
   @override
   void initState() {
@@ -47,6 +48,13 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
       text: context.read<DepotPortfolioState>().clientId,
     );
     onDispose(_clientId.dispose);
+    _loadScopes();
+  }
+
+  Future<void> _loadScopes() async {
+    final scopes = await ParqetAuth.grantedScopes();
+    if (!mounted) return;
+    setState(() => _scopes = scopes);
   }
 
   Future<void> _connect() async {
@@ -61,6 +69,8 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
       clientId: _clientId.text,
       responseHtml: html,
     );
+    if (!mounted) return;
+    await _loadScopes();
     if (connected && mounted) Navigator.of(context).pop();
   }
 
@@ -121,6 +131,20 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
                       ),
               ),
             ),
+            if (state.isConnected && _scopes.isNotEmpty)
+              ListTile(
+                leading: Icon(
+                  _scopes.contains(ParqetAuth.writeScope)
+                      ? Icons.edit_outlined
+                      : Icons.visibility_outlined,
+                ),
+                title: Text(l10n.depotSettingsGrantedAccess),
+                subtitle: Text(
+                  _scopes.contains(ParqetAuth.writeScope)
+                      ? l10n.depotSettingsAccessReadWrite
+                      : l10n.depotSettingsAccessReadOnly,
+                ),
+              ),
             SettingsSectionLabel(
               title: l10n.depotSettingsSectionParqet,
               description: l10n.depotSettingsIntro,

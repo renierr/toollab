@@ -11032,6 +11032,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotSettingsNotConnected => 'Nicht verbunden';
 
   @override
+  String get depotSettingsGrantedAccess => 'Erteilter Zugriff';
+
+  @override
+  String get depotSettingsAccessReadWrite => 'Lesen und Schreiben';
+
+  @override
+  String get depotSettingsAccessReadOnly =>
+      'Nur Lesen – zum Hochladen neu verbinden';
+
+  @override
   String get depotSettingsSectionSync => 'Synchronisierung';
 
   @override

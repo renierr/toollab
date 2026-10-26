@@ -19559,6 +19559,24 @@ abstract class AppLocalizations {
   /// **'Not connected'**
   String get depotSettingsNotConnected;
 
+  /// No description provided for @depotSettingsGrantedAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Granted access'**
+  String get depotSettingsGrantedAccess;
+
+  /// No description provided for @depotSettingsAccessReadWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Read and write'**
+  String get depotSettingsAccessReadWrite;
+
+  /// No description provided for @depotSettingsAccessReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Read only - reconnect to allow uploads'**
+  String get depotSettingsAccessReadOnly;
+
   /// No description provided for @depotSettingsSectionSync.
   ///
   /// In en, this message translates to:

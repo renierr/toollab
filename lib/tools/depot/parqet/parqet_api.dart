@@ -166,8 +166,10 @@ class ParqetApi {
     switch (res.statusCode) {
       case 200 || 201:
         break;
-      case 401 || 403:
+      case 401:
         throw ParqetException(ParqetErrorKind.unauthorized, res.body);
+      case 403:
+        throw ParqetException(ParqetErrorKind.scopeNotAllowed, res.body);
       case 429:
         throw ParqetException(ParqetErrorKind.rateLimited, res.body);
       default:

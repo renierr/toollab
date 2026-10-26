@@ -60,15 +60,26 @@ class ParqetAuth {
   static const _expiresKey = 'depot_parqet_expires_at';
   static const _scopeKey = 'depot_parqet_scope';
 
-  /// Whether the stored grant may create activities. Tokens from before
-  /// write access was requested carry no stored scope and cannot.
-  static Future<bool> canWrite() async {
+  /// In-memory copy of the stored grant. Secure storage is the cross-isolate
+  /// source of truth; this only spares a keystore read per request.
+  static ParqetTokens? _cached;
+
+  /// Shared by concurrent callers, so a parallel sync refreshes once instead
+  /// of rotating the refresh token per request.
+  static Future<String>? _pendingAccessToken;
+
+  /// Scopes Parqet granted, as named in the last token response. Empty when
+  /// the response named none, so callers must not read it as "no write".
+  static Future<Set<String>> grantedScopes() async {
     try {
       final granted = await _storage.read(key: _scopeKey) ?? '';
-      return granted.split(' ').contains(writeScope);
+      return granted
+          .split(RegExp(r'[\s,]+'))
+          .where((s) => s.isNotEmpty)
+          .toSet();
     } catch (e) {
       errorLog('[ParqetAuth] Reading scope failed: $e');
-      return false;
+      return const {};
     }
   }
 
@@ -82,6 +93,7 @@ class ParqetAuth {
         accessToken: access,
         refreshToken: refresh,
         expiresAt: DateTime.fromMillisecondsSinceEpoch(expires),
+        scope: await _storage.read(key: _scopeKey),
       );
     } catch (e) {
       errorLog('[ParqetAuth] Reading tokens failed: $e');
@@ -90,15 +102,19 @@ class ParqetAuth {
   }
 
   static Future<void> _saveTokens(ParqetTokens tokens) async {
+    _cached = tokens;
     await _storage.write(key: _accessKey, value: tokens.accessToken);
     await _storage.write(key: _refreshKey, value: tokens.refreshToken);
     await _storage.write(
       key: _expiresKey,
       value: '${tokens.expiresAt.millisecondsSinceEpoch}',
     );
+    final scope = tokens.scope;
+    if (scope != null) await _storage.write(key: _scopeKey, value: scope);
   }
 
   static Future<void> clearTokens() async {
+    _cached = null;
     for (final key in [_accessKey, _refreshKey, _expiresKey, _scopeKey]) {
       await _storage.delete(key: key);
     }
@@ -182,7 +198,9 @@ class ParqetAuth {
         'code_verifier': verifier,
       });
       await _saveTokens(tokens);
-      await _storage.write(key: _scopeKey, value: tokens.scope ?? scope);
+      // A login that does not name its scopes leaves the stored grant
+      // unknown rather than showing the scopes that were merely requested.
+      if (tokens.scope == null) await _storage.delete(key: _scopeKey);
     } finally {
       await server.close(force: true);
     }
@@ -210,12 +228,27 @@ class ParqetAuth {
   }
 
   /// A token valid for at least another minute, refreshed when needed.
-  static Future<String> accessToken(String clientId) async {
+  static Future<String> accessToken(String clientId) {
+    final pending = _pendingAccessToken;
+    if (pending != null) return pending;
+    final request = _accessToken(clientId);
+    return _pendingAccessToken = request.whenComplete(
+      () => _pendingAccessToken = null,
+    );
+  }
+
+  static Future<String> _accessToken(String clientId) async {
+    final cached = _cached;
+    if (cached != null && !cached.isExpiring) return cached.accessToken;
+
     final tokens = await readTokens();
     if (tokens == null) {
       throw const ParqetException(ParqetErrorKind.notConnected);
     }
-    if (!tokens.isExpiring) return tokens.accessToken;
+    if (!tokens.isExpiring) {
+      _cached = tokens;
+      return tokens.accessToken;
+    }
 
     try {
       final refreshed = await _tokenRequest({
@@ -223,8 +256,15 @@ class ParqetAuth {
         'refresh_token': tokens.refreshToken,
         'client_id': clientId,
       }, previousRefreshToken: tokens.refreshToken);
-      await _saveTokens(refreshed);
-      return refreshed.accessToken;
+      final merged = ParqetTokens(
+        accessToken: refreshed.accessToken,
+        refreshToken: refreshed.refreshToken,
+        expiresAt: refreshed.expiresAt,
+        // A refresh cannot widen the grant, so keep what is known.
+        scope: refreshed.scope ?? tokens.scope,
+      );
+      await _saveTokens(merged);
+      return merged.accessToken;
     } on ParqetException catch (e) {
       // The app and a scheduled run are separate isolates; if the other one
       // just rotated the refresh token, its result is already stored.

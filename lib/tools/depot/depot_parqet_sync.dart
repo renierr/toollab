@@ -17,6 +17,10 @@ class DepotParqetSync {
   /// The API accepts at most this many portfolios per performance request.
   static const _maxCombined = 25;
 
+  /// Parqet documents no rate limit, so stay gentle, but there is no reason
+  /// to serialize 30 independent requests behind each other either.
+  static const _maxConcurrent = 4;
+
   static Future<bool> isConnected() async {
     final clientId = await DepotStore.instance.clientId();
     if (clientId == null || clientId.isEmpty) return false;
@@ -42,23 +46,41 @@ class DepotParqetSync {
     // One currency for every request keeps the per-portfolio figures summable.
     final currency = portfolios.isEmpty ? 'EUR' : portfolios.first.currency;
 
-    // Sequential on purpose: Parqet documents no rate limit, so stay gentle.
-    for (final portfolio in portfolios) {
-      for (final period in DepotPeriod.values) {
-        final key = (scope: portfolio.id, period: period);
-        final performance = await api.performance(
-          key: key,
-          portfolioIds: [portfolio.id],
-          currency: currency,
-        );
-        // Position sizes and all-time figures come from the widest period.
+    Future<void> loadPeriod(
+      String scope,
+      DepotPeriod period,
+      List<String> ids,
+    ) async {
+      final key = (scope: scope, period: period);
+      final performance = await api.performance(
+        key: key,
+        portfolioIds: ids,
+        currency: currency,
+      );
+      // Holdings are only attributable to a single portfolio, and position
+      // sizes and all-time figures come from the widest period.
+      if (ids.length == 1) {
         if (period == DepotPeriod.max) holdings.addAll(performance.holdings);
         holdingPerformance.addAll(performance.holdingPerformance);
-        summaries.add(performance.summary);
-        charts[key] = performance.chart;
       }
-      transactions.addAll(await api.activities(portfolio.id));
+      summaries.add(performance.summary);
+      charts[key] = performance.chart;
     }
+
+    final jobs = <Future<void> Function()>[
+      for (final portfolio in portfolios) ...[
+        for (final period in DepotPeriod.values)
+          () => loadPeriod(portfolio.id, period, [portfolio.id]),
+        () async => transactions.addAll(await api.activities(portfolio.id)),
+      ],
+      if (portfolios.length > 1)
+        for (final period in DepotPeriod.values)
+          () => loadPeriod(DepotStore.allScope, period, [
+            for (final p in portfolios.take(_maxCombined)) p.id,
+          ]),
+    ];
+
+    await _runPooled(jobs);
 
     if (portfolios.length == 1) {
       for (final summary in [...summaries]) {
@@ -67,18 +89,6 @@ class DepotParqetSync {
       for (final period in DepotPeriod.values) {
         charts[(scope: DepotStore.allScope, period: period)] =
             charts[(scope: portfolios.first.id, period: period)]!;
-      }
-    } else if (portfolios.length > 1) {
-      final ids = [for (final p in portfolios.take(_maxCombined)) p.id];
-      for (final period in DepotPeriod.values) {
-        final key = (scope: DepotStore.allScope, period: period);
-        final combined = await api.performance(
-          key: key,
-          portfolioIds: ids,
-          currency: currency,
-        );
-        summaries.add(combined.summary);
-        charts[key] = combined.chart;
       }
     }
 
@@ -96,5 +106,43 @@ class DepotParqetSync {
         '${transactions.length} activities';
     debugLog('[DepotParqetSync] $detail');
     return detail;
+  }
+
+  /// Runs [jobs] with at most [_maxConcurrent] in flight and rethrows the
+  /// first failure once the running jobs have finished.
+  static Future<void> _runPooled(List<Future<void> Function()> jobs) async {
+    var next = 0;
+    Object? failure;
+    StackTrace? failureStack;
+
+    Future<void> worker() async {
+      while (failure == null && next < jobs.length) {
+        final job = jobs[next++];
+        try {
+          await _withRetry(job);
+        } catch (e, stack) {
+          failure ??= e;
+          failureStack ??= stack;
+        }
+      }
+    }
+
+    await Future.wait([
+      for (var i = 0; i < _maxConcurrent && i < jobs.length; i++) worker(),
+    ]);
+    final error = failure;
+    if (error != null) Error.throwWithStackTrace(error, failureStack!);
+  }
+
+  /// Parallelism makes a 429 more likely, so give it two more tries.
+  static Future<void> _withRetry(Future<void> Function() job) async {
+    for (var attempt = 0; ; attempt++) {
+      try {
+        return await job();
+      } on ParqetException catch (e) {
+        if (e.kind != ParqetErrorKind.rateLimited || attempt >= 2) rethrow;
+        await Future<void>.delayed(Duration(milliseconds: 500 * (attempt + 1)));
+      }
+    }
   }
 }

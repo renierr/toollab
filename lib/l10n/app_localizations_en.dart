@@ -10953,6 +10953,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotSettingsNotConnected => 'Not connected';
 
   @override
+  String get depotSettingsGrantedAccess => 'Granted access';
+
+  @override
+  String get depotSettingsAccessReadWrite => 'Read and write';
+
+  @override
+  String get depotSettingsAccessReadOnly =>
+      'Read only - reconnect to allow uploads';
+
+  @override
   String get depotSettingsSectionSync => 'Sync';
 
   @override

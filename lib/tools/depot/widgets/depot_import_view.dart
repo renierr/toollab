@@ -19,7 +19,6 @@ import '../depot_import_state.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../parqet/parqet_api.dart';
-import '../parqet/parqet_auth.dart';
 import '../parqet/parqet_exception.dart';
 import 'depot_activity_edit_dialog.dart';
 import 'depot_import_toolbar.dart';
@@ -109,21 +108,10 @@ class _DepotImportViewState extends State<DepotImportView> {
     final importState = context.read<DepotImportState>();
     final portfolio = context.read<DepotPortfolioState>();
     await portfolio.ensureLoaded();
-    final canWrite = portfolio.isConnected && await ParqetAuth.canWrite();
     if (!mounted) return;
 
-    if (!canWrite) {
-      final reconnect = await ConfirmActionDialog.show(
-        context: context,
-        title: l10n.depotUploadNeedsWriteTitle,
-        message: portfolio.isConnected
-            ? l10n.depotUploadNeedsWrite
-            : l10n.depotUploadNotConnected,
-        cancelLabel: l10n.commonCancel,
-        confirmLabel: l10n.depotSettingsTitle,
-        confirmColor: Theme.of(context).colorScheme.primary,
-      );
-      if (reconnect == true && mounted) await DepotSettingsPage.open(context);
+    if (!portfolio.isConnected) {
+      await _askForWrite(connected: false);
       return;
     }
     if (importState.exportable.isEmpty) {
@@ -174,12 +162,33 @@ class _DepotImportViewState extends State<DepotImportView> {
     } on ParqetException catch (e) {
       errorLog('[DepotImportView] Upload failed: $e');
       if (!mounted) return;
+      // The grant is judged by Parqet, not by the scope cached at login.
+      if (e.kind == ParqetErrorKind.scopeNotAllowed ||
+          e.kind == ParqetErrorKind.unauthorized) {
+        await _askForWrite(connected: true);
+        return;
+      }
       showNotificationDialog(
         context,
         DepotPortfolioLabels.error(l10n, e),
         isError: true,
       );
     }
+  }
+
+  Future<void> _askForWrite({required bool connected}) async {
+    final l10n = AppLocalizations.of(context);
+    final reconnect = await ConfirmActionDialog.show(
+      context: context,
+      title: l10n.depotUploadNeedsWriteTitle,
+      message: connected
+          ? l10n.depotUploadNeedsWrite
+          : l10n.depotUploadNotConnected,
+      cancelLabel: l10n.commonCancel,
+      confirmLabel: l10n.depotSettingsTitle,
+      confirmColor: Theme.of(context).colorScheme.primary,
+    );
+    if (reconnect == true && mounted) await DepotSettingsPage.open(context);
   }
 
   Future<void> _edit(String id) async {
