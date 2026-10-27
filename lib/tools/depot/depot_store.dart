@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:sqflite/sqflite.dart' show ConflictAlgorithm;
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
@@ -76,6 +78,9 @@ class DepotStore {
   String get _toolId => DepotTool.config.id;
 
   Future<ToolDatabase>? _db;
+  final _wishlistChanges = StreamController<void>.broadcast();
+
+  Stream<void> get wishlistChanges => _wishlistChanges.stream;
 
   Future<ToolDatabase> _getDb() => _db ??= _open();
 
@@ -83,7 +88,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 9,
+        currentVersion: 10,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -296,6 +301,19 @@ class DepotStore {
               'ALTER TABLE ${txn.nameTable(_wishlist)} ADD COLUMN isin TEXT',
             );
           }
+          if (oldVersion < 10) {
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(_wishlist)} '
+              'ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0',
+            );
+            await txn.execute(
+              'ALTER TABLE ${txn.nameTable(_wishlist)} '
+              'ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0',
+            );
+            await txn.execute(
+              'UPDATE ${txn.nameTable(_wishlist)} SET updated_at = added_at',
+            );
+          }
           // Only migrations that rebuild performance tables invalidate sync.
           if (oldVersion < 3) {
             await txn.executor.delete(
@@ -390,7 +408,11 @@ class DepotStore {
 
   Future<List<DepotWishlistItem>> wishlistItems() async {
     final db = await _getDb();
-    final rows = await db.query(_wishlist, orderBy: 'added_at DESC');
+    final rows = await db.query(
+      _wishlist,
+      where: 'deleted = 0',
+      orderBy: 'added_at DESC',
+    );
     return rows.map(DepotWishlistItem.fromMap).toList();
   }
 
@@ -428,16 +450,96 @@ class DepotStore {
 
   Future<void> saveWishlistItem(DepotWishlistItem item) async {
     final db = await _getDb();
-    await db.insert(
-      _wishlist,
-      item.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.transaction((txn) async {
+      final rows = await txn.query(
+        _wishlist,
+        columns: ['updated_at'],
+        where: 'symbol = ?',
+        whereArgs: [item.symbol],
+      );
+      final previous = rows.isEmpty ? 0 : rows.first['updated_at'] as int;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await txn.insert(_wishlist, {
+        ...item.toMap(),
+        'updated_at': now > previous ? now : previous + 1,
+        'deleted': 0,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
   }
 
   Future<void> deleteWishlistItem(String symbol) async {
     final db = await _getDb();
-    await db.delete(_wishlist, where: 'symbol = ?', whereArgs: [symbol]);
+    await db.rawUpdate(
+      'UPDATE ${db.nameTable(_wishlist)} SET deleted = 1, '
+      'updated_at = MAX(updated_at + 1, ?) '
+      'WHERE symbol = ? AND deleted = 0',
+      [DateTime.now().millisecondsSinceEpoch, symbol],
+    );
+  }
+
+  Future<List<DepotWishlistSyncRecord>> wishlistSyncRecords() async {
+    final db = await _getDb();
+    return (await db.query(
+      _wishlist,
+    )).map(DepotWishlistSyncRecord.fromMap).toList();
+  }
+
+  Future<DepotWishlistItem?> wishlistItem(String symbol) async {
+    final db = await _getDb();
+    final rows = await db.query(
+      _wishlist,
+      where: 'symbol = ? AND deleted = 0',
+      whereArgs: [symbol],
+    );
+    return rows.isEmpty ? null : DepotWishlistItem.fromMap(rows.first);
+  }
+
+  Future<void> savePulledWishlistItem(
+    DepotWishlistItem item,
+    int updatedAt,
+  ) async {
+    final db = await _getDb();
+    final changed = await db.transaction((txn) async {
+      final rows = await txn.query(
+        _wishlist,
+        columns: ['updated_at'],
+        where: 'symbol = ?',
+        whereArgs: [item.symbol],
+      );
+      if (rows.isNotEmpty && (rows.first['updated_at'] as int) >= updatedAt) {
+        return false;
+      }
+      await txn.insert(_wishlist, {
+        ...item.toMap(),
+        'updated_at': updatedAt,
+        'deleted': 0,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      return true;
+    });
+    if (changed) _wishlistChanges.add(null);
+  }
+
+  Future<void> finalizeWishlistDeletion(
+    String symbol,
+    int observedUpdatedAt,
+  ) async {
+    final db = await _getDb();
+    final removed = await db.transaction((txn) async {
+      final count = await txn.delete(
+        _wishlist,
+        where: 'symbol = ? AND updated_at <= ?',
+        whereArgs: [symbol, observedUpdatedAt],
+      );
+      if (count > 0) {
+        await txn.delete(
+          _wishlistLogos,
+          where: 'asset_key = ?',
+          whereArgs: [symbol],
+        );
+      }
+      return count;
+    });
+    if (removed > 0) _wishlistChanges.add(null);
   }
 
   Future<List<DepotTransaction>> transactions({String? portfolioId}) async {

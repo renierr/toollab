@@ -16,6 +16,7 @@ class DepotDataExport {
   static const _dateColumns = {
     'created_at',
     'added_at',
+    'updated_at',
     'datetime',
     'date',
     'synced_at',

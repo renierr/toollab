@@ -19484,7 +19484,7 @@ abstract class AppLocalizations {
   /// No description provided for @depotWishlistLocalOnly.
   ///
   /// In en, this message translates to:
-  /// **'Stored only in this app and never synced to Parqet.'**
+  /// **'Never synced to Parqet. Backend sync can share wishlist entries across devices.'**
   String get depotWishlistLocalOnly;
 
   /// No description provided for @depotWishlistNoResults.

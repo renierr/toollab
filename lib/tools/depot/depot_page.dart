@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:tool_lab/core/shared_file.dart';
 import 'package:tool_lab/core/tool_page_state.dart';
 import 'package:tool_lab/helpers/temp_file_manager.dart';
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
 import 'package:tool_lab/services/sharing_service.dart';
 import 'package:tool_lab/widgets/tool_layout.dart';
 
@@ -15,6 +17,7 @@ import 'depot_logo_state.dart';
 import 'depot_portfolio_state.dart';
 import 'depot_state.dart';
 import 'depot_wishlist_state.dart';
+import 'depot_wishlist_sync_delegate.dart';
 import 'widgets/depot_activities_view.dart';
 import 'widgets/depot_dividends_view.dart';
 import 'widgets/depot_import_view.dart';
@@ -61,10 +64,30 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
     });
 
     final portfolioState = context.read<DepotPortfolioState>();
+    final appState = context.read<AppState>();
+    Future<bool> syncWishlist() async {
+      if (!appState.syncEnabled ||
+          appState.syncServerUrl.isEmpty ||
+          !appState.isToolSyncEnabled(DepotTool.config.id)) {
+        return true;
+      }
+      if (appState.isSyncing) return false;
+      try {
+        await appState.syncWithBackend([DepotWishlistSyncDelegate()]);
+      } catch (e) {
+        errorLog('[DepotPage] Wishlist sync failed: $e');
+      }
+      return true;
+    }
+
+    wishlist.setSyncCallback(syncWishlist);
+    onDispose(() => wishlist.setSyncCallback(null));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final shared = widget.sharedFile;
       if (shared != null) _loadSharedFile(shared);
       portfolioState.syncIfStale();
+      wishlist.reloadFromStore();
+      wishlist.requestSync();
     });
 
     final sharingSub = SharingService.instance.onSharedFile.listen(

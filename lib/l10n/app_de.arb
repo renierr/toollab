@@ -4300,7 +4300,7 @@
   "depotWishlistLinkIsin": "ISIN zum bestehenden Eintrag hinzufügen",
   "depotWishlistEmpty": "Deine Wunschliste ist leer",
   "depotWishlistEmptyHint": "Aktien, ETFs und Krypto beobachten, ohne sie ins Portfolio aufzunehmen.",
-  "depotWishlistLocalOnly": "Nur in dieser App gespeichert und nie mit Parqet synchronisiert.",
+  "depotWishlistLocalOnly": "Wird nie mit Parqet synchronisiert. Die Backend-Synchronisierung kann Einträge zwischen Geräten teilen.",
   "depotWishlistNoResults": "Keine passenden Wertpapiere.",
   "depotWishlistSearchFailed": "Suche fehlgeschlagen. Verbindung prüfen.",
   "depotWishlistLoadFailed": "Die Wunschliste konnte nicht geladen werden. Öffne die App erneut, um es noch einmal zu versuchen.",

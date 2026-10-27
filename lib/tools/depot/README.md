@@ -20,7 +20,7 @@ Only imported statements and the local wishlist are edited here.
 | Overview | KPIs, value chart, allocation, biggest movers, holdings for the selected period and portfolio | `POST /performance` |
 | Dividends | Calendar, missing and upcoming payments, per year and per position | Parqet bookings plus Yahoo Finance for ex-dates and amounts |
 | Activities | Realized-per-year card and the booking list with filters | `GET /portfolios/{id}/activities` |
-| Wishlist | Local list of stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database plus Yahoo Finance |
+| Wishlist | Stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database, optional backend sync and Yahoo Finance |
 | Import | Parse DKB / ING PDF statements, export as Parqet CSV or send to Parqet | `POST /portfolios/{id}/activities` |
 
 ## Creating a connection
@@ -252,9 +252,11 @@ Depot tests use in-memory SQLite and block real HTTP requests. Run them with
 `flutter --suppress-analytics test --no-pub test/tools/depot` to also suppress Flutter CLI
 telemetry and avoid dependency downloads.
 
-The wishlist is the only table written by the user: it is keyed by Yahoo symbol and stores
-name, type, exchange, currency, verified ISIN when available, the price when added and the date. It is never sent to
-Parqet and survives both a sync and **Disconnect**; only removing an entry deletes it.
+The wishlist is keyed by Yahoo symbol and stores name, type, exchange, currency, verified
+ISIN when available, the price when added and the date. It is never sent to Parqet and
+survives Parqet sync and **Disconnect**. When cloud sync is enabled for Depot, entries and
+deletions sync through the backend; quotes, logos and the currency preference stay local.
+Existing entries are included in the first backend sync.
 
 ### Exporting the data
 

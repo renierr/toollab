@@ -5437,7 +5437,7 @@
   "depotWishlistLinkIsin": "Add ISIN to existing entry",
   "depotWishlistEmpty": "Your wishlist is empty",
   "depotWishlistEmptyHint": "Follow stocks, ETFs and crypto without adding them to your portfolio.",
-  "depotWishlistLocalOnly": "Stored only in this app and never synced to Parqet.",
+  "depotWishlistLocalOnly": "Never synced to Parqet. Backend sync can share wishlist entries across devices.",
   "depotWishlistNoResults": "No matching securities.",
   "depotWishlistSearchFailed": "Search failed. Check your connection.",
   "depotWishlistLoadFailed": "Could not load the wishlist. Reopen the app to try again.",

@@ -10912,7 +10912,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depotWishlistLocalOnly =>
-      'Stored only in this app and never synced to Parqet.';
+      'Never synced to Parqet. Backend sync can share wishlist entries across devices.';
 
   @override
   String get depotWishlistNoResults => 'No matching securities.';

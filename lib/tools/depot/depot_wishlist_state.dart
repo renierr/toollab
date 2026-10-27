@@ -10,8 +10,7 @@ import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_holding_logo.dart';
 import 'models/depot_wishlist.dart';
 
-/// Local-only watchlist. Nothing here is written to Parqet, so a sync and a
-/// disconnect leave it untouched.
+/// Wishlist entries are independent of Parqet.
 class DepotWishlistState extends ChangeNotifier {
   DepotWishlistState({
     Future<DepotWishlistQuote> Function(String)? quoteLoader,
@@ -23,13 +22,18 @@ class DepotWishlistState extends ChangeNotifier {
        _searchLoader = searchLoader ?? DepotMarketSearch.search,
        _fxLoader = fxLoader ?? YahooFinanceApi.fxRate,
        _logoLoader = logoLoader ?? _downloadLogo,
-       _historyLoader = historyLoader ?? YahooFinanceApi.yearDailyQuote;
+       _historyLoader = historyLoader ?? YahooFinanceApi.yearDailyQuote {
+    _wishlistSubscription = _store.wishlistChanges.listen((_) {
+      unawaited(_reloadWishlist());
+    });
+  }
 
   static const _parallelRequests = 4;
   static const _maxHistoryEntries = 16;
   static const _searchDebounce = Duration(milliseconds: 350);
 
   final DepotStore _store = DepotStore.instance;
+  late final StreamSubscription<void> _wishlistSubscription;
   final Future<DepotWishlistQuote> Function(String) _quoteLoader;
   final Future<List<DepotWishlistSearchResult>> Function(String) _searchLoader;
   final Future<double> Function(String, String) _fxLoader;
@@ -43,10 +47,14 @@ class DepotWishlistState extends ChangeNotifier {
   Future<void> _settingsWrite = Future.value();
   bool _loadFailed = false;
   bool _isRefreshing = false;
+  bool _refreshAfterSync = false;
+  int _wishlistRevision = 0;
   bool _isSearching = false;
   bool _searchFailed = false;
   String _query = '';
   Timer? _debounce;
+  Timer? _syncDebounce;
+  Future<bool> Function()? _syncWishlist;
   int _searchToken = 0;
   int _cacheRevision = 0;
   bool _restoreLogos = false;
@@ -129,6 +137,26 @@ class DepotWishlistState extends ChangeNotifier {
       result.isin != null &&
       _items.any((item) => item.symbol == result.symbol && item.isin == null);
   bool isAdding(String symbol) => _pending.contains(symbol);
+
+  void setSyncCallback(Future<bool> Function()? callback) {
+    _syncWishlist = callback;
+    if (callback == null) _syncDebounce?.cancel();
+  }
+
+  void _scheduleSync() {
+    if (_syncWishlist == null) return;
+    _syncDebounce?.cancel();
+    _syncDebounce = Timer(const Duration(seconds: 1), () async {
+      final sync = _syncWishlist;
+      if (sync != null && !await sync() && identical(sync, _syncWishlist)) {
+        _scheduleSync();
+      }
+    });
+  }
+
+  void requestSync() => _scheduleSync();
+
+  Future<void> reloadFromStore() => _reloadWishlist();
 
   Future<void> ensureHistory(String symbol) {
     if (_disposed || !contains(symbol)) return Future.value();
@@ -266,6 +294,39 @@ class DepotWishlistState extends ChangeNotifier {
       } else {
         _refreshOnResume = true;
       }
+    }
+  }
+
+  Future<void> _reloadWishlist() async {
+    if (!_isLoaded) {
+      if (_loading != null) await _loading;
+      if (!_isLoaded || _disposed) return;
+    }
+    final revision = ++_wishlistRevision;
+    try {
+      final items = await _store.wishlistItems();
+      if (_disposed) return;
+      if (revision != _wishlistRevision) {
+        unawaited(_reloadWishlist());
+        return;
+      }
+      _items = items;
+      final symbols = items.map((item) => item.symbol).toSet();
+      _quotes = Map.fromEntries(
+        _quotes.entries.where((e) => symbols.contains(e.key)),
+      );
+      _failed = _failed.where(symbols.contains).toSet();
+      _logos.removeWhere((symbol, _) => !symbols.contains(symbol));
+      _histories.removeWhere((symbol, _) => !symbols.contains(symbol));
+      _historyFailed.removeWhere((symbol) => !symbols.contains(symbol));
+      _notify();
+      if (_isRefreshing) {
+        _refreshAfterSync = true;
+      } else {
+        unawaited(refresh());
+      }
+    } catch (e) {
+      errorLog('[DepotWishlistState] Reloading synced items failed: $e');
     }
   }
 
@@ -410,6 +471,10 @@ class DepotWishlistState extends ChangeNotifier {
     if (_disposed) return;
     _isRefreshing = false;
     _notify();
+    if (_refreshAfterSync) {
+      _refreshAfterSync = false;
+      unawaited(refresh());
+    }
   }
 
   void search(String value) {
@@ -480,6 +545,7 @@ class DepotWishlistState extends ChangeNotifier {
       final updated = old.withIsin(result.isin!);
       try {
         await _store.saveWishlistItem(updated);
+        _wishlistRevision++;
       } catch (e) {
         errorLog('[DepotWishlistState] Saving ISIN failed: $e');
         return false;
@@ -489,6 +555,7 @@ class DepotWishlistState extends ChangeNotifier {
           for (final item in _items) identical(item, old) ? updated : item,
         ];
         _notify();
+        _scheduleSync();
         unawaited(() async {
           await _logoLoads[result.symbol]?.future;
           if (!_disposed && revision == _cacheRevision) {
@@ -517,6 +584,7 @@ class DepotWishlistState extends ChangeNotifier {
     );
     try {
       await _store.saveWishlistItem(item);
+      _wishlistRevision++;
     } catch (e) {
       errorLog('[DepotWishlistState] Saving ${item.symbol} failed: $e');
       return false;
@@ -531,6 +599,7 @@ class DepotWishlistState extends ChangeNotifier {
     };
     _failed = {..._failed}..remove(item.symbol);
     _notify();
+    _scheduleSync();
     if (revision == _cacheRevision) {
       if (_showEuro) unawaited(_loadRate(quote.currency));
       unawaited(_loadLogo(item));
@@ -541,6 +610,7 @@ class DepotWishlistState extends ChangeNotifier {
   Future<bool> remove(String symbol) async {
     try {
       await _store.deleteWishlistItem(symbol);
+      _wishlistRevision++;
     } catch (e) {
       errorLog('[DepotWishlistState] Deleting $symbol failed: $e');
       return false;
@@ -556,6 +626,7 @@ class DepotWishlistState extends ChangeNotifier {
     _failed = {..._failed}..remove(symbol);
     _logos.remove(symbol);
     _notify();
+    _scheduleSync();
     await Future.wait(_allLogoLoads[symbol]?.toList() ?? const []);
     final current = _items.where((item) => item.symbol == symbol).firstOrNull;
     if (current != null) {
@@ -593,6 +664,8 @@ class DepotWishlistState extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _debounce?.cancel();
+    _syncDebounce?.cancel();
+    unawaited(_wishlistSubscription.cancel());
     super.dispose();
   }
 }

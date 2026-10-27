@@ -2,7 +2,7 @@ import 'depot_holding.dart';
 import 'depot_market_search_result.dart';
 import 'market_quote.dart';
 
-/// A security on the local wishlist. Parqet does not know about it.
+/// A wishlist security; Parqet does not know about it.
 class DepotWishlistItem {
   final String symbol;
   final String name;
@@ -59,6 +59,25 @@ class DepotWishlistItem {
     addedAt: addedAt,
     isin: isin,
   );
+}
+
+class DepotWishlistSyncRecord {
+  final String symbol;
+  final int updatedAt;
+  final bool deleted;
+
+  const DepotWishlistSyncRecord({
+    required this.symbol,
+    required this.updatedAt,
+    required this.deleted,
+  });
+
+  factory DepotWishlistSyncRecord.fromMap(Map<String, Object?> map) =>
+      DepotWishlistSyncRecord(
+        symbol: map['symbol'] as String,
+        updatedAt: map['updated_at'] as int,
+        deleted: map['deleted'] == 1,
+      );
 }
 
 typedef DepotWishlistSearchResult = DepotMarketSearchResult;

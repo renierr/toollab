@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/providers/app_state.dart';
+import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/settings_service.dart';
 import 'package:tool_lab/tools/depot/depot_dividend_state.dart';
 import 'package:tool_lab/tools/depot/depot_holding_trend_state.dart';
 import 'package:tool_lab/tools/depot/depot_import_state.dart';
@@ -50,7 +55,20 @@ class _Portfolio extends DepotPortfolioState {
 
 void main() {
   blockDepotNetwork();
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    DatabaseService.instance.dbPathOverride = inMemoryDatabasePath;
+  });
+  tearDownAll(() async => DatabaseService.instance.close());
   testWidgets('leaving Depot reduces its transient caches', (tester) async {
+    FlutterSecureStorage.setMockInitialValues({});
+    final appState = await tester.runAsync(() async {
+      final settings = await SettingsService.init();
+      final state = AppState(settings);
+      await state.reloadFromDatabase();
+      return state;
+    });
     final trends = _Trends();
     final wishlist = _Wishlist();
     final dividends = _Dividends();
@@ -68,6 +86,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          ChangeNotifierProvider<AppState>.value(value: appState!),
           ChangeNotifierProvider<DepotHoldingTrendState>.value(value: trends),
           ChangeNotifierProvider<DepotWishlistState>.value(value: wishlist),
           ChangeNotifierProvider<DepotDividendState>.value(value: dividends),
@@ -107,5 +126,6 @@ void main() {
     portfolio.dispose();
     imports.dispose();
     tabs.dispose();
+    appState.dispose();
   });
 }

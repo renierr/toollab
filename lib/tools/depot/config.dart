@@ -12,6 +12,7 @@ import 'depot_page.dart';
 import 'depot_portfolio_state.dart';
 import 'depot_state.dart';
 import 'depot_wishlist_state.dart';
+import 'depot_wishlist_sync_delegate.dart';
 
 class DepotTool {
   DepotTool._();
@@ -29,6 +30,7 @@ class DepotTool {
     fileExtensions: const ['pdf'],
     shareTarget: const ShareTargetConfig(accept: ['application/pdf']),
     createPage: (sd) => DepotPage(sharedFile: sd?.firstFile),
+    syncDelegateFactory: DepotWishlistSyncDelegate.new,
     stateProviders: () => [
       ChangeNotifierProvider<DepotState>(create: (_) => DepotState()),
       ChangeNotifierProvider<DepotPortfolioState>(
