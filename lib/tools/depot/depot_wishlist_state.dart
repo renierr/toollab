@@ -5,7 +5,8 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
 import 'depot_logo_downloader.dart';
-import 'dividends/yahoo_finance_api.dart';
+import 'depot_market_search.dart';
+import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_holding_logo.dart';
 import 'models/depot_wishlist.dart';
 
@@ -17,10 +18,12 @@ class DepotWishlistState extends ChangeNotifier {
     Future<List<DepotWishlistSearchResult>> Function(String)? searchLoader,
     Future<double> Function(String, String)? fxLoader,
     Future<Uint8List> Function(String)? logoLoader,
-  }) : _quoteLoader = quoteLoader ?? YahooFinanceApi.wishlistQuote,
-       _searchLoader = searchLoader ?? YahooFinanceApi.searchWishlist,
+    Future<DepotWishlistQuote> Function(String)? historyLoader,
+  }) : _quoteLoader = quoteLoader ?? YahooFinanceApi.intradayQuote,
+       _searchLoader = searchLoader ?? DepotMarketSearch.search,
        _fxLoader = fxLoader ?? YahooFinanceApi.fxRate,
-       _logoLoader = logoLoader ?? _downloadLogo;
+       _logoLoader = logoLoader ?? _downloadLogo,
+       _historyLoader = historyLoader ?? YahooFinanceApi.yearDailyQuote;
 
   static const _parallelRequests = 4;
   static const _searchDebounce = Duration(milliseconds: 350);
@@ -30,6 +33,7 @@ class DepotWishlistState extends ChangeNotifier {
   final Future<List<DepotWishlistSearchResult>> Function(String) _searchLoader;
   final Future<double> Function(String, String) _fxLoader;
   final Future<Uint8List> Function(String) _logoLoader;
+  final Future<DepotWishlistQuote> Function(String) _historyLoader;
 
   Future<void>? _loading;
   bool _disposed = false;
@@ -53,6 +57,10 @@ class DepotWishlistState extends ChangeNotifier {
   final Map<String, Future<void>> _fxLoads = {};
   final Map<String, Uint8List> _logos = {};
   final Map<String, Future<void>> _logoLoads = {};
+  final Map<String, ({DepotWishlistQuote quote, DateTime fetchedAt})>
+  _histories = {};
+  final Map<String, Future<void>> _historyLoads = {};
+  final Set<String> _historyFailed = {};
 
   static String logoUrl(String symbol) => Uri.https(
     'financialmodelingprep.com',
@@ -101,6 +109,9 @@ class DepotWishlistState extends ChangeNotifier {
   Set<String> get failed => _failed;
 
   DepotWishlistQuote? quoteFor(String symbol) => _quotes[symbol];
+  DepotWishlistQuote? historyFor(String symbol) => _histories[symbol]?.quote;
+  bool isLoadingHistory(String symbol) => _historyLoads.containsKey(symbol);
+  bool historyFailed(String symbol) => _historyFailed.contains(symbol);
   Uint8List? logoFor(String symbol) => _logos[symbol];
   double? euroRate(String currency) =>
       currency == 'EUR' ? 1 : _eurRates[currency];
@@ -112,6 +123,41 @@ class DepotWishlistState extends ChangeNotifier {
       result.isin != null &&
       _items.any((item) => item.symbol == result.symbol && item.isin == null);
   bool isAdding(String symbol) => _pending.contains(symbol);
+
+  Future<void> ensureHistory(String symbol) {
+    if (_disposed || !contains(symbol)) return Future.value();
+    final cached = _histories[symbol];
+    if (cached != null &&
+        DateTime.now().difference(cached.fetchedAt) <
+            const Duration(hours: 24)) {
+      return Future.value();
+    }
+    final loading = _historyLoads[symbol];
+    if (loading != null) return loading;
+    _historyFailed.remove(symbol);
+    final item = _items.firstWhere((item) => item.symbol == symbol);
+    final future = _loadHistory(item);
+    _historyLoads[symbol] = future;
+    _notify();
+    return future;
+  }
+
+  Future<void> _loadHistory(DepotWishlistItem item) async {
+    final symbol = item.symbol;
+    try {
+      final quote = await _historyLoader(symbol);
+      if (_disposed || !_items.contains(item)) return;
+      _histories[symbol] = (quote: quote, fetchedAt: DateTime.now());
+    } catch (e) {
+      if (!_disposed && _items.contains(item)) {
+        _historyFailed.add(symbol);
+        debugLog('[DepotWishlistState] History unavailable for $symbol: $e');
+      }
+    } finally {
+      _historyLoads.remove(symbol);
+      _notify();
+    }
+  }
 
   Future<void> setShowEuro(bool value) {
     if (_showEuro == value) return _settingsWrite;
@@ -409,6 +455,8 @@ class DepotWishlistState extends ChangeNotifier {
         if (item.symbol != symbol) item,
     ];
     _quotes = {..._quotes}..remove(symbol);
+    _histories.remove(symbol);
+    _historyFailed.remove(symbol);
     _failed = {..._failed}..remove(symbol);
     _logos.remove(symbol);
     _notify();

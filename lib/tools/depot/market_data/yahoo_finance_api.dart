@@ -6,9 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:tool_lab/services/app_http_client.dart';
 
 import '../models/depot_dividend.dart';
-import '../models/depot_wishlist.dart';
-import '../parqet/parqet_asset_lookup.dart';
-import '../parsing/security_parser.dart';
+import '../models/market_quote.dart';
 
 class YahooFinanceException implements Exception {
   final String message;
@@ -52,35 +50,25 @@ class YahooFinanceApi {
     return null;
   }
 
-  /// Securities matching [query], limited to the kinds a wishlist follows.
-  static Future<List<DepotWishlistSearchResult>> searchWishlist(
-    String query,
-  ) async {
-    final isin = query.trim().toUpperCase();
-    final matchingSymbols = SecurityParser.isValidIsin(isin)
-        ? const ParqetAssetLookup()
-              .symbolsForIsin(isin)
-              .catchError((_) => <String>{})
-        : Future.value(<String>{});
+  static Future<List<MarketSearchResult>> searchListings(
+    String query, {
+    int limit = 20,
+  }) async {
     final json = await _getJson('/v1/finance/search', {
       'q': query,
-      'quotesCount': '20',
+      'quotesCount': '$limit',
       'newsCount': '0',
     });
-    final isinSymbols = await matchingSymbols;
-    final results = <DepotWishlistSearchResult>[];
+    final results = <MarketSearchResult>[];
     for (final item in json['quotes'] as List? ?? const []) {
       if (item is! Map) continue;
       final symbol = item['symbol'];
       final quoteType = item['quoteType'];
-      if (symbol is! String ||
-          symbol.isEmpty ||
-          quoteType is! String ||
-          !wishlistQuoteTypes.contains(quoteType.toUpperCase())) {
+      if (symbol is! String || symbol.isEmpty || quoteType is! String) {
         continue;
       }
       results.add(
-        DepotWishlistSearchResult(
+        MarketSearchResult(
           symbol: symbol,
           name:
               (item['longname'] as String?) ??
@@ -91,27 +79,64 @@ class YahooFinanceApi {
               (item['exchDisp'] as String?) ??
               (item['exchange'] as String?) ??
               '',
-          isin: isinSymbols.contains(symbol.toUpperCase()) ? isin : null,
         ),
       );
     }
     return results;
   }
 
-  /// One year of daily closes plus the latest quote of [symbol].
-  static Future<DepotWishlistQuote> wishlistQuote(String symbol) async {
-    final json = await _getJson(
-      '/v8/finance/chart/${Uri.encodeComponent(symbol)}',
-      {'range': '1y', 'interval': '1d'},
+  static Future<MarketQuote> intradayQuote(String symbol, {DateTime? now}) {
+    final end = (now ?? DateTime.now()).toUtc();
+    return chartQuote(
+      symbol,
+      from: end.subtract(const Duration(hours: 24)),
+      to: end,
+      interval: '5m',
+      includePrePost: true,
     );
-    return parseWishlistQuote(json, symbol);
+  }
+
+  static Future<MarketQuote> yearDailyQuote(String symbol) =>
+      chartQuote(symbol, range: '1y', interval: '1d');
+
+  static Future<MarketQuote> chartQuote(
+    String symbol, {
+    String? range,
+    DateTime? from,
+    DateTime? to,
+    required String interval,
+    bool includePrePost = false,
+  }) async {
+    if ((range != null && (from != null || to != null)) ||
+        (range == null && (from == null || to == null)) ||
+        (from != null && to != null && !from.isBefore(to))) {
+      throw ArgumentError('Provide a range or both from and to');
+    }
+    final json =
+        await _getJson('/v8/finance/chart/${Uri.encodeComponent(symbol)}', {
+          'range': ?range,
+          if (from != null) 'period1': '${from.millisecondsSinceEpoch ~/ 1000}',
+          if (to != null) 'period2': '${to.millisecondsSinceEpoch ~/ 1000}',
+          'interval': interval,
+          if (includePrePost) 'includePrePost': 'true',
+        });
+    return parseChartQuote(
+      json,
+      symbol,
+      dailyCloses: interval == '1d',
+      from: from,
+      to: to,
+    );
   }
 
   @visibleForTesting
-  static DepotWishlistQuote parseWishlistQuote(
+  static MarketQuote parseChartQuote(
     Map<String, dynamic> json,
-    String symbol,
-  ) {
+    String symbol, {
+    bool dailyCloses = true,
+    DateTime? from,
+    DateTime? to,
+  }) {
     final result = _chartResult(json);
     final meta = result['meta'] as Map? ?? const {};
     var currency = meta['currency'] as String? ?? '';
@@ -128,27 +153,34 @@ class YahooFinanceApi {
     final closes = quote is Map
         ? quote['close'] as List? ?? const []
         : const [];
-    final points = <DepotWishlistPoint>[];
+    final points = <MarketPricePoint>[];
     for (var i = 0; i < timestamps.length && i < closes.length; i++) {
       final close = value(closes[i]);
       final seconds = timestamps[i];
       if (close == null || seconds is! num) continue;
-      points.add(
-        DepotWishlistPoint(
-          date: DateTime.fromMillisecondsSinceEpoch((seconds * 1000).round()),
-          close: close,
-        ),
+      final date = DateTime.fromMillisecondsSinceEpoch(
+        (seconds * 1000).round(),
       );
+      if ((from != null && date.isBefore(from)) ||
+          (to != null && date.isAfter(to))) {
+        continue;
+      }
+      points.add(MarketPricePoint(date: date, close: close));
     }
-    if (points.isEmpty) {
+    final price =
+        value(meta['regularMarketPrice']) ??
+        (points.isEmpty ? null : points.last.close);
+    if (price == null) {
       throw YahooFinanceException('No chart points for $symbol');
     }
-    final price = value(meta['regularMarketPrice']) ?? points.last.close;
     final previousClose =
         value(meta['previousClose']) ??
-        (points.length > 1 ? points[points.length - 2].close : price);
+        value(meta['chartPreviousClose']) ??
+        (dailyCloses && points.length > 1
+            ? points[points.length - 2].close
+            : 0);
     final quoteTime = meta['regularMarketTime'];
-    return DepotWishlistQuote(
+    return MarketQuote(
       price: price,
       previousClose: previousClose,
       currency: currency,

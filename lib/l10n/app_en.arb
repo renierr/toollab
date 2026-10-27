@@ -5450,6 +5450,15 @@
   "depotWishlistOriginalPrice": "Listing price",
   "depotWishlistEuroPrice": "Approx. price in EUR",
   "depotWishlistNativeHistory": "Chart and returns use the listing currency",
+  "depotWishlistHistoryLoading": "Loading price history…",
+  "depotWishlistHistoryUnavailable": "Price history unavailable.",
+  "depotHoldingDayTrend": "Last 24 hours · Yahoo {symbol} · {currency}",
+  "@depotHoldingDayTrend": {
+    "placeholders": {
+      "symbol": {"type": "String"},
+      "currency": {"type": "String"}
+    }
+  },
   "depotWishlistFxNote": "EUR price uses the latest exchange rate. Historical prices and returns are in the listing currency.",
   "depotWishlistFxUnavailable": "EUR exchange rate unavailable; showing the listing currency.",
   "depotWishlistToday": "Today",

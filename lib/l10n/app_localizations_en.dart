@@ -10955,6 +10955,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Chart and returns use the listing currency';
 
   @override
+  String get depotWishlistHistoryLoading => 'Loading price history…';
+
+  @override
+  String get depotWishlistHistoryUnavailable => 'Price history unavailable.';
+
+  @override
+  String depotHoldingDayTrend(String symbol, String currency) {
+    return 'Last 24 hours · Yahoo $symbol · $currency';
+  }
+
+  @override
   String get depotWishlistFxNote =>
       'EUR price uses the latest exchange rate. Historical prices and returns are in the listing currency.';
 

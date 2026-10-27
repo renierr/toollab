@@ -19,11 +19,13 @@ class DepotWishlistDetailDialog extends StatelessWidget {
 
   const DepotWishlistDetailDialog({super.key, required this.item});
 
-  static Future<void> show(BuildContext context, DepotWishlistItem item) =>
-      showDialog<void>(
-        context: context,
-        builder: (_) => DepotWishlistDetailDialog(item: item),
-      );
+  static Future<void> show(BuildContext context, DepotWishlistItem item) {
+    context.read<DepotWishlistState>().ensureHistory(item.symbol);
+    return showDialog<void>(
+      context: context,
+      builder: (_) => DepotWishlistDetailDialog(item: item),
+    );
+  }
 
   Future<void> _remove(BuildContext context) async {
     final removed = await context.read<DepotWishlistState>().remove(
@@ -47,6 +49,7 @@ class DepotWishlistDetailDialog extends StatelessWidget {
     final theme = Theme.of(context);
     final state = context.watch<DepotWishlistState>();
     final quote = state.quoteFor(item.symbol);
+    final history = state.historyFor(item.symbol);
     final euroRate = quote == null
         ? null
         : state.displayEuroRate(quote.currency);
@@ -55,7 +58,7 @@ class DepotWishlistDetailDialog extends StatelessWidget {
     final addedOn = DateFormat.yMMMd(locale).format(item.addedAt);
     final quoteAt = quote?.quoteAt;
     final dayChange = quote?.dayChangePercent;
-    final yearChange = quote?.changeSince(const Duration(days: 365));
+    final yearChange = history?.changeSince(const Duration(days: 365));
     final sinceAdded = item.addedPrice == null
         ? null
         : quote?.changeFrom(item.addedPrice!);
@@ -116,23 +119,32 @@ class DepotWishlistDetailDialog extends StatelessWidget {
                     color: theme.hintColor,
                   ),
                 ),
-              )
-            else ...[
+              ),
+            if (history != null) ...[
               Text(l10n.depotWishlistChart, style: theme.textTheme.labelMedium),
               Text(
-                '${l10n.depotWishlistNativeHistory} (${quote.currency})',
+                '${l10n.depotWishlistNativeHistory} (${history.currency})',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor,
                 ),
               ),
               const SizedBox(height: 4),
               DepotWishlistChart(
-                points: quote.points,
-                format: format,
+                points: history.points,
+                format: DepotFormat.of(context, history.currency),
                 color: quoteColor,
               ),
               const SizedBox(height: 12),
-            ],
+            ] else if (state.isLoadingHistory(item.symbol))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(l10n.depotWishlistHistoryLoading),
+              )
+            else if (state.historyFailed(item.symbol))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(l10n.depotWishlistHistoryUnavailable),
+              ),
             for (final (label, value) in [
               (l10n.depotDetailSymbol, item.symbol),
               (l10n.depotDetailExchange, item.exchange),
@@ -154,24 +166,13 @@ class DepotWishlistDetailDialog extends StatelessWidget {
               ),
               (
                 l10n.depotWishlistRange1m,
-                quote == null
-                    ? ''
-                    : percentOrEmpty(
-                        quote.changeSince(const Duration(days: 31)),
-                      ),
+                percentOrEmpty(history?.changeSince(const Duration(days: 31))),
               ),
               (
                 l10n.depotWishlistRange6m,
-                quote == null
-                    ? ''
-                    : percentOrEmpty(
-                        quote.changeSince(const Duration(days: 183)),
-                      ),
+                percentOrEmpty(history?.changeSince(const Duration(days: 183))),
               ),
-              (
-                l10n.depotWishlistRange1y,
-                quote == null ? '' : percentOrEmpty(yearChange),
-              ),
+              (l10n.depotWishlistRange1y, percentOrEmpty(yearChange)),
               (
                 l10n.depotWishlistAddedPrice,
                 item.addedPrice == null ? '' : format.money(item.addedPrice!),

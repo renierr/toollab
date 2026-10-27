@@ -15,9 +15,10 @@ import 'package:tool_lab/tools/depot/depot_format.dart';
 import 'package:tool_lab/tools/depot/depot_data_export.dart';
 import 'package:tool_lab/tools/depot/depot_store.dart';
 import 'package:tool_lab/tools/depot/depot_wishlist_state.dart';
-import 'package:tool_lab/tools/depot/dividends/yahoo_finance_api.dart';
+import 'package:tool_lab/tools/depot/market_data/yahoo_finance_api.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/models/depot_wishlist.dart';
+import 'package:tool_lab/tools/depot/models/market_quote.dart';
 import 'package:tool_lab/tools/depot/parqet/parqet_asset_lookup.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_add_dialog.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_chart.dart';
@@ -137,7 +138,7 @@ void main() {
   });
 
   test('pence quotes normalize prices but not percentages', () {
-    final quote = YahooFinanceApi.parseWishlistQuote({
+    final quote = YahooFinanceApi.parseChartQuote({
       'chart': {
         'result': [
           {
@@ -163,6 +164,109 @@ void main() {
     expect(quote.points.first.close, 12);
     expect(quote.dayChangePercent, 2.5);
   });
+
+  test(
+    'intraday day change uses the previous close, not the last interval',
+    () {
+      Map<String, dynamic> response(Map<String, Object> meta) => {
+        'chart': {
+          'result': [
+            {
+              'meta': meta,
+              'timestamp': [1000, 2000],
+              'indicators': {
+                'quote': [
+                  {
+                    'close': [110, 120],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      };
+      final withClose = YahooFinanceApi.parseChartQuote(
+        response({'currency': 'EUR', 'chartPreviousClose': 100}),
+        'TEST',
+        dailyCloses: false,
+      );
+      expect(withClose.dayChangePercent, 20);
+      final missing = YahooFinanceApi.parseChartQuote(
+        response({'currency': 'EUR'}),
+        'TEST',
+        dailyCloses: false,
+      );
+      expect(missing.dayChangePercent, isNull);
+    },
+  );
+
+  test('intraday chart excludes points outside the rolling window', () {
+    final now = DateTime.utc(2026, 10, 27, 18);
+    final from = now.subtract(const Duration(hours: 24));
+    int seconds(DateTime date) => date.millisecondsSinceEpoch ~/ 1000;
+    final parsed = YahooFinanceApi.parseChartQuote(
+      {
+        'chart': {
+          'result': [
+            {
+              'meta': {'currency': 'EUR', 'regularMarketPrice': 100},
+              'timestamp': [
+                seconds(from.subtract(const Duration(minutes: 5))),
+                seconds(from),
+                seconds(now),
+                seconds(now.add(const Duration(minutes: 5))),
+              ],
+              'indicators': {
+                'quote': [
+                  {
+                    'close': [1, 2, 3, 4],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      'TEST',
+      dailyCloses: false,
+      from: from,
+      to: now,
+    );
+    expect(parsed.points.map((point) => point.close), [2, 3]);
+    final later = marketPointsInLast24Hours(
+      parsed.points,
+      now.add(const Duration(minutes: 1)),
+    );
+    expect(later.map((point) => point.close), [3]);
+  });
+
+  test(
+    'market quote remains available when the last 24 hours have no trades',
+    () {
+      final parsed = YahooFinanceApi.parseChartQuote(
+        {
+          'chart': {
+            'result': [
+              {
+                'meta': {
+                  'currency': 'EUR',
+                  'regularMarketPrice': 100,
+                  'previousClose': 90,
+                },
+                'timestamp': <int>[],
+                'indicators': {'quote': <Object>[]},
+              },
+            ],
+          },
+        },
+        'TEST',
+        dailyCloses: false,
+      );
+      expect(parsed.price, 100);
+      expect(parsed.points, isEmpty);
+      expect(parsed.dayChangePercent, closeTo(11.111, 0.001));
+    },
+  );
 
   test(
     'currency preference persists and ISIN links to an existing item',
@@ -681,6 +785,8 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final history = Completer<DepotWishlistQuote>();
+    var historyCalls = 0;
     final state = DepotWishlistState(
       quoteLoader: (_) async => const DepotWishlistQuote(
         price: 100,
@@ -691,6 +797,10 @@ void main() {
       ),
       fxLoader: (_, _) async => 0.9,
       logoLoader: (_) async => throw const FormatException('offline'),
+      historyLoader: (_) {
+        historyCalls++;
+        return history.future;
+      },
     );
     late final DepotLogoState logos;
     addTearDown(state.dispose);
@@ -727,8 +837,11 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('US0378331005'), findsOneWidget);
+    expect(historyCalls, 0);
     await tester.tap(find.text('Apple'));
     await tester.pumpAndSettle();
+    expect(historyCalls, 1);
+    expect(find.text('Kursverlauf wird geladen …'), findsOneWidget);
     final isin = find.text('US0378331005');
     expect(isin, findsOneWidget);
     String? copied;
@@ -760,6 +873,21 @@ void main() {
     await tester.pump();
     expect(copied, 'US0378331005');
     await mouse.removePointer();
+    history.complete(
+      DepotWishlistQuote(
+        price: 100,
+        previousClose: 90,
+        currency: 'USD',
+        exchange: 'NASDAQ',
+        points: [
+          DepotWishlistPoint(date: DateTime(2025, 1, 1), close: 10),
+          DepotWishlistPoint(date: DateTime(2026, 1, 1), close: 20),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(DepotWishlistChart), findsOneWidget);
+    expect(find.text('Kursverlauf wird geladen …'), findsNothing);
     await tester.tap(find.text('Schließen'));
     await tester.pumpAndSettle();
     expect(

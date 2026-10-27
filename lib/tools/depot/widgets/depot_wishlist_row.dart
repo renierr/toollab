@@ -2,15 +2,14 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:tool_lab/l10n/app_localizations.dart';
-import 'package:tool_lab/theme/theme.dart';
-import 'package:tool_lab/widgets/sparkline.dart';
 
 import '../depot_format.dart';
 import '../depot_portfolio_labels.dart';
 import '../models/depot_wishlist.dart';
 import 'depot_holding_avatar.dart';
+import 'depot_market_sparkline.dart';
 
-/// One wishlist entry: name, one-month trend, price and today's move.
+/// One wishlist entry: name, 24-hour trend, price and today's move.
 class DepotWishlistRow extends StatelessWidget {
   final DepotWishlistItem item;
   final DepotWishlistQuote? quote;
@@ -37,16 +36,7 @@ class DepotWishlistRow extends StatelessWidget {
       context,
       euroRate == null ? (quote?.currency ?? item.currency) : 'EUR',
     );
-    final trend = quote?.pointsSince(const Duration(days: 31)) ?? const [];
-    final trendChange = quote?.changeSince(const Duration(days: 30));
     final dayChange = quote?.dayChangePercent;
-    final trendColor = trendChange == null
-        ? theme.hintColor
-        : trendChange > 0
-        ? AppTheme.statusGreen
-        : trendChange < 0
-        ? AppTheme.statusRed
-        : theme.hintColor;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -90,18 +80,12 @@ class DepotWishlistRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (trend.length > 1 && !cramped) ...[
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    width: 64,
-                    height: 30,
-                    child: Sparkline(
-                      values: [for (final point in trend) point.close],
-                      color: trendColor,
-                      strokeWidth: 1.5,
-                    ),
+                if (quote != null && !cramped)
+                  DepotMarketSparkline(
+                    symbol: item.symbol,
+                    currency: quote!.currency,
+                    points: quote!.points,
                   ),
-                ],
                 const SizedBox(width: 12),
                 ConstrainedBox(
                   constraints: const BoxConstraints(minWidth: 72),

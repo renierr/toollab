@@ -11035,6 +11035,17 @@ class AppLocalizationsDe extends AppLocalizations {
       'Diagramm und Renditen in der Börsenwährung';
 
   @override
+  String get depotWishlistHistoryLoading => 'Kursverlauf wird geladen …';
+
+  @override
+  String get depotWishlistHistoryUnavailable => 'Kursverlauf nicht verfügbar.';
+
+  @override
+  String depotHoldingDayTrend(String symbol, String currency) {
+    return 'Letzte 24 Stunden · Yahoo $symbol · $currency';
+  }
+
+  @override
   String get depotWishlistFxNote =>
       'Der EUR-Kurs verwendet den aktuellen Wechselkurs. Historische Kurse und Renditen sind in der Börsenwährung.';
 

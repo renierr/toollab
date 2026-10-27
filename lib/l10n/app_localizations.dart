@@ -19559,6 +19559,24 @@ abstract class AppLocalizations {
   /// **'Chart and returns use the listing currency'**
   String get depotWishlistNativeHistory;
 
+  /// No description provided for @depotWishlistHistoryLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading price history…'**
+  String get depotWishlistHistoryLoading;
+
+  /// No description provided for @depotWishlistHistoryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Price history unavailable.'**
+  String get depotWishlistHistoryUnavailable;
+
+  /// No description provided for @depotHoldingDayTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 24 hours · Yahoo {symbol} · {currency}'**
+  String depotHoldingDayTrend(String symbol, String currency);
+
   /// No description provided for @depotWishlistFxNote.
   ///
   /// In en, this message translates to:

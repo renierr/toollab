@@ -3,7 +3,7 @@ import 'package:tool_lab/helpers/debug_log.dart';
 
 import 'depot_store.dart';
 import 'dividends/depot_dividend_calendar.dart';
-import 'dividends/yahoo_finance_api.dart';
+import 'market_data/yahoo_finance_api.dart';
 import 'models/depot_dividend.dart';
 import 'models/depot_holding.dart';
 import 'models/depot_transaction.dart';

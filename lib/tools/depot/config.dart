@@ -6,6 +6,7 @@ import 'package:tool_lab/theme/theme.dart';
 import 'depot_background_sync.dart';
 import 'depot_dividend_state.dart';
 import 'depot_import_state.dart';
+import 'depot_holding_trend_state.dart';
 import 'depot_logo_state.dart';
 import 'depot_page.dart';
 import 'depot_portfolio_state.dart';
@@ -37,6 +38,9 @@ class DepotTool {
         create: (_) => DepotDividendState(),
       ),
       ChangeNotifierProvider<DepotLogoState>(create: (_) => DepotLogoState()),
+      ChangeNotifierProvider<DepotHoldingTrendState>(
+        create: (_) => DepotHoldingTrendState(),
+      ),
       ChangeNotifierProvider<DepotWishlistState>(
         create: (_) => DepotWishlistState(),
       ),

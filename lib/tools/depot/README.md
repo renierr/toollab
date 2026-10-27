@@ -4,9 +4,9 @@ Portfolio overview on top of [Parqet](https://parqet.com). The tool mirrors your
 portfolios, holdings, performance and activities into a local database, and turns broker
 PDF statements into Parqet activities.
 
-Parqet is the source of truth. Everything shown is a local copy that a sync refreshes;
-nothing is edited locally except imported statements and the wishlist, which is local by
-design.
+Parqet is the source of truth for the portfolio. Its data is mirrored locally and
+refreshed by sync; intraday sparklines and dividend estimates use Yahoo Finance.
+Only imported statements and the local wishlist are edited here.
 
 - **API reference:** <https://developer.parqet.com/docs/api>
 - **OpenAPI spec (machine-readable, the most precise source):**
@@ -204,9 +204,21 @@ read from or written to Parqet. Its quotes come from Yahoo Finance instead:
 | Endpoint | Used for |
 |---|---|
 | `GET /v1/finance/search?q=…` | Security search by name, ticker or ISIN; filtered to stocks, ETFs, funds and crypto |
-| `GET /v8/finance/chart/{symbol}?range=1y&interval=1d` | Latest quote and one year of daily closes per wishlist entry |
+| `GET /v8/finance/chart/{symbol}?period1=…&period2=…&interval=5m` | Latest quote and the last 24 hours for wishlist entries and visible holdings |
+| `GET /v8/finance/chart/{symbol}?range=1y&interval=1d` | One year of daily closes, loaded on opening wishlist details |
 
 Yahoo's unofficial endpoints may change or be unavailable, and quotes may be delayed.
+Holding sparklines load only for visible rows with room to show them. For securities,
+the ISIN is sent to Parqet's public asset endpoint to resolve confirmed listing symbols;
+crypto symbols are searched on Yahoo. Yahoo receives the selected listing symbol, not
+portfolio amounts. Up to four holding lookups run concurrently, deduplicated by asset,
+with intraday results cached in memory for 15 minutes. Each line contains only prices
+within the last 24 hours, including available pre- and post-market data; it disappears
+when fewer than two points remain. The line uses the listing currency, not the holding's
+selected performance period or necessarily the same exchange as Parqet. Unsupported
+or unmatched assets have no line.
+Wishlist detail history is cached in memory for 24 hours and fetched only on opening
+details. Prices and history are not sent to Parqet.
 The selected Yahoo listing determines the exchange and trading currency. The wishlist's
 entries are ordered by today's percentage change, highest first; entries without a daily
 change appear last. The order updates when quotes refresh. The wishlist's
@@ -217,7 +229,8 @@ price is a current conversion, not a historical EUR return.
 Wishlist logos are fetched by symbol from Financial Modeling Prep, cached locally and
 fall back to initials when unavailable. No account credentials are sent to that provider.
 An ISIN search also checks Parqet's public asset data and stores the ISIN only for Yahoo
-symbols explicitly listed on the matching asset. Existing entries can be linked from the
+symbols explicitly listed on the matching asset. If Yahoo's ISIN search returns no match,
+the app searches by a confirmed symbol instead. Existing entries can be linked from the
 search result; if Parqet cannot confirm the match, the ISIN remains unknown.
 
 ## Local data
