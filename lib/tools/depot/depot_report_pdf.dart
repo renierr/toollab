@@ -653,13 +653,13 @@ pw.Widget _moversSection(_Report r, double width) {
   const nameWidth = 110.0;
   const valueWidth = 62.0;
   final half = (width - nameWidth - valueWidth - 8) / 2;
-  final largest = movers.map((m) => m.gain.abs()).reduce(math.max);
+  final largest = movers.map((m) => m.returnPercent.abs()).reduce(math.max);
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
       _sectionTitle(r.l10n.depotMoversTitle(r.periodLabel)),
       pw.SizedBox(height: 5),
-      for (final (:holding, :gain) in movers)
+      for (final (:holding, :returnPercent) in movers)
         pw.Padding(
           padding: const pw.EdgeInsets.symmetric(vertical: 1.2),
           child: pw.Row(
@@ -670,8 +670,8 @@ pw.Widget _moversSection(_Report r, double width) {
                 height: 9,
                 child: pw.Align(
                   alignment: pw.Alignment.centerRight,
-                  child: gain < 0
-                      ? _bar(half * gain.abs() / largest, _lossColor)
+                  child: returnPercent < 0
+                      ? _bar(half * returnPercent.abs() / largest, _lossColor)
                       : pw.SizedBox(),
                 ),
               ),
@@ -681,8 +681,8 @@ pw.Widget _moversSection(_Report r, double width) {
                 height: 9,
                 child: pw.Align(
                   alignment: pw.Alignment.centerLeft,
-                  child: gain > 0
-                      ? _bar(half * gain / largest, _gainColor)
+                  child: returnPercent > 0
+                      ? _bar(half * returnPercent / largest, _gainColor)
                       : pw.SizedBox(),
                 ),
               ),
@@ -690,9 +690,9 @@ pw.Widget _moversSection(_Report r, double width) {
               pw.SizedBox(
                 width: valueWidth,
                 child: _text(
-                  r.format.money(gain, signed: true),
+                  r.format.percent(returnPercent),
                   right: true,
-                  color: _signColor(gain),
+                  color: _signColor(returnPercent),
                 ),
               ),
             ],

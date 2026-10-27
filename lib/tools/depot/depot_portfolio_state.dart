@@ -24,7 +24,7 @@ class DepotRangeChange {
   const DepotRangeChange({required this.valueChange, required this.gain});
 }
 
-typedef DepotMover = ({DepotHolding holding, double gain});
+typedef DepotMover = ({DepotHolding holding, double returnPercent});
 
 class DepotPortfolioState extends ChangeNotifier {
   DepotPortfolioState({this.api});
@@ -115,7 +115,7 @@ class DepotPortfolioState extends ChangeNotifier {
   List<DepotHolding> get visibleHoldings => _visibleHoldings;
 
   /// Up to five gains, then up to five losses of the period among
-  /// [visibleHoldings], each largest first.
+  /// [visibleHoldings] by return percentage, each largest first.
   List<DepotMover> get movers => _movers;
   List<DepotTransaction> get visibleTransactions => _visibleTransactions;
 
@@ -376,13 +376,14 @@ class DepotPortfolioState extends ChangeNotifier {
       ..sort((a, b) => _holdingFilter.compare(a, b, performanceOf));
     final moves = [
       for (final h in _visibleHoldings)
-        if (performanceOf(h)?.gain case final gain? when gain != 0)
-          (holding: h, gain: gain),
+        if (performanceOf(h)?.returnPercent case final percent?
+            when percent != 0)
+          (holding: h, returnPercent: percent),
     ];
-    final gains = moves.where((m) => m.gain > 0).toList()
-      ..sort((a, b) => b.gain.compareTo(a.gain));
-    final losses = moves.where((m) => m.gain < 0).toList()
-      ..sort((a, b) => a.gain.compareTo(b.gain));
+    final gains = moves.where((m) => m.returnPercent > 0).toList()
+      ..sort((a, b) => b.returnPercent.compareTo(a.returnPercent));
+    final losses = moves.where((m) => m.returnPercent < 0).toList()
+      ..sort((a, b) => a.returnPercent.compareTo(b.returnPercent));
     _movers = [...gains.take(5), ...losses.take(5).toList().reversed];
   }
 

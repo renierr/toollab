@@ -24,7 +24,9 @@ class DepotMoversCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final largest = movers.map((m) => m.gain.abs()).fold<double>(0, math.max);
+    final largest = movers
+        .map((m) => m.returnPercent.abs())
+        .fold<double>(0, math.max);
 
     return Card(
       child: Padding(
@@ -40,7 +42,7 @@ class DepotMoversCard extends StatelessWidget {
             for (final mover in movers)
               _MoverRow(
                 mover: mover,
-                share: largest <= 0 ? 0 : mover.gain.abs() / largest,
+                share: largest <= 0 ? 0 : mover.returnPercent.abs() / largest,
                 format: format,
               ),
           ],
@@ -67,7 +69,8 @@ class _MoverRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final holding = mover.holding;
-    final color = DepotFormat.gainColor(mover.gain) ?? theme.hintColor;
+    final returnPercent = mover.returnPercent;
+    final color = DepotFormat.gainColor(returnPercent) ?? theme.hintColor;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
@@ -97,7 +100,7 @@ class _MoverRow extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _Bar(
-                      share: mover.gain < 0 ? share : 0,
+                      share: returnPercent < 0 ? share : 0,
                       color: color,
                       alignment: Alignment.centerRight,
                     ),
@@ -105,7 +108,7 @@ class _MoverRow extends StatelessWidget {
                   Container(width: 1, color: theme.dividerColor),
                   Expanded(
                     child: _Bar(
-                      share: mover.gain > 0 ? share : 0,
+                      share: returnPercent > 0 ? share : 0,
                       color: color,
                       alignment: Alignment.centerLeft,
                     ),
@@ -118,7 +121,7 @@ class _MoverRow extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 76),
             child: Text(
-              format.money(mover.gain, signed: true),
+              format.percent(returnPercent),
               textAlign: TextAlign.right,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: color,

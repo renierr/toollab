@@ -156,8 +156,9 @@ selected portfolio and period, and the holdings exactly as the filter and sort s
 2. KPI box: the same figures as the overview tiles.
 3. Value chart (value filled, invested capital dashed) next to the allocation by kind.
    On **Today** the chart has a single point, so the biggest movers take its place.
-4. Biggest movers: up to five gains and five losses of the period as diverging bars,
-   the same card the overview shows above the holdings. Both follow the holdings filter.
+4. Biggest movers: up to five gains and five losses of the period by return percentage,
+   as diverging bars the same card the overview shows above the holdings. Both follow
+   the holdings filter.
 5. Holdings table: shares, price, value, weight (with a small bar), and the period's gain
    and return, with a total row. Sold holdings are muted.
 6. All-time table per holding: average buy price, cost basis, unrealized (amount and
