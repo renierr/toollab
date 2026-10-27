@@ -208,6 +208,59 @@ void main() {
     expect(state.trendFor(holding(0))?.symbol, 'GOOGL');
   });
 
+  test(
+    'tries another confirmed listing when the first has too few prices',
+    () async {
+      final requested = <String>[];
+      final state = DepotHoldingTrendState(
+        resolve: (_) async => ['DPSTF', 'DHL.DE'],
+        quote: (symbol) async {
+          requested.add(symbol);
+          if (symbol == 'DPSTF') {
+            return DepotWishlistQuote(
+              price: 65,
+              previousClose: 64,
+              currency: 'USD',
+              exchange: '',
+              points: [DepotWishlistPoint(date: DateTime.now(), close: 65)],
+            );
+          }
+          return quote();
+        },
+      );
+      addTearDown(state.dispose);
+      state.ensure(holding(0, isin: 'DE0005552004'), visible: () => true);
+      await Future<void>.delayed(Duration.zero);
+      expect(requested, ['DPSTF', 'DHL.DE']);
+      expect(
+        state.trendFor(holding(0, isin: 'DE0005552004'))?.symbol,
+        'DHL.DE',
+      );
+    },
+  );
+
+  test('stops after three listings without enough prices', () async {
+    final requested = <String>[];
+    final state = DepotHoldingTrendState(
+      resolve: (_) async => ['ONE', 'TWO', 'THREE', 'FOUR'],
+      quote: (symbol) async {
+        requested.add(symbol);
+        return const DepotWishlistQuote(
+          price: 1,
+          previousClose: 1,
+          currency: 'EUR',
+          exchange: '',
+          points: [],
+        );
+      },
+    );
+    addTearDown(state.dispose);
+    state.ensure(holding(0), visible: () => true);
+    await Future<void>.delayed(Duration.zero);
+    expect(requested, ['ONE', 'TWO', 'THREE']);
+    expect(state.trendFor(holding(0)), isNull);
+  });
+
   test('does not fetch a chart after its row leaves the viewport', () async {
     final gate = Completer<List<String>>();
     var visible = true;

@@ -212,7 +212,8 @@ Holding sparklines load only for visible rows with room to show them. For securi
 the ISIN is sent to Parqet's public asset endpoint to resolve confirmed listing symbols;
 crypto symbols are searched on Yahoo. Yahoo receives the selected listing symbol, not
 portfolio amounts. Up to four holding lookups run concurrently, deduplicated by asset,
-with intraday results cached in memory for 15 minutes. Each line contains only prices
+with intraday results cached in memory for 15 minutes. Up to three confirmed listings
+are tried if a listing has fewer than two prices or cannot be loaded. Each line contains only prices
 within the last 24 hours, including available pre- and post-market data; it disappears
 when fewer than two points remain. The line uses the listing currency, not the holding's
 selected performance period or necessarily the same exchange as Parqet. Unsupported

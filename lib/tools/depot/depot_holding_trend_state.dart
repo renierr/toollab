@@ -92,7 +92,7 @@ class DepotHoldingTrendState extends ChangeNotifier {
           final quote = await _quote(symbol);
           if (_disposed) return;
           final points = marketPointsInLast24Hours(quote.points, _now());
-          if (points.length < 2) break;
+          if (points.length < 2) continue;
           _trends[key] = DepotHoldingTrend(
             symbol: symbol,
             currency: quote.currency,
