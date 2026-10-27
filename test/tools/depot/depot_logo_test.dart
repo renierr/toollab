@@ -345,6 +345,22 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(Image), findsOneWidget);
+    final image = tester.widget<Image>(find.byType(Image));
+    expect(image.fit, BoxFit.cover);
+    expect(
+      tester.getSize(find.byType(Image)),
+      tester.getSize(find.byType(DepotHoldingAvatar).first),
+    );
+    final box = tester.widget<Container>(
+      find
+          .ancestor(of: find.byType(Image), matching: find.byType(Container))
+          .first,
+    );
+    expect(box.clipBehavior, Clip.antiAlias);
+    expect(
+      (box.decoration! as BoxDecoration).borderRadius,
+      BorderRadius.circular(9),
+    );
     expect(find.text('NL'), findsOneWidget);
     expect(find.text('1 logo saved on this device'), findsOneWidget);
     expect(downloader.calls, isEmpty);

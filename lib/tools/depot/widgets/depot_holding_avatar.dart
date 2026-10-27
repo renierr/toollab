@@ -51,15 +51,12 @@ class DepotHoldingAvatar extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(size / 4),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(3),
-        child: Image.memory(
-          bytes,
-          fit: BoxFit.contain,
-          cacheWidth: 96,
-          excludeFromSemantics: true,
-          errorBuilder: (context, error, stackTrace) => fallback,
-        ),
+      child: Image.memory(
+        bytes,
+        fit: BoxFit.cover,
+        cacheWidth: 96,
+        excludeFromSemantics: true,
+        errorBuilder: (context, error, stackTrace) => fallback,
       ),
     );
   }

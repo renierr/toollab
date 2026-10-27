@@ -98,11 +98,22 @@ class _DepotHoldingTrendViewState extends State<DepotHoldingTrendView> {
     final trend = context.select<DepotHoldingTrendState, DepotHoldingTrend?>(
       (state) => state.trendFor(widget.holding),
     );
-    if (trend == null) return const SizedBox.shrink();
-    return DepotMarketSparkline(
-      symbol: trend.symbol,
-      currency: trend.currency,
-      points: trend.points,
+    return SizedBox(
+      width: 76,
+      height: 18,
+      child: trend == null
+          ? null
+          : OverflowBox(
+              maxHeight: 30,
+              child: Transform.translate(
+                offset: const Offset(0, 6),
+                child: DepotMarketSparkline(
+                  symbol: trend.symbol,
+                  currency: trend.currency,
+                  points: trend.points,
+                ),
+              ),
+            ),
     );
   }
 }

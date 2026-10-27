@@ -23,27 +23,31 @@ import 'package:tool_lab/widgets/sparkline.dart';
 
 import 'offline_test_support.dart';
 
-DepotHolding holding(int index, {String? isin, String? exchange}) =>
-    DepotHolding(
-      id: '$index',
-      portfolioId: 'p',
-      name: 'Holding $index',
-      assetType: DepotAssetType.security,
-      isin: isin ?? 'US00000000${index.toString().padLeft(2, '0')}',
-      quoteExchange: exchange,
-      shares: 1,
-      purchasePrice: 1,
-      purchaseValue: 1,
-      currentPrice: 2,
-      currentValue: 2,
-      isSold: false,
-      unrealizedGain: 1,
-      unrealizedReturn: 100,
-      realizedGain: 0,
-      dividends: 0,
-      fees: 0,
-      taxes: 0,
-    );
+DepotHolding holding(
+  int index, {
+  String? isin,
+  String? exchange,
+  String? name,
+}) => DepotHolding(
+  id: '$index',
+  portfolioId: 'p',
+  name: name ?? 'Holding $index',
+  assetType: DepotAssetType.security,
+  isin: isin ?? 'US00000000${index.toString().padLeft(2, '0')}',
+  quoteExchange: exchange,
+  shares: 1,
+  purchasePrice: 1,
+  purchaseValue: 1,
+  currentPrice: 2,
+  currentValue: 2,
+  isSold: false,
+  unrealizedGain: 1,
+  unrealizedReturn: 100,
+  realizedGain: 0,
+  dividends: 0,
+  fees: 0,
+  taxes: 0,
+);
 
 DepotWishlistQuote quote() => DepotWishlistQuote(
   price: 2,
@@ -491,6 +495,77 @@ void main() {
     state.clear();
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  for (final name in [
+    'Holding',
+    'A longer holding name that can wrap onto two lines',
+  ]) {
+    testWidgets('holding row stays the same size when the trend loads: $name', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(600, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final gate = Completer<DepotWishlistQuote>();
+      final trends = DepotHoldingTrendState(
+        resolve: (_) async => ['TEST'],
+        quote: (_) => gate.future,
+      );
+      late DepotLogoState logos;
+      await tester.runAsync(() async {
+        logos = DepotLogoState();
+        await logos.ensureLoaded();
+      });
+      addTearDown(trends.dispose);
+      addTearDown(logos.dispose);
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: trends),
+            ChangeNotifierProvider.value(value: logos),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: DepotHoldingTile(
+                holding: holding(0, name: name),
+                performance: null,
+                period: DepotPeriod.today,
+                format: DepotFormat('de', 'EUR'),
+                weight: 100,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      final before = tester.getRect(find.byType(DepotHoldingTile));
+      expect(find.byType(Sparkline), findsNothing);
+      gate.complete(quote());
+      await tester.pumpAndSettle();
+      expect(find.byType(Sparkline), findsOneWidget);
+      expect(tester.getRect(find.byType(DepotHoldingTile)), before);
+      final sparkline = tester.getRect(find.byType(Sparkline));
+      final subtitle = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(DepotHoldingTile),
+              matching: find.byWidgetPredicate(
+                (widget) => widget is Text && widget.textSpan != null,
+              ),
+            )
+            .first,
+      );
+      expect(sparkline.top, greaterThanOrEqualTo(before.top));
+      expect(sparkline.bottom, lessThanOrEqualTo(before.bottom));
+      expect(sparkline.bottom, greaterThan(subtitle.top));
+      expect(tester.takeException(), isNull);
+      trends.clear();
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
 
   for (final (width, scale) in [
     (320.0, 1.0),
