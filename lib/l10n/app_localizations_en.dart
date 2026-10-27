@@ -10966,6 +10966,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotSettingsSectionSync => 'Sync';
 
   @override
+  String get depotExportSection => 'Data';
+
+  @override
+  String get depotExportTitle => 'Export all data';
+
+  @override
+  String get depotExportSubtitle =>
+      'All synced tables as a SQLite database and CSV files in one ZIP, usable without Parqet';
+
+  @override
+  String get depotExportDone => 'Data exported';
+
+  @override
   String get depotLogosTitle => 'Holding logos';
 
   @override

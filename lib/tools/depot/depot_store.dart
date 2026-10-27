@@ -12,6 +12,27 @@ import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
 import 'models/depot_transaction.dart';
 
+/// One table's content for the data export.
+class DepotTableDump {
+  final String name;
+
+  /// The table's `CREATE TABLE` statement under [name].
+  final String createSql;
+  final List<String> columns;
+
+  /// Columns of [columns] that hold bytes, e.g. logo images.
+  final Set<String> binaryColumns;
+  final List<List<Object?>> rows;
+
+  const DepotTableDump({
+    required this.name,
+    required this.createSql,
+    required this.columns,
+    required this.binaryColumns,
+    required this.rows,
+  });
+}
+
 /// Local Parqet mirror, with performance cached independently per period.
 class DepotStore {
   DepotStore._();
@@ -659,6 +680,47 @@ class DepotStore {
       }
       await batch.commit(noResult: true);
     });
+  }
+
+  /// Every table with its schema, columns and rows, under its plain name.
+  Future<List<DepotTableDump>> dumpTables() async {
+    final db = await _getDb();
+    final dumps = <DepotTableDump>[];
+    for (final table in [
+      ..._tables,
+      _transactions,
+      _activityCounts,
+      _dividendAssets,
+      _dividendEvents,
+      _holdingLogos,
+    ]) {
+      final stored = db.nameTable(table);
+      final info = await db.rawQuery('PRAGMA table_info($stored)');
+      final schema = await db.rawQuery(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?",
+        [stored],
+      );
+      final columns = [for (final c in info) c['name'] as String];
+      final rows = await db.query(table);
+      dumps.add(
+        DepotTableDump(
+          name: table,
+          createSql: (schema.first['sql'] as String).replaceFirst(
+            stored,
+            table,
+          ),
+          columns: columns,
+          binaryColumns: {
+            for (final c in info)
+              if (c['type'] == 'BLOB') c['name'] as String,
+          },
+          rows: [
+            for (final row in rows) [for (final c in columns) row[c]],
+          ],
+        ),
+      );
+    }
+    return dumps;
   }
 
   Future<void> clear() async {

@@ -19583,6 +19583,30 @@ abstract class AppLocalizations {
   /// **'Sync'**
   String get depotSettingsSectionSync;
 
+  /// No description provided for @depotExportSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get depotExportSection;
+
+  /// No description provided for @depotExportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export all data'**
+  String get depotExportTitle;
+
+  /// No description provided for @depotExportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All synced tables as a SQLite database and CSV files in one ZIP, usable without Parqet'**
+  String get depotExportSubtitle;
+
+  /// No description provided for @depotExportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Data exported'**
+  String get depotExportDone;
+
   /// No description provided for @depotLogosTitle.
   ///
   /// In en, this message translates to:

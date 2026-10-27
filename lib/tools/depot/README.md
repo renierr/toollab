@@ -179,3 +179,18 @@ period, summaries and chart points per scope and period, transactions, activity 
 holding, dividend data from Yahoo Finance, and holding logos (downloaded only on request
 from the settings). Summaries and charts exist per portfolio and for all portfolios
 combined (scope `_all`).
+
+### Exporting the data
+
+**Settings → Data → Export all data** saves one ZIP. It is meant as an exit path: the
+files stay usable in a spreadsheet, a database tool or a script if Parqet is no longer
+available. The ZIP holds:
+
+- `depot.sqlite`: a standalone SQLite database with every table under its plain name
+  (`transactions`, `holdings`, …), the app's schema and raw values, logo images included.
+  Dates there are epoch milliseconds, as in the app.
+- One CSV per table, named like the table (`transactions.csv`, …): comma-separated,
+  UTF-8 with BOM, one header row, dot as decimal separator. Date columns (`datetime`,
+  `date`, `quote_at`, `synced_at`, …) are ISO 8601 in UTC. Logo images are left out.
+
+Amounts are in the portfolio currency, as Parqet booked them.

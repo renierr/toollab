@@ -11045,6 +11045,19 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotSettingsSectionSync => 'Synchronisierung';
 
   @override
+  String get depotExportSection => 'Daten';
+
+  @override
+  String get depotExportTitle => 'Alle Daten exportieren';
+
+  @override
+  String get depotExportSubtitle =>
+      'Alle synchronisierten Tabellen als SQLite-Datenbank und CSV-Dateien in einer ZIP, nutzbar ohne Parqet';
+
+  @override
+  String get depotExportDone => 'Daten exportiert';
+
+  @override
   String get depotLogosTitle => 'Logos der Positionen';
 
   @override

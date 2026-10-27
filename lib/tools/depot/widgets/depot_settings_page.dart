@@ -19,6 +19,7 @@ import '../depot_logo_state.dart';
 import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../parqet/parqet_auth.dart';
+import 'depot_data_export_tile.dart';
 import 'depot_logo_settings.dart';
 
 /// Pushed with a `MaterialPageRoute`, so a plain `Scaffold` instead of
@@ -224,6 +225,7 @@ class _DepotSettingsPageState extends State<DepotSettingsPage>
               ),
             ),
             const DepotLogoSettings(),
+            const DepotDataExportTile(),
             if (state.isConnected) ...[
               SettingsSectionLabel(title: l10n.depotSettingsSectionSync),
               ListTile(
