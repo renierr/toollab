@@ -11,6 +11,7 @@ import 'models/depot_period.dart';
 import 'models/depot_portfolio.dart';
 import 'models/depot_summary.dart';
 import 'models/depot_transaction.dart';
+import 'models/depot_wishlist.dart';
 
 /// One table's content for the data export.
 class DepotTableDump {
@@ -54,6 +55,7 @@ class DepotStore {
 
   static const _dividendAssets = 'dividend_assets';
   static const _dividendEvents = 'dividend_events';
+  static const _wishlist = 'wishlist_items';
 
   /// Parqet mirror only; the dividend cache survives a sync.
   static const _tables = [
@@ -79,7 +81,7 @@ class DepotStore {
     final db = await DatabaseService.instance.getToolDatabase(_toolId);
     try {
       await db.migrate(
-        currentVersion: 6,
+        currentVersion: 7,
         onMigrate: (txn, oldVersion, newVersion) async {
           if (oldVersion < 1) {
             await txn.execute('''
@@ -264,6 +266,19 @@ class DepotStore {
               )
             ''');
           }
+          if (oldVersion < 7) {
+            await txn.execute('''
+              CREATE TABLE ${txn.nameTable(_wishlist)} (
+                symbol TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                quote_type TEXT NOT NULL,
+                exchange TEXT NOT NULL,
+                currency TEXT NOT NULL,
+                added_price REAL,
+                added_at INTEGER NOT NULL
+              )
+            ''');
+          }
           // Only migrations that rebuild performance tables invalidate sync.
           if (oldVersion < 3) {
             await txn.executor.delete(
@@ -354,6 +369,26 @@ class DepotStore {
       logo.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  Future<List<DepotWishlistItem>> wishlistItems() async {
+    final db = await _getDb();
+    final rows = await db.query(_wishlist, orderBy: 'added_at DESC');
+    return rows.map(DepotWishlistItem.fromMap).toList();
+  }
+
+  Future<void> saveWishlistItem(DepotWishlistItem item) async {
+    final db = await _getDb();
+    await db.insert(
+      _wishlist,
+      item.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> deleteWishlistItem(String symbol) async {
+    final db = await _getDb();
+    await db.delete(_wishlist, where: 'symbol = ?', whereArgs: [symbol]);
   }
 
   Future<List<DepotTransaction>> transactions({String? portfolioId}) async {
@@ -693,6 +728,7 @@ class DepotStore {
       _dividendAssets,
       _dividendEvents,
       _holdingLogos,
+      _wishlist,
     ]) {
       final stored = db.nameTable(table);
       final info = await db.rawQuery('PRAGMA table_info($stored)');

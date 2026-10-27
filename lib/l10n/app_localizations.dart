@@ -19427,6 +19427,162 @@ abstract class AppLocalizations {
   /// **'Activities'**
   String get depotTabActivities;
 
+  /// No description provided for @depotTabWishlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Wishlist'**
+  String get depotTabWishlist;
+
+  /// No description provided for @depotWishlistAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to wishlist'**
+  String get depotWishlistAddTitle;
+
+  /// No description provided for @depotWishlistAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add security'**
+  String get depotWishlistAdd;
+
+  /// No description provided for @depotWishlistSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, ticker or ISIN'**
+  String get depotWishlistSearchHint;
+
+  /// No description provided for @depotWishlistEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your wishlist is empty'**
+  String get depotWishlistEmpty;
+
+  /// No description provided for @depotWishlistEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow stocks, ETFs and crypto without adding them to your portfolio.'**
+  String get depotWishlistEmptyHint;
+
+  /// No description provided for @depotWishlistLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored only in this app and never synced to Parqet.'**
+  String get depotWishlistLocalOnly;
+
+  /// No description provided for @depotWishlistNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching securities.'**
+  String get depotWishlistNoResults;
+
+  /// No description provided for @depotWishlistSearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Search failed. Check your connection.'**
+  String get depotWishlistSearchFailed;
+
+  /// No description provided for @depotWishlistLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the wishlist. Reopen the app to try again.'**
+  String get depotWishlistLoadFailed;
+
+  /// No description provided for @depotWishlistAddFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add this security. Check your connection and try again.'**
+  String get depotWishlistAddFailed;
+
+  /// No description provided for @depotWishlistAlreadyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'On wishlist'**
+  String get depotWishlistAlreadyAdded;
+
+  /// No description provided for @depotWishlistRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from wishlist'**
+  String get depotWishlistRemove;
+
+  /// No description provided for @depotWishlistRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove this security.'**
+  String get depotWishlistRemoveFailed;
+
+  /// No description provided for @depotWishlistQuoteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Quote unavailable'**
+  String get depotWishlistQuoteFailed;
+
+  /// No description provided for @depotWishlistPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get depotWishlistPrice;
+
+  /// No description provided for @depotWishlistToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get depotWishlistToday;
+
+  /// No description provided for @depotWishlistAddedPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price when added'**
+  String get depotWishlistAddedPrice;
+
+  /// No description provided for @depotWishlistAddedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Added on'**
+  String get depotWishlistAddedOn;
+
+  /// No description provided for @depotWishlistSinceAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Since added'**
+  String get depotWishlistSinceAdded;
+
+  /// No description provided for @depotWishlistDayRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Day range'**
+  String get depotWishlistDayRange;
+
+  /// No description provided for @depotWishlistYearRange.
+  ///
+  /// In en, this message translates to:
+  /// **'52-week range'**
+  String get depotWishlistYearRange;
+
+  /// No description provided for @depotWishlistChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Price, last 12 months'**
+  String get depotWishlistChart;
+
+  /// No description provided for @depotWishlistRange1m.
+  ///
+  /// In en, this message translates to:
+  /// **'1 month'**
+  String get depotWishlistRange1m;
+
+  /// No description provided for @depotWishlistRange6m.
+  ///
+  /// In en, this message translates to:
+  /// **'6 months'**
+  String get depotWishlistRange6m;
+
+  /// No description provided for @depotWishlistRange1y.
+  ///
+  /// In en, this message translates to:
+  /// **'1 year'**
+  String get depotWishlistRange1y;
+
   /// No description provided for @depotConnectTitle.
   ///
   /// In en, this message translates to:

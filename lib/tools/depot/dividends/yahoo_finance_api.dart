@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:tool_lab/services/app_http_client.dart';
 
 import '../models/depot_dividend.dart';
+import '../models/depot_wishlist.dart';
 
 class YahooFinanceException implements Exception {
   final String message;
@@ -46,6 +48,116 @@ class YahooFinanceApi {
       if (symbol is String && symbol.isNotEmpty) return symbol;
     }
     return null;
+  }
+
+  /// Securities matching [query], limited to the kinds a wishlist follows.
+  static Future<List<DepotWishlistSearchResult>> searchWishlist(
+    String query,
+  ) async {
+    final json = await _getJson('/v1/finance/search', {
+      'q': query,
+      'quotesCount': '20',
+      'newsCount': '0',
+    });
+    final results = <DepotWishlistSearchResult>[];
+    for (final item in json['quotes'] as List? ?? const []) {
+      if (item is! Map) continue;
+      final symbol = item['symbol'];
+      final quoteType = item['quoteType'];
+      if (symbol is! String ||
+          symbol.isEmpty ||
+          quoteType is! String ||
+          !wishlistQuoteTypes.contains(quoteType.toUpperCase())) {
+        continue;
+      }
+      results.add(
+        DepotWishlistSearchResult(
+          symbol: symbol,
+          name:
+              (item['longname'] as String?) ??
+              (item['shortname'] as String?) ??
+              symbol,
+          quoteType: quoteType,
+          exchange:
+              (item['exchDisp'] as String?) ??
+              (item['exchange'] as String?) ??
+              '',
+        ),
+      );
+    }
+    return results;
+  }
+
+  /// One year of daily closes plus the latest quote of [symbol].
+  static Future<DepotWishlistQuote> wishlistQuote(String symbol) async {
+    final json = await _getJson(
+      '/v8/finance/chart/${Uri.encodeComponent(symbol)}',
+      {'range': '1y', 'interval': '1d'},
+    );
+    return parseWishlistQuote(json, symbol);
+  }
+
+  @visibleForTesting
+  static DepotWishlistQuote parseWishlistQuote(
+    Map<String, dynamic> json,
+    String symbol,
+  ) {
+    final result = _chartResult(json);
+    final meta = result['meta'] as Map? ?? const {};
+    var currency = meta['currency'] as String? ?? '';
+    // London quotes in pence; the rest of the app thinks in pounds.
+    final divisor = currency == 'GBp' || currency == 'GBX' ? 100.0 : 1.0;
+    if (divisor != 1) currency = 'GBP';
+
+    double? value(Object? raw) => raw is num ? raw.toDouble() / divisor : null;
+    final timestamps = result['timestamp'] as List? ?? const [];
+    final rawQuotes = (result['indicators'] as Map?)?['quote'] as List?;
+    final quote = rawQuotes == null || rawQuotes.isEmpty
+        ? null
+        : rawQuotes.first;
+    final closes = quote is Map
+        ? quote['close'] as List? ?? const []
+        : const [];
+    final points = <DepotWishlistPoint>[];
+    for (var i = 0; i < timestamps.length && i < closes.length; i++) {
+      final close = value(closes[i]);
+      final seconds = timestamps[i];
+      if (close == null || seconds is! num) continue;
+      points.add(
+        DepotWishlistPoint(
+          date: DateTime.fromMillisecondsSinceEpoch((seconds * 1000).round()),
+          close: close,
+        ),
+      );
+    }
+    if (points.isEmpty) {
+      throw YahooFinanceException('No chart points for $symbol');
+    }
+    final price = value(meta['regularMarketPrice']) ?? points.last.close;
+    final previousClose =
+        value(meta['previousClose']) ??
+        (points.length > 1 ? points[points.length - 2].close : price);
+    final quoteTime = meta['regularMarketTime'];
+    return DepotWishlistQuote(
+      price: price,
+      previousClose: previousClose,
+      currency: currency,
+      exchange:
+          (meta['fullExchangeName'] as String?) ??
+          (meta['exchangeName'] as String?) ??
+          '',
+      points: points,
+      dayHigh: value(meta['regularMarketDayHigh']),
+      dayLow: value(meta['regularMarketDayLow']),
+      yearHigh: value(meta['fiftyTwoWeekHigh']),
+      yearLow: value(meta['fiftyTwoWeekLow']),
+      quoteAt: quoteTime is num
+          ? DateTime.fromMillisecondsSinceEpoch((quoteTime * 1000).round())
+          : null,
+      quotedDayChangePercent: meta['regularMarketChangePercent'] is num
+          ? (meta['regularMarketChangePercent'] as num).toDouble()
+          : null,
+    );
   }
 
   static Future<YahooDividends> dividends(String symbol) async {

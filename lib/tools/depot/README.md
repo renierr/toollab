@@ -5,7 +5,8 @@ portfolios, holdings, performance and activities into a local database, and turn
 PDF statements into Parqet activities.
 
 Parqet is the source of truth. Everything shown is a local copy that a sync refreshes;
-nothing is edited locally except imported statements before they are sent.
+nothing is edited locally except imported statements and the wishlist, which is local by
+design.
 
 - **API reference:** <https://developer.parqet.com/docs/api>
 - **OpenAPI spec (machine-readable, the most precise source):**
@@ -19,6 +20,7 @@ nothing is edited locally except imported statements before they are sent.
 | Overview | KPIs, value chart, allocation, biggest movers, holdings for the selected period and portfolio | `POST /performance` |
 | Dividends | Calendar, missing and upcoming payments, per year and per position | Parqet bookings plus Yahoo Finance for ex-dates and amounts |
 | Activities | Realized-per-year card and the booking list with filters | `GET /portfolios/{id}/activities` |
+| Wishlist | Local list of stocks, ETFs and crypto with quotes, trend and a 12-month chart | Local database plus Yahoo Finance |
 | Import | Parse DKB / ING PDF statements, export as Parqet CSV or send to Parqet | `POST /portfolios/{id}/activities` |
 
 ## Creating a connection
@@ -192,13 +194,29 @@ up through the activity counts, even when the statement dates lie further back.
 Pages of up to 500 activities are read, up to 4 requests run in parallel, and a
 rate-limited request is retried a few times with a short back-off.
 
+Parqet Connect has no watchlist and no security search endpoint, so the wishlist cannot be
+read from or written to Parqet. Its quotes come from Yahoo Finance instead:
+
+| Endpoint | Used for |
+|---|---|
+| `GET /v1/finance/search?q=…` | Security search by name, ticker or ISIN; filtered to stocks, ETFs, funds and crypto |
+| `GET /v8/finance/chart/{symbol}?range=1y&interval=1d` | Latest quote and one year of daily closes per wishlist entry |
+
+Yahoo's unofficial endpoints may change or be unavailable, and quotes may be delayed.
+Wishlist avatars use initials unless a matching logo is already in the local holding cache;
+public Parqet asset enrichment is not implemented.
+
 ## Local data
 
 Tables in the tool database (`DepotStore`): portfolios, holdings, holding performance per
 period, summaries and chart points per scope and period, transactions, activity counts per
-holding, dividend data from Yahoo Finance, and holding logos (downloaded only on request
-from the settings). Summaries and charts exist per portfolio and for all portfolios
-combined (scope `_all`).
+holding, dividend data from Yahoo Finance, holding logos (downloaded only on request from
+the settings), and the wishlist. Summaries and charts exist per portfolio and for all
+portfolios combined (scope `_all`).
+
+The wishlist is the only table written by the user: it is keyed by Yahoo symbol and stores
+name, type, exchange, currency, the price when added and the date. It is never sent to
+Parqet and survives both a sync and **Disconnect**; only removing an entry deletes it.
 
 ### Exporting the data
 

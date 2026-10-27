@@ -1,0 +1,143 @@
+import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+import 'package:tool_lab/theme/theme.dart';
+import 'package:tool_lab/widgets/sparkline.dart';
+
+import '../depot_format.dart';
+import '../depot_portfolio_labels.dart';
+import '../models/depot_wishlist.dart';
+import 'depot_holding_avatar.dart';
+
+/// One wishlist entry: name, one-month trend, price and today's move.
+class DepotWishlistRow extends StatelessWidget {
+  final DepotWishlistItem item;
+  final DepotWishlistQuote? quote;
+  final bool failed;
+  final VoidCallback onTap;
+
+  const DepotWishlistRow({
+    super.key,
+    required this.item,
+    required this.quote,
+    required this.failed,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final format = DepotFormat.of(context, quote?.currency ?? item.currency);
+    final trend = quote?.pointsSince(const Duration(days: 31)) ?? const [];
+    final trendChange = quote?.changeSince(const Duration(days: 30));
+    final dayChange = quote?.dayChangePercent;
+    final trendColor = trendChange == null
+        ? theme.hintColor
+        : trendChange > 0
+        ? AppTheme.statusGreen
+        : trendChange < 0
+        ? AppTheme.statusRed
+        : theme.hintColor;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // The price and change already carry the trend; the line goes first
+        // when there is not enough room for the name next to it.
+        final cramped = constraints.maxWidth < 380;
+        return InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                DepotHoldingAvatar(name: item.name, colorSeed: item.symbol),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '${item.symbol} · '
+                        '${DepotPortfolioLabels.kind(l10n, item.kind)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (trend.length > 1 && !cramped) ...[
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 64,
+                    height: 30,
+                    child: Sparkline(
+                      values: [for (final point in trend) point.close],
+                      color: trendColor,
+                      strokeWidth: 1.5,
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 12),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 72),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (quote == null)
+                        failed
+                            ? Tooltip(
+                                message: l10n.depotWishlistQuoteFailed,
+                                child: Icon(
+                                  Icons.cloud_off_outlined,
+                                  size: 18,
+                                  color: theme.hintColor,
+                                ),
+                              )
+                            : const SizedBox(height: 18),
+                      if (quote != null) ...[
+                        if (failed)
+                          Tooltip(
+                            message: l10n.depotWishlistQuoteFailed,
+                            child: Icon(
+                              Icons.cloud_off_outlined,
+                              size: 18,
+                              color: theme.hintColor,
+                            ),
+                          ),
+                        Text(
+                          format.money(quote!.price),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (dayChange != null)
+                          Text(
+                            format.percent(dayChange),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: DepotFormat.gainColor(dayChange),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

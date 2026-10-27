@@ -10961,6 +10961,90 @@ class AppLocalizationsDe extends AppLocalizations {
   String get depotTabActivities => 'Aktivitäten';
 
   @override
+  String get depotTabWishlist => 'Wunschliste';
+
+  @override
+  String get depotWishlistAddTitle => 'Zur Wunschliste hinzufügen';
+
+  @override
+  String get depotWishlistAdd => 'Wertpapier hinzufügen';
+
+  @override
+  String get depotWishlistSearchHint => 'Nach Name, Kürzel oder ISIN suchen';
+
+  @override
+  String get depotWishlistEmpty => 'Deine Wunschliste ist leer';
+
+  @override
+  String get depotWishlistEmptyHint =>
+      'Aktien, ETFs und Krypto beobachten, ohne sie ins Portfolio aufzunehmen.';
+
+  @override
+  String get depotWishlistLocalOnly =>
+      'Nur in dieser App gespeichert und nie mit Parqet synchronisiert.';
+
+  @override
+  String get depotWishlistNoResults => 'Keine passenden Wertpapiere.';
+
+  @override
+  String get depotWishlistSearchFailed =>
+      'Suche fehlgeschlagen. Verbindung prüfen.';
+
+  @override
+  String get depotWishlistLoadFailed =>
+      'Die Wunschliste konnte nicht geladen werden. Öffne die App erneut, um es noch einmal zu versuchen.';
+
+  @override
+  String get depotWishlistAddFailed =>
+      'Das Wertpapier konnte nicht hinzugefügt werden. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get depotWishlistAlreadyAdded => 'Auf der Wunschliste';
+
+  @override
+  String get depotWishlistRemove => 'Von der Wunschliste entfernen';
+
+  @override
+  String get depotWishlistRemoveFailed =>
+      'Das Wertpapier konnte nicht entfernt werden.';
+
+  @override
+  String get depotWishlistQuoteFailed => 'Kurs nicht verfügbar';
+
+  @override
+  String get depotWishlistPrice => 'Kurs';
+
+  @override
+  String get depotWishlistToday => 'Heute';
+
+  @override
+  String get depotWishlistAddedPrice => 'Kurs beim Hinzufügen';
+
+  @override
+  String get depotWishlistAddedOn => 'Hinzugefügt am';
+
+  @override
+  String get depotWishlistSinceAdded => 'Seit dem Hinzufügen';
+
+  @override
+  String get depotWishlistDayRange => 'Tagesspanne';
+
+  @override
+  String get depotWishlistYearRange => '52-Wochen-Spanne';
+
+  @override
+  String get depotWishlistChart => 'Kurs, letzte 12 Monate';
+
+  @override
+  String get depotWishlistRange1m => '1 Monat';
+
+  @override
+  String get depotWishlistRange6m => '6 Monate';
+
+  @override
+  String get depotWishlistRange1y => '1 Jahr';
+
+  @override
   String get depotConnectTitle => 'Parqet verbinden';
 
   @override

@@ -18,6 +18,8 @@ import 'widgets/depot_overview_view.dart';
 import 'widgets/depot_report_button.dart';
 import 'widgets/depot_settings_page.dart';
 import 'widgets/depot_tabs.dart';
+import 'widgets/depot_wishlist_add_dialog.dart';
+import 'widgets/depot_wishlist_view.dart';
 
 class DepotPage extends StatefulWidget {
   final SharedFile? sharedFile;
@@ -72,10 +74,17 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
         DepotTab.overview => DepotTool.config.localizedName(l10n),
         DepotTab.dividends => l10n.depotTabDividends,
         DepotTab.activities => l10n.depotTabActivities,
+        DepotTab.wishlist => l10n.depotTabWishlist,
         DepotTab.pdfImport => l10n.depotTabImport,
       },
       actions: [
         if (tab == DepotTab.overview) const DepotReportButton(),
+        if (tab == DepotTab.wishlist)
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: l10n.depotWishlistAdd,
+            onPressed: () => DepotWishlistAddDialog.show(context),
+          ),
         if (tab != DepotTab.pdfImport)
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -94,6 +103,7 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
               DepotTab.overview => const DepotOverviewView(),
               DepotTab.dividends => const DepotDividendsView(),
               DepotTab.activities => const DepotActivitiesView(),
+              DepotTab.wishlist => const DepotWishlistView(),
               DepotTab.pdfImport => DepotImportView(tempScope: _scope),
             },
           ),

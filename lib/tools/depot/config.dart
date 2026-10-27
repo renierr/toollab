@@ -10,6 +10,7 @@ import 'depot_logo_state.dart';
 import 'depot_page.dart';
 import 'depot_portfolio_state.dart';
 import 'depot_state.dart';
+import 'depot_wishlist_state.dart';
 
 class DepotTool {
   DepotTool._();
@@ -36,6 +37,9 @@ class DepotTool {
         create: (_) => DepotDividendState(),
       ),
       ChangeNotifierProvider<DepotLogoState>(create: (_) => DepotLogoState()),
+      ChangeNotifierProvider<DepotWishlistState>(
+        create: (_) => DepotWishlistState(),
+      ),
       ChangeNotifierProvider<DepotImportState>(
         create: (_) => DepotImportState(),
       ),

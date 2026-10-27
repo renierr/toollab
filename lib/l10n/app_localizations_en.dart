@@ -10882,6 +10882,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get depotTabActivities => 'Activities';
 
   @override
+  String get depotTabWishlist => 'Wishlist';
+
+  @override
+  String get depotWishlistAddTitle => 'Add to wishlist';
+
+  @override
+  String get depotWishlistAdd => 'Add security';
+
+  @override
+  String get depotWishlistSearchHint => 'Search by name, ticker or ISIN';
+
+  @override
+  String get depotWishlistEmpty => 'Your wishlist is empty';
+
+  @override
+  String get depotWishlistEmptyHint =>
+      'Follow stocks, ETFs and crypto without adding them to your portfolio.';
+
+  @override
+  String get depotWishlistLocalOnly =>
+      'Stored only in this app and never synced to Parqet.';
+
+  @override
+  String get depotWishlistNoResults => 'No matching securities.';
+
+  @override
+  String get depotWishlistSearchFailed =>
+      'Search failed. Check your connection.';
+
+  @override
+  String get depotWishlistLoadFailed =>
+      'Could not load the wishlist. Reopen the app to try again.';
+
+  @override
+  String get depotWishlistAddFailed =>
+      'Could not add this security. Check your connection and try again.';
+
+  @override
+  String get depotWishlistAlreadyAdded => 'On wishlist';
+
+  @override
+  String get depotWishlistRemove => 'Remove from wishlist';
+
+  @override
+  String get depotWishlistRemoveFailed => 'Could not remove this security.';
+
+  @override
+  String get depotWishlistQuoteFailed => 'Quote unavailable';
+
+  @override
+  String get depotWishlistPrice => 'Price';
+
+  @override
+  String get depotWishlistToday => 'Today';
+
+  @override
+  String get depotWishlistAddedPrice => 'Price when added';
+
+  @override
+  String get depotWishlistAddedOn => 'Added on';
+
+  @override
+  String get depotWishlistSinceAdded => 'Since added';
+
+  @override
+  String get depotWishlistDayRange => 'Day range';
+
+  @override
+  String get depotWishlistYearRange => '52-week range';
+
+  @override
+  String get depotWishlistChart => 'Price, last 12 months';
+
+  @override
+  String get depotWishlistRange1m => '1 month';
+
+  @override
+  String get depotWishlistRange6m => '6 months';
+
+  @override
+  String get depotWishlistRange1y => '1 year';
+
+  @override
   String get depotConnectTitle => 'Connect Parqet';
 
   @override

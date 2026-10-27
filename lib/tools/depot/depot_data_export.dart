@@ -15,6 +15,7 @@ class DepotDataExport {
   /// Stored as epoch milliseconds; exported as ISO 8601 UTC.
   static const _dateColumns = {
     'created_at',
+    'added_at',
     'datetime',
     'date',
     'synced_at',
