@@ -1,6 +1,34 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 enum WakeLockType { partial, full }
+
+/// Keeps the screen on while [set] to true; safe to toggle during a pending acquire.
+class ScreenOnRequest {
+  WakeLockLease? _lease;
+  bool _wanted = false;
+
+  void set(bool wanted) {
+    if (wanted == _wanted) return;
+    _wanted = wanted;
+    if (!wanted) {
+      final lease = _lease;
+      _lease = null;
+      if (lease != null) unawaited(lease.release());
+      return;
+    }
+    unawaited(
+      PowerWakeLockService.acquireFull().then((lease) {
+        if (_wanted && _lease == null) {
+          _lease = lease;
+        } else {
+          unawaited(lease.release());
+        }
+      }),
+    );
+  }
+}
 
 class WakeLockLease {
   WakeLockLease._(this._id, this.type);

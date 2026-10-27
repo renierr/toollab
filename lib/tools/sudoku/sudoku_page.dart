@@ -42,8 +42,7 @@ class _SudokuPageState extends State<SudokuPage> with DisposeCleanup {
 
   late final SudokuEngine _engine;
   late final SudokuState _settings;
-  WakeLockLease? _screenOn;
-  bool _screenOnWanted = false;
+  final ScreenOnRequest _screenOn = ScreenOnRequest();
   Timer? _idleTimer;
 
   @override
@@ -56,7 +55,7 @@ class _SudokuPageState extends State<SudokuPage> with DisposeCleanup {
     onDispose(() => _settings.removeListener(_syncSettings));
     onDispose(() => _engine.removeListener(_syncScreenOn));
     onDispose(() => _idleTimer?.cancel());
-    onDispose(() => _setScreenOn(false));
+    onDispose(() => _screenOn.set(false));
     onDispose(_engine.dispose);
     unawaited(_bootstrap());
   }
@@ -66,29 +65,9 @@ class _SudokuPageState extends State<SudokuPage> with DisposeCleanup {
     final playing = !_engine.paused && !_engine.completed;
     _idleTimer?.cancel();
     _idleTimer = playing
-        ? Timer(_idleScreenOff, () => _setScreenOn(false))
+        ? Timer(_idleScreenOff, () => _screenOn.set(false))
         : null;
-    _setScreenOn(playing);
-  }
-
-  void _setScreenOn(bool wanted) {
-    if (wanted == _screenOnWanted) return;
-    _screenOnWanted = wanted;
-    if (!wanted) {
-      final lease = _screenOn;
-      _screenOn = null;
-      if (lease != null) unawaited(lease.release());
-      return;
-    }
-    unawaited(
-      PowerWakeLockService.acquireFull().then((lease) {
-        if (mounted && _screenOnWanted && _screenOn == null) {
-          _screenOn = lease;
-        } else {
-          unawaited(lease.release());
-        }
-      }),
-    );
+    _screenOn.set(playing);
   }
 
   Future<void> _bootstrap() async {

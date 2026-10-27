@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/database_service.dart';
+import 'package:tool_lab/services/power_wake_lock_service.dart';
 
 import 'audio/sleep_playback_peak.dart';
 import 'audio/sleep_playback_ranges.dart';
@@ -43,6 +44,7 @@ class SleepPlayer extends ChangeNotifier {
   List<(Duration, Duration)> _audibleRanges = const [];
   int _generation = 0;
   final ValueNotifier<DateTime?> _playhead = ValueNotifier(null);
+  final ScreenOnRequest _screenOn = ScreenOnRequest();
 
   ValueListenable<DateTime?> get playhead => _playhead;
   String? get sessionId => _session?.id;
@@ -330,8 +332,15 @@ class SleepPlayer extends ChangeNotifier {
   }
 
   @override
+  void notifyListeners() {
+    _screenOn.set(_session != null && !_paused);
+    super.notifyListeners();
+  }
+
+  @override
   void dispose() {
     _disposed = true;
+    _screenOn.set(false);
     _generation++;
     onChunkStarted = null;
     unawaited(_releaseVoice());

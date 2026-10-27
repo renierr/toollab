@@ -31,8 +31,7 @@ class SoundFinderPage extends StatefulWidget {
 
 class _SoundFinderPageState extends State<SoundFinderPage>
     with DisposeCleanup<SoundFinderPage>, WidgetsBindingObserver {
-  WakeLockLease? _wakeLock;
-  bool _screenOnWanted = false;
+  final ScreenOnRequest _screenOn = ScreenOnRequest();
 
   @override
   void initState() {
@@ -41,38 +40,18 @@ class _SoundFinderPageState extends State<SoundFinderPage>
     final state = context.read<SoundFinderState>();
     WidgetsBinding.instance.addPostFrameCallback((_) => state.onPageEnter());
 
-    // A running sleep session wants the screen off, also when the page is
-    // reopened during the night.
-    void syncScreenOn() => _setScreenOn(!state.sleep.active);
-    state.sleep.addListener(syncScreenOn);
+    // Sleep mode lets the screen sleep, before, during and after a session;
+    // its playback holds the screen on by itself.
+    void syncScreenOn() => _screenOn.set(state.mode != SfMode.sleep);
+    state.addListener(syncScreenOn);
     syncScreenOn();
 
     onDispose(() => WidgetsBinding.instance.removeObserver(this));
     onDispose(() => unawaited(state.onPageLeave()));
     onDispose(() {
-      state.sleep.removeListener(syncScreenOn);
-      _setScreenOn(false);
+      state.removeListener(syncScreenOn);
+      _screenOn.set(false);
     });
-  }
-
-  void _setScreenOn(bool wanted) {
-    if (wanted == _screenOnWanted) return;
-    _screenOnWanted = wanted;
-    if (!wanted) {
-      final lease = _wakeLock;
-      _wakeLock = null;
-      if (lease != null) unawaited(lease.release());
-      return;
-    }
-    unawaited(
-      PowerWakeLockService.acquireFull().then((lease) {
-        if (_screenOnWanted && _wakeLock == null) {
-          _wakeLock = lease;
-        } else {
-          unawaited(lease.release());
-        }
-      }),
-    );
   }
 
   @override
