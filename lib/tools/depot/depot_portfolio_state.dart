@@ -24,6 +24,8 @@ class DepotRangeChange {
   const DepotRangeChange({required this.valueChange, required this.gain});
 }
 
+typedef DepotMover = ({DepotHolding holding, double gain});
+
 class DepotPortfolioState extends ChangeNotifier {
   DepotPortfolioState({this.api});
 
@@ -63,6 +65,7 @@ class DepotPortfolioState extends ChangeNotifier {
   DepotHoldingFilter _holdingFilter = const DepotHoldingFilter();
   DepotActivityFilter _activityFilter = const DepotActivityFilter();
   List<DepotHolding> _visibleHoldings = const [];
+  List<DepotMover> _movers = const [];
   List<DepotTransaction> _visibleTransactions = const [];
 
   bool get isLoaded => _isLoaded;
@@ -110,6 +113,10 @@ class DepotPortfolioState extends ChangeNotifier {
   DepotHoldingFilter get holdingFilter => _holdingFilter;
   DepotActivityFilter get activityFilter => _activityFilter;
   List<DepotHolding> get visibleHoldings => _visibleHoldings;
+
+  /// Up to five gains, then up to five losses of the period among
+  /// [visibleHoldings], each largest first.
+  List<DepotMover> get movers => _movers;
   List<DepotTransaction> get visibleTransactions => _visibleTransactions;
 
   /// The selected period's figures for [holding], if Parqet had any.
@@ -367,6 +374,16 @@ class DepotPortfolioState extends ChangeNotifier {
   void _refilterHoldings() {
     _visibleHoldings = _holdings.where(_holdingFilter.matches).toList()
       ..sort((a, b) => _holdingFilter.compare(a, b, performanceOf));
+    final moves = [
+      for (final h in _visibleHoldings)
+        if (performanceOf(h)?.gain case final gain? when gain != 0)
+          (holding: h, gain: gain),
+    ];
+    final gains = moves.where((m) => m.gain > 0).toList()
+      ..sort((a, b) => b.gain.compareTo(a.gain));
+    final losses = moves.where((m) => m.gain < 0).toList()
+      ..sort((a, b) => a.gain.compareTo(b.gain));
+    _movers = [...gains.take(5), ...losses.take(5).toList().reversed];
   }
 
   void _refilterTransactions() {

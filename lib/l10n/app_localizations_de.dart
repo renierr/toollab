@@ -11080,7 +11080,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String depotReportMovers(String period) {
+  String depotMoversTitle(String period) {
     return 'Größte Bewegungen ($period)';
   }
 

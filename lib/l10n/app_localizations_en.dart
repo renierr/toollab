@@ -11001,7 +11001,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String depotReportMovers(String period) {
+  String depotMoversTitle(String period) {
     return 'Biggest movers ($period)';
   }
 

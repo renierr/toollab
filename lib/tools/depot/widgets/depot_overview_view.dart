@@ -4,12 +4,14 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/widgets/readable_width.dart';
 
 import '../depot_format.dart';
+import '../depot_portfolio_labels.dart';
 import '../depot_portfolio_state.dart';
 import '../models/depot_period.dart';
 import 'depot_connect_card.dart';
 import 'depot_holding_filter_bar.dart';
 import 'depot_holding_tile.dart';
 import 'depot_kpi_grid.dart';
+import 'depot_movers_card.dart';
 import 'depot_period_selector.dart';
 import 'depot_sync_header.dart';
 import 'depot_value_card.dart';
@@ -71,6 +73,17 @@ class DepotOverviewView extends StatelessWidget {
                       format: format,
                       collapseChart: state.period == DepotPeriod.today,
                     ),
+                    if (state.movers.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      DepotMoversCard(
+                        movers: state.movers,
+                        periodLabel: DepotPortfolioLabels.period(
+                          l10n,
+                          state.period,
+                        ),
+                        format: format,
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     const DepotHoldingFilterBar(),
                   ],

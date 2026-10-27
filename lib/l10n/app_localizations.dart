@@ -19643,11 +19643,11 @@ abstract class AppLocalizations {
   /// **'sorted by {sort}'**
   String depotReportSorted(String sort);
 
-  /// No description provided for @depotReportMovers.
+  /// No description provided for @depotMoversTitle.
   ///
   /// In en, this message translates to:
   /// **'Biggest movers ({period})'**
-  String depotReportMovers(String period);
+  String depotMoversTitle(String period);
 
   /// No description provided for @depotReportHoldings.
   ///

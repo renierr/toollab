@@ -1,0 +1,160 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:tool_lab/l10n/app_localizations.dart';
+
+import '../depot_format.dart';
+import '../depot_portfolio_state.dart';
+import 'depot_holding_avatar.dart';
+
+/// The period's largest gains and losses as bars around a centre line.
+class DepotMoversCard extends StatelessWidget {
+  final List<DepotMover> movers;
+  final String periodLabel;
+  final DepotFormat format;
+
+  const DepotMoversCard({
+    super.key,
+    required this.movers,
+    required this.periodLabel,
+    required this.format,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final largest = movers.map((m) => m.gain.abs()).fold<double>(0, math.max);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.depotMoversTitle(periodLabel),
+              style: theme.textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            for (final mover in movers)
+              _MoverRow(
+                mover: mover,
+                share: largest <= 0 ? 0 : mover.gain.abs() / largest,
+                format: format,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MoverRow extends StatelessWidget {
+  final DepotMover mover;
+
+  /// Bar length relative to the largest move, 0..1.
+  final double share;
+  final DepotFormat format;
+
+  const _MoverRow({
+    required this.mover,
+    required this.share,
+    required this.format,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final holding = mover.holding;
+    final color = DepotFormat.gainColor(mover.gain) ?? theme.hintColor;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          DepotHoldingAvatar(
+            name: holding.name,
+            colorSeed: holding.identifier ?? holding.id,
+            size: 22,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 3,
+            child: Text(
+              holding.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 4,
+            child: SizedBox(
+              height: 16,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _Bar(
+                      share: mover.gain < 0 ? share : 0,
+                      color: color,
+                      alignment: Alignment.centerRight,
+                    ),
+                  ),
+                  Container(width: 1, color: theme.dividerColor),
+                  Expanded(
+                    child: _Bar(
+                      share: mover.gain > 0 ? share : 0,
+                      color: color,
+                      alignment: Alignment.centerLeft,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 76),
+            child: Text(
+              format.money(mover.gain, signed: true),
+              textAlign: TextAlign.right,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Bar extends StatelessWidget {
+  final double share;
+  final Color color;
+  final Alignment alignment;
+
+  const _Bar({
+    required this.share,
+    required this.color,
+    required this.alignment,
+  });
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: alignment,
+    child: FractionallySizedBox(
+      widthFactor: share,
+      child: Container(
+        height: 8,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.75),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    ),
+  );
+}

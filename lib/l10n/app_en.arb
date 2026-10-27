@@ -5485,8 +5485,8 @@
       }
     }
   },
-  "depotReportMovers": "Biggest movers ({period})",
-  "@depotReportMovers": {
+  "depotMoversTitle": "Biggest movers ({period})",
+  "@depotMoversTitle": {
     "placeholders": {
       "period": {
         "type": "String"

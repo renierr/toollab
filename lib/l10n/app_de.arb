@@ -4334,7 +4334,7 @@
   "depotReportCreated": "Erstellt {time}",
   "depotReportWithSold": "inkl. verkaufter",
   "depotReportSorted": "sortiert nach {sort}",
-  "depotReportMovers": "Größte Bewegungen ({period})",
+  "depotMoversTitle":"Größte Bewegungen ({period})",
   "depotReportHoldings": "Positionen ({count}) · {period}",
   "depotReportDetails": "Gesamtwerte je Position",
   "depotReportColHolding": "Position",

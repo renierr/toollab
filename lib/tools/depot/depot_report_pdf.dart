@@ -136,6 +136,7 @@ class _Report {
     required this.filter,
     required this.syncedAt,
     required this.logos,
+    required this.movers,
   });
 
   factory _Report.of(
@@ -174,6 +175,7 @@ class _Report {
       filter: state.holdingFilter,
       syncedAt: state.lastSyncAt,
       logos: logos,
+      movers: List.of(state.movers),
     );
   }
 
@@ -192,24 +194,12 @@ class _Report {
   final DepotHoldingFilter filter;
   final DateTime? syncedAt;
   final Map<String, pw.ImageProvider> logos;
+  final List<DepotMover> movers;
 
   String get periodLabel => DepotPortfolioLabels.period(l10n, period);
 
   double weightOf(DepotHolding h) =>
       openValue <= 0 ? 0 : h.currentValue / openValue * 100;
-
-  /// Up to five gains and five losses of the period, largest first.
-  late final List<(DepotHolding, double)> movers = () {
-    final moves = [
-      for (final h in holdings)
-        if (performance[h]?.gain case final gain? when gain != 0) (h, gain),
-    ];
-    final gains = moves.where((m) => m.$2 > 0).toList()
-      ..sort((a, b) => b.$2.compareTo(a.$2));
-    final losses = moves.where((m) => m.$2 < 0).toList()
-      ..sort((a, b) => a.$2.compareTo(b.$2));
-    return [...gains.take(5), ...losses.take(5).toList().reversed];
-  }();
 
   static String _logoKey(DepotHolding h) => h.identifier ?? h.id;
 
@@ -663,13 +653,13 @@ pw.Widget _moversSection(_Report r, double width) {
   const nameWidth = 110.0;
   const valueWidth = 62.0;
   final half = (width - nameWidth - valueWidth - 8) / 2;
-  final largest = movers.map((m) => m.$2.abs()).reduce(math.max);
+  final largest = movers.map((m) => m.gain.abs()).reduce(math.max);
   return pw.Column(
     crossAxisAlignment: pw.CrossAxisAlignment.start,
     children: [
-      _sectionTitle(r.l10n.depotReportMovers(r.periodLabel)),
+      _sectionTitle(r.l10n.depotMoversTitle(r.periodLabel)),
       pw.SizedBox(height: 5),
-      for (final (holding, gain) in movers)
+      for (final (:holding, :gain) in movers)
         pw.Padding(
           padding: const pw.EdgeInsets.symmetric(vertical: 1.2),
           child: pw.Row(
