@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:rhttp/rhttp.dart';
 
@@ -9,7 +10,11 @@ class AppHttpClient {
   static final Future<void> _initialization = Rhttp.init();
   static final Future<http.Client> _client = _createClient();
 
-  static Future<http.Client> get client => _client;
+  @visibleForTesting
+  static http.Client? testClient;
+
+  static Future<http.Client> get client =>
+      testClient == null ? _client : Future.value(testClient!);
 
   static Future<http.Client> _createClient() async {
     await _initialization;

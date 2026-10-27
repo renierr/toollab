@@ -17,6 +17,8 @@ import 'package:tool_lab/tools/depot/parqet/parqet_api.dart';
 import 'package:tool_lab/tools/depot/parqet/parqet_auth.dart';
 import 'package:tool_lab/tools/depot/parqet/parqet_exception.dart';
 
+import 'offline_test_support.dart';
+
 const _portfolio = DepotPortfolio(id: 'p1', name: 'One', currency: 'EUR');
 const _secondPortfolio = DepotPortfolio(id: 'p2', name: 'Two', currency: 'EUR');
 DepotPeriodKey _key(DepotPeriod period, [String scope = DepotStore.allScope]) =>
@@ -130,6 +132,7 @@ class _FakeApi extends ParqetApi {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  blockDepotNetwork();
   final store = DepotStore.instance;
 
   setUpAll(() {

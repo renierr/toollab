@@ -9,7 +9,10 @@ import 'package:tool_lab/tools/depot/models/depot_holding.dart';
 import 'package:tool_lab/tools/depot/models/depot_period.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_holding_details.dart';
 
+import 'offline_test_support.dart';
+
 void main() {
+  blockDepotNetwork();
   testWidgets('long press copies an ISIN on Android', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);

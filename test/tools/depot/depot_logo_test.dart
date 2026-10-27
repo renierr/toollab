@@ -12,12 +12,16 @@ import 'package:tool_lab/l10n/app_localizations.dart';
 import 'package:tool_lab/services/database_service.dart';
 import 'package:tool_lab/tools/depot/depot_logo_downloader.dart';
 import 'package:tool_lab/tools/depot/depot_logo_state.dart';
+import 'package:tool_lab/tools/depot/depot_dividend_state.dart';
 import 'package:tool_lab/tools/depot/depot_store.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding.dart';
+import 'package:tool_lab/tools/depot/models/depot_dividend.dart';
 import 'package:tool_lab/tools/depot/models/depot_holding_logo.dart';
 import 'package:tool_lab/tools/depot/models/depot_portfolio.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_holding_avatar.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_logo_settings.dart';
+
+import 'offline_test_support.dart';
 
 final _png = Uint8List.fromList(img.encodePng(img.Image(width: 2, height: 2)));
 
@@ -59,6 +63,7 @@ Future<void> _holdings(List<DepotHolding> holdings) =>
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  blockDepotNetwork();
   final store = DepotStore.instance;
 
   setUpAll(() {
@@ -245,6 +250,53 @@ void main() {
     await first;
     expect(state.cachedCount, 0);
     expect(await store.holdingLogos(), isEmpty);
+  });
+
+  test('reducing the memory cache is silent and reloads saved logos', () async {
+    await store.saveHoldingLogo(
+      DepotHoldingLogo(
+        key: 'CACHE',
+        sourceUrl: 'https://example.com/logo',
+        bytes: _png,
+        fetchedAt: DateTime(2026),
+      ),
+    );
+    final state = DepotLogoState(downloader: _Downloader());
+    addTearDown(state.dispose);
+    await state.ensureLoaded();
+    var notifications = 0;
+    state.addListener(() => notifications++);
+    expect(state.bytesFor('CACHE'), _png);
+    state.reduceCache();
+    expect(notifications, 0);
+    expect(state.bytesFor('CACHE'), isNull);
+    expect(await store.holdingLogos(), hasLength(1));
+    await state.ensureLoaded();
+    expect(state.bytesFor('CACHE'), _png);
+    expect(notifications, 1);
+  });
+
+  test('reducing dividend memory keeps the database cache', () async {
+    final fetchedAt = DateTime(2026, 1, 1);
+    await store.saveDividendAsset(
+      DepotDividendAsset(
+        key: 'CACHE',
+        symbol: 'CACHE',
+        currency: 'EUR',
+        fxCurrency: 'EUR',
+        fxRate: 1,
+        fetchedAt: fetchedAt,
+      ),
+    );
+    final state = DepotDividendState();
+    addTearDown(state.dispose);
+    await state.ensureLoaded();
+    expect(state.fetchedAt, fetchedAt);
+    state.reduceCache();
+    expect(state.fetchedAt, isNull);
+    expect((await store.dividendAssets()).containsKey('CACHE'), isTrue);
+    await state.ensureLoaded();
+    expect(state.fetchedAt, fetchedAt);
   });
 
   testWidgets('avatars and settings read only local bytes', (tester) async {

@@ -21,6 +21,8 @@ import 'package:tool_lab/tools/depot/widgets/depot_holding_tile.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_holding_trend.dart';
 import 'package:tool_lab/widgets/sparkline.dart';
 
+import 'offline_test_support.dart';
+
 DepotHolding holding(int index, {String? isin, String? exchange}) =>
     DepotHolding(
       id: '$index',
@@ -62,6 +64,7 @@ DepotWishlistQuote quote() => DepotWishlistQuote(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  blockDepotNetwork();
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
@@ -128,6 +131,127 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     expect(quotes, 0);
     expect(state.trendFor(holding(0)), isNull);
+  });
+
+  test(
+    'reduces cached points on exit without resetting the 15 minute throttle',
+    () async {
+      var now = DateTime.now();
+      var requests = 0;
+      final points = [
+        for (var i = 0; i < 200; i++)
+          DepotWishlistPoint(
+            date: now.subtract(Duration(minutes: 200 - i)),
+            close: i + 1.0,
+          ),
+      ];
+      final state = DepotHoldingTrendState(
+        now: () => now,
+        resolve: (holding) async {
+          requests++;
+          return [holding.isin!];
+        },
+        quote: (_) async => DepotWishlistQuote(
+          price: 200,
+          previousClose: 100,
+          currency: 'EUR',
+          exchange: '',
+          points: points,
+        ),
+      );
+      addTearDown(state.dispose);
+      state.ensure(holding(0), visible: () => true);
+      await Future<void>.delayed(Duration.zero);
+      expect(state.trendFor(holding(0))?.points, hasLength(200));
+      state.reduceCache();
+      final reduced = state.trendFor(holding(0))!.points;
+      expect(reduced, hasLength(48));
+      expect(reduced.first.close, points.first.close);
+      expect(reduced.last.close, points.last.close);
+      state.ensure(holding(0), visible: () => true);
+      await Future<void>.delayed(Duration.zero);
+      expect(requests, 1);
+      now = now.add(const Duration(minutes: 16));
+      state.ensure(holding(0), visible: () => true);
+      await Future<void>.delayed(Duration.zero);
+      expect(requests, 2);
+    },
+  );
+
+  test(
+    'closing discards an in-flight trend and allows a later visible retry',
+    () async {
+      final first = Completer<DepotWishlistQuote>();
+      final next = Completer<DepotWishlistQuote>();
+      var calls = 0;
+      final state = DepotHoldingTrendState(
+        resolve: (_) async => ['GOOGL'],
+        quote: (_) => ++calls == 1 ? first.future : next.future,
+      );
+      addTearDown(state.dispose);
+      state.ensure(holding(0), visible: () => true);
+      await Future<void>.delayed(Duration.zero);
+      state.reduceCache();
+      state.ensure(holding(0), visible: () => true);
+      first.complete(quote());
+      await Future<void>.delayed(Duration.zero);
+      expect(calls, 2);
+      expect(state.trendFor(holding(0)), isNull);
+      next.complete(quote());
+      await Future<void>.delayed(Duration.zero);
+      expect(state.trendFor(holding(0))?.symbol, 'GOOGL');
+    },
+  );
+
+  test('holding cache is bounded and expired entries are discarded', () async {
+    var now = DateTime.now();
+    final state = DepotHoldingTrendState(
+      now: () => now,
+      resolve: (holding) async => [holding.isin!],
+      quote: (_) async => quote(),
+    );
+    addTearDown(state.dispose);
+    for (var i = 0; i < 130; i++) {
+      state.ensure(holding(i), visible: () => true);
+    }
+    await Future<void>.delayed(Duration.zero);
+    expect(state.trendFor(holding(0)), isNull);
+    expect(state.trendFor(holding(129)), isNotNull);
+    now = now.add(const Duration(minutes: 16));
+    state.reduceCache();
+    expect(state.trendFor(holding(129)), isNull);
+  });
+
+  testWidgets('expired trends are released even when the tool is closed', (
+    tester,
+  ) async {
+    final state = DepotHoldingTrendState(
+      now: tester.binding.clock.now,
+      resolve: (holding) async => [holding.isin!],
+      quote: (_) async => DepotWishlistQuote(
+        price: 2,
+        previousClose: 1,
+        currency: 'EUR',
+        exchange: '',
+        points: [
+          DepotWishlistPoint(
+            date: tester.binding.clock.now().subtract(const Duration(hours: 2)),
+            close: 1,
+          ),
+          DepotWishlistPoint(
+            date: tester.binding.clock.now().subtract(const Duration(hours: 1)),
+            close: 2,
+          ),
+        ],
+      ),
+    );
+    state.ensure(holding(0), visible: () => true);
+    await tester.pump();
+    expect(state.trendFor(holding(0)), isNotNull);
+    state.reduceCache();
+    await tester.pump(const Duration(minutes: 15));
+    expect(state.trendFor(holding(0)), isNull);
+    state.dispose();
   });
 
   test(
@@ -364,6 +488,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(Sparkline), findsWidgets);
     expect(tester.takeException(), isNull);
+    state.clear();
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   for (final (width, scale) in [
@@ -432,6 +558,8 @@ void main() {
         expect(value.bottom, lessThanOrEqualTo(tile.bottom));
       }
       expect(tester.takeException(), isNull);
+      trends.clear();
+      await tester.pumpWidget(const SizedBox.shrink());
     });
   }
 }

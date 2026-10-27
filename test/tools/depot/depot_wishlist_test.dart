@@ -25,6 +25,8 @@ import 'package:tool_lab/tools/depot/widgets/depot_wishlist_chart.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_row.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_wishlist_view.dart';
 
+import 'offline_test_support.dart';
+
 DepotWishlistItem _item() => DepotWishlistItem(
   symbol: 'AAPL',
   name: 'Apple Inc.',
@@ -35,8 +37,17 @@ DepotWishlistItem _item() => DepotWishlistItem(
   addedAt: DateTime(2026, 1, 1),
 );
 
+DepotWishlistState _offlineWishlist() => DepotWishlistState(
+  quoteLoader: (_) async => throw StateError('Unexpected quote request'),
+  searchLoader: (_) async => throw StateError('Unexpected search request'),
+  fxLoader: (_, _) async => throw StateError('Unexpected FX request'),
+  logoLoader: (_) async => throw StateError('Unexpected logo request'),
+  historyLoader: (_) async => throw StateError('Unexpected history request'),
+);
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  blockDepotNetwork();
   final store = DepotStore.instance;
 
   setUpAll(() {
@@ -574,6 +585,130 @@ void main() {
     expect(await store.wishlistLogos(), isEmpty);
   });
 
+  test('reduces wishlist memory and restores cached logos on return', () async {
+    await store.deleteWishlistItem('CACHE');
+    await store.deleteWishlistLogo('CACHE');
+    final logoReady = Completer<void>();
+    var logoCalls = 0;
+    final points = [
+      for (var i = 0; i < 200; i++)
+        DepotWishlistPoint(
+          date: DateTime.now().subtract(Duration(minutes: 200 - i)),
+          close: i + 1.0,
+        ),
+    ];
+    final state = DepotWishlistState(
+      quoteLoader: (_) async => DepotWishlistQuote(
+        price: 200,
+        previousClose: 100,
+        currency: 'EUR',
+        exchange: '',
+        points: points,
+      ),
+      historyLoader: (_) async => quote(),
+      logoLoader: (_) async {
+        logoCalls++;
+        return Uint8List.fromList([1, 2, 3]);
+      },
+    );
+    addTearDown(state.dispose);
+    state.addListener(() {
+      if (state.logoFor('CACHE') != null && !logoReady.isCompleted) {
+        logoReady.complete();
+      }
+    });
+    await state.ensureLoaded();
+    expect(
+      await state.add(
+        const DepotWishlistSearchResult(
+          symbol: 'CACHE',
+          name: 'Cache',
+          quoteType: 'EQUITY',
+          exchange: '',
+        ),
+      ),
+      isTrue,
+    );
+    await logoReady.future.timeout(const Duration(seconds: 5));
+    await state.ensureHistory('CACHE');
+    expect(state.historyFor('CACHE'), isNotNull);
+    state.reduceCache();
+    expect(state.quoteFor('CACHE')!.points, hasLength(48));
+    expect(state.quoteFor('CACHE')!.price, 200);
+    expect(state.historyFor('CACHE'), isNull);
+    expect(state.logoFor('CACHE'), isNull);
+    expect((await store.wishlistItems()).single.symbol, 'CACHE');
+    await state.ensureLoaded();
+    expect(state.logoFor('CACHE'), [1, 2, 3]);
+    expect(logoCalls, 1);
+    await state.remove('CACHE');
+  });
+
+  test('old history requests cannot restore cache after exit', () async {
+    await store.deleteWishlistItem('CACHE');
+    final old = Completer<DepotWishlistQuote>();
+    final next = Completer<DepotWishlistQuote>();
+    var calls = 0;
+    final state = DepotWishlistState(
+      quoteLoader: (_) async => quote(),
+      historyLoader: (_) => ++calls == 1 ? old.future : next.future,
+      logoLoader: (_) async => throw const FormatException('offline'),
+    );
+    addTearDown(state.dispose);
+    await state.ensureLoaded();
+    await state.add(
+      const DepotWishlistSearchResult(
+        symbol: 'CACHE',
+        name: 'Cache',
+        quoteType: 'EQUITY',
+        exchange: '',
+      ),
+    );
+    final oldRequest = state.ensureHistory('CACHE');
+    state.reduceCache();
+    final newRequest = state.ensureHistory('CACHE');
+    expect(calls, 2);
+    next.complete(quote());
+    await newRequest;
+    final current = state.historyFor('CACHE');
+    old.complete(quote());
+    await oldRequest;
+    expect(identical(state.historyFor('CACHE'), current), isTrue);
+    expect(state.isLoadingHistory('CACHE'), isFalse);
+    await state.remove('CACHE');
+  });
+
+  test('wishlist history cache is limited to sixteen entries', () async {
+    final symbols = [for (var i = 0; i < 18; i++) 'HISTORY$i'];
+    for (final symbol in symbols) {
+      await store.deleteWishlistItem(symbol);
+    }
+    final state = DepotWishlistState(
+      quoteLoader: (_) async => quote(),
+      historyLoader: (_) async => quote(),
+      logoLoader: (_) async => throw const FormatException('offline'),
+    );
+    addTearDown(state.dispose);
+    await state.ensureLoaded();
+    for (final symbol in symbols) {
+      await state.add(
+        DepotWishlistSearchResult(
+          symbol: symbol,
+          name: symbol,
+          quoteType: 'EQUITY',
+          exchange: '',
+        ),
+      );
+      await state.ensureHistory(symbol);
+    }
+    expect(state.historyFor(symbols.first), isNull);
+    expect(state.historyFor(symbols[1]), isNull);
+    expect(state.historyFor(symbols.last), isNotNull);
+    for (final symbol in symbols) {
+      await state.remove(symbol);
+    }
+  });
+
   test('failed EUR rates leave the original quote available', () async {
     await store.deleteWishlistItem('FXFAIL');
     final state = DepotWishlistState(
@@ -690,7 +825,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    final state = DepotWishlistState();
+    final state = _offlineWishlist();
     await tester.runAsync(() async {
       await store.clear();
       await store.deleteWishlistItem('AAPL');
@@ -916,7 +1051,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final state = DepotWishlistState();
+    final state = _offlineWishlist();
     addTearDown(state.dispose);
     await tester.runAsync(state.ensureLoaded);
     await tester.pumpWidget(

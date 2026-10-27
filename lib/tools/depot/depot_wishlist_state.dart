@@ -26,6 +26,7 @@ class DepotWishlistState extends ChangeNotifier {
        _historyLoader = historyLoader ?? YahooFinanceApi.yearDailyQuote;
 
   static const _parallelRequests = 4;
+  static const _maxHistoryEntries = 16;
   static const _searchDebounce = Duration(milliseconds: 350);
 
   final DepotStore _store = DepotStore.instance;
@@ -47,6 +48,10 @@ class DepotWishlistState extends ChangeNotifier {
   String _query = '';
   Timer? _debounce;
   int _searchToken = 0;
+  int _cacheRevision = 0;
+  bool _restoreLogos = false;
+  bool _refreshOnResume = false;
+  ({int revision, Future<void> future})? _restoringLogos;
 
   List<DepotWishlistItem> _items = const [];
   Map<String, DepotWishlistQuote> _quotes = const {};
@@ -56,10 +61,11 @@ class DepotWishlistState extends ChangeNotifier {
   final Map<String, double> _eurRates = {};
   final Map<String, Future<void>> _fxLoads = {};
   final Map<String, Uint8List> _logos = {};
-  final Map<String, Future<void>> _logoLoads = {};
+  final Map<String, ({int revision, Future<void> future})> _logoLoads = {};
+  final Map<String, Set<Future<void>>> _allLogoLoads = {};
   final Map<String, ({DepotWishlistQuote quote, DateTime fetchedAt})>
   _histories = {};
-  final Map<String, Future<void>> _historyLoads = {};
+  final Map<String, ({int revision, Future<void> future})> _historyLoads = {};
   final Set<String> _historyFailed = {};
 
   static String logoUrl(String symbol) => Uri.https(
@@ -133,28 +139,39 @@ class DepotWishlistState extends ChangeNotifier {
       return Future.value();
     }
     final loading = _historyLoads[symbol];
-    if (loading != null) return loading;
+    if (loading != null && loading.revision == _cacheRevision) {
+      return loading.future;
+    }
     _historyFailed.remove(symbol);
     final item = _items.firstWhere((item) => item.symbol == symbol);
-    final future = _loadHistory(item);
-    _historyLoads[symbol] = future;
+    final revision = _cacheRevision;
+    final future = _loadHistory(item, revision);
+    _historyLoads[symbol] = (revision: revision, future: future);
     _notify();
     return future;
   }
 
-  Future<void> _loadHistory(DepotWishlistItem item) async {
+  Future<void> _loadHistory(DepotWishlistItem item, int revision) async {
     final symbol = item.symbol;
     try {
       final quote = await _historyLoader(symbol);
-      if (_disposed || !_items.contains(item)) return;
+      if (_disposed || revision != _cacheRevision || !_items.contains(item)) {
+        return;
+      }
+      _histories.remove(symbol);
       _histories[symbol] = (quote: quote, fetchedAt: DateTime.now());
+      while (_histories.length > _maxHistoryEntries) {
+        _histories.remove(_histories.keys.first);
+      }
     } catch (e) {
-      if (!_disposed && _items.contains(item)) {
+      if (!_disposed && revision == _cacheRevision && _items.contains(item)) {
         _historyFailed.add(symbol);
         debugLog('[DepotWishlistState] History unavailable for $symbol: $e');
       }
     } finally {
-      _historyLoads.remove(symbol);
+      if (_historyLoads[symbol]?.revision == revision) {
+        _historyLoads.remove(symbol);
+      }
       _notify();
     }
   }
@@ -180,9 +197,47 @@ class DepotWishlistState extends ChangeNotifier {
     return _settingsWrite;
   }
 
-  Future<void> ensureLoaded() => _loading ??= _load();
+  Future<void> ensureLoaded() async {
+    final revision = _cacheRevision;
+    await (_loading ??= _load());
+    if (_disposed || revision != _cacheRevision) return;
+    if (_restoreLogos) {
+      final restoring = _restoringLogos;
+      if (restoring == null || restoring.revision != revision) {
+        final future = _loadCachedLogos(revision);
+        _restoringLogos = (revision: revision, future: future);
+      }
+      await _restoringLogos!.future;
+      if (!_disposed && revision == _cacheRevision) {
+        unawaited(_loadMissingLogos(_items));
+      }
+    }
+    if (!_disposed && revision == _cacheRevision && _refreshOnResume) {
+      _refreshOnResume = false;
+      unawaited(refresh());
+    }
+  }
+
+  Future<void> _loadCachedLogos(int revision) async {
+    try {
+      final logos = await _store.wishlistLogos();
+      if (_disposed || revision != _cacheRevision) return;
+      _logos.addEntries(
+        logos
+            .where((logo) => contains(logo.key))
+            .map((logo) => MapEntry(logo.key, logo.bytes)),
+      );
+      _restoreLogos = false;
+      _notify();
+    } catch (e) {
+      errorLog('[DepotWishlistState] Loading logos failed: $e');
+    } finally {
+      if (_restoringLogos?.revision == revision) _restoringLogos = null;
+    }
+  }
 
   Future<void> _load() async {
+    final revision = _cacheRevision;
     try {
       _items = await _store.wishlistItems();
     } catch (e) {
@@ -196,7 +251,9 @@ class DepotWishlistState extends ChangeNotifier {
     }
     try {
       final logos = await _store.wishlistLogos();
-      _logos.addEntries(logos.map((logo) => MapEntry(logo.key, logo.bytes)));
+      if (revision == _cacheRevision) {
+        _logos.addEntries(logos.map((logo) => MapEntry(logo.key, logo.bytes)));
+      }
     } catch (e) {
       errorLog('[DepotWishlistState] Loading logos failed: $e');
     }
@@ -204,12 +261,18 @@ class DepotWishlistState extends ChangeNotifier {
     _isLoaded = true;
     _notify();
     if (_items.isNotEmpty) {
-      unawaited(refresh());
+      if (revision == _cacheRevision) {
+        unawaited(refresh());
+      } else {
+        _refreshOnResume = true;
+      }
     }
   }
 
   Future<void> _loadMissingLogos(List<DepotWishlistItem> items) async {
+    final revision = _cacheRevision;
     for (var start = 0; start < items.length; start += _parallelRequests) {
+      if (_disposed || revision != _cacheRevision) return;
       await Future.wait(
         items.skip(start).take(_parallelRequests).map(_loadLogo),
       );
@@ -222,29 +285,48 @@ class DepotWishlistState extends ChangeNotifier {
         _logos.containsKey(item.symbol)) {
       return Future.value();
     }
-    return _logoLoads.putIfAbsent(item.symbol, () async {
-      try {
-        final bytes = await _logoLoader(item.symbol);
-        if (_disposed || !_items.contains(item)) return;
-        await _store.saveWishlistLogo(
-          DepotHoldingLogo(
-            key: item.symbol,
-            sourceUrl: logoUrl(item.symbol),
-            bytes: bytes,
-            fetchedAt: DateTime.now(),
-          ),
-        );
-        if (_disposed || !_items.contains(item)) return;
-        _logos[item.symbol] = bytes;
-        _notify();
-      } catch (e) {
-        debugLog(
-          '[DepotWishlistState] Logo unavailable for ${item.symbol}: $e',
-        );
-      } finally {
+    final revision = _cacheRevision;
+    final loading = _logoLoads[item.symbol];
+    if (loading != null && loading.revision == revision) return loading.future;
+    final future = _fetchLogo(item, revision);
+    _logoLoads[item.symbol] = (revision: revision, future: future);
+    _allLogoLoads.putIfAbsent(item.symbol, () => {}).add(future);
+    unawaited(
+      future.then((_) {
+        final loads = _allLogoLoads[item.symbol];
+        loads?.remove(future);
+        if (loads?.isEmpty ?? false) _allLogoLoads.remove(item.symbol);
+      }),
+    );
+    return future;
+  }
+
+  Future<void> _fetchLogo(DepotWishlistItem item, int revision) async {
+    try {
+      final bytes = await _logoLoader(item.symbol);
+      if (_disposed || revision != _cacheRevision || !_items.contains(item)) {
+        return;
+      }
+      await _store.saveWishlistLogo(
+        DepotHoldingLogo(
+          key: item.symbol,
+          sourceUrl: logoUrl(item.symbol),
+          bytes: bytes,
+          fetchedAt: DateTime.now(),
+        ),
+      );
+      if (_disposed || revision != _cacheRevision || !_items.contains(item)) {
+        return;
+      }
+      _logos[item.symbol] = bytes;
+      _notify();
+    } catch (e) {
+      debugLog('[DepotWishlistState] Logo unavailable for ${item.symbol}: $e');
+    } finally {
+      if (_logoLoads[item.symbol]?.revision == revision) {
         _logoLoads.remove(item.symbol);
       }
-    });
+    }
   }
 
   Future<void> _loadRate(String currency) {
@@ -273,6 +355,7 @@ class DepotWishlistState extends ChangeNotifier {
   Future<void> refresh() async {
     if (_isRefreshing || _disposed) return;
     _isRefreshing = true;
+    final revision = _cacheRevision;
     _notify();
     unawaited(_loadMissingLogos(_items));
 
@@ -310,7 +393,10 @@ class DepotWishlistState extends ChangeNotifier {
     _quotes = {
       ..._quotes,
       for (final entry in quotes.entries)
-        if (unchanged(entry.key)) entry.key: entry.value,
+        if (unchanged(entry.key))
+          entry.key: revision == _cacheRevision
+              ? entry.value
+              : entry.value.withReducedPoints(),
     };
     _failed = {
       ..._failed.where((symbol) => !snapshot.containsKey(symbol)),
@@ -388,6 +474,7 @@ class DepotWishlistState extends ChangeNotifier {
   }
 
   Future<bool> _add(DepotWishlistSearchResult result) async {
+    final revision = _cacheRevision;
     if (canLinkIsin(result)) {
       final old = _items.firstWhere((item) => item.symbol == result.symbol);
       final updated = old.withIsin(result.isin!);
@@ -403,8 +490,10 @@ class DepotWishlistState extends ChangeNotifier {
         ];
         _notify();
         unawaited(() async {
-          await _logoLoads[result.symbol];
-          await _loadLogo(updated);
+          await _logoLoads[result.symbol]?.future;
+          if (!_disposed && revision == _cacheRevision) {
+            await _loadLogo(updated);
+          }
         }());
       }
       return true;
@@ -434,11 +523,18 @@ class DepotWishlistState extends ChangeNotifier {
     }
     if (_disposed) return true;
     _items = [item, ..._items.where((i) => i.symbol != item.symbol)];
-    _quotes = {..._quotes, item.symbol: quote};
+    _quotes = {
+      ..._quotes,
+      item.symbol: revision == _cacheRevision
+          ? quote
+          : quote.withReducedPoints(),
+    };
     _failed = {..._failed}..remove(item.symbol);
     _notify();
-    if (_showEuro) unawaited(_loadRate(quote.currency));
-    unawaited(_loadLogo(item));
+    if (revision == _cacheRevision) {
+      if (_showEuro) unawaited(_loadRate(quote.currency));
+      unawaited(_loadLogo(item));
+    }
     return true;
   }
 
@@ -460,7 +556,7 @@ class DepotWishlistState extends ChangeNotifier {
     _failed = {..._failed}..remove(symbol);
     _logos.remove(symbol);
     _notify();
-    await _logoLoads[symbol];
+    await Future.wait(_allLogoLoads[symbol]?.toList() ?? const []);
     final current = _items.where((item) => item.symbol == symbol).firstOrNull;
     if (current != null) {
       unawaited(_loadLogo(current));
@@ -472,6 +568,21 @@ class DepotWishlistState extends ChangeNotifier {
       }
     }
     return true;
+  }
+
+  void reduceCache() {
+    if (_disposed) return;
+    _cacheRevision++;
+    _quotes = {
+      for (final entry in _quotes.entries)
+        entry.key: entry.value.withReducedPoints(),
+    };
+    _histories.clear();
+    _historyLoads.clear();
+    _historyFailed.clear();
+    _logos.clear();
+    _logoLoads.clear();
+    _restoreLogos = true;
   }
 
   void _notify() {

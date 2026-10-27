@@ -212,14 +212,20 @@ Holding sparklines load only for visible rows with room to show them. For securi
 the ISIN is sent to Parqet's public asset endpoint to resolve confirmed listing symbols;
 crypto symbols are searched on Yahoo. Yahoo receives the selected listing symbol, not
 portfolio amounts. Up to four holding lookups run concurrently, deduplicated by asset,
-with intraday results cached in memory for 15 minutes. Up to three confirmed listings
-are tried if a listing has fewer than two prices or cannot be loaded. Each line contains only prices
+with intraday results cached in memory for 15 minutes. The cache holds at most 128 trends
+and 128 failed lookups, and removes expired entries even while the tool is closed. Up to
+three confirmed listings are tried if a listing has fewer than two prices or cannot be
+loaded. Each line contains only prices
 within the last 24 hours, including available pre- and post-market data; it disappears
 when fewer than two points remain. The line uses the listing currency, not the holding's
 selected performance period or necessarily the same exchange as Parqet. Unsupported
 or unmatched assets have no line.
-Wishlist detail history is cached in memory for 24 hours and fetched only on opening
-details. Prices and history are not sent to Parqet.
+Wishlist detail history is cached in memory for 24 hours (at most 16 entries) and fetched
+only on opening details. Leaving Depot drops these histories and the in-memory logo bytes,
+and reduces retained intraday lines to at most 48 points per asset. Saved wishlist items,
+database-cached logos, and in-memory cache timestamps remain intact. Returning within 15
+minutes reuses the reduced holding lines; the manual Parqet refresh does not bypass this throttle.
+Prices and history are not sent to Parqet.
 The selected Yahoo listing determines the exchange and trading currency. The wishlist's
 entries are ordered by today's percentage change, highest first; entries without a daily
 change appear last. The order updates when quotes refresh. The wishlist's
@@ -241,6 +247,10 @@ period, summaries and chart points per scope and period, transactions, activity 
 holding, dividend data from Yahoo Finance, holding logos (downloaded only on request from
 the settings), and the wishlist. Summaries and charts exist per portfolio and for all
 portfolios combined (scope `_all`).
+
+Depot tests use in-memory SQLite and block real HTTP requests. Run them with
+`flutter --suppress-analytics test --no-pub test/tools/depot` to also suppress Flutter CLI
+telemetry and avoid dependency downloads.
 
 The wishlist is the only table written by the user: it is keyed by Yahoo symbol and stores
 name, type, exchange, currency, verified ISIN when available, the price when added and the date. It is never sent to

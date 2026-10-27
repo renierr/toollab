@@ -7,7 +7,10 @@ import 'package:tool_lab/tools/depot/depot_format.dart';
 import 'package:tool_lab/tools/depot/models/depot_income_month.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_income_chart.dart';
 
+import 'offline_test_support.dart';
+
 void main() {
+  blockDepotNetwork();
   test('monthly median includes empty months and averages the middle pair', () {
     List<DepotIncomeMonth> months(List<double> totals) => [
       for (var i = 0; i < totals.length; i++)

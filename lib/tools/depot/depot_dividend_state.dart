@@ -22,6 +22,8 @@ class DepotDividendState extends ChangeNotifier {
   Future<void>? _loading;
   bool _disposed = false;
   bool _isFetching = false;
+  bool _releaseWhenFinished = false;
+  int _cacheRevision = 0;
   int _failedCount = 0;
   Map<String, DepotDividendAsset> _assets = const {};
 
@@ -76,11 +78,17 @@ class DepotDividendState extends ChangeNotifier {
     );
   }
 
-  Future<void> ensureLoaded() => _loading ??= _load();
+  Future<void> ensureLoaded() {
+    _releaseWhenFinished = false;
+    return _loading ??= _load();
+  }
 
   Future<void> _load() async {
+    final revision = _cacheRevision;
     try {
-      _assets = await _store.dividendAssets();
+      final assets = await _store.dividendAssets();
+      if (_disposed || revision != _cacheRevision) return;
+      _assets = assets;
     } catch (e) {
       errorLog('[DepotDividendState] Loading failed: $e');
     }
@@ -99,6 +107,20 @@ class DepotDividendState extends ChangeNotifier {
     _notify();
   }
 
+  void reduceCache() {
+    _cacheRevision++;
+    _calendar = null;
+    _calendarHoldings = null;
+    _calendarTransactions = null;
+    _calendarAssets = null;
+    _calendarDay = null;
+    _loading = null;
+    _assets = const {};
+    if (_isFetching) {
+      _releaseWhenFinished = true;
+    }
+  }
+
   /// Loads dividend data for open securities whose cache is missing, stale
   /// or in another currency; [force] reloads all of them.
   Future<void> refresh({
@@ -106,8 +128,9 @@ class DepotDividendState extends ChangeNotifier {
     required String currency,
     bool force = false,
   }) async {
+    final revision = _cacheRevision;
     await ensureLoaded();
-    if (_isFetching) return;
+    if (_disposed || revision != _cacheRevision || _isFetching) return;
     final now = DateTime.now();
     final targets = <String, DepotHolding>{};
     for (final h in holdings) {
@@ -134,6 +157,9 @@ class DepotDividendState extends ChangeNotifier {
       final rates = <String, Future<double>>{};
       final entries = targets.entries.toList();
       for (var i = 0; i < entries.length; i += _parallelRequests) {
+        if (_disposed || revision != _cacheRevision || _releaseWhenFinished) {
+          break;
+        }
         final chunk = entries.skip(i).take(_parallelRequests);
         await Future.wait([
           for (final e in chunk)
@@ -142,6 +168,11 @@ class DepotDividendState extends ChangeNotifier {
       }
     } finally {
       _isFetching = false;
+      if (_releaseWhenFinished) {
+        _assets = const {};
+        _loading = null;
+        _releaseWhenFinished = false;
+      }
       _notify();
     }
   }
@@ -197,7 +228,9 @@ class DepotDividendState extends ChangeNotifier {
         );
       }
       await _store.saveDividendAsset(asset);
-      _assets = {..._assets, key: asset};
+      if (!_disposed && !_releaseWhenFinished) {
+        _assets = {..._assets, key: asset};
+      }
     } catch (e) {
       errorLog('[DepotDividendState] Fetching $key failed: $e');
       _failedCount++;

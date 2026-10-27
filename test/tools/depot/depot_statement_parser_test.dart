@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+
+import 'offline_test_support.dart';
 import 'package:tool_lab/tools/depot/depot_import_state.dart';
 import 'package:tool_lab/tools/depot/models/depot_activity.dart';
 import 'package:tool_lab/tools/depot/parsing/security_parser.dart';
@@ -270,6 +272,7 @@ Zeitpunkt der Erstellung der Abrechnung.
 ''';
 
 void main() {
+  blockDepotNetwork();
   group('DKB dividend statement', () {
     final parsed = DepotStatementParser.parse(
       id: 'x',

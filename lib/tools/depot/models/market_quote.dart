@@ -20,6 +20,18 @@ List<MarketPricePoint> marketPointsInLast24Hours(
   ];
 }
 
+List<MarketPricePoint> reduceMarketPoints(
+  List<MarketPricePoint> points, {
+  int limit = 48,
+}) {
+  assert(limit >= 2);
+  if (points.length <= limit) return points;
+  return List.unmodifiable([
+    for (var index = 0; index < limit; index++)
+      points[(index * (points.length - 1) / (limit - 1)).round()],
+  ]);
+}
+
 class MarketQuote {
   final double price;
   final double previousClose;
@@ -46,6 +58,20 @@ class MarketQuote {
     this.quoteAt,
     this.quotedDayChangePercent,
   });
+
+  MarketQuote withReducedPoints() => MarketQuote(
+    price: price,
+    previousClose: previousClose,
+    currency: currency,
+    exchange: exchange,
+    points: reduceMarketPoints(points),
+    dayHigh: dayHigh,
+    dayLow: dayLow,
+    yearHigh: yearHigh,
+    yearLow: yearLow,
+    quoteAt: quoteAt,
+    quotedDayChangePercent: quotedDayChangePercent,
+  );
 
   double? get dayChangePercent =>
       quotedDayChangePercent ??

@@ -111,12 +111,16 @@ class DepotLogoState extends ChangeNotifier {
   }
 
   void reset() {
+    reduceCache();
+    _notify();
+  }
+
+  void reduceCache() {
     _generation++;
     _logos.clear();
     _loading = null;
     _loadFailed = false;
     _failed = 0;
-    _notify();
   }
 
   void _notify() {

@@ -19,6 +19,7 @@ class DepotHoldingTrendState extends ChangeNotifier {
        _now = now ?? DateTime.now;
 
   static const _maxConcurrent = 4;
+  static const _maxCacheEntries = 128;
   static const _freshFor = Duration(minutes: 15);
   static const _retryAfter = Duration(minutes: 15);
   final Future<List<String>> Function(DepotHolding) _resolve;
@@ -27,8 +28,10 @@ class DepotHoldingTrendState extends ChangeNotifier {
   final Map<String, DepotHoldingTrend> _trends = {};
   final Map<String, DateTime> _failed = {};
   final Map<String, DepotHolding> _queue = {};
+  final Map<String, int> _active = {};
   final Map<String, Set<bool Function()>> _observers = {};
-  final Set<String> _active = {};
+  Timer? _expiryTimer;
+  int _revision = 0;
   bool _disposed = false;
 
   static String? keyOf(DepotHolding holding) {
@@ -51,8 +54,11 @@ class DepotHoldingTrendState extends ChangeNotifier {
   void ensure(DepotHolding holding, {required bool Function() visible}) {
     final key = keyOf(holding);
     if (_disposed || key == null) return;
-    if (_active.contains(key)) {
+    _pruneExpired();
+    final active = _active[key];
+    if (active != null) {
       _observers.putIfAbsent(key, () => {}).add(visible);
+      if (active != _revision) _queue[key] = holding;
       return;
     }
     final cached = _trends[key];
@@ -68,31 +74,35 @@ class DepotHoldingTrendState extends ChangeNotifier {
 
   void _drain() {
     while (!_disposed && _active.length < _maxConcurrent && _queue.isNotEmpty) {
-      final key = _queue.keys.first;
+      final key = _queue.keys
+          .where((key) => !_active.containsKey(key))
+          .firstOrNull;
+      if (key == null) return;
       final holding = _queue.remove(key)!;
       if (!_isVisible(key)) {
         _observers.remove(key);
         continue;
       }
-      _active.add(key);
-      unawaited(_load(key, holding));
+      _active[key] = _revision;
+      unawaited(_load(key, holding, _revision));
     }
   }
 
   bool _isVisible(String key) =>
       _observers[key]?.any((visible) => visible()) ?? false;
 
-  Future<void> _load(String key, DepotHolding holding) async {
+  Future<void> _load(String key, DepotHolding holding, int revision) async {
     try {
       final symbols = await _resolve(holding);
-      if (_disposed || !_isVisible(key)) return;
+      if (_disposed || revision != _revision || !_isVisible(key)) return;
       for (final symbol in symbols.take(3)) {
-        if (_disposed || !_isVisible(key)) return;
+        if (_disposed || revision != _revision || !_isVisible(key)) return;
         try {
           final quote = await _quote(symbol);
-          if (_disposed) return;
+          if (_disposed || revision != _revision) return;
           final points = marketPointsInLast24Hours(quote.points, _now());
           if (points.length < 2) continue;
+          _trends.remove(key);
           _trends[key] = DepotHoldingTrend(
             symbol: symbol,
             currency: quote.currency,
@@ -100,6 +110,8 @@ class DepotHoldingTrendState extends ChangeNotifier {
             fetchedAt: _now(),
           );
           _failed.remove(key);
+          _trimCache();
+          _scheduleExpiry();
           notifyListeners();
           return;
         } catch (e) {
@@ -108,22 +120,98 @@ class DepotHoldingTrendState extends ChangeNotifier {
       }
       throw const FormatException('No confirmed chart');
     } catch (e) {
-      if (!_disposed) {
+      if (!_disposed && revision == _revision) {
+        _failed.remove(key);
         _failed[key] = _now();
+        _trimCache();
+        _scheduleExpiry();
         debugLog('[DepotHoldingTrendState] Trend unavailable for $key: $e');
       }
     } finally {
-      _active.remove(key);
-      _observers.remove(key);
+      if (_active[key] == revision) _active.remove(key);
+      if (!_queue.containsKey(key)) _observers.remove(key);
       _drain();
     }
+  }
+
+  void _trimCache() {
+    while (_trends.length > _maxCacheEntries) {
+      final key = _trends.keys.first;
+      _trends.remove(key);
+    }
+    while (_failed.length > _maxCacheEntries) {
+      final key = _failed.keys.first;
+      _failed.remove(key);
+    }
+  }
+
+  void _pruneExpired() {
+    final now = _now();
+    for (final entry in _trends.entries.toList()) {
+      if (now.difference(entry.value.fetchedAt) >= _freshFor) {
+        _trends.remove(entry.key);
+      }
+    }
+    for (final entry in _failed.entries.toList()) {
+      if (now.difference(entry.value) >= _retryAfter) {
+        _failed.remove(entry.key);
+      }
+    }
+  }
+
+  void _scheduleExpiry() {
+    _expiryTimer?.cancel();
+    DateTime? next;
+    for (final time in [
+      for (final trend in _trends.values) trend.fetchedAt.add(_freshFor),
+      for (final failure in _failed.values) failure.add(_retryAfter),
+    ]) {
+      if (next == null || time.isBefore(next)) next = time;
+    }
+    if (next == null || _disposed) return;
+    final delay = next.difference(_now());
+    _expiryTimer = Timer(delay.isNegative ? Duration.zero : delay, () {
+      final previous = _trends.length;
+      _pruneExpired();
+      _scheduleExpiry();
+      if (!_disposed && _trends.length != previous) notifyListeners();
+    });
+  }
+
+  void reduceCache() {
+    if (_disposed) return;
+    _revision++;
+    _queue.clear();
+    _observers.clear();
+    _pruneExpired();
+    for (final entry in _trends.entries.toList()) {
+      final trend = entry.value;
+      _trends[entry.key] = DepotHoldingTrend(
+        symbol: trend.symbol,
+        currency: trend.currency,
+        points: reduceMarketPoints(trend.points),
+        fetchedAt: trend.fetchedAt,
+      );
+    }
+    _trimCache();
+    _scheduleExpiry();
+  }
+
+  void clear() {
+    _revision++;
+    _expiryTimer?.cancel();
+    _expiryTimer = null;
+    _trends.clear();
+    _failed.clear();
+    _queue.clear();
+    _observers.clear();
+    if (!_disposed) notifyListeners();
   }
 
   @override
   void dispose() {
     _disposed = true;
-    _queue.clear();
-    _observers.clear();
+    clear();
     super.dispose();
   }
 }

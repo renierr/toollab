@@ -9,7 +9,10 @@ import 'package:tool_lab/tools/depot/models/depot_summary.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_value_card.dart';
 import 'package:tool_lab/tools/depot/widgets/depot_value_chart.dart';
 
+import 'offline_test_support.dart';
+
 void main() {
+  blockDepotNetwork();
   for (final width in [320.0, 800.0]) {
     testWidgets(
       'today hides the chart and keeps a compact allocation at $width',

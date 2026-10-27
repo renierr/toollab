@@ -9,8 +9,12 @@ import 'package:tool_lab/widgets/tool_layout.dart';
 
 import 'config.dart';
 import 'depot_import_state.dart';
+import 'depot_dividend_state.dart';
+import 'depot_holding_trend_state.dart';
+import 'depot_logo_state.dart';
 import 'depot_portfolio_state.dart';
 import 'depot_state.dart';
+import 'depot_wishlist_state.dart';
 import 'widgets/depot_activities_view.dart';
 import 'widgets/depot_dividends_view.dart';
 import 'widgets/depot_import_view.dart';
@@ -43,6 +47,18 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
 
     final importState = context.read<DepotImportState>();
     onDispose(() => Future.microtask(importState.clear));
+
+    final trends = context.read<DepotHoldingTrendState>();
+    final wishlist = context.read<DepotWishlistState>();
+    final dividends = context.read<DepotDividendState>();
+    final logos = context.read<DepotLogoState>();
+    logos.ensureLoaded();
+    onDispose(() {
+      trends.reduceCache();
+      wishlist.reduceCache();
+      dividends.reduceCache();
+      logos.reduceCache();
+    });
 
     final portfolioState = context.read<DepotPortfolioState>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
