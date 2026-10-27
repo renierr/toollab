@@ -457,7 +457,11 @@ class DepotStore {
     }
     final batch = txn.batch();
     for (final summary in summaries) {
-      batch.insert(_summaries, summary.toMap());
+      batch.insert(
+        _summaries,
+        summary.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
     for (final entry in charts.entries) {
       for (final point in entry.value) {
@@ -468,8 +472,13 @@ class DepotStore {
         );
       }
     }
+    // A holding listed twice must not roll back the whole sync.
     for (final performance in holdingPerformance) {
-      batch.insert(_holdingPerformance, performance.toMap());
+      batch.insert(
+        _holdingPerformance,
+        performance.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
     await batch.commit(noResult: true);
   }

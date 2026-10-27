@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:tool_lab/helpers/debug_log.dart';
 import 'package:tool_lab/services/app_http_client.dart';
 
 import '../models/depot_holding.dart';
@@ -70,9 +72,15 @@ class ParqetApi {
       body: {
         'portfolioIds': portfolioIds,
         'currency': currency,
-        'interval': {'type': 'relative', 'value': key.period.wire},
+        'interval': _interval(key.period),
       },
     );
+    if (kDebugMode && key.period == DepotPeriod.today) {
+      debugLog(
+        '[ParqetApi] today ${key.scope}: interval ${json['interval']}, '
+        'performance ${json['performance']}',
+      );
+    }
     final syncedAt = DateTime.now();
     final holdings = [
       for (final item in json['holdings'] as List? ?? const [])
@@ -97,6 +105,17 @@ class ParqetApi {
           ?DepotChartPoint.fromJson(item as Map<String, dynamic>),
       ],
     );
+  }
+
+  /// Parqet's relative `1d` starts at the close before yesterday, so today is
+  /// requested as an absolute range from midnight.
+  static Map<String, String> _interval(DepotPeriod period) {
+    if (period != DepotPeriod.today) {
+      return {'type': 'relative', 'value': period.wire};
+    }
+    final now = DateTime.now();
+    final start = DateTime.utc(now.year, now.month, now.day);
+    return {'type': 'absolute', 'start': start.toIso8601String()};
   }
 
   /// Activities of [portfolioId], newest page first. With [since] the walk
