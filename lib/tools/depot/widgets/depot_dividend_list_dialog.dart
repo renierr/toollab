@@ -45,43 +45,45 @@ class DepotDividendListDialog extends StatelessWidget {
 
     return ResponsiveAlertDialog(
       title: Text(title),
-      content: SizedBox(
-        width: 520,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.depotDividendListSummary(
-                entries.length,
-                format.money(total),
-              ),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (entries.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Text(
-                  l10n.depotDividendListEmpty,
-                  textAlign: TextAlign.center,
+      content: SelectionArea(
+        child: SizedBox(
+          width: 520,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.depotDividendListSummary(
+                  entries.length,
+                  format.money(total),
                 ),
-              )
-            else
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: maxHeight),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: entries.length,
-                  itemBuilder: (context, index) => DepotDividendEntryTile(
-                    entry: entries[index],
-                    format: format,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.hintColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (entries.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Text(
+                    l10n.depotDividendListEmpty,
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxHeight),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: entries.length,
+                    itemBuilder: (context, index) => DepotDividendEntryTile(
+                      entry: entries[index],
+                      format: format,
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
       actions: [

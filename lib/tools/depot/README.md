@@ -78,7 +78,11 @@ Periods map to Parqet's `relative` timeframes (`1m`, `ytd`, `max`, …), except 
 Parqet's relative `1d` starts at the close *before* yesterday, so on a Tuesday it would
 report Monday plus Tuesday. Today is therefore requested as an `absolute` timeframe from
 today's midnight, which starts at yesterday's close. Its chart has a single point, so the
-day's change comes from the summary's start and end values instead of the chart.
+day's change comes from the summary's start and end values instead of the chart. The
+overview hides the chart for Today; other periods still show it.
+
+Depot text and detail values can be selected and copied, including ISINs. On touch
+screens, long-press a value to select it; on desktop, select it with the mouse.
 
 ### Reading a holding
 

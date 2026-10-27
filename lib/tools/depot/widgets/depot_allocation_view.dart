@@ -28,12 +28,13 @@ class DepotAllocationView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l10n.depotAllocationTitle, style: theme.textTheme.titleSmall),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: SizedBox(
             height: 14,
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 for (final entry in allocation.entries)
                   Expanded(
@@ -44,7 +45,7 @@ class DepotAllocationView extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
         for (final entry in allocation.entries)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 3),

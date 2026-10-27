@@ -99,13 +99,15 @@ class _DepotPageState extends State<DepotPage> with DisposeCleanup {
             child: DepotTabs(),
           ),
           Expanded(
-            child: switch (tab) {
-              DepotTab.overview => const DepotOverviewView(),
-              DepotTab.dividends => const DepotDividendsView(),
-              DepotTab.activities => const DepotActivitiesView(),
-              DepotTab.wishlist => const DepotWishlistView(),
-              DepotTab.pdfImport => DepotImportView(tempScope: _scope),
-            },
+            child: SelectionArea(
+              child: switch (tab) {
+                DepotTab.overview => const DepotOverviewView(),
+                DepotTab.dividends => const DepotDividendsView(),
+                DepotTab.activities => const DepotActivitiesView(),
+                DepotTab.wishlist => const DepotWishlistView(),
+                DepotTab.pdfImport => DepotImportView(tempScope: _scope),
+              },
+            ),
           ),
         ],
       ),

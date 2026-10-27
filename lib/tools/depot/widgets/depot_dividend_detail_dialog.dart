@@ -93,31 +93,35 @@ class DepotDividendDetailDialog extends StatelessWidget {
         children: [
           DepotHoldingAvatar(name: e.name, colorSeed: e.colorSeed),
           const SizedBox(width: 12),
-          Expanded(child: Text(e.name, style: theme.textTheme.titleMedium)),
+          Expanded(
+            child: SelectableText(e.name, style: theme.textTheme.titleMedium),
+          ),
         ],
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (label, value) in rows)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: InfoRow(label: label, value: value),
-            ),
-          for (final note in notes)
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Text(
-                note,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: e.status == DepotDividendStatus.missing
-                      ? DepotColors.dividendMissing
-                      : theme.hintColor,
+      content: SelectionArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (label, value) in rows)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: InfoRow(label: label, value: value),
+              ),
+            for (final note in notes)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  note,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: e.status == DepotDividendStatus.missing
+                        ? DepotColors.dividendMissing
+                        : theme.hintColor,
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
       actions: [
         TextButton(

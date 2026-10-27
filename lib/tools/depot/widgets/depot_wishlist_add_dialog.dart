@@ -145,20 +145,22 @@ class _SearchResults extends StatelessWidget {
       );
     }
 
-    return ListView.separated(
-      itemCount: state.results.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final result = state.results[index];
-        final added = state.contains(result.symbol);
-        return _SearchResultTile(
-          result: result,
-          added: added,
-          canLinkIsin: state.canLinkIsin(result),
-          pending: state.isAdding(result.symbol),
-          onAdd: () => onAdd(result),
-        );
-      },
+    return SelectionArea(
+      child: ListView.separated(
+        itemCount: state.results.length,
+        separatorBuilder: (_, _) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final result = state.results[index];
+          final added = state.contains(result.symbol);
+          return _SearchResultTile(
+            result: result,
+            added: added,
+            canLinkIsin: state.canLinkIsin(result),
+            pending: state.isAdding(result.symbol),
+            onAdd: () => onAdd(result),
+          );
+        },
+      ),
     );
   }
 }

@@ -89,7 +89,7 @@ class DepotWishlistDetailDialog extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.name, style: theme.textTheme.titleMedium),
+                SelectableText(item.name, style: theme.textTheme.titleMedium),
                 Text(
                   '${item.symbol} · '
                   '${DepotPortfolioLabels.kind(l10n, item.kind)}',
@@ -102,111 +102,116 @@ class DepotWishlistDetailDialog extends StatelessWidget {
           ),
         ],
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (quote == null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                l10n.depotWishlistQuoteFailed,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.hintColor,
-                ),
-              ),
-            )
-          else ...[
-            Text(l10n.depotWishlistChart, style: theme.textTheme.labelMedium),
-            Text(
-              '${l10n.depotWishlistNativeHistory} (${quote.currency})',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.hintColor,
-              ),
-            ),
-            const SizedBox(height: 4),
-            DepotWishlistChart(
-              points: quote.points,
-              format: format,
-              color: quoteColor,
-            ),
-            const SizedBox(height: 12),
-          ],
-          for (final (label, value) in [
-            (l10n.depotDetailExchange, item.exchange),
-            if (item.isin != null) (l10n.depotDetailIsin, item.isin!),
-            if (quote != null && quote.currency != 'EUR' && euroRate != null)
-              (
-                l10n.depotWishlistEuroPrice,
-                '≈ ${DepotFormat.of(context, 'EUR').money(quote.price * euroRate)}',
-              ),
-            (
-              quote != null && quote.currency != 'EUR'
-                  ? l10n.depotWishlistOriginalPrice
-                  : l10n.depotWishlistPrice,
-              quote == null ? '' : format.money(quote.price),
-            ),
-            (
-              l10n.depotWishlistToday,
-              quote == null ? '' : percentOrEmpty(dayChange),
-            ),
-            (
-              l10n.depotWishlistRange1m,
-              quote == null
-                  ? ''
-                  : percentOrEmpty(quote.changeSince(const Duration(days: 31))),
-            ),
-            (
-              l10n.depotWishlistRange6m,
-              quote == null
-                  ? ''
-                  : percentOrEmpty(
-                      quote.changeSince(const Duration(days: 183)),
-                    ),
-            ),
-            (
-              l10n.depotWishlistRange1y,
-              quote == null ? '' : percentOrEmpty(yearChange),
-            ),
-            (
-              l10n.depotWishlistAddedPrice,
-              item.addedPrice == null ? '' : format.money(item.addedPrice!),
-            ),
-            (l10n.depotWishlistSinceAdded, percentOrEmpty(sinceAdded)),
-            (l10n.depotWishlistAddedOn, addedOn),
-            (
-              l10n.depotWishlistDayRange,
-              quote == null ? '' : range(quote.dayLow, quote.dayHigh),
-            ),
-            (
-              l10n.depotWishlistYearRange,
-              quote == null ? '' : range(quote.yearLow, quote.yearHigh),
-            ),
-            (
-              l10n.depotDetailQuoteAt,
-              quoteAt == null
-                  ? ''
-                  : DateFormat.yMMMd(locale).add_Hm().format(quoteAt),
-            ),
-          ])
-            if (value.isNotEmpty)
+      content: SelectionArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (quote == null)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: InfoRow(label: label, value: value),
-              ),
-          if (state.showEuro && quote != null && quote.currency != 'EUR')
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                euroRate == null
-                    ? l10n.depotWishlistFxUnavailable
-                    : l10n.depotWishlistFxNote,
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  l10n.depotWishlistQuoteFailed,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              )
+            else ...[
+              Text(l10n.depotWishlistChart, style: theme.textTheme.labelMedium),
+              Text(
+                '${l10n.depotWishlistNativeHistory} (${quote.currency})',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor,
                 ),
               ),
-            ),
-        ],
+              const SizedBox(height: 4),
+              DepotWishlistChart(
+                points: quote.points,
+                format: format,
+                color: quoteColor,
+              ),
+              const SizedBox(height: 12),
+            ],
+            for (final (label, value) in [
+              (l10n.depotDetailSymbol, item.symbol),
+              (l10n.depotDetailExchange, item.exchange),
+              if (item.isin != null) (l10n.depotDetailIsin, item.isin!),
+              if (quote != null && quote.currency != 'EUR' && euroRate != null)
+                (
+                  l10n.depotWishlistEuroPrice,
+                  '≈ ${DepotFormat.of(context, 'EUR').money(quote.price * euroRate)}',
+                ),
+              (
+                quote != null && quote.currency != 'EUR'
+                    ? l10n.depotWishlistOriginalPrice
+                    : l10n.depotWishlistPrice,
+                quote == null ? '' : format.money(quote.price),
+              ),
+              (
+                l10n.depotWishlistToday,
+                quote == null ? '' : percentOrEmpty(dayChange),
+              ),
+              (
+                l10n.depotWishlistRange1m,
+                quote == null
+                    ? ''
+                    : percentOrEmpty(
+                        quote.changeSince(const Duration(days: 31)),
+                      ),
+              ),
+              (
+                l10n.depotWishlistRange6m,
+                quote == null
+                    ? ''
+                    : percentOrEmpty(
+                        quote.changeSince(const Duration(days: 183)),
+                      ),
+              ),
+              (
+                l10n.depotWishlistRange1y,
+                quote == null ? '' : percentOrEmpty(yearChange),
+              ),
+              (
+                l10n.depotWishlistAddedPrice,
+                item.addedPrice == null ? '' : format.money(item.addedPrice!),
+              ),
+              (l10n.depotWishlistSinceAdded, percentOrEmpty(sinceAdded)),
+              (l10n.depotWishlistAddedOn, addedOn),
+              (
+                l10n.depotWishlistDayRange,
+                quote == null ? '' : range(quote.dayLow, quote.dayHigh),
+              ),
+              (
+                l10n.depotWishlistYearRange,
+                quote == null ? '' : range(quote.yearLow, quote.yearHigh),
+              ),
+              (
+                l10n.depotDetailQuoteAt,
+                quoteAt == null
+                    ? ''
+                    : DateFormat.yMMMd(locale).add_Hm().format(quoteAt),
+              ),
+            ])
+              if (value.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: InfoRow(label: label, value: value),
+                ),
+            if (state.showEuro && quote != null && quote.currency != 'EUR')
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  euroRate == null
+                      ? l10n.depotWishlistFxUnavailable
+                      : l10n.depotWishlistFxNote,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
       actions: [
         TextButton.icon(

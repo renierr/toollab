@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'dart:typed_data';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -483,7 +484,7 @@ void main() {
       app(
         ChangeNotifierProvider.value(
           value: state,
-          child: const DepotWishlistView(),
+          child: const SelectionArea(child: DepotWishlistView()),
         ),
       ),
     );
@@ -532,14 +533,12 @@ void main() {
     });
     addTearDown(logos.dispose);
     await tester.pumpWidget(
-      app(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider.value(value: state),
-            ChangeNotifierProvider.value(value: logos),
-          ],
-          child: const DepotWishlistView(),
-        ),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: state),
+          ChangeNotifierProvider.value(value: logos),
+        ],
+        child: app(const SelectionArea(child: DepotWishlistView())),
       ),
     );
     await tester.pumpAndSettle();
@@ -548,6 +547,41 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('US0378331005'), findsOneWidget);
+    await tester.tap(find.text('Apple'));
+    await tester.pumpAndSettle();
+    final isin = find.text('US0378331005');
+    expect(isin, findsOneWidget);
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final bounds = tester.getRect(isin);
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: bounds.centerLeft);
+    await mouse.down(bounds.centerLeft + const Offset(1, 0));
+    await mouse.moveTo(bounds.centerRight - const Offset(1, 0));
+    await mouse.up();
+    await tester.pump();
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyC);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pump();
+    expect(copied, 'US0378331005');
+    await mouse.removePointer();
+    await tester.tap(find.text('Schließen'));
+    await tester.pumpAndSettle();
     expect(
       tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
       isTrue,

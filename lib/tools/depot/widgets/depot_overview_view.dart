@@ -71,7 +71,7 @@ class DepotOverviewView extends StatelessWidget {
                       change: state.rangeChange,
                       allocation: state.allocation,
                       format: format,
-                      collapseChart: state.period == DepotPeriod.today,
+                      showChart: state.period != DepotPeriod.today,
                     ),
                     if (state.movers.isNotEmpty) ...[
                       const SizedBox(height: 12),
